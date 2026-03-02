@@ -4,7 +4,7 @@ import "./globals.css";
 import { MobileNav } from "@/components/mobile-nav";
 
 export const metadata: Metadata = {
-  title: "HypertrophyApp",
+  title: "Rocco's HyperTrophy Plan",
   description: "Deterministic hypertrophy workout planner and runner",
   manifest: "/manifest.json",
 };

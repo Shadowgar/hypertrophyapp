@@ -56,3 +56,7 @@ Template `progression` block defines deterministic progression mode, with API/co
 - New templates or rule changes require version bump.
 - Existing plans keep template version pinned for reproducibility.
 - Migration scripts should map old template ids/fields to new contracts.
+
+## Runtime Validation
+- API template loading validates canonical templates against this schema before week generation.
+- Invalid templates are rejected with an explicit `422` response and are not used for planning.

@@ -1,4 +1,4 @@
-# HypertrophyApp Monorepo
+# Rocco's HyperTrophy Plan Monorepo
 
 Deterministic hypertrophy planner + workout runner for Raspberry Pi-hosted local-first deployment.
 

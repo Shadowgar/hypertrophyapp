@@ -1,0 +1,105 @@
+"use client";
+
+import { FormEvent, useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import { API_BASE_URL } from "@/lib/env";
+
+type ResetRequestResponse = {
+  status: string;
+  reset_token?: string | null;
+};
+
+export default function ResetPasswordPage() {
+  const [email, setEmail] = useState("athlete@example.com");
+  const [token, setToken] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [requestStatus, setRequestStatus] = useState("Idle");
+  const [confirmStatus, setConfirmStatus] = useState("Idle");
+
+  async function handleRequest(event: FormEvent) {
+    event.preventDefault();
+    setRequestStatus("Requesting...");
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/password-reset/request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!response.ok) {
+        setRequestStatus("Request failed");
+        return;
+      }
+
+      const payload = (await response.json()) as ResetRequestResponse;
+      if (payload.reset_token) {
+        setToken(payload.reset_token);
+      }
+      setRequestStatus("Reset requested");
+    } catch {
+      setRequestStatus("Network error");
+    }
+  }
+
+  async function handleConfirm(event: FormEvent) {
+    event.preventDefault();
+    setConfirmStatus("Updating password...");
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/password-reset/confirm`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, new_password: newPassword }),
+      });
+      if (!response.ok) {
+        setConfirmStatus("Password update failed");
+        return;
+      }
+      setConfirmStatus("Password updated");
+    } catch {
+      setConfirmStatus("Network error");
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold">Reset Password</h1>
+
+      <form className="main-card space-y-3" onSubmit={handleRequest}>
+        <p className="text-xs text-zinc-400">Request reset token</p>
+        <input
+          className="w-full rounded-md bg-zinc-900 p-2 text-white"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          placeholder="Email"
+        />
+        <Button className="w-full" type="submit">
+          Request Reset
+        </Button>
+        <p className="text-xs text-zinc-400">Status: {requestStatus}</p>
+      </form>
+
+      <form className="main-card space-y-3" onSubmit={handleConfirm}>
+        <p className="text-xs text-zinc-400">Confirm new password</p>
+        <input
+          className="w-full rounded-md bg-zinc-900 p-2 text-white"
+          value={token}
+          onChange={(event) => setToken(event.target.value)}
+          placeholder="Reset token"
+        />
+        <input
+          className="w-full rounded-md bg-zinc-900 p-2 text-white"
+          value={newPassword}
+          onChange={(event) => setNewPassword(event.target.value)}
+          placeholder="New password"
+          type="password"
+        />
+        <Button className="w-full" type="submit">
+          Confirm Reset
+        </Button>
+        <p className="text-xs text-zinc-400">Status: {confirmStatus}</p>
+      </form>
+    </div>
+  );
+}

@@ -2,6 +2,7 @@ from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from core_engine import generate_week_plan
@@ -18,7 +19,14 @@ DbSession = Annotated[Session, Depends(get_db)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
-@router.post("/plan/generate-week", responses={400: {"description": "Complete profile first"}})
+@router.post(
+    "/plan/generate-week",
+    responses={
+        400: {"description": "Complete profile first"},
+        404: {"description": "Program template not found"},
+        422: {"description": "Program template schema is invalid"},
+    },
+)
 def plan_generate_week(
     payload: GenerateWeekPlanRequest,
     db: DbSession,
@@ -27,7 +35,12 @@ def plan_generate_week(
     if not current_user.days_available or not current_user.split_preference:
         raise HTTPException(status_code=400, detail="Complete profile first")
 
-    template = load_program_template(payload.template_id)
+    try:
+        template = load_program_template(payload.template_id)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValidationError as exc:
+        raise HTTPException(status_code=422, detail="Invalid program template schema") from exc
     history_rows = (
         db.query(WorkoutSetLog)
         .filter(WorkoutSetLog.user_id == current_user.id)
@@ -51,6 +64,7 @@ def plan_generate_week(
         program_template=template,
         history=history,
         phase=current_user.nutrition_phase or "maintenance",
+        available_equipment=current_user.equipment_profile or [],
     )
 
     week_start = date.fromisoformat(plan["week_start"])

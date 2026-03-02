@@ -2,7 +2,7 @@
 
 ## Product Vision
 
-HypertrophyApp is a deterministic, nutrition-aware, multi-user hypertrophy training platform designed to rival and exceed RP-style workflows while remaining:
+Rocco's HyperTrophy Plan is a deterministic, nutrition-aware, multi-user hypertrophy training platform designed to rival and exceed RP-style workflows while remaining:
 
 - Local-first (self-hosted on Raspberry Pi)
 - Deterministic at runtime (no guide search / no runtime ingestion)
@@ -11,6 +11,76 @@ HypertrophyApp is a deterministic, nutrition-aware, multi-user hypertrophy train
 - Deployable via Docker Compose
 
 This file is the single source of truth for scope, phases, and definition of done. Any major scope change must update this file first.
+
+---
+
+# UI Design System — Hyperdrive OS Layer
+
+## Design Philosophy
+
+- Training Operating System: interfaces must prioritize execution speed, clarity, and deterministic user actions.
+- Minimal cognitive load: one primary action focus per panel; secondary actions grouped and de-emphasized.
+- Data-dense but clean: compact information grouping with strict typography hierarchy and spacing rhythm.
+- Subtle depth, restrained glow: depth cues are structural, not decorative.
+- Red accent reserved for state + power indicators only.
+
+## Visual Language
+
+- Ultra-dark matte background as the base surface.
+- Frosted glass layered panels for grouped controls and data modules.
+- Soft elevation shadows with low spread and low opacity for panel separation.
+- Thin red accent outlines with a 1–2px maximum stroke width.
+- Controlled glow is allowed only for:
+  - active set
+  - PR detection
+  - recovery warning
+- Green/Yellow/Red are reserved strictly for performance state signaling.
+
+## Mode-Based Interface Architecture
+
+- WORKOUT MODE
+- PLAN MODE
+- ANALYTICS MODE
+- BODY MODE
+- SYSTEM MODE
+
+Layout density and panel structure may shift by mode, but component behavior and state semantics must remain deterministic and consistent across modes.
+
+## Workout Runner UI Specification
+
+- Exercise Control Module layout: exercise header, primary metrics block, set stack, and action row.
+- Large working weight display as the dominant numeric element in each exercise module.
+- Rep range displayed adjacent to working weight using fixed formatting.
+- Collapsible warmups hidden by default after first completion, with deterministic expand/collapse state.
+- Stacked working sets with clear current-set emphasis and completed-set state markers.
+- Action row order is fixed: Video | Swap | Notes | Rest.
+- Auto rest timer trigger starts immediately on set completion.
+- Subtle pulse on set completion for confirmation feedback.
+- Deterministic performance color state based on logged outcomes and recovery flags.
+
+## Analytics Dashboard Specification
+
+- Strength graph styling: thin white trend line with red peak highlights.
+- Mesocycle vertical markers rendered as low-contrast separators at deterministic interval boundaries.
+- Volume per muscle heat map using normalized weekly set volume buckets.
+- Body measurement trend overlays aligned on shared date axis with bodyweight context.
+- PR markers rendered as explicit point annotations for rep PR and weight PR events.
+
+## Micro-Interaction Rules
+
+- No heavy animations.
+- Only CSS transforms and opacity transitions for interactive feedback.
+- GPU-safe transitions only; avoid CPU-heavy paint patterns.
+- No 3D libraries.
+- 60fps target on iPhone Safari.
+
+## Performance Constraints
+
+- No large animation libraries.
+- No particle systems.
+- Minimal blur layers; limit concurrent frosted panels per viewport.
+- Avoid layout thrashing by preventing repeated reflow-triggering patterns.
+- All animations must complete under 200ms.
 
 ---
 
@@ -107,6 +177,15 @@ Platform:
 - Docker Compose deployment
 - Core-engine unit tests for progression, warmups, substitution logic, week generation
 
+## Physique & Recovery Tracking (MVP-Level)
+
+- Body measurement tracking (user-defined measurements + pre-seeded defaults)
+- Deterministic measurement trend graphs
+- Bodyweight overlay on physique trends
+- “What’s sore today?” quick pre-workout input
+- Exercise-level notes display in workout runner
+- Exercise video button support when template metadata includes links
+
 ---
 
 # Equipment & Substitution System (Core Requirement)
@@ -194,6 +273,37 @@ No AI required. No guide search.
 
 ---
 
+# Recovery & Soreness Tracking System (Deterministic)
+
+## Input Model
+
+- Pre-workout soreness input modal before session start
+- Muscle list with severity per muscle:
+  - None
+  - Mild
+  - Moderate
+  - Severe
+
+## Deterministic Adjustment Rules
+
+- Severe: reduce working load slightly OR reduce one working set OR suggest lower joint-stress substitute
+- Moderate: apply minimal adjustment only
+- Mild: log only (no loading change)
+- Rules must be deterministic, explicit, and testable
+- System must never rewrite the full plan automatically
+
+## Acceptance Criteria
+
+- [ ] Soreness input is captured pre-workout with deterministic severity values
+- [ ] Per-muscle soreness entries persist and are available to workout generation/recommendation logic
+- [ ] Severe soreness triggers only deterministic, bounded recommendation adjustments
+- [ ] Moderate soreness applies minimal deterministic adjustment
+- [ ] Mild soreness is logged without automatic loading changes
+- [ ] No automatic full-plan rewrite occurs from soreness input
+- [ ] Core-engine tests verify soreness-to-recommendation behavior
+
+---
+
 # Exercise Video Links (YouTube) (Core Requirement)
 
 ## Goal
@@ -224,6 +334,20 @@ If missing, UI should not render a video action.
 - Workout UI conditionally renders video action per exercise.
 - Clicking video action opens external YouTube URL in new tab.
 - Missing links do not create UI errors.
+
+---
+
+# Physique & Analytics Dashboard
+
+- Strength trend graphs (weight over time)
+- Rep performance trends
+- Bodyweight trend graph
+- Body measurement trends
+- Volume per muscle weekly tracking
+- PR detection (rep PR + weight PR)
+- Adherence tracking (% completed sessions)
+- Mesocycle markers on charts
+- Deterministic calculations only (no runtime AI/guide parsing)
 
 ---
 
@@ -277,39 +401,46 @@ If missing, UI should not render a video action.
 - [x] Dark-mode base UI
 - [x] Alembic migrations
 - [x] Docs baseline
+- [ ] Define UI design tokens (colors, spacing, glow intensity)
+- [ ] Define glass layer CSS system
 
 ---
 
 ## Phase 1 — PDL + Canonical Templates
 - [x] Define canonical schema
-- [ ] Add movement_pattern field
-- [ ] Add equipment_tags field
-- [ ] Add substitution metadata field
-- [ ] Add video.youtube_url field to exercise schema (canonical PDL)
+- [x] Add movement_pattern field
+- [x] Add equipment_tags field
+- [x] Add substitution metadata field
+- [x] Add video.youtube_url field to exercise schema (canonical PDL)
 - [x] Add `notes` field to session exercise slots (template-level notes)
 - [x] Add `substitution_candidates` list to exercise slots
 - [x] Add deterministic equipment tag parsing fallback (DB/BB/Cable/Machine/BW) in importer/template tooling
 - [x] Seed working template
-- [ ] Schema validation tests
+- [x] Schema validation tests
 
 ---
 
 ## Phase 2 — Auth + Equipment-Aware Profiles
 - [x] JWT auth
+- [x] Login method (email/password)
+- [x] Password reset flow (request reset + confirm reset)
 - [x] User profile CRUD
 - [x] Onboarding wizard
-- [ ] Add training location (Gym/Home)
-- [ ] Add equipment profile (Dumbbells Only minimum)
-- [ ] Profile validation tests
+- [x] Profile UX location (`/onboarding` for initial setup, `/settings` for review/edit)
+- [x] Add training location (Gym/Home)
+- [x] Add equipment profile (Dumbbells Only minimum)
+- [x] Profile validation tests
 
 ---
 
 ## Phase 3 — Weekly Check-In + Nutrition Phase
 - [x] Weekly check-in model
 - [x] Phase modifiers
-- [ ] Validation rules
-- [ ] UI implementation
-- [ ] Tests
+- [x] Add soreness input model + CRUD
+- [x] Add body measurement model + CRUD
+- [x] Validation rules
+- [x] UI implementation
+- [x] Tests
 
 ---
 
@@ -325,25 +456,33 @@ If missing, UI should not render a video action.
 ## Phase 5 — Workout Runner + Substitution UX
 - [x] Workout instance generation
 - [x] Reps logging
-- [ ] Resume logic
-- [ ] Add “I don’t have this equipment” button
+- [x] Resume logic
+- [ ] Add soreness modal before workout start
+- [ ] Add notes display per exercise
+- [ ] Add Video button per exercise
+- [ ] Implement Exercise Control Module UI
+- [ ] Implement rest timer auto-start + subtle pulse animation
+- [ ] Implement Video | Swap | Notes action row styling
+- [x] Add “I don’t have this equipment” button
 - [x] Add Video action per exercise card that opens video.youtube_url in a new tab
 - [x] Display slot `notes` in the exercise card (collapsible)
 - [x] Ensure notes persist and remain visible after substitutions
-- [ ] Substitution picker modal
-- [ ] Persist substitution selection
+- [x] Substitution picker modal
+- [x] Persist substitution selection
 - [x] Update exercise state correctly
 - [ ] Tests
 
 ---
 
 ## Phase 6 — Weekly Plan Generator (Equipment-Aware)
-- [ ] Equipment filtering during generation
-- [ ] Substitution pre-filtering
-- [ ] Ensure substitution selection is applied at the slot level and logged accordingly
-- [ ] Compression logic (2/3/4 days)
+- [x] Equipment filtering during generation
+- [x] Substitution pre-filtering
+- [x] Ensure substitution selection is applied at the slot level and logged accordingly
+- [x] Compression logic (2/3/4 days)
+- [ ] Ensure soreness modifiers apply deterministically to recommendations
+- [ ] Track weekly volume per muscle
 - [ ] Muscle coverage validator
-- [ ] Deterministic week output tests
+- [x] Deterministic week output tests
 
 ---
 
@@ -370,6 +509,13 @@ If missing, UI should not render a video action.
 - [ ] Exercise trend charts
 - [ ] Bodyweight trend
 - [ ] Adherence tracking
+- [ ] Add strength trend charts
+- [ ] Add body measurement charts
+- [ ] Add PR detection logic
+- [ ] Add adherence tracking dashboard
+- [ ] Implement analytics dashboard visual system
+- [ ] Add PR highlight styling
+- [ ] Add volume heat map styling
 
 ---
 

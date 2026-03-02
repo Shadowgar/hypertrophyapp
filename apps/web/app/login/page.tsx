@@ -1,0 +1,60 @@
+"use client";
+
+import { FormEvent, useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import { API_BASE_URL } from "@/lib/env";
+
+export default function LoginPage() {
+  const [email, setEmail] = useState("athlete@example.com");
+  const [password, setPassword] = useState("");
+  const [status, setStatus] = useState("Idle");
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    setStatus("Logging in...");
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!response.ok) {
+        setStatus("Login failed");
+        return;
+      }
+
+      const payload = (await response.json()) as { access_token: string };
+      localStorage.setItem("hypertrophy_token", payload.access_token);
+      setStatus("Logged in");
+    } catch {
+      setStatus("Network error");
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold">Login</h1>
+      <form className="main-card space-y-3" onSubmit={handleSubmit}>
+        <input
+          className="w-full rounded-md bg-zinc-900 p-2 text-white"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          placeholder="Email"
+        />
+        <input
+          className="w-full rounded-md bg-zinc-900 p-2 text-white"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          placeholder="Password"
+          type="password"
+        />
+        <Button className="w-full" type="submit">
+          Login
+        </Button>
+      </form>
+      <p className="text-sm text-zinc-300">Status: {status}</p>
+    </div>
+  );
+}

@@ -18,6 +18,53 @@ DbSession = Annotated[Session, Depends(get_db)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
+def _session_by_id(sessions: list[dict]) -> dict[str, dict]:
+    return {
+        session.get("session_id"): session
+        for session in sessions
+        if session.get("session_id")
+    }
+
+
+def _is_session_incomplete(db: Session, user_id: str, workout_id: str, session: dict) -> bool:
+    planned_sets = sum(int(exercise.get("sets", 3)) for exercise in session.get("exercises", []))
+    logged_sets = (
+        db.query(WorkoutSetLog)
+        .filter(
+            WorkoutSetLog.user_id == user_id,
+            WorkoutSetLog.workout_id == workout_id,
+        )
+        .count()
+    )
+    return logged_sets < planned_sets
+
+
+def _find_resume_session(db: Session, user_id: str, sessions: list[dict]) -> dict | None:
+    session_by_id = _session_by_id(sessions)
+    if not session_by_id:
+        return None
+
+    latest_log = (
+        db.query(WorkoutSetLog)
+        .filter(
+            WorkoutSetLog.user_id == user_id,
+            WorkoutSetLog.workout_id.in_(list(session_by_id.keys())),
+        )
+        .order_by(WorkoutSetLog.created_at.desc())
+        .first()
+    )
+    if not latest_log:
+        return None
+
+    candidate = session_by_id.get(latest_log.workout_id)
+    if not candidate:
+        return None
+
+    if _is_session_incomplete(db, user_id, latest_log.workout_id, candidate):
+        return candidate
+    return None
+
+
 @router.get(
     "/workout/today",
     responses={404: {"description": "No plan generated or no workouts available"}},
@@ -35,10 +82,14 @@ def workout_today(
     if not plans:
         raise HTTPException(status_code=404, detail="No plan generated")
 
-    today = date.today().isoformat()
     latest = plans[0].payload
     sessions = latest.get("sessions", [])
-    selected = next((session for session in sessions if session.get("date") == today), None)
+    selected = _find_resume_session(db, current_user.id, sessions)
+    resume_selected = selected is not None
+
+    if not selected:
+        today = date.today().isoformat()
+        selected = next((session for session in sessions if session.get("date") == today), None)
     if not selected and sessions:
         selected = sessions[0]
 
@@ -47,6 +98,8 @@ def workout_today(
 
     for ex in selected.get("exercises", []):
         ex["warmups"] = compute_warmups(ex.get("recommended_working_weight", 20), 3)
+
+    selected["resume"] = resume_selected
 
     return selected
 

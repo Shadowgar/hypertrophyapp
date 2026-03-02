@@ -12,17 +12,17 @@
 - Build-time import pipeline (`importers/`) produces canonical templates.
 
 ## Data Model Overview
-- `users`: account + onboarding profile + nutrition settings.
+- `users`: account + onboarding profile + nutrition settings + equipment context (`training_location`, `equipment_profile`).
 - `weekly_checkins`: weekly adherence and bodyweight snapshots.
 - `workout_plans`: generated weekly plan payloads by template/version.
-- `workout_set_logs`: per-set logs from runner.
+- `workout_set_logs`: per-set logs from runner with slot continuity (`primary_exercise_id`) and performed movement (`exercise_id`).
 - `exercise_states`: progression state per user/exercise.
 
 ## Core Engine Services
 - Warmup service: deterministic ramp sets from target working weight.
 - Progression service: next load recommendation from reps/sets/phase modifier.
 - State update service: updates exposure/fatigue/next load after logging.
-- Scheduler service: generates week sessions from templates and availability.
+- Scheduler service: generates week sessions from templates, availability, and equipment constraints.
 
 ## Deployment Topology (Raspberry Pi)
 - Single-node Docker Compose deployment.

@@ -2,8 +2,8 @@ import re
 
 
 _FALLBACK_RULES: tuple[tuple[re.Pattern[str], str], ...] = (
-    (re.compile(r"\bD\.?B\.?\b|\bDUMBBELL\b", re.IGNORECASE), "dumbbell"),
-    (re.compile(r"\bB\.?B\.?\b|\bBARBELL\b", re.IGNORECASE), "barbell"),
+    (re.compile(r"(?:^|[^a-z0-9])d\.?b\.?($|[^a-z0-9])|\bdumbbell\b", re.IGNORECASE), "dumbbell"),
+    (re.compile(r"(?:^|[^a-z0-9])b\.?b\.?($|[^a-z0-9])|\bbarbell\b", re.IGNORECASE), "barbell"),
     (re.compile(r"\bCABLE\b", re.IGNORECASE), "cable"),
     (re.compile(r"\bMACHINE\b", re.IGNORECASE), "machine"),
     (re.compile(r"\bBW\b|\bBODYWEIGHT\b", re.IGNORECASE), "bodyweight"),

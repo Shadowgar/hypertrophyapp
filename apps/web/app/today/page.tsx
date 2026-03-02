@@ -7,6 +7,7 @@ import { api, type WorkoutExercise, type WorkoutSession } from "@/lib/api";
 
 type SwapState = Record<string, number>;
 type NotesState = Record<string, boolean>;
+const SWAP_STORAGE_PREFIX = "hypertrophy_swap_selection";
 
 export default function TodayPage() {
   const [health, setHealth] = useState("loading");
@@ -14,6 +15,7 @@ export default function TodayPage() {
   const [message, setMessage] = useState("No workout loaded");
   const [swapIndexByExercise, setSwapIndexByExercise] = useState<SwapState>({});
   const [notesOpenByExercise, setNotesOpenByExercise] = useState<NotesState>({});
+  const [swapTargetExerciseId, setSwapTargetExerciseId] = useState<string | null>(null);
 
   useEffect(() => {
     api.health()
@@ -26,26 +28,43 @@ export default function TodayPage() {
       const data = await api.getTodayWorkout();
       setWorkout(data);
       setMessage("");
-      setSwapIndexByExercise({});
       setNotesOpenByExercise({});
+
+      const storageKey = `${SWAP_STORAGE_PREFIX}:${data.session_id}`;
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved) as SwapState;
+          setSwapIndexByExercise(parsed);
+        } catch {
+          setSwapIndexByExercise({});
+        }
+      } else {
+        setSwapIndexByExercise({});
+      }
     } catch {
       setWorkout(null);
       setMessage("No workout available. Generate week plan first.");
     }
   }
 
+  useEffect(() => {
+    if (!workout) {
+      return;
+    }
+    const storageKey = `${SWAP_STORAGE_PREFIX}:${workout.session_id}`;
+    localStorage.setItem(storageKey, JSON.stringify(swapIndexByExercise));
+  }, [swapIndexByExercise, workout]);
+
   function toggleNotes(exerciseId: string) {
     setNotesOpenByExercise((prev) => ({ ...prev, [exerciseId]: !prev[exerciseId] }));
   }
 
-  function swapExercise(exerciseId: string, optionCount: number) {
-    if (optionCount < 1) {
-      return;
-    }
+  function selectSwap(exerciseId: string, selectedIndex: number) {
     setSwapIndexByExercise((prev) => {
-      const current = prev[exerciseId] ?? 0;
-      return { ...prev, [exerciseId]: (current + 1) % (optionCount + 1) };
+      return { ...prev, [exerciseId]: selectedIndex };
     });
+    setSwapTargetExerciseId(null);
   }
 
   function resolveExerciseName(exercise: WorkoutExercise): string {
@@ -56,6 +75,9 @@ export default function TodayPage() {
     }
     return substitutions[selectedIndex - 1] ?? exercise.name;
   }
+
+  const swapTarget = workout?.exercises.find((exercise) => exercise.id === swapTargetExerciseId) ?? null;
+  const swapTargetCurrentIndex = swapTarget ? (swapIndexByExercise[swapTarget.id] ?? 0) : 0;
 
   return (
     <div className="space-y-4">
@@ -74,6 +96,7 @@ export default function TodayPage() {
           <div className="main-card">
             <p className="text-sm text-zinc-300">{workout.title}</p>
             <p className="text-xs text-zinc-400">{workout.date}</p>
+            {workout.resume ? <p className="text-xs text-accent">Resumed unfinished workout</p> : null}
           </div>
 
           {workout.exercises.map((exercise) => {
@@ -109,11 +132,11 @@ export default function TodayPage() {
                   <Button
                     className="h-8 px-3 text-xs"
                     disabled={substitutions.length === 0}
-                    onClick={() => swapExercise(exercise.id, substitutions.length)}
+                    onClick={() => setSwapTargetExerciseId(exercise.id)}
                     type="button"
                     variant="secondary"
                   >
-                    Swap
+                    I don’t have this equipment
                   </Button>
                   <Button
                     className="h-8 px-3 text-xs"
@@ -133,6 +156,52 @@ export default function TodayPage() {
               </div>
             );
           })}
+        </div>
+      ) : null}
+
+      {swapTarget ? (
+        <div className="fixed inset-0 z-50 flex items-end bg-black/60 p-4 md:items-center md:justify-center">
+          <div className="main-card w-full max-w-md space-y-3">
+            <div>
+              <p className="text-sm font-semibold text-zinc-100">Choose a substitute</p>
+              <p className="text-xs text-zinc-400">Slot: {swapTarget.name}</p>
+            </div>
+
+            <div className="space-y-2">
+              <Button
+                className="w-full justify-start"
+                onClick={() => selectSwap(swapTarget.id, 0)}
+                type="button"
+                variant={swapTargetCurrentIndex === 0 ? "default" : "secondary"}
+              >
+                {swapTarget.name} (Original)
+              </Button>
+
+              {(swapTarget.substitution_candidates ?? []).map((candidate, index) => {
+                const value = index + 1;
+                return (
+                  <Button
+                    key={`${swapTarget.id}-${candidate}`}
+                    className="w-full justify-start"
+                    onClick={() => selectSwap(swapTarget.id, value)}
+                    type="button"
+                    variant={swapTargetCurrentIndex === value ? "default" : "secondary"}
+                  >
+                    {candidate}
+                  </Button>
+                );
+              })}
+            </div>
+
+            <Button
+              className="w-full"
+              onClick={() => setSwapTargetExerciseId(null)}
+              type="button"
+              variant="ghost"
+            >
+              Close
+            </Button>
+          </div>
         </div>
       ) : null}
     </div>

@@ -1,5 +1,7 @@
 from datetime import date, datetime
-from pydantic import BaseModel, EmailStr, Field
+from typing import Literal
+
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 class TokenResponse(BaseModel):
@@ -18,12 +20,32 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+
+class PasswordResetRequestResponse(BaseModel):
+    status: str
+    reset_token: str | None = None
+
+
+class PasswordResetConfirmRequest(BaseModel):
+    token: str = Field(min_length=16)
+    new_password: str = Field(min_length=8)
+
+
+class StatusResponse(BaseModel):
+    status: str
+
+
 class ProfileUpsert(BaseModel):
     name: str
     age: int
     weight: float
     gender: str
     split_preference: str
+    training_location: str | None = None
+    equipment_profile: list[str] = Field(default_factory=list)
     days_available: int = Field(ge=2, le=4)
     nutrition_phase: str
     calories: int
@@ -38,9 +60,58 @@ class ProfileResponse(ProfileUpsert):
 
 class WeeklyCheckinRequest(BaseModel):
     week_start: date
-    body_weight: float
+    body_weight: float = Field(gt=0)
     adherence_score: int = Field(ge=1, le=5)
     notes: str | None = None
+
+    @field_validator("week_start")
+    @classmethod
+    def validate_week_start(cls, value: date) -> date:
+        if value.weekday() != 0:
+            raise ValueError("week_start must be a Monday")
+        if value > date.today():
+            raise ValueError("week_start cannot be in the future")
+        return value
+
+
+SorenessSeverity = Literal["none", "mild", "moderate", "severe"]
+
+
+class SorenessEntryCreateRequest(BaseModel):
+    entry_date: date
+    severity_by_muscle: dict[str, SorenessSeverity] = Field(default_factory=dict)
+    notes: str | None = None
+
+
+class SorenessEntryResponse(BaseModel):
+    id: str
+    entry_date: date
+    severity_by_muscle: dict[str, SorenessSeverity]
+    notes: str | None = None
+    created_at: datetime
+
+
+class BodyMeasurementEntryCreateRequest(BaseModel):
+    measured_on: date
+    name: str = Field(min_length=1, max_length=80)
+    value: float = Field(gt=0)
+    unit: str = Field(min_length=1, max_length=16)
+
+
+class BodyMeasurementEntryUpdateRequest(BaseModel):
+    measured_on: date | None = None
+    name: str | None = Field(default=None, min_length=1, max_length=80)
+    value: float | None = Field(default=None, gt=0)
+    unit: str | None = Field(default=None, min_length=1, max_length=16)
+
+
+class BodyMeasurementEntryResponse(BaseModel):
+    id: str
+    measured_on: date
+    name: str
+    value: float
+    unit: str
+    created_at: datetime
 
 
 class GenerateWeekPlanRequest(BaseModel):

@@ -1,6 +1,6 @@
 {
-  "name": "HypertrophyApp",
-  "short_name": "Hypertrophy",
+  "name": "Rocco's HyperTrophy Plan",
+  "short_name": "Rocco Plan",
   "description": "Deterministic hypertrophy workout planner",
   "start_url": "/",
   "display": "standalone",

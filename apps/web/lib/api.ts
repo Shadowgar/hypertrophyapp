@@ -18,7 +18,32 @@ export type WorkoutSession = {
   session_id: string;
   title: string;
   date: string;
+  resume?: boolean;
   exercises: WorkoutExercise[];
+};
+
+export type Profile = {
+  email: string;
+  name: string;
+  age: number;
+  weight: number;
+  gender: string;
+  split_preference: string;
+  training_location?: string | null;
+  equipment_profile: string[];
+  days_available: number;
+  nutrition_phase: string;
+  calories: number;
+  protein: number;
+  fat: number;
+  carbs: number;
+};
+
+export type WeeklyCheckinPayload = {
+  week_start: string;
+  body_weight: number;
+  adherence_score: number;
+  notes?: string;
 };
 
 export function getToken(): string | null {
@@ -54,5 +79,10 @@ export const api = {
   health: () => request<{ status: string; date: string }>("/health"),
   getTodayWorkout: () => request<WorkoutSession>("/workout/today"),
   generateWeek: () => request<Record<string, unknown>>("/plan/generate-week", { method: "POST", body: JSON.stringify({}) }),
-  getProfile: () => request<Record<string, unknown>>("/profile"),
+  getProfile: () => request<Profile>("/profile"),
+  weeklyCheckin: (payload: WeeklyCheckinPayload) =>
+    request<{ status: string; phase: string }>("/weekly-checkin", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
 };
