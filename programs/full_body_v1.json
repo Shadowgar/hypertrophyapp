@@ -1,0 +1,49 @@
+{
+  "id": "full_body_v1",
+  "version": "1.0.0",
+  "split": "full_body",
+  "days_supported": [2, 3, 4],
+  "deload": {
+    "trigger_weeks": 6,
+    "set_reduction_pct": 40,
+    "load_reduction_pct": 10
+  },
+  "progression": {
+    "mode": "double_progression",
+    "increment_kg": 2.5
+  },
+  "sessions": [
+    {
+      "name": "Full Body A",
+      "exercises": [
+        { "id": "squat", "name": "Back Squat", "sets": 3, "rep_range": [6, 10], "start_weight": 60, "priority": "high" },
+        { "id": "bench", "name": "Bench Press", "sets": 3, "rep_range": [6, 10], "start_weight": 50, "priority": "high" },
+        { "id": "row", "name": "Chest Supported Row", "sets": 3, "rep_range": [8, 12], "start_weight": 35 }
+      ]
+    },
+    {
+      "name": "Full Body B",
+      "exercises": [
+        { "id": "rdl", "name": "Romanian Deadlift", "sets": 3, "rep_range": [6, 10], "start_weight": 70, "priority": "high" },
+        { "id": "ohp", "name": "Overhead Press", "sets": 3, "rep_range": [6, 10], "start_weight": 30, "priority": "high" },
+        { "id": "pulldown", "name": "Lat Pulldown", "sets": 3, "rep_range": [8, 12], "start_weight": 45 }
+      ]
+    },
+    {
+      "name": "Full Body C",
+      "exercises": [
+        { "id": "legpress", "name": "Leg Press", "sets": 3, "rep_range": [10, 15], "start_weight": 120 },
+        { "id": "incline", "name": "Incline DB Press", "sets": 3, "rep_range": [8, 12], "start_weight": 24 },
+        { "id": "curl", "name": "Cable Curl", "sets": 2, "rep_range": [10, 15], "start_weight": 20 }
+      ]
+    },
+    {
+      "name": "Full Body D",
+      "exercises": [
+        { "id": "split_squat", "name": "Bulgarian Split Squat", "sets": 3, "rep_range": [8, 12], "start_weight": 20 },
+        { "id": "dip", "name": "Assisted Dip", "sets": 3, "rep_range": [8, 12], "start_weight": 0 },
+        { "id": "lateral", "name": "Lateral Raise", "sets": 3, "rep_range": [12, 20], "start_weight": 8 }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,914 @@
+{
+  "id": "edited_ppl_5x",
+  "version": "1.0.0",
+  "split": "ppl",
+  "days_supported": [
+    2,
+    3,
+    4
+  ],
+  "deload": {
+    "trigger_weeks": 6,
+    "set_reduction_pct": 35,
+    "load_reduction_pct": 10
+  },
+  "progression": {
+    "mode": "double_progression",
+    "increment_kg": 2.5
+  },
+  "sessions": [
+    {
+      "name": "Push #1",
+      "exercises": [
+        {
+          "id": "bench_press",
+          "primary_exercise_id": "bench_press",
+          "name": "Bench Press",
+          "sets": 3,
+          "rep_range": [
+            3,
+            5
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [
+            "DB Bench Press",
+            "Machine Chest Press"
+          ],
+          "notes": "~3-4 min Set up a comfortable arch, quick pause on the chest and explode up on each rep",
+          "video": null
+        },
+        {
+          "id": "seated_shoulder_press",
+          "primary_exercise_id": "seated_shoulder_press",
+          "name": "Seated Shoulder Press",
+          "sets": 3,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [
+            "Smith Machine Shoulder Press",
+            "Machine Shoulder Press"
+          ],
+          "notes": "~2-3 min",
+          "video": null
+        },
+        {
+          "id": "chest_flys",
+          "primary_exercise_id": "chest_flys",
+          "name": "Chest Flys",
+          "sets": 2,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [
+            "DB Flye"
+          ],
+          "notes": "0 min",
+          "video": null
+        },
+        {
+          "id": "lateral_raise",
+          "primary_exercise_id": "lateral_raise",
+          "name": "Lateral Raise",
+          "sets": 3,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "lateral_raise",
+          "primary_muscles": [
+            "side_delts"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [
+            "Cable Lateral Raise",
+            "Machine Lateral Raise"
+          ],
+          "notes": "~1-2 min Lead with the elbows",
+          "video": null
+        },
+        {
+          "id": "bottom_half_tricep_pushdown_bottom_half_overhead_tricep_extension",
+          "primary_exercise_id": "bottom_half_tricep_pushdown_bottom_half_overhead_tricep_extension",
+          "name": "Bottom Half Tricep Pushdown + Bottom Half Overhead Tricep Extension",
+          "sets": 3,
+          "rep_range": [
+            6,
+            6
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "vertical_press",
+          "primary_muscles": [
+            "front_delts",
+            "triceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [
+            "Tricep Pushdown",
+            "Skull crusher"
+          ],
+          "notes": "~1-2 min Do the second half of the ROM for pressdowns (\"the squeeze\") and the first half of the ROM for overhead extensions (\"the stretch\")",
+          "video": null
+        },
+        {
+          "id": "bar_tricep_pushdown",
+          "primary_exercise_id": "bar_tricep_pushdown",
+          "name": "Bar Tricep Pushdown",
+          "sets": 2,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "triceps_extension",
+          "primary_muscles": [
+            "triceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [
+            "Single-Arm Tricep Pressdown",
+            "Single-Arm Cable Tricep Kickback"
+          ],
+          "notes": "~1-2 min",
+          "video": null
+        },
+        {
+          "id": "exercise",
+          "primary_exercise_id": "exercise",
+          "name": "Exercise",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [
+            "Substitution Option 1",
+            "Substitution Option 2"
+          ],
+          "notes": "Warm-up Sets Load RPE Rest Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Pull #1",
+      "exercises": [
+        {
+          "id": "wide_grip_chin_up",
+          "primary_exercise_id": "wide_grip_chin_up",
+          "name": "Wide Grip Chin Up",
+          "sets": 4,
+          "rep_range": [
+            10,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [
+            "Machine Pulldown",
+            "Pull-Up"
+          ],
+          "notes": "See Notes ~2-3 min",
+          "video": null
+        },
+        {
+          "id": "low_row",
+          "primary_exercise_id": "low_row",
+          "name": "Low Row",
+          "sets": 3,
+          "rep_range": [
+            6,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_pull",
+          "primary_muscles": [
+            "lats",
+            "mid_back",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [
+            "Seated Row",
+            "Pull-Up"
+          ],
+          "notes": "~2-3 min",
+          "video": null
+        },
+        {
+          "id": "lat_pulldown_drop_set_last",
+          "primary_exercise_id": "lat_pulldown_drop_set_last",
+          "name": "Lat Pulldown (drop set last)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "vertical_pull",
+          "primary_muscles": [
+            "lats",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "~2-3 min After hitting failure at ~8-10 reps, do a dropset. Strip the weight back ~30-50% and do another 5 reps with nice and controlled technique",
+          "video": null
+        },
+        {
+          "id": "bent_over_row",
+          "primary_exercise_id": "bent_over_row",
+          "name": "Bent Over Row",
+          "sets": 3,
+          "rep_range": [
+            6,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_pull",
+          "primary_muscles": [
+            "lats",
+            "mid_back",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "0 min",
+          "video": null
+        },
+        {
+          "id": "lat_pullover",
+          "primary_exercise_id": "lat_pullover",
+          "name": "Lat Pullover",
+          "sets": 2,
+          "rep_range": [
+            12,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 0 min",
+          "video": null
+        },
+        {
+          "id": "face_pull",
+          "primary_exercise_id": "face_pull",
+          "name": "Face Pull",
+          "sets": 3,
+          "rep_range": [
+            10,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [
+            "Reverse Cable Flye",
+            "Bent-Over Reverse DB Flye"
+          ],
+          "notes": "~1-2 min",
+          "video": null
+        },
+        {
+          "id": "ez_bar_curls_last_set_to_failure",
+          "primary_exercise_id": "ez_bar_curls_last_set_to_failure",
+          "name": "EZ Bar Curls (last set to failure)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [
+            "DB Curl",
+            "Cable Curl"
+          ],
+          "notes": "~1-2 min Focus on contracting your biceps, minimize torso momentum",
+          "video": null
+        },
+        {
+          "id": "hammer_curls",
+          "primary_exercise_id": "hammer_curls",
+          "name": "Hammer Curls",
+          "sets": 3,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [
+            "Spider Curl",
+            "Bayesian Curl"
+          ],
+          "notes": "~1-2 min",
+          "video": null
+        },
+        {
+          "id": "exercise",
+          "primary_exercise_id": "exercise",
+          "name": "Exercise",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [
+            "Substitution Option 1",
+            "Substitution Option 2"
+          ],
+          "notes": "Warm-up Sets Load RPE Rest Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Legs #1",
+      "exercises": [
+        {
+          "id": "squat_top_set",
+          "primary_exercise_id": "squat_top_set",
+          "name": "Squat (top set)",
+          "sets": 1,
+          "rep_range": [
+            3,
+            5
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [
+            "Hack Squat",
+            "DB Bulgarian Split Squat"
+          ],
+          "notes": "~3-4 min Sit back and down, keep your upper back tight to the bar",
+          "video": null
+        },
+        {
+          "id": "pause_squat_lower_weight",
+          "primary_exercise_id": "pause_squat_lower_weight",
+          "name": "Pause Squat (Lower Weight)",
+          "sets": 2,
+          "rep_range": [
+            5,
+            5
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [
+            "Pause Hack Squat",
+            "Pause DB Bulgarian Split Squat"
+          ],
+          "notes": "~3-4 min Drop the weight by ~25% from your top set. 2 second pause. Sit back and down, keep your upper back tight to the bar",
+          "video": null
+        },
+        {
+          "id": "barbell_rdl",
+          "primary_exercise_id": "barbell_rdl",
+          "name": "Barbell RDL",
+          "sets": 3,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "hinge",
+          "primary_muscles": [
+            "hamstrings",
+            "glutes",
+            "erectors"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [
+            "DB RDL",
+            "45\u00b0 Hyperextension"
+          ],
+          "notes": "~2-3 min Maintain a neutral lower back, set your hips back, don't allow your spine to round",
+          "video": null
+        },
+        {
+          "id": "seated_leg_curl",
+          "primary_exercise_id": "seated_leg_curl",
+          "name": "Seated Leg Curl",
+          "sets": 3,
+          "rep_range": [
+            10,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [
+            "Lying Leg Curl",
+            "Nordic Ham Curl"
+          ],
+          "notes": "~1-2 min Focus on squeezing your hamstrings to move the weight",
+          "video": null
+        },
+        {
+          "id": "leg_press",
+          "primary_exercise_id": "leg_press",
+          "name": "Leg Press",
+          "sets": 3,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "~1-2 min",
+          "video": null
+        },
+        {
+          "id": "calf_raises",
+          "primary_exercise_id": "calf_raises",
+          "name": "Calf Raises",
+          "sets": 3,
+          "rep_range": [
+            10,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "calf_raise",
+          "primary_muscles": [
+            "calves"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [
+            "Standing Calf Raises"
+          ],
+          "notes": "~1-2 min Press all the way up to your toes, stretch your calves at the bottom, don't bounce",
+          "video": null
+        },
+        {
+          "id": "exercise",
+          "primary_exercise_id": "exercise",
+          "name": "Exercise",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [
+            "Substitution Option 1",
+            "Substitution Option 2"
+          ],
+          "notes": "Warm-up Sets Load RPE Rest Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Upper #1",
+      "exercises": [
+        {
+          "id": "wide_grip_lat_pulldown",
+          "primary_exercise_id": "wide_grip_lat_pulldown",
+          "name": "Wide Grip Lat Pulldown",
+          "sets": 3,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "vertical_pull",
+          "primary_muscles": [
+            "lats",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [
+            "Lat Pulldown",
+            "Machine Pulldown"
+          ],
+          "notes": "~2-3 min 1.5x shoulder width grip, pull your chest to the bar",
+          "video": null
+        },
+        {
+          "id": "smith_machine_military_press",
+          "primary_exercise_id": "smith_machine_military_press",
+          "name": "Smith Machine Military Press",
+          "sets": 3,
+          "rep_range": [
+            10,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "machine"
+          ],
+          "substitution_candidates": [
+            "Seated Shoulder DB Press",
+            "Machine Shoulder Press"
+          ],
+          "notes": "~3-4 min",
+          "video": null
+        },
+        {
+          "id": "machine_chest_press",
+          "primary_exercise_id": "machine_chest_press",
+          "name": "Machine Chest Press",
+          "sets": 3,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "machine"
+          ],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        },
+        {
+          "id": "wide_grip_seated_row",
+          "primary_exercise_id": "wide_grip_seated_row",
+          "name": "Wide Grip Seated Row",
+          "sets": 3,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_pull",
+          "primary_muscles": [
+            "lats",
+            "mid_back",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [
+            "Single-Arm DB Row",
+            "Meadows Row"
+          ],
+          "notes": "~2-3 min",
+          "video": null
+        },
+        {
+          "id": "shrugs",
+          "primary_exercise_id": "shrugs",
+          "name": "Shrugs",
+          "sets": 3,
+          "rep_range": [
+            10,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [
+            "DB Lateral Raise",
+            "Machine Lateral Raise"
+          ],
+          "notes": "~1-2 min",
+          "video": null
+        },
+        {
+          "id": "cable_flys",
+          "primary_exercise_id": "cable_flys",
+          "name": "Cable Flys",
+          "sets": 3,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [
+            "cable"
+          ],
+          "substitution_candidates": [
+            "DB Fly"
+          ],
+          "notes": "~1-2 min",
+          "video": null
+        },
+        {
+          "id": "tricep_pushdown_bicep_curl",
+          "primary_exercise_id": "tricep_pushdown_bicep_curl",
+          "name": "Tricep Pushdown + Bicep Curl",
+          "sets": 3,
+          "rep_range": [
+            6,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "0 min Superset",
+          "video": null
+        },
+        {
+          "id": "exercise",
+          "primary_exercise_id": "exercise",
+          "name": "Exercise",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [
+            "Substitution Option 1",
+            "Substitution Option 2"
+          ],
+          "notes": "Warm-up Sets Load RPE Rest Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Lower #1",
+      "exercises": [
+        {
+          "id": "deadlift",
+          "primary_exercise_id": "deadlift",
+          "name": "Deadlift",
+          "sets": 1,
+          "rep_range": [
+            5,
+            5
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "hinge",
+          "primary_muscles": [
+            "hamstrings",
+            "glutes",
+            "erectors"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [
+            "Trap Bar Deadlift",
+            "Barbell Hip Thrust"
+          ],
+          "notes": "~3-5 min Brace your lats, chest tall, pull the slack out of the bar before lifting",
+          "video": null
+        },
+        {
+          "id": "romanian_deadlift",
+          "primary_exercise_id": "romanian_deadlift",
+          "name": "Romanian Deadlift",
+          "sets": 2,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "hinge",
+          "primary_muscles": [
+            "hamstrings",
+            "glutes",
+            "erectors"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [
+            "Barbell RDL",
+            "DB RDL"
+          ],
+          "notes": "~3-4 min",
+          "video": null
+        },
+        {
+          "id": "leg_press",
+          "primary_exercise_id": "leg_press",
+          "name": "Leg Press",
+          "sets": 4,
+          "rep_range": [
+            10,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [
+            "Goblet Squat",
+            "Walking Lunge"
+          ],
+          "notes": "~2-3 min Medium width feet placement on the platform, don't allow your lower back to round",
+          "video": null
+        },
+        {
+          "id": "standing_leg_curl",
+          "primary_exercise_id": "standing_leg_curl",
+          "name": "Standing Leg Curl",
+          "sets": 3,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [
+            "Nordic Ham Curl",
+            "Lying Leg Curl"
+          ],
+          "notes": "~1-2 min Keep your hips straight, do Nordic ham curls if no GHR machine",
+          "video": null
+        },
+        {
+          "id": "single_leg_leg_extension",
+          "primary_exercise_id": "single_leg_leg_extension",
+          "name": "Single Leg...Leg Extension",
+          "sets": 3,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "triceps_extension",
+          "primary_muscles": [
+            "triceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [
+            "DB Step-Up",
+            "Goblet Squat"
+          ],
+          "notes": "~1-2 min Control the weight with a 3-4 second negative",
+          "video": null
+        },
+        {
+          "id": "seated_calf_raise",
+          "primary_exercise_id": "seated_calf_raise",
+          "name": "Seated Calf Raise",
+          "sets": 4,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "calf_raise",
+          "primary_muscles": [
+            "calves"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [
+            "Standing Calf Raise",
+            "Leg Press Toe Press"
+          ],
+          "notes": "~1-2 min Press all the way up to your toes, stretch your calves at the bottom, don't bounce",
+          "video": null
+        },
+        {
+          "id": "leg_raise",
+          "primary_exercise_id": "leg_raise",
+          "name": "Leg Raise",
+          "sets": 3,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [
+            "Hanging Leg Raise",
+            "Reverse Crunch"
+          ],
+          "notes": "~1-2 min Don't swing your legs at the bottom, minimize momentum, tuck your knees towards your chest if lifting your legs straight out is too challenging",
+          "video": null
+        }
+      ]
+    }
+  ]
+}

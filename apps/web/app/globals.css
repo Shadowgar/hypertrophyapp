@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-background text-foreground;
+}
+
+.main-card {
+  @apply rounded-xl border border-zinc-800 bg-card p-4;
+}

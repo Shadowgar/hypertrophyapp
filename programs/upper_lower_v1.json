@@ -1,0 +1,87 @@
+{
+  "id": "upper_lower_v1",
+  "version": "1.0.0",
+  "split": "upper_lower",
+  "days_supported": [2, 4],
+  "deload": { "trigger_weeks": 6, "set_reduction_pct": 35, "load_reduction_pct": 10 },
+  "progression": { "mode": "double_progression", "increment_kg": 2.5 },
+  "sessions": [
+    {
+      "name": "Upper A",
+      "exercises": [
+        {
+          "id": "bench",
+          "primary_exercise_id": "bench",
+          "name": "Bench Press",
+          "sets": 3,
+          "rep_range": [6, 10],
+          "start_weight": 50,
+          "priority": "high",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": ["chest", "triceps", "front_delts"],
+          "equipment_tags": ["barbell", "bench"],
+          "substitution_candidates": ["db_bench", "machine_chest_press"],
+          "notes": "Pause lightly on chest and maintain scapular retraction.",
+          "video": { "youtube_url": "https://www.youtube.com/watch?v=rT7DgCr-3pg" }
+        }
+      ]
+    },
+    {
+      "name": "Lower A",
+      "exercises": [
+        {
+          "id": "squat",
+          "primary_exercise_id": "squat",
+          "name": "Back Squat",
+          "sets": 3,
+          "rep_range": [6, 10],
+          "start_weight": 60,
+          "priority": "high",
+          "movement_pattern": "squat",
+          "primary_muscles": ["quads", "glutes", "adductors"],
+          "equipment_tags": ["barbell", "rack"],
+          "substitution_candidates": ["hack_squat", "leg_press"],
+          "notes": "Keep torso stacked over midfoot and drive up explosively."
+        }
+      ]
+    },
+    {
+      "name": "Upper B",
+      "exercises": [
+        {
+          "id": "ohp",
+          "primary_exercise_id": "ohp",
+          "name": "Overhead Press",
+          "sets": 3,
+          "rep_range": [6, 10],
+          "start_weight": 30,
+          "priority": "high",
+          "movement_pattern": "vertical_press",
+          "primary_muscles": ["front_delts", "triceps"],
+          "equipment_tags": ["barbell"],
+          "substitution_candidates": ["db_shoulder_press", "machine_shoulder_press"],
+          "notes": "Brace glutes and abs; press in a straight line overhead."
+        }
+      ]
+    },
+    {
+      "name": "Lower B",
+      "exercises": [
+        {
+          "id": "rdl",
+          "primary_exercise_id": "rdl",
+          "name": "Romanian Deadlift",
+          "sets": 3,
+          "rep_range": [6, 10],
+          "start_weight": 70,
+          "priority": "high",
+          "movement_pattern": "hinge",
+          "primary_muscles": ["hamstrings", "glutes", "erectors"],
+          "equipment_tags": ["barbell"],
+          "substitution_candidates": ["db_rdl", "hyperextension"],
+          "notes": "Push hips back and keep a neutral spine through full ROM."
+        }
+      ]
+    }
+  ]
+}

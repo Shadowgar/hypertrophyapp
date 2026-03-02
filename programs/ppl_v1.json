@@ -1,0 +1,70 @@
+{
+  "id": "ppl_v1",
+  "version": "1.0.0",
+  "split": "ppl",
+  "days_supported": [3, 4],
+  "deload": { "trigger_weeks": 6, "set_reduction_pct": 35, "load_reduction_pct": 10 },
+  "progression": { "mode": "double_progression", "increment_kg": 2.5 },
+  "sessions": [
+    {
+      "name": "Push",
+      "exercises": [
+        {
+          "id": "bench",
+          "primary_exercise_id": "bench",
+          "name": "Bench Press",
+          "sets": 3,
+          "rep_range": [6, 10],
+          "start_weight": 50,
+          "priority": "high",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": ["chest", "triceps", "front_delts"],
+          "equipment_tags": ["barbell", "bench"],
+          "substitution_candidates": ["db_bench", "machine_chest_press"],
+          "notes": "Set upper back, controlled touch on chest, then drive up.",
+          "video": { "youtube_url": "https://www.youtube.com/watch?v=rT7DgCr-3pg" }
+        }
+      ]
+    },
+    {
+      "name": "Pull",
+      "exercises": [
+        {
+          "id": "row",
+          "primary_exercise_id": "row",
+          "name": "Barbell Row",
+          "sets": 3,
+          "rep_range": [6, 10],
+          "start_weight": 55,
+          "priority": "high",
+          "movement_pattern": "horizontal_pull",
+          "primary_muscles": ["lats", "mid_back", "biceps"],
+          "equipment_tags": ["barbell"],
+          "substitution_candidates": ["chest_supported_row", "cable_row"],
+          "notes": "Pull toward lower chest, minimize torso swing.",
+          "video": { "youtube_url": "https://www.youtube.com/watch?v=vT2GjY_Umpw" }
+        }
+      ]
+    },
+    {
+      "name": "Legs",
+      "exercises": [
+        {
+          "id": "squat",
+          "primary_exercise_id": "squat",
+          "name": "Back Squat",
+          "sets": 3,
+          "rep_range": [6, 10],
+          "start_weight": 60,
+          "priority": "high",
+          "movement_pattern": "squat",
+          "primary_muscles": ["quads", "glutes", "adductors"],
+          "equipment_tags": ["barbell", "rack"],
+          "substitution_candidates": ["hack_squat", "db_bulgarian_split_squat"],
+          "notes": "Brace hard and keep full foot pressure through the floor.",
+          "video": { "youtube_url": "https://www.youtube.com/watch?v=ultWZbUMPL8" }
+        }
+      ]
+    }
+  ]
+}
