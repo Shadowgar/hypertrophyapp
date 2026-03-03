@@ -26,6 +26,8 @@ _NS = {
     "r": "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
 }
 
+_YOUTUBE_URL_RE = re.compile(r"https?://[^\s\"]*(?:youtube\.com|youtu\.be)[^\s\"]*", re.IGNORECASE)
+
 
 @dataclass(slots=True)
 class ParsedSheet:
@@ -122,6 +124,12 @@ def as_column_map(header: list[str]) -> dict[str, int]:
                 return idx
         return -1
 
+    def find_any_index(*keywords: str) -> int:
+        for idx, label in enumerate(normalized):
+            if any(keyword in label for keyword in keywords):
+                return idx
+        return -1
+
     return {
         "session": 0,
         "exercise": find_index("exercise"),
@@ -129,6 +137,7 @@ def as_column_map(header: list[str]) -> dict[str, int]:
         "reps": find_index("reps"),
         "sub1": find_index("substitution", "option", "1"),
         "sub2": find_index("substitution", "option", "2"),
+        "video": find_any_index("youtube", "video", "url", "link"),
     }
 
 
@@ -260,6 +269,21 @@ def _extract_substitution_candidates(row: list[str], mapped: dict[str, int]) -> 
     ]
 
 
+def _extract_youtube_url(row: list[str], mapped: dict[str, int]) -> dict[str, str] | None:
+    candidates: list[str] = []
+
+    video_idx = mapped.get("video", -1)
+    if video_idx >= 0:
+        candidates.append(column_value(row, video_idx))
+
+    candidates.extend(cell for cell in row if cell)
+    for raw in candidates:
+        match = _YOUTUBE_URL_RE.search(raw)
+        if match:
+            return {"youtube_url": match.group(0).strip()}
+    return None
+
+
 def _parse_exercise_row(row: list[str], mapped: dict[str, int], exercise_idx: int) -> dict | None:
     exercise_name = column_value(row, exercise_idx)
     if not exercise_name:
@@ -277,6 +301,7 @@ def _parse_exercise_row(row: list[str], mapped: dict[str, int], exercise_idx: in
             "primary_muscles": infer_primary_muscles(movement_pattern),
             "substitution_candidates": _extract_substitution_candidates(row, mapped),
             "notes": pick_notes(row, mapped),
+            "video": _extract_youtube_url(row, mapped),
         }
     )
 

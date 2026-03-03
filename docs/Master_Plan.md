@@ -682,7 +682,7 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 - [x] Settings program switcher (required)
 - [x] Program catalog API + UI cards
 - [x] Program explanation summaries per catalog item
-- [ ] Ensure importers map spreadsheet YouTube links into canonical templates for all supported programs
+- [x] Ensure importers map spreadsheet YouTube links into canonical templates for all supported programs
 
 ---
 
