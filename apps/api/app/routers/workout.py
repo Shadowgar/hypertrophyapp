@@ -99,6 +99,26 @@ def workout_today(
     for ex in selected.get("exercises", []):
         ex["warmups"] = compute_warmups(ex.get("recommended_working_weight", 20), 3)
 
+    # Attach completed set counts per exercise for resume UI
+    logs = (
+        db.query(WorkoutSetLog)
+        .filter(
+            WorkoutSetLog.user_id == current_user.id,
+            WorkoutSetLog.workout_id == selected.get("session_id"),
+        )
+        .all()
+    )
+    completed_by_ex: dict[str, int] = {}
+    for l in logs:
+        # use highest set_index seen for the exercise
+        prev = completed_by_ex.get(l.exercise_id, 0)
+        if l.set_index > prev:
+            completed_by_ex[l.exercise_id] = l.set_index
+
+    for ex in selected.get("exercises", []):
+        ex_id = ex.get("id")
+        ex["completed_sets"] = completed_by_ex.get(ex_id, 0)
+
     selected["resume"] = resume_selected
 
     return selected
