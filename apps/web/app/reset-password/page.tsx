@@ -14,6 +14,7 @@ export default function ResetPasswordPage() {
   const [email, setEmail] = useState("athlete@example.com");
   const [token, setToken] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [requestStatus, setRequestStatus] = useState("Idle");
   const [confirmStatus, setConfirmStatus] = useState("Idle");
 
@@ -93,8 +94,16 @@ export default function ResetPasswordPage() {
           value={newPassword}
           onChange={(event) => setNewPassword(event.target.value)}
           placeholder="New password"
-          type="password"
+          type={showNewPassword ? "text" : "password"}
         />
+        <Button
+          className="h-8 w-full text-xs"
+          onClick={() => setShowNewPassword((prev) => !prev)}
+          type="button"
+          variant="secondary"
+        >
+          {showNewPassword ? "Hide Password" : "Show Password"}
+        </Button>
         <Button className="w-full" type="submit">
           Confirm Reset
         </Button>

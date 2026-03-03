@@ -20,6 +20,7 @@ class User(Base):
     weight: Mapped[float | None] = mapped_column(Float, nullable=True)
     gender: Mapped[str | None] = mapped_column(String, nullable=True)
     split_preference: Mapped[str | None] = mapped_column(String, nullable=True)
+    selected_program_id: Mapped[str | None] = mapped_column(String, nullable=True)
     training_location: Mapped[str | None] = mapped_column(String, nullable=True)
     equipment_profile: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     days_available: Mapped[int | None] = mapped_column(Integer, nullable=True)

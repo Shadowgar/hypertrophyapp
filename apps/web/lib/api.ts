@@ -37,12 +37,29 @@ export type Profile = {
   protein: number;
   fat: number;
   carbs: number;
+  selected_program_id?: string | null;
 };
 
 export type WeeklyCheckinPayload = {
   week_start: string;
   body_weight: number;
   adherence_score: number;
+  notes?: string;
+};
+
+export type SorenessSeverity = "none" | "mild" | "moderate" | "severe";
+
+export type SorenessEntry = {
+  id: string;
+  entry_date: string;
+  severity_by_muscle: Record<string, SorenessSeverity>;
+  notes?: string | null;
+  created_at: string;
+};
+
+export type SorenessCreatePayload = {
+  entry_date: string;
+  severity_by_muscle: Record<string, SorenessSeverity>;
   notes?: string;
 };
 
@@ -78,10 +95,19 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export const api = {
   health: () => request<{ status: string; date: string }>("/health"),
   getTodayWorkout: () => request<WorkoutSession>("/workout/today"),
-  generateWeek: () => request<Record<string, unknown>>("/plan/generate-week", { method: "POST", body: JSON.stringify({}) }),
+  generateWeek: (templateId?: string | null) => request<Record<string, unknown>>("/plan/generate-week", { method: "POST", body: JSON.stringify(templateId ? { template_id: templateId } : {}) }),
   getProfile: () => request<Profile>("/profile"),
+  listPrograms: () => request<Array<{id: string; slug?: string; name: string; description?: string}>>("/plan/programs"),
+  updateProfile: (payload: Partial<Profile>) => request<Profile>("/profile", { method: "POST", body: JSON.stringify(payload) }),
   weeklyCheckin: (payload: WeeklyCheckinPayload) =>
     request<{ status: string; phase: string }>("/weekly-checkin", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  listSoreness: (startDate: string, endDate: string) =>
+    request<SorenessEntry[]>(`/soreness?start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`),
+  createSoreness: (payload: SorenessCreatePayload) =>
+    request<SorenessEntry>("/soreness", {
       method: "POST",
       body: JSON.stringify(payload),
     }),

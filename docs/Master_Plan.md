@@ -134,6 +134,77 @@ Platform:
 
 ---
 
+## Reference Intelligence System (Next-Gen)
+
+### Corpus Coverage (Current Repository)
+
+- Reference corpus currently includes approximately:
+  - 43 PDF files
+  - 13 XLSX files
+  - 1 EPUB file
+- Program families present in corpus names include:
+  - Pure Bodybuilding (Full Body + Phase 2 variants)
+  - PowerBuilding 3.0
+  - PPL systems
+  - Upper/Lower systems
+  - Essentials (3x/4x/5x)
+  - Fundamentals, Muscle Ladder, Nutrition, Technique, Guidebooks
+
+### Product Requirement
+
+- Every reference file in `/reference/` must be represented in-app through deterministic derived artifacts.
+- Representation may be via structured metadata, canonical program objects, normalized guide text, summaries, and provenance references.
+- Runtime determinism remains mandatory: no live PDF/XLSX parsing at request time.
+
+### Build-Time Ingestion Architecture
+
+Create deterministic ingestion pipeline modules in `/importers/` that:
+
+1. Scan all assets in `/reference/` and register each file in an asset catalog.
+2. Extract spreadsheet structure into canonical program/session/exercise schema.
+3. Extract PDF/EPUB instructional text into normalized section documents.
+4. Emit deterministic outputs:
+   - `/programs/*.json` for runtime planning
+   - `/docs/guides/*.md` for plan/exercise guides
+   - `/docs/reference/index.json` for provenance index
+5. Validate output checksums and schema correctness in CI.
+
+### Program Catalog + Selection UX
+
+- Add Program Catalog pages with cards for all imported programs (Pure Bodybuilding variants, PowerBuilding, PPL, etc.).
+- Each program card must include:
+  - intended level
+  - frequency options
+  - progression style
+  - equipment assumptions
+  - mesocycle length
+- User selects start program during onboarding.
+- User can switch program later in settings with deterministic migration rules.
+
+### Plan Guide Pages (Text-First)
+
+For each program, phase, session, and exercise slot, generate in-app text guide pages:
+
+- Program overview guide
+- Phase/mesocycle guide
+- Day/session execution guide
+- Exercise execution guide (warmups, working sets/reps, intensity techniques, rest rules, cues, substitutions)
+
+Guides must render deterministic text artifacts; no embedded PDF rendering is required.
+
+### Deterministic Progression to Next Program
+
+- Engine may suggest program/phase advancement using explicit thresholds (adherence, progression stalls, mesocycle completion, recovery markers).
+- Engine must not auto-switch programs without explicit user confirmation.
+
+### Content Rights / Safety Handling
+
+- Keep raw source files local in `/reference/`.
+- API/UI should serve normalized instructional artifacts and provenance references, not bulk raw source document dumps.
+- Prefer structured data + concise summaries over long verbatim copyrighted excerpts.
+
+---
+
 ## Repository Structure
 
 /apps/web  
@@ -158,7 +229,7 @@ Platform:
   - units
   - experience level
   - split preference
-  - days/week (2/3/4)
+  - days/week (2/3/4/5)
   - nutrition phase
   - calories/macros
   - training location (Gym/Home)
@@ -176,6 +247,17 @@ Platform:
 - Mobile-first screens
 - Docker Compose deployment
 - Core-engine unit tests for progression, warmups, substitution logic, week generation
+- Program catalog selection + plan guide pages (text-first, deterministic)
+
+## Authentication Methods
+
+- Current (implemented): Email + Password (JWT)
+- Planned (non-MVP):
+  - Google OAuth login
+  - Apple Sign In
+  - Passkey login (WebAuthn)
+
+Authentication expansion must preserve deterministic runtime behavior and local-first operation for core training features.
 
 ## Physique & Recovery Tracking (MVP-Level)
 
@@ -361,6 +443,7 @@ If missing, UI should not render a video action.
 - Deload recommendation wizard
 - Program version migration tooling
 - Admin UI
+- Full reference vault explorer (all source assets + provenance graph)
 
 ---
 
@@ -457,12 +540,12 @@ If missing, UI should not render a video action.
 - [x] Workout instance generation
 - [x] Reps logging
 - [x] Resume logic
-- [ ] Add soreness modal before workout start
-- [ ] Add notes display per exercise
-- [ ] Add Video button per exercise
-- [ ] Implement Exercise Control Module UI
-- [ ] Implement rest timer auto-start + subtle pulse animation
-- [ ] Implement Video | Swap | Notes action row styling
+- [x] Add soreness modal before workout start
+- [x] Add notes display per exercise
+- [x] Add Video button per exercise
+- [x] Implement Exercise Control Module UI
+- [x] Implement rest timer auto-start + subtle pulse animation
+- [x] Implement Video | Swap | Notes action row styling
 - [x] Add “I don’t have this equipment” button
 - [x] Add Video action per exercise card that opens video.youtube_url in a new tab
 - [x] Display slot `notes` in the exercise card (collapsible)
@@ -500,8 +583,28 @@ If missing, UI should not render a video action.
 - [x] PPL templates
 - [x] Upper/Lower templates
 - [ ] Equipment-safe variants
-- [ ] Template selection logic
+- [ ] Template/program selection logic
+- [ ] Onboarding program picker (required)
+- [ ] Settings program switcher (required)
+- [ ] Program catalog API + UI cards
+- [ ] Program explanation summaries per catalog item
 - [ ] Ensure importers map spreadsheet YouTube links into canonical templates for all supported programs
+
+---
+
+## Phase 13 — Reference Corpus Intelligence + Plan Guides
+- [ ] Build asset catalog covering every file in `/reference/`
+- [ ] Add deterministic PDF/EPUB extraction pipeline (build-time)
+- [ ] Add deterministic XLSX extraction pipeline (build-time)
+- [ ] Emit normalized guide docs into `/docs/guides/`
+- [ ] Emit provenance index (`asset -> section -> derived entity`)
+- [ ] Add API endpoints for program/day/exercise guides
+- [ ] Add web Plan Guide pages (Program → Phase → Day → Exercise)
+- [ ] Add workout runner drill-down to exercise guide text
+- [ ] Add deterministic “next recommended program” suggestion logic
+- [ ] Add explicit confirmation flow before program/phase switch
+- [ ] Add ingestion determinism tests (checksum + schema stability)
+- [ ] Add guide coverage tests (no orphan assets)
 
 ---
 
@@ -540,6 +643,56 @@ If missing, UI should not render a video action.
 - [ ] MEV/MAV/MRV tracking
 - [ ] Deload wizard
 - [ ] OpenClaw advisory layer
+- [ ] Google OAuth login
+- [ ] Apple Sign In login
+- [ ] Passkey login (WebAuthn)
+
+---
+
+# Model Ownership & Quality Routing
+
+Use model routing to maximize quality while keeping throughput high.
+
+## GPT-5.3-Codex (Primary for Critical Engineering)
+
+GPT-5.3-Codex owns implementation and review for high-risk and architecture-sensitive work:
+
+- Core engine logic (`packages/core-engine`) and deterministic planning rules
+- API contract changes, migrations, auth, security-sensitive flows
+- Program ingestion architecture, canonical schema evolution, import validation
+- Workout runner state logic, substitution correctness, progression behavior
+- Refactors affecting multiple services or cross-layer coupling
+- Final code review/acceptance for any production-facing feature
+
+## GPT-5-mini (Support for Low-Risk Throughput Work)
+
+GPT-5-mini may handle bounded, low-risk tasks with strict guardrails:
+
+- Drafting documentation sections and checklist updates
+- UI copy improvements and non-critical content edits
+- Boilerplate page scaffolds that do not change core business logic
+- Test skeletons and fixture setup (must be reviewed before merge)
+- Data normalization scripts where output is validated by schema tests
+
+## Mandatory Quality Gates
+
+- Any change touching planner determinism, auth, data models, or migrations requires GPT-5.3-Codex implementation or final review.
+- Any GPT-5-mini code contribution must pass automated tests and then receive GPT-5.3-Codex review before acceptance.
+- Runtime behavior changes require updated tests in API/core-engine/web as applicable.
+- No merge if model ownership is unclear for a changed area.
+
+## Default Assignment Rule
+
+- If uncertain, route the task to GPT-5.3-Codex.
+- GPT-5-mini is opt-in for scoped support tasks only.
+
+## Operational Handoff Docs
+
+- `docs/GPT5_MINI_HANDOFF.md` (locked contracts + allowed scope)
+- `docs/GPT5_MINI_EXECUTION_BACKLOG.md` (ordered mini task plan)
+- `docs/GPT5_MINI_RUNBOOK.md` (execution + validation + failure handling)
+- `docs/GPT5_MINI_BOOTSTRAP_PROMPT.md` (session-start prompt for mini)
+- `scripts/mini_preflight.sh` + `scripts/mini_validate.sh` (automation guardrails)
 
 ---
 

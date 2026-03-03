@@ -6,10 +6,10 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "#09090b",
-        foreground: "#fafafa",
-        accent: "#dc2626",
-        card: "#111111",
+        background: "var(--ui-bg-matte)",
+        foreground: "var(--ui-foreground)",
+        accent: "var(--ui-accent-red)",
+        card: "var(--ui-surface-1)",
       },
     },
   },

@@ -1,3 +1,5 @@
+from datetime import date, timedelta
+
 from core_engine import generate_week_plan
 
 
@@ -131,3 +133,41 @@ def test_generate_week_plan_compresses_sessions_evenly_for_three_days() -> None:
     )
 
     assert [session["title"] for session in plan["sessions"]] == ["Day A", "Day C", "Day E"]
+
+
+def test_generate_week_plan_honors_template_day_offsets() -> None:
+    template = {
+        "id": "offset_schedule",
+        "sessions": [
+            {"name": "Full Body #1", "day_offset": 0, "exercises": [{"id": "a", "name": "A"}]},
+            {"name": "Full Body #2", "day_offset": 1, "exercises": [{"id": "b", "name": "B"}]},
+            {"name": "Full Body #3", "day_offset": 3, "exercises": [{"id": "c", "name": "C"}]},
+            {"name": "Full Body #4", "day_offset": 4, "exercises": [{"id": "d", "name": "D"}]},
+            {"name": "Arms + Weak Points", "day_offset": 5, "exercises": [{"id": "e", "name": "E"}]},
+        ],
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=5,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+    )
+
+    week_start = date.fromisoformat(plan["week_start"])
+    assert [session["title"] for session in plan["sessions"]] == [
+        "Full Body #1",
+        "Full Body #2",
+        "Full Body #3",
+        "Full Body #4",
+        "Arms + Weak Points",
+    ]
+    assert [session["date"] for session in plan["sessions"]] == [
+        week_start.isoformat(),
+        (week_start + timedelta(days=1)).isoformat(),
+        (week_start + timedelta(days=3)).isoformat(),
+        (week_start + timedelta(days=4)).isoformat(),
+        (week_start + timedelta(days=5)).isoformat(),
+    ]

@@ -44,3 +44,23 @@ def test_profile_upsert_rejects_invalid_days_available() -> None:
         raised = True
 
     assert raised is True
+
+
+def test_profile_upsert_accepts_five_days_available() -> None:
+    payload = ProfileUpsert(
+        name="Test",
+        age=30,
+        weight=80,
+        gender="male",
+        split_preference="full_body",
+        training_location="gym",
+        equipment_profile=["dumbbell", "machine"],
+        days_available=5,
+        nutrition_phase="maintenance",
+        calories=2500,
+        protein=180,
+        fat=70,
+        carbs=260,
+    )
+
+    assert payload.days_available == 5

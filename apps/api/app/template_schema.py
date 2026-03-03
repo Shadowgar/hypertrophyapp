@@ -32,6 +32,7 @@ class CanonicalExercise(BaseModel):
 
 class CanonicalSession(BaseModel):
     name: str
+    day_offset: int | None = Field(default=None, ge=0, le=6)
     exercises: list[CanonicalExercise]
 
 
