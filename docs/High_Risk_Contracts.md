@@ -80,6 +80,15 @@ Scope: deterministic offline queue/replay and sync status semantics.
 - Ordering and conflict resolution behavior must remain deterministic.
 - Sync status states/transitions must match the contract state machine.
 
+## 5) Security & Hardening Contract
+
+Scope: secrets handling, rate limiting, backup/restore, and failure drill requirements.
+
+- Canonical contract document: `docs/Security_Hardening_Architecture.md`
+- Secrets strategy must enforce runtime-only secret injection and rotation boundaries.
+- Rate limiting behavior must return deterministic `429` semantics.
+- Backup/restore and failure drills must follow scripted, verifiable procedures.
+
 ## Enforcement Checklist
 
 Before merging changes in these areas:

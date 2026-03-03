@@ -15,6 +15,7 @@ Related operating docs:
 - `docs/Master_Plan.md` (`Model Ownership & Quality Routing`)
 - `docs/High_Risk_Contracts.md`
 - `docs/Offline_Sync_Deterministic_Contract.md`
+- `docs/Security_Hardening_Architecture.md`
 
 Automation scripts:
 - `scripts/mini_preflight.sh`
@@ -104,6 +105,7 @@ Automation scripts:
 - Guide API route contracts and error semantics without coordinated caller/test updates.
 - Ingestion artifact contract files (`asset_catalog.json`, `provenance_index.json`) and aggregate signature semantics.
 - Offline replay semantics (`client_id` + `op_id` idempotency, deterministic queue ordering, `409/422` conflict behavior, sync state machine).
+- Security hardening semantics (runtime secret injection boundaries, deterministic `429` behavior, backup/restore and drill contracts).
 
 ### If a prohibited change is required
 1. Update `docs/High_Risk_Contracts.md` first.
