@@ -9,7 +9,7 @@ beforeEach(() => {
 
 test("Today page loads workout and shows exercises", async () => {
   const workout = {
-    session_id: "ppl_v1-1",
+    session_id: "ppl_v1-day1",
     title: "Push Day",
     date: new Date().toISOString().slice(0, 10),
     resume: false,
@@ -49,4 +49,7 @@ test("Today page loads workout and shows exercises", async () => {
   fireEvent.click(loadBtn);
 
   await waitFor(() => expect(screen.getByText(/Bench Press/i)).toBeInTheDocument());
+
+  const guideLink = screen.getByRole("link", { name: /Bench Press/i });
+  expect(guideLink).toHaveAttribute("href", "/guides/ppl_v1/exercise/ex-1");
 });

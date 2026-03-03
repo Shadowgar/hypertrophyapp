@@ -151,6 +151,50 @@ class ProgramTemplateSummary(BaseModel):
     description: str
 
 
+class GuideProgramSummary(BaseModel):
+    id: str
+    name: str
+    split: str
+    days_supported: list[int]
+    description: str
+
+
+class GuideDaySummary(BaseModel):
+    day_index: int
+    day_name: str
+    exercise_count: int
+    first_exercise_id: str | None = None
+
+
+class GuideExerciseSummary(BaseModel):
+    id: str
+    primary_exercise_id: str | None = None
+    name: str
+    notes: str | None = None
+    video_youtube_url: str | None = None
+
+
+class ProgramGuideResponse(BaseModel):
+    id: str
+    name: str
+    description: str
+    split: str
+    days_supported: list[int]
+    days: list[GuideDaySummary]
+
+
+class ProgramDayGuideResponse(BaseModel):
+    program_id: str
+    day_index: int
+    day_name: str
+    exercises: list[GuideExerciseSummary]
+
+
+class ProgramExerciseGuideResponse(BaseModel):
+    program_id: str
+    exercise: GuideExerciseSummary
+
+
 class WorkoutSetLogRequest(BaseModel):
     primary_exercise_id: str | None = None
     exercise_id: str

@@ -12,11 +12,24 @@ from ..deps import get_current_user
 from ..models import SorenessEntry, User, WeeklyCheckin, WorkoutPlan, WorkoutSetLog
 from ..program_loader import list_program_templates, load_program_template
 from ..schemas import GenerateWeekPlanRequest, ProgramTemplateSummary
+from ..schemas import (
+    GuideDaySummary,
+    GuideExerciseSummary,
+    GuideProgramSummary,
+    ProgramDayGuideResponse,
+    ProgramExerciseGuideResponse,
+    ProgramGuideResponse,
+)
 
 router = APIRouter()
 
 DbSession = Annotated[Session, Depends(get_db)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
+INVALID_TEMPLATE_DETAIL = "Invalid program template schema"
+GUIDE_RESPONSES = {
+    404: {"description": "Guide resource not found"},
+    422: {"description": INVALID_TEMPLATE_DETAIL},
+}
 
 
 def _collect_recovery_and_mesocycle_inputs(
@@ -166,9 +179,144 @@ def _resolve_template_for_generation(
     raise FileNotFoundError("No valid program templates available for generation")
 
 
+def _program_display_name(program_id: str) -> str:
+    normalized = program_id.replace("_v", " v").replace("_", " ").strip()
+    return " ".join(part.capitalize() for part in normalized.split())
+
+
+def _guide_program_summary(program_id: str) -> dict[str, Any]:
+    summaries = list_program_templates()
+    summary = next((item for item in summaries if item.get("id") == program_id), None)
+    if summary is None:
+        raise FileNotFoundError(f"Program template not found: {program_id}")
+    return summary
+
+
+def _guide_day_exercises(template: dict[str, Any], *, day_index: int) -> list[GuideExerciseSummary]:
+    sessions = template.get("sessions") or []
+    if day_index < 1 or day_index > len(sessions):
+        raise IndexError("day index out of range")
+
+    session = sessions[day_index - 1]
+    exercises = session.get("exercises") or []
+    result: list[GuideExerciseSummary] = []
+    for exercise in exercises:
+        video = exercise.get("video") if isinstance(exercise.get("video"), dict) else {}
+        result.append(
+            GuideExerciseSummary(
+                id=str(exercise.get("id", "")),
+                primary_exercise_id=exercise.get("primary_exercise_id"),
+                name=str(exercise.get("name", "")),
+                notes=exercise.get("notes"),
+                video_youtube_url=video.get("youtube_url"),
+            )
+        )
+    return result
+
+
+def _resolve_exercise_guide(template: dict[str, Any], *, exercise_id: str) -> GuideExerciseSummary | None:
+    sessions = template.get("sessions") or []
+    for session in sessions:
+        for exercise in session.get("exercises") or []:
+            if exercise.get("id") == exercise_id or exercise.get("primary_exercise_id") == exercise_id:
+                video = exercise.get("video") if isinstance(exercise.get("video"), dict) else {}
+                return GuideExerciseSummary(
+                    id=str(exercise.get("id", "")),
+                    primary_exercise_id=exercise.get("primary_exercise_id"),
+                    name=str(exercise.get("name", "")),
+                    notes=exercise.get("notes"),
+                    video_youtube_url=video.get("youtube_url"),
+                )
+    return None
+
+
 @router.get("/plan/programs", response_model=list[ProgramTemplateSummary])
 def plan_list_programs() -> list[dict]:
     return list_program_templates()
+
+
+@router.get("/plan/guides/programs")
+def list_guide_programs() -> list[GuideProgramSummary]:
+    summaries = list_program_templates()
+    return [
+        GuideProgramSummary(
+            id=str(item["id"]),
+            name=_program_display_name(str(item["id"])),
+            split=str(item["split"]),
+            days_supported=list(item.get("days_supported") or []),
+            description=str(item.get("description") or ""),
+        )
+        for item in summaries
+    ]
+
+
+@router.get("/plan/guides/programs/{program_id}", responses=GUIDE_RESPONSES)
+def get_program_guide(program_id: str) -> ProgramGuideResponse:
+    try:
+        summary = _guide_program_summary(program_id)
+        template = load_program_template(program_id)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValidationError as exc:
+        raise HTTPException(status_code=422, detail=INVALID_TEMPLATE_DETAIL) from exc
+
+    sessions = template.get("sessions") or []
+    days = [
+        GuideDaySummary(
+            day_index=index,
+            day_name=str(session.get("name") or f"Day {index}"),
+            exercise_count=len(session.get("exercises") or []),
+            first_exercise_id=(session.get("exercises") or [{}])[0].get("id") if (session.get("exercises") or []) else None,
+        )
+        for index, session in enumerate(sessions, start=1)
+    ]
+
+    return ProgramGuideResponse(
+        id=program_id,
+        name=_program_display_name(program_id),
+        description=str(summary.get("description") or ""),
+        split=str(summary.get("split") or ""),
+        days_supported=list(summary.get("days_supported") or []),
+        days=days,
+    )
+
+
+@router.get("/plan/guides/programs/{program_id}/days/{day_index}", responses=GUIDE_RESPONSES)
+def get_program_day_guide(program_id: str, day_index: int) -> ProgramDayGuideResponse:
+    try:
+        template = load_program_template(program_id)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValidationError as exc:
+        raise HTTPException(status_code=422, detail=INVALID_TEMPLATE_DETAIL) from exc
+
+    sessions = template.get("sessions") or []
+    if day_index < 1 or day_index > len(sessions):
+        raise HTTPException(status_code=404, detail="Guide day not found")
+
+    day_name = str((sessions[day_index - 1] or {}).get("name") or f"Day {day_index}")
+    exercises = _guide_day_exercises(template, day_index=day_index)
+    return ProgramDayGuideResponse(
+        program_id=program_id,
+        day_index=day_index,
+        day_name=day_name,
+        exercises=exercises,
+    )
+
+
+@router.get("/plan/guides/programs/{program_id}/exercise/{exercise_id}", responses=GUIDE_RESPONSES)
+def get_program_exercise_guide(program_id: str, exercise_id: str) -> ProgramExerciseGuideResponse:
+    try:
+        template = load_program_template(program_id)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValidationError as exc:
+        raise HTTPException(status_code=422, detail=INVALID_TEMPLATE_DETAIL) from exc
+
+    exercise = _resolve_exercise_guide(template, exercise_id=exercise_id)
+    if exercise is None:
+        raise HTTPException(status_code=404, detail="Guide exercise not found")
+    return ProgramExerciseGuideResponse(program_id=program_id, exercise=exercise)
 
 
 @router.post(

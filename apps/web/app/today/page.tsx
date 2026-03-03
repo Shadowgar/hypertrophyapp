@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,44 @@ const MUSCLE_GROUPS = [
 
 function createInitialSorenessState(): Record<string, SorenessSeverity> {
   return Object.fromEntries(MUSCLE_GROUPS.map((muscle) => [muscle, "none"])) as Record<string, SorenessSeverity>;
+}
+
+function extractProgramId(sessionId: string): string | null {
+  const match = /^(.*)-day\d+$/.exec(sessionId);
+  return match ? match[1] : null;
+}
+
+function ExerciseTitleLink({
+  selectedName,
+  guideHref,
+}: Readonly<{ selectedName: string; guideHref: string | null }>) {
+  if (!guideHref) {
+    return <>{selectedName}</>;
+  }
+  return (
+    <Link href={guideHref} className="underline decoration-zinc-600 underline-offset-2">
+      {selectedName}
+    </Link>
+  );
+}
+
+function resolveExerciseStatus(completed: number, totalSets: number, resumed: boolean): "green" | "yellow" | "red" {
+  if (completed >= totalSets) {
+    return "green";
+  }
+  if (resumed && completed === 0) {
+    return "red";
+  }
+  return "yellow";
+}
+
+function resolveExerciseName(exercise: WorkoutExercise, swapIndexByExercise: SwapState): string {
+  const substitutions = exercise.substitution_candidates ?? [];
+  const selectedIndex = swapIndexByExercise[exercise.id] ?? 0;
+  if (selectedIndex === 0) {
+    return exercise.name;
+  }
+  return substitutions[selectedIndex - 1] ?? exercise.name;
 }
 
 export default function TodayPage() {
@@ -215,17 +254,9 @@ export default function TodayPage() {
     }
   }
 
-  function resolveExerciseName(exercise: WorkoutExercise): string {
-    const substitutions = exercise.substitution_candidates ?? [];
-    const selectedIndex = swapIndexByExercise[exercise.id] ?? 0;
-    if (selectedIndex === 0) {
-      return exercise.name;
-    }
-    return substitutions[selectedIndex - 1] ?? exercise.name;
-  }
-
   const swapTarget = workout?.exercises.find((exercise) => exercise.id === swapTargetExerciseId) ?? null;
   const swapTargetCurrentIndex = swapTarget ? (swapIndexByExercise[swapTarget.id] ?? 0) : 0;
+  const activeProgramId = workout ? extractProgramId(workout.session_id) : null;
 
   return (
     <div className="space-y-4">
@@ -266,20 +297,20 @@ export default function TodayPage() {
             const notesOpen = notesOpenByExercise[exercise.id] ?? false;
             const hasVideo = Boolean(exercise.video?.youtube_url);
             const substitutions = exercise.substitution_candidates ?? [];
-            const selectedName = resolveExerciseName(exercise);
+            const selectedName = resolveExerciseName(exercise, swapIndexByExercise);
+            const guideHref = activeProgramId
+              ? `/guides/${activeProgramId}/exercise/${exercise.primary_exercise_id ?? exercise.id}`
+              : null;
             const completed = completedSetsByExercise[exercise.id] ?? 0;
-            let status: "green" | "yellow" | "red" = "yellow";
-            if (completed >= exercise.sets) {
-              status = "green";
-            } else if (workout.resume && completed === 0) {
-              status = "red";
-            }
+            const status = resolveExerciseStatus(completed, exercise.sets, Boolean(workout.resume));
 
             return (
               <div key={exercise.id} className="main-card space-y-3">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                  <p className="text-sm font-semibold text-zinc-100">{selectedName}</p>
+                  <p className="text-sm font-semibold text-zinc-100">
+                    <ExerciseTitleLink selectedName={selectedName} guideHref={guideHref} />
+                  </p>
                   <p className="text-xs text-zinc-400">
                     {exercise.sets} sets · {exercise.rep_range[0]}-{exercise.rep_range[1]} reps · {exercise.recommended_working_weight} kg
                   </p>

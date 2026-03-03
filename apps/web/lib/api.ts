@@ -83,6 +83,52 @@ export type ProgramSwitchResponse = {
   applied: boolean;
 };
 
+export type GuideProgram = {
+  id: string;
+  name: string;
+  split: string;
+  days_supported: number[];
+  description: string;
+};
+
+export type GuideProgramDetail = {
+  id: string;
+  name: string;
+  description: string;
+  split: string;
+  days_supported: number[];
+  days: Array<{
+    day_index: number;
+    day_name: string;
+    exercise_count: number;
+    first_exercise_id?: string | null;
+  }>;
+};
+
+export type GuideDayDetail = {
+  program_id: string;
+  day_index: number;
+  day_name: string;
+  exercises: Array<{
+    id: string;
+    primary_exercise_id?: string | null;
+    name: string;
+    notes?: string | null;
+    video_youtube_url?: string | null;
+  }>;
+};
+
+export type GuideExerciseDetail = {
+  program_id: string;
+  exercise: {
+    id: string;
+    primary_exercise_id?: string | null;
+    name: string;
+    notes?: string | null;
+    video_youtube_url?: string | null;
+  };
+};
+
 export type WeeklyCheckinPayload = {
   week_start: string;
   body_weight: number;
@@ -142,6 +188,15 @@ export const api = {
   generateWeek: (templateId?: string | null) => request<Record<string, unknown>>("/plan/generate-week", { method: "POST", body: JSON.stringify(templateId ? { template_id: templateId } : {}) }),
   getProfile: () => request<Profile>("/profile"),
   listPrograms: () => request<Array<{id: string; slug?: string; name: string; description?: string}>>("/plan/programs"),
+  listGuidePrograms: () => request<GuideProgram[]>("/plan/guides/programs"),
+  getProgramGuide: (programId: string) =>
+    request<GuideProgramDetail>(`/plan/guides/programs/${encodeURIComponent(programId)}`),
+  getProgramDayGuide: (programId: string, dayIndex: number) =>
+    request<GuideDayDetail>(`/plan/guides/programs/${encodeURIComponent(programId)}/days/${encodeURIComponent(String(dayIndex))}`),
+  getProgramExerciseGuide: (programId: string, exerciseId: string) =>
+    request<GuideExerciseDetail>(
+      `/plan/guides/programs/${encodeURIComponent(programId)}/exercise/${encodeURIComponent(exerciseId)}`,
+    ),
   getProgramRecommendation: () => request<ProgramRecommendation>("/profile/program-recommendation"),
   switchProgram: (payload: { target_program_id: string; confirm?: boolean }) =>
     request<ProgramSwitchResponse>("/profile/program-switch", {

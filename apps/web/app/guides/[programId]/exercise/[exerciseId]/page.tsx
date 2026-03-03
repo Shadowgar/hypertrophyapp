@@ -17,21 +17,14 @@ export default function ExerciseGuidePage() {
     (async () => {
       setStatus("Loading...");
       try {
-        const list = await api.listPrograms();
-        const prog = list.find((p: any) => p.id === programId || p.slug === programId);
-        // Try common shapes: prog.exercises or prog.library
-        let found = null;
-        if (prog) {
-          const pAny: any = prog;
-          const candidates = pAny.exercises ?? pAny.library ?? [];
-          found = candidates.find((e: any) => e.id === exerciseId || e.slug === exerciseId || e.name === exerciseId);
-        }
+        const details = await api.getProgramExerciseGuide(programId, exerciseId);
+        const found = details.exercise;
         if (mounted) {
           setExercise(found);
           setStatus(found ? null : "Exercise not found in program data");
         }
       } catch {
-        if (mounted) setStatus("Failed to load exercise");
+        if (mounted) setStatus("Exercise not found in program data");
       }
     })();
     return () => { mounted = false };

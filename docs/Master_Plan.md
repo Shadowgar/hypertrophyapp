@@ -552,7 +552,7 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 
 ### Priority B — Codex Should Own If Time Allows
 
-- [ ] API contracts for guide retrieval and plan guide drill-down pathways (Phase 13)
+- [x] API contracts for guide retrieval and plan guide drill-down pathways (Phase 13)
 - [ ] Offline queue/replay conflict semantics and deterministic sync rules (Phase 10)
 - [ ] Security/hardening architecture: secrets strategy, rate limiting approach, backup/restore design and drills (Phase 11)
 - [ ] Auth expansion architecture for OAuth + Passkey (WebAuthn) flows (Phase 12)
@@ -692,9 +692,9 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 - [x] Add deterministic XLSX extraction pipeline (build-time)
 - [x] Emit normalized guide docs into `/docs/guides/`
 - [x] Emit provenance index (`asset -> section -> derived entity`)
-- [ ] Add API endpoints for program/day/exercise guides
+- [x] Add API endpoints for program/day/exercise guides
 - [ ] Add web Plan Guide pages (Program → Phase → Day → Exercise)
-- [ ] Add workout runner drill-down to exercise guide text
+- [x] Add workout runner drill-down to exercise guide text
 - [x] Add deterministic “next recommended program” suggestion logic
 - [x] Add explicit confirmation flow before program/phase switch
 - [x] Add ingestion determinism tests (checksum + schema stability)

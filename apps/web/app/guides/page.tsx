@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { api, type GuideProgram } from "@/lib/api";
 
 export default function GuidesIndex() {
-  const [programs, setPrograms] = useState<Array<{id: string; name: string; description?: string}>>([]);
+  const [programs, setPrograms] = useState<GuideProgram[]>([]);
 
   useEffect(() => {
     let mounted = true;
-    api.listPrograms()
+    api.listGuidePrograms()
       .then((list) => { if (mounted) setPrograms(list); })
       .catch(() => {});
     return () => { mounted = false };
