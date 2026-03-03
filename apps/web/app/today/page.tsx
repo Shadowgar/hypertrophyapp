@@ -64,6 +64,16 @@ function resolveExerciseName(exercise: WorkoutExercise, swapIndexByExercise: Swa
   return substitutions[selectedIndex - 1] ?? exercise.name;
 }
 
+function resolveHealthStatus(health: string): "green" | "yellow" | "red" {
+  if (health === "ok") {
+    return "green";
+  }
+  if (health === "loading") {
+    return "yellow";
+  }
+  return "red";
+}
+
 export default function TodayPage() {
   const [health, setHealth] = useState("loading");
   const [workout, setWorkout] = useState<WorkoutSession | null>(null);
@@ -257,12 +267,19 @@ export default function TodayPage() {
   const swapTarget = workout?.exercises.find((exercise) => exercise.id === swapTargetExerciseId) ?? null;
   const swapTargetCurrentIndex = swapTarget ? (swapIndexByExercise[swapTarget.id] ?? 0) : 0;
   const activeProgramId = workout ? extractProgramId(workout.session_id) : null;
+  const healthStatus = resolveHealthStatus(health);
 
   return (
     <div className="space-y-4">
       <h1 className="ui-title-page">Today</h1>
-      <div className="main-card main-card--module">
-        <p className="ui-body-sm">API Health: {health}</p>
+      <div className="main-card main-card--module main-card--accent spacing-grid spacing-grid--tight">
+        <div className="telemetry-header">
+          <p className="telemetry-kicker">Runner Status</p>
+          <span className="telemetry-status">
+            <span className={`status-dot status-dot--${healthStatus}`} /> API {health}
+          </span>
+        </div>
+        <p className="telemetry-meta">Load today&apos;s workout and continue execution from the current session state.</p>
         <Button className="mt-3 w-full" onClick={beginWorkoutLoad}>
           Load Today Workout
         </Button>
@@ -272,22 +289,24 @@ export default function TodayPage() {
 
       {workout ? (
         <div className="space-y-3">
-          <div className="main-card main-card--shell">
-            <p className="ui-body-sm">{workout.title}</p>
-            <p className="ui-meta">{workout.date}</p>
+          <div className="main-card main-card--shell spacing-grid spacing-grid--tight">
+            <div className="telemetry-header">
+              <p className="telemetry-value">{workout.title}</p>
+              <p className="telemetry-meta">{workout.date}</p>
+            </div>
             {workout.mesocycle ? (
-              <p className="text-xs text-zinc-300">
+              <p className="telemetry-meta text-zinc-300">
                 Mesocycle Week {workout.mesocycle.week_index}/{workout.mesocycle.trigger_weeks_effective}
               </p>
             ) : null}
             {workout.deload?.active ? (
-              <p className="inline-flex items-center gap-2 text-xs text-amber-300">
+              <p className="telemetry-status text-amber-300">
                 <span className="status-dot status-dot--yellow" /> Deload Week Active ({workout.deload.reason})
               </p>
             ) : null}
-            {workout.resume ? <p className="text-xs text-accent">Resumed unfinished workout</p> : null}
+            {workout.resume ? <p className="telemetry-meta text-accent">Resumed unfinished workout</p> : null}
             {workoutProgress ? (
-              <p className="text-xs text-zinc-300">
+              <p className="telemetry-meta text-zinc-300">
                 Progress: {workoutProgress.completed}/{workoutProgress.planned} sets ({workoutProgress.percent}%)
               </p>
             ) : null}
@@ -306,14 +325,15 @@ export default function TodayPage() {
 
             return (
               <div key={exercise.id} className="main-card main-card--module spacing-grid">
-                <div className="flex items-start justify-between gap-3">
+                <div className="telemetry-header items-start">
                   <div>
-                  <p className="text-sm font-semibold text-zinc-100">
-                    <ExerciseTitleLink selectedName={selectedName} guideHref={guideHref} />
-                  </p>
-                  <p className="ui-meta">
-                    {exercise.sets} sets · {exercise.rep_range[0]}-{exercise.rep_range[1]} reps · {exercise.recommended_working_weight} kg
-                  </p>
+                    <p className="telemetry-kicker">Exercise Slot</p>
+                    <p className="text-sm font-semibold text-zinc-100">
+                      <ExerciseTitleLink selectedName={selectedName} guideHref={guideHref} />
+                    </p>
+                    <p className="telemetry-meta">
+                      {exercise.sets} sets · {exercise.rep_range[0]}-{exercise.rep_range[1]} reps · {exercise.recommended_working_weight} kg
+                    </p>
                   </div>
                   <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-2 py-1">
                     <span className={`status-dot status-dot--${status}`} />
