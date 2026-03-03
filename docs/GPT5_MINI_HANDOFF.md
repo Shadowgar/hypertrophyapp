@@ -13,6 +13,7 @@ Related operating docs:
 - `docs/GPT5_MINI_RUNBOOK.md`
 - `docs/GPT5_MINI_BOOTSTRAP_PROMPT.md`
 - `docs/Master_Plan.md` (`Model Ownership & Quality Routing`)
+- `docs/High_Risk_Contracts.md`
 
 Automation scripts:
 - `scripts/mini_preflight.sh`
@@ -86,6 +87,26 @@ Automation scripts:
 - Prefer additive and backward-compatible API changes.
 - If a breaking change is required, update callers and tests in the same session.
 - Keep deterministic runtime rules: no runtime PDF/XLSX parsing or embeddings-based retrieval.
+
+## Deterministic Boundaries (Do / Do-Not-Change)
+
+### DO (allowed)
+- Additive API fields that do not break existing consumers.
+- New tests for deterministic behaviors and contract enforcement.
+- UI composition and visual updates that do not alter deterministic planning behavior.
+- Build-time importer improvements that preserve deterministic outputs and schema validity.
+
+### DO NOT CHANGE without explicit contract update
+- Engine payload keys/semantics consumed by API/web (`weekly_volume_by_muscle`, `muscle_coverage`, `mesocycle`, `deload`, session/exercise structure).
+- Runtime determinism constraints (no runtime parsing of `/reference`, no runtime retrieval/embeddings).
+- Program switching semantics (two-step explicit confirmation flow).
+- Guide API route contracts and error semantics without coordinated caller/test updates.
+- Ingestion artifact contract files (`asset_catalog.json`, `provenance_index.json`) and aggregate signature semantics.
+
+### If a prohibited change is required
+1. Update `docs/High_Risk_Contracts.md` first.
+2. Update all affected API/web/tests in one PR.
+3. Run focused validation for the changed contract surfaces.
 
 ## Validation Commands
 

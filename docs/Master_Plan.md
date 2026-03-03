@@ -566,8 +566,8 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 ### Codex Exit Criteria (Before Handoff to Mini-Only Execution)
 
 - [x] All Priority A architecture decisions merged with tests
-- [ ] High-risk contracts documented (engine rules, ingestion schema, API invariants)
-- [ ] Mini handoff pack updated with explicit do/do-not-change boundaries for deterministic logic
+- [x] High-risk contracts documented (engine rules, ingestion schema, API invariants)
+- [x] Mini handoff pack updated with explicit do/do-not-change boundaries for deterministic logic
 
 ---
 
