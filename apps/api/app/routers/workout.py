@@ -192,3 +192,63 @@ def log_set(
         weight=record.weight,
         created_at=record.created_at,
     )
+
+
+@router.get("/workout/{workout_id}/progress")
+def workout_progress(
+    workout_id: str,
+    db: DbSession,
+    current_user: CurrentUser,
+):
+    """Return per-exercise completed sets and an overall percent complete."""
+    # gather logs for this workout
+    logs = (
+        db.query(WorkoutSetLog)
+        .filter(
+            WorkoutSetLog.user_id == current_user.id,
+            WorkoutSetLog.workout_id == workout_id,
+        )
+        .all()
+    )
+
+    completed_by_ex: dict[str, int] = {}
+    for l in logs:
+        prev = completed_by_ex.get(l.exercise_id, 0)
+        if l.set_index > prev:
+            completed_by_ex[l.exercise_id] = l.set_index
+
+    # try to find the plan session to calculate planned sets
+    plans = (
+        db.query(WorkoutPlan)
+        .filter(WorkoutPlan.user_id == current_user.id)
+        .order_by(WorkoutPlan.created_at.desc())
+        .all()
+    )
+    planned_total = 0
+    exercises_info: list[dict] = []
+    if plans:
+        latest = plans[0].payload
+        sessions = latest.get("sessions", [])
+        session = next((s for s in sessions if s.get("session_id") == workout_id), None)
+        if session:
+            for ex in session.get("exercises", []):
+                planned_sets = int(ex.get("sets", 3))
+                planned_total += planned_sets
+                exercises_info.append({
+                    "exercise_id": ex.get("id"),
+                    "planned_sets": planned_sets,
+                    "completed_sets": completed_by_ex.get(ex.get("id"), 0),
+                })
+
+    completed_total = sum(completed_by_ex.values())
+    percent = 0
+    if planned_total > 0:
+        percent = int((completed_total / planned_total) * 100)
+
+    return {
+        "workout_id": workout_id,
+        "completed_total": completed_total,
+        "planned_total": planned_total,
+        "percent_complete": percent,
+        "exercises": exercises_info,
+    }
