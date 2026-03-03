@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { api } from "@/lib/api";
+import { api, getProgramDisplayName, type ProgramTemplateOption } from "@/lib/api";
 
 export default function WeekPage() {
   const [plan, setPlan] = useState("Generate a weekly plan.");
-  const [programs, setPrograms] = useState<Array<{id: string; name: string}>>([]);
+  const [programs, setPrograms] = useState<ProgramTemplateOption[]>([]);
   const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
 
   async function generate() {
@@ -48,7 +48,7 @@ export default function WeekPage() {
           <label htmlFor="week-program" className="ui-meta">Program override (optional)</label>
           <select id="week-program" aria-label="Week program override selector" aria-describedby="week-program-desc" className="ui-select" value={selectedProgramId ?? ""} onChange={(e) => setSelectedProgramId(e.target.value || null)}>
             <option value="">Server-selected — trainer&apos;s recommended program</option>
-            {programs.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+            {programs.map((p) => <option key={p.id} value={p.id}>{getProgramDisplayName(p)}</option>)}
           </select>
           <p id="week-program-desc" className="text-xs text-zinc-500">Select a program to override the server selection for this generated week.</p>
           <Button aria-label="Generate week plan" className="w-full" onClick={generate}>

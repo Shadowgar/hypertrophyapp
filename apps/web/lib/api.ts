@@ -73,6 +73,30 @@ export type ProgramRecommendation = {
   generated_at: string;
 };
 
+export type ProgramTemplateOption = {
+  id: string;
+  slug?: string;
+  name?: string;
+  description?: string;
+};
+
+export function getProgramDisplayName(program: ProgramTemplateOption): string {
+  const preferred = program.name?.trim();
+  if (preferred) {
+    return preferred;
+  }
+  const source = program.slug?.trim() || program.id;
+  const suffixMatch = /_v(\d+)$/i.exec(source);
+  const withoutSuffix = suffixMatch ? source.slice(0, -suffixMatch[0].length) : source;
+  const spaced = withoutSuffix.replaceAll("_", " ").replaceAll("-", " ");
+  const normalized = suffixMatch ? `${spaced} v${suffixMatch[1]}` : spaced;
+  return normalized
+    .trim()
+    .split(/\s+/)
+    .map((part) => (part.length ? part[0].toUpperCase() + part.slice(1) : part))
+    .join(" ");
+}
+
 export type ProgramSwitchResponse = {
   status: "confirmation_required" | "switched" | "unchanged";
   current_program_id: string;
@@ -187,7 +211,7 @@ export const api = {
   getWorkoutProgress: (workoutId: string) => request<WorkoutProgress>(`/workout/${encodeURIComponent(workoutId)}/progress`),
   generateWeek: (templateId?: string | null) => request<Record<string, unknown>>("/plan/generate-week", { method: "POST", body: JSON.stringify(templateId ? { template_id: templateId } : {}) }),
   getProfile: () => request<Profile>("/profile"),
-  listPrograms: () => request<Array<{id: string; slug?: string; name: string; description?: string}>>("/plan/programs"),
+  listPrograms: () => request<ProgramTemplateOption[]>("/plan/programs"),
   listGuidePrograms: () => request<GuideProgram[]>("/plan/guides/programs"),
   getProgramGuide: (programId: string) =>
     request<GuideProgramDetail>(`/plan/guides/programs/${encodeURIComponent(programId)}`),

@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { getProgramDisplayName, type ProgramTemplateOption } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/env";
 
 const EQUIPMENT_OPTIONS = ["dumbbell", "barbell", "cable", "machine", "bodyweight"];
@@ -25,7 +26,7 @@ export default function OnboardingPage() {
   const [trainingLocation, setTrainingLocation] = useState("home");
   const [equipmentProfile, setEquipmentProfile] = useState<string[]>(["dumbbell"]);
   const [daysAvailable, setDaysAvailable] = useState(5);
-  const [programs, setPrograms] = useState<Array<{id: string; slug: string; name: string; description?: string}>>([]);
+  const [programs, setPrograms] = useState<ProgramTemplateOption[]>([]);
   const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -202,7 +203,7 @@ export default function OnboardingPage() {
               <option value="">Default — trainer&apos;s recommended program</option>
               {programs.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.name}
+                  {getProgramDisplayName(p)}
                 </option>
               ))}
             </select>

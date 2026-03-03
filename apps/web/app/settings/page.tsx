@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { api, type Profile, type ProgramRecommendation } from "@/lib/api";
+import { api, getProgramDisplayName, type Profile, type ProgramRecommendation, type ProgramTemplateOption } from "@/lib/api";
 
 export default function SettingsPage() {
   const [theme] = useState("dark");
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [programs, setPrograms] = useState<Array<{id: string; name: string; description?: string}>>([]);
+  const [programs, setPrograms] = useState<ProgramTemplateOption[]>([]);
   const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
   const [recommendation, setRecommendation] = useState<ProgramRecommendation | null>(null);
   const [pendingSwitch, setPendingSwitch] = useState<{ targetProgramId: string; reason: string } | null>(null);
@@ -148,7 +148,7 @@ export default function SettingsPage() {
           >
             <option value="">Default — trainer&apos;s recommended program</option>
             {programs.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
+              <option key={p.id} value={p.id}>{getProgramDisplayName(p)}</option>
             ))}
           </select>
           <p id="settings-program-desc" className="text-xs text-zinc-500">{selectedProgramId ? (programs.find((p) => p.id === selectedProgramId)?.description ?? "No description available.") : "Default uses trainer recommendation."}</p>
