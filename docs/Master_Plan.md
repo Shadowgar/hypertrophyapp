@@ -546,7 +546,7 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 - [x] Deterministic soreness modifier integration in generation/recommendation path (Phase 6)
 - [x] Weekly volume-per-muscle computation + muscle coverage validator with deterministic tests (Phase 6)
 - [x] Mesocycle state model + deload lifecycle + early-deload trigger rules + test matrix (Phase 7)
-- [ ] Program/template selection engine correctness (including equipment-safe variant selection) (Phase 8)
+- [x] Program/template selection engine correctness (including equipment-safe variant selection) (Phase 8)
 - [ ] Reference ingestion architecture: deterministic PDF/EPUB/XLSX normalization + provenance index + checksum stability tests (Phase 13)
 - [ ] Deterministic “next recommended program” logic + switch confirmation semantics (Phase 13)
 
@@ -676,12 +676,12 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 - [x] Full Body templates
 - [x] PPL templates
 - [x] Upper/Lower templates
-- [ ] Equipment-safe variants
-- [ ] Template/program selection logic
-- [ ] Onboarding program picker (required)
-- [ ] Settings program switcher (required)
-- [ ] Program catalog API + UI cards
-- [ ] Program explanation summaries per catalog item
+- [x] Equipment-safe variants
+- [x] Template/program selection logic
+- [x] Onboarding program picker (required)
+- [x] Settings program switcher (required)
+- [x] Program catalog API + UI cards
+- [x] Program explanation summaries per catalog item
 - [ ] Ensure importers map spreadsheet YouTube links into canonical templates for all supported programs
 
 ---

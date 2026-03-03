@@ -10,6 +10,7 @@ os.environ["DATABASE_URL"] = f"sqlite:///{DB_FILE}"
 
 from app.database import Base, engine
 from app.main import app
+from app.routers import plan as plan_router
 
 TEST_CREDENTIAL = f"T{uuid.uuid4().hex[:15]}"
 
@@ -257,3 +258,167 @@ def test_generate_week_includes_mesocycle_and_deload_payload() -> None:
     assert plan["mesocycle"]["is_deload_week"] is True
     assert plan["mesocycle"]["deload_reason"] == "early_soreness+early_adherence"
     assert plan["deload"]["active"] is True
+
+
+def test_generate_week_falls_back_to_equipment_safe_template(monkeypatch) -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    template_unusable = {
+        "id": "ppl_v1",
+        "sessions": [
+            {
+                "name": "Push",
+                "exercises": [
+                    {
+                        "id": "bench",
+                        "name": "Bench Press",
+                        "sets": 3,
+                        "rep_range": [8, 10],
+                        "start_weight": 60,
+                        "equipment_tags": ["barbell"],
+                        "substitution_candidates": [],
+                    }
+                ],
+            }
+        ],
+    }
+    template_fallback = {
+        "id": "upper_lower_v1",
+        "sessions": [
+            {
+                "name": "Upper",
+                "exercises": [
+                    {
+                        "id": "db_press",
+                        "name": "DB Press",
+                        "sets": 3,
+                        "rep_range": [8, 10],
+                        "start_weight": 25,
+                        "equipment_tags": ["dumbbell"],
+                        "substitution_candidates": [],
+                    }
+                ],
+            }
+        ],
+    }
+    template_map = {
+        "ppl_v1": template_unusable,
+        "upper_lower_v1": template_fallback,
+    }
+
+    monkeypatch.setattr(
+        plan_router,
+        "list_program_templates",
+        lambda: [
+            {"id": "ppl_v1", "split": "ppl", "days_supported": [3]},
+            {"id": "upper_lower_v1", "split": "ppl", "days_supported": [3]},
+        ],
+    )
+    monkeypatch.setattr(plan_router, "load_program_template", lambda template_id: template_map[template_id])
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "fallback-catalog@example.com", "password": TEST_CREDENTIAL, "name": "Fallback User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Fallback User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "ppl",
+            "selected_program_id": "ppl_v1",
+            "training_location": "home",
+            "equipment_profile": ["dumbbell"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+
+    assert plan["program_template_id"] == "upper_lower_v1"
+    assert len(plan["sessions"]) == 1
+    assert plan["sessions"][0]["exercises"][0]["id"] == "db_press"
+
+
+def test_generate_week_explicit_template_override_is_respected(monkeypatch) -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    explicit_template = {
+        "id": "explicit_template",
+        "sessions": [
+            {
+                "name": "Only Session",
+                "exercises": [
+                    {
+                        "id": "bw_pushup",
+                        "name": "Push-up",
+                        "sets": 3,
+                        "rep_range": [8, 12],
+                        "start_weight": 5,
+                        "equipment_tags": ["bodyweight"],
+                    }
+                ],
+            }
+        ],
+    }
+
+    monkeypatch.setattr(plan_router, "list_program_templates", lambda: [])
+    monkeypatch.setattr(plan_router, "load_program_template", lambda template_id: explicit_template)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "explicit-catalog@example.com", "password": TEST_CREDENTIAL, "name": "Explicit User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Explicit User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "full_body_v1",
+            "training_location": "home",
+            "equipment_profile": ["bodyweight"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    generate = client.post(
+        "/plan/generate-week",
+        headers=headers,
+        json={"template_id": "explicit_template"},
+    )
+    assert generate.status_code == 200
+    plan = generate.json()
+
+    assert plan["program_template_id"] == "explicit_template"
+    assert plan["sessions"][0]["session_id"].startswith("explicit_template-")
