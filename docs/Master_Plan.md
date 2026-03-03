@@ -544,7 +544,7 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 ### Priority A — Must Be Codex-Owned Now
 
 - [x] Deterministic soreness modifier integration in generation/recommendation path (Phase 6)
-- [ ] Weekly volume-per-muscle computation + muscle coverage validator with deterministic tests (Phase 6)
+- [x] Weekly volume-per-muscle computation + muscle coverage validator with deterministic tests (Phase 6)
 - [ ] Mesocycle state model + deload lifecycle + early-deload trigger rules + test matrix (Phase 7)
 - [ ] Program/template selection engine correctness (including equipment-safe variant selection) (Phase 8)
 - [ ] Reference ingestion architecture: deterministic PDF/EPUB/XLSX normalization + provenance index + checksum stability tests (Phase 13)
@@ -657,8 +657,8 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 - [x] Ensure substitution selection is applied at the slot level and logged accordingly
 - [x] Compression logic (2/3/4 days)
 - [x] Ensure soreness modifiers apply deterministically to recommendations
-- [ ] Track weekly volume per muscle
-- [ ] Muscle coverage validator
+- [x] Track weekly volume per muscle
+- [x] Muscle coverage validator
 - [x] Deterministic week output tests
 
 ---

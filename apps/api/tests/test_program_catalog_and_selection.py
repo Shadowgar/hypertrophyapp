@@ -139,3 +139,50 @@ def test_generate_week_applies_latest_soreness_modifiers() -> None:
     assert adjusted_pull["id"] == "row"
     assert adjusted_push["recommended_working_weight"] < baseline_push["recommended_working_weight"]
     assert adjusted_pull["recommended_working_weight"] < baseline_pull["recommended_working_weight"]
+
+
+def test_generate_week_includes_weekly_volume_and_coverage_payload() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "volume-catalog@example.com", "password": TEST_CREDENTIAL, "name": "Volume User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Volume User",
+            "age": 29,
+            "weight": 80,
+            "gender": "male",
+            "split_preference": "ppl",
+            "selected_program_id": "ppl_v1",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "bench", "rack"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+
+    assert "weekly_volume_by_muscle" in plan
+    assert "muscle_coverage" in plan
+    assert isinstance(plan["weekly_volume_by_muscle"], dict)
+    assert isinstance(plan["muscle_coverage"], dict)
+    assert "minimum_sets_per_muscle" in plan["muscle_coverage"]
+    assert "under_target_muscles" in plan["muscle_coverage"]
+    assert "covered_muscles" in plan["muscle_coverage"]

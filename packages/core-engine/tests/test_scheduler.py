@@ -257,3 +257,83 @@ def test_generate_week_plan_mild_soreness_does_not_change_weight() -> None:
     )
 
     assert plan["sessions"][0]["exercises"][0]["recommended_working_weight"] == pytest.approx(32.5)
+
+
+def test_generate_week_plan_tracks_weekly_volume_and_coverage() -> None:
+    template = {
+        "id": "volume_tracking_test",
+        "sessions": [
+            {
+                "name": "A",
+                "exercises": [
+                    {
+                        "id": "bench",
+                        "name": "Bench Press",
+                        "sets": 3,
+                        "primary_muscles": ["chest", "triceps"],
+                    },
+                    {
+                        "id": "row",
+                        "name": "Barbell Row",
+                        "sets": 4,
+                        "primary_muscles": ["lats", "mid_back", "biceps"],
+                    },
+                ],
+            }
+        ],
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=2,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+    )
+
+    volume = plan["weekly_volume_by_muscle"]
+    coverage = plan["muscle_coverage"]
+
+    assert volume["chest"] == 3
+    assert volume["triceps"] == 3
+    assert volume["back"] == 4
+    assert volume["biceps"] == 4
+    assert volume["quads"] == 0
+    assert coverage["minimum_sets_per_muscle"] == 2
+    assert coverage["untracked_exercise_count"] == 0
+    assert "chest" in coverage["covered_muscles"]
+    assert "back" in coverage["covered_muscles"]
+    assert "quads" in coverage["under_target_muscles"]
+    assert "hamstrings" in coverage["under_target_muscles"]
+
+
+def test_generate_week_plan_counts_untracked_exercises_for_coverage() -> None:
+    template = {
+        "id": "coverage_untracked_test",
+        "sessions": [
+            {
+                "name": "A",
+                "exercises": [
+                    {
+                        "id": "mystery",
+                        "name": "X1",
+                        "sets": 3,
+                    }
+                ],
+            }
+        ],
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=2,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+    )
+
+    coverage = plan["muscle_coverage"]
+    assert coverage["untracked_exercise_count"] == 1
+    assert all(value == 0 for value in plan["weekly_volume_by_muscle"].values())

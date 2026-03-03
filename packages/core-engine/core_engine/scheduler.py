@@ -37,6 +37,19 @@ _MUSCLE_ALIASES = {
     "calves": "calves",
 }
 
+_TRACKED_MUSCLES = (
+    "chest",
+    "back",
+    "quads",
+    "hamstrings",
+    "glutes",
+    "shoulders",
+    "biceps",
+    "triceps",
+    "calves",
+)
+_MIN_SETS_PER_MUSCLE = 2
+
 
 def _normalize_muscle_label(value: str | None) -> str | None:
     if not value:
@@ -233,6 +246,37 @@ def _select_sessions_for_days(base_sessions: list[dict[str, Any]], days_availabl
     return [(index, base_sessions[index]) for index in selected_indices]
 
 
+def _compute_weekly_volume_and_coverage(planned_sessions: list[dict[str, Any]]) -> tuple[dict[str, int], dict[str, Any]]:
+    volume_by_muscle = dict.fromkeys(_TRACKED_MUSCLES, 0)
+    untracked_exercise_count = 0
+
+    for session in planned_sessions:
+        for exercise in session.get("exercises", []):
+            resolved_muscles = _resolve_exercise_muscles(exercise)
+            tracked_muscles = [muscle for muscle in resolved_muscles if muscle in volume_by_muscle]
+            if not tracked_muscles:
+                untracked_exercise_count += 1
+                continue
+
+            sets = int(exercise.get("sets", 0) or 0)
+            for muscle in tracked_muscles:
+                volume_by_muscle[muscle] += sets
+
+    under_target_muscles = [
+        muscle for muscle in _TRACKED_MUSCLES if volume_by_muscle[muscle] < _MIN_SETS_PER_MUSCLE
+    ]
+    covered_muscles = [
+        muscle for muscle in _TRACKED_MUSCLES if volume_by_muscle[muscle] >= _MIN_SETS_PER_MUSCLE
+    ]
+
+    return volume_by_muscle, {
+        "minimum_sets_per_muscle": _MIN_SETS_PER_MUSCLE,
+        "covered_muscles": covered_muscles,
+        "under_target_muscles": under_target_muscles,
+        "untracked_exercise_count": untracked_exercise_count,
+    }
+
+
 def generate_week_plan(
     user_profile: dict[str, Any],
     days_available: int,
@@ -286,6 +330,8 @@ def generate_week_plan(
             }
         )
 
+    weekly_volume_by_muscle, muscle_coverage = _compute_weekly_volume_and_coverage(planned_sessions)
+
     return {
         "split": split_preference,
         "phase": phase,
@@ -296,4 +342,6 @@ def generate_week_plan(
         },
         "sessions": planned_sessions,
         "missed_day_policy": "roll-forward-priority-lifts",
+        "weekly_volume_by_muscle": weekly_volume_by_muscle,
+        "muscle_coverage": muscle_coverage,
     }
