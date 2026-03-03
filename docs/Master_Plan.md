@@ -553,7 +553,7 @@ If missing, UI should not render a video action.
 - [x] Substitution picker modal
 - [x] Persist substitution selection
 - [x] Update exercise state correctly
-- [ ] Tests
+- [x] Tests
 
 ---
 
