@@ -67,12 +67,14 @@ export default function SettingsPage() {
             value={selectedProgramId ?? ""}
             onChange={(e) => setSelectedProgramId(e.target.value || null)}
             aria-label="Settings program selector"
+            aria-describedby="settings-program-desc"
           >
-            <option value="">Default (trainer choice)</option>
+            <option value="">Default — trainer&apos;s recommended program</option>
             {programs.map((p) => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
           </select>
+          <p id="settings-program-desc" className="text-xs text-zinc-500">{selectedProgramId ? (programs.find((p) => p.id === selectedProgramId)?.description ?? "No description available.") : "Default uses trainer recommendation."}</p>
           <div className="flex gap-2">
             <Button aria-label="Save selected program" className="mt-2" onClick={saveProgram}>Save Program</Button>
             <p className="text-sm text-zinc-400 mt-3">{status ?? ""}</p>

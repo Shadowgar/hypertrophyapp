@@ -20,7 +20,7 @@ export default function GuidesIndex() {
       <h1 className="text-xl font-semibold">Program Guides</h1>
       <div className="grid gap-3">
         {programs.map((p) => (
-          <Link key={p.id} href={`/programs/${p.id}`} className="main-card p-3">
+          <Link key={p.id} href={`/programs/${p.id}`} className="main-card p-3" aria-label={`Open guide for ${p.name}`}>
             <h2 className="font-medium">{p.name}</h2>
             {p.description && <p className="text-sm text-zinc-400">{p.description}</p>}
           </Link>

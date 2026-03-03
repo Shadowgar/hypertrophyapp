@@ -161,19 +161,20 @@ export default function OnboardingPage() {
             value={selectedProgramId ?? ""}
             onChange={(e) => setSelectedProgramId(e.target.value || null)}
             aria-label="Program selector"
+            aria-describedby="program-desc"
           >
-            <option value="">Default (trainer choice)</option>
+            <option value="">Default — trainer&apos;s recommended program</option>
             {programs.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
               </option>
             ))}
           </select>
-          {selectedProgramId && (
-            <p className="text-xs text-zinc-500">{
-              (programs.find((p) => p.id === selectedProgramId)?.description) ?? ""
-            }</p>
-          )}
+          <p id="program-desc" className="text-xs text-zinc-500">
+            {selectedProgramId
+              ? (programs.find((p) => p.id === selectedProgramId)?.description ?? "No description available.")
+              : "Choose \"Default\" to let the trainer decide the best matching program for you."}
+          </p>
         </div>
 
         <div className="space-y-2 rounded-md border border-zinc-800 p-3">
