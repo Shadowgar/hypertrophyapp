@@ -140,6 +140,63 @@ def _apply_soreness_modifier(weight: float, severity: str) -> float:
     return round(adjusted / 2.5) * 2.5
 
 
+def _normalize_percentage(value: Any, fallback: int) -> int:
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        parsed = fallback
+    return max(0, min(100, parsed))
+
+
+def _compute_mesocycle_state(
+    program_template: dict[str, Any],
+    phase: str,
+    prior_generated_weeks: int,
+    latest_adherence_score: int | None,
+    severe_soreness_count: int,
+) -> dict[str, Any]:
+    deload = program_template.get("deload") or {}
+    base_trigger_weeks = max(1, int(deload.get("trigger_weeks", 6) or 6))
+    if phase == "cut":
+        trigger_weeks_effective = max(3, base_trigger_weeks - 1)
+    else:
+        trigger_weeks_effective = base_trigger_weeks
+
+    weeks_completed_prior = max(0, int(prior_generated_weeks))
+    week_index = (weeks_completed_prior % trigger_weeks_effective) + 1
+    scheduled_deload = week_index == trigger_weeks_effective
+    early_soreness = severe_soreness_count >= 2
+    early_adherence = latest_adherence_score is not None and latest_adherence_score <= 2
+
+    reasons: list[str] = []
+    if scheduled_deload:
+        reasons.append("scheduled")
+    if early_soreness:
+        reasons.append("early_soreness")
+    if early_adherence:
+        reasons.append("early_adherence")
+
+    return {
+        "weeks_completed_prior": weeks_completed_prior,
+        "week_index": week_index,
+        "trigger_weeks_base": base_trigger_weeks,
+        "trigger_weeks_effective": trigger_weeks_effective,
+        "is_deload_week": bool(reasons),
+        "deload_reason": "+".join(reasons) if reasons else "none",
+        "early_triggers": {
+            "severe_soreness": early_soreness,
+            "low_adherence": early_adherence,
+        },
+    }
+
+
+def _apply_deload_modifiers(sets: int, weight: float, *, set_reduction_pct: int, load_reduction_pct: int) -> tuple[int, float]:
+    adjusted_sets = max(1, int(round(sets * (100 - set_reduction_pct) / 100)))
+    adjusted_weight = max(5.0, weight * (100 - load_reduction_pct) / 100)
+    rounded_weight = round(adjusted_weight / 2.5) * 2.5
+    return adjusted_sets, rounded_weight
+
+
 def _build_equipment_set(available_equipment: list[str] | None) -> set[str]:
     return {item.lower() for item in (available_equipment or []) if item}
 
@@ -176,6 +233,10 @@ def _build_planned_exercise(
     history_index: dict[str, dict[str, Any]],
     equipment_set: set[str],
     soreness_by_muscle: dict[str, str],
+    *,
+    is_deload_week: bool,
+    set_reduction_pct: int,
+    load_reduction_pct: int,
 ) -> dict[str, Any] | None:
     resolved_equipment_tags = resolve_equipment_tags(
         exercise_name=exercise.get("name", ""),
@@ -185,6 +246,14 @@ def _build_planned_exercise(
     recommended = float(previous.get("next_working_weight") or exercise.get("start_weight", 20))
     soreness_severity = _resolve_exercise_soreness(exercise, soreness_by_muscle)
     recommended = _apply_soreness_modifier(recommended, soreness_severity)
+    planned_sets = int(exercise.get("sets", 3) or 3)
+    if is_deload_week:
+        planned_sets, recommended = _apply_deload_modifiers(
+            planned_sets,
+            recommended,
+            set_reduction_pct=set_reduction_pct,
+            load_reduction_pct=load_reduction_pct,
+        )
     substitutions = exercise.get("substitution_candidates") or exercise.get("substitutions") or []
     compatible_substitutions = _prefilter_substitutions(substitutions, equipment_set)
 
@@ -200,7 +269,7 @@ def _build_planned_exercise(
         "id": planned_id,
         "primary_exercise_id": exercise.get("primary_exercise_id") or exercise.get("id"),
         "name": planned_name,
-        "sets": exercise.get("sets", 3),
+        "sets": planned_sets,
         "rep_range": exercise.get("rep_range", [8, 12]),
         "recommended_working_weight": recommended,
         "priority": exercise.get("priority", "standard"),
@@ -286,6 +355,9 @@ def generate_week_plan(
     phase: str,
     available_equipment: list[str] | None = None,
     soreness_by_muscle: dict[str, str] | None = None,
+    prior_generated_weeks: int = 0,
+    latest_adherence_score: int | None = None,
+    severe_soreness_count: int = 0,
 ) -> dict[str, Any]:
     days_available = max(2, min(7, days_available))
     today = date.today()
@@ -299,6 +371,23 @@ def generate_week_plan(
     }
     equipment_set = _build_equipment_set(available_equipment)
     normalized_soreness = _normalize_soreness_by_muscle(soreness_by_muscle)
+    mesocycle = _compute_mesocycle_state(
+        program_template=program_template,
+        phase=phase,
+        prior_generated_weeks=prior_generated_weeks,
+        latest_adherence_score=latest_adherence_score,
+        severe_soreness_count=severe_soreness_count,
+    )
+
+    deload_config = program_template.get("deload") or {}
+    set_reduction_pct = _normalize_percentage(deload_config.get("set_reduction_pct"), 35)
+    load_reduction_pct = _normalize_percentage(deload_config.get("load_reduction_pct"), 10)
+    deload = {
+        "active": mesocycle["is_deload_week"],
+        "set_reduction_pct": set_reduction_pct,
+        "load_reduction_pct": load_reduction_pct,
+        "reason": mesocycle["deload_reason"],
+    }
 
     planned_sessions: list[dict[str, Any]] = []
     for order_idx, (template_index, session) in enumerate(selected_sessions):
@@ -314,6 +403,9 @@ def generate_week_plan(
                 history_index,
                 equipment_set,
                 normalized_soreness,
+                is_deload_week=bool(deload["active"]),
+                set_reduction_pct=set_reduction_pct,
+                load_reduction_pct=load_reduction_pct,
             )
             if planned_exercise is not None:
                 exercises.append(planned_exercise)
@@ -333,6 +425,7 @@ def generate_week_plan(
     weekly_volume_by_muscle, muscle_coverage = _compute_weekly_volume_and_coverage(planned_sessions)
 
     return {
+        "program_template_id": program_template.get("id", "template"),
         "split": split_preference,
         "phase": phase,
         "week_start": week_start.isoformat(),
@@ -344,4 +437,6 @@ def generate_week_plan(
         "missed_day_policy": "roll-forward-priority-lifts",
         "weekly_volume_by_muscle": weekly_volume_by_muscle,
         "muscle_coverage": muscle_coverage,
+        "mesocycle": mesocycle,
+        "deload": deload,
     }

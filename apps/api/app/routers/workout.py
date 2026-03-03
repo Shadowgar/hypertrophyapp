@@ -96,6 +96,9 @@ def workout_today(
     if not selected:
         raise HTTPException(status_code=404, detail="No workouts available")
 
+    selected["mesocycle"] = latest.get("mesocycle")
+    selected["deload"] = latest.get("deload")
+
     for ex in selected.get("exercises", []):
         ex["warmups"] = compute_warmups(ex.get("recommended_working_weight", 20), 3)
 

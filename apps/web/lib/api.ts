@@ -19,6 +19,19 @@ export type WorkoutSession = {
   title: string;
   date: string;
   resume?: boolean;
+  mesocycle?: {
+    week_index: number;
+    trigger_weeks_base: number;
+    trigger_weeks_effective: number;
+    is_deload_week: boolean;
+    deload_reason: string;
+  };
+  deload?: {
+    active: boolean;
+    set_reduction_pct: number;
+    load_reduction_pct: number;
+    reason: string;
+  };
   exercises: WorkoutExercise[];
 };
 

@@ -9,7 +9,7 @@ from core_engine import generate_week_plan
 
 from ..database import get_db
 from ..deps import get_current_user
-from ..models import SorenessEntry, User, WorkoutPlan, WorkoutSetLog
+from ..models import SorenessEntry, User, WeeklyCheckin, WorkoutPlan, WorkoutSetLog
 from ..program_loader import list_program_templates, load_program_template
 from ..schemas import GenerateWeekPlanRequest, ProgramTemplateSummary
 
@@ -17,6 +17,55 @@ router = APIRouter()
 
 DbSession = Annotated[Session, Depends(get_db)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+def _collect_recovery_and_mesocycle_inputs(
+    db: Session,
+    *,
+    user_id: str,
+    selected_template_id: str,
+) -> tuple[dict[str, str], int, int | None, int]:
+    latest_soreness = (
+        db.query(SorenessEntry)
+        .filter(SorenessEntry.user_id == user_id, SorenessEntry.entry_date <= date.today())
+        .order_by(SorenessEntry.entry_date.desc(), SorenessEntry.created_at.desc())
+        .first()
+    )
+    soreness_by_muscle = latest_soreness.severity_by_muscle if latest_soreness else {}
+    severe_soreness_count = sum(
+        1 for severity in soreness_by_muscle.values() if str(severity).lower() == "severe"
+    )
+
+    latest_checkin = (
+        db.query(WeeklyCheckin)
+        .filter(WeeklyCheckin.user_id == user_id, WeeklyCheckin.week_start <= date.today())
+        .order_by(WeeklyCheckin.week_start.desc(), WeeklyCheckin.created_at.desc())
+        .first()
+    )
+    latest_adherence_score = latest_checkin.adherence_score if latest_checkin else None
+
+    prior_plans = db.query(WorkoutPlan).filter(WorkoutPlan.user_id == user_id).all()
+    prior_weeks_for_template: set[str] = set()
+    for existing_plan in prior_plans:
+        payload_data = existing_plan.payload if isinstance(existing_plan.payload, dict) else {}
+        program_id = payload_data.get("program_template_id")
+        if program_id == selected_template_id:
+            prior_weeks_for_template.add(existing_plan.week_start.isoformat())
+            continue
+
+        sessions = payload_data.get("sessions") or []
+        if any(
+            str(session.get("session_id", "")).startswith(f"{selected_template_id}-")
+            for session in sessions
+        ):
+            prior_weeks_for_template.add(existing_plan.week_start.isoformat())
+
+    return (
+        soreness_by_muscle,
+        severe_soreness_count,
+        latest_adherence_score,
+        len(prior_weeks_for_template),
+    )
 
 
 @router.get("/plan/programs", response_model=list[ProgramTemplateSummary])
@@ -64,13 +113,13 @@ def plan_generate_week(
         for row in history_rows
     ]
 
-    latest_soreness = (
-        db.query(SorenessEntry)
-        .filter(SorenessEntry.user_id == current_user.id, SorenessEntry.entry_date <= date.today())
-        .order_by(SorenessEntry.entry_date.desc(), SorenessEntry.created_at.desc())
-        .first()
+    soreness_by_muscle, severe_soreness_count, latest_adherence_score, prior_generated_weeks = (
+        _collect_recovery_and_mesocycle_inputs(
+            db,
+            user_id=current_user.id,
+            selected_template_id=selected_template_id,
+        )
     )
-    soreness_by_muscle = latest_soreness.severity_by_muscle if latest_soreness else {}
 
     plan = generate_week_plan(
         user_profile={"name": current_user.name},
@@ -81,6 +130,9 @@ def plan_generate_week(
         phase=current_user.nutrition_phase or "maintenance",
         available_equipment=current_user.equipment_profile or [],
         soreness_by_muscle=soreness_by_muscle,
+        prior_generated_weeks=prior_generated_weeks,
+        latest_adherence_score=latest_adherence_score,
+        severe_soreness_count=severe_soreness_count,
     )
 
     week_start = date.fromisoformat(plan["week_start"])

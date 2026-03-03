@@ -1,5 +1,5 @@
 import os
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 import uuid
 
@@ -186,3 +186,74 @@ def test_generate_week_includes_weekly_volume_and_coverage_payload() -> None:
     assert "minimum_sets_per_muscle" in plan["muscle_coverage"]
     assert "under_target_muscles" in plan["muscle_coverage"]
     assert "covered_muscles" in plan["muscle_coverage"]
+
+
+def test_generate_week_includes_mesocycle_and_deload_payload() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "mesocycle-catalog@example.com", "password": TEST_CREDENTIAL, "name": "Mesocycle User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Mesocycle User",
+            "age": 33,
+            "weight": 85,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "full_body_v1",
+            "training_location": "home",
+            "equipment_profile": ["dumbbell", "bodyweight"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    monday = date.today() - timedelta(days=date.today().weekday())
+    weekly_checkin = client.post(
+        "/weekly-checkin",
+        headers=headers,
+        json={
+            "week_start": monday.isoformat(),
+            "body_weight": 84.5,
+            "adherence_score": 2,
+            "notes": "high fatigue",
+        },
+    )
+    assert weekly_checkin.status_code == 200
+
+    soreness_response = client.post(
+        "/soreness",
+        headers=headers,
+        json={
+            "entry_date": date.today().isoformat(),
+            "severity_by_muscle": {
+                "chest": "severe",
+                "back": "severe",
+            },
+            "notes": "high soreness",
+        },
+    )
+    assert soreness_response.status_code == 201
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+
+    assert plan["program_template_id"] == "full_body_v1"
+    assert plan["mesocycle"]["is_deload_week"] is True
+    assert plan["mesocycle"]["deload_reason"] == "early_soreness+early_adherence"
+    assert plan["deload"]["active"] is True

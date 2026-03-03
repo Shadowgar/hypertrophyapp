@@ -337,3 +337,82 @@ def test_generate_week_plan_counts_untracked_exercises_for_coverage() -> None:
     coverage = plan["muscle_coverage"]
     assert coverage["untracked_exercise_count"] == 1
     assert all(value == 0 for value in plan["weekly_volume_by_muscle"].values())
+
+
+def test_generate_week_plan_applies_scheduled_deload_at_trigger_week() -> None:
+    template = {
+        "id": "scheduled_deload_test",
+        "deload": {"trigger_weeks": 6, "set_reduction_pct": 40, "load_reduction_pct": 10},
+        "sessions": [
+            {
+                "name": "A",
+                "exercises": [
+                    {
+                        "id": "bench",
+                        "name": "Bench Press",
+                        "sets": 5,
+                        "start_weight": 100,
+                        "primary_muscles": ["chest"],
+                    }
+                ],
+            }
+        ],
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=2,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+        prior_generated_weeks=5,
+    )
+
+    ex = plan["sessions"][0]["exercises"][0]
+    assert plan["mesocycle"]["is_deload_week"] is True
+    assert plan["mesocycle"]["deload_reason"] == "scheduled"
+    assert plan["mesocycle"]["week_index"] == 6
+    assert plan["deload"]["active"] is True
+    assert ex["sets"] == 3
+    assert ex["recommended_working_weight"] == pytest.approx(90.0)
+
+
+def test_generate_week_plan_applies_early_deload_trigger_from_soreness_or_adherence() -> None:
+    template = {
+        "id": "early_deload_test",
+        "deload": {"trigger_weeks": 6, "set_reduction_pct": 35, "load_reduction_pct": 10},
+        "sessions": [
+            {
+                "name": "A",
+                "exercises": [
+                    {
+                        "id": "row",
+                        "name": "Barbell Row",
+                        "sets": 4,
+                        "start_weight": 80,
+                        "primary_muscles": ["back", "biceps"],
+                    }
+                ],
+            }
+        ],
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=2,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+        prior_generated_weeks=1,
+        latest_adherence_score=2,
+        severe_soreness_count=2,
+    )
+
+    ex = plan["sessions"][0]["exercises"][0]
+    assert plan["mesocycle"]["is_deload_week"] is True
+    assert plan["mesocycle"]["deload_reason"] == "early_soreness+early_adherence"
+    assert plan["deload"]["active"] is True
+    assert ex["sets"] == 3
+    assert ex["recommended_working_weight"] == pytest.approx(72.5)

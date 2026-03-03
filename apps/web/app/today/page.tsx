@@ -244,6 +244,16 @@ export default function TodayPage() {
           <div className="main-card">
             <p className="text-sm text-zinc-300">{workout.title}</p>
             <p className="text-xs text-zinc-400">{workout.date}</p>
+            {workout.mesocycle ? (
+              <p className="text-xs text-zinc-300">
+                Mesocycle Week {workout.mesocycle.week_index}/{workout.mesocycle.trigger_weeks_effective}
+              </p>
+            ) : null}
+            {workout.deload?.active ? (
+              <p className="inline-flex items-center gap-2 text-xs text-amber-300">
+                <span className="status-dot status-dot--yellow" /> Deload Week Active ({workout.deload.reason})
+              </p>
+            ) : null}
             {workout.resume ? <p className="text-xs text-accent">Resumed unfinished workout</p> : null}
             {workoutProgress ? (
               <p className="text-xs text-zinc-300">

@@ -545,7 +545,7 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 
 - [x] Deterministic soreness modifier integration in generation/recommendation path (Phase 6)
 - [x] Weekly volume-per-muscle computation + muscle coverage validator with deterministic tests (Phase 6)
-- [ ] Mesocycle state model + deload lifecycle + early-deload trigger rules + test matrix (Phase 7)
+- [x] Mesocycle state model + deload lifecycle + early-deload trigger rules + test matrix (Phase 7)
 - [ ] Program/template selection engine correctness (including equipment-safe variant selection) (Phase 8)
 - [ ] Reference ingestion architecture: deterministic PDF/EPUB/XLSX normalization + provenance index + checksum stability tests (Phase 13)
 - [ ] Deterministic “next recommended program” logic + switch confirmation semantics (Phase 13)
@@ -664,11 +664,11 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 ---
 
 ## Phase 7 — Mesocycle + Deload Logic
-- [ ] Mesocycle model
-- [ ] Deload support
-- [ ] Early deload triggers
-- [ ] UI indicator
-- [ ] Tests
+- [x] Mesocycle model
+- [x] Deload support
+- [x] Early deload triggers
+- [x] UI indicator
+- [x] Tests
 
 ---
 
