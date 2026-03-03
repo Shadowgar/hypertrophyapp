@@ -34,6 +34,7 @@ export default function ExerciseControlModule({
   repRange,
   onSetComplete,
 }: Props) {
+  const restCycle = defaultRestSeconds > 0 ? defaultRestSeconds : 1;
   const [secondsLeft, setSecondsLeft] = useState<number>(defaultRestSeconds);
   const [running, setRunning] = useState<boolean>(false);
   const [completedSets, setCompletedSets] = useState<number>(initialCompletedSets ?? 0);
@@ -119,12 +120,22 @@ export default function ExerciseControlModule({
         <div className="flex flex-col">
           <div className="flex items-baseline gap-2">
             <span className="font-mono text-sm">{formatTime(secondsLeft)}</span>
-            <span className="text-xs text-zinc-400">rest</span>
+            <span className="text-xs text-zinc-400">REST</span>
           </div>
           <div className="text-xs text-zinc-400">
             Set {completedSets}/{totalSets}
           </div>
           {note ? <div className="text-xs text-zinc-500">{note}</div> : null}
+        </div>
+
+        <div
+          className="relative h-10 w-10 rounded-full border border-white/15"
+          aria-label="Rest countdown ring"
+          style={{
+            background: `conic-gradient(rgba(220,38,38,0.9) ${(secondsLeft / restCycle) * 360}deg, rgba(255,255,255,0.08) 0deg)`,
+          }}
+        >
+          <div className="absolute inset-[4px] rounded-full bg-black/65" />
         </div>
 
         <div className="flex gap-2">

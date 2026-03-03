@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className="dark">
-      <body className="mx-auto min-h-screen max-w-md pb-20">
+      <body className="hyperdrive-body mx-auto min-h-screen max-w-md pb-24">
         <main className="p-4">{children}</main>
         <MobileNav />
       </body>

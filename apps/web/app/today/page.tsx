@@ -257,14 +257,27 @@ export default function TodayPage() {
             const hasVideo = Boolean(exercise.video?.youtube_url);
             const substitutions = exercise.substitution_candidates ?? [];
             const selectedName = resolveExerciseName(exercise);
+            const completed = completedSetsByExercise[exercise.id] ?? 0;
+            let status: "green" | "yellow" | "red" = "yellow";
+            if (completed >= exercise.sets) {
+              status = "green";
+            } else if (workout.resume && completed === 0) {
+              status = "red";
+            }
 
             return (
               <div key={exercise.id} className="main-card space-y-3">
-                <div>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
                   <p className="text-sm font-semibold text-zinc-100">{selectedName}</p>
                   <p className="text-xs text-zinc-400">
                     {exercise.sets} sets · {exercise.rep_range[0]}-{exercise.rep_range[1]} reps · {exercise.recommended_working_weight} kg
                   </p>
+                  </div>
+                  <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-2 py-1">
+                    <span className={`status-dot status-dot--${status}`} />
+                    <span className="text-[10px] uppercase tracking-wide text-zinc-300">{status}</span>
+                  </div>
                 </div>
 
                 <div className="glass-layer rounded-lg p-2 flex flex-wrap gap-2">

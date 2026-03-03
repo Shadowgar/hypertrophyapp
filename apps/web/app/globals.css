@@ -36,6 +36,33 @@ body {
   @apply bg-background text-foreground;
 }
 
+.hyperdrive-body {
+  background:
+    radial-gradient(1200px 480px at 75% -10%, rgba(220, 38, 38, 0.12), transparent 60%),
+    radial-gradient(800px 380px at 15% -20%, rgba(255, 255, 255, 0.06), transparent 58%),
+    var(--ui-bg-matte);
+}
+
+.hyperdrive-body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 14%);
+  animation: ambient-pan 18s ease-in-out infinite alternate;
+}
+
+@keyframes ambient-pan {
+  from {
+    opacity: 0.35;
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    opacity: 0.55;
+    transform: translate3d(0, -4px, 0);
+  }
+}
+
 .glass-layer {
   background: linear-gradient(180deg, rgba(23, 26, 33, 0.7), rgba(16, 18, 23, 0.58));
   border: 1px solid var(--ui-border-subtle);
@@ -87,5 +114,75 @@ body {
   pointer-events: none;
   border-radius: 0.75rem;
   border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.command-dock-wrap {
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.command-dock {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.9rem;
+  padding: 0.35rem;
+  background: linear-gradient(180deg, rgba(16, 18, 23, 0.9), rgba(10, 11, 16, 0.88));
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.42);
+}
+
+.dock-btn {
+  transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.dock-btn--idle {
+  color: #d4d4d8;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.dock-btn--active {
+  color: #fff;
+  background: rgba(220, 38, 38, 0.18);
+  box-shadow: var(--ui-glow-active);
+}
+
+.status-dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 9999px;
+  display: inline-block;
+}
+
+.status-dot--green {
+  background: var(--ui-state-green);
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.45);
+}
+
+.status-dot--yellow {
+  background: var(--ui-state-yellow);
+  box-shadow: 0 0 10px rgba(234, 179, 8, 0.45);
+}
+
+.status-dot--red {
+  background: var(--ui-state-red);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.45);
+}
+
+body[data-ui-mode="workout"] {
+  --ui-border-accent: rgba(220, 38, 38, 0.8);
+}
+
+body[data-ui-mode="plan"] {
+  --ui-border-accent: rgba(244, 114, 24, 0.68);
+}
+
+body[data-ui-mode="analytics"] {
+  --ui-border-accent: rgba(249, 115, 22, 0.7);
+}
+
+body[data-ui-mode="body"] {
+  --ui-border-accent: rgba(120, 113, 108, 0.72);
+}
+
+body[data-ui-mode="system"] {
+  --ui-border-accent: rgba(161, 161, 170, 0.7);
 }
 

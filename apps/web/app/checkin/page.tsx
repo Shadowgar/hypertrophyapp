@@ -94,6 +94,26 @@ export default function CheckinPage() {
           Save Check-In
         </Button>
       </form>
+      <div className="grid grid-cols-3 gap-2">
+        <div className="main-card">
+          <p className="text-[10px] uppercase tracking-wide text-zinc-400">Sleep</p>
+          <p className="inline-flex items-center gap-2 text-xs text-zinc-200">
+            <span className="status-dot status-dot--green" /> Stable
+          </p>
+        </div>
+        <div className="main-card">
+          <p className="text-[10px] uppercase tracking-wide text-zinc-400">Stress</p>
+          <p className="inline-flex items-center gap-2 text-xs text-zinc-200">
+            <span className="status-dot status-dot--yellow" /> Moderate
+          </p>
+        </div>
+        <div className="main-card">
+          <p className="text-[10px] uppercase tracking-wide text-zinc-400">Readiness</p>
+          <p className="inline-flex items-center gap-2 text-xs text-zinc-200">
+            <span className="status-dot status-dot--red" /> Watch
+          </p>
+        </div>
+      </div>
       <p className="text-sm text-zinc-300">Status: {status}</p>
     </div>
   );
