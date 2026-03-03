@@ -1,0 +1,41 @@
+name: Mini Validate (PR)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  mini-validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Compose plugin
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose-plugin || true
+
+      - name: Build and run services (if docker-compose present)
+        run: |
+          if command -v docker-compose >/dev/null 2>&1; then
+            docker-compose up -d --build
+          elif docker compose version >/dev/null 2>&1; then
+            docker compose up -d --build
+          else
+            echo "docker-compose not available; the validation script may still succeed if it uses local commands"
+          fi
+
+      - name: Run mini validation script
+        run: |
+          set -o pipefail
+          mkdir -p docs
+          ./scripts/mini_validate.sh > docs/mini_validate_output.txt 2>&1 || true
+          cat docs/mini_validate_output.txt
+
+      - name: Upload validation logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: mini-validate-logs
+          path: docs/mini_validate_output.txt

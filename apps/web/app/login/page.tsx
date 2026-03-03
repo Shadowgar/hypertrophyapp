@@ -8,6 +8,7 @@ import { API_BASE_URL } from "@/lib/env";
 export default function LoginPage() {
   const [email, setEmail] = useState("athlete@example.com");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [status, setStatus] = useState("Idle");
 
   async function handleSubmit(event: FormEvent) {
@@ -48,8 +49,16 @@ export default function LoginPage() {
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           placeholder="Password"
-          type="password"
+          type={showPassword ? "text" : "password"}
         />
+        <Button
+          className="h-8 w-full text-xs"
+          onClick={() => setShowPassword((prev) => !prev)}
+          type="button"
+          variant="secondary"
+        >
+          {showPassword ? "Hide Password" : "Show Password"}
+        </Button>
         <Button className="w-full" type="submit">
           Login
         </Button>

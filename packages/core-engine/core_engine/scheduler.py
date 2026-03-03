@@ -117,7 +117,7 @@ def generate_week_plan(
     phase: str,
     available_equipment: list[str] | None = None,
 ) -> dict[str, Any]:
-    days_available = max(2, min(4, days_available))
+    days_available = max(2, min(7, days_available))
     today = date.today()
     week_start = today - timedelta(days=today.weekday())
 
@@ -131,7 +131,11 @@ def generate_week_plan(
 
     planned_sessions: list[dict[str, Any]] = []
     for order_idx, (template_index, session) in enumerate(selected_sessions):
-        session_date = week_start + timedelta(days=order_idx * (7 // days_available))
+        template_day_offset = session.get("day_offset")
+        if isinstance(template_day_offset, int):
+            session_date = week_start + timedelta(days=max(0, min(6, template_day_offset)))
+        else:
+            session_date = week_start + timedelta(days=order_idx * (7 // days_available))
         exercises: list[dict[str, Any]] = []
         for exercise in session.get("exercises", []):
             planned_exercise = _build_planned_exercise(exercise, history_index, equipment_set)

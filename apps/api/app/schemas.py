@@ -44,9 +44,10 @@ class ProfileUpsert(BaseModel):
     weight: float
     gender: str
     split_preference: str
+    selected_program_id: str = "full_body_v1"
     training_location: str | None = None
     equipment_profile: list[str] = Field(default_factory=list)
-    days_available: int = Field(ge=2, le=4)
+    days_available: int = Field(ge=2, le=5)
     nutrition_phase: str
     calories: int
     protein: int
@@ -115,7 +116,16 @@ class BodyMeasurementEntryResponse(BaseModel):
 
 
 class GenerateWeekPlanRequest(BaseModel):
-    template_id: str = "full_body_v1"
+    template_id: str | None = None
+
+
+class ProgramTemplateSummary(BaseModel):
+    id: str
+    version: str
+    split: str
+    days_supported: list[int]
+    session_count: int
+    description: str
 
 
 class WorkoutSetLogRequest(BaseModel):

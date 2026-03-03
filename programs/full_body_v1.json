@@ -1,8 +1,8 @@
 {
   "id": "full_body_v1",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "split": "full_body",
-  "days_supported": [2, 3, 4],
+  "days_supported": [2, 3, 4, 5],
   "deload": {
     "trigger_weeks": 6,
     "set_reduction_pct": 40,
@@ -14,35 +14,289 @@
   },
   "sessions": [
     {
-      "name": "Full Body A",
+      "name": "Full Body #1",
+      "day_offset": 0,
       "exercises": [
-        { "id": "squat", "name": "Back Squat", "sets": 3, "rep_range": [6, 10], "start_weight": 60, "priority": "high" },
-        { "id": "bench", "name": "Bench Press", "sets": 3, "rep_range": [6, 10], "start_weight": 50, "priority": "high" },
-        { "id": "row", "name": "Chest Supported Row", "sets": 3, "rep_range": [8, 12], "start_weight": 35 }
+        {
+          "id": "lat_cable_row",
+          "name": "Lat-Focused Cable Row",
+          "sets": 3,
+          "rep_range": [10, 12],
+          "start_weight": 42.5,
+          "priority": "high",
+          "equipment_tags": ["cable"],
+          "substitution_candidates": ["Chest Supported Row", "1-Arm Cable Row"],
+          "notes": "Warm-up: 2 sets. Working: 3 sets of 10-12. Week 6 intensity: long-length partials on all reps of the last set."
+        },
+        {
+          "id": "low_incline_db_press",
+          "name": "Low Incline DB Press",
+          "sets": 3,
+          "rep_range": [8, 10],
+          "start_weight": 30,
+          "priority": "high",
+          "equipment_tags": ["dumbbell"],
+          "substitution_candidates": ["Incline Machine Press", "Barbell Incline Press"],
+          "notes": "Warm-up: 2 sets. Working: 3 sets of 8-10. Keep controlled eccentric and full range."
+        },
+        {
+          "id": "lying_leg_curl",
+          "name": "Lying Leg Curl",
+          "sets": 3,
+          "rep_range": [10, 12],
+          "start_weight": 40,
+          "equipment_tags": ["machine"],
+          "substitution_candidates": ["Seated Leg Curl", "DB Leg Curl"],
+          "notes": "Warm-up: 1-2 sets. Working: 3 sets of 10-12."
+        },
+        {
+          "id": "smith_squat",
+          "name": "Smith Machine Squat",
+          "sets": 3,
+          "rep_range": [8, 10],
+          "start_weight": 70,
+          "equipment_tags": ["machine"],
+          "substitution_candidates": ["Hack Squat", "Back Squat"],
+          "notes": "Warm-up: 2 sets. Working: 3 sets of 8-10."
+        },
+        {
+          "id": "reverse_pec_deck",
+          "name": "Reverse Pec Deck",
+          "sets": 3,
+          "rep_range": [12, 15],
+          "start_weight": 25,
+          "equipment_tags": ["machine"],
+          "substitution_candidates": ["Cable Rear Delt Fly", "DB Rear Delt Fly"],
+          "notes": "Working: 3 sets of 12-15. Last set uses integrated partials."
+        }
       ]
     },
     {
-      "name": "Full Body B",
+      "name": "Full Body #2",
+      "day_offset": 1,
       "exercises": [
-        { "id": "rdl", "name": "Romanian Deadlift", "sets": 3, "rep_range": [6, 10], "start_weight": 70, "priority": "high" },
-        { "id": "ohp", "name": "Overhead Press", "sets": 3, "rep_range": [6, 10], "start_weight": 30, "priority": "high" },
-        { "id": "pulldown", "name": "Lat Pulldown", "sets": 3, "rep_range": [8, 12], "start_weight": 45 }
+        {
+          "id": "single_arm_lat_pulldown",
+          "name": "Single-Arm Lat Pulldown",
+          "sets": 3,
+          "rep_range": [10, 12],
+          "start_weight": 32.5,
+          "priority": "high",
+          "equipment_tags": ["cable"],
+          "substitution_candidates": ["Neutral Grip Pulldown", "Assisted Pull-up"],
+          "notes": "Warm-up: 2 sets. Working: 3 sets of 10-12."
+        },
+        {
+          "id": "flat_machine_press",
+          "name": "Flat Machine Press",
+          "sets": 3,
+          "rep_range": [8, 10],
+          "start_weight": 55,
+          "equipment_tags": ["machine"],
+          "substitution_candidates": ["Flat DB Press", "Barbell Bench Press"],
+          "notes": "Warm-up: 2 sets. Working: 3 sets of 8-10."
+        },
+        {
+          "id": "rdl",
+          "name": "Romanian Deadlift",
+          "sets": 3,
+          "rep_range": [8, 10],
+          "start_weight": 80,
+          "priority": "high",
+          "equipment_tags": ["barbell"],
+          "substitution_candidates": ["DB RDL", "Smith RDL"],
+          "notes": "Warm-up: 2 sets. Working: 3 sets of 8-10."
+        },
+        {
+          "id": "leg_extension",
+          "name": "Leg Extension",
+          "sets": 3,
+          "rep_range": [12, 15],
+          "start_weight": 50,
+          "equipment_tags": ["machine"],
+          "substitution_candidates": ["Sissy Squat", "Spanish Squat"],
+          "notes": "Working: 3 sets of 12-15."
+        },
+        {
+          "id": "lateral_raise",
+          "name": "Cable Lateral Raise",
+          "sets": 3,
+          "rep_range": [12, 20],
+          "start_weight": 10,
+          "equipment_tags": ["cable"],
+          "substitution_candidates": ["DB Lateral Raise", "Machine Lateral Raise"],
+          "notes": "Working: 3 sets of 12-20."
+        }
       ]
     },
     {
-      "name": "Full Body C",
+      "name": "Full Body #3",
+      "day_offset": 3,
       "exercises": [
-        { "id": "legpress", "name": "Leg Press", "sets": 3, "rep_range": [10, 15], "start_weight": 120 },
-        { "id": "incline", "name": "Incline DB Press", "sets": 3, "rep_range": [8, 12], "start_weight": 24 },
-        { "id": "curl", "name": "Cable Curl", "sets": 2, "rep_range": [10, 15], "start_weight": 20 }
+        {
+          "id": "chest_supported_row",
+          "name": "Chest Supported Row",
+          "sets": 3,
+          "rep_range": [8, 12],
+          "start_weight": 40,
+          "equipment_tags": ["machine", "dumbbell"],
+          "substitution_candidates": ["T-Bar Row", "Cable Row"],
+          "notes": "Warm-up: 1-2 sets. Working: 3 sets of 8-12."
+        },
+        {
+          "id": "incline_db_press",
+          "name": "Incline DB Press",
+          "sets": 3,
+          "rep_range": [8, 12],
+          "start_weight": 26,
+          "equipment_tags": ["dumbbell"],
+          "substitution_candidates": ["Incline Machine Press", "Smith Incline Press"],
+          "notes": "Warm-up: 2 sets. Working: 3 sets of 8-12."
+        },
+        {
+          "id": "leg_press",
+          "name": "Leg Press",
+          "sets": 3,
+          "rep_range": [10, 15],
+          "start_weight": 140,
+          "equipment_tags": ["machine"],
+          "substitution_candidates": ["Hack Squat", "Smith Squat"],
+          "notes": "Warm-up: 2 sets. Working: 3 sets of 10-15."
+        },
+        {
+          "id": "seated_leg_curl",
+          "name": "Seated Leg Curl",
+          "sets": 3,
+          "rep_range": [10, 12],
+          "start_weight": 42.5,
+          "equipment_tags": ["machine"],
+          "substitution_candidates": ["Lying Leg Curl"],
+          "notes": "Working: 3 sets of 10-12."
+        },
+        {
+          "id": "rear_delt_fly",
+          "name": "Rear Delt Cable Fly",
+          "sets": 3,
+          "rep_range": [12, 20],
+          "start_weight": 8,
+          "equipment_tags": ["cable"],
+          "substitution_candidates": ["Reverse Pec Deck", "DB Rear Delt Fly"],
+          "notes": "Working: 3 sets of 12-20."
+        }
       ]
     },
     {
-      "name": "Full Body D",
+      "name": "Full Body #4",
+      "day_offset": 4,
       "exercises": [
-        { "id": "split_squat", "name": "Bulgarian Split Squat", "sets": 3, "rep_range": [8, 12], "start_weight": 20 },
-        { "id": "dip", "name": "Assisted Dip", "sets": 3, "rep_range": [8, 12], "start_weight": 0 },
-        { "id": "lateral", "name": "Lateral Raise", "sets": 3, "rep_range": [12, 20], "start_weight": 8 }
+        {
+          "id": "neutral_grip_pulldown",
+          "name": "Neutral Grip Lat Pulldown",
+          "sets": 3,
+          "rep_range": [8, 12],
+          "start_weight": 50,
+          "priority": "high",
+          "equipment_tags": ["cable"],
+          "substitution_candidates": ["Pull-up", "Assisted Pull-up"],
+          "notes": "Warm-up: 2 sets. Working: 3 sets of 8-12."
+        },
+        {
+          "id": "smith_incline_press",
+          "name": "Smith Incline Press",
+          "sets": 3,
+          "rep_range": [8, 10],
+          "start_weight": 65,
+          "priority": "high",
+          "equipment_tags": ["machine"],
+          "substitution_candidates": ["Incline DB Press", "Machine Incline Press"],
+          "notes": "Warm-up: 2 sets. Working: 3 sets of 8-10."
+        },
+        {
+          "id": "hack_squat",
+          "name": "Hack Squat",
+          "sets": 3,
+          "rep_range": [8, 12],
+          "start_weight": 90,
+          "equipment_tags": ["machine"],
+          "substitution_candidates": ["Leg Press", "Back Squat"],
+          "notes": "Warm-up: 2 sets. Working: 3 sets of 8-12."
+        },
+        {
+          "id": "db_rdl",
+          "name": "DB Romanian Deadlift",
+          "sets": 3,
+          "rep_range": [8, 12],
+          "start_weight": 28,
+          "equipment_tags": ["dumbbell"],
+          "substitution_candidates": ["Barbell RDL", "Smith RDL"],
+          "notes": "Working: 3 sets of 8-12."
+        },
+        {
+          "id": "machine_lateral_raise",
+          "name": "Machine Lateral Raise",
+          "sets": 3,
+          "rep_range": [12, 20],
+          "start_weight": 20,
+          "equipment_tags": ["machine"],
+          "substitution_candidates": ["Cable Lateral Raise", "DB Lateral Raise"],
+          "notes": "Working: 3 sets of 12-20."
+        }
+      ]
+    },
+    {
+      "name": "Arms + Weak Points",
+      "day_offset": 5,
+      "exercises": [
+        {
+          "id": "ez_bar_curl",
+          "name": "EZ-Bar Curl",
+          "sets": 3,
+          "rep_range": [8, 12],
+          "start_weight": 30,
+          "equipment_tags": ["barbell"],
+          "substitution_candidates": ["Cable Curl", "DB Curl"],
+          "notes": "Warm-up: 1-2 sets. Working: 3 sets of 8-12."
+        },
+        {
+          "id": "overhead_cable_extension",
+          "name": "Overhead Cable Triceps Extension",
+          "sets": 3,
+          "rep_range": [10, 15],
+          "start_weight": 25,
+          "equipment_tags": ["cable"],
+          "substitution_candidates": ["Skull Crusher", "Rope Pushdown"],
+          "notes": "Working: 3 sets of 10-15."
+        },
+        {
+          "id": "hammer_curl",
+          "name": "Incline Hammer Curl",
+          "sets": 3,
+          "rep_range": [10, 12],
+          "start_weight": 14,
+          "equipment_tags": ["dumbbell"],
+          "substitution_candidates": ["Cable Hammer Curl"],
+          "notes": "Working: 3 sets of 10-12."
+        },
+        {
+          "id": "rope_pressdown",
+          "name": "Rope Pressdown",
+          "sets": 3,
+          "rep_range": [10, 15],
+          "start_weight": 27.5,
+          "equipment_tags": ["cable"],
+          "substitution_candidates": ["Machine Dip", "V-Bar Pressdown"],
+          "notes": "Working: 3 sets of 10-15."
+        },
+        {
+          "id": "weak_point_choice",
+          "name": "Weak Point Isolation",
+          "sets": 3,
+          "rep_range": [12, 20],
+          "start_weight": 15,
+          "equipment_tags": ["cable", "machine", "dumbbell"],
+          "substitution_candidates": ["Calf Raise", "Rear Delt Fly", "Lateral Raise"],
+          "notes": "Choose one lagging muscle and run 3 focused sets."
+        }
       ]
     }
   ]

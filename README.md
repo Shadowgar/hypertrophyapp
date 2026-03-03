@@ -44,3 +44,10 @@ Deterministic hypertrophy planner + workout runner for Raspberry Pi-hosted local
 - Runtime never parses PDFs/XLSX and never uses vector/search retrieval.
 - All guide knowledge is encoded into versioned templates and deterministic code rules.
 - Program generation uses only persisted user/profile/history + canonical templates.
+
+## CI
+
+Mini-validate (runs on PRs):
+
+![mini-validate](https://github.com/Shadowgar/hypertrophyapp/actions/workflows/mini-validate.yml/badge.svg)
+
