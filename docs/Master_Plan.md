@@ -553,7 +553,7 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 ### Priority B — Codex Should Own If Time Allows
 
 - [x] API contracts for guide retrieval and plan guide drill-down pathways (Phase 13)
-- [ ] Offline queue/replay conflict semantics and deterministic sync rules (Phase 10)
+- [x] Offline queue/replay conflict semantics and deterministic sync rules (Phase 10)
 - [ ] Security/hardening architecture: secrets strategy, rate limiting approach, backup/restore design and drills (Phase 11)
 - [ ] Auth expansion architecture for OAuth + Passkey (WebAuthn) flows (Phase 12)
 
@@ -717,6 +717,7 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 ---
 
 ## Phase 10 — Offline Reliability
+- Contract defined in `docs/Offline_Sync_Deterministic_Contract.md` (queue ordering, idempotency, conflict semantics, sync state machine).
 - [ ] Offline logging queue
 - [ ] Replay mechanism
 - [ ] Sync status UX

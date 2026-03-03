@@ -71,6 +71,15 @@ Scope: endpoints consumed by current web flows.
 - Template validation failures surface as `422` with stable error semantics.
 - Additive response fields are preferred; breaking field removals/renames require coordinated updates.
 
+## 4) Offline Replay Contract
+
+Scope: deterministic offline queue/replay and sync status semantics.
+
+- Canonical contract document: `docs/Offline_Sync_Deterministic_Contract.md`
+- Replay must be idempotent via `(client_id, op_id)` semantics.
+- Ordering and conflict resolution behavior must remain deterministic.
+- Sync status states/transitions must match the contract state machine.
+
 ## Enforcement Checklist
 
 Before merging changes in these areas:
