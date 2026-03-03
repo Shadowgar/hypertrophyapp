@@ -36,6 +36,7 @@ export default function TodayPage() {
   const [sorenessStatus, setSorenessStatus] = useState("Idle");
   const [sorenessNotes, setSorenessNotes] = useState("");
   const [sorenessByMuscle, setSorenessByMuscle] = useState<Record<string, SorenessSeverity>>(createInitialSorenessState());
+  const [completedSetsByExercise, setCompletedSetsByExercise] = useState<Record<string, number>>({});
 
   useEffect(() => {
     api.health()
@@ -61,6 +62,19 @@ export default function TodayPage() {
         }
       } else {
         setSwapIndexByExercise({});
+      }
+      // restore completed sets for this session if present
+      try {
+        const completedKey = `hypertrophy_completed_sets:${data.session_id}`;
+        const savedCompleted = localStorage.getItem(completedKey);
+        if (savedCompleted) {
+          const parsed = JSON.parse(savedCompleted) as Record<string, number>;
+          setCompletedSetsByExercise(parsed);
+        } else {
+          setCompletedSetsByExercise({});
+        }
+      } catch {
+        setCompletedSetsByExercise({});
       }
     } catch {
       setWorkout(null);
@@ -122,6 +136,41 @@ export default function TodayPage() {
       return { ...prev, [exerciseId]: selectedIndex };
     });
     setSwapTargetExerciseId(null);
+  }
+
+  async function handleSetComplete(exerciseId: string, completedCount: number) {
+    if (!workout) return;
+    setCompletedSetsByExercise((prev) => {
+      const next = { ...prev, [exerciseId]: completedCount };
+      try {
+        const completedKey = `hypertrophy_completed_sets:${workout.session_id}`;
+        localStorage.setItem(completedKey, JSON.stringify(next));
+      } catch {
+        // ignore storage errors
+      }
+      return next;
+    });
+
+    // find exercise info for payload
+    const exercise = workout.exercises.find((e) => e.id === exerciseId);
+    if (!exercise) return;
+
+    const payload = {
+      primary_exercise_id: exercise.primary_exercise_id ?? null,
+      exercise_id: exerciseId,
+      set_index: completedCount,
+      reps: exercise.rep_range ? exercise.rep_range[0] : 0,
+      weight: exercise.recommended_working_weight ?? 0,
+      rpe: null,
+    } as const;
+
+    try {
+      await api.logSet(workout.session_id, payload);
+    } catch (e) {
+      // log but don't interrupt user flow
+      // eslint-disable-next-line no-console
+      console.warn("logSet failed", e);
+    }
   }
 
   function resolveExerciseName(exercise: WorkoutExercise): string {
@@ -210,6 +259,8 @@ export default function TodayPage() {
                   note={exercise.notes}
                   totalSets={exercise.sets}
                   defaultRestSeconds={90}
+                  initialCompletedSets={completedSetsByExercise[exercise.id] ?? 0}
+                  onSetComplete={handleSetComplete}
                 />
 
                 {notesOpen ? (

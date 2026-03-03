@@ -30,11 +30,11 @@ test("Settings page shows selected program and saves changes", async () => {
   render(<SettingsPage />);
 
   await waitFor(() => {
-    expect(screen.getByLabelText(/Program/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Settings program selector/i)).toBeInTheDocument();
   });
 
   // change program
-  const select = screen.getByLabelText(/Program/i);
+  const select = screen.getByLabelText(/Settings program selector/i);
   fireEvent.change(select, { target: { value: "upper_lower" } });
 
   const save = screen.getByRole("button", { name: /Save Program/i });

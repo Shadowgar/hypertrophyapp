@@ -8,6 +8,8 @@ type Props = Readonly<{
   note?: string | null;
   totalSets?: number;
   defaultRestSeconds?: number;
+  initialCompletedSets?: number;
+  onSetComplete?: (exerciseId: string, setIndex: number) => Promise<void> | void;
 }>;
 
 function formatTime(seconds: number) {
@@ -25,10 +27,12 @@ export default function ExerciseControlModule({
   note,
   totalSets = 3,
   defaultRestSeconds = 90,
+  initialCompletedSets = 0,
+  onSetComplete,
 }: Props) {
   const [secondsLeft, setSecondsLeft] = useState<number>(defaultRestSeconds);
   const [running, setRunning] = useState<boolean>(false);
-  const [completedSets, setCompletedSets] = useState<number>(0);
+  const [completedSets, setCompletedSets] = useState<number>(initialCompletedSets ?? 0);
   const intervalRef = useRef<ReturnType<typeof globalThis.setInterval> | null>(null);
 
   useEffect(() => {
@@ -74,6 +78,11 @@ export default function ExerciseControlModule({
   function completeSet() {
     setCompletedSets((prev) => {
       const next = Math.min(prev + 1, totalSets);
+      // notify parent of new completed set index
+      if (onSetComplete) {
+        // fire-and-forget, parent may persist this
+        Promise.resolve(onSetComplete(exerciseId, next)).catch(() => {});
+      }
       return next;
     });
     resetTimer();
