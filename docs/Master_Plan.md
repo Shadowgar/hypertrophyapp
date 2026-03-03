@@ -759,7 +759,7 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 - [x] Upgrade Today runner composition to closer HUD parity
 - [x] Upgrade Onboarding composition and hierarchy to match premium finish
 - [x] Upgrade Week/Check-In/History/Guides/Settings to same material hierarchy
-- [ ] Add analytics visual module polish (sparklines, PR highlights, compact charts)
+- [x] Add analytics visual module polish (sparklines, PR highlights, compact charts)
 - [ ] Add motion polish pass (120–200ms, transform/opacity only)
 - [ ] Add iconography consistency pass for all nav/action surfaces
 - [ ] Capture screenshot parity checklist for key screens (before/after)
