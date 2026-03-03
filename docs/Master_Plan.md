@@ -82,6 +82,68 @@ Layout density and panel structure may shift by mode, but component behavior and
 - Avoid layout thrashing by preventing repeated reflow-triggering patterns.
 - All animations must complete under 200ms.
 
+## Reference Visual Parity Program (Premium Finish)
+
+Goal: make production screens visually align with the Hyperdrive reference aesthetic while preserving deterministic UX and mobile performance.
+
+### Visual Parity Targets
+
+- Multi-layer depth system with explicit material hierarchy (base matte shell, glass panel, elevated module, active highlight).
+- Cinematic but restrained lighting: edge highlights, radial passes, controlled bloom, subtle vignette, low-opacity streaks.
+- Instrument-grade module composition: dense but readable metrics, status pips, compact HUD rows, clear action rails.
+- Tight typographic hierarchy: consistent title/body/label scales, fixed spacing rhythm, deterministic alignment grid.
+- Premium command dock: stronger active/inactive contrast, consistent iconography, deterministic state semantics per mode.
+
+### Design Token Expansion (Required)
+
+- Define 4–6 depth tiers for shadow/glow treatment.
+- Define glass opacity tiers for shell/card/module overlays.
+- Define edge-highlight tiers for inactive/hover/active states.
+- Define red accent intensity tiers (idle, active, warning, PR).
+- Define state color tiers (green/yellow/red) reserved for performance signals only.
+
+### Component Overhaul Scope (Required)
+
+- Inputs, selects, textareas, and toggles adopt layered glass + inner border treatment.
+- Buttons and segmented controls adopt deterministic active/pressed/disabled material states.
+- Card primitives adopt shell/module variants with consistent padding, radius, and border logic.
+- Bottom navigation dock adopts premium active indicator behavior and icon/text balance.
+- Exercise control surfaces standardize metric emphasis, row rhythm, and action-rail hierarchy.
+
+### Cinematic Shell Scope (Required)
+
+- Add ambient matte background grain/noise at low opacity.
+- Add subtle radial light passes with strict opacity ceilings.
+- Add constrained vignette and edge illumination layers for depth framing.
+- Keep all cinematic effects CSS-based and GPU-safe.
+
+### Information Density & Dashboard Scope
+
+- Add compact telemetry modules for weekly volume, progression, readiness, and body metrics.
+- Standardize micro-widgets (status dots, sparkline framing, module headers, metric labels).
+- Enforce deterministic module order per mode.
+
+### Motion & Interaction Scope
+
+- Transition duration budget: 120–200ms.
+- Use opacity/transform only for interactive feedback.
+- Add subtle glow ramp for active controls and completion events.
+- Add deterministic press/focus feedback for all primary controls.
+
+### Iconography & Framing Scope
+
+- Use one consistent icon family/weight across command surfaces.
+- Enforce mobile-first frame composition for screenshot parity (iPhone Pro Max first).
+- Preserve accessibility contrast and tap target requirements while matching aesthetic goals.
+
+### Visual Acceptance Criteria
+
+- Side-by-side screenshot review shows clear parity in depth, hierarchy, accent behavior, and dock language.
+- Onboarding, Today, Week, Check-In, History, Guides, and Settings share one coherent material system.
+- Active/idle/warning states are visually distinct and semantically consistent.
+- No performance regressions on mobile target (maintain current interaction smoothness).
+- No deterministic behavior changes in planner/workout logic due to UI work.
+
 ---
 
 ## Product Goal
@@ -646,6 +708,29 @@ If missing, UI should not render a video action.
 - [ ] Google OAuth login
 - [ ] Apple Sign In login
 - [ ] Passkey login (WebAuthn)
+
+---
+
+## Phase 14 — Hyperdrive Visual Parity (App-Wide Premium UI)
+- [ ] Expand design tokens for depth/glow/glass/accent tiers
+- [ ] Implement shell material tiers (base, glass, elevated, active)
+- [ ] Implement cinematic background layers (grain, radial pass, vignette)
+- [ ] Overhaul form controls (input/select/textarea/toggle) with unified material language
+- [ ] Overhaul button and segmented-control interaction states
+- [ ] Overhaul card primitives (shell/module variants + deterministic spacing grid)
+- [ ] Upgrade command dock contrast, active markers, and icon consistency
+- [ ] Standardize typography scale/weights/line-height/letter-spacing across routes
+- [ ] Standardize telemetry micro-widgets (status dots, metric labels, module headers)
+- [ ] Upgrade Today runner composition to closer HUD parity
+- [ ] Upgrade Onboarding composition and hierarchy to match premium finish
+- [ ] Upgrade Week/Check-In/History/Guides/Settings to same material hierarchy
+- [ ] Add analytics visual module polish (sparklines, PR highlights, compact charts)
+- [ ] Add motion polish pass (120–200ms, transform/opacity only)
+- [ ] Add iconography consistency pass for all nav/action surfaces
+- [ ] Capture screenshot parity checklist for key screens (before/after)
+- [ ] Add web visual regression snapshots for critical routes
+- [ ] Validate no performance regression on mobile target
+- [ ] Validate no deterministic behavior changes from UI refactor
 
 ---
 
