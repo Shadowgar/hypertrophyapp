@@ -112,8 +112,8 @@ export default function OnboardingPage() {
     <div className="space-y-4">
       <h1 className="text-xl font-semibold">Onboarding</h1>
       <form className="main-card space-y-3" onSubmit={handleSubmit}>
-        <input className="w-full rounded-md bg-zinc-900 p-2 text-white" value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" />
-        <input className="w-full rounded-md bg-zinc-900 p-2 text-white" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
+        <input aria-label="Full name" className="w-full rounded-md bg-zinc-900 p-2 text-white" value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" />
+        <input aria-label="Email address" className="w-full rounded-md bg-zinc-900 p-2 text-white" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
         <div className="space-y-2">
           <input
             className="w-full rounded-md bg-zinc-900 p-2 text-white"
@@ -121,6 +121,7 @@ export default function OnboardingPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
+            aria-label="Password"
           />
           <Button
             className="h-8 w-full text-xs"
@@ -159,6 +160,7 @@ export default function OnboardingPage() {
             className="w-full rounded-md bg-zinc-900 p-2 text-white"
             value={selectedProgramId ?? ""}
             onChange={(e) => setSelectedProgramId(e.target.value || null)}
+            aria-label="Program selector"
           >
             <option value="">Default (trainer choice)</option>
             {programs.map((p) => (

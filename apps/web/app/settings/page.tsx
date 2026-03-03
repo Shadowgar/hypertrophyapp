@@ -66,6 +66,7 @@ export default function SettingsPage() {
             className="w-full rounded-md bg-zinc-900 p-2 text-white"
             value={selectedProgramId ?? ""}
             onChange={(e) => setSelectedProgramId(e.target.value || null)}
+            aria-label="Settings program selector"
           >
             <option value="">Default (trainer choice)</option>
             {programs.map((p) => (
@@ -73,7 +74,7 @@ export default function SettingsPage() {
             ))}
           </select>
           <div className="flex gap-2">
-            <Button className="mt-2" onClick={saveProgram}>Save Program</Button>
+            <Button aria-label="Save selected program" className="mt-2" onClick={saveProgram}>Save Program</Button>
             <p className="text-sm text-zinc-400 mt-3">{status ?? ""}</p>
           </div>
         </div>

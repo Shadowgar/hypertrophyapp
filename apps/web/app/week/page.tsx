@@ -33,11 +33,11 @@ export default function WeekPage() {
       <div className="main-card">
         <div className="space-y-2">
           <label htmlFor="week-program" className="text-xs text-zinc-400">Program override (optional)</label>
-          <select id="week-program" className="w-full rounded-md bg-zinc-900 p-2 text-white" value={selectedProgramId ?? ""} onChange={(e) => setSelectedProgramId(e.target.value || null)}>
+          <select id="week-program" aria-label="Week program override selector" className="w-full rounded-md bg-zinc-900 p-2 text-white" value={selectedProgramId ?? ""} onChange={(e) => setSelectedProgramId(e.target.value || null)}>
             <option value="">Server-selected (default)</option>
             {programs.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
-          <Button className="w-full" onClick={generate}>
+          <Button aria-label="Generate week plan" className="w-full" onClick={generate}>
             Generate Week
           </Button>
         </div>
