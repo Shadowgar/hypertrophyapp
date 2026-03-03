@@ -19,12 +19,16 @@ else
 	(cd "$ROOT/apps/api" && PYTHONPATH=. pytest tests/test_program_catalog_and_selection.py tests/test_profile_schema.py tests/test_workout_resume.py tests/test_workout_progress.py tests/test_program_loader.py -q)
 fi
 
-echo "[2/3] Web build"
+echo "[2/4] Web tests"
+cd "$ROOT/apps/web"
+npm run test --silent
+
+echo "[3/4] Web build"
 cd "$ROOT/apps/web"
 npm run build
 
 cd "$ROOT"
-echo "[3/3] Changed files overview"
+echo "[4/4] Changed files overview"
 git --no-pager status --short
 
 echo "[PASS] Mini validation complete."
