@@ -24,6 +24,27 @@
   --ui-shadow-soft: 0 10px 24px rgba(0, 0, 0, 0.35);
   --ui-shadow-elevated: 0 16px 34px rgba(0, 0, 0, 0.42);
 
+  --ui-depth-shadow-1: 0 2px 8px rgba(0, 0, 0, 0.22);
+  --ui-depth-shadow-2: 0 6px 14px rgba(0, 0, 0, 0.3);
+  --ui-depth-shadow-3: 0 10px 24px rgba(0, 0, 0, 0.35);
+  --ui-depth-shadow-4: 0 16px 34px rgba(0, 0, 0, 0.42);
+  --ui-depth-shadow-5: 0 24px 44px rgba(0, 0, 0, 0.5);
+  --ui-depth-shadow-6: 0 30px 56px rgba(0, 0, 0, 0.58);
+
+  --ui-glass-alpha-shell: 0.5;
+  --ui-glass-alpha-card: 0.64;
+  --ui-glass-alpha-module: 0.74;
+  --ui-glass-alpha-elevated: 0.82;
+
+  --ui-edge-idle: rgba(255, 255, 255, 0.08);
+  --ui-edge-hover: rgba(255, 255, 255, 0.14);
+  --ui-edge-active: rgba(220, 38, 38, 0.78);
+
+  --ui-accent-idle: rgba(220, 38, 38, 0.1);
+  --ui-accent-active: rgba(220, 38, 38, 0.2);
+  --ui-accent-warning: rgba(234, 179, 8, 0.22);
+  --ui-accent-pr: rgba(34, 197, 94, 0.2);
+
   --ui-space-1: 0.25rem;
   --ui-space-2: 0.5rem;
   --ui-space-3: 0.75rem;
@@ -52,6 +73,17 @@ body {
   animation: ambient-pan 18s ease-in-out infinite alternate;
 }
 
+.hyperdrive-body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(140% 100% at 50% -12%, rgba(255, 255, 255, 0.02), transparent 52%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.36));
+  opacity: 0.7;
+}
+
 @keyframes ambient-pan {
   from {
     opacity: 0.35;
@@ -64,23 +96,62 @@ body {
 }
 
 .glass-layer {
-  background: linear-gradient(180deg, rgba(23, 26, 33, 0.7), rgba(16, 18, 23, 0.58));
-  border: 1px solid var(--ui-border-subtle);
-  box-shadow: var(--ui-shadow-soft);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--ui-surface-2) calc(var(--ui-glass-alpha-card) * 100%), transparent),
+    color-mix(in srgb, var(--ui-surface-1) calc((var(--ui-glass-alpha-card) - 0.12) * 100%), transparent)
+  );
+  border: 1px solid var(--ui-edge-idle);
+  box-shadow: var(--ui-depth-shadow-3);
   backdrop-filter: blur(8px) saturate(120%);
   -webkit-backdrop-filter: blur(8px) saturate(120%);
 }
 
 .glass-layer--elevated {
-  background: linear-gradient(180deg, rgba(23, 26, 33, 0.8), rgba(16, 18, 23, 0.68));
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: var(--ui-shadow-elevated);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--ui-surface-2) calc(var(--ui-glass-alpha-elevated) * 100%), transparent),
+    color-mix(in srgb, var(--ui-surface-1) calc((var(--ui-glass-alpha-elevated) - 0.12) * 100%), transparent)
+  );
+  border: 1px solid var(--ui-edge-hover);
+  box-shadow: var(--ui-depth-shadow-4);
   backdrop-filter: blur(10px) saturate(122%);
   -webkit-backdrop-filter: blur(10px) saturate(122%);
 }
 
 .glass-layer--accent {
-  border: 1px solid var(--ui-border-accent);
+  border: 1px solid var(--ui-edge-active);
+}
+
+.material-shell {
+  background: color-mix(in srgb, var(--ui-surface-1) calc(var(--ui-glass-alpha-shell) * 100%), transparent);
+  border: 1px solid var(--ui-edge-idle);
+  box-shadow: var(--ui-depth-shadow-2);
+}
+
+.material-card {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--ui-surface-2) calc(var(--ui-glass-alpha-card) * 100%), transparent),
+    color-mix(in srgb, var(--ui-surface-1) calc((var(--ui-glass-alpha-card) - 0.1) * 100%), transparent)
+  );
+  border: 1px solid var(--ui-edge-idle);
+  box-shadow: var(--ui-depth-shadow-3);
+}
+
+.material-module {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--ui-surface-2) calc(var(--ui-glass-alpha-module) * 100%), transparent),
+    color-mix(in srgb, var(--ui-surface-1) calc((var(--ui-glass-alpha-module) - 0.08) * 100%), transparent)
+  );
+  border: 1px solid var(--ui-edge-hover);
+  box-shadow: var(--ui-depth-shadow-4);
+}
+
+.material-active {
+  border-color: var(--ui-edge-active);
+  box-shadow: var(--ui-glow-active), var(--ui-depth-shadow-4);
 }
 
 .state-glow--active {
@@ -99,9 +170,13 @@ body {
   @apply rounded-xl p-4;
   position: relative;
   overflow: hidden;
-  background-color: color-mix(in srgb, var(--ui-surface-1) 76%, transparent);
-  border: 1px solid var(--ui-border-subtle);
-  box-shadow: var(--ui-shadow-soft);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--ui-surface-2) calc(var(--ui-glass-alpha-card) * 100%), transparent),
+    color-mix(in srgb, var(--ui-surface-1) calc((var(--ui-glass-alpha-card) - 0.12) * 100%), transparent)
+  );
+  border: 1px solid var(--ui-edge-idle);
+  box-shadow: var(--ui-depth-shadow-3);
   backdrop-filter: blur(8px) saturate(120%);
   -webkit-backdrop-filter: blur(8px) saturate(120%);
 }
@@ -113,7 +188,7 @@ body {
   inset: 0;
   pointer-events: none;
   border-radius: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .command-dock-wrap {
@@ -122,26 +197,32 @@ body {
 }
 
 .command-dock {
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--ui-edge-idle);
   border-radius: 0.9rem;
   padding: 0.35rem;
-  background: linear-gradient(180deg, rgba(16, 18, 23, 0.9), rgba(10, 11, 16, 0.88));
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.42);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--ui-surface-2) calc(var(--ui-glass-alpha-elevated) * 100%), transparent),
+    color-mix(in srgb, var(--ui-surface-1) calc((var(--ui-glass-alpha-elevated) - 0.12) * 100%), transparent)
+  );
+  box-shadow: var(--ui-depth-shadow-4);
 }
 
 .dock-btn {
-  transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+  transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease, border-color 160ms ease;
 }
 
 .dock-btn--idle {
-  color: #d4d4d8;
-  background: rgba(255, 255, 255, 0.06);
+  color: #e4e4e7;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid transparent;
 }
 
 .dock-btn--active {
   color: #fff;
-  background: rgba(220, 38, 38, 0.18);
-  box-shadow: var(--ui-glow-active);
+  background: var(--ui-accent-active);
+  border: 1px solid var(--ui-edge-active);
+  box-shadow: var(--ui-glow-active), var(--ui-depth-shadow-2);
 }
 
 .status-dot {
