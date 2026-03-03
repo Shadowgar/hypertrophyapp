@@ -89,6 +89,15 @@ Scope: secrets handling, rate limiting, backup/restore, and failure drill requir
 - Rate limiting behavior must return deterministic `429` semantics.
 - Backup/restore and failure drills must follow scripted, verifiable procedures.
 
+## 6) Auth Expansion Contract
+
+Scope: OAuth (Google/Apple) and Passkey (WebAuthn) architecture and identity-linking semantics.
+
+- Canonical contract document: `docs/Auth_Expansion_Architecture.md`
+- Auth methods are additive and must preserve existing password/JWT flows.
+- Identity linking across methods must be deterministic and conflict-safe.
+- Auth endpoint error semantics (`401/409/422`) must remain predictable and testable.
+
 ## Enforcement Checklist
 
 Before merging changes in these areas:

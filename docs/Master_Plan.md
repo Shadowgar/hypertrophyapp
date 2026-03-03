@@ -555,7 +555,7 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 - [x] API contracts for guide retrieval and plan guide drill-down pathways (Phase 13)
 - [x] Offline queue/replay conflict semantics and deterministic sync rules (Phase 10)
 - [x] Security/hardening architecture: secrets strategy, rate limiting approach, backup/restore design and drills (Phase 11)
-- [ ] Auth expansion architecture for OAuth + Passkey (WebAuthn) flows (Phase 12)
+- [x] Auth expansion architecture for OAuth + Passkey (WebAuthn) flows (Phase 12)
 
 ### Priority C — Safe for GPT-5-mini (After Codex Direction)
 
@@ -735,6 +735,7 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 ---
 
 ## Phase 12 — Advanced Enhancements
+- Auth expansion architecture contract defined in `docs/Auth_Expansion_Architecture.md` (OAuth + WebAuthn identity, session, and linking semantics).
 - [ ] Optional RPE support
 - [ ] MEV/MAV/MRV tracking
 - [ ] Deload wizard

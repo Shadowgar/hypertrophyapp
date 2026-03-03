@@ -16,6 +16,7 @@ Related operating docs:
 - `docs/High_Risk_Contracts.md`
 - `docs/Offline_Sync_Deterministic_Contract.md`
 - `docs/Security_Hardening_Architecture.md`
+- `docs/Auth_Expansion_Architecture.md`
 
 Automation scripts:
 - `scripts/mini_preflight.sh`
@@ -106,6 +107,7 @@ Automation scripts:
 - Ingestion artifact contract files (`asset_catalog.json`, `provenance_index.json`) and aggregate signature semantics.
 - Offline replay semantics (`client_id` + `op_id` idempotency, deterministic queue ordering, `409/422` conflict behavior, sync state machine).
 - Security hardening semantics (runtime secret injection boundaries, deterministic `429` behavior, backup/restore and drill contracts).
+- Auth expansion semantics (deterministic identity linking across password/OAuth/passkeys and stable auth error/session contracts).
 
 ### If a prohibited change is required
 1. Update `docs/High_Risk_Contracts.md` first.
