@@ -436,6 +436,43 @@ body {
   box-shadow: 0 0 10px rgba(239, 68, 68, 0.45);
 }
 
+.telemetry-kicker {
+  font-size: 0.6875rem;
+  line-height: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.075em;
+  color: #a1a1aa;
+}
+
+.telemetry-value {
+  font-size: 0.95rem;
+  line-height: 1.35rem;
+  font-weight: 600;
+  color: #f4f4f5;
+}
+
+.telemetry-meta {
+  font-size: 0.75rem;
+  line-height: 1.1rem;
+  color: #a1a1aa;
+}
+
+.telemetry-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1.1rem;
+  color: #e4e4e7;
+}
+
+.telemetry-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
 body[data-ui-mode="workout"] {
   --ui-border-accent: rgba(220, 38, 38, 0.8);
 }

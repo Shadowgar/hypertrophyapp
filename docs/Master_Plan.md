@@ -755,7 +755,7 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 - [x] Overhaul card primitives (shell/module variants + deterministic spacing grid)
 - [x] Upgrade command dock contrast, active markers, and icon consistency
 - [x] Standardize typography scale/weights/line-height/letter-spacing across routes
-- [ ] Standardize telemetry micro-widgets (status dots, metric labels, module headers)
+- [x] Standardize telemetry micro-widgets (status dots, metric labels, module headers)
 - [ ] Upgrade Today runner composition to closer HUD parity
 - [ ] Upgrade Onboarding composition and hierarchy to match premium finish
 - [ ] Upgrade Week/Check-In/History/Guides/Settings to same material hierarchy

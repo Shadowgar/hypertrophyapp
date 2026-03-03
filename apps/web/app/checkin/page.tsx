@@ -96,20 +96,20 @@ export default function CheckinPage() {
       </form>
       <div className="grid grid-cols-3 gap-2">
         <div className="main-card main-card--shell">
-          <p className="text-[10px] uppercase tracking-wide text-zinc-400">Sleep</p>
-          <p className="inline-flex items-center gap-2 text-xs text-zinc-200">
+          <p className="telemetry-kicker">Sleep</p>
+          <p className="telemetry-status">
             <span className="status-dot status-dot--green" /> Stable
           </p>
         </div>
         <div className="main-card main-card--shell">
-          <p className="text-[10px] uppercase tracking-wide text-zinc-400">Stress</p>
-          <p className="inline-flex items-center gap-2 text-xs text-zinc-200">
+          <p className="telemetry-kicker">Stress</p>
+          <p className="telemetry-status">
             <span className="status-dot status-dot--yellow" /> Moderate
           </p>
         </div>
         <div className="main-card main-card--shell">
-          <p className="text-[10px] uppercase tracking-wide text-zinc-400">Readiness</p>
-          <p className="inline-flex items-center gap-2 text-xs text-zinc-200">
+          <p className="telemetry-kicker">Readiness</p>
+          <p className="telemetry-status">
             <span className="status-dot status-dot--red" /> Watch
           </p>
         </div>

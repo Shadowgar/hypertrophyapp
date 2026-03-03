@@ -32,14 +32,14 @@ export default function WeekPage() {
       <h1 className="ui-title-page">Week Plan</h1>
       <div className="grid grid-cols-2 gap-3">
         <div className="main-card main-card--shell">
-          <p className="ui-label">Generator</p>
-          <p className="inline-flex items-center gap-2 text-sm text-zinc-200">
+          <p className="telemetry-kicker">Generator</p>
+          <p className="telemetry-status">
             <span className="status-dot status-dot--green" /> Ready
           </p>
         </div>
         <div className="main-card main-card--module main-card--accent">
-          <p className="ui-label">Program Source</p>
-          <p className="text-sm text-zinc-200">{selectedProgramId ? "Manual override" : "Auto-select"}</p>
+          <p className="telemetry-kicker">Program Source</p>
+          <p className="telemetry-value">{selectedProgramId ? "Manual override" : "Auto-select"}</p>
         </div>
       </div>
       <div className="main-card main-card--module">

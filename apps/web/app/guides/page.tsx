@@ -20,12 +20,12 @@ export default function GuidesIndex() {
       <h1 className="ui-title-page">Program Guides</h1>
       <div className="grid grid-cols-2 gap-3">
         <div className="main-card main-card--shell">
-          <p className="ui-label">Library</p>
-          <p className="text-sm text-zinc-200">{programs.length} program modules</p>
+          <p className="telemetry-kicker">Library</p>
+          <p className="telemetry-value">{programs.length} program modules</p>
         </div>
         <div className="main-card main-card--module main-card--accent">
-          <p className="ui-label">Sync</p>
-          <p className="inline-flex items-center gap-2 text-sm text-zinc-200">
+          <p className="telemetry-kicker">Sync</p>
+          <p className="telemetry-status">
             <span className="status-dot status-dot--green" /> Online
           </p>
         </div>
