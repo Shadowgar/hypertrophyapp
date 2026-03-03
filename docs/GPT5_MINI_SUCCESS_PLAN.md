@@ -17,7 +17,7 @@ Enable GPT-5-mini to complete the entire project autonomously, with consistent q
 1. Run preflight and validate current baseline:
    - `./scripts/mini_preflight.sh`
    - `./scripts/mini_validate.sh`
-2. Select next highest-priority incomplete work item from roadmap/backlog.
+2. Select next highest-priority incomplete work item with `./scripts/mini_next_task.sh` (backlog first, then `Master_Plan` fallback).
 3. Implement end-to-end (API/UI/tests/docs) for that item only.
 4. Run focused tests first (changed areas), then full validation:
    - targeted `pytest` / `vitest`

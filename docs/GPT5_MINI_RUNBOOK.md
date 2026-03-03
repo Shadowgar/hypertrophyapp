@@ -21,7 +21,7 @@ cd /home/rocco/hypertrophyapp
 - Push directly to `main` after validations pass.
 
 ## Mini Execution Loop (Required)
-1. Choose one not-started item from `docs/GPT5_MINI_EXECUTION_BACKLOG.md`.
+1. Choose next task with `./scripts/mini_next_task.sh` (backlog first, then `Master_Plan` fallback).
 2. Implement that task across all required files.
 3. Run `./scripts/mini_validate.sh`.
 4. If validation fails, fix issues and re-run until green.
@@ -37,7 +37,8 @@ cd /home/rocco/hypertrophyapp
 
 ### Session start (pick next backlog task)
 ```bash
-cd /home/rocco/hypertrophyapp && awk '/^### Task/{task=$0} /^ Status:/{if($0 !~ /COMPLETED/){print task; exit}}' docs/GPT5_MINI_EXECUTION_BACKLOG.md
+cd /home/rocco/hypertrophyapp
+./scripts/mini_next_task.sh
 ```
 
 Use the printed task as the starting target for the current mini session.
