@@ -548,7 +548,7 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 - [x] Mesocycle state model + deload lifecycle + early-deload trigger rules + test matrix (Phase 7)
 - [x] Program/template selection engine correctness (including equipment-safe variant selection) (Phase 8)
 - [x] Reference ingestion architecture: deterministic PDF/EPUB/XLSX normalization + provenance index + checksum stability tests (Phase 13)
-- [ ] Deterministic “next recommended program” logic + switch confirmation semantics (Phase 13)
+- [x] Deterministic “next recommended program” logic + switch confirmation semantics (Phase 13)
 
 ### Priority B — Codex Should Own If Time Allows
 
@@ -565,7 +565,7 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 
 ### Codex Exit Criteria (Before Handoff to Mini-Only Execution)
 
-- [ ] All Priority A architecture decisions merged with tests
+- [x] All Priority A architecture decisions merged with tests
 - [ ] High-risk contracts documented (engine rules, ingestion schema, API invariants)
 - [ ] Mini handoff pack updated with explicit do/do-not-change boundaries for deterministic logic
 
@@ -695,8 +695,8 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 - [ ] Add API endpoints for program/day/exercise guides
 - [ ] Add web Plan Guide pages (Program → Phase → Day → Exercise)
 - [ ] Add workout runner drill-down to exercise guide text
-- [ ] Add deterministic “next recommended program” suggestion logic
-- [ ] Add explicit confirmation flow before program/phase switch
+- [x] Add deterministic “next recommended program” suggestion logic
+- [x] Add explicit confirmation flow before program/phase switch
 - [x] Add ingestion determinism tests (checksum + schema stability)
 - [ ] Add guide coverage tests (no orphan assets)
 

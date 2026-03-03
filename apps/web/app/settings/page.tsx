@@ -3,13 +3,15 @@
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { api, type Profile } from "@/lib/api";
+import { api, type Profile, type ProgramRecommendation } from "@/lib/api";
 
 export default function SettingsPage() {
   const [theme] = useState("dark");
   const [profile, setProfile] = useState<Profile | null>(null);
   const [programs, setPrograms] = useState<Array<{id: string; name: string; description?: string}>>([]);
   const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
+  const [recommendation, setRecommendation] = useState<ProgramRecommendation | null>(null);
+  const [pendingSwitch, setPendingSwitch] = useState<{ targetProgramId: string; reason: string } | null>(null);
   const [status, setStatus] = useState<string | null>(null);
 
   useEffect(() => {
@@ -29,18 +31,72 @@ export default function SettingsPage() {
       })
       .catch(() => {});
 
+    api.getProgramRecommendation()
+      .then((data) => {
+        if (!mounted) return;
+        setRecommendation(data);
+      })
+      .catch(() => {});
+
     return () => { mounted = false };
   }, []);
 
   async function saveProgram() {
     if (!profile) return;
+    if (!selectedProgramId) {
+      setStatus("Choose a program first");
+      setTimeout(() => setStatus(null), 2000);
+      return;
+    }
+
+    if (selectedProgramId === (profile.selected_program_id ?? null)) {
+      setStatus("Already selected");
+      setPendingSwitch(null);
+      setTimeout(() => setStatus(null), 1500);
+      return;
+    }
+
     setStatus("Saving...");
     try {
-      const updated = await api.updateProfile({ selected_program_id: selectedProgramId });
-      setProfile(updated);
-      setStatus("Saved");
+      const response = await api.switchProgram({ target_program_id: selectedProgramId, confirm: false });
+      if (response.requires_confirmation) {
+        setPendingSwitch({ targetProgramId: selectedProgramId, reason: response.reason });
+        setStatus("Confirm program switch");
+      } else if (response.applied) {
+        const updated = await api.getProfile();
+        setProfile(updated);
+        setPendingSwitch(null);
+        setStatus("Saved");
+      } else {
+        setPendingSwitch(null);
+        setStatus("No change");
+      }
     } catch {
       setStatus("Save failed");
+    }
+    setTimeout(() => setStatus(null), 2000);
+  }
+
+  async function confirmProgramSwitch() {
+    if (!pendingSwitch) return;
+    setStatus("Applying switch...");
+    try {
+      const response = await api.switchProgram({
+        target_program_id: pendingSwitch.targetProgramId,
+        confirm: true,
+      });
+      if (response.applied) {
+        const updated = await api.getProfile();
+        setProfile(updated);
+        const recommendationUpdated = await api.getProgramRecommendation();
+        setRecommendation(recommendationUpdated);
+        setStatus("Program switched");
+      } else {
+        setStatus("No change");
+      }
+      setPendingSwitch(null);
+    } catch {
+      setStatus("Switch failed");
     }
     setTimeout(() => setStatus(null), 2000);
   }
@@ -61,6 +117,11 @@ export default function SettingsPage() {
         </div>
       </div>
       <div className="main-card space-y-3">
+        <div className="rounded-md border border-zinc-800 p-3 text-xs text-zinc-300">
+          <p>Recommended Program: {recommendation?.recommended_program_id ?? "not available"}</p>
+          <p>Reason: {recommendation?.reason ?? "not available"}</p>
+        </div>
+
         <p className="text-sm text-zinc-300">Theme is locked to dark for MVP.</p>
         <Button variant="secondary" className="w-full" disabled>
           Theme: {theme}
@@ -89,8 +150,18 @@ export default function SettingsPage() {
           <p id="settings-program-desc" className="text-xs text-zinc-500">{selectedProgramId ? (programs.find((p) => p.id === selectedProgramId)?.description ?? "No description available.") : "Default uses trainer recommendation."}</p>
           <div className="flex gap-2">
             <Button aria-label="Save selected program" className="mt-2" onClick={saveProgram}>Save Program</Button>
+            {pendingSwitch ? (
+              <Button aria-label="Confirm program switch" className="mt-2" onClick={confirmProgramSwitch} variant="secondary">
+                Confirm Switch
+              </Button>
+            ) : null}
             <p className="text-sm text-zinc-400 mt-3">{status ?? ""}</p>
           </div>
+          {pendingSwitch ? (
+            <p className="text-xs text-zinc-500">
+              Switching to <span className="text-zinc-300">{pendingSwitch.targetProgramId}</span> requires confirmation ({pendingSwitch.reason}).
+            </p>
+          ) : null}
         </div>
       </div>
     </div>

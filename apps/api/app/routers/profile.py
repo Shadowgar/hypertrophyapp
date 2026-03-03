@@ -1,5 +1,6 @@
-from datetime import date
-from typing import Annotated, Sequence
+from datetime import UTC, date
+from datetime import datetime
+from typing import Annotated, Any, Sequence
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -7,12 +8,17 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..deps import get_current_user
 from ..models import BodyMeasurementEntry, SorenessEntry, User, WeeklyCheckin
+from ..models import WorkoutPlan
+from ..program_loader import list_program_templates
 from ..schemas import (
     BodyMeasurementEntryCreateRequest,
     BodyMeasurementEntryResponse,
     BodyMeasurementEntryUpdateRequest,
     ProfileResponse,
     ProfileUpsert,
+    ProgramRecommendationResponse,
+    ProgramSwitchRequest,
+    ProgramSwitchResponse,
     SorenessEntryCreateRequest,
     SorenessEntryResponse,
     WeeklyCheckinRequest,
@@ -22,6 +28,94 @@ router = APIRouter()
 
 DbSession = Annotated[Session, Depends(get_db)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+def _compatible_program_ids(days_available: int, split_preference: str) -> list[str]:
+    summaries = list_program_templates()
+    compatible = [
+        item["id"]
+        for item in summaries
+        if days_available in (item.get("days_supported") or [])
+    ]
+    split_matched = [
+        item["id"]
+        for item in summaries
+        if item.get("split") == split_preference and days_available in (item.get("days_supported") or [])
+    ]
+    ordered = split_matched + [item for item in compatible if item not in split_matched]
+    return ordered or [item["id"] for item in summaries]
+
+
+def _latest_plan_payload(db: Session, user_id: str) -> dict[str, Any]:
+    latest_plan = (
+        db.query(WorkoutPlan)
+        .filter(WorkoutPlan.user_id == user_id)
+        .order_by(WorkoutPlan.created_at.desc())
+        .first()
+    )
+    if latest_plan and isinstance(latest_plan.payload, dict):
+        return latest_plan.payload
+    return {}
+
+
+def _deterministic_program_recommendation(
+    *,
+    current_program_id: str,
+    compatible_program_ids: list[str],
+    latest_adherence_score: int | None,
+    latest_plan_payload: dict[str, Any],
+) -> tuple[str, str]:
+    if not compatible_program_ids:
+        return current_program_id, "no_compatible_programs"
+    if current_program_id not in compatible_program_ids:
+        return compatible_program_ids[0], "current_not_compatible"
+    if latest_adherence_score is not None and latest_adherence_score <= 2:
+        return current_program_id, "low_adherence_keep_program"
+
+    rotated = _rotate_for_coverage_gap(current_program_id, compatible_program_ids, latest_plan_payload)
+    if rotated:
+        return rotated, "coverage_gap_rotate"
+
+    rotated = _rotate_for_mesocycle_completion(current_program_id, compatible_program_ids, latest_plan_payload)
+    if rotated:
+        return rotated, "mesocycle_complete_rotate"
+
+    return current_program_id, "maintain_current_program"
+
+
+def _rotate_for_coverage_gap(
+    current_program_id: str,
+    compatible_program_ids: list[str],
+    latest_plan_payload: dict[str, Any],
+) -> str | None:
+    if len(compatible_program_ids) <= 1:
+        return None
+    under_target = (latest_plan_payload.get("muscle_coverage") or {}).get("under_target_muscles")
+    if not isinstance(under_target, list) or len(under_target) < 4:
+        return None
+    return next((candidate for candidate in compatible_program_ids if candidate != current_program_id), None)
+
+
+def _rotate_for_mesocycle_completion(
+    current_program_id: str,
+    compatible_program_ids: list[str],
+    latest_plan_payload: dict[str, Any],
+) -> str | None:
+    if len(compatible_program_ids) <= 1:
+        return None
+    mesocycle = latest_plan_payload.get("mesocycle")
+    if not isinstance(mesocycle, dict):
+        return None
+
+    week_index = int(mesocycle.get("week_index", 1) or 1)
+    trigger_weeks = int(mesocycle.get("trigger_weeks_effective", 6) or 6)
+    if week_index < trigger_weeks:
+        return None
+
+    index = compatible_program_ids.index(current_program_id)
+    next_index = (index + 1) % len(compatible_program_ids)
+    recommended = compatible_program_ids[next_index]
+    return recommended if recommended != current_program_id else None
 
 
 @router.get("/profile")
@@ -71,6 +165,109 @@ def upsert_profile(
     db.refresh(current_user)
 
     return get_profile(current_user)
+
+
+@router.get("/profile/program-recommendation")
+def program_recommendation(
+    db: DbSession,
+    current_user: CurrentUser,
+) -> ProgramRecommendationResponse:
+    current_program_id = current_user.selected_program_id or "full_body_v1"
+    compatible_program_ids = _compatible_program_ids(
+        days_available=current_user.days_available or 2,
+        split_preference=current_user.split_preference or "full_body",
+    )
+
+    latest_checkin = (
+        db.query(WeeklyCheckin)
+        .filter(WeeklyCheckin.user_id == current_user.id)
+        .order_by(WeeklyCheckin.week_start.desc(), WeeklyCheckin.created_at.desc())
+        .first()
+    )
+    adherence_score = latest_checkin.adherence_score if latest_checkin else None
+    latest_plan_payload = _latest_plan_payload(db, current_user.id)
+
+    recommended_program_id, reason = _deterministic_program_recommendation(
+        current_program_id=current_program_id,
+        compatible_program_ids=compatible_program_ids,
+        latest_adherence_score=adherence_score,
+        latest_plan_payload=latest_plan_payload,
+    )
+
+    return ProgramRecommendationResponse(
+        current_program_id=current_program_id,
+        recommended_program_id=recommended_program_id,
+        reason=reason,
+        compatible_program_ids=compatible_program_ids,
+        generated_at=datetime.now(UTC),
+    )
+
+
+@router.post("/profile/program-switch")
+def switch_program(
+    payload: ProgramSwitchRequest,
+    db: DbSession,
+    current_user: CurrentUser,
+) -> ProgramSwitchResponse:
+    compatible_program_ids = _compatible_program_ids(
+        days_available=current_user.days_available or 2,
+        split_preference=current_user.split_preference or "full_body",
+    )
+
+    if payload.target_program_id not in compatible_program_ids:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Target program is not compatible")
+
+    current_program_id = current_user.selected_program_id or "full_body_v1"
+    latest_checkin = (
+        db.query(WeeklyCheckin)
+        .filter(WeeklyCheckin.user_id == current_user.id)
+        .order_by(WeeklyCheckin.week_start.desc(), WeeklyCheckin.created_at.desc())
+        .first()
+    )
+    adherence_score = latest_checkin.adherence_score if latest_checkin else None
+    latest_plan_payload = _latest_plan_payload(db, current_user.id)
+    recommended_program_id, reason = _deterministic_program_recommendation(
+        current_program_id=current_program_id,
+        compatible_program_ids=compatible_program_ids,
+        latest_adherence_score=adherence_score,
+        latest_plan_payload=latest_plan_payload,
+    )
+
+    if payload.target_program_id == current_program_id:
+        return ProgramSwitchResponse(
+            status="unchanged",
+            current_program_id=current_program_id,
+            target_program_id=payload.target_program_id,
+            recommended_program_id=recommended_program_id,
+            reason="target_matches_current",
+            requires_confirmation=False,
+            applied=False,
+        )
+
+    if not payload.confirm:
+        return ProgramSwitchResponse(
+            status="confirmation_required",
+            current_program_id=current_program_id,
+            target_program_id=payload.target_program_id,
+            recommended_program_id=recommended_program_id,
+            reason=reason,
+            requires_confirmation=True,
+            applied=False,
+        )
+
+    current_user.selected_program_id = payload.target_program_id
+    db.add(current_user)
+    db.commit()
+
+    return ProgramSwitchResponse(
+        status="switched",
+        current_program_id=current_program_id,
+        target_program_id=payload.target_program_id,
+        recommended_program_id=recommended_program_id,
+        reason=reason,
+        requires_confirmation=False,
+        applied=True,
+    )
 
 
 @router.post("/weekly-checkin")

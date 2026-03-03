@@ -65,6 +65,24 @@ export type Profile = {
   selected_program_id?: string | null;
 };
 
+export type ProgramRecommendation = {
+  current_program_id: string;
+  recommended_program_id: string;
+  reason: string;
+  compatible_program_ids: string[];
+  generated_at: string;
+};
+
+export type ProgramSwitchResponse = {
+  status: "confirmation_required" | "switched" | "unchanged";
+  current_program_id: string;
+  target_program_id: string;
+  recommended_program_id: string;
+  reason: string;
+  requires_confirmation: boolean;
+  applied: boolean;
+};
+
 export type WeeklyCheckinPayload = {
   week_start: string;
   body_weight: number;
@@ -124,6 +142,12 @@ export const api = {
   generateWeek: (templateId?: string | null) => request<Record<string, unknown>>("/plan/generate-week", { method: "POST", body: JSON.stringify(templateId ? { template_id: templateId } : {}) }),
   getProfile: () => request<Profile>("/profile"),
   listPrograms: () => request<Array<{id: string; slug?: string; name: string; description?: string}>>("/plan/programs"),
+  getProgramRecommendation: () => request<ProgramRecommendation>("/profile/program-recommendation"),
+  switchProgram: (payload: { target_program_id: string; confirm?: boolean }) =>
+    request<ProgramSwitchResponse>("/profile/program-switch", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   updateProfile: (payload: Partial<Profile>) => request<Profile>("/profile", { method: "POST", body: JSON.stringify(payload) }),
   weeklyCheckin: (payload: WeeklyCheckinPayload) =>
     request<{ status: string; phase: string }>("/weekly-checkin", {

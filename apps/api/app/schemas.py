@@ -119,6 +119,29 @@ class GenerateWeekPlanRequest(BaseModel):
     template_id: str | None = None
 
 
+class ProgramRecommendationResponse(BaseModel):
+    current_program_id: str
+    recommended_program_id: str
+    reason: str
+    compatible_program_ids: list[str]
+    generated_at: datetime
+
+
+class ProgramSwitchRequest(BaseModel):
+    target_program_id: str = Field(min_length=1)
+    confirm: bool = False
+
+
+class ProgramSwitchResponse(BaseModel):
+    status: str
+    current_program_id: str
+    target_program_id: str
+    recommended_program_id: str
+    reason: str
+    requires_confirmation: bool
+    applied: bool
+
+
 class ProgramTemplateSummary(BaseModel):
     id: str
     version: str
