@@ -14,9 +14,17 @@ cd /home/rocco/hypertrophyapp
 ```
 
 ## Working Agreement
-- Keep PRs small: one task at a time.
+- Keep implementation scope small: one backlog task at a time.
 - If uncertain, stop and route to GPT-5.3-Codex.
 - Preserve existing API routes and payload structure.
+- GPT-5-mini does not open, manage, or troubleshoot PRs; PR operations are handled by a human or GPT-5.3-Codex.
+
+## Mini Execution Loop (Required)
+1. Choose one not-started item from `docs/GPT5_MINI_EXECUTION_BACKLOG.md`.
+2. Implement only that task in allowed files.
+3. Run `./scripts/mini_validate.sh`.
+4. If validation passes, update docs/checklist notes and stop.
+5. If validation fails in locked-contract areas, escalate to GPT-5.3-Codex immediately.
 
 ## Quick Commands
 
@@ -55,7 +63,7 @@ npm run build
 - Web build passes.
 - No edits to forbidden zones.
 
-## PR Checklist (required for every PR)
+## Handoff Checklist (for human/Codex PR owner)
 
 - Run `./scripts/mini_preflight.sh` and include its output in PR description.
 - Run `./scripts/mini_validate.sh` locally or in CI and attach the logs.
@@ -63,3 +71,5 @@ npm run build
 - Add or update unit tests for UI behavior where applicable.
 - Confirm no changes to `packages/core-engine` or `apps/api/alembic`.
 - Add brief testing notes and any manual verification steps in PR description.
+
+Note: GPT-5-mini should not perform PR creation or review workflow tasks.

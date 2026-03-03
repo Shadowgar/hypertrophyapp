@@ -3,6 +3,11 @@
 ## Purpose
 This document defines exactly what GPT-5-mini should build next, what is already locked, and what must not be changed without GPT-5.3-Codex review.
 
+## PR Ownership Rule
+- GPT-5-mini is responsible for task implementation and local validation only.
+- Pull request creation, review, merge workflow, and PR troubleshooting are owned by a human or GPT-5.3-Codex.
+- If a session drifts into PR process work, redirect immediately to the next backlog implementation task.
+
 Related operating docs:
 - `docs/GPT5_MINI_EXECUTION_BACKLOG.md`
 - `docs/GPT5_MINI_RUNBOOK.md`
@@ -103,3 +108,4 @@ npm run build
 - No regressions in API tests above.
 - Web build passes.
 - No edits to locked-contract files unless explicitly approved.
+- PR workflow tasks are deferred to human/Codex owner.
