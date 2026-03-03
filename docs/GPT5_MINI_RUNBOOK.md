@@ -28,6 +28,13 @@ cd /home/rocco/hypertrophyapp
 
 ## Quick Commands
 
+### Session start (pick next backlog task)
+```bash
+cd /home/rocco/hypertrophyapp && awk '/^### Task/{task=$0} /^ Status:/{if($0 !~ /COMPLETED/){print task; exit}}' docs/GPT5_MINI_EXECUTION_BACKLOG.md
+```
+
+Use the printed task as the only implementation target for the current mini session.
+
 ### One-command validation
 ```bash
 cd /home/rocco/hypertrophyapp
