@@ -29,6 +29,12 @@ cd /home/rocco/hypertrophyapp
 
 ## Quick Commands
 
+### One-command session flow
+```bash
+cd /home/rocco/hypertrophyapp
+./scripts/mini_session.sh
+```
+
 ### Session start (pick next backlog task)
 ```bash
 cd /home/rocco/hypertrophyapp && awk '/^### Task/{task=$0} /^ Status:/{if($0 !~ /COMPLETED/){print task; exit}}' docs/GPT5_MINI_EXECUTION_BACKLOG.md
@@ -45,7 +51,7 @@ cd /home/rocco/hypertrophyapp
 ### API regression checks
 ```bash
 cd /home/rocco/hypertrophyapp
-docker compose exec -T api sh -lc 'cd /app/apps/api && PYTHONPATH=. pytest tests/test_program_catalog_and_selection.py tests/test_profile_schema.py tests/test_workout_resume.py tests/test_program_loader.py -q'
+docker compose exec -T api sh -lc 'cd /app/apps/api && PYTHONPATH=. pytest tests -q'
 ```
 
 ### Web compile check

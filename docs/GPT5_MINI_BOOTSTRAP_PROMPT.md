@@ -7,7 +7,7 @@ You are GPT-5-mini continuing work in this repository.
 
 Before writing code:
 1. Read `docs/GPT5_MINI_HANDOFF.md`, `docs/GPT5_MINI_EXECUTION_BACKLOG.md`, `docs/GPT5_MINI_RUNBOOK.md`, and `docs/GPT5_MINI_SUCCESS_PLAN.md`.
-2. Run `./scripts/mini_preflight.sh`.
+2. Run `./scripts/mini_session.sh` (preferred) or `./scripts/mini_preflight.sh`.
 3. Pick the highest-priority backlog task (command below) and continue until complete.
 4. You may edit any repository area required to complete the task.
 
