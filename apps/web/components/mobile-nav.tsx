@@ -39,12 +39,12 @@ export function MobileNav() {
               href={item.href}
               title={item.label}
               className={cn(
-                "dock-btn block rounded-md px-2 py-2 text-center",
+                "dock-btn flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-md px-2 py-1.5 text-center",
                 pathname === item.href ? "dock-btn--active" : "dock-btn--idle"
               )}
             >
               <span aria-hidden="true" className="text-base leading-none">{item.icon}</span>
-              <span className="sr-only">{item.label}</span>
+              <span className="text-[10px] leading-none tracking-wide">{item.label}</span>
             </Link>
           </li>
         ))}
