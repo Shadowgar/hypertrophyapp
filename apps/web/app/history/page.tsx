@@ -44,11 +44,15 @@ export default function HistoryPage() {
         </div>
       </div>
       <div className="main-card main-card--module">
+        <p className="telemetry-kicker mb-2">History Controls</p>
         <Button className="w-full" onClick={loadHistory}>
           Load Bench History
         </Button>
       </div>
-      <pre className="main-card main-card--module overflow-x-auto text-xs text-zinc-200">{history}</pre>
+      <div className="main-card main-card--module spacing-grid spacing-grid--tight">
+        <p className="telemetry-kicker">History Output</p>
+        <pre className="overflow-x-auto text-xs text-zinc-200">{history}</pre>
+      </div>
     </div>
   );
 }

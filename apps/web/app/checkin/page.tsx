@@ -14,6 +14,17 @@ function mondayOfCurrentWeek(): string {
   return monday.toISOString().slice(0, 10);
 }
 
+function resolveStatusTone(status: string): "green" | "yellow" | "red" {
+  const lowered = status.toLowerCase();
+  if (lowered.includes("saved")) {
+    return "green";
+  }
+  if (lowered.includes("failed")) {
+    return "red";
+  }
+  return "yellow";
+}
+
 export default function CheckinPage() {
   const defaultWeekStart = useMemo(() => mondayOfCurrentWeek(), []);
   const [weekStart, setWeekStart] = useState(defaultWeekStart);
@@ -21,6 +32,7 @@ export default function CheckinPage() {
   const [adherenceScore, setAdherenceScore] = useState("4");
   const [notes, setNotes] = useState("");
   const [status, setStatus] = useState("Idle");
+  const statusTone = resolveStatusTone(status);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -42,7 +54,17 @@ export default function CheckinPage() {
   return (
     <div className="space-y-4">
       <h1 className="ui-title-page">Weekly Check-In</h1>
+      <div className="main-card main-card--module main-card--accent spacing-grid spacing-grid--tight">
+        <div className="telemetry-header">
+          <p className="telemetry-kicker">Check-In State</p>
+          <p className="telemetry-status">
+            <span className={`status-dot status-dot--${statusTone}`} /> {status}
+          </p>
+        </div>
+        <p className="telemetry-meta">Capture weekly recovery and adherence markers before generating the next cycle.</p>
+      </div>
       <form className="main-card main-card--module spacing-grid" onSubmit={handleSubmit}>
+        <p className="telemetry-kicker">Weekly Inputs</p>
         <label className="space-y-1 text-xs text-zinc-300">
           <span>Week Start (Monday)</span>
           <input
@@ -114,7 +136,6 @@ export default function CheckinPage() {
           </p>
         </div>
       </div>
-      <p className="ui-body-sm">Status: {status}</p>
     </div>
   );
 }

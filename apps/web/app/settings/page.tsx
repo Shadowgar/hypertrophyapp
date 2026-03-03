@@ -117,22 +117,26 @@ export default function SettingsPage() {
         </div>
       </div>
       <div className="main-card main-card--module spacing-grid">
+        <p className="telemetry-kicker">Program Intelligence</p>
         <div className="rounded-md border border-zinc-800 p-3 text-xs text-zinc-300">
           <p>Recommended Program: {recommendation?.recommended_program_id ?? "not available"}</p>
           <p>Reason: {recommendation?.reason ?? "not available"}</p>
         </div>
 
+        <p className="telemetry-kicker">Display</p>
         <p className="ui-body-sm">Theme is locked to dark for MVP.</p>
         <Button variant="secondary" className="w-full" disabled>
           Theme: {theme}
         </Button>
 
+        <p className="telemetry-kicker">Profile Context</p>
         <div className="rounded-md border border-zinc-800 p-3 text-xs text-zinc-300">
           <p>Training Location: {profile?.training_location ?? "not set"}</p>
           <p>Equipment: {(profile?.equipment_profile ?? []).join(", ") || "not set"}</p>
         </div>
 
         <div className="space-y-2">
+          <p className="telemetry-kicker">Program Override</p>
           <label htmlFor="settings-program" className="ui-meta">Program</label>
           <select
             id="settings-program"
@@ -155,7 +159,7 @@ export default function SettingsPage() {
                 Confirm Switch
               </Button>
             ) : null}
-            <p className="text-sm text-zinc-400 mt-3">{status ?? ""}</p>
+            <p className="telemetry-meta mt-3">{status ?? ""}</p>
           </div>
           {pendingSwitch ? (
             <p className="text-xs text-zinc-500">

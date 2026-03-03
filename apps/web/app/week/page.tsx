@@ -43,7 +43,8 @@ export default function WeekPage() {
         </div>
       </div>
       <div className="main-card main-card--module">
-        <div className="space-y-2">
+        <div className="spacing-grid spacing-grid--tight">
+          <p className="telemetry-kicker">Generation Controls</p>
           <label htmlFor="week-program" className="ui-meta">Program override (optional)</label>
           <select id="week-program" aria-label="Week program override selector" aria-describedby="week-program-desc" className="ui-select" value={selectedProgramId ?? ""} onChange={(e) => setSelectedProgramId(e.target.value || null)}>
             <option value="">Server-selected — trainer&apos;s recommended program</option>
@@ -55,7 +56,10 @@ export default function WeekPage() {
           </Button>
         </div>
       </div>
-      <pre className="main-card main-card--module overflow-x-auto text-xs text-zinc-200">{plan}</pre>
+      <div className="main-card main-card--module spacing-grid spacing-grid--tight">
+        <p className="telemetry-kicker">Plan Output</p>
+        <pre className="overflow-x-auto text-xs text-zinc-200">{plan}</pre>
+      </div>
     </div>
   );
 }
