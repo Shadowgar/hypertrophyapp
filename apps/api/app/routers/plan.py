@@ -9,7 +9,7 @@ from core_engine import generate_week_plan
 
 from ..database import get_db
 from ..deps import get_current_user
-from ..models import User, WorkoutPlan, WorkoutSetLog
+from ..models import SorenessEntry, User, WorkoutPlan, WorkoutSetLog
 from ..program_loader import list_program_templates, load_program_template
 from ..schemas import GenerateWeekPlanRequest, ProgramTemplateSummary
 
@@ -64,6 +64,14 @@ def plan_generate_week(
         for row in history_rows
     ]
 
+    latest_soreness = (
+        db.query(SorenessEntry)
+        .filter(SorenessEntry.user_id == current_user.id, SorenessEntry.entry_date <= date.today())
+        .order_by(SorenessEntry.entry_date.desc(), SorenessEntry.created_at.desc())
+        .first()
+    )
+    soreness_by_muscle = latest_soreness.severity_by_muscle if latest_soreness else {}
+
     plan = generate_week_plan(
         user_profile={"name": current_user.name},
         days_available=current_user.days_available,
@@ -72,6 +80,7 @@ def plan_generate_week(
         history=history,
         phase=current_user.nutrition_phase or "maintenance",
         available_equipment=current_user.equipment_profile or [],
+        soreness_by_muscle=soreness_by_muscle,
     )
 
     week_start = date.fromisoformat(plan["week_start"])

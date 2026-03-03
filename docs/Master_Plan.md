@@ -438,13 +438,13 @@ No AI required. No guide search.
 
 ## Acceptance Criteria
 
-- [ ] Soreness input is captured pre-workout with deterministic severity values
-- [ ] Per-muscle soreness entries persist and are available to workout generation/recommendation logic
-- [ ] Severe soreness triggers only deterministic, bounded recommendation adjustments
-- [ ] Moderate soreness applies minimal deterministic adjustment
-- [ ] Mild soreness is logged without automatic loading changes
-- [ ] No automatic full-plan rewrite occurs from soreness input
-- [ ] Core-engine tests verify soreness-to-recommendation behavior
+- [x] Soreness input is captured pre-workout with deterministic severity values
+- [x] Per-muscle soreness entries persist and are available to workout generation/recommendation logic
+- [x] Severe soreness triggers only deterministic, bounded recommendation adjustments
+- [x] Moderate soreness applies minimal deterministic adjustment
+- [x] Mild soreness is logged without automatic loading changes
+- [x] No automatic full-plan rewrite occurs from soreness input
+- [x] Core-engine tests verify soreness-to-recommendation behavior
 
 ---
 
@@ -543,7 +543,7 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 
 ### Priority A — Must Be Codex-Owned Now
 
-- [ ] Deterministic soreness modifier integration in generation/recommendation path (Phase 6)
+- [x] Deterministic soreness modifier integration in generation/recommendation path (Phase 6)
 - [ ] Weekly volume-per-muscle computation + muscle coverage validator with deterministic tests (Phase 6)
 - [ ] Mesocycle state model + deload lifecycle + early-deload trigger rules + test matrix (Phase 7)
 - [ ] Program/template selection engine correctness (including equipment-safe variant selection) (Phase 8)
@@ -656,7 +656,7 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 - [x] Substitution pre-filtering
 - [x] Ensure substitution selection is applied at the slot level and logged accordingly
 - [x] Compression logic (2/3/4 days)
-- [ ] Ensure soreness modifiers apply deterministically to recommendations
+- [x] Ensure soreness modifiers apply deterministically to recommendations
 - [ ] Track weekly volume per muscle
 - [ ] Muscle coverage validator
 - [x] Deterministic week output tests

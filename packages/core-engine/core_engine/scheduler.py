@@ -5,6 +5,128 @@ import re
 from .equipment import resolve_equipment_tags
 
 
+_SORENESS_LEVEL_ORDER = {"none": 0, "mild": 1, "moderate": 2, "severe": 3}
+_SORENESS_WEIGHT_FACTOR = {
+    "none": 1.0,
+    "mild": 1.0,
+    "moderate": 0.975,
+    "severe": 0.925,
+}
+
+_MUSCLE_ALIASES = {
+    "chest": "chest",
+    "pec": "chest",
+    "pecs": "chest",
+    "back": "back",
+    "lats": "back",
+    "lat": "back",
+    "mid_back": "back",
+    "upper_back": "back",
+    "erectors": "back",
+    "quads": "quads",
+    "quadriceps": "quads",
+    "hamstrings": "hamstrings",
+    "glutes": "glutes",
+    "shoulders": "shoulders",
+    "delts": "shoulders",
+    "front_delts": "shoulders",
+    "rear_delts": "shoulders",
+    "side_delts": "shoulders",
+    "biceps": "biceps",
+    "triceps": "triceps",
+    "calves": "calves",
+}
+
+
+def _normalize_muscle_label(value: str | None) -> str | None:
+    if not value:
+        return None
+    normalized = re.sub(r"[^a-z]+", "_", value.strip().lower()).strip("_")
+    return _MUSCLE_ALIASES.get(normalized)
+
+
+def _token_mapped_muscles(name: str) -> set[str]:
+    lowered = name.lower()
+    mapped: set[str] = set()
+
+    if any(token in lowered for token in ("bench", "chest", "pec", "fly", "press")):
+        mapped.add("chest")
+    if any(token in lowered for token in ("row", "pulldown", "pull up", "pull-up", "pullup", "lat")):
+        mapped.add("back")
+    if any(token in lowered for token in ("squat", "leg press", "lunge", "extension", "adductor")):
+        mapped.add("quads")
+    if any(token in lowered for token in ("rdl", "deadlift", "leg curl", "hamstring")):
+        mapped.add("hamstrings")
+    if any(token in lowered for token in ("glute", "hip thrust")):
+        mapped.add("glutes")
+    if any(token in lowered for token in ("shoulder", "delt", "lateral raise", "ohp", "overhead")):
+        mapped.add("shoulders")
+    if "curl" in lowered and "leg curl" not in lowered:
+        mapped.add("biceps")
+    if any(token in lowered for token in ("tricep", "pushdown", "skull crusher", "extension")):
+        mapped.add("triceps")
+    if "calf" in lowered:
+        mapped.add("calves")
+
+    return mapped
+
+
+def _resolve_exercise_muscles(exercise: dict[str, Any]) -> set[str]:
+    resolved: set[str] = set()
+
+    for muscle in exercise.get("primary_muscles") or []:
+        normalized = _normalize_muscle_label(muscle)
+        if normalized:
+            resolved.add(normalized)
+
+    movement_pattern = exercise.get("movement_pattern")
+    normalized_movement = _normalize_muscle_label(movement_pattern)
+    if normalized_movement:
+        resolved.add(normalized_movement)
+
+    if not resolved:
+        resolved.update(_token_mapped_muscles(exercise.get("name", "")))
+
+    return resolved
+
+
+def _normalize_soreness_by_muscle(soreness_by_muscle: dict[str, str] | None) -> dict[str, str]:
+    normalized: dict[str, str] = {}
+    for muscle, severity in (soreness_by_muscle or {}).items():
+        normalized_muscle = _normalize_muscle_label(muscle)
+        if not normalized_muscle:
+            continue
+        normalized_severity = (severity or "none").lower()
+        if normalized_severity not in _SORENESS_LEVEL_ORDER:
+            normalized_severity = "none"
+
+        existing = normalized.get(normalized_muscle, "none")
+        if _SORENESS_LEVEL_ORDER[normalized_severity] >= _SORENESS_LEVEL_ORDER[existing]:
+            normalized[normalized_muscle] = normalized_severity
+
+    return normalized
+
+
+def _resolve_exercise_soreness(exercise: dict[str, Any], soreness_by_muscle: dict[str, str]) -> str:
+    muscles = _resolve_exercise_muscles(exercise)
+    if not muscles:
+        return "none"
+
+    severity = "none"
+    for muscle in muscles:
+        candidate = soreness_by_muscle.get(muscle, "none")
+        if _SORENESS_LEVEL_ORDER[candidate] > _SORENESS_LEVEL_ORDER[severity]:
+            severity = candidate
+
+    return severity
+
+
+def _apply_soreness_modifier(weight: float, severity: str) -> float:
+    factor = _SORENESS_WEIGHT_FACTOR.get(severity, 1.0)
+    adjusted = max(5.0, weight * factor)
+    return round(adjusted / 2.5) * 2.5
+
+
 def _build_equipment_set(available_equipment: list[str] | None) -> set[str]:
     return {item.lower() for item in (available_equipment or []) if item}
 
@@ -40,13 +162,16 @@ def _build_planned_exercise(
     exercise: dict[str, Any],
     history_index: dict[str, dict[str, Any]],
     equipment_set: set[str],
+    soreness_by_muscle: dict[str, str],
 ) -> dict[str, Any] | None:
     resolved_equipment_tags = resolve_equipment_tags(
         exercise_name=exercise.get("name", ""),
         explicit_tags=exercise.get("equipment_tags"),
     )
     previous = history_index.get(exercise.get("id"), {})
-    recommended = previous.get("next_working_weight") or exercise.get("start_weight", 20)
+    recommended = float(previous.get("next_working_weight") or exercise.get("start_weight", 20))
+    soreness_severity = _resolve_exercise_soreness(exercise, soreness_by_muscle)
+    recommended = _apply_soreness_modifier(recommended, soreness_severity)
     substitutions = exercise.get("substitution_candidates") or exercise.get("substitutions") or []
     compatible_substitutions = _prefilter_substitutions(substitutions, equipment_set)
 
@@ -116,6 +241,7 @@ def generate_week_plan(
     history: list[dict[str, Any]],
     phase: str,
     available_equipment: list[str] | None = None,
+    soreness_by_muscle: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     days_available = max(2, min(7, days_available))
     today = date.today()
@@ -128,6 +254,7 @@ def generate_week_plan(
         item.get("exercise_id"): item for item in history if item.get("exercise_id")
     }
     equipment_set = _build_equipment_set(available_equipment)
+    normalized_soreness = _normalize_soreness_by_muscle(soreness_by_muscle)
 
     planned_sessions: list[dict[str, Any]] = []
     for order_idx, (template_index, session) in enumerate(selected_sessions):
@@ -138,7 +265,12 @@ def generate_week_plan(
             session_date = week_start + timedelta(days=order_idx * (7 // days_available))
         exercises: list[dict[str, Any]] = []
         for exercise in session.get("exercises", []):
-            planned_exercise = _build_planned_exercise(exercise, history_index, equipment_set)
+            planned_exercise = _build_planned_exercise(
+                exercise,
+                history_index,
+                equipment_set,
+                normalized_soreness,
+            )
             if planned_exercise is not None:
                 exercises.append(planned_exercise)
 

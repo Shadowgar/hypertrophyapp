@@ -1,5 +1,7 @@
 from datetime import date, timedelta
 
+import pytest
+
 from core_engine import generate_week_plan
 
 
@@ -171,3 +173,87 @@ def test_generate_week_plan_honors_template_day_offsets() -> None:
         (week_start + timedelta(days=4)).isoformat(),
         (week_start + timedelta(days=5)).isoformat(),
     ]
+
+
+def test_generate_week_plan_applies_deterministic_soreness_modifiers() -> None:
+    template = {
+        "id": "soreness_modifier_test",
+        "sessions": [
+            {
+                "name": "Session A",
+                "exercises": [
+                    {
+                        "id": "bench",
+                        "name": "Bench Press",
+                        "start_weight": 100,
+                        "primary_muscles": ["chest", "triceps"],
+                    },
+                    {
+                        "id": "row",
+                        "name": "Barbell Row",
+                        "start_weight": 100,
+                        "primary_muscles": ["lats", "mid_back", "biceps"],
+                    },
+                ],
+            }
+        ],
+    }
+
+    baseline = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=2,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+    )
+    soreness_adjusted = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=2,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+        soreness_by_muscle={"chest": "severe", "back": "moderate", "biceps": "mild"},
+    )
+
+    baseline_exercises = baseline["sessions"][0]["exercises"]
+    adjusted_exercises = soreness_adjusted["sessions"][0]["exercises"]
+
+    assert baseline["sessions"][0]["session_id"] == soreness_adjusted["sessions"][0]["session_id"]
+    assert [item["id"] for item in baseline_exercises] == [item["id"] for item in adjusted_exercises]
+    assert baseline_exercises[0]["recommended_working_weight"] == 100
+    assert adjusted_exercises[0]["recommended_working_weight"] == pytest.approx(92.5)
+    assert baseline_exercises[1]["recommended_working_weight"] == 100
+    assert adjusted_exercises[1]["recommended_working_weight"] == pytest.approx(97.5)
+
+
+def test_generate_week_plan_mild_soreness_does_not_change_weight() -> None:
+    template = {
+        "id": "mild_soreness_no_change",
+        "sessions": [
+            {
+                "name": "Session A",
+                "exercises": [
+                    {
+                        "id": "curl",
+                        "name": "DB Curl",
+                        "start_weight": 32.5,
+                        "primary_muscles": ["biceps"],
+                    }
+                ],
+            }
+        ],
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=2,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+        soreness_by_muscle={"biceps": "mild"},
+    )
+
+    assert plan["sessions"][0]["exercises"][0]["recommended_working_weight"] == pytest.approx(32.5)
