@@ -749,7 +749,7 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 ## Phase 14 — Hyperdrive Visual Parity (App-Wide Premium UI)
 - [x] Expand design tokens for depth/glow/glass/accent tiers
 - [x] Implement shell material tiers (base, glass, elevated, active)
-- [ ] Implement cinematic background layers (grain, radial pass, vignette)
+- [x] Implement cinematic background layers (grain, radial pass, vignette)
 - [x] Overhaul form controls (input/select/textarea/toggle) with unified material language
 - [x] Overhaul button and segmented-control interaction states
 - [x] Overhaul card primitives (shell/module variants + deterministic spacing grid)
