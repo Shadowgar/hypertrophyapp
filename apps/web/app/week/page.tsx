@@ -30,6 +30,18 @@ export default function WeekPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-semibold">Week Plan</h1>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="main-card">
+          <p className="text-xs uppercase tracking-wide text-zinc-400">Generator</p>
+          <p className="inline-flex items-center gap-2 text-sm text-zinc-200">
+            <span className="status-dot status-dot--green" /> Ready
+          </p>
+        </div>
+        <div className="main-card glass-layer--accent">
+          <p className="text-xs uppercase tracking-wide text-zinc-400">Program Source</p>
+          <p className="text-sm text-zinc-200">{selectedProgramId ? "Manual override" : "Auto-select"}</p>
+        </div>
+      </div>
       <div className="main-card">
         <div className="space-y-2">
           <label htmlFor="week-program" className="text-xs text-zinc-400">Program override (optional)</label>

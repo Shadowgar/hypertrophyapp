@@ -48,6 +48,18 @@ export default function SettingsPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-semibold">Settings</h1>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="main-card">
+          <p className="text-xs uppercase tracking-wide text-zinc-400">Profile Link</p>
+          <p className="inline-flex items-center gap-2 text-sm text-zinc-200">
+            <span className="status-dot status-dot--green" /> Connected
+          </p>
+        </div>
+        <div className="main-card glass-layer--accent">
+          <p className="text-xs uppercase tracking-wide text-zinc-400">Config Scope</p>
+          <p className="text-sm text-zinc-200">Program + recovery</p>
+        </div>
+      </div>
       <div className="main-card space-y-3">
         <p className="text-sm text-zinc-300">Theme is locked to dark for MVP.</p>
         <Button variant="secondary" className="w-full" disabled>
