@@ -10,6 +10,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from importers.reference_corpus_ingest import build_reference_catalog
+from importers.reference_corpus_ingest import ExtractionResult
 
 
 def _write_minimal_xlsx(path: Path) -> None:
@@ -98,3 +99,45 @@ def test_reference_ingestion_is_deterministic(tmp_path: Path) -> None:
 
     assert asset_catalog_file == second["asset_catalog"]
     assert provenance_file == second["provenance_index"]
+
+
+def test_reference_ingestion_has_no_orphan_assets_against_real_corpus(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    reference_dir = tmp_path / "reference"
+    guides_dir = tmp_path / "docs" / "guides"
+    reference_dir.mkdir(parents=True)
+
+    _write_minimal_xlsx(reference_dir / "Program Sheet.xlsx")
+    _write_minimal_epub(reference_dir / "Guide.epub")
+    (reference_dir / "Notes.pdf").write_bytes(b"%PDF-1.4 synthetic")
+    (reference_dir / "ignore.txt").write_text("unsupported", encoding="utf-8")
+
+    def _fast_extract(_path: Path) -> ExtractionResult:
+        return ExtractionResult(text="coverage-only", method="coverage_stub")
+
+    monkeypatch.setattr("importers.reference_corpus_ingest.extract_asset_text", _fast_extract)
+
+    result = cast(dict[str, Any], build_reference_catalog(reference_dir=reference_dir, guides_dir=guides_dir))
+    asset_catalog = cast(dict[str, Any], result["asset_catalog"])
+    provenance = cast(dict[str, Any], result["provenance_index"])
+
+    supported_files = sorted(
+        path.relative_to(reference_dir.parent).as_posix()
+        for path in reference_dir.iterdir()
+        if path.is_file() and path.suffix.lower() in {".pdf", ".epub", ".xlsx"}
+    )
+
+    catalog_assets = sorted(item["asset_path"] for item in asset_catalog["assets"])
+    provenance_assets = sorted(item["asset"] for item in provenance["provenance"])
+
+    assert asset_catalog["asset_count"] == len(supported_files)
+    assert provenance["asset_count"] == len(supported_files)
+    assert catalog_assets == supported_files
+    assert provenance_assets == supported_files
+
+    for item in asset_catalog["assets"]:
+        derived_doc = Path(str(item["derived_doc"]))
+        derived_path = derived_doc if derived_doc.is_absolute() else reference_dir.parent / derived_doc
+        assert derived_path.exists()

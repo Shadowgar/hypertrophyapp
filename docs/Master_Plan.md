@@ -698,7 +698,7 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 - [x] Add deterministic “next recommended program” suggestion logic
 - [x] Add explicit confirmation flow before program/phase switch
 - [x] Add ingestion determinism tests (checksum + schema stability)
-- [ ] Add guide coverage tests (no orphan assets)
+- [x] Add guide coverage tests (no orphan assets)
 
 ---
 
