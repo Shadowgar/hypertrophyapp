@@ -64,17 +64,32 @@ export default function TodayPage() {
         setSwapIndexByExercise({});
       }
       // restore completed sets for this session if present
+      let localCompleted: Record<string, number> = {};
       try {
         const completedKey = `hypertrophy_completed_sets:${data.session_id}`;
         const savedCompleted = localStorage.getItem(completedKey);
         if (savedCompleted) {
           const parsed = JSON.parse(savedCompleted) as Record<string, number>;
-          setCompletedSetsByExercise(parsed);
+          localCompleted = parsed;
         } else {
-          setCompletedSetsByExercise({});
+          localCompleted = {};
         }
       } catch {
-        setCompletedSetsByExercise({});
+        localCompleted = {};
+      }
+
+      // prefer server-side progress when available
+      try {
+        const progress = await api.getWorkoutProgress(data.session_id);
+        const serverCompleted = Object.fromEntries(
+          (progress.exercises ?? []).map((item) => [item.exercise_id, Number(item.completed_sets) || 0]),
+        ) as Record<string, number>;
+        const merged = Object.keys(serverCompleted).length > 0 ? serverCompleted : localCompleted;
+        setCompletedSetsByExercise(merged);
+        const completedKey = `hypertrophy_completed_sets:${data.session_id}`;
+        localStorage.setItem(completedKey, JSON.stringify(merged));
+      } catch {
+        setCompletedSetsByExercise(localCompleted);
       }
     } catch {
       setWorkout(null);

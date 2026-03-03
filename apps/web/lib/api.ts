@@ -22,6 +22,18 @@ export type WorkoutSession = {
   exercises: WorkoutExercise[];
 };
 
+export type WorkoutProgress = {
+  workout_id: string;
+  completed_total: number;
+  planned_total: number;
+  percent_complete: number;
+  exercises: Array<{
+    exercise_id: string;
+    planned_sets: number;
+    completed_sets: number;
+  }>;
+};
+
 export type Profile = {
   email: string;
   name: string;
@@ -95,6 +107,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export const api = {
   health: () => request<{ status: string; date: string }>("/health"),
   getTodayWorkout: () => request<WorkoutSession>("/workout/today"),
+  getWorkoutProgress: (workoutId: string) => request<WorkoutProgress>(`/workout/${encodeURIComponent(workoutId)}/progress`),
   generateWeek: (templateId?: string | null) => request<Record<string, unknown>>("/plan/generate-week", { method: "POST", body: JSON.stringify(templateId ? { template_id: templateId } : {}) }),
   getProfile: () => request<Profile>("/profile"),
   listPrograms: () => request<Array<{id: string; slug?: string; name: string; description?: string}>>("/plan/programs"),
@@ -108,6 +121,11 @@ export const api = {
     request<SorenessEntry[]>(`/soreness?start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`),
   createSoreness: (payload: SorenessCreatePayload) =>
     request<SorenessEntry>("/soreness", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  logSet: (workoutId: string, payload: { primary_exercise_id?: string | null; exercise_id: string; set_index: number; reps: number; weight: number; rpe?: number | null }) =>
+    request<Record<string, unknown>>(`/workout/${encodeURIComponent(workoutId)}/log-set`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),
