@@ -154,6 +154,59 @@ body {
   box-shadow: var(--ui-glow-active), var(--ui-depth-shadow-4);
 }
 
+.ui-input,
+.ui-select,
+.ui-textarea {
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid var(--ui-edge-idle);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--ui-surface-2) 72%, transparent),
+    color-mix(in srgb, var(--ui-surface-1) 68%, transparent)
+  );
+  color: var(--ui-foreground);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), var(--ui-depth-shadow-1);
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.ui-input,
+.ui-select {
+  padding: 0.5rem 0.625rem;
+}
+
+.ui-textarea {
+  padding: 0.5rem 0.625rem;
+  resize: vertical;
+}
+
+.ui-input::placeholder,
+.ui-textarea::placeholder {
+  color: #a1a1aa;
+}
+
+.ui-input:hover,
+.ui-select:hover,
+.ui-textarea:hover {
+  border-color: var(--ui-edge-hover);
+}
+
+.ui-input:focus,
+.ui-select:focus,
+.ui-textarea:focus,
+.ui-input:focus-visible,
+.ui-select:focus-visible,
+.ui-textarea:focus-visible {
+  outline: none;
+  border-color: var(--ui-edge-active);
+  box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.55), 0 0 14px rgba(220, 38, 38, 0.2), var(--ui-depth-shadow-1);
+}
+
+.ui-select option {
+  background-color: #11131a;
+  color: #f4f4f5;
+}
+
 .state-glow--active {
   box-shadow: var(--ui-glow-active);
 }
@@ -214,7 +267,7 @@ body {
 
 .dock-btn--idle {
   color: #e4e4e7;
-  background: rgba(255, 255, 255, 0.045);
+  background: #1f232b;
   border: 1px solid transparent;
 }
 

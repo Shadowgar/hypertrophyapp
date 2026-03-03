@@ -39,13 +39,13 @@ export default function LoginPage() {
       <h1 className="text-xl font-semibold">Login</h1>
       <form className="main-card space-y-3" onSubmit={handleSubmit}>
         <input
-          className="w-full rounded-md bg-zinc-900 p-2 text-white"
+          className="ui-input"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="Email"
         />
         <input
-          className="w-full rounded-md bg-zinc-900 p-2 text-white"
+          className="ui-input"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           placeholder="Password"

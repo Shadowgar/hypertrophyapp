@@ -46,7 +46,7 @@ export default function CheckinPage() {
         <label className="space-y-1 text-xs text-zinc-300">
           <span>Week Start (Monday)</span>
           <input
-            className="w-full rounded-md bg-zinc-900 p-2 text-white"
+            className="ui-input"
             onChange={(event) => setWeekStart(event.target.value)}
             type="date"
             value={weekStart}
@@ -56,7 +56,7 @@ export default function CheckinPage() {
         <label className="space-y-1 text-xs text-zinc-300">
           <span>Bodyweight</span>
           <input
-            className="w-full rounded-md bg-zinc-900 p-2 text-white"
+            className="ui-input"
             min="0.1"
             onChange={(event) => setBodyWeight(event.target.value)}
             step="0.1"
@@ -68,7 +68,7 @@ export default function CheckinPage() {
         <label className="space-y-1 text-xs text-zinc-300">
           <span>Adherence Score (1-5)</span>
           <select
-            className="w-full rounded-md bg-zinc-900 p-2 text-white"
+            className="ui-select"
             onChange={(event) => setAdherenceScore(event.target.value)}
             value={adherenceScore}
           >
@@ -83,7 +83,7 @@ export default function CheckinPage() {
         <label className="space-y-1 text-xs text-zinc-300">
           <span>Notes (optional)</span>
           <textarea
-            className="w-full rounded-md bg-zinc-900 p-2 text-white"
+            className="ui-textarea"
             onChange={(event) => setNotes(event.target.value)}
             rows={3}
             value={notes}

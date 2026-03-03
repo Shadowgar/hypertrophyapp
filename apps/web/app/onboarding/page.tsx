@@ -112,11 +112,11 @@ export default function OnboardingPage() {
     <div className="space-y-4">
       <h1 className="text-xl font-semibold">Onboarding</h1>
       <form className="main-card space-y-3" onSubmit={handleSubmit}>
-        <input aria-label="Full name" className="w-full rounded-md bg-zinc-900 p-2 text-white" value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" />
-        <input aria-label="Email address" className="w-full rounded-md bg-zinc-900 p-2 text-white" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
+        <input aria-label="Full name" className="ui-input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" />
+        <input aria-label="Email address" className="ui-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
         <div className="space-y-2">
           <input
-            className="w-full rounded-md bg-zinc-900 p-2 text-white"
+            className="ui-input"
             type={showPassword ? "text" : "password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -134,7 +134,7 @@ export default function OnboardingPage() {
         </div>
 
         <select
-          className="w-full rounded-md bg-zinc-900 p-2 text-white"
+          className="ui-select"
           value={trainingLocation}
           onChange={(event) => setTrainingLocation(event.target.value)}
         >
@@ -143,7 +143,7 @@ export default function OnboardingPage() {
         </select>
 
         <select
-          className="w-full rounded-md bg-zinc-900 p-2 text-white"
+          className="ui-select"
           value={daysAvailable}
           onChange={(event) => setDaysAvailable(Number(event.target.value))}
         >
@@ -157,7 +157,7 @@ export default function OnboardingPage() {
           <label htmlFor="program-select" className="text-xs text-zinc-400">Program</label>
           <select
             id="program-select"
-            className="w-full rounded-md bg-zinc-900 p-2 text-white"
+            className="ui-select"
             value={selectedProgramId ?? ""}
             onChange={(e) => setSelectedProgramId(e.target.value || null)}
             aria-label="Program selector"

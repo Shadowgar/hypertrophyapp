@@ -136,7 +136,7 @@ export default function SettingsPage() {
           <label htmlFor="settings-program" className="text-xs text-zinc-400">Program</label>
           <select
             id="settings-program"
-            className="w-full rounded-md bg-zinc-900 p-2 text-white"
+            className="ui-select"
             value={selectedProgramId ?? ""}
             onChange={(e) => setSelectedProgramId(e.target.value || null)}
             aria-label="Settings program selector"

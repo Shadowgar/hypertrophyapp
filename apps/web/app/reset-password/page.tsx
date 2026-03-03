@@ -70,7 +70,7 @@ export default function ResetPasswordPage() {
       <form className="main-card space-y-3" onSubmit={handleRequest}>
         <p className="text-xs text-zinc-400">Request reset token</p>
         <input
-          className="w-full rounded-md bg-zinc-900 p-2 text-white"
+          className="ui-input"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="Email"
@@ -84,13 +84,13 @@ export default function ResetPasswordPage() {
       <form className="main-card space-y-3" onSubmit={handleConfirm}>
         <p className="text-xs text-zinc-400">Confirm new password</p>
         <input
-          className="w-full rounded-md bg-zinc-900 p-2 text-white"
+          className="ui-input"
           value={token}
           onChange={(event) => setToken(event.target.value)}
           placeholder="Reset token"
         />
         <input
-          className="w-full rounded-md bg-zinc-900 p-2 text-white"
+          className="ui-input"
           value={newPassword}
           onChange={(event) => setNewPassword(event.target.value)}
           placeholder="New password"

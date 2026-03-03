@@ -436,7 +436,7 @@ export default function TodayPage() {
                 <div key={muscle} className="flex items-center justify-between gap-2">
                   <span className="text-xs uppercase tracking-wide text-zinc-300">{muscle}</span>
                   <select
-                    className="rounded-md bg-zinc-900 p-1 text-xs text-white"
+                    className="ui-select p-1 text-xs"
                     onChange={(event) => {
                       const value = event.target.value as SorenessSeverity;
                       setSorenessByMuscle((prev) => ({ ...prev, [muscle]: value }));
@@ -453,7 +453,7 @@ export default function TodayPage() {
             </div>
 
             <textarea
-              className="w-full rounded-md bg-zinc-900 p-2 text-xs text-white"
+              className="ui-textarea text-xs"
               onChange={(event) => setSorenessNotes(event.target.value)}
               placeholder="Optional soreness notes"
               rows={3}

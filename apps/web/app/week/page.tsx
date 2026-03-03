@@ -45,7 +45,7 @@ export default function WeekPage() {
       <div className="main-card">
         <div className="space-y-2">
           <label htmlFor="week-program" className="text-xs text-zinc-400">Program override (optional)</label>
-          <select id="week-program" aria-label="Week program override selector" aria-describedby="week-program-desc" className="w-full rounded-md bg-zinc-900 p-2 text-white" value={selectedProgramId ?? ""} onChange={(e) => setSelectedProgramId(e.target.value || null)}>
+          <select id="week-program" aria-label="Week program override selector" aria-describedby="week-program-desc" className="ui-select" value={selectedProgramId ?? ""} onChange={(e) => setSelectedProgramId(e.target.value || null)}>
             <option value="">Server-selected — trainer&apos;s recommended program</option>
             {programs.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
