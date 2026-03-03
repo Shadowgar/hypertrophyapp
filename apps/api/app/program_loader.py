@@ -14,8 +14,20 @@ PROGRAM_DESCRIPTIONS: dict[str, str] = {
 }
 
 
+def _resolve_programs_path() -> Path:
+    configured = Path(settings.programs_dir)
+    if configured.exists():
+        return configured
+
+    repo_programs = Path(__file__).resolve().parents[3] / "programs"
+    if repo_programs.exists():
+        return repo_programs
+
+    return configured
+
+
 def list_program_templates() -> list[dict]:
-    programs_path = Path(settings.programs_dir)
+    programs_path = _resolve_programs_path()
     candidates = sorted(programs_path.glob("*.json"))
 
     summaries: list[dict] = []
@@ -45,7 +57,7 @@ def list_program_templates() -> list[dict]:
 
 
 def load_program_template(template_id: str) -> dict:
-    candidate = Path(settings.programs_dir) / f"{template_id}.json"
+    candidate = _resolve_programs_path() / f"{template_id}.json"
     if not candidate.exists():
         raise FileNotFoundError(f"Program template not found: {template_id}")
 
