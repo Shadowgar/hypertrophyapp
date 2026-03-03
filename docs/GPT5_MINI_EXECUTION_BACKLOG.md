@@ -3,6 +3,11 @@
 ## Goal
 Ship remaining Phase 8/13 UI surfaces without changing locked deterministic contracts.
 
+## Execution Rule for GPT-5-mini
+- GPT-5-mini focus is implementation and validation only.
+- GPT-5-mini must not open, manage, or debug PR workflows.
+- After each completed task, hand off results to a human or GPT-5.3-Codex for PR handling.
+
 ## Locked Inputs
 - API contracts in `docs/GPT5_MINI_HANDOFF.md`
 - Model ownership policy in `docs/Master_Plan.md` (`Model Ownership & Quality Routing`)
@@ -84,7 +89,7 @@ Acceptance for Sprint B:
 - Do not change auth/security behavior.
 - Do not change existing response semantics for locked endpoints.
 
-## Validation per PR
+## Validation per Task
 
 ```bash
 cd /home/rocco/hypertrophyapp
@@ -101,3 +106,4 @@ Escalate immediately if any task requires:
 - migration changes
 - planner behavior changes
 - deterministic rule changes
+- PR workflow intervention or CI/PR tooling changes outside task validation
