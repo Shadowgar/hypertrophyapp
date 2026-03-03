@@ -1,0 +1,5386 @@
+{
+  "id": "powerbuilding_3_0",
+  "version": "1.0.0",
+  "split": "full_body",
+  "days_supported": [
+    2,
+    3,
+    4
+  ],
+  "deload": {
+    "trigger_weeks": 6,
+    "set_reduction_pct": 35,
+    "load_reduction_pct": 10
+  },
+  "progression": {
+    "mode": "double_progression",
+    "increment_kg": 2.5
+  },
+  "sessions": [
+    {
+      "name": "FULL BODY 1:",
+      "exercises": [
+        {
+          "id": "back_squat_top_single",
+          "primary_exercise_id": "back_squat_top_single",
+          "name": "Back Squat (Top Single)",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Top set. Focus on technique and explosive power.",
+          "video": null
+        },
+        {
+          "id": "back_squat",
+          "primary_exercise_id": "back_squat",
+          "name": "Back Squat",
+          "sets": 3,
+          "rep_range": [
+            5,
+            5
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Sit back and down, keep your upper back tight to the bar",
+          "video": null
+        },
+        {
+          "id": "barbell_overhead_press",
+          "primary_exercise_id": "barbell_overhead_press",
+          "name": "Barbell Overhead Press",
+          "sets": 2,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "2-3min These are intentionally light for shoulder stability and balance. Don't push these hard. Big bench day tomorrow.",
+          "video": null
+        },
+        {
+          "id": "romanian_deadlift",
+          "primary_exercise_id": "romanian_deadlift",
+          "name": "Romanian Deadlift",
+          "sets": 2,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "hinge",
+          "primary_muscles": [
+            "hamstrings",
+            "glutes",
+            "erectors"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-3min Set the pins high, short ROM, use low bar position, set hips back and keep shins vertical",
+          "video": null
+        },
+        {
+          "id": "chest_supported_row",
+          "primary_exercise_id": "chest_supported_row",
+          "name": "Chest-Supported Row",
+          "sets": 4,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_pull",
+          "primary_muscles": [
+            "lats",
+            "mid_back",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Can use machine or brace against bench. Minimize cheating.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 2:",
+      "exercises": [
+        {
+          "id": "strict_bench_press",
+          "primary_exercise_id": "strict_bench_press",
+          "name": "Strict Bench Press",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Strict 1 second pause on chest. Execute the set up and rep as perfectly as possible. Don't overhype. Focus.",
+          "video": null
+        },
+        {
+          "id": "barbell_bench_press",
+          "primary_exercise_id": "barbell_bench_press",
+          "name": "Barbell Bench Press",
+          "sets": 3,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "3-5min Set up a comfortable arch, quick pause on chest and explode up on each rep",
+          "video": null
+        },
+        {
+          "id": "leg_curl",
+          "primary_exercise_id": "leg_curl",
+          "name": "Leg Curl",
+          "sets": 3,
+          "rep_range": [
+            10,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Focus on squeezing your hamstrings to move the weight",
+          "video": null
+        },
+        {
+          "id": "ez_bar_strict_curl",
+          "primary_exercise_id": "ez_bar_strict_curl",
+          "name": "EZ-Bar Strict Curl",
+          "sets": 4,
+          "rep_range": [
+            6,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Lean against wall and maintain wall contact with head, hips and back. Keep elbows pinned at sides. Control the weight.",
+          "video": null
+        },
+        {
+          "id": "face_pull",
+          "primary_exercise_id": "face_pull",
+          "name": "Face Pull",
+          "sets": 3,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Don't go too heavy, focus on mind-muscle connection",
+          "video": null
+        },
+        {
+          "id": "seated_calf_raise",
+          "primary_exercise_id": "seated_calf_raise",
+          "name": "Seated Calf Raise",
+          "sets": 3,
+          "rep_range": [
+            10,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "calf_raise",
+          "primary_muscles": [
+            "calves"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Push these all very hard. Go to true failure.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 3:",
+      "exercises": [
+        {
+          "id": "wide_stance_back_squat",
+          "primary_exercise_id": "wide_stance_back_squat",
+          "name": "Wide Stance Back Squat",
+          "sets": 3,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-4min This is a pin squat that starts and ends with the bar on the pins. At the bottom you're just above parallel. Get tight.",
+          "video": null
+        },
+        {
+          "id": "close_grip_bench_press",
+          "primary_exercise_id": "close_grip_bench_press",
+          "name": "Close Grip Bench Press",
+          "sets": 3,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-4min Shoulder width grip, tuck your elbows in closer to your sides",
+          "video": null
+        },
+        {
+          "id": "neutral_grip_pulldown",
+          "primary_exercise_id": "neutral_grip_pulldown",
+          "name": "Neutral Grip Pulldown",
+          "sets": 4,
+          "rep_range": [
+            6,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "vertical_pull",
+          "primary_muscles": [
+            "lats",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-3min Pull your elbows down against your sides",
+          "video": null
+        },
+        {
+          "id": "tricep_pushdown",
+          "primary_exercise_id": "tricep_pushdown",
+          "name": "Tricep Pushdown",
+          "sets": 3,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "triceps_extension",
+          "primary_muscles": [
+            "triceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Arc the dummbells behind your head. Constant tension on triceps",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 4:",
+      "exercises": [
+        {
+          "id": "deadlift",
+          "primary_exercise_id": "deadlift",
+          "name": "Deadlift",
+          "sets": 1,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "hinge",
+          "primary_muscles": [
+            "hamstrings",
+            "glutes",
+            "erectors"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Brace your lats, chest tall, pull the slack out of the bar before lifting",
+          "video": null
+        },
+        {
+          "id": "pause_deadlift",
+          "primary_exercise_id": "pause_deadlift",
+          "name": "Pause Deadlift",
+          "sets": 2,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "hinge",
+          "primary_muscles": [
+            "hamstrings",
+            "glutes",
+            "erectors"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "2-4min 1 second pause right after plates leave the floor",
+          "video": null
+        },
+        {
+          "id": "dumbbell_lateral_raise",
+          "primary_exercise_id": "dumbbell_lateral_raise",
+          "name": "Dumbbell Lateral Raise",
+          "sets": 4,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "lateral_raise",
+          "primary_muscles": [
+            "side_delts"
+          ],
+          "equipment_tags": [
+            "dumbbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Focus on contracting your delts to move the weight, don't let form get sloppy toward the end of the set!",
+          "video": null
+        },
+        {
+          "id": "rear_delt_fly",
+          "primary_exercise_id": "rear_delt_fly",
+          "name": "Rear Delt Fly",
+          "sets": 4,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Mind-muscle connection with rear delts",
+          "video": null
+        },
+        {
+          "id": "lat_pullover",
+          "primary_exercise_id": "lat_pullover",
+          "name": "Lat Pullover",
+          "sets": 3,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Use bands if no cables. Keep constant tension on the lats. Big stretch at the top by leaning slightly forward.",
+          "video": null
+        },
+        {
+          "id": "hammer_curl",
+          "primary_exercise_id": "hammer_curl",
+          "name": "Hammer Curl",
+          "sets": 4,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Keep elbows locked in place, squeeze the dumbbell handle hard!",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 5:",
+      "exercises": [
+        {
+          "id": "back_squat",
+          "primary_exercise_id": "back_squat",
+          "name": "Back Squat",
+          "sets": 4,
+          "rep_range": [
+            6,
+            6
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Sit back and down, keep your upper back tight to the bar",
+          "video": null
+        },
+        {
+          "id": "barbell_bench_press",
+          "primary_exercise_id": "barbell_bench_press",
+          "name": "Barbell Bench Press",
+          "sets": 4,
+          "rep_range": [
+            6,
+            6
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "3-5min Set up a comfortable arch, quick pause on chest and explode up on each rep",
+          "video": null
+        },
+        {
+          "id": "bicep_grip_lat_pulldown",
+          "primary_exercise_id": "bicep_grip_lat_pulldown",
+          "name": "Bicep Grip Lat Pulldown",
+          "sets": 3,
+          "rep_range": [
+            10,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "vertical_pull",
+          "primary_muscles": [
+            "lats",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-3min Be mindful of lower back fatgiue, stay light and minimize cheating",
+          "video": null
+        },
+        {
+          "id": "hip_abduction",
+          "primary_exercise_id": "hip_abduction",
+          "name": "Hip Abduction",
+          "sets": 3,
+          "rep_range": [
+            12,
+            15
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Machine, band or weighted, squeeze and hold for 1 second at the top of each rep",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "REST DAY",
+      "exercises": [
+        {
+          "id": "exercise",
+          "primary_exercise_id": "exercise",
+          "name": "Exercise",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Warm-up Sets Load %1RM RPE Rest Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 1:",
+      "exercises": [
+        {
+          "id": "back_squat_top_single",
+          "primary_exercise_id": "back_squat_top_single",
+          "name": "Back Squat (Top Single)",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Top set. Focus on technique and explosive power.",
+          "video": null
+        },
+        {
+          "id": "back_squat",
+          "primary_exercise_id": "back_squat",
+          "name": "Back Squat",
+          "sets": 3,
+          "rep_range": [
+            5,
+            5
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Sit back and down, keep your upper back tight to the bar",
+          "video": null
+        },
+        {
+          "id": "barbell_overhead_press",
+          "primary_exercise_id": "barbell_overhead_press",
+          "name": "Barbell Overhead Press",
+          "sets": 2,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "2-3min These are intentionally light for shoulder stability and balance. Don't push these hard. Big bench day tomorrow.",
+          "video": null
+        },
+        {
+          "id": "romanian_deadlift",
+          "primary_exercise_id": "romanian_deadlift",
+          "name": "Romanian Deadlift",
+          "sets": 2,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "hinge",
+          "primary_muscles": [
+            "hamstrings",
+            "glutes",
+            "erectors"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-3min Set the pins high, short ROM, use low bar position, set hips back and keep shins vertical",
+          "video": null
+        },
+        {
+          "id": "chest_supported_row",
+          "primary_exercise_id": "chest_supported_row",
+          "name": "Chest-Supported Row",
+          "sets": 4,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_pull",
+          "primary_muscles": [
+            "lats",
+            "mid_back",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Can use machine or brace against bench. Minimize cheating.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 2:",
+      "exercises": [
+        {
+          "id": "strict_bench_press",
+          "primary_exercise_id": "strict_bench_press",
+          "name": "Strict Bench Press",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Strict 1 second pause on chest. Execute the set up and rep as perfectly as possible. Don't overhype. Focus.",
+          "video": null
+        },
+        {
+          "id": "barbell_bench_press",
+          "primary_exercise_id": "barbell_bench_press",
+          "name": "Barbell Bench Press",
+          "sets": 3,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "3-5min Set up a comfortable arch, quick pause on chest and explode up on each rep",
+          "video": null
+        },
+        {
+          "id": "seated_leg_curl",
+          "primary_exercise_id": "seated_leg_curl",
+          "name": "Seated Leg Curl",
+          "sets": 3,
+          "rep_range": [
+            10,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Focus on squeezing your hamstrings to move the weight",
+          "video": null
+        },
+        {
+          "id": "ez_bar_strict_curl",
+          "primary_exercise_id": "ez_bar_strict_curl",
+          "name": "EZ-Bar Strict Curl",
+          "sets": 4,
+          "rep_range": [
+            6,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Lean against wall and maintain wall contact with head, hips and back. Keep elbows pinned at sides. Control the weight.",
+          "video": null
+        },
+        {
+          "id": "face_pull",
+          "primary_exercise_id": "face_pull",
+          "name": "Face Pull",
+          "sets": 3,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Don't go too heavy, focus on mind-muscle connection",
+          "video": null
+        },
+        {
+          "id": "seated_calf_raise",
+          "primary_exercise_id": "seated_calf_raise",
+          "name": "Seated Calf Raise",
+          "sets": 3,
+          "rep_range": [
+            10,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "calf_raise",
+          "primary_muscles": [
+            "calves"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Push these all very hard. Go to true failure.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 3:",
+      "exercises": [
+        {
+          "id": "sissy_squat",
+          "primary_exercise_id": "sissy_squat",
+          "name": "Sissy Squat",
+          "sets": 3,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-4min Sit fully back on to the box, release tension in thighs, minimize rocking while seated",
+          "video": null
+        },
+        {
+          "id": "barbell_pin_bench_press",
+          "primary_exercise_id": "barbell_pin_bench_press",
+          "name": "Barbell Pin Bench Press",
+          "sets": 3,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "2-4min Set the pins just above chest height, release tension while the bar is on the pins, then explode up. Control the weight.",
+          "video": null
+        },
+        {
+          "id": "neutral_grip_pulldown",
+          "primary_exercise_id": "neutral_grip_pulldown",
+          "name": "Neutral Grip Pulldown",
+          "sets": 4,
+          "rep_range": [
+            6,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "vertical_pull",
+          "primary_muscles": [
+            "lats",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-3min Pull your elbows down against your sides",
+          "video": null
+        },
+        {
+          "id": "overhead_tricep_extension",
+          "primary_exercise_id": "overhead_tricep_extension",
+          "name": "Overhead Tricep Extension",
+          "sets": 3,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "vertical_press",
+          "primary_muscles": [
+            "front_delts",
+            "triceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Arc the dummbells behind your head. Constant tension on triceps",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 4:",
+      "exercises": [
+        {
+          "id": "deadlift",
+          "primary_exercise_id": "deadlift",
+          "name": "Deadlift",
+          "sets": 1,
+          "rep_range": [
+            2,
+            2
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "hinge",
+          "primary_muscles": [
+            "hamstrings",
+            "glutes",
+            "erectors"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Brace your lats, chest tall, pull the slack out of the bar before lifting",
+          "video": null
+        },
+        {
+          "id": "touch_and_go_deadlift",
+          "primary_exercise_id": "touch_and_go_deadlift",
+          "name": "Touch-And-Go Deadlift",
+          "sets": 2,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "hinge",
+          "primary_muscles": [
+            "hamstrings",
+            "glutes",
+            "erectors"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "2-4min Don't bounce the plates off the floor, just a light tap. Allow some momentum and get in a good groove. Breathe/brace at the top.",
+          "video": null
+        },
+        {
+          "id": "dumbbell_lateral_raise",
+          "primary_exercise_id": "dumbbell_lateral_raise",
+          "name": "Dumbbell Lateral Raise",
+          "sets": 4,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "lateral_raise",
+          "primary_muscles": [
+            "side_delts"
+          ],
+          "equipment_tags": [
+            "dumbbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Focus on contracting your delts to move the weight, don't let form get sloppy toward the end of the set!",
+          "video": null
+        },
+        {
+          "id": "face_pulls",
+          "primary_exercise_id": "face_pulls",
+          "name": "Face Pulls",
+          "sets": 4,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Mind-muscle connection with rear delts",
+          "video": null
+        },
+        {
+          "id": "lat_pullovers",
+          "primary_exercise_id": "lat_pullovers",
+          "name": "Lat Pullovers",
+          "sets": 3,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Use bands if no cables. Keep constant tension on the lats. Big stretch at the top by leaning slightly forward.",
+          "video": null
+        },
+        {
+          "id": "hammer_curl",
+          "primary_exercise_id": "hammer_curl",
+          "name": "Hammer Curl",
+          "sets": 4,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Keep elbows locked in place, squeeze the dumbbell handle hard!",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 5:",
+      "exercises": [
+        {
+          "id": "back_squat",
+          "primary_exercise_id": "back_squat",
+          "name": "Back Squat",
+          "sets": 3,
+          "rep_range": [
+            6,
+            6
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Sit back and down, keep your upper back tight to the bar",
+          "video": null
+        },
+        {
+          "id": "barbell_bench_press",
+          "primary_exercise_id": "barbell_bench_press",
+          "name": "Barbell Bench Press",
+          "sets": 3,
+          "rep_range": [
+            6,
+            6
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "3-5min Set up a comfortable arch, quick pause on chest and explode up on each rep",
+          "video": null
+        },
+        {
+          "id": "bent_over_row",
+          "primary_exercise_id": "bent_over_row",
+          "name": "Bent Over Row",
+          "sets": 3,
+          "rep_range": [
+            10,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_pull",
+          "primary_muscles": [
+            "lats",
+            "mid_back",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-3min Be mindful of lower back fatgiue, stay light and minimize cheating",
+          "video": null
+        },
+        {
+          "id": "hip_abduction",
+          "primary_exercise_id": "hip_abduction",
+          "name": "Hip Abduction",
+          "sets": 3,
+          "rep_range": [
+            12,
+            15
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Machine, band or weighted, squeeze and hold for 1 second at the top of each rep",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "REST DAY",
+      "exercises": [
+        {
+          "id": "exercise",
+          "primary_exercise_id": "exercise",
+          "name": "Exercise",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Warm-up Sets Load %1RM RPE Rest Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 1:",
+      "exercises": [
+        {
+          "id": "back_squat_top_single",
+          "primary_exercise_id": "back_squat_top_single",
+          "name": "Back Squat (Top Single)",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Top set. Focus on technique and explosive power.",
+          "video": null
+        },
+        {
+          "id": "back_squat",
+          "primary_exercise_id": "back_squat",
+          "name": "Back Squat",
+          "sets": 2,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Sit back and down, keep your upper back tight to the bar",
+          "video": null
+        },
+        {
+          "id": "barbell_overhead_press",
+          "primary_exercise_id": "barbell_overhead_press",
+          "name": "Barbell Overhead Press",
+          "sets": 2,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "2-3min These are intentionally light for shoulder stability and balance. Don't push these hard. Big bench day tomorrow.",
+          "video": null
+        },
+        {
+          "id": "romanian_deadlift",
+          "primary_exercise_id": "romanian_deadlift",
+          "name": "Romanian Deadlift",
+          "sets": 2,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "hinge",
+          "primary_muscles": [
+            "hamstrings",
+            "glutes",
+            "erectors"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-3min Set the pins high, short ROM, use low bar position, set hips back and keep shins vertical",
+          "video": null
+        },
+        {
+          "id": "chest_supported_row",
+          "primary_exercise_id": "chest_supported_row",
+          "name": "Chest-Supported Row",
+          "sets": 4,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_pull",
+          "primary_muscles": [
+            "lats",
+            "mid_back",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Can use machine or brace against bench. Minimize cheating.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 2:",
+      "exercises": [
+        {
+          "id": "strict_bench_press",
+          "primary_exercise_id": "strict_bench_press",
+          "name": "Strict Bench Press",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Strict 1 second pause on chest. Execute the set up and rep as perfectly as possible. Don't overhype. Focus.",
+          "video": null
+        },
+        {
+          "id": "barbell_bench_press",
+          "primary_exercise_id": "barbell_bench_press",
+          "name": "Barbell Bench Press",
+          "sets": 3,
+          "rep_range": [
+            2,
+            2
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "3-5min Set up a comfortable arch, quick pause on chest and explode up on each rep",
+          "video": null
+        },
+        {
+          "id": "seated_leg_curl",
+          "primary_exercise_id": "seated_leg_curl",
+          "name": "Seated Leg Curl",
+          "sets": 3,
+          "rep_range": [
+            10,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Focus on squeezing your hamstrings to move the weight",
+          "video": null
+        },
+        {
+          "id": "ez_bar_strict_curl",
+          "primary_exercise_id": "ez_bar_strict_curl",
+          "name": "EZ-Bar Strict Curl",
+          "sets": 4,
+          "rep_range": [
+            6,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Lean against wall and maintain wall contact with head, hips and back. Keep elbows pinned at sides. Control the weight.",
+          "video": null
+        },
+        {
+          "id": "face_pull",
+          "primary_exercise_id": "face_pull",
+          "name": "Face Pull",
+          "sets": 3,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Don't go too heavy, focus on mind-muscle connection",
+          "video": null
+        },
+        {
+          "id": "seated_calf_raise",
+          "primary_exercise_id": "seated_calf_raise",
+          "name": "Seated Calf Raise",
+          "sets": 3,
+          "rep_range": [
+            10,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "calf_raise",
+          "primary_muscles": [
+            "calves"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Push these all very hard. Go to true failure.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 3:",
+      "exercises": [
+        {
+          "id": "wide_stance_back_squat",
+          "primary_exercise_id": "wide_stance_back_squat",
+          "name": "Wide Stance Back Squat",
+          "sets": 3,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-4min This is a pin squat that starts and ends with the bar on the pins. At the bottom you're just above parallel. Get tight.",
+          "video": null
+        },
+        {
+          "id": "close_grip_bench_press",
+          "primary_exercise_id": "close_grip_bench_press",
+          "name": "Close Grip Bench Press",
+          "sets": 3,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-4min Shoulder width grip, tuck your elbows in closer to your sides",
+          "video": null
+        },
+        {
+          "id": "neutral_grip_pulldown",
+          "primary_exercise_id": "neutral_grip_pulldown",
+          "name": "Neutral Grip Pulldown",
+          "sets": 4,
+          "rep_range": [
+            6,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "vertical_pull",
+          "primary_muscles": [
+            "lats",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-3min Pull your elbows down against your sides",
+          "video": null
+        },
+        {
+          "id": "dumbell_shrugs",
+          "primary_exercise_id": "dumbell_shrugs",
+          "name": "Dumbell Shrugs",
+          "sets": 3,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Arc the dummbells behind your head. Constant tension on triceps",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 4:",
+      "exercises": [
+        {
+          "id": "deadlift",
+          "primary_exercise_id": "deadlift",
+          "name": "Deadlift",
+          "sets": 1,
+          "rep_range": [
+            2,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "hinge",
+          "primary_muscles": [
+            "hamstrings",
+            "glutes",
+            "erectors"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Brace your lats, chest tall, pull the slack out of the bar before lifting",
+          "video": null
+        },
+        {
+          "id": "pause_deadlift",
+          "primary_exercise_id": "pause_deadlift",
+          "name": "Pause Deadlift",
+          "sets": 2,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "hinge",
+          "primary_muscles": [
+            "hamstrings",
+            "glutes",
+            "erectors"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "2-4min 1 second pause right after plates leave the floor",
+          "video": null
+        },
+        {
+          "id": "dumbbell_lateral_raise",
+          "primary_exercise_id": "dumbbell_lateral_raise",
+          "name": "Dumbbell Lateral Raise",
+          "sets": 4,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "lateral_raise",
+          "primary_muscles": [
+            "side_delts"
+          ],
+          "equipment_tags": [
+            "dumbbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Focus on contracting your delts to move the weight, don't let form get sloppy toward the end of the set!",
+          "video": null
+        },
+        {
+          "id": "rear_delt_flys",
+          "primary_exercise_id": "rear_delt_flys",
+          "name": "Rear Delt Flys",
+          "sets": 4,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Mind-muscle connection with rear delts",
+          "video": null
+        },
+        {
+          "id": "lat_cable_pullover",
+          "primary_exercise_id": "lat_cable_pullover",
+          "name": "Lat Cable Pullover",
+          "sets": 3,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [
+            "cable"
+          ],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Use bands if no cables. Keep constant tension on the lats. Big stretch at the top by leaning slightly forward.",
+          "video": null
+        },
+        {
+          "id": "hammer_curl",
+          "primary_exercise_id": "hammer_curl",
+          "name": "Hammer Curl",
+          "sets": 4,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Keep elbows locked in place, squeeze the dumbbell handle hard!",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 5:",
+      "exercises": [
+        {
+          "id": "back_squat",
+          "primary_exercise_id": "back_squat",
+          "name": "Back Squat",
+          "sets": 2,
+          "rep_range": [
+            6,
+            6
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Sit back and down, keep your upper back tight to the bar",
+          "video": null
+        },
+        {
+          "id": "barbell_bench_press",
+          "primary_exercise_id": "barbell_bench_press",
+          "name": "Barbell Bench Press",
+          "sets": 3,
+          "rep_range": [
+            6,
+            6
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "3-5min Set up a comfortable arch, quick pause on chest and explode up on each rep",
+          "video": null
+        },
+        {
+          "id": "chest_supported_row",
+          "primary_exercise_id": "chest_supported_row",
+          "name": "Chest Supported Row",
+          "sets": 3,
+          "rep_range": [
+            10,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_pull",
+          "primary_muscles": [
+            "lats",
+            "mid_back",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Be mindful of lower back fatgiue, stay light and minimize cheating",
+          "video": null
+        },
+        {
+          "id": "hip_abduction",
+          "primary_exercise_id": "hip_abduction",
+          "name": "Hip Abduction",
+          "sets": 3,
+          "rep_range": [
+            12,
+            15
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Machine, band or weighted, squeeze and hold for 1 second at the top of each rep",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "REST DAY",
+      "exercises": [
+        {
+          "id": "exercise",
+          "primary_exercise_id": "exercise",
+          "name": "Exercise",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Warm-up Sets Load %1RM RPE Rest Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 1:",
+      "exercises": [
+        {
+          "id": "back_squat_top_single",
+          "primary_exercise_id": "back_squat_top_single",
+          "name": "Back Squat (Top Single)",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Top set. Focus on technique and explosive power.",
+          "video": null
+        },
+        {
+          "id": "back_squat",
+          "primary_exercise_id": "back_squat",
+          "name": "Back Squat",
+          "sets": 3,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Sit back and down, keep your upper back tight to the bar",
+          "video": null
+        },
+        {
+          "id": "barbell_overhead_press",
+          "primary_exercise_id": "barbell_overhead_press",
+          "name": "Barbell Overhead Press",
+          "sets": 2,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "2-3min These are intentionally light for shoulder stability and balance. Don't push these hard. Big bench day tomorrow.",
+          "video": null
+        },
+        {
+          "id": "romanian_deadlift",
+          "primary_exercise_id": "romanian_deadlift",
+          "name": "Romanian Deadlift",
+          "sets": 2,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "hinge",
+          "primary_muscles": [
+            "hamstrings",
+            "glutes",
+            "erectors"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-3min Set the pins high, short ROM, use low bar position, set hips back and keep shins vertical",
+          "video": null
+        },
+        {
+          "id": "chest_supported_row",
+          "primary_exercise_id": "chest_supported_row",
+          "name": "Chest-Supported Row",
+          "sets": 4,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_pull",
+          "primary_muscles": [
+            "lats",
+            "mid_back",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Can use machine or brace against bench. Minimize cheating.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 2:",
+      "exercises": [
+        {
+          "id": "strict_bench_press",
+          "primary_exercise_id": "strict_bench_press",
+          "name": "Strict Bench Press",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Strict 1 second pause on chest. Execute the set up and rep as perfectly as possible. Don't overhype. Focus.",
+          "video": null
+        },
+        {
+          "id": "barbell_bench_press",
+          "primary_exercise_id": "barbell_bench_press",
+          "name": "Barbell Bench Press",
+          "sets": 3,
+          "rep_range": [
+            2,
+            2
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "3-5min Set up a comfortable arch, quick pause on chest and explode up on each rep",
+          "video": null
+        },
+        {
+          "id": "seated_leg_curl",
+          "primary_exercise_id": "seated_leg_curl",
+          "name": "Seated Leg Curl",
+          "sets": 3,
+          "rep_range": [
+            10,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Focus on squeezing your hamstrings to move the weight",
+          "video": null
+        },
+        {
+          "id": "incline_dumbell_curl",
+          "primary_exercise_id": "incline_dumbell_curl",
+          "name": "Incline Dumbell Curl",
+          "sets": 4,
+          "rep_range": [
+            6,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min",
+          "video": null
+        },
+        {
+          "id": "face_pull",
+          "primary_exercise_id": "face_pull",
+          "name": "Face Pull",
+          "sets": 3,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Don't go too heavy, focus on mind-muscle connection",
+          "video": null
+        },
+        {
+          "id": "seated_calf_raise",
+          "primary_exercise_id": "seated_calf_raise",
+          "name": "Seated Calf Raise",
+          "sets": 3,
+          "rep_range": [
+            10,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "calf_raise",
+          "primary_muscles": [
+            "calves"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Push these all very hard. Go to true failure.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 3:",
+      "exercises": [
+        {
+          "id": "sissy_squat",
+          "primary_exercise_id": "sissy_squat",
+          "name": "Sissy Squat",
+          "sets": 3,
+          "rep_range": [
+            12,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-4min Sit fully back on to the box, release tension in thighs, minimize rocking while seated",
+          "video": null
+        },
+        {
+          "id": "barbell_bench_press",
+          "primary_exercise_id": "barbell_bench_press",
+          "name": "Barbell Bench Press",
+          "sets": 3,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "2-4min Set the pins just above chest height, release tension while the bar is on the pins, then explode up. Control the weight.",
+          "video": null
+        },
+        {
+          "id": "neutral_grip_pulldown",
+          "primary_exercise_id": "neutral_grip_pulldown",
+          "name": "Neutral Grip Pulldown",
+          "sets": 4,
+          "rep_range": [
+            6,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "vertical_pull",
+          "primary_muscles": [
+            "lats",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-3min Pull your elbows down against your sides",
+          "video": null
+        },
+        {
+          "id": "cable_chest_flys",
+          "primary_exercise_id": "cable_chest_flys",
+          "name": "Cable Chest Flys",
+          "sets": 2,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [
+            "cable"
+          ],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        },
+        {
+          "id": "tricep_pushdown",
+          "primary_exercise_id": "tricep_pushdown",
+          "name": "Tricep Pushdown",
+          "sets": 3,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "triceps_extension",
+          "primary_muscles": [
+            "triceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Arc the dummbells behind your head. Constant tension on triceps",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 4:",
+      "exercises": [
+        {
+          "id": "deadlift",
+          "primary_exercise_id": "deadlift",
+          "name": "Deadlift",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "hinge",
+          "primary_muscles": [
+            "hamstrings",
+            "glutes",
+            "erectors"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Brace your lats, chest tall, pull the slack out of the bar before lifting",
+          "video": null
+        },
+        {
+          "id": "touch_and_go_deadlift",
+          "primary_exercise_id": "touch_and_go_deadlift",
+          "name": "Touch-And-Go Deadlift",
+          "sets": 2,
+          "rep_range": [
+            5,
+            5
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "hinge",
+          "primary_muscles": [
+            "hamstrings",
+            "glutes",
+            "erectors"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "2-4min 1 second pause right after plates leave the floor",
+          "video": null
+        },
+        {
+          "id": "dumbbell_lateral_raise",
+          "primary_exercise_id": "dumbbell_lateral_raise",
+          "name": "Dumbbell Lateral Raise",
+          "sets": 4,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "lateral_raise",
+          "primary_muscles": [
+            "side_delts"
+          ],
+          "equipment_tags": [
+            "dumbbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Focus on contracting your delts to move the weight, don't let form get sloppy toward the end of the set!",
+          "video": null
+        },
+        {
+          "id": "band_pull_apart",
+          "primary_exercise_id": "band_pull_apart",
+          "name": "Band Pull-Apart",
+          "sets": 4,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Mind-muscle connection with rear delts",
+          "video": null
+        },
+        {
+          "id": "lat_pulldown",
+          "primary_exercise_id": "lat_pulldown",
+          "name": "Lat Pulldown",
+          "sets": 3,
+          "rep_range": [
+            12,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "vertical_pull",
+          "primary_muscles": [
+            "lats",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Use bands if no cables. Keep constant tension on the lats. Big stretch at the top by leaning slightly forward.",
+          "video": null
+        },
+        {
+          "id": "hammer_curl",
+          "primary_exercise_id": "hammer_curl",
+          "name": "Hammer Curl",
+          "sets": 4,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Keep elbows locked in place, squeeze the dumbbell handle hard!",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 5:",
+      "exercises": [
+        {
+          "id": "back_squat",
+          "primary_exercise_id": "back_squat",
+          "name": "Back Squat",
+          "sets": 2,
+          "rep_range": [
+            6,
+            6
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Sit back and down, keep your upper back tight to the bar",
+          "video": null
+        },
+        {
+          "id": "barbell_bench_press",
+          "primary_exercise_id": "barbell_bench_press",
+          "name": "Barbell Bench Press",
+          "sets": 1,
+          "rep_range": [
+            6,
+            6
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "3-5min Set up a comfortable arch, quick pause on chest and explode up on each rep",
+          "video": null
+        },
+        {
+          "id": "bent_over_row",
+          "primary_exercise_id": "bent_over_row",
+          "name": "Bent Over Row",
+          "sets": 3,
+          "rep_range": [
+            10,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_pull",
+          "primary_muscles": [
+            "lats",
+            "mid_back",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-3min Be mindful of lower back fatgiue, stay light and minimize cheating",
+          "video": null
+        },
+        {
+          "id": "hip_abduction",
+          "primary_exercise_id": "hip_abduction",
+          "name": "Hip Abduction",
+          "sets": 3,
+          "rep_range": [
+            12,
+            15
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Machine, band or weighted, squeeze and hold for 1 second at the top of each rep",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Semi-deload Week - Avoid failure and train lighter this week to promote recovery and to prepare for the next 5 weeks!",
+      "exercises": [
+        {
+          "id": "exercise",
+          "primary_exercise_id": "exercise",
+          "name": "Exercise",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Warm-up Sets Load %1RM RPE Rest Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 1:",
+      "exercises": [
+        {
+          "id": "back_squat",
+          "primary_exercise_id": "back_squat",
+          "name": "Back Squat",
+          "sets": 2,
+          "rep_range": [
+            5,
+            5
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Sit back and down, keep your upper back tight to the bar",
+          "video": null
+        },
+        {
+          "id": "barbell_overhead_press",
+          "primary_exercise_id": "barbell_overhead_press",
+          "name": "Barbell Overhead Press",
+          "sets": 2,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "2-3min Squeeze your glutes to keep your torso upright, press up and slightly back",
+          "video": null
+        },
+        {
+          "id": "romanian_deadlift",
+          "primary_exercise_id": "romanian_deadlift",
+          "name": "Romanian Deadlift",
+          "sets": 2,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "hinge",
+          "primary_muscles": [
+            "hamstrings",
+            "glutes",
+            "erectors"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-3min Set the pins high, short ROM, use low bar position, set hips back and keep shins vertical",
+          "video": null
+        },
+        {
+          "id": "chest_supported_row",
+          "primary_exercise_id": "chest_supported_row",
+          "name": "Chest-Supported Row",
+          "sets": 3,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_pull",
+          "primary_muscles": [
+            "lats",
+            "mid_back",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Can use machine or brace against bench. Minimize cheating.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 2:",
+      "exercises": [
+        {
+          "id": "barbell_bench_press",
+          "primary_exercise_id": "barbell_bench_press",
+          "name": "Barbell Bench Press",
+          "sets": 3,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "3-5min Set up a comfortable arch, quick pause on chest and explode up on each rep",
+          "video": null
+        },
+        {
+          "id": "seated_leg_curl",
+          "primary_exercise_id": "seated_leg_curl",
+          "name": "Seated Leg Curl",
+          "sets": 3,
+          "rep_range": [
+            10,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Focus on squeezing your hamstrings to move the weight",
+          "video": null
+        },
+        {
+          "id": "barbell_strict_curl",
+          "primary_exercise_id": "barbell_strict_curl",
+          "name": "Barbell Strict Curl",
+          "sets": 3,
+          "rep_range": [
+            6,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Lean against wall and maintain wall contact with head, hips and back. Keep elbows pinned at sides. Control the weight.",
+          "video": null
+        },
+        {
+          "id": "face_pull",
+          "primary_exercise_id": "face_pull",
+          "name": "Face Pull",
+          "sets": 3,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Don't go too heavy, focus on mind-muscle connection",
+          "video": null
+        },
+        {
+          "id": "seated_calf_raise",
+          "primary_exercise_id": "seated_calf_raise",
+          "name": "Seated Calf Raise",
+          "sets": 3,
+          "rep_range": [
+            10,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "calf_raise",
+          "primary_muscles": [
+            "calves"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Push these all very hard. Go to true failure.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 3:",
+      "exercises": [
+        {
+          "id": "wide_stance_back_squat",
+          "primary_exercise_id": "wide_stance_back_squat",
+          "name": "Wide Stance Back Squat",
+          "sets": 2,
+          "rep_range": [
+            6,
+            6
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-4min This is a pin squat that starts and ends with the bar on the pins. At the bottom you're just above parallel. Get tight.",
+          "video": null
+        },
+        {
+          "id": "close_grip_bench_press",
+          "primary_exercise_id": "close_grip_bench_press",
+          "name": "Close Grip Bench Press",
+          "sets": 2,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-4min Shoulder width grip, tuck your elbows in closer to your sides",
+          "video": null
+        },
+        {
+          "id": "neutral_grip_pulldown",
+          "primary_exercise_id": "neutral_grip_pulldown",
+          "name": "Neutral Grip Pulldown",
+          "sets": 3,
+          "rep_range": [
+            6,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "vertical_pull",
+          "primary_muscles": [
+            "lats",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-3min Pull your elbows down against your sides",
+          "video": null
+        },
+        {
+          "id": "dumbell_pullover",
+          "primary_exercise_id": "dumbell_pullover",
+          "name": "Dumbell Pullover",
+          "sets": 3,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-3min Arc the dummbells behind your head. Constant tension on triceps",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 4:",
+      "exercises": [
+        {
+          "id": "deadlift",
+          "primary_exercise_id": "deadlift",
+          "name": "Deadlift",
+          "sets": 1,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "hinge",
+          "primary_muscles": [
+            "hamstrings",
+            "glutes",
+            "erectors"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Brace your lats, chest tall, pull the slack out of the bar before lifting",
+          "video": null
+        },
+        {
+          "id": "pause_deadlift",
+          "primary_exercise_id": "pause_deadlift",
+          "name": "Pause Deadlift",
+          "sets": 2,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "hinge",
+          "primary_muscles": [
+            "hamstrings",
+            "glutes",
+            "erectors"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "2-4min 1 second pause right after plates leave the floor",
+          "video": null
+        },
+        {
+          "id": "dumbbell_lateral_raise",
+          "primary_exercise_id": "dumbbell_lateral_raise",
+          "name": "Dumbbell Lateral Raise",
+          "sets": 3,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "lateral_raise",
+          "primary_muscles": [
+            "side_delts"
+          ],
+          "equipment_tags": [
+            "dumbbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Focus on contracting your delts to move the weight, don't let form get sloppy toward the end of the set!",
+          "video": null
+        },
+        {
+          "id": "face_pulls",
+          "primary_exercise_id": "face_pulls",
+          "name": "Face Pulls",
+          "sets": 3,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Mind-muscle connection with rear delts",
+          "video": null
+        },
+        {
+          "id": "overhead_tricep_extension",
+          "primary_exercise_id": "overhead_tricep_extension",
+          "name": "Overhead Tricep Extension",
+          "sets": 3,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "vertical_press",
+          "primary_muscles": [
+            "front_delts",
+            "triceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Use bands if no cables. Keep constant tension on the lats. Big stretch at the top by leaning slightly forward.",
+          "video": null
+        },
+        {
+          "id": "hammer_curl",
+          "primary_exercise_id": "hammer_curl",
+          "name": "Hammer Curl",
+          "sets": 3,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Keep elbows locked in place, squeeze the dumbbell handle hard!",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 5:",
+      "exercises": [
+        {
+          "id": "back_squat",
+          "primary_exercise_id": "back_squat",
+          "name": "Back Squat",
+          "sets": 2,
+          "rep_range": [
+            6,
+            6
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Sit back and down, keep your upper back tight to the bar",
+          "video": null
+        },
+        {
+          "id": "barbell_bench_press",
+          "primary_exercise_id": "barbell_bench_press",
+          "name": "Barbell Bench Press",
+          "sets": 2,
+          "rep_range": [
+            6,
+            6
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "3-5min Set up a comfortable arch, quick pause on chest and explode up on each rep",
+          "video": null
+        },
+        {
+          "id": "seated_row",
+          "primary_exercise_id": "seated_row",
+          "name": "Seated Row",
+          "sets": 3,
+          "rep_range": [
+            10,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_pull",
+          "primary_muscles": [
+            "lats",
+            "mid_back",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-3min Be mindful of lower back fatgiue, stay light and minimize cheating",
+          "video": null
+        },
+        {
+          "id": "hip_abduction",
+          "primary_exercise_id": "hip_abduction",
+          "name": "Hip Abduction",
+          "sets": 3,
+          "rep_range": [
+            12,
+            15
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Machine, band or weighted, squeeze and hold for 1 second at the top of each rep",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "REST DAY",
+      "exercises": [
+        {
+          "id": "exercise",
+          "primary_exercise_id": "exercise",
+          "name": "Exercise",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Warm-up Sets Load %1RM RPE Rest Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 1:",
+      "exercises": [
+        {
+          "id": "back_squat_top_single",
+          "primary_exercise_id": "back_squat_top_single",
+          "name": "Back Squat (Top Single)",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Top set. Focus on technique and explosive power.",
+          "video": null
+        },
+        {
+          "id": "back_squat",
+          "primary_exercise_id": "back_squat",
+          "name": "Back Squat",
+          "sets": 3,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Sit back and down, keep your upper back tight to the bar",
+          "video": null
+        },
+        {
+          "id": "barbell_overhead_press",
+          "primary_exercise_id": "barbell_overhead_press",
+          "name": "Barbell Overhead Press",
+          "sets": 2,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "2-3min These are intentionally light for shoulder stability and balance. Don't push these hard. Big bench day tomorrow.",
+          "video": null
+        },
+        {
+          "id": "good_morning",
+          "primary_exercise_id": "good_morning",
+          "name": "Good Morning",
+          "sets": 2,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-3min Set the pins high, short ROM, use low bar position, set hips back and keep shins vertical",
+          "video": null
+        },
+        {
+          "id": "chest_supported_row",
+          "primary_exercise_id": "chest_supported_row",
+          "name": "Chest-Supported Row",
+          "sets": 3,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_pull",
+          "primary_muscles": [
+            "lats",
+            "mid_back",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Can use machine or brace against bench. Minimize cheating.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 2:",
+      "exercises": [
+        {
+          "id": "strict_bench_press",
+          "primary_exercise_id": "strict_bench_press",
+          "name": "Strict Bench Press",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Strict 1 second pause on chest. Execute the set up and rep as perfectly as possible. Don't overhype. Focus.",
+          "video": null
+        },
+        {
+          "id": "barbell_bench_press",
+          "primary_exercise_id": "barbell_bench_press",
+          "name": "Barbell Bench Press",
+          "sets": 3,
+          "rep_range": [
+            2,
+            2
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "3-5min Set up a comfortable arch, quick pause on chest and explode up on each rep",
+          "video": null
+        },
+        {
+          "id": "seated_leg_curl",
+          "primary_exercise_id": "seated_leg_curl",
+          "name": "Seated Leg Curl",
+          "sets": 2,
+          "rep_range": [
+            10,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Focus on squeezing your hamstrings to move the weight",
+          "video": null
+        },
+        {
+          "id": "barbell_or_ez_bar_strict_curl",
+          "primary_exercise_id": "barbell_or_ez_bar_strict_curl",
+          "name": "Barbell (or EZ-Bar) Strict Curl",
+          "sets": 4,
+          "rep_range": [
+            6,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Lean against wall and maintain wall contact with head, hips and back. Keep elbows pinned at sides. Control the weight.",
+          "video": null
+        },
+        {
+          "id": "seated_face_pull",
+          "primary_exercise_id": "seated_face_pull",
+          "name": "Seated Face Pull",
+          "sets": 2,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Don't go too heavy, focus on mind-muscle connection",
+          "video": null
+        },
+        {
+          "id": "standing_calf_raise",
+          "primary_exercise_id": "standing_calf_raise",
+          "name": "Standing Calf Raise",
+          "sets": 2,
+          "rep_range": [
+            10,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "calf_raise",
+          "primary_muscles": [
+            "calves"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Push these all very hard. Go to true failure.",
+          "video": null
+        },
+        {
+          "id": "hanging_leg_raise",
+          "primary_exercise_id": "hanging_leg_raise",
+          "name": "Hanging Leg Raise",
+          "sets": 2,
+          "rep_range": [
+            6,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Knees to chest, controlled reps, straighten legs more to increase difficulty",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 3:",
+      "exercises": [
+        {
+          "id": "wide_stance_back_squat",
+          "primary_exercise_id": "wide_stance_back_squat",
+          "name": "Wide Stance Back Squat",
+          "sets": 2,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-4min Sit fully back on to the box, release tension in thighs, minimize rocking while seated",
+          "video": null
+        },
+        {
+          "id": "barbell_pin_bench_press",
+          "primary_exercise_id": "barbell_pin_bench_press",
+          "name": "Barbell Pin Bench Press",
+          "sets": 2,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "2-4min Set the pins just above chest height, release tension while the bar is on the pins, then explode up. Control the weight.",
+          "video": null
+        },
+        {
+          "id": "neutral_grip_pulldown",
+          "primary_exercise_id": "neutral_grip_pulldown",
+          "name": "Neutral Grip Pulldown",
+          "sets": 3,
+          "rep_range": [
+            6,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "vertical_pull",
+          "primary_muscles": [
+            "lats",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-3min Pull your elbows down against your sides",
+          "video": null
+        },
+        {
+          "id": "dumbbell_skull_crusher",
+          "primary_exercise_id": "dumbbell_skull_crusher",
+          "name": "Dumbbell Skull Crusher",
+          "sets": 2,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [
+            "dumbbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Arc the dummbells behind your head. Constant tension on triceps",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 4:",
+      "exercises": [
+        {
+          "id": "deadlift",
+          "primary_exercise_id": "deadlift",
+          "name": "Deadlift",
+          "sets": 1,
+          "rep_range": [
+            2,
+            2
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "hinge",
+          "primary_muscles": [
+            "hamstrings",
+            "glutes",
+            "erectors"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Brace your lats, chest tall, pull the slack out of the bar before lifting",
+          "video": null
+        },
+        {
+          "id": "touch_and_go_deadlift",
+          "primary_exercise_id": "touch_and_go_deadlift",
+          "name": "Touch-And-Go Deadlift",
+          "sets": 2,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "hinge",
+          "primary_muscles": [
+            "hamstrings",
+            "glutes",
+            "erectors"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "2-4min 1 second pause right after plates leave the floor",
+          "video": null
+        },
+        {
+          "id": "dumbbell_lateral_raise",
+          "primary_exercise_id": "dumbbell_lateral_raise",
+          "name": "Dumbbell Lateral Raise",
+          "sets": 3,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "lateral_raise",
+          "primary_muscles": [
+            "side_delts"
+          ],
+          "equipment_tags": [
+            "dumbbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Focus on contracting your delts to move the weight, don't let form get sloppy toward the end of the set!",
+          "video": null
+        },
+        {
+          "id": "band_pull_apart",
+          "primary_exercise_id": "band_pull_apart",
+          "name": "Band Pull-Apart",
+          "sets": 3,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Mind-muscle connection with rear delts",
+          "video": null
+        },
+        {
+          "id": "dumbell_pullover",
+          "primary_exercise_id": "dumbell_pullover",
+          "name": "Dumbell Pullover",
+          "sets": 2,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Use bands if no cables. Keep constant tension on the lats. Big stretch at the top by leaning slightly forward.",
+          "video": null
+        },
+        {
+          "id": "hammer_curl",
+          "primary_exercise_id": "hammer_curl",
+          "name": "Hammer Curl",
+          "sets": 3,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Keep elbows locked in place, squeeze the dumbbell handle hard!",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 5:",
+      "exercises": [
+        {
+          "id": "back_squat",
+          "primary_exercise_id": "back_squat",
+          "name": "Back Squat",
+          "sets": 3,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Sit back and down, keep your upper back tight to the bar",
+          "video": null
+        },
+        {
+          "id": "barbell_bench_press",
+          "primary_exercise_id": "barbell_bench_press",
+          "name": "Barbell Bench Press",
+          "sets": 3,
+          "rep_range": [
+            5,
+            5
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "3-5min Set up a comfortable arch, quick pause on chest and explode up on each rep",
+          "video": null
+        },
+        {
+          "id": "chest_supported_row",
+          "primary_exercise_id": "chest_supported_row",
+          "name": "Chest Supported Row",
+          "sets": 2,
+          "rep_range": [
+            10,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_pull",
+          "primary_muscles": [
+            "lats",
+            "mid_back",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-3min Be mindful of lower back fatgiue, stay light and minimize cheating",
+          "video": null
+        },
+        {
+          "id": "hip_abduction",
+          "primary_exercise_id": "hip_abduction",
+          "name": "Hip Abduction",
+          "sets": 2,
+          "rep_range": [
+            12,
+            15
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Machine, band or weighted, squeeze and hold for 1 second at the top of each rep",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "REST DAY",
+      "exercises": [
+        {
+          "id": "exercise",
+          "primary_exercise_id": "exercise",
+          "name": "Exercise",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Warm-up Sets Load %1RM RPE Rest Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 1:",
+      "exercises": [
+        {
+          "id": "back_squat_top_single",
+          "primary_exercise_id": "back_squat_top_single",
+          "name": "Back Squat (Top Single)",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Top set. Focus on technique and explosive power.",
+          "video": null
+        },
+        {
+          "id": "back_squat",
+          "primary_exercise_id": "back_squat",
+          "name": "Back Squat",
+          "sets": 2,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Sit back and down, keep your upper back tight to the bar",
+          "video": null
+        },
+        {
+          "id": "barbell_overhead_press",
+          "primary_exercise_id": "barbell_overhead_press",
+          "name": "Barbell Overhead Press",
+          "sets": 2,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "2-3min These are intentionally light for shoulder stability and balance. Don't push these hard. Big bench day tomorrow.",
+          "video": null
+        },
+        {
+          "id": "good_mornings",
+          "primary_exercise_id": "good_mornings",
+          "name": "Good Mornings",
+          "sets": 1,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-3min Set the pins high, short ROM, use low bar position, set hips back and keep shins vertical",
+          "video": null
+        },
+        {
+          "id": "lat_pulldown",
+          "primary_exercise_id": "lat_pulldown",
+          "name": "Lat Pulldown",
+          "sets": 3,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "vertical_pull",
+          "primary_muscles": [
+            "lats",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 2:",
+      "exercises": [
+        {
+          "id": "strict_bench_press",
+          "primary_exercise_id": "strict_bench_press",
+          "name": "Strict Bench Press",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Strict 1 second pause on chest. Execute the set up and rep as perfectly as possible. Don't overhype. Focus.",
+          "video": null
+        },
+        {
+          "id": "barbell_bench_press",
+          "primary_exercise_id": "barbell_bench_press",
+          "name": "Barbell Bench Press",
+          "sets": 3,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "3-5min Set up a comfortable arch, quick pause on chest and explode up on each rep",
+          "video": null
+        },
+        {
+          "id": "seated_leg_curl",
+          "primary_exercise_id": "seated_leg_curl",
+          "name": "Seated Leg Curl",
+          "sets": 2,
+          "rep_range": [
+            10,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Focus on squeezing your hamstrings to move the weight",
+          "video": null
+        },
+        {
+          "id": "barbell_strict_curl",
+          "primary_exercise_id": "barbell_strict_curl",
+          "name": "Barbell Strict Curl",
+          "sets": 3,
+          "rep_range": [
+            6,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Lean against wall and maintain wall contact with head, hips and back. Keep elbows pinned at sides. Control the weight.",
+          "video": null
+        },
+        {
+          "id": "face_pull",
+          "primary_exercise_id": "face_pull",
+          "name": "Face Pull",
+          "sets": 2,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Don't go too heavy, focus on mind-muscle connection",
+          "video": null
+        },
+        {
+          "id": "standing_calf_raise",
+          "primary_exercise_id": "standing_calf_raise",
+          "name": "Standing Calf Raise",
+          "sets": 2,
+          "rep_range": [
+            10,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "calf_raise",
+          "primary_muscles": [
+            "calves"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Push these all very hard. Go to true failure.",
+          "video": null
+        },
+        {
+          "id": "hanging_leg_raise",
+          "primary_exercise_id": "hanging_leg_raise",
+          "name": "Hanging Leg Raise",
+          "sets": 2,
+          "rep_range": [
+            6,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Knees to chest, controlled reps, straighten legs more to increase difficulty",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 3:",
+      "exercises": [
+        {
+          "id": "banded_pull_ups",
+          "primary_exercise_id": "banded_pull_ups",
+          "name": "Banded Pull Ups",
+          "sets": 2,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-4min",
+          "video": null
+        },
+        {
+          "id": "close_grip_bench_press",
+          "primary_exercise_id": "close_grip_bench_press",
+          "name": "Close Grip Bench Press",
+          "sets": 2,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-4min Shoulder width grip, tuck your elbows in closer to your sides",
+          "video": null
+        },
+        {
+          "id": "neutral_grip_pulldown",
+          "primary_exercise_id": "neutral_grip_pulldown",
+          "name": "Neutral Grip Pulldown",
+          "sets": 3,
+          "rep_range": [
+            6,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "vertical_pull",
+          "primary_muscles": [
+            "lats",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-3min Pull your elbows down against your sides",
+          "video": null
+        },
+        {
+          "id": "dumbbell_skull_crusher",
+          "primary_exercise_id": "dumbbell_skull_crusher",
+          "name": "Dumbbell Skull Crusher",
+          "sets": 2,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [
+            "dumbbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Arc the dummbells behind your head. Constant tension on triceps",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 4:",
+      "exercises": [
+        {
+          "id": "deadlift",
+          "primary_exercise_id": "deadlift",
+          "name": "Deadlift",
+          "sets": 1,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "hinge",
+          "primary_muscles": [
+            "hamstrings",
+            "glutes",
+            "erectors"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Brace your lats, chest tall, pull the slack out of the bar before lifting",
+          "video": null
+        },
+        {
+          "id": "pause_deadlift",
+          "primary_exercise_id": "pause_deadlift",
+          "name": "Pause Deadlift",
+          "sets": 2,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "hinge",
+          "primary_muscles": [
+            "hamstrings",
+            "glutes",
+            "erectors"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "2-4min 1 second pause right after plates leave the floor",
+          "video": null
+        },
+        {
+          "id": "dumbbell_lateral_raise",
+          "primary_exercise_id": "dumbbell_lateral_raise",
+          "name": "Dumbbell Lateral Raise",
+          "sets": 3,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "lateral_raise",
+          "primary_muscles": [
+            "side_delts"
+          ],
+          "equipment_tags": [
+            "dumbbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Focus on contracting your delts to move the weight, don't let form get sloppy toward the end of the set!",
+          "video": null
+        },
+        {
+          "id": "cable_rear_delt_flys",
+          "primary_exercise_id": "cable_rear_delt_flys",
+          "name": "Cable Rear Delt Flys",
+          "sets": 3,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [
+            "cable"
+          ],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Mind-muscle connection with rear delts",
+          "video": null
+        },
+        {
+          "id": "dumbell_pullover",
+          "primary_exercise_id": "dumbell_pullover",
+          "name": "Dumbell Pullover",
+          "sets": 2,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Use bands if no cables. Keep constant tension on the lats. Big stretch at the top by leaning slightly forward.",
+          "video": null
+        },
+        {
+          "id": "hammer_curl",
+          "primary_exercise_id": "hammer_curl",
+          "name": "Hammer Curl",
+          "sets": 3,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Keep elbows locked in place, squeeze the dumbbell handle hard!",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 5:",
+      "exercises": [
+        {
+          "id": "back_squat",
+          "primary_exercise_id": "back_squat",
+          "name": "Back Squat",
+          "sets": 2,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Sit back and down, keep your upper back tight to the bar",
+          "video": null
+        },
+        {
+          "id": "barbell_bench_press",
+          "primary_exercise_id": "barbell_bench_press",
+          "name": "Barbell Bench Press",
+          "sets": 2,
+          "rep_range": [
+            5,
+            5
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "3-5min Set up a comfortable arch, quick pause on chest and explode up on each rep",
+          "video": null
+        },
+        {
+          "id": "bent_over_row",
+          "primary_exercise_id": "bent_over_row",
+          "name": "Bent Over Row",
+          "sets": 2,
+          "rep_range": [
+            10,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_pull",
+          "primary_muscles": [
+            "lats",
+            "mid_back",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-3min Be mindful of lower back fatgiue, stay light and minimize cheating",
+          "video": null
+        },
+        {
+          "id": "hip_abduction",
+          "primary_exercise_id": "hip_abduction",
+          "name": "Hip Abduction",
+          "sets": 2,
+          "rep_range": [
+            12,
+            15
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Machine, band or weighted, squeeze and hold for 1 second at the top of each rep",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "REST DAY",
+      "exercises": [
+        {
+          "id": "exercise",
+          "primary_exercise_id": "exercise",
+          "name": "Exercise",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Warm-up Sets Load %1RM RPE Rest Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 1:",
+      "exercises": [
+        {
+          "id": "back_squat_top_single",
+          "primary_exercise_id": "back_squat_top_single",
+          "name": "Back Squat (Top Single)",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Top set. Focus on technique and explosive power.",
+          "video": null
+        },
+        {
+          "id": "back_squat",
+          "primary_exercise_id": "back_squat",
+          "name": "Back Squat",
+          "sets": 1,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Sit back and down, keep your upper back tight to the bar",
+          "video": null
+        },
+        {
+          "id": "barbell_overhead_press",
+          "primary_exercise_id": "barbell_overhead_press",
+          "name": "Barbell Overhead Press",
+          "sets": 2,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "2-3min These are intentionally light for shoulder stability and balance. Don't push these hard. Big bench day tomorrow.",
+          "video": null
+        },
+        {
+          "id": "good_mornings",
+          "primary_exercise_id": "good_mornings",
+          "name": "Good Mornings",
+          "sets": 1,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-3min Set the pins high, short ROM, use low bar position, set hips back and keep shins vertical",
+          "video": null
+        },
+        {
+          "id": "chest_supported_row",
+          "primary_exercise_id": "chest_supported_row",
+          "name": "Chest-Supported Row",
+          "sets": 3,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_pull",
+          "primary_muscles": [
+            "lats",
+            "mid_back",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Can use machine or brace against bench. Minimize cheating.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 2:",
+      "exercises": [
+        {
+          "id": "strict_bench_press",
+          "primary_exercise_id": "strict_bench_press",
+          "name": "Strict Bench Press",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Strict 1 second pause on chest. Execute the set up and rep as perfectly as possible. Don't overhype. Focus.",
+          "video": null
+        },
+        {
+          "id": "barbell_bench_press",
+          "primary_exercise_id": "barbell_bench_press",
+          "name": "Barbell Bench Press",
+          "sets": 1,
+          "rep_range": [
+            2,
+            2
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "3-5min Set up a comfortable arch, quick pause on chest and explode up on each rep",
+          "video": null
+        },
+        {
+          "id": "seated_leg_curl",
+          "primary_exercise_id": "seated_leg_curl",
+          "name": "Seated Leg Curl",
+          "sets": 2,
+          "rep_range": [
+            10,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Focus on squeezing your hamstrings to move the weight",
+          "video": null
+        },
+        {
+          "id": "barbell_or_ez_bar_strict_curl",
+          "primary_exercise_id": "barbell_or_ez_bar_strict_curl",
+          "name": "Barbell (or EZ-Bar) Strict Curl",
+          "sets": 3,
+          "rep_range": [
+            6,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Lean against wall and maintain wall contact with head, hips and back. Keep elbows pinned at sides. Control the weight.",
+          "video": null
+        },
+        {
+          "id": "face_pull",
+          "primary_exercise_id": "face_pull",
+          "name": "Face Pull",
+          "sets": 2,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Don't go too heavy, focus on mind-muscle connection",
+          "video": null
+        },
+        {
+          "id": "standing_calf_raise",
+          "primary_exercise_id": "standing_calf_raise",
+          "name": "Standing Calf Raise",
+          "sets": 2,
+          "rep_range": [
+            10,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "calf_raise",
+          "primary_muscles": [
+            "calves"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Push these all very hard. Go to true failure.",
+          "video": null
+        },
+        {
+          "id": "hanging_leg_raise",
+          "primary_exercise_id": "hanging_leg_raise",
+          "name": "Hanging Leg Raise",
+          "sets": 2,
+          "rep_range": [
+            6,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Knees to chest, controlled reps, straighten legs more to increase difficulty",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 3:",
+      "exercises": [
+        {
+          "id": "hack_squat",
+          "primary_exercise_id": "hack_squat",
+          "name": "Hack Squat",
+          "sets": 3,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-4min Sit fully back on to the box, release tension in thighs, minimize rocking while seated",
+          "video": null
+        },
+        {
+          "id": "barbell_pin_bench_press",
+          "primary_exercise_id": "barbell_pin_bench_press",
+          "name": "Barbell Pin Bench Press",
+          "sets": 3,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "2-4min Set the pins just above chest height, release tension while the bar is on the pins, then explode up. Control the weight.",
+          "video": null
+        },
+        {
+          "id": "neutral_grip_pulldown",
+          "primary_exercise_id": "neutral_grip_pulldown",
+          "name": "Neutral Grip Pulldown",
+          "sets": 3,
+          "rep_range": [
+            6,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "vertical_pull",
+          "primary_muscles": [
+            "lats",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-3min Pull your elbows down against your sides",
+          "video": null
+        },
+        {
+          "id": "barbell_skull_crusher",
+          "primary_exercise_id": "barbell_skull_crusher",
+          "name": "Barbell Skull Crusher",
+          "sets": 2,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Arc the dummbells behind your head. Constant tension on triceps",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 4:",
+      "exercises": [
+        {
+          "id": "deadlift",
+          "primary_exercise_id": "deadlift",
+          "name": "Deadlift",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "hinge",
+          "primary_muscles": [
+            "hamstrings",
+            "glutes",
+            "erectors"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Brace your lats, chest tall, pull the slack out of the bar before lifting",
+          "video": null
+        },
+        {
+          "id": "touch_and_go_deadlift",
+          "primary_exercise_id": "touch_and_go_deadlift",
+          "name": "Touch-And-Go Deadlift",
+          "sets": 2,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "hinge",
+          "primary_muscles": [
+            "hamstrings",
+            "glutes",
+            "erectors"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "2-4min 1 second pause right after plates leave the floor",
+          "video": null
+        },
+        {
+          "id": "dumbbell_lateral_raise",
+          "primary_exercise_id": "dumbbell_lateral_raise",
+          "name": "Dumbbell Lateral Raise",
+          "sets": 3,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "lateral_raise",
+          "primary_muscles": [
+            "side_delts"
+          ],
+          "equipment_tags": [
+            "dumbbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Focus on contracting your delts to move the weight, don't let form get sloppy toward the end of the set!",
+          "video": null
+        },
+        {
+          "id": "cable_rear_delt_fly",
+          "primary_exercise_id": "cable_rear_delt_fly",
+          "name": "Cable Rear Delt Fly",
+          "sets": 3,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [
+            "cable"
+          ],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Mind-muscle connection with rear delts",
+          "video": null
+        },
+        {
+          "id": "dumbell_pullover",
+          "primary_exercise_id": "dumbell_pullover",
+          "name": "Dumbell Pullover",
+          "sets": 2,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Use bands if no cables. Keep constant tension on the lats. Big stretch at the top by leaning slightly forward.",
+          "video": null
+        },
+        {
+          "id": "hammer_curl",
+          "primary_exercise_id": "hammer_curl",
+          "name": "Hammer Curl",
+          "sets": 3,
+          "rep_range": [
+            8,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Keep elbows locked in place, squeeze the dumbbell handle hard!",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 5:",
+      "exercises": [
+        {
+          "id": "back_squat",
+          "primary_exercise_id": "back_squat",
+          "name": "Back Squat",
+          "sets": 2,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Sit back and down, keep your upper back tight to the bar",
+          "video": null
+        },
+        {
+          "id": "barbell_bench_press",
+          "primary_exercise_id": "barbell_bench_press",
+          "name": "Barbell Bench Press",
+          "sets": 1,
+          "rep_range": [
+            5,
+            5
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "3-5min Set up a comfortable arch, quick pause on chest and explode up on each rep",
+          "video": null
+        },
+        {
+          "id": "chest_supported_row",
+          "primary_exercise_id": "chest_supported_row",
+          "name": "Chest Supported Row",
+          "sets": 2,
+          "rep_range": [
+            10,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_pull",
+          "primary_muscles": [
+            "lats",
+            "mid_back",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-3min Be mindful of lower back fatgiue, stay light and minimize cheating",
+          "video": null
+        },
+        {
+          "id": "hip_abduction",
+          "primary_exercise_id": "hip_abduction",
+          "name": "Hip Abduction",
+          "sets": 2,
+          "rep_range": [
+            12,
+            15
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Machine, band or weighted, squeeze and hold for 1 second at the top of each rep",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "TAPER WEEK - LOCK IN TECHNIQUE AND PRIORITIZE RECOVERY WITH LOWER VOLUME",
+      "exercises": [
+        {
+          "id": "exercise",
+          "primary_exercise_id": "exercise",
+          "name": "Exercise",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Warm-up Sets Load %1RM RPE Rest Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 1:",
+      "exercises": [
+        {
+          "id": "back_squat",
+          "primary_exercise_id": "back_squat",
+          "name": "Back Squat",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Try to move the bar as explosively as possible on the positive. Approach with confidence. Technique locked. Don't overhype.",
+          "video": null
+        },
+        {
+          "id": "strict_bench_press",
+          "primary_exercise_id": "strict_bench_press",
+          "name": "Strict Bench Press",
+          "sets": 1,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Make every rep look exactly the same. 1 second pause on each rep.",
+          "video": null
+        },
+        {
+          "id": "reset_deadlift",
+          "primary_exercise_id": "reset_deadlift",
+          "name": "Reset Deadlift",
+          "sets": 2,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "hinge",
+          "primary_muscles": [
+            "hamstrings",
+            "glutes",
+            "erectors"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Stand up and set up again in between each rep. Think of each set as 3 separate singles.",
+          "video": null
+        },
+        {
+          "id": "chest_supported_row",
+          "primary_exercise_id": "chest_supported_row",
+          "name": "Chest-Supported Row",
+          "sets": 4,
+          "rep_range": [
+            6,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_pull",
+          "primary_muscles": [
+            "lats",
+            "mid_back",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Can use machine or brace against bench. Minimize cheating.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 2:",
+      "exercises": [
+        {
+          "id": "deadlift",
+          "primary_exercise_id": "deadlift",
+          "name": "Deadlift",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "hinge",
+          "primary_muscles": [
+            "hamstrings",
+            "glutes",
+            "erectors"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Try to move the bar as explosively as possible on the positive. Approach with confidence. Technique locked. Don't overhype.",
+          "video": null
+        },
+        {
+          "id": "barbell_overhead_press",
+          "primary_exercise_id": "barbell_overhead_press",
+          "name": "Barbell Overhead Press",
+          "sets": 2,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "2-3min These are intentionally light for shoulder stability and balance. Don't push these hard. Big bench day tomorrow.",
+          "video": null
+        },
+        {
+          "id": "anderson_squat",
+          "primary_exercise_id": "anderson_squat",
+          "name": "Anderson Squat",
+          "sets": 2,
+          "rep_range": [
+            5,
+            5
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 2-4min This is a pin squat that starts and ends with the bar on the pins. At the bottom you're just above parallel. Get tight.",
+          "video": null
+        },
+        {
+          "id": "barbell_or_ez_bar_strict_curl",
+          "primary_exercise_id": "barbell_or_ez_bar_strict_curl",
+          "name": "Barbell (or EZ-Bar) Strict Curl",
+          "sets": 4,
+          "rep_range": [
+            6,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Lean against wall and maintain wall contact with head, hips and back. Keep elbows pinned at sides. Control the weight.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "FULL BODY 3:",
+      "exercises": [
+        {
+          "id": "strict_bench_press",
+          "primary_exercise_id": "strict_bench_press",
+          "name": "Strict Bench Press",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Try to move the bar as explosively as possible on the positive. Approach with confidence. Technique locked. Don't overhype.",
+          "video": null
+        },
+        {
+          "id": "back_squat",
+          "primary_exercise_id": "back_squat",
+          "name": "Back Squat",
+          "sets": 2,
+          "rep_range": [
+            5,
+            5
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "3-5min Sit back and down, keep your upper back tight to the bar",
+          "video": null
+        },
+        {
+          "id": "seated_leg_curl",
+          "primary_exercise_id": "seated_leg_curl",
+          "name": "Seated Leg Curl",
+          "sets": 4,
+          "rep_range": [
+            6,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Focus on squeezing your hamstrings to move the weight",
+          "video": null
+        },
+        {
+          "id": "seated_face_pull",
+          "primary_exercise_id": "seated_face_pull",
+          "name": "Seated Face Pull",
+          "sets": 4,
+          "rep_range": [
+            12,
+            15
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Don't go too heavy, focus on mind-muscle connection",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "MAX TESTING OPTION A: Important! Choose either Week 10A or Week 10B. Do not run both weeks. See above for suggestions on which week to run.",
+      "exercises": [
+        {
+          "id": "exercise",
+          "primary_exercise_id": "exercise",
+          "name": "Exercise",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Warm-up Sets Load %1RM RPE Rest Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "SQUAT TEST:",
+      "exercises": [
+        {
+          "id": "back_squat",
+          "primary_exercise_id": "back_squat",
+          "name": "Back Squat",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "4-6min Aim for a new PR. Start with 100% and increase by ~2.5% every attempt until you hit a 9.5-10 RPE. Use a spotter and good form!",
+          "video": null
+        },
+        {
+          "id": "leg_curl",
+          "primary_exercise_id": "leg_curl",
+          "name": "Leg Curl",
+          "sets": 2,
+          "rep_range": [
+            10,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Can be seated or lying. Focus on squeezing your hamstrings to move the weight",
+          "video": null
+        },
+        {
+          "id": "dumbbell_lateral_raise",
+          "primary_exercise_id": "dumbbell_lateral_raise",
+          "name": "Dumbbell Lateral Raise",
+          "sets": 2,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "lateral_raise",
+          "primary_muscles": [
+            "side_delts"
+          ],
+          "equipment_tags": [
+            "dumbbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Focus on contracting your delts to move the weight, don't let form get sloppy toward the end of the set!",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "BENCH TEST:",
+      "exercises": [
+        {
+          "id": "barbell_bench_press",
+          "primary_exercise_id": "barbell_bench_press",
+          "name": "Barbell Bench Press",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "4-6min Aim for a new PR. Start with 100% and increase by ~2.5% every attempt until you hit a 9.5-10 RPE. Use a spotter and good form!",
+          "video": null
+        },
+        {
+          "id": "barbell_or_ez_bar_strict_curl",
+          "primary_exercise_id": "barbell_or_ez_bar_strict_curl",
+          "name": "Barbell (or EZ-Bar) Strict Curl",
+          "sets": 1,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Lean against wall and maintain wall contact with head, hips and back. Keep elbows pinned at sides. Control the weight.",
+          "video": null
+        },
+        {
+          "id": "barbell_overhead_press",
+          "primary_exercise_id": "barbell_overhead_press",
+          "name": "Barbell Overhead Press",
+          "sets": 2,
+          "rep_range": [
+            5,
+            5
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "N/A 2-3min Press up and back overhead, slight pause on the chest on each rep",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "DEADLIFT TEST:",
+      "exercises": [
+        {
+          "id": "deadlift",
+          "primary_exercise_id": "deadlift",
+          "name": "Deadlift",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "hinge",
+          "primary_muscles": [
+            "hamstrings",
+            "glutes",
+            "erectors"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "4-6min Aim for a new PR. Start with 100% and increase by ~2.5% every attempt until you hit a 9.5-10 RPE. Use a spotter and good form!",
+          "video": null
+        },
+        {
+          "id": "chest_supported_row",
+          "primary_exercise_id": "chest_supported_row",
+          "name": "Chest-Supported Row",
+          "sets": 3,
+          "rep_range": [
+            10,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_pull",
+          "primary_muscles": [
+            "lats",
+            "mid_back",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Can use machine or brace against bench. Minimize cheating.",
+          "video": null
+        },
+        {
+          "id": "dumbbell_skull_crusher",
+          "primary_exercise_id": "dumbbell_skull_crusher",
+          "name": "Dumbbell Skull Crusher",
+          "sets": 2,
+          "rep_range": [
+            12,
+            15
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [
+            "dumbbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Arc the dummbells behind your head. Constant tension on triceps",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "MAX TESTING OPTION B: Important! Choose either Week 10A or Week 10B. Do not run both weeks. See above for suggestions on which week to run.",
+      "exercises": [
+        {
+          "id": "exercise",
+          "primary_exercise_id": "exercise",
+          "name": "Exercise",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Warm-up Sets Load %1RM RPE Rest Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "SQUAT TEST:",
+      "exercises": [
+        {
+          "id": "back_squat",
+          "primary_exercise_id": "back_squat",
+          "name": "Back Squat",
+          "sets": 1,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "squat",
+          "primary_muscles": [
+            "quads",
+            "glutes"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "4-6min As many reps as possible. Always use a spotter and good form. Aim to hit 3-5 reps",
+          "video": null
+        },
+        {
+          "id": "leg_curl",
+          "primary_exercise_id": "leg_curl",
+          "name": "Leg Curl",
+          "sets": 2,
+          "rep_range": [
+            10,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Can be seated or lying. Focus on squeezing your hamstrings to move the weight",
+          "video": null
+        },
+        {
+          "id": "dumbbell_lateral_raise",
+          "primary_exercise_id": "dumbbell_lateral_raise",
+          "name": "Dumbbell Lateral Raise",
+          "sets": 2,
+          "rep_range": [
+            15,
+            20
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "lateral_raise",
+          "primary_muscles": [
+            "side_delts"
+          ],
+          "equipment_tags": [
+            "dumbbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Focus on contracting your delts to move the weight",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "BENCH TEST:",
+      "exercises": [
+        {
+          "id": "barbell_bench_press",
+          "primary_exercise_id": "barbell_bench_press",
+          "name": "Barbell Bench Press",
+          "sets": 1,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "4-6min As many reps as possible. Always use a spotter and good form. Aim to hit 3-5 reps",
+          "video": null
+        },
+        {
+          "id": "barbell_or_ez_bar_strict_curl",
+          "primary_exercise_id": "barbell_or_ez_bar_strict_curl",
+          "name": "Barbell (or EZ-Bar) Strict Curl",
+          "sets": 1,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "curl",
+          "primary_muscles": [
+            "biceps"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Lean against wall and maintain wall contact with head, hips and back. Keep elbows pinned at sides. Control the weight.",
+          "video": null
+        },
+        {
+          "id": "barbell_overhead_press",
+          "primary_exercise_id": "barbell_overhead_press",
+          "name": "Barbell Overhead Press",
+          "sets": 2,
+          "rep_range": [
+            5,
+            5
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_press",
+          "primary_muscles": [
+            "chest",
+            "triceps",
+            "front_delts"
+          ],
+          "equipment_tags": [
+            "barbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "N/A 2-3min Press up and back overhead, slight pause on the chest on each rep",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "DEADLIFT TEST:",
+      "exercises": [
+        {
+          "id": "deadlift",
+          "primary_exercise_id": "deadlift",
+          "name": "Deadlift",
+          "sets": 1,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "hinge",
+          "primary_muscles": [
+            "hamstrings",
+            "glutes",
+            "erectors"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "4-6min As many reps as possible. Always use a spotter and good form. Aim to hit 3-5 reps",
+          "video": null
+        },
+        {
+          "id": "chest_supported_row",
+          "primary_exercise_id": "chest_supported_row",
+          "name": "Chest-Supported Row",
+          "sets": 3,
+          "rep_range": [
+            10,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": "horizontal_pull",
+          "primary_muscles": [
+            "lats",
+            "mid_back",
+            "biceps"
+          ],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Can use machine or brace against bench. Minimize cheating.",
+          "video": null
+        },
+        {
+          "id": "dumbbell_skull_crusher",
+          "primary_exercise_id": "dumbbell_skull_crusher",
+          "name": "Dumbbell Skull Crusher",
+          "sets": 2,
+          "rep_range": [
+            12,
+            15
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [
+            "dumbbell"
+          ],
+          "substitution_candidates": [],
+          "notes": "N/A 1-2min Arc the dummbells behind your head. Constant tension on triceps",
+          "video": null
+        }
+      ]
+    }
+  ]
+}

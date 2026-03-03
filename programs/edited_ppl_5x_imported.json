@@ -584,8 +584,8 @@
           "name": "Smith Machine Military Press",
           "sets": 3,
           "rep_range": [
-            10,
-            8
+            8,
+            10
           ],
           "start_weight": 20,
           "priority": "standard",

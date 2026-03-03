@@ -1,0 +1,1376 @@
+{
+  "id": "the_bodybuilding_transformation_system_intermediate_advanced",
+  "version": "1.0.0",
+  "split": "full_body",
+  "days_supported": [
+    2,
+    3,
+    4
+  ],
+  "deload": {
+    "trigger_weeks": 6,
+    "set_reduction_pct": 35,
+    "load_reduction_pct": 10
+  },
+  "progression": {
+    "mode": "double_progression",
+    "increment_kg": 2.5
+  },
+  "sessions": [
+    {
+      "name": "Intermediate-Advanced Program",
+      "exercises": [
+        {
+          "id": "warm_up_protocol",
+          "primary_exercise_id": "warm_up_protocol",
+          "name": "WARM UP PROTOCOL",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        },
+        {
+          "id": "foundation_block",
+          "primary_exercise_id": "foundation_block",
+          "name": "Foundation Block",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        },
+        {
+          "id": "week_1",
+          "primary_exercise_id": "week_1",
+          "name": "Week 1",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        },
+        {
+          "id": "upper_strength_focus",
+          "primary_exercise_id": "upper_strength_focus",
+          "name": "Upper (Strength Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "45\u00b0 Incline Barbell Press N/A 3-5 min 45\u00b0 Incline DB Press 45\u00b0 Incline Machine Press 1 second pause at the bottom of each rep while maintaining tension on the pecs",
+          "video": null
+        },
+        {
+          "id": "lower_strength_focus",
+          "primary_exercise_id": "lower_strength_focus",
+          "name": "Lower \n(Strength Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Lying Leg Curl N/A 1-2 min Seated Leg Curl Nordic Ham Curl Set the machine so that you get the biggest stretch possible at the bottom. Prevent your butt from popping up as you curl.",
+          "video": null
+        },
+        {
+          "id": "pull_hypertrophy_focus",
+          "primary_exercise_id": "pull_hypertrophy_focus",
+          "name": "Pull (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Neutral-Grip Lat Pulldown N/A 2-3 min Neutral-Grip Pull-Up Dual-Handle Lat Pulldown Do these pulldowns with the handle more out in front of you, more like a cross between pullover and a pulldown. Focus on feeling your lats working more than the weight you're using.",
+          "video": null
+        },
+        {
+          "id": "push_hypertrophy_focus",
+          "primary_exercise_id": "push_hypertrophy_focus",
+          "name": "Push (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Barbell Bench Press N/A 3-5 min Machine Chest Press DB Bench Press Set up a comfortable arch, quick pause on the chest and explode up on each rep.",
+          "video": null
+        },
+        {
+          "id": "legs_hypertrophy_focus",
+          "primary_exercise_id": "legs_hypertrophy_focus",
+          "name": "Legs (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Leg Press N/A 2-3 min Smith Machine Static Lunge DB Walking Lunge Feet lower on the platform for more quad focus. Get as deep as you can without excessive back rounding. Control the negative and do a slight pause at the bottom of each rep.",
+          "video": null
+        },
+        {
+          "id": "week_2",
+          "primary_exercise_id": "week_2",
+          "name": "Week 2",
+          "sets": 2,
+          "rep_range": [
+            2,
+            2
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        },
+        {
+          "id": "upper_strength_focus",
+          "primary_exercise_id": "upper_strength_focus",
+          "name": "Upper (Strength Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "45\u00b0 Incline Barbell Press Failure 3-5 min 45\u00b0 Incline DB Press 45\u00b0 Incline Machine Press 1 second pause at the bottom of each rep while maintaining tension on the pecs",
+          "video": null
+        },
+        {
+          "id": "lower_strength_focus",
+          "primary_exercise_id": "lower_strength_focus",
+          "name": "Lower \n(Strength Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Lying Leg Curl Failure + LLPs (Extend set) 1-2 min Seated Leg Curl Nordic Ham Curl Set the machine so that you get the biggest stretch possible at the bottom. Prevent your butt from popping up as you curl.",
+          "video": null
+        },
+        {
+          "id": "pull_hypertrophy_focus",
+          "primary_exercise_id": "pull_hypertrophy_focus",
+          "name": "Pull (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Neutral-Grip Lat Pulldown Failure 2-3 min Neutral-Grip Pull-Up Dual-Handle Lat Pulldown Do these pulldowns with the handle more out in front of you, more like a cross between pullover and a pulldown. Focus on feeling your lats working more than the weight you're using.",
+          "video": null
+        },
+        {
+          "id": "push_hypertrophy_focus",
+          "primary_exercise_id": "push_hypertrophy_focus",
+          "name": "Push (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Barbell Bench Press Failure 3-5 min Machine Chest Press DB Bench Press Set up a comfortable arch, quick pause on the chest and explode up on each rep.",
+          "video": null
+        },
+        {
+          "id": "legs_hypertrophy_focus",
+          "primary_exercise_id": "legs_hypertrophy_focus",
+          "name": "Legs (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Leg Press Failure 2-3 min Smith Machine Static Lunge DB Walking Lunge Feet lower on the platform for more quad focus. Get as deep as you can without excessive back rounding. Control the negative and do a slight pause at the bottom of each rep.",
+          "video": null
+        },
+        {
+          "id": "week_3",
+          "primary_exercise_id": "week_3",
+          "name": "Week 3",
+          "sets": 3,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        },
+        {
+          "id": "upper_strength_focus",
+          "primary_exercise_id": "upper_strength_focus",
+          "name": "Upper (Strength Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "45\u00b0 Incline Barbell Press Failure 3-5 min 45\u00b0 Incline DB Press 45\u00b0 Incline Machine Press 1 second pause at the bottom of each rep while maintaining tension on the pecs",
+          "video": null
+        },
+        {
+          "id": "lower_strength_focus",
+          "primary_exercise_id": "lower_strength_focus",
+          "name": "Lower \n(Strength Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Lying Leg Curl Failure + LLPs (Extend set) 1-2 min Seated Leg Curl Nordic Ham Curl Set the machine so that you get the biggest stretch possible at the bottom. Prevent your butt from popping up as you curl.",
+          "video": null
+        },
+        {
+          "id": "pull_hypertrophy_focus",
+          "primary_exercise_id": "pull_hypertrophy_focus",
+          "name": "Pull (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Neutral-Grip Lat Pulldown Failure 2-3 min Neutral-Grip Pull-Up Dual-Handle Lat Pulldown Do these pulldowns with the handle more out in front of you, more like a cross between pullover and a pulldown. Focus on feeling your lats working more than the weight you're using.",
+          "video": null
+        },
+        {
+          "id": "push_hypertrophy_focus",
+          "primary_exercise_id": "push_hypertrophy_focus",
+          "name": "Push (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Barbell Bench Press Failure 3-5 min Machine Chest Press DB Bench Press Set up a comfortable arch, quick pause on the chest and explode up on each rep.",
+          "video": null
+        },
+        {
+          "id": "legs_hypertrophy_focus",
+          "primary_exercise_id": "legs_hypertrophy_focus",
+          "name": "Legs (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Leg Press Failure 2-3 min Smith Machine Static Lunge DB Walking Lunge Feet lower on the platform for more quad focus. Get as deep as you can without excessive back rounding. Control the negative and do a slight pause at the bottom of each rep.",
+          "video": null
+        },
+        {
+          "id": "week_4",
+          "primary_exercise_id": "week_4",
+          "name": "Week 4",
+          "sets": 4,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        },
+        {
+          "id": "upper_strength_focus",
+          "primary_exercise_id": "upper_strength_focus",
+          "name": "Upper (Strength Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "45\u00b0 Incline Barbell Press Failure 3-5 min 45\u00b0 Incline DB Press 45\u00b0 Incline Machine Press 1 second pause at the bottom of each rep while maintaining tension on the pecs",
+          "video": null
+        },
+        {
+          "id": "lower_strength_focus",
+          "primary_exercise_id": "lower_strength_focus",
+          "name": "Lower \n(Strength Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Lying Leg Curl Failure + LLPs (Extend set) 1-2 min Seated Leg Curl Nordic Ham Curl Set the machine so that you get the biggest stretch possible at the bottom. Prevent your butt from popping up as you curl.",
+          "video": null
+        },
+        {
+          "id": "pull_hypertrophy_focus",
+          "primary_exercise_id": "pull_hypertrophy_focus",
+          "name": "Pull (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Neutral-Grip Lat Pulldown Failure 2-3 min Neutral-Grip Pull-Up Dual-Handle Lat Pulldown Do these pulldowns with the handle more out in front of you, more like a cross between pullover and a pulldown. Focus on feeling your lats working more than the weight you're using.",
+          "video": null
+        },
+        {
+          "id": "push_hypertrophy_focus",
+          "primary_exercise_id": "push_hypertrophy_focus",
+          "name": "Push (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Barbell Bench Press Failure 3-5 min Machine Chest Press DB Bench Press Set up a comfortable arch, quick pause on the chest and explode up on each rep.",
+          "video": null
+        },
+        {
+          "id": "legs_hypertrophy_focus",
+          "primary_exercise_id": "legs_hypertrophy_focus",
+          "name": "Legs (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Leg Press Failure 2-3 min Smith Machine Static Lunge DB Walking Lunge Feet lower on the platform for more quad focus. Get as deep as you can without excessive back rounding. Control the negative and do a slight pause at the bottom of each rep.",
+          "video": null
+        },
+        {
+          "id": "week_5",
+          "primary_exercise_id": "week_5",
+          "name": "Week 5",
+          "sets": 5,
+          "rep_range": [
+            5,
+            5
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        },
+        {
+          "id": "upper_strength_focus",
+          "primary_exercise_id": "upper_strength_focus",
+          "name": "Upper (Strength Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "45\u00b0 Incline Barbell Press Failure 3-5 min 45\u00b0 Incline DB Press 45\u00b0 Incline Machine Press 1 second pause at the bottom of each rep while maintaining tension on the pecs",
+          "video": null
+        },
+        {
+          "id": "lower_strength_focus",
+          "primary_exercise_id": "lower_strength_focus",
+          "name": "Lower \n(Strength Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Lying Leg Curl Failure + LLPs (Extend set) 1-2 min Seated Leg Curl Nordic Ham Curl Set the machine so that you get the biggest stretch possible at the bottom. Prevent your butt from popping up as you curl.",
+          "video": null
+        },
+        {
+          "id": "pull_hypertrophy_focus",
+          "primary_exercise_id": "pull_hypertrophy_focus",
+          "name": "Pull (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Neutral-Grip Lat Pulldown Failure 2-3 min Neutral-Grip Pull-Up Dual-Handle Lat Pulldown Do these pulldowns with the handle more out in front of you, more like a cross between pullover and a pulldown. Focus on feeling your lats working more than the weight you're using.",
+          "video": null
+        },
+        {
+          "id": "push_hypertrophy_focus",
+          "primary_exercise_id": "push_hypertrophy_focus",
+          "name": "Push (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Barbell Bench Press Failure 3-5 min Machine Chest Press DB Bench Press Set up a comfortable arch, quick pause on the chest and explode up on each rep.",
+          "video": null
+        },
+        {
+          "id": "legs_hypertrophy_focus",
+          "primary_exercise_id": "legs_hypertrophy_focus",
+          "name": "Legs (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Leg Press Failure 2-3 min Smith Machine Static Lunge DB Walking Lunge Feet lower on the platform for more quad focus. Get as deep as you can without excessive back rounding. Control the negative and do a slight pause at the bottom of each rep.",
+          "video": null
+        },
+        {
+          "id": "ramping_block",
+          "primary_exercise_id": "ramping_block",
+          "name": "Ramping Block",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        },
+        {
+          "id": "week_6",
+          "primary_exercise_id": "week_6",
+          "name": "Week 6",
+          "sets": 6,
+          "rep_range": [
+            6,
+            6
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        },
+        {
+          "id": "upper_strength_focus",
+          "primary_exercise_id": "upper_strength_focus",
+          "name": "Upper (Strength Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "45\u00b0 Incline DB Press N/A 3-5 min 45\u00b0 Incline Barbell Press 45\u00b0 Incline Machine Press 1 second pause at the bottom of each rep while maintaining tension on the pecs",
+          "video": null
+        },
+        {
+          "id": "lower_strength_focus",
+          "primary_exercise_id": "lower_strength_focus",
+          "name": "Lower \n(Strength Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Lying Leg Curl N/A 1-2 min Seated Leg Curl Nordic Ham Curl Set the machine so that you get the biggest stretch possible at the bottom. Prevent your butt from popping up as you curl.",
+          "video": null
+        },
+        {
+          "id": "pull_hypertrophy_focus",
+          "primary_exercise_id": "pull_hypertrophy_focus",
+          "name": "Pull (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Lean-Back Lat Pulldown N/A 2-3 min Lean-Back Machine Pulldown Pull-Up Initiate the pulldown with a straight up posture. As you pull the bar down, lean back by about 15-30\u00b0 to get the mid-back more involved. Softly touch the bar to your chest on every rep and, even though you're leaning back, still control the weight!",
+          "video": null
+        },
+        {
+          "id": "push_hypertrophy_focus",
+          "primary_exercise_id": "push_hypertrophy_focus",
+          "name": "Push (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Machine Chest Press N/A 3-5 min Barbell Bench Press DB Bench Press 1 second pause at the bottom of each rep while maintaining tension on the pecs",
+          "video": null
+        },
+        {
+          "id": "legs_hypertrophy_focus",
+          "primary_exercise_id": "legs_hypertrophy_focus",
+          "name": "Legs (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Hack Squat N/A 2-3 min Leg Press DB Walking Lunge Use a controlled negative (don't free fall) and then explode on the positive.",
+          "video": null
+        },
+        {
+          "id": "week_7",
+          "primary_exercise_id": "week_7",
+          "name": "Week 7",
+          "sets": 7,
+          "rep_range": [
+            7,
+            7
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        },
+        {
+          "id": "upper_strength_focus",
+          "primary_exercise_id": "upper_strength_focus",
+          "name": "Upper (Strength Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "45\u00b0 Incline DB Press Failure 3-5 min 45\u00b0 Incline Barbell Press 45\u00b0 Incline Machine Press 1 second pause at the bottom of each rep while maintaining tension on the pecs",
+          "video": null
+        },
+        {
+          "id": "lower_strength_focus",
+          "primary_exercise_id": "lower_strength_focus",
+          "name": "Lower \n(Strength Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Lying Leg Curl Failure + LLPs (Extend set) 1-2 min Seated Leg Curl Nordic Ham Curl Set the machine so that you get the biggest stretch possible at the bottom. Prevent your butt from popping up as you curl.",
+          "video": null
+        },
+        {
+          "id": "pull_hypertrophy_focus",
+          "primary_exercise_id": "pull_hypertrophy_focus",
+          "name": "Pull (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Lean-Back Lat Pulldown Failure 2-3 min Lean-Back Machine Pulldown Pull-Up Initiate the pulldown with a straight up posture. As you pull the bar down, lean back by about 15-30\u00b0 to get the mid-back more involved. Softly touch the bar to your chest on every rep and, even though you're leaning back, still control the weight!",
+          "video": null
+        },
+        {
+          "id": "push_hypertrophy_focus",
+          "primary_exercise_id": "push_hypertrophy_focus",
+          "name": "Push (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Machine Chest Press Failure 3-5 min Barbell Bench Press DB Bench Press 1 second pause at the bottom of each rep while maintaining tension on the pecs",
+          "video": null
+        },
+        {
+          "id": "legs_hypertrophy_focus",
+          "primary_exercise_id": "legs_hypertrophy_focus",
+          "name": "Legs (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Hack Squat Failure 2-3 min Leg Press DB Walking Lunge Use a controlled negative (don't free fall) and then explode on the positive.",
+          "video": null
+        },
+        {
+          "id": "week_8",
+          "primary_exercise_id": "week_8",
+          "name": "Week 8",
+          "sets": 8,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        },
+        {
+          "id": "upper_strength_focus",
+          "primary_exercise_id": "upper_strength_focus",
+          "name": "Upper (Strength Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "45\u00b0 Incline DB Press Failure 3-5 min 45\u00b0 Incline Barbell Press 45\u00b0 Incline Machine Press 1 second pause at the bottom of each rep while maintaining tension on the pecs",
+          "video": null
+        },
+        {
+          "id": "lower_strength_focus",
+          "primary_exercise_id": "lower_strength_focus",
+          "name": "Lower \n(Strength Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Lying Leg Curl Failure + LLPs (Extend set) 1-2 min Seated Leg Curl Nordic Ham Curl Set the machine so that you get the biggest stretch possible at the bottom. Prevent your butt from popping up as you curl.",
+          "video": null
+        },
+        {
+          "id": "pull_hypertrophy_focus",
+          "primary_exercise_id": "pull_hypertrophy_focus",
+          "name": "Pull (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Lean-Back Lat Pulldown Failure 2-3 min Lean-Back Machine Pulldown Pull-Up Initiate the pulldown with a straight up posture. As you pull the bar down, lean back by about 15-30\u00b0 to get the mid-back more involved. Softly touch the bar to your chest on every rep and, even though you're leaning back, still control the weight!",
+          "video": null
+        },
+        {
+          "id": "push_hypertrophy_focus",
+          "primary_exercise_id": "push_hypertrophy_focus",
+          "name": "Push (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Machine Chest Press Failure 3-5 min Barbell Bench Press DB Bench Press 1 second pause at the bottom of each rep while maintaining tension on the pecs",
+          "video": null
+        },
+        {
+          "id": "legs_hypertrophy_focus",
+          "primary_exercise_id": "legs_hypertrophy_focus",
+          "name": "Legs (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Hack Squat Failure 2-3 min Leg Press DB Walking Lunge Use a controlled negative (don't free fall) and then explode on the positive.",
+          "video": null
+        },
+        {
+          "id": "week_9",
+          "primary_exercise_id": "week_9",
+          "name": "Week 9",
+          "sets": 9,
+          "rep_range": [
+            9,
+            9
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        },
+        {
+          "id": "upper_strength_focus",
+          "primary_exercise_id": "upper_strength_focus",
+          "name": "Upper (Strength Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "45\u00b0 Incline DB Press Failure 3-5 min 45\u00b0 Incline Barbell Press 45\u00b0 Incline Machine Press 1 second pause at the bottom of each rep while maintaining tension on the pecs",
+          "video": null
+        },
+        {
+          "id": "lower_strength_focus",
+          "primary_exercise_id": "lower_strength_focus",
+          "name": "Lower \n(Strength Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Lying Leg Curl Failure + LLPs (Extend set) 1-2 min Seated Leg Curl Nordic Ham Curl Set the machine so that you get the biggest stretch possible at the bottom. Prevent your butt from popping up as you curl.",
+          "video": null
+        },
+        {
+          "id": "pull_hypertrophy_focus",
+          "primary_exercise_id": "pull_hypertrophy_focus",
+          "name": "Pull (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Lean-Back Lat Pulldown Failure 2-3 min Lean-Back Machine Pulldown Pull-Up Initiate the pulldown with a straight up posture. As you pull the bar down, lean back by about 15-30\u00b0 to get the mid-back more involved. Softly touch the bar to your chest on every rep and, even though you're leaning back, still control the weight!",
+          "video": null
+        },
+        {
+          "id": "push_hypertrophy_focus",
+          "primary_exercise_id": "push_hypertrophy_focus",
+          "name": "Push (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Machine Chest Press Failure 3-5 min Barbell Bench Press DB Bench Press 1 second pause at the bottom of each rep while maintaining tension on the pecs",
+          "video": null
+        },
+        {
+          "id": "legs_hypertrophy_focus",
+          "primary_exercise_id": "legs_hypertrophy_focus",
+          "name": "Legs (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Hack Squat Failure 2-3 min Leg Press DB Walking Lunge Use a controlled negative (don't free fall) and then explode on the positive.",
+          "video": null
+        },
+        {
+          "id": "week_10",
+          "primary_exercise_id": "week_10",
+          "name": "Week 10",
+          "sets": 10,
+          "rep_range": [
+            10,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        },
+        {
+          "id": "upper_strength_focus",
+          "primary_exercise_id": "upper_strength_focus",
+          "name": "Upper (Strength Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "45\u00b0 Incline DB Press Failure 3-5 min 45\u00b0 Incline Barbell Press 45\u00b0 Incline Machine Press 1 second pause at the bottom of each rep while maintaining tension on the pecs",
+          "video": null
+        },
+        {
+          "id": "lower_strength_focus",
+          "primary_exercise_id": "lower_strength_focus",
+          "name": "Lower \n(Strength Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Lying Leg Curl Failure + LLPs (Extend set) 1-2 min Seated Leg Curl Nordic Ham Curl Set the machine so that you get the biggest stretch possible at the bottom. Prevent your butt from popping up as you curl.",
+          "video": null
+        },
+        {
+          "id": "pull_hypertrophy_focus",
+          "primary_exercise_id": "pull_hypertrophy_focus",
+          "name": "Pull (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Lean-Back Lat Pulldown Failure 2-3 min Lean-Back Machine Pulldown Pull-Up Initiate the pulldown with a straight up posture. As you pull the bar down, lean back by about 15-30\u00b0 to get the mid-back more involved. Softly touch the bar to your chest on every rep and, even though you're leaning back, still control the weight!",
+          "video": null
+        },
+        {
+          "id": "push_hypertrophy_focus",
+          "primary_exercise_id": "push_hypertrophy_focus",
+          "name": "Push (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Machine Chest Press Failure 3-5 min Barbell Bench Press DB Bench Press 1 second pause at the bottom of each rep while maintaining tension on the pecs",
+          "video": null
+        },
+        {
+          "id": "legs_hypertrophy_focus",
+          "primary_exercise_id": "legs_hypertrophy_focus",
+          "name": "Legs (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Hack Squat Failure 2-3 min Leg Press DB Walking Lunge Use a controlled negative (don't free fall) and then explode on the positive.",
+          "video": null
+        },
+        {
+          "id": "week_11",
+          "primary_exercise_id": "week_11",
+          "name": "Week 11",
+          "sets": 11,
+          "rep_range": [
+            11,
+            11
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        },
+        {
+          "id": "upper_strength_focus",
+          "primary_exercise_id": "upper_strength_focus",
+          "name": "Upper (Strength Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "45\u00b0 Incline DB Press Failure 3-5 min 45\u00b0 Incline Barbell Press 45\u00b0 Incline Machine Press 1 second pause at the bottom of each rep while maintaining tension on the pecs",
+          "video": null
+        },
+        {
+          "id": "lower_strength_focus",
+          "primary_exercise_id": "lower_strength_focus",
+          "name": "Lower \n(Strength Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Lying Leg Curl Failure + LLPs (Extend set) 1-2 min Seated Leg Curl Nordic Ham Curl Set the machine so that you get the biggest stretch possible at the bottom. Prevent your butt from popping up as you curl.",
+          "video": null
+        },
+        {
+          "id": "pull_hypertrophy_focus",
+          "primary_exercise_id": "pull_hypertrophy_focus",
+          "name": "Pull (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Lean-Back Lat Pulldown Failure 2-3 min Lean-Back Machine Pulldown Pull-Up Initiate the pulldown with a straight up posture. As you pull the bar down, lean back by about 15-30\u00b0 to get the mid-back more involved. Softly touch the bar to your chest on every rep and, even though you're leaning back, still control the weight!",
+          "video": null
+        },
+        {
+          "id": "push_hypertrophy_focus",
+          "primary_exercise_id": "push_hypertrophy_focus",
+          "name": "Push (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Machine Chest Press Failure 3-5 min Barbell Bench Press DB Bench Press 1 second pause at the bottom of each rep while maintaining tension on the pecs",
+          "video": null
+        },
+        {
+          "id": "legs_hypertrophy_focus",
+          "primary_exercise_id": "legs_hypertrophy_focus",
+          "name": "Legs (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Hack Squat Failure 2-3 min Leg Press DB Walking Lunge Use a controlled negative (don't free fall) and then explode on the positive.",
+          "video": null
+        },
+        {
+          "id": "week_12",
+          "primary_exercise_id": "week_12",
+          "name": "Week 12",
+          "sets": 12,
+          "rep_range": [
+            12,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        },
+        {
+          "id": "upper_strength_focus",
+          "primary_exercise_id": "upper_strength_focus",
+          "name": "Upper (Strength Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "45\u00b0 Incline DB Press Failure 3-5 min 45\u00b0 Incline Barbell Press 45\u00b0 Incline Machine Press 1 second pause at the bottom of each rep while maintaining tension on the pecs",
+          "video": null
+        },
+        {
+          "id": "lower_strength_focus",
+          "primary_exercise_id": "lower_strength_focus",
+          "name": "Lower \n(Strength Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Lying Leg Curl Failure + LLPs (Extend set) 1-2 min Seated Leg Curl Nordic Ham Curl Set the machine so that you get the biggest stretch possible at the bottom. Prevent your butt from popping up as you curl.",
+          "video": null
+        },
+        {
+          "id": "pull_hypertrophy_focus",
+          "primary_exercise_id": "pull_hypertrophy_focus",
+          "name": "Pull (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Lean-Back Lat Pulldown Failure 2-3 min Lean-Back Machine Pulldown Pull-Up Initiate the pulldown with a straight up posture. As you pull the bar down, lean back by about 15-30\u00b0 to get the mid-back more involved. Softly touch the bar to your chest on every rep and, even though you're leaning back, still control the weight!",
+          "video": null
+        },
+        {
+          "id": "push_hypertrophy_focus",
+          "primary_exercise_id": "push_hypertrophy_focus",
+          "name": "Push (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Machine Chest Press Failure 3-5 min Barbell Bench Press DB Bench Press 1 second pause at the bottom of each rep while maintaining tension on the pecs",
+          "video": null
+        },
+        {
+          "id": "legs_hypertrophy_focus",
+          "primary_exercise_id": "legs_hypertrophy_focus",
+          "name": "Legs (Hypertrophy Focus)",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Hack Squat Failure 2-3 min Leg Press DB Walking Lunge Use a controlled negative (don't free fall) and then explode on the positive.",
+          "video": null
+        }
+      ]
+    }
+  ]
+}

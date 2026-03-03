@@ -1,0 +1,1949 @@
+{
+  "id": "pure_bodybuilding_phase_2_full_body_sheet",
+  "version": "1.0.0",
+  "split": "full_body",
+  "days_supported": [
+    2,
+    3,
+    4
+  ],
+  "deload": {
+    "trigger_weeks": 6,
+    "set_reduction_pct": 35,
+    "load_reduction_pct": 10
+  },
+  "progression": {
+    "mode": "double_progression",
+    "increment_kg": 2.5
+  },
+  "sessions": [
+    {
+      "name": "WARM UP PROTOCOL",
+      "exercises": [
+        {
+          "id": "warm_up_protocol",
+          "primary_exercise_id": "warm_up_protocol",
+          "name": "WARM UP PROTOCOL",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "WEAK POINTS TABLE",
+      "exercises": [
+        {
+          "id": "weak_points_table",
+          "primary_exercise_id": "weak_points_table",
+          "name": "WEAK POINTS TABLE",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "BLOCK 1: 5-WEEK CLIMB PHASE",
+      "exercises": [
+        {
+          "id": "block_1_5_week_climb_phase",
+          "primary_exercise_id": "block_1_5_week_climb_phase",
+          "name": "BLOCK 1: 5-WEEK CLIMB PHASE",
+          "sets": 1,
+          "rep_range": [
+            1,
+            5
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "IMPORTANT NOTE: BLOCK 1 STARTS WITH AN INTRO/DELOAD WEEK BEFORE INCREASING THE VOLUME/INTENSITY FOR THE REMAINING 4 WEEKS",
+      "exercises": [
+        {
+          "id": "important_note_block_1_starts_with_an_intro_deload_week_before_increasing_the_volume_intensity_for_the_remaining_4_weeks",
+          "primary_exercise_id": "important_note_block_1_starts_with_an_intro_deload_week_before_increasing_the_volume_intensity_for_the_remaining_4_weeks",
+          "name": "IMPORTANT NOTE: BLOCK 1 STARTS WITH AN INTRO/DELOAD WEEK BEFORE INCREASING THE VOLUME/INTENSITY FOR THE REMAINING 4 WEEKS",
+          "sets": 1,
+          "rep_range": [
+            1,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        },
+        {
+          "id": "week_1",
+          "primary_exercise_id": "week_1",
+          "name": "Week 1",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #1",
+      "exercises": [
+        {
+          "id": "full_body_1",
+          "primary_exercise_id": "full_body_1",
+          "name": "Full Body #1",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Wide-Grip Pull-Up N/A ~2-3 min Wide-Grip Machine Pulldown Wide-Grip Lat Pulldown 1.5x shoulder width overhand grip. Slow 2-3 second negative. Feel your lats pulling apart on the way down. Slight 0.5-1 second pause at the bottom, then lift your chest up and drive your elbows down as you lift yourself up. Don't be afraid to use assistance. Add weight if needed. Keep the form tight and controlled!",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #2",
+      "exercises": [
+        {
+          "id": "full_body_2",
+          "primary_exercise_id": "full_body_2",
+          "name": "Full Body #2",
+          "sets": 2,
+          "rep_range": [
+            2,
+            2
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Seated Leg Curl N/A ~1-2 min Lying Leg Curl Nordic Ham Curl Lean forward over the machine to get a maximum stretch in your hamstrings.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Rest Day",
+      "exercises": [
+        {
+          "id": "rest_day",
+          "primary_exercise_id": "rest_day",
+          "name": "Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #3",
+      "exercises": [
+        {
+          "id": "full_body_3",
+          "primary_exercise_id": "full_body_3",
+          "name": "Full Body #3",
+          "sets": 3,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Smith Machine Deficit Row N/A ~3-4 min Pendlay Deficit Row Helms Row Focus on getting a big stretch and touch your stomach/chest on each rep!",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #4",
+      "exercises": [
+        {
+          "id": "full_body_4",
+          "primary_exercise_id": "full_body_4",
+          "name": "Full Body #4",
+          "sets": 4,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Barbell RDL N/A ~3-5 min DB RDL Deadlift The RPE is intentionally low here because these will cause a lot of muscle damage. Don't be tempted to go too heavy. To keep tension on the hamstrings, stop about 75% of the way to full lockout on each rep (i.e. stay in the bottom 3/4 of the range of motion).",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Arms & Weak Points",
+      "exercises": [
+        {
+          "id": "arms_weak_points",
+          "primary_exercise_id": "arms_weak_points",
+          "name": "Arms & Weak Points",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Weak Point Exercise 1 (optional) N/A ~1-3 min Decide on your weak point using The Weak Point Table in your Hypertrophy Handbook. Perform ONE of the exercises listed under Exercise 1 for the sets and reps provided here.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Rest Day",
+      "exercises": [
+        {
+          "id": "rest_day",
+          "primary_exercise_id": "rest_day",
+          "name": "Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        },
+        {
+          "id": "week_2",
+          "primary_exercise_id": "week_2",
+          "name": "Week 2",
+          "sets": 2,
+          "rep_range": [
+            2,
+            2
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #1",
+      "exercises": [
+        {
+          "id": "full_body_1",
+          "primary_exercise_id": "full_body_1",
+          "name": "Full Body #1",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Wide-Grip Pull-Up Lengthened Partials \n(Extend Set) ~2-3 min Wide-Grip Machine Pulldown Wide-Grip Lat Pulldown 1.5x shoulder width overhand grip. Slow 2-3 second negative. Feel your lats pulling apart on the way down. Slight 0.5-1 second pause at the bottom, then lift your chest up and drive your elbows down as you lift yourself up. Don't be afraid to use assistance. Add weight if needed. Keep the form tight and controlled! Once you hit the Last Set RPE on the final set, switch to partial reps. These should be the bottom half of the ROM. Stop once you have 0-1 half reps left in the tank.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #2",
+      "exercises": [
+        {
+          "id": "full_body_2",
+          "primary_exercise_id": "full_body_2",
+          "name": "Full Body #2",
+          "sets": 2,
+          "rep_range": [
+            2,
+            2
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Seated Leg Curl Lengthened Partials \n(Extend Set) ~1-2 min Lying Leg Curl Nordic Ham Curl Lean forward over the machine to get a maximum stretch in your hamstrings. Once you hit failure on the final set, continue with lengthened partials in the top half of the ROM, until you can no longer achieve a full half rep.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Rest Day",
+      "exercises": [
+        {
+          "id": "rest_day",
+          "primary_exercise_id": "rest_day",
+          "name": "Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #3",
+      "exercises": [
+        {
+          "id": "full_body_3",
+          "primary_exercise_id": "full_body_3",
+          "name": "Full Body #3",
+          "sets": 3,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Smith Machine Deficit Row Lengthened Partials\n(Extend Set) ~3-4 min Pendlay Deficit Row Helms Row Focus on getting a big stretch and touch your stomach/chest on each rep! Once you hit the Last Set RPE on the final set, switch to partial reps. These should be the bottom half of the ROM. Stop once you have 0-1 half reps left in the tank.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #4",
+      "exercises": [
+        {
+          "id": "full_body_4",
+          "primary_exercise_id": "full_body_4",
+          "name": "Full Body #4",
+          "sets": 4,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Barbell RDL N/A ~3-5 min DB RDL Deadlift The RPE is intentionally low here because these will cause a lot of muscle damage. Don't be tempted to go too heavy. To keep tension on the hamstrings, stop about 75% of the way to full lockout on each rep (i.e. stay in the bottom 3/4 of the range of motion).",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Arms & Weak Points",
+      "exercises": [
+        {
+          "id": "arms_weak_points",
+          "primary_exercise_id": "arms_weak_points",
+          "name": "Arms & Weak Points",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Weak Point Exercise 1 (optional) N/A ~1-3 min Decide on your weak point using The Weak Point Table in your Hypertrophy Handbook. Perform ONE of the exercises listed under Exercise 1 for the sets and reps provided here.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Rest Day",
+      "exercises": [
+        {
+          "id": "rest_day",
+          "primary_exercise_id": "rest_day",
+          "name": "Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        },
+        {
+          "id": "week_3",
+          "primary_exercise_id": "week_3",
+          "name": "Week 3",
+          "sets": 3,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #1",
+      "exercises": [
+        {
+          "id": "full_body_1",
+          "primary_exercise_id": "full_body_1",
+          "name": "Full Body #1",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Wide-Grip Pull-Up Lengthened Partials \n(Extend Set) ~2-3 min Wide-Grip Machine Pulldown Wide-Grip Lat Pulldown 1.5x shoulder width overhand grip. Slow 2-3 second negative. Feel your lats pulling apart on the way down. Slight 0.5-1 second pause at the bottom, then lift your chest up and drive your elbows down as you lift yourself up. Don't be afraid to use assistance. Add weight if needed. Keep the form tight and controlled! Once you hit the Last Set RPE on the final set, switch to partial reps. These should be the bottom half of the ROM. Stop once you have 0-1 half reps left in the tank.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #2",
+      "exercises": [
+        {
+          "id": "full_body_2",
+          "primary_exercise_id": "full_body_2",
+          "name": "Full Body #2",
+          "sets": 2,
+          "rep_range": [
+            2,
+            2
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Seated Leg Curl Lengthened Partials \n(Extend Set) ~1-2 min Lying Leg Curl Nordic Ham Curl Lean forward over the machine to get a maximum stretch in your hamstrings. Once you hit failure on the final set, continue with lengthened partials in the top half of the ROM, until you can no longer achieve a full half rep.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Rest Day",
+      "exercises": [
+        {
+          "id": "rest_day",
+          "primary_exercise_id": "rest_day",
+          "name": "Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #3",
+      "exercises": [
+        {
+          "id": "full_body_3",
+          "primary_exercise_id": "full_body_3",
+          "name": "Full Body #3",
+          "sets": 3,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Smith Machine Deficit Row Lengthened Partials\n(Extend Set) ~3-4 min Pendlay Deficit Row Helms Row Focus on getting a big stretch and touch your stomach/chest on each rep! Once you hit the Last Set RPE on the final set, switch to partial reps. These should be the bottom half of the ROM. Stop once you have 0-1 half reps left in the tank.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #4",
+      "exercises": [
+        {
+          "id": "full_body_4",
+          "primary_exercise_id": "full_body_4",
+          "name": "Full Body #4",
+          "sets": 4,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Barbell RDL N/A ~3-5 min DB RDL Deadlift The RPE is intentionally low here because these will cause a lot of muscle damage. Don't be tempted to go too heavy. To keep tension on the hamstrings, stop about 75% of the way to full lockout on each rep (i.e. stay in the bottom 3/4 of the range of motion).",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Arms & Weak Points",
+      "exercises": [
+        {
+          "id": "arms_weak_points",
+          "primary_exercise_id": "arms_weak_points",
+          "name": "Arms & Weak Points",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Weak Point Exercise 1 (optional) N/A ~1-3 min Decide on your weak point using The Weak Point Table in your Hypertrophy Handbook. Perform ONE of the exercises listed under Exercise 1 for the sets and reps provided here.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Rest Day",
+      "exercises": [
+        {
+          "id": "rest_day",
+          "primary_exercise_id": "rest_day",
+          "name": "Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        },
+        {
+          "id": "week_4",
+          "primary_exercise_id": "week_4",
+          "name": "Week 4",
+          "sets": 4,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #1",
+      "exercises": [
+        {
+          "id": "full_body_1",
+          "primary_exercise_id": "full_body_1",
+          "name": "Full Body #1",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Wide-Grip Pull-Up Lengthened Partials \n(Extend Set) ~2-3 min Wide-Grip Machine Pulldown Wide-Grip Lat Pulldown 1.5x shoulder width overhand grip. Slow 2-3 second negative. Feel your lats pulling apart on the way down. Slight 0.5-1 second pause at the bottom, then lift your chest up and drive your elbows down as you lift yourself up. Don't be afraid to use assistance. Add weight if needed. Keep the form tight and controlled! Once you hit the Last Set RPE on the final set, switch to partial reps. These should be the bottom half of the ROM. Stop once you have 0-1 half reps left in the tank.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #2",
+      "exercises": [
+        {
+          "id": "full_body_2",
+          "primary_exercise_id": "full_body_2",
+          "name": "Full Body #2",
+          "sets": 2,
+          "rep_range": [
+            2,
+            2
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Seated Leg Curl Lengthened Partials \n(Extend Set) ~1-2 min Lying Leg Curl Nordic Ham Curl Lean forward over the machine to get a maximum stretch in your hamstrings. Once you hit failure on the final set, continue with lengthened partials in the top half of the ROM, until you can no longer achieve a full half rep.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Rest Day",
+      "exercises": [
+        {
+          "id": "rest_day",
+          "primary_exercise_id": "rest_day",
+          "name": "Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #3",
+      "exercises": [
+        {
+          "id": "full_body_3",
+          "primary_exercise_id": "full_body_3",
+          "name": "Full Body #3",
+          "sets": 3,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Smith Machine Deficit Row Lengthened Partials\n(Extend Set) ~3-4 min Pendlay Deficit Row Helms Row Focus on getting a big stretch and touch your stomach/chest on each rep! Once you hit the Last Set RPE on the final set, switch to partial reps. These should be the bottom half of the ROM. Stop once you have 0-1 half reps left in the tank.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #4",
+      "exercises": [
+        {
+          "id": "full_body_4",
+          "primary_exercise_id": "full_body_4",
+          "name": "Full Body #4",
+          "sets": 4,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Barbell RDL N/A ~3-5 min DB RDL Deadlift The RPE is intentionally low here because these will cause a lot of muscle damage. Don't be tempted to go too heavy. To keep tension on the hamstrings, stop about 75% of the way to full lockout on each rep (i.e. stay in the bottom 3/4 of the range of motion).",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Arms & Weak Points",
+      "exercises": [
+        {
+          "id": "arms_weak_points",
+          "primary_exercise_id": "arms_weak_points",
+          "name": "Arms & Weak Points",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Weak Point Exercise 1 (optional) N/A ~1-3 min Decide on your weak point using The Weak Point Table in your Hypertrophy Handbook. Perform ONE of the exercises listed under Exercise 1 for the sets and reps provided here.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Rest Day",
+      "exercises": [
+        {
+          "id": "rest_day",
+          "primary_exercise_id": "rest_day",
+          "name": "Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        },
+        {
+          "id": "week_5",
+          "primary_exercise_id": "week_5",
+          "name": "Week 5",
+          "sets": 5,
+          "rep_range": [
+            5,
+            5
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #1",
+      "exercises": [
+        {
+          "id": "full_body_1",
+          "primary_exercise_id": "full_body_1",
+          "name": "Full Body #1",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Wide-Grip Pull-Up Lengthened Partials \n(Extend Set) ~2-3 min Wide-Grip Machine Pulldown Wide-Grip Lat Pulldown 1.5x shoulder width overhand grip. Slow 2-3 second negative. Feel your lats pulling apart on the way down. Slight 0.5-1 second pause at the bottom, then lift your chest up and drive your elbows down as you lift yourself up. Don't be afraid to use assistance. Add weight if needed. Keep the form tight and controlled! Once you hit the Last Set RPE on the final set, switch to partial reps. These should be the bottom half of the ROM. Stop once you have 0-1 half reps left in the tank.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #2",
+      "exercises": [
+        {
+          "id": "full_body_2",
+          "primary_exercise_id": "full_body_2",
+          "name": "Full Body #2",
+          "sets": 2,
+          "rep_range": [
+            2,
+            2
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Seated Leg Curl Lengthened Partials \n(Extend Set) ~1-2 min Lying Leg Curl Nordic Ham Curl Lean forward over the machine to get a maximum stretch in your hamstrings. Once you hit failure on the final set, continue with lengthened partials in the top half of the ROM, until you can no longer achieve a full half rep.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Rest Day",
+      "exercises": [
+        {
+          "id": "rest_day",
+          "primary_exercise_id": "rest_day",
+          "name": "Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #3",
+      "exercises": [
+        {
+          "id": "full_body_3",
+          "primary_exercise_id": "full_body_3",
+          "name": "Full Body #3",
+          "sets": 3,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Smith Machine Deficit Row Lengthened Partials\n(Extend Set) ~3-4 min Pendlay Deficit Row Helms Row Focus on getting a big stretch and touch your stomach/chest on each rep! Once you hit the Last Set RPE on the final set, switch to partial reps. These should be the bottom half of the ROM. Stop once you have 0-1 half reps left in the tank.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #4",
+      "exercises": [
+        {
+          "id": "full_body_4",
+          "primary_exercise_id": "full_body_4",
+          "name": "Full Body #4",
+          "sets": 4,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Barbell RDL N/A ~3-5 min DB RDL Deadlift The RPE is intentionally low here because these will cause a lot of muscle damage. Don't be tempted to go too heavy. To keep tension on the hamstrings, stop about 75% of the way to full lockout on each rep (i.e. stay in the bottom 3/4 of the range of motion).",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Arms & Weak Points",
+      "exercises": [
+        {
+          "id": "arms_weak_points",
+          "primary_exercise_id": "arms_weak_points",
+          "name": "Arms & Weak Points",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Weak Point Exercise 1 (optional) N/A ~1-3 min Decide on your weak point using The Weak Point Table in your Hypertrophy Handbook. Perform ONE of the exercises listed under Exercise 1 for the sets and reps provided here.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Rest Day",
+      "exercises": [
+        {
+          "id": "rest_day",
+          "primary_exercise_id": "rest_day",
+          "name": "Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "BLOCK 2: 5-WEEK GRIND PHASE",
+      "exercises": [
+        {
+          "id": "block_2_5_week_grind_phase",
+          "primary_exercise_id": "block_2_5_week_grind_phase",
+          "name": "BLOCK 2: 5-WEEK GRIND PHASE",
+          "sets": 2,
+          "rep_range": [
+            2,
+            5
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "IMPORTANT NOTE: BLOCK 2 STARTS WITH AN INTRO/DELOAD WEEK BEFORE INCREASING THE VOLUME/INTENSITY FOR THE FINAL 4 WEEKS",
+      "exercises": [
+        {
+          "id": "important_note_block_2_starts_with_an_intro_deload_week_before_increasing_the_volume_intensity_for_the_final_4_weeks",
+          "primary_exercise_id": "important_note_block_2_starts_with_an_intro_deload_week_before_increasing_the_volume_intensity_for_the_final_4_weeks",
+          "name": "IMPORTANT NOTE: BLOCK 2 STARTS WITH AN INTRO/DELOAD WEEK BEFORE INCREASING THE VOLUME/INTENSITY FOR THE FINAL 4 WEEKS",
+          "sets": 2,
+          "rep_range": [
+            2,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        },
+        {
+          "id": "week_6",
+          "primary_exercise_id": "week_6",
+          "name": "Week 6",
+          "sets": 6,
+          "rep_range": [
+            6,
+            6
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #1",
+      "exercises": [
+        {
+          "id": "full_body_1",
+          "primary_exercise_id": "full_body_1",
+          "name": "Full Body #1",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Wide-Grip Lat Pulldown N/A ~2-3 min Wide-Grip Pull-Up Wide-Grip Machine Pulldown Think about pulling your elbows \"down\" and \"in\".",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #2",
+      "exercises": [
+        {
+          "id": "full_body_2",
+          "primary_exercise_id": "full_body_2",
+          "name": "Full Body #2",
+          "sets": 2,
+          "rep_range": [
+            2,
+            2
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Seated Leg Curl N/A ~1-2 min Lying Leg Curl Nordic Ham Curl Lean forward over the machine to get a maximum stretch in your hamstrings.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Rest Day",
+      "exercises": [
+        {
+          "id": "rest_day",
+          "primary_exercise_id": "rest_day",
+          "name": "Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #3",
+      "exercises": [
+        {
+          "id": "full_body_3",
+          "primary_exercise_id": "full_body_3",
+          "name": "Full Body #3",
+          "sets": 3,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Deficit Pendlay Row N/A ~3-4 min Smith Machine Deficit Row DB Row Stand on a bumper plate. Focus on getting a big stretch and touch your stomach/chest on each rep!",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #4",
+      "exercises": [
+        {
+          "id": "full_body_4",
+          "primary_exercise_id": "full_body_4",
+          "name": "Full Body #4",
+          "sets": 4,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "DB RDL N/A ~3-5 min Barbell RDL Deadlift The RPE is intentionally low here because these will cause a lot of muscle damage. Don't be tempted to go too heavy. To keep tension on the hamstrings, stop about 75% of the way to full lockout on each rep (i.e. stay in the bottom 3/4 of the range of motion).",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Arms & Weak Points",
+      "exercises": [
+        {
+          "id": "arms_weak_points",
+          "primary_exercise_id": "arms_weak_points",
+          "name": "Arms & Weak Points",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Weak Point Exercise 1 (optional) N/A ~1-3 min Decide on your weak point using The Weak Point Table in your Hypertrophy Handbook. Perform ONE of the exercises listed under Exercise 1 for the sets and reps provided here.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Rest Day",
+      "exercises": [
+        {
+          "id": "rest_day",
+          "primary_exercise_id": "rest_day",
+          "name": "Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        },
+        {
+          "id": "week_7",
+          "primary_exercise_id": "week_7",
+          "name": "Week 7",
+          "sets": 7,
+          "rep_range": [
+            7,
+            7
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #1",
+      "exercises": [
+        {
+          "id": "full_body_1",
+          "primary_exercise_id": "full_body_1",
+          "name": "Full Body #1",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Wide-Grip Lat Pulldown Lengthened Partials \n(Extend Set) ~2-3 min Wide-Grip Pull-Up Wide-Grip Machine Pulldown Think about pulling your elbows \"down\" and \"in\". Once you hit the Last Set RPE on the final set, switch to partial reps. These should be the top half of the ROM. Stop once you have 0-1 half reps left in the tank.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #2",
+      "exercises": [
+        {
+          "id": "full_body_2",
+          "primary_exercise_id": "full_body_2",
+          "name": "Full Body #2",
+          "sets": 2,
+          "rep_range": [
+            2,
+            2
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Seated Leg Curl Lengthened Partials \n(Extend Set) ~1-2 min Lying Leg Curl Nordic Ham Curl Lean forward over the machine to get a maximum stretch in your hamstrings. Once you hit failure on the final set, continue with lengthened partials in the top half of the ROM, until you can no longer achieve a full half rep.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Rest Day",
+      "exercises": [
+        {
+          "id": "rest_day",
+          "primary_exercise_id": "rest_day",
+          "name": "Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #3",
+      "exercises": [
+        {
+          "id": "full_body_3",
+          "primary_exercise_id": "full_body_3",
+          "name": "Full Body #3",
+          "sets": 3,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Deficit Pendlay Row Lengthened Partials\n(Extend Set) ~3-4 min Smith Machine Deficit Row DB Row Stand on a bumper plate. Focus on getting a big stretch and touch your stomach/chest on each rep! Once you hit the Last Set RPE on the final set, switch to partial reps. These should be the bottom half of the ROM. Stop once you have 0-1 half reps left in the tank.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #4",
+      "exercises": [
+        {
+          "id": "full_body_4",
+          "primary_exercise_id": "full_body_4",
+          "name": "Full Body #4",
+          "sets": 4,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "DB RDL N/A ~3-5 min Barbell RDL Deadlift The RPE is intentionally low here because these will cause a lot of muscle damage. Don't be tempted to go too heavy. To keep tension on the hamstrings, stop about 75% of the way to full lockout on each rep (i.e. stay in the bottom 3/4 of the range of motion).",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Arms & Weak Points",
+      "exercises": [
+        {
+          "id": "arms_weak_points",
+          "primary_exercise_id": "arms_weak_points",
+          "name": "Arms & Weak Points",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Weak Point Exercise 1 (optional) N/A ~1-3 min Decide on your weak point using The Weak Point Table in your Hypertrophy Handbook. Perform ONE of the exercises listed under Exercise 1 for the sets and reps provided here.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Rest Day",
+      "exercises": [
+        {
+          "id": "rest_day",
+          "primary_exercise_id": "rest_day",
+          "name": "Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        },
+        {
+          "id": "week_8",
+          "primary_exercise_id": "week_8",
+          "name": "Week 8",
+          "sets": 8,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #1",
+      "exercises": [
+        {
+          "id": "full_body_1",
+          "primary_exercise_id": "full_body_1",
+          "name": "Full Body #1",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Wide-Grip Lat Pulldown Lengthened Partials \n(Extend Set) ~2-3 min Wide-Grip Pull-Up Wide-Grip Machine Pulldown Think about pulling your elbows \"down\" and \"in\". Once you hit the Last Set RPE on the final set, switch to partial reps. These should be the top half of the ROM. Stop once you have 0-1 half reps left in the tank.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #2",
+      "exercises": [
+        {
+          "id": "full_body_2",
+          "primary_exercise_id": "full_body_2",
+          "name": "Full Body #2",
+          "sets": 2,
+          "rep_range": [
+            2,
+            2
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Seated Leg Curl Lengthened Partials \n(Extend Set) ~1-2 min Lying Leg Curl Nordic Ham Curl Lean forward over the machine to get a maximum stretch in your hamstrings. Once you hit failure on the final set, continue with lengthened partials in the top half of the ROM, until you can no longer achieve a full half rep.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Rest Day",
+      "exercises": [
+        {
+          "id": "rest_day",
+          "primary_exercise_id": "rest_day",
+          "name": "Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #3",
+      "exercises": [
+        {
+          "id": "full_body_3",
+          "primary_exercise_id": "full_body_3",
+          "name": "Full Body #3",
+          "sets": 3,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Deficit Pendlay Row Lengthened Partials\n(Extend Set) ~3-4 min Smith Machine Deficit Row DB Row Stand on a bumper plate. Focus on getting a big stretch and touch your stomach/chest on each rep! Once you hit the Last Set RPE on the final set, switch to partial reps. These should be the bottom half of the ROM. Stop once you have 0-1 half reps left in the tank.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #4",
+      "exercises": [
+        {
+          "id": "full_body_4",
+          "primary_exercise_id": "full_body_4",
+          "name": "Full Body #4",
+          "sets": 4,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "DB RDL N/A ~3-5 min Barbell RDL Deadlift The RPE is intentionally low here because these will cause a lot of muscle damage. Don't be tempted to go too heavy. To keep tension on the hamstrings, stop about 75% of the way to full lockout on each rep (i.e. stay in the bottom 3/4 of the range of motion).",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Arms & Weak Points",
+      "exercises": [
+        {
+          "id": "arms_weak_points",
+          "primary_exercise_id": "arms_weak_points",
+          "name": "Arms & Weak Points",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Weak Point Exercise 1 (optional) N/A ~1-3 min Decide on your weak point using The Weak Point Table in your Hypertrophy Handbook. Perform ONE of the exercises listed under Exercise 1 for the sets and reps provided here.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Rest Day",
+      "exercises": [
+        {
+          "id": "rest_day",
+          "primary_exercise_id": "rest_day",
+          "name": "Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        },
+        {
+          "id": "week_9",
+          "primary_exercise_id": "week_9",
+          "name": "Week 9",
+          "sets": 9,
+          "rep_range": [
+            9,
+            9
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #1",
+      "exercises": [
+        {
+          "id": "full_body_1",
+          "primary_exercise_id": "full_body_1",
+          "name": "Full Body #1",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Wide-Grip Lat Pulldown Lengthened Partials \n(Extend Set) ~2-3 min Wide-Grip Pull-Up Wide-Grip Machine Pulldown Think about pulling your elbows \"down\" and \"in\". Once you hit the Last Set RPE on the final set, switch to partial reps. These should be the top half of the ROM. Stop once you have 0-1 half reps left in the tank.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #2",
+      "exercises": [
+        {
+          "id": "full_body_2",
+          "primary_exercise_id": "full_body_2",
+          "name": "Full Body #2",
+          "sets": 2,
+          "rep_range": [
+            2,
+            2
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Seated Leg Curl Lengthened Partials \n(Extend Set) ~1-2 min Lying Leg Curl Nordic Ham Curl Lean forward over the machine to get a maximum stretch in your hamstrings. Once you hit failure on the final set, continue with lengthened partials in the top half of the ROM, until you can no longer achieve a full half rep.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Rest Day",
+      "exercises": [
+        {
+          "id": "rest_day",
+          "primary_exercise_id": "rest_day",
+          "name": "Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #3",
+      "exercises": [
+        {
+          "id": "full_body_3",
+          "primary_exercise_id": "full_body_3",
+          "name": "Full Body #3",
+          "sets": 3,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Deficit Pendlay Row Lengthened Partials\n(Extend Set) ~3-4 min Smith Machine Deficit Row DB Row Stand on a bumper plate. Focus on getting a big stretch and touch your stomach/chest on each rep! Once you hit the Last Set RPE on the final set, switch to partial reps. These should be the bottom half of the ROM. Stop once you have 0-1 half reps left in the tank.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #4",
+      "exercises": [
+        {
+          "id": "full_body_4",
+          "primary_exercise_id": "full_body_4",
+          "name": "Full Body #4",
+          "sets": 4,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "DB RDL N/A ~3-5 min Barbell RDL Deadlift The RPE is intentionally low here because these will cause a lot of muscle damage. Don't be tempted to go too heavy. To keep tension on the hamstrings, stop about 75% of the way to full lockout on each rep (i.e. stay in the bottom 3/4 of the range of motion).",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Arms & Weak Points",
+      "exercises": [
+        {
+          "id": "arms_weak_points",
+          "primary_exercise_id": "arms_weak_points",
+          "name": "Arms & Weak Points",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Weak Point Exercise 1 (optional) N/A ~1-3 min Decide on your weak point using The Weak Point Table in your Hypertrophy Handbook. Perform ONE of the exercises listed under Exercise 1 for the sets and reps provided here.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Rest Day",
+      "exercises": [
+        {
+          "id": "rest_day",
+          "primary_exercise_id": "rest_day",
+          "name": "Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        },
+        {
+          "id": "week_10",
+          "primary_exercise_id": "week_10",
+          "name": "Week 10",
+          "sets": 10,
+          "rep_range": [
+            10,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #1",
+      "exercises": [
+        {
+          "id": "full_body_1",
+          "primary_exercise_id": "full_body_1",
+          "name": "Full Body #1",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Wide-Grip Lat Pulldown Lengthened Partials \n(Extend Set) ~2-3 min Wide-Grip Pull-Up Wide-Grip Machine Pulldown Think about pulling your elbows \"down\" and \"in\". Once you hit the Last Set RPE on the final set, switch to partial reps. These should be the top half of the ROM. Stop once you have 0-1 half reps left in the tank.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #2",
+      "exercises": [
+        {
+          "id": "full_body_2",
+          "primary_exercise_id": "full_body_2",
+          "name": "Full Body #2",
+          "sets": 2,
+          "rep_range": [
+            2,
+            2
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Seated Leg Curl Lengthened Partials \n(Extend Set) ~1-2 min Lying Leg Curl Nordic Ham Curl Lean forward over the machine to get a maximum stretch in your hamstrings. Once you hit failure on the final set, continue with lengthened partials in the top half of the ROM, until you can no longer achieve a full half rep.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Rest Day",
+      "exercises": [
+        {
+          "id": "rest_day",
+          "primary_exercise_id": "rest_day",
+          "name": "Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #3",
+      "exercises": [
+        {
+          "id": "full_body_3",
+          "primary_exercise_id": "full_body_3",
+          "name": "Full Body #3",
+          "sets": 3,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Deficit Pendlay Row Lengthened Partials\n(Extend Set) ~3-4 min Smith Machine Deficit Row DB Row Stand on a bumper plate. Focus on getting a big stretch and touch your stomach/chest on each rep! Once you hit the Last Set RPE on the final set, switch to partial reps. These should be the bottom half of the ROM. Stop once you have 0-1 half reps left in the tank.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #4",
+      "exercises": [
+        {
+          "id": "full_body_4",
+          "primary_exercise_id": "full_body_4",
+          "name": "Full Body #4",
+          "sets": 4,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "DB RDL N/A ~3-5 min Barbell RDL Deadlift The RPE is intentionally low here because these will cause a lot of muscle damage. Don't be tempted to go too heavy. To keep tension on the hamstrings, stop about 75% of the way to full lockout on each rep (i.e. stay in the bottom 3/4 of the range of motion).",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Arms & Weak Points",
+      "exercises": [
+        {
+          "id": "arms_weak_points",
+          "primary_exercise_id": "arms_weak_points",
+          "name": "Arms & Weak Points",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Weak Point Exercise 1 (optional) N/A ~1-3 min Decide on your weak point using The Weak Point Table in your Hypertrophy Handbook. Perform ONE of the exercises listed under Exercise 1 for the sets and reps provided here.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Rest Day",
+      "exercises": [
+        {
+          "id": "rest_day",
+          "primary_exercise_id": "rest_day",
+          "name": "Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        }
+      ]
+    }
+  ]
+}

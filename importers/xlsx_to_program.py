@@ -98,7 +98,8 @@ def slugify(value: str) -> str:
 def parse_rep_range(raw_value: str) -> list[int]:
     values = [int(match) for match in re.findall(r"\d+", raw_value)]
     if len(values) >= 2:
-        return [values[0], values[1]]
+        lower, upper = sorted((values[0], values[1]))
+        return [lower, upper]
     if len(values) == 1:
         return [values[0], values[0]]
     return [8, 12]

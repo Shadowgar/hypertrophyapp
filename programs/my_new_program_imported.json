@@ -1,0 +1,1926 @@
+{
+  "id": "my_new_program",
+  "version": "1.0.0",
+  "split": "full_body",
+  "days_supported": [
+    2,
+    3,
+    4
+  ],
+  "deload": {
+    "trigger_weeks": 6,
+    "set_reduction_pct": 35,
+    "load_reduction_pct": 10
+  },
+  "progression": {
+    "mode": "double_progression",
+    "increment_kg": 2.5
+  },
+  "sessions": [
+    {
+      "name": "WARM UP PROTOCOL",
+      "exercises": [
+        {
+          "id": "warm_up_protocol",
+          "primary_exercise_id": "warm_up_protocol",
+          "name": "WARM UP PROTOCOL",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "WEAK POINTS TABLE",
+      "exercises": [
+        {
+          "id": "weak_points_table",
+          "primary_exercise_id": "weak_points_table",
+          "name": "WEAK POINTS TABLE",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "BLOCK 1: 5-WEEK BUILD PHASE",
+      "exercises": [
+        {
+          "id": "block_1_5_week_build_phase",
+          "primary_exercise_id": "block_1_5_week_build_phase",
+          "name": "BLOCK 1: 5-WEEK BUILD PHASE",
+          "sets": 1,
+          "rep_range": [
+            1,
+            5
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        },
+        {
+          "id": "week_1",
+          "primary_exercise_id": "week_1",
+          "name": "Week 1",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #1",
+      "exercises": [
+        {
+          "id": "full_body_1",
+          "primary_exercise_id": "full_body_1",
+          "name": "Full Body #1",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Cross-Body Lat Pull-Around Long-length Partials (on all reps of the last set) ~2-3 min Half-Kneeling 1-Arm Lat Pulldown Neutral-Grip Pullup Try to keep the cable and your wrist aligned in a straight line throughout the pull. Feel a nice, deep lat stretch at the top.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #2",
+      "exercises": [
+        {
+          "id": "full_body_2",
+          "primary_exercise_id": "full_body_2",
+          "name": "Full Body #2",
+          "sets": 2,
+          "rep_range": [
+            2,
+            2
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Seated DB Shoulder Press N/A ~2-3 min Seated Barbell Shoulder Press Standing DB Arnold Press Slightly rotate the dumbbells in on the negative and flare your elbows out as you push.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Mandatory Rest Day",
+      "exercises": [
+        {
+          "id": "mandatory_rest_day",
+          "primary_exercise_id": "mandatory_rest_day",
+          "name": "Mandatory Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #3",
+      "exercises": [
+        {
+          "id": "full_body_3",
+          "primary_exercise_id": "full_body_3",
+          "name": "Full Body #3",
+          "sets": 3,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Superset A1: Assisted Pull-Up Long-length Partials (on all reps of the last set) ~1 min Lat Pulldown Machine Pulldown Slow 2-3 second negative. Feel your lats pulling apart on the way down. Slight 0.5-1 second pause at the bottom, then lift your chest up and drive your elbows down as you lift yourself up. Don't be afraid to use assistance. Keep the form tight and controlled!",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #4",
+      "exercises": [
+        {
+          "id": "full_body_4",
+          "primary_exercise_id": "full_body_4",
+          "name": "Full Body #4",
+          "sets": 4,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Lying Leg Curl N/A ~1-2 min Seated Leg Curl Nordic Ham Curl Because we did seated hamstring work yesterday, these are mainly meant to get the knees nice and warmed up before hack squats. Don't push these too hard today, just feel the hamstrings moving the weight under control.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Arms & Weak Points",
+      "exercises": [
+        {
+          "id": "arms_weak_points",
+          "primary_exercise_id": "arms_weak_points",
+          "name": "Arms & Weak Points",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Weak Point Exercise 1 N/A ~1-3 min See The Weak Point Table for sub options See The Weak Point Table for sub options Decide on your weak point using The Weak Point Table in your Hypertrophy Handbook. Perform ONE of the exercises listed under Exercise 1 for the sets and reps provided here.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Mandatory Rest Day",
+      "exercises": [
+        {
+          "id": "mandatory_rest_day",
+          "primary_exercise_id": "mandatory_rest_day",
+          "name": "Mandatory Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        },
+        {
+          "id": "week_2",
+          "primary_exercise_id": "week_2",
+          "name": "Week 2",
+          "sets": 2,
+          "rep_range": [
+            2,
+            2
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #1",
+      "exercises": [
+        {
+          "id": "full_body_1",
+          "primary_exercise_id": "full_body_1",
+          "name": "Full Body #1",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Cross-Body Lat Pull-Around Long-length Partials (on all reps of the last set) ~2-3 min Half-Kneeling 1-Arm Lat Pulldown Neutral-Grip Pullup Try to keep the cable and your wrist aligned in a straight line throughout the pull. Feel a nice, deep lat stretch at the top.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #2",
+      "exercises": [
+        {
+          "id": "full_body_2",
+          "primary_exercise_id": "full_body_2",
+          "name": "Full Body #2",
+          "sets": 2,
+          "rep_range": [
+            2,
+            2
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Seated DB Shoulder Press N/A ~2-3 min Seated Barbell Shoulder Press Standing DB Arnold Press Slightly rotate the dumbbells in on the negative and flare your elbows out as you push.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Mandatory Rest Day",
+      "exercises": [
+        {
+          "id": "mandatory_rest_day",
+          "primary_exercise_id": "mandatory_rest_day",
+          "name": "Mandatory Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #3",
+      "exercises": [
+        {
+          "id": "full_body_3",
+          "primary_exercise_id": "full_body_3",
+          "name": "Full Body #3",
+          "sets": 3,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Superset A1: Assisted Pull-Up Long-length Partials (on all reps of the last set) ~1 min Lat Pulldown Machine Pulldown Slow 2-3 second negative. Feel your lats pulling apart on the way down. Slight 0.5-1 second pause at the bottom, then lift your chest up and drive your elbows down as you lift yourself up. Don't be afraid to use assistance. Keep the form tight and controlled!",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #4",
+      "exercises": [
+        {
+          "id": "full_body_4",
+          "primary_exercise_id": "full_body_4",
+          "name": "Full Body #4",
+          "sets": 4,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Lying Leg Curl N/A ~1-2 min Seated Leg Curl Nordic Ham Curl Because we did seated hamstring work yesterday, these are mainly meant to get the knees nice and warmed up before hack squats. Don't push these too hard today, just feel the hamstrings moving the weight under control.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Arms & Weak Points",
+      "exercises": [
+        {
+          "id": "arms_weak_points",
+          "primary_exercise_id": "arms_weak_points",
+          "name": "Arms & Weak Points",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Weak Point Exercise 1 N/A ~1-3 min See The Weak Point Table for sub options See The Weak Point Table for sub options Decide on your weak point using The Weak Point Table in your Hypertrophy Handbook. Perform ONE of the exercises listed under Exercise 1 for the sets and reps provided here.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Mandatory Rest Day",
+      "exercises": [
+        {
+          "id": "mandatory_rest_day",
+          "primary_exercise_id": "mandatory_rest_day",
+          "name": "Mandatory Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        },
+        {
+          "id": "week_3",
+          "primary_exercise_id": "week_3",
+          "name": "Week 3",
+          "sets": 3,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #1",
+      "exercises": [
+        {
+          "id": "full_body_1",
+          "primary_exercise_id": "full_body_1",
+          "name": "Full Body #1",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Cross-Body Lat Pull-Around Long-length Partials (on all reps of the last set) ~2-3 min Half-Kneeling 1-Arm Lat Pulldown Neutral-Grip Pullup Try to keep the cable and your wrist aligned in a straight line throughout the pull. Feel a nice, deep lat stretch at the top.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #2",
+      "exercises": [
+        {
+          "id": "full_body_2",
+          "primary_exercise_id": "full_body_2",
+          "name": "Full Body #2",
+          "sets": 2,
+          "rep_range": [
+            2,
+            2
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Seated DB Shoulder Press N/A ~2-3 min Seated Barbell Shoulder Press Standing DB Arnold Press Slightly rotate the dumbbells in on the negative and flare your elbows out as you push.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Mandatory Rest Day",
+      "exercises": [
+        {
+          "id": "mandatory_rest_day",
+          "primary_exercise_id": "mandatory_rest_day",
+          "name": "Mandatory Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #3",
+      "exercises": [
+        {
+          "id": "full_body_3",
+          "primary_exercise_id": "full_body_3",
+          "name": "Full Body #3",
+          "sets": 3,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Superset A1: Assisted Pull-Up Long-length Partials (on all reps of the last set) ~1 min Lat Pulldown Machine Pulldown Slow 2-3 second negative. Feel your lats pulling apart on the way down. Slight 0.5-1 second pause at the bottom, then lift your chest up and drive your elbows down as you lift yourself up. Don't be afraid to use assistance. Keep the form tight and controlled!",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #4",
+      "exercises": [
+        {
+          "id": "full_body_4",
+          "primary_exercise_id": "full_body_4",
+          "name": "Full Body #4",
+          "sets": 4,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Lying Leg Curl N/A ~1-2 min Seated Leg Curl Nordic Ham Curl Because we did seated hamstring work yesterday, these are mainly meant to get the knees nice and warmed up before hack squats. Don't push these too hard today, just feel the hamstrings moving the weight under control.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Arms & Weak Points",
+      "exercises": [
+        {
+          "id": "arms_weak_points",
+          "primary_exercise_id": "arms_weak_points",
+          "name": "Arms & Weak Points",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Weak Point Exercise 1 N/A ~1-3 min See The Weak Point Table for sub options See The Weak Point Table for sub options Decide on your weak point using The Weak Point Table in your Hypertrophy Handbook. Perform ONE of the exercises listed under Exercise 1 for the sets and reps provided here.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Mandatory Rest Day",
+      "exercises": [
+        {
+          "id": "mandatory_rest_day",
+          "primary_exercise_id": "mandatory_rest_day",
+          "name": "Mandatory Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        },
+        {
+          "id": "week_4",
+          "primary_exercise_id": "week_4",
+          "name": "Week 4",
+          "sets": 4,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #1",
+      "exercises": [
+        {
+          "id": "full_body_1",
+          "primary_exercise_id": "full_body_1",
+          "name": "Full Body #1",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Cross-Body Lat Pull-Around Long-length Partials (on all reps of the last set) ~2-3 min Half-Kneeling 1-Arm Lat Pulldown Neutral-Grip Pullup Try to keep the cable and your wrist aligned in a straight line throughout the pull. Feel a nice, deep lat stretch at the top.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #2",
+      "exercises": [
+        {
+          "id": "full_body_2",
+          "primary_exercise_id": "full_body_2",
+          "name": "Full Body #2",
+          "sets": 2,
+          "rep_range": [
+            2,
+            2
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Seated DB Shoulder Press N/A ~2-3 min Seated Barbell Shoulder Press Standing DB Arnold Press Slightly rotate the dumbbells in on the negative and flare your elbows out as you push.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Mandatory Rest Day",
+      "exercises": [
+        {
+          "id": "mandatory_rest_day",
+          "primary_exercise_id": "mandatory_rest_day",
+          "name": "Mandatory Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #3",
+      "exercises": [
+        {
+          "id": "full_body_3",
+          "primary_exercise_id": "full_body_3",
+          "name": "Full Body #3",
+          "sets": 3,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Superset A1: Assisted Pull-Up Long-length Partials (on all reps of the last set) ~1 min Lat Pulldown Machine Pulldown Slow 2-3 second negative. Feel your lats pulling apart on the way down. Slight 0.5-1 second pause at the bottom, then lift your chest up and drive your elbows down as you lift yourself up. Don't be afraid to use assistance. Keep the form tight and controlled!",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #4",
+      "exercises": [
+        {
+          "id": "full_body_4",
+          "primary_exercise_id": "full_body_4",
+          "name": "Full Body #4",
+          "sets": 4,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Lying Leg Curl N/A ~1-2 min Seated Leg Curl Nordic Ham Curl Because we did seated hamstring work yesterday, these are mainly meant to get the knees nice and warmed up before hack squats. Don't push these too hard today, just feel the hamstrings moving the weight under control.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Arms & Weak Points",
+      "exercises": [
+        {
+          "id": "arms_weak_points",
+          "primary_exercise_id": "arms_weak_points",
+          "name": "Arms & Weak Points",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Weak Point Exercise 1 N/A ~1-3 min See The Weak Point Table for sub options See The Weak Point Table for sub options Decide on your weak point using The Weak Point Table in your Hypertrophy Handbook. Perform ONE of the exercises listed under Exercise 1 for the sets and reps provided here.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Mandatory Rest Day",
+      "exercises": [
+        {
+          "id": "mandatory_rest_day",
+          "primary_exercise_id": "mandatory_rest_day",
+          "name": "Mandatory Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "SEMI-DELOAD WEEK: AVOID FAILURE AND TRAIN LIGHTER THIS WEEK TO PROMOTE RECOVERY AND TO PREPARE FOR THE NEXT 5 WEEKS!",
+      "exercises": [
+        {
+          "id": "semi_deload_week_avoid_failure_and_train_lighter_this_week_to_promote_recovery_and_to_prepare_for_the_next_5_weeks",
+          "primary_exercise_id": "semi_deload_week_avoid_failure_and_train_lighter_this_week_to_promote_recovery_and_to_prepare_for_the_next_5_weeks",
+          "name": "SEMI-DELOAD WEEK: AVOID FAILURE AND TRAIN LIGHTER THIS WEEK TO PROMOTE RECOVERY AND TO PREPARE FOR THE NEXT 5 WEEKS!",
+          "sets": 5,
+          "rep_range": [
+            5,
+            5
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        },
+        {
+          "id": "week_5",
+          "primary_exercise_id": "week_5",
+          "name": "Week 5",
+          "sets": 5,
+          "rep_range": [
+            5,
+            5
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #1",
+      "exercises": [
+        {
+          "id": "full_body_1",
+          "primary_exercise_id": "full_body_1",
+          "name": "Full Body #1",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Cross-Body Lat Pull-Around Long-length Partials (on all reps of the last set) ~2-3 min Half-Kneeling 1-Arm Lat Pulldown Neutral-Grip Pullup Try to keep the cable and your wrist aligned in a straight line throughout the pull. Feel a nice, deep lat stretch at the top.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #2",
+      "exercises": [
+        {
+          "id": "full_body_2",
+          "primary_exercise_id": "full_body_2",
+          "name": "Full Body #2",
+          "sets": 2,
+          "rep_range": [
+            2,
+            2
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Seated DB Shoulder Press N/A ~2-3 min Seated Barbell Shoulder Press Standing DB Arnold Press Slightly rotate the dumbbells in on the negative and flare your elbows out as you push.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Mandatory Rest Day",
+      "exercises": [
+        {
+          "id": "mandatory_rest_day",
+          "primary_exercise_id": "mandatory_rest_day",
+          "name": "Mandatory Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #3",
+      "exercises": [
+        {
+          "id": "full_body_3",
+          "primary_exercise_id": "full_body_3",
+          "name": "Full Body #3",
+          "sets": 3,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Superset A1: Assisted Pull-Up Long-length Partials (on all reps of the last set) ~1 min Lat Pulldown Machine Pulldown Slow 2-3 second negative. Feel your lats pulling apart on the way down. Slight 0.5-1 second pause at the bottom, then lift your chest up and drive your elbows down as you lift yourself up. Don't be afraid to use assistance. Keep the form tight and controlled!",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #4",
+      "exercises": [
+        {
+          "id": "full_body_4",
+          "primary_exercise_id": "full_body_4",
+          "name": "Full Body #4",
+          "sets": 4,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Lying Leg Curl N/A ~1-2 min Seated Leg Curl Nordic Ham Curl Because we did seated hamstring work yesterday, these are mainly meant to get the knees nice and warmed up before hack squats. Don't push these too hard today, just feel the hamstrings moving the weight under control.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Arms & Weak Points",
+      "exercises": [
+        {
+          "id": "arms_weak_points",
+          "primary_exercise_id": "arms_weak_points",
+          "name": "Arms & Weak Points",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Weak Point Exercise 1 N/A ~1-3 min See The Weak Point Table for sub options See The Weak Point Table for sub options Decide on your weak point using The Weak Point Table in your Hypertrophy Handbook. Perform ONE of the exercises listed under Exercise 1 for the sets and reps provided here.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Mandatory Rest Day",
+      "exercises": [
+        {
+          "id": "mandatory_rest_day",
+          "primary_exercise_id": "mandatory_rest_day",
+          "name": "Mandatory Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "BLOCK 2: 5-WEEK NOVELTY PHASE",
+      "exercises": [
+        {
+          "id": "block_2_5_week_novelty_phase",
+          "primary_exercise_id": "block_2_5_week_novelty_phase",
+          "name": "BLOCK 2: 5-WEEK NOVELTY PHASE",
+          "sets": 2,
+          "rep_range": [
+            2,
+            5
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        },
+        {
+          "id": "week_6",
+          "primary_exercise_id": "week_6",
+          "name": "Week 6",
+          "sets": 6,
+          "rep_range": [
+            6,
+            6
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #1",
+      "exercises": [
+        {
+          "id": "full_body_1",
+          "primary_exercise_id": "full_body_1",
+          "name": "Full Body #1",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Lat-Focused Cable Row Long-length Partials (on all reps of the last set) ~2-3 min Half-Kneeling 1-Arm Lat Pulldown Elbows-In 1-Arm DB Row Keep your torso locked in a fixed position (don't lean forward on the negative). Drive your elbows down and back to engage the lats. Keep your elbows tucked in to your sides.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #2",
+      "exercises": [
+        {
+          "id": "full_body_2",
+          "primary_exercise_id": "full_body_2",
+          "name": "Full Body #2",
+          "sets": 2,
+          "rep_range": [
+            2,
+            2
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Cuffed Behind-The-Back Lateral Raise Myo-reps ~1-2 min Cross-Body Cable Y-Raise DB Lateral Raise Raise the cables up in a \"Y\" motion. Really try to connect with the middle delt fibers as you sweep the weight up and out.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Mandatory Rest Day",
+      "exercises": [
+        {
+          "id": "mandatory_rest_day",
+          "primary_exercise_id": "mandatory_rest_day",
+          "name": "Mandatory Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #3",
+      "exercises": [
+        {
+          "id": "full_body_3",
+          "primary_exercise_id": "full_body_3",
+          "name": "Full Body #3",
+          "sets": 3,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Dual-Handle Lat Pulldown (Mid-back + Lats) Long-length Partials (on all reps of the last set) ~2-3 min Overhand Lat Pulldown Pull-Up Lean back by ~15\u00b0 and drive your elbows down as you squeeze your shoulder blades together. This should feel like a mix of lats and mid-traps.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #4",
+      "exercises": [
+        {
+          "id": "full_body_4",
+          "primary_exercise_id": "full_body_4",
+          "name": "Full Body #4",
+          "sets": 4,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Seated Leg Curl N/A ~2-3 min Lying Leg Curl Nordic Ham Curl Lean forward over the machine to get a maximum stretch in your hamstrings.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Arms & Weak Points",
+      "exercises": [
+        {
+          "id": "arms_weak_points",
+          "primary_exercise_id": "arms_weak_points",
+          "name": "Arms & Weak Points",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Weak Point Exercise 1 N/A ~1-3 min See The Weak Point Table for sub options See The Weak Point Table for sub options Decide on your weak point using The Weak Point Table in your Hypertrophy Handbook. Perform ONE of the exercises listed under Exercise 1 for the sets and reps provided here.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Mandatory Rest Day",
+      "exercises": [
+        {
+          "id": "mandatory_rest_day",
+          "primary_exercise_id": "mandatory_rest_day",
+          "name": "Mandatory Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        },
+        {
+          "id": "week_7",
+          "primary_exercise_id": "week_7",
+          "name": "Week 7",
+          "sets": 7,
+          "rep_range": [
+            7,
+            7
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #1",
+      "exercises": [
+        {
+          "id": "full_body_1",
+          "primary_exercise_id": "full_body_1",
+          "name": "Full Body #1",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Lat-Focused Cable Row Long-length Partials (on all reps of the last set) ~2-3 min Half-Kneeling 1-Arm Lat Pulldown Elbows-In 1-Arm DB Row Keep your torso locked in a fixed position (don't lean forward on the negative). Drive your elbows down and back to engage the lats. Keep your elbows tucked in to your sides.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #2",
+      "exercises": [
+        {
+          "id": "full_body_2",
+          "primary_exercise_id": "full_body_2",
+          "name": "Full Body #2",
+          "sets": 2,
+          "rep_range": [
+            2,
+            2
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Cuffed Behind-The-Back Lateral Raise Myo-reps ~1-2 min Cross-Body Cable Y-Raise DB Lateral Raise Raise the cables up in a \"Y\" motion. Really try to connect with the middle delt fibers as you sweep the weight up and out.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Mandatory Rest Day",
+      "exercises": [
+        {
+          "id": "mandatory_rest_day",
+          "primary_exercise_id": "mandatory_rest_day",
+          "name": "Mandatory Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #3",
+      "exercises": [
+        {
+          "id": "full_body_3",
+          "primary_exercise_id": "full_body_3",
+          "name": "Full Body #3",
+          "sets": 3,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Dual-Handle Lat Pulldown (Mid-back + Lats) Long-length Partials (on all reps of the last set) ~2-3 min Overhand Lat Pulldown Pull-Up Lean back by ~15\u00b0 and drive your elbows down as you squeeze your shoulder blades together. This should feel like a mix of lats and mid-traps.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #4",
+      "exercises": [
+        {
+          "id": "full_body_4",
+          "primary_exercise_id": "full_body_4",
+          "name": "Full Body #4",
+          "sets": 4,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Seated Leg Curl N/A ~2-3 min Lying Leg Curl Nordic Ham Curl Lean forward over the machine to get a maximum stretch in your hamstrings.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Arms & Weak Points",
+      "exercises": [
+        {
+          "id": "arms_weak_points",
+          "primary_exercise_id": "arms_weak_points",
+          "name": "Arms & Weak Points",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Weak Point Exercise 1 N/A ~1-3 min See The Weak Point Table for sub options See The Weak Point Table for sub options Decide on your weak point using The Weak Point Table in your Hypertrophy Handbook. Perform ONE of the exercises listed under Exercise 1 for the sets and reps provided here.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Mandatory Rest Day",
+      "exercises": [
+        {
+          "id": "mandatory_rest_day",
+          "primary_exercise_id": "mandatory_rest_day",
+          "name": "Mandatory Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        },
+        {
+          "id": "week_8",
+          "primary_exercise_id": "week_8",
+          "name": "Week 8",
+          "sets": 8,
+          "rep_range": [
+            8,
+            8
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #1",
+      "exercises": [
+        {
+          "id": "full_body_1",
+          "primary_exercise_id": "full_body_1",
+          "name": "Full Body #1",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Lat-Focused Cable Row Long-length Partials (on all reps of the last set) ~2-3 min Half-Kneeling 1-Arm Lat Pulldown Elbows-In 1-Arm DB Row Keep your torso locked in a fixed position (don't lean forward on the negative). Drive your elbows down and back to engage the lats. Keep your elbows tucked in to your sides.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #2",
+      "exercises": [
+        {
+          "id": "full_body_2",
+          "primary_exercise_id": "full_body_2",
+          "name": "Full Body #2",
+          "sets": 2,
+          "rep_range": [
+            2,
+            2
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Cuffed Behind-The-Back Lateral Raise Myo-reps ~1-2 min Cross-Body Cable Y-Raise DB Lateral Raise Raise the cables up in a \"Y\" motion. Really try to connect with the middle delt fibers as you sweep the weight up and out.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Mandatory Rest Day",
+      "exercises": [
+        {
+          "id": "mandatory_rest_day",
+          "primary_exercise_id": "mandatory_rest_day",
+          "name": "Mandatory Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #3",
+      "exercises": [
+        {
+          "id": "full_body_3",
+          "primary_exercise_id": "full_body_3",
+          "name": "Full Body #3",
+          "sets": 3,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Dual-Handle Lat Pulldown (Mid-back + Lats) Long-length Partials (on all reps of the last set) ~2-3 min Overhand Lat Pulldown Pull-Up Lean back by ~15\u00b0 and drive your elbows down as you squeeze your shoulder blades together. This should feel like a mix of lats and mid-traps.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #4",
+      "exercises": [
+        {
+          "id": "full_body_4",
+          "primary_exercise_id": "full_body_4",
+          "name": "Full Body #4",
+          "sets": 4,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Seated Leg Curl N/A ~2-3 min Lying Leg Curl Nordic Ham Curl Lean forward over the machine to get a maximum stretch in your hamstrings.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Arms & Weak Points",
+      "exercises": [
+        {
+          "id": "arms_weak_points",
+          "primary_exercise_id": "arms_weak_points",
+          "name": "Arms & Weak Points",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Weak Point Exercise 1 N/A ~1-3 min See The Weak Point Table for sub options See The Weak Point Table for sub options Decide on your weak point using The Weak Point Table in your Hypertrophy Handbook. Perform ONE of the exercises listed under Exercise 1 for the sets and reps provided here.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Mandatory Rest Day",
+      "exercises": [
+        {
+          "id": "mandatory_rest_day",
+          "primary_exercise_id": "mandatory_rest_day",
+          "name": "Mandatory Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        },
+        {
+          "id": "week_9",
+          "primary_exercise_id": "week_9",
+          "name": "Week 9",
+          "sets": 9,
+          "rep_range": [
+            9,
+            9
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #1",
+      "exercises": [
+        {
+          "id": "full_body_1",
+          "primary_exercise_id": "full_body_1",
+          "name": "Full Body #1",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Lat-Focused Cable Row Long-length Partials (on all reps of the last set) ~2-3 min Half-Kneeling 1-Arm Lat Pulldown Elbows-In 1-Arm DB Row Keep your torso locked in a fixed position (don't lean forward on the negative). Drive your elbows down and back to engage the lats. Keep your elbows tucked in to your sides.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #2",
+      "exercises": [
+        {
+          "id": "full_body_2",
+          "primary_exercise_id": "full_body_2",
+          "name": "Full Body #2",
+          "sets": 2,
+          "rep_range": [
+            2,
+            2
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Cuffed Behind-The-Back Lateral Raise Myo-reps ~1-2 min Cross-Body Cable Y-Raise DB Lateral Raise Raise the cables up in a \"Y\" motion. Really try to connect with the middle delt fibers as you sweep the weight up and out.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Mandatory Rest Day",
+      "exercises": [
+        {
+          "id": "mandatory_rest_day",
+          "primary_exercise_id": "mandatory_rest_day",
+          "name": "Mandatory Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #3",
+      "exercises": [
+        {
+          "id": "full_body_3",
+          "primary_exercise_id": "full_body_3",
+          "name": "Full Body #3",
+          "sets": 3,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Dual-Handle Lat Pulldown (Mid-back + Lats) Long-length Partials (on all reps of the last set) ~2-3 min Overhand Lat Pulldown Pull-Up Lean back by ~15\u00b0 and drive your elbows down as you squeeze your shoulder blades together. This should feel like a mix of lats and mid-traps.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #4",
+      "exercises": [
+        {
+          "id": "full_body_4",
+          "primary_exercise_id": "full_body_4",
+          "name": "Full Body #4",
+          "sets": 4,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Seated Leg Curl N/A ~2-3 min Lying Leg Curl Nordic Ham Curl Lean forward over the machine to get a maximum stretch in your hamstrings.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Arms & Weak Points",
+      "exercises": [
+        {
+          "id": "arms_weak_points",
+          "primary_exercise_id": "arms_weak_points",
+          "name": "Arms & Weak Points",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Weak Point Exercise 1 N/A ~1-3 min See The Weak Point Table for sub options See The Weak Point Table for sub options Decide on your weak point using The Weak Point Table in your Hypertrophy Handbook. Perform ONE of the exercises listed under Exercise 1 for the sets and reps provided here.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Mandatory Rest Day",
+      "exercises": [
+        {
+          "id": "mandatory_rest_day",
+          "primary_exercise_id": "mandatory_rest_day",
+          "name": "Mandatory Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        },
+        {
+          "id": "week_10",
+          "primary_exercise_id": "week_10",
+          "name": "Week 10",
+          "sets": 10,
+          "rep_range": [
+            10,
+            10
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Exercise Last-Set Intensity Technique Warm-up Sets Working Sets Reps Tracking Load and Reps Early Set RPE Last Set RPE Rest Substitution Option 1 Substitution Option 2 Notes",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #1",
+      "exercises": [
+        {
+          "id": "full_body_1",
+          "primary_exercise_id": "full_body_1",
+          "name": "Full Body #1",
+          "sets": 1,
+          "rep_range": [
+            1,
+            1
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Lat-Focused Cable Row Long-length Partials (on all reps of the last set) ~2-3 min Half-Kneeling 1-Arm Lat Pulldown Elbows-In 1-Arm DB Row Keep your torso locked in a fixed position (don't lean forward on the negative). Drive your elbows down and back to engage the lats. Keep your elbows tucked in to your sides.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #2",
+      "exercises": [
+        {
+          "id": "full_body_2",
+          "primary_exercise_id": "full_body_2",
+          "name": "Full Body #2",
+          "sets": 2,
+          "rep_range": [
+            2,
+            2
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Cuffed Behind-The-Back Lateral Raise Myo-reps ~1-2 min Cross-Body Cable Y-Raise DB Lateral Raise Raise the cables up in a \"Y\" motion. Really try to connect with the middle delt fibers as you sweep the weight up and out.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Mandatory Rest Day",
+      "exercises": [
+        {
+          "id": "mandatory_rest_day",
+          "primary_exercise_id": "mandatory_rest_day",
+          "name": "Mandatory Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #3",
+      "exercises": [
+        {
+          "id": "full_body_3",
+          "primary_exercise_id": "full_body_3",
+          "name": "Full Body #3",
+          "sets": 3,
+          "rep_range": [
+            3,
+            3
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Dual-Handle Lat Pulldown (Mid-back + Lats) Long-length Partials (on all reps of the last set) ~2-3 min Overhand Lat Pulldown Pull-Up Lean back by ~15\u00b0 and drive your elbows down as you squeeze your shoulder blades together. This should feel like a mix of lats and mid-traps.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Full Body #4",
+      "exercises": [
+        {
+          "id": "full_body_4",
+          "primary_exercise_id": "full_body_4",
+          "name": "Full Body #4",
+          "sets": 4,
+          "rep_range": [
+            4,
+            4
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Seated Leg Curl N/A ~2-3 min Lying Leg Curl Nordic Ham Curl Lean forward over the machine to get a maximum stretch in your hamstrings.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Arms & Weak Points",
+      "exercises": [
+        {
+          "id": "arms_weak_points",
+          "primary_exercise_id": "arms_weak_points",
+          "name": "Arms & Weak Points",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": "Weak Point Exercise 1 N/A ~1-3 min See The Weak Point Table for sub options See The Weak Point Table for sub options Decide on your weak point using The Weak Point Table in your Hypertrophy Handbook. Perform ONE of the exercises listed under Exercise 1 for the sets and reps provided here.",
+          "video": null
+        }
+      ]
+    },
+    {
+      "name": "Mandatory Rest Day",
+      "exercises": [
+        {
+          "id": "mandatory_rest_day",
+          "primary_exercise_id": "mandatory_rest_day",
+          "name": "Mandatory Rest Day",
+          "sets": 3,
+          "rep_range": [
+            8,
+            12
+          ],
+          "start_weight": 20,
+          "priority": "standard",
+          "movement_pattern": null,
+          "primary_muscles": [],
+          "equipment_tags": [],
+          "substitution_candidates": [],
+          "notes": null,
+          "video": null
+        }
+      ]
+    }
+  ]
+}
