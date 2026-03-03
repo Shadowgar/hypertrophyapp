@@ -37,7 +37,7 @@ test("Settings page shows selected program and saves changes", async () => {
   const select = screen.getByLabelText(/Settings program selector/i);
   fireEvent.change(select, { target: { value: "upper_lower" } });
 
-  const save = screen.getByRole("button", { name: /Save Program/i });
+  const save = screen.getByRole("button", { name: /Save selected program/i });
   fireEvent.click(save);
 
   await waitFor(() => {

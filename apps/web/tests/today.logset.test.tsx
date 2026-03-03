@@ -9,6 +9,8 @@ beforeEach(() => {
 });
 
 test("Completing a set calls log-set POST and persists completed sets", async () => {
+  let completedSets = 0;
+
   const workout = {
     session_id: "sess-1",
     title: "Push Day",
@@ -44,10 +46,10 @@ test("Completing a set calls log-set POST and persists completed sets", async ()
         new Response(
           JSON.stringify({
             workout_id: workout.session_id,
-            completed_total: 0,
+            completed_total: completedSets,
             planned_total: 3,
-            percent_complete: 0,
-            exercises: [{ exercise_id: "ex-1", planned_sets: 3, completed_sets: 0 }],
+            percent_complete: Math.floor((completedSets / 3) * 100),
+            exercises: [{ exercise_id: "ex-1", planned_sets: 3, completed_sets: completedSets }],
           }),
           { status: 200 },
         ),
@@ -57,6 +59,7 @@ test("Completing a set calls log-set POST and persists completed sets", async ()
       return Promise.resolve(new Response(JSON.stringify([{ id: "s1", entry_date: "2026-03-03" }]), { status: 200 }));
     }
     if (url.includes("/log-set") && init?.method === "POST") {
+      completedSets = 1;
       return Promise.resolve(new Response(JSON.stringify({ status: "ok" }), { status: 200 }));
     }
     return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));

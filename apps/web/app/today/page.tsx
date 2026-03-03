@@ -181,6 +181,21 @@ export default function TodayPage() {
 
     try {
       await api.logSet(workout.session_id, payload);
+
+      // refresh from server-side progress to keep client in sync
+      try {
+        const progress = await api.getWorkoutProgress(workout.session_id);
+        const serverCompleted = Object.fromEntries(
+          (progress.exercises ?? []).map((item) => [item.exercise_id, Number(item.completed_sets) || 0]),
+        ) as Record<string, number>;
+        if (Object.keys(serverCompleted).length > 0) {
+          setCompletedSetsByExercise(serverCompleted);
+          const completedKey = `hypertrophy_completed_sets:${workout.session_id}`;
+          localStorage.setItem(completedKey, JSON.stringify(serverCompleted));
+        }
+      } catch {
+        // keep optimistic state when progress refresh fails
+      }
     } catch (e) {
       // log but don't interrupt user flow
       // eslint-disable-next-line no-console
