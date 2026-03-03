@@ -306,6 +306,8 @@ export default function TodayPage() {
                   note={exercise.notes}
                   totalSets={exercise.sets}
                   defaultRestSeconds={90}
+                  recommendedWorkingWeight={exercise.recommended_working_weight}
+                  repRange={exercise.rep_range}
                   initialCompletedSets={completedSetsByExercise[exercise.id] ?? 0}
                   onSetComplete={handleSetComplete}
                 />

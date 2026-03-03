@@ -9,6 +9,8 @@ type Props = Readonly<{
   totalSets?: number;
   defaultRestSeconds?: number;
   initialCompletedSets?: number;
+  recommendedWorkingWeight?: number;
+  repRange?: [number, number];
   onSetComplete?: (exerciseId: string, setIndex: number) => Promise<void> | void;
 }>;
 
@@ -28,6 +30,8 @@ export default function ExerciseControlModule({
   totalSets = 3,
   defaultRestSeconds = 90,
   initialCompletedSets = 0,
+  recommendedWorkingWeight,
+  repRange,
   onSetComplete,
 }: Props) {
   const [secondsLeft, setSecondsLeft] = useState<number>(defaultRestSeconds);
@@ -91,12 +95,26 @@ export default function ExerciseControlModule({
 
   return (
     <div
-      className={`glass-layer rounded-lg p-2 text-xs text-zinc-300 ${
+      className={`glass-layer glass-layer--elevated rounded-xl p-3 text-xs text-zinc-300 ${
         running ? "ring-2 ring-accent/30 animate-pulse" : ""
       }`}
       data-testid={`exercise-control-${exerciseId}`}
       aria-live="polite"
     >
+      {typeof recommendedWorkingWeight === "number" ? (
+        <div className="mb-2 rounded-lg border border-white/10 bg-black/25 px-3 py-2">
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-semibold tracking-tight text-accent">{recommendedWorkingWeight}</span>
+            <span className="text-sm text-zinc-300">kg</span>
+            {repRange ? (
+              <span className="ml-auto text-xs text-zinc-400">
+                {repRange[0]}-{repRange[1]} reps
+              </span>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
       <div className="flex items-center justify-between gap-3">
         <div className="flex flex-col">
           <div className="flex items-baseline gap-2">
@@ -127,6 +145,26 @@ export default function ExerciseControlModule({
             Reset
           </Button>
         </div>
+      </div>
+
+      <div className="mt-2 space-y-1.5">
+        {Array.from({ length: totalSets }).map((_, index) => {
+          const setNumber = index + 1;
+          const done = setNumber <= completedSets;
+          return (
+            <div
+              key={`${exerciseId}-set-${setNumber}`}
+              className={`flex items-center justify-between rounded-md border px-2 py-1 ${
+                done ? "border-red-400/40 bg-red-500/10" : "border-white/10 bg-black/20"
+              }`}
+            >
+              <span className="text-xs text-zinc-200">Set {setNumber}</span>
+              <span className={`text-[10px] uppercase tracking-wide ${done ? "text-red-300" : "text-zinc-500"}`}>
+                {done ? "Done" : "Pending"}
+              </span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
