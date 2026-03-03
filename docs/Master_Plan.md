@@ -757,7 +757,7 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 - [x] Standardize typography scale/weights/line-height/letter-spacing across routes
 - [x] Standardize telemetry micro-widgets (status dots, metric labels, module headers)
 - [x] Upgrade Today runner composition to closer HUD parity
-- [ ] Upgrade Onboarding composition and hierarchy to match premium finish
+- [x] Upgrade Onboarding composition and hierarchy to match premium finish
 - [ ] Upgrade Week/Check-In/History/Guides/Settings to same material hierarchy
 - [ ] Add analytics visual module polish (sparklines, PR highlights, compact charts)
 - [ ] Add motion polish pass (120–200ms, transform/opacity only)
