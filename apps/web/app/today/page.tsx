@@ -321,7 +321,7 @@ export default function TodayPage() {
                   </div>
                 </div>
 
-                <div className="glass-layer rounded-lg p-2 flex flex-wrap gap-2">
+                <div className="ui-segmented ui-segmented--auto">
                   <Button
                     className="h-8 px-3 text-xs"
                     disabled={!hasVideo}
@@ -332,7 +332,7 @@ export default function TodayPage() {
                       }
                     }}
                     type="button"
-                    variant="secondary"
+                    variant="segment"
                   >
                     Video
                   </Button>
@@ -341,7 +341,7 @@ export default function TodayPage() {
                     disabled={substitutions.length === 0}
                     onClick={() => setSwapTargetExerciseId(exercise.id)}
                     type="button"
-                    variant="secondary"
+                    variant="segment"
                   >
                     I don’t have this equipment
                   </Button>
@@ -349,7 +349,7 @@ export default function TodayPage() {
                     className="h-8 px-3 text-xs"
                     onClick={() => toggleNotes(exercise.id)}
                     type="button"
-                    variant="secondary"
+                    variant="segment"
                   >
                     Notes
                   </Button>
@@ -385,12 +385,13 @@ export default function TodayPage() {
               <p className="text-xs text-zinc-400">Slot: {swapTarget.name}</p>
             </div>
 
-            <div className="space-y-2">
+            <div className="ui-segmented ui-segmented--auto">
               <Button
                 className="w-full justify-start"
                 onClick={() => selectSwap(swapTarget.id, 0)}
                 type="button"
-                variant={swapTargetCurrentIndex === 0 ? "default" : "secondary"}
+                variant="segment"
+                aria-pressed={swapTargetCurrentIndex === 0}
               >
                 {swapTarget.name} (Original)
               </Button>
@@ -403,7 +404,8 @@ export default function TodayPage() {
                     className="w-full justify-start"
                     onClick={() => selectSwap(swapTarget.id, value)}
                     type="button"
-                    variant={swapTargetCurrentIndex === value ? "default" : "secondary"}
+                    variant="segment"
+                    aria-pressed={swapTargetCurrentIndex === value}
                   >
                     {candidate}
                   </Button>

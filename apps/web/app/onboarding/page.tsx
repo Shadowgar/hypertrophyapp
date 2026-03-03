@@ -179,15 +179,16 @@ export default function OnboardingPage() {
 
         <div className="space-y-2 rounded-md border border-zinc-800 p-3">
           <p className="text-xs text-zinc-400">Equipment Profile</p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="ui-segmented ui-segmented--2">
             {EQUIPMENT_OPTIONS.map((equipment) => {
               const selected = equipmentProfile.includes(equipment);
               return (
                 <Button
                   key={equipment}
                   type="button"
-                  variant={selected ? "default" : "secondary"}
+                  variant="segment"
                   className="h-8 text-xs"
+                  aria-pressed={selected}
                   onClick={() => toggleEquipment(equipment)}
                 >
                   {equipment}
