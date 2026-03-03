@@ -484,8 +484,8 @@ If missing, UI should not render a video action.
 - [x] Dark-mode base UI
 - [x] Alembic migrations
 - [x] Docs baseline
-- [ ] Define UI design tokens (colors, spacing, glow intensity)
-- [ ] Define glass layer CSS system
+- [x] Define UI design tokens (colors, spacing, glow intensity)
+- [x] Define glass layer CSS system
 
 ---
 
