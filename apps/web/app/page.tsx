@@ -5,16 +5,16 @@ import { Button } from "@/components/ui/button";
 export default function HomePage() {
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-white">Rocco&apos;s HyperTrophy Plan</h1>
-      <p className="text-sm text-zinc-300">
+      <h1 className="ui-title-hero">Rocco&apos;s HyperTrophy Plan</h1>
+      <p className="ui-body-sm">
         Deterministic hypertrophy planner + workout runner. Start with onboarding, then generate your week.
       </p>
 
       <div className="main-card main-card--module main-card--accent spacing-grid spacing-grid--tight">
-        <p className="text-xs uppercase tracking-wide text-zinc-400">System Status</p>
+        <p className="ui-label">System Status</p>
         <div className="flex items-center justify-between">
-          <p className="text-sm text-zinc-100">Recovery</p>
-          <span className="inline-flex items-center gap-2 text-xs text-zinc-200">
+          <p className="ui-title-section">Recovery</p>
+          <span className="inline-flex items-center gap-2 ui-meta text-zinc-200">
             <span className="status-dot status-dot--green" /> Operational
           </span>
         </div>
@@ -22,14 +22,14 @@ export default function HomePage() {
 
       <div className="grid grid-cols-2 gap-3">
         <div className="main-card main-card--shell">
-          <p className="text-xs uppercase tracking-wide text-zinc-400">This Week</p>
-          <p className="text-sm text-zinc-200">Sessions 3 / 4</p>
-          <p className="text-xs text-zinc-500">Volume: 19 sets</p>
+          <p className="ui-label">This Week</p>
+          <p className="ui-title-section text-zinc-200">Sessions 3 / 4</p>
+          <p className="ui-meta text-zinc-500">Volume: 19 sets</p>
         </div>
         <div className="main-card main-card--shell">
-          <p className="text-xs uppercase tracking-wide text-zinc-400">Trend Snapshot</p>
-          <p className="text-sm text-zinc-200">Bench ↑ 15 lbs</p>
-          <p className="text-xs text-zinc-500">Last 8 weeks</p>
+          <p className="ui-label">Trend Snapshot</p>
+          <p className="ui-title-section text-zinc-200">Bench ↑ 15 lbs</p>
+          <p className="ui-meta text-zinc-500">Last 8 weeks</p>
         </div>
       </div>
 

@@ -260,21 +260,21 @@ export default function TodayPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Today</h1>
+      <h1 className="ui-title-page">Today</h1>
       <div className="main-card main-card--module">
-        <p className="text-sm text-zinc-300">API Health: {health}</p>
+        <p className="ui-body-sm">API Health: {health}</p>
         <Button className="mt-3 w-full" onClick={beginWorkoutLoad}>
           Load Today Workout
         </Button>
       </div>
 
-      {message ? <div className="main-card main-card--shell text-sm text-zinc-300">{message}</div> : null}
+      {message ? <div className="main-card main-card--shell ui-body-sm">{message}</div> : null}
 
       {workout ? (
         <div className="space-y-3">
           <div className="main-card main-card--shell">
-            <p className="text-sm text-zinc-300">{workout.title}</p>
-            <p className="text-xs text-zinc-400">{workout.date}</p>
+            <p className="ui-body-sm">{workout.title}</p>
+            <p className="ui-meta">{workout.date}</p>
             {workout.mesocycle ? (
               <p className="text-xs text-zinc-300">
                 Mesocycle Week {workout.mesocycle.week_index}/{workout.mesocycle.trigger_weeks_effective}
@@ -311,7 +311,7 @@ export default function TodayPage() {
                   <p className="text-sm font-semibold text-zinc-100">
                     <ExerciseTitleLink selectedName={selectedName} guideHref={guideHref} />
                   </p>
-                  <p className="text-xs text-zinc-400">
+                  <p className="ui-meta">
                     {exercise.sets} sets · {exercise.rep_range[0]}-{exercise.rep_range[1]} reps · {exercise.recommended_working_weight} kg
                   </p>
                   </div>
@@ -382,7 +382,7 @@ export default function TodayPage() {
           <div className="main-card main-card--elevated w-full max-w-md spacing-grid">
             <div>
               <p className="text-sm font-semibold text-zinc-100">Choose a substitute</p>
-              <p className="text-xs text-zinc-400">Slot: {swapTarget.name}</p>
+              <p className="ui-meta">Slot: {swapTarget.name}</p>
             </div>
 
             <div className="ui-segmented ui-segmented--auto">
@@ -430,13 +430,13 @@ export default function TodayPage() {
           <div className="main-card main-card--elevated w-full max-w-md spacing-grid">
             <div>
               <p className="text-sm font-semibold text-zinc-100">What&rsquo;s sore today?</p>
-              <p className="text-xs text-zinc-400">Log soreness before starting this workout.</p>
+              <p className="ui-meta">Log soreness before starting this workout.</p>
             </div>
 
             <div className="space-y-2">
               {MUSCLE_GROUPS.map((muscle) => (
                 <div key={muscle} className="flex items-center justify-between gap-2">
-                  <span className="text-xs uppercase tracking-wide text-zinc-300">{muscle}</span>
+                  <span className="ui-label text-zinc-300">{muscle}</span>
                   <select
                     className="ui-select p-1 text-xs"
                     onChange={(event) => {
@@ -462,7 +462,7 @@ export default function TodayPage() {
               value={sorenessNotes}
             />
 
-            <p className="text-xs text-zinc-400">{sorenessStatus}</p>
+            <p className="ui-meta">{sorenessStatus}</p>
 
             <div className="flex gap-2">
               <Button className="w-full" onClick={submitSorenessAndLoad} type="button">

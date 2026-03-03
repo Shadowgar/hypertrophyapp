@@ -44,7 +44,7 @@ export default function DayGuidePage() {
 
   return (
     <div className="p-4 space-y-4">
-      <h1 className="text-xl font-semibold">Day Guide</h1>
+      <h1 className="ui-title-page">Day Guide</h1>
       {status ? <p className="text-sm text-zinc-400">{status}</p> : null}
       {dayGuide ? (
         <div className="main-card space-y-3">

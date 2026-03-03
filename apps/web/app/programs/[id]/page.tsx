@@ -36,7 +36,7 @@ export default function ProgramGuidePage() {
 
   return (
     <div className="p-4 space-y-4">
-      <h1 className="text-xl font-semibold">Program Guide</h1>
+      <h1 className="ui-title-page">Program Guide</h1>
       {status && <p className="text-sm text-zinc-400">{status}</p>}
       {program && (
         <div className="main-card space-y-3">

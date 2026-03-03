@@ -34,7 +34,7 @@ export default function ExerciseGuidePage() {
 
   return (
     <div className="p-4 space-y-4">
-      <h1 className="text-xl font-semibold">Exercise Guide</h1>
+      <h1 className="ui-title-page">Exercise Guide</h1>
       {status && <p className="text-sm text-zinc-400">{status}</p>}
       {exercise ? (
         <div className="main-card space-y-2">

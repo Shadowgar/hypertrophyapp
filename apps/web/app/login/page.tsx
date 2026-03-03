@@ -36,7 +36,7 @@ export default function LoginPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Login</h1>
+      <h1 className="ui-title-page">Login</h1>
       <form className="main-card main-card--module spacing-grid" onSubmit={handleSubmit}>
         <input
           className="ui-input"
@@ -63,7 +63,7 @@ export default function LoginPage() {
           Login
         </Button>
       </form>
-      <p className="text-sm text-zinc-300">Status: {status}</p>
+      <p className="ui-body-sm">Status: {status}</p>
     </div>
   );
 }

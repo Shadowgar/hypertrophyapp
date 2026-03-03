@@ -103,16 +103,16 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Settings</h1>
+      <h1 className="ui-title-page">Settings</h1>
       <div className="grid grid-cols-2 gap-3">
         <div className="main-card main-card--shell">
-          <p className="text-xs uppercase tracking-wide text-zinc-400">Profile Link</p>
+          <p className="ui-label">Profile Link</p>
           <p className="inline-flex items-center gap-2 text-sm text-zinc-200">
             <span className="status-dot status-dot--green" /> Connected
           </p>
         </div>
         <div className="main-card main-card--module main-card--accent">
-          <p className="text-xs uppercase tracking-wide text-zinc-400">Config Scope</p>
+          <p className="ui-label">Config Scope</p>
           <p className="text-sm text-zinc-200">Program + recovery</p>
         </div>
       </div>
@@ -122,7 +122,7 @@ export default function SettingsPage() {
           <p>Reason: {recommendation?.reason ?? "not available"}</p>
         </div>
 
-        <p className="text-sm text-zinc-300">Theme is locked to dark for MVP.</p>
+        <p className="ui-body-sm">Theme is locked to dark for MVP.</p>
         <Button variant="secondary" className="w-full" disabled>
           Theme: {theme}
         </Button>
@@ -133,7 +133,7 @@ export default function SettingsPage() {
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="settings-program" className="text-xs text-zinc-400">Program</label>
+          <label htmlFor="settings-program" className="ui-meta">Program</label>
           <select
             id="settings-program"
             className="ui-select"

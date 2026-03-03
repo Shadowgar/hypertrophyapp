@@ -41,7 +41,7 @@ export default function CheckinPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Weekly Check-In</h1>
+      <h1 className="ui-title-page">Weekly Check-In</h1>
       <form className="main-card main-card--module spacing-grid" onSubmit={handleSubmit}>
         <label className="space-y-1 text-xs text-zinc-300">
           <span>Week Start (Monday)</span>
@@ -114,7 +114,7 @@ export default function CheckinPage() {
           </p>
         </div>
       </div>
-      <p className="text-sm text-zinc-300">Status: {status}</p>
+      <p className="ui-body-sm">Status: {status}</p>
     </div>
   );
 }

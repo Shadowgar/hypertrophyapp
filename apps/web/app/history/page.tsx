@@ -30,14 +30,14 @@ export default function HistoryPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold">History</h1>
+      <h1 className="ui-title-page">History</h1>
       <div className="grid grid-cols-2 gap-3">
         <div className="main-card main-card--shell">
-          <p className="text-xs uppercase tracking-wide text-zinc-400">Adherence</p>
+          <p className="ui-label">Adherence</p>
           <p className="text-sm text-zinc-200">92% over 30 days</p>
         </div>
         <div className="main-card main-card--module main-card--accent">
-          <p className="text-xs uppercase tracking-wide text-zinc-400">Fatigue</p>
+          <p className="ui-label">Fatigue</p>
           <p className="inline-flex items-center gap-2 text-sm text-zinc-200">
             <span className="status-dot status-dot--yellow" /> Elevated
           </p>

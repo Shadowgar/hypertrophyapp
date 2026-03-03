@@ -110,7 +110,7 @@ export default function OnboardingPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Onboarding</h1>
+      <h1 className="ui-title-page">Onboarding</h1>
       <form className="main-card main-card--module spacing-grid" onSubmit={handleSubmit}>
         <input aria-label="Full name" className="ui-input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" />
         <input aria-label="Email address" className="ui-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
@@ -154,7 +154,7 @@ export default function OnboardingPage() {
         </select>
 
         <div className="space-y-1">
-          <label htmlFor="program-select" className="text-xs text-zinc-400">Program</label>
+          <label htmlFor="program-select" className="ui-meta">Program</label>
           <select
             id="program-select"
             className="ui-select"
@@ -178,7 +178,7 @@ export default function OnboardingPage() {
         </div>
 
         <div className="space-y-2 rounded-md border border-zinc-800 p-3">
-          <p className="text-xs text-zinc-400">Equipment Profile</p>
+          <p className="ui-meta">Equipment Profile</p>
           <div className="ui-segmented ui-segmented--2">
             {EQUIPMENT_OPTIONS.map((equipment) => {
               const selected = equipmentProfile.includes(equipment);
@@ -200,7 +200,7 @@ export default function OnboardingPage() {
 
         <Button type="submit" className="w-full">Save Onboarding</Button>
       </form>
-      <p className="text-sm text-zinc-300">Status: {status}</p>
+      <p className="ui-body-sm">Status: {status}</p>
     </div>
   );
 }
