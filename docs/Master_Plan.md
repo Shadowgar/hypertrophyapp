@@ -537,6 +537,38 @@ If missing, UI should not render a video action.
 
 # Roadmap (Phases + Checklists)
 
+## Codex 5.3 Critical Burn-Down (Before Quota Exhaustion)
+
+Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex before usage reaches 100% and work shifts to GPT-5-mini support mode.
+
+### Priority A — Must Be Codex-Owned Now
+
+- [ ] Deterministic soreness modifier integration in generation/recommendation path (Phase 6)
+- [ ] Weekly volume-per-muscle computation + muscle coverage validator with deterministic tests (Phase 6)
+- [ ] Mesocycle state model + deload lifecycle + early-deload trigger rules + test matrix (Phase 7)
+- [ ] Program/template selection engine correctness (including equipment-safe variant selection) (Phase 8)
+- [ ] Reference ingestion architecture: deterministic PDF/EPUB/XLSX normalization + provenance index + checksum stability tests (Phase 13)
+- [ ] Deterministic “next recommended program” logic + switch confirmation semantics (Phase 13)
+
+### Priority B — Codex Should Own If Time Allows
+
+- [ ] API contracts for guide retrieval and plan guide drill-down pathways (Phase 13)
+- [ ] Offline queue/replay conflict semantics and deterministic sync rules (Phase 10)
+- [ ] Security/hardening architecture: secrets strategy, rate limiting approach, backup/restore design and drills (Phase 11)
+- [ ] Auth expansion architecture for OAuth + Passkey (WebAuthn) flows (Phase 12)
+
+### Priority C — Safe for GPT-5-mini (After Codex Direction)
+
+- [ ] Hyperdrive visual parity implementation tasks that do not alter deterministic behavior (Phase 14)
+- [ ] Non-critical UI refinements, static content, docs cleanup, and screenshot parity checklists
+- [ ] Test fixture expansion and visual regression snapshot maintenance
+
+### Codex Exit Criteria (Before Handoff to Mini-Only Execution)
+
+- [ ] All Priority A architecture decisions merged with tests
+- [ ] High-risk contracts documented (engine rules, ingestion schema, API invariants)
+- [ ] Mini handoff pack updated with explicit do/do-not-change boundaries for deterministic logic
+
 ---
 
 ## Phase 0 — Foundation
