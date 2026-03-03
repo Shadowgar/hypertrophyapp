@@ -37,6 +37,7 @@ export default function TodayPage() {
   const [sorenessNotes, setSorenessNotes] = useState("");
   const [sorenessByMuscle, setSorenessByMuscle] = useState<Record<string, SorenessSeverity>>(createInitialSorenessState());
   const [completedSetsByExercise, setCompletedSetsByExercise] = useState<Record<string, number>>({});
+  const [workoutProgress, setWorkoutProgress] = useState<{ completed: number; planned: number; percent: number } | null>(null);
 
   useEffect(() => {
     api.health()
@@ -86,10 +87,16 @@ export default function TodayPage() {
         ) as Record<string, number>;
         const merged = Object.keys(serverCompleted).length > 0 ? serverCompleted : localCompleted;
         setCompletedSetsByExercise(merged);
+        setWorkoutProgress({
+          completed: Number(progress.completed_total) || 0,
+          planned: Number(progress.planned_total) || 0,
+          percent: Number(progress.percent_complete) || 0,
+        });
         const completedKey = `hypertrophy_completed_sets:${data.session_id}`;
         localStorage.setItem(completedKey, JSON.stringify(merged));
       } catch {
         setCompletedSetsByExercise(localCompleted);
+        setWorkoutProgress(null);
       }
     } catch {
       setWorkout(null);
@@ -190,6 +197,11 @@ export default function TodayPage() {
         ) as Record<string, number>;
         if (Object.keys(serverCompleted).length > 0) {
           setCompletedSetsByExercise(serverCompleted);
+          setWorkoutProgress({
+            completed: Number(progress.completed_total) || 0,
+            planned: Number(progress.planned_total) || 0,
+            percent: Number(progress.percent_complete) || 0,
+          });
           const completedKey = `hypertrophy_completed_sets:${workout.session_id}`;
           localStorage.setItem(completedKey, JSON.stringify(serverCompleted));
         }
@@ -233,6 +245,11 @@ export default function TodayPage() {
             <p className="text-sm text-zinc-300">{workout.title}</p>
             <p className="text-xs text-zinc-400">{workout.date}</p>
             {workout.resume ? <p className="text-xs text-accent">Resumed unfinished workout</p> : null}
+            {workoutProgress ? (
+              <p className="text-xs text-zinc-300">
+                Progress: {workoutProgress.completed}/{workoutProgress.planned} sets ({workoutProgress.percent}%)
+              </p>
+            ) : null}
           </div>
 
           {workout.exercises.map((exercise) => {

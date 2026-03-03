@@ -71,6 +71,7 @@ test("Completing a set calls log-set POST and persists completed sets", async ()
   fireEvent.click(loadBtn);
 
   await waitFor(() => expect(screen.getByText(/Bench Press/i)).toBeInTheDocument());
+  expect(screen.getByText(/Progress:\s*0\/3 sets \(0%\)/i)).toBeInTheDocument();
 
   // find Complete Set button within the exercise control
   const completeBtn = screen.getByRole("button", { name: /Complete Set/i });
@@ -96,4 +97,8 @@ test("Completing a set calls log-set POST and persists completed sets", async ()
   const key = `hypertrophy_completed_sets:${workout.session_id}`;
   const stored = JSON.parse(localStorage.getItem(key) || "{}");
   expect(stored["ex-1"]).toBe(1);
+
+  await waitFor(() => {
+    expect(screen.getByText(/Progress:\s*1\/3 sets \(33%\)/i)).toBeInTheDocument();
+  });
 });
