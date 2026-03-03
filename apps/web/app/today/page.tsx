@@ -261,18 +261,18 @@ export default function TodayPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-semibold">Today</h1>
-      <div className="main-card">
+      <div className="main-card main-card--module">
         <p className="text-sm text-zinc-300">API Health: {health}</p>
         <Button className="mt-3 w-full" onClick={beginWorkoutLoad}>
           Load Today Workout
         </Button>
       </div>
 
-      {message ? <div className="main-card text-sm text-zinc-300">{message}</div> : null}
+      {message ? <div className="main-card main-card--shell text-sm text-zinc-300">{message}</div> : null}
 
       {workout ? (
         <div className="space-y-3">
-          <div className="main-card">
+          <div className="main-card main-card--shell">
             <p className="text-sm text-zinc-300">{workout.title}</p>
             <p className="text-xs text-zinc-400">{workout.date}</p>
             {workout.mesocycle ? (
@@ -305,7 +305,7 @@ export default function TodayPage() {
             const status = resolveExerciseStatus(completed, exercise.sets, Boolean(workout.resume));
 
             return (
-              <div key={exercise.id} className="main-card space-y-3">
+              <div key={exercise.id} className="main-card main-card--module spacing-grid">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                   <p className="text-sm font-semibold text-zinc-100">
@@ -379,7 +379,7 @@ export default function TodayPage() {
 
       {swapTarget ? (
         <div className="fixed inset-0 z-50 flex items-end bg-black/60 p-4 md:items-center md:justify-center">
-          <div className="main-card w-full max-w-md space-y-3">
+          <div className="main-card main-card--elevated w-full max-w-md spacing-grid">
             <div>
               <p className="text-sm font-semibold text-zinc-100">Choose a substitute</p>
               <p className="text-xs text-zinc-400">Slot: {swapTarget.name}</p>
@@ -427,7 +427,7 @@ export default function TodayPage() {
 
       {showSorenessModal ? (
         <div className="fixed inset-0 z-50 flex items-end bg-black/60 p-4 md:items-center md:justify-center">
-          <div className="main-card w-full max-w-md space-y-3">
+          <div className="main-card main-card--elevated w-full max-w-md spacing-grid">
             <div>
               <p className="text-sm font-semibold text-zinc-100">What&rsquo;s sore today?</p>
               <p className="text-xs text-zinc-400">Log soreness before starting this workout.</p>

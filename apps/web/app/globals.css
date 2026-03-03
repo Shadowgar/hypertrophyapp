@@ -252,6 +252,50 @@ body {
   -webkit-backdrop-filter: blur(8px) saturate(120%);
 }
 
+.main-card--shell {
+  background: color-mix(in srgb, var(--ui-surface-1) calc(var(--ui-glass-alpha-shell) * 100%), transparent);
+  border-color: var(--ui-edge-idle);
+  box-shadow: var(--ui-depth-shadow-2);
+}
+
+.main-card--module {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--ui-surface-2) calc(var(--ui-glass-alpha-module) * 100%), transparent),
+    color-mix(in srgb, var(--ui-surface-1) calc((var(--ui-glass-alpha-module) - 0.1) * 100%), transparent)
+  );
+  border-color: var(--ui-edge-hover);
+  box-shadow: var(--ui-depth-shadow-4);
+}
+
+.main-card--elevated {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--ui-surface-2) calc(var(--ui-glass-alpha-elevated) * 100%), transparent),
+    color-mix(in srgb, var(--ui-surface-1) calc((var(--ui-glass-alpha-elevated) - 0.1) * 100%), transparent)
+  );
+  border-color: var(--ui-edge-hover);
+  box-shadow: var(--ui-depth-shadow-5);
+}
+
+.main-card--accent {
+  border-color: var(--ui-edge-active);
+  box-shadow: var(--ui-glow-active), var(--ui-depth-shadow-3);
+}
+
+.spacing-grid {
+  display: grid;
+  gap: var(--ui-space-3);
+}
+
+.spacing-grid--tight {
+  gap: var(--ui-space-2);
+}
+
+.spacing-grid--loose {
+  gap: var(--ui-space-4);
+}
+
 .main-card::before {
   content: "";
   display: block;

@@ -42,7 +42,7 @@ export default function CheckinPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-semibold">Weekly Check-In</h1>
-      <form className="main-card space-y-3" onSubmit={handleSubmit}>
+      <form className="main-card main-card--module spacing-grid" onSubmit={handleSubmit}>
         <label className="space-y-1 text-xs text-zinc-300">
           <span>Week Start (Monday)</span>
           <input
@@ -95,19 +95,19 @@ export default function CheckinPage() {
         </Button>
       </form>
       <div className="grid grid-cols-3 gap-2">
-        <div className="main-card">
+        <div className="main-card main-card--shell">
           <p className="text-[10px] uppercase tracking-wide text-zinc-400">Sleep</p>
           <p className="inline-flex items-center gap-2 text-xs text-zinc-200">
             <span className="status-dot status-dot--green" /> Stable
           </p>
         </div>
-        <div className="main-card">
+        <div className="main-card main-card--shell">
           <p className="text-[10px] uppercase tracking-wide text-zinc-400">Stress</p>
           <p className="inline-flex items-center gap-2 text-xs text-zinc-200">
             <span className="status-dot status-dot--yellow" /> Moderate
           </p>
         </div>
-        <div className="main-card">
+        <div className="main-card main-card--shell">
           <p className="text-[10px] uppercase tracking-wide text-zinc-400">Readiness</p>
           <p className="inline-flex items-center gap-2 text-xs text-zinc-200">
             <span className="status-dot status-dot--red" /> Watch

@@ -37,7 +37,7 @@ export default function LoginPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-semibold">Login</h1>
-      <form className="main-card space-y-3" onSubmit={handleSubmit}>
+      <form className="main-card main-card--module spacing-grid" onSubmit={handleSubmit}>
         <input
           className="ui-input"
           value={email}

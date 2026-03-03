@@ -105,18 +105,18 @@ export default function SettingsPage() {
     <div className="space-y-4">
       <h1 className="text-xl font-semibold">Settings</h1>
       <div className="grid grid-cols-2 gap-3">
-        <div className="main-card">
+        <div className="main-card main-card--shell">
           <p className="text-xs uppercase tracking-wide text-zinc-400">Profile Link</p>
           <p className="inline-flex items-center gap-2 text-sm text-zinc-200">
             <span className="status-dot status-dot--green" /> Connected
           </p>
         </div>
-        <div className="main-card glass-layer--accent">
+        <div className="main-card main-card--module main-card--accent">
           <p className="text-xs uppercase tracking-wide text-zinc-400">Config Scope</p>
           <p className="text-sm text-zinc-200">Program + recovery</p>
         </div>
       </div>
-      <div className="main-card space-y-3">
+      <div className="main-card main-card--module spacing-grid">
         <div className="rounded-md border border-zinc-800 p-3 text-xs text-zinc-300">
           <p>Recommended Program: {recommendation?.recommended_program_id ?? "not available"}</p>
           <p>Reason: {recommendation?.reason ?? "not available"}</p>

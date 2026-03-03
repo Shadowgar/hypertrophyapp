@@ -32,23 +32,23 @@ export default function HistoryPage() {
     <div className="space-y-4">
       <h1 className="text-xl font-semibold">History</h1>
       <div className="grid grid-cols-2 gap-3">
-        <div className="main-card">
+        <div className="main-card main-card--shell">
           <p className="text-xs uppercase tracking-wide text-zinc-400">Adherence</p>
           <p className="text-sm text-zinc-200">92% over 30 days</p>
         </div>
-        <div className="main-card glass-layer--accent">
+        <div className="main-card main-card--module main-card--accent">
           <p className="text-xs uppercase tracking-wide text-zinc-400">Fatigue</p>
           <p className="inline-flex items-center gap-2 text-sm text-zinc-200">
             <span className="status-dot status-dot--yellow" /> Elevated
           </p>
         </div>
       </div>
-      <div className="main-card">
+      <div className="main-card main-card--module">
         <Button className="w-full" onClick={loadHistory}>
           Load Bench History
         </Button>
       </div>
-      <pre className="main-card overflow-x-auto text-xs text-zinc-200">{history}</pre>
+      <pre className="main-card main-card--module overflow-x-auto text-xs text-zinc-200">{history}</pre>
     </div>
   );
 }

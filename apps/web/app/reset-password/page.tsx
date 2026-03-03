@@ -67,7 +67,7 @@ export default function ResetPasswordPage() {
     <div className="space-y-4">
       <h1 className="text-xl font-semibold">Reset Password</h1>
 
-      <form className="main-card space-y-3" onSubmit={handleRequest}>
+      <form className="main-card main-card--module spacing-grid" onSubmit={handleRequest}>
         <p className="text-xs text-zinc-400">Request reset token</p>
         <input
           className="ui-input"
@@ -81,7 +81,7 @@ export default function ResetPasswordPage() {
         <p className="text-xs text-zinc-400">Status: {requestStatus}</p>
       </form>
 
-      <form className="main-card space-y-3" onSubmit={handleConfirm}>
+      <form className="main-card main-card--module spacing-grid" onSubmit={handleConfirm}>
         <p className="text-xs text-zinc-400">Confirm new password</p>
         <input
           className="ui-input"

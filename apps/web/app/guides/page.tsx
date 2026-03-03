@@ -19,11 +19,11 @@ export default function GuidesIndex() {
     <div className="p-4 space-y-4">
       <h1 className="text-xl font-semibold">Program Guides</h1>
       <div className="grid grid-cols-2 gap-3">
-        <div className="main-card">
+        <div className="main-card main-card--shell">
           <p className="text-xs uppercase tracking-wide text-zinc-400">Library</p>
           <p className="text-sm text-zinc-200">{programs.length} program modules</p>
         </div>
-        <div className="main-card glass-layer--accent">
+        <div className="main-card main-card--module main-card--accent">
           <p className="text-xs uppercase tracking-wide text-zinc-400">Sync</p>
           <p className="inline-flex items-center gap-2 text-sm text-zinc-200">
             <span className="status-dot status-dot--green" /> Online
@@ -32,7 +32,7 @@ export default function GuidesIndex() {
       </div>
       <div className="grid gap-3">
         {programs.map((p) => (
-          <Link key={p.id} href={`/programs/${p.id}`} className="main-card p-3" aria-label={`Open guide for ${p.name}`}>
+          <Link key={p.id} href={`/programs/${p.id}`} className="main-card main-card--module p-3" aria-label={`Open guide for ${p.name}`}>
             <h2 className="font-medium">{p.name}</h2>
             {p.description && <p className="text-sm text-zinc-400">{p.description}</p>}
           </Link>

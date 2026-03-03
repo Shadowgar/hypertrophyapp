@@ -111,7 +111,7 @@ export default function OnboardingPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-semibold">Onboarding</h1>
-      <form className="main-card space-y-3" onSubmit={handleSubmit}>
+      <form className="main-card main-card--module spacing-grid" onSubmit={handleSubmit}>
         <input aria-label="Full name" className="ui-input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" />
         <input aria-label="Email address" className="ui-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
         <div className="space-y-2">

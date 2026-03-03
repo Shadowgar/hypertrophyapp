@@ -10,7 +10,7 @@ export default function HomePage() {
         Deterministic hypertrophy planner + workout runner. Start with onboarding, then generate your week.
       </p>
 
-      <div className="main-card glass-layer--accent space-y-2">
+      <div className="main-card main-card--module main-card--accent spacing-grid spacing-grid--tight">
         <p className="text-xs uppercase tracking-wide text-zinc-400">System Status</p>
         <div className="flex items-center justify-between">
           <p className="text-sm text-zinc-100">Recovery</p>
@@ -21,19 +21,19 @@ export default function HomePage() {
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="main-card">
+        <div className="main-card main-card--shell">
           <p className="text-xs uppercase tracking-wide text-zinc-400">This Week</p>
           <p className="text-sm text-zinc-200">Sessions 3 / 4</p>
           <p className="text-xs text-zinc-500">Volume: 19 sets</p>
         </div>
-        <div className="main-card">
+        <div className="main-card main-card--shell">
           <p className="text-xs uppercase tracking-wide text-zinc-400">Trend Snapshot</p>
           <p className="text-sm text-zinc-200">Bench ↑ 15 lbs</p>
           <p className="text-xs text-zinc-500">Last 8 weeks</p>
         </div>
       </div>
 
-      <div className="main-card space-y-3">
+      <div className="main-card main-card--module spacing-grid">
         <Link href="/login" className="block">
           <Button className="w-full" variant="secondary">
             Login
