@@ -547,7 +547,7 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 - [x] Weekly volume-per-muscle computation + muscle coverage validator with deterministic tests (Phase 6)
 - [x] Mesocycle state model + deload lifecycle + early-deload trigger rules + test matrix (Phase 7)
 - [x] Program/template selection engine correctness (including equipment-safe variant selection) (Phase 8)
-- [ ] Reference ingestion architecture: deterministic PDF/EPUB/XLSX normalization + provenance index + checksum stability tests (Phase 13)
+- [x] Reference ingestion architecture: deterministic PDF/EPUB/XLSX normalization + provenance index + checksum stability tests (Phase 13)
 - [ ] Deterministic “next recommended program” logic + switch confirmation semantics (Phase 13)
 
 ### Priority B — Codex Should Own If Time Allows
@@ -687,17 +687,17 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 ---
 
 ## Phase 13 — Reference Corpus Intelligence + Plan Guides
-- [ ] Build asset catalog covering every file in `/reference/`
-- [ ] Add deterministic PDF/EPUB extraction pipeline (build-time)
-- [ ] Add deterministic XLSX extraction pipeline (build-time)
-- [ ] Emit normalized guide docs into `/docs/guides/`
-- [ ] Emit provenance index (`asset -> section -> derived entity`)
+- [x] Build asset catalog covering every file in `/reference/`
+- [x] Add deterministic PDF/EPUB extraction pipeline (build-time)
+- [x] Add deterministic XLSX extraction pipeline (build-time)
+- [x] Emit normalized guide docs into `/docs/guides/`
+- [x] Emit provenance index (`asset -> section -> derived entity`)
 - [ ] Add API endpoints for program/day/exercise guides
 - [ ] Add web Plan Guide pages (Program → Phase → Day → Exercise)
 - [ ] Add workout runner drill-down to exercise guide text
 - [ ] Add deterministic “next recommended program” suggestion logic
 - [ ] Add explicit confirmation flow before program/phase switch
-- [ ] Add ingestion determinism tests (checksum + schema stability)
+- [x] Add ingestion determinism tests (checksum + schema stability)
 - [ ] Add guide coverage tests (no orphan assets)
 
 ---

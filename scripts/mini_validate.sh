@@ -5,15 +5,10 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 echo "[1/3] API regression tests"
-# Run full API test suite inside container if available, otherwise run locally with PYTHONPATH set
+# Run full API test suite in a freshly built container if available, otherwise run locally with PYTHONPATH set
 if command -v docker >/dev/null 2>&1 && (docker compose version >/dev/null 2>&1 || docker-compose version >/dev/null 2>&1); then
-	echo "- running pytest inside api container (docker compose available)"
-	if docker compose ps >/dev/null 2>&1; then
-		docker compose exec -T api sh -lc 'cd /app/apps/api && PYTHONPATH=. pytest tests -q'
-	else
-		echo "- docker compose present but services not running; attempting local pytest fallback"
-		(cd "$ROOT/apps/api" && PYTHONPATH=. pytest tests -q)
-	fi
+	echo "- running pytest in fresh api container (docker compose available)"
+	docker compose run --rm --build api sh -lc 'cd /app/apps/api && PYTHONPATH=. pytest tests -q'
 else
 	echo "- docker compose not available; running pytest locally with PYTHONPATH=."
 	(cd "$ROOT/apps/api" && PYTHONPATH=. pytest tests -q)

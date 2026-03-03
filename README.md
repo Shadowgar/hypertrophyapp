@@ -45,6 +45,23 @@ Deterministic hypertrophy planner + workout runner for Raspberry Pi-hosted local
 - All guide knowledge is encoded into versioned templates and deterministic code rules.
 - Program generation uses only persisted user/profile/history + canonical templates.
 
+## Build-Time Reference Corpus Ingestion
+
+Generate deterministic reference artifacts (asset catalog, provenance index, normalized guide docs):
+
+- `python3 importers/reference_corpus_ingest.py --reference-dir reference --guides-dir docs/guides`
+
+Outputs:
+
+- `docs/guides/asset_catalog.json`
+- `docs/guides/provenance_index.json`
+- `docs/guides/generated/*.md`
+
+Notes:
+
+- This pipeline is build-time only and must never run in runtime request paths.
+- PDF extraction uses `pypdf` when available; EPUB/XLSX extraction is deterministic via zip/XML parsing.
+
 ## CI
 
 Mini-validate (runs on PRs):
