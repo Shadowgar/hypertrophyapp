@@ -1,16 +1,15 @@
 # GPT-5-mini Execution Backlog (Safe Takeover)
 
 ## Goal
-Ship remaining Phase 8/13 UI surfaces without changing locked deterministic contracts.
+Ship remaining project scope end-to-end, including backend, frontend, tests, docs, and validation.
 
 ## Execution Rule for GPT-5-mini
-- GPT-5-mini focus is implementation and validation only.
-- GPT-5-mini must not open, manage, or debug PR workflows.
-- After each completed task, hand off results to a human or GPT-5.3-Codex for PR handling.
+- GPT-5-mini owns implementation, validation, commit, and push to `main`.
+- Complete one task at a time, then continue to the next highest-priority incomplete task.
 
-## Locked Inputs
+## Inputs
 - API contracts in `docs/GPT5_MINI_HANDOFF.md`
-- Model ownership policy in `docs/Master_Plan.md` (`Model Ownership & Quality Routing`)
+- Product direction in `docs/Master_Plan.md`
 
 ## Sprint A — Program Selection UX (UI-only)
 
@@ -84,10 +83,8 @@ Acceptance for Sprint B:
 - No new backend contract requirements
 
 ## Guardrails (Must Follow)
-- Do not edit `packages/core-engine/**`.
-- Do not edit `apps/api/alembic/**`.
-- Do not change auth/security behavior.
-- Do not change existing response semantics for locked endpoints.
+- Keep deterministic runtime rules (no runtime PDF/XLSX parsing).
+- Keep tests green and maintain API compatibility unless explicitly updated across callers/tests.
 
 ## Validation per Task
 
@@ -100,10 +97,5 @@ cd /home/rocco/hypertrophyapp/apps/web
 npm run build
 ```
 
-## Escalation to GPT-5.3-Codex
-Escalate immediately if any task requires:
-- schema/model changes
-- migration changes
-- planner behavior changes
-- deterministic rule changes
-- PR workflow intervention or CI/PR tooling changes outside task validation
+## Escalation
+Escalation is optional and only needed when external approvals are required.

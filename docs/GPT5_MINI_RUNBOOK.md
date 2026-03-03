@@ -4,8 +4,9 @@
 1. Read:
    - `docs/GPT5_MINI_HANDOFF.md`
    - `docs/GPT5_MINI_EXECUTION_BACKLOG.md`
-   - `docs/Master_Plan.md` (Model Ownership section)
-2. Confirm no locked-contract file edits are required.
+   - `docs/GPT5_MINI_SUCCESS_PLAN.md`
+   - `docs/Master_Plan.md`
+2. Confirm current repository state is clean and reproducible.
 3. Run automated preflight:
 
 ```bash
@@ -14,17 +15,17 @@ cd /home/rocco/hypertrophyapp
 ```
 
 ## Working Agreement
-- Keep implementation scope small: one backlog task at a time.
-- If uncertain, stop and route to GPT-5.3-Codex.
-- Preserve existing API routes and payload structure.
-- GPT-5-mini does not open, manage, or troubleshoot PRs; PR operations are handled by a human or GPT-5.3-Codex.
+- Keep implementation focused: complete one backlog task at a time, end-to-end.
+- GPT-5-mini is authorized for full-stack implementation in this repository.
+- GPT-5-mini can modify backend, frontend, tests, scripts, and docs as needed.
+- Push directly to `main` after validations pass.
 
 ## Mini Execution Loop (Required)
 1. Choose one not-started item from `docs/GPT5_MINI_EXECUTION_BACKLOG.md`.
-2. Implement only that task in allowed files.
+2. Implement that task across all required files.
 3. Run `./scripts/mini_validate.sh`.
-4. If validation passes, update docs/checklist notes and stop.
-5. If validation fails in locked-contract areas, escalate to GPT-5.3-Codex immediately.
+4. If validation fails, fix issues and re-run until green.
+5. Update docs/checklist notes and continue with next priority task.
 
 ## Quick Commands
 
@@ -33,7 +34,7 @@ cd /home/rocco/hypertrophyapp
 cd /home/rocco/hypertrophyapp && awk '/^### Task/{task=$0} /^ Status:/{if($0 !~ /COMPLETED/){print task; exit}}' docs/GPT5_MINI_EXECUTION_BACKLOG.md
 ```
 
-Use the printed task as the only implementation target for the current mini session.
+Use the printed task as the starting target for the current mini session.
 
 ### One-command validation
 ```bash
@@ -57,8 +58,7 @@ npm run build
 
 ### If API test fails
 - Re-run only failing test first.
-- Check whether failure touches locked contracts.
-- If locked contracts are involved, escalate to GPT-5.3-Codex.
+- Fix root cause and re-run full validation.
 
 ### If web build fails
 - Fix TS/ESLint/local UI logic errors.
@@ -68,15 +68,12 @@ npm run build
 - Target task acceptance criteria met.
 - API regression command passes.
 - Web build passes.
-- No edits to forbidden zones.
+- Web test suite passes.
+- Working tree is clean after commit.
 
-## Handoff Checklist (for human/Codex PR owner)
+## Completion Checklist
 
-- Run `./scripts/mini_preflight.sh` and include its output in PR description.
-- Run `./scripts/mini_validate.sh` locally or in CI and attach the logs.
-- Ensure `apps/web` `npm run build` completes without errors.
-- Add or update unit tests for UI behavior where applicable.
-- Confirm no changes to `packages/core-engine` or `apps/api/alembic`.
-- Add brief testing notes and any manual verification steps in PR description.
-
-Note: GPT-5-mini should not perform PR creation or review workflow tasks.
+- Run `./scripts/mini_preflight.sh`.
+- Run `./scripts/mini_validate.sh`.
+- Add or update tests for changed behavior.
+- Commit with clear message and push to `main`.

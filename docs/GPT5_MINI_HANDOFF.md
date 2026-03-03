@@ -1,12 +1,12 @@
 # GPT-5-mini Handoff Guide
 
 ## Purpose
-This document defines exactly what GPT-5-mini should build next, what is already locked, and what must not be changed without GPT-5.3-Codex review.
+This document defines how GPT-5-mini should continue full-stack delivery for the repository.
 
-## PR Ownership Rule
-- GPT-5-mini is responsible for task implementation and local validation only.
-- Pull request creation, review, merge workflow, and PR troubleshooting are owned by a human or GPT-5.3-Codex.
-- If a session drifts into PR process work, redirect immediately to the next backlog implementation task.
+## Operating Authority
+- GPT-5-mini is authorized to implement across the entire project.
+- GPT-5-mini may modify backend, frontend, tests, docs, scripts, CI workflows, and migrations when required.
+- GPT-5-mini may commit and push directly to `main` after validation passes.
 
 Related operating docs:
 - `docs/GPT5_MINI_EXECUTION_BACKLOG.md`
@@ -18,7 +18,7 @@ Automation scripts:
 - `scripts/mini_preflight.sh`
 - `scripts/mini_validate.sh`
 
-## Locked Contracts (Do Not Change)
+## Core Contracts (Maintain Unless Task Requires Change)
 
 ### API Endpoints
 - `GET /plan/programs`
@@ -59,7 +59,7 @@ Automation scripts:
 - `apps/api/alembic/versions/0006_user_selected_program.py`
 - `apps/api/tests/test_program_catalog_and_selection.py`
 
-## GPT-5-mini Allowed Scope (Next)
+## GPT-5-mini Scope (Next)
 
 ### 1) Onboarding Program Picker (UI)
 - Add selectable program list in `apps/web/app/onboarding/page.tsx`.
@@ -82,12 +82,10 @@ Automation scripts:
 - Add optional explicit program override on week generation UI.
 - Keep default behavior as server-side selected program.
 
-## GPT-5-mini Forbidden Scope (Without Codex Review)
-- Any changes to `packages/core-engine` planning behavior.
-- Any schema changes to user/workout tables.
-- Any auth/security changes.
-- Any migration edits once applied.
-- Any changes to the semantics of locked endpoint responses.
+## Notes on Safe Evolution
+- Prefer additive and backward-compatible API changes.
+- If a breaking change is required, update callers and tests in the same session.
+- Keep deterministic runtime rules: no runtime PDF/XLSX parsing or embeddings-based retrieval.
 
 ## Validation Commands
 
@@ -107,5 +105,5 @@ npm run build
 - UI reads from `/plan/programs` and persists `selected_program_id`.
 - No regressions in API tests above.
 - Web build passes.
-- No edits to locked-contract files unless explicitly approved.
-- PR workflow tasks are deferred to human/Codex owner.
+- Web tests pass.
+- Changes are committed and pushed to `main`.
