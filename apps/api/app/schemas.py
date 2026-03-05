@@ -44,7 +44,7 @@ class ProfileUpsert(BaseModel):
     weight: float
     gender: str
     split_preference: str
-    selected_program_id: str = "full_body_v1"
+    selected_program_id: str | None = None
     training_location: str | None = None
     equipment_profile: list[str] = Field(default_factory=list)
     days_available: int = Field(ge=2, le=5)

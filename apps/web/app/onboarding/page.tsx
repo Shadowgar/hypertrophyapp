@@ -193,7 +193,8 @@ export default function OnboardingPage() {
       });
 
       if (!profileRes.ok) {
-        setStatus("Profile save failed");
+        const detail = await profileRes.text();
+        setStatus(detail ? `Profile save failed: ${detail}` : "Profile save failed");
         return;
       }
 

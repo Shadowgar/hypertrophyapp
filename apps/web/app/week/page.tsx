@@ -20,8 +20,9 @@ export default function WeekPage() {
       }
       const data = await api.generateWeek(selectedProgramId);
       setPlan(JSON.stringify(data, null, 2));
-    } catch {
-      setPlan("Failed. Ensure onboarding completed and token exists.");
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "Unknown error";
+      setPlan(`Failed to generate week plan: ${detail}`);
     }
   }
 

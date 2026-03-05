@@ -570,7 +570,7 @@ def upsert_profile(
     current_user.weight = payload.weight
     current_user.gender = payload.gender
     current_user.split_preference = payload.split_preference
-    current_user.selected_program_id = payload.selected_program_id
+    current_user.selected_program_id = payload.selected_program_id or "full_body_v1"
     current_user.training_location = payload.training_location
     current_user.equipment_profile = payload.equipment_profile
     current_user.days_available = payload.days_available

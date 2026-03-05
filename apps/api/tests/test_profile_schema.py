@@ -64,3 +64,24 @@ def test_profile_upsert_accepts_five_days_available() -> None:
     )
 
     assert payload.days_available == 5
+
+
+def test_profile_upsert_accepts_null_selected_program_id() -> None:
+    payload = ProfileUpsert(
+        name="Test",
+        age=30,
+        weight=80,
+        gender="male",
+        split_preference="full_body",
+        selected_program_id=None,
+        training_location="gym",
+        equipment_profile=["dumbbell", "machine"],
+        days_available=4,
+        nutrition_phase="maintenance",
+        calories=2500,
+        protein=180,
+        fat=70,
+        carbs=260,
+    )
+
+    assert payload.selected_program_id is None
