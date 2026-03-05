@@ -1,10 +1,10 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { UiIcon } from "@/components/ui/icons";
-import { getProgramDisplayName, type ProgramTemplateOption } from "@/lib/api";
+import { api, getProgramDisplayName, type ProgramTemplateOption } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/env";
 
 const EQUIPMENT_OPTIONS = ["dumbbell", "barbell", "cable", "machine", "bodyweight"];
@@ -24,24 +24,34 @@ export default function OnboardingPage() {
   const [email, setEmail] = useState("athlete@example.com");
   const [password, setPassword] = useState("athlete123");
   const [name, setName] = useState("Athlete");
+  const [splitPreference, setSplitPreference] = useState("full_body");
   const [trainingLocation, setTrainingLocation] = useState("home");
   const [equipmentProfile, setEquipmentProfile] = useState<string[]>(["dumbbell"]);
   const [daysAvailable, setDaysAvailable] = useState(5);
   const [programs, setPrograms] = useState<ProgramTemplateOption[]>([]);
+  const [programCatalogStatus, setProgramCatalogStatus] = useState("Loading program catalog...");
   const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/plan/programs`);
-        if (!res.ok) return;
-        const data = await res.json();
-        // expect { programs: [...] } or array
-        const list = Array.isArray(data) ? data : data.programs ?? data.items ?? [];
-        if (mounted) setPrograms(list);
+        const list = await api.listPrograms();
+        if (!mounted) {
+          return;
+        }
+        setPrograms(Array.isArray(list) ? list : []);
+        setProgramCatalogStatus(
+          list.length > 0
+            ? `Loaded ${list.length} training templates from reference-derived catalog.`
+            : "Program catalog returned no templates.",
+        );
       } catch {
-        // ignore
+        if (!mounted) {
+          return;
+        }
+        setPrograms([]);
+        setProgramCatalogStatus("Program catalog unavailable. Confirm API is reachable at /api.");
       }
     })();
     return () => {
@@ -51,6 +61,30 @@ export default function OnboardingPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [status, setStatus] = useState("Idle");
   const statusTone = resolveStatusTone(status);
+
+  const visiblePrograms = useMemo(() => {
+    const splitMatched = programs.filter((program) => !program.split || program.split === splitPreference);
+    const splitAndDaysMatched = splitMatched.filter((program) => {
+      if (!Array.isArray(program.days_supported) || program.days_supported.length === 0) {
+        return true;
+      }
+      return program.days_supported.includes(daysAvailable);
+    });
+
+    if (splitAndDaysMatched.length > 0) {
+      return splitAndDaysMatched;
+    }
+    if (splitMatched.length > 0) {
+      return splitMatched;
+    }
+    return programs;
+  }, [daysAvailable, programs, splitPreference]);
+
+  useEffect(() => {
+    if (selectedProgramId && !visiblePrograms.some((program) => program.id === selectedProgramId)) {
+      setSelectedProgramId(null);
+    }
+  }, [selectedProgramId, visiblePrograms]);
 
   function toggleEquipment(equipment: string) {
     setEquipmentProfile((prev) => {
@@ -103,7 +137,7 @@ export default function OnboardingPage() {
           age: 30,
           weight: 82,
           gender: "male",
-          split_preference: "full_body",
+          split_preference: splitPreference,
           training_location: trainingLocation,
           equipment_profile: equipmentProfile,
           days_available: daysAvailable,
@@ -190,6 +224,17 @@ export default function OnboardingPage() {
             <option value={4}>4 days / week</option>
             <option value={5}>5 days / week</option>
           </select>
+
+          <select
+            className="ui-select"
+            value={splitPreference}
+            onChange={(event) => setSplitPreference(event.target.value)}
+            aria-label="Split preference"
+          >
+            <option value="full_body">Full Body</option>
+            <option value="ppl">Push Pull Legs</option>
+            <option value="upper_lower">Upper Lower</option>
+          </select>
         </div>
 
         <div className="spacing-grid spacing-grid--tight">
@@ -205,7 +250,7 @@ export default function OnboardingPage() {
               aria-describedby="program-desc"
             >
               <option value="">Default — trainer&apos;s recommended program</option>
-              {programs.map((p) => (
+              {visiblePrograms.map((p) => (
                 <option key={p.id} value={p.id}>
                   {getProgramDisplayName(p)}
                 </option>
@@ -216,6 +261,7 @@ export default function OnboardingPage() {
                 ? (programs.find((p) => p.id === selectedProgramId)?.description ?? "No description available.")
                 : "Choose \"Default\" to let the trainer decide the best matching program for you."}
             </p>
+            <p className="text-xs text-zinc-500">{programCatalogStatus}</p>
           </div>
         </div>
 

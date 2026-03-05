@@ -3,9 +3,9 @@
 - Asset: reference/The_Ultimate_Push_Pull_Legs_System_4X.pdf
 - SHA256: 960e40a762c4f3bbc9c4ca17f9403464b19bf027c61d0a546ef031c5704faaef
 - Type: pdf
-- Extraction Method: pdf_unavailable
-- Extracted Characters: 0
+- Extraction Method: pdf_pypdf
+- Extracted Characters: 133884
 
 ## Excerpt
 
-(No text extracted)
+4x/w e e k All rights r eser v ed. No par t of this book ma y be used or r epr oduced b y any means, gr aphic, electr onic, or mechanical, including phot ocop ying, r ecor ding, taping or b y any information st or age r etrie v al system without the written permission of the author , ex cept in the case of brief quotations embodied in critical ar ticles or r e views. Readers should be awar e that Internet W eb sites off er ed as citations and/or sour ces for fur ther information ma y ha v e changed or disappear ed between the time this book was written and when it is r ead. Limit of Liability/Disclaimer of W arr anty: While the author has used his best effor ts and knowledge in r esear ching and pr eparing this book, he mak es no r epr esentations or warr anties with r espect t o the accur acy or completeness of the contents of this book and specifically disclaims any implied warr anties of mer chantability or fitness for a par ticular purpose. No warr anty ma y be cr eated or extended b y sales r epr esentativ es or pr omotional sales materials. The advice and str ategies contained her ein ma y not be suitable for y our par ticular situation. Y ou should alwa ys consult with a medical pr of essional befor e beginning any ex er cise pr ogr am. The contents of this e-book ar e not intended for the tr eatment or pr e v ention of any disease or medical condition, nor as a substitute for medical tr eatment, nor as an alternativ e t o medical advice. The author is not a licensed healthcar e pr o vider or a r egister ed dietitian. Utilizing the information within this e-book is at the sole choice and risk of the r eader . If y ou engage in this ex er cise pr ogr am, y ou agr ee that y ou do so at y our own risk, ar e v oluntarily par ticipating in these activities, assume all risk of injur y t o y ourself, and agr ee t o r elease and dischar ge the publisher and the author fr om any and all claims or causes of action, known or unknown, arising out of the contents of this 

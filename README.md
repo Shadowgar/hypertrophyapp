@@ -68,7 +68,8 @@ Examples:
 
 Generate deterministic reference artifacts (asset catalog, provenance index, normalized guide docs):
 
-- `python3 importers/reference_corpus_ingest.py --reference-dir reference --guides-dir docs/guides`
+- `cd apps/api && .venv/bin/pip install -r requirements.txt`
+- `cd /home/rocco/hypertrophyapp && apps/api/.venv/bin/python importers/reference_corpus_ingest.py --reference-dir reference --guides-dir docs/guides`
 
 Outputs:
 
@@ -79,7 +80,7 @@ Outputs:
 Notes:
 
 - This pipeline is build-time only and must never run in runtime request paths.
-- PDF extraction uses `pypdf` when available; EPUB/XLSX extraction is deterministic via zip/XML parsing.
+- PDF extraction requires `pypdf`; the ingest script exits with an error if PDF parsing support is unavailable.
 
 ## CI
 

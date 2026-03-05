@@ -10,7 +10,9 @@ WORKDIR /app
 COPY --from=deps /app/apps/web/node_modules /app/apps/web/node_modules
 COPY apps/web /app/apps/web
 ARG NEXT_PUBLIC_API_BASE_URL=/api
+ARG SERVER_API_BASE_URL=http://api:8000
 ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
+ENV SERVER_API_BASE_URL=${SERVER_API_BASE_URL}
 WORKDIR /app/apps/web
 RUN npm run build
 

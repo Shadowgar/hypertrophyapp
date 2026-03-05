@@ -89,6 +89,8 @@ export type ProgramTemplateOption = {
   slug?: string;
   name?: string;
   description?: string;
+  split?: string;
+  days_supported?: number[];
 };
 
 export function getProgramDisplayName(program: ProgramTemplateOption): string {

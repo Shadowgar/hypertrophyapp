@@ -8,9 +8,9 @@
       "asset_type": "pdf",
       "bytes": 7267230,
       "derived_doc": "docs/guides/generated/396948117-10-tips-for-chest-gains-jeff-nippard-2-e47430dd.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 6182,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "5bdd4fead74f8395aa7c0672866981bc7a18be5d8e75cea3c0c6ac51fcfb91bb"
     },
     {
       "asset_path": "reference/396948117-10-Tips-for-Chest-Gains-Jeff-Nippard.pdf",
@@ -18,9 +18,9 @@
       "asset_type": "pdf",
       "bytes": 7267230,
       "derived_doc": "docs/guides/generated/396948117-10-tips-for-chest-gains-jeff-nippard-e47430dd.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 6182,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "5bdd4fead74f8395aa7c0672866981bc7a18be5d8e75cea3c0c6ac51fcfb91bb"
     },
     {
       "asset_path": "reference/406115590-Jeff-Nippard-s-Squat-Specialization-Program-pdf.pdf",
@@ -28,9 +28,9 @@
       "asset_type": "pdf",
       "bytes": 7512894,
       "derived_doc": "docs/guides/generated/406115590-jeff-nippard-s-squat-specialization-program-pdf-0f8ce226.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 71809,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "99c2a7f3e60e812cc58ff3734c22bf549f29fdfcfc57bb0ab8bf54415783eeba"
     },
     {
       "asset_path": "reference/450906884-My-Favorite-Exercise-for-Each-Body-Part.pdf",
@@ -39,7 +39,7 @@
       "bytes": 2195227,
       "derived_doc": "docs/guides/generated/450906884-my-favorite-exercise-for-each-body-part-d77f3c9b.md",
       "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
+      "extraction_method": "pdf_pypdf",
       "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
@@ -48,9 +48,9 @@
       "asset_type": "pdf",
       "bytes": 2114598,
       "derived_doc": "docs/guides/generated/a-stoic-a-day-70784a72.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 203009,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "8eb7f3a489bdb75128299dd1bf7ae415458fbde43d57633d9a83459845fba7e9"
     },
     {
       "asset_path": "reference/Bench Press.pdf",
@@ -58,9 +58,9 @@
       "asset_type": "pdf",
       "bytes": 7790815,
       "derived_doc": "docs/guides/generated/bench-press-631f5e09.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 87885,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "f69a6c6dbb81699f07602b23b247366324857fdc5929f812395e907f53e1c5eb"
     },
     {
       "asset_path": "reference/C.A.R.D. Workout (Jeff Nippard) (Z-Library).pdf",
@@ -68,9 +68,9 @@
       "asset_type": "pdf",
       "bytes": 9499616,
       "derived_doc": "docs/guides/generated/c-a-r-d-workout-jeff-nippard-z-library-6c062ef6.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 12558,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "bf85ffcd2afef318d82e1e193f15f0d12d20620d8d27d9b3006ec0f0b8395da7"
     },
     {
       "asset_path": "reference/Comeback Program (Jeff Nippard) (Z-Library).pdf",
@@ -78,9 +78,9 @@
       "asset_type": "pdf",
       "bytes": 2686817,
       "derived_doc": "docs/guides/generated/comeback-program-jeff-nippard-z-library-1db98a38.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 34700,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "c3a9e99b5e0e68723bfeda085117d6cb851828d3a42d30755e11adfe7342e1c5"
     },
     {
       "asset_path": "reference/Copy of Jeff Nippard's Arm Hypertrophy Program.pdf",
@@ -88,9 +88,9 @@
       "asset_type": "pdf",
       "bytes": 14325569,
       "derived_doc": "docs/guides/generated/copy-of-jeff-nippard-s-arm-hypertrophy-program-55636d11.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 54102,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "815a356d7da7eaafc006e0de1dd53f3dd277de228d8321a053feb8735b44c194"
     },
     {
       "asset_path": "reference/Copy of Nutrition_Booklet.pdf",
@@ -98,9 +98,9 @@
       "asset_type": "pdf",
       "bytes": 69729531,
       "derived_doc": "docs/guides/generated/copy-of-nutrition-booklet-13fce45f.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 10719,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "374e44c532c8e4c1cea90074ac98c7f1443c9a4834faac6b34f0723fad131eeb"
     },
     {
       "asset_path": "reference/Copy of The_Pure_Bodybuilding_Program_-_Full_Body.pdf",
@@ -108,9 +108,9 @@
       "asset_type": "pdf",
       "bytes": 42790440,
       "derived_doc": "docs/guides/generated/copy-of-the-pure-bodybuilding-program-full-body-82123b0b.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 125675,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "838fbada5a2d99e26afc94362663cc3dba58f13d06cf82554ca087ce136d137f"
     },
     {
       "asset_path": "reference/Edited PPL 5x.xlsx",
@@ -128,9 +128,9 @@
       "asset_type": "pdf",
       "bytes": 7278671,
       "derived_doc": "docs/guides/generated/full-body-high-frequency-program-jeff-nippard-7d12f51f.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 139760,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "d733ffe92366ffc91d0e6ba16f8e34a0597de70c79ff8d5f9a653eba39c9f7e9"
     },
     {
       "asset_path": "reference/Fundamentals Hypertrophy Program (Jeff Nippard) (Z-Library).pdf",
@@ -138,9 +138,9 @@
       "asset_type": "pdf",
       "bytes": 15988121,
       "derived_doc": "docs/guides/generated/fundamentals-hypertrophy-program-jeff-nippard-z-library-e434144e.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 127067,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "7c0e587e46f21458f561f066ffc49eca7b321c80892911f99bd177bce2ce9905"
     },
     {
       "asset_path": "reference/GET READY MANUAL  CHECKLIST (Nippard, Jeff) (Z-Library).pdf",
@@ -148,9 +148,9 @@
       "asset_type": "pdf",
       "bytes": 1696578,
       "derived_doc": "docs/guides/generated/get-ready-manual-checklist-nippard-jeff-z-library-f0a104c6.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 28161,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "5bdc698aa065a920aa126d27d43631479ce68d0350c479432b304bb7d2476985"
     },
     {
       "asset_path": "reference/Get-Ready-Manual.pdf",
@@ -158,9 +158,9 @@
       "asset_type": "pdf",
       "bytes": 1696578,
       "derived_doc": "docs/guides/generated/get-ready-manual-f0a104c6.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 28161,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "5bdc698aa065a920aa126d27d43631479ce68d0350c479432b304bb7d2476985"
     },
     {
       "asset_path": "reference/Glute Hypertophy.pdf",
@@ -168,9 +168,9 @@
       "asset_type": "pdf",
       "bytes": 8842886,
       "derived_doc": "docs/guides/generated/glute-hypertophy-a2c66232.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 57260,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "de00dcad8c3374e8fbe5fcbffae202ca49368d8788668504a5c0b06bfd8289a6"
     },
     {
       "asset_path": "reference/Glute hypertrophy program (Jeff Nippard) (z-library.sk, 1lib.sk, z-lib.sk).pdf",
@@ -178,9 +178,9 @@
       "asset_type": "pdf",
       "bytes": 8842886,
       "derived_doc": "docs/guides/generated/glute-hypertrophy-program-jeff-nippard-z-library-sk-1lib-sk-z-lib-sk-a2c66232.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 57260,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "de00dcad8c3374e8fbe5fcbffae202ca49368d8788668504a5c0b06bfd8289a6"
     },
     {
       "asset_path": "reference/Hypertrophy Handbook (Jeff Nippard) (z-library.sk, 1lib.sk, z-lib.sk).pdf",
@@ -188,9 +188,9 @@
       "asset_type": "pdf",
       "bytes": 43286832,
       "derived_doc": "docs/guides/generated/hypertrophy-handbook-jeff-nippard-z-library-sk-1lib-sk-z-lib-sk-44b1f911.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 91376,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "2773f19439a0ed2122cf1da115228e283159a043f7052a5dc12f62436897608c"
     },
     {
       "asset_path": "reference/Jeff Nippard - The Muscle Ladder Preorder Bonus.pdf",
@@ -198,9 +198,9 @@
       "asset_type": "pdf",
       "bytes": 8537664,
       "derived_doc": "docs/guides/generated/jeff-nippard-the-muscle-ladder-preorder-bonus-4bf75a91.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 26329,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "23c129cd2ba1a82be31bc3728f831a2799bf01485b96c545d0aeb56f3f5d7543"
     },
     {
       "asset_path": "reference/JefF Nippard Powerbuilding 3.0 5x (Jeff Nippard) (Z-Library).pdf",
@@ -208,9 +208,9 @@
       "asset_type": "pdf",
       "bytes": 15388141,
       "derived_doc": "docs/guides/generated/jeff-nippard-powerbuilding-3-0-5x-jeff-nippard-z-library-ec633552.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 118243,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "8cde074215a9fc471abebfc4d79e884e42a522178d009fe03c0ff84b06ff3f02"
     },
     {
       "asset_path": "reference/My New Program.xlsx",
@@ -228,9 +228,9 @@
       "asset_type": "pdf",
       "bytes": 69729531,
       "derived_doc": "docs/guides/generated/nutrition-booklet-13fce45f.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 10719,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "374e44c532c8e4c1cea90074ac98c7f1443c9a4834faac6b34f0723fad131eeb"
     },
     {
       "asset_path": "reference/PowerBuilding 3.0.xlsx",
@@ -248,9 +248,9 @@
       "asset_type": "pdf",
       "bytes": 15388141,
       "derived_doc": "docs/guides/generated/powerbuilding-3-0-ebook-5x-ec633552.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 118243,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "8cde074215a9fc471abebfc4d79e884e42a522178d009fe03c0ff84b06ff3f02"
     },
     {
       "asset_path": "reference/Pure Bodybuilding Phase 2 - Full Body Sheet.xlsx",
@@ -268,9 +268,9 @@
       "asset_type": "pdf",
       "bytes": 56565189,
       "derived_doc": "docs/guides/generated/pure-bodybuilding-phase-2-full-body-142844ed.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 127056,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "fb1d4411cb2224079a2300344f3eeb7170befcb25458a3bb41eec59a5647d3af"
     },
     {
       "asset_path": "reference/Pure Bodybuilding Phase 2 - Hypertrophy Handbook.pdf",
@@ -278,9 +278,9 @@
       "asset_type": "pdf",
       "bytes": 235230791,
       "derived_doc": "docs/guides/generated/pure-bodybuilding-phase-2-hypertrophy-handbook-04cd79ff.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 90459,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "544ab3751c00f42dd43f8a91a53c579354b34aef2f42cd8feb3bc4469c3c210e"
     },
     {
       "asset_path": "reference/Pure Bodybuilding Phase 2 - Nutrition Booklet.pdf",
@@ -288,9 +288,9 @@
       "asset_type": "pdf",
       "bytes": 15156222,
       "derived_doc": "docs/guides/generated/pure-bodybuilding-phase-2-nutrition-booklet-f6788e2c.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 10931,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "bd5c182a63dac64179b6fb378c81fb2cc673ebc23cb317c3488f911b7979279b"
     },
     {
       "asset_path": "reference/Pure Bodybuilding Phase 2 - PPL Sheet.xlsx",
@@ -318,9 +318,9 @@
       "asset_type": "pdf",
       "bytes": 56144594,
       "derived_doc": "docs/guides/generated/pure-bodybuilding-phase-2-upper-lower-f455f6dc.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 126590,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "7df54ace971ad35b871193540a6c68c68abecf44a035ba0bd09763972bcf518f"
     },
     {
       "asset_path": "reference/Pure_Bodybuilding_-_Full_Body.xlsx",
@@ -338,9 +338,9 @@
       "asset_type": "pdf",
       "bytes": 81684525,
       "derived_doc": "docs/guides/generated/purebodybuilding-phase-2-ppl-dc34ca33.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 187366,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "1bfa6548421572c316cfc1d601bab2cb7053e8263e81b7be090753960cd38425"
     },
     {
       "asset_path": "reference/Technique-Handbook.pdf",
@@ -348,9 +348,9 @@
       "asset_type": "pdf",
       "bytes": 5867349,
       "derived_doc": "docs/guides/generated/technique-handbook-26ef47c5.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 94136,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "80cfc786b6c5314dff7f675dfae557f6b4b7a8ea50b4070a206beb815e17331c"
     },
     {
       "asset_path": "reference/The Bodybuilding Transformation System - Intermediate to Advanced (Jeff Nippard) (z-library.sk, 1lib.sk, z-lib.sk).pdf",
@@ -358,9 +358,9 @@
       "asset_type": "pdf",
       "bytes": 57573224,
       "derived_doc": "docs/guides/generated/the-bodybuilding-transformation-system-intermediate-to-advanced-jeff-nippard-z-library-sk-1lib-sk-z-lib-sk-4bb89344.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 120754,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "44f06bd081ae09e73dec7043204e06b5c3f698e4def9429ef4e6022f1a3a008b"
     },
     {
       "asset_path": "reference/The Essentials Program - 3xweek (Jeff Nippard) (Z-Library).pdf",
@@ -368,9 +368,9 @@
       "asset_type": "pdf",
       "bytes": 68893952,
       "derived_doc": "docs/guides/generated/the-essentials-program-3xweek-jeff-nippard-z-library-2aafd830.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 104249,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "7e73db4d0479efd47060cc3143688add0b05e5177dc9f808e120d9f14ef7694b"
     },
     {
       "asset_path": "reference/The Essentials Program - 4xweek (Jeff Nippard) (z-lib.org).pdf",
@@ -378,9 +378,9 @@
       "asset_type": "pdf",
       "bytes": 88788930,
       "derived_doc": "docs/guides/generated/the-essentials-program-4xweek-jeff-nippard-z-lib-org-b23e5efc.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 114856,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "003b1390e60447677f4d2b6c6b14f5bc3ea63a2768a00fc1d62460ee34f0fe40"
     },
     {
       "asset_path": "reference/The Essentials Program - 5xweek (Jeff Nippard) (z-lib.org).pdf",
@@ -388,9 +388,9 @@
       "asset_type": "pdf",
       "bytes": 93756985,
       "derived_doc": "docs/guides/generated/the-essentials-program-5xweek-jeff-nippard-z-lib-org-b2f6e99f.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 126407,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "211085cc7a56634d3ac9786114a1bbab943e784f1b13380815a9fb3f7d23adc3"
     },
     {
       "asset_path": "reference/The Muscle Ladder Get Jacked Using Science (Jeff Nippard) (Z-Library).pdf",
@@ -398,9 +398,9 @@
       "asset_type": "pdf",
       "bytes": 98118265,
       "derived_doc": "docs/guides/generated/the-muscle-ladder-get-jacked-using-science-jeff-nippard-z-library-2b43ccfd.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 634650,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "578d7c85c268c196ba076d61f76648211391cc56dbb302675e47a9bc794079f7"
     },
     {
       "asset_path": "reference/The Muscle Ladder Get Jacked Using Science (Jeff Nippard) (z-library.sk, 1lib.sk, z-lib.sk).epub",
@@ -418,9 +418,9 @@
       "asset_type": "pdf",
       "bytes": 98118265,
       "derived_doc": "docs/guides/generated/the-muscle-ladder-get-jacked-using-science-jeff-nippard-2b43ccfd.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 634650,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "578d7c85c268c196ba076d61f76648211391cc56dbb302675e47a9bc794079f7"
     },
     {
       "asset_path": "reference/The Pure Bodybuilding Nutrition Booklet (Jeff Nippard) (Z-Library).pdf",
@@ -428,9 +428,9 @@
       "asset_type": "pdf",
       "bytes": 69729531,
       "derived_doc": "docs/guides/generated/the-pure-bodybuilding-nutrition-booklet-jeff-nippard-z-library-13fce45f.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 10719,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "374e44c532c8e4c1cea90074ac98c7f1443c9a4834faac6b34f0723fad131eeb"
     },
     {
       "asset_path": "reference/The Pure Bodybulding Program Phase 2 (Jeff Nippard) (Z-Library).pdf",
@@ -438,9 +438,9 @@
       "asset_type": "pdf",
       "bytes": 56565189,
       "derived_doc": "docs/guides/generated/the-pure-bodybulding-program-phase-2-jeff-nippard-z-library-142844ed.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 127056,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "fb1d4411cb2224079a2300344f3eeb7170befcb25458a3bb41eec59a5647d3af"
     },
     {
       "asset_path": "reference/The_Bodybuilding_Transformation_System_-_Beginner.pdf",
@@ -448,9 +448,9 @@
       "asset_type": "pdf",
       "bytes": 51849413,
       "derived_doc": "docs/guides/generated/the-bodybuilding-transformation-system-beginner-7957aeab.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 108808,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "c149f0e19148638d7e67046daf58656a8da5a5919f089f998b80a0927dc248f0"
     },
     {
       "asset_path": "reference/The_Bodybuilding_Transformation_System_-_Beginner.xlsx",
@@ -478,9 +478,9 @@
       "asset_type": "pdf",
       "bytes": 57573224,
       "derived_doc": "docs/guides/generated/the-bodybuilding-transformation-system-intermediate-advanced-4bb89344.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 120754,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "44f06bd081ae09e73dec7043204e06b5c3f698e4def9429ef4e6022f1a3a008b"
     },
     {
       "asset_path": "reference/The_Bodybuilding_Transformation_System_Guidebook_-_Beginner.pdf",
@@ -488,9 +488,9 @@
       "asset_type": "pdf",
       "bytes": 44304604,
       "derived_doc": "docs/guides/generated/the-bodybuilding-transformation-system-guidebook-beginner-1fd15280.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 74259,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "acdfdb450ebd54cab8d45580a94d7cdaa14c343fd2b8e02cb8ae3ff7f61b9a46"
     },
     {
       "asset_path": "reference/The_Bodybuilding_Transformation_System_Guidebook_-_Intermediate_Advanced.pdf",
@@ -498,9 +498,9 @@
       "asset_type": "pdf",
       "bytes": 60102533,
       "derived_doc": "docs/guides/generated/the-bodybuilding-transformation-system-guidebook-intermediate-advanced-dfa35f49.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 84892,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "cc63eae299ec35fad8b97d5854344c194d29444e55775fce7d1f05d06632efd1"
     },
     {
       "asset_path": "reference/The_Ultimate_Push_Pull_Legs_System_-_4x.xlsx",
@@ -538,9 +538,9 @@
       "asset_type": "pdf",
       "bytes": 169019543,
       "derived_doc": "docs/guides/generated/the-ultimate-push-pull-legs-system-4x-960e40a7.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 133884,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "0edf06a99e1bdecebf33fa7ed576ea450fce396e6253f82143d2c169cf7d9383"
     },
     {
       "asset_path": "reference/The_Ultimate_Push_Pull_Legs_System_5X.pdf",
@@ -548,9 +548,9 @@
       "asset_type": "pdf",
       "bytes": 174039745,
       "derived_doc": "docs/guides/generated/the-ultimate-push-pull-legs-system-5x-dc721e43.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 149200,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "91b46ee984b7016db708e3fc60011e755889fb99668546b27d6ce63a1062591a"
     },
     {
       "asset_path": "reference/The_Ultimate_Push_Pull_Legs_System_6X.pdf",
@@ -558,9 +558,9 @@
       "asset_type": "pdf",
       "bytes": 178280867,
       "derived_doc": "docs/guides/generated/the-ultimate-push-pull-legs-system-6x-dea4e828.md",
-      "extracted_characters": 0,
-      "extraction_method": "pdf_unavailable",
-      "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "extracted_characters": 163828,
+      "extraction_method": "pdf_pypdf",
+      "text_sha256": "4d0d5a51c4dd93215e64d2e981734e582f4a16b3c7075241e93258ab8c4ee5dc"
     }
   ],
   "version": 1

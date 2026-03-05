@@ -289,6 +289,18 @@ def main() -> int:
 
     result = cast(dict[str, Any], build_reference_catalog(reference_dir, guides_dir))
     catalog = cast(dict[str, Any], result["asset_catalog"])
+    assets = cast(list[dict[str, Any]], catalog.get("assets", []))
+    pdf_unavailable_assets = [
+        str(item.get("asset_path"))
+        for item in assets
+        if str(item.get("asset_type")) == "pdf" and str(item.get("extraction_method")) == "pdf_unavailable"
+    ]
+    if pdf_unavailable_assets:
+        raise SystemExit(
+            "PDF extraction is unavailable. Install pypdf and rerun ingestion. "
+            f"Missing parser for {len(pdf_unavailable_assets)} PDF assets."
+        )
+
     print(
         json.dumps(
             {
