@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..deps import get_current_user
 from ..models import BodyMeasurementEntry, SorenessEntry, User, WeeklyCheckin, WeeklyReviewCycle, WorkoutSetLog
-from ..models import WorkoutPlan
+from ..models import ExerciseState, PasswordResetToken, WorkoutPlan, WorkoutSessionState
 from ..program_loader import list_program_templates
 from ..schemas import (
     BodyMeasurementEntryCreateRequest,
@@ -20,6 +20,7 @@ from ..schemas import (
     ProgramSwitchResponse,
     SorenessEntryCreateRequest,
     SorenessEntryResponse,
+    StatusResponse,
     WeeklyExerciseAdjustmentResponse,
     WeeklyExerciseFaultResponse,
     WeeklyCheckinRequest,
@@ -972,3 +973,25 @@ def delete_body_measurement(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Measurement entry not found")
     db.delete(entry)
     db.commit()
+
+
+@router.post("/profile/dev/wipe", response_model=StatusResponse)
+def wipe_current_user_data(
+    db: DbSession,
+    current_user: CurrentUser,
+) -> StatusResponse:
+    user_id = current_user.id
+
+    db.query(WorkoutSessionState).filter(WorkoutSessionState.user_id == user_id).delete(synchronize_session=False)
+    db.query(WorkoutSetLog).filter(WorkoutSetLog.user_id == user_id).delete(synchronize_session=False)
+    db.query(ExerciseState).filter(ExerciseState.user_id == user_id).delete(synchronize_session=False)
+    db.query(WorkoutPlan).filter(WorkoutPlan.user_id == user_id).delete(synchronize_session=False)
+    db.query(WeeklyReviewCycle).filter(WeeklyReviewCycle.user_id == user_id).delete(synchronize_session=False)
+    db.query(WeeklyCheckin).filter(WeeklyCheckin.user_id == user_id).delete(synchronize_session=False)
+    db.query(SorenessEntry).filter(SorenessEntry.user_id == user_id).delete(synchronize_session=False)
+    db.query(BodyMeasurementEntry).filter(BodyMeasurementEntry.user_id == user_id).delete(synchronize_session=False)
+    db.query(PasswordResetToken).filter(PasswordResetToken.user_id == user_id).delete(synchronize_session=False)
+    db.query(User).filter(User.id == user_id).delete(synchronize_session=False)
+    db.commit()
+
+    return StatusResponse(status="wiped")

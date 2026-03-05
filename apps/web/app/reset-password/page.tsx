@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { UiIcon } from "@/components/ui/icons";
@@ -12,6 +13,7 @@ type ResetRequestResponse = {
 };
 
 export default function ResetPasswordPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("athlete@example.com");
   const [token, setToken] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -40,7 +42,7 @@ export default function ResetPasswordPage() {
       if (payload.reset_token) {
         setToken(payload.reset_token);
       }
-      setRequestStatus("Reset requested");
+      setRequestStatus(payload.reset_token ? "Reset token generated (dev mode: token shown below)." : "Reset requested. Check your email inbox.");
     } catch {
       setRequestStatus("Network error");
     }
@@ -62,18 +64,19 @@ export default function ResetPasswordPage() {
         setConfirmStatus(message);
         return;
       }
-      setConfirmStatus("Password updated");
+      setConfirmStatus("Password updated. Redirecting to login...");
+      setTimeout(() => router.push("/login"), 600);
     } catch {
       setConfirmStatus("Network error");
     }
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <h1 className="ui-title-page">Reset Password</h1>
 
       <form className="main-card main-card--module spacing-grid" onSubmit={handleRequest}>
-        <p className="ui-meta">Request reset token</p>
+        <p className="telemetry-kicker">Step 1 - Request Reset Token</p>
         <input
           className="ui-input"
           value={email}
@@ -87,10 +90,11 @@ export default function ResetPasswordPage() {
           </span>
         </Button>
         <p className="ui-meta">Status: {requestStatus}</p>
+        <p className="ui-meta">If your environment has no SMTP configured, this screen will auto-fill the reset token for dev testing.</p>
       </form>
 
       <form className="main-card main-card--module spacing-grid" onSubmit={handleConfirm}>
-        <p className="ui-meta">Confirm new password</p>
+        <p className="telemetry-kicker">Step 2 - Confirm New Password</p>
         <input
           className="ui-input"
           value={token}
@@ -104,17 +108,16 @@ export default function ResetPasswordPage() {
           placeholder="New password"
           type={showNewPassword ? "text" : "password"}
         />
-        <Button
-          className="h-8 w-full text-xs"
+        <button
+          className="h-8 w-full rounded-md border border-[var(--ui-edge-idle)] bg-[var(--ui-surface-1)] px-3 text-xs text-zinc-100 transition-colors hover:border-[var(--ui-edge-active)]"
           onClick={() => setShowNewPassword((prev) => !prev)}
           type="button"
-          variant="secondary"
         >
           <span className="inline-flex items-center gap-2">
             <UiIcon name="settings" className="ui-icon--action" />
             {showNewPassword ? "Hide Password" : "Show Password"}
           </span>
-        </Button>
+        </button>
         <Button className="w-full" type="submit">
           <span className="inline-flex items-center gap-2">
             <UiIcon name="save" className="ui-icon--action" />

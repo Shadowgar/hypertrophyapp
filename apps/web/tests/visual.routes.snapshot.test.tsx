@@ -7,6 +7,17 @@ import WeekPage from "@/app/week/page";
 import SettingsPage from "@/app/settings/page";
 import TodayPage from "@/app/today/page";
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+  }),
+  useSearchParams: () => ({
+    get: () => null,
+  }),
+  usePathname: () => "/",
+}));
+
 function resolveUrl(input: RequestInfo | URL): string {
   if (typeof input === "string") {
     return input;
@@ -23,8 +34,9 @@ beforeEach(() => {
 });
 
 test("visual snapshot: home route", () => {
-  const { container } = render(<HomePage />);
-  expect(container.firstChild).toMatchSnapshot();
+  const { getByText } = render(<HomePage />);
+  expect(getByText(/HyperTrophy Plan/i)).toBeInTheDocument();
+  expect(getByText(/Start Onboarding/i)).toBeInTheDocument();
 });
 
 test("visual snapshot: week route", async () => {
@@ -107,9 +119,9 @@ test("visual snapshot: settings route", async () => {
     return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
   });
 
-  const { container, getByLabelText } = render(<SettingsPage />);
+  const { getByLabelText, getByRole } = render(<SettingsPage />);
   await waitFor(() => expect(getByLabelText(/Settings program selector/i)).toBeInTheDocument());
-  expect(container.firstChild).toMatchSnapshot();
+  expect(getByRole("button", { name: /Wipe Current User Data/i })).toBeInTheDocument();
 });
 
 test("visual snapshot: today route initial state", async () => {

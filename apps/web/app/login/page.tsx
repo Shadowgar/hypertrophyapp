@@ -1,12 +1,15 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { UiIcon } from "@/components/ui/icons";
 import { API_BASE_URL } from "@/lib/env";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("athlete@example.com");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -30,7 +33,9 @@ export default function LoginPage() {
 
       const payload = (await response.json()) as { access_token: string };
       localStorage.setItem("hypertrophy_token", payload.access_token);
+      const nextPath = searchParams.get("next") || "/today";
       setStatus("Logged in");
+      router.push(nextPath);
     } catch {
       setStatus("Network error");
     }
@@ -53,17 +58,16 @@ export default function LoginPage() {
           placeholder="Password"
           type={showPassword ? "text" : "password"}
         />
-        <Button
-          className="h-8 w-full text-xs"
+        <button
+          className="h-8 w-full rounded-md border border-[var(--ui-edge-idle)] bg-[var(--ui-surface-1)] px-3 text-xs text-zinc-100 transition-colors hover:border-[var(--ui-edge-active)]"
           onClick={() => setShowPassword((prev) => !prev)}
           type="button"
-          variant="secondary"
         >
           <span className="inline-flex items-center gap-2">
             <UiIcon name="settings" className="ui-icon--action" />
             {showPassword ? "Hide Password" : "Show Password"}
           </span>
-        </Button>
+        </button>
         <Button className="w-full" type="submit">
           <span className="inline-flex items-center gap-2">
             <UiIcon name="login" className="ui-icon--action" />

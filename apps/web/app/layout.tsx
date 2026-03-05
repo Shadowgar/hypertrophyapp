@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
-import { MobileNav } from "@/components/mobile-nav";
+import { AppShell } from "@/components/app-shell";
 
 export const metadata: Metadata = {
   title: "Rocco's HyperTrophy Plan",
@@ -13,8 +13,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" className="dark">
       <body className="hyperdrive-body mx-auto min-h-screen max-w-md pb-24">
-        <main className="motion-page-enter p-4">{children}</main>
-        <MobileNav />
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

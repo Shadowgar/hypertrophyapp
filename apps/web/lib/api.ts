@@ -473,6 +473,11 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  wipeProfileData: () =>
+    request<{ status: string }>("/profile/dev/wipe", {
+      method: "POST",
+      body: JSON.stringify({}),
+    }),
   logSet: (workoutId: string, payload: { primary_exercise_id?: string | null; exercise_id: string; set_index: number; reps: number; weight: number; rpe?: number | null }) =>
     request<WorkoutSetFeedback>(`/workout/${encodeURIComponent(workoutId)}/log-set`, {
       method: "POST",

@@ -1,6 +1,14 @@
 import React from "react";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { beforeEach, expect, test, vi } from "vitest";
 import OnboardingPage from "@/app/onboarding/page";
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+  }),
+}));
 
 beforeEach(() => {
   // reset fetch mock
@@ -16,7 +24,7 @@ test("Onboarding loads program list and renders options", async () => {
 
   // mock /plan/programs
   // @ts-ignore
-  global.fetch.mockImplementation((input, init) => {
+  globalThis.fetch.mockImplementation((input, init) => {
     if (typeof input === "string" && input.endsWith("/plan/programs")) {
       return Promise.resolve(new Response(JSON.stringify(programs), { status: 200 }));
     }
@@ -32,4 +40,14 @@ test("Onboarding loads program list and renders options", async () => {
 
   // options should include our program
   expect(screen.getByText("Full Body V1")).toBeInTheDocument();
+
+  const password = screen.getByLabelText(/Password/i);
+  expect(password).toHaveAttribute("type", "password");
+  fireEvent.click(screen.getByRole("button", { name: /show password/i }));
+  expect(password).toHaveAttribute("type", "text");
+
+  const dumbbell = screen.getByRole("button", { name: /dumbbell/i });
+  expect(dumbbell).toHaveAttribute("aria-pressed", "true");
+  fireEvent.click(dumbbell);
+  expect(dumbbell).toHaveAttribute("aria-pressed", "false");
 });

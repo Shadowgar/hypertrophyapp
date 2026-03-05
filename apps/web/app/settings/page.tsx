@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { UiIcon } from "@/components/ui/icons";
 import { api, getProgramDisplayName, type Profile, type ProgramRecommendation, type ProgramTemplateOption } from "@/lib/api";
 
 export default function SettingsPage() {
+  const router = useRouter();
   const [theme] = useState("dark");
   const [profile, setProfile] = useState<Profile | null>(null);
   const [programs, setPrograms] = useState<ProgramTemplateOption[]>([]);
@@ -102,6 +104,23 @@ export default function SettingsPage() {
     setTimeout(() => setStatus(null), 2000);
   }
 
+  async function wipeUserData() {
+    const confirmed = globalThis.confirm("This will permanently wipe your current user account and all related data. Continue?");
+    if (!confirmed) {
+      return;
+    }
+
+    setStatus("Wiping account data...");
+    try {
+      await api.wipeProfileData();
+      localStorage.removeItem("hypertrophy_token");
+      setStatus("Data wiped. Redirecting to onboarding...");
+      setTimeout(() => router.push("/onboarding"), 400);
+    } catch {
+      setStatus("Wipe failed");
+    }
+  }
+
   return (
     <div className="space-y-4">
       <h1 className="ui-title-page">Settings</h1>
@@ -178,6 +197,17 @@ export default function SettingsPage() {
               Switching to <span className="text-zinc-300">{pendingSwitch.targetProgramId}</span> requires confirmation ({pendingSwitch.reason}).
             </p>
           ) : null}
+        </div>
+
+        <div className="rounded-md border border-red-700/40 bg-red-950/20 p-3">
+          <p className="telemetry-kicker">Developer Tools</p>
+          <p className="telemetry-meta">Use this to wipe your current user and retest onboarding from scratch.</p>
+          <Button className="mt-2 w-full" variant="secondary" onClick={wipeUserData}>
+            <span className="inline-flex items-center gap-2">
+              <UiIcon name="reset" className="ui-icon--action" />
+              Wipe Current User Data
+            </span>
+          </Button>
         </div>
       </div>
     </div>
