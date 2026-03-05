@@ -228,6 +228,80 @@ export type HistoryWeeklyCheckinResponse = {
   entries: HistoryWeeklyCheckinEntry[];
 };
 
+export type HistoryBodyweightPoint = {
+  week_start: string;
+  body_weight: number;
+};
+
+export type HistoryStrengthTrendPoint = {
+  week_start: string;
+  max_weight: number;
+  avg_est_1rm: number;
+};
+
+export type HistoryStrengthTrend = {
+  exercise_id: string;
+  total_sets: number;
+  latest_weight: number;
+  pr_weight: number;
+  pr_delta: number;
+  points: HistoryStrengthTrendPoint[];
+};
+
+export type HistoryPrHighlight = {
+  exercise_id: string;
+  pr_weight: number;
+  previous_pr_weight: number;
+  pr_delta: number;
+};
+
+export type HistoryBodyMeasurementTrend = {
+  name: string;
+  unit: string;
+  latest_value: number;
+  delta: number;
+  points: Array<{
+    measured_on: string;
+    value: number;
+  }>;
+};
+
+export type HistoryHeatmapCell = {
+  day_index: number;
+  sets: number;
+  volume: number;
+};
+
+export type HistoryVolumeHeatmap = {
+  max_volume: number;
+  weeks: Array<{
+    week_start: string;
+    days: HistoryHeatmapCell[];
+  }>;
+};
+
+export type HistoryAnalyticsResponse = {
+  window: {
+    start_date: string;
+    end_date: string;
+    limit_weeks: number;
+    checkin_limit: number;
+  };
+  checkins: HistoryWeeklyCheckinEntry[];
+  adherence: {
+    average_score: number;
+    average_pct: number;
+    latest_score: number;
+    trend_delta: number;
+    high_readiness_streak: number;
+  };
+  bodyweight_trend: HistoryBodyweightPoint[];
+  strength_trends: HistoryStrengthTrend[];
+  pr_highlights: HistoryPrHighlight[];
+  body_measurement_trends: HistoryBodyMeasurementTrend[];
+  volume_heatmap: HistoryVolumeHeatmap;
+};
+
 export type WeeklyExerciseFault = {
   primary_exercise_id: string;
   exercise_id: string;
@@ -386,6 +460,10 @@ export const api = {
     }),
   getWeeklyCheckinHistory: (limit = 12) =>
     request<HistoryWeeklyCheckinResponse>(`/history/weekly-checkins?limit=${encodeURIComponent(String(limit))}`),
+  getHistoryAnalytics: (limitWeeks = 8, checkinLimit = 24) =>
+    request<HistoryAnalyticsResponse>(
+      `/history/analytics?limit_weeks=${encodeURIComponent(String(limitWeeks))}&checkin_limit=${encodeURIComponent(String(checkinLimit))}`,
+    ),
   listSoreness: (startDate: string, endDate: string) =>
     request<SorenessEntry[]>(`/soreness?start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`),
   createSoreness: (payload: SorenessCreatePayload) =>

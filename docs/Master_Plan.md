@@ -759,16 +759,16 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 ---
 
 ## Phase 9 — Analytics + Trends
-- [ ] Exercise trend charts
-- [ ] Bodyweight trend
-- [ ] Adherence tracking
-- [ ] Add strength trend charts
-- [ ] Add body measurement charts
-- [ ] Add PR detection logic
-- [ ] Add adherence tracking dashboard
-- [ ] Implement analytics dashboard visual system
-- [ ] Add PR highlight styling
-- [ ] Add volume heat map styling
+- [x] Exercise trend charts
+- [x] Bodyweight trend
+- [x] Adherence tracking
+- [x] Add strength trend charts
+- [x] Add body measurement charts
+- [x] Add PR detection logic
+- [x] Add adherence tracking dashboard
+- [x] Implement analytics dashboard visual system
+- [x] Add PR highlight styling
+- [x] Add volume heat map styling
 
 ---
 
