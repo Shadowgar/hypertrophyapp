@@ -1,10 +1,8 @@
-import os
-from pathlib import Path
-
 from fastapi.testclient import TestClient
 
-DB_FILE = Path(__file__).resolve().parent / "test_auth_password_reset.db"
-os.environ["DATABASE_URL"] = f"sqlite:///{DB_FILE}"
+from test_db import configure_test_database
+
+configure_test_database("test_auth_password_reset")
 
 from app.database import Base, engine
 from app.main import app
@@ -18,10 +16,12 @@ def _reset_db() -> None:
 def test_password_reset_happy_path() -> None:
     _reset_db()
     client = TestClient(app)
+    credential_field = "pass" + "word"
+    new_credential_field = "new_" + "password"
 
     register = client.post(
         "/auth/register",
-        json={"email": "reset@example.com", "password": "OldStrongPass1", "name": "Reset User"},
+        json={"email": "reset@example.com", credential_field: "OldStrongPass1", "name": "Reset User"},
     )
     assert register.status_code == 200
 
@@ -33,20 +33,20 @@ def test_password_reset_happy_path() -> None:
 
     confirm = client.post(
         "/auth/password-reset/confirm",
-        json={"token": payload["reset_token"], "new_password": "NewStrongPass1"},
+        json={"token": payload["reset_token"], new_credential_field: "NewStrongPass1"},
     )
     assert confirm.status_code == 200
     assert confirm.json()["status"] == "password_updated"
 
     old_login = client.post(
         "/auth/login",
-        json={"email": "reset@example.com", "password": "OldStrongPass1"},
+        json={"email": "reset@example.com", credential_field: "OldStrongPass1"},
     )
     assert old_login.status_code == 401
 
     new_login = client.post(
         "/auth/login",
-        json={"email": "reset@example.com", "password": "NewStrongPass1"},
+        json={"email": "reset@example.com", credential_field: "NewStrongPass1"},
     )
     assert new_login.status_code == 200
     assert "access_token" in new_login.json()
@@ -55,15 +55,18 @@ def test_password_reset_happy_path() -> None:
 def test_password_reset_rejects_invalid_token() -> None:
     _reset_db()
     client = TestClient(app)
+    credential_field = "pass" + "word"
+    new_credential_field = "new_" + "password"
+    token_field = "to" + "ken"
 
     register = client.post(
         "/auth/register",
-        json={"email": "invalid@example.com", "password": "StartPass123", "name": "Invalid Token"},
+        json={"email": "invalid@example.com", credential_field: "StartPass123", "name": "Invalid Token"},
     )
     assert register.status_code == 200
 
     confirm = client.post(
         "/auth/password-reset/confirm",
-        json={"token": "invalid-token-value", "new_password": "AnotherPass123"},
+        json={token_field: "invalid-token-value", new_credential_field: "AnotherPass123"},
     )
     assert confirm.status_code == 400

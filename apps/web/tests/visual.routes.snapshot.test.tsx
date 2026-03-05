@@ -1,0 +1,128 @@
+import React from "react";
+import { render, waitFor } from "@testing-library/react";
+import { beforeEach, expect, test, vi } from "vitest";
+
+import HomePage from "@/app/page";
+import WeekPage from "@/app/week/page";
+import SettingsPage from "@/app/settings/page";
+import TodayPage from "@/app/today/page";
+
+function resolveUrl(input: RequestInfo | URL): string {
+  if (typeof input === "string") {
+    return input;
+  }
+  if (input instanceof URL) {
+    return input.toString();
+  }
+  return input.url;
+}
+
+beforeEach(() => {
+  // @ts-ignore
+  globalThis.fetch = vi.fn();
+});
+
+test("visual snapshot: home route", () => {
+  const { container } = render(<HomePage />);
+  expect(container.firstChild).toMatchSnapshot();
+});
+
+test("visual snapshot: week route", async () => {
+  // @ts-ignore
+  globalThis.fetch.mockImplementation((input: RequestInfo | URL) => {
+    const url = resolveUrl(input);
+
+    if (url.endsWith("/plan/programs")) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify([
+            { id: "full_body_v1", name: "Full Body V1", version: "1.0.0", split: "full_body", days_supported: [3, 4, 5] },
+          ]),
+          { status: 200 },
+        ),
+      );
+    }
+
+    return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
+  });
+
+  const { container, getByLabelText } = render(<WeekPage />);
+  await waitFor(() => expect(getByLabelText(/Week program override selector/i)).toBeInTheDocument());
+  expect(container.firstChild).toMatchSnapshot();
+});
+
+test("visual snapshot: settings route", async () => {
+  // @ts-ignore
+  globalThis.fetch.mockImplementation((input: RequestInfo | URL) => {
+    const url = resolveUrl(input);
+
+    if (url.endsWith("/profile") && !url.includes("recommendation")) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            name: "Athlete",
+            training_location: "home",
+            equipment_profile: ["dumbbell", "bodyweight"],
+            days_available: 4,
+            selected_program_id: "full_body_v1",
+          }),
+          { status: 200 },
+        ),
+      );
+    }
+
+    if (url.endsWith("/plan/programs")) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify([
+            {
+              id: "full_body_v1",
+              name: "Full Body V1",
+              version: "1.0.0",
+              split: "full_body",
+              days_supported: [3, 4, 5],
+              description: "Deterministic full-body template",
+            },
+          ]),
+          { status: 200 },
+        ),
+      );
+    }
+
+    if (url.endsWith("/profile/program-recommendation")) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            current_program_id: "full_body_v1",
+            recommended_program_id: "full_body_v1",
+            reason: "current_selection_is_compatible",
+            compatible_program_ids: ["full_body_v1"],
+            generated_at: "2026-03-05T00:00:00Z",
+          }),
+          { status: 200 },
+        ),
+      );
+    }
+
+    return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
+  });
+
+  const { container, getByLabelText } = render(<SettingsPage />);
+  await waitFor(() => expect(getByLabelText(/Settings program selector/i)).toBeInTheDocument());
+  expect(container.firstChild).toMatchSnapshot();
+});
+
+test("visual snapshot: today route initial state", async () => {
+  // @ts-ignore
+  globalThis.fetch.mockImplementation((input: RequestInfo | URL) => {
+    const url = resolveUrl(input);
+    if (url.endsWith("/health")) {
+      return Promise.resolve(new Response(JSON.stringify({ status: "ok", date: "2026-03-05" }), { status: 200 }));
+    }
+    return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
+  });
+
+  const { container, getByText } = render(<TodayPage />);
+  await waitFor(() => expect(getByText(/Load Today Workout/i)).toBeInTheDocument());
+  expect(container.firstChild).toMatchSnapshot();
+});

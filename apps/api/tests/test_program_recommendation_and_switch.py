@@ -1,12 +1,11 @@
-import os
 from datetime import date, timedelta
-from pathlib import Path
 import uuid
 
 from fastapi.testclient import TestClient
 
-DB_FILE = Path(__file__).resolve().parent / "test_program_recommendation_and_switch.db"
-os.environ["DATABASE_URL"] = f"sqlite:///{DB_FILE}"
+from test_db import configure_test_database
+
+configure_test_database("test_program_recommendation_and_switch")
 
 from app.database import Base, engine
 from app.main import app

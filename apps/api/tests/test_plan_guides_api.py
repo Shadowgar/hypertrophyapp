@@ -1,10 +1,8 @@
-import os
-from pathlib import Path
-
 from fastapi.testclient import TestClient
 
-DB_FILE = Path(__file__).resolve().parent / "test_plan_guides_api.db"
-os.environ["DATABASE_URL"] = f"sqlite:///{DB_FILE}"
+from test_db import configure_test_database
+
+configure_test_database("test_plan_guides_api")
 
 from app.database import Base, engine
 from app.main import app

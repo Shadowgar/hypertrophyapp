@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { UiIcon } from "@/components/ui/icons";
 import { api, getProgramDisplayName, type ProgramTemplateOption } from "@/lib/api";
 
 export default function WeekPage() {
@@ -12,6 +13,11 @@ export default function WeekPage() {
 
   async function generate() {
     try {
+      const reviewStatus = await api.getWeeklyReviewStatus();
+      if (reviewStatus.today_is_sunday && reviewStatus.review_required) {
+        setPlan("Sunday review required. Open Check-In, submit weekly review, then generate the next week.");
+        return;
+      }
       const data = await api.generateWeek(selectedProgramId);
       setPlan(JSON.stringify(data, null, 2));
     } catch {
@@ -52,7 +58,10 @@ export default function WeekPage() {
           </select>
           <p id="week-program-desc" className="text-xs text-zinc-500">Select a program to override the server selection for this generated week.</p>
           <Button aria-label="Generate week plan" className="w-full" onClick={generate}>
-            Generate Week
+            <span className="inline-flex items-center gap-2">
+              <UiIcon name="plan" className="ui-icon--action" />
+              Generate Week
+            </span>
           </Button>
         </div>
       </div>

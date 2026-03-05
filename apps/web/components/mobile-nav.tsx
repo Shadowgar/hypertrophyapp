@@ -4,14 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
+import { UiIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
 
 const items = [
-  { href: "/today", label: "Workout", icon: "◉" },
-  { href: "/week", label: "Plan", icon: "◈" },
-  { href: "/history", label: "Analytics", icon: "▤" },
-  { href: "/checkin", label: "Body", icon: "◎" },
-  { href: "/settings", label: "Settings", icon: "⌬" },
+  { href: "/today", label: "Workout", icon: "workout" as const },
+  { href: "/week", label: "Plan", icon: "plan" as const },
+  { href: "/history", label: "Analytics", icon: "analytics" as const },
+  { href: "/checkin", label: "Body", icon: "body" as const },
+  { href: "/settings", label: "Settings", icon: "settings" as const },
 ];
 
 function resolveMode(pathname: string): "workout" | "plan" | "analytics" | "body" | "system" {
@@ -43,7 +44,7 @@ export function MobileNav() {
                 pathname === item.href ? "dock-btn--active" : "dock-btn--idle"
               )}
             >
-              <span aria-hidden="true" className="text-base leading-none">{item.icon}</span>
+              <UiIcon name={item.icon} className="ui-icon--nav" />
               <span className="text-[10px] leading-none tracking-wide">{item.label}</span>
             </Link>
           </li>

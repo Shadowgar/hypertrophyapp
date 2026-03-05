@@ -1,6 +1,6 @@
-import os
+from test_db import configure_test_database
 
-os.environ["DATABASE_URL"] = "sqlite:///./test_health.db"
+configure_test_database("test_health")
 
 from fastapi.testclient import TestClient
 

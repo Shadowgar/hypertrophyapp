@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { UiIcon } from "@/components/ui/icons";
 import { getProgramDisplayName, type ProgramTemplateOption } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/env";
 
@@ -160,7 +161,10 @@ export default function OnboardingPage() {
               type="button"
               variant="secondary"
             >
-              {showPassword ? "Hide Password" : "Show Password"}
+              <span className="inline-flex items-center gap-2">
+                <UiIcon name="settings" className="ui-icon--action" />
+                {showPassword ? "Hide Password" : "Show Password"}
+              </span>
             </Button>
           </div>
         </div>
@@ -236,7 +240,12 @@ export default function OnboardingPage() {
           </div>
         </div>
 
-        <Button type="submit" className="w-full">Save Onboarding</Button>
+        <Button type="submit" className="w-full">
+          <span className="inline-flex items-center gap-2">
+            <UiIcon name="save" className="ui-icon--action" />
+            Save Onboarding
+          </span>
+        </Button>
       </form>
       <div className="main-card main-card--shell">
         <p className="telemetry-status">

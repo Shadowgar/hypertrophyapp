@@ -28,6 +28,25 @@ Deterministic hypertrophy planner + workout runner for Raspberry Pi-hosted local
 - Create a new migration revision:
    - `docker compose exec api alembic revision -m "your_change"`
 
+## API Tests (Postgres-First)
+
+- API tests default to PostgreSQL for runtime parity.
+- By default tests use:
+   - `TEST_DATABASE_HOST` or `DATABASE_HOST` or `POSTGRES_HOST` (default `localhost`)
+   - `TEST_DATABASE_PORT` or `DATABASE_PORT` (default `5432`)
+   - `TEST_DATABASE_NAME` or `POSTGRES_DB` (default `hypertrophy_test`)
+   - `TEST_DATABASE_USER` or `POSTGRES_USER` (default `hypertrophy`)
+   - `TEST_DATABASE_PASSWORD` or `POSTGRES_PASSWORD` (default `hypertrophy`)
+- Full override for one-off local runs:
+   - `TEST_DATABASE_URL=sqlite:///./test_local.db`
+
+Examples:
+
+- Postgres-backed test run:
+   - `cd apps/api && .venv/bin/pytest tests -q`
+- Temporary SQLite override:
+   - `cd apps/api && TEST_DATABASE_URL=sqlite:///./test_local.db .venv/bin/pytest tests/test_health.py -q`
+
 ## Monorepo Layout
 
 - `apps/web` — Next.js mobile-first PWA client

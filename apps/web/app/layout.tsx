@@ -13,7 +13,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" className="dark">
       <body className="hyperdrive-body mx-auto min-h-screen max-w-md pb-24">
-        <main className="p-4">{children}</main>
+        <main className="motion-page-enter p-4">{children}</main>
         <MobileNav />
       </body>
     </html>

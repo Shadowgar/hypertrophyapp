@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..deps import get_current_user
-from ..models import User, WorkoutSetLog
+from ..models import User, WeeklyCheckin, WorkoutSetLog
 
 router = APIRouter()
 
@@ -41,3 +41,30 @@ def get_exercise_history(
         for row in rows
     ]
     return {"exercise_id": exercise_id, "history": history}
+
+
+@router.get("/history/weekly-checkins")
+def get_weekly_checkin_history(
+    db: DbSession,
+    current_user: CurrentUser,
+    limit: int = 12,
+) -> dict:
+    capped_limit = max(1, min(52, int(limit)))
+    rows = (
+        db.query(WeeklyCheckin)
+        .filter(WeeklyCheckin.user_id == current_user.id)
+        .order_by(WeeklyCheckin.week_start.desc())
+        .limit(capped_limit)
+        .all()
+    )
+    entries = [
+        {
+            "week_start": row.week_start.isoformat(),
+            "body_weight": float(row.body_weight),
+            "adherence_score": int(row.adherence_score),
+            "notes": row.notes,
+            "created_at": row.created_at.isoformat(),
+        }
+        for row in reversed(rows)
+    ]
+    return {"entries": entries}

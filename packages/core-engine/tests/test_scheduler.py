@@ -137,6 +137,85 @@ def test_generate_week_plan_compresses_sessions_evenly_for_three_days() -> None:
     assert [session["title"] for session in plan["sessions"]] == ["Day A", "Day C", "Day E"]
 
 
+def test_generate_week_plan_preserves_priority_lifts_when_days_compress() -> None:
+    template = {
+        "id": "compression_priority_continuity",
+        "sessions": [
+            {
+                "name": "Day A",
+                "exercises": [{"id": "bench", "name": "Bench Press", "primary_muscles": ["chest"]}],
+            },
+            {
+                "name": "Day B",
+                "exercises": [{"id": "squat", "name": "Back Squat", "primary_muscles": ["quads"]}],
+            },
+            {
+                "name": "Day C",
+                "exercises": [{"id": "row", "name": "Barbell Row", "primary_muscles": ["back"]}],
+            },
+            {
+                "name": "Day D",
+                "exercises": [{"id": "press", "name": "Overhead Press", "primary_muscles": ["shoulders"]}],
+            },
+            {
+                "name": "Day E",
+                "exercises": [{"id": "rdl", "name": "Romanian Deadlift", "primary_muscles": ["hamstrings"]}],
+            },
+        ],
+    }
+
+    history = [
+        {"primary_exercise_id": "squat", "exercise_id": "squat", "next_working_weight": 100},
+        {"primary_exercise_id": "squat", "exercise_id": "squat", "next_working_weight": 100},
+        {"primary_exercise_id": "row", "exercise_id": "row", "next_working_weight": 80},
+        {"primary_exercise_id": "row", "exercise_id": "row", "next_working_weight": 80},
+    ]
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=2,
+        split_preference="full_body",
+        program_template=template,
+        history=history,
+        phase="maintenance",
+    )
+
+    assert [session["title"] for session in plan["sessions"]] == ["Day B", "Day C"]
+    assert [session["session_id"] for session in plan["sessions"]] == [
+        "compression_priority_continuity-2",
+        "compression_priority_continuity-3",
+    ]
+
+
+def test_generate_week_plan_falls_back_to_even_compression_when_history_unknown() -> None:
+    template = {
+        "id": "compression_history_fallback",
+        "sessions": [
+            {"name": "Day A", "exercises": [{"id": "a", "name": "A"}]},
+            {"name": "Day B", "exercises": [{"id": "b", "name": "B"}]},
+            {"name": "Day C", "exercises": [{"id": "c", "name": "C"}]},
+            {"name": "Day D", "exercises": [{"id": "d", "name": "D"}]},
+            {"name": "Day E", "exercises": [{"id": "e", "name": "E"}]},
+        ],
+    }
+
+    history = [
+        {"primary_exercise_id": "unknown_1", "exercise_id": "unknown_1", "next_working_weight": 50},
+        {"primary_exercise_id": "unknown_2", "exercise_id": "unknown_2", "next_working_weight": 50},
+    ]
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=2,
+        split_preference="full_body",
+        program_template=template,
+        history=history,
+        phase="maintenance",
+    )
+
+    assert [session["title"] for session in plan["sessions"]] == ["Day A", "Day E"]
+
+
 def test_generate_week_plan_honors_template_day_offsets() -> None:
     template = {
         "id": "offset_schedule",

@@ -11,7 +11,11 @@ type Props = Readonly<{
   initialCompletedSets?: number;
   recommendedWorkingWeight?: number;
   repRange?: [number, number];
-  onSetComplete?: (exerciseId: string, setIndex: number) => Promise<void> | void;
+  onSetComplete?: (
+    exerciseId: string,
+    setIndex: number,
+    performed: { reps: number; weight: number },
+  ) => Promise<void> | void;
 }>;
 
 function formatTime(seconds: number) {
@@ -38,7 +42,21 @@ export default function ExerciseControlModule({
   const [secondsLeft, setSecondsLeft] = useState<number>(defaultRestSeconds);
   const [running, setRunning] = useState<boolean>(false);
   const [completedSets, setCompletedSets] = useState<number>(initialCompletedSets ?? 0);
+  const [actualReps, setActualReps] = useState<number>(repRange?.[0] ?? 8);
+  const [actualWeight, setActualWeight] = useState<number>(recommendedWorkingWeight ?? 0);
   const intervalRef = useRef<ReturnType<typeof globalThis.setInterval> | null>(null);
+
+  useEffect(() => {
+    if (recommendedWorkingWeight !== undefined) {
+      setActualWeight(recommendedWorkingWeight);
+    }
+  }, [recommendedWorkingWeight]);
+
+  useEffect(() => {
+    if (repRange) {
+      setActualReps(repRange[0]);
+    }
+  }, [repRange]);
 
   useEffect(() => {
     return () => stopTimer();
@@ -81,12 +99,17 @@ export default function ExerciseControlModule({
   }
 
   function completeSet() {
+    const safeReps = Number.isFinite(actualReps) ? Math.max(1, Math.round(actualReps)) : repRange?.[0] ?? 8;
+    const safeWeight = Number.isFinite(actualWeight)
+      ? Math.max(0, Math.round(actualWeight * 100) / 100)
+      : recommendedWorkingWeight ?? 0;
+
     setCompletedSets((prev) => {
       const next = Math.min(prev + 1, totalSets);
       // notify parent of new completed set index
       if (onSetComplete) {
         // fire-and-forget, parent may persist this
-        Promise.resolve(onSetComplete(exerciseId, next)).catch(() => {});
+        Promise.resolve(onSetComplete(exerciseId, next, { reps: safeReps, weight: safeWeight })).catch(() => {});
       }
       return next;
     });
@@ -117,7 +140,7 @@ export default function ExerciseControlModule({
       ) : null}
 
       <div className="flex items-center justify-between gap-3">
-        <div className="flex flex-col">
+        <div className="flex flex-col gap-2">
           <div className="flex items-baseline gap-2">
             <span className="font-mono text-sm">{formatTime(secondsLeft)}</span>
             <span className="text-xs text-zinc-400">REST</span>
@@ -126,6 +149,31 @@ export default function ExerciseControlModule({
             Set {completedSets}/{totalSets}
           </div>
           {note ? <div className="text-xs text-zinc-500">{note}</div> : null}
+          <div className="flex items-center gap-2">
+            <label className="text-[10px] uppercase tracking-wide text-zinc-500" htmlFor={`${exerciseId}-actual-reps`}>
+              Actual reps
+            </label>
+            <input
+              id={`${exerciseId}-actual-reps`}
+              className="ui-input h-8 w-20 px-2 py-1 text-xs"
+              type="number"
+              min={1}
+              value={actualReps}
+              onChange={(event) => setActualReps(Number(event.target.value))}
+            />
+            <label className="text-[10px] uppercase tracking-wide text-zinc-500" htmlFor={`${exerciseId}-actual-weight`}>
+              Actual kg
+            </label>
+            <input
+              id={`${exerciseId}-actual-weight`}
+              className="ui-input h-8 w-24 px-2 py-1 text-xs"
+              type="number"
+              min={0}
+              step={0.5}
+              value={actualWeight}
+              onChange={(event) => setActualWeight(Number(event.target.value))}
+            />
+          </div>
         </div>
 
         <div

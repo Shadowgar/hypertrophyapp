@@ -1,0 +1,11 @@
+# Normalized Reference Guide
+
+- Asset: reference/The_Bodybuilding_Transformation_System_-_Intermediate-Advanced.xlsx
+- SHA256: f9f60de040fa9ec156cffbe51d5a660bc2f77dcc8067a5fdab861c2da0cb06d2
+- Type: xlsx
+- Extraction Method: xlsx_zip_xml
+- Extracted Characters: 108783
+
+## Excerpt
+
+The Bodybuilding Transformation System - Intermediate-Advanced Copyright 2025 by Jeff Nippard. All rights reserved. IMPORTANT PROGRAM NOTES (READ BEFORE STARTING) ● Perform a full general warm-up and exercise-specific warm-up every workout as outlined below (should only take 5-10 mins max) ● Note that for the first week of the program, most sets are taken to an RPE of ~7-9. This means you will be leaving 1-3 reps in the tank on most exercises. This only lasts for the first week (to serve as a deload/intro week). After the first week, the intensity will increase and you’ll start taking the last set of every exercise to failure. ● All working sets are broken up into Early Sets and Last Sets. The Early Sets are all the sets that come before your Last Set. Usually the Early Sets should be a little bit easier than the later sets (slightly lower RPE) whereas the Last Set is pushed to failure on all exercises (besides intro/deload weeks). See the Bodybuilding Transformation System Guidebook for a full explanation of RPE. ● Each exercise has a clickable link which demonstrates how to perform the exercise. I suggest watching each exercise demo before starting the workout. ● All other aspects of the program, including when to make an exercise substitution and how to progress through the rep ranges given is explained in the Bodybuilding Transformation System Guidebook. Give it a full read before starting your first workout! Let's crush it!! WARM UP PROTOCOL General Warm-Up Perform the following general warm-up before every workout (should take 5-10 mins max). You can save time by doing some of the dynamic stretches as you do warm-up sets for the first exercise. 5-10 minutes | Light cardio on machine on your choice of machine (treadmill, stairmaster, elliptical, bike, etc.) 10 reps per side | Arm Swings 10 reps per side | Arm Circles 10 reps per side | Front-to-Back Leg Swings 10 reps per side | Side-to-Side Leg Swings 15 reps per side | Cable External Rotation (optional) Exerc

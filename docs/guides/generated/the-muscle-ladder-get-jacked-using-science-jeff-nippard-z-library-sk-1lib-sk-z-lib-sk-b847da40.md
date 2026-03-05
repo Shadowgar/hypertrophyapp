@@ -1,0 +1,11 @@
+# Normalized Reference Guide
+
+- Asset: reference/The Muscle Ladder Get Jacked Using Science (Jeff Nippard) (z-library.sk, 1lib.sk, z-lib.sk).epub
+- SHA256: b847da409205b77cd0eae01dda5cc15f81ee54a8486c36b4219edb820b6c641f
+- Type: epub
+- Extraction Method: epub_zip_html
+- Extracted Characters: 603728
+
+## Excerpt
+
+c15J How Do I Build Habits and Routines? “How do you stay motivated?” It’s one of the most common questions I hear, especially from discouraged lifters. It’s a fair question, but I don’t think the answer will help anyone who feels compelled to ask. The truth is, I’m not always motivated. Even though I genuinely enjoy training, there will always be days when I don’t feel like going to the gym. Motivation comes in waves, and I’ve learned not to count on it to pull me along. You shouldn’t either. It’s much smarter to focus on building the habits and routines that allow you to stick to your program—especially when, if you stop to think about it, you’d rather do almost anything else. It’s like operating on autopilot. For the rest of this chapter, I’m highlighting some of my favorite habit-building techniques. They’ve made my fitness journey much easier, and I hope they do the same for you. Bundle Temptations Temptation bundling means linking an activity you enjoy (the “temptation”) with a less enjoyable activity that’s aligned with a long-term goal. For example, for some reason, I love watching videos on YouTube where someone shows their reaction to listening to a new album for the first time. I can easily kill thirty to forty minutes just watching someone else listen to music. I know it’s not the most productive use of my time, but that’s why I call it a “temptation,” instead of “a vital part of my daily routine.” Conversely, I find cardio monotonous and boring and not at all tempting. So, I hold off on my temptation (watching album reactions) until I can bundle it with something I don’t enjoy (cardio). Because I can look forward to the videos, I’m much less likely to skip the cardio altogether. A 2014 study by Milkman and colleagues found that people were more likely to go to the gym and exercise when they were given an audiobook to listen to. 4 The researchers described it as bundling an instantly gratifying “want” behavior (enjoying audiobooks) with a valuable “shoul

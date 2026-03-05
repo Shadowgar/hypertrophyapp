@@ -1,11 +1,12 @@
 import json
-import os
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
-os.environ["DATABASE_URL"] = "sqlite:///./test_program_loader.db"
+from test_db import configure_test_database
+
+configure_test_database("test_program_loader")
 
 from app.config import settings
 from app.program_loader import load_program_template

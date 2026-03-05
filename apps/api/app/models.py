@@ -1,7 +1,7 @@
 from datetime import date, datetime
 import uuid
 
-from sqlalchemy import Date, DateTime, Float, ForeignKey, Integer, JSON, String
+from sqlalchemy import Date, DateTime, Float, ForeignKey, Integer, JSON, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .database import Base
@@ -52,6 +52,27 @@ class WeeklyCheckin(Base):
     body_weight: Mapped[float] = mapped_column(Float)
     adherence_score: Mapped[int] = mapped_column(Integer)
     notes: Mapped[str | None] = mapped_column(String, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class WeeklyReviewCycle(Base):
+    __tablename__ = "weekly_review_cycles"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id: Mapped[str] = mapped_column(String, ForeignKey(USER_FK), index=True)
+    reviewed_on: Mapped[date] = mapped_column(Date, index=True)
+    week_start: Mapped[date] = mapped_column(Date, index=True)
+    previous_week_start: Mapped[date] = mapped_column(Date, index=True)
+    body_weight: Mapped[float] = mapped_column(Float)
+    calories: Mapped[int] = mapped_column(Integer)
+    protein: Mapped[int] = mapped_column(Integer)
+    fat: Mapped[int] = mapped_column(Integer)
+    carbs: Mapped[int] = mapped_column(Integer)
+    adherence_score: Mapped[int] = mapped_column(Integer)
+    notes: Mapped[str | None] = mapped_column(String, nullable=True)
+    faults: Mapped[dict] = mapped_column(JSON)
+    adjustments: Mapped[dict] = mapped_column(JSON)
+    summary: Mapped[dict] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
@@ -115,3 +136,40 @@ class ExerciseState(Base):
     exposure_count: Mapped[int] = mapped_column(Integer, default=0)
     fatigue_score: Mapped[float] = mapped_column(Float, default=0)
     last_updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class WorkoutSessionState(Base):
+    __tablename__ = "workout_session_states"
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id",
+            "workout_id",
+            "exercise_id",
+            name="uq_workout_session_states_user_workout_exercise",
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id: Mapped[str] = mapped_column(String, ForeignKey(USER_FK), index=True)
+    workout_id: Mapped[str] = mapped_column(String, index=True)
+    primary_exercise_id: Mapped[str] = mapped_column(String, index=True)
+    exercise_id: Mapped[str] = mapped_column(String, index=True)
+
+    planned_sets: Mapped[int] = mapped_column(Integer)
+    planned_reps_min: Mapped[int] = mapped_column(Integer)
+    planned_reps_max: Mapped[int] = mapped_column(Integer)
+    planned_weight: Mapped[float] = mapped_column(Float)
+
+    completed_sets: Mapped[int] = mapped_column(Integer, default=0)
+    total_logged_reps: Mapped[int] = mapped_column(Integer, default=0)
+    total_logged_weight: Mapped[float] = mapped_column(Float, default=0)
+    set_history: Mapped[list[dict]] = mapped_column(JSON, default=list)
+
+    remaining_sets: Mapped[int] = mapped_column(Integer, default=0)
+    recommended_reps_min: Mapped[int] = mapped_column(Integer)
+    recommended_reps_max: Mapped[int] = mapped_column(Integer)
+    recommended_weight: Mapped[float] = mapped_column(Float)
+    last_guidance: Mapped[str] = mapped_column(String)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

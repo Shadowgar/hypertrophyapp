@@ -1,0 +1,600 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`visual snapshot: home route 1`] = `
+<div
+  class="space-y-4"
+>
+  <h1
+    class="ui-title-hero"
+  >
+    Rocco's HyperTrophy Plan
+  </h1>
+  <p
+    class="ui-body-sm"
+  >
+    Deterministic hypertrophy planner + workout runner. Start with onboarding, then generate your week.
+  </p>
+  <div
+    class="main-card main-card--module main-card--accent spacing-grid spacing-grid--tight"
+  >
+    <p
+      class="telemetry-kicker"
+    >
+      System Status
+    </p>
+    <div
+      class="telemetry-header"
+    >
+      <p
+        class="telemetry-value"
+      >
+        Recovery
+      </p>
+      <span
+        class="telemetry-status"
+      >
+        <span
+          class="status-dot status-dot--green"
+        />
+         Operational
+      </span>
+    </div>
+  </div>
+  <div
+    class="grid grid-cols-2 gap-3"
+  >
+    <div
+      class="main-card main-card--shell"
+    >
+      <p
+        class="telemetry-kicker"
+      >
+        This Week
+      </p>
+      <p
+        class="telemetry-value"
+      >
+        Sessions 3 / 4
+      </p>
+      <p
+        class="telemetry-meta"
+      >
+        Volume: 19 sets
+      </p>
+    </div>
+    <div
+      class="main-card main-card--shell"
+    >
+      <p
+        class="telemetry-kicker"
+      >
+        Trend Snapshot
+      </p>
+      <p
+        class="telemetry-value"
+      >
+        Bench ↑ 15 lbs
+      </p>
+      <p
+        class="telemetry-meta"
+      >
+        Last 8 weeks
+      </p>
+    </div>
+  </div>
+  <div
+    class="main-card main-card--module spacing-grid"
+  >
+    <a
+      class="block"
+      href="/login"
+    >
+      <button
+        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 material-module text-white hover:border-[var(--ui-edge-active)] hover:bg-[var(--ui-accent-idle)] hover:shadow-[var(--ui-depth-shadow-3)] h-10 px-4 py-2 w-full"
+      >
+        <span
+          class="inline-flex items-center gap-2"
+        >
+          <svg
+            aria-hidden="true"
+            class="ui-icon ui-icon--action"
+            fill="none"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.9"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M10 8V5h9v14h-9v-3M15 12H5M8 9l-3 3 3 3"
+            />
+          </svg>
+          Login
+        </span>
+      </button>
+    </a>
+    <a
+      class="block"
+      href="/reset-password"
+    >
+      <button
+        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 material-module text-white hover:border-[var(--ui-edge-active)] hover:bg-[var(--ui-accent-idle)] hover:shadow-[var(--ui-depth-shadow-3)] h-10 px-4 py-2 w-full"
+      >
+        <span
+          class="inline-flex items-center gap-2"
+        >
+          <svg
+            aria-hidden="true"
+            class="ui-icon ui-icon--action"
+            fill="none"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.9"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M20 7v5h-5M20 12a8 8 0 1 1-2.3-5.7"
+            />
+          </svg>
+          Reset Password
+        </span>
+      </button>
+    </a>
+    <a
+      class="block"
+      href="/onboarding"
+    >
+      <button
+        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 border border-[var(--ui-edge-active)] bg-[var(--ui-accent-active)] text-white shadow-[var(--ui-depth-shadow-2)] hover:bg-[rgba(220,38,38,0.25)] hover:shadow-[var(--ui-glow-active),var(--ui-depth-shadow-3)] h-10 px-4 py-2 w-full"
+      >
+        <span
+          class="inline-flex items-center gap-2"
+        >
+          <svg
+            aria-hidden="true"
+            class="ui-icon ui-icon--action"
+            fill="none"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.9"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M4 12h7M15 8h5M15 16h5M12 4v16"
+            />
+          </svg>
+          Start Onboarding
+        </span>
+      </button>
+    </a>
+    <a
+      class="block"
+      href="/today"
+    >
+      <button
+        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 material-module text-white hover:border-[var(--ui-edge-active)] hover:bg-[var(--ui-accent-idle)] hover:shadow-[var(--ui-depth-shadow-3)] h-10 px-4 py-2 w-full"
+      >
+        <span
+          class="inline-flex items-center gap-2"
+        >
+          <svg
+            aria-hidden="true"
+            class="ui-icon ui-icon--action"
+            fill="none"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.9"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M4 10h3l2-3 6 10 2-3h3"
+            />
+          </svg>
+          Go To Today
+        </span>
+      </button>
+    </a>
+  </div>
+</div>
+`;
+
+exports[`visual snapshot: settings route 1`] = `
+<div
+  class="space-y-4"
+>
+  <h1
+    class="ui-title-page"
+  >
+    Settings
+  </h1>
+  <div
+    class="grid grid-cols-2 gap-3"
+  >
+    <div
+      class="main-card main-card--shell"
+    >
+      <p
+        class="telemetry-kicker"
+      >
+        Profile Link
+      </p>
+      <p
+        class="telemetry-status"
+      >
+        <span
+          class="status-dot status-dot--green"
+        />
+         Connected
+      </p>
+    </div>
+    <div
+      class="main-card main-card--module main-card--accent"
+    >
+      <p
+        class="telemetry-kicker"
+      >
+        Config Scope
+      </p>
+      <p
+        class="telemetry-value"
+      >
+        Program + recovery
+      </p>
+    </div>
+  </div>
+  <div
+    class="main-card main-card--module spacing-grid"
+  >
+    <p
+      class="telemetry-kicker"
+    >
+      Program Intelligence
+    </p>
+    <div
+      class="rounded-md border border-zinc-800 p-3 text-xs text-zinc-300"
+    >
+      <p>
+        Recommended Program: 
+        full_body_v1
+      </p>
+      <p>
+        Reason: 
+        current_selection_is_compatible
+      </p>
+    </div>
+    <p
+      class="telemetry-kicker"
+    >
+      Display
+    </p>
+    <p
+      class="ui-body-sm"
+    >
+      Theme is locked to dark for MVP.
+    </p>
+    <button
+      class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 material-module text-white hover:border-[var(--ui-edge-active)] hover:bg-[var(--ui-accent-idle)] hover:shadow-[var(--ui-depth-shadow-3)] h-10 px-4 py-2 w-full"
+      disabled=""
+    >
+      <span
+        class="inline-flex items-center gap-2"
+      >
+        <svg
+          aria-hidden="true"
+          class="ui-icon ui-icon--action"
+          fill="none"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.9"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="2.5"
+          />
+          <path
+            d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"
+          />
+        </svg>
+        Theme: 
+        dark
+      </span>
+    </button>
+    <p
+      class="telemetry-kicker"
+    >
+      Profile Context
+    </p>
+    <div
+      class="rounded-md border border-zinc-800 p-3 text-xs text-zinc-300"
+    >
+      <p>
+        Training Location: 
+        home
+      </p>
+      <p>
+        Equipment: 
+        dumbbell, bodyweight
+      </p>
+    </div>
+    <div
+      class="space-y-2"
+    >
+      <p
+        class="telemetry-kicker"
+      >
+        Program Override
+      </p>
+      <label
+        class="ui-meta"
+        for="settings-program"
+      >
+        Program
+      </label>
+      <select
+        aria-describedby="settings-program-desc"
+        aria-label="Settings program selector"
+        class="ui-select"
+        id="settings-program"
+      >
+        <option
+          value=""
+        >
+          Default — trainer's recommended program
+        </option>
+        <option
+          value="full_body_v1"
+        >
+          Full Body V1
+        </option>
+      </select>
+      <p
+        class="text-xs text-zinc-500"
+        id="settings-program-desc"
+      >
+        Deterministic full-body template
+      </p>
+      <div
+        class="flex gap-2"
+      >
+        <button
+          aria-label="Save selected program"
+          class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 border border-[var(--ui-edge-active)] bg-[var(--ui-accent-active)] text-white shadow-[var(--ui-depth-shadow-2)] hover:bg-[rgba(220,38,38,0.25)] hover:shadow-[var(--ui-glow-active),var(--ui-depth-shadow-3)] h-10 px-4 py-2 mt-2"
+        >
+          <span
+            class="inline-flex items-center gap-2"
+          >
+            <svg
+              aria-hidden="true"
+              class="ui-icon ui-icon--action"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.9"
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M5 4h11l3 3v13H5z"
+              />
+              <path
+                d="M8 4v6h8M8 20v-6h8"
+              />
+            </svg>
+            Save Program
+          </span>
+        </button>
+        <p
+          class="telemetry-meta mt-3"
+        />
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`visual snapshot: today route initial state 1`] = `
+<div
+  class="space-y-4"
+>
+  <h1
+    class="ui-title-page"
+  >
+    Today
+  </h1>
+  <div
+    class="main-card main-card--module main-card--accent spacing-grid spacing-grid--tight"
+  >
+    <div
+      class="telemetry-header"
+    >
+      <p
+        class="telemetry-kicker"
+      >
+        Runner Status
+      </p>
+      <span
+        class="telemetry-status"
+      >
+        <span
+          class="status-dot status-dot--green"
+        />
+         API 
+        ok
+      </span>
+    </div>
+    <p
+      class="telemetry-meta"
+    >
+      Load today's workout and continue execution from the current session state.
+    </p>
+    <button
+      class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 border border-[var(--ui-edge-active)] bg-[var(--ui-accent-active)] text-white shadow-[var(--ui-depth-shadow-2)] hover:bg-[rgba(220,38,38,0.25)] hover:shadow-[var(--ui-glow-active),var(--ui-depth-shadow-3)] h-10 px-4 py-2 mt-3 w-full"
+    >
+      <span
+        class="inline-flex items-center gap-2"
+      >
+        <svg
+          aria-hidden="true"
+          class="ui-icon ui-icon--action"
+          fill="none"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.9"
+          viewBox="0 0 24 24"
+        >
+          <path
+            d="M4 10h3l2-3 6 10 2-3h3"
+          />
+        </svg>
+        Load Today Workout
+      </span>
+    </button>
+  </div>
+  <div
+    class="main-card main-card--shell ui-body-sm"
+  >
+    No workout loaded
+  </div>
+</div>
+`;
+
+exports[`visual snapshot: week route 1`] = `
+<div
+  class="space-y-4"
+>
+  <h1
+    class="ui-title-page"
+  >
+    Week Plan
+  </h1>
+  <div
+    class="grid grid-cols-2 gap-3"
+  >
+    <div
+      class="main-card main-card--shell"
+    >
+      <p
+        class="telemetry-kicker"
+      >
+        Generator
+      </p>
+      <p
+        class="telemetry-status"
+      >
+        <span
+          class="status-dot status-dot--green"
+        />
+         Ready
+      </p>
+    </div>
+    <div
+      class="main-card main-card--module main-card--accent"
+    >
+      <p
+        class="telemetry-kicker"
+      >
+        Program Source
+      </p>
+      <p
+        class="telemetry-value"
+      >
+        Auto-select
+      </p>
+    </div>
+  </div>
+  <div
+    class="main-card main-card--module"
+  >
+    <div
+      class="spacing-grid spacing-grid--tight"
+    >
+      <p
+        class="telemetry-kicker"
+      >
+        Generation Controls
+      </p>
+      <label
+        class="ui-meta"
+        for="week-program"
+      >
+        Program override (optional)
+      </label>
+      <select
+        aria-describedby="week-program-desc"
+        aria-label="Week program override selector"
+        class="ui-select"
+        id="week-program"
+      >
+        <option
+          value=""
+        >
+          Server-selected — trainer's recommended program
+        </option>
+        <option
+          value="full_body_v1"
+        >
+          Full Body V1
+        </option>
+      </select>
+      <p
+        class="text-xs text-zinc-500"
+        id="week-program-desc"
+      >
+        Select a program to override the server selection for this generated week.
+      </p>
+      <button
+        aria-label="Generate week plan"
+        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 border border-[var(--ui-edge-active)] bg-[var(--ui-accent-active)] text-white shadow-[var(--ui-depth-shadow-2)] hover:bg-[rgba(220,38,38,0.25)] hover:shadow-[var(--ui-glow-active),var(--ui-depth-shadow-3)] h-10 px-4 py-2 w-full"
+      >
+        <span
+          class="inline-flex items-center gap-2"
+        >
+          <svg
+            aria-hidden="true"
+            class="ui-icon ui-icon--action"
+            fill="none"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.9"
+            viewBox="0 0 24 24"
+          >
+            <rect
+              height="15"
+              rx="2"
+              width="16"
+              x="4"
+              y="5"
+            />
+            <path
+              d="M8 3v4M16 3v4M7 11h10M7 15h6"
+            />
+          </svg>
+          Generate Week
+        </span>
+      </button>
+    </div>
+  </div>
+  <div
+    class="main-card main-card--module spacing-grid spacing-grid--tight"
+  >
+    <p
+      class="telemetry-kicker"
+    >
+      Plan Output
+    </p>
+    <pre
+      class="overflow-x-auto text-xs text-zinc-200"
+    >
+      Generate a weekly plan.
+    </pre>
+  </div>
+</div>
+`;

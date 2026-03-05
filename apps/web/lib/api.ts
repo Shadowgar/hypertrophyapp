@@ -9,9 +9,20 @@ export type WorkoutExercise = {
   recommended_working_weight: number;
   substitution_candidates?: string[];
   notes?: string | null;
+  completed_sets?: number;
+  live_recommendation?: WorkoutLiveRecommendation;
   video?: {
     youtube_url?: string;
   } | null;
+};
+
+export type WorkoutLiveRecommendation = {
+  completed_sets: number;
+  remaining_sets: number;
+  recommended_reps_min: number;
+  recommended_reps_max: number;
+  recommended_weight: number;
+  guidance: string;
 };
 
 export type WorkoutSession = {
@@ -153,11 +164,144 @@ export type GuideExerciseDetail = {
   };
 };
 
+export type WorkoutSetFeedback = {
+  id: string;
+  primary_exercise_id: string;
+  exercise_id: string;
+  set_index: number;
+  reps: number;
+  weight: number;
+  planned_reps_min: number;
+  planned_reps_max: number;
+  planned_weight: number;
+  rep_delta: number;
+  weight_delta: number;
+  next_working_weight: number;
+  guidance: string;
+  live_recommendation: WorkoutLiveRecommendation;
+  created_at: string;
+};
+
+export type WorkoutExerciseSummary = {
+  exercise_id: string;
+  primary_exercise_id?: string | null;
+  name: string;
+  planned_sets: number;
+  planned_reps_min: number;
+  planned_reps_max: number;
+  planned_weight: number;
+  performed_sets: number;
+  average_performed_reps: number;
+  average_performed_weight: number;
+  completion_pct: number;
+  rep_delta: number;
+  weight_delta: number;
+  next_working_weight: number;
+  guidance: string;
+};
+
+export type WorkoutSummary = {
+  workout_id: string;
+  completed_total: number;
+  planned_total: number;
+  percent_complete: number;
+  overall_guidance: string;
+  exercises: WorkoutExerciseSummary[];
+};
+
 export type WeeklyCheckinPayload = {
   week_start: string;
   body_weight: number;
   adherence_score: number;
   notes?: string;
+};
+
+export type HistoryWeeklyCheckinEntry = {
+  week_start: string;
+  body_weight: number;
+  adherence_score: number;
+  notes?: string | null;
+  created_at: string;
+};
+
+export type HistoryWeeklyCheckinResponse = {
+  entries: HistoryWeeklyCheckinEntry[];
+};
+
+export type WeeklyExerciseFault = {
+  primary_exercise_id: string;
+  exercise_id: string;
+  name: string;
+  planned_sets: number;
+  completed_sets: number;
+  completion_pct: number;
+  target_reps_min: number;
+  target_reps_max: number;
+  average_performed_reps: number;
+  target_weight: number;
+  average_performed_weight: number;
+  guidance: string;
+  fault_score: number;
+  fault_level: string;
+  fault_reasons: string[];
+};
+
+export type WeeklyPerformanceSummary = {
+  previous_week_start: string;
+  previous_week_end: string;
+  planned_sets_total: number;
+  completed_sets_total: number;
+  completion_pct: number;
+  faulty_exercise_count: number;
+  exercise_faults: WeeklyExerciseFault[];
+};
+
+export type WeeklyReviewStatus = {
+  today_is_sunday: boolean;
+  review_required: boolean;
+  current_week_start: string;
+  week_start: string;
+  previous_week_start: string;
+  previous_week_end: string;
+  existing_review_submitted: boolean;
+  previous_week_summary?: WeeklyPerformanceSummary | null;
+};
+
+export type WeeklyExerciseAdjustment = {
+  primary_exercise_id: string;
+  set_delta: number;
+  weight_scale: number;
+  rationale: string;
+};
+
+export type WeeklyPlanAdjustment = {
+  global_set_delta: number;
+  global_weight_scale: number;
+  weak_point_exercises: string[];
+  exercise_overrides: WeeklyExerciseAdjustment[];
+};
+
+export type WeeklyReviewPayload = {
+  body_weight: number;
+  calories: number;
+  protein: number;
+  fat: number;
+  carbs: number;
+  adherence_score: number;
+  notes?: string;
+  nutrition_phase?: string;
+  week_start?: string;
+};
+
+export type WeeklyReviewResponse = {
+  status: string;
+  week_start: string;
+  previous_week_start: string;
+  readiness_score: number;
+  global_guidance: string;
+  fault_count: number;
+  summary: WeeklyPerformanceSummary;
+  adjustments: WeeklyPlanAdjustment;
 };
 
 export type SorenessSeverity = "none" | "mild" | "moderate" | "severe";
@@ -209,6 +353,7 @@ export const api = {
   health: () => request<{ status: string; date: string }>("/health"),
   getTodayWorkout: () => request<WorkoutSession>("/workout/today"),
   getWorkoutProgress: (workoutId: string) => request<WorkoutProgress>(`/workout/${encodeURIComponent(workoutId)}/progress`),
+  getWorkoutSummary: (workoutId: string) => request<WorkoutSummary>(`/workout/${encodeURIComponent(workoutId)}/summary`),
   generateWeek: (templateId?: string | null) => request<Record<string, unknown>>("/plan/generate-week", { method: "POST", body: JSON.stringify(templateId ? { template_id: templateId } : {}) }),
   getProfile: () => request<Profile>("/profile"),
   listPrograms: () => request<ProgramTemplateOption[]>("/plan/programs"),
@@ -228,11 +373,19 @@ export const api = {
       body: JSON.stringify(payload),
     }),
   updateProfile: (payload: Partial<Profile>) => request<Profile>("/profile", { method: "POST", body: JSON.stringify(payload) }),
+  getWeeklyReviewStatus: () => request<WeeklyReviewStatus>("/weekly-review/status"),
+  submitWeeklyReview: (payload: WeeklyReviewPayload) =>
+    request<WeeklyReviewResponse>("/weekly-review", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   weeklyCheckin: (payload: WeeklyCheckinPayload) =>
     request<{ status: string; phase: string }>("/weekly-checkin", {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  getWeeklyCheckinHistory: (limit = 12) =>
+    request<HistoryWeeklyCheckinResponse>(`/history/weekly-checkins?limit=${encodeURIComponent(String(limit))}`),
   listSoreness: (startDate: string, endDate: string) =>
     request<SorenessEntry[]>(`/soreness?start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`),
   createSoreness: (payload: SorenessCreatePayload) =>
@@ -241,7 +394,7 @@ export const api = {
       body: JSON.stringify(payload),
     }),
   logSet: (workoutId: string, payload: { primary_exercise_id?: string | null; exercise_id: string; set_index: number; reps: number; weight: number; rpe?: number | null }) =>
-    request<Record<string, unknown>>(`/workout/${encodeURIComponent(workoutId)}/log-set`, {
+    request<WorkoutSetFeedback>(`/workout/${encodeURIComponent(workoutId)}/log-set`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),

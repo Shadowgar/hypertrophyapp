@@ -67,9 +67,7 @@ Status: COMPLETED by Codex — `apps/web/app/guides/page.tsx` lists available pr
 - Add route: `apps/web/app/guides/[programId]/page.tsx`
 - Render text-first placeholders sourced from existing summary fields.
 
-Status: COMPLETED by Codex — program detail route implemented at `apps/web/app/programs/[id]/page.tsx` (naming differs: `/programs/:id`).
-
- Status: PARTIALLY COMPLETED — a program guide page was added at `apps/web/app/programs/[id]/page.tsx`. Mini may adapt naming to `guides/*` if preferred.
+Status: COMPLETED by Codex — program detail guide is implemented at `apps/web/app/programs/[id]/page.tsx` (route naming differs from original draft).
 
 ### Task B3 — Exercise guide placeholder route
 - Add route: `apps/web/app/guides/[programId]/exercise/[exerciseId]/page.tsx`
@@ -85,6 +83,7 @@ Acceptance for Sprint B:
 ## Guardrails (Must Follow)
 - Keep deterministic runtime rules (no runtime PDF/XLSX parsing).
 - Keep tests green and maintain API compatibility unless explicitly updated across callers/tests.
+- API tests are Postgres-first; use `TEST_DATABASE_URL` only for explicit local overrides.
 
 ## Validation per Task
 

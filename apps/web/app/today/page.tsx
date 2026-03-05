@@ -4,8 +4,17 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { UiIcon } from "@/components/ui/icons";
 import ExerciseControlModule from "@/components/exercise-control";
-import { api, type SorenessSeverity, type WorkoutExercise, type WorkoutSession } from "@/lib/api";
+import {
+  api,
+  type SorenessSeverity,
+  type WorkoutExercise,
+  type WorkoutLiveRecommendation,
+  type WorkoutSession,
+  type WorkoutSetFeedback,
+  type WorkoutSummary,
+} from "@/lib/api";
 
 type SwapState = Record<string, number>;
 type NotesState = Record<string, boolean>;
@@ -74,6 +83,40 @@ function resolveHealthStatus(health: string): "green" | "yellow" | "red" {
   return "red";
 }
 
+function WorkoutSummaryCard({ summary }: Readonly<{ summary: WorkoutSummary | null }>) {
+  if (!summary) {
+    return null;
+  }
+
+  return (
+    <div className="main-card main-card--module spacing-grid">
+      <div className="telemetry-header">
+        <p className="telemetry-kicker">Day Summary</p>
+        <p className="telemetry-status">
+          <span className="status-dot status-dot--green" /> {summary.percent_complete}% complete
+        </p>
+      </div>
+      <p className="telemetry-meta">Overall guidance: {summary.overall_guidance}</p>
+      <div className="space-y-2">
+        {summary.exercises.map((item) => (
+          <div key={item.exercise_id} className="rounded-md border border-zinc-800 bg-zinc-900/40 p-2 text-xs text-zinc-300">
+            <p className="font-semibold text-zinc-100">{item.name}</p>
+            <p>
+              Planned: {item.planned_sets} sets · {item.planned_reps_min}-{item.planned_reps_max} reps @ {item.planned_weight} kg
+            </p>
+            <p>
+              Performed: {item.performed_sets} sets · avg {item.average_performed_reps} reps @ {item.average_performed_weight} kg
+            </p>
+            <p>
+              Next: {item.next_working_weight} kg ({item.guidance})
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function TodayPage() {
   const [health, setHealth] = useState("loading");
   const [workout, setWorkout] = useState<WorkoutSession | null>(null);
@@ -87,6 +130,18 @@ export default function TodayPage() {
   const [sorenessByMuscle, setSorenessByMuscle] = useState<Record<string, SorenessSeverity>>(createInitialSorenessState());
   const [completedSetsByExercise, setCompletedSetsByExercise] = useState<Record<string, number>>({});
   const [workoutProgress, setWorkoutProgress] = useState<{ completed: number; planned: number; percent: number } | null>(null);
+  const [setFeedbackByExercise, setSetFeedbackByExercise] = useState<Record<string, WorkoutSetFeedback>>({});
+  const [liveRecommendationByExercise, setLiveRecommendationByExercise] = useState<Record<string, WorkoutLiveRecommendation>>({});
+  const [workoutSummary, setWorkoutSummary] = useState<WorkoutSummary | null>(null);
+
+  async function loadWorkoutSummary(workoutId: string) {
+    try {
+      const summary = await api.getWorkoutSummary(workoutId);
+      setWorkoutSummary(summary);
+    } catch {
+      setWorkoutSummary(null);
+    }
+  }
 
   useEffect(() => {
     api.health()
@@ -100,6 +155,15 @@ export default function TodayPage() {
       setWorkout(data);
       setMessage("");
       setNotesOpenByExercise({});
+      setWorkoutSummary(null);
+      setSetFeedbackByExercise({});
+
+      const initialRecommendations = Object.fromEntries(
+        (data.exercises ?? [])
+          .filter((exercise) => Boolean(exercise.live_recommendation))
+          .map((exercise) => [exercise.id, exercise.live_recommendation as WorkoutLiveRecommendation]),
+      ) as Record<string, WorkoutLiveRecommendation>;
+      setLiveRecommendationByExercise(initialRecommendations);
 
       const storageKey = `${SWAP_STORAGE_PREFIX}:${data.session_id}`;
       const saved = localStorage.getItem(storageKey);
@@ -143,6 +207,9 @@ export default function TodayPage() {
         });
         const completedKey = `hypertrophy_completed_sets:${data.session_id}`;
         localStorage.setItem(completedKey, JSON.stringify(merged));
+        if ((Number(progress.percent_complete) || 0) >= 100) {
+          await loadWorkoutSummary(data.session_id);
+        }
       } catch {
         setCompletedSetsByExercise(localCompleted);
         setWorkoutProgress(null);
@@ -162,6 +229,12 @@ export default function TodayPage() {
   async function beginWorkoutLoad() {
     const today = new Date().toISOString().slice(0, 10);
     try {
+      const reviewStatus = await api.getWeeklyReviewStatus();
+      if (reviewStatus.today_is_sunday && reviewStatus.review_required) {
+        setMessage("Sunday review required before starting workout. Go to Check-In to submit weekly review.");
+        return;
+      }
+
       const entries = await api.listSoreness(today, today);
       if (entries.length > 0) {
         await loadToday();
@@ -209,7 +282,11 @@ export default function TodayPage() {
     setSwapTargetExerciseId(null);
   }
 
-  async function handleSetComplete(exerciseId: string, completedCount: number) {
+  async function handleSetComplete(
+    exerciseId: string,
+    completedCount: number,
+    performed: { reps: number; weight: number },
+  ) {
     if (!workout) return;
     setCompletedSetsByExercise((prev) => {
       const next = { ...prev, [exerciseId]: completedCount };
@@ -230,13 +307,18 @@ export default function TodayPage() {
       primary_exercise_id: exercise.primary_exercise_id ?? null,
       exercise_id: exerciseId,
       set_index: completedCount,
-      reps: exercise.rep_range ? exercise.rep_range[0] : 0,
-      weight: exercise.recommended_working_weight ?? 0,
+      reps: performed.reps,
+      weight: performed.weight,
       rpe: null,
     } as const;
 
     try {
-      await api.logSet(workout.session_id, payload);
+      const feedback = await api.logSet(workout.session_id, payload);
+      setSetFeedbackByExercise((prev) => ({ ...prev, [exerciseId]: feedback }));
+      setLiveRecommendationByExercise((prev) => ({
+        ...prev,
+        [exerciseId]: feedback.live_recommendation,
+      }));
 
       // refresh from server-side progress to keep client in sync
       try {
@@ -246,13 +328,17 @@ export default function TodayPage() {
         ) as Record<string, number>;
         if (Object.keys(serverCompleted).length > 0) {
           setCompletedSetsByExercise(serverCompleted);
+          const percent = Number(progress.percent_complete) || 0;
           setWorkoutProgress({
             completed: Number(progress.completed_total) || 0,
             planned: Number(progress.planned_total) || 0,
-            percent: Number(progress.percent_complete) || 0,
+            percent,
           });
           const completedKey = `hypertrophy_completed_sets:${workout.session_id}`;
           localStorage.setItem(completedKey, JSON.stringify(serverCompleted));
+          if (percent >= 100) {
+            await loadWorkoutSummary(workout.session_id);
+          }
         }
       } catch {
         // keep optimistic state when progress refresh fails
@@ -281,7 +367,10 @@ export default function TodayPage() {
         </div>
         <p className="telemetry-meta">Load today&apos;s workout and continue execution from the current session state.</p>
         <Button className="mt-3 w-full" onClick={beginWorkoutLoad}>
-          Load Today Workout
+          <span className="inline-flex items-center gap-2">
+            <UiIcon name="workout" className="ui-icon--action" />
+            Load Today Workout
+          </span>
         </Button>
       </div>
 
@@ -354,7 +443,10 @@ export default function TodayPage() {
                     type="button"
                     variant="segment"
                   >
-                    Video
+                    <span className="inline-flex items-center gap-2">
+                      <UiIcon name="video" className="ui-icon--action" />
+                      Video
+                    </span>
                   </Button>
                   <Button
                     className="h-8 px-3 text-xs"
@@ -363,7 +455,10 @@ export default function TodayPage() {
                     type="button"
                     variant="segment"
                   >
-                    I don’t have this equipment
+                    <span className="inline-flex items-center gap-2">
+                      <UiIcon name="swap" className="ui-icon--action" />
+                      I don’t have this equipment
+                    </span>
                   </Button>
                   <Button
                     className="h-8 px-3 text-xs"
@@ -371,7 +466,10 @@ export default function TodayPage() {
                     type="button"
                     variant="segment"
                   >
-                    Notes
+                    <span className="inline-flex items-center gap-2">
+                      <UiIcon name="notes" className="ui-icon--action" />
+                      Notes
+                    </span>
                   </Button>
                 </div>
 
@@ -386,6 +484,33 @@ export default function TodayPage() {
                   onSetComplete={handleSetComplete}
                 />
 
+                {setFeedbackByExercise[exercise.id] ? (
+                  <div className="rounded-md border border-zinc-800 bg-zinc-900/40 p-2 text-xs text-zinc-300">
+                    <p>
+                      Logged: {setFeedbackByExercise[exercise.id].reps} reps @ {setFeedbackByExercise[exercise.id].weight} kg
+                    </p>
+                    <p>
+                      Planned: {setFeedbackByExercise[exercise.id].planned_reps_min}-{setFeedbackByExercise[exercise.id].planned_reps_max} reps @ {setFeedbackByExercise[exercise.id].planned_weight} kg
+                    </p>
+                    <p>
+                      Next recommendation: {setFeedbackByExercise[exercise.id].next_working_weight} kg ({setFeedbackByExercise[exercise.id].guidance})
+                    </p>
+                  </div>
+                ) : null}
+
+                {liveRecommendationByExercise[exercise.id] ? (
+                  <div className="rounded-md border border-zinc-800 bg-zinc-900/40 p-2 text-xs text-zinc-300">
+                    <p>
+                      Remaining sets: {liveRecommendationByExercise[exercise.id].remaining_sets}
+                    </p>
+                    <p>
+                      Next set target: {liveRecommendationByExercise[exercise.id].recommended_reps_min}-
+                      {liveRecommendationByExercise[exercise.id].recommended_reps_max} reps @ {liveRecommendationByExercise[exercise.id].recommended_weight} kg
+                    </p>
+                    <p>Guidance: {liveRecommendationByExercise[exercise.id].guidance}</p>
+                  </div>
+                ) : null}
+
                 {notesOpen ? (
                   <div className="rounded-md border border-zinc-800 bg-zinc-900/40 p-2 text-xs text-zinc-300">
                     {exercise.notes ?? "No notes for this slot."}
@@ -394,6 +519,8 @@ export default function TodayPage() {
               </div>
             );
           })}
+
+          <WorkoutSummaryCard summary={workoutSummary} />
         </div>
       ) : null}
 
@@ -439,7 +566,10 @@ export default function TodayPage() {
               type="button"
               variant="ghost"
             >
-              Close
+              <span className="inline-flex items-center gap-2">
+                <UiIcon name="close" className="ui-icon--action" />
+                Close
+              </span>
             </Button>
           </div>
         </div>
@@ -486,7 +616,10 @@ export default function TodayPage() {
 
             <div className="flex gap-2">
               <Button className="w-full" onClick={submitSorenessAndLoad} type="button">
-                Save & Start Workout
+                <span className="inline-flex items-center gap-2">
+                  <UiIcon name="save" className="ui-icon--action" />
+                  Save & Start Workout
+                </span>
               </Button>
               <Button
                 className="w-full"
@@ -497,7 +630,10 @@ export default function TodayPage() {
                 type="button"
                 variant="secondary"
               >
-                Skip
+                <span className="inline-flex items-center gap-2">
+                  <UiIcon name="skip" className="ui-icon--action" />
+                  Skip
+                </span>
               </Button>
             </div>
           </div>

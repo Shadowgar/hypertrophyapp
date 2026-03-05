@@ -156,6 +156,7 @@ Deliver a deterministic hypertrophy planner + workout runner that can compete wi
 
 - **Runtime determinism:** no guide search, no PDF/XLSX parsing in runtime services.
 - **Build-time only knowledge:** guide knowledge is converted into canonical templates + deterministic rules.
+- **Reference knowledge operationalization:** PDF/EPUB/XLSX science and coaching rules must be transformed at build-time into executable planner/progression logic and structured guides, not pasted raw into runtime UX.
 - **Multi-user onboarding** captures profile, split, days/week, nutrition phase, calories/macros, AND equipment availability.
 - **Engine outputs** weekly plans, warmups, substitution-safe exercises, and next-weight recommendations.
 - **Exposure-based progression** handles missed days, rolls priority lifts forward, prevents skipped muscles.
@@ -193,6 +194,8 @@ Platform:
 - The runtime app must never search guides or use embeddings/vector retrieval.
 - The runtime app must never depend on OpenClaw to function.
 - All program logic must execute from canonical templates in `/programs/` plus deterministic code rules.
+- Runtime services must start on a schema-compatible database state (migrations applied before serving requests).
+- API automated tests should default to PostgreSQL for runtime parity; SQLite may be used only via explicit local override.
 
 ---
 
@@ -310,6 +313,7 @@ Guides must render deterministic text artifacts; no embedded PDF rendering is re
 - Docker Compose deployment
 - Core-engine unit tests for progression, warmups, substitution logic, week generation
 - Program catalog selection + plan guide pages (text-first, deterministic)
+- Testing operations loop for local QA: wipe user/testing data -> onboard -> test -> wipe again
 
 ## Authentication Methods
 
@@ -329,6 +333,49 @@ Authentication expansion must preserve deterministic runtime behavior and local-
 - “What’s sore today?” quick pre-workout input
 - Exercise-level notes display in workout runner
 - Exercise video button support when template metadata includes links
+
+## Adaptive Session Intelligence (Required)
+
+### Sunday Review -> Monday Execution Loop (Required)
+
+- On Sunday app open, system must run a deterministic previous-week lift review before next-week generation.
+- Review must include planned vs performed set completion and per-exercise fault classification (missed volume, below-target reps, low completion).
+- User must submit upcoming-week fuel targets in the same flow: bodyweight, daily calories, and macros.
+- Review output must persist as deterministic adjustment directives for the upcoming week (global and exercise-specific set/load modifiers).
+- Monday plan generation must consume the latest stored review directives for that target week and stamp provenance in plan payload.
+- Week generation UI and workout start flow should gate on Sunday when review is required, with explicit routing to review submission.
+
+### Guided Set-by-Set Execution Flow
+
+- Session start must present: planned exercise order, warmup sets (with target weights), working sets, rep targets, and rest guidance.
+- For every set, user must be able to log actual weight and actual reps performed.
+- After each logged set, system must deterministically recompute remaining working-set recommendations for that exercise in-session.
+- Recomputed recommendations must preserve hypertrophy intent (target rep zone, fatigue management, and progression continuity).
+- Workout runner must step the user exercise-by-exercise through the full day until all planned slots are completed or explicitly skipped.
+
+### End-of-Day Plan vs Actual Review
+
+- At session completion, system must render a deterministic summary with:
+  - planned vs performed sets/reps/load per exercise
+  - completion variance and adherence signal
+  - next-exposure recommendation preview
+- Summary output must persist and become input to subsequent progression decisions.
+
+### Cross-Week Continuity with Variable Days/Week
+
+- Progression must remain coherent when `days_available` changes week-to-week (e.g., 2 -> 4 -> 3 days).
+- System must track exercise exposure and progression state across the full training timeline, not reset by weekly split changes.
+- Compression/expansion of weekly structure must preserve movement-pattern coverage and priority-lift continuity.
+- Weak-point emphasis should increase only via deterministic, bounded adjustments (volume/intensity/frequency) while preserving total recovery constraints.
+
+### Acceptance Criteria
+
+- Warmup targets are shown with concrete loads before first working set.
+- User can log actual reps/load for every set from workout runner UI.
+- Remaining set recommendations update after each logged set.
+- End-of-day plan-vs-actual report is available and persisted.
+- Next-exposure recommendations use accumulated historical performance, not only current week shape.
+- Changing weekly training-day availability does not break progression continuity or muscle coverage.
 
 ---
 
@@ -530,6 +577,8 @@ If missing, UI should not render a video action.
 - Deterministic substitution engine verified
 - Equipment filtering functional
 - 2/3/4 day compression logic works
+- Auth flows resilient on clean/stale local environments (register/login/password reset request/confirm)
+- Repeatable local test reset flow available via script (`scripts/reset_testing_user_data.sh`)
 - Dark-mode mobile UI polished
 - Documentation accurate
 
@@ -561,6 +610,7 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 
 - [ ] Hyperdrive visual parity implementation tasks that do not alter deterministic behavior (Phase 14)
 - [ ] Non-critical UI refinements, static content, docs cleanup, and screenshot parity checklists
+- [x] Postgres-first API test harness with explicit `TEST_DATABASE_URL` override path for local troubleshooting
 - [ ] Test fixture expansion and visual regression snapshot maintenance
 
 ### Codex Exit Criteria (Before Handoff to Mini-Only Execution)
@@ -601,6 +651,8 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 - [x] JWT auth
 - [x] Login method (email/password)
 - [x] Password reset flow (request reset + confirm reset)
+- [x] Login/reset UI surfaces backend error detail for faster test diagnostics
+- [x] API container applies Alembic migrations before serving requests
 - [x] User profile CRUD
 - [x] Onboarding wizard
 - [x] Profile UX location (`/onboarding` for initial setup, `/settings` for review/edit)
@@ -618,6 +670,9 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 - [x] Validation rules
 - [x] UI implementation
 - [x] Tests
+- [x] Sunday review status endpoint (prior-week audit + required/optional flag)
+- [x] Sunday review submit endpoint (upcoming-week bodyweight + calories/macros + deterministic adjustment output)
+- [x] Persist weekly review cycles for planner consumption
 
 ---
 
@@ -693,7 +748,8 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 - [x] Emit normalized guide docs into `/docs/guides/`
 - [x] Emit provenance index (`asset -> section -> derived entity`)
 - [x] Add API endpoints for program/day/exercise guides
-- [ ] Add web Plan Guide pages (Program → Phase → Day → Exercise)
+- [x] Add web Plan Guide pages (Program → Phase → Day → Exercise)
+- [x] Add web Program/Day/Exercise guide pages
 - [x] Add workout runner drill-down to exercise guide text
 - [x] Add deterministic “next recommended program” suggestion logic
 - [x] Add explicit confirmation flow before program/phase switch
@@ -760,12 +816,28 @@ Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex 
 - [x] Upgrade Onboarding composition and hierarchy to match premium finish
 - [x] Upgrade Week/Check-In/History/Guides/Settings to same material hierarchy
 - [x] Add analytics visual module polish (sparklines, PR highlights, compact charts)
-- [ ] Add motion polish pass (120–200ms, transform/opacity only)
-- [ ] Add iconography consistency pass for all nav/action surfaces
-- [ ] Capture screenshot parity checklist for key screens (before/after)
-- [ ] Add web visual regression snapshots for critical routes
-- [ ] Validate no performance regression on mobile target
-- [ ] Validate no deterministic behavior changes from UI refactor
+- [x] Add motion polish pass (120–200ms, transform/opacity only)
+- [x] Add iconography consistency pass for all nav/action surfaces
+- [x] Capture screenshot parity checklist for key screens (before/after)
+- [x] Add web visual regression snapshots for critical routes
+- [x] Validate no performance regression on mobile target
+- [x] Validate no deterministic behavior changes from UI refactor
+
+---
+
+## Phase 15 — Adaptive Coaching Loop (Execution Intelligence)
+- [x] Add workout session state model for set-level planned vs actual tracking
+- [x] Add API contract to return live per-exercise recommendation updates after each logged set
+- [x] Use exercise-specific rep ranges/planned sets (not fixed defaults) in progression updates
+- [x] Add in-session recalculation rules for remaining sets (deterministic hypertrophy guardrails)
+- [x] Add end-of-day summary endpoint (planned vs performed + next exposure recommendation)
+- [x] Add Today UI fields for actual set input (weight/reps) per set completion
+- [x] Add deterministic progression continuity across variable `days_available` by exposure history
+- [x] Add weak-point boosting logic with bounded deterministic adjustments
+- [x] Add tests for adaptive set recalculation, day-end summary, and variable-day continuity
+- [x] Add deterministic Sunday prior-week performance fault scan (planned vs performed by exercise)
+- [x] Feed weekly review adjustment directives into week generation payload (global + per-exercise)
+- [x] Gate Sunday Week/Today entrypoints until weekly review is submitted
 
 ---
 

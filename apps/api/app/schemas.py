@@ -75,6 +75,91 @@ class WeeklyCheckinRequest(BaseModel):
         return value
 
 
+class WeeklyExerciseFaultResponse(BaseModel):
+    primary_exercise_id: str
+    exercise_id: str
+    name: str
+    planned_sets: int
+    completed_sets: int
+    completion_pct: int
+    target_reps_min: int
+    target_reps_max: int
+    average_performed_reps: float
+    target_weight: float
+    average_performed_weight: float
+    guidance: str
+    fault_score: int
+    fault_level: str
+    fault_reasons: list[str]
+
+
+class WeeklyPerformanceSummaryResponse(BaseModel):
+    previous_week_start: date
+    previous_week_end: date
+    planned_sets_total: int
+    completed_sets_total: int
+    completion_pct: int
+    faulty_exercise_count: int
+    exercise_faults: list[WeeklyExerciseFaultResponse]
+
+
+class WeeklyReviewStatusResponse(BaseModel):
+    today_is_sunday: bool
+    review_required: bool
+    current_week_start: date
+    week_start: date
+    previous_week_start: date
+    previous_week_end: date
+    existing_review_submitted: bool
+    previous_week_summary: WeeklyPerformanceSummaryResponse | None = None
+
+
+class WeeklyExerciseAdjustmentResponse(BaseModel):
+    primary_exercise_id: str
+    set_delta: int
+    weight_scale: float
+    rationale: str
+
+
+class WeeklyPlanAdjustmentResponse(BaseModel):
+    global_set_delta: int
+    global_weight_scale: float
+    weak_point_exercises: list[str]
+    exercise_overrides: list[WeeklyExerciseAdjustmentResponse]
+
+
+class WeeklyReviewSubmitRequest(BaseModel):
+    body_weight: float = Field(gt=0)
+    calories: int = Field(gt=0)
+    protein: int = Field(gt=0)
+    fat: int = Field(gt=0)
+    carbs: int = Field(gt=0)
+    adherence_score: int = Field(ge=1, le=5)
+    notes: str | None = None
+    nutrition_phase: str | None = None
+    week_start: date | None = None
+
+    @field_validator("week_start")
+    @classmethod
+    def validate_week_start_if_present(cls, value: date | None) -> date | None:
+        if value is None:
+            return value
+        if value.weekday() != 0:
+            raise ValueError("week_start must be a Monday")
+        return value
+
+
+class WeeklyReviewSubmitResponse(BaseModel):
+    status: str
+    week_start: date
+    previous_week_start: date
+    readiness_score: int
+    global_guidance: str
+    fault_count: int
+    summary: WeeklyPerformanceSummaryResponse
+    adjustments: WeeklyPlanAdjustmentResponse
+
+
 SorenessSeverity = Literal["none", "mild", "moderate", "severe"]
 
 
@@ -144,6 +229,7 @@ class ProgramSwitchResponse(BaseModel):
 
 class ProgramTemplateSummary(BaseModel):
     id: str
+    name: str
     version: str
     split: str
     days_supported: list[int]
@@ -204,10 +290,55 @@ class WorkoutSetLogRequest(BaseModel):
     rpe: float | None = None
 
 
+class WorkoutLiveRecommendationResponse(BaseModel):
+    completed_sets: int
+    remaining_sets: int
+    recommended_reps_min: int
+    recommended_reps_max: int
+    recommended_weight: float
+    guidance: str
+
+
 class WorkoutSetLogResponse(BaseModel):
     id: str
     primary_exercise_id: str
     exercise_id: str
+    set_index: int
     reps: int
     weight: float
+    planned_reps_min: int
+    planned_reps_max: int
+    planned_weight: float
+    rep_delta: int
+    weight_delta: float
+    next_working_weight: float
+    guidance: str
+    live_recommendation: WorkoutLiveRecommendationResponse
     created_at: datetime
+
+
+class WorkoutExerciseSummaryResponse(BaseModel):
+    exercise_id: str
+    primary_exercise_id: str | None = None
+    name: str
+    planned_sets: int
+    planned_reps_min: int
+    planned_reps_max: int
+    planned_weight: float
+    performed_sets: int
+    average_performed_reps: float
+    average_performed_weight: float
+    completion_pct: int
+    rep_delta: float
+    weight_delta: float
+    next_working_weight: float
+    guidance: str
+
+
+class WorkoutSummaryResponse(BaseModel):
+    workout_id: str
+    completed_total: int
+    planned_total: int
+    percent_complete: int
+    overall_guidance: str
+    exercises: list[WorkoutExerciseSummaryResponse]

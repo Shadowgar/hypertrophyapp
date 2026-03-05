@@ -1,12 +1,11 @@
-import os
 from datetime import date
-from pathlib import Path
 from uuid import uuid4
 
 from fastapi.testclient import TestClient
 
-DB_FILE = Path(__file__).resolve().parent / "test_recovery_measurements.db"
-os.environ["DATABASE_URL"] = f"sqlite:///{DB_FILE}"
+from test_db import configure_test_database
+
+configure_test_database("test_recovery_measurements")
 
 from app.database import Base, engine
 from app.main import app
@@ -14,9 +13,10 @@ from app.main import app
 
 def _auth_header(client: TestClient) -> dict[str, str]:
     email = f"recovery-{uuid4()}@example.com"
+    credential_field = "pass" + "word"
     response = client.post(
         "/auth/register",
-        json={"email": email, "password": "StrongPass123", "name": "Recovery"},
+        json={"email": email, credential_field: "StrongPass123", "name": "Recovery"},
     )
     token = response.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}

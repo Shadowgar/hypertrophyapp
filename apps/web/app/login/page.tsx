@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { UiIcon } from "@/components/ui/icons";
 import { API_BASE_URL } from "@/lib/env";
 
 export default function LoginPage() {
@@ -22,7 +23,8 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
       if (!response.ok) {
-        setStatus("Login failed");
+        const detail = await response.text();
+        setStatus(detail ? `Login failed: ${detail}` : "Login failed");
         return;
       }
 
@@ -57,10 +59,16 @@ export default function LoginPage() {
           type="button"
           variant="secondary"
         >
-          {showPassword ? "Hide Password" : "Show Password"}
+          <span className="inline-flex items-center gap-2">
+            <UiIcon name="settings" className="ui-icon--action" />
+            {showPassword ? "Hide Password" : "Show Password"}
+          </span>
         </Button>
         <Button className="w-full" type="submit">
-          Login
+          <span className="inline-flex items-center gap-2">
+            <UiIcon name="login" className="ui-icon--action" />
+            Login
+          </span>
         </Button>
       </form>
       <p className="ui-body-sm">Status: {status}</p>

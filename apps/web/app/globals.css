@@ -56,6 +56,10 @@
   --ui-space-4: 1rem;
   --ui-space-5: 1.25rem;
   --ui-space-6: 1.5rem;
+
+  --ui-motion-fast: 140ms;
+  --ui-motion-base: 160ms;
+  --ui-motion-page: 180ms;
 }
 
 body {
@@ -103,6 +107,23 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.075em;
   color: #a1a1aa;
+}
+
+.ui-icon {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+}
+
+.ui-icon--nav {
+  width: 1.05rem;
+  height: 1.05rem;
+  opacity: 0.9;
+}
+
+.ui-icon--action {
+  width: 0.95rem;
+  height: 0.95rem;
 }
 
 .ui-meta {
@@ -167,6 +188,21 @@ body {
     opacity: 0.55;
     transform: translate3d(0, -4px, 0);
   }
+}
+
+@keyframes ui-fade-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.motion-page-enter {
+  animation: ui-fade-rise var(--ui-motion-page) ease-out both;
 }
 
 .glass-layer {
@@ -315,6 +351,8 @@ body {
   @apply rounded-xl p-4;
   position: relative;
   overflow: hidden;
+  transform: translate3d(0, 0, 0);
+  transition: transform var(--ui-motion-base) ease, opacity var(--ui-motion-base) ease;
   background: linear-gradient(
     180deg,
     color-mix(in srgb, var(--ui-surface-2) calc(var(--ui-glass-alpha-card) * 100%), transparent),
@@ -324,6 +362,12 @@ body {
   box-shadow: var(--ui-depth-shadow-3);
   backdrop-filter: blur(8px) saturate(120%);
   -webkit-backdrop-filter: blur(8px) saturate(120%);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .main-card:is(:hover, :focus-within) {
+    transform: translate3d(0, -2px, 0);
+  }
 }
 
 .main-card--shell {
@@ -398,7 +442,14 @@ body {
 }
 
 .dock-btn {
-  transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease, border-color 160ms ease;
+  opacity: 0.95;
+  transform: translate3d(0, 0, 0);
+  transition: transform var(--ui-motion-fast) ease, opacity var(--ui-motion-fast) ease;
+}
+
+.dock-btn:is(:hover, :focus-visible) {
+  opacity: 1;
+  transform: translate3d(0, -2px, 0);
 }
 
 .dock-btn--idle {
@@ -409,6 +460,7 @@ body {
 
 .dock-btn--active {
   color: #fff;
+  opacity: 1;
   background: var(--ui-accent-active);
   border: 1px solid var(--ui-edge-active);
   box-shadow: var(--ui-glow-active), var(--ui-depth-shadow-2);
@@ -491,5 +543,17 @@ body[data-ui-mode="body"] {
 
 body[data-ui-mode="system"] {
   --ui-border-accent: rgba(161, 161, 170, 0.7);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-page-enter {
+    animation: none;
+  }
+
+  .main-card,
+  .dock-btn {
+    transition: none;
+    transform: none;
+  }
 }
 

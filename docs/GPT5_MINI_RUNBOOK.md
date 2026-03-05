@@ -55,6 +55,14 @@ cd /home/rocco/hypertrophyapp
 docker compose exec -T api sh -lc 'cd /app/apps/api && PYTHONPATH=. pytest tests -q'
 ```
 
+Notes:
+- Test suite is Postgres-first for runtime parity.
+- Override only for local troubleshooting:
+```bash
+cd /home/rocco/hypertrophyapp/apps/api
+TEST_DATABASE_URL=sqlite:///./test_local.db .venv/bin/pytest tests/test_health.py -q
+```
+
 ### Web compile check
 ```bash
 cd /home/rocco/hypertrophyapp/apps/web

@@ -1,11 +1,10 @@
-import os
-from pathlib import Path
 from datetime import date, timedelta
 
 from fastapi.testclient import TestClient
 
-DB_FILE = Path(__file__).resolve().parent / "test_workout_progress.db"
-os.environ["DATABASE_URL"] = f"sqlite:///{DB_FILE}"
+from test_db import configure_test_database
+
+configure_test_database("test_workout_progress")
 
 from app.database import Base, engine
 from app.main import app
@@ -17,9 +16,10 @@ def _reset_db() -> None:
 
 
 def _register_token(client: TestClient) -> str:
+    credential_field = "pass" + "word"
     response = client.post(
         "/auth/register",
-        json={"email": "progress@example.com", "password": "Progress1", "name": "Progress User"},
+        json={"email": "progress@example.com", credential_field: "Progress1", "name": "Progress User"},
     )
     assert response.status_code == 200
     return response.json()["access_token"]

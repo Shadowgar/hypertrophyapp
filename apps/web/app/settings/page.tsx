@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { UiIcon } from "@/components/ui/icons";
 import { api, getProgramDisplayName, type Profile, type ProgramRecommendation, type ProgramTemplateOption } from "@/lib/api";
 
 export default function SettingsPage() {
@@ -126,7 +127,10 @@ export default function SettingsPage() {
         <p className="telemetry-kicker">Display</p>
         <p className="ui-body-sm">Theme is locked to dark for MVP.</p>
         <Button variant="secondary" className="w-full" disabled>
-          Theme: {theme}
+          <span className="inline-flex items-center gap-2">
+            <UiIcon name="settings" className="ui-icon--action" />
+            Theme: {theme}
+          </span>
         </Button>
 
         <p className="telemetry-kicker">Profile Context</p>
@@ -153,10 +157,18 @@ export default function SettingsPage() {
           </select>
           <p id="settings-program-desc" className="text-xs text-zinc-500">{selectedProgramId ? (programs.find((p) => p.id === selectedProgramId)?.description ?? "No description available.") : "Default uses trainer recommendation."}</p>
           <div className="flex gap-2">
-            <Button aria-label="Save selected program" className="mt-2" onClick={saveProgram}>Save Program</Button>
+            <Button aria-label="Save selected program" className="mt-2" onClick={saveProgram}>
+              <span className="inline-flex items-center gap-2">
+                <UiIcon name="save" className="ui-icon--action" />
+                Save Program
+              </span>
+            </Button>
             {pendingSwitch ? (
               <Button aria-label="Confirm program switch" className="mt-2" onClick={confirmProgramSwitch} variant="secondary">
-                Confirm Switch
+                <span className="inline-flex items-center gap-2">
+                  <UiIcon name="swap" className="ui-icon--action" />
+                  Confirm Switch
+                </span>
               </Button>
             ) : null}
             <p className="telemetry-meta mt-3">{status ?? ""}</p>

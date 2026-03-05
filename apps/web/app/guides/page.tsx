@@ -32,7 +32,7 @@ export default function GuidesIndex() {
       </div>
       <div className="grid gap-3">
         {programs.map((p) => (
-          <Link key={p.id} href={`/programs/${p.id}`} className="main-card main-card--module spacing-grid spacing-grid--tight p-3" aria-label={`Open guide for ${p.name}`}>
+          <Link key={p.id} href={`/guides/${p.id}`} className="main-card main-card--module spacing-grid spacing-grid--tight p-3" aria-label={`Open guide for ${p.name}`}>
             <p className="telemetry-kicker">Program Module</p>
             <h2 className="font-medium text-zinc-100">{p.name}</h2>
             {p.description && <p className="telemetry-meta">{p.description}</p>}

@@ -1,0 +1,11 @@
+# Normalized Reference Guide
+
+- Asset: reference/The_Ultimate_Push_Pull_Legs_System_-_6x.xlsx
+- SHA256: d746c17ef9982e787417b0d58738a7842c4eb202bd1afaf1f44ba0b6c5729b8d
+- Type: xlsx
+- Extraction Method: xlsx_zip_xml
+- Extracted Characters: 93571
+
+## Excerpt
+
+Jeff Nippard's Ultimate PPL Program - 6x/Week Spreadsheet Copyright 2023 by Jeff Nippard. All rights reserved. Phase 1 - Base Hypertrophy (Moderate Volume, Moderate Intensity) Week 1 | Exercise | Warm-up Sets | Working Sets | Reps | Load | RPE | Rest | Substitution Option 1 | Substitution Option 2 | Notes Push #1 | Bench Press | 44624 | 1 | 3-5 | 44782 | ~3-4 min | DB Bench Press | Machine Chest Press | Set up a comfortable arch, quick pause on the chest and explode up on each rep Larsen Press | 0 | 2 | 10 | 44782 | ~3-4 min | DB Bench Press (No Leg Drive) | Machine Chest Press (No Leg Drive) | Shoulder blades still retracted and depressed. Slight arch in upper back. Zero leg drive. Standing Dumbbell Arnold Press | 2 | 3 | 8-10 | 44782 | ~2-3 min | Seated DB Shoulder Press | Machine Shoulder Press | Start with your elbows in front of you and palms facing in. Rotate the dumbbells so that your palms face forward as you press. A1. Press-Around | 1 | 2 | 12-15 | 44814 | 0 min | DB Flye | Deficit Push Up | Brace with your non-working arm, squeeze your pecs by pressing the cable across your body A2. Pec Static Stretch 30s | 0 | 2 | 30s HOLD | N/A | 0 min | N/A | N/A | Hold a pec stretch for 30 seconds. The stretch should be held at about a 7/10 intensity. Cross-Body Cable Y-Raise (Side Delt) | 1 | 3 | 12-15 | 44814 | ~1-2 min | DB Lateral Raise | Machine Lateral Raise | Think about swinging the cable out and up as if "drawing a sword" from your side Squeeze-Only Triceps Pressdown + Stretch-Only Overhead Triceps Extension | 1 | 3 | 8 + 8 | 44814 | ~1-2 min | Triceps Pressdown (12-15 reps) | DB Skull Crusher (12-15 reps) | Do the second half of the ROM for pressdowns ("the squeeze") and the first half of the ROM for overhead extensions ("the stretch") N1-Style Cross-Body Triceps Extension | 0 | 2 | 10-12 | 10 | ~1-2 min | Single-Arm Tricep Pressdown | Single-Arm Cable Tricep Kickback | Extend your triceps with your arm more out to the side than a regular pressdown. Feel the

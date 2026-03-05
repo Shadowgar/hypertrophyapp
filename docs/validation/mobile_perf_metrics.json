@@ -1,0 +1,73 @@
+{
+  "budgets": {
+    "maxSharedJsKb": 170,
+    "maxCriticalRouteChunkKb": 35,
+    "maxCriticalRouteTotalKb": 200
+  },
+  "sharedJsBytes": 166625,
+  "sharedJsKb": 162.72,
+  "maxCriticalRouteChunkJsBytes": 22041,
+  "maxCriticalRouteChunkJsKb": 21.52,
+  "maxCriticalRouteTotalJsBytes": 188666,
+  "maxCriticalRouteTotalJsKb": 184.24,
+  "routes": [
+    {
+      "id": "home",
+      "routeKey": "/page",
+      "chunkJsBytes": 6978,
+      "chunkJsKb": 6.81,
+      "totalWithSharedBytes": 173603,
+      "totalWithSharedKb": 169.53
+    },
+    {
+      "id": "today",
+      "routeKey": "/today/page",
+      "chunkJsBytes": 22041,
+      "chunkJsKb": 21.52,
+      "totalWithSharedBytes": 188666,
+      "totalWithSharedKb": 184.24
+    },
+    {
+      "id": "week",
+      "routeKey": "/week/page",
+      "chunkJsBytes": 11328,
+      "chunkJsKb": 11.06,
+      "totalWithSharedBytes": 177953,
+      "totalWithSharedKb": 173.78
+    },
+    {
+      "id": "checkin",
+      "routeKey": "/checkin/page",
+      "chunkJsBytes": 12151,
+      "chunkJsKb": 11.87,
+      "totalWithSharedBytes": 178776,
+      "totalWithSharedKb": 174.59
+    },
+    {
+      "id": "history",
+      "routeKey": "/history/page",
+      "chunkJsBytes": 11791,
+      "chunkJsKb": 11.51,
+      "totalWithSharedBytes": 178416,
+      "totalWithSharedKb": 174.23
+    },
+    {
+      "id": "guides",
+      "routeKey": "/guides/page",
+      "chunkJsBytes": 9274,
+      "chunkJsKb": 9.06,
+      "totalWithSharedBytes": 175899,
+      "totalWithSharedKb": 171.78
+    },
+    {
+      "id": "settings",
+      "routeKey": "/settings/page",
+      "chunkJsBytes": 11893,
+      "chunkJsKb": 11.61,
+      "totalWithSharedBytes": 178518,
+      "totalWithSharedKb": 174.33
+    }
+  ],
+  "failures": [],
+  "passed": true
+}

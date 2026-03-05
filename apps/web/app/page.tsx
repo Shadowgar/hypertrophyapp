@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { UiIcon } from "@/components/ui/icons";
 
 export default function HomePage() {
   return (
@@ -36,20 +37,34 @@ export default function HomePage() {
       <div className="main-card main-card--module spacing-grid">
         <Link href="/login" className="block">
           <Button className="w-full" variant="secondary">
-            Login
+            <span className="inline-flex items-center gap-2">
+              <UiIcon name="login" className="ui-icon--action" />
+              Login
+            </span>
           </Button>
         </Link>
         <Link href="/reset-password" className="block">
           <Button className="w-full" variant="secondary">
-            Reset Password
+            <span className="inline-flex items-center gap-2">
+              <UiIcon name="reset" className="ui-icon--action" />
+              Reset Password
+            </span>
           </Button>
         </Link>
         <Link href="/onboarding" className="block">
-          <Button className="w-full">Start Onboarding</Button>
+          <Button className="w-full">
+            <span className="inline-flex items-center gap-2">
+              <UiIcon name="onboarding" className="ui-icon--action" />
+              Start Onboarding
+            </span>
+          </Button>
         </Link>
         <Link href="/today" className="block">
           <Button className="w-full" variant="secondary">
-            Go To Today
+            <span className="inline-flex items-center gap-2">
+              <UiIcon name="workout" className="ui-icon--action" />
+              Go To Today
+            </span>
           </Button>
         </Link>
       </div>

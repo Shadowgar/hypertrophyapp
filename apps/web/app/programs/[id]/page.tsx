@@ -49,7 +49,13 @@ export default function ProgramGuidePage() {
                 <p className="text-xs text-zinc-400">{day.exercise_count} exercises</p>
                 <div className="mt-2 flex gap-2">
                   <Link
-                    href={`/guides/${program.id}/day/${day.day_index}`}
+                    href={`/guides/${program.id}/phase/main`}
+                    className="rounded-md border border-zinc-700 px-2 py-1 text-xs text-zinc-200"
+                  >
+                    Open phase guide
+                  </Link>
+                  <Link
+                    href={`/guides/${program.id}/phase/main/day/${day.day_index}`}
                     className="rounded-md border border-zinc-700 px-2 py-1 text-xs text-zinc-200"
                   >
                     Open day guide

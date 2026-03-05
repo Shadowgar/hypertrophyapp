@@ -1,0 +1,11 @@
+# Normalized Reference Guide
+
+- Asset: reference/My New Program.xlsx
+- SHA256: 46f50999771cbb454b325729b2d2a77515dbcf2cdd86891e4543eab65019bb71
+- Type: xlsx
+- Extraction Method: xlsx_zip_xml
+- Extracted Characters: 113534
+
+## Excerpt
+
+THE PURE BODYBUILDING PROGRAM - FULL BODY Copyright 2023 by Jeff Nippard. All rights reserved. IMPORTANT PROGRAM NOTES (READ BEFORE STARTING) • Perform a full general warm-up and exercise-specific warm-up every workout as outlined below (should only take 5-10 mins max) • Note that for the first 2 weeks of this Full Body version of the program, most sets in this program are taken to an RPE of ~7-8 or ~8-9. This means you will be leaving 1-3 reps in the tank on most exercises. This only lasts for the first two weeks (to get you adapted to the higher training frequency). For these first two weeks, there are also fewer intensity techniques used. After the first two weeks, the intensity will increase and most sets will be taken to an RPE of 9-10. This means you will push most sets within ~1 rep of failure or to failure. Make sure you are focused mentally before starting each working set! • All working sets are broken up into Early Sets and Last Sets. The Early Sets are all the sets that come before your Last Set. Usually the Early Sets should be a little bit easier than the later sets (slightly lower RPE) whereas the Last Set is pushed to failure on most (but not all exercises). See the Pure Hypertrophy Handbook for a full explanation of RPE. • There is a Weak Point & Arms day in this program where you will select a weak point from the table below and perform 1-2 exercises for your weak point on this day. Please read The Hypertrophy Handbook for more detail. • Each exercise has a clickable link which demonstrates how to perform the exercise. I suggest watching each exercise demo before starting the workout. • All other aspects of the program, including how to understand the Last-Set Intensity Technique column, when to make an exercise substitution and how to progress through the rep ranges given is explained in The Hypertrophy Handbook. Give it a full read before starting your first workout! Let's crush it!! WARM UP PROTOCOL General Warm-Up Perform the following general 

@@ -169,6 +169,26 @@ def split_from_filename(path: Path) -> str:
     return "full_body"
 
 
+def infer_days_supported(path: Path, split: str) -> list[int]:
+    name = path.stem.lower()
+
+    explicit_days = sorted(
+        {
+            int(match)
+            for match in re.findall(r"(?:^|\D)(\d)(?:x|\s*days?)(?:\D|$)", name)
+            if match.isdigit() and 2 <= int(match) <= 7
+        }
+    )
+    if explicit_days:
+        return explicit_days
+
+    if split == "upper_lower":
+        return [4]
+    if split == "ppl":
+        return [3, 4, 5, 6]
+    return [2, 3, 4, 5]
+
+
 def _read_shared_strings(workbook_zip: zipfile.ZipFile) -> list[str]:
     if "xl/sharedStrings.xml" not in workbook_zip.namelist():
         return []
@@ -381,11 +401,12 @@ def import_workbook(input_file: Path, output_file: Path | None = None, sheet_nam
             "No session data parsed. Ensure the workbook contains columns like Exercise/Working Sets/Reps."
         )
 
+    split = split_from_filename(input_file)
     template = {
         "id": slugify(input_file.stem),
         "version": "1.0.0",
-        "split": split_from_filename(input_file),
-        "days_supported": [2, 3, 4],
+        "split": split,
+        "days_supported": infer_days_supported(input_file, split),
         "deload": {"trigger_weeks": 6, "set_reduction_pct": 35, "load_reduction_pct": 10},
         "progression": {"mode": "double_progression", "increment_kg": 2.5},
         "sessions": parsed_sessions,

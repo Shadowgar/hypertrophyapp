@@ -9,7 +9,7 @@ from core_engine import generate_week_plan
 
 from ..database import get_db
 from ..deps import get_current_user
-from ..models import SorenessEntry, User, WeeklyCheckin, WorkoutPlan, WorkoutSetLog
+from ..models import SorenessEntry, User, WeeklyCheckin, WeeklyReviewCycle, WorkoutPlan, WorkoutSetLog
 from ..program_loader import list_program_templates, load_program_template
 from ..schemas import GenerateWeekPlanRequest, ProgramTemplateSummary
 from ..schemas import (
@@ -30,6 +30,12 @@ GUIDE_RESPONSES = {
     404: {"description": "Guide resource not found"},
     422: {"description": INVALID_TEMPLATE_DETAIL},
 }
+
+REVIEW_SET_DELTA_MIN = -1
+REVIEW_SET_DELTA_MAX = 1
+REVIEW_ADDITIONAL_SET_CAP = 2
+REVIEW_INTENSITY_MIN_SCALE = 0.93
+REVIEW_INTENSITY_MAX_SCALE = 1.03
 
 
 def _collect_recovery_and_mesocycle_inputs(
@@ -102,6 +108,87 @@ def _preview_template_viability(
     session_count = len(sessions)
     exercise_count = sum(len(session.get("exercises") or []) for session in sessions)
     return session_count, exercise_count
+
+
+def _round_to_increment(weight: float, increment: float = 2.5) -> float:
+    return round(max(5.0, weight) / increment) * increment
+
+
+def _clamp_scale(value: float) -> float:
+    return max(0.8, min(1.2, value))
+
+
+def _clamp_review_set_delta(value: int) -> int:
+    return max(REVIEW_SET_DELTA_MIN, min(REVIEW_SET_DELTA_MAX, value))
+
+
+def _clamp_review_intensity_scale(value: float) -> float:
+    return max(REVIEW_INTENSITY_MIN_SCALE, min(REVIEW_INTENSITY_MAX_SCALE, value))
+
+
+def _resolve_review_adjustments(review_cycle: WeeklyReviewCycle) -> tuple[int, float, dict[str, Any], list[str]]:
+    adjustments = review_cycle.adjustments if isinstance(review_cycle.adjustments, dict) else {}
+    global_adjustments = adjustments.get("global") if isinstance(adjustments.get("global"), dict) else {}
+    global_set_delta = _clamp_review_set_delta(int(global_adjustments.get("set_delta", 0) or 0))
+    global_weight_scale = _clamp_review_intensity_scale(
+        _clamp_scale(float(global_adjustments.get("weight_scale", 1.0) or 1.0))
+    )
+    exercise_overrides = adjustments.get("exercise_overrides") if isinstance(adjustments.get("exercise_overrides"), dict) else {}
+    weak_points = adjustments.get("weak_point_exercises") if isinstance(adjustments.get("weak_point_exercises"), list) else []
+    return global_set_delta, global_weight_scale, exercise_overrides, weak_points
+
+
+def _apply_exercise_adjustments(
+    exercise: dict[str, Any],
+    *,
+    global_set_delta: int,
+    global_weight_scale: float,
+    exercise_overrides: dict[str, Any],
+) -> None:
+    primary_exercise_id = str(exercise.get("primary_exercise_id") or exercise.get("id") or "")
+    per_exercise = exercise_overrides.get(primary_exercise_id)
+    if not isinstance(per_exercise, dict):
+        per_exercise = {}
+
+    exercise_set_delta = _clamp_review_set_delta(int(per_exercise.get("set_delta", 0) or 0))
+    exercise_weight_scale = _clamp_review_intensity_scale(
+        _clamp_scale(float(per_exercise.get("weight_scale", 1.0) or 1.0))
+    )
+
+    original_sets = int(exercise.get("sets", 1) or 1)
+    adjusted_sets = original_sets + global_set_delta + exercise_set_delta
+    max_sets = max(1, original_sets + REVIEW_ADDITIONAL_SET_CAP)
+    exercise["sets"] = max(1, min(max_sets, adjusted_sets))
+
+    original_weight = float(exercise.get("recommended_working_weight", 20) or 20)
+    scaled_weight = original_weight * global_weight_scale * exercise_weight_scale
+    exercise["recommended_working_weight"] = _round_to_increment(scaled_weight)
+
+    rationale = per_exercise.get("rationale")
+    if rationale:
+        exercise["adaptive_rationale"] = str(rationale)
+
+
+def _apply_review_adjustments(plan: dict[str, Any], review_cycle: WeeklyReviewCycle) -> dict[str, Any]:
+    global_set_delta, global_weight_scale, exercise_overrides, weak_points = _resolve_review_adjustments(review_cycle)
+
+    for session in plan.get("sessions") or []:
+        for exercise in session.get("exercises") or []:
+            _apply_exercise_adjustments(
+                exercise,
+                global_set_delta=global_set_delta,
+                global_weight_scale=global_weight_scale,
+                exercise_overrides=exercise_overrides,
+            )
+
+    plan["adaptive_review"] = {
+        "week_start": review_cycle.week_start.isoformat(),
+        "reviewed_on": review_cycle.reviewed_on.isoformat(),
+        "global_set_delta": global_set_delta,
+        "global_weight_scale": global_weight_scale,
+        "weak_point_exercises": weak_points,
+    }
+    return plan
 
 
 def _ordered_candidate_template_ids(
@@ -358,8 +445,10 @@ def plan_generate_week(
 
     history = [
         {
+            "primary_exercise_id": row.primary_exercise_id,
             "exercise_id": row.exercise_id,
             "next_working_weight": row.weight,
+            "created_at": row.created_at.isoformat() if row.created_at else None,
         }
         for row in history_rows
     ]
@@ -387,6 +476,15 @@ def plan_generate_week(
     )
 
     week_start = date.fromisoformat(plan["week_start"])
+    review_cycle = (
+        db.query(WeeklyReviewCycle)
+        .filter(WeeklyReviewCycle.user_id == current_user.id, WeeklyReviewCycle.week_start == week_start)
+        .order_by(WeeklyReviewCycle.created_at.desc())
+        .first()
+    )
+    if review_cycle is not None:
+        plan = _apply_review_adjustments(plan, review_cycle)
+
     record = WorkoutPlan(
         user_id=current_user.id,
         week_start=week_start,

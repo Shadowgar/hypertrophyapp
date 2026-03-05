@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { UiIcon } from "@/components/ui/icons";
 import { API_BASE_URL } from "@/lib/env";
 
 type ResetRequestResponse = {
@@ -29,7 +30,9 @@ export default function ResetPasswordPage() {
         body: JSON.stringify({ email }),
       });
       if (!response.ok) {
-        setRequestStatus("Request failed");
+        const detail = await response.text();
+        const message = detail ? `Request failed: ${detail}` : "Request failed";
+        setRequestStatus(message);
         return;
       }
 
@@ -54,7 +57,9 @@ export default function ResetPasswordPage() {
         body: JSON.stringify({ token, new_password: newPassword }),
       });
       if (!response.ok) {
-        setConfirmStatus("Password update failed");
+        const detail = await response.text();
+        const message = detail ? `Password update failed: ${detail}` : "Password update failed";
+        setConfirmStatus(message);
         return;
       }
       setConfirmStatus("Password updated");
@@ -76,7 +81,10 @@ export default function ResetPasswordPage() {
           placeholder="Email"
         />
         <Button className="w-full" type="submit">
-          Request Reset
+          <span className="inline-flex items-center gap-2">
+            <UiIcon name="reset" className="ui-icon--action" />
+            Request Reset
+          </span>
         </Button>
         <p className="ui-meta">Status: {requestStatus}</p>
       </form>
@@ -102,10 +110,16 @@ export default function ResetPasswordPage() {
           type="button"
           variant="secondary"
         >
-          {showNewPassword ? "Hide Password" : "Show Password"}
+          <span className="inline-flex items-center gap-2">
+            <UiIcon name="settings" className="ui-icon--action" />
+            {showNewPassword ? "Hide Password" : "Show Password"}
+          </span>
         </Button>
         <Button className="w-full" type="submit">
-          Confirm Reset
+          <span className="inline-flex items-center gap-2">
+            <UiIcon name="save" className="ui-icon--action" />
+            Confirm Reset
+          </span>
         </Button>
         <p className="ui-meta">Status: {confirmStatus}</p>
       </form>

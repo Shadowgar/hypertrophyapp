@@ -303,16 +303,135 @@ def _normalize_indices(indices: list[int], total: int, count: int) -> list[int]:
     return normalized[:count]
 
 
-def _select_sessions_for_days(base_sessions: list[dict[str, Any]], days_available: int) -> list[tuple[int, dict[str, Any]]]:
-    if days_available >= len(base_sessions):
-        return list(enumerate(base_sessions))
-
+def _select_sessions_evenly(base_sessions: list[dict[str, Any]], days_available: int) -> list[tuple[int, dict[str, Any]]]:
     selected_indices = _normalize_indices(
         _spread_indices(len(base_sessions), days_available),
         len(base_sessions),
         days_available,
     )
     return [(index, base_sessions[index]) for index in selected_indices]
+
+
+def _history_exercise_key(history_item: dict[str, Any]) -> str | None:
+    primary_exercise_id = str(history_item.get("primary_exercise_id") or "").strip()
+    if primary_exercise_id:
+        return primary_exercise_id
+
+    exercise_id = str(history_item.get("exercise_id") or "").strip()
+    return exercise_id or None
+
+
+def _rank_history_priority_exercises(history: list[dict[str, Any]], limit: int = 6) -> list[str]:
+    if not history:
+        return []
+
+    weighted_counts: dict[str, float] = {}
+    total = len(history)
+    denominator = max(1, total - 1)
+    for index, item in enumerate(history):
+        exercise_key = _history_exercise_key(item)
+        if not exercise_key:
+            continue
+
+        # Favor recent exposures while preserving determinism.
+        recency_weight = 1.0 + ((total - index - 1) / denominator)
+        weighted_counts[exercise_key] = weighted_counts.get(exercise_key, 0.0) + recency_weight
+
+    ranked = sorted(weighted_counts.items(), key=lambda pair: (-pair[1], pair[0]))
+    return [exercise_id for exercise_id, _ in ranked[:limit]]
+
+
+def _session_profile(session: dict[str, Any]) -> tuple[set[str], set[str]]:
+    primary_exercise_ids: set[str] = set()
+    muscles: set[str] = set()
+
+    for exercise in session.get("exercises") or []:
+        primary_exercise_id = str(exercise.get("primary_exercise_id") or exercise.get("id") or "").strip()
+        if primary_exercise_id:
+            primary_exercise_ids.add(primary_exercise_id)
+        muscles.update(_resolve_exercise_muscles(exercise))
+
+    return primary_exercise_ids, muscles
+
+
+def _priority_weight(exercise_ids: set[str], priority_weights: dict[str, int]) -> int:
+    return sum(priority_weights.get(exercise_id, 0) for exercise_id in exercise_ids)
+
+
+def _session_distance_score(index: int, selected_indices: list[int], total_sessions: int) -> float:
+    if not selected_indices:
+        return 0.0
+    nearest_distance = min(abs(index - selected) for selected in selected_indices)
+    return nearest_distance / max(1, total_sessions - 1)
+
+
+def _select_sessions_with_continuity(
+    base_sessions: list[dict[str, Any]],
+    days_available: int,
+    priority_targets: list[str],
+) -> list[tuple[int, dict[str, Any]]]:
+    priority_weights = {
+        exercise_id: len(priority_targets) - index
+        for index, exercise_id in enumerate(priority_targets)
+    }
+
+    session_profiles = [_session_profile(session) for session in base_sessions]
+    if not any(_priority_weight(primary_ids, priority_weights) > 0 for primary_ids, _ in session_profiles):
+        return _select_sessions_evenly(base_sessions, days_available)
+
+    selected_indices: list[int] = []
+    covered_priority: set[str] = set()
+    covered_muscles: set[str] = set()
+
+    while len(selected_indices) < days_available:
+        best_index: int | None = None
+        best_score: tuple[int, int, int, int, float] | None = None
+
+        for index, (session_primary_ids, session_muscles) in enumerate(session_profiles):
+            if index in selected_indices:
+                continue
+
+            new_priority_ids = session_primary_ids - covered_priority
+            score = (
+                _priority_weight(new_priority_ids, priority_weights),
+                len(session_muscles - covered_muscles),
+                _priority_weight(session_primary_ids, priority_weights),
+                len(session_muscles),
+                _session_distance_score(index, selected_indices, len(base_sessions)),
+            )
+
+            if best_score is None or score > best_score or (score == best_score and index < best_index):
+                best_index = index
+                best_score = score
+
+        if best_index is None:
+            break
+
+        selected_indices.append(best_index)
+        session_primary_ids, session_muscles = session_profiles[best_index]
+        covered_priority.update(session_primary_ids)
+        covered_muscles.update(session_muscles)
+
+    if len(selected_indices) != days_available:
+        return _select_sessions_evenly(base_sessions, days_available)
+
+    selected_indices.sort()
+    return [(index, base_sessions[index]) for index in selected_indices]
+
+
+def _select_sessions_for_days(
+    base_sessions: list[dict[str, Any]],
+    days_available: int,
+    history: list[dict[str, Any]],
+) -> list[tuple[int, dict[str, Any]]]:
+    if days_available >= len(base_sessions):
+        return list(enumerate(base_sessions))
+
+    priority_targets = _rank_history_priority_exercises(history)
+    if not priority_targets:
+        return _select_sessions_evenly(base_sessions, days_available)
+
+    return _select_sessions_with_continuity(base_sessions, days_available, priority_targets)
 
 
 def _compute_weekly_volume_and_coverage(planned_sessions: list[dict[str, Any]]) -> tuple[dict[str, int], dict[str, Any]]:
@@ -364,7 +483,7 @@ def generate_week_plan(
     week_start = today - timedelta(days=today.weekday())
 
     base_sessions = program_template.get("sessions", [])
-    selected_sessions = _select_sessions_for_days(base_sessions, days_available)
+    selected_sessions = _select_sessions_for_days(base_sessions, days_available, history)
 
     history_index = {
         item.get("exercise_id"): item for item in history if item.get("exercise_id")
