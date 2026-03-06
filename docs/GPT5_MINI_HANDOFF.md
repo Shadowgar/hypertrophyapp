@@ -1,181 +1,33 @@
-# GPT-5-mini Handoff Guide
+# GPT-5-mini Handoff - Adaptive Coaching Rebuild
 
-## Purpose
-This document defines how GPT-5-mini should continue full-stack delivery for the repository.
+Last updated: 2026-03-06
 
-## Operating Authority
-- GPT-5-mini is authorized to implement across the entire project.
-- GPT-5-mini may modify backend, frontend, tests, docs, scripts, CI workflows, and migrations when required.
-- GPT-5-mini may commit and push directly to `main` after validation passes.
+## Mission
 
-Related operating docs:
+Rebuild the platform into a deterministic adaptive hypertrophy coaching system based on:
+- Excel-derived structured templates
+- PDF-derived explicit coaching rules
+
+## Active Baseline Docs
+
+- `docs/Master_Plan.md`
+- `docs/redesign/Adaptive_Coaching_Redesign.md`
 - `docs/GPT5_MINI_EXECUTION_BACKLOG.md`
-- `docs/GPT5_MINI_RUNBOOK.md`
-- `docs/GPT5_MINI_BOOTSTRAP_PROMPT.md`
-- `docs/Master_Plan.md` (`Model Ownership & Quality Routing`)
-- `docs/High_Risk_Contracts.md`
-- `docs/Offline_Sync_Deterministic_Contract.md`
-- `docs/Security_Hardening_Architecture.md`
-- `docs/Auth_Expansion_Architecture.md`
 
-Automation scripts:
-- `scripts/mini_preflight.sh`
-- `scripts/mini_validate.sh`
+## Current State Snapshot
 
-## Core Contracts (Maintain Unless Task Requires Change)
+Implemented and pushed:
+- Coaching preview/apply timeline UX
+- Ingestion quality reporting
+- XLSX sanitization and preflight audit guard
 
-### API Endpoints
-- `GET /plan/programs`
-  - Returns validated program summaries from `/programs/*.json`.
-  - Response shape:
-    - `id: string`
-    - `version: string`
-    - `split: string`
-    - `days_supported: number[]`
-    - `session_count: number`
-    - `description: string`
-- `POST /plan/generate-week`
-  - Uses `payload.template_id` if provided.
-  - Otherwise uses user `selected_program_id`.
-  - Otherwise falls back to `full_body_v1`.
-  - Request shape (current):
-    - `template_id?: string`
-- `GET /profile`
-  - Must include `selected_program_id`.
-- `POST /profile`
-  - Must accept and persist `selected_program_id`.
-- `GET /plan/intelligence/reference-pairs`
-  - Returns workbook/PDF pairing records from provenance artifacts.
-- `POST /plan/intelligence/coach-preview`
-  - Returns deterministic schedule/progression/phase/specialization preview payload.
-- `POST /plan/intelligence/apply-phase`
-  - Requires `recommendation_id` and confirmation flag.
-- `POST /plan/intelligence/apply-specialization`
-  - Requires `recommendation_id` and confirmation flag.
+Started for redesign foundation:
+- Gold sample template: `programs/gold/adaptive_full_body_gold_v0_1.json`
+- Gold sample rules: `docs/rules/gold/adaptive_full_body_gold_v0_1.rules.json`
+- Redesign authority doc: `docs/redesign/Adaptive_Coaching_Redesign.md`
 
-### Data Model
-- `users.selected_program_id` exists and is persisted.
-- Alembic revision `0006_user_selected_program` introduces this field.
+## Immediate Next Execution
 
-### Determinism Rules
-- No runtime PDF/XLSX parsing.
-- No runtime embeddings/retrieval.
-- All runtime planning from canonical templates in `/programs/`.
-
-## Files Changed by GPT-5.3-Codex
-- `apps/api/app/models.py`
-- `apps/api/app/schemas.py`
-- `apps/api/app/program_loader.py`
-- `apps/api/app/routers/profile.py`
-- `apps/api/app/routers/plan.py`
-- `apps/api/alembic/versions/0006_user_selected_program.py`
-- `apps/api/tests/test_program_catalog_and_selection.py`
-
-## GPT-5-mini Scope (Next)
-
-### 1) Onboarding Program Picker (UI)
-- Add selectable program list in `apps/web/app/onboarding/page.tsx`.
-- Use `GET /plan/programs`.
-- Save chosen `selected_program_id` through `/profile`.
-
-### 2) Settings Program Switcher (UI)
-- Add program switch UI in `apps/web/app/settings/page.tsx`.
-- Persist via `/profile`.
-- Display current program summary.
-
-### 3) Plan Guide Pages (UI Scaffolding)
-- Add initial route structure for guide surfaces:
-  - program overview
-  - day/session overview
-  - exercise guide
-- Use text-first rendering from API-ready structures (no PDF rendering).
-
-### 4) Week Page Program UX
-- Add optional explicit program override on week generation UI.
-- Keep default behavior as server-side selected program.
-
-## Notes on Safe Evolution
-- Prefer additive and backward-compatible API changes.
-- If a breaking change is required, update callers and tests in the same session.
-- Keep deterministic runtime rules: no runtime PDF/XLSX parsing or embeddings-based retrieval.
-
-## Deterministic Boundaries (Do / Do-Not-Change)
-
-### DO (allowed)
-- Additive API fields that do not break existing consumers.
-- New tests for deterministic behaviors and contract enforcement.
-- UI composition and visual updates that do not alter deterministic planning behavior.
-- Build-time importer improvements that preserve deterministic outputs and schema validity.
-
-### DO NOT CHANGE without explicit contract update
-- Engine payload keys/semantics consumed by API/web (`weekly_volume_by_muscle`, `muscle_coverage`, `mesocycle`, `deload`, session/exercise structure).
-- Runtime determinism constraints (no runtime parsing of `/reference`, no runtime retrieval/embeddings).
-- Program switching semantics (two-step explicit confirmation flow).
-- Guide API route contracts and error semantics without coordinated caller/test updates.
-- Ingestion artifact contract files (`asset_catalog.json`, `provenance_index.json`) and aggregate signature semantics.
-- Offline replay semantics (`client_id` + `op_id` idempotency, deterministic queue ordering, `409/422` conflict behavior, sync state machine).
-- Security hardening semantics (runtime secret injection boundaries, deterministic `429` behavior, backup/restore and drill contracts).
-- Auth expansion semantics (deterministic identity linking across password/OAuth/passkeys and stable auth error/session contracts).
-
-### If a prohibited change is required
-1. Update `docs/High_Risk_Contracts.md` first.
-2. Update all affected API/web/tests in one PR.
-3. Run focused validation for the changed contract surfaces.
-
-## Validation Commands
-
-### API tests (container)
-```bash
-cd /home/rocco/hypertrophyapp
-docker compose exec -T api sh -lc 'cd /app/apps/api && PYTHONPATH=. pytest tests/test_program_catalog_and_selection.py tests/test_profile_schema.py tests/test_workout_resume.py -q'
-```
-
-### Web build
-```bash
-cd /home/rocco/hypertrophyapp/apps/web
-npm run build
-```
-
-## Definition of Done for mini tasks
-- UI reads from `/plan/programs` and persists `selected_program_id`.
-- No regressions in API tests above.
-- Web build passes.
-- Web tests pass.
-- Changes are committed and pushed to `main`.
-
-## Current Working-Tree Progress (2026-03-06)
-- Importer hardening: `importers/xlsx_to_program.py` now sanitizes structural/non-workout rows before canonical export.
-- New importer regression coverage: `apps/api/tests/test_xlsx_to_program_sanitization.py`.
-- Frontend API wiring added for intelligence endpoints: `apps/web/lib/api.ts`.
-- Initial settings coaching UX added: `apps/web/app/settings/page.tsx`.
-- Frontend test coverage added: `apps/web/tests/settings.intelligence.test.tsx`.
-- Coaching preview/apply chaining is now automatic in Settings via preview `recommendation_id`.
-- Coaching preview/apply flow is now integrated across Week, Check-In, and Today via shared UI panel.
-- Recommendation timeline/history surface is now available in `apps/web/app/history/page.tsx` with rationale visibility.
-- Ingestion quality and normalization report now generated at `docs/validation/ingestion_quality_report.json` and `docs/validation/ingestion_quality_report.md`.
-
-
-
-
-
-
-## Progress Sync (2026-03-06)
-- Repository state synchronized through commit `1026d25` on `main` (pushed to `origin/main`).
-- Validation baseline is green via `./scripts/mini_validate.sh`:
-  - API: `63 passed`
-  - Web tests: `16 passed`
-  - Web build: success
-- Additional progress after previous sync:
-  - `777cb86`: pruned obsolete visual-route snapshots (`apps/web/tests/__snapshots__/visual.routes.snapshot.test.tsx.snap`)
-  - `739cb99`: migrated API startup from `@app.on_event("startup")` to FastAPI lifespan in `apps/api/app/main.py`
-  - `18dd81b`: replaced model `datetime.utcnow()` defaults with centralized UTC helper in `apps/api/app/models.py`
-  - `cb317d0`: hardened `scripts/mini_validate.sh` with compose command detection and one-shot rebuild/retry fallback for failed containerized API test runs
-  - `3596622`: migrated auth stack from `passlib/python-jose` to `bcrypt/PyJWT` in API runtime paths
-  - `1026d25`: added coach-preview API edge-case tests for invalid template handling, low-readiness deload extension, and phase-transition boundary branches
-- Current warning profile:
-  - FastAPI startup deprecation warning removed.
-  - SQLAlchemy `datetime.utcnow()` warning class removed from API test runs.
-  - `passlib` and `python-jose` deprecation warnings removed from validation output.
-  - `mini_validate` run now reports clean test results without warning spam in the default path.
-- Drift prevention protocol for next sessions: run `./scripts/mini_preflight.sh` and `./scripts/mini_next_task.sh` before implementation, and `./scripts/mini_validate.sh` before commit/push.
-
+1. Complete explicit keep/isolate/deprecate/delete audit list.
+2. Finalize canonical schemas and validation tests.
+3. Implement gold sample decision-engine flow end-to-end.

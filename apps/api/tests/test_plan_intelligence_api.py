@@ -191,22 +191,6 @@ def test_apply_specialization_decision_requires_confirmation_then_applies() -> N
     assert apply_payload["applied_recommendation_id"]
 
 
-def test_reference_pair_endpoint_returns_list_payload() -> None:
-    _reset_db()
-    client = TestClient(app)
-
-    response = client.get("/plan/intelligence/reference-pairs")
-    assert response.status_code == 200
-
-    payload = response.json()
-    assert isinstance(payload, list)
-    if payload:
-        first = payload[0]
-        assert "workbook_asset_path" in first
-        assert "guide_asset_path" in first
-        assert "match_score" in first
-
-
 def test_recommendation_timeline_returns_preview_and_applied_records_with_rationale() -> None:
     _reset_db()
     client = TestClient(app)

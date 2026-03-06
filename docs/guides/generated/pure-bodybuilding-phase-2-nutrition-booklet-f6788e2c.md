@@ -3,9 +3,9 @@
 - Asset: reference/Pure Bodybuilding Phase 2 - Nutrition Booklet.pdf
 - SHA256: f6788e2c94bb7daecd3a00e8b621cd811d95db500381de23fcff0140d77bb141
 - Type: pdf
-- Extraction Method: pdf_metadata_only
-- Extracted Characters: 0
+- Extraction Method: pdf_pypdf
+- Extracted Characters: 10931
 
 ## Excerpt
 
-(No text extracted)
+In this booklet I’ m going t o boil down e v er ything ther e is t o know about bodybuilding nutrition t o the bar e essentials. What follows is the essence of what y ou r eally need t o do with y our diet t o get jack ed: the pur e bodybuilding nutrition fundamentals. If Y our Main Goal Is T o Maximiz e Muscle Gain Because building new muscle tissue is an ener getically expensiv e pr oject for the body , in or der t o gain maximum muscle on this pr ogr am, I r ecommend a small ~5-15% caloric surplus. This means y ou eat 5-15% mor e calories than y our maintenance intak e. I’ ll explain how t o find y our maintenance intak e shor tly . The r eason I suggest a small caloric surplus is because the bigger the surplus, the mor e fat y ou will gain alongside y our muscle gain. If Y our Main Goal Is T o Gain Muscle & Lose F at A t The Same Time (Body Recomposition) If y our main goal while running this pr ogr am is t o build muscle while losing fat, I’ d suggest putting y our calories at maintenance intak e. This simply means y ou will eat the number of calories needed t o maintain y our curr ent bodyweight. In this case, as y ou gain muscle, y ou will simultaneously lose fat at a similar r ate, r esulting in little t o no net weight change. If Y our Main Goal Is T o Lose F at If losing fat is y our main priority , then y ou’ ll want t o be in a 5-15% caloric deficit. Ov er the long term, lar ger deficits tend t o r esult in mor e muscle loss and less sustainable fat loss. F or this r eason, I am suggesting a smaller deficit and a slower diet. It ma y be tempting t o get the weight off as fast as possible, but r emember , cr ash dieting often hur ts muscle mass, str ength and can r esult in r apid weight r egain after the diet is o v er . Finding Y our Maintenance Calories If y ou ar en ’t sur e how t o find y our maintenance calories, her e is a r ough guide: S e t t i n g U p Y o u r C a l o r i e s Y our caloric intak e will ultimately dictate whether y ou gain or lose

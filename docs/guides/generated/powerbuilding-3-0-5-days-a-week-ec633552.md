@@ -3,9 +3,9 @@
 - Asset: reference/Powerbuilding 3.0 5 days a week.pdf
 - SHA256: ec6335524c9bdd03ba2455b6e912843c0953a756d9e2f33fc1bac033f1d1a316
 - Type: pdf
-- Extraction Method: pdf_metadata_only
-- Extracted Characters: 0
+- Extraction Method: pdf_pypdf
+- Extracted Characters: 118243
 
 ## Excerpt
 
-(No text extracted)
+5X/WEEK POWERBUILDING PHASE 3.0 (4X/WEEK) 2 DISCLAIMER Copyright 2022 by Jeff Nippard. All rights reserved. No part of this e-book may be used or reproduced by any means: graphic, electronic, or mechanical, including photocopying, recording, taping or by any information storage retrieval system without the written permission of the author, except in the case of brief quotations embodied in critical articles or reviews. Readers should be aware that Internet Web sites offered as citations and/or sources for further information may have changed or disappeared between the POWERBUILDING PHASE 3.0 (4X/WEEK) 3 time this book was written and when it is read. Limit of Liability/Disclaimer of Warranty: While the author has used his best efforts and knowledge in researching and preparing this book, he makes no representations or warranties with respect to the accuracy or completeness of the contents of this book and specifically disclaims any implied warranties of merchantability or fitness for a particular purpose. No warranty may be created or extended by sales representatives or written sales materials. The advice and strategies contained herein may not be suitable for your particular situation. You should consult with a medical professional where appropriate. Neither the publisher nor the author shall be liable for any loss of profit or any other commercial damages, including but not limited to special, incidental, consequential, or other damages. The contents of this e-book are not intended for the treatment or prevention of disease, nor as a substitute for medical treatment, nor as an alternative to medical advice. Utilizing the information within this e-book is at the sole choice and risk of the reader. DISCLAIMER 2 ABOUT ME 6 KEY TERMS 8 ABOUT THIS PROGRAM 12 FAQ 18 WARM UP 34 POWERBUILDING PROGRAM 3.0 38 TABLE OF CONTENTS PROGRAM EXPLAINED 71 TRAINING VARIABLES 90 EXERCISE VIDEO DEMONSTRATIONS 96 EXERCISE SUBSTITUTIONS 101 REFERENCES 105 POWERBUILDING PHASE 3.0 (4X/WE

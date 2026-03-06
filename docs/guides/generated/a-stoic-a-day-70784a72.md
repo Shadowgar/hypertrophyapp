@@ -3,9 +3,9 @@
 - Asset: reference/a-stoic-a-day.pdf
 - SHA256: 70784a7297f383961b1f0314dd0f8f5c122fd1a0b1eeb8f77744ef6398555e7a
 - Type: pdf
-- Extraction Method: pdf_metadata_only
-- Extracted Characters: 0
+- Extraction Method: pdf_pypdf
+- Extracted Characters: 203009
 
 ## Excerpt
 
-(No text extracted)
+What is Stoicism? Wikipedia defines Stoicism as: “A school of Hellenistic philosophy founded by Zeno of Citium in Athens in the early 3rd century BC. It is a philosophy of personal eudemonic virtue ethics informed by its system of logic and its views on the natural world, asserting that the practice of virtue is both necessary and sufficient to achieve eudaimonia – flourishing, by means of living an ethical life.” But Stoicism is so much more than a definition or an entry in Wikipedia. Stoicism is a mindset. It is an operating system for life. It is a philosophy of life that allows us to live with greater strength, acceptance and tranquility. Who Were the Stoics? The primary Stoics were:  Zeno – Founder of the Stoic School of Philosophy  Seneca - a Roman Stoic philosopher, statesman, and dramatist. Advisor to Nero.  Epictetus - Born a slave, he ultimately became one of the greatest Roman teachers of Stoicism.  Marcus Aurelius - a Roman emperor from 161 to 180 and a Stoic philosopher. He was the last of the rulers known as the Five Good Emperors. Why Should I Care about Stoicism? Stoicism is a philosophy that can help us in every area of our lives:  Our personal life  Our professional life  Our emotional life  Our family life The Practice of Stoicism  Study – Read some Stoicism daily (this book is a great start).  Practice – Practice Stoicism in your daily life.  Reflect – Reflect upon your daily successes and areas for improvement. “Every night before going to sleep, we must ask ourselves: what weakness did I overcome today? What virtue did I acquire?” - Seneca How to Use This Book This book is meant to be a daily reflection. Each morning, read the Stoic Thought of the Day and the Stoic quote. In the evening, reflect upon the Stoic Reflection of the Day. Some of these reflections may “hurt”. That is good! Epictetus tells us: “Friends, the school of a philosopher is a hospital. When you leave, you should have suffered, not enjoyed yourself.” January 1st St

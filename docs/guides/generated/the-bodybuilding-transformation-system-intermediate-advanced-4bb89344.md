@@ -3,9 +3,9 @@
 - Asset: reference/The_Bodybuilding_Transformation_System_-_Intermediate_Advanced.pdf
 - SHA256: 4bb8934483d723ce8dc71d57c38f67e3b5cf7b93da0129350722e245c07c98ca
 - Type: pdf
-- Extraction Method: pdf_metadata_only
-- Extracted Characters: 0
+- Extraction Method: pdf_pypdf
+- Extracted Characters: 120754
 
 ## Excerpt
 
-(No text extracted)
+P er form a full gener al warm-up and ex er cise-specific warm-up e v er y workout as outlined below (should only tak e 5-10 mins max) Note that for the first week of the pr ogr am, most sets ar e tak en t o an RPE of ~7-9. This means y ou will be lea ving 1-3 r eps in the tank on most ex er cises. This only lasts for the first week (t o ser v e as a deload/intr o week). After the first week, the intensity will incr ease and y ou’ ll star t taking the last set of e v er y ex er cise t o failur e. All working sets ar e br ok en up int o Early Sets and Last Sets. The Early Sets ar e all the sets that come befor e y our Last Set. Usually the Early Sets should be a little bit easier than the later sets (slightly lower RPE) wher eas the Last Set is pushed t o failur e on all ex er cises (besides intr o/deload weeks). See the Bodybuilding T r ansformation System Guidebook for a full explanation of RPE. Each ex er cise has a clickable link which demonstr ates how t o per form the ex er cise. I suggest watching each ex er cise demo befor e star ting the workout. All other aspects of the pr ogr am, including when t o mak e an ex er cise substitution and how t o pr ogr ess thr ough the r ep r anges giv en is explained in the Bodybuilding T r ansformation System Guidebook. Giv e it a full r ead befor e star ting y our first workout! Let' s crush it!! IMP O R T A N T PR O G R A M N O T E S R EA D B E F O R E S T A R T IN G 5-10 minutes 1 W arm-Up Set Listed 3 W arm-Up Sets Listed 4 W arm-Up Sets Listed 2 W arm-Up Sets Listed 10 r eps per side 15 r eps per side 10 r eps per side 10 r eps per side 10 r eps per side Light car dio on machine on y our choice of machine (tr eadmill, stairmaster , elliptical, bik e, etc.) Use ~60% of y our planned working weight for ~6-10 r eps (or until y ou f eel warm and loose) P er form a full warm-up p yr amid: W arm-Up Set #1 = ~45% of planned working weight for ~6-10 r eps W arm-Up Set #2 = ~65% of planned working weight for 4-6 r eps W arm-Up 

@@ -3,9 +3,9 @@
 - Asset: reference/Pure Bodybuilding Phase 2 - Upper Lower.pdf
 - SHA256: f455f6dc541515ba30c117315c74704cee6839b2682994febc09ff13059ed29c
 - Type: pdf
-- Extraction Method: pdf_metadata_only
-- Extracted Characters: 0
+- Extraction Method: pdf_pypdf
+- Extracted Characters: 126590
 
 ## Excerpt
 
-(No text extracted)
+P er form a full gener al warm-up and ex er cise-specific warm-up e v er y workout as outlined below (should only tak e 5-10 mins max) Note that for the first week of all pr ogr ams, most sets ar e tak en t o an RPE of ~7-9. This means y ou will be lea ving 1-3 r eps in the tank on most ex er cises. This only lasts for the first week (t o ser v e as a deload/intr o week). After the first week, the intensity will incr ease and most sets will be tak en t o an RPE of 9-10. This means y ou will push most sets within ~1 r ep of failur e or t o failur e. Mak e sur e y ou ar e focused mentally befor e star ting each working set! All working sets ar e br ok en up int o Early Sets and Last Sets. The Early Sets ar e all the sets that come befor e y our Last Set. Usually the Early Sets should be a little bit easier than the later sets (slightly lower RPE) wher eas the Last Set is pushed t o failur e on most (but not all ex er cises). See The Hyper tr ophy Handbook for a full explanation of RPE. Ther e is a W eak P oint & Arms da y in this pr ogr am wher e y ou will select a weak point fr om the table below and per form 1-2 ex er cises for y our weak point on this da y . Please r ead The Hyper tr ophy Handbook for mor e detail. Each ex er cise has a clickable link which demonstr ates how t o per form the ex er cise. I suggest watching each ex er cise demo befor e star ting the workout. If y ou' d lik e t o include the powerlifts, simply select them fr om the ex er cise substitutions column when a v ailable. F eel fr ee t o also adjust the r eps t o be in the 3-6 r ep r ange. All other aspects of the pr ogr am, including when t o mak e an ex er cise substitution and how t o pr ogr ess thr ough the r ep r anges giv en is explained in The Hyper tr ophy Handbook. Giv e it a full r ead befor e star ting y our first workout! Let' s crush it!! IMP O R T A N T PR O G R A M N O T E S R EA D B E F O R E S T A R T IN G 5-10 minutes 1 W arm-Up Set Listed 3 W arm-Up Sets Listed 2 W arm-Up S

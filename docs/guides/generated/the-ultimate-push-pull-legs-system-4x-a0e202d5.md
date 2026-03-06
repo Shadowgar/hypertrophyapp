@@ -3,9 +3,9 @@
 - Asset: reference/The_Ultimate_Push_Pull_Legs_System_-_4x.xlsx
 - SHA256: a0e202d5443603a03844a3eaea65969eddec06ea3cbb3dd49e0c6e876b88a589
 - Type: xlsx
-- Extraction Method: xlsx_metadata_only
-- Extracted Characters: 0
+- Extraction Method: xlsx_zip_xml
+- Extracted Characters: 66979
 
 ## Excerpt
 
-(No text extracted)
+Jeff Nippard's Ultimate PPL Program - 4x/Week Spreadsheet Copyright 2023 by Jeff Nippard. All rights reserved. Phase 1 - Base Hypertrophy (Moderate Volume, Moderate Intensity) Week 1 | Exercise | Warm-up Sets | Working Sets | Reps | Load | RPE | Rest | Substitution Option 1 | Substitution Option 2 | Notes Legs #1 | Squat | 44624 | 1 | 2-4 | 44782 | ~3-4 min | Hack Squat | DB Bulgarian Split Squat | Sit back and down, keep your upper back tight to the bar Pause Squat (Back off) | 0 | 2 | 5 | 44782 | ~3-4 min | Pause Hack Squat | Pause DB Bulgarian Split Squat | Drop the weight by ~25% from your top set. 2 second pause. Sit back and down, keep your upper back tight to the bar Barbell RDL | 2 | 3 | 8-10 | 44782 | ~2-3 min | DB RDL | 45° Hyperextension | Maintain a neutral lower back, set your hips back, don't allow your spine to round Walking Lunge | 1 | 2 | 10 | 44782 | ~2-3 min | DB Step-Up | Goblet Squat | Take medium strides, minimize the amount you push off your rear leg Seated Leg Curl | 1 | 3 | 10-12 | 44814 | ~1-2 min | Lying Leg Curl | Nordic Ham Curl | Focus on squeezing your hamstrings to move the weight Leg Press Toe Press | 1 | 4 | 10-12 | 44814 | ~1-2 min | Seated Calf Raise | Standing Calf Raise | Press all the way up to your toes, stretch your calves at the bottom, don't bounce Decline Plate-Weighted Crunch | 1 | 3 | 10-12 | 44814 | ~1-2 min | Cable Crunch | Machine Crunch | Hold a plate or DB to your chest and crunch hard! Push #1 | Bench Press | 44624 | 1 | 3-5 | 44782 | ~3-4 min | DB Bench Press | Machine Chest Press | Set up a comfortable arch, quick pause on the chest and explode up on each rep Larsen Press | 0 | 2 | 10 | 44782 | ~3-4 min | DB Bench Press (No Leg Drive) | Machine Chest Press (No Leg Drive) | Shoulder blades still retracted and depressed. Slight arch in upper back. Zero leg drive. Standing Dumbbell Arnold Press | 2 | 3 | 8-10 | 44782 | ~2-3 min | Seated DB Shoulder Press | Machine Shoulder Press | Start with your elbows in front of 

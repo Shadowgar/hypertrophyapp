@@ -3,9 +3,9 @@
 - Asset: reference/The Muscle Ladder Get Jacked Using Science (Jeff Nippard).pdf
 - SHA256: 2b43ccfd392b1407d93a7603824a4fc95426547b467e1ec2bce00289efa88759
 - Type: pdf
-- Extraction Method: pdf_metadata_only
-- Extracted Characters: 0
+- Extraction Method: pdf_pypdf
+- Extracted Characters: 634650
 
 ## Excerpt
 
-(No text extracted)
+First published in 2024 by Victory Belt Publishing Inc. Copyright © 2024 Jeﬀ Nippard All rights reserved No part of this publication may be reproduced or distributed in any form or by any means, electronic or mechanical, or stored in a database or retrieval system, without prior written permission from the publisher. Ebook ISBN 9781628604870 The author is not a licensed practitioner, physician, or medical professional and oﬀers no medical diagnoses, treatments, suggestions, or counseling. The information presented herein has not been evaluated by the U.S. Food and Drug Administration, and it is not intended to diagnose, treat, cure, or prevent any disease. Full medical clearance from a licensed physician should be obtained before beginning or modifying any diet, exercise, or lifestyle program, and physicians should be informed of all nutritional changes. The author/owner claims no responsibility to any person or entity for any liability, loss, or damage caused or alleged to be caused directly or indirectly as a result of the use, application, or interpretation of the information presented herein. Cover design by Crizalie Olimpo Interior design by Kat Lannom and Justin-Aaron Velasco Illustrations by Crizalie Olimpo and Elita San Juan Photography by Matt Dziadecki a_prh_7.1_149812987_c0_r0 01 02 03 04 05 06 07 08 TABLE OF CONTENTS Setting Up the Ladder Sustainability Will This Work Long Term? Mindset Thinking Your Way to Gains Technique How to Lift the Weights Exercise Selection What Are the Best Exercises? Effort Am I Training Hard Enough? Progressive Overload Am I Actually Progressing? Volume How Much Work Should I Do? 09 10 11 12 13 14 15 Training Splits & Training Frequency How Often Should I Lift? Load & Rep Ranges How Heavy Should I Lift? Rest Periods How Long Should I Rest Between Sets? Advanced Techniques How Do I Keep Driving Progress? Periodization How Do I Organize Training Over Time? Nutrition, Cardio & Supplements How Do I Manage the Other Stuﬀ? Training 

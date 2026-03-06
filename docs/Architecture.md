@@ -1,65 +1,55 @@
-# Architecture
+# Architecture - Adaptive Coaching Target State
 
-## Runtime Services
-- `apps/web`: Next.js App Router client, mobile-first UI + PWA shell.
-- `apps/api`: FastAPI service exposing auth/profile/planning/logging endpoints.
-- `postgres`: primary datastore for users, plans, logs, state.
-- `caddy`: reverse proxy routing `/api/*` to API and all other routes to web.
+Last updated: 2026-03-06
 
-## Deterministic Runtime Constraint
-- Runtime only reads persisted DB state + canonical templates in `programs/`.
-- Runtime does not parse `reference/` assets and does not perform search retrieval.
-- Build-time import pipeline (`importers/`) produces canonical templates.
+## Runtime Boundary
 
-## Data Model Overview
-- `users`: account + onboarding profile + nutrition settings + equipment context (`training_location`, `equipment_profile`).
-- `weekly_checkins`: weekly adherence and bodyweight snapshots.
-- `workout_plans`: generated weekly plan payloads by template/version.
-- `workout_set_logs`: per-set logs from runner with slot continuity (`primary_exercise_id`) and performed movement (`exercise_id`).
-- `exercise_states`: progression state per user/exercise.
+Runtime reads only:
+- canonical program templates
+- canonical coaching rules
+- exercise catalog
+- user training state
 
-## Core Engine Services
-- Warmup service: deterministic ramp sets from target working weight.
-- Progression service: next load recommendation from reps/sets/phase modifier.
-- State update service: updates exposure/fatigue/next load after logging.
-- Scheduler service: generates week sessions from templates, availability, and equipment constraints.
+Runtime does not read raw `reference/*.pdf` or `reference/*.xlsx`.
+Runtime does not depend on `docs/guides/generated/*.md` text artifacts.
 
-## Deployment Topology (Raspberry Pi)
-- Single-node Docker Compose deployment.
-- Caddy exposes port `80` for LAN access.
-- API and web run internally; Postgres not exposed externally by default.
-- Data durability via Docker volume + backup script in `infra/scripts`.
+## Runtime Components
 
-## Configuration
-- `.env` controls DB URL, JWT settings, and web API base URL.
-- `PROGRAMS_DIR` points API to canonical template directory.
+1. Template Runtime Service
+- Resolves active program/phase/week/day
+- Delivers ordered exercise slots and prescriptions
 
-## Scaling Notes
-- MVP is single-node local-first.
-- Horizontal scaling can be introduced later by externalizing Postgres and using sticky auth/session policy.
+2. Rules Runtime Service
+- Loads typed coaching rules per program scope
+- Evaluates progression, fatigue, deload, transition, substitution decisions
 
+3. Exercise Catalog Service
+- Canonical exercise IDs, aliases, muscles, equipment, default media, substitutions
 
+4. User State Service
+- Stores logs and progression state
+- Stores fatigue/adherence/stall markers
 
+5. Decision Engine
+- Inputs: template + rules + user state
+- Outputs: today's plan, post-session evaluation, next-session adaptation
 
+6. API/UI Layer
+- Program selection
+- Workout execution and logging
+- Explainable adaptation timeline
 
+## Build-Time Components
 
-## Progress Sync (2026-03-06)
-- Repository state synchronized through commit `1026d25` on `main` (pushed to `origin/main`).
-- Validation baseline is green via `./scripts/mini_validate.sh`:
-  - API: `63 passed`
-  - Web tests: `16 passed`
-  - Web build: success
-- Additional progress after previous sync:
-  - `777cb86`: pruned obsolete visual-route snapshots (`apps/web/tests/__snapshots__/visual.routes.snapshot.test.tsx.snap`)
-  - `739cb99`: migrated API startup from `@app.on_event("startup")` to FastAPI lifespan in `apps/api/app/main.py`
-  - `18dd81b`: replaced model `datetime.utcnow()` defaults with centralized UTC helper in `apps/api/app/models.py`
-  - `cb317d0`: hardened `scripts/mini_validate.sh` with compose command detection and one-shot rebuild/retry fallback for failed containerized API test runs
-  - `3596622`: migrated auth stack from `passlib/python-jose` to `bcrypt/PyJWT` in API runtime paths
-  - `1026d25`: added coach-preview API edge-case tests for invalid template handling, low-readiness deload extension, and phase-transition boundary branches
-- Current warning profile:
-  - FastAPI startup deprecation warning removed.
-  - SQLAlchemy `datetime.utcnow()` warning class removed from API test runs.
-  - `passlib` and `python-jose` deprecation warnings removed from validation output.
-  - `mini_validate` run now reports clean test results without warning spam in the default path.
-- Drift prevention protocol for next sessions: run `./scripts/mini_preflight.sh` and `./scripts/mini_next_task.sh` before implementation, and `./scripts/mini_validate.sh` before commit/push.
+1. Excel importer pipeline -> canonical program objects
+2. PDF doctrine distillation pipeline -> typed coaching rules
+3. Provenance and quality gates -> verification reports
 
+## Legacy Components To Isolate
+
+- `importers/reference_corpus_ingest.py` generated markdown guides remain build artifacts only.
+- `GET /plan/intelligence/reference-pairs` is informational provenance, not coaching runtime logic.
+
+## Deployment Principle
+
+Single-node deployment can remain unchanged (web/api/postgres/caddy). The architecture change is a domain-model and runtime-boundary change, not a hosting change.

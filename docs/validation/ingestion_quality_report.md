@@ -1,6 +1,6 @@
 # Ingestion Quality Report
 
-Generated: 2026-03-06T14:38:22.636488+00:00
+Generated: 2026-03-06T15:25:17.667858+00:00
 Programs Dir: `/home/rocco/hypertrophyapp/programs`
 
 ## Totals

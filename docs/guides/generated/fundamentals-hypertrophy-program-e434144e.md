@@ -3,9 +3,9 @@
 - Asset: reference/Fundamentals Hypertrophy Program.pdf
 - SHA256: e434144e3be718d9bd3b865631b8d311edeefd3cee749c0bf123dd0c5a35e485
 - Type: pdf
-- Extraction Method: pdf_metadata_only
-- Extracted Characters: 0
+- Extraction Method: pdf_pypdf
+- Extracted Characters: 127067
 
 ## Excerpt
 
-(No text extracted)
+HYPERTROPHY PROGRAM FUNDAMENTALS JEFF NIPPARD HYPERTROPHY PROGRAM JEFF NIPPARD WRITTEN BY FUNDAMENTALS ABOUT ME 4 ABOUT THIS PROGRAM 6 VKEY TERMS 8 ANATOMY 9 FREQUENTLY ASKED QUESTIONS 20 WARM UP 25 EXERCISE SUBSTITUTIONS 27 REST DAYS AND TRAINING DAYS 30 FULL BODY PROGRAM 32 UPPER/LOWER PROGRAM 48 BODYPART PROGRAM 64 PROGRAM EXPLAINED 80 PROGRAM VARIABLES 84 EXERCISE VIDEO LINKS 87 REFERENCES 92 DISCLAIMER 96 TABLE OF CONTENTS JEFF NIPPARD FUNDAMENTALS HYPERTROPHY PROGRAM 4 Jeff is a professional drug-free bodybuilder and powerlifter. Through his informative and entertaining Youtube channel which has gathered a fan-base of over 700,000 subscribers, Jeff aims to share the knowledge he has gathered through university education and field experience with others who are passionate about the science behind building muscle, losing fat and getting healthier. He earned the title of Mr. Junior Canada for natural bodybuilding in 2012 and as a powerlifter, Jeff held the Canadian national record for the bench press in 2014. As a powerlifter, Jeff has claimed a 502 lb squat, 336 lb bench press and a 518 lb deadlift with an all time best Wilks score of 446. With a Bachelor of Science degree in biochemistry, Jeff has gathered the requisite scientific knowledge to compliment his practical experience acquired through ABOUT ME JEFF NIPPARD FUNDAMENTALS HYPERTROPHY PROGRAM 5 training and coaching. Jeff has coached women’s bikini and men’s bodybuilding national and provincial champions, professional natural bodybuilders and nationally and IPF Worlds qualified raw powerlifters. He has presented seminars on Block Periodization, concurrent training and nutrition and training for natural bodybuilding in academic settings including the 2014 Online Fitness Summit and at the University of Iowa. He has aspirations of completing a PhD in exercise science or a related field. Jeff currently lives in Kelowna, Canada where he is producing informative YouTube videos and podcasts while preparing for 
