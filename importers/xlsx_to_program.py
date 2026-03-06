@@ -27,6 +27,18 @@ _NS = {
 }
 
 _YOUTUBE_URL_RE = re.compile(r"https?://[^\s\"]*(?:youtube\.com|youtu\.be)[^\s\"]*", re.IGNORECASE)
+_SESSION_META_LABELS = {
+    "warm up protocol",
+    "weak point table",
+    "weak points table",
+}
+_EXERCISE_META_LABELS = {
+    "warm up protocol",
+    "weak point table",
+    "weak points table",
+    "mandatory rest day",
+}
+_SPLIT_DAY_LABEL_RE = re.compile(r"^(?:full\s*body|upper|lower|push|pull|legs?)\s*#?\s*\d+$", re.IGNORECASE)
 
 
 @dataclass(slots=True)
@@ -305,9 +317,47 @@ def _extract_youtube_url(row: list[str], mapped: dict[str, int]) -> dict[str, st
     return None
 
 
+def _normalize_label(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", value.strip().lower()).strip()
+
+
+def _has_numeric_prescription(raw_value: str) -> bool:
+    return bool(re.search(r"\d", raw_value))
+
+
+def _is_structural_session_label(value: str) -> bool:
+    normalized = _normalize_label(value)
+    if not normalized:
+        return True
+    if normalized in _SESSION_META_LABELS:
+        return True
+    return normalized.startswith("week ") or normalized.startswith("block ")
+
+
+def _is_structural_exercise_label(value: str) -> bool:
+    normalized = _normalize_label(value)
+    if not normalized:
+        return True
+    if normalized in _EXERCISE_META_LABELS:
+        return True
+    if normalized.startswith("week ") or normalized.startswith("block "):
+        return True
+    if _SPLIT_DAY_LABEL_RE.match(normalized):
+        return True
+    return False
+
+
 def _parse_exercise_row(row: list[str], mapped: dict[str, int], exercise_idx: int) -> dict | None:
     exercise_name = column_value(row, exercise_idx)
     if not exercise_name:
+        return None
+
+    if _is_structural_exercise_label(exercise_name):
+        return None
+
+    working_sets_raw = column_value(row, mapped["working_sets"])
+    reps_raw = column_value(row, mapped["reps"])
+    if not (_has_numeric_prescription(working_sets_raw) and _has_numeric_prescription(reps_raw)):
         return None
 
     movement_pattern = infer_movement_pattern(exercise_name)
@@ -315,8 +365,8 @@ def _parse_exercise_row(row: list[str], mapped: dict[str, int], exercise_idx: in
         {
             "id": slugify(exercise_name),
             "name": exercise_name,
-            "sets": parse_int(column_value(row, mapped["working_sets"]), fallback=3),
-            "rep_range": parse_rep_range(column_value(row, mapped["reps"])),
+            "sets": parse_int(working_sets_raw, fallback=3),
+            "rep_range": parse_rep_range(reps_raw),
             "start_weight": 20,
             "movement_pattern": movement_pattern,
             "primary_muscles": infer_primary_muscles(movement_pattern),
@@ -346,7 +396,7 @@ def _process_session_row(
     default_session_name: str,
 ) -> None:
     session_candidate = column_value(row, mapped["session"])
-    if session_candidate and not session_candidate.lower().startswith("week"):
+    if session_candidate and not _is_structural_session_label(session_candidate):
         _flush_session(state)
         state.current_session_name = session_candidate
 

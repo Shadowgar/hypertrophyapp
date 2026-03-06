@@ -20,4 +20,7 @@ for file in "${required_files[@]}"; do
   echo "[OK] $file"
 done
 
+echo "[CHECK] Master plan audit evidence paths"
+"$ROOT/scripts/verify_master_plan_audit.sh"
+
 echo "[PASS] Mini preflight checks complete. Mini is clear for full-scope implementation work."
