@@ -76,3 +76,16 @@ Evidence (2026-03-06)
 Evidence (2026-03-06)
 - Imported templates moved to `programs/archive_imports/` with `programs/archive_imports/README.md`.
 - Runtime catalog filtered in `apps/api/app/program_loader.py` to exclude archive/import variants.
+
+### Task 3.4 - Onboarding Reliability Loop
+- Ensure local test onboarding can recover from stale test users without manual DB operations.
+- Status: STARTED
+
+Evidence (2026-03-06)
+- `apps/api/app/routers/auth.py`: `POST /auth/dev/wipe-user` endpoint (config-gated dev reset).
+- `apps/web/app/onboarding/page.tsx`: onboarding reset controls and actionable auth failure messaging.
+- `apps/api/tests/test_auth_password_reset.py`: wipe endpoint re-registration coverage.
+
+### Task 3.5 - Screenshot Parity Translation
+- Convert external onboarding references into implementable parity checklist tasks.
+- Status: TODO

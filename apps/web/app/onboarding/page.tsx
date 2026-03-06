@@ -196,7 +196,7 @@ export default function OnboardingPage() {
         });
         if (!loginRes.ok) {
           const loginError = await parseApiError(loginRes, "Login failed");
-          setStatus(`Registration/login failed: ${registerError}; ${loginError}`);
+          setStatus(`Registration/login failed: ${registerError}; ${loginError}. Use Wipe Test User By Email or password reset.`);
           return;
         }
         const token = (await loginRes.json()) as { access_token: string };
@@ -240,6 +240,42 @@ export default function OnboardingPage() {
       router.push("/today");
     } catch {
       setStatus("Network error during onboarding");
+    }
+  }
+
+  async function wipeTestUserByEmail() {
+    const confirmed = globalThis.confirm(
+      "This will permanently delete the user account for this email and all related data. Continue?",
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    setStatus("Wiping test user...");
+    try {
+      const response = await api.devWipeUser({ email, confirmation: "WIPE" });
+      localStorage.removeItem("hypertrophy_token");
+      setStatus(response.status === "already_absent" ? "Test user already absent" : "Test user wiped");
+    } catch {
+      setStatus("Test user wipe failed");
+    }
+  }
+
+  async function wipeCurrentLoggedInUserData() {
+    const confirmed = globalThis.confirm(
+      "This will wipe data for the currently authenticated user token stored in this browser. Continue?",
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    setStatus("Wiping current logged-in user data...");
+    try {
+      await api.wipeProfileData();
+      localStorage.removeItem("hypertrophy_token");
+      setStatus("Current user data wiped");
+    } catch {
+      setStatus("Current user wipe failed (log in first or use wipe-by-email)");
     }
   }
 
@@ -407,6 +443,25 @@ export default function OnboardingPage() {
         <p className="telemetry-status">
           <span className={`status-dot status-dot--${statusTone}`} /> Status: {status}
         </p>
+      </div>
+
+      <div className="rounded-md border border-red-700/40 bg-red-950/20 p-3">
+        <p className="telemetry-kicker">Developer Tools</p>
+        <p className="telemetry-meta">Reset onboarding/program test state without leaving this screen.</p>
+        <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2">
+          <Button type="button" variant="secondary" onClick={wipeTestUserByEmail}>
+            <span className="inline-flex items-center gap-2">
+              <UiIcon name="reset" className="ui-icon--action" />
+              Wipe Test User By Email
+            </span>
+          </Button>
+          <Button type="button" variant="secondary" onClick={wipeCurrentLoggedInUserData}>
+            <span className="inline-flex items-center gap-2">
+              <UiIcon name="reset" className="ui-icon--action" />
+              Wipe Current Logged-In User Data
+            </span>
+          </Button>
+        </div>
       </div>
     </div>
   );

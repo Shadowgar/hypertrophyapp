@@ -661,6 +661,11 @@ export const api = {
       method: "POST",
       body: JSON.stringify({}),
     }),
+  devWipeUser: (payload: { email: string; confirmation: string }) =>
+    request<{ status: string }>("/auth/dev/wipe-user", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   logSet: (workoutId: string, payload: { primary_exercise_id?: string | null; exercise_id: string; set_index: number; reps: number; weight: number; rpe?: number | null }) =>
     request<WorkoutSetFeedback>(`/workout/${encodeURIComponent(workoutId)}/log-set`, {
       method: "POST",

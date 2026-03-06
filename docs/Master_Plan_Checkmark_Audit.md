@@ -16,6 +16,7 @@ Status legend:
 | Runtime template catalog hygiene | Runtime list excludes legacy imported artifacts | VERIFIED | `apps/api/app/program_loader.py`, `apps/api/tests/test_program_loader_dedup.py`, `programs/archive_imports/README.md` |
 | Coaching timeline UX | User can view recommendation timeline with rationale | VERIFIED | `apps/web/app/history/page.tsx`, `apps/web/tests/history.analytics.test.tsx` |
 | Onboarding failure transparency | Register/login/profile failures expose backend detail text | VERIFIED | `apps/web/app/onboarding/page.tsx`, `apps/web/tests/onboarding.error.test.tsx` |
+| Onboarding reset controls | Test loop supports wiping stale onboarding accounts from onboarding screen | VERIFIED | `apps/api/app/routers/auth.py`, `apps/web/app/onboarding/page.tsx`, `apps/api/tests/test_auth_password_reset.py` |
 | Ingestion quality report | Metrics for invalid sessions/missing fields are generated | VERIFIED | `importers/ingestion_quality_report.py`, `docs/validation/ingestion_quality_report.json` |
 | Full extraction policy | CI/local ingestion mode policy is documented and scripted | PARTIAL | `docs/guides/FULL_EXTRACTION_RUNBOOK.md`, `scripts/reference_ingest.sh`, `scripts/verify_guides_checksums.py` |
 | Full extraction artifact quality | All guides have non-empty extracted content | NOT VERIFIED | `scripts/reference_ingest.sh local-full` currently fails on `reference/My-Favorite-Exercise-for-Each-Body-Part.pdf` |

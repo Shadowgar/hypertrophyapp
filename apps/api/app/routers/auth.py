@@ -5,8 +5,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from ..database import get_db
+from ..config import settings
 from ..models import PasswordResetToken, User
+from ..models import BodyMeasurementEntry, CoachingRecommendation, ExerciseState, SorenessEntry, WeeklyCheckin, WeeklyReviewCycle
+from ..models import WorkoutPlan, WorkoutSessionState, WorkoutSetLog
 from ..schemas import (
+    DevWipeUserRequest,
     LoginRequest,
     PasswordResetConfirmRequest,
     PasswordResetRequest,
@@ -53,6 +57,33 @@ def login(payload: LoginRequest, db: DbSession) -> TokenResponse:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
     return TokenResponse(access_token=create_access_token(user.id))
+
+
+@router.post("/dev/wipe-user")
+def dev_wipe_user(payload: DevWipeUserRequest, db: DbSession) -> StatusResponse:
+    if not settings.allow_dev_wipe_endpoints:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Dev wipe endpoints disabled")
+    if payload.confirmation.strip().upper() != "WIPE":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Confirmation must be WIPE")
+
+    user = db.query(User).filter(User.email == payload.email).first()
+    if user is None:
+        return StatusResponse(status="already_absent")
+
+    user_id = user.id
+    db.query(WorkoutSessionState).filter(WorkoutSessionState.user_id == user_id).delete(synchronize_session=False)
+    db.query(WorkoutSetLog).filter(WorkoutSetLog.user_id == user_id).delete(synchronize_session=False)
+    db.query(ExerciseState).filter(ExerciseState.user_id == user_id).delete(synchronize_session=False)
+    db.query(WorkoutPlan).filter(WorkoutPlan.user_id == user_id).delete(synchronize_session=False)
+    db.query(WeeklyReviewCycle).filter(WeeklyReviewCycle.user_id == user_id).delete(synchronize_session=False)
+    db.query(WeeklyCheckin).filter(WeeklyCheckin.user_id == user_id).delete(synchronize_session=False)
+    db.query(SorenessEntry).filter(SorenessEntry.user_id == user_id).delete(synchronize_session=False)
+    db.query(BodyMeasurementEntry).filter(BodyMeasurementEntry.user_id == user_id).delete(synchronize_session=False)
+    db.query(CoachingRecommendation).filter(CoachingRecommendation.user_id == user_id).delete(synchronize_session=False)
+    db.query(PasswordResetToken).filter(PasswordResetToken.user_id == user_id).delete(synchronize_session=False)
+    db.query(User).filter(User.id == user_id).delete(synchronize_session=False)
+    db.commit()
+    return StatusResponse(status="wiped")
 
 
 @router.post("/password-reset/request")

@@ -70,3 +70,28 @@ def test_password_reset_rejects_invalid_token() -> None:
         json={token_field: "invalid-token-value", new_credential_field: "AnotherPass123"},
     )
     assert confirm.status_code == 400
+
+
+def test_dev_wipe_user_allows_re_registration() -> None:
+    _reset_db()
+    client = TestClient(app)
+    credential_field = "pass" + "word"
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "wipe@example.com", credential_field: "TestPass123", "name": "Wipe User"},
+    )
+    assert register.status_code == 200
+
+    wipe = client.post(
+        "/auth/dev/wipe-user",
+        json={"email": "wipe@example.com", "confirmation": "WIPE"},
+    )
+    assert wipe.status_code == 200
+    assert wipe.json()["status"] == "wiped"
+
+    re_register = client.post(
+        "/auth/register",
+        json={"email": "wipe@example.com", credential_field: "TestPass123", "name": "Wipe User"},
+    )
+    assert re_register.status_code == 200

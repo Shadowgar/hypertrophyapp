@@ -20,6 +20,11 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class DevWipeUserRequest(BaseModel):
+    email: EmailStr
+    confirmation: str = Field(min_length=4)
+
+
 class PasswordResetRequest(BaseModel):
     email: EmailStr
 

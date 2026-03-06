@@ -70,6 +70,12 @@ The repository currently still contains ingestion-centered artifact generation (
 - [ ] Strengthen scenario tests and regression safety.
 - [ ] Close release gate with evidence-backed docs and green validation.
 
+### Phase G - Onboarding Reliability and Parity
+- [x] Add developer-safe account reset controls directly in onboarding for local test loops.
+- [x] Add actionable auth failure handling with explicit recovery paths.
+- [ ] Review external onboarding references and translate into concrete parity tasks (copy, flow steps, friction points).
+- [ ] Implement onboarding funnel refinements (step sequencing, progress indicator, and reduced cognitive load).
+
 ## Non-Negotiables
 
 - No runtime PDF/XLSX parsing
@@ -94,3 +100,6 @@ The repository currently still contains ingestion-centered artifact generation (
 - Deterministic adaptation apply path now feeds runtime week generation:
 	- `POST /plan/adaptation/apply`
 	- `POST /plan/generate-week` consumes active adaptation state and decrements temporary duration week-by-week.
+- Onboarding testing reliability improvements:
+	- `POST /auth/dev/wipe-user` (dev-only by config) supports wipe-by-email reset when register/login is blocked by stale test accounts.
+	- Onboarding screen now includes explicit `Wipe Test User By Email` and `Wipe Current Logged-In User Data` controls.
