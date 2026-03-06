@@ -87,6 +87,113 @@ def test_coach_preview_returns_deterministic_intelligence_payload() -> None:
     assert "video_coverage_pct" in payload_a["media_warmups"]
 
 
+def test_coach_preview_rejects_invalid_template_id() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_and_onboard(client)
+
+    response = client.post(
+        "/plan/intelligence/coach-preview",
+        headers=headers,
+        json={
+            "template_id": "does_not_exist",
+            "from_days": 5,
+            "to_days": 3,
+            "completion_pct": 90,
+            "adherence_score": 4,
+            "soreness_level": "mild",
+            "current_phase": "accumulation",
+            "weeks_in_phase": 3,
+            "stagnation_weeks": 0,
+            "lagging_muscles": [],
+        },
+    )
+
+    assert response.status_code == 404
+    assert "Program template not found" in response.json().get("detail", "")
+
+
+def test_coach_preview_extends_deload_when_readiness_is_low() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_and_onboard(client)
+
+    response = client.post(
+        "/plan/intelligence/coach-preview",
+        headers=headers,
+        json={
+            "template_id": "full_body_v1",
+            "from_days": 5,
+            "to_days": 3,
+            "completion_pct": 88,
+            "adherence_score": 4,
+            "soreness_level": "mild",
+            "current_phase": "deload",
+            "weeks_in_phase": 1,
+            "readiness_score": 45,
+            "stagnation_weeks": 0,
+            "lagging_muscles": [],
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["phase_transition"]["next_phase"] == "deload"
+    assert payload["phase_transition"]["reason"] == "extend_deload_low_readiness"
+
+
+def test_coach_preview_handles_phase_transition_edge_cases() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_and_onboard(client)
+
+    accumulation_complete = client.post(
+        "/plan/intelligence/coach-preview",
+        headers=headers,
+        json={
+            "template_id": "full_body_v1",
+            "from_days": 5,
+            "to_days": 3,
+            "completion_pct": 98,
+            "adherence_score": 5,
+            "soreness_level": "none",
+            "average_rpe": 8.0,
+            "current_phase": "accumulation",
+            "weeks_in_phase": 6,
+            "readiness_score": 80,
+            "stagnation_weeks": 0,
+            "lagging_muscles": [],
+        },
+    )
+    assert accumulation_complete.status_code == 200
+    accumulation_payload = accumulation_complete.json()
+    assert accumulation_payload["phase_transition"]["next_phase"] == "intensification"
+    assert accumulation_payload["phase_transition"]["reason"] == "accumulation_complete"
+
+    intensification_cap = client.post(
+        "/plan/intelligence/coach-preview",
+        headers=headers,
+        json={
+            "template_id": "full_body_v1",
+            "from_days": 5,
+            "to_days": 3,
+            "completion_pct": 92,
+            "adherence_score": 4,
+            "soreness_level": "mild",
+            "average_rpe": 8.5,
+            "current_phase": "intensification",
+            "weeks_in_phase": 4,
+            "readiness_score": 72,
+            "stagnation_weeks": 0,
+            "lagging_muscles": [],
+        },
+    )
+    assert intensification_cap.status_code == 200
+    intensification_payload = intensification_cap.json()
+    assert intensification_payload["phase_transition"]["next_phase"] == "deload"
+    assert intensification_payload["phase_transition"]["reason"] == "intensification_fatigue_cap"
+
+
 def test_reference_pair_endpoint_returns_list_payload() -> None:
     _reset_db()
     client = TestClient(app)
