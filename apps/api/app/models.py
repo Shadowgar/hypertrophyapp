@@ -116,6 +116,23 @@ class WorkoutPlan(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive)
 
 
+class CoachingRecommendation(Base):
+    __tablename__ = "coaching_recommendations"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id: Mapped[str] = mapped_column(String, ForeignKey(USER_FK), index=True)
+    template_id: Mapped[str] = mapped_column(String, index=True)
+    recommendation_type: Mapped[str] = mapped_column(String, index=True)
+    current_phase: Mapped[str] = mapped_column(String)
+    recommended_phase: Mapped[str] = mapped_column(String)
+    progression_action: Mapped[str] = mapped_column(String)
+    request_payload: Mapped[dict] = mapped_column(JSON)
+    recommendation_payload: Mapped[dict] = mapped_column(JSON)
+    status: Mapped[str] = mapped_column(String, default="previewed")
+    applied_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive)
+
+
 class WorkoutSetLog(Base):
     __tablename__ = "workout_set_logs"
 

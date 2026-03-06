@@ -6,8 +6,9 @@ from test_db import configure_test_database
 
 configure_test_database("test_plan_intelligence_api")
 
-from app.database import Base, engine
+from app.database import Base, SessionLocal, engine
 from app.main import app
+from app.models import CoachingRecommendation, User
 
 TEST_CREDENTIAL = f"T{uuid.uuid4().hex[:15]}"
 
@@ -192,6 +193,53 @@ def test_coach_preview_handles_phase_transition_edge_cases() -> None:
     intensification_payload = intensification_cap.json()
     assert intensification_payload["phase_transition"]["next_phase"] == "deload"
     assert intensification_payload["phase_transition"]["reason"] == "intensification_fatigue_cap"
+
+
+def test_coach_preview_persists_recommendation_record() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_and_onboard(client)
+
+    request_payload = {
+        "template_id": "full_body_v1",
+        "from_days": 5,
+        "to_days": 3,
+        "completion_pct": 96,
+        "adherence_score": 4,
+        "soreness_level": "mild",
+        "average_rpe": 8.5,
+        "current_phase": "accumulation",
+        "weeks_in_phase": 6,
+        "stagnation_weeks": 0,
+        "lagging_muscles": ["biceps", "shoulders"],
+    }
+
+    response = client.post("/plan/intelligence/coach-preview", headers=headers, json=request_payload)
+    assert response.status_code == 200
+    body = response.json()
+
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == "intelligence@example.com").first()
+        assert user is not None
+
+        records = (
+            db.query(CoachingRecommendation)
+            .filter(CoachingRecommendation.user_id == user.id)
+            .order_by(CoachingRecommendation.created_at.desc())
+            .all()
+        )
+
+        assert len(records) == 1
+        record = records[0]
+        assert record.recommendation_type == "coach_preview"
+        assert record.status == "previewed"
+        assert record.template_id == "full_body_v1"
+        assert record.current_phase == "accumulation"
+        assert record.progression_action == body["progression"]["action"]
+        assert record.recommended_phase == body["phase_transition"]["next_phase"]
+        assert record.request_payload["from_days"] == 5
+        assert record.request_payload["to_days"] == 3
+        assert record.recommendation_payload["template_id"] == "full_body_v1"
 
 
 def test_reference_pair_endpoint_returns_list_payload() -> None:

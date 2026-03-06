@@ -18,7 +18,7 @@ from core_engine import (
 
 from ..database import get_db
 from ..deps import get_current_user
-from ..models import SorenessEntry, User, WeeklyCheckin, WeeklyReviewCycle, WorkoutPlan, WorkoutSetLog
+from ..models import CoachingRecommendation, SorenessEntry, User, WeeklyCheckin, WeeklyReviewCycle, WorkoutPlan, WorkoutSetLog
 from ..program_loader import list_program_templates, load_program_template
 from ..schemas import GenerateWeekPlanRequest, ProgramTemplateSummary
 from ..schemas import (
@@ -629,7 +629,7 @@ def coach_intelligence_preview(
     )
     media_warmups = summarize_program_media_and_warmups(template)
 
-    return IntelligenceCoachPreviewResponse(
+    response_payload = IntelligenceCoachPreviewResponse(
         template_id=selected_template_id,
         program_name=_resolve_program_name(selected_template_id),
         schedule=ScheduleAdaptationPreviewResponse.model_validate(
@@ -649,6 +649,22 @@ def coach_intelligence_preview(
         specialization=SpecializationPreviewResponse.model_validate(specialization),
         media_warmups=ProgramMediaWarmupSummaryResponse.model_validate(media_warmups),
     )
+
+    recommendation_record = CoachingRecommendation(
+        user_id=current_user.id,
+        template_id=selected_template_id,
+        recommendation_type="coach_preview",
+        current_phase=payload.current_phase,
+        recommended_phase=response_payload.phase_transition.next_phase,
+        progression_action=response_payload.progression.action,
+        request_payload=payload.model_dump(mode="json"),
+        recommendation_payload=response_payload.model_dump(mode="json"),
+        status="previewed",
+    )
+    db.add(recommendation_record)
+    db.commit()
+
+    return response_payload
 
 
 @router.post(
