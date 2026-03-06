@@ -167,8 +167,9 @@ Legend: `VERIFIED` = concrete code/tests/docs evidence present.
 | Phase 15 — Adaptive Coaching Loop (Execution Intelligence) | Gate Sunday Week/Today entrypoints until weekly review is submitted | VERIFIED | apps/api/alembic/versions/0008_workout_session_states.py; apps/api/app/models.py; apps/api/app/routers/workout.py; apps/api/app/routers/profile.py; apps/api/app/routers/plan.py; apps/web/app/today/page.tsx; apps/web/app/week/page.tsx; apps/web/app/checkin/page.tsx; apps/api/tests/test_workout_session_state.py; apps/api/tests/test_workout_logset_feedback.py; apps/api/tests/test_workout_summary.py; apps/api/tests/test_weekly_review.py; packages/core-engine/tests/test_scheduler.py |  |
 
 
+
 ## Progress Sync (2026-03-06)
-- Repository state synchronized through commit `739cb99` on `main` (pushed to `origin/main`).
+- Repository state synchronized through commit `18dd81b` on `main` (pushed to `origin/main`).
 - Validation baseline is green via `./scripts/mini_validate.sh`:
   - API: `60 passed`
   - Web tests: `16 passed`
@@ -176,8 +177,10 @@ Legend: `VERIFIED` = concrete code/tests/docs evidence present.
 - Additional progress after previous sync:
   - `777cb86`: pruned obsolete visual-route snapshots (`apps/web/tests/__snapshots__/visual.routes.snapshot.test.tsx.snap`)
   - `739cb99`: migrated API startup from `@app.on_event("startup")` to FastAPI lifespan in `apps/api/app/main.py`
+  - `18dd81b`: replaced model `datetime.utcnow()` defaults with centralized UTC helper in `apps/api/app/models.py`
 - Current warning profile:
   - FastAPI startup deprecation warning removed.
-  - Remaining warnings are dependency-level (`passlib` `crypt` deprecation and upstream `utcnow` deprecations in SQLAlchemy/JOSE call paths).
+  - SQLAlchemy `datetime.utcnow()` warning class removed from API test runs.
+  - Remaining warnings are dependency-level (`passlib` `crypt` deprecation and `python-jose` internal `utcnow` deprecation).
 - Drift prevention protocol for next sessions: run `./scripts/mini_preflight.sh` and `./scripts/mini_next_task.sh` before implementation, and `./scripts/mini_validate.sh` before commit/push.
 
