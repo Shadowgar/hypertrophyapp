@@ -60,3 +60,19 @@ Template `progression` block defines deterministic progression mode, with API/co
 ## Runtime Validation
 - API template loading validates canonical templates against this schema before week generation.
 - Invalid templates are rejected with an explicit `422` response and are not used for planning.
+
+## Progress Sync (2026-03-06)
+- Repository state synchronized through commit `09ac04e` on `main` (pushed to `origin/main`).
+- Validation baseline is green via `./scripts/mini_validate.sh`:
+  - API: `60 passed`
+  - Web tests: `16 passed`
+  - Web build: success
+- Latest delivered stabilization work:
+  - fixed containerized API test DB resolution to prefer `DATABASE_NAME`
+  - added regression coverage for test DB configuration precedence
+  - fixed Settings test by mocking `next/navigation` router
+  - resolved web lint/build blockers in `today` and `history` routes
+  - removed invalid `<center>` nesting from the home page markup
+- Known follow-up (non-blocking): Vitest reports `2 obsolete` snapshots in `apps/web/tests/visual.routes.snapshot.test.tsx`.
+- Drift prevention protocol for next sessions: run `./scripts/mini_preflight.sh` and `./scripts/mini_next_task.sh` before implementation, and `./scripts/mini_validate.sh` before commit/push.
+

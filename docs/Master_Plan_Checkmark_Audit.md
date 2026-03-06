@@ -165,3 +165,19 @@ Legend: `VERIFIED` = concrete code/tests/docs evidence present.
 | Phase 15 — Adaptive Coaching Loop (Execution Intelligence) | Add deterministic Sunday prior-week performance fault scan (planned vs performed by exercise) | VERIFIED | apps/api/alembic/versions/0008_workout_session_states.py; apps/api/app/models.py; apps/api/app/routers/workout.py; apps/api/app/routers/profile.py; apps/api/app/routers/plan.py; apps/web/app/today/page.tsx; apps/web/app/week/page.tsx; apps/web/app/checkin/page.tsx; apps/api/tests/test_workout_session_state.py; apps/api/tests/test_workout_logset_feedback.py; apps/api/tests/test_workout_summary.py; apps/api/tests/test_weekly_review.py; packages/core-engine/tests/test_scheduler.py |  |
 | Phase 15 — Adaptive Coaching Loop (Execution Intelligence) | Feed weekly review adjustment directives into week generation payload (global + per-exercise) | VERIFIED | apps/api/alembic/versions/0008_workout_session_states.py; apps/api/app/models.py; apps/api/app/routers/workout.py; apps/api/app/routers/profile.py; apps/api/app/routers/plan.py; apps/web/app/today/page.tsx; apps/web/app/week/page.tsx; apps/web/app/checkin/page.tsx; apps/api/tests/test_workout_session_state.py; apps/api/tests/test_workout_logset_feedback.py; apps/api/tests/test_workout_summary.py; apps/api/tests/test_weekly_review.py; packages/core-engine/tests/test_scheduler.py |  |
 | Phase 15 — Adaptive Coaching Loop (Execution Intelligence) | Gate Sunday Week/Today entrypoints until weekly review is submitted | VERIFIED | apps/api/alembic/versions/0008_workout_session_states.py; apps/api/app/models.py; apps/api/app/routers/workout.py; apps/api/app/routers/profile.py; apps/api/app/routers/plan.py; apps/web/app/today/page.tsx; apps/web/app/week/page.tsx; apps/web/app/checkin/page.tsx; apps/api/tests/test_workout_session_state.py; apps/api/tests/test_workout_logset_feedback.py; apps/api/tests/test_workout_summary.py; apps/api/tests/test_weekly_review.py; packages/core-engine/tests/test_scheduler.py |  |
+
+## Progress Sync (2026-03-06)
+- Repository state synchronized through commit `09ac04e` on `main` (pushed to `origin/main`).
+- Validation baseline is green via `./scripts/mini_validate.sh`:
+  - API: `60 passed`
+  - Web tests: `16 passed`
+  - Web build: success
+- Latest delivered stabilization work:
+  - fixed containerized API test DB resolution to prefer `DATABASE_NAME`
+  - added regression coverage for test DB configuration precedence
+  - fixed Settings test by mocking `next/navigation` router
+  - resolved web lint/build blockers in `today` and `history` routes
+  - removed invalid `<center>` nesting from the home page markup
+- Known follow-up (non-blocking): Vitest reports `2 obsolete` snapshots in `apps/web/tests/visual.routes.snapshot.test.tsx`.
+- Drift prevention protocol for next sessions: run `./scripts/mini_preflight.sh` and `./scripts/mini_next_task.sh` before implementation, and `./scripts/mini_validate.sh` before commit/push.
+
