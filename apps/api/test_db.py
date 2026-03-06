@@ -30,7 +30,10 @@ def configure_test_database(test_name: str) -> str:
 
     host = os.getenv("TEST_DATABASE_HOST", os.getenv("DATABASE_HOST", os.getenv("POSTGRES_HOST", "localhost")))
     port = int(os.getenv("TEST_DATABASE_PORT", os.getenv("DATABASE_PORT", "5432")))
-    name = os.getenv("TEST_DATABASE_NAME", os.getenv("POSTGRES_DB", "hypertrophy_test"))
+    name = os.getenv(
+        "TEST_DATABASE_NAME",
+        os.getenv("DATABASE_NAME", os.getenv("POSTGRES_DB", "hypertrophy_test")),
+    )
     user = os.getenv("TEST_DATABASE_USER", os.getenv("POSTGRES_USER", "hypertrophy"))
     password = os.getenv("TEST_DATABASE_PASSWORD", os.getenv("POSTGRES_PASSWORD", "hypertrophy"))
 

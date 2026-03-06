@@ -3,6 +3,13 @@ import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 import SettingsPage from "@/app/settings/page";
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+  }),
+}));
+
 beforeEach(() => {
   // @ts-ignore
   globalThis.fetch = vi.fn();

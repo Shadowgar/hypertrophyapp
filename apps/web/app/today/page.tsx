@@ -132,7 +132,7 @@ function WorkoutHeaderCard({
       </div>
       {workout.daily_quote ? (
         <div className="rounded-md border border-white/10 bg-black/25 p-2">
-          <p className="text-xs text-zinc-200">"{workout.daily_quote.text}"</p>
+          <p className="text-xs text-zinc-200">&quot;{workout.daily_quote.text}&quot;</p>
           <p className="mt-1 text-[11px] uppercase tracking-wide text-zinc-400">
             {workout.daily_quote.author} · {workout.daily_quote.source}
           </p>

@@ -34,7 +34,7 @@ export default function HistoryPage() {
     };
   }, []);
 
-  const weeklyCheckins = dashboard?.checkins ?? [];
+  const weeklyCheckins = useMemo(() => dashboard?.checkins ?? [], [dashboard]);
 
   const adherencePct = useMemo(() => {
     return dashboard?.adherence.average_pct ?? 0;

@@ -6,10 +6,8 @@ import { UiIcon } from "@/components/ui/icons";
 export default function HomePage() {
   return (
     <div className="space-y-4">
-      <center><h1 className="ui-title-hero">Rocco&apos;s HyperTrophy Plan</h1></center>
-      <p className="ui-body-sm">
-        <center>Start with onboarding, then generate your week.</center>
-      </p>
+      <h1 className="ui-title-hero text-center">Rocco&apos;s HyperTrophy Plan</h1>
+      <p className="ui-body-sm text-center">Start with onboarding, then generate your week.</p>
 
       <div className="main-card main-card--module main-card--accent spacing-grid spacing-grid--tight">
         <p className="telemetry-kicker">System Status</p>
