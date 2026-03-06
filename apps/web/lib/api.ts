@@ -125,6 +125,111 @@ export type ProgramSwitchResponse = {
   applied: boolean;
 };
 
+export type ReferenceWorkbookGuidePair = {
+  workbook_asset_path: string;
+  workbook_asset_sha256: string;
+  guide_asset_path: string;
+  guide_asset_sha256: string;
+  match_score: number;
+};
+
+export type IntelligenceCoachPreviewRequest = {
+  template_id?: string | null;
+  from_days: number;
+  to_days: number;
+  completion_pct: number;
+  adherence_score: number;
+  soreness_level: SorenessSeverity;
+  average_rpe?: number | null;
+  current_phase: "accumulation" | "intensification" | "deload";
+  weeks_in_phase: number;
+  stagnation_weeks: number;
+  readiness_score?: number | null;
+  lagging_muscles: string[];
+  target_min_sets: number;
+};
+
+export type IntelligenceCoachPreviewResponse = {
+  recommendation_id: string;
+  template_id: string;
+  program_name: string;
+  schedule: {
+    from_days: number;
+    to_days: number;
+    kept_sessions: string[];
+    dropped_sessions: string[];
+    added_sessions: string[];
+    risk_level: "low" | "medium" | "high";
+    muscle_set_delta: Record<string, number>;
+    tradeoffs: string[];
+  };
+  progression: {
+    action: "progress" | "hold" | "deload";
+    load_scale: number;
+    set_delta: number;
+    reason: string;
+  };
+  phase_transition: {
+    next_phase: "accumulation" | "intensification" | "deload";
+    reason: string;
+  };
+  specialization: {
+    focus_muscles: string[];
+    focus_adjustments: Record<string, number>;
+    donor_adjustments: Record<string, number>;
+    uncompensated_added_sets: number;
+  };
+  media_warmups: {
+    total_exercises: number;
+    video_linked_exercises: number;
+    video_coverage_pct: number;
+    sample_warmups: Array<{
+      exercise_id: string;
+      warmups: number[];
+    }>;
+  };
+};
+
+export type ApplyPhaseDecisionResponse = {
+  status: string;
+  recommendation_id: string;
+  applied_recommendation_id?: string | null;
+  requires_confirmation: boolean;
+  applied: boolean;
+  next_phase: "accumulation" | "intensification" | "deload";
+  reason: string;
+};
+
+export type ApplySpecializationDecisionResponse = {
+  status: string;
+  recommendation_id: string;
+  applied_recommendation_id?: string | null;
+  requires_confirmation: boolean;
+  applied: boolean;
+  focus_muscles: string[];
+  focus_adjustments: Record<string, number>;
+  donor_adjustments: Record<string, number>;
+  uncompensated_added_sets: number;
+};
+
+export type CoachingRecommendationTimelineEntry = {
+  recommendation_id: string;
+  recommendation_type: string;
+  status: string;
+  template_id: string;
+  current_phase: string;
+  recommended_phase: string;
+  progression_action: string;
+  rationale: string;
+  focus_muscles: string[];
+  created_at: string;
+  applied_at?: string | null;
+};
+
+export type CoachingRecommendationTimelineResponse = {
+  entries: CoachingRecommendationTimelineEntry[];
+};
+
 export type GuideProgram = {
   id: string;
   name: string;
@@ -453,6 +558,26 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  listReferencePairs: () => request<ReferenceWorkbookGuidePair[]>("/plan/intelligence/reference-pairs"),
+  coachPreview: (payload: IntelligenceCoachPreviewRequest) =>
+    request<IntelligenceCoachPreviewResponse>("/plan/intelligence/coach-preview", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  applyPhaseDecision: (payload: { recommendation_id: string; confirm?: boolean }) =>
+    request<ApplyPhaseDecisionResponse>("/plan/intelligence/apply-phase", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  applySpecializationDecision: (payload: { recommendation_id: string; confirm?: boolean }) =>
+    request<ApplySpecializationDecisionResponse>("/plan/intelligence/apply-specialization", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  getCoachingRecommendationTimeline: (limit = 20) =>
+    request<CoachingRecommendationTimelineResponse>(
+      `/plan/intelligence/recommendations?limit=${encodeURIComponent(String(limit))}`,
+    ),
   updateProfile: (payload: Partial<Profile>) => request<Profile>("/profile", { method: "POST", body: JSON.stringify(payload) }),
   getWeeklyReviewStatus: () => request<WeeklyReviewStatus>("/weekly-review/status"),
   submitWeeklyReview: (payload: WeeklyReviewPayload) =>

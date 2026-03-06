@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 
+import CoachingIntelligencePanel from "@/components/coaching-intelligence-panel";
 import { Button } from "@/components/ui/button";
 import { UiIcon } from "@/components/ui/icons";
 import { api, type WeeklyReviewResponse, type WeeklyReviewStatus } from "@/lib/api";
@@ -103,6 +104,8 @@ export default function CheckinPage() {
           </p>
         ) : null}
       </div>
+
+      <CoachingIntelligencePanel contextLabel="Check-In" />
 
       {previousSummary ? (
         <div className="main-card main-card--module spacing-grid spacing-grid--tight">

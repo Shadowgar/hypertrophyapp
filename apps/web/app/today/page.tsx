@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import CoachingIntelligencePanel from "@/components/coaching-intelligence-panel";
 import { UiIcon } from "@/components/ui/icons";
 import ExerciseControlModule from "@/components/exercise-control";
 import {
@@ -414,6 +415,8 @@ export default function TodayPage() {
           </span>
         </Button>
       </div>
+
+      <CoachingIntelligencePanel contextLabel="Today" templateId={activeProgramId} />
 
       {message ? <div className="main-card main-card--shell ui-body-sm">{message}</div> : null}
 

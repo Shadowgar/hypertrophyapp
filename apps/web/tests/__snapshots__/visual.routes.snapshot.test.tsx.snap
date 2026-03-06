@@ -60,6 +60,177 @@ exports[`visual snapshot: today route initial state 1`] = `
     </button>
   </div>
   <div
+    class="main-card main-card--module spacing-grid spacing-grid--tight"
+  >
+    <p
+      class="telemetry-kicker"
+    >
+      Coaching Intelligence
+    </p>
+    <p
+      class="telemetry-meta"
+    >
+      Surface: 
+      Today
+    </p>
+    <p
+      class="telemetry-meta"
+    >
+      Template: 
+      profile-selected
+    </p>
+    <div
+      class="grid grid-cols-2 gap-2"
+    >
+      <label
+        class="ui-meta"
+        for="Today-preview-from-days"
+      >
+        From Days
+      </label>
+      <input
+        class="ui-input"
+        id="Today-preview-from-days"
+        max="7"
+        min="2"
+        type="number"
+        value="5"
+      />
+      <label
+        class="ui-meta"
+        for="Today-preview-to-days"
+      >
+        To Days
+      </label>
+      <input
+        class="ui-input"
+        id="Today-preview-to-days"
+        max="7"
+        min="2"
+        type="number"
+        value="3"
+      />
+      <label
+        class="ui-meta"
+        for="Today-preview-phase"
+      >
+        Current Phase
+      </label>
+      <select
+        class="ui-select"
+        id="Today-preview-phase"
+      >
+        <option
+          value="accumulation"
+        >
+          Accumulation
+        </option>
+        <option
+          value="intensification"
+        >
+          Intensification
+        </option>
+        <option
+          value="deload"
+        >
+          Deload
+        </option>
+      </select>
+      <label
+        class="ui-meta"
+        for="Today-preview-soreness"
+      >
+        Soreness
+      </label>
+      <select
+        class="ui-select"
+        id="Today-preview-soreness"
+      >
+        <option
+          value="none"
+        >
+          None
+        </option>
+        <option
+          value="mild"
+        >
+          Mild
+        </option>
+        <option
+          value="moderate"
+        >
+          Moderate
+        </option>
+        <option
+          value="severe"
+        >
+          Severe
+        </option>
+      </select>
+    </div>
+    <label
+      class="ui-meta"
+      for="Today-preview-lagging"
+    >
+      Lagging Muscles (comma-separated)
+    </label>
+    <input
+      class="ui-input"
+      id="Today-preview-lagging"
+      value="biceps, shoulders"
+    />
+    <button
+      aria-label="Generate coaching preview"
+      class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 material-module text-white hover:border-[var(--ui-edge-active)] hover:bg-[var(--ui-accent-idle)] hover:shadow-[var(--ui-depth-shadow-3)] h-10 px-4 py-2 w-full"
+    >
+      Generate Coaching Preview
+    </button>
+    <p
+      class="telemetry-meta"
+    />
+    <p
+      class="telemetry-meta"
+    >
+      Recommendation ID: 
+      Generate preview first
+    </p>
+    <div
+      class="grid grid-cols-2 gap-2"
+    >
+      <button
+        aria-label="Check phase decision"
+        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 material-module text-white hover:border-[var(--ui-edge-active)] hover:bg-[var(--ui-accent-idle)] hover:shadow-[var(--ui-depth-shadow-3)] h-10 px-4 py-2"
+        disabled=""
+      >
+        Check Phase
+      </button>
+      <button
+        aria-label="Apply phase decision"
+        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 material-module text-white hover:border-[var(--ui-edge-active)] hover:bg-[var(--ui-accent-idle)] hover:shadow-[var(--ui-depth-shadow-3)] h-10 px-4 py-2"
+        disabled=""
+      >
+        Apply Phase
+      </button>
+      <button
+        aria-label="Check specialization decision"
+        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 material-module text-white hover:border-[var(--ui-edge-active)] hover:bg-[var(--ui-accent-idle)] hover:shadow-[var(--ui-depth-shadow-3)] h-10 px-4 py-2"
+        disabled=""
+      >
+        Check Specialization
+      </button>
+      <button
+        aria-label="Apply specialization decision"
+        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 material-module text-white hover:border-[var(--ui-edge-active)] hover:bg-[var(--ui-accent-idle)] hover:shadow-[var(--ui-depth-shadow-3)] h-10 px-4 py-2"
+        disabled=""
+      >
+        Apply Specialization
+      </button>
+    </div>
+    <p
+      class="telemetry-meta"
+    />
+  </div>
+  <div
     class="main-card main-card--shell ui-body-sm"
   >
     No workout loaded
@@ -183,6 +354,177 @@ exports[`visual snapshot: week route 1`] = `
         </span>
       </button>
     </div>
+  </div>
+  <div
+    class="main-card main-card--module spacing-grid spacing-grid--tight"
+  >
+    <p
+      class="telemetry-kicker"
+    >
+      Coaching Intelligence
+    </p>
+    <p
+      class="telemetry-meta"
+    >
+      Surface: 
+      Week Plan
+    </p>
+    <p
+      class="telemetry-meta"
+    >
+      Template: 
+      profile-selected
+    </p>
+    <div
+      class="grid grid-cols-2 gap-2"
+    >
+      <label
+        class="ui-meta"
+        for="Week Plan-preview-from-days"
+      >
+        From Days
+      </label>
+      <input
+        class="ui-input"
+        id="Week Plan-preview-from-days"
+        max="7"
+        min="2"
+        type="number"
+        value="5"
+      />
+      <label
+        class="ui-meta"
+        for="Week Plan-preview-to-days"
+      >
+        To Days
+      </label>
+      <input
+        class="ui-input"
+        id="Week Plan-preview-to-days"
+        max="7"
+        min="2"
+        type="number"
+        value="3"
+      />
+      <label
+        class="ui-meta"
+        for="Week Plan-preview-phase"
+      >
+        Current Phase
+      </label>
+      <select
+        class="ui-select"
+        id="Week Plan-preview-phase"
+      >
+        <option
+          value="accumulation"
+        >
+          Accumulation
+        </option>
+        <option
+          value="intensification"
+        >
+          Intensification
+        </option>
+        <option
+          value="deload"
+        >
+          Deload
+        </option>
+      </select>
+      <label
+        class="ui-meta"
+        for="Week Plan-preview-soreness"
+      >
+        Soreness
+      </label>
+      <select
+        class="ui-select"
+        id="Week Plan-preview-soreness"
+      >
+        <option
+          value="none"
+        >
+          None
+        </option>
+        <option
+          value="mild"
+        >
+          Mild
+        </option>
+        <option
+          value="moderate"
+        >
+          Moderate
+        </option>
+        <option
+          value="severe"
+        >
+          Severe
+        </option>
+      </select>
+    </div>
+    <label
+      class="ui-meta"
+      for="Week Plan-preview-lagging"
+    >
+      Lagging Muscles (comma-separated)
+    </label>
+    <input
+      class="ui-input"
+      id="Week Plan-preview-lagging"
+      value="biceps, shoulders"
+    />
+    <button
+      aria-label="Generate coaching preview"
+      class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 material-module text-white hover:border-[var(--ui-edge-active)] hover:bg-[var(--ui-accent-idle)] hover:shadow-[var(--ui-depth-shadow-3)] h-10 px-4 py-2 w-full"
+    >
+      Generate Coaching Preview
+    </button>
+    <p
+      class="telemetry-meta"
+    />
+    <p
+      class="telemetry-meta"
+    >
+      Recommendation ID: 
+      Generate preview first
+    </p>
+    <div
+      class="grid grid-cols-2 gap-2"
+    >
+      <button
+        aria-label="Check phase decision"
+        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 material-module text-white hover:border-[var(--ui-edge-active)] hover:bg-[var(--ui-accent-idle)] hover:shadow-[var(--ui-depth-shadow-3)] h-10 px-4 py-2"
+        disabled=""
+      >
+        Check Phase
+      </button>
+      <button
+        aria-label="Apply phase decision"
+        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 material-module text-white hover:border-[var(--ui-edge-active)] hover:bg-[var(--ui-accent-idle)] hover:shadow-[var(--ui-depth-shadow-3)] h-10 px-4 py-2"
+        disabled=""
+      >
+        Apply Phase
+      </button>
+      <button
+        aria-label="Check specialization decision"
+        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 material-module text-white hover:border-[var(--ui-edge-active)] hover:bg-[var(--ui-accent-idle)] hover:shadow-[var(--ui-depth-shadow-3)] h-10 px-4 py-2"
+        disabled=""
+      >
+        Check Specialization
+      </button>
+      <button
+        aria-label="Apply specialization decision"
+        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 material-module text-white hover:border-[var(--ui-edge-active)] hover:bg-[var(--ui-accent-idle)] hover:shadow-[var(--ui-depth-shadow-3)] h-10 px-4 py-2"
+        disabled=""
+      >
+        Apply Specialization
+      </button>
+    </div>
+    <p
+      class="telemetry-meta"
+    />
   </div>
   <div
     class="main-card main-card--module spacing-grid spacing-grid--tight"

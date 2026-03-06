@@ -271,6 +271,7 @@ class IntelligenceCoachPreviewRequest(BaseModel):
 
 
 class IntelligenceCoachPreviewResponse(BaseModel):
+    recommendation_id: str
     template_id: str
     program_name: str
     schedule: ScheduleAdaptationPreviewResponse
@@ -310,6 +311,24 @@ class ApplySpecializationDecisionResponse(BaseModel):
     focus_adjustments: dict[str, int]
     donor_adjustments: dict[str, int]
     uncompensated_added_sets: int
+
+
+class CoachingRecommendationTimelineEntry(BaseModel):
+    recommendation_id: str
+    recommendation_type: str
+    status: str
+    template_id: str
+    current_phase: str
+    recommended_phase: str
+    progression_action: str
+    rationale: str
+    focus_muscles: list[str]
+    created_at: datetime
+    applied_at: datetime | None = None
+
+
+class CoachingRecommendationTimelineResponse(BaseModel):
+    entries: list[CoachingRecommendationTimelineEntry]
 
 
 class ProgramRecommendationResponse(BaseModel):

@@ -4,12 +4,26 @@ import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { UiIcon } from "@/components/ui/icons";
-import { api, type HistoryAnalyticsResponse } from "@/lib/api";
+import {
+  api,
+  type CoachingRecommendationTimelineEntry,
+  type HistoryAnalyticsResponse,
+} from "@/lib/api";
+
+function formatTimestamp(iso: string): string {
+  const parsed = new Date(iso);
+  if (Number.isNaN(parsed.getTime())) {
+    return iso;
+  }
+  return parsed.toLocaleString();
+}
 
 export default function HistoryPage() {
   const [history, setHistory] = useState("No analytics snapshot loaded.");
   const [dashboard, setDashboard] = useState<HistoryAnalyticsResponse | null>(null);
   const [trendStatus, setTrendStatus] = useState("Loading trend data...");
+  const [timelineEntries, setTimelineEntries] = useState<CoachingRecommendationTimelineEntry[]>([]);
+  const [timelineStatus, setTimelineStatus] = useState("Loading recommendation timeline...");
 
   useEffect(() => {
     let mounted = true;
@@ -27,6 +41,21 @@ export default function HistoryPage() {
         }
         setDashboard(null);
         setTrendStatus("Unable to load weekly check-in trends.");
+      }
+
+      try {
+        const timeline = await api.getCoachingRecommendationTimeline(24);
+        if (!mounted) {
+          return;
+        }
+        setTimelineEntries(timeline.entries);
+        setTimelineStatus(timeline.entries.length > 0 ? "" : "No coaching recommendations yet.");
+      } catch {
+        if (!mounted) {
+          return;
+        }
+        setTimelineEntries([]);
+        setTimelineStatus("Unable to load recommendation timeline.");
       }
     })();
     return () => {
@@ -137,6 +166,31 @@ export default function HistoryPage() {
       <div className="main-card main-card--module spacing-grid spacing-grid--tight">
         <p className="telemetry-kicker">History Output</p>
         <pre className="overflow-x-auto text-xs text-zinc-200">{history}</pre>
+      </div>
+
+      <div className="main-card main-card--module spacing-grid spacing-grid--tight">
+        <p className="telemetry-kicker">Coaching Decision Timeline</p>
+        {timelineEntries.length > 0 ? (
+          <div className="space-y-2">
+            {timelineEntries.map((entry) => (
+              <div key={entry.recommendation_id} className="rounded-md border border-white/10 bg-zinc-900/60 p-2 text-xs text-zinc-200">
+                <p className="flex items-center justify-between gap-2">
+                  <span className="font-medium">{entry.recommendation_type.replaceAll("_", " ")}</span>
+                  <span className="telemetry-meta uppercase">{entry.status}</span>
+                </p>
+                <p className="telemetry-meta">{entry.template_id} · {entry.current_phase} to {entry.recommended_phase}</p>
+                <p className="telemetry-meta">Progression action: {entry.progression_action}</p>
+                <p>Rationale: {entry.rationale}</p>
+                <p>Focus muscles: {entry.focus_muscles.length > 0 ? entry.focus_muscles.join(", ") : "none"}</p>
+                <p className="telemetry-meta">Created: {formatTimestamp(entry.created_at)}</p>
+                {entry.applied_at ? <p className="telemetry-meta">Applied: {formatTimestamp(entry.applied_at)}</p> : null}
+                <p className="telemetry-meta">Recommendation ID: {entry.recommendation_id}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-zinc-500">{timelineStatus}</p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">

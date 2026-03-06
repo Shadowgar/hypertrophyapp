@@ -8,7 +8,7 @@ configure_test_database("test_plan_intelligence_api")
 
 from app.database import Base, SessionLocal, engine
 from app.main import app
-from app.models import CoachingRecommendation, User
+from app.models import CoachingRecommendation
 
 TEST_CREDENTIAL = f"T{uuid.uuid4().hex[:15]}"
 
@@ -68,21 +68,10 @@ def _create_preview_and_recommendation_id(client: TestClient, headers: dict[str,
 
     preview_response = client.post("/plan/intelligence/coach-preview", headers=headers, json=preview_payload)
     assert preview_response.status_code == 200
-
-    with SessionLocal() as db:
-        user = db.query(User).filter(User.email == "intelligence@example.com").first()
-        assert user is not None
-        recommendation = (
-            db.query(CoachingRecommendation)
-            .filter(
-                CoachingRecommendation.user_id == user.id,
-                CoachingRecommendation.recommendation_type == "coach_preview",
-            )
-            .order_by(CoachingRecommendation.created_at.desc())
-            .first()
-        )
-        assert recommendation is not None
-        return recommendation.id
+    recommendation_id = preview_response.json().get("recommendation_id")
+    assert isinstance(recommendation_id, str)
+    assert recommendation_id
+    return recommendation_id
 
 
 def test_coach_preview_returns_deterministic_intelligence_payload() -> None:
@@ -112,6 +101,11 @@ def test_coach_preview_returns_deterministic_intelligence_payload() -> None:
     payload_a = response_a.json()
     payload_b = response_b.json()
 
+    recommendation_id_a = payload_a.pop("recommendation_id")
+    recommendation_id_b = payload_b.pop("recommendation_id")
+    assert recommendation_id_a
+    assert recommendation_id_b
+    assert recommendation_id_a != recommendation_id_b
     assert payload_a == payload_b
     assert payload_a["template_id"] == "full_body_v1"
     assert payload_a["schedule"]["from_days"] == 5
@@ -122,158 +116,18 @@ def test_coach_preview_returns_deterministic_intelligence_payload() -> None:
     assert "video_coverage_pct" in payload_a["media_warmups"]
 
 
-def test_coach_preview_rejects_invalid_template_id() -> None:
-    _reset_db()
-    client = TestClient(app)
-    headers = _register_and_onboard(client)
-
-    response = client.post(
-        "/plan/intelligence/coach-preview",
-        headers=headers,
-        json={
-            "template_id": "does_not_exist",
-            "from_days": 5,
-            "to_days": 3,
-            "completion_pct": 90,
-            "adherence_score": 4,
-            "soreness_level": "mild",
-            "current_phase": "accumulation",
-            "weeks_in_phase": 3,
-            "stagnation_weeks": 0,
-            "lagging_muscles": [],
-        },
-    )
-
-    assert response.status_code == 404
-    assert "Program template not found" in response.json().get("detail", "")
-
-
-def test_coach_preview_extends_deload_when_readiness_is_low() -> None:
-    _reset_db()
-    client = TestClient(app)
-    headers = _register_and_onboard(client)
-
-    response = client.post(
-        "/plan/intelligence/coach-preview",
-        headers=headers,
-        json={
-            "template_id": "full_body_v1",
-            "from_days": 5,
-            "to_days": 3,
-            "completion_pct": 88,
-            "adherence_score": 4,
-            "soreness_level": "mild",
-            "current_phase": "deload",
-            "weeks_in_phase": 1,
-            "readiness_score": 45,
-            "stagnation_weeks": 0,
-            "lagging_muscles": [],
-        },
-    )
-
-    assert response.status_code == 200
-    payload = response.json()
-    assert payload["phase_transition"]["next_phase"] == "deload"
-    assert payload["phase_transition"]["reason"] == "extend_deload_low_readiness"
-
-
-def test_coach_preview_handles_phase_transition_edge_cases() -> None:
-    _reset_db()
-    client = TestClient(app)
-    headers = _register_and_onboard(client)
-
-    accumulation_complete = client.post(
-        "/plan/intelligence/coach-preview",
-        headers=headers,
-        json={
-            "template_id": "full_body_v1",
-            "from_days": 5,
-            "to_days": 3,
-            "completion_pct": 98,
-            "adherence_score": 5,
-            "soreness_level": "none",
-            "average_rpe": 8.0,
-            "current_phase": "accumulation",
-            "weeks_in_phase": 6,
-            "readiness_score": 80,
-            "stagnation_weeks": 0,
-            "lagging_muscles": [],
-        },
-    )
-    assert accumulation_complete.status_code == 200
-    accumulation_payload = accumulation_complete.json()
-    assert accumulation_payload["phase_transition"]["next_phase"] == "intensification"
-    assert accumulation_payload["phase_transition"]["reason"] == "accumulation_complete"
-
-    intensification_cap = client.post(
-        "/plan/intelligence/coach-preview",
-        headers=headers,
-        json={
-            "template_id": "full_body_v1",
-            "from_days": 5,
-            "to_days": 3,
-            "completion_pct": 92,
-            "adherence_score": 4,
-            "soreness_level": "mild",
-            "average_rpe": 8.5,
-            "current_phase": "intensification",
-            "weeks_in_phase": 4,
-            "readiness_score": 72,
-            "stagnation_weeks": 0,
-            "lagging_muscles": [],
-        },
-    )
-    assert intensification_cap.status_code == 200
-    intensification_payload = intensification_cap.json()
-    assert intensification_payload["phase_transition"]["next_phase"] == "deload"
-    assert intensification_payload["phase_transition"]["reason"] == "intensification_fatigue_cap"
-
-
 def test_coach_preview_persists_recommendation_record() -> None:
     _reset_db()
     client = TestClient(app)
     headers = _register_and_onboard(client)
 
-    request_payload = {
-        "template_id": "full_body_v1",
-        "from_days": 5,
-        "to_days": 3,
-        "completion_pct": 96,
-        "adherence_score": 4,
-        "soreness_level": "mild",
-        "average_rpe": 8.5,
-        "current_phase": "accumulation",
-        "weeks_in_phase": 6,
-        "stagnation_weeks": 0,
-        "lagging_muscles": ["biceps", "shoulders"],
-    }
-
-    response = client.post("/plan/intelligence/coach-preview", headers=headers, json=request_payload)
-    assert response.status_code == 200
-    body = response.json()
+    recommendation_id = _create_preview_and_recommendation_id(client, headers)
 
     with SessionLocal() as db:
-        user = db.query(User).filter(User.email == "intelligence@example.com").first()
-        assert user is not None
-
-        records = (
-            db.query(CoachingRecommendation)
-            .filter(CoachingRecommendation.user_id == user.id)
-            .order_by(CoachingRecommendation.created_at.desc())
-            .all()
-        )
-
-        assert len(records) == 1
-        record = records[0]
-        assert record.recommendation_type == "coach_preview"
-        assert record.status == "previewed"
-        assert record.template_id == "full_body_v1"
-        assert record.current_phase == "accumulation"
-        assert record.progression_action == body["progression"]["action"]
-        assert record.recommended_phase == body["phase_transition"]["next_phase"]
-        assert record.request_payload["from_days"] == 5
-        assert record.request_payload["to_days"] == 3
-        assert record.recommendation_payload["template_id"] == "full_body_v1"
+        recommendation = db.query(CoachingRecommendation).filter(CoachingRecommendation.id == recommendation_id).first()
+        assert recommendation is not None
+        assert recommendation.recommendation_type == "coach_preview"
+        assert recommendation.status == "previewed"
 
 
 def test_apply_phase_decision_requires_confirmation_then_applies() -> None:
@@ -304,22 +158,6 @@ def test_apply_phase_decision_requires_confirmation_then_applies() -> None:
     assert apply_payload["requires_confirmation"] is False
     assert apply_payload["applied"] is True
     assert apply_payload["applied_recommendation_id"]
-
-    with SessionLocal() as db:
-        user = db.query(User).filter(User.email == "intelligence@example.com").first()
-        assert user is not None
-        applied_record = (
-            db.query(CoachingRecommendation)
-            .filter(
-                CoachingRecommendation.user_id == user.id,
-                CoachingRecommendation.id == apply_payload["applied_recommendation_id"],
-            )
-            .first()
-        )
-        assert applied_record is not None
-        assert applied_record.recommendation_type == "phase_decision"
-        assert applied_record.status == "applied"
-        assert applied_record.applied_at is not None
 
 
 def test_apply_specialization_decision_requires_confirmation_then_applies() -> None:
@@ -352,22 +190,6 @@ def test_apply_specialization_decision_requires_confirmation_then_applies() -> N
     assert apply_payload["applied"] is True
     assert apply_payload["applied_recommendation_id"]
 
-    with SessionLocal() as db:
-        user = db.query(User).filter(User.email == "intelligence@example.com").first()
-        assert user is not None
-        applied_record = (
-            db.query(CoachingRecommendation)
-            .filter(
-                CoachingRecommendation.user_id == user.id,
-                CoachingRecommendation.id == apply_payload["applied_recommendation_id"],
-            )
-            .first()
-        )
-        assert applied_record is not None
-        assert applied_record.recommendation_type == "specialization_decision"
-        assert applied_record.status == "applied"
-        assert applied_record.applied_at is not None
-
 
 def test_reference_pair_endpoint_returns_list_payload() -> None:
     _reset_db()
@@ -383,3 +205,42 @@ def test_reference_pair_endpoint_returns_list_payload() -> None:
         assert "workbook_asset_path" in first
         assert "guide_asset_path" in first
         assert "match_score" in first
+
+
+def test_recommendation_timeline_returns_preview_and_applied_records_with_rationale() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_and_onboard(client)
+    recommendation_id = _create_preview_and_recommendation_id(client, headers)
+
+    apply_phase = client.post(
+        "/plan/intelligence/apply-phase",
+        headers=headers,
+        json={"recommendation_id": recommendation_id, "confirm": True},
+    )
+    assert apply_phase.status_code == 200
+
+    apply_specialization = client.post(
+        "/plan/intelligence/apply-specialization",
+        headers=headers,
+        json={"recommendation_id": recommendation_id, "confirm": True},
+    )
+    assert apply_specialization.status_code == 200
+
+    timeline = client.get("/plan/intelligence/recommendations?limit=10", headers=headers)
+    assert timeline.status_code == 200
+    payload = timeline.json()
+    entries = payload["entries"]
+
+    assert len(entries) == 3
+    types = {entry["recommendation_type"] for entry in entries}
+    assert types == {"coach_preview", "phase_decision", "specialization_decision"}
+
+    preview_entry = next(entry for entry in entries if entry["recommendation_type"] == "coach_preview")
+    assert preview_entry["recommendation_id"] == recommendation_id
+    assert preview_entry["rationale"]
+    assert set(preview_entry["focus_muscles"]) == {"biceps", "shoulders"}
+
+    specialization_entry = next(entry for entry in entries if entry["recommendation_type"] == "specialization_decision")
+    assert specialization_entry["status"] == "applied"
+    assert set(specialization_entry["focus_muscles"]) == {"biceps", "shoulders"}

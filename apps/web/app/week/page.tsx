@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import CoachingIntelligencePanel from "@/components/coaching-intelligence-panel";
 import { Button } from "@/components/ui/button";
 import { UiIcon } from "@/components/ui/icons";
 import { api, getProgramDisplayName, type ProgramTemplateOption } from "@/lib/api";
@@ -66,6 +67,7 @@ export default function WeekPage() {
           </Button>
         </div>
       </div>
+      <CoachingIntelligencePanel contextLabel="Week Plan" templateId={selectedProgramId} />
       <div className="main-card main-card--module spacing-grid spacing-grid--tight">
         <p className="telemetry-kicker">Plan Output</p>
         <pre className="overflow-x-auto text-xs text-zinc-200">{plan}</pre>

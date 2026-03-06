@@ -78,11 +78,32 @@ test("history page renders analytics dashboard payload", async () => {
     },
   };
 
+  const timelinePayload = {
+    entries: [
+      {
+        recommendation_id: "rec_1",
+        recommendation_type: "coach_preview",
+        status: "previewed",
+        template_id: "full_body_v1",
+        current_phase: "accumulation",
+        recommended_phase: "intensification",
+        progression_action: "hold",
+        rationale: "maintain_until_stable",
+        focus_muscles: ["biceps", "shoulders"],
+        created_at: "2026-03-05T10:00:00",
+        applied_at: null,
+      },
+    ],
+  };
+
   // @ts-ignore
   globalThis.fetch.mockImplementation((input: RequestInfo | URL) => {
     const url = resolveUrl(input);
     if (url.includes("/history/analytics")) {
       return Promise.resolve(new Response(JSON.stringify(payload), { status: 200 }));
+    }
+    if (url.includes("/plan/intelligence/recommendations")) {
+      return Promise.resolve(new Response(JSON.stringify(timelinePayload), { status: 200 }));
     }
     return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
   });
@@ -94,6 +115,9 @@ test("history page renders analytics dashboard payload", async () => {
   expect(screen.getAllByText(/bench/i).length).toBeGreaterThan(0);
   expect(screen.getByText(/\+10 kg/i)).toBeInTheDocument();
   expect(screen.getByText(/Volume Heat Map/i)).toBeInTheDocument();
+  expect(screen.getByText(/Coaching Decision Timeline/i)).toBeInTheDocument();
+  expect(screen.getByText(/Rationale: maintain_until_stable/i)).toBeInTheDocument();
+  expect(screen.getByText(/Focus muscles: biceps, shoulders/i)).toBeInTheDocument();
 
   const button = screen.getByRole("button", { name: /Load Analytics Snapshot/i });
   fireEvent.click(button);

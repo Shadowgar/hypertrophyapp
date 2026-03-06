@@ -1,7 +1,7 @@
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 import json
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal, cast
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import ValidationError
@@ -26,6 +26,8 @@ from ..schemas import (
     ApplyPhaseDecisionResponse,
     ApplySpecializationDecisionRequest,
     ApplySpecializationDecisionResponse,
+    CoachingRecommendationTimelineEntry,
+    CoachingRecommendationTimelineResponse,
     GuideDaySummary,
     GuideExerciseSummary,
     GuideProgramSummary,
@@ -47,7 +49,7 @@ router = APIRouter()
 DbSession = Annotated[Session, Depends(get_db)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
 INVALID_TEMPLATE_DETAIL = "Invalid program template schema"
-GUIDE_RESPONSES = {
+GUIDE_RESPONSES: dict[int | str, dict[str, Any]] = {
     404: {"description": "Guide resource not found"},
     422: {"description": INVALID_TEMPLATE_DETAIL},
 }
@@ -149,13 +151,16 @@ def _clamp_review_intensity_scale(value: float) -> float:
 
 def _resolve_review_adjustments(review_cycle: WeeklyReviewCycle) -> tuple[int, float, dict[str, Any], list[str]]:
     adjustments = review_cycle.adjustments if isinstance(review_cycle.adjustments, dict) else {}
-    global_adjustments = adjustments.get("global") if isinstance(adjustments.get("global"), dict) else {}
+    global_adjustments_raw = adjustments.get("global")
+    global_adjustments: dict[str, Any] = global_adjustments_raw if isinstance(global_adjustments_raw, dict) else {}
     global_set_delta = _clamp_review_set_delta(int(global_adjustments.get("set_delta", 0) or 0))
     global_weight_scale = _clamp_review_intensity_scale(
         _clamp_scale(float(global_adjustments.get("weight_scale", 1.0) or 1.0))
     )
-    exercise_overrides = adjustments.get("exercise_overrides") if isinstance(adjustments.get("exercise_overrides"), dict) else {}
-    weak_points = adjustments.get("weak_point_exercises") if isinstance(adjustments.get("weak_point_exercises"), list) else []
+    exercise_overrides_raw = adjustments.get("exercise_overrides")
+    exercise_overrides: dict[str, Any] = exercise_overrides_raw if isinstance(exercise_overrides_raw, dict) else {}
+    weak_points_raw = adjustments.get("weak_point_exercises")
+    weak_points = [str(item) for item in weak_points_raw] if isinstance(weak_points_raw, list) else []
     return global_set_delta, global_weight_scale, exercise_overrides, weak_points
 
 
@@ -541,7 +546,7 @@ def list_reference_workbook_guide_pairs() -> list[ReferenceWorkbookGuidePair]:
 
 
 def _utcnow_naive() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 def _resolve_preview_recommendation(db: Session, *, user_id: str, recommendation_id: str) -> CoachingRecommendation:
@@ -557,6 +562,73 @@ def _resolve_preview_recommendation(db: Session, *, user_id: str, recommendation
     if recommendation is None:
         raise HTTPException(status_code=404, detail="Recommendation not found")
     return recommendation
+
+
+def _recommendation_rationale(record: CoachingRecommendation) -> str:
+    payload = record.recommendation_payload if isinstance(record.recommendation_payload, dict) else {}
+    phase_transition_raw = payload.get("phase_transition")
+    phase_transition = phase_transition_raw if isinstance(phase_transition_raw, dict) else {}
+    progression_raw = payload.get("progression")
+    progression = progression_raw if isinstance(progression_raw, dict) else {}
+    specialization_raw = payload.get("specialization")
+    specialization = specialization_raw if isinstance(specialization_raw, dict) else {}
+
+    for candidate in (
+        phase_transition.get("reason"),
+        progression.get("reason"),
+        specialization.get("reason"),
+    ):
+        text = str(candidate or "").strip()
+        if text:
+            return text
+    return "No rationale recorded"
+
+
+def _recommendation_focus_muscles(record: CoachingRecommendation) -> list[str]:
+    payload = record.recommendation_payload if isinstance(record.recommendation_payload, dict) else {}
+    specialization_raw = payload.get("specialization")
+    specialization = specialization_raw if isinstance(specialization_raw, dict) else {}
+    raw_focus = specialization.get("focus_muscles")
+    if not isinstance(raw_focus, list):
+        return []
+    return [str(item) for item in raw_focus if str(item).strip()]
+
+
+@router.get(
+    "/plan/intelligence/recommendations",
+    response_model=CoachingRecommendationTimelineResponse,
+)
+def list_coaching_recommendations(
+    db: DbSession,
+    current_user: CurrentUser,
+    limit: int = 20,
+) -> CoachingRecommendationTimelineResponse:
+    capped_limit = max(1, min(100, int(limit)))
+    rows = (
+        db.query(CoachingRecommendation)
+        .filter(CoachingRecommendation.user_id == current_user.id)
+        .order_by(CoachingRecommendation.created_at.desc())
+        .limit(capped_limit)
+        .all()
+    )
+
+    entries = [
+        CoachingRecommendationTimelineEntry(
+            recommendation_id=row.id,
+            recommendation_type=row.recommendation_type,
+            status=row.status,
+            template_id=row.template_id,
+            current_phase=row.current_phase,
+            recommended_phase=row.recommended_phase,
+            progression_action=row.progression_action,
+            rationale=_recommendation_rationale(row),
+            focus_muscles=_recommendation_focus_muscles(row),
+            created_at=row.created_at,
+            applied_at=row.applied_at,
+        )
+        for row in rows
+    ]
+    return CoachingRecommendationTimelineResponse(entries=entries)
 
 
 @router.post(
@@ -583,11 +655,12 @@ def apply_phase_decision(
     if not isinstance(phase_transition, dict):
         raise HTTPException(status_code=400, detail="Recommendation is missing phase transition details")
 
-    next_phase = str(phase_transition.get("next_phase") or source_recommendation.recommended_phase)
+    next_phase_raw = str(phase_transition.get("next_phase") or source_recommendation.recommended_phase)
     reason = str(phase_transition.get("reason") or "phase_apply")
     allowed_phases = {"accumulation", "intensification", "deload"}
-    if next_phase not in allowed_phases:
+    if next_phase_raw not in allowed_phases:
         raise HTTPException(status_code=400, detail="Recommendation has unsupported next phase")
+    next_phase = cast(Literal["accumulation", "intensification", "deload"], next_phase_raw)
 
     if not payload.confirm:
         return ApplyPhaseDecisionResponse(
@@ -774,6 +847,10 @@ def coach_intelligence_preview(
         average_rpe=payload.average_rpe,
         consecutive_underperformance_weeks=payload.stagnation_weeks,
     )
+    progression_action_raw = str(progression.get("action") or "hold")
+    if progression_action_raw not in {"progress", "hold", "deload"}:
+        progression_action_raw = "hold"
+    progression_action = cast(Literal["progress", "hold", "deload"], progression_action_raw)
 
     readiness_score = (
         payload.readiness_score
@@ -782,14 +859,14 @@ def coach_intelligence_preview(
             completion_pct=payload.completion_pct,
             adherence_score=payload.adherence_score,
             soreness_level=payload.soreness_level,
-            progression_action=str(progression.get("action") or "hold"),
+            progression_action=progression_action,
         )
     )
     phase_transition = recommend_phase_transition(
         current_phase=payload.current_phase,
         weeks_in_phase=payload.weeks_in_phase,
         readiness_score=readiness_score,
-        progression_action=str(progression.get("action") or "hold"),
+        progression_action=progression_action,
         stagnation_weeks=payload.stagnation_weeks,
     )
     specialization = recommend_specialization_adjustments(
@@ -799,42 +876,57 @@ def coach_intelligence_preview(
     )
     media_warmups = summarize_program_media_and_warmups(template)
 
-    response_payload = IntelligenceCoachPreviewResponse(
-        template_id=selected_template_id,
-        program_name=_resolve_program_name(selected_template_id),
-        schedule=ScheduleAdaptationPreviewResponse.model_validate(
-            {
-                "from_days": schedule.get("from_days"),
-                "to_days": schedule.get("to_days"),
-                "kept_sessions": schedule.get("kept_sessions"),
-                "dropped_sessions": schedule.get("dropped_sessions"),
-                "added_sessions": schedule.get("added_sessions"),
-                "risk_level": schedule.get("risk_level"),
-                "muscle_set_delta": schedule.get("muscle_set_delta"),
-                "tradeoffs": schedule.get("tradeoffs"),
-            }
-        ),
-        progression=ProgressionDecisionResponse.model_validate(progression),
-        phase_transition=PhaseTransitionResponse.model_validate(phase_transition),
-        specialization=SpecializationPreviewResponse.model_validate(specialization),
-        media_warmups=ProgramMediaWarmupSummaryResponse.model_validate(media_warmups),
+    schedule_preview = ScheduleAdaptationPreviewResponse.model_validate(
+        {
+            "from_days": schedule.get("from_days"),
+            "to_days": schedule.get("to_days"),
+            "kept_sessions": schedule.get("kept_sessions"),
+            "dropped_sessions": schedule.get("dropped_sessions"),
+            "added_sessions": schedule.get("added_sessions"),
+            "risk_level": schedule.get("risk_level"),
+            "muscle_set_delta": schedule.get("muscle_set_delta"),
+            "tradeoffs": schedule.get("tradeoffs"),
+        }
     )
+    progression_preview = ProgressionDecisionResponse.model_validate(progression)
+    phase_transition_preview = PhaseTransitionResponse.model_validate(phase_transition)
+    specialization_preview = SpecializationPreviewResponse.model_validate(specialization)
+    media_warmups_preview = ProgramMediaWarmupSummaryResponse.model_validate(media_warmups)
+
+    response_payload_without_id = {
+        "template_id": selected_template_id,
+        "program_name": _resolve_program_name(selected_template_id),
+        "schedule": schedule_preview,
+        "progression": progression_preview,
+        "phase_transition": phase_transition_preview,
+        "specialization": specialization_preview,
+        "media_warmups": media_warmups_preview,
+    }
 
     recommendation_record = CoachingRecommendation(
         user_id=current_user.id,
         template_id=selected_template_id,
         recommendation_type="coach_preview",
         current_phase=payload.current_phase,
-        recommended_phase=response_payload.phase_transition.next_phase,
-        progression_action=response_payload.progression.action,
+        recommended_phase=phase_transition_preview.next_phase,
+        progression_action=progression_preview.action,
         request_payload=payload.model_dump(mode="json"),
-        recommendation_payload=response_payload.model_dump(mode="json"),
+        recommendation_payload={},
         status="previewed",
     )
     db.add(recommendation_record)
+    db.flush()
+
+    recommendation_record.recommendation_payload = IntelligenceCoachPreviewResponse(
+        recommendation_id=recommendation_record.id,
+        **response_payload_without_id,
+    ).model_dump(mode="json")
     db.commit()
 
-    return response_payload
+    return IntelligenceCoachPreviewResponse(
+        recommendation_id=recommendation_record.id,
+        **response_payload_without_id,
+    )
 
 
 @router.post(
