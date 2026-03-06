@@ -29,6 +29,14 @@ def test_program_catalog_lists_templates() -> None:
     assert isinstance(payload, list)
     assert any(item["id"] == "full_body_v1" for item in payload)
 
+    ids = {str(item.get("id")) for item in payload}
+    # These duplicate payload pairs exist in source imports and must collapse in API catalog.
+    assert not {"my_new_program", "pure_bodybuilding_full_body"}.issubset(ids)
+    assert not {
+        "pure_bodybuilding_phase_2_full_body_sheet",
+        "pure_bodybuilding_phase_2_full_body_sheet_1",
+    }.issubset(ids)
+
 
 def test_generate_week_uses_selected_program_when_template_not_passed() -> None:
     _reset_db()

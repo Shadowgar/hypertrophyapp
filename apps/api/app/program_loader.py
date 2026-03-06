@@ -1,5 +1,8 @@
 import json
+import hashlib
 from pathlib import Path
+import re
+from typing import Any
 from pydantic import ValidationError
 
 from .config import settings
@@ -49,6 +52,41 @@ def _fallback_program_name(program_id: str) -> str:
     return " ".join(part.capitalize() for part in program_id.replace("-", "_").split("_") if part)
 
 
+def _program_signature(program: dict[str, Any]) -> str:
+    # Signature intentionally excludes `id` so semantic duplicates collapse.
+    payload = {
+        "version": program.get("version"),
+        "split": program.get("split"),
+        "days_supported": program.get("days_supported"),
+        "deload": program.get("deload"),
+        "progression": program.get("progression"),
+        "sessions": program.get("sessions"),
+    }
+    normalized = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+
+
+def _catalog_id_rank(program_id: str) -> tuple[int, int, int, int, str]:
+    curated_priority = {
+        "full_body_v1": 0,
+        "ppl_v1": 0,
+        "upper_lower_v1": 0,
+        "pure_bodybuilding_full_body": 1,
+        "pure_bodybuilding_phase_2_full_body_sheet": 1,
+        "pure_bodybuilding_phase_2_ppl_sheet": 1,
+        "pure_bodybuilding_phase_2_upper_lower_sheet": 1,
+    }
+    ad_hoc_penalty = 1 if program_id.startswith("my_new_program") else 0
+    alt_suffix_penalty = 1 if re.search(r"_\d+$", program_id) else 0
+    return (
+        curated_priority.get(program_id, 20),
+        ad_hoc_penalty,
+        alt_suffix_penalty,
+        len(program_id),
+        program_id,
+    )
+
+
 def _resolve_programs_path() -> Path:
     configured = Path(settings.programs_dir)
     if configured.exists():
@@ -66,6 +104,7 @@ def list_program_templates() -> list[dict]:
     candidates = sorted(programs_path.glob("*.json"))
 
     summaries_by_id: dict[str, dict] = {}
+    templates_by_id: dict[str, dict[str, Any]] = {}
     for candidate in candidates:
         raw = json.loads(candidate.read_text(encoding="utf-8"))
         try:
@@ -74,6 +113,7 @@ def list_program_templates() -> list[dict]:
             continue
 
         data = validated.model_dump()
+        templates_by_id[data["id"]] = data
         summaries_by_id[data["id"]] = {
             "id": data["id"],
             "name": PROGRAM_NAMES.get(data["id"], _fallback_program_name(data["id"])),
@@ -87,7 +127,15 @@ def list_program_templates() -> list[dict]:
             ),
         }
 
-    return [summaries_by_id[key] for key in sorted(summaries_by_id)]
+    winner_by_signature: dict[str, str] = {}
+    for template_id in sorted(templates_by_id):
+        signature = _program_signature(templates_by_id[template_id])
+        incumbent = winner_by_signature.get(signature)
+        if incumbent is None or _catalog_id_rank(template_id) < _catalog_id_rank(incumbent):
+            winner_by_signature[signature] = template_id
+
+    selected_ids = sorted(winner_by_signature.values())
+    return [summaries_by_id[key] for key in selected_ids]
 
 
 def load_program_template(template_id: str) -> dict:
