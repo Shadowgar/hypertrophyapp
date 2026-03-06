@@ -91,3 +91,6 @@ The repository currently still contains ingestion-centered artifact generation (
 - User weak areas are persisted on profile and used as defaults in adaptation workflows.
 - Deterministic adaptation preview API now supports `2/3/4/5` target training days:
 	- `POST /plan/adaptation/preview`
+- Deterministic adaptation apply path now feeds runtime week generation:
+	- `POST /plan/adaptation/apply`
+	- `POST /plan/generate-week` consumes active adaptation state and decrements temporary duration week-by-week.

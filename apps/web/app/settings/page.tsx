@@ -36,6 +36,7 @@ export default function SettingsPage() {
   const [coachStatus, setCoachStatus] = useState<string | null>(null);
   const [adaptationPreview, setAdaptationPreview] = useState<FrequencyAdaptationResult | null>(null);
   const [adaptationStatus, setAdaptationStatus] = useState<string | null>(null);
+  const [adaptationApplyStatus, setAdaptationApplyStatus] = useState<string | null>(null);
   const [previewFromDays, setPreviewFromDays] = useState<number>(5);
   const [previewToDays, setPreviewToDays] = useState<number>(3);
   const [previewDurationWeeks, setPreviewDurationWeeks] = useState<number>(4);
@@ -140,6 +141,7 @@ export default function SettingsPage() {
 
   async function generateAdaptationPreview() {
     setAdaptationStatus("Generating frequency adaptation...");
+    setAdaptationApplyStatus(null);
     try {
       const preview = await api.previewFrequencyAdaptation({
         program_id: selectedProgramId,
@@ -151,6 +153,23 @@ export default function SettingsPage() {
       setAdaptationStatus("Frequency adaptation ready");
     } catch {
       setAdaptationStatus("Frequency adaptation failed");
+    }
+  }
+
+  async function applyAdaptation() {
+    setAdaptationApplyStatus("Applying frequency adaptation...");
+    try {
+      const response = await api.applyFrequencyAdaptation({
+        program_id: selectedProgramId,
+        target_days: previewToDays,
+        duration_weeks: previewDurationWeeks,
+        weak_areas: parseLaggingMuscles(previewLaggingMuscles),
+      });
+      setAdaptationApplyStatus(
+        `Applied (${response.target_days}d for ${response.duration_weeks} weeks, ${response.weeks_remaining} remaining)`,
+      );
+    } catch {
+      setAdaptationApplyStatus("Apply frequency adaptation failed");
     }
   }
 
@@ -332,6 +351,10 @@ export default function SettingsPage() {
             Generate Frequency Adaptation Preview
           </Button>
           <p className="telemetry-meta">{adaptationStatus ?? ""}</p>
+          <Button aria-label="Apply frequency adaptation" variant="secondary" className="w-full" onClick={applyAdaptation}>
+            Apply Frequency Adaptation
+          </Button>
+          <p className="telemetry-meta">{adaptationApplyStatus ?? ""}</p>
           {adaptationPreview ? (
             <div className="rounded-md border border-zinc-800 p-2">
               <p>Adaptation: {adaptationPreview.from_days}d -&gt; {adaptationPreview.to_days}d</p>

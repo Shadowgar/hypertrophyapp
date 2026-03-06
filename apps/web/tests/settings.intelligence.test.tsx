@@ -121,6 +121,21 @@ test("Settings coaching panel previews and applies intelligence decisions", asyn
     if (url.endsWith("/plan/adaptation/preview") && init?.method === "POST") {
       return Promise.resolve(new Response(JSON.stringify(adaptationPreview), { status: 200 }));
     }
+    if (url.endsWith("/plan/adaptation/apply") && init?.method === "POST") {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            status: "applied",
+            program_id: "full_body_v1",
+            target_days: 3,
+            duration_weeks: 4,
+            weeks_remaining: 4,
+            weak_areas: ["biceps", "shoulders"],
+          }),
+          { status: 200 },
+        ),
+      );
+    }
     if (url.endsWith("/plan/intelligence/apply-phase") && init?.method === "POST") {
       return Promise.resolve(
         new Response(
@@ -160,6 +175,12 @@ test("Settings coaching panel previews and applies intelligence decisions", asyn
   await waitFor(() => {
     expect(screen.getByText(/Adaptation: 5d -> 3d/i)).toBeInTheDocument();
     expect(screen.getByText(/First Week Decisions: 1/i)).toBeInTheDocument();
+  });
+
+  fireEvent.click(screen.getByRole("button", { name: /Apply frequency adaptation/i }));
+
+  await waitFor(() => {
+    expect(screen.getByText(/Applied \(3d for 4 weeks, 4 remaining\)/i)).toBeInTheDocument();
   });
 
   fireEvent.click(screen.getByRole("button", { name: /Apply phase decision/i }));
@@ -216,4 +237,17 @@ test("Settings coaching panel previews and applies intelligence decisions", asyn
     target_days: 3,
     duration_weeks: 4,
   });
+
+  const adaptationApplyCall = fetchCalls.find(([input, init]) => {
+    let requestUrl: string;
+    if (typeof input === "string") {
+      requestUrl = input;
+    } else if (input instanceof URL) {
+      requestUrl = input.toString();
+    } else {
+      requestUrl = input.url;
+    }
+    return requestUrl.endsWith("/plan/adaptation/apply") && init?.method === "POST";
+  });
+  expect(adaptationApplyCall).toBeDefined();
 });

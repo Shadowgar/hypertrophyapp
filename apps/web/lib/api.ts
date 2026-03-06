@@ -255,6 +255,15 @@ export type FrequencyAdaptationResult = {
   rejoin_policy: string;
 };
 
+export type FrequencyAdaptationApplyResponse = {
+  status: string;
+  program_id: string;
+  target_days: number;
+  duration_weeks: number;
+  weeks_remaining: number;
+  weak_areas: string[];
+};
+
 export type GuideProgram = {
   id: string;
   name: string;
@@ -609,6 +618,16 @@ export const api = {
     weak_areas?: string[];
   }) =>
     request<FrequencyAdaptationResult>("/plan/adaptation/preview", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  applyFrequencyAdaptation: (payload: {
+    program_id?: string | null;
+    target_days: number;
+    duration_weeks?: number;
+    weak_areas?: string[];
+  }) =>
+    request<FrequencyAdaptationApplyResponse>("/plan/adaptation/apply", {
       method: "POST",
       body: JSON.stringify(payload),
     }),

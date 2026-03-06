@@ -53,6 +53,13 @@ Evidence (2026-03-06)
 
 ### Task 2.2 - Gold End-To-End Runtime Path
 - Selection -> generation -> logging -> evaluation -> adaptation.
+- Status: STARTED
+
+Evidence (2026-03-06)
+- `apps/api/app/routers/plan.py`: `POST /plan/adaptation/apply` persists temporary adaptation state.
+- `apps/api/app/routers/plan.py`: `POST /plan/generate-week` consumes active adaptation state and applies temporary day-frequency reduction.
+- `apps/api/tests/test_program_frequency_adaptation_api.py`: apply + generate-week countdown coverage.
+- `apps/web/app/settings/page.tsx`: UI wiring for adaptation preview and apply actions.
 
 ## Priority 3 - Scale and Hardening
 

@@ -68,6 +68,14 @@ Behavior:
 	- Merges request constraints with persisted user weak areas.
 	- Returns deterministic adaptation preview with decision trace.
 
+- `POST /plan/adaptation/apply`
+	- Persists temporary adaptation state (`target_days`, `duration_weeks`, `weak_areas`) for the selected runtime template.
+	- Validates payload against deterministic adaptation engine before persisting.
+
+- `POST /plan/generate-week`
+	- Applies active adaptation state to effective generation frequency.
+	- Decrements adaptation duration by generated week and clears state after completion.
+
 - `GET /profile` and `POST /profile`
 	- Persist and return `weak_areas` overlay used by adaptation.
 
@@ -98,7 +106,7 @@ Current applied runtime isolation/deprecation:
 - done for baseline package + tests
 
 2. Wire onboarding package into coaching/runtime selection path
-- adaptation preview endpoint implemented; full runtime switching flow still pending
+- adaptation preview and apply endpoints implemented; full progression continuity across compressed/rejoin windows still pending
 
 3. Validate against scenario matrix
 - 2/3/4/5-day schedules

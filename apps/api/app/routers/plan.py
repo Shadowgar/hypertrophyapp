@@ -22,6 +22,8 @@ from ..program_loader import list_program_templates, load_program_onboarding_pac
 from ..adaptive_schema import FrequencyAdaptationResult
 from ..schemas import GenerateWeekPlanRequest, ProgramTemplateSummary
 from ..schemas import (
+    FrequencyAdaptationApplyRequest,
+    FrequencyAdaptationApplyResponse,
     ApplyPhaseDecisionRequest,
     ApplyPhaseDecisionResponse,
     ApplySpecializationDecisionRequest,
@@ -375,7 +377,10 @@ def _resolve_recovery_state(db: Session, user_id: str) -> str:
     return "high_fatigue" if severe_count >= 2 else "normal"
 
 
-def _resolve_overlay_weak_areas(payload: FrequencyAdaptationPreviewRequest, current_user: User) -> list[str]:
+def _resolve_overlay_weak_areas(
+    payload: FrequencyAdaptationPreviewRequest | FrequencyAdaptationApplyRequest,
+    current_user: User,
+) -> list[str]:
     explicit = [item.strip().lower() for item in payload.weak_areas if item and item.strip()]
     if explicit:
         return list(dict.fromkeys(explicit))
@@ -386,6 +391,96 @@ def _resolve_overlay_weak_areas(payload: FrequencyAdaptationPreviewRequest, curr
 def _resolve_onboarding_program_id(requested_program_id: str | None, current_user: User) -> str:
     selected = requested_program_id or current_user.selected_program_id or "full_body_v1"
     return ONBOARDING_PACKAGE_BY_TEMPLATE.get(selected, selected)
+
+
+def _resolve_active_frequency_adaptation(current_user: User, *, selected_template_id: str) -> dict[str, Any] | None:
+    state = current_user.active_frequency_adaptation
+    if not isinstance(state, dict):
+        return None
+
+    target_days_raw = state.get("target_days")
+    weeks_remaining_raw = state.get("weeks_remaining")
+    template_id = str(state.get("template_id") or state.get("program_id") or "").strip()
+    if not template_id or template_id != selected_template_id:
+        return None
+
+    if not isinstance(target_days_raw, (int, float, str)) or not isinstance(
+        weeks_remaining_raw,
+        (int, float, str),
+    ):
+        return None
+    try:
+        target_days = int(target_days_raw)
+        weeks_remaining = int(weeks_remaining_raw)
+    except (TypeError, ValueError):
+        return None
+
+    if target_days < 2 or target_days > 5 or weeks_remaining <= 0:
+        return None
+
+    duration_weeks = state.get("duration_weeks")
+    weak_areas_raw = state.get("weak_areas")
+    weak_areas = [str(item).strip().lower() for item in (weak_areas_raw or []) if str(item).strip()]
+    return {
+        "program_id": template_id,
+        "template_id": template_id,
+        "target_days": target_days,
+        "duration_weeks": int(duration_weeks) if isinstance(duration_weeks, int) else weeks_remaining,
+        "weeks_remaining": weeks_remaining,
+        "last_applied_week_start": state.get("last_applied_week_start"),
+        "weak_areas": list(dict.fromkeys(weak_areas)),
+    }
+
+
+def _apply_active_frequency_adaptation_to_plan(
+    *,
+    plan: dict[str, Any],
+    current_user: User,
+    selected_template_id: str,
+    active_frequency_adaptation: dict[str, Any] | None,
+) -> tuple[dict[str, Any], bool]:
+    if active_frequency_adaptation is None:
+        return plan, False
+
+    adaptation_summary: dict[str, Any] = {
+        "active": True,
+        "template_id": selected_template_id,
+        "target_days": int(active_frequency_adaptation["target_days"]),
+        "duration_weeks": int(active_frequency_adaptation["duration_weeks"]),
+        "weeks_remaining_before_apply": int(active_frequency_adaptation["weeks_remaining"]),
+        "weak_areas": list(active_frequency_adaptation.get("weak_areas") or []),
+    }
+    week_start_iso = plan.get("week_start")
+    already_applied_for_week = active_frequency_adaptation.get("last_applied_week_start") == week_start_iso
+
+    if already_applied_for_week:
+        adaptation_summary["weeks_remaining_after_apply"] = int(active_frequency_adaptation["weeks_remaining"])
+        plan["applied_frequency_adaptation"] = adaptation_summary
+        return plan, False
+
+    remaining_after = max(0, int(active_frequency_adaptation["weeks_remaining"]) - 1)
+    if remaining_after > 0:
+        current_user.active_frequency_adaptation = {
+            "template_id": selected_template_id,
+            "program_id": selected_template_id,
+            "target_days": int(active_frequency_adaptation["target_days"]),
+            "duration_weeks": int(active_frequency_adaptation["duration_weeks"]),
+            "weeks_remaining": remaining_after,
+            "weak_areas": list(active_frequency_adaptation.get("weak_areas") or []),
+            "last_applied_week_start": week_start_iso,
+            "applied_at": (
+                current_user.active_frequency_adaptation.get("applied_at")
+                if isinstance(current_user.active_frequency_adaptation, dict)
+                else datetime.now(UTC).isoformat()
+            ),
+        }
+    else:
+        current_user.active_frequency_adaptation = None
+        adaptation_summary["completed"] = True
+
+    adaptation_summary["weeks_remaining_after_apply"] = remaining_after
+    plan["applied_frequency_adaptation"] = adaptation_summary
+    return plan, True
 
 
 def _derive_readiness_score(
@@ -975,6 +1070,73 @@ def preview_frequency_adaptation(
 
 
 @router.post(
+    "/plan/adaptation/apply",
+    response_model=FrequencyAdaptationApplyResponse,
+    responses={
+        400: {"description": PROFILE_INCOMPLETE_DETAIL},
+        404: {"description": "Onboarding package not found"},
+    },
+)
+def apply_frequency_adaptation(
+    payload: FrequencyAdaptationApplyRequest,
+    db: DbSession,
+    current_user: CurrentUser,
+) -> FrequencyAdaptationApplyResponse:
+    if not current_user.days_available or not current_user.split_preference:
+        raise HTTPException(status_code=400, detail=PROFILE_INCOMPLETE_DETAIL)
+
+    selected_template_id = payload.program_id or current_user.selected_program_id or "full_body_v1"
+    onboarding_program_id = _resolve_onboarding_program_id(selected_template_id, current_user)
+    try:
+        onboarding_package = load_program_onboarding_package(onboarding_program_id)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    weak_areas = _resolve_overlay_weak_areas(payload, current_user)
+    # Validate adaptation request against the deterministic adaptation engine before persisting.
+    adapt_onboarding_frequency(
+        onboarding_package=onboarding_package,
+        overlay={
+            "available_training_days": payload.target_days,
+            "temporary_duration_weeks": payload.duration_weeks,
+            "weak_areas": [
+                {
+                    "muscle_group": item,
+                    "priority": 5,
+                    "desired_extra_slots_per_week": 1,
+                }
+                for item in weak_areas
+            ],
+            "equipment_limits": current_user.equipment_profile or [],
+            "recovery_state": _resolve_recovery_state(db, current_user.id),
+            "current_week_index": _resolve_current_week_index(db, current_user.id),
+        },
+    )
+
+    current_user.active_frequency_adaptation = {
+        "template_id": selected_template_id,
+        "program_id": selected_template_id,
+        "target_days": payload.target_days,
+        "duration_weeks": payload.duration_weeks,
+        "weeks_remaining": payload.duration_weeks,
+        "weak_areas": weak_areas,
+        "last_applied_week_start": None,
+        "applied_at": datetime.now(UTC).isoformat(),
+    }
+    db.add(current_user)
+    db.commit()
+
+    return FrequencyAdaptationApplyResponse(
+        status="applied",
+        program_id=selected_template_id,
+        target_days=payload.target_days,
+        duration_weeks=payload.duration_weeks,
+        weeks_remaining=payload.duration_weeks,
+        weak_areas=weak_areas,
+    )
+
+
+@router.post(
     "/plan/generate-week",
     responses={
         400: {"description": PROFILE_INCOMPLETE_DETAIL},
@@ -1003,6 +1165,17 @@ def plan_generate_week(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except ValidationError as exc:
         raise HTTPException(status_code=422, detail=INVALID_TEMPLATE_DETAIL) from exc
+
+    active_frequency_adaptation = _resolve_active_frequency_adaptation(
+        current_user,
+        selected_template_id=selected_template_id,
+    )
+    effective_days_available = (
+        int(active_frequency_adaptation["target_days"])
+        if active_frequency_adaptation is not None
+        else current_user.days_available
+    )
+
     history_rows = (
         db.query(WorkoutSetLog)
         .filter(WorkoutSetLog.user_id == current_user.id)
@@ -1031,7 +1204,7 @@ def plan_generate_week(
 
     plan = generate_week_plan(
         user_profile={"name": current_user.name},
-        days_available=current_user.days_available,
+        days_available=effective_days_available,
         split_preference=current_user.split_preference,
         program_template=template,
         history=history,
@@ -1052,6 +1225,15 @@ def plan_generate_week(
     )
     if review_cycle is not None:
         plan = _apply_review_adjustments(plan, review_cycle)
+
+    plan, adaptation_user_state_updated = _apply_active_frequency_adaptation_to_plan(
+        plan=plan,
+        current_user=current_user,
+        selected_template_id=selected_template_id,
+        active_frequency_adaptation=active_frequency_adaptation,
+    )
+    if adaptation_user_state_updated:
+        db.add(current_user)
 
     record = WorkoutPlan(
         user_id=current_user.id,

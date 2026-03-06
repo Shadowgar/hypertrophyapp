@@ -95,3 +95,68 @@ def test_frequency_adaptation_preview_uses_profile_weak_areas_when_not_provided(
 
     payload = response.json()
     assert payload["weak_areas"] == ["chest", "hamstrings"]
+
+
+def test_frequency_adaptation_apply_persists_state_for_runtime_generation() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_and_profile(client)
+
+    apply_response = client.post(
+        "/plan/adaptation/apply",
+        headers=headers,
+        json={
+            "program_id": "full_body_v1",
+            "target_days": 3,
+            "duration_weeks": 2,
+            "weak_areas": ["chest"],
+        },
+    )
+    assert apply_response.status_code == 200
+    apply_payload = apply_response.json()
+    assert apply_payload["status"] == "applied"
+    assert apply_payload["target_days"] == 3
+    assert apply_payload["weeks_remaining"] == 2
+
+    generate_response = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate_response.status_code == 200
+    generate_payload = generate_response.json()
+    assert generate_payload["user"]["days_available"] == 3
+    assert len(generate_payload["sessions"]) == 3
+    adaptation = generate_payload.get("applied_frequency_adaptation")
+    assert isinstance(adaptation, dict)
+    assert adaptation["target_days"] == 3
+    assert adaptation["weeks_remaining_before_apply"] == 2
+    assert adaptation["weeks_remaining_after_apply"] == 1
+
+
+def test_frequency_adaptation_apply_completes_after_duration_weeks() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_and_profile(client)
+
+    apply_response = client.post(
+        "/plan/adaptation/apply",
+        headers=headers,
+        json={
+            "program_id": "full_body_v1",
+            "target_days": 2,
+            "duration_weeks": 1,
+        },
+    )
+    assert apply_response.status_code == 200
+
+    first_week = client.post("/plan/generate-week", headers=headers, json={})
+    assert first_week.status_code == 200
+    first_payload = first_week.json()
+    assert first_payload["user"]["days_available"] == 2
+    adaptation = first_payload.get("applied_frequency_adaptation")
+    assert isinstance(adaptation, dict)
+    assert adaptation["weeks_remaining_after_apply"] == 0
+    assert adaptation.get("completed") is True
+
+    second_week = client.post("/plan/generate-week", headers=headers, json={})
+    assert second_week.status_code == 200
+    second_payload = second_week.json()
+    assert second_payload["user"]["days_available"] == 5
+    assert "applied_frequency_adaptation" not in second_payload

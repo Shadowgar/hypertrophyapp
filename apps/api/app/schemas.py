@@ -212,6 +212,22 @@ class FrequencyAdaptationPreviewRequest(BaseModel):
     weak_areas: list[str] = Field(default_factory=list)
 
 
+class FrequencyAdaptationApplyRequest(BaseModel):
+    program_id: str | None = None
+    target_days: int = Field(ge=2, le=5)
+    duration_weeks: int = Field(default=2, ge=1, le=8)
+    weak_areas: list[str] = Field(default_factory=list)
+
+
+class FrequencyAdaptationApplyResponse(BaseModel):
+    status: str
+    program_id: str
+    target_days: int
+    duration_weeks: int
+    weeks_remaining: int
+    weak_areas: list[str]
+
+
 class ScheduleAdaptationPreviewResponse(BaseModel):
     from_days: int
     to_days: int

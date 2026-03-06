@@ -29,6 +29,7 @@ class User(Base):
     training_location: Mapped[str | None] = mapped_column(String, nullable=True)
     equipment_profile: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     weak_areas: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+    active_frequency_adaptation: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     days_available: Mapped[int | None] = mapped_column(Integer, nullable=True)
     nutrition_phase: Mapped[str | None] = mapped_column(String, nullable=True)
     calories: Mapped[int | None] = mapped_column(Integer, nullable=True)
