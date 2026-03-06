@@ -14,6 +14,13 @@ cd /home/rocco/hypertrophyapp
 ./scripts/mini_preflight.sh
 ```
 
+Audit guard (invoked by preflight):
+
+```bash
+cd /home/rocco/hypertrophyapp
+./scripts/verify_master_plan_audit.sh
+```
+
 ## Working Agreement
 - Keep implementation focused: complete one backlog task at a time, end-to-end.
 - GPT-5-mini is authorized for full-stack implementation in this repository.
@@ -47,6 +54,12 @@ Use the printed task as the starting target for the current mini session.
 ```bash
 cd /home/rocco/hypertrophyapp
 ./scripts/mini_validate.sh
+```
+
+### Ingestion quality report
+```bash
+cd /home/rocco/hypertrophyapp
+python3 scripts/generate_ingestion_quality_report.py
 ```
 
 ### API regression checks
@@ -92,6 +105,12 @@ npm run build
 - Run `./scripts/mini_validate.sh`.
 - Add or update tests for changed behavior.
 - Commit with clear message and push to `main`.
+
+## Current Working-Tree Progress (2026-03-06)
+- Implemented deterministic XLSX import sanitization for structural row filtering.
+- Added API-side test coverage for sanitization behavior.
+- Wired Settings UI to intelligence preview/apply endpoint calls.
+- Added settings intelligence web test coverage.
 
 
 

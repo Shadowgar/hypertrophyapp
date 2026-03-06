@@ -82,6 +82,25 @@ Definition of done for P2:
 - Changes committed and pushed.
 - Next task identified and documented.
 
+## Current Working-Tree Progress (2026-03-06)
+- Completed importer hardening milestone:
+  - deterministic structural-row sanitization in `importers/xlsx_to_program.py`
+  - regression test in `apps/api/tests/test_xlsx_to_program_sanitization.py`
+- Completed initial coaching integration milestone:
+  - intelligence API client contracts in `apps/web/lib/api.ts`
+  - settings coaching preview/apply panel in `apps/web/app/settings/page.tsx`
+  - test coverage in `apps/web/tests/settings.intelligence.test.tsx`
+- Completed preview-to-apply ergonomics milestone:
+  - `coach-preview` response now includes `recommendation_id`
+  - settings apply actions auto-chain without manual id entry
+- Completed cross-surface coaching integration milestone:
+  - shared coaching panel integrated into `week`, `checkin`, and `today`
+  - route-level coaching integration tests added
+- Completed recommendation timeline/history UX milestone:
+  - history route now renders recommendation timeline with rationale/focus visibility.
+- Completed ingestion quality reporting milestone:
+  - added deterministic ingestion/template-normalization report generation and committed validation artifacts under `docs/validation/`.
+
 
 
 

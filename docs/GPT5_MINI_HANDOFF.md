@@ -44,6 +44,14 @@ Automation scripts:
   - Must include `selected_program_id`.
 - `POST /profile`
   - Must accept and persist `selected_program_id`.
+- `GET /plan/intelligence/reference-pairs`
+  - Returns workbook/PDF pairing records from provenance artifacts.
+- `POST /plan/intelligence/coach-preview`
+  - Returns deterministic schedule/progression/phase/specialization preview payload.
+- `POST /plan/intelligence/apply-phase`
+  - Requires `recommendation_id` and confirmation flag.
+- `POST /plan/intelligence/apply-specialization`
+  - Requires `recommendation_id` and confirmation flag.
 
 ### Data Model
 - `users.selected_program_id` exists and is persisted.
@@ -134,6 +142,17 @@ npm run build
 - Web build passes.
 - Web tests pass.
 - Changes are committed and pushed to `main`.
+
+## Current Working-Tree Progress (2026-03-06)
+- Importer hardening: `importers/xlsx_to_program.py` now sanitizes structural/non-workout rows before canonical export.
+- New importer regression coverage: `apps/api/tests/test_xlsx_to_program_sanitization.py`.
+- Frontend API wiring added for intelligence endpoints: `apps/web/lib/api.ts`.
+- Initial settings coaching UX added: `apps/web/app/settings/page.tsx`.
+- Frontend test coverage added: `apps/web/tests/settings.intelligence.test.tsx`.
+- Coaching preview/apply chaining is now automatic in Settings via preview `recommendation_id`.
+- Coaching preview/apply flow is now integrated across Week, Check-In, and Today via shared UI panel.
+- Recommendation timeline/history surface is now available in `apps/web/app/history/page.tsx` with rationale visibility.
+- Ingestion quality and normalization report now generated at `docs/validation/ingestion_quality_report.json` and `docs/validation/ingestion_quality_report.md`.
 
 
 

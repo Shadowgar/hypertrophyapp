@@ -1,241 +1,255 @@
-# Master Plan (Reality-Corrected)
+# Master Plan (Authoritative, Evidence-Based)
 
 Last updated: 2026-03-06
-Owner: HyperTrophy core team
-Scope: Monorepo-wide product, architecture, and delivery plan
+Audit basis: committed `HEAD` on `main` (unstaged local edits intentionally excluded from this audit)
 
 ## Purpose
 
-This is the single authoritative plan for what exists, what is partially implemented, and what must be built next.
-Code and tests are the source of truth. If this file conflicts with code, update this file.
+This file is the single execution plan for product architecture and delivery.
+Code + tests + generated artifacts are the source of truth.
+If docs conflict with code, docs must be corrected immediately.
 
-## Product Intent
+## Product Intent (Locked)
 
 Build a deterministic hypertrophy coaching system that:
 
-- Runs local-first (self-hosted)
-- Uses canonical templates at runtime (no runtime PDF/XLSX parsing)
-- Delivers explainable scheduling, progression, phase transitions, and specialization guidance
-- Preserves user control for all major plan changes
+- Is local-first and self-hostable.
+- Uses canonical program data at runtime.
+- Adapts schedule/progression with explainable deterministic rules.
+- Uses PDF/XLSX sources at build-time only.
+- Preserves explicit user confirmation for major plan changes.
 
-## Verified Current State
+## A. Verified Current State
 
-### Platform and runtime
+### Platform
 
-- API: FastAPI + SQLAlchemy + Alembic is live and tested.
-- Web: Next.js app routes for onboarding, week/today/check-in/history/settings are present.
-- Engine: deterministic scheduler/progression/warmup/equipment modules are present.
-- Auth: register/login/password reset contract exists.
+- API is FastAPI + SQLAlchemy with Alembic migrations and active tests.
+- Web is Next.js App Router with core routes: onboarding, week, today, check-in, history, guides, settings.
+- Core engine has deterministic modules for scheduler/progression/warmups/equipment/intelligence.
 
-### Working capability blocks
+### Implemented capabilities (verified)
 
-- Deterministic week generation from canonical `programs/*.json` templates.
-- Equipment-aware substitutions and soreness-sensitive load adjustments.
-- Mesocycle and deload signaling in generated plans.
-- In-session workout logging and deterministic next-step guidance.
-- Weekly review cycle with adjustment payload persisted and applied.
-- Program recommendation and explicit switch confirmation flow.
-- Program guide read endpoints for programs/days/exercises.
-
-### New implementation in this cycle
-
-- Added deterministic intelligence module in `packages/core-engine/core_engine/intelligence.py` with:
-  - schedule adaptation + tradeoff reporting
-  - progression action recommendation (`progress`, `hold`, `deload`)
-  - phase transition recommendation
-  - specialization adjustment recommendation
-  - media and warmup coverage summary
-- Added API endpoints:
+- Deterministic week generation from canonical JSON templates.
+- Equipment-aware substitution filtering during generation.
+- Soreness-aware deterministic load modifiers.
+- Mesocycle/deload signaling from generated week context.
+- Workout runner with set logging, live in-session guidance, and day summary.
+- Weekly review persistence and adjustment application into next generated week.
+- Program recommendation and explicit program-switch confirmation flow.
+- Guide APIs for program/day/exercise drill-down.
+- Intelligence APIs in committed `HEAD` for:
   - `GET /plan/intelligence/reference-pairs`
   - `POST /plan/intelligence/coach-preview`
-- Added test coverage:
-  - `packages/core-engine/tests/test_intelligence.py`
-  - `apps/api/tests/test_plan_intelligence_api.py`
-  - pairing override coverage in `apps/api/tests/test_reference_corpus_ingestion.py`
+  - `POST /plan/intelligence/apply-phase`
+  - `POST /plan/intelligence/apply-specialization`
 
-### Known gaps (not complete)
+### Known hard gaps (verified)
 
-- Ingested guide artifacts currently include metadata-only output in the present workspace state.
-- Canonical template quality is inconsistent across imported programs.
-- Video link coverage is low in many program templates.
-- Frontend does not yet expose a full coaching intelligence UI workflow.
-- UI does not yet expose a first-class "coach decision timeline" view for users.
+- Reference guide artifacts in repo are currently metadata-only (`pdf_metadata_only`, `xlsx_metadata_only`), with zero extracted text.
+- Imported templates have severe quality variance (many non-workout rows promoted into sessions/exercises).
+- Video coverage in templates is near-zero for most imported programs.
+- Frontend now consumes intelligence endpoints in Settings, Week, Check-In, and Today (`coach-preview`, `apply-phase`, `apply-specialization`).
+- Apply flow auto-chains preview `recommendation_id` across integrated surfaces.
+- No first-class coaching decision timeline UX.
 
-## Non-Negotiable Runtime Rules
+## B. Master Plan Corrections
+
+These corrections replace drifted assumptions:
+
+- "All checked items are verified" is invalid. Several prior checks used broad grouped evidence and must be reclassified.
+- `programs/schema.py` is referenced in prior audit docs but does not exist.
+- "Ingestion complete" must be split:
+  - Pairing/catalog/dedup: implemented.
+  - Usable extracted manual knowledge: not implemented in committed artifacts.
+- "Coaching intelligence complete" must be split:
+  - Engine + API backend contracts: mostly implemented in `HEAD`.
+  - End-to-end product behavior (UI flow + user decisions + traceability UX): partial.
+- "Template library complete" is false for quality:
+  - Quantity exists.
+  - Many imported templates are structurally noisy and not coach-grade.
+
+## C. Proposed Architecture For Intelligent Program Coaching
+
+1. Source ingestion layer
+- Deterministic asset scan, checksum, dedup, workbook/PDF pairing.
+- Full extraction mode for PDF/XLSX text and workbook structure.
+- Provenance capture at entity level.
+
+2. Knowledge normalization layer
+- Canonical entities: program, phase, workout day, exercise slot, rule bundles.
+- Rule extraction outputs: progression, deload, transitions, specialization, warmups, constraints.
+- Quality gates reject malformed or non-workout rows.
+
+3. Program engine layer
+- Selects program by profile + availability + compatibility.
+- Adapts schedule while preserving priorities and fatigue balance.
+- Computes session order, progression actions, phase transitions, and deload decisions.
+
+4. User performance model
+- Tracks planned vs performed outcomes.
+- Computes readiness/momentum/stagnation signals.
+- Detects weak-point lag patterns from repeated underperformance.
+
+5. Coaching recommendation layer
+- Generates explainable recommendations with deterministic rationale.
+- Persists recommendation records and supports confirmed apply endpoints.
+- Maintains source traceability to template/rule provenance.
+
+6. UI layer
+- Presents preview/apply coaching decisions.
+- Shows tradeoffs for schedule adaptation.
+- Shows phase path, rationale, and exercise videos.
+
+## D. Implementation Phases
+
+### Phase 1: Audit hardening and truth controls
+
+- Rebuild checklist audit with strict evidence mapping.
+- Add automated guard that validates evidence file references.
+- Require status classes: `VERIFIED`, `PARTIAL`, `NOT VERIFIED`.
+
+Exit criteria:
+- Drift checks fail fast in preflight when evidence links are broken.
+
+### Phase 2: Ingestion quality floor
+
+- Promote full-extraction workflow for reference ingestion runs.
+- Add deterministic row sanitization in XLSX importer.
+- Add template quality checks (session semantics, exercise density, video mapping quality).
+
+Exit criteria:
+- Canonical templates pass quality gate.
+- Generated guide docs contain meaningful extracted content.
+
+### Phase 3: Canonical model and rule normalization
+
+- Introduce normalized rule structures per program family.
+- Encode transitions, deload, specialization, and adaptation rules deterministically.
+- Add provenance links from rules to source sections.
+
+Exit criteria:
+- Rule bundles are queryable/testable without manual interpretation.
+
+### Phase 4: Engine evolution
+
+- Improve schedule adaptation beyond naive compression.
+- Add controlled specialization integration rules.
+- Add stronger readiness + fatigue decision matrix.
+
+Exit criteria:
+- Scenario tests A-E pass deterministically.
+
+### Phase 5: Coaching UX integration
+
+- Wire frontend to intelligence preview/apply endpoints.
+- Add recommendation timeline and rationale surfaces.
+- Show adaptation tradeoffs and phase transition explanations.
+
+Exit criteria:
+- User can preview, confirm, apply, and review decisions in UI.
+
+### Phase 6: Regression safety and parity
+
+- Expand tests across importer/engine/API/web flows.
+- Keep deterministic behavior stable.
+- Validate mobile quality/performance.
+
+Exit criteria:
+- `mini_validate` + intelligence scenario suites green.
+
+## E. First Files To Inspect / Modify
+
+- `importers/reference_corpus_ingest.py`
+- `importers/xlsx_to_program.py`
+- `apps/api/app/template_schema.py`
+- `apps/api/app/program_loader.py`
+- `packages/core-engine/core_engine/intelligence.py`
+- `packages/core-engine/core_engine/scheduler.py`
+- `apps/api/app/routers/plan.py`
+- `apps/web/lib/api.ts`
+- `apps/web/app/settings/page.tsx`
+- `apps/web/app/week/page.tsx`
+- `apps/api/tests/test_reference_corpus_ingestion.py`
+- `apps/api/tests/test_plan_intelligence_api.py`
+- `packages/core-engine/tests/test_intelligence.py`
+
+## F. Risks And Unknowns
+
+- Source materials may contain implicit rules not directly represented in workbook columns.
+- Current template imports include noisy rows that can distort recommendations.
+- Unstaged local edits can create apparent drift vs committed `HEAD` truth.
+- Full extraction can be environment-sensitive if parser dependencies are missing.
+
+Mitigations:
+
+- Treat committed `HEAD` + passing tests as audit baseline.
+- Enforce artifact quality checks before accepting new template imports.
+- Keep deterministic logic centralized in engine modules.
+- Require provenance-aware rules, not free-form runtime text interpretation.
+
+## G. Initial Code Changes (This Execution)
+
+- Rewrote this plan to reflect committed-repo truth.
+- Rebuilt checkmark audit strategy to remove blanket completion claims.
+- Added automated audit-evidence verification hook in preflight flow.
+- Added deterministic XLSX importer sanitization to filter structural/non-workout rows.
+- Added importer regression tests covering row sanitization.
+- Added frontend Settings coaching panel wiring for intelligence preview/apply endpoint calls.
+- Added frontend tests covering settings coaching preview/apply behavior.
+
+## Runtime Non-Negotiables
 
 - No runtime PDF/XLSX parsing.
-- No runtime vector retrieval requirement for core flows.
-- Deterministic outputs from profile + history + canonical templates + deterministic rules.
-- All major changes (program switch, phase transition, specialization boosts) require explicit user-visible explanation.
+- No runtime vector retrieval required for core planning flows.
+- Major plan changes require explicit confirmation and explanation.
 
-## Capability Matrix
+# Roadmap (Phases + Checklists)
 
-Status legend:
+## Phase 1 - Drift Control
 
-- `[x]` complete and validated
-- `[~]` partial
-- `[ ]` not started
+- [x] Replace narrative-only master plan with evidence-first plan sections A-G.
+- [x] Reclassify audit statuses to `VERIFIED/PARTIAL/NOT VERIFIED`.
+- [x] Add audit evidence path validation script.
+- [x] Run preflight with audit guard integrated.
 
-### Data and ingestion
+## Phase 2 - Ingestion Reality Upgrade
 
-- `[x]` Deterministic reference catalog/provenance generation
-- `[x]` Workbook/PDF pairing with enforcement and dedup support
-- `[~]` Full text extraction quality for all reference assets
-- `[~]` Canonical program normalization quality across all imported templates
+- [x] Add deterministic XLSX row sanitization that excludes non-workout rows.
+- [x] Add ingestion quality report (invalid sessions, missing reps/sets, missing video links).
+- [ ] Add full-extraction runbook and CI/local mode policy.
+- [ ] Regenerate `docs/guides` with non-empty excerpts and verify checksums.
 
-### Planning and adaptation
+## Phase 3 - Canonical Rule Layer
 
-- `[x]` Deterministic weekly plan generation
-- `[x]` Equipment-aware substitutions
-- `[x]` Soreness-aware load modifiers
-- `[x]` Mesocycle and deload signaling
-- `[x]` Schedule adaptation tradeoff engine (new)
-- `[~]` Missed-session recovery strategy explanation in user-facing UI
+- [ ] Add normalized rule payload schema for transitions/deload/specialization.
+- [ ] Emit provenance links from canonical rules back to source assets.
+- [ ] Add tests validating rule extraction determinism.
 
-### Progression and phase intelligence
+## Phase 4 - Coaching Engine Hardening
 
-- `[x]` Deterministic set logging and next-weight guidance
-- `[x]` Weekly review adjustment application
-- `[x]` Progress/hold/deload decision engine (new)
-- `[x]` Phase transition decision engine (new)
-- `[x]` Persistent timeline of decision rationale per user
+- [ ] Improve schedule adaptation algorithm to preserve movement distribution under compression.
+- [ ] Add deterministic weak-point integration policy with fatigue caps.
+- [ ] Add scenario tests for A/B/C/D/E product requirements.
 
-### Specialization and weak-point strategy
+## Phase 5 - Product Integration
 
-- `[x]` Weak-point inputs in weekly review workflow
-- `[x]` Deterministic specialization adjustment preview engine (new)
-- `[~]` End-to-end specialization plan application UX (API apply is complete; UI wiring pending)
+- [x] Add frontend client contracts for intelligence preview/apply endpoints.
+- [x] Add initial Settings recommendation preview/apply UI wiring.
+- [x] Build full recommendation preview/apply UX across week/check-in/settings/today.
+- [x] Add recommendation timeline UI with rationale visibility.
 
-### Guide and media experience
+## Phase 6 - Validation + Release Gate
 
-- `[x]` Program/day/exercise guide endpoints
-- `[x]` Video and warmup coverage summary engine (new)
-- `[~]` Reliable high video-link coverage across templates
-- `[~]` Rich exercise guide rendering beyond baseline API payloads
+- [ ] Expand API and web tests for full coaching loop.
+- [ ] Run `./scripts/mini_validate.sh` with all new tests passing.
+- [ ] Update docs and audit with final evidence references.
 
-## Architecture Direction (Target)
+## Definition Of Done
 
-### Runtime layers
-
-1. Canonical Program Layer
-   - Program templates with normalized sessions/exercises
-   - Template metadata including split, days, progression style, and media fields
-
-2. Deterministic Intelligence Layer
-   - Schedule adaptation with explicit tradeoffs
-   - Progression action engine
-   - Phase transition engine
-   - Specialization allocator
-   - Media and warmup coverage analyzer
-
-3. Coaching API Layer
-   - Read endpoints for guidance previews and evidence
-   - Write endpoints only when user confirms decisions
-
-4. Product UI Layer
-   - Explainable recommendation cards
-   - User controls: apply, defer, or decline
-   - Rationale visibility for every recommendation
-
-## Phased Delivery Plan
-
-### Phase 1: Truth and quality baseline
-
-- Finalize ingestion mode policy (`metadata-only` vs full extraction) for CI and local workflows.
-- Raise canonical template quality floor with deterministic sheet sanitization.
-- Add quality checks for required exercise fields and day/session semantics.
-
-Exit criteria:
-
-- Asset catalog/provenance stable in CI.
-- Pairing enforcement green.
-- Template quality checks pass on target corpus.
-
-### Phase 2: Intelligence runtime foundation
-
-- Land deterministic intelligence modules and API preview endpoints.
-- Add request/response contracts and full test coverage.
-- Ensure no side effects from preview endpoints.
-
-Exit criteria:
-
-- Preview endpoints deterministic and tested.
-- Regression suite green.
-
-### Phase 3: User-applied coaching decisions
-
-- Add persisted coaching decision records.
-- Add apply endpoints for approved recommendations.
-- Add undo-safe controls where feasible.
-
-Exit criteria:
-
-- User can preview, approve, and apply changes with auditable rationale.
-
-### Phase 4: UX and parity hardening
-
-- Integrate coaching previews in week/check-in/settings surfaces.
-- Improve guide readability and exercise-level context.
-- Harden mobile interaction and visual consistency.
-
-Exit criteria:
-
-- End-to-end coaching workflow available in UI.
-- Mobile acceptance and deterministic behavior checks pass.
-
-## Immediate Backlog (Priority Ordered)
-
-1. [done] Add API tests for edge cases in coach preview (invalid template, low-readiness deload branch, phase edge cases).
-2. [done] Add persistent coaching recommendation model and migration.
-3. [done] Add apply/confirm endpoints for phase and specialization decisions.
-4. Improve imported template sanitization for non-workout rows.
-5. Improve video link extraction and mapping completeness.
-6. Connect frontend settings/check-in pages to coaching preview endpoint.
-
-## Risks and Mitigations
-
-- Risk: false confidence from docs diverging from code.
-  - Mitigation: keep this file code-referenced and update on every major change.
-- Risk: noisy generated artifacts in git history.
-  - Mitigation: isolate ingestion runs and avoid committing incidental churn.
-- Risk: adaptation rules become opaque.
-  - Mitigation: keep decision outputs explicit (`action`, `reason`, `risk_level`, deltas).
-- Risk: template inconsistency undermines intelligence quality.
-  - Mitigation: deterministic template quality gates and regression fixtures.
-
-## Definition of Done for this plan
-
-A roadmap item can be marked complete only when:
+An item is complete only when:
 
 - Code is merged.
-- Deterministic tests cover the behavior.
-- API contracts are documented in code-level schemas.
-- This file is updated to reflect final status.
-
-
-
-
-
-
-## Progress Sync (2026-03-06)
-- Repository state synchronized through commit `c253dfd` on `main` (pushed to `origin/main`).
-- Validation baseline is green via `./scripts/mini_validate.sh`:
-  - API: `66 passed`
-  - Web tests: `16 passed`
-  - Web build: success
-- Additional progress after previous sync:
-  - `777cb86`: pruned obsolete visual-route snapshots (`apps/web/tests/__snapshots__/visual.routes.snapshot.test.tsx.snap`)
-  - `739cb99`: migrated API startup from `@app.on_event("startup")` to FastAPI lifespan in `apps/api/app/main.py`
-  - `18dd81b`: replaced model `datetime.utcnow()` defaults with centralized UTC helper in `apps/api/app/models.py`
-  - `cb317d0`: hardened `scripts/mini_validate.sh` with compose command detection and one-shot rebuild/retry fallback for failed containerized API test runs
-  - `3596622`: migrated auth stack from `passlib/python-jose` to `bcrypt/PyJWT` in API runtime paths
-  - `1026d25`: added coach-preview API edge-case tests for invalid template handling, low-readiness deload extension, and phase-transition boundary branches
-  - `dc5ffcf`: added persistent `coaching_recommendations` model/migration and persisted `coach-preview` recommendation records
-  - `c253dfd`: added `/plan/intelligence/apply-phase` and `/plan/intelligence/apply-specialization` confirm/apply endpoints with regression tests
-- Current warning profile:
-  - FastAPI startup deprecation warning removed.
-  - SQLAlchemy `datetime.utcnow()` warning class removed from API test runs.
-  - `passlib` and `python-jose` deprecation warnings removed from validation output.
-  - `mini_validate` run now reports clean test results without warning spam in the default path.
-- Drift prevention protocol for next sessions: run `./scripts/mini_preflight.sh` and `./scripts/mini_next_task.sh` before implementation, and `./scripts/mini_validate.sh` before commit/push.
+- Deterministic tests cover behavior.
+- Evidence references are valid and resolvable.
+- This file and `docs/Master_Plan_Checkmark_Audit.md` are updated.
 

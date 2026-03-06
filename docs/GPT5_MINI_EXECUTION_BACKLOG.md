@@ -80,6 +80,31 @@ Acceptance for Sprint B:
 - No runtime PDF rendering/parsing
 - No new backend contract requirements
 
+## Sprint C — Import Sanitization + Coaching Endpoint Wiring
+
+### Task C1 — XLSX structural row sanitization
+- Files:
+  - `importers/xlsx_to_program.py`
+  - `apps/api/tests/test_xlsx_to_program_sanitization.py`
+- Add:
+  - deterministic filters for structural session/exercise labels
+  - requirement for explicit numeric set/rep prescriptions before row import
+  - regression test proving noisy workbook rows are excluded
+
+Status: COMPLETED by Codex — importer now filters structural rows (e.g., block/week/rest/split-label rows) and preserves valid exercise rows.
+
+### Task C2 — Settings coaching endpoint wiring
+- Files:
+  - `apps/web/lib/api.ts`
+  - `apps/web/app/settings/page.tsx`
+  - `apps/web/tests/settings.intelligence.test.tsx`
+- Add:
+  - API client contracts for `reference-pairs`, `coach-preview`, `apply-phase`, `apply-specialization`
+  - settings panel controls to run coach preview and invoke apply endpoints
+  - frontend tests validating preview + apply request wiring
+
+Status: COMPLETED by Codex — settings now exposes an initial coaching preview/apply workflow and tests validate request wiring.
+
 ## Guardrails (Must Follow)
 - Keep deterministic runtime rules (no runtime PDF/XLSX parsing).
 - Keep tests green and maintain API compatibility unless explicitly updated across callers/tests.
@@ -123,4 +148,16 @@ Escalation is optional and only needed when external approvals are required.
   - `passlib` and `python-jose` deprecation warnings removed from validation output.
   - `mini_validate` run now reports clean test results without warning spam in the default path.
 - Drift prevention protocol for next sessions: run `./scripts/mini_preflight.sh` and `./scripts/mini_next_task.sh` before implementation, and `./scripts/mini_validate.sh` before commit/push.
+
+## Progress Update (Working Tree, 2026-03-06)
+- Completed Sprint C Task C1: deterministic XLSX importer sanitization + new regression test.
+- Completed Sprint C Task C2: frontend settings coaching preview/apply wiring + new web test coverage.
+- Completed Sprint C Task C3: backend preview recommendation persistence/apply endpoints restored and preview `recommendation_id` returned for automatic frontend apply chaining.
+- Completed Sprint C Task C4: shared coaching panel integration in `week`, `checkin`, and `today` with route-level web tests.
+- Completed Sprint C Task C5: recommendation timeline/history UX added to `history` with rationale visibility and API timeline endpoint wiring.
+- Completed Sprint C Task C6: ingestion quality + template normalization report generation with committed validation artifacts in `docs/validation/`.
+- Validation executed:
+  - API importer tests: `3 passed`
+  - Web settings tests: `2 passed`
+  - Web route coaching integration tests: `7 passed`
 
