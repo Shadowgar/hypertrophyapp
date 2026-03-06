@@ -17,6 +17,7 @@ Status legend:
 | Coaching timeline UX | User can view recommendation timeline with rationale | VERIFIED | `apps/web/app/history/page.tsx`, `apps/web/tests/history.analytics.test.tsx` |
 | Onboarding failure transparency | Register/login/profile failures expose backend detail text | VERIFIED | `apps/web/app/onboarding/page.tsx`, `apps/web/tests/onboarding.error.test.tsx` |
 | Onboarding reset controls | Test loop supports wiping stale onboarding accounts from onboarding screen | VERIFIED | `apps/api/app/routers/auth.py`, `apps/web/app/onboarding/page.tsx`, `apps/api/tests/test_auth_password_reset.py` |
+| Onboarding screenshot parity translation | External onboarding references translated into explicit field/flow checklist | PARTIAL | `docs/redesign/Onboarding_Reference_Analysis_Batch1.md`, `docs/redesign/Onboarding_Reference_Analysis_Batch2.md`, `docs/redesign/Onboarding_Reference_Analysis_Batch3.md` (branch/error edge cases pending) |
 | Ingestion quality report | Metrics for invalid sessions/missing fields are generated | VERIFIED | `importers/ingestion_quality_report.py`, `docs/validation/ingestion_quality_report.json` |
 | Full extraction policy | CI/local ingestion mode policy is documented and scripted | PARTIAL | `docs/guides/FULL_EXTRACTION_RUNBOOK.md`, `scripts/reference_ingest.sh`, `scripts/verify_guides_checksums.py` |
 | Full extraction artifact quality | All guides have non-empty extracted content | NOT VERIFIED | `scripts/reference_ingest.sh local-full` currently fails on `reference/My-Favorite-Exercise-for-Each-Body-Part.pdf` |

@@ -88,4 +88,26 @@ Evidence (2026-03-06)
 
 ### Task 3.5 - Screenshot Parity Translation
 - Convert external onboarding references into implementable parity checklist tasks.
+- Status: STARTED
+
+Evidence (2026-03-06)
+- `docs/redesign/Onboarding_Reference_Analysis_Batch1.md`: extracted intro + questionnaire flow structure and tracked field map from first screenshot batch.
+- `docs/redesign/Onboarding_Reference_Analysis_Batch2.md`: extracted motivation/obstacle/frequency/name/account-transition/sync steps from second screenshot batch.
+- `docs/redesign/Onboarding_Reference_Analysis_Batch3.md`: extracted notifications/location/equipment/experience/duration/days and workout-generation handoff from final screenshot batch.
+- `docs/redesign/Onboarding_Reference_Process_Map.md`: consolidated sequence and deterministic-input map across all provided screenshot batches.
+
+### Task 3.6 - Calendar Training History View
+- Add a calendar page where the user can click previous days to inspect completed training for that date.
 - Status: TODO
+
+Scope
+- Month and week calendar views with completion indicators.
+- Click/tap a date to open full training detail for that day.
+- Show performed exercises, sets/reps/weight, substitutions, and completion status.
+- Show planned vs performed deltas when plan exists for that date.
+- Include quick filters (program, muscle group, completed vs missed).
+- Include streak and weekly consistency summaries in calendar context.
+
+Stretch (post-MVP)
+- Personal records/best set badges surfaced on calendar days.
+- Fast jump to same weekday history (e.g., previous Mondays) for progression comparison.

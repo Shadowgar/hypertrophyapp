@@ -69,12 +69,16 @@ The repository currently still contains ingestion-centered artifact generation (
 - [ ] Expand canonical imports/rules beyond gold sample.
 - [ ] Strengthen scenario tests and regression safety.
 - [ ] Close release gate with evidence-backed docs and green validation.
+- [ ] Deliver calendar training history view (click past dates to inspect performed exercises and plan deltas).
 
 ### Phase G - Onboarding Reliability and Parity
 - [x] Add developer-safe account reset controls directly in onboarding for local test loops.
 - [x] Add actionable auth failure handling with explicit recovery paths.
-- [ ] Review external onboarding references and translate into concrete parity tasks (copy, flow steps, friction points).
+- [x] Review external onboarding references (batch 1) and translate into concrete parity tasks.
 - [ ] Implement onboarding funnel refinements (step sequencing, progress indicator, and reduced cognitive load).
+
+Reference:
+- `docs/redesign/Onboarding_Reference_Analysis_Batch1.md`
 
 ## Non-Negotiables
 
