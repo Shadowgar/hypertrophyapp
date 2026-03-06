@@ -40,10 +40,11 @@
 
 
 
+
 ## Progress Sync (2026-03-06)
-- Repository state synchronized through commit `3596622` on `main` (pushed to `origin/main`).
+- Repository state synchronized through commit `1026d25` on `main` (pushed to `origin/main`).
 - Validation baseline is green via `./scripts/mini_validate.sh`:
-  - API: `60 passed`
+  - API: `63 passed`
   - Web tests: `16 passed`
   - Web build: success
 - Additional progress after previous sync:
@@ -52,6 +53,7 @@
   - `18dd81b`: replaced model `datetime.utcnow()` defaults with centralized UTC helper in `apps/api/app/models.py`
   - `cb317d0`: hardened `scripts/mini_validate.sh` with compose command detection and one-shot rebuild/retry fallback for failed containerized API test runs
   - `3596622`: migrated auth stack from `passlib/python-jose` to `bcrypt/PyJWT` in API runtime paths
+  - `1026d25`: added coach-preview API edge-case tests for invalid template handling, low-readiness deload extension, and phase-transition boundary branches
 - Current warning profile:
   - FastAPI startup deprecation warning removed.
   - SQLAlchemy `datetime.utcnow()` warning class removed from API test runs.
