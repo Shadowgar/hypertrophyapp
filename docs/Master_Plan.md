@@ -59,7 +59,7 @@ Build a deterministic hypertrophy coaching system that:
 - Canonical template quality is inconsistent across imported programs.
 - Video link coverage is low in many program templates.
 - Frontend does not yet expose a full coaching intelligence UI workflow.
-- Runtime does not yet persist a first-class "coach decision timeline" entity.
+- UI does not yet expose a first-class "coach decision timeline" view for users.
 
 ## Non-Negotiable Runtime Rules
 
@@ -98,13 +98,13 @@ Status legend:
 - `[x]` Weekly review adjustment application
 - `[x]` Progress/hold/deload decision engine (new)
 - `[x]` Phase transition decision engine (new)
-- `[~]` Persistent timeline of decision rationale per user
+- `[x]` Persistent timeline of decision rationale per user
 
 ### Specialization and weak-point strategy
 
 - `[x]` Weak-point inputs in weekly review workflow
 - `[x]` Deterministic specialization adjustment preview engine (new)
-- `[~]` End-to-end specialization plan application UX
+- `[~]` End-to-end specialization plan application UX (API apply is complete; UI wiring pending)
 
 ### Guide and media experience
 
@@ -185,9 +185,9 @@ Exit criteria:
 
 ## Immediate Backlog (Priority Ordered)
 
-1. Add API tests for edge cases in coach preview (invalid template, low-readiness deload branch, phase edge cases).
-2. Add persistent coaching recommendation model and migration.
-3. Add apply/confirm endpoints for phase and specialization decisions.
+1. [done] Add API tests for edge cases in coach preview (invalid template, low-readiness deload branch, phase edge cases).
+2. [done] Add persistent coaching recommendation model and migration.
+3. [done] Add apply/confirm endpoints for phase and specialization decisions.
 4. Improve imported template sanitization for non-workout rows.
 5. Improve video link extraction and mapping completeness.
 6. Connect frontend settings/check-in pages to coaching preview endpoint.

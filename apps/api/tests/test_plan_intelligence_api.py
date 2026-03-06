@@ -51,6 +51,40 @@ def _register_and_onboard(client: TestClient) -> dict[str, str]:
     return headers
 
 
+def _create_preview_and_recommendation_id(client: TestClient, headers: dict[str, str]) -> str:
+    preview_payload = {
+        "template_id": "full_body_v1",
+        "from_days": 5,
+        "to_days": 3,
+        "completion_pct": 96,
+        "adherence_score": 4,
+        "soreness_level": "mild",
+        "average_rpe": 8.5,
+        "current_phase": "accumulation",
+        "weeks_in_phase": 6,
+        "stagnation_weeks": 0,
+        "lagging_muscles": ["biceps", "shoulders"],
+    }
+
+    preview_response = client.post("/plan/intelligence/coach-preview", headers=headers, json=preview_payload)
+    assert preview_response.status_code == 200
+
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == "intelligence@example.com").first()
+        assert user is not None
+        recommendation = (
+            db.query(CoachingRecommendation)
+            .filter(
+                CoachingRecommendation.user_id == user.id,
+                CoachingRecommendation.recommendation_type == "coach_preview",
+            )
+            .order_by(CoachingRecommendation.created_at.desc())
+            .first()
+        )
+        assert recommendation is not None
+        return recommendation.id
+
+
 def test_coach_preview_returns_deterministic_intelligence_payload() -> None:
     _reset_db()
     client = TestClient(app)
@@ -240,6 +274,99 @@ def test_coach_preview_persists_recommendation_record() -> None:
         assert record.request_payload["from_days"] == 5
         assert record.request_payload["to_days"] == 3
         assert record.recommendation_payload["template_id"] == "full_body_v1"
+
+
+def test_apply_phase_decision_requires_confirmation_then_applies() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_and_onboard(client)
+    recommendation_id = _create_preview_and_recommendation_id(client, headers)
+
+    preflight = client.post(
+        "/plan/intelligence/apply-phase",
+        headers=headers,
+        json={"recommendation_id": recommendation_id, "confirm": False},
+    )
+    assert preflight.status_code == 200
+    preflight_payload = preflight.json()
+    assert preflight_payload["status"] == "confirmation_required"
+    assert preflight_payload["requires_confirmation"] is True
+    assert preflight_payload["applied"] is False
+
+    apply_response = client.post(
+        "/plan/intelligence/apply-phase",
+        headers=headers,
+        json={"recommendation_id": recommendation_id, "confirm": True},
+    )
+    assert apply_response.status_code == 200
+    apply_payload = apply_response.json()
+    assert apply_payload["status"] == "applied"
+    assert apply_payload["requires_confirmation"] is False
+    assert apply_payload["applied"] is True
+    assert apply_payload["applied_recommendation_id"]
+
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == "intelligence@example.com").first()
+        assert user is not None
+        applied_record = (
+            db.query(CoachingRecommendation)
+            .filter(
+                CoachingRecommendation.user_id == user.id,
+                CoachingRecommendation.id == apply_payload["applied_recommendation_id"],
+            )
+            .first()
+        )
+        assert applied_record is not None
+        assert applied_record.recommendation_type == "phase_decision"
+        assert applied_record.status == "applied"
+        assert applied_record.applied_at is not None
+
+
+def test_apply_specialization_decision_requires_confirmation_then_applies() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_and_onboard(client)
+    recommendation_id = _create_preview_and_recommendation_id(client, headers)
+
+    preflight = client.post(
+        "/plan/intelligence/apply-specialization",
+        headers=headers,
+        json={"recommendation_id": recommendation_id, "confirm": False},
+    )
+    assert preflight.status_code == 200
+    preflight_payload = preflight.json()
+    assert preflight_payload["status"] == "confirmation_required"
+    assert preflight_payload["requires_confirmation"] is True
+    assert preflight_payload["applied"] is False
+    assert isinstance(preflight_payload["focus_muscles"], list)
+
+    apply_response = client.post(
+        "/plan/intelligence/apply-specialization",
+        headers=headers,
+        json={"recommendation_id": recommendation_id, "confirm": True},
+    )
+    assert apply_response.status_code == 200
+    apply_payload = apply_response.json()
+    assert apply_payload["status"] == "applied"
+    assert apply_payload["requires_confirmation"] is False
+    assert apply_payload["applied"] is True
+    assert apply_payload["applied_recommendation_id"]
+
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == "intelligence@example.com").first()
+        assert user is not None
+        applied_record = (
+            db.query(CoachingRecommendation)
+            .filter(
+                CoachingRecommendation.user_id == user.id,
+                CoachingRecommendation.id == apply_payload["applied_recommendation_id"],
+            )
+            .first()
+        )
+        assert applied_record is not None
+        assert applied_record.recommendation_type == "specialization_decision"
+        assert applied_record.status == "applied"
+        assert applied_record.applied_at is not None
 
 
 def test_reference_pair_endpoint_returns_list_payload() -> None:

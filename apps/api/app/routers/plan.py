@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime, timezone
 import json
 from pathlib import Path
 from typing import Annotated, Any
@@ -22,6 +22,10 @@ from ..models import CoachingRecommendation, SorenessEntry, User, WeeklyCheckin,
 from ..program_loader import list_program_templates, load_program_template
 from ..schemas import GenerateWeekPlanRequest, ProgramTemplateSummary
 from ..schemas import (
+    ApplyPhaseDecisionRequest,
+    ApplyPhaseDecisionResponse,
+    ApplySpecializationDecisionRequest,
+    ApplySpecializationDecisionResponse,
     GuideDaySummary,
     GuideExerciseSummary,
     GuideProgramSummary,
@@ -534,6 +538,172 @@ def get_program_exercise_guide(program_id: str, exercise_id: str) -> ProgramExer
 def list_reference_workbook_guide_pairs() -> list[ReferenceWorkbookGuidePair]:
     pairs = _load_reference_workbook_pairs()
     return [ReferenceWorkbookGuidePair.model_validate(row) for row in pairs]
+
+
+def _utcnow_naive() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
+def _resolve_preview_recommendation(db: Session, *, user_id: str, recommendation_id: str) -> CoachingRecommendation:
+    recommendation = (
+        db.query(CoachingRecommendation)
+        .filter(
+            CoachingRecommendation.id == recommendation_id,
+            CoachingRecommendation.user_id == user_id,
+            CoachingRecommendation.recommendation_type == "coach_preview",
+        )
+        .first()
+    )
+    if recommendation is None:
+        raise HTTPException(status_code=404, detail="Recommendation not found")
+    return recommendation
+
+
+@router.post(
+    "/plan/intelligence/apply-phase",
+    response_model=ApplyPhaseDecisionResponse,
+    responses={404: {"description": "Recommendation not found"}},
+)
+def apply_phase_decision(
+    payload: ApplyPhaseDecisionRequest,
+    db: DbSession,
+    current_user: CurrentUser,
+) -> ApplyPhaseDecisionResponse:
+    source_recommendation = _resolve_preview_recommendation(
+        db,
+        user_id=current_user.id,
+        recommendation_id=payload.recommendation_id,
+    )
+    recommendation_payload = (
+        source_recommendation.recommendation_payload
+        if isinstance(source_recommendation.recommendation_payload, dict)
+        else {}
+    )
+    phase_transition = recommendation_payload.get("phase_transition")
+    if not isinstance(phase_transition, dict):
+        raise HTTPException(status_code=400, detail="Recommendation is missing phase transition details")
+
+    next_phase = str(phase_transition.get("next_phase") or source_recommendation.recommended_phase)
+    reason = str(phase_transition.get("reason") or "phase_apply")
+    allowed_phases = {"accumulation", "intensification", "deload"}
+    if next_phase not in allowed_phases:
+        raise HTTPException(status_code=400, detail="Recommendation has unsupported next phase")
+
+    if not payload.confirm:
+        return ApplyPhaseDecisionResponse(
+            status="confirmation_required",
+            recommendation_id=source_recommendation.id,
+            requires_confirmation=True,
+            applied=False,
+            next_phase=next_phase,
+            reason=reason,
+        )
+
+    applied_record = CoachingRecommendation(
+        user_id=current_user.id,
+        template_id=source_recommendation.template_id,
+        recommendation_type="phase_decision",
+        current_phase=source_recommendation.current_phase,
+        recommended_phase=next_phase,
+        progression_action=source_recommendation.progression_action,
+        request_payload={
+            "source_recommendation_id": source_recommendation.id,
+            "confirm": True,
+        },
+        recommendation_payload={"phase_transition": phase_transition},
+        status="applied",
+        applied_at=_utcnow_naive(),
+    )
+    db.add(applied_record)
+    db.commit()
+
+    return ApplyPhaseDecisionResponse(
+        status="applied",
+        recommendation_id=source_recommendation.id,
+        applied_recommendation_id=applied_record.id,
+        requires_confirmation=False,
+        applied=True,
+        next_phase=next_phase,
+        reason=reason,
+    )
+
+
+@router.post(
+    "/plan/intelligence/apply-specialization",
+    response_model=ApplySpecializationDecisionResponse,
+    responses={404: {"description": "Recommendation not found"}},
+)
+def apply_specialization_decision(
+    payload: ApplySpecializationDecisionRequest,
+    db: DbSession,
+    current_user: CurrentUser,
+) -> ApplySpecializationDecisionResponse:
+    source_recommendation = _resolve_preview_recommendation(
+        db,
+        user_id=current_user.id,
+        recommendation_id=payload.recommendation_id,
+    )
+    recommendation_payload = (
+        source_recommendation.recommendation_payload
+        if isinstance(source_recommendation.recommendation_payload, dict)
+        else {}
+    )
+    specialization = recommendation_payload.get("specialization")
+    if not isinstance(specialization, dict):
+        raise HTTPException(status_code=400, detail="Recommendation is missing specialization details")
+
+    focus_muscles = [str(item) for item in specialization.get("focus_muscles") or []]
+    focus_adjustments = {
+        str(key): int(value)
+        for key, value in (specialization.get("focus_adjustments") or {}).items()
+    }
+    donor_adjustments = {
+        str(key): int(value)
+        for key, value in (specialization.get("donor_adjustments") or {}).items()
+    }
+    uncompensated_added_sets = int(specialization.get("uncompensated_added_sets") or 0)
+
+    if not payload.confirm:
+        return ApplySpecializationDecisionResponse(
+            status="confirmation_required",
+            recommendation_id=source_recommendation.id,
+            requires_confirmation=True,
+            applied=False,
+            focus_muscles=focus_muscles,
+            focus_adjustments=focus_adjustments,
+            donor_adjustments=donor_adjustments,
+            uncompensated_added_sets=uncompensated_added_sets,
+        )
+
+    applied_record = CoachingRecommendation(
+        user_id=current_user.id,
+        template_id=source_recommendation.template_id,
+        recommendation_type="specialization_decision",
+        current_phase=source_recommendation.current_phase,
+        recommended_phase=source_recommendation.recommended_phase,
+        progression_action=source_recommendation.progression_action,
+        request_payload={
+            "source_recommendation_id": source_recommendation.id,
+            "confirm": True,
+        },
+        recommendation_payload={"specialization": specialization},
+        status="applied",
+        applied_at=_utcnow_naive(),
+    )
+    db.add(applied_record)
+    db.commit()
+
+    return ApplySpecializationDecisionResponse(
+        status="applied",
+        recommendation_id=source_recommendation.id,
+        applied_recommendation_id=applied_record.id,
+        requires_confirmation=False,
+        applied=True,
+        focus_muscles=focus_muscles,
+        focus_adjustments=focus_adjustments,
+        donor_adjustments=donor_adjustments,
+        uncompensated_added_sets=uncompensated_added_sets,
+    )
 
 
 @router.post(

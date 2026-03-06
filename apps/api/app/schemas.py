@@ -280,6 +280,38 @@ class IntelligenceCoachPreviewResponse(BaseModel):
     media_warmups: ProgramMediaWarmupSummaryResponse
 
 
+class ApplyPhaseDecisionRequest(BaseModel):
+    recommendation_id: str = Field(min_length=1)
+    confirm: bool = False
+
+
+class ApplyPhaseDecisionResponse(BaseModel):
+    status: str
+    recommendation_id: str
+    applied_recommendation_id: str | None = None
+    requires_confirmation: bool
+    applied: bool
+    next_phase: Literal["accumulation", "intensification", "deload"]
+    reason: str
+
+
+class ApplySpecializationDecisionRequest(BaseModel):
+    recommendation_id: str = Field(min_length=1)
+    confirm: bool = False
+
+
+class ApplySpecializationDecisionResponse(BaseModel):
+    status: str
+    recommendation_id: str
+    applied_recommendation_id: str | None = None
+    requires_confirmation: bool
+    applied: bool
+    focus_muscles: list[str]
+    focus_adjustments: dict[str, int]
+    donor_adjustments: dict[str, int]
+    uncompensated_added_sets: int
+
+
 class ProgramRecommendationResponse(BaseModel):
     current_program_id: str
     recommended_program_id: str
