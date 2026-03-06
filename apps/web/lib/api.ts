@@ -72,6 +72,7 @@ export type Profile = {
   split_preference: string;
   training_location?: string | null;
   equipment_profile: string[];
+  weak_areas?: string[];
   days_available: number;
   nutrition_phase: string;
   calories: number;
@@ -123,14 +124,6 @@ export type ProgramSwitchResponse = {
   reason: string;
   requires_confirmation: boolean;
   applied: boolean;
-};
-
-export type ReferenceWorkbookGuidePair = {
-  workbook_asset_path: string;
-  workbook_asset_sha256: string;
-  guide_asset_path: string;
-  guide_asset_sha256: string;
-  match_score: number;
 };
 
 export type IntelligenceCoachPreviewRequest = {
@@ -228,6 +221,38 @@ export type CoachingRecommendationTimelineEntry = {
 
 export type CoachingRecommendationTimelineResponse = {
   entries: CoachingRecommendationTimelineEntry[];
+};
+
+export type FrequencyAdaptationDecision = {
+  action: "preserve" | "combine" | "rotate" | "reduce";
+  exercise_id: string;
+  source_day_id: string;
+  target_day_id?: string | null;
+  reason: string;
+};
+
+export type FrequencyAdaptationWeekResult = {
+  week_index: number;
+  adapted_training_days: number;
+  adapted_days: Array<{
+    day_id: string;
+    source_day_ids: string[];
+    exercise_ids: string[];
+  }>;
+  decisions: FrequencyAdaptationDecision[];
+  coverage_before: Record<string, number>;
+  coverage_after: Record<string, number>;
+  rationale: string;
+};
+
+export type FrequencyAdaptationResult = {
+  program_id: string;
+  from_days: number;
+  to_days: number;
+  duration_weeks: number;
+  weak_areas: string[];
+  weeks: FrequencyAdaptationWeekResult[];
+  rejoin_policy: string;
 };
 
 export type GuideProgram = {
@@ -558,7 +583,6 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  listReferencePairs: () => request<ReferenceWorkbookGuidePair[]>("/plan/intelligence/reference-pairs"),
   coachPreview: (payload: IntelligenceCoachPreviewRequest) =>
     request<IntelligenceCoachPreviewResponse>("/plan/intelligence/coach-preview", {
       method: "POST",
@@ -578,6 +602,16 @@ export const api = {
     request<CoachingRecommendationTimelineResponse>(
       `/plan/intelligence/recommendations?limit=${encodeURIComponent(String(limit))}`,
     ),
+  previewFrequencyAdaptation: (payload: {
+    program_id?: string | null;
+    target_days: number;
+    duration_weeks?: number;
+    weak_areas?: string[];
+  }) =>
+    request<FrequencyAdaptationResult>("/plan/adaptation/preview", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   updateProfile: (payload: Partial<Profile>) => request<Profile>("/profile", { method: "POST", body: JSON.stringify(payload) }),
   getWeeklyReviewStatus: () => request<WeeklyReviewStatus>("/weekly-review/status"),
   submitWeeklyReview: (payload: WeeklyReviewPayload) =>

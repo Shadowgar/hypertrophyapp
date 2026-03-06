@@ -10,6 +10,7 @@ def test_profile_upsert_accepts_equipment_profile() -> None:
         split_preference="full_body",
         training_location="home",
         equipment_profile=["dumbbell", "bodyweight"],
+        weak_areas=["chest", "hamstrings"],
         days_available=3,
         nutrition_phase="maintenance",
         calories=2500,
@@ -20,6 +21,7 @@ def test_profile_upsert_accepts_equipment_profile() -> None:
 
     assert payload.training_location == "home"
     assert payload.equipment_profile == ["dumbbell", "bodyweight"]
+    assert payload.weak_areas == ["chest", "hamstrings"]
 
 
 def test_profile_upsert_rejects_invalid_days_available() -> None:
@@ -33,6 +35,7 @@ def test_profile_upsert_rejects_invalid_days_available() -> None:
             split_preference="full_body",
             training_location="home",
             equipment_profile=["dumbbell"],
+            weak_areas=["back"],
             days_available=1,
             nutrition_phase="maintenance",
             calories=2500,
@@ -76,6 +79,7 @@ def test_profile_upsert_accepts_null_selected_program_id() -> None:
         selected_program_id=None,
         training_location="gym",
         equipment_profile=["dumbbell", "machine"],
+        weak_areas=[],
         days_available=4,
         nutrition_phase="maintenance",
         calories=2500,

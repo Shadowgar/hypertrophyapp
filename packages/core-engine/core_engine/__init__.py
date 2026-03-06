@@ -9,6 +9,7 @@ from .intelligence import (
     recommend_specialization_adjustments,
     summarize_program_media_and_warmups,
 )
+from .onboarding_adaptation import adapt_onboarding_frequency
 
 __all__ = [
     "compute_warmups",
@@ -22,4 +23,5 @@ __all__ = [
     "recommend_progression_action",
     "recommend_specialization_adjustments",
     "summarize_program_media_and_warmups",
+    "adapt_onboarding_frequency",
 ]

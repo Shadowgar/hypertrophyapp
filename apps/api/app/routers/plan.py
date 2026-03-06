@@ -1,6 +1,4 @@
 from datetime import UTC, date, datetime
-import json
-from pathlib import Path
 from typing import Annotated, Any, Literal, cast
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -8,6 +6,7 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from core_engine import (
+    adapt_onboarding_frequency,
     evaluate_schedule_adaptation,
     generate_week_plan,
     recommend_phase_transition,
@@ -19,7 +18,8 @@ from core_engine import (
 from ..database import get_db
 from ..deps import get_current_user
 from ..models import CoachingRecommendation, SorenessEntry, User, WeeklyCheckin, WeeklyReviewCycle, WorkoutPlan, WorkoutSetLog
-from ..program_loader import list_program_templates, load_program_template
+from ..program_loader import list_program_templates, load_program_onboarding_package, load_program_template
+from ..adaptive_schema import FrequencyAdaptationResult
 from ..schemas import GenerateWeekPlanRequest, ProgramTemplateSummary
 from ..schemas import (
     ApplyPhaseDecisionRequest,
@@ -31,6 +31,7 @@ from ..schemas import (
     GuideDaySummary,
     GuideExerciseSummary,
     GuideProgramSummary,
+    FrequencyAdaptationPreviewRequest,
     IntelligenceCoachPreviewRequest,
     IntelligenceCoachPreviewResponse,
     ProgramDayGuideResponse,
@@ -38,7 +39,6 @@ from ..schemas import (
     ProgramGuideResponse,
     ProgramMediaWarmupSummaryResponse,
     ProgressionDecisionResponse,
-    ReferenceWorkbookGuidePair,
     ScheduleAdaptationPreviewResponse,
     SpecializationPreviewResponse,
     PhaseTransitionResponse,
@@ -53,12 +53,17 @@ GUIDE_RESPONSES: dict[int | str, dict[str, Any]] = {
     404: {"description": "Guide resource not found"},
     422: {"description": INVALID_TEMPLATE_DETAIL},
 }
+PROFILE_INCOMPLETE_DETAIL = "Complete profile first"
 
 REVIEW_SET_DELTA_MIN = -1
 REVIEW_SET_DELTA_MAX = 1
 REVIEW_ADDITIONAL_SET_CAP = 2
 REVIEW_INTENSITY_MIN_SCALE = 0.93
 REVIEW_INTENSITY_MAX_SCALE = 1.03
+ONBOARDING_PACKAGE_BY_TEMPLATE: dict[str, str] = {
+    "full_body_v1": "pure_bodybuilding_phase_1_full_body",
+    "pure_bodybuilding_phase_1_full_body": "pure_bodybuilding_phase_1_full_body",
+}
 
 
 def _collect_recovery_and_mesocycle_inputs(
@@ -344,39 +349,43 @@ def _resolve_program_name(program_id: str) -> str:
     return _program_display_name(program_id)
 
 
-def _repo_root() -> Path:
-    return Path(__file__).resolve().parents[4]
+def _resolve_current_week_index(db: Session, user_id: str) -> int:
+    latest_plan = (
+        db.query(WorkoutPlan)
+        .filter(WorkoutPlan.user_id == user_id)
+        .order_by(WorkoutPlan.created_at.desc())
+        .first()
+    )
+    if latest_plan and isinstance(latest_plan.payload, dict):
+        mesocycle = latest_plan.payload.get("mesocycle")
+        if isinstance(mesocycle, dict):
+            return max(1, int(mesocycle.get("week_index", 1) or 1))
+    return 1
 
 
-def _load_reference_workbook_pairs() -> list[dict[str, Any]]:
-    provenance_path = _repo_root() / "docs" / "guides" / "provenance_index.json"
-    if not provenance_path.exists():
-        return []
+def _resolve_recovery_state(db: Session, user_id: str) -> str:
+    latest_soreness = (
+        db.query(SorenessEntry)
+        .filter(SorenessEntry.user_id == user_id, SorenessEntry.entry_date <= date.today())
+        .order_by(SorenessEntry.entry_date.desc(), SorenessEntry.created_at.desc())
+        .first()
+    )
+    severity_by_muscle = latest_soreness.severity_by_muscle if latest_soreness else {}
+    severe_count = sum(1 for value in severity_by_muscle.values() if str(value).lower() == "severe")
+    return "high_fatigue" if severe_count >= 2 else "normal"
 
-    try:
-        payload = json.loads(provenance_path.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
-        return []
 
-    pairs = payload.get("workbook_pdf_pairs")
-    if not isinstance(pairs, list):
-        return []
+def _resolve_overlay_weak_areas(payload: FrequencyAdaptationPreviewRequest, current_user: User) -> list[str]:
+    explicit = [item.strip().lower() for item in payload.weak_areas if item and item.strip()]
+    if explicit:
+        return list(dict.fromkeys(explicit))
+    stored = [str(item).strip().lower() for item in (current_user.weak_areas or []) if str(item).strip()]
+    return list(dict.fromkeys(stored))
 
-    normalized: list[dict[str, Any]] = []
-    for row in pairs:
-        if not isinstance(row, dict):
-            continue
-        normalized.append(
-            {
-                "workbook_asset_path": str(row.get("workbook_asset_path") or ""),
-                "workbook_asset_sha256": str(row.get("workbook_asset_sha256") or ""),
-                "guide_asset_path": str(row.get("guide_asset_path") or ""),
-                "guide_asset_sha256": str(row.get("guide_asset_sha256") or ""),
-                "match_score": int(row.get("match_score") or 0),
-            }
-        )
 
-    return normalized
+def _resolve_onboarding_program_id(requested_program_id: str | None, current_user: User) -> str:
+    selected = requested_program_id or current_user.selected_program_id or "full_body_v1"
+    return ONBOARDING_PACKAGE_BY_TEMPLATE.get(selected, selected)
 
 
 def _derive_readiness_score(
@@ -537,12 +546,6 @@ def get_program_exercise_guide(program_id: str, exercise_id: str) -> ProgramExer
     if exercise is None:
         raise HTTPException(status_code=404, detail="Guide exercise not found")
     return ProgramExerciseGuideResponse(program_id=program_id, exercise=exercise)
-
-
-@router.get("/plan/intelligence/reference-pairs", response_model=list[ReferenceWorkbookGuidePair])
-def list_reference_workbook_guide_pairs() -> list[ReferenceWorkbookGuidePair]:
-    pairs = _load_reference_workbook_pairs()
-    return [ReferenceWorkbookGuidePair.model_validate(row) for row in pairs]
 
 
 def _utcnow_naive() -> datetime:
@@ -783,7 +786,7 @@ def apply_specialization_decision(
     "/plan/intelligence/coach-preview",
     response_model=IntelligenceCoachPreviewResponse,
     responses={
-        400: {"description": "Complete profile first"},
+        400: {"description": PROFILE_INCOMPLETE_DETAIL},
         404: {"description": "Program template not found"},
         422: {"description": "Program template schema is invalid"},
     },
@@ -794,7 +797,7 @@ def coach_intelligence_preview(
     current_user: CurrentUser,
 ) -> IntelligenceCoachPreviewResponse:
     if not current_user.split_preference:
-        raise HTTPException(status_code=400, detail="Complete profile first")
+        raise HTTPException(status_code=400, detail=PROFILE_INCOMPLETE_DETAIL)
 
     profile_days = current_user.days_available or payload.from_days
     max_requested_days = max(payload.from_days, payload.to_days, profile_days)
@@ -930,9 +933,51 @@ def coach_intelligence_preview(
 
 
 @router.post(
+    "/plan/adaptation/preview",
+    response_model=FrequencyAdaptationResult,
+    responses={
+        400: {"description": PROFILE_INCOMPLETE_DETAIL},
+        404: {"description": "Onboarding package not found"},
+    },
+)
+def preview_frequency_adaptation(
+    payload: FrequencyAdaptationPreviewRequest,
+    db: DbSession,
+    current_user: CurrentUser,
+) -> FrequencyAdaptationResult:
+    if not current_user.days_available or not current_user.split_preference:
+        raise HTTPException(status_code=400, detail=PROFILE_INCOMPLETE_DETAIL)
+
+    onboarding_program_id = _resolve_onboarding_program_id(payload.program_id, current_user)
+    try:
+        onboarding_package = load_program_onboarding_package(onboarding_program_id)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    weak_areas = _resolve_overlay_weak_areas(payload, current_user)
+    overlay = {
+        "available_training_days": payload.target_days,
+        "temporary_duration_weeks": payload.duration_weeks,
+        "weak_areas": [
+            {
+                "muscle_group": item,
+                "priority": 5,
+                "desired_extra_slots_per_week": 1,
+            }
+            for item in weak_areas
+        ],
+        "equipment_limits": current_user.equipment_profile or [],
+        "recovery_state": _resolve_recovery_state(db, current_user.id),
+        "current_week_index": _resolve_current_week_index(db, current_user.id),
+    }
+    raw_result = adapt_onboarding_frequency(onboarding_package=onboarding_package, overlay=overlay)
+    return FrequencyAdaptationResult.model_validate(raw_result)
+
+
+@router.post(
     "/plan/generate-week",
     responses={
-        400: {"description": "Complete profile first"},
+        400: {"description": PROFILE_INCOMPLETE_DETAIL},
         404: {"description": "Program template not found"},
         422: {"description": "Program template schema is invalid"},
     },
@@ -943,7 +988,7 @@ def plan_generate_week(
     current_user: CurrentUser,
 ) -> dict:
     if not current_user.days_available or not current_user.split_preference:
-        raise HTTPException(status_code=400, detail="Complete profile first")
+        raise HTTPException(status_code=400, detail=PROFILE_INCOMPLETE_DETAIL)
 
     try:
         selected_template_id, template = _resolve_template_for_generation(

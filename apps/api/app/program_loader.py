@@ -6,6 +6,7 @@ from typing import Any
 from pydantic import ValidationError
 
 from .config import settings
+from .adaptive_schema import ProgramOnboardingPackage
 from .template_schema import CanonicalProgramTemplate
 
 
@@ -46,6 +47,19 @@ PROGRAM_NAMES: dict[str, str] = {
     "the_bodybuilding_transformation_system_beginner": "Bodybuilding Transformation System — Beginner",
     "the_bodybuilding_transformation_system_intermediate_advanced": "Bodybuilding Transformation System — Intermediate/Advanced",
 }
+
+
+def _normalized_stem(path: Path) -> str:
+    return path.stem.replace(".", "_")
+
+
+def _is_runtime_template_file(path: Path) -> bool:
+    name = path.name.lower()
+    if name.endswith(".onboarding.json"):
+        return False
+    if name.endswith("_imported.json"):
+        return False
+    return True
 
 
 def _fallback_program_name(program_id: str) -> str:
@@ -99,9 +113,13 @@ def _resolve_programs_path() -> Path:
     return configured
 
 
+def _resolve_onboarding_path() -> Path:
+    return _resolve_programs_path() / "gold"
+
+
 def list_program_templates() -> list[dict]:
     programs_path = _resolve_programs_path()
-    candidates = sorted(programs_path.glob("*.json"))
+    candidates = [candidate for candidate in sorted(programs_path.glob("*.json")) if _is_runtime_template_file(candidate)]
 
     summaries_by_id: dict[str, dict] = {}
     templates_by_id: dict[str, dict[str, Any]] = {}
@@ -113,6 +131,11 @@ def list_program_templates() -> list[dict]:
             continue
 
         data = validated.model_dump()
+        runtime_id = _normalized_stem(candidate)
+        if str(data.get("id") or "") != runtime_id:
+            # Runtime templates must have stable ID<->filename mapping.
+            continue
+
         templates_by_id[data["id"]] = data
         summaries_by_id[data["id"]] = {
             "id": data["id"],
@@ -139,10 +162,57 @@ def list_program_templates() -> list[dict]:
 
 
 def load_program_template(template_id: str) -> dict:
-    candidate = _resolve_programs_path() / f"{template_id}.json"
+    programs_path = _resolve_programs_path()
+    for candidate in sorted(programs_path.glob("*.json")):
+        if not _is_runtime_template_file(candidate):
+            continue
+        if _normalized_stem(candidate) != template_id:
+            continue
+
+        raw = json.loads(candidate.read_text(encoding="utf-8"))
+        validated = CanonicalProgramTemplate.model_validate(raw)
+        payload = validated.model_dump()
+        if str(payload.get("id") or "") != template_id:
+            continue
+        return payload
+
+    raise FileNotFoundError(f"Program template not found: {template_id}")
+
+
+def list_program_onboarding_packages() -> list[dict[str, Any]]:
+    onboarding_path = _resolve_onboarding_path()
+    if not onboarding_path.exists():
+        return []
+
+    summaries: list[dict[str, Any]] = []
+    for candidate in sorted(onboarding_path.glob("*.onboarding.json")):
+        try:
+            raw = json.loads(candidate.read_text(encoding="utf-8"))
+            package = ProgramOnboardingPackage.model_validate(raw)
+        except (OSError, json.JSONDecodeError, ValidationError):
+            continue
+
+        summaries.append(
+            {
+                "program_id": package.program_id,
+                "program_name": package.blueprint.program_name,
+                "split": package.blueprint.split,
+                "default_training_days": package.blueprint.default_training_days,
+                "total_weeks": package.blueprint.total_weeks,
+                "source_workbook": package.blueprint.source_workbook,
+                "source_pdf": package.source_pdf,
+                "version": package.version,
+            }
+        )
+
+    return summaries
+
+
+def load_program_onboarding_package(program_id: str) -> dict[str, Any]:
+    candidate = _resolve_onboarding_path() / f"{program_id}.onboarding.json"
     if not candidate.exists():
-        raise FileNotFoundError(f"Program template not found: {template_id}")
+        raise FileNotFoundError(f"Program onboarding package not found: {program_id}")
 
     raw = json.loads(candidate.read_text(encoding="utf-8"))
-    validated = CanonicalProgramTemplate.model_validate(raw)
-    return validated.model_dump()
+    validated = ProgramOnboardingPackage.model_validate(raw)
+    return validated.model_dump(mode="json")

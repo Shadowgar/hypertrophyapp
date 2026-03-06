@@ -1,0 +1,55 @@
+{
+  "program_id": "adaptive_full_body_gold_v0_1",
+  "program_name": "Adaptive Full Body Gold v0.1",
+  "source_workbook": "reference/Pure Bodybuilding - Phase 1 - Full Body Sheet.xlsx",
+  "version": "0.1.0",
+  "split": "full_body",
+  "phases": [
+    {
+      "phase_id": "accumulation_1",
+      "phase_name": "Accumulation",
+      "weeks": [
+        {
+          "week_index": 1,
+          "days": [
+            {
+              "day_id": "w1d1",
+              "day_name": "Full Body A",
+              "slots": [
+                {
+                  "slot_id": "w1d1_s1",
+                  "order_index": 1,
+                  "exercise_id": "bench_press_barbell",
+                  "video_url": "https://www.youtube.com/watch?v=rT7DgCr-3pg",
+                  "warmup_prescription": [
+                    { "percent": 50, "reps": 8 },
+                    { "percent": 70, "reps": 5 },
+                    { "percent": 85, "reps": 2 }
+                  ],
+                  "work_sets": [
+                    { "set_type": "work", "sets": 3, "rep_target": { "min": 6, "max": 8 }, "rir_target": 2 }
+                  ],
+                  "notes": "Control eccentric and full chest touch"
+                },
+                {
+                  "slot_id": "w1d1_s2",
+                  "order_index": 2,
+                  "exercise_id": "row_chest_supported",
+                  "video_url": "https://www.youtube.com/watch?v=GYX7Qm9JQKM",
+                  "warmup_prescription": [
+                    { "percent": 50, "reps": 8 },
+                    { "percent": 70, "reps": 5 }
+                  ],
+                  "work_sets": [
+                    { "set_type": "work", "sets": 3, "rep_target": { "min": 8, "max": 10 }, "rir_target": 2 }
+                  ],
+                  "notes": "Pause on contraction"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

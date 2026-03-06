@@ -603,6 +603,7 @@ def get_profile(current_user: CurrentUser) -> ProfileResponse:
         selected_program_id=current_user.selected_program_id or "full_body_v1",
         training_location=current_user.training_location,
         equipment_profile=current_user.equipment_profile or [],
+        weak_areas=current_user.weak_areas or [],
         days_available=current_user.days_available or 2,
         nutrition_phase=current_user.nutrition_phase or "maintenance",
         calories=current_user.calories or 0,
@@ -626,6 +627,7 @@ def upsert_profile(
     current_user.selected_program_id = payload.selected_program_id or "full_body_v1"
     current_user.training_location = payload.training_location
     current_user.equipment_profile = payload.equipment_profile
+    current_user.weak_areas = payload.weak_areas
     current_user.days_available = payload.days_available
     current_user.nutrition_phase = payload.nutrition_phase
     current_user.calories = payload.calories

@@ -12,41 +12,62 @@ const EQUIPMENT_OPTIONS = ["dumbbell", "barbell", "cable", "machine", "bodyweigh
 
 const FALLBACK_PROGRAMS: ProgramTemplateOption[] = [
   {
-    id: "pure_bodybuilding_full_body",
-    name: "Pure Bodybuilding Phase 1 - Full Body",
+    id: "full_body_v1",
+    name: "Full Body v1",
     split: "full_body",
-    days_supported: [2, 3, 4],
-    description: "Foundational full body progression with deterministic sessions.",
+    days_supported: [2, 3, 4, 5],
+    description: "Deterministic full body template for adaptive weekly scheduling.",
   },
   {
-    id: "pure_bodybuilding_phase_2_full_body_sheet",
-    name: "Pure Bodybuilding Phase 2 - Full Body",
-    split: "full_body",
-    days_supported: [2, 3, 4],
-    description: "Phase 2 full-body variant from your reference corpus.",
-  },
-  {
-    id: "pure_bodybuilding_phase_2_ppl_sheet",
-    name: "Pure Bodybuilding Phase 2 - PPL",
+    id: "ppl_v1",
+    name: "Push Pull Legs v1",
     split: "ppl",
-    days_supported: [2, 3, 4],
-    description: "Phase 2 push/pull/legs variant.",
+    days_supported: [2, 3, 4, 5],
+    description: "Deterministic PPL template with adaptive compression support.",
   },
   {
-    id: "pure_bodybuilding_phase_2_upper_lower_sheet",
-    name: "Pure Bodybuilding Phase 2 - Upper Lower",
+    id: "upper_lower_v1",
+    name: "Upper Lower v1",
     split: "upper_lower",
-    days_supported: [2, 3, 4],
-    description: "Phase 2 upper/lower variant.",
-  },
-  {
-    id: "the_bodybuilding_transformation_system_beginner",
-    name: "Bodybuilding Transformation System - Beginner",
-    split: "full_body",
-    days_supported: [2, 3, 4],
-    description: "Beginner track from the transformation system.",
+    days_supported: [2, 3, 4, 5],
+    description: "Deterministic upper/lower template with frequency adaptation support.",
   },
 ];
+
+async function parseApiError(response: Response, fallback: string): Promise<string> {
+  try {
+    const payload = await response.json() as { detail?: unknown; message?: string };
+    const detail = payload.detail;
+    if (typeof detail === "string" && detail.trim()) {
+      return detail;
+    }
+    if (Array.isArray(detail) && detail.length > 0) {
+      return detail
+        .map((item) => {
+          if (typeof item === "string") return item;
+          if (item && typeof item === "object" && "msg" in item) {
+            const msg = (item as { msg?: unknown }).msg;
+            return typeof msg === "string" ? msg : JSON.stringify(item);
+          }
+          return JSON.stringify(item);
+        })
+        .join("; ");
+    }
+    if (typeof payload.message === "string" && payload.message.trim()) {
+      return payload.message;
+    }
+  } catch {
+    try {
+      const text = await response.text();
+      if (text.trim()) {
+        return text;
+      }
+    } catch {
+      // no-op: fallback below
+    }
+  }
+  return fallback;
+}
 
 function resolveStatusTone(status: string): "green" | "yellow" | "red" {
   const lowered = status.toLowerCase();
@@ -59,6 +80,13 @@ function resolveStatusTone(status: string): "green" | "yellow" | "red" {
   return "yellow";
 }
 
+function parseWeakAreas(raw: string): string[] {
+  return raw
+    .split(",")
+    .map((item) => item.trim().toLowerCase())
+    .filter((item) => item.length > 0);
+}
+
 export default function OnboardingPage() {
   const router = useRouter();
   const [email, setEmail] = useState("athlete@example.com");
@@ -67,6 +95,7 @@ export default function OnboardingPage() {
   const [splitPreference, setSplitPreference] = useState("full_body");
   const [trainingLocation, setTrainingLocation] = useState("home");
   const [equipmentProfile, setEquipmentProfile] = useState<string[]>(["dumbbell"]);
+  const [weakAreasRaw, setWeakAreasRaw] = useState("chest, hamstrings");
   const [daysAvailable, setDaysAvailable] = useState(5);
   const [programs, setPrograms] = useState<ProgramTemplateOption[]>([]);
   const [programCatalogStatus, setProgramCatalogStatus] = useState("Loading program catalog...");
@@ -153,13 +182,21 @@ export default function OnboardingPage() {
         const token = (await registerRes.json()) as { access_token: string };
         accessToken = token.access_token;
       } else {
+        const registerError = await parseApiError(registerRes, "Registration failed");
+        const looksLikeExistingAccount = registerRes.status === 400 && registerError.toLowerCase().includes("already used");
+        if (!looksLikeExistingAccount) {
+          setStatus(`Registration failed: ${registerError}`);
+          return;
+        }
+
         const loginRes = await fetch(`${API_BASE_URL}/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password }),
         });
         if (!loginRes.ok) {
-          setStatus("Registration/login failed");
+          const loginError = await parseApiError(loginRes, "Login failed");
+          setStatus(`Registration/login failed: ${registerError}; ${loginError}`);
           return;
         }
         const token = (await loginRes.json()) as { access_token: string };
@@ -182,6 +219,7 @@ export default function OnboardingPage() {
           split_preference: splitPreference,
           training_location: trainingLocation,
           equipment_profile: equipmentProfile,
+          weak_areas: parseWeakAreas(weakAreasRaw),
           days_available: daysAvailable,
           nutrition_phase: "maintenance",
           calories: 2600,
@@ -193,8 +231,8 @@ export default function OnboardingPage() {
       });
 
       if (!profileRes.ok) {
-        const detail = await profileRes.text();
-        setStatus(detail ? `Profile save failed: ${detail}` : "Profile save failed");
+        const detail = await parseApiError(profileRes, "Profile save failed");
+        setStatus(`Profile save failed: ${detail}`);
         return;
       }
 
@@ -344,6 +382,18 @@ export default function OnboardingPage() {
               );
             })}
           </div>
+        </div>
+
+        <div className="spacing-grid spacing-grid--tight">
+          <label htmlFor="weak-areas" className="ui-meta">Weak Areas (comma-separated)</label>
+          <input
+            id="weak-areas"
+            className="ui-input"
+            value={weakAreasRaw}
+            onChange={(event) => setWeakAreasRaw(event.target.value)}
+            placeholder="chest, hamstrings"
+          />
+          <p className="text-xs text-zinc-500">These are persisted and used by adaptive schedule logic.</p>
         </div>
 
         <Button type="submit" className="w-full">

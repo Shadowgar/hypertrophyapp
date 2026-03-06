@@ -51,13 +51,13 @@ def _write_template(path: Path, *, template_id: str, split: str, first_exercise:
 
 def test_list_program_templates_deduplicates_identical_payloads(monkeypatch, tmp_path: Path) -> None:
     _write_template(
-        tmp_path / "pure_bodybuilding_phase_2___full_body_sheet_imported.json",
+        tmp_path / "pure_bodybuilding_phase_2_full_body_sheet.json",
         template_id="pure_bodybuilding_phase_2_full_body_sheet",
         split="full_body",
         first_exercise="bench",
     )
     _write_template(
-        tmp_path / "pure_bodybuilding_phase_2___full_body_sheet_(1)_imported.json",
+        tmp_path / "pure_bodybuilding_phase_2_full_body_sheet_1.json",
         template_id="pure_bodybuilding_phase_2_full_body_sheet_1",
         split="full_body",
         first_exercise="bench",
@@ -68,6 +68,12 @@ def test_list_program_templates_deduplicates_identical_payloads(monkeypatch, tmp
         split="upper_lower",
         first_exercise="row",
     )
+    _write_template(
+        tmp_path / "legacy_imported_template_imported.json",
+        template_id="legacy_imported_template",
+        split="full_body",
+        first_exercise="legacy",
+    )
 
     monkeypatch.setattr(program_loader, "_resolve_programs_path", lambda: tmp_path)
 
@@ -77,4 +83,5 @@ def test_list_program_templates_deduplicates_identical_payloads(monkeypatch, tmp
     assert "upper_lower_v1" in ids
     assert "pure_bodybuilding_phase_2_full_body_sheet" in ids
     assert "pure_bodybuilding_phase_2_full_body_sheet_1" not in ids
+    assert "legacy_imported_template" not in ids
     assert len(ids) == 2

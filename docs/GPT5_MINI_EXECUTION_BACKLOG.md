@@ -1,163 +1,71 @@
-# GPT-5-mini Execution Backlog (Safe Takeover)
+# GPT-5-mini Execution Backlog - Adaptive Coaching Rebuild
 
-## Goal
-Ship remaining project scope end-to-end, including backend, frontend, tests, docs, and validation.
+Last updated: 2026-03-06
 
-## Execution Rule for GPT-5-mini
-- GPT-5-mini owns implementation, validation, commit, and push to `main`.
-- Complete one task at a time, then continue to the next highest-priority incomplete task.
+## Priority 0 - Foundation (In Progress)
 
-## Inputs
-- API contracts in `docs/GPT5_MINI_HANDOFF.md`
-- Product direction in `docs/Master_Plan.md`
+### Task 0.1 - Ingestion-Centered Architecture Audit
+- Identify code to keep/isolate/deprecate/delete.
+- Deliver explicit list with file paths and rationale.
+- Status: DONE (`docs/redesign/Architecture_Audit_Matrix.md`)
 
-## Sprint A — Program Selection UX (UI-only)
+### Task 0.2 - Canonical Schema Finalization
+- Finalize typed contracts for templates/catalog/rules/user state.
+- Add schema validation tests.
+- Status: STARTED (`apps/api/app/adaptive_schema.py`, `apps/api/tests/test_adaptive_gold_schema_contract.py`)
 
-### Task A1 — API client support
-- File: `apps/web/lib/api.ts`
-- Add:
-  - `ProgramTemplateSummary` type
-  - `api.listPrograms()` -> `GET /plan/programs`
-  - optional `template_id` param support in `api.generateWeek(templateId?)`
-- Acceptance:
-  - Type-safe compile
-  - No change to existing endpoint paths
+### Task 0.3 - Gold Sample Pair
+- Build one manually validated gold program + matching rule set.
+- Status: STARTED (`programs/gold/*`, `docs/rules/gold/*`)
 
-### Task A2 — Onboarding program picker
-- File: `apps/web/app/onboarding/page.tsx`
-- Add:
-  - fetch `api.listPrograms()` on load
-  - selector for `selected_program_id`
-  - include `selected_program_id` in `/profile` payload
-- Acceptance:
-  - Onboarding saves selected program
-  - Existing onboarding flow still works if program fetch fails (fallback to `full_body_v1`)
- 
- Status: COMPLETED by Codex — `apps/web/app/onboarding/page.tsx` now fetches `/plan/programs` and persists `selected_program_id`.
+### Task 0.4 - Onboarding Package Domain Store
+- Maintain one onboarding package per runtime template id.
+- Validate package schema and loader stability.
+- Status: STARTED
 
-### Task A3 — Settings program switcher
-- File: `apps/web/app/settings/page.tsx`
-- Add:
-  - show current `profile.selected_program_id`
-  - fetch and render program options
-  - save changes through existing `/profile` upsert
-- Acceptance:
-  - User can change selected program without breaking other profile fields
+Evidence (2026-03-06)
+- `apps/api/app/program_loader.py`: onboarding package loaders + runtime catalog filter for canonical templates.
+- `apps/api/tests/test_program_onboarding_contract.py`: package contract and loader tests.
 
- Status: COMPLETED by Codex — `apps/web/app/settings/page.tsx` includes program selector and saves via `/profile`.
+## Priority 1 - Importer and Rules
 
-### Task A4 — Week page override
-- File: `apps/web/app/week/page.tsx`
-- Add optional override selector using `api.listPrograms()` and call `api.generateWeek(selectedOrUndefined)`
-- Acceptance:
-  - default button uses server-selected program
-  - override path works and still returns week plan
+### Task 1.1 - Excel Importer v2
+- Preserve phase/week/day/slot fidelity.
+- Preserve warmups/work sets/videos/notes.
+- Emit ambiguity diagnostics.
 
-Status: COMPLETED by Codex — `apps/web/app/week/page.tsx` now supports an optional program override and passes template id to `POST /plan/generate-week`.
+### Task 1.2 - PDF Rule Distillation v1
+- Convert doctrine to typed deterministic rules.
+- Link rules to source references.
 
-## Sprint B — Plan Guide Scaffolding (UI route structure)
+## Priority 2 - Decision Engine Gold Flow
 
-### Task B1 — Program guide index route
-- Add route: `apps/web/app/guides/page.tsx`
-- Display available programs from `api.listPrograms()`.
+### Task 2.1 - Deterministic Adaptation Core
+- Workout generation from template + rules + state.
+- Post-session evaluation and next-session adaptation.
+- Status: STARTED
 
-Status: COMPLETED by Codex — `apps/web/app/guides/page.tsx` lists available programs and links to program guide pages.
+Evidence (2026-03-06)
+- `packages/core-engine/core_engine/onboarding_adaptation.py`: deterministic adaptation decisions (`preserve/combine/rotate/reduce`).
+- `apps/api/app/routers/plan.py`: `POST /plan/adaptation/preview` wired to onboarding package + user weak-area overlay.
+- `apps/api/tests/test_program_frequency_adaptation_api.py`: API coverage for deterministic adaptation preview.
+- `packages/core-engine/tests/test_onboarding_adaptation.py`: core adaptation tests for target day changes.
 
-### Task B2 — Program detail guide route
-- Add route: `apps/web/app/guides/[programId]/page.tsx`
-- Render text-first placeholders sourced from existing summary fields.
+### Task 2.2 - Gold End-To-End Runtime Path
+- Selection -> generation -> logging -> evaluation -> adaptation.
 
-Status: COMPLETED by Codex — program detail guide is implemented at `apps/web/app/programs/[id]/page.tsx` (route naming differs from original draft).
+## Priority 3 - Scale and Hardening
 
-### Task B3 — Exercise guide placeholder route
-- Add route: `apps/web/app/guides/[programId]/exercise/[exerciseId]/page.tsx`
-- Render deterministic placeholders and link back to program guide.
+### Task 3.1 - Program Library Migration
+- Expand canonical migration beyond gold sample.
 
-Status: COMPLETED by Codex — exercise guide route implemented at `apps/web/app/guides/[programId]/exercise/[exerciseId]/page.tsx` and renders text-first exercise details when available in program templates.
+### Task 3.2 - Scenario and Regression Expansion
+- Add scenario suite for progression/fatigue/deload/substitution behavior.
 
-Acceptance for Sprint B:
-- Routes compile
-- No runtime PDF rendering/parsing
-- No new backend contract requirements
+### Task 3.3 - Import Archive Hygiene
+- Keep imported template variants available for audit, not runtime selection.
+- Status: STARTED
 
-## Sprint C — Import Sanitization + Coaching Endpoint Wiring
-
-### Task C1 — XLSX structural row sanitization
-- Files:
-  - `importers/xlsx_to_program.py`
-  - `apps/api/tests/test_xlsx_to_program_sanitization.py`
-- Add:
-  - deterministic filters for structural session/exercise labels
-  - requirement for explicit numeric set/rep prescriptions before row import
-  - regression test proving noisy workbook rows are excluded
-
-Status: COMPLETED by Codex — importer now filters structural rows (e.g., block/week/rest/split-label rows) and preserves valid exercise rows.
-
-### Task C2 — Settings coaching endpoint wiring
-- Files:
-  - `apps/web/lib/api.ts`
-  - `apps/web/app/settings/page.tsx`
-  - `apps/web/tests/settings.intelligence.test.tsx`
-- Add:
-  - API client contracts for `reference-pairs`, `coach-preview`, `apply-phase`, `apply-specialization`
-  - settings panel controls to run coach preview and invoke apply endpoints
-  - frontend tests validating preview + apply request wiring
-
-Status: COMPLETED by Codex — settings now exposes an initial coaching preview/apply workflow and tests validate request wiring.
-
-## Guardrails (Must Follow)
-- Keep deterministic runtime rules (no runtime PDF/XLSX parsing).
-- Keep tests green and maintain API compatibility unless explicitly updated across callers/tests.
-- API tests are Postgres-first; use `TEST_DATABASE_URL` only for explicit local overrides.
-
-## Validation per Task
-
-```bash
-cd /home/rocco/hypertrophyapp
-
-docker compose exec -T api sh -lc 'cd /app/apps/api && PYTHONPATH=. pytest tests/test_program_catalog_and_selection.py tests/test_profile_schema.py tests/test_workout_resume.py -q'
-
-cd /home/rocco/hypertrophyapp/apps/web
-npm run build
-```
-
-## Escalation
-Escalation is optional and only needed when external approvals are required.
-
-
-
-
-
-
-## Progress Sync (2026-03-06)
-- Repository state synchronized through commit `1026d25` on `main` (pushed to `origin/main`).
-- Validation baseline is green via `./scripts/mini_validate.sh`:
-  - API: `63 passed`
-  - Web tests: `16 passed`
-  - Web build: success
-- Additional progress after previous sync:
-  - `777cb86`: pruned obsolete visual-route snapshots (`apps/web/tests/__snapshots__/visual.routes.snapshot.test.tsx.snap`)
-  - `739cb99`: migrated API startup from `@app.on_event("startup")` to FastAPI lifespan in `apps/api/app/main.py`
-  - `18dd81b`: replaced model `datetime.utcnow()` defaults with centralized UTC helper in `apps/api/app/models.py`
-  - `cb317d0`: hardened `scripts/mini_validate.sh` with compose command detection and one-shot rebuild/retry fallback for failed containerized API test runs
-  - `3596622`: migrated auth stack from `passlib/python-jose` to `bcrypt/PyJWT` in API runtime paths
-  - `1026d25`: added coach-preview API edge-case tests for invalid template handling, low-readiness deload extension, and phase-transition boundary branches
-- Current warning profile:
-  - FastAPI startup deprecation warning removed.
-  - SQLAlchemy `datetime.utcnow()` warning class removed from API test runs.
-  - `passlib` and `python-jose` deprecation warnings removed from validation output.
-  - `mini_validate` run now reports clean test results without warning spam in the default path.
-- Drift prevention protocol for next sessions: run `./scripts/mini_preflight.sh` and `./scripts/mini_next_task.sh` before implementation, and `./scripts/mini_validate.sh` before commit/push.
-
-## Progress Update (Working Tree, 2026-03-06)
-- Completed Sprint C Task C1: deterministic XLSX importer sanitization + new regression test.
-- Completed Sprint C Task C2: frontend settings coaching preview/apply wiring + new web test coverage.
-- Completed Sprint C Task C3: backend preview recommendation persistence/apply endpoints restored and preview `recommendation_id` returned for automatic frontend apply chaining.
-- Completed Sprint C Task C4: shared coaching panel integration in `week`, `checkin`, and `today` with route-level web tests.
-- Completed Sprint C Task C5: recommendation timeline/history UX added to `history` with rationale visibility and API timeline endpoint wiring.
-- Completed Sprint C Task C6: ingestion quality + template normalization report generation with committed validation artifacts in `docs/validation/`.
-- Validation executed:
-  - API importer tests: `3 passed`
-  - Web settings tests: `2 passed`
-  - Web route coaching integration tests: `7 passed`
-
+Evidence (2026-03-06)
+- Imported templates moved to `programs/archive_imports/` with `programs/archive_imports/README.md`.
+- Runtime catalog filtered in `apps/api/app/program_loader.py` to exclude archive/import variants.

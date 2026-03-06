@@ -47,6 +47,7 @@ class ProfileUpsert(BaseModel):
     selected_program_id: str | None = None
     training_location: str | None = None
     equipment_profile: list[str] = Field(default_factory=list)
+    weak_areas: list[str] = Field(default_factory=list)
     days_available: int = Field(ge=2, le=5)
     nutrition_phase: str
     calories: int
@@ -204,12 +205,11 @@ class GenerateWeekPlanRequest(BaseModel):
     template_id: str | None = None
 
 
-class ReferenceWorkbookGuidePair(BaseModel):
-    workbook_asset_path: str
-    workbook_asset_sha256: str
-    guide_asset_path: str
-    guide_asset_sha256: str
-    match_score: int
+class FrequencyAdaptationPreviewRequest(BaseModel):
+    program_id: str | None = None
+    target_days: int = Field(ge=2, le=5)
+    duration_weeks: int = Field(default=2, ge=1, le=4)
+    weak_areas: list[str] = Field(default_factory=list)
 
 
 class ScheduleAdaptationPreviewResponse(BaseModel):
