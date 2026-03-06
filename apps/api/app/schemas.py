@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from typing import Any
 from typing import Literal
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
@@ -53,6 +54,7 @@ class ProfileUpsert(BaseModel):
     training_location: str | None = None
     equipment_profile: list[str] = Field(default_factory=list)
     weak_areas: list[str] = Field(default_factory=list)
+    onboarding_answers: dict[str, Any] = Field(default_factory=dict)
     days_available: int = Field(ge=2, le=5)
     nutrition_phase: str
     calories: int

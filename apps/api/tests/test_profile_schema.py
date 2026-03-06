@@ -89,3 +89,30 @@ def test_profile_upsert_accepts_null_selected_program_id() -> None:
     )
 
     assert payload.selected_program_id is None
+
+
+def test_profile_upsert_accepts_onboarding_answers_payload() -> None:
+    payload = ProfileUpsert(
+        name="Test",
+        age=30,
+        weight=80,
+        gender="male",
+        split_preference="full_body",
+        selected_program_id="full_body_v1",
+        training_location="gym",
+        equipment_profile=["dumbbell", "machine"],
+        weak_areas=["chest"],
+        onboarding_answers={
+            "primary_goal": "build_muscle",
+            "experience_level": "intermediate",
+            "preferred_workout_duration_minutes": 45,
+        },
+        days_available=4,
+        nutrition_phase="maintenance",
+        calories=2500,
+        protein=180,
+        fat=70,
+        carbs=260,
+    )
+
+    assert payload.onboarding_answers["primary_goal"] == "build_muscle"

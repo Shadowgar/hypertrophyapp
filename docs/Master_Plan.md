@@ -75,7 +75,7 @@ The repository currently still contains ingestion-centered artifact generation (
 - [x] Add developer-safe account reset controls directly in onboarding for local test loops.
 - [x] Add actionable auth failure handling with explicit recovery paths.
 - [x] Review external onboarding references (batch 1) and translate into concrete parity tasks.
-- [ ] Implement onboarding funnel refinements (step sequencing, progress indicator, and reduced cognitive load).
+- [x] Implement onboarding funnel refinements (step sequencing, progress indicator, and reduced cognitive load).
 
 Reference:
 - `docs/redesign/Onboarding_Reference_Analysis_Batch1.md`
@@ -107,3 +107,6 @@ Reference:
 - Onboarding testing reliability improvements:
 	- `POST /auth/dev/wipe-user` (dev-only by config) supports wipe-by-email reset when register/login is blocked by stale test accounts.
 	- Onboarding screen now includes explicit `Wipe Test User By Email` and `Wipe Current Logged-In User Data` controls.
+- Onboarding funnel parity v1 implemented:
+	- intro slides -> step-based questionnaire -> account creation -> deterministic plan bootstrap handoff.
+	- profile now persists `onboarding_answers` JSON for richer onboarding signal capture.

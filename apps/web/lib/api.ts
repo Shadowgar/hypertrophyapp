@@ -73,6 +73,7 @@ export type Profile = {
   training_location?: string | null;
   equipment_profile: string[];
   weak_areas?: string[];
+  onboarding_answers?: Record<string, unknown>;
   days_available: number;
   nutrition_phase: string;
   calories: number;

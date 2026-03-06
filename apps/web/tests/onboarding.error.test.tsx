@@ -16,6 +16,37 @@ beforeEach(() => {
   globalThis.fetch = vi.fn();
 });
 
+async function completeQuestionnaireToAccountStep() {
+  fireEvent.click(screen.getByRole("button", { name: /next slide/i }));
+  fireEvent.click(screen.getByRole("button", { name: /next slide/i }));
+  fireEvent.click(screen.getByRole("button", { name: /get started/i }));
+
+  fireEvent.click(screen.getByRole("button", { name: /^male$/i }));
+  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
+
+  fireEvent.click(screen.getByRole("button", { name: /build muscle/i }));
+  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
+
+  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
+  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
+
+  fireEvent.change(screen.getByLabelText(/birthday/i), { target: { value: "1990-01-01" } });
+  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
+
+  fireEvent.click(screen.getByRole("button", { name: /getting started/i }));
+  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
+
+  for (let index = 0; index < 8; index += 1) {
+    fireEvent.click(screen.getByRole("button", { name: /skip/i }));
+  }
+
+  await waitFor(() => {
+    expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
+  });
+  fireEvent.change(screen.getByLabelText(/first name/i), { target: { value: "Rocco" } });
+  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
+}
+
 test("Onboarding surfaces register validation errors", async () => {
   // @ts-ignore
   globalThis.fetch.mockImplementation((input, _init) => {
@@ -35,10 +66,12 @@ test("Onboarding surfaces register validation errors", async () => {
   render(<OnboardingPage />);
 
   await waitFor(() => {
-    expect(screen.getByLabelText(/program/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /next slide/i })).toBeInTheDocument();
   });
 
-  fireEvent.click(screen.getByRole("button", { name: /save onboarding/i }));
+  await completeQuestionnaireToAccountStep();
+
+  fireEvent.click(screen.getByRole("button", { name: /continue/i }));
 
   await waitFor(() => {
     expect(screen.getAllByText(/registration failed: password must be at least 8 characters/i).length).toBeGreaterThan(0);

@@ -96,6 +96,16 @@ Evidence (2026-03-06)
 - `docs/redesign/Onboarding_Reference_Analysis_Batch3.md`: extracted notifications/location/equipment/experience/duration/days and workout-generation handoff from final screenshot batch.
 - `docs/redesign/Onboarding_Reference_Process_Map.md`: consolidated sequence and deterministic-input map across all provided screenshot batches.
 
+### Task 3.7 - Onboarding Funnel Refinement v1
+- Replace single-page onboarding form with step-based low-friction funnel aligned with reference behavior.
+- Status: STARTED
+
+Evidence (2026-03-06)
+- `apps/web/app/onboarding/page.tsx`: intro slides, one-question-per-step flow, progress bar, skip for optional steps, account stage, and workout bootstrap handoff.
+- `apps/api/app/models.py`: `onboarding_answers` persistence field.
+- `apps/api/app/routers/profile.py`: profile upsert/get now writes and returns onboarding answers.
+- `apps/api/alembic/versions/0012_user_onboarding_answers.py`: migration for onboarding answers persistence.
+
 ### Task 3.6 - Calendar Training History View
 - Add a calendar page where the user can click previous days to inspect completed training for that date.
 - Status: TODO

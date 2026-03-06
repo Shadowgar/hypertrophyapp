@@ -16,7 +16,38 @@ beforeEach(() => {
   globalThis.fetch = vi.fn();
 });
 
-test("Onboarding loads program list and renders options", async () => {
+async function completeQuestionnaireToAccountStep() {
+  fireEvent.click(screen.getByRole("button", { name: /next slide/i }));
+  fireEvent.click(screen.getByRole("button", { name: /next slide/i }));
+  fireEvent.click(screen.getByRole("button", { name: /get started/i }));
+
+  fireEvent.click(screen.getByRole("button", { name: /^male$/i }));
+  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
+
+  fireEvent.click(screen.getByRole("button", { name: /build muscle/i }));
+  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
+
+  fireEvent.click(screen.getByRole("button", { name: /^next$/i })); // height
+  fireEvent.click(screen.getByRole("button", { name: /^next$/i })); // weight
+
+  fireEvent.change(screen.getByLabelText(/birthday/i), { target: { value: "1990-01-01" } });
+  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
+
+  fireEvent.click(screen.getByRole("button", { name: /getting started/i }));
+  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
+
+  for (let index = 0; index < 8; index += 1) {
+    fireEvent.click(screen.getByRole("button", { name: /skip/i }));
+  }
+
+  await waitFor(() => {
+    expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
+  });
+  fireEvent.change(screen.getByLabelText(/first name/i), { target: { value: "Rocco" } });
+  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
+}
+
+test("Onboarding wizard reaches account step with program catalog and password toggle", async () => {
   const programs = [
     { id: "full_body_v1", name: "Full Body V1", description: "A 5-day full body" },
     { id: "upper_lower", name: "Upper/Lower", description: "4 day" },
@@ -33,21 +64,20 @@ test("Onboarding loads program list and renders options", async () => {
 
   render(<OnboardingPage />);
 
-  // wait for options to appear
   await waitFor(() => {
-    expect(screen.getByLabelText(/Program/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /next slide/i })).toBeInTheDocument();
   });
 
-  // options should include our program
+  await completeQuestionnaireToAccountStep();
+
+  await waitFor(() => {
+    expect(screen.getByLabelText(/program/i)).toBeInTheDocument();
+  });
+
   expect(screen.getByText("Full Body V1")).toBeInTheDocument();
 
   const password = screen.getByLabelText(/Password/i);
   expect(password).toHaveAttribute("type", "password");
   fireEvent.click(screen.getByRole("button", { name: /show password/i }));
   expect(password).toHaveAttribute("type", "text");
-
-  const dumbbell = screen.getByRole("button", { name: /dumbbell/i });
-  expect(dumbbell).toHaveAttribute("aria-pressed", "true");
-  fireEvent.click(dumbbell);
-  expect(dumbbell).toHaveAttribute("aria-pressed", "false");
 });
