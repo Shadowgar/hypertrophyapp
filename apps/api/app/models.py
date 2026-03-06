@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 import uuid
 
 from sqlalchemy import Date, DateTime, Float, ForeignKey, Integer, JSON, String, UniqueConstraint
@@ -7,6 +7,11 @@ from sqlalchemy.orm import Mapped, mapped_column
 from .database import Base
 
 USER_FK = "users.id"
+
+
+def _utcnow_naive() -> datetime:
+    # Preserve existing naive-UTC storage semantics without using deprecated utcnow().
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 class User(Base):
@@ -29,7 +34,7 @@ class User(Base):
     protein: Mapped[int | None] = mapped_column(Integer, nullable=True)
     fat: Mapped[int | None] = mapped_column(Integer, nullable=True)
     carbs: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive)
 
 
 class PasswordResetToken(Base):
@@ -40,7 +45,7 @@ class PasswordResetToken(Base):
     token_hash: Mapped[str] = mapped_column(String, unique=True, index=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime)
     used_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive)
 
 
 class WeeklyCheckin(Base):
@@ -52,7 +57,7 @@ class WeeklyCheckin(Base):
     body_weight: Mapped[float] = mapped_column(Float)
     adherence_score: Mapped[int] = mapped_column(Integer)
     notes: Mapped[str | None] = mapped_column(String, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive)
 
 
 class WeeklyReviewCycle(Base):
@@ -73,7 +78,7 @@ class WeeklyReviewCycle(Base):
     faults: Mapped[dict] = mapped_column(JSON)
     adjustments: Mapped[dict] = mapped_column(JSON)
     summary: Mapped[dict] = mapped_column(JSON)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive)
 
 
 class SorenessEntry(Base):
@@ -84,7 +89,7 @@ class SorenessEntry(Base):
     entry_date: Mapped[date] = mapped_column(Date, index=True)
     severity_by_muscle: Mapped[dict[str, str]] = mapped_column(JSON)
     notes: Mapped[str | None] = mapped_column(String, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive)
 
 
 class BodyMeasurementEntry(Base):
@@ -96,7 +101,7 @@ class BodyMeasurementEntry(Base):
     name: Mapped[str] = mapped_column(String)
     value: Mapped[float] = mapped_column(Float)
     unit: Mapped[str] = mapped_column(String)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive)
 
 
 class WorkoutPlan(Base):
@@ -108,7 +113,7 @@ class WorkoutPlan(Base):
     split: Mapped[str] = mapped_column(String)
     phase: Mapped[str] = mapped_column(String)
     payload: Mapped[dict] = mapped_column(JSON)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive)
 
 
 class WorkoutSetLog(Base):
@@ -123,7 +128,7 @@ class WorkoutSetLog(Base):
     reps: Mapped[int] = mapped_column(Integer)
     weight: Mapped[float] = mapped_column(Float)
     rpe: Mapped[float | None] = mapped_column(Float, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive)
 
 
 class ExerciseState(Base):
@@ -135,7 +140,7 @@ class ExerciseState(Base):
     current_working_weight: Mapped[float] = mapped_column(Float, default=20)
     exposure_count: Mapped[int] = mapped_column(Integer, default=0)
     fatigue_score: Mapped[float] = mapped_column(Float, default=0)
-    last_updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive, onupdate=_utcnow_naive)
 
 
 class WorkoutSessionState(Base):
@@ -171,5 +176,5 @@ class WorkoutSessionState(Base):
     recommended_weight: Mapped[float] = mapped_column(Float)
     last_guidance: Mapped[str] = mapped_column(String)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive, onupdate=_utcnow_naive)
