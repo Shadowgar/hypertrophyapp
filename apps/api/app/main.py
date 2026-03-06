@@ -1,16 +1,18 @@
 from datetime import date
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
 from .database import Base, engine
 from .routers import auth, history, plan, profile, workout
 
-app = FastAPI(title="Rocco's HyperTrophy Plan API", version="0.1.0")
-
-
-@app.on_event("startup")
-def on_startup() -> None:
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
     Base.metadata.create_all(bind=engine)
+    yield
+
+
+app = FastAPI(title="Rocco's HyperTrophy Plan API", version="0.1.0", lifespan=lifespan)
 
 
 @app.get("/health")
