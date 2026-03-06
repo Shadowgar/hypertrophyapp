@@ -64,8 +64,9 @@ Template `progression` block defines deterministic progression mode, with API/co
 
 
 
+
 ## Progress Sync (2026-03-06)
-- Repository state synchronized through commit `cb317d0` on `main` (pushed to `origin/main`).
+- Repository state synchronized through commit `3596622` on `main` (pushed to `origin/main`).
 - Validation baseline is green via `./scripts/mini_validate.sh`:
   - API: `60 passed`
   - Web tests: `16 passed`
@@ -75,9 +76,11 @@ Template `progression` block defines deterministic progression mode, with API/co
   - `739cb99`: migrated API startup from `@app.on_event("startup")` to FastAPI lifespan in `apps/api/app/main.py`
   - `18dd81b`: replaced model `datetime.utcnow()` defaults with centralized UTC helper in `apps/api/app/models.py`
   - `cb317d0`: hardened `scripts/mini_validate.sh` with compose command detection and one-shot rebuild/retry fallback for failed containerized API test runs
+  - `3596622`: migrated auth stack from `passlib/python-jose` to `bcrypt/PyJWT` in API runtime paths
 - Current warning profile:
   - FastAPI startup deprecation warning removed.
   - SQLAlchemy `datetime.utcnow()` warning class removed from API test runs.
-  - Remaining warnings are dependency-level (`passlib` `crypt` deprecation and `python-jose` internal `utcnow` deprecation).
+  - `passlib` and `python-jose` deprecation warnings removed from validation output.
+  - `mini_validate` run now reports clean test results without warning spam in the default path.
 - Drift prevention protocol for next sessions: run `./scripts/mini_preflight.sh` and `./scripts/mini_next_task.sh` before implementation, and `./scripts/mini_validate.sh` before commit/push.
 
