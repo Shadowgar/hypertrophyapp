@@ -1,899 +1,213 @@
-# Master Plan (Single Source of Truth)
+# Master Plan (Reality-Corrected)
 
-## Product Vision
+Last updated: 2026-03-06
+Owner: HyperTrophy core team
+Scope: Monorepo-wide product, architecture, and delivery plan
 
-Rocco's HyperTrophy Plan is a deterministic, nutrition-aware, multi-user hypertrophy training platform designed to rival and exceed RP-style workflows while remaining:
+## Purpose
 
-- Local-first (self-hosted on Raspberry Pi)
-- Deterministic at runtime (no guide search / no runtime ingestion)
-- Mobile-first (iPhone Pro Max primary target: Safari/Edge)
-- Dark mode default (white text + red accents)
-- Deployable via Docker Compose
+This is the single authoritative plan for what exists, what is partially implemented, and what must be built next.
+Code and tests are the source of truth. If this file conflicts with code, update this file.
 
-This file is the single source of truth for scope, phases, and definition of done. Any major scope change must update this file first.
+## Product Intent
 
----
+Build a deterministic hypertrophy coaching system that:
 
-# UI Design System — Hyperdrive OS Layer
+- Runs local-first (self-hosted)
+- Uses canonical templates at runtime (no runtime PDF/XLSX parsing)
+- Delivers explainable scheduling, progression, phase transitions, and specialization guidance
+- Preserves user control for all major plan changes
 
-## Design Philosophy
+## Verified Current State
 
-- Training Operating System: interfaces must prioritize execution speed, clarity, and deterministic user actions.
-- Minimal cognitive load: one primary action focus per panel; secondary actions grouped and de-emphasized.
-- Data-dense but clean: compact information grouping with strict typography hierarchy and spacing rhythm.
-- Subtle depth, restrained glow: depth cues are structural, not decorative.
-- Red accent reserved for state + power indicators only.
+### Platform and runtime
 
-## Visual Language
+- API: FastAPI + SQLAlchemy + Alembic is live and tested.
+- Web: Next.js app routes for onboarding, week/today/check-in/history/settings are present.
+- Engine: deterministic scheduler/progression/warmup/equipment modules are present.
+- Auth: register/login/password reset contract exists.
 
-- Ultra-dark matte background as the base surface.
-- Frosted glass layered panels for grouped controls and data modules.
-- Soft elevation shadows with low spread and low opacity for panel separation.
-- Thin red accent outlines with a 1–2px maximum stroke width.
-- Controlled glow is allowed only for:
-  - active set
-  - PR detection
-  - recovery warning
-- Green/Yellow/Red are reserved strictly for performance state signaling.
+### Working capability blocks
 
-## Mode-Based Interface Architecture
+- Deterministic week generation from canonical `programs/*.json` templates.
+- Equipment-aware substitutions and soreness-sensitive load adjustments.
+- Mesocycle and deload signaling in generated plans.
+- In-session workout logging and deterministic next-step guidance.
+- Weekly review cycle with adjustment payload persisted and applied.
+- Program recommendation and explicit switch confirmation flow.
+- Program guide read endpoints for programs/days/exercises.
 
-- WORKOUT MODE
-- PLAN MODE
-- ANALYTICS MODE
-- BODY MODE
-- SYSTEM MODE
+### New implementation in this cycle
 
-Layout density and panel structure may shift by mode, but component behavior and state semantics must remain deterministic and consistent across modes.
+- Added deterministic intelligence module in `packages/core-engine/core_engine/intelligence.py` with:
+  - schedule adaptation + tradeoff reporting
+  - progression action recommendation (`progress`, `hold`, `deload`)
+  - phase transition recommendation
+  - specialization adjustment recommendation
+  - media and warmup coverage summary
+- Added API endpoints:
+  - `GET /plan/intelligence/reference-pairs`
+  - `POST /plan/intelligence/coach-preview`
+- Added test coverage:
+  - `packages/core-engine/tests/test_intelligence.py`
+  - `apps/api/tests/test_plan_intelligence_api.py`
+  - pairing override coverage in `apps/api/tests/test_reference_corpus_ingestion.py`
 
-## Workout Runner UI Specification
+### Known gaps (not complete)
 
-- Exercise Control Module layout: exercise header, primary metrics block, set stack, and action row.
-- Large working weight display as the dominant numeric element in each exercise module.
-- Rep range displayed adjacent to working weight using fixed formatting.
-- Collapsible warmups hidden by default after first completion, with deterministic expand/collapse state.
-- Stacked working sets with clear current-set emphasis and completed-set state markers.
-- Action row order is fixed: Video | Swap | Notes | Rest.
-- Auto rest timer trigger starts immediately on set completion.
-- Subtle pulse on set completion for confirmation feedback.
-- Deterministic performance color state based on logged outcomes and recovery flags.
+- Ingested guide artifacts currently include metadata-only output in the present workspace state.
+- Canonical template quality is inconsistent across imported programs.
+- Video link coverage is low in many program templates.
+- Frontend does not yet expose a full coaching intelligence UI workflow.
+- Runtime does not yet persist a first-class "coach decision timeline" entity.
 
-## Analytics Dashboard Specification
+## Non-Negotiable Runtime Rules
 
-- Strength graph styling: thin white trend line with red peak highlights.
-- Mesocycle vertical markers rendered as low-contrast separators at deterministic interval boundaries.
-- Volume per muscle heat map using normalized weekly set volume buckets.
-- Body measurement trend overlays aligned on shared date axis with bodyweight context.
-- PR markers rendered as explicit point annotations for rep PR and weight PR events.
+- No runtime PDF/XLSX parsing.
+- No runtime vector retrieval requirement for core flows.
+- Deterministic outputs from profile + history + canonical templates + deterministic rules.
+- All major changes (program switch, phase transition, specialization boosts) require explicit user-visible explanation.
 
-## Micro-Interaction Rules
+## Capability Matrix
 
-- No heavy animations.
-- Only CSS transforms and opacity transitions for interactive feedback.
-- GPU-safe transitions only; avoid CPU-heavy paint patterns.
-- No 3D libraries.
-- 60fps target on iPhone Safari.
+Status legend:
 
-## Performance Constraints
+- `[x]` complete and validated
+- `[~]` partial
+- `[ ]` not started
 
-- No large animation libraries.
-- No particle systems.
-- Minimal blur layers; limit concurrent frosted panels per viewport.
-- Avoid layout thrashing by preventing repeated reflow-triggering patterns.
-- All animations must complete under 200ms.
+### Data and ingestion
 
-## Reference Visual Parity Program (Premium Finish)
+- `[x]` Deterministic reference catalog/provenance generation
+- `[x]` Workbook/PDF pairing with enforcement and dedup support
+- `[~]` Full text extraction quality for all reference assets
+- `[~]` Canonical program normalization quality across all imported templates
 
-Goal: make production screens visually align with the Hyperdrive reference aesthetic while preserving deterministic UX and mobile performance.
+### Planning and adaptation
 
-### Visual Parity Targets
+- `[x]` Deterministic weekly plan generation
+- `[x]` Equipment-aware substitutions
+- `[x]` Soreness-aware load modifiers
+- `[x]` Mesocycle and deload signaling
+- `[x]` Schedule adaptation tradeoff engine (new)
+- `[~]` Missed-session recovery strategy explanation in user-facing UI
 
-- Multi-layer depth system with explicit material hierarchy (base matte shell, glass panel, elevated module, active highlight).
-- Cinematic but restrained lighting: edge highlights, radial passes, controlled bloom, subtle vignette, low-opacity streaks.
-- Instrument-grade module composition: dense but readable metrics, status pips, compact HUD rows, clear action rails.
-- Tight typographic hierarchy: consistent title/body/label scales, fixed spacing rhythm, deterministic alignment grid.
-- Premium command dock: stronger active/inactive contrast, consistent iconography, deterministic state semantics per mode.
+### Progression and phase intelligence
 
-### Design Token Expansion (Required)
+- `[x]` Deterministic set logging and next-weight guidance
+- `[x]` Weekly review adjustment application
+- `[x]` Progress/hold/deload decision engine (new)
+- `[x]` Phase transition decision engine (new)
+- `[~]` Persistent timeline of decision rationale per user
 
-- Define 4–6 depth tiers for shadow/glow treatment.
-- Define glass opacity tiers for shell/card/module overlays.
-- Define edge-highlight tiers for inactive/hover/active states.
-- Define red accent intensity tiers (idle, active, warning, PR).
-- Define state color tiers (green/yellow/red) reserved for performance signals only.
+### Specialization and weak-point strategy
 
-### Component Overhaul Scope (Required)
+- `[x]` Weak-point inputs in weekly review workflow
+- `[x]` Deterministic specialization adjustment preview engine (new)
+- `[~]` End-to-end specialization plan application UX
 
-- Inputs, selects, textareas, and toggles adopt layered glass + inner border treatment.
-- Buttons and segmented controls adopt deterministic active/pressed/disabled material states.
-- Card primitives adopt shell/module variants with consistent padding, radius, and border logic.
-- Bottom navigation dock adopts premium active indicator behavior and icon/text balance.
-- Exercise control surfaces standardize metric emphasis, row rhythm, and action-rail hierarchy.
+### Guide and media experience
 
-### Cinematic Shell Scope (Required)
+- `[x]` Program/day/exercise guide endpoints
+- `[x]` Video and warmup coverage summary engine (new)
+- `[~]` Reliable high video-link coverage across templates
+- `[~]` Rich exercise guide rendering beyond baseline API payloads
 
-- Add ambient matte background grain/noise at low opacity.
-- Add subtle radial light passes with strict opacity ceilings.
-- Add constrained vignette and edge illumination layers for depth framing.
-- Keep all cinematic effects CSS-based and GPU-safe.
+## Architecture Direction (Target)
 
-### Information Density & Dashboard Scope
+### Runtime layers
 
-- Add compact telemetry modules for weekly volume, progression, readiness, and body metrics.
-- Standardize micro-widgets (status dots, sparkline framing, module headers, metric labels).
-- Enforce deterministic module order per mode.
+1. Canonical Program Layer
+   - Program templates with normalized sessions/exercises
+   - Template metadata including split, days, progression style, and media fields
 
-### Motion & Interaction Scope
+2. Deterministic Intelligence Layer
+   - Schedule adaptation with explicit tradeoffs
+   - Progression action engine
+   - Phase transition engine
+   - Specialization allocator
+   - Media and warmup coverage analyzer
 
-- Transition duration budget: 120–200ms.
-- Use opacity/transform only for interactive feedback.
-- Add subtle glow ramp for active controls and completion events.
-- Add deterministic press/focus feedback for all primary controls.
+3. Coaching API Layer
+   - Read endpoints for guidance previews and evidence
+   - Write endpoints only when user confirms decisions
 
-### Iconography & Framing Scope
+4. Product UI Layer
+   - Explainable recommendation cards
+   - User controls: apply, defer, or decline
+   - Rationale visibility for every recommendation
 
-- Use one consistent icon family/weight across command surfaces.
-- Enforce mobile-first frame composition for screenshot parity (iPhone Pro Max first).
-- Preserve accessibility contrast and tap target requirements while matching aesthetic goals.
+## Phased Delivery Plan
 
-### Visual Acceptance Criteria
+### Phase 1: Truth and quality baseline
 
-- Side-by-side screenshot review shows clear parity in depth, hierarchy, accent behavior, and dock language.
-- Onboarding, Today, Week, Check-In, History, Guides, and Settings share one coherent material system.
-- Active/idle/warning states are visually distinct and semantically consistent.
-- No performance regressions on mobile target (maintain current interaction smoothness).
-- No deterministic behavior changes in planner/workout logic due to UI work.
+- Finalize ingestion mode policy (`metadata-only` vs full extraction) for CI and local workflows.
+- Raise canonical template quality floor with deterministic sheet sanitization.
+- Add quality checks for required exercise fields and day/session semantics.
 
----
+Exit criteria:
 
-## Product Goal
+- Asset catalog/provenance stable in CI.
+- Pairing enforcement green.
+- Template quality checks pass on target corpus.
 
-Deliver a deterministic hypertrophy planner + workout runner that can compete with RP-style hypertrophy apps while staying local-first, mobile-first, and Raspberry Pi deployable.
+### Phase 2: Intelligence runtime foundation
 
----
+- Land deterministic intelligence modules and API preview endpoints.
+- Add request/response contracts and full test coverage.
+- Ensure no side effects from preview endpoints.
 
-## Non-Negotiables
+Exit criteria:
 
-- **Runtime determinism:** no guide search, no PDF/XLSX parsing in runtime services.
-- **Build-time only knowledge:** guide knowledge is converted into canonical templates + deterministic rules.
-- **Reference knowledge operationalization:** PDF/EPUB/XLSX science and coaching rules must be transformed at build-time into executable planner/progression logic and structured guides, not pasted raw into runtime UX.
-- **Multi-user onboarding** captures profile, split, days/week, nutrition phase, calories/macros, AND equipment availability.
-- **Engine outputs** weekly plans, warmups, substitution-safe exercises, and next-weight recommendations.
-- **Exposure-based progression** handles missed days, rolls priority lifts forward, prevents skipped muscles.
-- **No RPE required:** reps-only logging must fully work (optional RPE may be added later).
-- **Local-first:** no cloud dependency required for core features.
+- Preview endpoints deterministic and tested.
+- Regression suite green.
 
----
+### Phase 3: User-applied coaching decisions
 
-## Locked Technology Stack
+- Add persisted coaching decision records.
+- Add apply endpoints for approved recommendations.
+- Add undo-safe controls where feasible.
 
-Frontend:
-- Next.js (App Router) + React + TypeScript
-- Tailwind CSS + shadcn/ui
-- PWA enabled
-- Dark mode default theme
+Exit criteria:
 
-Backend:
-- FastAPI (Python) + Pydantic
-- JWT Auth
+- User can preview, approve, and apply changes with auditable rationale.
 
-Database:
-- PostgreSQL
+### Phase 4: UX and parity hardening
 
-Deployment:
-- Docker Compose + Caddy reverse proxy
+- Integrate coaching previews in week/check-in/settings surfaces.
+- Improve guide readability and exercise-level context.
+- Harden mobile interaction and visual consistency.
 
-Platform:
-- Raspberry Pi 5 / Ubuntu 24.04 LTS (ARM64)
+Exit criteria:
 
----
+- End-to-end coaching workflow available in UI.
+- Mobile acceptance and deterministic behavior checks pass.
 
-## Runtime Constraints (Hard Rules)
+## Immediate Backlog (Priority Ordered)
 
-- The runtime app must never parse or query PDFs/XLSX.
-- The runtime app must never search guides or use embeddings/vector retrieval.
-- The runtime app must never depend on OpenClaw to function.
-- All program logic must execute from canonical templates in `/programs/` plus deterministic code rules.
-- Runtime services must start on a schema-compatible database state (migrations applied before serving requests).
-- API automated tests should default to PostgreSQL for runtime parity; SQLite may be used only via explicit local override.
+1. Add API tests for edge cases in coach preview (invalid template, low-readiness deload branch, phase edge cases).
+2. Add persistent coaching recommendation model and migration.
+3. Add apply/confirm endpoints for phase and specialization decisions.
+4. Improve imported template sanitization for non-workout rows.
+5. Improve video link extraction and mapping completeness.
+6. Connect frontend settings/check-in pages to coaching preview endpoint.
 
----
+## Risks and Mitigations
 
-## Reference Intelligence System (Next-Gen)
+- Risk: false confidence from docs diverging from code.
+  - Mitigation: keep this file code-referenced and update on every major change.
+- Risk: noisy generated artifacts in git history.
+  - Mitigation: isolate ingestion runs and avoid committing incidental churn.
+- Risk: adaptation rules become opaque.
+  - Mitigation: keep decision outputs explicit (`action`, `reason`, `risk_level`, deltas).
+- Risk: template inconsistency undermines intelligence quality.
+  - Mitigation: deterministic template quality gates and regression fixtures.
 
-### Corpus Coverage (Current Repository)
+## Definition of Done for this plan
 
-- Reference corpus currently includes approximately:
-  - 43 PDF files
-  - 13 XLSX files
-  - 1 EPUB file
-- Program families present in corpus names include:
-  - Pure Bodybuilding (Full Body + Phase 2 variants)
-  - PowerBuilding 3.0
-  - PPL systems
-  - Upper/Lower systems
-  - Essentials (3x/4x/5x)
-  - Fundamentals, Muscle Ladder, Nutrition, Technique, Guidebooks
-
-### Product Requirement
-
-- Every reference file in `/reference/` must be represented in-app through deterministic derived artifacts.
-- Representation may be via structured metadata, canonical program objects, normalized guide text, summaries, and provenance references.
-- Runtime determinism remains mandatory: no live PDF/XLSX parsing at request time.
-
-### Build-Time Ingestion Architecture
-
-Create deterministic ingestion pipeline modules in `/importers/` that:
-
-1. Scan all assets in `/reference/` and register each file in an asset catalog.
-2. Extract spreadsheet structure into canonical program/session/exercise schema.
-3. Extract PDF/EPUB instructional text into normalized section documents.
-4. Emit deterministic outputs:
-   - `/programs/*.json` for runtime planning
-   - `/docs/guides/*.md` for plan/exercise guides
-   - `/docs/reference/index.json` for provenance index
-5. Validate output checksums and schema correctness in CI.
-
-### Program Catalog + Selection UX
-
-- Add Program Catalog pages with cards for all imported programs (Pure Bodybuilding variants, PowerBuilding, PPL, etc.).
-- Each program card must include:
-  - intended level
-  - frequency options
-  - progression style
-  - equipment assumptions
-  - mesocycle length
-- User selects start program during onboarding.
-- User can switch program later in settings with deterministic migration rules.
+A roadmap item can be marked complete only when:
 
-### Plan Guide Pages (Text-First)
-
-For each program, phase, session, and exercise slot, generate in-app text guide pages:
-
-- Program overview guide
-- Phase/mesocycle guide
-- Day/session execution guide
-- Exercise execution guide (warmups, working sets/reps, intensity techniques, rest rules, cues, substitutions)
-
-Guides must render deterministic text artifacts; no embedded PDF rendering is required.
-
-### Deterministic Progression to Next Program
-
-- Engine may suggest program/phase advancement using explicit thresholds (adherence, progression stalls, mesocycle completion, recovery markers).
-- Engine must not auto-switch programs without explicit user confirmation.
-
-### Content Rights / Safety Handling
-
-- Keep raw source files local in `/reference/`.
-- API/UI should serve normalized instructional artifacts and provenance references, not bulk raw source document dumps.
-- Prefer structured data + concise summaries over long verbatim copyrighted excerpts.
-
----
-
-## Repository Structure
-
-/apps/web  
-/apps/api  
-/packages/core-engine  
-/programs  
-/importers  
-/reference  
-/infra  
-/docs  
-
----
-
-# MVP Scope
-
-- Auth: register/login (JWT)
-- Onboarding profile:
-  - name
-  - age
-  - weight
-  - gender
-  - units
-  - experience level
-  - split preference
-  - days/week (2/3/4/5)
-  - nutrition phase
-  - calories/macros
-  - training location (Gym/Home)
-  - equipment profile (minimum support: Dumbbells Only)
-- Weekly check-in (phase + calories/macros + bodyweight)
-- Deterministic week plan generation from `/programs/` templates
-- Equipment-aware plan generation
-- Workout runner:
-  - today endpoint
-  - reps-only logging
-  - resume workout
-  - substitution button (“I don’t have this equipment”)
-- Deterministic substitution engine
-- Exercise history endpoint + simple trend charts
-- Mobile-first screens
-- Docker Compose deployment
-- Core-engine unit tests for progression, warmups, substitution logic, week generation
-- Program catalog selection + plan guide pages (text-first, deterministic)
-- Testing operations loop for local QA: wipe user/testing data -> onboard -> test -> wipe again
-
-## Authentication Methods
-
-- Current (implemented): Email + Password (JWT)
-- Planned (non-MVP):
-  - Google OAuth login
-  - Apple Sign In
-  - Passkey login (WebAuthn)
-
-Authentication expansion must preserve deterministic runtime behavior and local-first operation for core training features.
-
-## Physique & Recovery Tracking (MVP-Level)
-
-- Body measurement tracking (user-defined measurements + pre-seeded defaults)
-- Deterministic measurement trend graphs
-- Bodyweight overlay on physique trends
-- “What’s sore today?” quick pre-workout input
-- Exercise-level notes display in workout runner
-- Exercise video button support when template metadata includes links
-
-## Adaptive Session Intelligence (Required)
-
-### Sunday Review -> Monday Execution Loop (Required)
-
-- On Sunday app open, system must run a deterministic previous-week lift review before next-week generation.
-- Review must include planned vs performed set completion and per-exercise fault classification (missed volume, below-target reps, low completion).
-- User must submit upcoming-week fuel targets in the same flow: bodyweight, daily calories, and macros.
-- Review output must persist as deterministic adjustment directives for the upcoming week (global and exercise-specific set/load modifiers).
-- Monday plan generation must consume the latest stored review directives for that target week and stamp provenance in plan payload.
-- Week generation UI and workout start flow should gate on Sunday when review is required, with explicit routing to review submission.
-
-### Guided Set-by-Set Execution Flow
-
-- Session start must present: planned exercise order, warmup sets (with target weights), working sets, rep targets, and rest guidance.
-- For every set, user must be able to log actual weight and actual reps performed.
-- After each logged set, system must deterministically recompute remaining working-set recommendations for that exercise in-session.
-- Recomputed recommendations must preserve hypertrophy intent (target rep zone, fatigue management, and progression continuity).
-- Workout runner must step the user exercise-by-exercise through the full day until all planned slots are completed or explicitly skipped.
-
-### End-of-Day Plan vs Actual Review
-
-- At session completion, system must render a deterministic summary with:
-  - planned vs performed sets/reps/load per exercise
-  - completion variance and adherence signal
-  - next-exposure recommendation preview
-- Summary output must persist and become input to subsequent progression decisions.
-
-### Cross-Week Continuity with Variable Days/Week
-
-- Progression must remain coherent when `days_available` changes week-to-week (e.g., 2 -> 4 -> 3 days).
-- System must track exercise exposure and progression state across the full training timeline, not reset by weekly split changes.
-- Compression/expansion of weekly structure must preserve movement-pattern coverage and priority-lift continuity.
-- Weak-point emphasis should increase only via deterministic, bounded adjustments (volume/intensity/frequency) while preserving total recovery constraints.
-
-### Acceptance Criteria
-
-- Warmup targets are shown with concrete loads before first working set.
-- User can log actual reps/load for every set from workout runner UI.
-- Remaining set recommendations update after each logged set.
-- End-of-day plan-vs-actual report is available and persisted.
-- Next-exposure recommendations use accumulated historical performance, not only current week shape.
-- Changing weekly training-day availability does not break progression continuity or muscle coverage.
-
----
-
-# Equipment & Substitution System (Core Requirement)
-
-## User Equipment Context
-
-User must select:
-
-- Gym (full equipment)
-- Home (minimum: dumbbells only; expandable later)
-
-Equipment profile must filter available exercises during week generation.
-
----
-
-## Deterministic Substitution Engine
-
-Each exercise must include:
-
-- movement_pattern  
-  (horizontal_press, vertical_press, horizontal_pull, vertical_pull, squat, hinge, lunge, calf_raise, lateral_raise, curl, triceps_extension, etc.)
-
-- primary_muscles (array)
-
-- equipment_tags  
-  (barbell, dumbbell, machine, cable, bodyweight, band, rack, bench, etc.)
-
-- difficulty_class (optional)
-
-Substitution Algorithm (Deterministic):
-
-1. Filter by available equipment
-2. Match exact movement pattern
-3. Score by primary muscle overlap
-4. Prefer template-defined substitutions
-5. Return top 3–5 options
-
----
-
-## Substitution Mapping Rules (Name Parsing + Template Overrides)
-
-### Goal
-Ensure substitutions are tied to the intended “main exercise” slot, while supporting equipment-aware selection and consistent logging.
-
-### Canonical Model Requirements
-Each exercise slot in a session must support:
-
-- `primary_exercise_id` (the default exercise for that slot)
-- `substitution_candidates` (ordered list of exercise IDs)
-- `notes` (string, may include cues/tempo/intensity technique details)
-
-The workout runner must always display the slot-level `notes` (even if a substitution is chosen), and may also show exercise-level notes if present.
-
-### Deterministic Substitution Tie-In
-When a user selects **“I don’t have this equipment”**, the substitution is applied to the **slot** (not globally). The slot retains:
-- progression state link for that exposure
-- notes/intention
-- movement pattern + primary muscle intent
-
-### Name Parsing Heuristic (Deterministic, Limited)
-Templates/importers may auto-tag equipment based on exercise name tokens:
-
-- If exercise name contains `DB`, `D.B.`, or `Dumbbell` → add `equipment_tags: ["dumbbell"]`
-- If contains `BB`, `Barbell` → add `equipment_tags: ["barbell"]`
-- If contains `Cable` → add `equipment_tags: ["cable"]`
-- If contains `Machine` → add `equipment_tags: ["machine"]`
-- If contains `BW`, `Bodyweight` → add `equipment_tags: ["bodyweight"]`
-
-This heuristic is used only as a fallback. If the spreadsheet/template provides explicit equipment tags, those override parsing.
-
-### Acceptance Criteria
-- Substitutions are tied to the exercise slot (not free-floating).
-- Selecting a substitute does not lose the original slot intent.
-- `DB` in a name correctly tags the exercise as dumbbell-based (unless overridden).
-- Exercise notes are visible during the workout at the point of performance.
-
-User may select substitute during workout.
-
-Substitution must preserve:
-- movement pattern
-- primary muscle intent
-- progression continuity
-
-No AI required. No guide search.
-
----
-
-# Recovery & Soreness Tracking System (Deterministic)
-
-## Input Model
-
-- Pre-workout soreness input modal before session start
-- Muscle list with severity per muscle:
-  - None
-  - Mild
-  - Moderate
-  - Severe
-
-## Deterministic Adjustment Rules
-
-- Severe: reduce working load slightly OR reduce one working set OR suggest lower joint-stress substitute
-- Moderate: apply minimal adjustment only
-- Mild: log only (no loading change)
-- Rules must be deterministic, explicit, and testable
-- System must never rewrite the full plan automatically
-
-## Acceptance Criteria
-
-- [x] Soreness input is captured pre-workout with deterministic severity values
-- [x] Per-muscle soreness entries persist and are available to workout generation/recommendation logic
-- [x] Severe soreness triggers only deterministic, bounded recommendation adjustments
-- [x] Moderate soreness applies minimal deterministic adjustment
-- [x] Mild soreness is logged without automatic loading changes
-- [x] No automatic full-plan rewrite occurs from soreness input
-- [x] Core-engine tests verify soreness-to-recommendation behavior
-
----
-
-# Exercise Video Links (YouTube) (Core Requirement)
-
-## Goal
-
-Every exercise shown in the app should support an optional YouTube link so users can quickly view form/reference videos.
-
-## Data Source
-
-Video links are provided in canonical templates/imported program data and stored as part of exercise metadata.
-
-## Canonical Data Model
-
-Each exercise object supports:
-
-- `video.youtube_url` (optional string)
-
-If missing, UI should not render a video action.
-
-## Runtime UX
-
-- Workout runner shows a `Video` action on each exercise card when `video.youtube_url` exists.
-- Tapping `Video` opens the link in a new browser tab.
-- No runtime lookup/search is performed.
-
-## Acceptance Criteria
-
-- Video links are available in canonical schema and templates.
-- Workout UI conditionally renders video action per exercise.
-- Clicking video action opens external YouTube URL in new tab.
-- Missing links do not create UI errors.
-
----
-
-# Physique & Analytics Dashboard
-
-- Strength trend graphs (weight over time)
-- Rep performance trends
-- Bodyweight trend graph
-- Body measurement trends
-- Volume per muscle weekly tracking
-- PR detection (rep PR + weight PR)
-- Adherence tracking (% completed sessions)
-- Mesocycle markers on charts
-- Deterministic calculations only (no runtime AI/guide parsing)
-
----
-
-# Post-MVP Scope
-
-- Optional last-set RPE support
-- Expanded template library
-- Advanced substitution trees
-- Analytics dashboard
-- Volume landmark tracking (MEV/MAV/MRV)
-- Deload recommendation wizard
-- Program version migration tooling
-- Admin UI
-- Full reference vault explorer (all source assets + provenance graph)
-
----
-
-# Explicitly Out of Scope (MVP)
-
-- PDF/XLSX runtime ingestion
-- Vector retrieval
-- Runtime LLM planning
-- OpenClaw runtime dependency
-- Social features
-- Cloud dependency
-
----
-
-# Definition of Done (MVP)
-
-- `docker compose up --build` runs successfully on ARM64
-- Web UI reachable
-- API health endpoint responds
-- Auth/profile/checkin/plan/workout/history endpoints functional
-- Deterministic progression engine verified
-- Deterministic substitution engine verified
-- Equipment filtering functional
-- 2/3/4 day compression logic works
-- Auth flows resilient on clean/stale local environments (register/login/password reset request/confirm)
-- Repeatable local test reset flow available via script (`scripts/reset_testing_user_data.sh`)
-- Dark-mode mobile UI polished
-- Documentation accurate
-
----
-
-# Roadmap (Phases + Checklists)
-
-## Codex 5.3 Critical Burn-Down (Before Quota Exhaustion)
-
-Purpose: prioritize the highest-risk items that benefit most from GPT-5.3-Codex before usage reaches 100% and work shifts to GPT-5-mini support mode.
-
-### Priority A — Must Be Codex-Owned Now
-
-- [x] Deterministic soreness modifier integration in generation/recommendation path (Phase 6)
-- [x] Weekly volume-per-muscle computation + muscle coverage validator with deterministic tests (Phase 6)
-- [x] Mesocycle state model + deload lifecycle + early-deload trigger rules + test matrix (Phase 7)
-- [x] Program/template selection engine correctness (including equipment-safe variant selection) (Phase 8)
-- [x] Reference ingestion architecture: deterministic PDF/EPUB/XLSX normalization + provenance index + checksum stability tests (Phase 13)
-- [x] Deterministic “next recommended program” logic + switch confirmation semantics (Phase 13)
-
-### Priority B — Codex Should Own If Time Allows
-
-- [x] API contracts for guide retrieval and plan guide drill-down pathways (Phase 13)
-- [x] Offline queue/replay conflict semantics and deterministic sync rules (Phase 10)
-- [x] Security/hardening architecture: secrets strategy, rate limiting approach, backup/restore design and drills (Phase 11)
-- [x] Auth expansion architecture for OAuth + Passkey (WebAuthn) flows (Phase 12)
-
-### Priority C — Safe for GPT-5-mini (After Codex Direction)
-
-- [ ] Hyperdrive visual parity implementation tasks that do not alter deterministic behavior (Phase 14)
-- [ ] Non-critical UI refinements, static content, docs cleanup, and screenshot parity checklists
-- [x] Postgres-first API test harness with explicit `TEST_DATABASE_URL` override path for local troubleshooting
-- [ ] Test fixture expansion and visual regression snapshot maintenance
-
-### Codex Exit Criteria (Before Handoff to Mini-Only Execution)
-
-- [x] All Priority A architecture decisions merged with tests
-- [x] High-risk contracts documented (engine rules, ingestion schema, API invariants)
-- [x] Mini handoff pack updated with explicit do/do-not-change boundaries for deterministic logic
-
----
-
-## Phase 0 — Foundation
-- [x] Monorepo scaffold
-- [x] Docker Compose stack
-- [x] API `/health`
-- [x] Dark-mode base UI
-- [x] Alembic migrations
-- [x] Docs baseline
-- [x] Define UI design tokens (colors, spacing, glow intensity)
-- [x] Define glass layer CSS system
-
----
-
-## Phase 1 — PDL + Canonical Templates
-- [x] Define canonical schema
-- [x] Add movement_pattern field
-- [x] Add equipment_tags field
-- [x] Add substitution metadata field
-- [x] Add video.youtube_url field to exercise schema (canonical PDL)
-- [x] Add `notes` field to session exercise slots (template-level notes)
-- [x] Add `substitution_candidates` list to exercise slots
-- [x] Add deterministic equipment tag parsing fallback (DB/BB/Cable/Machine/BW) in importer/template tooling
-- [x] Seed working template
-- [x] Schema validation tests
-
----
-
-## Phase 2 — Auth + Equipment-Aware Profiles
-- [x] JWT auth
-- [x] Login method (email/password)
-- [x] Password reset flow (request reset + confirm reset)
-- [x] Login/reset UI surfaces backend error detail for faster test diagnostics
-- [x] API container applies Alembic migrations before serving requests
-- [x] User profile CRUD
-- [x] Onboarding wizard
-- [x] Profile UX location (`/onboarding` for initial setup, `/settings` for review/edit)
-- [x] Add training location (Gym/Home)
-- [x] Add equipment profile (Dumbbells Only minimum)
-- [x] Profile validation tests
-
----
-
-## Phase 3 — Weekly Check-In + Nutrition Phase
-- [x] Weekly check-in model
-- [x] Phase modifiers
-- [x] Add soreness input model + CRUD
-- [x] Add body measurement model + CRUD
-- [x] Validation rules
-- [x] UI implementation
-- [x] Tests
-- [x] Sunday review status endpoint (prior-week audit + required/optional flag)
-- [x] Sunday review submit endpoint (upcoming-week bodyweight + calories/macros + deterministic adjustment output)
-- [x] Persist weekly review cycles for planner consumption
-
----
-
-## Phase 4 — Core Engine v1
-- [x] Warmup engine
-- [x] Progression engine
-- [x] Exposure tracking
-- [x] Phase modifiers
-- [x] Unit tests
-
----
-
-## Phase 5 — Workout Runner + Substitution UX
-- [x] Workout instance generation
-- [x] Reps logging
-- [x] Resume logic
-- [x] Add soreness modal before workout start
-- [x] Add notes display per exercise
-- [x] Add Video button per exercise
-- [x] Implement Exercise Control Module UI
-- [x] Implement rest timer auto-start + subtle pulse animation
-- [x] Implement Video | Swap | Notes action row styling
-- [x] Add “I don’t have this equipment” button
-- [x] Add Video action per exercise card that opens video.youtube_url in a new tab
-- [x] Display slot `notes` in the exercise card (collapsible)
-- [x] Ensure notes persist and remain visible after substitutions
-- [x] Substitution picker modal
-- [x] Persist substitution selection
-- [x] Update exercise state correctly
-- [x] Tests
-
----
-
-## Phase 6 — Weekly Plan Generator (Equipment-Aware)
-- [x] Equipment filtering during generation
-- [x] Substitution pre-filtering
-- [x] Ensure substitution selection is applied at the slot level and logged accordingly
-- [x] Compression logic (2/3/4 days)
-- [x] Ensure soreness modifiers apply deterministically to recommendations
-- [x] Track weekly volume per muscle
-- [x] Muscle coverage validator
-- [x] Deterministic week output tests
-
----
-
-## Phase 7 — Mesocycle + Deload Logic
-- [x] Mesocycle model
-- [x] Deload support
-- [x] Early deload triggers
-- [x] UI indicator
-- [x] Tests
-
----
-
-## Phase 8 — Program Library Expansion
-- [x] Full Body templates
-- [x] PPL templates
-- [x] Upper/Lower templates
-- [x] Equipment-safe variants
-- [x] Template/program selection logic
-- [x] Onboarding program picker (required)
-- [x] Settings program switcher (required)
-- [x] Program catalog API + UI cards
-- [x] Program explanation summaries per catalog item
-- [x] Ensure importers map spreadsheet YouTube links into canonical templates for all supported programs
-
----
-
-## Phase 13 — Reference Corpus Intelligence + Plan Guides
-- [x] Build asset catalog covering every file in `/reference/`
-- [x] Add deterministic PDF/EPUB extraction pipeline (build-time)
-- [x] Add deterministic XLSX extraction pipeline (build-time)
-- [x] Emit normalized guide docs into `/docs/guides/`
-- [x] Emit provenance index (`asset -> section -> derived entity`)
-- [x] Add API endpoints for program/day/exercise guides
-- [x] Add web Plan Guide pages (Program → Phase → Day → Exercise)
-- [x] Add web Program/Day/Exercise guide pages
-- [x] Add workout runner drill-down to exercise guide text
-- [x] Add deterministic “next recommended program” suggestion logic
-- [x] Add explicit confirmation flow before program/phase switch
-- [x] Add ingestion determinism tests (checksum + schema stability)
-- [x] Add guide coverage tests (no orphan assets)
-
----
-
-## Phase 9 — Analytics + Trends
-- [x] Exercise trend charts
-- [x] Bodyweight trend
-- [x] Adherence tracking
-- [x] Add strength trend charts
-- [x] Add body measurement charts
-- [x] Add PR detection logic
-- [x] Add adherence tracking dashboard
-- [x] Implement analytics dashboard visual system
-- [x] Add PR highlight styling
-- [x] Add volume heat map styling
-
----
-
-## Phase 10 — Offline Reliability
-- Contract defined in `docs/Offline_Sync_Deterministic_Contract.md` (queue ordering, idempotency, conflict semantics, sync state machine).
-- [ ] Offline logging queue
-- [ ] Replay mechanism
-- [ ] Sync status UX
-
----
-
-## Phase 11 — Hardening
-- Architecture contract defined in `docs/Security_Hardening_Architecture.md` (secrets, rate limiting, backup/restore, and failure drill requirements).
-- [ ] Backups
-- [ ] Restore procedures
-- [ ] Secrets management
-- [ ] Rate limiting
-- [ ] Failure drills
-
----
-
-## Phase 12 — Advanced Enhancements
-- Auth expansion architecture contract defined in `docs/Auth_Expansion_Architecture.md` (OAuth + WebAuthn identity, session, and linking semantics).
-- [ ] Optional RPE support
-- [ ] MEV/MAV/MRV tracking
-- [ ] Deload wizard
-- [ ] OpenClaw advisory layer
-- [ ] Google OAuth login
-- [ ] Apple Sign In login
-- [ ] Passkey login (WebAuthn)
-
----
-
-## Phase 14 — Hyperdrive Visual Parity (App-Wide Premium UI)
-- [x] Expand design tokens for depth/glow/glass/accent tiers
-- [x] Implement shell material tiers (base, glass, elevated, active)
-- [x] Implement cinematic background layers (grain, radial pass, vignette)
-- [x] Overhaul form controls (input/select/textarea/toggle) with unified material language
-- [x] Overhaul button and segmented-control interaction states
-- [x] Overhaul card primitives (shell/module variants + deterministic spacing grid)
-- [x] Upgrade command dock contrast, active markers, and icon consistency
-- [x] Standardize typography scale/weights/line-height/letter-spacing across routes
-- [x] Standardize telemetry micro-widgets (status dots, metric labels, module headers)
-- [x] Upgrade Today runner composition to closer HUD parity
-- [x] Upgrade Onboarding composition and hierarchy to match premium finish
-- [x] Upgrade Week/Check-In/History/Guides/Settings to same material hierarchy
-- [x] Add analytics visual module polish (sparklines, PR highlights, compact charts)
-- [x] Add motion polish pass (120–200ms, transform/opacity only)
-- [x] Add iconography consistency pass for all nav/action surfaces
-- [x] Capture screenshot parity checklist for key screens (before/after)
-- [x] Add web visual regression snapshots for critical routes
-- [x] Validate no performance regression on mobile target
-- [x] Validate no deterministic behavior changes from UI refactor
-
----
-
-## Phase 15 — Adaptive Coaching Loop (Execution Intelligence)
-- [x] Add workout session state model for set-level planned vs actual tracking
-- [x] Add API contract to return live per-exercise recommendation updates after each logged set
-- [x] Use exercise-specific rep ranges/planned sets (not fixed defaults) in progression updates
-- [x] Add in-session recalculation rules for remaining sets (deterministic hypertrophy guardrails)
-- [x] Add end-of-day summary endpoint (planned vs performed + next exposure recommendation)
-- [x] Add Today UI fields for actual set input (weight/reps) per set completion
-- [x] Add deterministic progression continuity across variable `days_available` by exposure history
-- [x] Add weak-point boosting logic with bounded deterministic adjustments
-- [x] Add tests for adaptive set recalculation, day-end summary, and variable-day continuity
-- [x] Add deterministic Sunday prior-week performance fault scan (planned vs performed by exercise)
-- [x] Feed weekly review adjustment directives into week generation payload (global + per-exercise)
-- [x] Gate Sunday Week/Today entrypoints until weekly review is submitted
-
----
-
-# Model Ownership & Quality Routing
-
-Use model routing to maximize quality while keeping throughput high.
-
-## GPT-5.3-Codex (Primary for Critical Engineering)
-
-GPT-5.3-Codex owns implementation and review for high-risk and architecture-sensitive work:
-
-- Core engine logic (`packages/core-engine`) and deterministic planning rules
-- API contract changes, migrations, auth, security-sensitive flows
-- Program ingestion architecture, canonical schema evolution, import validation
-- Workout runner state logic, substitution correctness, progression behavior
-- Refactors affecting multiple services or cross-layer coupling
-- Final code review/acceptance for any production-facing feature
-
-## GPT-5-mini (Support for Low-Risk Throughput Work)
-
-GPT-5-mini may handle bounded, low-risk tasks with strict guardrails:
-
-- Drafting documentation sections and checklist updates
-- UI copy improvements and non-critical content edits
-- Boilerplate page scaffolds that do not change core business logic
-- Test skeletons and fixture setup (must be reviewed before merge)
-- Data normalization scripts where output is validated by schema tests
-
-## Mandatory Quality Gates
-
-- Any change touching planner determinism, auth, data models, or migrations requires GPT-5.3-Codex implementation or final review.
-- Any GPT-5-mini code contribution must pass automated tests and then receive GPT-5.3-Codex review before acceptance.
-- Runtime behavior changes require updated tests in API/core-engine/web as applicable.
-- No merge if model ownership is unclear for a changed area.
-
-## Default Assignment Rule
-
-- If uncertain, route the task to GPT-5.3-Codex.
-- GPT-5-mini is opt-in for scoped support tasks only.
-
-## Operational Handoff Docs
-
-- `docs/GPT5_MINI_HANDOFF.md` (locked contracts + allowed scope)
-- `docs/GPT5_MINI_EXECUTION_BACKLOG.md` (ordered mini task plan)
-- `docs/GPT5_MINI_RUNBOOK.md` (execution + validation + failure handling)
-- `docs/GPT5_MINI_BOOTSTRAP_PROMPT.md` (session-start prompt for mini)
-- `scripts/mini_preflight.sh` + `scripts/mini_validate.sh` (automation guardrails)
-
----
-
-# Drift Prevention Rules
-
-- All new features must map to a roadmap phase.
-- Substitution engine must remain deterministic.
-- No runtime guide parsing ever.
-- All core-engine logic must have unit tests.
-- This document must be updated before major architectural changes.
-
----
+- Code is merged.
+- Deterministic tests cover the behavior.
+- API contracts are documented in code-level schemas.
+- This file is updated to reflect final status.

@@ -45,20 +45,36 @@ WEAK_POINT_INTENSITY_MIN_SCALE = 0.93
 WEAK_POINT_INTENSITY_MAX_SCALE = 1.03
 
 
-def _compatible_program_ids(days_available: int, split_preference: str) -> list[str]:
+def _is_adaptation_upgrade(summary: dict[str, Any], days_available: int) -> bool:
+    if days_available < 2 or days_available > 4:
+        return False
+    session_count = int(summary.get("session_count") or 0)
+    return session_count >= 5
+
+
+def _program_rank(summary: dict[str, Any], *, days_available: int, split_preference: str) -> tuple[int, int, int, str]:
+    split_rank = 0 if str(summary.get("split") or "") == split_preference else 1
+    adaptation_rank = 0 if _is_adaptation_upgrade(summary, days_available) else 1
+    session_rank = -int(summary.get("session_count") or 0)
+    return (split_rank, adaptation_rank, session_rank, str(summary.get("id") or ""))
+
+
+def _compatible_program_summaries(days_available: int, split_preference: str) -> list[dict[str, Any]]:
     summaries = list_program_templates()
-    compatible = [
-        item["id"]
-        for item in summaries
-        if days_available in (item.get("days_supported") or [])
-    ]
-    split_matched = [
-        item["id"]
-        for item in summaries
-        if item.get("split") == split_preference and days_available in (item.get("days_supported") or [])
-    ]
-    ordered = split_matched + [item for item in compatible if item not in split_matched]
-    return ordered or [item["id"] for item in summaries]
+    compatible = [item for item in summaries if days_available in (item.get("days_supported") or [])]
+    if compatible:
+        return sorted(
+            compatible,
+            key=lambda item: _program_rank(item, days_available=days_available, split_preference=split_preference),
+        )
+    return sorted(
+        summaries,
+        key=lambda item: _program_rank(item, days_available=days_available, split_preference=split_preference),
+    )
+
+
+def _compatible_program_ids(days_available: int, split_preference: str) -> list[str]:
+    return [str(item.get("id") or "") for item in _compatible_program_summaries(days_available, split_preference)]
 
 
 def _latest_plan_payload(db: Session, user_id: str) -> dict[str, Any]:
@@ -482,6 +498,8 @@ def _deterministic_program_recommendation(
     *,
     current_program_id: str,
     compatible_program_ids: list[str],
+    compatible_program_summaries: list[dict[str, Any]],
+    days_available: int,
     latest_adherence_score: int | None,
     latest_plan_payload: dict[str, Any],
 ) -> tuple[str, str]:
@@ -492,6 +510,15 @@ def _deterministic_program_recommendation(
     if latest_adherence_score is not None and latest_adherence_score <= 2:
         return current_program_id, "low_adherence_keep_program"
 
+    rotated = _rotate_for_adaptation_upgrade(
+        current_program_id=current_program_id,
+        compatible_program_ids=compatible_program_ids,
+        compatible_program_summaries=compatible_program_summaries,
+        days_available=days_available,
+    )
+    if rotated:
+        return rotated, "days_adaptation_upgrade"
+
     rotated = _rotate_for_coverage_gap(current_program_id, compatible_program_ids, latest_plan_payload)
     if rotated:
         return rotated, "coverage_gap_rotate"
@@ -501,6 +528,32 @@ def _deterministic_program_recommendation(
         return rotated, "mesocycle_complete_rotate"
 
     return current_program_id, "maintain_current_program"
+
+
+def _rotate_for_adaptation_upgrade(
+    *,
+    current_program_id: str,
+    compatible_program_ids: list[str],
+    compatible_program_summaries: list[dict[str, Any]],
+    days_available: int,
+) -> str | None:
+    if days_available < 2 or days_available > 4:
+        return None
+    if len(compatible_program_ids) <= 1:
+        return None
+
+    summary_by_id = {str(item.get("id") or ""): item for item in compatible_program_summaries}
+    current_summary = summary_by_id.get(current_program_id)
+    if current_summary and _is_adaptation_upgrade(current_summary, days_available):
+        return None
+
+    for candidate in compatible_program_ids:
+        if candidate == current_program_id:
+            continue
+        summary = summary_by_id.get(candidate)
+        if summary and _is_adaptation_upgrade(summary, days_available):
+            return candidate
+    return None
 
 
 def _rotate_for_coverage_gap(
@@ -593,10 +646,20 @@ def program_recommendation(
     current_user: CurrentUser,
 ) -> ProgramRecommendationResponse:
     current_program_id = current_user.selected_program_id or "full_body_v1"
-    compatible_program_ids = _compatible_program_ids(
-        days_available=current_user.days_available or 2,
-        split_preference=current_user.split_preference or "full_body",
+    days_available = current_user.days_available or 2
+    split_preference = current_user.split_preference or "full_body"
+    compatible_program_summaries = _compatible_program_summaries(
+        days_available=days_available,
+        split_preference=split_preference,
     )
+    compatible_program_ids = [str(item.get("id") or "") for item in compatible_program_summaries]
+    compatible_program_ids = [item for item in compatible_program_ids if item]
+
+    if not compatible_program_ids:
+        compatible_program_ids = _compatible_program_ids(
+            days_available=days_available,
+            split_preference=split_preference,
+        )
 
     latest_checkin = (
         db.query(WeeklyCheckin)
@@ -610,6 +673,8 @@ def program_recommendation(
     recommended_program_id, reason = _deterministic_program_recommendation(
         current_program_id=current_program_id,
         compatible_program_ids=compatible_program_ids,
+        compatible_program_summaries=compatible_program_summaries,
+        days_available=days_available,
         latest_adherence_score=adherence_score,
         latest_plan_payload=latest_plan_payload,
     )
@@ -629,10 +694,14 @@ def switch_program(
     db: DbSession,
     current_user: CurrentUser,
 ) -> ProgramSwitchResponse:
-    compatible_program_ids = _compatible_program_ids(
-        days_available=current_user.days_available or 2,
-        split_preference=current_user.split_preference or "full_body",
+    days_available = current_user.days_available or 2
+    split_preference = current_user.split_preference or "full_body"
+    compatible_program_summaries = _compatible_program_summaries(
+        days_available=days_available,
+        split_preference=split_preference,
     )
+    compatible_program_ids = [str(item.get("id") or "") for item in compatible_program_summaries]
+    compatible_program_ids = [item for item in compatible_program_ids if item]
 
     if payload.target_program_id not in compatible_program_ids:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Target program is not compatible")
@@ -649,6 +718,8 @@ def switch_program(
     recommended_program_id, reason = _deterministic_program_recommendation(
         current_program_id=current_program_id,
         compatible_program_ids=compatible_program_ids,
+        compatible_program_summaries=compatible_program_summaries,
+        days_available=days_available,
         latest_adherence_score=adherence_score,
         latest_plan_payload=latest_plan_payload,
     )

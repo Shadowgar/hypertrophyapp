@@ -3,9 +3,9 @@
 - Asset: reference/PowerBuilding 3.0.xlsx
 - SHA256: f4de3f2c311a2c0664e3c7136d0064114a6e778000f6f0e5ff6ec99e2b5431b1
 - Type: xlsx
-- Extraction Method: xlsx_zip_xml
-- Extracted Characters: 35805
+- Extraction Method: xlsx_metadata_only
+- Extracted Characters: 0
 
 ## Excerpt
 
-Jeff Nippard's Powerbuilding System - 5x/Week Spreadsheet Copyright 2022 by Jeff Nippard. All rights reserved. IMPORTANT: In the light green cell below, type "kg" if using kilograms or type "lbs" if using pounds (quotation marks not included) kg IMPORTANT: On the right, enter your CURRENT 1 rep max loads in the spaces below the given exercise (use the same units you specified above). See pg. 16 of the Get Ready Manual if unsure of your 1RM. | Squat | Bench | Deadlift | OHP 110.0 | 90 | 145.0 | 55.0 Week 1 | Exercise | Warm-up Sets | Working Sets | Reps | Load | %1RM | RPE | Rest | Notes FULL BODY 1: | Back Squat (Top Single) | 4.0 | 1.0 | 1 | 92.5-97.5 | 85-87.5% | ~6-8 | 3-5min | Top set. Focus on technique and explosive power. Back Squat | 0.0 | 3.0 | 5 | 82.5-85 | 75-77.5% | 44750.0 | 3-5min | Sit back and down, keep your upper back tight to the bar Barbell Overhead Press | 3.0 | 2.0 | 8 | 37.5 | 0.7 | 6.0 | 2-3min | These are intentionally light for shoulder stability and balance. Don't push these hard. Big bench day tomorrow. Romanian Deadlift | 2.0 | 2.0 | 8-10 | 50.0 | N/A | 6.0 | 2-3min | Set the pins high, short ROM, use low bar position, set hips back and keep shins vertical Chest-Supported Row | 1.0 | 4.0 | 8-10 | 25.0 | N/A | 9.0 | 1-2min | Can use machine or brace against bench. Minimize cheating. FULL BODY 2: | Strict Bench Press | 4.0 | 1.0 | 1 | 80-80 | 87.5-90% | ~7-8 | 3-5min | Strict 1 second pause on chest. Execute the set up and rep as perfectly as possible. Don't overhype. Focus. Barbell Bench Press | 0.0 | 3.0 | 3 | 75 | 0.825 | 44750.0 | 3-5min | Set up a comfortable arch, quick pause on chest and explode up on each rep Leg Curl | 1.0 | 3.0 | 10-12 | 40.0 | N/A | 8.0 | 1-2min | Focus on squeezing your hamstrings to move the weight EZ-Bar Strict Curl | 1.0 | 4.0 | 6-8 | 40.0 | N/A | 10.0 | 1-2min | Lean against wall and maintain wall contact with head, hips and back. Keep elbows pinned at sides. Control the weight. Face Pull | 0.0 | 3.0 | 15-2
+(No text extracted)

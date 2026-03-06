@@ -117,6 +117,47 @@ function WorkoutSummaryCard({ summary }: Readonly<{ summary: WorkoutSummary | nu
   );
 }
 
+function WorkoutHeaderCard({
+  workout,
+  workoutProgress,
+}: Readonly<{
+  workout: WorkoutSession;
+  workoutProgress: { completed: number; planned: number; percent: number } | null;
+}>) {
+  return (
+    <div className="main-card main-card--shell spacing-grid spacing-grid--tight">
+      <div className="telemetry-header">
+        <p className="telemetry-value">{workout.title}</p>
+        <p className="telemetry-meta">{workout.date}</p>
+      </div>
+      {workout.daily_quote ? (
+        <div className="rounded-md border border-white/10 bg-black/25 p-2">
+          <p className="text-xs text-zinc-200">"{workout.daily_quote.text}"</p>
+          <p className="mt-1 text-[11px] uppercase tracking-wide text-zinc-400">
+            {workout.daily_quote.author} · {workout.daily_quote.source}
+          </p>
+        </div>
+      ) : null}
+      {workout.mesocycle ? (
+        <p className="telemetry-meta text-zinc-300">
+          Mesocycle Week {workout.mesocycle.week_index}/{workout.mesocycle.trigger_weeks_effective}
+        </p>
+      ) : null}
+      {workout.deload?.active ? (
+        <p className="telemetry-status text-amber-300">
+          <span className="status-dot status-dot--yellow" /> Deload Week Active ({workout.deload.reason})
+        </p>
+      ) : null}
+      {workout.resume ? <p className="telemetry-meta text-accent">Resumed unfinished workout</p> : null}
+      {workoutProgress ? (
+        <p className="telemetry-meta text-zinc-300">
+          Progress: {workoutProgress.completed}/{workoutProgress.planned} sets ({workoutProgress.percent}%)
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 export default function TodayPage() {
   const [health, setHealth] = useState("loading");
   const [workout, setWorkout] = useState<WorkoutSession | null>(null);
@@ -378,28 +419,7 @@ export default function TodayPage() {
 
       {workout ? (
         <div className="space-y-3">
-          <div className="main-card main-card--shell spacing-grid spacing-grid--tight">
-            <div className="telemetry-header">
-              <p className="telemetry-value">{workout.title}</p>
-              <p className="telemetry-meta">{workout.date}</p>
-            </div>
-            {workout.mesocycle ? (
-              <p className="telemetry-meta text-zinc-300">
-                Mesocycle Week {workout.mesocycle.week_index}/{workout.mesocycle.trigger_weeks_effective}
-              </p>
-            ) : null}
-            {workout.deload?.active ? (
-              <p className="telemetry-status text-amber-300">
-                <span className="status-dot status-dot--yellow" /> Deload Week Active ({workout.deload.reason})
-              </p>
-            ) : null}
-            {workout.resume ? <p className="telemetry-meta text-accent">Resumed unfinished workout</p> : null}
-            {workoutProgress ? (
-              <p className="telemetry-meta text-zinc-300">
-                Progress: {workoutProgress.completed}/{workoutProgress.planned} sets ({workoutProgress.percent}%)
-              </p>
-            ) : null}
-          </div>
+          <WorkoutHeaderCard workout={workout} workoutProgress={workoutProgress} />
 
           {workout.exercises.map((exercise) => {
             const notesOpen = notesOpenByExercise[exercise.id] ?? false;

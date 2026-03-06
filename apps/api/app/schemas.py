@@ -204,6 +204,82 @@ class GenerateWeekPlanRequest(BaseModel):
     template_id: str | None = None
 
 
+class ReferenceWorkbookGuidePair(BaseModel):
+    workbook_asset_path: str
+    workbook_asset_sha256: str
+    guide_asset_path: str
+    guide_asset_sha256: str
+    match_score: int
+
+
+class ScheduleAdaptationPreviewResponse(BaseModel):
+    from_days: int
+    to_days: int
+    kept_sessions: list[str]
+    dropped_sessions: list[str]
+    added_sessions: list[str]
+    risk_level: Literal["low", "medium", "high"]
+    muscle_set_delta: dict[str, int]
+    tradeoffs: list[str]
+
+
+class ProgressionDecisionResponse(BaseModel):
+    action: Literal["progress", "hold", "deload"]
+    load_scale: float
+    set_delta: int
+    reason: str
+
+
+class PhaseTransitionResponse(BaseModel):
+    next_phase: Literal["accumulation", "intensification", "deload"]
+    reason: str
+
+
+class SpecializationPreviewResponse(BaseModel):
+    focus_muscles: list[str]
+    focus_adjustments: dict[str, int]
+    donor_adjustments: dict[str, int]
+    uncompensated_added_sets: int
+
+
+class WarmupSampleResponse(BaseModel):
+    exercise_id: str
+    warmups: list[float]
+
+
+class ProgramMediaWarmupSummaryResponse(BaseModel):
+    total_exercises: int
+    video_linked_exercises: int
+    video_coverage_pct: float
+    sample_warmups: list[WarmupSampleResponse]
+
+
+class IntelligenceCoachPreviewRequest(BaseModel):
+    template_id: str | None = None
+    from_days: int = Field(ge=2, le=7)
+    to_days: int = Field(ge=2, le=7)
+    completion_pct: int = Field(default=90, ge=0, le=100)
+    adherence_score: int = Field(default=3, ge=1, le=5)
+    soreness_level: SorenessSeverity = "none"
+    average_rpe: float | None = Field(default=None, ge=1.0, le=10.0)
+    current_phase: Literal["accumulation", "intensification", "deload"] = "accumulation"
+    weeks_in_phase: int = Field(default=1, ge=1, le=16)
+    stagnation_weeks: int = Field(default=0, ge=0, le=8)
+    readiness_score: int | None = Field(default=None, ge=0, le=100)
+    lagging_muscles: list[str] = Field(default_factory=list)
+    target_min_sets: int = Field(default=8, ge=4, le=20)
+
+
+class IntelligenceCoachPreviewResponse(BaseModel):
+    template_id: str
+    program_name: str
+    schedule: ScheduleAdaptationPreviewResponse
+    progression: ProgressionDecisionResponse
+    phase_transition: PhaseTransitionResponse
+    specialization: SpecializationPreviewResponse
+    media_warmups: ProgramMediaWarmupSummaryResponse
+
+
 class ProgramRecommendationResponse(BaseModel):
     current_program_id: str
     recommended_program_id: str

@@ -1,7 +1,7 @@
 # Normalized Reference Guide
 
-- Asset: reference/Nutrition_Booklet.pdf
-- SHA256: 13fce45ff8995446b6e61940a0acc51e98c168f97273e07de17fe33c54c8eee9
+- Asset: reference/Squat-Specialization-Program-pdf.pdf
+- SHA256: 0f8ce2268a76532bf147b17b7c4e5d9cb0348bf219942743d10f89ce7ef3037b
 - Type: pdf
 - Extraction Method: pdf_metadata_only
 - Extracted Characters: 0

@@ -69,6 +69,20 @@ def test_program_recommendation_endpoint_returns_deterministic_payload() -> None
     assert "reason" in payload
 
 
+def test_program_recommendation_prefers_high_frequency_adaptation_for_three_days() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_and_onboard(client)
+
+    recommendation = client.get("/profile/program-recommendation", headers=headers)
+    assert recommendation.status_code == 200
+    payload = recommendation.json()
+
+    assert payload["current_program_id"] == "ppl_v1"
+    assert payload["recommended_program_id"] != "ppl_v1"
+    assert payload["reason"] == "days_adaptation_upgrade"
+
+
 def test_program_switch_requires_confirmation_then_applies() -> None:
     _reset_db()
     client = TestClient(app)

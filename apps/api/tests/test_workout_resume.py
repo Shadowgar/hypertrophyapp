@@ -85,6 +85,10 @@ def test_workout_today_resumes_incomplete_session() -> None:
     payload = today.json()
     assert payload["session_id"] == first_session["session_id"]
     assert payload["resume"] is True
+    assert isinstance(payload.get("daily_quote"), dict)
+    assert payload["daily_quote"]["text"]
+    assert payload["daily_quote"]["author"]
+    assert payload["daily_quote"]["source"]
     assert "mesocycle" in payload
     assert "deload" in payload
     # ensure server reports completed sets per exercise
@@ -123,3 +127,4 @@ def test_workout_today_does_not_resume_completed_session() -> None:
     assert today.status_code == 200
     payload = today.json()
     assert payload["resume"] is False
+    assert isinstance(payload.get("daily_quote"), dict)

@@ -3,9 +3,9 @@
 - Asset: reference/Edited PPL 5x.xlsx
 - SHA256: 4639eaf914bdecf75c3afcd647f8d1d1003ce50b3131575fb55da19f7a715b29
 - Type: xlsx
-- Extraction Method: xlsx_zip_xml
-- Extracted Characters: 5144
+- Extraction Method: xlsx_metadata_only
+- Extracted Characters: 0
 
 ## Excerpt
 
-Mixed Volume, Moderate Intensity Week 1 Day 1 | Exercise | Warm-up Sets | Working Sets | Reps | Load | RPE | Rest | Substitution Option 1 | Substitution Option 2 | Notes Push #1 | Bench Press | 44624.0 | 3.0 | 3-5 | 44782.0 | ~3-4 min | DB Bench Press | Machine Chest Press | Set up a comfortable arch, quick pause on the chest and explode up on each rep Seated Shoulder Press | 2.0 | 3.0 | 8-10 | 44782.0 | ~2-3 min | Smith Machine Shoulder Press | Machine Shoulder Press Chest Flys | 1.0 | 2.0 | 8-10 | 44814.0 | 0 min | DB Flye Lateral Raise | 1.0 | 3.0 | 8-10 | 44814.0 | ~1-2 min | Cable Lateral Raise | Machine Lateral Raise | Lead with the elbows Bottom Half Tricep Pushdown + Bottom Half Overhead Tricep Extension | 1.0 | 3.0 | 6+6 | 44814.0 | ~1-2 min | Tricep Pushdown | Skull crusher | Do the second half of the ROM for pressdowns ("the squeeze") and the first half of the ROM for overhead extensions ("the stretch") Bar Tricep Pushdown | 0.0 | 2.0 | 8-10 | 10.0 | ~1-2 min | Single-Arm Tricep Pressdown | Single-Arm Cable Tricep Kickback Week 1 Day 2 | Exercise | Warm-up Sets | Working Sets | Reps | Load | RPE | Rest | Substitution Option 1 | Substitution Option 2 | Notes Pull #1 | Wide Grip Chin Up | 0.0 | 4.0 | 10-12 | See Notes | ~2-3 min | Machine Pulldown | Pull-Up Low Row | 0.0 | 3.0 | 6-8 | 10.0 | ~2-3 min | Seated Row | Pull-Up Lat Pulldown (drop set last) | 2.0 | 3.0 | 8-10 | 44782.0 | ~2-3 min | After hitting failure at ~8-10 reps, do a dropset. Strip the weight back ~30-50% and do another 5 reps with nice and controlled technique Bent Over Row | 0.0 | 3.0 | 6-8 | 44814.0 | 0 min Lat Pullover | 0.0 | 2.0 | 12 | N/A | 0 min Face Pull | 1.0 | 3.0 | 10 | 44814.0 | ~1-2 min | Reverse Cable Flye | Bent-Over Reverse DB Flye EZ Bar Curls (last set to failure) | 1.0 | 3.0 | 8-10 | 44814.0 | ~1-2 min | DB Curl | Cable Curl | Focus on contracting your biceps, minimize torso momentum Hammer Curls | 0.0 | 3.0 | 8-10 | 10.0 | ~1-2 min | Spider Curl | Bayesian Curl Week 1 D
+(No text extracted)

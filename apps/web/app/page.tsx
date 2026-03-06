@@ -6,9 +6,9 @@ import { UiIcon } from "@/components/ui/icons";
 export default function HomePage() {
   return (
     <div className="space-y-4">
-      <h1 className="ui-title-hero">Rocco&apos;s HyperTrophy Plan</h1>
+      <center><h1 className="ui-title-hero">Rocco&apos;s HyperTrophy Plan</h1></center>
       <p className="ui-body-sm">
-        Deterministic hypertrophy planner + workout runner. Start with onboarding, then generate your week.
+        <center>Start with onboarding, then generate your week.</center>
       </p>
 
       <div className="main-card main-card--module main-card--accent spacing-grid spacing-grid--tight">

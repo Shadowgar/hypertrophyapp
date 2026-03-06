@@ -1,11 +1,20 @@
 from datetime import date
+import json
+from pathlib import Path
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
-from core_engine import generate_week_plan
+from core_engine import (
+    evaluate_schedule_adaptation,
+    generate_week_plan,
+    recommend_phase_transition,
+    recommend_progression_action,
+    recommend_specialization_adjustments,
+    summarize_program_media_and_warmups,
+)
 
 from ..database import get_db
 from ..deps import get_current_user
@@ -16,9 +25,17 @@ from ..schemas import (
     GuideDaySummary,
     GuideExerciseSummary,
     GuideProgramSummary,
+    IntelligenceCoachPreviewRequest,
+    IntelligenceCoachPreviewResponse,
     ProgramDayGuideResponse,
     ProgramExerciseGuideResponse,
     ProgramGuideResponse,
+    ProgramMediaWarmupSummaryResponse,
+    ProgressionDecisionResponse,
+    ReferenceWorkbookGuidePair,
+    ScheduleAdaptationPreviewResponse,
+    SpecializationPreviewResponse,
+    PhaseTransitionResponse,
 )
 
 router = APIRouter()
@@ -191,6 +208,31 @@ def _apply_review_adjustments(plan: dict[str, Any], review_cycle: WeeklyReviewCy
     return plan
 
 
+def _template_summary_rank(
+    summary: dict[str, Any],
+    *,
+    split_preference: str,
+    days_available: int,
+) -> tuple[int, int, int, str]:
+    split_rank = 0 if str(summary.get("split") or "") == split_preference else 1
+    session_count = int(summary.get("session_count") or 0)
+    adaptation_rank = 0 if 2 <= days_available <= 4 and session_count >= 5 else 1
+    return (split_rank, adaptation_rank, -session_count, str(summary.get("id") or ""))
+
+
+def _append_candidate_ids(
+    ordered: list[str],
+    summaries: list[dict[str, Any]],
+    predicate,
+) -> None:
+    for summary in summaries:
+        if not predicate(summary):
+            continue
+        template_id = str(summary.get("id") or "")
+        if template_id and template_id not in ordered:
+            ordered.append(template_id)
+
+
 def _ordered_candidate_template_ids(
     *,
     preferred_template_id: str | None,
@@ -198,24 +240,36 @@ def _ordered_candidate_template_ids(
     days_available: int,
 ) -> list[str]:
     summaries = list_program_templates()
+    sorted_summaries = sorted(
+        summaries,
+        key=lambda summary: _template_summary_rank(
+            summary,
+            split_preference=split_preference,
+            days_available=days_available,
+        ),
+    )
     ordered: list[str] = []
 
-    def add_template(template_id: str | None) -> None:
-        if not template_id or template_id in ordered:
-            return
-        ordered.append(template_id)
+    preferred_id = str(preferred_template_id or "")
+    if preferred_id:
+        ordered.append(preferred_id)
 
-    add_template(preferred_template_id)
+    _append_candidate_ids(
+        ordered,
+        sorted_summaries,
+        lambda summary: (
+            summary.get("split") == split_preference
+            and days_available in (summary.get("days_supported") or [])
+        ),
+    )
+    _append_candidate_ids(
+        ordered,
+        sorted_summaries,
+        lambda summary: days_available in (summary.get("days_supported") or []),
+    )
 
-    for summary in summaries:
-        if summary.get("split") == split_preference and days_available in (summary.get("days_supported") or []):
-            add_template(summary.get("id"))
-
-    for summary in summaries:
-        if days_available in (summary.get("days_supported") or []):
-            add_template(summary.get("id"))
-
-    add_template("full_body_v1")
+    if "full_body_v1" not in ordered:
+        ordered.append("full_body_v1")
     return ordered
 
 
@@ -269,6 +323,76 @@ def _resolve_template_for_generation(
 def _program_display_name(program_id: str) -> str:
     normalized = program_id.replace("_v", " v").replace("_", " ").strip()
     return " ".join(part.capitalize() for part in normalized.split())
+
+
+def _resolve_program_name(program_id: str) -> str:
+    summaries = list_program_templates()
+    match = next((summary for summary in summaries if summary.get("id") == program_id), None)
+    if isinstance(match, dict):
+        name = str(match.get("name") or "").strip()
+        if name:
+            return name
+    return _program_display_name(program_id)
+
+
+def _repo_root() -> Path:
+    return Path(__file__).resolve().parents[4]
+
+
+def _load_reference_workbook_pairs() -> list[dict[str, Any]]:
+    provenance_path = _repo_root() / "docs" / "guides" / "provenance_index.json"
+    if not provenance_path.exists():
+        return []
+
+    try:
+        payload = json.loads(provenance_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return []
+
+    pairs = payload.get("workbook_pdf_pairs")
+    if not isinstance(pairs, list):
+        return []
+
+    normalized: list[dict[str, Any]] = []
+    for row in pairs:
+        if not isinstance(row, dict):
+            continue
+        normalized.append(
+            {
+                "workbook_asset_path": str(row.get("workbook_asset_path") or ""),
+                "workbook_asset_sha256": str(row.get("workbook_asset_sha256") or ""),
+                "guide_asset_path": str(row.get("guide_asset_path") or ""),
+                "guide_asset_sha256": str(row.get("guide_asset_sha256") or ""),
+                "match_score": int(row.get("match_score") or 0),
+            }
+        )
+
+    return normalized
+
+
+def _derive_readiness_score(
+    *,
+    completion_pct: int,
+    adherence_score: int,
+    soreness_level: str,
+    progression_action: str,
+) -> int:
+    soreness_penalty_by_level = {
+        "none": 0,
+        "mild": 4,
+        "moderate": 10,
+        "severe": 18,
+    }
+    action_penalty = {
+        "progress": 0,
+        "hold": 5,
+        "deload": 18,
+    }
+    soreness_penalty = soreness_penalty_by_level.get(soreness_level.lower(), 0)
+    readiness = int((0.65 * completion_pct) + (8 * adherence_score))
+    readiness -= soreness_penalty
+    readiness -= action_penalty.get(progression_action, 0)
+    return max(0, min(100, readiness))
 
 
 def _guide_program_summary(program_id: str) -> dict[str, Any]:
@@ -406,6 +530,127 @@ def get_program_exercise_guide(program_id: str, exercise_id: str) -> ProgramExer
     return ProgramExerciseGuideResponse(program_id=program_id, exercise=exercise)
 
 
+@router.get("/plan/intelligence/reference-pairs", response_model=list[ReferenceWorkbookGuidePair])
+def list_reference_workbook_guide_pairs() -> list[ReferenceWorkbookGuidePair]:
+    pairs = _load_reference_workbook_pairs()
+    return [ReferenceWorkbookGuidePair.model_validate(row) for row in pairs]
+
+
+@router.post(
+    "/plan/intelligence/coach-preview",
+    response_model=IntelligenceCoachPreviewResponse,
+    responses={
+        400: {"description": "Complete profile first"},
+        404: {"description": "Program template not found"},
+        422: {"description": "Program template schema is invalid"},
+    },
+)
+def coach_intelligence_preview(
+    payload: IntelligenceCoachPreviewRequest,
+    db: DbSession,
+    current_user: CurrentUser,
+) -> IntelligenceCoachPreviewResponse:
+    if not current_user.split_preference:
+        raise HTTPException(status_code=400, detail="Complete profile first")
+
+    profile_days = current_user.days_available or payload.from_days
+    max_requested_days = max(payload.from_days, payload.to_days, profile_days)
+
+    try:
+        selected_template_id, template = _resolve_template_for_generation(
+            explicit_template_id=payload.template_id,
+            profile_template_id=current_user.selected_program_id,
+            split_preference=current_user.split_preference,
+            days_available=max_requested_days,
+            nutrition_phase=current_user.nutrition_phase or "maintenance",
+            available_equipment=current_user.equipment_profile or [],
+        )
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValidationError as exc:
+        raise HTTPException(status_code=422, detail=INVALID_TEMPLATE_DETAIL) from exc
+
+    history_rows = (
+        db.query(WorkoutSetLog)
+        .filter(WorkoutSetLog.user_id == current_user.id)
+        .order_by(WorkoutSetLog.created_at.desc())
+        .limit(100)
+        .all()
+    )
+    history = [
+        {
+            "primary_exercise_id": row.primary_exercise_id,
+            "exercise_id": row.exercise_id,
+            "next_working_weight": row.weight,
+            "created_at": row.created_at.isoformat() if row.created_at else None,
+        }
+        for row in history_rows
+    ]
+
+    schedule = evaluate_schedule_adaptation(
+        user_profile={"name": current_user.name},
+        split_preference=current_user.split_preference,
+        program_template=template,
+        history=history,
+        phase=current_user.nutrition_phase or "maintenance",
+        from_days=payload.from_days,
+        to_days=payload.to_days,
+        available_equipment=current_user.equipment_profile or [],
+    )
+    progression = recommend_progression_action(
+        completion_pct=payload.completion_pct,
+        adherence_score=payload.adherence_score,
+        soreness_level=payload.soreness_level,
+        average_rpe=payload.average_rpe,
+        consecutive_underperformance_weeks=payload.stagnation_weeks,
+    )
+
+    readiness_score = (
+        payload.readiness_score
+        if payload.readiness_score is not None
+        else _derive_readiness_score(
+            completion_pct=payload.completion_pct,
+            adherence_score=payload.adherence_score,
+            soreness_level=payload.soreness_level,
+            progression_action=str(progression.get("action") or "hold"),
+        )
+    )
+    phase_transition = recommend_phase_transition(
+        current_phase=payload.current_phase,
+        weeks_in_phase=payload.weeks_in_phase,
+        readiness_score=readiness_score,
+        progression_action=str(progression.get("action") or "hold"),
+        stagnation_weeks=payload.stagnation_weeks,
+    )
+    specialization = recommend_specialization_adjustments(
+        weekly_volume_by_muscle=(schedule.get("to_plan") or {}).get("weekly_volume_by_muscle", {}),
+        lagging_muscles=payload.lagging_muscles,
+        target_min_sets=payload.target_min_sets,
+    )
+    media_warmups = summarize_program_media_and_warmups(template)
+
+    return IntelligenceCoachPreviewResponse(
+        template_id=selected_template_id,
+        program_name=_resolve_program_name(selected_template_id),
+        schedule=ScheduleAdaptationPreviewResponse.model_validate(
+            {
+                "from_days": schedule.get("from_days"),
+                "to_days": schedule.get("to_days"),
+                "kept_sessions": schedule.get("kept_sessions"),
+                "dropped_sessions": schedule.get("dropped_sessions"),
+                "added_sessions": schedule.get("added_sessions"),
+                "risk_level": schedule.get("risk_level"),
+                "muscle_set_delta": schedule.get("muscle_set_delta"),
+                "tradeoffs": schedule.get("tradeoffs"),
+            }
+        ),
+        progression=ProgressionDecisionResponse.model_validate(progression),
+        phase_transition=PhaseTransitionResponse.model_validate(phase_transition),
+        specialization=SpecializationPreviewResponse.model_validate(specialization),
+        media_warmups=ProgramMediaWarmupSummaryResponse.model_validate(media_warmups),
+    )
+
+
 @router.post(
     "/plan/generate-week",
     responses={
@@ -434,7 +679,7 @@ def plan_generate_week(
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except ValidationError as exc:
-        raise HTTPException(status_code=422, detail="Invalid program template schema") from exc
+        raise HTTPException(status_code=422, detail=INVALID_TEMPLATE_DETAIL) from exc
     history_rows = (
         db.query(WorkoutSetLog)
         .filter(WorkoutSetLog.user_id == current_user.id)

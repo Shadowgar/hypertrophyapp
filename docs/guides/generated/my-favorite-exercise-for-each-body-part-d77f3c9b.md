@@ -1,7 +1,7 @@
 # Normalized Reference Guide
 
-- Asset: reference/Nutrition_Booklet.pdf
-- SHA256: 13fce45ff8995446b6e61940a0acc51e98c168f97273e07de17fe33c54c8eee9
+- Asset: reference/My-Favorite-Exercise-for-Each-Body-Part.pdf
+- SHA256: d77f3c9bf15377bf0b78a535b0bdca63fd4b85979bfbab802de3f8c39c8b1766
 - Type: pdf
 - Extraction Method: pdf_metadata_only
 - Extracted Characters: 0

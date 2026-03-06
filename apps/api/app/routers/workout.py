@@ -17,6 +17,7 @@ from ..schemas import (
     WorkoutSetLogResponse,
     WorkoutSummaryResponse,
 )
+from ..stoic_quotes import daily_stoic_quote
 
 router = APIRouter()
 
@@ -438,6 +439,7 @@ def workout_today(
             }
 
     selected["resume"] = resume_selected
+    selected["daily_quote"] = daily_stoic_quote()
 
     return selected
 

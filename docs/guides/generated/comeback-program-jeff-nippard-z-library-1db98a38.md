@@ -3,9 +3,9 @@
 - Asset: reference/Comeback Program (Jeff Nippard) (Z-Library).pdf
 - SHA256: 1db98a3808bbd86baf124a96aa08649ab83fbc9c080c22619e8ff572d0a320e2
 - Type: pdf
-- Extraction Method: pdf_pypdf
-- Extracted Characters: 34700
+- Extraction Method: pdf_metadata_only
+- Extracted Characters: 0
 
 ## Excerpt
 
-JEFF NIPPARD’S - COMEBACK PROGRAM 2 All documents included or exchanged between Jeff Nippard and the Client are the in- tellectual property of STRCNG Incorporated and are not to be copied, sold, published, posted, or redistributed either in part or in full without my written consent. All viola- tions will be prosecuted to the fullest extent of the law. Jeff Nippard is not a doctor or registered dietitian. The contents of this document should not be taken as medical advice. It is not intended to diagnose, treat, cure, or prevent any health problem - nor is it intended to replace the advice of a physician. Always consult your physician or qualified health professional on any matters regard- ing your health. Use of the information in this program is strictly at your own risk. Jeff Nippard and/or STRCNG Incorporated will not assume any liability for any direct or indirect losses or damages that may result including, but not limited to, economic loss, injury, illness or death. DISCLAIMER JEFF NIPPARD’S - COMEBACK PROGRAM 3 ABOUT JEFF Jeff is a professional drug-free bodybuilder and powerlifter . Through his informative and entertaining Youtube channel which has gathered a fan-base of over 1 million subscribers, Jeff aims to share the knowledge he has gathered through university education and field experience with others who are passionate about the science behind building muscle, losing fat and getting healthier . He earned the title of Mr . Junior Canada for natural bodybuilding in 2012 and as a powerlifter , Jeff held the Canadian national record for the bench press in 2014. As a powerlifter , Jeff has claimed a 502 lb squat, 336 lb bench press and a 518 lb deadlift with an all time best Wilks score of 446. With a Bachelor of Science degree in biochemistry, Jeff has gathered the requisite scientific knowledge to compliment his practical experience acquired through training and coaching. Jeff has coached women’s bikini and men’s bodybuilding national and provincial cham
+(No text extracted)

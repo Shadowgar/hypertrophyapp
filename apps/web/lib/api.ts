@@ -30,6 +30,11 @@ export type WorkoutSession = {
   title: string;
   date: string;
   resume?: boolean;
+  daily_quote?: {
+    text: string;
+    author: string;
+    source: string;
+  };
   mesocycle?: {
     week_index: number;
     trigger_weeks_base: number;

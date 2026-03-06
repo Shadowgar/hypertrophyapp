@@ -1,7 +1,7 @@
 # Normalized Reference Guide
 
-- Asset: reference/Nutrition_Booklet.pdf
-- SHA256: 13fce45ff8995446b6e61940a0acc51e98c168f97273e07de17fe33c54c8eee9
+- Asset: reference/Jeff Nippard - The Muscle Ladde.pdf
+- SHA256: 4bf75a91186d928d50587b7d8f874e1a4d942270258abf8d6f1fd0a05efcb05d
 - Type: pdf
 - Extraction Method: pdf_metadata_only
 - Extracted Characters: 0

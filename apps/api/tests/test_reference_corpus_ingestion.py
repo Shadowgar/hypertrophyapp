@@ -53,12 +53,17 @@ def _write_minimal_epub(path: Path) -> None:
         archive.writestr("OEBPS/ch1.xhtml", "<html><body><h1>Hypertrophy</h1><p>Progressive overload</p></body></html>")
 
 
+def _write_minimal_pdf(path: Path, payload: bytes | None = None) -> None:
+    path.write_bytes(payload or b"%PDF-1.4 synthetic")
+
+
 def test_reference_ingestion_emits_catalog_and_provenance(tmp_path: Path) -> None:
     reference_dir = tmp_path / "reference"
     guides_dir = tmp_path / "docs" / "guides"
     reference_dir.mkdir(parents=True)
 
     _write_minimal_xlsx(reference_dir / "Program Sheet.xlsx")
+    _write_minimal_pdf(reference_dir / "Program Sheet.pdf")
     _write_minimal_epub(reference_dir / "Guide.epub")
 
     result = build_reference_catalog(reference_dir=reference_dir, guides_dir=guides_dir)
@@ -67,16 +72,18 @@ def test_reference_ingestion_emits_catalog_and_provenance(tmp_path: Path) -> Non
     asset_catalog = cast(dict[str, Any], payload["asset_catalog"])
     provenance = cast(dict[str, Any], payload["provenance_index"])
 
-    assert asset_catalog["asset_count"] == 2
-    assert provenance["asset_count"] == 2
-    assert len(asset_catalog["assets"]) == 2
+    assert asset_catalog["asset_count"] == 3
+    assert asset_catalog["source_asset_count"] == 3
+    assert asset_catalog["workbook_pdf_pair_count"] == 1
+    assert provenance["asset_count"] == 3
+    assert len(asset_catalog["assets"]) == 3
     assert (guides_dir / "asset_catalog.json").exists()
     assert (guides_dir / "provenance_index.json").exists()
 
     generated_dir = guides_dir / "generated"
     assert generated_dir.exists()
     generated_docs = sorted(generated_dir.glob("*.md"))
-    assert len(generated_docs) == 2
+    assert len(generated_docs) == 3
 
 
 def test_reference_ingestion_is_deterministic(tmp_path: Path) -> None:
@@ -85,6 +92,7 @@ def test_reference_ingestion_is_deterministic(tmp_path: Path) -> None:
     reference_dir.mkdir(parents=True)
 
     _write_minimal_xlsx(reference_dir / "A.xlsx")
+    _write_minimal_pdf(reference_dir / "A.pdf")
     _write_minimal_epub(reference_dir / "B.epub")
 
     first = cast(dict[str, Any], build_reference_catalog(reference_dir=reference_dir, guides_dir=guides_dir))
@@ -111,10 +119,10 @@ def test_reference_ingestion_has_no_orphan_assets_against_real_corpus(
 
     _write_minimal_xlsx(reference_dir / "Program Sheet.xlsx")
     _write_minimal_epub(reference_dir / "Guide.epub")
-    (reference_dir / "Notes.pdf").write_bytes(b"%PDF-1.4 synthetic")
+    _write_minimal_pdf(reference_dir / "Program Sheet.pdf")
     (reference_dir / "ignore.txt").write_text("unsupported", encoding="utf-8")
 
-    def _fast_extract(_path: Path) -> ExtractionResult:
+    def _fast_extract(_path: Path, *, metadata_only: bool = False) -> ExtractionResult:
         return ExtractionResult(text="coverage-only", method="coverage_stub")
 
     monkeypatch.setattr("importers.reference_corpus_ingest.extract_asset_text", _fast_extract)
@@ -141,3 +149,88 @@ def test_reference_ingestion_has_no_orphan_assets_against_real_corpus(
         derived_doc = Path(str(item["derived_doc"]))
         derived_path = derived_doc if derived_doc.is_absolute() else reference_dir.parent / derived_doc
         assert derived_path.exists()
+
+
+def test_reference_ingestion_deduplicates_assets_by_checksum(tmp_path: Path, monkeypatch) -> None:
+    reference_dir = tmp_path / "reference"
+    guides_dir = tmp_path / "docs" / "guides"
+    reference_dir.mkdir(parents=True)
+
+    _write_minimal_xlsx(reference_dir / "The_Ultimate_Push_Pull_Legs_System_-_5x.xlsx")
+    duplicate_payload = b"%PDF-1.4 duplicate"
+    _write_minimal_pdf(reference_dir / "The_Ultimate_Push_Pull_Legs_System_5X.pdf", payload=duplicate_payload)
+    _write_minimal_pdf(reference_dir / "Copy of The_Ultimate_Push_Pull_Legs_System_5X.pdf", payload=duplicate_payload)
+
+    def _fast_extract(_path: Path, *, metadata_only: bool = False) -> ExtractionResult:
+        return ExtractionResult(text="coverage-only", method="coverage_stub")
+
+    monkeypatch.setattr("importers.reference_corpus_ingest.extract_asset_text", _fast_extract)
+
+    result = cast(dict[str, Any], build_reference_catalog(reference_dir=reference_dir, guides_dir=guides_dir))
+    asset_catalog = cast(dict[str, Any], result["asset_catalog"])
+
+    assert asset_catalog["source_asset_count"] == 3
+    assert asset_catalog["asset_count"] == 2
+    assert asset_catalog["duplicate_asset_count"] == 1
+    assert asset_catalog["workbook_pdf_pair_count"] == 1
+    assert len(asset_catalog["duplicate_assets"]) == 1
+
+
+def test_reference_ingestion_enforces_workbook_pdf_pairing(tmp_path: Path, monkeypatch) -> None:
+    reference_dir = tmp_path / "reference"
+    guides_dir = tmp_path / "docs" / "guides"
+    reference_dir.mkdir(parents=True)
+
+    _write_minimal_xlsx(reference_dir / "Unpaired Program.xlsx")
+    _write_minimal_pdf(reference_dir / "Totally Different Guide.pdf")
+
+    def _fast_extract(_path: Path, *, metadata_only: bool = False) -> ExtractionResult:
+        return ExtractionResult(text="coverage-only", method="coverage_stub")
+
+    monkeypatch.setattr("importers.reference_corpus_ingest.extract_asset_text", _fast_extract)
+
+    try:
+        build_reference_catalog(reference_dir=reference_dir, guides_dir=guides_dir)
+        assert False, "Expected workbook/PDF pairing enforcement to fail"
+    except ValueError as exc:
+        assert "Workbook/PDF pairing enforcement failed" in str(exc)
+
+
+def test_reference_ingestion_metadata_only_mode(tmp_path: Path) -> None:
+    reference_dir = tmp_path / "reference"
+    guides_dir = tmp_path / "docs" / "guides"
+    reference_dir.mkdir(parents=True)
+
+    _write_minimal_xlsx(reference_dir / "Program Sheet.xlsx")
+    _write_minimal_pdf(reference_dir / "Program Sheet.pdf")
+
+    result = cast(
+        dict[str, Any],
+        build_reference_catalog(reference_dir=reference_dir, guides_dir=guides_dir, metadata_only=True),
+    )
+    asset_catalog = cast(dict[str, Any], result["asset_catalog"])
+    assets = cast(list[dict[str, Any]], asset_catalog["assets"])
+
+    assert asset_catalog["asset_count"] == 2
+    assert asset_catalog["workbook_pdf_pair_count"] == 1
+    assert all(int(item["extracted_characters"]) == 0 for item in assets)
+    assert all(str(item["extraction_method"]).endswith("_metadata_only") for item in assets)
+
+
+def test_reference_ingestion_pairing_override_for_my_new_program(tmp_path: Path) -> None:
+    reference_dir = tmp_path / "reference"
+    guides_dir = tmp_path / "docs" / "guides"
+    reference_dir.mkdir(parents=True)
+
+    _write_minimal_xlsx(reference_dir / "my_new_program.xlsx")
+    _write_minimal_pdf(reference_dir / "The_Pure_Bodybuilding_Program - Phase 1 - Full_Body.pdf")
+
+    result = cast(
+        dict[str, Any],
+        build_reference_catalog(reference_dir=reference_dir, guides_dir=guides_dir, metadata_only=True),
+    )
+    pairs = cast(list[dict[str, Any]], result["asset_catalog"]["workbook_pdf_pairs"])
+
+    assert len(pairs) == 1
+    assert pairs[0]["workbook_asset_path"] == "reference/my_new_program.xlsx"
+    assert pairs[0]["guide_asset_path"] == "reference/The_Pure_Bodybuilding_Program - Phase 1 - Full_Body.pdf"
