@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { UiIcon } from "@/components/ui/icons";
 import {
   api,
+  type FrequencyAdaptationResult,
   getProgramDisplayName,
   type IntelligenceCoachPreviewResponse,
   type Profile,
@@ -31,11 +32,13 @@ export default function SettingsPage() {
   const [recommendation, setRecommendation] = useState<ProgramRecommendation | null>(null);
   const [pendingSwitch, setPendingSwitch] = useState<{ targetProgramId: string; reason: string } | null>(null);
   const [status, setStatus] = useState<string | null>(null);
-  const [referencePairCount, setReferencePairCount] = useState<number | null>(null);
   const [coachPreview, setCoachPreview] = useState<IntelligenceCoachPreviewResponse | null>(null);
   const [coachStatus, setCoachStatus] = useState<string | null>(null);
+  const [adaptationPreview, setAdaptationPreview] = useState<FrequencyAdaptationResult | null>(null);
+  const [adaptationStatus, setAdaptationStatus] = useState<string | null>(null);
   const [previewFromDays, setPreviewFromDays] = useState<number>(5);
   const [previewToDays, setPreviewToDays] = useState<number>(3);
+  const [previewDurationWeeks, setPreviewDurationWeeks] = useState<number>(4);
   const [previewPhase, setPreviewPhase] = useState<"accumulation" | "intensification" | "deload">("accumulation");
   const [previewSoreness, setPreviewSoreness] = useState<SorenessSeverity>("mild");
   const [previewLaggingMuscles, setPreviewLaggingMuscles] = useState<string>("biceps, shoulders");
@@ -67,13 +70,6 @@ export default function SettingsPage() {
         setRecommendation(data);
       })
       .catch(() => {});
-
-    api.listReferencePairs()
-      .then((rows) => {
-        if (!mounted) return;
-        setReferencePairCount(rows.length);
-      })
-      .catch(() => setReferencePairCount(null));
 
     return () => { mounted = false };
   }, []);
@@ -116,6 +112,7 @@ export default function SettingsPage() {
 
   async function generateCoachPreview() {
     setCoachStatus("Generating preview...");
+    setAdaptationStatus(null);
     setApplyStatus(null);
     try {
       const payload = {
@@ -138,6 +135,22 @@ export default function SettingsPage() {
       setCoachStatus("Preview ready");
     } catch {
       setCoachStatus("Preview failed");
+    }
+  }
+
+  async function generateAdaptationPreview() {
+    setAdaptationStatus("Generating frequency adaptation...");
+    try {
+      const preview = await api.previewFrequencyAdaptation({
+        program_id: selectedProgramId,
+        target_days: previewToDays,
+        duration_weeks: previewDurationWeeks,
+        weak_areas: parseLaggingMuscles(previewLaggingMuscles),
+      });
+      setAdaptationPreview(preview);
+      setAdaptationStatus("Frequency adaptation ready");
+    } catch {
+      setAdaptationStatus("Frequency adaptation failed");
     }
   }
 
@@ -234,7 +247,6 @@ export default function SettingsPage() {
         <div className="rounded-md border border-zinc-800 p-3 text-xs text-zinc-300">
           <p>Recommended Program: {recommendation?.recommended_program_id ?? "not available"}</p>
           <p>Reason: {recommendation?.reason ?? "not available"}</p>
-          <p>Reference Workbook/PDF Pairs: {referencePairCount ?? "not available"}</p>
         </div>
 
         <div className="rounded-md border border-zinc-800 p-3 text-xs text-zinc-300 space-y-2">
@@ -291,6 +303,16 @@ export default function SettingsPage() {
             value={previewLaggingMuscles}
             onChange={(e) => setPreviewLaggingMuscles(e.target.value)}
           />
+          <label htmlFor="preview-duration" className="ui-meta">Temporary Duration (weeks)</label>
+          <input
+            id="preview-duration"
+            className="ui-input"
+            type="number"
+            min={1}
+            max={12}
+            value={previewDurationWeeks}
+            onChange={(e) => setPreviewDurationWeeks(Math.max(1, Math.min(12, Number(e.target.value) || 1)))}
+          />
           <Button aria-label="Generate coaching preview" variant="secondary" className="w-full" onClick={generateCoachPreview}>
             Generate Coaching Preview
           </Button>
@@ -303,6 +325,22 @@ export default function SettingsPage() {
               <p>Phase Recommendation: {coachPreview.phase_transition.next_phase}</p>
               <p>Adaptation Risk: {coachPreview.schedule.risk_level}</p>
               <p>Focus Muscles: {coachPreview.specialization.focus_muscles.join(", ") || "none"}</p>
+            </div>
+          ) : null}
+
+          <Button aria-label="Generate frequency adaptation preview" variant="secondary" className="w-full" onClick={generateAdaptationPreview}>
+            Generate Frequency Adaptation Preview
+          </Button>
+          <p className="telemetry-meta">{adaptationStatus ?? ""}</p>
+          {adaptationPreview ? (
+            <div className="rounded-md border border-zinc-800 p-2">
+              <p>Adaptation: {adaptationPreview.from_days}d -&gt; {adaptationPreview.to_days}d</p>
+              <p>Duration: {adaptationPreview.duration_weeks} week(s)</p>
+              <p>Weak Areas: {adaptationPreview.weak_areas.join(", ") || "none"}</p>
+              <p>Week Plans: {adaptationPreview.weeks.length}</p>
+              <p>
+                First Week Decisions: {adaptationPreview.weeks[0]?.decisions.length ?? 0}
+              </p>
             </div>
           ) : null}
         </div>

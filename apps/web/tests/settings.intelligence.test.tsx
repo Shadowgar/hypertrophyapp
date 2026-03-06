@@ -68,6 +68,39 @@ test("Settings coaching panel previews and applies intelligence decisions", asyn
       sample_warmups: [],
     },
   };
+  const adaptationPreview = {
+    program_id: "pure_bodybuilding_phase_1_full_body",
+    from_days: 5,
+    to_days: 3,
+    duration_weeks: 4,
+    weak_areas: ["biceps", "shoulders"],
+    weeks: [
+      {
+        week_index: 1,
+        adapted_training_days: 3,
+        adapted_days: [
+          {
+            day_id: "d1",
+            source_day_ids: ["day_a", "day_b"],
+            exercise_ids: ["bench_press", "row"],
+          },
+        ],
+        decisions: [
+          {
+            action: "combine",
+            exercise_id: "bench_press",
+            source_day_id: "day_a",
+            target_day_id: "d1",
+            reason: "compression",
+          },
+        ],
+        coverage_before: { chest: 3 },
+        coverage_after: { chest: 2 },
+        rationale: "deterministic compression",
+      },
+    ],
+    rejoin_policy: "restore original split after temporary constraint window",
+  };
 
   // @ts-ignore
   globalThis.fetch.mockImplementation((input, init) => {
@@ -82,11 +115,11 @@ test("Settings coaching panel previews and applies intelligence decisions", asyn
     if (url.endsWith("/profile/program-recommendation")) {
       return Promise.resolve(new Response(JSON.stringify(recommendation), { status: 200 }));
     }
-    if (url.endsWith("/plan/intelligence/reference-pairs")) {
-      return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }));
-    }
     if (url.endsWith("/plan/intelligence/coach-preview") && init?.method === "POST") {
       return Promise.resolve(new Response(JSON.stringify(preview), { status: 200 }));
+    }
+    if (url.endsWith("/plan/adaptation/preview") && init?.method === "POST") {
+      return Promise.resolve(new Response(JSON.stringify(adaptationPreview), { status: 200 }));
     }
     if (url.endsWith("/plan/intelligence/apply-phase") && init?.method === "POST") {
       return Promise.resolve(
@@ -122,6 +155,13 @@ test("Settings coaching panel previews and applies intelligence decisions", asyn
     expect(screen.getAllByText(/Recommendation ID: rec_123/i).length).toBeGreaterThan(0);
   });
 
+  fireEvent.click(screen.getByRole("button", { name: /Generate frequency adaptation preview/i }));
+
+  await waitFor(() => {
+    expect(screen.getByText(/Adaptation: 5d -> 3d/i)).toBeInTheDocument();
+    expect(screen.getByText(/First Week Decisions: 1/i)).toBeInTheDocument();
+  });
+
   fireEvent.click(screen.getByRole("button", { name: /Apply phase decision/i }));
 
   await waitFor(() => {
@@ -152,5 +192,28 @@ test("Settings coaching panel previews and applies intelligence decisions", asyn
   const phaseApplyBody = typeof rawBody === "string" ? JSON.parse(rawBody) : {};
   expect(phaseApplyBody).toMatchObject({
     recommendation_id: "rec_123",
+  });
+
+  const adaptationCall = fetchCalls.find(([input, init]) => {
+    let requestUrl: string;
+    if (typeof input === "string") {
+      requestUrl = input;
+    } else if (input instanceof URL) {
+      requestUrl = input.toString();
+    } else {
+      requestUrl = input.url;
+    }
+    return requestUrl.endsWith("/plan/adaptation/preview") && init?.method === "POST";
+  });
+  expect(adaptationCall).toBeDefined();
+  if (!adaptationCall) {
+    throw new Error("Expected adaptation preview request to be issued");
+  }
+  const adaptationInit = adaptationCall[1];
+  const adaptationRawBody = adaptationInit?.body;
+  const adaptationBody = typeof adaptationRawBody === "string" ? JSON.parse(adaptationRawBody) : {};
+  expect(adaptationBody).toMatchObject({
+    target_days: 3,
+    duration_weeks: 4,
   });
 });
