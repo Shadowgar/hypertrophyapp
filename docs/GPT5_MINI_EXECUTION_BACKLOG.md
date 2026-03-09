@@ -261,6 +261,21 @@ Evidence (2026-03-09, workout-progress completion projection extraction)
 - `apps/api/app/routers/workout.py`: `GET /workout/{workout_id}/progress` now reuses `build_workout_today_log_runtime` for deterministic completion-log projection before completed-set aggregation.
 - `apps/api/tests/test_workout_progress.py`, `apps/api/tests/test_workout_resume.py`, and `apps/api/tests/test_workout_session_state.py`: focused workout regressions passed after the progress-route extraction.
 
+Evidence (2026-03-09, workout-summary progression lookup runtime extraction)
+- `packages/core-engine/core_engine/intelligence.py`: `build_workout_summary_progression_lookup_runtime` now owns deterministic primary-exercise-id normalization from planned workout exercises for progression-state lookup, with structured decision trace.
+- `apps/api/app/routers/workout.py`: `GET /workout/{workout_id}/summary` now delegates progression lookup ID shaping to that helper while retaining SQL reads and response validation in-router.
+- `packages/core-engine/tests/test_intelligence.py`, `apps/api/tests/test_workout_summary.py`, and `apps/api/tests/test_workout_progress.py`: focused regressions passed after summary-runtime extraction.
+
+Evidence (2026-03-09, workout-today progression lookup runtime extraction)
+- `packages/core-engine/core_engine/intelligence.py`: `build_workout_today_progression_lookup_runtime` now owns deterministic primary-exercise-id normalization from persisted workout session-state rows for progression-state lookup in workout-today, with structured decision trace.
+- `apps/api/app/routers/workout.py`: `GET /workout/today` now delegates that lookup-ID shaping to the shared helper before progression-state DB query.
+- `packages/core-engine/tests/test_intelligence.py`, `apps/api/tests/test_workout_resume.py`, `apps/api/tests/test_workout_session_state.py`, and `apps/api/tests/test_workout_summary.py`: focused regressions passed after workout-today progression-runtime extraction.
+
+Evidence (2026-03-09, plan guide summary resolution extraction)
+- `packages/core-engine/core_engine/generation.py`: `resolve_program_guide_summary` now owns deterministic program-summary resolution for guide routes, including canonical `FileNotFoundError` on missing IDs.
+- `apps/api/app/routers/plan.py`: `GET /plan/guides/programs/{program_id}` now delegates summary lookup to that helper while preserving HTTP error mapping and template loading in-router.
+- `packages/core-engine/tests/test_generation.py` and `apps/api/tests/test_program_catalog_and_selection.py`: focused engine/API regressions passed after guide-summary extraction.
+
 ### Task 2.2 - Gold End-To-End Runtime Path
 - Selection -> generation -> logging -> evaluation -> adaptation.
 - Status: STARTED

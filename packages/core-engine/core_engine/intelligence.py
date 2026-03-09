@@ -1489,6 +1489,67 @@ def build_workout_today_log_runtime(
     }
 
 
+def build_workout_summary_progression_lookup_runtime(
+    *,
+    planned_session: dict[str, Any] | None,
+) -> dict[str, Any]:
+    session = _coerce_dict(planned_session)
+    primary_exercise_ids: list[str] = []
+    seen: set[str] = set()
+    for exercise in session.get("exercises") or []:
+        if not isinstance(exercise, dict):
+            continue
+        normalized = str(exercise.get("primary_exercise_id") or exercise.get("id") or "")
+        if not normalized or normalized in seen:
+            continue
+        seen.add(normalized)
+        primary_exercise_ids.append(normalized)
+
+    return {
+        "primary_exercise_ids": primary_exercise_ids,
+        "decision_trace": {
+            "interpreter": "build_workout_summary_progression_lookup_runtime",
+            "version": "v1",
+            "inputs": {
+                "planned_exercise_count": len(
+                    [exercise for exercise in session.get("exercises") or [] if isinstance(exercise, dict)]
+                ),
+            },
+            "outcome": {
+                "primary_exercise_id_count": len(primary_exercise_ids),
+            },
+        },
+    }
+
+
+def build_workout_today_progression_lookup_runtime(
+    *,
+    session_states: list[Any],
+) -> dict[str, Any]:
+    primary_exercise_ids: list[str] = []
+    seen: set[str] = set()
+    for row in session_states:
+        normalized = str(_read_attr(row, "primary_exercise_id") or "")
+        if not normalized or normalized in seen:
+            continue
+        seen.add(normalized)
+        primary_exercise_ids.append(normalized)
+
+    return {
+        "primary_exercise_ids": primary_exercise_ids,
+        "decision_trace": {
+            "interpreter": "build_workout_today_progression_lookup_runtime",
+            "version": "v1",
+            "inputs": {
+                "session_state_count": len(session_states),
+            },
+            "outcome": {
+                "primary_exercise_id_count": len(primary_exercise_ids),
+            },
+        },
+    }
+
+
 def build_workout_today_session_state_payloads(
     *,
     session_states: list[Any],

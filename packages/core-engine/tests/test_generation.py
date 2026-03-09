@@ -1,0 +1,488 @@
+from datetime import date, datetime, time, timedelta
+from types import SimpleNamespace
+from typing import Any
+
+import pytest
+
+from core_engine import (
+    build_coach_preview_context,
+    build_guide_programs_payload,
+    build_program_day_guide_payload,
+    build_program_exercise_guide_payload,
+    build_program_guide_payload,
+    format_program_display_name,
+    prepare_coach_preview_runtime_inputs,
+    prepare_generation_template_runtime,
+    prepare_frequency_adaptation_runtime_inputs,
+    resolve_program_guide_summary,
+    resolve_frequency_adaptation_request_context,
+    resolve_generation_template_choice,
+    resolve_program_exercise_guide,
+    resolve_week_generation_runtime_inputs,
+    serialize_recent_training_history,
+)
+
+
+def test_resolve_generation_template_choice_falls_back_to_first_viable_candidate() -> None:
+    unusable_template = {
+        "id": "ppl_v1",
+        "sessions": [
+            {
+                "name": "Push",
+                "exercises": [
+                    {
+                        "id": "bench",
+                        "name": "Bench Press",
+                        "sets": 3,
+                        "rep_range": [8, 10],
+                        "start_weight": 60,
+                        "equipment_tags": ["barbell"],
+                        "substitution_candidates": [],
+                    }
+                ],
+            }
+        ],
+    }
+    fallback_template = {
+        "id": "upper_lower_v1",
+        "sessions": [
+            {
+                "name": "Upper",
+                "exercises": [
+                    {
+                        "id": "db_press",
+                        "name": "DB Press",
+                        "sets": 3,
+                        "rep_range": [8, 10],
+                        "start_weight": 25,
+                        "equipment_tags": ["dumbbell"],
+                        "substitution_candidates": [],
+                    }
+                ],
+            }
+        ],
+    }
+
+    selection = resolve_generation_template_choice(
+        explicit_template_id=None,
+        explicit_template=None,
+        profile_template_id="ppl_v1",
+        split_preference="ppl",
+        days_available=3,
+        nutrition_phase="maintenance",
+        available_equipment=["dumbbell"],
+        candidate_summaries=[
+            {"id": "ppl_v1", "split": "ppl", "days_supported": [3]},
+            {"id": "upper_lower_v1", "split": "ppl", "days_supported": [3]},
+        ],
+        loaded_candidate_templates={
+            "ppl_v1": unusable_template,
+            "upper_lower_v1": fallback_template,
+        },
+    )
+
+    assert selection["selected_template_id"] == "upper_lower_v1"
+    assert selection["selected_template"]["id"] == "upper_lower_v1"
+    assert selection["decision_trace"]["reason"] == "first_viable_candidate"
+
+
+def test_prepare_generation_template_runtime_loads_explicit_template() -> None:
+    template = {"id": "full_body_v1", "sessions": []}
+
+    runtime = prepare_generation_template_runtime(
+        explicit_template_id="full_body_v1",
+        profile_template_id="ppl_v1",
+        split_preference="full_body",
+        days_available=3,
+        nutrition_phase="maintenance",
+        available_equipment=["barbell"],
+        candidate_summaries=[],
+        load_template=lambda template_id: template if template_id == "full_body_v1" else {},
+    )
+
+    assert runtime["selected_template_id"] == "full_body_v1"
+    assert runtime["selected_template"] == template
+    assert runtime["decision_trace"]["selected_template_id"] == "full_body_v1"
+
+
+def test_prepare_generation_template_runtime_skips_unloadable_candidates() -> None:
+    templates = {
+        "upper_lower_v1": {
+            "id": "upper_lower_v1",
+            "sessions": [
+                {
+                    "name": "Upper",
+                    "exercises": [
+                        {
+                            "id": "db_press",
+                            "name": "DB Press",
+                            "sets": 3,
+                            "rep_range": [8, 10],
+                            "start_weight": 25,
+                            "equipment_tags": ["dumbbell"],
+                            "substitution_candidates": [],
+                        }
+                    ],
+                }
+            ],
+        }
+    }
+
+    def load_template(template_id: str) -> dict[str, Any]:
+        if template_id == "broken_template":
+            raise FileNotFoundError(template_id)
+        return templates[template_id]
+
+    runtime = prepare_generation_template_runtime(
+        explicit_template_id=None,
+        profile_template_id="broken_template",
+        split_preference="ppl",
+        days_available=3,
+        nutrition_phase="maintenance",
+        available_equipment=["dumbbell"],
+        candidate_summaries=[
+            {"id": "broken_template", "split": "ppl", "days_supported": [3]},
+            {"id": "upper_lower_v1", "split": "ppl", "days_supported": [3]},
+        ],
+        load_template=load_template,
+    )
+
+    assert runtime["selected_template_id"] == "upper_lower_v1"
+    assert runtime["selected_template"]["id"] == "upper_lower_v1"
+    assert runtime["decision_trace"]["reason"] == "first_viable_candidate"
+
+
+def test_resolve_program_guide_summary_returns_matching_summary() -> None:
+    summary = resolve_program_guide_summary(
+        program_id="full_body_v1",
+        available_program_summaries=[
+            {"id": "ppl_v1", "name": "PPL"},
+            {"id": "full_body_v1", "name": "Full Body"},
+        ],
+    )
+    assert summary["id"] == "full_body_v1"
+
+
+def test_resolve_program_guide_summary_raises_when_missing() -> None:
+    with pytest.raises(FileNotFoundError):
+        resolve_program_guide_summary(
+            program_id="missing_v1",
+            available_program_summaries=[{"id": "full_body_v1"}],
+        )
+
+
+def test_resolve_week_generation_runtime_inputs_prefers_canonical_training_state() -> None:
+    today = date(2026, 3, 5)
+    user_training_state = {
+        "exercise_performance_history": [
+            {
+                "exercise_id": "bench",
+                "performed_at": datetime.combine(today - timedelta(days=2), time(9, 0)),
+                "set_index": 1,
+                "reps": 8,
+                "weight": 82.5,
+                "rpe": 8.0,
+            },
+            {
+                "exercise_id": "row",
+                "performed_at": datetime.combine(today - timedelta(days=1), time(9, 0)),
+                "set_index": 1,
+                "reps": 10,
+                "weight": 70.0,
+                "rpe": 7.5,
+            },
+        ],
+        "fatigue_state": {
+            "soreness_by_muscle": {"chest": "severe", "back": "severe", "quads": "mild"},
+        },
+        "adherence_state": {
+            "latest_adherence_score": 2,
+        },
+        "generation_state": {
+            "prior_generated_weeks_by_program": {"full_body_v1": 2},
+        },
+    }
+
+    runtime = resolve_week_generation_runtime_inputs(
+        selected_template_id="full_body_v1",
+        current_days_available=4,
+        active_frequency_adaptation={"target_days": 3},
+        user_training_state=user_training_state,
+        history_rows=[],
+        latest_soreness_entry=None,
+        latest_checkin=None,
+        prior_plans=[],
+    )
+
+    assert runtime["effective_days_available"] == 3
+    assert len(runtime["history"]) == 2
+    assert runtime["history"][0]["primary_exercise_id"] == "bench"
+    assert runtime["soreness_by_muscle"] == {"chest": "severe", "back": "severe", "quads": "mild"}
+    assert runtime["severe_soreness_count"] == 2
+    assert runtime["latest_adherence_score"] == 2
+    assert runtime["prior_generated_weeks"] == 2
+    assert runtime["decision_trace"]["interpreter"] == "resolve_week_generation_runtime_inputs"
+    assert runtime["decision_trace"]["outcome"]["effective_days_available"] == 3
+    assert runtime["decision_trace"]["outcome"]["prior_generated_weeks"] == 2
+    assert runtime["decision_trace"]["steps"][1]["result"]["soreness_source"] == "training_state"
+    assert runtime["decision_trace"]["steps"][3]["result"]["source"] == "training_state"
+
+
+def test_build_coach_preview_context_reuses_serialized_recent_training_history() -> None:
+    history_rows = [
+        SimpleNamespace(
+            primary_exercise_id="bench",
+            exercise_id="bench",
+            weight=82.5,
+            created_at=datetime(2026, 3, 5, 9, 0),
+        )
+    ]
+    template = {"id": "full_body_v1", "sessions": []}
+
+    serialized_history = serialize_recent_training_history(history_rows)
+    context = build_coach_preview_context(
+        user_name="Coach User",
+        split_preference="full_body",
+        template=template,
+        history_rows=history_rows,
+        nutrition_phase="maintenance",
+        available_equipment=["barbell", "bench"],
+    )
+
+    assert serialized_history == [
+        {
+            "primary_exercise_id": "bench",
+            "exercise_id": "bench",
+            "next_working_weight": 82.5,
+            "created_at": "2026-03-05T09:00:00",
+        }
+    ]
+    assert context == {
+        "user_profile": {"name": "Coach User"},
+        "split_preference": "full_body",
+        "program_template": template,
+        "history": serialized_history,
+        "phase": "maintenance",
+        "available_equipment": ["barbell", "bench"],
+    }
+
+
+def test_build_coach_preview_context_prefers_canonical_training_state_history() -> None:
+    template = {"id": "full_body_v1", "sessions": []}
+
+    context = build_coach_preview_context(
+        user_name="Coach User",
+        split_preference="full_body",
+        template=template,
+        history_rows=[
+            SimpleNamespace(
+                primary_exercise_id="bench",
+                exercise_id="bench",
+                weight=82.5,
+                created_at=datetime(2026, 3, 5, 9, 0),
+            )
+        ],
+        user_training_state={
+            "exercise_performance_history": [
+                {
+                    "exercise_id": "row",
+                    "performed_at": datetime(2026, 3, 6, 9, 0),
+                    "set_index": 1,
+                    "reps": 10,
+                    "weight": 70.0,
+                    "rpe": 8.0,
+                }
+            ]
+        },
+        nutrition_phase="maintenance",
+        available_equipment=["barbell", "bench"],
+    )
+
+    assert context["history"] == [
+        {
+            "primary_exercise_id": "row",
+            "exercise_id": "row",
+            "next_working_weight": 70.0,
+            "created_at": "2026-03-06T09:00:00",
+        }
+    ]
+
+
+def test_prepare_coach_preview_runtime_inputs_normalizes_days_and_trace() -> None:
+    runtime = prepare_coach_preview_runtime_inputs(
+        preview_request={"from_days": 3, "to_days": 5, "current_phase": "accumulation"},
+        profile_days_available=4,
+    )
+
+    assert runtime["max_requested_days"] == 5
+    assert runtime["preview_request"]["from_days"] == 3
+    assert runtime["preview_request"]["to_days"] == 5
+    assert runtime["decision_trace"]["interpreter"] == "prepare_coach_preview_runtime_inputs"
+    assert runtime["decision_trace"]["outcome"]["profile_days"] == 4
+
+
+def test_resolve_frequency_adaptation_request_context_derives_program_week_and_recovery_state() -> None:
+    latest_plan = SimpleNamespace(payload={"mesocycle": {"week_index": 4}})
+    latest_soreness = SimpleNamespace(severity_by_muscle={"chest": "severe", "back": "severe", "quads": "mild"})
+
+    context = resolve_frequency_adaptation_request_context(
+        requested_program_id=None,
+        selected_program_id="full_body_v1",
+        latest_plan=latest_plan,
+        latest_soreness_entry=latest_soreness,
+    )
+
+    assert context["program_id"] == "full_body_v1"
+    assert context["current_week_index"] == 4
+    assert context["recovery_state"] == "high_fatigue"
+    assert context["decision_trace"]["interpreter"] == "resolve_frequency_adaptation_request_context"
+    assert context["decision_trace"]["outcome"]["current_week_index"] == 4
+    assert context["decision_trace"]["outcome"]["recovery_state"] == "high_fatigue"
+
+
+def test_resolve_frequency_adaptation_request_context_prefers_canonical_training_state() -> None:
+    context = resolve_frequency_adaptation_request_context(
+        requested_program_id=None,
+        selected_program_id=None,
+        user_training_state={
+            "user_program_state": {
+                "program_id": "upper_lower_v1",
+                "week_index": 5,
+            },
+            "fatigue_state": {
+                "recovery_state": "high_fatigue",
+                "severe_soreness_count": 2,
+            },
+        },
+        latest_plan=None,
+        latest_soreness_entry=None,
+    )
+
+    assert context["program_id"] == "upper_lower_v1"
+    assert context["current_week_index"] == 5
+    assert context["recovery_state"] == "high_fatigue"
+    assert context["decision_trace"]["steps"][1]["result"]["source"] == "training_state"
+    assert context["decision_trace"]["steps"][2]["result"]["source"] == "training_state"
+
+
+def test_prepare_frequency_adaptation_runtime_inputs_reuses_context_and_shapes_engine_args() -> None:
+    runtime = prepare_frequency_adaptation_runtime_inputs(
+        requested_program_id=None,
+        selected_program_id="full_body_v1",
+        user_training_state={
+            "user_program_state": {
+                "program_id": "upper_lower_v1",
+                "week_index": 5,
+            },
+            "fatigue_state": {
+                "recovery_state": "high_fatigue",
+                "severe_soreness_count": 2,
+            },
+        },
+        current_days_available=5,
+        target_days=3,
+        duration_weeks=2,
+        explicit_weak_areas=["chest"],
+        stored_weak_areas=["hamstrings"],
+        equipment_profile=["barbell", "bench"],
+    )
+
+    assert runtime["program_id"] == "full_body_v1"
+    assert runtime["current_days"] == 5
+    assert runtime["target_days"] == 3
+    assert runtime["duration_weeks"] == 2
+    assert runtime["recovery_state"] == "high_fatigue"
+    assert runtime["current_week_index"] == 5
+    assert runtime["explicit_weak_areas"] == ["chest"]
+    assert runtime["stored_weak_areas"] == ["hamstrings"]
+    assert runtime["equipment_profile"] == ["barbell", "bench"]
+    assert runtime["decision_trace"]["interpreter"] == "prepare_frequency_adaptation_runtime_inputs"
+    assert runtime["decision_trace"]["outcome"]["program_id"] == "full_body_v1"
+    assert runtime["context_trace"]["interpreter"] == "resolve_frequency_adaptation_request_context"
+
+
+def test_resolve_week_generation_runtime_inputs_prefers_canonical_training_state_history_and_adherence() -> None:
+    today = date(2026, 3, 5)
+    prior_plans = [
+        SimpleNamespace(
+            week_start=today - timedelta(days=14),
+            payload={"program_template_id": "full_body_v1", "sessions": []},
+        )
+    ]
+
+    runtime = resolve_week_generation_runtime_inputs(
+        selected_template_id="full_body_v1",
+        current_days_available=4,
+        active_frequency_adaptation=None,
+        user_training_state={
+            "exercise_performance_history": [
+                {
+                    "exercise_id": "bench",
+                    "performed_at": datetime(2026, 3, 3, 9, 0),
+                    "weight": 82.5,
+                }
+            ],
+            "adherence_state": {
+                "latest_adherence_score": 4,
+            },
+        },
+        history_rows=[],
+        latest_soreness_entry=SimpleNamespace(severity_by_muscle={"chest": "severe", "back": "severe"}),
+        latest_checkin=None,
+        prior_plans=prior_plans,
+    )
+
+    assert runtime["history"] == [
+        {
+            "primary_exercise_id": "bench",
+            "exercise_id": "bench",
+            "next_working_weight": 82.5,
+            "created_at": "2026-03-03T09:00:00",
+        }
+    ]
+    assert runtime["latest_adherence_score"] == 4
+    assert runtime["decision_trace"]["steps"][1]["result"]["latest_adherence_score_source"] == "training_state"
+    assert runtime["decision_trace"]["steps"][2]["result"]["history_source"] == "training_state"
+
+
+def test_guide_payload_builders_shape_program_day_and_exercise_views() -> None:
+    summary_payloads = build_guide_programs_payload(
+        [
+            {
+                "id": "full_body_v1",
+                "split": "full_body",
+                "days_supported": [3],
+                "description": "Full body template",
+            }
+        ]
+    )
+    template = {
+        "sessions": [
+            {
+                "name": "Day 1",
+                "exercises": [
+                    {
+                        "id": "bench",
+                        "primary_exercise_id": "bench",
+                        "name": "Bench Press",
+                        "notes": "Pause on chest.",
+                        "video": {"youtube_url": "https://example.com/bench"},
+                    }
+                ],
+            }
+        ]
+    }
+
+    guide_payload = build_program_guide_payload(
+        program_id="full_body_v1",
+        program_summary=summary_payloads[0],
+        template=template,
+    )
+    day_payload = build_program_day_guide_payload(program_id="full_body_v1", template=template, day_index=1)
+    exercise = resolve_program_exercise_guide(template=template, exercise_id="bench")
+
+    assert format_program_display_name("full_body_v1") == "Full Body V1"
+    assert guide_payload["days"][0]["first_exercise_id"] == "bench"
+    assert day_payload["exercises"][0]["video_youtube_url"] == "https://example.com/bench"
+    assert exercise is not None
+    assert build_program_exercise_guide_payload(program_id="full_body_v1", exercise=exercise)["exercise"]["id"] == "bench"

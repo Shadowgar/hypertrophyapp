@@ -8,10 +8,12 @@ from core_engine import (
     build_repeat_failure_substitution_payload,
     build_workout_log_set_payload,
     build_workout_performance_summary,
+    build_workout_summary_progression_lookup_runtime,
     build_workout_session_state_defaults,
     build_workout_today_log_runtime,
     build_workout_today_payload,
     build_workout_today_plan_runtime,
+    build_workout_today_progression_lookup_runtime,
     build_workout_today_session_state_payloads,
     build_workout_today_state_payloads,
     build_workout_progress_payload,
@@ -228,11 +230,8 @@ def workout_today(
     selected_program_id = plan_runtime["selected_program_id"]
     rule_set = _load_workout_rule_set_from_program_id(selected_program_id)
     progression_states: list[ExerciseState] = []
-    primary_exercise_ids = {
-        str(row.primary_exercise_id)
-        for row in states
-        if str(row.primary_exercise_id or "")
-    }
+    progression_lookup_runtime = build_workout_today_progression_lookup_runtime(session_states=states)
+    primary_exercise_ids = set(progression_lookup_runtime["primary_exercise_ids"])
     if primary_exercise_ids:
         progression_states = (
             db.query(ExerciseState)
@@ -464,11 +463,8 @@ def workout_summary(
         .all()
     )
 
-    primary_exercise_ids = {
-        str(exercise.get("primary_exercise_id") or exercise.get("id") or "")
-        for exercise in (session.get("exercises") or [])
-        if isinstance(exercise, dict) and str(exercise.get("primary_exercise_id") or exercise.get("id") or "")
-    }
+    summary_runtime = build_workout_summary_progression_lookup_runtime(planned_session=session)
+    primary_exercise_ids = set(summary_runtime["primary_exercise_ids"])
     progression_states: list[ExerciseState] = []
     if primary_exercise_ids:
         progression_states = (
