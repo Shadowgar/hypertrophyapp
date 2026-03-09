@@ -2,6 +2,51 @@
 
 Deterministic hypertrophy planner + workout runner for local-first deployment.
 
+## About
+
+Rocco's HyperTrophy is an explainable, deterministic adaptive hypertrophy coaching platform. It is designed to produce reproducible weekly workout plans and live coaching guidance from canonical program templates and explicitly distilled coaching rules. The project emphasizes local-first development, deterministic decision-making, and structured decision traces so that every automated coaching choice can be inspected and tested.
+
+Core goals:
+- Produce deterministic, testable workout plans from authored templates.
+- Make adaptation decisions auditable via structured `decision_trace` payloads.
+- Keep runtime free of direct PDF/XLSX parsing — ingestion is a build-time step.
+- Expose clear boundaries: routers handle auth/SQL/persistence, `packages/core-engine` owns deterministic logic.
+
+## How it works (high level)
+
+1. Authoritative inputs (build-time)
+   - Program templates live in `programs/` (JSON canonical templates).
+   - Coaching doctrine and rules are distilled from source guides into typed rule artifacts under `docs/rules/` by build-time importers in `importers/`.
+
+2. Runtime inputs
+   - User profile, onboarding answers, and persisted workout logs (`WorkoutSetLog`, `ExerciseState`, soreness/check-ins, weekly-reviews`).
+
+3. Core engine
+   - `packages/core-engine` consumes templates + rules + canonical `UserTrainingState` to produce deterministic outputs: coach previews, generated-week plans, frequency-adaptation recommendations, live workout guidance, and progression decisions.
+   - All meaningful coaching logic and payload normalization live here; engine helpers emit structured `decision_trace` data for auditability.
+
+4. API layer
+   - `apps/api` provides HTTP endpoints, authorization, SQL reads/writes, and validation. Routers delegate deterministic decisions and payload shaping to core-engine helpers and keep only persistence/error mapping responsibilities.
+
+5. Web UI
+   - `apps/web` is a Next.js client that calls the API to display generated plans, run workouts, log sets, present coach previews, and surface adaptation suggestions.
+
+6. Live loop (runtime)
+   - User runs a session in the web UI -> logs sets -> API persists logs and state -> core-engine evaluates performance, fatigue, and substitution/deload signals -> engine may produce adaptation recommendations for future weeks or immediate substitutions -> updated state influences the next generated-week or coach-preview.
+
+Primary flows (simple):
+- Onboarding: collects preferences and bootstraps the first plan.
+- Generate-week: engine creates a weekly plan from template + user-state.
+- Workout run & log: user follows sessions, logs sets; API persists logs and updates `ExerciseState`.
+- Post-session evaluation: engine computes progression/fatigue and may emit substitutions or adaptation suggestions.
+- Frequency adaptation: preview/apply flow to adjust weekly slot frequency deterministically.
+
+Developer notes
+- Run import/ingestion scripts only when updating the `reference/` corpus; runtime must not rely on parsing PDFs/XLSX.
+- Use direct venv executables in `apps/api` (e.g., `.venv/bin/python`) instead of `source`-ing activation scripts.
+- Keep business logic in `packages/core-engine` and leave routers limited to SQL and HTTP concerns.
+
+
 ## Current Status
 
 - Runtime architecture is deterministic and template-driven.
@@ -150,6 +195,32 @@ Onboarding redesign/parity:
 - `docs/redesign/Onboarding_Reference_Analysis_Batch2.md`
 - `docs/redesign/Onboarding_Reference_Analysis_Batch3.md`
 - `docs/redesign/Onboarding_Reference_Process_Map.md`
+
+## AI Mini Runbook (GPT-5-mini)
+
+- **Mission:** Rebuild the platform into a deterministic adaptive hypertrophy coaching system (Excel-derived structured templates + PDF-derived explicit coaching rules).
+- **Key runbook docs:** `docs/GPT5_MINI_HANDOFF.md`, `docs/GPT5_MINI_EXECUTION_BACKLOG.md`, `docs/GPT5_MINI_RUNBOOK.md`, `docs/GPT5_MINI_SUCCESS_PLAN.md`, `docs/GPT5_MINI_BOOTSTRAP_PROMPT.md`, `docs/GPT5_MINI_PASSOFF_PROMPT.md`.
+
+- **Start sequence:**
+   - Run the preflight: `./scripts/mini_preflight.sh` (or preferred `./scripts/mini_session.sh`).
+   - Pick the next highest-priority task: `./scripts/mini_next_task.sh`.
+   - Implement a single focused seam, run focused tests, then run full validation.
+
+- **Ingestion modes:** `./scripts/reference_ingest.sh [ci|local-metadata|local-full]` (see `docs/GPT5_MINI_RUNBOOK.md`).
+
+- **Validation / Delivery:**
+   - Focused tests: run from `apps/api` or `packages/core-engine` with the direct `.venv/bin/python -m pytest` pattern.
+   - Full gate: `./scripts/mini_validate.sh` (runs API tests, web tests, and Next.js production build).
+   - Quality checks: `./scripts/verify_master_plan_audit.sh`, `./scripts/verify_guides_checksums.py`.
+
+**Execution Backlog Snapshot (high-level priorities)**
+
+- Priority 0 — Decision Runtime Sovereignty: move meaningful coaching decisions behind `packages/core-engine` interpreters, emit structured `decision_trace`, and contain legacy router paths.
+- Priority 1 — Importer & Rules: Excel importer v2 (preserve phases/weeks/slots, emit diagnostics) and PDF doctrine rule distillation (typed rule payloads with provenance).
+- Priority 2 — Deterministic Adaptation Core: deterministic generate -> evaluate -> adapt loop; frequency-adaptation preview/apply and coach-preview flows.
+- Priority 3 — Scale & Hardening: gold-sample migration, scenario/regression expansion, onboarding reliability, and archive hygiene.
+
+See `docs/GPT5_MINI_EXECUTION_BACKLOG.md` for the full task list and evidence log.
 
 ## Monorepo Layout
 
