@@ -29,6 +29,7 @@ function resolveUrl(input: RequestInfo | URL): string {
 }
 
 beforeEach(() => {
+  localStorage.clear();
   // @ts-ignore
   globalThis.fetch = vi.fn();
 });

@@ -41,10 +41,12 @@ test("Week page coaching panel previews and auto-applies phase decision", async 
       load_scale: 1,
       set_delta: 0,
       reason: "maintain_until_stable",
+      rationale: "Performance is stable but not yet strong enough to progress. Hold the current load and accumulate cleaner work.",
     },
     phase_transition: {
       next_phase: "accumulation",
       reason: "continue_accumulation",
+      rationale: "Stay in accumulation. Current readiness and momentum do not justify a phase change yet.",
     },
     specialization: {
       focus_muscles: ["biceps"],
@@ -99,6 +101,7 @@ test("Week page coaching panel previews and auto-applies phase decision", async 
             applied: true,
             next_phase: "accumulation",
             reason: "continue_accumulation",
+            rationale: "Stay in accumulation. Current readiness and momentum do not justify a phase change yet.",
           }),
           { status: 200 },
         ),
@@ -117,11 +120,18 @@ test("Week page coaching panel previews and auto-applies phase decision", async 
   await waitFor(() => {
     expect(screen.getAllByText(/Recommendation ID: rec_week_1/i).length).toBeGreaterThan(0);
   });
+  expect(
+    screen.getByText(/Performance is stable but not yet strong enough to progress\. Hold the current load and accumulate cleaner work\./i),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByText(/Stay in accumulation\. Current readiness and momentum do not justify a phase change yet\./i),
+  ).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole("button", { name: /Apply phase decision/i }));
   await waitFor(() => {
     expect(screen.getByText(/Phase: applied/i)).toBeInTheDocument();
   });
+  expect(screen.queryByText(/continue_accumulation/i)).not.toBeInTheDocument();
 
   // @ts-ignore
   const fetchCalls = globalThis.fetch.mock.calls as Array<[RequestInfo | URL, RequestInit | undefined]>;

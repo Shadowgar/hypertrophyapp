@@ -39,6 +39,8 @@ _EXERCISE_META_LABELS = {
     "mandatory rest day",
 }
 _SPLIT_DAY_LABEL_RE = re.compile(r"^(?:full\s*body|upper|lower|push|pull|legs?)\s*#?\s*\d+$", re.IGNORECASE)
+_BLOCK_PREFIX = "block "
+_PHASE_PREFIX = "phase "
 
 
 @dataclass(slots=True)
@@ -52,6 +54,47 @@ class SessionParseState:
     sessions: list[dict]
     current_session_name: str | None
     current_exercises: list[dict]
+
+
+@dataclass(slots=True)
+class ImportDiagnostic:
+    sheet_name: str
+    row_index: int | None
+    code: str
+    message: str
+
+    def as_dict(self) -> dict:
+        return {
+            "sheet_name": self.sheet_name,
+            "row_index": self.row_index,
+            "code": self.code,
+            "message": self.message,
+        }
+
+
+@dataclass(slots=True)
+class ParsedSheetResult:
+    sessions: list[dict]
+    diagnostics: list[ImportDiagnostic]
+
+
+@dataclass(slots=True)
+class StructuredWeek:
+    week_index: int
+    sessions: list[dict]
+
+
+@dataclass(slots=True)
+class StructuredPhase:
+    phase_id: str
+    phase_name: str
+    weeks: list[StructuredWeek]
+
+
+@dataclass(slots=True)
+class ParsedStructuredSheetResult:
+    phases: list[StructuredPhase]
+    diagnostics: list[ImportDiagnostic]
 
 
 def infer_equipment_tags_from_name(exercise_name: str) -> list[str]:
@@ -124,6 +167,18 @@ def parse_int(raw_value: str, fallback: int) -> int:
     return int(match.group(0))
 
 
+def parse_float(raw_value: str) -> float | None:
+    values = [float(match) for match in re.findall(r"\d+(?:\.\d+)?", raw_value)]
+    if not values:
+        return None
+    bounded = [value for value in values if 0 < value <= 10]
+    if not bounded:
+        return None
+    if len(bounded) >= 2:
+        return round((bounded[0] + bounded[1]) / 2, 1)
+    return bounded[0]
+
+
 def normalize_row(row: list[str]) -> list[str]:
     return [cell.strip() for cell in row]
 
@@ -146,8 +201,13 @@ def as_column_map(header: list[str]) -> dict[str, int]:
     return {
         "session": 0,
         "exercise": find_index("exercise"),
+        "warmup_sets": find_index("warm", "sets"),
         "working_sets": find_index("working", "sets"),
         "reps": find_index("reps"),
+        "load": find_any_index("load"),
+        "percent_1rm": find_any_index("%1rm", "percent 1rm", "percentage 1rm"),
+        "rpe": find_any_index("rpe", "rir"),
+        "rest": find_any_index("rest"),
         "sub1": find_index("substitution", "option", "1"),
         "sub2": find_index("substitution", "option", "2"),
         "video": find_any_index("youtube", "video", "url", "link"),
@@ -317,6 +377,59 @@ def _extract_youtube_url(row: list[str], mapped: dict[str, int]) -> dict[str, st
     return None
 
 
+def _parse_set_type(exercise_name: str, notes: str | None) -> str:
+    lowered = f"{exercise_name} {notes or ''}".lower()
+    if "back off" in lowered or "backoff" in lowered or "back-off" in lowered:
+        return "backoff"
+    if "top set" in lowered or "top single" in lowered:
+        return "top"
+    return "work"
+
+
+def _parse_load_target(row: list[str], mapped: dict[str, int]) -> str | None:
+    for key in ("percent_1rm", "load"):
+        raw_value = column_value(row, mapped.get(key, -1)).strip()
+        if not raw_value or raw_value.upper() == "N/A":
+            continue
+        if re.fullmatch(r"\d{4,}(?:\.\d+)?", raw_value):
+            continue
+        return raw_value
+    return None
+
+
+def _parse_rest_seconds(raw_value: str) -> int | None:
+    cleaned = raw_value.strip().lower()
+    if not cleaned or re.fullmatch(r"\d{4,}(?:\.\d+)?", cleaned):
+        return None
+
+    values = [int(match) for match in re.findall(r"\d+", cleaned)]
+    if not values:
+        return None
+    if "min" in cleaned:
+        if len(values) >= 2:
+            return int(((values[0] + values[1]) / 2) * 60)
+        return values[0] * 60
+    if "sec" in cleaned or cleaned.endswith("s"):
+        return values[0]
+    return None
+
+
+def _parse_phase_label(*values: str) -> str | None:
+    for value in values:
+        normalized = _normalize_label(value)
+        if normalized.startswith(_BLOCK_PREFIX) or normalized.startswith(_PHASE_PREFIX):
+            return value.strip()
+    return None
+
+
+def _parse_week_index(*values: str) -> int | None:
+    for value in values:
+        match = re.search(r"week\s*(\d+)", value, re.IGNORECASE)
+        if match:
+            return int(match.group(1))
+    return None
+
+
 def _normalize_label(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", value.strip().lower()).strip()
 
@@ -331,7 +444,7 @@ def _is_structural_session_label(value: str) -> bool:
         return True
     if normalized in _SESSION_META_LABELS:
         return True
-    return normalized.startswith("week ") or normalized.startswith("block ")
+    return normalized.startswith("week ") or normalized.startswith(_BLOCK_PREFIX) or normalized.startswith(_PHASE_PREFIX)
 
 
 def _is_structural_exercise_label(value: str) -> bool:
@@ -340,7 +453,7 @@ def _is_structural_exercise_label(value: str) -> bool:
         return True
     if normalized in _EXERCISE_META_LABELS:
         return True
-    if normalized.startswith("week ") or normalized.startswith("block "):
+    if normalized.startswith("week ") or normalized.startswith(_BLOCK_PREFIX) or normalized.startswith(_PHASE_PREFIX):
         return True
     if _SPLIT_DAY_LABEL_RE.match(normalized):
         return True
@@ -361,6 +474,7 @@ def _parse_exercise_row(row: list[str], mapped: dict[str, int], exercise_idx: in
         return None
 
     movement_pattern = infer_movement_pattern(exercise_name)
+    notes = pick_notes(row, mapped)
     return normalize_slot_exercise(
         {
             "id": slugify(exercise_name),
@@ -371,10 +485,240 @@ def _parse_exercise_row(row: list[str], mapped: dict[str, int], exercise_idx: in
             "movement_pattern": movement_pattern,
             "primary_muscles": infer_primary_muscles(movement_pattern),
             "substitution_candidates": _extract_substitution_candidates(row, mapped),
-            "notes": pick_notes(row, mapped),
+            "notes": notes,
             "video": _extract_youtube_url(row, mapped),
+            "set_type": _parse_set_type(exercise_name, notes),
+            "rpe_target": parse_float(column_value(row, mapped.get("rpe", -1))),
+            "load_target": _parse_load_target(row, mapped),
+            "warmup_sets": parse_int(column_value(row, mapped.get("warmup_sets", -1)), fallback=0),
+            "rest_seconds": _parse_rest_seconds(column_value(row, mapped.get("rest", -1))),
         }
     )
+
+
+def _phase_id_from_name(phase_name: str, fallback_index: int) -> str:
+    phase_id = slugify(phase_name)
+    return phase_id or f"phase_{fallback_index}"
+
+
+def _append_structured_session(
+    *,
+    phases: list[StructuredPhase],
+    phase_id: str,
+    phase_name: str,
+    week_index: int,
+    session_name: str | None,
+    exercises: list[dict],
+) -> None:
+    if not session_name or not exercises:
+        return
+
+    phase = next((item for item in phases if item.phase_id == phase_id), None)
+    if phase is None:
+        phase = StructuredPhase(phase_id=phase_id, phase_name=phase_name, weeks=[])
+        phases.append(phase)
+
+    week = next((item for item in phase.weeks if item.week_index == week_index), None)
+    if week is None:
+        week = StructuredWeek(week_index=week_index, sessions=[])
+        phase.weeks.append(week)
+
+    week.sessions.append({"name": session_name, "exercises": list(exercises)})
+
+
+def _transition_structured_context(
+    *,
+    session_candidate: str,
+    exercise_name: str,
+    current_phase_name: str,
+    current_week_index: int,
+    current_session_name: str | None,
+    phase_count: int,
+    flush: callable,
+) -> tuple[str, str | None, int, str | None]:
+    next_phase_name = current_phase_name
+    next_phase_id: str | None = None
+    next_week_index = current_week_index
+    next_session_name = current_session_name
+
+    phase_label = _parse_phase_label(session_candidate, exercise_name)
+    week_index = _parse_week_index(session_candidate, exercise_name)
+
+    if phase_label and phase_label != current_phase_name:
+        flush()
+        next_phase_name = phase_label
+        next_phase_id = _phase_id_from_name(phase_label, phase_count + 1)
+        if week_index is None:
+            next_week_index = 1
+
+    if week_index is not None and week_index != next_week_index:
+        flush()
+        next_week_index = week_index
+
+    if session_candidate and not _is_structural_session_label(session_candidate) and next_session_name != session_candidate:
+        flush()
+        next_session_name = session_candidate
+
+    return next_phase_name, next_phase_id, next_week_index, next_session_name
+
+
+def _append_structured_skip_diagnostic(
+    *,
+    diagnostics: list[ImportDiagnostic],
+    sheet_name: str,
+    row_index: int,
+    session_candidate: str,
+    exercise_name: str,
+) -> None:
+    if exercise_name and _is_structural_exercise_label(exercise_name):
+        diagnostics.append(
+            _build_diagnostic(
+                sheet_name,
+                row_index,
+                "structural_exercise_label_skipped",
+                f"Structural exercise label '{exercise_name}' was ignored.",
+            )
+        )
+        return
+
+    if session_candidate and _is_structural_session_label(session_candidate):
+        diagnostics.append(
+            _build_diagnostic(
+                sheet_name,
+                row_index,
+                "structural_session_label_skipped",
+                f"Structural session label '{session_candidate}' was ignored.",
+            )
+        )
+
+
+def _build_diagnostic(sheet_name: str, row_index: int | None, code: str, message: str) -> ImportDiagnostic:
+    return ImportDiagnostic(sheet_name=sheet_name, row_index=row_index, code=code, message=message)
+
+
+def _missing_header_result(sheet_name: str) -> ParsedSheetResult:
+    return ParsedSheetResult(
+        sessions=[],
+        diagnostics=[
+            _build_diagnostic(
+                sheet_name,
+                None,
+                "missing_header",
+                "Sheet skipped because no Exercise/Working Sets/Reps header row was found.",
+            )
+        ],
+    )
+
+
+def _missing_exercise_column_result(sheet_name: str, header_row_index: int) -> ParsedSheetResult:
+    return ParsedSheetResult(
+        sessions=[],
+        diagnostics=[
+            _build_diagnostic(
+                sheet_name,
+                header_row_index + 1,
+                "missing_exercise_column",
+                "Sheet skipped because the Exercise column could not be resolved from the header row.",
+            )
+        ],
+    )
+
+
+def _update_session_name(
+    *,
+    state: SessionParseState,
+    diagnostics: list[ImportDiagnostic],
+    sheet_name: str,
+    row_index: int,
+    session_candidate: str,
+    exercise_name: str,
+) -> None:
+    if session_candidate and _is_structural_session_label(session_candidate):
+        diagnostics.append(
+            _build_diagnostic(
+                sheet_name,
+                row_index,
+                "structural_session_label_skipped",
+                f"Structural session label '{session_candidate}' was ignored.",
+            )
+        )
+
+    if session_candidate and not _is_structural_session_label(session_candidate):
+        if state.current_session_name != session_candidate:
+            _flush_session(state)
+            state.current_session_name = session_candidate
+
+    if state.current_session_name is None:
+        state.current_session_name = sheet_name
+        if exercise_name and not _is_structural_exercise_label(exercise_name):
+            diagnostics.append(
+                _build_diagnostic(
+                    sheet_name,
+                    row_index,
+                    "defaulted_session_name",
+                    f"No session label found; defaulted session grouping to sheet name '{sheet_name}'.",
+                )
+            )
+
+
+def _append_row_diagnostic(
+    diagnostics: list[ImportDiagnostic],
+    *,
+    sheet_name: str,
+    row_index: int,
+    code: str,
+    message: str,
+) -> None:
+    diagnostics.append(_build_diagnostic(sheet_name, row_index, code, message))
+
+
+def _handle_exercise_row(
+    *,
+    state: SessionParseState,
+    diagnostics: list[ImportDiagnostic],
+    sheet_name: str,
+    row_index: int,
+    row: list[str],
+    mapped: dict[str, int],
+    exercise_idx: int,
+) -> None:
+    exercise_name = column_value(row, exercise_idx)
+    if not exercise_name:
+        return
+    if _is_structural_exercise_label(exercise_name):
+        _append_row_diagnostic(
+            diagnostics,
+            sheet_name=sheet_name,
+            row_index=row_index,
+            code="structural_exercise_label_skipped",
+            message=f"Structural exercise label '{exercise_name}' was ignored.",
+        )
+        return
+
+    working_sets_raw = column_value(row, mapped["working_sets"])
+    reps_raw = column_value(row, mapped["reps"])
+    if not _has_numeric_prescription(working_sets_raw):
+        _append_row_diagnostic(
+            diagnostics,
+            sheet_name=sheet_name,
+            row_index=row_index,
+            code="missing_working_sets",
+            message=f"Exercise '{exercise_name}' was skipped because Working Sets is missing or non-numeric.",
+        )
+        return
+    if not _has_numeric_prescription(reps_raw):
+        _append_row_diagnostic(
+            diagnostics,
+            sheet_name=sheet_name,
+            row_index=row_index,
+            code="missing_reps",
+            message=f"Exercise '{exercise_name}' was skipped because Reps is missing or non-numeric.",
+        )
+        return
+
+    parsed_exercise = _parse_exercise_row(row, mapped, exercise_idx)
+    if parsed_exercise is not None:
+        state.current_exercises.append(parsed_exercise)
 
 
 def _flush_session(state: SessionParseState) -> None:
@@ -408,27 +752,119 @@ def _process_session_row(
         state.current_exercises.append(parsed_exercise)
 
 
-def parse_sheet_to_sessions(sheet: ParsedSheet) -> list[dict]:
+def parse_sheet_to_sessions(sheet: ParsedSheet) -> ParsedSheetResult:
     header_row_index = _find_header_index(sheet.rows)
     if header_row_index < 0:
-        return []
+        return _missing_header_result(sheet.name)
 
     header = sheet.rows[header_row_index]
     mapped = as_column_map(header)
     exercise_idx = mapped["exercise"]
     if exercise_idx < 0:
-        return []
+        return _missing_exercise_column_result(sheet.name, header_row_index)
 
     state = SessionParseState(sessions=[], current_session_name=None, current_exercises=[])
+    diagnostics: list[ImportDiagnostic] = []
 
-    for raw_row in sheet.rows[header_row_index + 1 :]:
+    for row_index, raw_row in enumerate(sheet.rows[header_row_index + 1 :], start=header_row_index + 2):
         row = normalize_row(raw_row)
         if not any(row):
             continue
-        _process_session_row(state, row, mapped, exercise_idx, sheet.name)
+
+        session_candidate = column_value(row, mapped["session"])
+        exercise_name = column_value(row, exercise_idx)
+        _update_session_name(
+            state=state,
+            diagnostics=diagnostics,
+            sheet_name=sheet.name,
+            row_index=row_index,
+            session_candidate=session_candidate,
+            exercise_name=exercise_name,
+        )
+        _handle_exercise_row(
+            state=state,
+            diagnostics=diagnostics,
+            sheet_name=sheet.name,
+            row_index=row_index,
+            row=row,
+            mapped=mapped,
+            exercise_idx=exercise_idx,
+        )
 
     _flush_session(state)
-    return state.sessions
+    return ParsedSheetResult(sessions=state.sessions, diagnostics=diagnostics)
+
+
+def parse_sheet_to_structured_sessions(sheet: ParsedSheet) -> ParsedStructuredSheetResult:
+    header_row_index = _find_header_index(sheet.rows)
+    if header_row_index < 0:
+        result = _missing_header_result(sheet.name)
+        return ParsedStructuredSheetResult(phases=[], diagnostics=result.diagnostics)
+
+    header = sheet.rows[header_row_index]
+    mapped = as_column_map(header)
+    exercise_idx = mapped["exercise"]
+    if exercise_idx < 0:
+        result = _missing_exercise_column_result(sheet.name, header_row_index)
+        return ParsedStructuredSheetResult(phases=[], diagnostics=result.diagnostics)
+
+    diagnostics: list[ImportDiagnostic] = []
+    phases: list[StructuredPhase] = []
+    current_phase_name = sheet.name
+    current_phase_id = _phase_id_from_name(sheet.name, 1)
+    current_week_index = 1
+    current_session_name: str | None = None
+    current_exercises: list[dict] = []
+
+    def flush() -> None:
+        nonlocal current_exercises
+        _append_structured_session(
+            phases=phases,
+            phase_id=current_phase_id,
+            phase_name=current_phase_name,
+            week_index=current_week_index,
+            session_name=current_session_name,
+            exercises=current_exercises,
+        )
+        current_exercises = []
+
+    for row_index, raw_row in enumerate(sheet.rows[header_row_index + 1 :], start=header_row_index + 2):
+        row = normalize_row(raw_row)
+        if not any(row):
+            continue
+
+        session_candidate = column_value(row, mapped["session"])
+        exercise_name = column_value(row, exercise_idx)
+        current_phase_name, phase_id_override, current_week_index, current_session_name = _transition_structured_context(
+            session_candidate=session_candidate,
+            exercise_name=exercise_name,
+            current_phase_name=current_phase_name,
+            current_week_index=current_week_index,
+            current_session_name=current_session_name,
+            phase_count=len(phases),
+            flush=flush,
+        )
+        if phase_id_override is not None:
+            current_phase_id = phase_id_override
+
+        if current_session_name is None:
+            current_session_name = sheet.name
+
+        parsed_exercise = _parse_exercise_row(row, mapped, exercise_idx)
+        if parsed_exercise is None:
+            _append_structured_skip_diagnostic(
+                diagnostics=diagnostics,
+                sheet_name=sheet.name,
+                row_index=row_index,
+                session_candidate=session_candidate,
+                exercise_name=exercise_name,
+            )
+            continue
+
+        current_exercises.append(parsed_exercise)
+
+    flush()
+    return ParsedStructuredSheetResult(phases=phases, diagnostics=diagnostics)
 
 
 def import_workbook(input_file: Path, output_file: Path | None = None, sheet_name: str | None = None) -> Path:
@@ -443,8 +879,11 @@ def import_workbook(input_file: Path, output_file: Path | None = None, sheet_nam
             raise ValueError(f"Sheet '{sheet_name}' not found in {input_file.name}")
 
     parsed_sessions: list[dict] = []
+    diagnostics: list[dict] = []
     for sheet in selected_sheets:
-        parsed_sessions.extend(parse_sheet_to_sessions(sheet))
+        parsed = parse_sheet_to_sessions(sheet)
+        parsed_sessions.extend(parsed.sessions)
+        diagnostics.extend(item.as_dict() for item in parsed.diagnostics)
 
     if not parsed_sessions:
         raise ValueError(
@@ -455,11 +894,19 @@ def import_workbook(input_file: Path, output_file: Path | None = None, sheet_nam
     template = {
         "id": slugify(input_file.stem),
         "version": "1.0.0",
+        "source_workbook": str(input_file),
         "split": split,
         "days_supported": infer_days_supported(input_file, split),
         "deload": {"trigger_weeks": 6, "set_reduction_pct": 35, "load_reduction_pct": 10},
         "progression": {"mode": "double_progression", "increment_kg": 2.5},
         "sessions": parsed_sessions,
+        "import_diagnostics": {
+            "status": "warnings" if diagnostics else "clean",
+            "sheet_count": len(selected_sheets),
+            "session_count": len(parsed_sessions),
+            "diagnostic_count": len(diagnostics),
+            "items": diagnostics,
+        },
     }
 
     destination = output_file or Path("programs") / f"{slugify(input_file.stem)}_imported.json"
@@ -489,6 +936,11 @@ def normalize_slot_exercise(raw_exercise: dict) -> dict:
         "substitution_candidates": list(dict.fromkeys(substitutions)),
         "notes": raw_exercise.get("notes"),
         "video": raw_exercise.get("video"),
+        "set_type": raw_exercise.get("set_type", "work"),
+        "rpe_target": raw_exercise.get("rpe_target"),
+        "load_target": raw_exercise.get("load_target"),
+        "warmup_sets": raw_exercise.get("warmup_sets", 0),
+        "rest_seconds": raw_exercise.get("rest_seconds"),
     }
 
 

@@ -4,6 +4,8 @@ from typing import Literal
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
+from .adaptive_schema import UserTrainingState
+
 
 class TokenResponse(BaseModel):
     access_token: str
@@ -15,19 +17,39 @@ class RegisterRequest(BaseModel):
     password: str = Field(min_length=8)
     name: str
 
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: EmailStr) -> str:
+        return str(value).strip().lower()
+
 
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: EmailStr) -> str:
+        return str(value).strip().lower()
 
 
 class DevWipeUserRequest(BaseModel):
     email: EmailStr
     confirmation: str = Field(min_length=4)
 
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: EmailStr) -> str:
+        return str(value).strip().lower()
+
 
 class PasswordResetRequest(BaseModel):
     email: EmailStr
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: EmailStr) -> str:
+        return str(value).strip().lower()
 
 
 class PasswordResetRequestResponse(BaseModel):
@@ -65,6 +87,10 @@ class ProfileUpsert(BaseModel):
 
 class ProfileResponse(ProfileUpsert):
     email: EmailStr
+
+
+class UserTrainingStateResponse(UserTrainingState):
+    pass
 
 
 class WeeklyCheckinRequest(BaseModel):
@@ -166,6 +192,7 @@ class WeeklyReviewSubmitResponse(BaseModel):
     fault_count: int
     summary: WeeklyPerformanceSummaryResponse
     adjustments: WeeklyPlanAdjustmentResponse
+    decision_trace: dict[str, Any]
 
 
 SorenessSeverity = Literal["none", "mild", "moderate", "severe"]
@@ -233,6 +260,7 @@ class FrequencyAdaptationApplyResponse(BaseModel):
     duration_weeks: int
     weeks_remaining: int
     weak_areas: list[str]
+    decision_trace: dict[str, Any]
 
 
 class ScheduleAdaptationPreviewResponse(BaseModel):
@@ -251,11 +279,13 @@ class ProgressionDecisionResponse(BaseModel):
     load_scale: float
     set_delta: int
     reason: str
+    rationale: str
 
 
 class PhaseTransitionResponse(BaseModel):
     next_phase: Literal["accumulation", "intensification", "deload"]
     reason: str
+    rationale: str
 
 
 class SpecializationPreviewResponse(BaseModel):
@@ -302,6 +332,7 @@ class IntelligenceCoachPreviewResponse(BaseModel):
     phase_transition: PhaseTransitionResponse
     specialization: SpecializationPreviewResponse
     media_warmups: ProgramMediaWarmupSummaryResponse
+    decision_trace: dict[str, Any]
 
 
 class ApplyPhaseDecisionRequest(BaseModel):
@@ -317,6 +348,8 @@ class ApplyPhaseDecisionResponse(BaseModel):
     applied: bool
     next_phase: Literal["accumulation", "intensification", "deload"]
     reason: str
+    rationale: str
+    decision_trace: dict[str, Any]
 
 
 class ApplySpecializationDecisionRequest(BaseModel):
@@ -334,6 +367,7 @@ class ApplySpecializationDecisionResponse(BaseModel):
     focus_adjustments: dict[str, int]
     donor_adjustments: dict[str, int]
     uncompensated_added_sets: int
+    decision_trace: dict[str, Any]
 
 
 class CoachingRecommendationTimelineEntry(BaseModel):
@@ -358,6 +392,8 @@ class ProgramRecommendationResponse(BaseModel):
     current_program_id: str
     recommended_program_id: str
     reason: str
+    rationale: str
+    decision_trace: dict[str, Any]
     compatible_program_ids: list[str]
     generated_at: datetime
 
@@ -373,6 +409,8 @@ class ProgramSwitchResponse(BaseModel):
     target_program_id: str
     recommended_program_id: str
     reason: str
+    rationale: str
+    decision_trace: dict[str, Any]
     requires_confirmation: bool
     applied: bool
 
@@ -440,6 +478,15 @@ class WorkoutSetLogRequest(BaseModel):
     rpe: float | None = None
 
 
+class WorkoutSubstitutionRecommendationResponse(BaseModel):
+    recommended_name: str
+    compatible_substitutions: list[str]
+    failed_exposure_count: int
+    trigger_threshold: int
+    reason: str
+    decision_trace: dict[str, Any]
+
+
 class WorkoutLiveRecommendationResponse(BaseModel):
     completed_sets: int
     remaining_sets: int
@@ -447,6 +494,9 @@ class WorkoutLiveRecommendationResponse(BaseModel):
     recommended_reps_max: int
     recommended_weight: float
     guidance: str
+    guidance_rationale: str
+    decision_trace: dict[str, Any]
+    substitution_recommendation: WorkoutSubstitutionRecommendationResponse | None = None
 
 
 class WorkoutSetLogResponse(BaseModel):
@@ -463,6 +513,9 @@ class WorkoutSetLogResponse(BaseModel):
     weight_delta: float
     next_working_weight: float
     guidance: str
+    guidance_rationale: str
+    decision_trace: dict[str, Any]
+    starting_load_decision_trace: dict[str, Any] | None = None
     live_recommendation: WorkoutLiveRecommendationResponse
     created_at: datetime
 
@@ -483,6 +536,8 @@ class WorkoutExerciseSummaryResponse(BaseModel):
     weight_delta: float
     next_working_weight: float
     guidance: str
+    guidance_rationale: str
+    decision_trace: dict[str, Any]
 
 
 class WorkoutSummaryResponse(BaseModel):
@@ -491,4 +546,6 @@ class WorkoutSummaryResponse(BaseModel):
     planned_total: int
     percent_complete: int
     overall_guidance: str
+    overall_rationale: str
+    decision_trace: dict[str, Any]
     exercises: list[WorkoutExerciseSummaryResponse]

@@ -2,9 +2,11 @@
 
 ## Onboarding Flow
 1. User opens `/onboarding`.
-2. User registers account (email/password/name).
-3. User submits profile: age, weight, gender, split preference, training location, equipment profile, days/week, nutrition phase, calories/macros.
-4. App stores JWT locally and persists profile via `/profile`.
+2. App walks the user through intro slides and one-question-per-step onboarding inputs (with optional skips on non-critical questions).
+3. Questionnaire progress auto-saves in browser-local draft storage and restores on revisit.
+4. User reaches account step and registers/logs in (email/password/name).
+5. App stores JWT locally and persists profile + `onboarding_answers` via `/profile`.
+6. App attempts initial workout generation via `/plan/generate-week` and redirects to `/today` on success path.
 
 ## Weekly Check-In Flow
 1. User submits check-in via `/weekly-checkin` with current bodyweight + adherence score.
@@ -33,31 +35,28 @@
 
 ## History Flow
 1. User opens `/history`.
-2. App requests `/history/exercise/{id}`.
-3. API returns set logs for trend review and confidence checks.
+2. App requests `/history/analytics` and `/history/calendar`.
+3. Calendar renders daily completion indicators, streak summaries, PR badges, and optional completion/program/muscle filtering.
+4. User clicks a day cell.
+5. App requests `/history/day/{day}`.
+6. API returns workout/exercise/set detail, planned-vs-performed deltas, and planned-only missed-day detail when applicable.
+7. UI supports previous same-weekday jump and same-weekday delta comparison cards (sets/volume/PR-day count).
+8. App optionally uses `/history/exercise/{id}` for exercise-specific trend deep dives.
 
 
 
 
 
 
-## Progress Sync (2026-03-06)
-- Repository state synchronized through commit `1026d25` on `main` (pushed to `origin/main`).
+## Progress Sync (2026-03-07)
 - Validation baseline is green via `./scripts/mini_validate.sh`:
-  - API: `63 passed`
-  - Web tests: `16 passed`
+  - API: `85 passed`
+  - Web tests: `28 passed`
   - Web build: success
-- Additional progress after previous sync:
-  - `777cb86`: pruned obsolete visual-route snapshots (`apps/web/tests/__snapshots__/visual.routes.snapshot.test.tsx.snap`)
-  - `739cb99`: migrated API startup from `@app.on_event("startup")` to FastAPI lifespan in `apps/api/app/main.py`
-  - `18dd81b`: replaced model `datetime.utcnow()` defaults with centralized UTC helper in `apps/api/app/models.py`
-  - `cb317d0`: hardened `scripts/mini_validate.sh` with compose command detection and one-shot rebuild/retry fallback for failed containerized API test runs
-  - `3596622`: migrated auth stack from `passlib/python-jose` to `bcrypt/PyJWT` in API runtime paths
-  - `1026d25`: added coach-preview API edge-case tests for invalid template handling, low-readiness deload extension, and phase-transition boundary branches
-- Current warning profile:
-  - FastAPI startup deprecation warning removed.
-  - SQLAlchemy `datetime.utcnow()` warning class removed from API test runs.
-  - `passlib` and `python-jose` deprecation warnings removed from validation output.
-  - `mini_validate` run now reports clean test results without warning spam in the default path.
+- Additional progress:
+  - containerized API test image now includes schema/rules + web-client contract files required by runtime-boundary tests (`apps/api/Dockerfile`).
+  - canonical onboarding schema contracts tightened with cross-field + uniqueness validators (`apps/api/app/adaptive_schema.py`).
+  - onboarding schema contract tests expanded with negative-path coverage (`apps/api/tests/test_program_onboarding_contract.py`).
+  - history view now includes same-weekday progression comparison cards in selected-day detail (`apps/web/app/history/page.tsx`, `apps/web/tests/history.calendar.test.tsx`).
 - Drift prevention protocol for next sessions: run `./scripts/mini_preflight.sh` and `./scripts/mini_next_task.sh` before implementation, and `./scripts/mini_validate.sh` before commit/push.
 

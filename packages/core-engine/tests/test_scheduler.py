@@ -82,7 +82,49 @@ def test_generate_week_plan_filters_by_available_equipment() -> None:
     assert [exercise["id"] for exercise in exercises] == ["db_row", "db_press"]
     assert exercises[0]["primary_exercise_id"] == "barbell_row"
     assert exercises[0]["substitution_candidates"] == ["DB Row"]
+    assert exercises[0]["substitution_decision_trace"]["interpreter"] == "resolve_equipment_substitution"
+    assert exercises[0]["substitution_decision_trace"]["outcome"]["selected_name"] == "DB Row"
     assert exercises[1]["substitution_candidates"] == ["DB Arnold Press"]
+
+
+def test_generate_week_plan_threads_substitution_rules_into_equipment_swap_policy() -> None:
+    template = {
+        "id": "equipment_rule_runtime_test",
+        "sessions": [
+            {
+                "name": "A",
+                "exercises": [
+                    {
+                        "id": "barbell_row",
+                        "name": "Barbell Row",
+                        "equipment_tags": ["barbell"],
+                        "substitution_candidates": ["Cable Row", "DB Row"],
+                    }
+                ],
+            }
+        ],
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=2,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+        available_equipment=["dumbbell"],
+        rule_set={
+            "substitution_rules": {
+                "equipment_mismatch": "use_first_compatible_substitution",
+                "repeat_failure_trigger": "switch_after_three_failed_exposures",
+            }
+        },
+    )
+
+    exercise = plan["sessions"][0]["exercises"][0]
+    assert exercise["id"] == "db_row"
+    assert exercise["name"] == "DB Row"
+    assert exercise["substitution_decision_trace"]["outcome"]["auto_substituted"] is True
 
 
 def test_generate_week_plan_compresses_sessions_evenly_for_two_days() -> None:

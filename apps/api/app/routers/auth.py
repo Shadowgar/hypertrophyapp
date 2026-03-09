@@ -2,6 +2,7 @@ from typing import Annotated
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -34,12 +35,13 @@ DbSession = Annotated[Session, Depends(get_db)]
 
 @router.post("/register")
 def register(payload: RegisterRequest, db: DbSession) -> TokenResponse:
-    existing = db.query(User).filter(User.email == payload.email).first()
+    normalized_email = payload.email.strip().lower()
+    existing = db.query(User).filter(func.lower(User.email) == normalized_email).first()
     if existing:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already used")
 
     user = User(
-        email=payload.email,
+        email=normalized_email,
         password_hash=hash_password(payload.password),
         name=payload.name,
     )
@@ -52,7 +54,8 @@ def register(payload: RegisterRequest, db: DbSession) -> TokenResponse:
 
 @router.post("/login")
 def login(payload: LoginRequest, db: DbSession) -> TokenResponse:
-    user = db.query(User).filter(User.email == payload.email).first()
+    normalized_email = payload.email.strip().lower()
+    user = db.query(User).filter(func.lower(User.email) == normalized_email).first()
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
@@ -66,7 +69,8 @@ def dev_wipe_user(payload: DevWipeUserRequest, db: DbSession) -> StatusResponse:
     if payload.confirmation.strip().upper() != "WIPE":
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Confirmation must be WIPE")
 
-    user = db.query(User).filter(User.email == payload.email).first()
+    normalized_email = payload.email.strip().lower()
+    user = db.query(User).filter(func.lower(User.email) == normalized_email).first()
     if user is None:
         return StatusResponse(status="already_absent")
 
@@ -88,7 +92,8 @@ def dev_wipe_user(payload: DevWipeUserRequest, db: DbSession) -> StatusResponse:
 
 @router.post("/password-reset/request")
 def password_reset_request(payload: PasswordResetRequest, db: DbSession) -> PasswordResetRequestResponse:
-    user = db.query(User).filter(User.email == payload.email).first()
+    normalized_email = payload.email.strip().lower()
+    user = db.query(User).filter(func.lower(User.email) == normalized_email).first()
     if not user:
         return PasswordResetRequestResponse(status="accepted")
 

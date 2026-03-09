@@ -48,7 +48,13 @@ test("Today page loads workout and shows exercises", async () => {
   const loadBtn = screen.getByRole("button", { name: /Load Today Workout/i });
   fireEvent.click(loadBtn);
 
-  await waitFor(() => expect(screen.getByText(/Bench Press/i)).toBeInTheDocument());
+  await waitFor(() => expect(screen.getAllByText(/Bench Press/i).length).toBeGreaterThan(0));
+
+  expect(screen.getByText(/Session Intent/i)).toBeInTheDocument();
+  expect(screen.getByText(/Lead exercise: Bench Press for 3 sets of 8-12 reps @ 60 kg\./i)).toBeInTheDocument();
+  expect(screen.getByText(/Between-Set Coach/i)).toBeInTheDocument();
+  expect(screen.getByText(/Live lane: Bench Press/i)).toBeInTheDocument();
+  expect(screen.getByText(/Start with 8-12 reps @ 60 kg\./i)).toBeInTheDocument();
 
   const guideLink = screen.getByRole("link", { name: /Bench Press/i });
   expect(guideLink).toHaveAttribute("href", "/guides/ppl_v1/exercise/ex-1");

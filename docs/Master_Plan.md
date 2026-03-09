@@ -1,6 +1,6 @@
 # Master Plan - Adaptive Coaching Rebuild
 
-Last updated: 2026-03-06
+Last updated: 2026-03-07
 
 ## Product Vision
 
@@ -36,6 +36,16 @@ Build-time pipelines may parse source files; runtime may not.
 
 The repository currently still contains ingestion-centered artifact generation (`docs/guides/generated/*.md` excerpts) that is useful for provenance checks but not sufficient as runtime coaching logic.
 
+The main architectural risk is now split-brain hardening:
+- canonical rules are partially operational
+- canonical rules are not yet sovereign
+- meaningful coaching logic still exists outside one authoritative interpreter path
+
+Immediate direction:
+- move decision families into `packages/core-engine` one at a time
+- emit structured decision traces
+- prevent legacy runtime paths from gaining new coaching behavior
+
 ## Ordered Execution Plan (Do In Order)
 
 ### Phase A - Architecture Audit and Isolation
@@ -54,6 +64,9 @@ The repository currently still contains ingestion-centered artifact generation (
 - [ ] Add provenance links from rules to source sections.
 
 ### Phase D - Deterministic Decision Engine
+- [ ] Establish one sovereign decision runtime in `packages/core-engine` for all meaningful coaching decisions.
+- [ ] Emit structured decision traces for each decision family.
+- [ ] Refactor router-owned coaching heuristics behind interpreter paths.
 - [ ] Implement first-pass deterministic progression and adaptation logic for gold sample.
 - [ ] Model fatigue, underperformance, stalls, deload triggers, and substitutions.
 - [ ] Persist explainable decision rationale on each adjustment.
@@ -69,7 +82,7 @@ The repository currently still contains ingestion-centered artifact generation (
 - [ ] Expand canonical imports/rules beyond gold sample.
 - [ ] Strengthen scenario tests and regression safety.
 - [ ] Close release gate with evidence-backed docs and green validation.
-- [ ] Deliver calendar training history view (click past dates to inspect performed exercises and plan deltas).
+- [x] Deliver calendar training history view (click past dates to inspect performed exercises and plan deltas).
 
 ### Phase G - Onboarding Reliability and Parity
 - [x] Add developer-safe account reset controls directly in onboarding for local test loops.
@@ -99,6 +112,13 @@ Reference:
 
 - Runtime program catalog now excludes legacy `*_imported.json` artifacts and serves canonical templates only.
 - User weak areas are persisted on profile and used as defaults in adaptation workflows.
+- Canonical onboarding schema contracts are stricter:
+	- onboarding package `program_id` must align across package, blueprint, and intent.
+	- week-sequence entries must map to declared week-template IDs.
+	- day slot IDs and order indices are validated as unique per day.
+- Transitional XLSX importer is less lossy and less silent:
+	- emitted templates retain `source_workbook` provenance.
+	- workbook parsing now emits explicit `import_diagnostics` warnings for missing headers/prescriptions, structural-label skips, and defaulted session grouping.
 - Deterministic adaptation preview API now supports `2/3/4/5` target training days:
 	- `POST /plan/adaptation/preview`
 - Deterministic adaptation apply path now feeds runtime week generation:
@@ -107,6 +127,16 @@ Reference:
 - Onboarding testing reliability improvements:
 	- `POST /auth/dev/wipe-user` (dev-only by config) supports wipe-by-email reset when register/login is blocked by stale test accounts.
 	- Onboarding screen now includes explicit `Wipe Test User By Email` and `Wipe Current Logged-In User Data` controls.
+	- Auth endpoints now resolve email case-insensitively with whitespace normalization (register/login/password reset/dev wipe).
+	- Onboarding now includes `Request Password Reset Token` recovery action for deterministic local test loops.
+	- Onboarding questionnaire now auto-saves/restores browser-local draft progress with explicit `Clear Saved Draft` control.
 - Onboarding funnel parity v1 implemented:
 	- intro slides -> step-based questionnaire -> account creation -> deterministic plan bootstrap handoff.
 	- profile now persists `onboarding_answers` JSON for richer onboarding signal capture.
+- Calendar history view delivered:
+	- `GET /history/calendar` exposes clickable daily summaries, program/muscle metadata, and PR badge metadata for a date window.
+	- `GET /history/day/{day}` exposes performed workout/exercise/set detail and planned-vs-performed set deltas for selected date.
+	- Missed days with planned sessions now return planned-only detail (zero logged sets).
+	- `/history` now renders week/month windows, older-window navigation, completion/program/muscle filters, previous-same-weekday jump, same-weekday delta cards, PR badges, and selected-day detail panel.
+- Validation gate health:
+	- `./scripts/mini_validate.sh` currently passes (`API 85 passed`, `web tests 28 passed`, `web build success`).

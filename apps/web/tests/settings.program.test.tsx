@@ -21,6 +21,7 @@ test("Settings page shows selected program and saves changes", async () => {
     current_program_id: "full_body_v1",
     recommended_program_id: "upper_lower",
     reason: "mesocycle_complete_rotate",
+    rationale: "The current mesocycle appears complete. Rotate to a fresh compatible template.",
     compatible_program_ids: ["full_body_v1", "upper_lower"],
     generated_at: new Date().toISOString(),
   };
@@ -49,6 +50,7 @@ test("Settings page shows selected program and saves changes", async () => {
               target_program_id: payload.target_program_id,
               recommended_program_id: "upper_lower",
               reason: "mesocycle_complete_rotate",
+              rationale: "The current mesocycle appears complete. Rotate to a fresh compatible template.",
               requires_confirmation: true,
               applied: false,
             }),
@@ -64,6 +66,7 @@ test("Settings page shows selected program and saves changes", async () => {
             target_program_id: payload.target_program_id,
             recommended_program_id: "upper_lower",
             reason: "mesocycle_complete_rotate",
+            rationale: "The current mesocycle appears complete. Rotate to a fresh compatible template.",
             requires_confirmation: false,
             applied: true,
           }),
@@ -80,6 +83,8 @@ test("Settings page shows selected program and saves changes", async () => {
     expect(screen.getByLabelText(/Settings program selector/i)).toBeInTheDocument();
   });
 
+  expect(screen.getByText(/The current mesocycle appears complete\. Rotate to a fresh compatible template\./i)).toBeInTheDocument();
+
   // change program
   const select = screen.getByLabelText(/Settings program selector/i);
   fireEvent.change(select, { target: { value: "upper_lower" } });
@@ -90,6 +95,7 @@ test("Settings page shows selected program and saves changes", async () => {
   await waitFor(() => {
     expect(screen.getByText(/Confirm program switch/i)).toBeInTheDocument();
   });
+  expect(screen.queryByText(/mesocycle_complete_rotate/i)).not.toBeInTheDocument();
 
   const confirm = screen.getByRole("button", { name: /Confirm program switch/i });
   fireEvent.click(confirm);

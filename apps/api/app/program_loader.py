@@ -6,7 +6,7 @@ from typing import Any
 from pydantic import ValidationError
 
 from .config import settings
-from .adaptive_schema import ProgramOnboardingPackage
+from .adaptive_schema import AdaptiveGoldRuleSet, ProgramOnboardingPackage
 from .template_schema import CanonicalProgramTemplate
 
 
@@ -48,6 +48,18 @@ PROGRAM_NAMES: dict[str, str] = {
     "the_bodybuilding_transformation_system_intermediate_advanced": "Bodybuilding Transformation System — Intermediate/Advanced",
 }
 
+LINKED_PROGRAM_IDS: dict[str, str] = {
+    "full_body_v1": "pure_bodybuilding_phase_1_full_body",
+    "ppl_v1": "pure_bodybuilding_phase_2_ppl_sheet",
+    "upper_lower_v1": "pure_bodybuilding_phase_2_upper_lower_sheet",
+    "pure_bodybuilding_full_body": "pure_bodybuilding_phase_1_full_body",
+    "pure_bodybuilding_phase_1_full_body": "pure_bodybuilding_phase_1_full_body",
+    "pure_bodybuilding_phase_2_full_body_sheet": "pure_bodybuilding_phase_2_full_body_sheet",
+    "pure_bodybuilding_phase_2_full_body_sheet_1": "pure_bodybuilding_phase_2_full_body_sheet",
+    "pure_bodybuilding_phase_2_ppl_sheet": "pure_bodybuilding_phase_2_ppl_sheet",
+    "pure_bodybuilding_phase_2_upper_lower_sheet": "pure_bodybuilding_phase_2_upper_lower_sheet",
+}
+
 
 def _normalized_stem(path: Path) -> str:
     return path.stem.replace(".", "_")
@@ -64,6 +76,10 @@ def _is_runtime_template_file(path: Path) -> bool:
 
 def _fallback_program_name(program_id: str) -> str:
     return " ".join(part.capitalize() for part in program_id.replace("-", "_").split("_") if part)
+
+
+def resolve_linked_program_id(program_id: str) -> str:
+    return LINKED_PROGRAM_IDS.get(program_id, program_id)
 
 
 def _program_signature(program: dict[str, Any]) -> str:
@@ -115,6 +131,10 @@ def _resolve_programs_path() -> Path:
 
 def _resolve_onboarding_path() -> Path:
     return _resolve_programs_path() / "gold"
+
+
+def _resolve_rules_path() -> Path:
+    return Path(__file__).resolve().parents[3] / "docs" / "rules" / "canonical"
 
 
 def list_program_templates() -> list[dict]:
@@ -209,10 +229,34 @@ def list_program_onboarding_packages() -> list[dict[str, Any]]:
 
 
 def load_program_onboarding_package(program_id: str) -> dict[str, Any]:
-    candidate = _resolve_onboarding_path() / f"{program_id}.onboarding.json"
+    candidate = _resolve_onboarding_path() / f"{resolve_linked_program_id(program_id)}.onboarding.json"
     if not candidate.exists():
         raise FileNotFoundError(f"Program onboarding package not found: {program_id}")
 
     raw = json.loads(candidate.read_text(encoding="utf-8"))
     validated = ProgramOnboardingPackage.model_validate(raw)
     return validated.model_dump(mode="json")
+
+
+def load_program_rule_set(program_id: str) -> dict[str, Any]:
+    resolved_program_id = resolve_linked_program_id(program_id)
+    rules_path = _resolve_rules_path()
+    if not rules_path.exists():
+        raise FileNotFoundError(f"Program rule set not found: {program_id}")
+
+    direct_candidate = rules_path / f"{resolved_program_id}.rules.json"
+    candidates = [direct_candidate]
+    if not direct_candidate.exists():
+        candidates = sorted(rules_path.glob("*.rules.json"))
+
+    for candidate in candidates:
+        if not candidate.exists():
+            continue
+
+        raw = json.loads(candidate.read_text(encoding="utf-8"))
+        validated = AdaptiveGoldRuleSet.model_validate(raw)
+        payload = validated.model_dump(mode="json")
+        if resolved_program_id in payload.get("program_scope", []):
+            return payload
+
+    raise FileNotFoundError(f"Program rule set not found: {program_id}")

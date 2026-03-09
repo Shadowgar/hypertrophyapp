@@ -67,6 +67,11 @@ def test_program_recommendation_endpoint_returns_deterministic_payload() -> None
     assert isinstance(payload["compatible_program_ids"], list)
     assert "recommended_program_id" in payload
     assert "reason" in payload
+    assert payload["rationale"]
+    assert payload["decision_trace"]["interpreter"] == "recommend_program_selection"
+    assert payload["decision_trace"]["candidate_resolution"]["interpreter"] == "resolve_program_recommendation_candidates"
+    assert payload["decision_trace"]["inputs"]["latest_adherence_score_source"] == "training_state"
+    assert payload["decision_trace"]["inputs"]["mesocycle_context_source"] == "training_state"
 
 
 def test_program_recommendation_prefers_high_frequency_adaptation_for_three_days() -> None:
@@ -81,6 +86,12 @@ def test_program_recommendation_prefers_high_frequency_adaptation_for_three_days
     assert payload["current_program_id"] == "ppl_v1"
     assert payload["recommended_program_id"] != "ppl_v1"
     assert payload["reason"] == "days_adaptation_upgrade"
+    assert payload["rationale"] == (
+        "A different compatible template can preserve weekly coverage better at the current day availability."
+    )
+    assert payload["decision_trace"]["selected_program_id"] == payload["recommended_program_id"]
+    assert payload["recommended_program_id"] in payload["decision_trace"]["candidate_resolution"]["compatible_program_ids"]
+    assert payload["decision_trace"]["candidate_resolution"]["compatibility_mode"] == "days_supported_match"
 
 
 def test_program_switch_requires_confirmation_then_applies() -> None:
@@ -103,6 +114,9 @@ def test_program_switch_requires_confirmation_then_applies() -> None:
     assert preflight.status_code == 200
     preflight_payload = preflight.json()
     assert preflight_payload["status"] in {"confirmation_required", "unchanged"}
+    assert preflight_payload["rationale"]
+    assert preflight_payload["decision_trace"]["switch_outcome"]["status"] in {"confirmation_required", "unchanged"}
+    assert preflight_payload["decision_trace"]["candidate_resolution"]["interpreter"] == "resolve_program_recommendation_candidates"
 
     apply = client.post(
         "/profile/program-switch",
@@ -147,3 +161,47 @@ def test_program_recommendation_keeps_current_on_low_adherence() -> None:
 
     assert payload["recommended_program_id"] == "ppl_v1"
     assert payload["reason"] == "low_adherence_keep_program"
+    assert payload["rationale"] == "Recent adherence is low. Keep the current program stable before rotating templates."
+
+
+def test_program_switch_preflight_matches_recommendation_trace_selection() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_and_onboard(client)
+
+    recommendation = client.get("/profile/program-recommendation", headers=headers)
+    assert recommendation.status_code == 200
+    recommendation_payload = recommendation.json()
+
+    preflight = client.post(
+        "/profile/program-switch",
+        headers=headers,
+        json={"target_program_id": recommendation_payload["recommended_program_id"], "confirm": False},
+    )
+    assert preflight.status_code == 200
+    preflight_payload = preflight.json()
+
+    assert preflight_payload["recommended_program_id"] == recommendation_payload["recommended_program_id"]
+    assert preflight_payload["decision_trace"]["selected_program_id"] == recommendation_payload["decision_trace"]["selected_program_id"]
+    assert preflight_payload["decision_trace"]["candidate_resolution"]["compatible_program_ids"] == (
+        recommendation_payload["decision_trace"]["candidate_resolution"]["compatible_program_ids"]
+    )
+
+
+def test_program_switch_rejects_incompatible_target_program() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_and_onboard(client)
+
+    response = client.post(
+        "/profile/program-switch",
+        headers=headers,
+        json={"target_program_id": "bro_split_v1", "confirm": True},
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Target program is not compatible"}
+
+    profile = client.get("/profile", headers=headers)
+    assert profile.status_code == 200
+    assert profile.json()["selected_program_id"] == "ppl_v1"

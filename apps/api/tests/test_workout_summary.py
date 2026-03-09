@@ -90,8 +90,11 @@ def test_workout_summary_returns_progress_and_guidance() -> None:
     assert payload["workout_id"] == first_session["session_id"]
     assert payload["percent_complete"] == 100
     assert payload["overall_guidance"] == "performance_below_target_adjust_load_and_recover"
+    assert payload["decision_trace"]["interpreter"] == "summarize_workout_session_guidance"
+    assert payload["decision_trace"]["outcome"]["overall_guidance"] == payload["overall_guidance"]
 
     target_summary = next(item for item in payload["exercises"] if item["exercise_id"] == first_exercise["id"])
     assert target_summary["performed_sets"] == first_planned_sets
     assert target_summary["completion_pct"] == 100
     assert target_summary["guidance"] == "below_target_reps_reduce_or_hold_load"
+    assert target_summary["decision_trace"]["interpreter"] == "summarize_workout_exercise_performance"

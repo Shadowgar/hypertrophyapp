@@ -72,6 +72,33 @@ def test_import_workbook_sanitizes_structural_rows(tmp_path: Path) -> None:
     destination = import_workbook(workbook, output_file=output)
     payload = json.loads(destination.read_text(encoding="utf-8"))
 
+    assert payload["source_workbook"] == str(workbook)
     assert [session["name"] for session in payload["sessions"]] == ["Full Body #1", "Full Body #2"]
     assert [exercise["name"] for exercise in payload["sessions"][0]["exercises"]] == ["DB Bench Press"]
     assert [exercise["name"] for exercise in payload["sessions"][1]["exercises"]] == ["Seated Cable Row"]
+
+    diagnostics = payload["import_diagnostics"]
+    assert diagnostics["status"] == "warnings"
+    assert diagnostics["diagnostic_count"] >= 4
+    codes = {item["code"] for item in diagnostics["items"]}
+    assert "structural_session_label_skipped" in codes
+    assert "structural_exercise_label_skipped" in codes
+    assert "missing_working_sets" in codes
+
+
+def test_import_workbook_emits_defaulted_session_name_diagnostic(tmp_path: Path) -> None:
+    workbook = tmp_path / "Upper Lower Example.xlsx"
+    output = tmp_path / "imported.json"
+    rows = [
+        ["Session", "Exercise", "Working Sets", "Reps", "Video Link"],
+        ["", "DB Bench Press", "3", "8-10", ""],
+    ]
+    _write_xlsx_with_rows(workbook, rows)
+
+    destination = import_workbook(workbook, output_file=output)
+    payload = json.loads(destination.read_text(encoding="utf-8"))
+
+    assert [session["name"] for session in payload["sessions"]] == ["Main"]
+    diagnostics = payload["import_diagnostics"]
+    assert diagnostics["status"] == "warnings"
+    assert any(item["code"] == "defaulted_session_name" for item in diagnostics["items"])

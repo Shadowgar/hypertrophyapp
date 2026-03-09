@@ -1,10 +1,11 @@
 # GPT-5-mini Runbook - Adaptive Coaching
 
-Last updated: 2026-03-06
+Last updated: 2026-03-07
 
 ## Start Sequence
 
 1. Read:
+- `docs/AI_CONTINUATION_GOVERNANCE.md`
 - `docs/Master_Plan.md`
 - `docs/redesign/Adaptive_Coaching_Redesign.md`
 - `docs/GPT5_MINI_EXECUTION_BACKLOG.md`
@@ -51,3 +52,8 @@ cd /home/rocco/hypertrophyapp
 ## Delivery Rule
 
 Implement one task end-to-end, validate, commit, push, then move to next task.
+
+For coaching logic specifically:
+- do not add new meaningful decision logic in routers
+- migrate one decision family at a time into `packages/core-engine`
+- require a structured decision trace before calling the task complete

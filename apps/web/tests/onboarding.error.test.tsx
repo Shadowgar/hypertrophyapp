@@ -14,6 +14,7 @@ vi.mock("next/navigation", () => ({
 beforeEach(() => {
   // @ts-ignore
   globalThis.fetch = vi.fn();
+  localStorage.clear();
 });
 
 async function completeQuestionnaireToAccountStep() {
@@ -137,4 +138,89 @@ test("Onboarding developer wipe button calls dev wipe endpoint", async () => {
   expect(wipeCall).toBeDefined();
 
   confirmSpy.mockRestore();
+});
+
+
+test("Onboarding register request normalizes email casing and whitespace", async () => {
+  // @ts-ignore
+  globalThis.fetch.mockImplementation((input, _init) => {
+    const url = typeof input === "string" ? input : input.url;
+
+    if (url.endsWith("/plan/programs")) {
+      return Promise.resolve(new Response(JSON.stringify([{ id: "full_body_v1", name: "Full Body v1" }]), { status: 200 }));
+    }
+    if (url.endsWith("/auth/register")) {
+      return Promise.resolve(new Response(JSON.stringify({ access_token: "tok" }), { status: 200 }));
+    }
+    if (url.endsWith("/profile")) {
+      return Promise.resolve(new Response(JSON.stringify({ status: "ok" }), { status: 200 }));
+    }
+    if (url.endsWith("/plan/generate-week")) {
+      return Promise.resolve(new Response(JSON.stringify({ status: "ok" }), { status: 200 }));
+    }
+
+    return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
+  });
+
+  render(<OnboardingPage />);
+
+  await waitFor(() => {
+    expect(screen.getByRole("button", { name: /next slide/i })).toBeInTheDocument();
+  });
+
+  await completeQuestionnaireToAccountStep();
+
+  fireEvent.change(screen.getByLabelText(/email address/i), {
+    target: { value: "  ATHLETE@Example.COM  " },
+  });
+  fireEvent.click(screen.getByRole("button", { name: /continue/i }));
+
+  await waitFor(() => {
+    // @ts-ignore
+    const calls = globalThis.fetch.mock.calls as Array<[RequestInfo | URL, RequestInit | undefined]>;
+    const registerCall = calls.find(([input]) => {
+      let url: string;
+      if (typeof input === "string") {
+        url = input;
+      } else if (input instanceof URL) {
+        url = input.toString();
+      } else {
+        url = input.url;
+      }
+      return url.endsWith("/auth/register");
+    });
+    expect(registerCall).toBeDefined();
+    const payloadBody = registerCall?.[1]?.body;
+    const body = typeof payloadBody === "string" ? (JSON.parse(payloadBody) as { email?: string }) : {};
+    expect(body.email).toBe("athlete@example.com");
+  });
+});
+
+
+test("Onboarding password reset request button calls reset endpoint", async () => {
+  // @ts-ignore
+  globalThis.fetch.mockImplementation((input, _init) => {
+    const url = typeof input === "string" ? input : input.url;
+
+    if (url.endsWith("/plan/programs")) {
+      return Promise.resolve(new Response(JSON.stringify([{ id: "full_body_v1", name: "Full Body v1" }]), { status: 200 }));
+    }
+    if (url.endsWith("/auth/password-reset/request")) {
+      return Promise.resolve(new Response(JSON.stringify({ status: "accepted", reset_token: "abc123def456ghi7" }), { status: 200 }));
+    }
+
+    return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
+  });
+
+  render(<OnboardingPage />);
+
+  await waitFor(() => {
+    expect(screen.getByRole("button", { name: /request password reset token/i })).toBeInTheDocument();
+  });
+
+  fireEvent.click(screen.getByRole("button", { name: /request password reset token/i }));
+
+  await waitFor(() => {
+    expect(screen.getAllByText(/password reset token issued:/i).length).toBeGreaterThan(0);
+  });
 });

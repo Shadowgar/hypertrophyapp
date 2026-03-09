@@ -1,0 +1,65 @@
+{
+  "rule_set_id": "the_ultimate_push_pull_legs_system_6x_rules",
+  "version": "0.1.0",
+  "program_scope": [
+    "the_ultimate_push_pull_legs_system_6x"
+  ],
+  "source_pdf": "reference/The_Ultimate_Push_Pull_Legs_System_6X.pdf",
+  "starting_load_rules": {
+    "method": "rep_range_rir_start",
+    "default_rir_target": 2,
+    "fallback_percent_estimated_1rm": 72
+  },
+  "progression_rules": {
+    "success_condition": "reach_top_of_rep_range_then_add_load",
+    "on_success": {
+      "action": "increase_load",
+      "percent": 2.5,
+      "reduce_percent": null,
+      "after_exposures": null
+    },
+    "on_in_range": {
+      "action": "hold_load_chase_reps",
+      "percent": null,
+      "reduce_percent": null,
+      "after_exposures": null
+    },
+    "on_under_target": {
+      "action": "hold_or_reduce",
+      "percent": null,
+      "reduce_percent": 2.5,
+      "after_exposures": 2
+    }
+  },
+  "fatigue_rules": {
+    "high_fatigue_trigger": {
+      "conditions": [
+        "intro week lasts 1 week; avoid interpreting early underperformance as stall",
+        "session_rpe_avg >= 9 for two exposures"
+      ]
+    },
+    "on_high_fatigue": {
+      "action": "reduce_volume",
+      "set_delta": -1
+    }
+  },
+  "deload_rules": {
+    "scheduled_every_n_weeks": 4,
+    "early_deload_trigger": "repeated_under_target_plus_high_fatigue",
+    "on_deload": {
+      "set_reduction_percent": 35,
+      "load_reduction_percent": 10
+    }
+  },
+  "substitution_rules": {
+    "equipment_mismatch": "use_first_compatible_substitution",
+    "repeat_failure_trigger": "switch_after_three_failed_exposures"
+  },
+  "rationale_templates": {
+    "increase_load": "Performance exceeded target range. Increase load next exposure.",
+    "hold_load": "Performance stayed in range. Hold load and chase the rep ceiling.",
+    "reduce_load": "Performance repeatedly fell below target. Reduce load to restore quality.",
+    "deload": "Fatigue and underperformance indicate that a short deload is warranted."
+  },
+  "source_sections": []
+}

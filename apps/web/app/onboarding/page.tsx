@@ -80,6 +80,8 @@ const GYM_SETUP_OPTIONS = [
 const EXPERIENCE_LEVEL_OPTIONS = ["beginner", "intermediate", "advanced"] as const;
 const DURATION_OPTIONS = [30, 45, 60] as const;
 const DAYS_OPTIONS = [2, 3, 4, 5] as const;
+const GYM_SETUP_WITH_EMPTY_OPTIONS = ["", ...GYM_SETUP_OPTIONS] as const;
+const ONBOARDING_DRAFT_KEY = "hypertrophy_onboarding_draft_v1";
 
 type Phase = "intro" | "questions" | "account" | "saving";
 type AuthMode = "register" | "login";
@@ -105,6 +107,100 @@ type QuestionStep = {
   title: string;
   skipAllowed: boolean;
 };
+
+type OnboardingDraft = {
+  phase: Exclude<Phase, "saving">;
+  authMode: AuthMode;
+  introIndex: number;
+  questionIndex: number;
+  gender: (typeof GENDER_OPTIONS)[number] | "";
+  primaryGoal: (typeof GOAL_OPTIONS)[number] | "";
+  heightUnit: "in" | "cm";
+  heightFeet: string;
+  heightInches: string;
+  heightCm: string;
+  weightUnit: "lbs" | "kg";
+  weightValue: string;
+  birthday: string;
+  trainingAgeBucket: (typeof TRAINING_AGE_OPTIONS)[number] | "";
+  strengthFrequency: (typeof FREQUENCY_OPTIONS)[number] | "";
+  motivationDriver: (typeof MOTIVATION_OPTIONS)[number] | "";
+  obstacle: (typeof OBSTACLE_OPTIONS)[number] | "";
+  trainingLocation: (typeof LOCATION_OPTIONS)[number] | "";
+  gymSetup: "" | (typeof GYM_SETUP_OPTIONS)[number];
+  experienceLevel: (typeof EXPERIENCE_LEVEL_OPTIONS)[number] | "";
+  workoutDurationMinutes: number | null;
+  daysAvailable: number | null;
+  firstName: string;
+  lastName: string;
+  email: string;
+  weakAreasRaw: string;
+  selectedProgramId: string | null;
+};
+
+function parseOnboardingDraft(raw: string): Partial<OnboardingDraft> | null {
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== "object") {
+      return null;
+    }
+    return parsed as Partial<OnboardingDraft>;
+  } catch {
+    return null;
+  }
+}
+
+function isMeaningfulDraft(draft: OnboardingDraft): boolean {
+  if (draft.phase !== "intro") {
+    return true;
+  }
+  if (draft.introIndex > 0 || draft.questionIndex > 0) {
+    return true;
+  }
+  return Boolean(
+    draft.gender
+    || draft.primaryGoal
+    || draft.birthday
+    || draft.trainingAgeBucket
+    || draft.strengthFrequency
+    || draft.motivationDriver
+    || draft.obstacle
+    || draft.trainingLocation
+    || draft.gymSetup
+    || draft.experienceLevel
+    || draft.firstName.trim()
+    || draft.lastName.trim()
+    || draft.email.trim() !== "athlete@example.com"
+    || draft.weakAreasRaw.trim()
+    || draft.selectedProgramId,
+  );
+}
+
+function applyStringDraftValue(value: unknown, setter: (next: string) => void): void {
+  if (typeof value === "string") {
+    setter(value);
+  }
+}
+
+function applyStringOptionDraftValue(
+  value: unknown,
+  options: readonly string[],
+  setter: (next: string) => void,
+): void {
+  if (typeof value === "string" && options.includes(value)) {
+    setter(value);
+  }
+}
+
+function applyNumberOptionDraftValue(
+  value: unknown,
+  options: readonly number[],
+  setter: (next: number) => void,
+): void {
+  if (typeof value === "number" && options.includes(value)) {
+    setter(value);
+  }
+}
 
 async function parseApiError(response: Response, fallback: string): Promise<string> {
   try {
@@ -159,6 +255,10 @@ function parseWeakAreas(raw: string): string[] {
     .split(",")
     .map((item) => item.trim().toLowerCase())
     .filter((item) => item.length > 0);
+}
+
+function normalizeEmailInput(value: string): string {
+  return value.trim().toLowerCase();
 }
 
 function deriveAgeFromBirthday(birthday: string): number {
@@ -255,6 +355,8 @@ export default function OnboardingPage() {
   const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
 
   const [status, setStatus] = useState("Idle");
+  const [draftReady, setDraftReady] = useState(false);
+  const [hasSavedDraft, setHasSavedDraft] = useState(false);
   const statusTone = resolveStatusTone(status);
 
   useEffect(() => {
@@ -333,6 +435,157 @@ export default function OnboardingPage() {
   );
 
   const currentQuestion = questionSteps[Math.min(questionIndex, questionSteps.length - 1)];
+
+  useEffect(() => {
+    const raw = localStorage.getItem(ONBOARDING_DRAFT_KEY);
+    if (!raw) {
+      setDraftReady(true);
+      return;
+    }
+
+    const draft = parseOnboardingDraft(raw);
+    if (!draft) {
+      localStorage.removeItem(ONBOARDING_DRAFT_KEY);
+      setDraftReady(true);
+      return;
+    }
+
+    const restoredPhase = draft.phase === "questions" || draft.phase === "account" ? draft.phase : "intro";
+    const restoredAuthMode = draft.authMode === "login" ? "login" : "register";
+    const restoredIntroIndex = Number.isFinite(draft.introIndex) ? Math.min(Math.max(0, Number(draft.introIndex)), INTRO_SLIDES.length - 1) : 0;
+    const restoredQuestionIndex = Number.isFinite(draft.questionIndex)
+      ? Math.min(Math.max(0, Number(draft.questionIndex)), questionSteps.length - 1)
+      : 0;
+
+    const optionDraftBindings: Array<{ value: unknown; options: readonly string[]; setter: (next: string) => void }> = [
+      { value: draft.gender, options: GENDER_OPTIONS, setter: setGender as (next: string) => void },
+      { value: draft.primaryGoal, options: GOAL_OPTIONS, setter: setPrimaryGoal as (next: string) => void },
+      { value: draft.heightUnit, options: ["in", "cm"], setter: setHeightUnit as (next: string) => void },
+      { value: draft.weightUnit, options: ["lbs", "kg"], setter: setWeightUnit as (next: string) => void },
+      { value: draft.trainingAgeBucket, options: TRAINING_AGE_OPTIONS, setter: setTrainingAgeBucket as (next: string) => void },
+      { value: draft.strengthFrequency, options: FREQUENCY_OPTIONS, setter: setStrengthFrequency as (next: string) => void },
+      { value: draft.motivationDriver, options: MOTIVATION_OPTIONS, setter: setMotivationDriver as (next: string) => void },
+      { value: draft.obstacle, options: OBSTACLE_OPTIONS, setter: setObstacle as (next: string) => void },
+      { value: draft.trainingLocation, options: LOCATION_OPTIONS, setter: setTrainingLocation as (next: string) => void },
+      { value: draft.gymSetup, options: GYM_SETUP_WITH_EMPTY_OPTIONS, setter: setGymSetup as (next: string) => void },
+      { value: draft.experienceLevel, options: EXPERIENCE_LEVEL_OPTIONS, setter: setExperienceLevel as (next: string) => void },
+    ];
+    for (const binding of optionDraftBindings) {
+      applyStringOptionDraftValue(binding.value, binding.options, binding.setter);
+    }
+
+    const numberBindings: Array<{ value: unknown; options: readonly number[]; setter: (next: number) => void }> = [
+      { value: draft.workoutDurationMinutes, options: DURATION_OPTIONS, setter: setWorkoutDurationMinutes as (next: number) => void },
+      { value: draft.daysAvailable, options: DAYS_OPTIONS, setter: setDaysAvailable as (next: number) => void },
+    ];
+    for (const binding of numberBindings) {
+      applyNumberOptionDraftValue(binding.value, binding.options, binding.setter);
+    }
+
+    const stringBindings: Array<{ value: unknown; setter: (next: string) => void }> = [
+      { value: draft.heightFeet, setter: setHeightFeet },
+      { value: draft.heightInches, setter: setHeightInches },
+      { value: draft.heightCm, setter: setHeightCm },
+      { value: draft.weightValue, setter: setWeightValue },
+      { value: draft.birthday, setter: setBirthday },
+      { value: draft.firstName, setter: setFirstName },
+      { value: draft.lastName, setter: setLastName },
+      { value: draft.email, setter: setEmail },
+      { value: draft.weakAreasRaw, setter: setWeakAreasRaw },
+    ];
+    for (const binding of stringBindings) {
+      applyStringDraftValue(binding.value, binding.setter);
+    }
+
+    if (typeof draft.selectedProgramId === "string") {
+      setSelectedProgramId(draft.selectedProgramId || null);
+    }
+    if (draft.selectedProgramId === null) {
+      setSelectedProgramId(null);
+    }
+
+    setPhase(restoredPhase);
+    setAuthMode(restoredAuthMode);
+    setIntroIndex(restoredIntroIndex);
+    setQuestionIndex(restoredQuestionIndex);
+    setHasSavedDraft(true);
+    setStatus("Recovered saved onboarding draft");
+    setDraftReady(true);
+  }, [questionSteps.length]);
+
+  useEffect(() => {
+    if (!draftReady) {
+      return;
+    }
+
+    const draft: OnboardingDraft = {
+      phase: phase === "saving" ? "account" : phase,
+      authMode,
+      introIndex,
+      questionIndex,
+      gender,
+      primaryGoal,
+      heightUnit,
+      heightFeet,
+      heightInches,
+      heightCm,
+      weightUnit,
+      weightValue,
+      birthday,
+      trainingAgeBucket,
+      strengthFrequency,
+      motivationDriver,
+      obstacle,
+      trainingLocation,
+      gymSetup,
+      experienceLevel,
+      workoutDurationMinutes,
+      daysAvailable,
+      firstName,
+      lastName,
+      email,
+      weakAreasRaw,
+      selectedProgramId,
+    };
+
+    if (!isMeaningfulDraft(draft)) {
+      localStorage.removeItem(ONBOARDING_DRAFT_KEY);
+      setHasSavedDraft(false);
+      return;
+    }
+
+    localStorage.setItem(ONBOARDING_DRAFT_KEY, JSON.stringify(draft));
+    setHasSavedDraft(true);
+  }, [
+    authMode,
+    birthday,
+    daysAvailable,
+    draftReady,
+    email,
+    experienceLevel,
+    firstName,
+    gender,
+    gymSetup,
+    heightCm,
+    heightFeet,
+    heightInches,
+    heightUnit,
+    introIndex,
+    lastName,
+    motivationDriver,
+    obstacle,
+    phase,
+    primaryGoal,
+    questionIndex,
+    selectedProgramId,
+    strengthFrequency,
+    trainingAgeBucket,
+    trainingLocation,
+    weakAreasRaw,
+    weightUnit,
+    weightValue,
+    workoutDurationMinutes,
+  ]);
 
   function isCurrentQuestionValid(): boolean {
     if (!currentQuestion) {
@@ -442,11 +695,18 @@ export default function OnboardingPage() {
   }
 
   async function resolveAccessToken(resolvedName: string): Promise<string | null> {
+    const normalizedEmail = normalizeEmailInput(email);
+    if (!normalizedEmail) {
+      setStatus("Email is required");
+      setPhase("account");
+      return null;
+    }
+
     if (authMode === "login") {
       const loginRes = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: normalizedEmail, password }),
       });
       if (!loginRes.ok) {
         const loginError = await parseApiError(loginRes, "Login failed");
@@ -461,7 +721,7 @@ export default function OnboardingPage() {
     const registerRes = await fetch(`${API_BASE_URL}/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, name: resolvedName }),
+      body: JSON.stringify({ email: normalizedEmail, password, name: resolvedName }),
     });
     if (registerRes.ok) {
       const token = (await registerRes.json()) as { access_token: string };
@@ -479,7 +739,7 @@ export default function OnboardingPage() {
     const loginRes = await fetch(`${API_BASE_URL}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email: normalizedEmail, password }),
     });
     if (!loginRes.ok) {
       const loginError = await parseApiError(loginRes, "Login failed");
@@ -566,6 +826,8 @@ export default function OnboardingPage() {
       }
 
       setStatus("Onboarding saved and first plan initialized");
+      localStorage.removeItem(ONBOARDING_DRAFT_KEY);
+      setHasSavedDraft(false);
       router.push("/today");
     } catch {
       setStatus("Network error during onboarding");
@@ -573,7 +835,19 @@ export default function OnboardingPage() {
     }
   }
 
+  function clearSavedDraft() {
+    localStorage.removeItem(ONBOARDING_DRAFT_KEY);
+    setHasSavedDraft(false);
+    setStatus("Saved onboarding draft cleared");
+  }
+
   async function wipeTestUserByEmail() {
+    const normalizedEmail = normalizeEmailInput(email);
+    if (!normalizedEmail) {
+      setStatus("Enter an email before wipe-by-email");
+      return;
+    }
+
     const confirmed = globalThis.confirm(
       "This will permanently delete the user account for this email and all related data. Continue?",
     );
@@ -583,11 +857,31 @@ export default function OnboardingPage() {
 
     setStatus("Wiping test user...");
     try {
-      const response = await api.devWipeUser({ email, confirmation: "WIPE" });
+      const response = await api.devWipeUser({ email: normalizedEmail, confirmation: "WIPE" });
       localStorage.removeItem("hypertrophy_token");
       setStatus(response.status === "already_absent" ? "Test user already absent" : "Test user wiped");
     } catch {
       setStatus("Test user wipe failed");
+    }
+  }
+
+  async function requestPasswordResetForEmail() {
+    const normalizedEmail = normalizeEmailInput(email);
+    if (!normalizedEmail) {
+      setStatus("Enter an email before requesting password reset");
+      return;
+    }
+
+    setStatus("Requesting password reset...");
+    try {
+      const response = await api.requestPasswordReset({ email: normalizedEmail });
+      if (response.reset_token) {
+        setStatus(`Password reset token issued: ${response.reset_token}`);
+        return;
+      }
+      setStatus("Password reset request accepted");
+    } catch {
+      setStatus("Password reset request failed");
     }
   }
 
@@ -907,6 +1201,12 @@ export default function OnboardingPage() {
           </p>
         </div>
         <p className="telemetry-meta">{programCatalogStatus}</p>
+        {hasSavedDraft ? (
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <p className="telemetry-meta">Draft autosave active on this browser.</p>
+            <Button type="button" variant="secondary" onClick={clearSavedDraft}>Clear Saved Draft</Button>
+          </div>
+        ) : null}
       </div>
 
       {phase === "intro" ? (
@@ -1058,7 +1358,7 @@ export default function OnboardingPage() {
       <div className="rounded-md border border-red-700/40 bg-red-950/20 p-3">
         <p className="telemetry-kicker">Developer Tools</p>
         <p className="telemetry-meta">Reset onboarding/program test state without leaving this screen.</p>
-        <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2">
+        <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-3">
           <Button type="button" variant="secondary" onClick={wipeTestUserByEmail}>
             <span className="inline-flex items-center gap-2">
               <UiIcon name="reset" className="ui-icon--action" />
@@ -1069,6 +1369,12 @@ export default function OnboardingPage() {
             <span className="inline-flex items-center gap-2">
               <UiIcon name="reset" className="ui-icon--action" />
               Wipe Current Logged-In User Data
+            </span>
+          </Button>
+          <Button type="button" variant="secondary" onClick={requestPasswordResetForEmail}>
+            <span className="inline-flex items-center gap-2">
+              <UiIcon name="reset" className="ui-icon--action" />
+              Request Password Reset Token
             </span>
           </Button>
         </div>

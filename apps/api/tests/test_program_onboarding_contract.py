@@ -1,7 +1,10 @@
 import json
+from copy import deepcopy
 from pathlib import Path
 
+import pytest
 from test_db import configure_test_database
+from pydantic import ValidationError
 
 configure_test_database("test_program_onboarding_contract")
 
@@ -51,3 +54,36 @@ def test_user_overlay_constraints_accept_two_to_five_days() -> None:
             }
         )
         assert overlay.available_training_days == days
+
+
+def _gold_onboarding_payload() -> dict:
+    package_path = _repo_root() / "programs" / "gold" / "pure_bodybuilding_phase_1_full_body.onboarding.json"
+    return json.loads(package_path.read_text(encoding="utf-8"))
+
+
+def test_onboarding_package_rejects_mismatched_program_ids() -> None:
+    payload = _gold_onboarding_payload()
+    payload["program_intent"]["program_id"] = "wrong_program_id"
+
+    with pytest.raises(ValidationError, match="program_id must match program_intent.program_id"):
+        ProgramOnboardingPackage.model_validate(payload)
+
+
+def test_onboarding_package_rejects_unknown_week_template_in_sequence() -> None:
+    payload = _gold_onboarding_payload()
+    payload["blueprint"]["week_sequence"][0] = "unknown_week_template"
+
+    with pytest.raises(ValidationError, match="week_sequence references unknown week_template_id"):
+        ProgramOnboardingPackage.model_validate(payload)
+
+
+def test_onboarding_package_rejects_duplicate_slot_order_index_per_day() -> None:
+    payload = _gold_onboarding_payload()
+    mutated = deepcopy(payload)
+
+    first_day_slots = mutated["blueprint"]["week_templates"][0]["days"][0]["slots"]
+    assert len(first_day_slots) >= 2
+    first_day_slots[1]["order_index"] = first_day_slots[0]["order_index"]
+
+    with pytest.raises(ValidationError, match="slots must have unique order_index values per day"):
+        ProgramOnboardingPackage.model_validate(mutated)

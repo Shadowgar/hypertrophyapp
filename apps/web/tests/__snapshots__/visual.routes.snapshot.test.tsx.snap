@@ -248,7 +248,7 @@ exports[`visual snapshot: week route 1`] = `
     Week Plan
   </h1>
   <div
-    class="grid grid-cols-2 gap-3"
+    class="grid grid-cols-1 gap-3 md:grid-cols-2"
   >
     <div
       class="main-card main-card--shell"
@@ -527,18 +527,18 @@ exports[`visual snapshot: week route 1`] = `
     />
   </div>
   <div
-    class="main-card main-card--module spacing-grid spacing-grid--tight"
+    class="main-card main-card--shell spacing-grid spacing-grid--tight"
   >
     <p
       class="telemetry-kicker"
     >
-      Plan Output
+      Planner Status
     </p>
-    <pre
-      class="overflow-x-auto text-xs text-zinc-200"
+    <p
+      class="text-sm text-zinc-200"
     >
       Generate a weekly plan.
-    </pre>
+    </p>
   </div>
 </div>
 `;

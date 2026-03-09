@@ -1,3 +1,4 @@
+from datetime import date
 import uuid
 
 from fastapi.testclient import TestClient
@@ -6,8 +7,9 @@ from test_db import configure_test_database
 
 configure_test_database("test_program_frequency_adaptation_api")
 
-from app.database import Base, engine
+from app.database import Base, SessionLocal, engine
 from app.main import app
+from app.models import SorenessEntry, User, WorkoutPlan
 
 TEST_CREDENTIAL = f"T{uuid.uuid4().hex[:15]}"
 
@@ -72,6 +74,7 @@ def test_frequency_adaptation_preview_supports_two_to_five_days() -> None:
         assert payload["to_days"] == days
         assert payload["duration_weeks"] == 2
         assert payload["weak_areas"] == ["chest", "hamstrings"]
+        assert payload["decision_trace"]["interpreter"] == "recommend_frequency_adaptation_preview"
         assert len(payload["weeks"]) == 2
         for week in payload["weeks"]:
             assert week["adapted_training_days"] == days
@@ -95,6 +98,50 @@ def test_frequency_adaptation_preview_uses_profile_weak_areas_when_not_provided(
 
     payload = response.json()
     assert payload["weak_areas"] == ["chest", "hamstrings"]
+    assert payload["decision_trace"]["resolved_context"]["weak_area_source"] == "profile"
+
+
+def test_frequency_adaptation_preview_derives_recovery_state_and_week_index_from_user_state() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_and_profile(client)
+
+    with SessionLocal() as session:
+        user = session.query(User).filter(User.email == "adaptation-api@example.com").first()
+        assert user is not None
+        session.add(
+            WorkoutPlan(
+                user_id=user.id,
+                week_start=date(2026, 3, 2),
+                split="full_body",
+                phase="maintenance",
+                payload={"mesocycle": {"week_index": 4}},
+            )
+        )
+        session.add(
+            SorenessEntry(
+                user_id=user.id,
+                entry_date=date(2026, 3, 7),
+                severity_by_muscle={"chest": "severe", "back": "severe"},
+                notes="high fatigue",
+            )
+        )
+        session.commit()
+
+    response = client.post(
+        "/plan/adaptation/preview",
+        headers=headers,
+        json={
+            "target_days": 3,
+            "duration_weeks": 1,
+        },
+    )
+    assert response.status_code == 200
+
+    payload = response.json()
+    assert payload["decision_trace"]["resolved_context"]["recovery_state"] == "high_fatigue"
+    assert payload["decision_trace"]["resolved_context"]["current_week_index"] == 4
+    assert payload["decision_trace"]["request_runtime_trace"]["interpreter"] == "prepare_frequency_adaptation_runtime_inputs"
 
 
 def test_frequency_adaptation_apply_persists_state_for_runtime_generation() -> None:
@@ -117,6 +164,7 @@ def test_frequency_adaptation_apply_persists_state_for_runtime_generation() -> N
     assert apply_payload["status"] == "applied"
     assert apply_payload["target_days"] == 3
     assert apply_payload["weeks_remaining"] == 2
+    assert apply_payload["decision_trace"]["interpreter"] == "interpret_frequency_adaptation_apply"
 
     generate_response = client.post("/plan/generate-week", headers=headers, json={})
     assert generate_response.status_code == 200
@@ -128,6 +176,7 @@ def test_frequency_adaptation_apply_persists_state_for_runtime_generation() -> N
     assert adaptation["target_days"] == 3
     assert adaptation["weeks_remaining_before_apply"] == 2
     assert adaptation["weeks_remaining_after_apply"] == 1
+    assert adaptation["decision_trace"]["interpreter"] == "apply_active_frequency_adaptation_runtime"
 
 
 def test_frequency_adaptation_apply_completes_after_duration_weeks() -> None:
@@ -154,6 +203,7 @@ def test_frequency_adaptation_apply_completes_after_duration_weeks() -> None:
     assert isinstance(adaptation, dict)
     assert adaptation["weeks_remaining_after_apply"] == 0
     assert adaptation.get("completed") is True
+    assert adaptation["decision_trace"]["outcome"]["status"] == "completed"
 
     second_week = client.post("/plan/generate-week", headers=headers, json={})
     assert second_week.status_code == 200

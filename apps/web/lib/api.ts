@@ -23,6 +23,8 @@ export type WorkoutLiveRecommendation = {
   recommended_reps_max: number;
   recommended_weight: number;
   guidance: string;
+  guidance_rationale?: string;
+  decision_trace?: Record<string, unknown>;
 };
 
 export type WorkoutSession = {
@@ -87,6 +89,8 @@ export type ProgramRecommendation = {
   current_program_id: string;
   recommended_program_id: string;
   reason: string;
+  rationale?: string;
+  decision_trace?: Record<string, unknown>;
   compatible_program_ids: string[];
   generated_at: string;
 };
@@ -98,6 +102,79 @@ export type ProgramTemplateOption = {
   description?: string;
   split?: string;
   days_supported?: number[];
+};
+
+export type GeneratedWeekExercise = {
+  id: string;
+  primary_exercise_id?: string | null;
+  name: string;
+  sets: number;
+  rep_range: [number, number];
+  recommended_working_weight: number;
+  primary_muscles?: string[];
+  substitution_candidates?: string[];
+  notes?: string | null;
+  adaptive_rationale?: string;
+};
+
+export type GeneratedWeekSession = {
+  session_id: string;
+  title: string;
+  date: string;
+  exercises: GeneratedWeekExercise[];
+};
+
+export type GeneratedWeekPlan = {
+  program_template_id: string;
+  split: string;
+  phase: string;
+  week_start: string;
+  user: {
+    name?: string | null;
+    days_available: number;
+  };
+  sessions: GeneratedWeekSession[];
+  missed_day_policy: string;
+  weekly_volume_by_muscle: Record<string, number>;
+  muscle_coverage: {
+    minimum_sets_per_muscle?: number;
+    covered_muscles?: string[];
+    under_target_muscles?: string[];
+    untracked_exercise_count?: number;
+  };
+  mesocycle: {
+    week_index: number;
+    trigger_weeks_base: number;
+    trigger_weeks_effective: number;
+    is_deload_week: boolean;
+    deload_reason: string;
+  };
+  deload: {
+    active: boolean;
+    set_reduction_pct: number;
+    load_reduction_pct: number;
+    reason: string;
+  };
+  adaptive_review?: {
+    global_set_delta: number;
+    global_weight_scale: number;
+    weak_point_exercises: string[];
+    week_start?: string;
+    reviewed_on?: string;
+    decision_trace?: Record<string, unknown>;
+  };
+  applied_frequency_adaptation?: {
+    template_id: string;
+    target_days: number;
+    duration_weeks: number;
+    weeks_remaining_before_apply: number;
+    weeks_remaining_after_apply: number;
+    weak_areas: string[];
+    completed?: boolean;
+    decision_trace?: Record<string, unknown>;
+  };
+  template_selection_trace: Record<string, unknown>;
+  generation_runtime_trace: Record<string, unknown>;
 };
 
 export function getProgramDisplayName(program: ProgramTemplateOption): string {
@@ -123,6 +200,8 @@ export type ProgramSwitchResponse = {
   target_program_id: string;
   recommended_program_id: string;
   reason: string;
+  rationale?: string;
+  decision_trace?: Record<string, unknown>;
   requires_confirmation: boolean;
   applied: boolean;
 };
@@ -162,10 +241,12 @@ export type IntelligenceCoachPreviewResponse = {
     load_scale: number;
     set_delta: number;
     reason: string;
+    rationale?: string;
   };
   phase_transition: {
     next_phase: "accumulation" | "intensification" | "deload";
     reason: string;
+    rationale?: string;
   };
   specialization: {
     focus_muscles: string[];
@@ -182,6 +263,7 @@ export type IntelligenceCoachPreviewResponse = {
       warmups: number[];
     }>;
   };
+  decision_trace: Record<string, unknown>;
 };
 
 export type ApplyPhaseDecisionResponse = {
@@ -192,7 +274,73 @@ export type ApplyPhaseDecisionResponse = {
   applied: boolean;
   next_phase: "accumulation" | "intensification" | "deload";
   reason: string;
+  rationale?: string;
+  decision_trace: Record<string, unknown>;
 };
+
+const REASON_MESSAGES: Record<string, string> = {
+  maintain_until_stable: "Performance is stable but not yet strong enough to progress. Hold the current load and accumulate cleaner work.",
+  under_target_without_high_fatigue: "Performance is below target without clear high-fatigue signals. Hold load and accumulate cleaner exposures before changing phase or deloading.",
+  continue_accumulation: "Stay in accumulation. Current readiness and momentum do not justify a phase change yet.",
+  accumulation_complete: "Accumulation has run its course and readiness is high enough to move into intensification.",
+  accumulation_stall: "Accumulation has stalled. Transition into deload to recover before rebuilding momentum.",
+  intro_phase_protection: "Stay in accumulation. Early underperformance is still within the intro phase and should not be treated as a true stall.",
+  resume_accumulation: "Deload work appears sufficient. Resume accumulation and rebuild workload.",
+  extend_deload_low_readiness: "Stay in deload because readiness is still too low to resume hard training.",
+  intensification_fatigue_cap: "End intensification and deload before fatigue outpaces recovery.",
+  continue_intensification: "Stay in intensification. Current performance still supports heavier work in this phase.",
+  low_completion: "session completion has been too low",
+  low_adherence: "adherence has dropped below the target threshold",
+  high_soreness: "fatigue and soreness are elevated",
+  phase_apply: "Apply the recommended phase transition.",
+  no_compatible_programs: "No compatible program was found for the current availability, so keep the current selection.",
+  current_not_compatible: "The current program no longer matches the available training days or split preference. Move to the first compatible option.",
+  low_adherence_keep_program: "Recent adherence is low. Keep the current program stable before rotating templates.",
+  days_adaptation_upgrade: "A different compatible template can preserve weekly coverage better at the current day availability.",
+  coverage_gap_rotate: "The latest plan left a coverage gap. Rotate to a compatible template with better distribution.",
+  mesocycle_complete_rotate: "The current mesocycle appears complete. Rotate to a fresh compatible template.",
+  maintain_current_program: "The current program remains compatible and no stronger rotation signal is present.",
+  target_matches_current: "The requested program already matches the current selection.",
+};
+
+function humanizeReasonCode(reason: string): string {
+  const normalized = reason.trim();
+  if (!normalized) {
+    return "No rationale available.";
+  }
+  if (!normalized.includes("_") && !normalized.includes("+")) {
+    return normalized;
+  }
+  if (normalized.includes("+")) {
+    const clauses = normalized
+      .split("+")
+      .map((token) => REASON_MESSAGES[token] ?? token.replaceAll("_", " "))
+      .filter((token) => token.length > 0);
+    if (clauses.length === 0) {
+      return "No rationale available.";
+    }
+    if (clauses.length === 1) {
+      return `Deload because ${clauses[0]}.`;
+    }
+    if (clauses.length === 2) {
+      return `Deload because ${clauses[0]} and ${clauses[1]}.`;
+    }
+    return `Deload because ${clauses.slice(0, -1).join(", ")}, and ${clauses.at(-1)}.`;
+  }
+  return REASON_MESSAGES[normalized] ?? `${normalized.replaceAll("_", " ")}.`;
+}
+
+export function resolveReasonText(rationale?: string | null, reason?: string | null): string {
+  const preferred = rationale?.trim();
+  if (preferred) {
+    return preferred;
+  }
+  const fallback = reason?.trim();
+  if (!fallback) {
+    return "No rationale available.";
+  }
+  return humanizeReasonCode(fallback);
+}
 
 export type ApplySpecializationDecisionResponse = {
   status: string;
@@ -204,6 +352,7 @@ export type ApplySpecializationDecisionResponse = {
   focus_adjustments: Record<string, number>;
   donor_adjustments: Record<string, number>;
   uncompensated_added_sets: number;
+  decision_trace: Record<string, unknown>;
 };
 
 export type CoachingRecommendationTimelineEntry = {
@@ -254,6 +403,7 @@ export type FrequencyAdaptationResult = {
   weak_areas: string[];
   weeks: FrequencyAdaptationWeekResult[];
   rejoin_policy: string;
+  decision_trace?: Record<string, unknown>;
 };
 
 export type FrequencyAdaptationApplyResponse = {
@@ -263,6 +413,7 @@ export type FrequencyAdaptationApplyResponse = {
   duration_weeks: number;
   weeks_remaining: number;
   weak_areas: string[];
+  decision_trace?: Record<string, unknown>;
 };
 
 export type GuideProgram = {
@@ -325,6 +476,8 @@ export type WorkoutSetFeedback = {
   weight_delta: number;
   next_working_weight: number;
   guidance: string;
+  guidance_rationale: string;
+  decision_trace?: Record<string, unknown>;
   live_recommendation: WorkoutLiveRecommendation;
   created_at: string;
 };
@@ -345,6 +498,8 @@ export type WorkoutExerciseSummary = {
   weight_delta: number;
   next_working_weight: number;
   guidance: string;
+  guidance_rationale: string;
+  decision_trace?: Record<string, unknown>;
 };
 
 export type WorkoutSummary = {
@@ -353,6 +508,8 @@ export type WorkoutSummary = {
   planned_total: number;
   percent_complete: number;
   overall_guidance: string;
+  overall_rationale: string;
+  decision_trace?: Record<string, unknown>;
   exercises: WorkoutExerciseSummary[];
 };
 
@@ -449,6 +606,70 @@ export type HistoryAnalyticsResponse = {
   volume_heatmap: HistoryVolumeHeatmap;
 };
 
+export type HistoryCalendarDay = {
+  date: string;
+  weekday: number;
+  set_count: number;
+  exercise_count: number;
+  total_volume: number;
+  completed: boolean;
+  program_ids: string[];
+  muscles: string[];
+  pr_count: number;
+  pr_exercises: string[];
+};
+
+export type HistoryCalendarResponse = {
+  start_date: string;
+  end_date: string;
+  active_days: number;
+  current_streak_days: number;
+  longest_streak_days: number;
+  days: HistoryCalendarDay[];
+};
+
+export type HistoryDaySet = {
+  set_index: number;
+  reps: number;
+  weight: number;
+  rpe?: number | null;
+  created_at: string;
+};
+
+export type HistoryDayExercise = {
+  exercise_id: string;
+  primary_exercise_id?: string | null;
+  planned_name?: string | null;
+  primary_muscles?: string[];
+  total_sets: number;
+  total_volume: number;
+  planned_sets?: number | null;
+  set_delta?: number | null;
+  sets: HistoryDaySet[];
+};
+
+export type HistoryDayWorkout = {
+  workout_id: string;
+  program_id?: string | null;
+  total_sets: number;
+  total_volume: number;
+  planned_sets_total?: number;
+  set_delta?: number;
+  exercises: HistoryDayExercise[];
+};
+
+export type HistoryDayDetailResponse = {
+  date: string;
+  workouts: HistoryDayWorkout[];
+  totals: {
+    set_count: number;
+    exercise_count: number;
+    total_volume: number;
+    planned_set_count?: number;
+    set_delta?: number;
+  };
+};
+
 export type WeeklyExerciseFault = {
   primary_exercise_id: string;
   exercise_id: string;
@@ -523,6 +744,7 @@ export type WeeklyReviewResponse = {
   fault_count: number;
   summary: WeeklyPerformanceSummary;
   adjustments: WeeklyPlanAdjustment;
+  decision_trace: Record<string, unknown>;
 };
 
 export type SorenessSeverity = "none" | "mild" | "moderate" | "severe";
@@ -539,6 +761,11 @@ export type SorenessCreatePayload = {
   entry_date: string;
   severity_by_muscle: Record<string, SorenessSeverity>;
   notes?: string;
+};
+
+export type PasswordResetRequestResponse = {
+  status: string;
+  reset_token?: string | null;
 };
 
 export function getToken(): string | null {
@@ -575,7 +802,7 @@ export const api = {
   getTodayWorkout: () => request<WorkoutSession>("/workout/today"),
   getWorkoutProgress: (workoutId: string) => request<WorkoutProgress>(`/workout/${encodeURIComponent(workoutId)}/progress`),
   getWorkoutSummary: (workoutId: string) => request<WorkoutSummary>(`/workout/${encodeURIComponent(workoutId)}/summary`),
-  generateWeek: (templateId?: string | null) => request<Record<string, unknown>>("/plan/generate-week", { method: "POST", body: JSON.stringify(templateId ? { template_id: templateId } : {}) }),
+  generateWeek: (templateId?: string | null) => request<GeneratedWeekPlan>("/plan/generate-week", { method: "POST", body: JSON.stringify(templateId ? { template_id: templateId } : {}) }),
   getProfile: () => request<Profile>("/profile"),
   listPrograms: () => request<ProgramTemplateOption[]>("/plan/programs"),
   listGuidePrograms: () => request<GuideProgram[]>("/plan/guides/programs"),
@@ -650,6 +877,12 @@ export const api = {
     request<HistoryAnalyticsResponse>(
       `/history/analytics?limit_weeks=${encodeURIComponent(String(limitWeeks))}&checkin_limit=${encodeURIComponent(String(checkinLimit))}`,
     ),
+  getHistoryCalendar: (startDate: string, endDate: string) =>
+    request<HistoryCalendarResponse>(
+      `/history/calendar?start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`,
+    ),
+  getHistoryDayDetail: (day: string) =>
+    request<HistoryDayDetailResponse>(`/history/day/${encodeURIComponent(day)}`),
   listSoreness: (startDate: string, endDate: string) =>
     request<SorenessEntry[]>(`/soreness?start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`),
   createSoreness: (payload: SorenessCreatePayload) =>
@@ -664,6 +897,11 @@ export const api = {
     }),
   devWipeUser: (payload: { email: string; confirmation: string }) =>
     request<{ status: string }>("/auth/dev/wipe-user", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  requestPasswordReset: (payload: { email: string }) =>
+    request<PasswordResetRequestResponse>("/auth/password-reset/request", {
       method: "POST",
       body: JSON.stringify(payload),
     }),

@@ -18,6 +18,47 @@ function resolveStatusTone(status: string): "green" | "yellow" | "red" {
   return "yellow";
 }
 
+function humanizeCode(value: string | null | undefined): string {
+  const normalized = value?.trim() ?? "";
+  if (!normalized) {
+    return "No guidance recorded.";
+  }
+  if (!/[+_-]/.test(normalized)) {
+    return normalized;
+  }
+  const text = normalized.replaceAll("+", " and ").replaceAll("_", " ").trim();
+  if (!text) {
+    return "No guidance recorded.";
+  }
+  return `${text[0].toUpperCase()}${text.slice(1)}.`;
+}
+
+function resolveReadinessTone(score: number | null): "green" | "yellow" | "red" {
+  if (score === null) {
+    return "yellow";
+  }
+  if (score >= 75) {
+    return "green";
+  }
+  if (score >= 55) {
+    return "yellow";
+  }
+  return "red";
+}
+
+function resolveReadinessLabel(score: number | null): string {
+  if (score === null) {
+    return "Awaiting adaptive output";
+  }
+  if (score >= 75) {
+    return "Primed to push";
+  }
+  if (score >= 55) {
+    return "Manage fatigue carefully";
+  }
+  return "Recovery-first week";
+}
+
 export default function CheckinPage() {
   const [reviewStatus, setReviewStatus] = useState<WeeklyReviewStatus | null>(null);
   const [bodyWeight, setBodyWeight] = useState("0");
@@ -82,6 +123,22 @@ export default function CheckinPage() {
   }
 
   const previousSummary = reviewResult?.summary ?? reviewStatus?.previous_week_summary ?? null;
+  const readinessScore = reviewResult?.readiness_score ?? null;
+  const readinessTone = resolveReadinessTone(readinessScore);
+  const readinessLabel = resolveReadinessLabel(readinessScore);
+  const weakPointLabel = reviewResult?.adjustments.weak_point_exercises.length
+    ? reviewResult.adjustments.weak_point_exercises.map((item) => humanizeCode(item)).join(", ")
+    : "None";
+  const calorieValue = Number(calories || 0);
+  const proteinValue = Number(protein || 0);
+  const fatValue = Number(fat || 0);
+  const carbsValue = Number(carbs || 0);
+  let volumeShiftLabel = "Awaiting output";
+  if (reviewResult) {
+    const sign = reviewResult.adjustments.global_set_delta >= 0 ? "+" : "";
+    volumeShiftLabel = `${sign}${reviewResult.adjustments.global_set_delta} set delta`;
+  }
+  const loadScaleLabel = reviewResult ? `${reviewResult.adjustments.global_weight_scale.toFixed(2)}x target` : "Awaiting output";
 
   return (
     <div className="space-y-4">
@@ -107,6 +164,70 @@ export default function CheckinPage() {
 
       <CoachingIntelligencePanel contextLabel="Check-In" />
 
+      <div className="grid gap-3 lg:grid-cols-2">
+        <div className="main-card main-card--module spacing-grid spacing-grid--tight">
+          <div className="telemetry-header">
+            <div>
+              <p className="telemetry-kicker">Review Command Center</p>
+              <p className="telemetry-value">{readinessLabel}</p>
+            </div>
+            <span className="telemetry-status">
+              <span className={`status-dot status-dot--${readinessTone}`} />
+              {readinessScore === null ? "Pending" : `Readiness ${readinessScore}`}
+            </span>
+          </div>
+          <p className="telemetry-meta text-zinc-300">
+            {reviewResult ? humanizeCode(reviewResult.global_guidance) : "Submit the review to turn previous-week training into next-week prescriptions."}
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
+              <p className="telemetry-kicker">Volume Shift</p>
+              <p className="text-sm text-zinc-100">{volumeShiftLabel}</p>
+            </div>
+            <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
+              <p className="telemetry-kicker">Load Scale</p>
+              <p className="text-sm text-zinc-100">{loadScaleLabel}</p>
+            </div>
+            <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
+              <p className="telemetry-kicker">Weak Point Targets</p>
+              <p className="text-sm text-zinc-100">{weakPointLabel}</p>
+            </div>
+            <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
+              <p className="telemetry-kicker">Fault Count</p>
+              <p className="text-sm text-zinc-100">{previousSummary ? previousSummary.faulty_exercise_count : 0} flagged lifts</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="main-card main-card--module spacing-grid spacing-grid--tight">
+          <div className="telemetry-header">
+            <div>
+              <p className="telemetry-kicker">Nutrition Snapshot</p>
+              <p className="telemetry-value">Next week fuel plan</p>
+            </div>
+            <p className="telemetry-meta">Adjust before saving if recovery or scale trend is off.</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
+              <p className="telemetry-kicker">Calories</p>
+              <p className="text-sm text-zinc-100">{calorieValue} kcal</p>
+            </div>
+            <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
+              <p className="telemetry-kicker">Protein</p>
+              <p className="text-sm text-zinc-100">{proteinValue} g</p>
+            </div>
+            <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
+              <p className="telemetry-kicker">Fat</p>
+              <p className="text-sm text-zinc-100">{fatValue} g</p>
+            </div>
+            <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
+              <p className="telemetry-kicker">Carbs</p>
+              <p className="text-sm text-zinc-100">{carbsValue} g</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {previousSummary ? (
         <div className="main-card main-card--module spacing-grid spacing-grid--tight">
           <p className="telemetry-kicker">Previous Week Lift Audit</p>
@@ -118,11 +239,12 @@ export default function CheckinPage() {
             {previousSummary.exercise_faults.slice(0, 5).map((fault) => (
               <div key={fault.primary_exercise_id} className="rounded-md border border-zinc-800 bg-zinc-900/40 p-2 text-xs text-zinc-300">
                 <p className="font-semibold text-zinc-100">{fault.name}</p>
+                <p className="text-[11px] uppercase tracking-wide text-zinc-500">{fault.fault_level} fault</p>
                 <p>
                   {fault.completed_sets}/{fault.planned_sets} sets · avg {fault.average_performed_reps} reps @ {fault.average_performed_weight} kg
                 </p>
                 <p>
-                  Target {fault.target_reps_min}-{fault.target_reps_max} reps @ {fault.target_weight} kg · {fault.guidance}
+                  Target {fault.target_reps_min}-{fault.target_reps_max} reps @ {fault.target_weight} kg · {humanizeCode(fault.guidance)}
                 </p>
               </div>
             ))}
@@ -230,14 +352,14 @@ export default function CheckinPage() {
         <div className="main-card main-card--module spacing-grid spacing-grid--tight">
           <p className="telemetry-kicker">Adaptive Output</p>
           <p className="telemetry-meta text-zinc-300">Readiness score: {reviewResult.readiness_score}</p>
-          <p className="telemetry-meta text-zinc-300">Guidance: {reviewResult.global_guidance}</p>
-          <p className="telemetry-meta text-zinc-300">Weak points: {reviewResult.adjustments.weak_point_exercises.join(", ") || "None"}</p>
+          <p className="telemetry-meta text-zinc-300">Guidance: {humanizeCode(reviewResult.global_guidance)}</p>
+          <p className="telemetry-meta text-zinc-300">Weak points: {weakPointLabel}</p>
           <div className="space-y-2">
             {reviewResult.adjustments.exercise_overrides.slice(0, 5).map((item) => (
               <div key={item.primary_exercise_id} className="rounded-md border border-zinc-800 bg-zinc-900/40 p-2 text-xs text-zinc-300">
-                <p className="font-semibold text-zinc-100">{item.primary_exercise_id}</p>
+                <p className="font-semibold text-zinc-100">{humanizeCode(item.primary_exercise_id)}</p>
                 <p>
-                  set_delta {item.set_delta}, weight_scale {item.weight_scale} · {item.rationale}
+                  set_delta {item.set_delta}, weight_scale {item.weight_scale} · {humanizeCode(item.rationale)}
                 </p>
               </div>
             ))}

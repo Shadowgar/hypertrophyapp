@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   api,
+  resolveReasonText,
   type IntelligenceCoachPreviewResponse,
   type SorenessSeverity,
 } from "@/lib/api";
@@ -104,7 +105,7 @@ export default function CoachingIntelligencePanel({
     setApplyStatus(confirm ? "Applying phase decision..." : "Checking phase decision...");
     try {
       const response = await api.applyPhaseDecision({ recommendation_id: recommendationId, confirm });
-      setApplyStatus(`Phase: ${response.status} (${response.reason})`);
+      setApplyStatus(`Phase: ${response.status} (${resolveReasonText(response.rationale, response.reason)})`);
     } catch {
       setApplyStatus("Phase apply failed");
     }
@@ -196,7 +197,9 @@ export default function CoachingIntelligencePanel({
           <p>Program: {coachPreview.program_name}</p>
           <p>Recommendation ID: {coachPreview.recommendation_id}</p>
           <p>Progression: {coachPreview.progression.action}</p>
+          <p>{resolveReasonText(coachPreview.progression.rationale, coachPreview.progression.reason)}</p>
           <p>Phase Recommendation: {coachPreview.phase_transition.next_phase}</p>
+          <p>{resolveReasonText(coachPreview.phase_transition.rationale, coachPreview.phase_transition.reason)}</p>
           <p>Adaptation Risk: {coachPreview.schedule.risk_level}</p>
         </div>
       ) : null}

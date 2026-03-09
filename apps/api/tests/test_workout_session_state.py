@@ -6,7 +6,7 @@ configure_test_database("test_workout_session_state")
 
 from app.database import Base, SessionLocal, engine
 from app.main import app
-from app.models import WorkoutSessionState
+from app.models import ExerciseState, User, WorkoutSessionState
 
 
 def _reset_db() -> None:
@@ -24,7 +24,7 @@ def _register_token(client: TestClient, email: str) -> str:
     return response.json()["access_token"]
 
 
-def _onboard_profile(client: TestClient, token: str) -> None:
+def _onboard_profile(client: TestClient, token: str, *, equipment_profile: list[str] | None = None) -> None:
     response = client.post(
         "/profile",
         headers={"Authorization": f"Bearer {token}"},
@@ -35,7 +35,7 @@ def _onboard_profile(client: TestClient, token: str) -> None:
             "gender": "male",
             "split_preference": "full_body",
             "training_location": "home",
-            "equipment_profile": ["dumbbell"],
+            "equipment_profile": equipment_profile or ["dumbbell"],
             "days_available": 3,
             "nutrition_phase": "maintenance",
             "calories": 2500,
@@ -162,3 +162,55 @@ def test_log_set_live_recommendation_increases_load_when_reps_above_target() -> 
     live = payload["live_recommendation"]
     assert live["guidance"] == "remaining_sets_increase_load_keep_reps_controlled"
     assert float(live["recommended_weight"]) >= logged_weight
+
+
+def test_log_set_surfaces_repeat_failure_substitution_recommendation() -> None:
+    _reset_db()
+    client = TestClient(app)
+    email = "sessionstate-repeat@example.com"
+    token = _register_token(client, email)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    _onboard_profile(client, token, equipment_profile=["cable", "machine", "dumbbell", "barbell"])
+    first_session, first_exercise = _setup_first_exercise(client, headers)
+
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == email).first()
+        assert user is not None
+        state = ExerciseState(
+            user_id=user.id,
+            exercise_id=first_exercise.get("primary_exercise_id") or first_exercise["id"],
+            current_working_weight=float(first_exercise["recommended_working_weight"]),
+            exposure_count=2,
+            consecutive_under_target_exposures=2,
+            last_progression_action="hold",
+            fatigue_score=0,
+        )
+        db.add(state)
+        db.commit()
+
+    planned_min = int(first_exercise["rep_range"][0])
+    response = client.post(
+        f"/workout/{first_session['session_id']}/log-set",
+        headers=headers,
+        json={
+            "primary_exercise_id": first_exercise.get("primary_exercise_id"),
+            "exercise_id": first_exercise["id"],
+            "set_index": 1,
+            "reps": max(1, planned_min - 2),
+            "weight": float(first_exercise["recommended_working_weight"]),
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()
+
+    substitution = payload["live_recommendation"]["substitution_recommendation"]
+    assert substitution["recommended_name"] == "Chest Supported Row"
+    assert substitution["failed_exposure_count"] == 3
+    assert substitution["trigger_threshold"] == 3
+
+    today = client.get("/workout/today", headers=headers)
+    assert today.status_code == 200
+    today_payload = today.json()
+    matching = next(item for item in today_payload["exercises"] if item["id"] == first_exercise["id"])
+    assert matching["live_recommendation"]["substitution_recommendation"]["recommended_name"] == "Chest Supported Row"

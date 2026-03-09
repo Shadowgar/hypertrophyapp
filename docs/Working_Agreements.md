@@ -1,6 +1,6 @@
 # Working Agreements - Adaptive Coaching Program
 
-Last updated: 2026-03-06
+Last updated: 2026-03-07
 
 ## Product Integrity Rules
 
@@ -16,6 +16,16 @@ Last updated: 2026-03-06
 3. Every adaptation decision must be explainable and testable.
 4. Import ambiguity must be surfaced, not guessed.
 5. Schema changes require versioning + migration notes.
+
+## Decision Runtime Rules
+
+1. No new meaningful coaching behavior outside `packages/core-engine`.
+2. Preview and apply must share one interpreter per decision family.
+3. Routers orchestrate IO and persistence only.
+4. Explanations must come from interpreter output.
+5. Every meaningful coaching decision must emit a structured decision trace.
+6. Legacy runtime paths may exist temporarily, but may not receive new coaching logic.
+7. Programs without canonical artifacts are legacy, not first-class runtime programs.
 
 ## Commit and Review Rules
 

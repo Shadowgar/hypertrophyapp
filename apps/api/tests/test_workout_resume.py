@@ -93,6 +93,9 @@ def test_workout_today_resumes_incomplete_session() -> None:
     assert "deload" in payload
     # ensure server reports completed sets per exercise
     assert payload["exercises"][0].get("completed_sets", 0) == 1
+    assert payload["exercises"][0].get("live_recommendation", {}).get("remaining_sets") == int(exercise.get("sets", 3)) - 1
+    assert isinstance(payload["exercises"][0].get("warmups"), list)
+    assert payload["exercises"][0]["warmups"]
 
 
 def test_workout_today_does_not_resume_completed_session() -> None:

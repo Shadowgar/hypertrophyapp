@@ -84,6 +84,107 @@ function resolveHealthStatus(health: string): "green" | "yellow" | "red" {
   return "red";
 }
 
+function resolveGuidanceText(rationale?: string | null, guidance?: string | null): string {
+  const preferred = rationale?.trim();
+  if (preferred) {
+    return preferred;
+  }
+  const fallback = guidance?.trim();
+  return fallback || "Follow the planned progression.";
+}
+
+function SessionIntentCard({
+  workout,
+  workoutProgress,
+}: Readonly<{
+  workout: WorkoutSession;
+  workoutProgress: { completed: number; planned: number; percent: number } | null;
+}>) {
+  const leadExercise = workout.exercises[0];
+  const remainingSets = workoutProgress ? Math.max(0, workoutProgress.planned - workoutProgress.completed) : null;
+  let intentLabel = "Primary hypertrophy exposure";
+  if (workout.deload?.active) {
+    intentLabel = "Deload execution";
+  } else if (workout.resume) {
+    intentLabel = "Resume and finish";
+  }
+  const pacingLine = workoutProgress
+    ? `Progress is ${workoutProgress.percent}%. Finish the remaining ${remainingSets ?? 0} planned sets without drifting off target.`
+    : `Open with ${leadExercise?.sets ?? 0} sets on the lead slot, then roll through ${workout.exercises.length} total exercises.`;
+  let cautionLine = "Stay in the planned rep range before adding load or extra fatigue.";
+  if (workout.deload?.active) {
+    cautionLine = `Keep effort controlled and respect the ${workout.deload.load_reduction_pct}% load trim.`;
+  } else if (workout.resume) {
+    cautionLine = "Resume from the saved state instead of repeating completed work.";
+  }
+
+  return (
+    <div className="main-card main-card--module main-card--accent spacing-grid spacing-grid--tight">
+      <div className="telemetry-header">
+        <p className="telemetry-kicker">Session Intent</p>
+        <p className="telemetry-status">
+          <span className="status-dot status-dot--green" /> {intentLabel}
+        </p>
+      </div>
+      {leadExercise ? (
+        <p className="text-sm text-zinc-100">
+          Lead exercise: {leadExercise.name} for {leadExercise.sets} sets of {leadExercise.rep_range[0]}-{leadExercise.rep_range[1]} reps @ {leadExercise.recommended_working_weight} kg.
+        </p>
+      ) : null}
+      <p className="telemetry-meta">{pacingLine}</p>
+      <p className="text-xs text-zinc-200">{cautionLine}</p>
+    </div>
+  );
+}
+
+function BetweenSetCoachCard({
+  workout,
+  completedSetsByExercise,
+  liveRecommendationByExercise,
+  setFeedbackByExercise,
+  swapIndexByExercise,
+}: Readonly<{
+  workout: WorkoutSession;
+  completedSetsByExercise: Record<string, number>;
+  liveRecommendationByExercise: Record<string, WorkoutLiveRecommendation>;
+  setFeedbackByExercise: Record<string, WorkoutSetFeedback>;
+  swapIndexByExercise: SwapState;
+}>) {
+  const activeExercise = workout.exercises.find((exercise) => (completedSetsByExercise[exercise.id] ?? 0) < exercise.sets) ?? workout.exercises[0];
+  if (!activeExercise) {
+    return null;
+  }
+
+  const selectedName = resolveExerciseName(activeExercise, swapIndexByExercise);
+  const completed = completedSetsByExercise[activeExercise.id] ?? 0;
+  const recommendation = liveRecommendationByExercise[activeExercise.id] ?? null;
+  const feedback = setFeedbackByExercise[activeExercise.id] ?? null;
+  const swapActive = selectedName !== activeExercise.name;
+  let coachGuidance = "Log the opening set to unlock within-session load guidance.";
+  if (recommendation) {
+    coachGuidance = resolveGuidanceText(recommendation.guidance_rationale, recommendation.guidance);
+  } else if (feedback) {
+    coachGuidance = resolveGuidanceText(feedback.guidance_rationale, feedback.guidance);
+  }
+
+  return (
+    <div className="main-card main-card--shell spacing-grid spacing-grid--tight">
+      <div className="telemetry-header">
+        <p className="telemetry-kicker">Between-Set Coach</p>
+        <p className="telemetry-meta">Live lane: {selectedName}</p>
+      </div>
+      <p className="text-sm text-zinc-100">{selectedName}: {completed}/{activeExercise.sets} sets complete.</p>
+      <p className="text-xs text-zinc-200">
+        {recommendation
+          ? `Next set target: ${recommendation.recommended_reps_min}-${recommendation.recommended_reps_max} reps @ ${recommendation.recommended_weight} kg.`
+          : `Start with ${activeExercise.rep_range[0]}-${activeExercise.rep_range[1]} reps @ ${activeExercise.recommended_working_weight} kg.`}
+      </p>
+      <p className="telemetry-meta">{coachGuidance}</p>
+      {swapActive ? <p className="telemetry-meta">Equipment swap active for this slot.</p> : null}
+    </div>
+  );
+}
+
 function WorkoutSummaryCard({ summary }: Readonly<{ summary: WorkoutSummary | null }>) {
   if (!summary) {
     return null;
@@ -97,7 +198,7 @@ function WorkoutSummaryCard({ summary }: Readonly<{ summary: WorkoutSummary | nu
           <span className="status-dot status-dot--green" /> {summary.percent_complete}% complete
         </p>
       </div>
-      <p className="telemetry-meta">Overall guidance: {summary.overall_guidance}</p>
+      <p className="telemetry-meta">Overall guidance: {resolveGuidanceText(summary.overall_rationale, summary.overall_guidance)}</p>
       <div className="space-y-2">
         {summary.exercises.map((item) => (
           <div key={item.exercise_id} className="rounded-md border border-zinc-800 bg-zinc-900/40 p-2 text-xs text-zinc-300">
@@ -109,8 +210,9 @@ function WorkoutSummaryCard({ summary }: Readonly<{ summary: WorkoutSummary | nu
               Performed: {item.performed_sets} sets · avg {item.average_performed_reps} reps @ {item.average_performed_weight} kg
             </p>
             <p>
-              Next: {item.next_working_weight} kg ({item.guidance})
+              Next: {item.next_working_weight} kg
             </p>
+            <p>{resolveGuidanceText(item.guidance_rationale, item.guidance)}</p>
           </div>
         ))}
       </div>
@@ -423,6 +525,14 @@ export default function TodayPage() {
       {workout ? (
         <div className="space-y-3">
           <WorkoutHeaderCard workout={workout} workoutProgress={workoutProgress} />
+          <SessionIntentCard workout={workout} workoutProgress={workoutProgress} />
+          <BetweenSetCoachCard
+            workout={workout}
+            completedSetsByExercise={completedSetsByExercise}
+            liveRecommendationByExercise={liveRecommendationByExercise}
+            setFeedbackByExercise={setFeedbackByExercise}
+            swapIndexByExercise={swapIndexByExercise}
+          />
 
           {workout.exercises.map((exercise) => {
             const notesOpen = notesOpenByExercise[exercise.id] ?? false;
@@ -516,7 +626,13 @@ export default function TodayPage() {
                       Planned: {setFeedbackByExercise[exercise.id].planned_reps_min}-{setFeedbackByExercise[exercise.id].planned_reps_max} reps @ {setFeedbackByExercise[exercise.id].planned_weight} kg
                     </p>
                     <p>
-                      Next recommendation: {setFeedbackByExercise[exercise.id].next_working_weight} kg ({setFeedbackByExercise[exercise.id].guidance})
+                      Next recommendation: {setFeedbackByExercise[exercise.id].next_working_weight} kg
+                    </p>
+                    <p>
+                      {resolveGuidanceText(
+                        setFeedbackByExercise[exercise.id].guidance_rationale,
+                        setFeedbackByExercise[exercise.id].guidance,
+                      )}
                     </p>
                   </div>
                 ) : null}
@@ -530,7 +646,12 @@ export default function TodayPage() {
                       Next set target: {liveRecommendationByExercise[exercise.id].recommended_reps_min}-
                       {liveRecommendationByExercise[exercise.id].recommended_reps_max} reps @ {liveRecommendationByExercise[exercise.id].recommended_weight} kg
                     </p>
-                    <p>Guidance: {liveRecommendationByExercise[exercise.id].guidance}</p>
+                    <p>
+                      Guidance: {resolveGuidanceText(
+                        liveRecommendationByExercise[exercise.id].guidance_rationale,
+                        liveRecommendationByExercise[exercise.id].guidance,
+                      )}
+                    </p>
                   </div>
                 ) : null}
 

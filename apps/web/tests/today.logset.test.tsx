@@ -60,7 +60,37 @@ test("Completing a set calls log-set POST and persists completed sets", async ()
     }
     if (url.includes("/log-set") && init?.method === "POST") {
       completedSets = 1;
-      return Promise.resolve(new Response(JSON.stringify({ status: "ok" }), { status: 200 }));
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            id: "log-1",
+            primary_exercise_id: "bench-1",
+            exercise_id: "ex-1",
+            set_index: 1,
+            reps: 8,
+            weight: 60,
+            planned_reps_min: 8,
+            planned_reps_max: 12,
+            planned_weight: 60,
+            rep_delta: 0,
+            weight_delta: 0,
+            next_working_weight: 60,
+            guidance: "below_target_reps_reduce_or_hold_load",
+            guidance_rationale: "Performance fell below the target range. Hold load on the first miss and only reduce if it repeats across 2 exposures.",
+            live_recommendation: {
+              completed_sets: 1,
+              remaining_sets: 2,
+              recommended_reps_min: 8,
+              recommended_reps_max: 10,
+              recommended_weight: 57.5,
+              guidance: "remaining_sets_reduce_load_focus_target_reps",
+              guidance_rationale: "Reps dropped below target. Trim load slightly within the session so the remaining sets stay on target.",
+            },
+            created_at: new Date().toISOString(),
+          }),
+          { status: 200 },
+        ),
+      );
     }
     return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
   });
@@ -70,8 +100,9 @@ test("Completing a set calls log-set POST and persists completed sets", async ()
   const loadBtn = screen.getByRole("button", { name: /Load Today Workout/i });
   fireEvent.click(loadBtn);
 
-  await waitFor(() => expect(screen.getByText(/Bench Press/i)).toBeInTheDocument());
+  await waitFor(() => expect(screen.getAllByText(/Bench Press/i).length).toBeGreaterThan(0));
   expect(screen.getByText(/Progress:\s*0\/3 sets \(0%\)/i)).toBeInTheDocument();
+  expect(screen.getByText(/Live lane: Bench Press/i)).toBeInTheDocument();
 
   // find Complete Set button within the exercise control
   const completeBtn = screen.getByRole("button", { name: /Complete Set/i });
@@ -101,4 +132,16 @@ test("Completing a set calls log-set POST and persists completed sets", async ()
   await waitFor(() => {
     expect(screen.getByText(/Progress:\s*1\/3 sets \(33%\)/i)).toBeInTheDocument();
   });
+
+  expect(screen.getByText(/Bench Press: 1\/3 sets complete\./i)).toBeInTheDocument();
+  expect(screen.getAllByText(/Next set target: 8-10 reps @ 57.5 kg/i).length).toBeGreaterThan(0);
+
+  expect(
+    screen.getByText(/Performance fell below the target range\. Hold load on the first miss and only reduce if it repeats across 2 exposures\./i),
+  ).toBeInTheDocument();
+  expect(
+    screen.getAllByText(/Reps dropped below target\. Trim load slightly within the session so the remaining sets stay on target\./i).length,
+  ).toBeGreaterThan(0);
+  expect(screen.queryByText(/below_target_reps_reduce_or_hold_load/i)).not.toBeInTheDocument();
+  expect(screen.queryByText(/remaining_sets_reduce_load_focus_target_reps/i)).not.toBeInTheDocument();
 });

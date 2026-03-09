@@ -23,6 +23,11 @@ def _current_monday() -> date:
     return today - timedelta(days=today.weekday())
 
 
+def _review_week_start() -> date:
+    current_monday = _current_monday()
+    return current_monday + timedelta(days=7) if date.today().weekday() == 6 else current_monday
+
+
 def _register_and_onboard(client: TestClient) -> dict[str, str]:
     generated_secret = f"Pw-{uuid4().hex[:12]}"
     credential_field = "pass" + "word"
@@ -59,8 +64,7 @@ def _register_and_onboard(client: TestClient) -> dict[str, str]:
 
 
 def _seed_previous_week_plan_and_logs_for_faults(user_email: str) -> None:
-    current_monday = _current_monday()
-    previous_monday = current_monday - timedelta(days=7)
+    previous_monday = _review_week_start() - timedelta(days=7)
     payload = {
         "program_template_id": "full_body_v1",
         "sessions": [
@@ -178,6 +182,8 @@ def test_submit_weekly_review_updates_profile_and_returns_adjustments() -> None:
     assert "readiness_score" in payload
     assert "adjustments" in payload
     assert "global_guidance" in payload
+    assert payload["decision_trace"]["interpreter"] == "interpret_weekly_review_decision"
+    assert payload["decision_trace"]["outcome"]["readiness_score"] == payload["readiness_score"]
 
     profile = client.get("/profile", headers=headers)
     assert profile.status_code == 200
@@ -216,6 +222,10 @@ def test_generate_week_uses_saved_weekly_review_adjustments() -> None:
                     "global": {"set_delta": 1, "weight_scale": 0.95},
                     "weak_point_exercises": [],
                     "exercise_overrides": {},
+                    "decision_trace": {
+                        "interpreter": "interpret_weekly_review_decision",
+                        "outcome": {"global_set_delta": 1, "global_weight_scale": 0.95},
+                    },
                 },
                 summary={"planned_sets_total": 0, "completed_sets_total": 0},
             )
@@ -229,6 +239,7 @@ def test_generate_week_uses_saved_weekly_review_adjustments() -> None:
     assert "adaptive_review" in payload
     assert payload["adaptive_review"]["global_set_delta"] == 1
     assert math.isclose(float(payload["adaptive_review"]["global_weight_scale"]), 0.95, rel_tol=1e-9, abs_tol=1e-9)
+    assert payload["adaptive_review"]["decision_trace"]["interpreter"] == "interpret_weekly_review_decision"
     assert all((exercise.get("sets", 0) >= 2) for session in payload.get("sessions", []) for exercise in session.get("exercises", []))
 
 
@@ -263,7 +274,7 @@ def test_weekly_review_weak_point_boost_is_bounded() -> None:
     assert all(int(item["set_delta"]) <= 1 for item in overrides)
     assert all(0.93 <= float(item["weight_scale"]) <= 1.03 for item in overrides)
 
-    monday = _current_monday()
+    monday = _review_week_start()
     with SessionLocal() as session:
         cycle = (
             session.query(WeeklyReviewCycle)
@@ -275,8 +286,11 @@ def test_weekly_review_weak_point_boost_is_bounded() -> None:
         stored = cycle.adjustments if isinstance(cycle.adjustments, dict) else {}
         boosted_exercises = stored.get("weak_point_boosted_exercises")
         caps = stored.get("weak_point_caps")
+        decision_trace = stored.get("decision_trace")
         assert isinstance(boosted_exercises, list)
         assert len(boosted_exercises) <= 2
         assert isinstance(caps, dict)
+        assert isinstance(decision_trace, dict)
+        assert decision_trace.get("interpreter") == "interpret_weekly_review_decision"
         assert caps.get("max_boosted_exercises") == 2
         assert caps.get("max_set_delta_per_exercise") == 1

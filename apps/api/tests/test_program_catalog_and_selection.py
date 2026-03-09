@@ -77,6 +77,10 @@ def test_generate_week_uses_selected_program_when_template_not_passed() -> None:
     plan = generate.json()
     assert len(plan["sessions"]) > 0
     assert plan["sessions"][0]["session_id"].startswith("ppl_v1-")
+    assert plan["template_selection_trace"]["interpreter"] == "recommend_generation_template_selection"
+    assert plan["template_selection_trace"]["selected_template_id"] == "ppl_v1"
+    assert plan["generation_runtime_trace"]["interpreter"] == "resolve_week_generation_runtime_inputs"
+    assert plan["generation_runtime_trace"]["outcome"]["effective_days_available"] == 3
 
 
 def test_generate_week_applies_latest_soreness_modifiers() -> None:
@@ -265,6 +269,8 @@ def test_generate_week_includes_mesocycle_and_deload_payload() -> None:
     assert plan["mesocycle"]["is_deload_week"] is True
     assert plan["mesocycle"]["deload_reason"] == "early_soreness+early_adherence"
     assert plan["deload"]["active"] is True
+    assert plan["generation_runtime_trace"]["outcome"]["severe_soreness_count"] == 2
+    assert plan["generation_runtime_trace"]["outcome"]["latest_adherence_score"] == 2
 
 
 def test_generate_week_falls_back_to_equipment_safe_template(monkeypatch) -> None:
@@ -359,6 +365,8 @@ def test_generate_week_falls_back_to_equipment_safe_template(monkeypatch) -> Non
     plan = generate.json()
 
     assert plan["program_template_id"] == "upper_lower_v1"
+    assert plan["template_selection_trace"]["selected_template_id"] == "upper_lower_v1"
+    assert plan["template_selection_trace"]["reason"] == "first_viable_candidate"
     assert len(plan["sessions"]) == 1
     assert plan["sessions"][0]["exercises"][0]["id"] == "db_press"
 
@@ -428,4 +436,5 @@ def test_generate_week_explicit_template_override_is_respected(monkeypatch) -> N
     plan = generate.json()
 
     assert plan["program_template_id"] == "explicit_template"
+    assert plan["template_selection_trace"]["reason"] == "explicit_template_override"
     assert plan["sessions"][0]["session_id"].startswith("explicit_template-")

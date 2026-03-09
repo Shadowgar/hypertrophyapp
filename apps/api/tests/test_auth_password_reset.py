@@ -95,3 +95,35 @@ def test_dev_wipe_user_allows_re_registration() -> None:
         json={"email": "wipe@example.com", credential_field: "TestPass123", "name": "Wipe User"},
     )
     assert re_register.status_code == 200
+
+
+def test_auth_email_matching_is_case_and_whitespace_insensitive() -> None:
+    _reset_db()
+    client = TestClient(app)
+    credential_field = "pass" + "word"
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "  CaseUser@Example.COM  ", credential_field: "CasePass123", "name": "Case User"},
+    )
+    assert register.status_code == 200
+
+    duplicate = client.post(
+        "/auth/register",
+        json={"email": "caseuser@example.com", credential_field: "CasePass123", "name": "Case User"},
+    )
+    assert duplicate.status_code == 400
+
+    login = client.post(
+        "/auth/login",
+        json={"email": " CASEUSER@example.com ", credential_field: "CasePass123"},
+    )
+    assert login.status_code == 200
+    assert "access_token" in login.json()
+
+    wipe = client.post(
+        "/auth/dev/wipe-user",
+        json={"email": "CaSeUsEr@ExAmPlE.CoM", "confirmation": "WIPE"},
+    )
+    assert wipe.status_code == 200
+    assert wipe.json()["status"] == "wiped"

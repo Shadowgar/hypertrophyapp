@@ -3,6 +3,7 @@ from typing import Any
 import re
 
 from .equipment import resolve_equipment_tags
+from .rules_runtime import resolve_equipment_substitution
 
 
 _SORENESS_LEVEL_ORDER = {"none": 0, "mild": 1, "moderate": 2, "severe": 3}
@@ -209,20 +210,6 @@ def _is_equipment_compatible(tags: list[str], equipment_set: set[str]) -> bool:
     return bool(equipment_set.intersection({tag.lower() for tag in tags}))
 
 
-def _prefilter_substitutions(candidates: list[str], equipment_set: set[str]) -> list[str]:
-    if not candidates:
-        return []
-    if not equipment_set:
-        return candidates
-
-    filtered: list[str] = []
-    for candidate in candidates:
-        candidate_tags = resolve_equipment_tags(exercise_name=candidate, explicit_tags=None)
-        if _is_equipment_compatible(candidate_tags, equipment_set):
-            filtered.append(candidate)
-    return filtered
-
-
 def _slugify(value: str) -> str:
     slug = re.sub(r"[^a-z0-9]+", "_", value.lower()).strip("_")
     return slug or "exercise"
@@ -237,6 +224,7 @@ def _build_planned_exercise(
     is_deload_week: bool,
     set_reduction_pct: int,
     load_reduction_pct: int,
+    rule_set: dict[str, Any] | None,
 ) -> dict[str, Any] | None:
     resolved_equipment_tags = resolve_equipment_tags(
         exercise_name=exercise.get("name", ""),
@@ -255,14 +243,22 @@ def _build_planned_exercise(
             load_reduction_pct=load_reduction_pct,
         )
     substitutions = exercise.get("substitution_candidates") or exercise.get("substitutions") or []
-    compatible_substitutions = _prefilter_substitutions(substitutions, equipment_set)
+    substitution_runtime = resolve_equipment_substitution(
+        exercise_id=str(exercise.get("id") or ""),
+        exercise_name=str(exercise.get("name") or ""),
+        exercise_equipment_tags=resolved_equipment_tags,
+        substitution_candidates=list(substitutions),
+        equipment_set=equipment_set,
+        rule_set=rule_set,
+    )
+    compatible_substitutions = list(substitution_runtime["compatible_substitutions"])
 
     planned_id = exercise.get("id")
     planned_name = exercise.get("name")
-    if not _is_equipment_compatible(resolved_equipment_tags, equipment_set):
+    if not bool(substitution_runtime["decision_trace"]["outcome"]["original_compatible"]):
         if not compatible_substitutions:
             return None
-        planned_name = compatible_substitutions[0]
+        planned_name = str(substitution_runtime["selected_name"])
         planned_id = _slugify(planned_name)
 
     return {
@@ -276,6 +272,7 @@ def _build_planned_exercise(
         "movement_pattern": exercise.get("movement_pattern"),
         "primary_muscles": exercise.get("primary_muscles", []),
         "substitution_candidates": compatible_substitutions,
+        "substitution_decision_trace": dict(substitution_runtime["decision_trace"]),
         "notes": exercise.get("notes"),
         "video": exercise.get("video"),
         "equipment_tags": resolved_equipment_tags,
@@ -477,6 +474,7 @@ def generate_week_plan(
     prior_generated_weeks: int = 0,
     latest_adherence_score: int | None = None,
     severe_soreness_count: int = 0,
+    rule_set: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     days_available = max(2, min(7, days_available))
     today = date.today()
@@ -525,6 +523,7 @@ def generate_week_plan(
                 is_deload_week=bool(deload["active"]),
                 set_reduction_pct=set_reduction_pct,
                 load_reduction_pct=load_reduction_pct,
+                rule_set=rule_set,
             )
             if planned_exercise is not None:
                 exercises.append(planned_exercise)

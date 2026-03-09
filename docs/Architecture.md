@@ -1,6 +1,6 @@
 # Architecture - Adaptive Coaching Target State
 
-Last updated: 2026-03-06
+Last updated: 2026-03-07
 
 ## Runtime Boundary
 
@@ -34,6 +34,26 @@ Runtime does not depend on `docs/guides/generated/*.md` text artifacts.
 - Inputs: template + rules + user state
 - Outputs: today's plan, post-session evaluation, next-session adaptation
 
+## Decision Runtime Sovereignty
+
+The runtime is only correct when the decision engine is the final authority for meaningful coaching decisions.
+
+Sovereignty rules:
+- meaningful coaching decisions must be executed in `packages/core-engine`
+- API routers may not invent coaching decisions on their own
+- preview and apply flows must call the same interpreter for a given decision family
+- explanations must be emitted from interpreter output, not reconstructed independently
+- every meaningful decision must emit a structured decision trace
+
+Meaningful coaching decisions include:
+- program recommendation
+- frequency adaptation
+- substitution selection
+- progression changes
+- deload triggers
+- phase transitions
+- weak-point adjustments
+
 6. API/UI Layer
 - Program selection
 - Workout execution and logging
@@ -49,6 +69,7 @@ Runtime does not depend on `docs/guides/generated/*.md` text artifacts.
 
 - `importers/reference_corpus_ingest.py` generated markdown guides remain build artifacts only.
 - `GET /plan/intelligence/reference-pairs` is informational provenance, not coaching runtime logic.
+- any runtime path that lacks canonical artifacts is legacy and must not gain new coaching behavior.
 
 ## Deployment Principle
 

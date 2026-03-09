@@ -12,6 +12,8 @@ COPY packages/core-engine /app/packages/core-engine
 RUN pip install --no-cache-dir -e /app/packages/core-engine
 
 COPY apps/api /app/apps/api
+COPY apps/web/lib /app/apps/web/lib
+COPY docs/rules /app/docs/rules
 COPY importers /app/importers
 COPY programs /app/programs
 

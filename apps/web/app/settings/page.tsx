@@ -9,6 +9,7 @@ import {
   api,
   type FrequencyAdaptationResult,
   getProgramDisplayName,
+  resolveReasonText,
   type IntelligenceCoachPreviewResponse,
   type Profile,
   type ProgramRecommendation,
@@ -30,7 +31,7 @@ export default function SettingsPage() {
   const [programs, setPrograms] = useState<ProgramTemplateOption[]>([]);
   const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
   const [recommendation, setRecommendation] = useState<ProgramRecommendation | null>(null);
-  const [pendingSwitch, setPendingSwitch] = useState<{ targetProgramId: string; reason: string } | null>(null);
+  const [pendingSwitch, setPendingSwitch] = useState<{ targetProgramId: string; rationale: string } | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [coachPreview, setCoachPreview] = useState<IntelligenceCoachPreviewResponse | null>(null);
   const [coachStatus, setCoachStatus] = useState<string | null>(null);
@@ -94,7 +95,10 @@ export default function SettingsPage() {
     try {
       const response = await api.switchProgram({ target_program_id: selectedProgramId, confirm: false });
       if (response.requires_confirmation) {
-        setPendingSwitch({ targetProgramId: selectedProgramId, reason: response.reason });
+        setPendingSwitch({
+          targetProgramId: selectedProgramId,
+          rationale: resolveReasonText(response.rationale, response.reason),
+        });
         setStatus("Confirm program switch");
       } else if (response.applied) {
         const updated = await api.getProfile();
@@ -183,7 +187,7 @@ export default function SettingsPage() {
     setApplyStatus(confirm ? "Applying phase decision..." : "Checking phase decision...");
     try {
       const response = await api.applyPhaseDecision({ recommendation_id: recommendationId, confirm });
-      setApplyStatus(`Phase: ${response.status} (${response.reason})`);
+      setApplyStatus(`Phase: ${response.status} (${resolveReasonText(response.rationale, response.reason)})`);
     } catch {
       setApplyStatus("Phase apply failed");
     }
@@ -264,8 +268,12 @@ export default function SettingsPage() {
       <div className="main-card main-card--module spacing-grid">
         <p className="telemetry-kicker">Program Intelligence</p>
         <div className="rounded-md border border-zinc-800 p-3 text-xs text-zinc-300">
-          <p>Recommended Program: {recommendation?.recommended_program_id ?? "not available"}</p>
-          <p>Reason: {recommendation?.reason ?? "not available"}</p>
+          <p>
+            Recommended Program: {recommendation ? getProgramDisplayName({ id: recommendation.recommended_program_id }) : "not available"}
+          </p>
+          <p>
+            Reason: {recommendation ? resolveReasonText(recommendation.rationale, recommendation.reason) : "not available"}
+          </p>
         </div>
 
         <div className="rounded-md border border-zinc-800 p-3 text-xs text-zinc-300 space-y-2">
@@ -341,7 +349,9 @@ export default function SettingsPage() {
               <p>Program: {coachPreview.program_name}</p>
               <p>Recommendation ID: {coachPreview.recommendation_id}</p>
               <p>Progression: {coachPreview.progression.action}</p>
+              <p>{resolveReasonText(coachPreview.progression.rationale, coachPreview.progression.reason)}</p>
               <p>Phase Recommendation: {coachPreview.phase_transition.next_phase}</p>
+              <p>{resolveReasonText(coachPreview.phase_transition.rationale, coachPreview.phase_transition.reason)}</p>
               <p>Adaptation Risk: {coachPreview.schedule.risk_level}</p>
               <p>Focus Muscles: {coachPreview.specialization.focus_muscles.join(", ") || "none"}</p>
             </div>
@@ -439,7 +449,7 @@ export default function SettingsPage() {
           </div>
           {pendingSwitch ? (
             <p className="text-xs text-zinc-500">
-              Switching to <span className="text-zinc-300">{pendingSwitch.targetProgramId}</span> requires confirmation ({pendingSwitch.reason}).
+              Switching to <span className="text-zinc-300">{getProgramDisplayName({ id: pendingSwitch.targetProgramId })}</span> requires confirmation ({pendingSwitch.rationale}).
             </p>
           ) : null}
         </div>

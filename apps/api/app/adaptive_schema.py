@@ -1,6 +1,7 @@
-from typing import Literal
+from datetime import date, datetime
+from typing import Any, Literal
 
-from pydantic import BaseModel, Field, ValidationInfo, field_validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
 
 class RepTarget(BaseModel):
@@ -19,13 +20,16 @@ class RepTarget(BaseModel):
 class WarmupStep(BaseModel):
     percent: int = Field(ge=1, le=100)
     reps: int = Field(ge=1)
+    rest_seconds: int | None = Field(default=None, ge=0)
 
 
 class WorkSetPrescription(BaseModel):
-    set_type: str
+    set_type: Literal["work", "top", "backoff"] = "work"
     sets: int = Field(ge=1)
     rep_target: RepTarget
-    rir_target: int = Field(ge=0, le=6)
+    rir_target: int | None = Field(default=None, ge=0, le=6)
+    rpe_target: float | None = Field(default=None, ge=1, le=10)
+    load_target: str | None = None
 
 
 class AdaptiveSlot(BaseModel):
@@ -43,16 +47,45 @@ class AdaptiveDay(BaseModel):
     day_name: str = Field(min_length=1)
     slots: list[AdaptiveSlot] = Field(default_factory=list)
 
+    @field_validator("slots")
+    @classmethod
+    def validate_slots_unique_ids_and_order(cls, value: list[AdaptiveSlot]) -> list[AdaptiveSlot]:
+        slot_ids = [slot.slot_id for slot in value]
+        if len(slot_ids) != len(set(slot_ids)):
+            raise ValueError("slots must have unique slot_id values per day")
+
+        order_indices = [slot.order_index for slot in value]
+        if len(order_indices) != len(set(order_indices)):
+            raise ValueError("slots must have unique order_index values per day")
+
+        return value
+
 
 class AdaptiveWeek(BaseModel):
     week_index: int = Field(ge=1)
     days: list[AdaptiveDay] = Field(default_factory=list)
+
+    @field_validator("days")
+    @classmethod
+    def validate_days_unique_ids(cls, value: list[AdaptiveDay]) -> list[AdaptiveDay]:
+        day_ids = [day.day_id for day in value]
+        if len(day_ids) != len(set(day_ids)):
+            raise ValueError("days must have unique day_id values per week")
+        return value
 
 
 class AdaptivePhase(BaseModel):
     phase_id: str = Field(min_length=1)
     phase_name: str = Field(min_length=1)
     weeks: list[AdaptiveWeek] = Field(default_factory=list)
+
+    @field_validator("weeks")
+    @classmethod
+    def validate_weeks_unique_indexes(cls, value: list[AdaptiveWeek]) -> list[AdaptiveWeek]:
+        week_indexes = [week.week_index for week in value]
+        if len(week_indexes) != len(set(week_indexes)):
+            raise ValueError("weeks must have unique week_index values per phase")
+        return value
 
 
 class AdaptiveGoldProgramTemplate(BaseModel):
@@ -62,6 +95,16 @@ class AdaptiveGoldProgramTemplate(BaseModel):
     version: str = Field(min_length=1)
     split: str = Field(min_length=1)
     phases: list[AdaptivePhase] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_phases_unique_ids(self) -> "AdaptiveGoldProgramTemplate":
+        if not self.phases:
+            raise ValueError("phases must not be empty")
+
+        phase_ids = [phase.phase_id for phase in self.phases]
+        if len(phase_ids) != len(set(phase_ids)):
+            raise ValueError("phases must have unique phase_id values")
+        return self
 
 
 class StartingLoadRules(BaseModel):
@@ -114,6 +157,14 @@ class SubstitutionRules(BaseModel):
     repeat_failure_trigger: str = Field(min_length=1)
 
 
+class RuleSourceSection(BaseModel):
+    field: str = Field(min_length=1)
+    source_doc: str = Field(min_length=1)
+    source_pdf: str = Field(min_length=1)
+    heading: str | None = None
+    excerpt: str = Field(min_length=1)
+
+
 class AdaptiveGoldRuleSet(BaseModel):
     rule_set_id: str = Field(min_length=1)
     version: str = Field(min_length=1)
@@ -125,6 +176,17 @@ class AdaptiveGoldRuleSet(BaseModel):
     deload_rules: DeloadRules
     substitution_rules: SubstitutionRules
     rationale_templates: dict[str, str] = Field(default_factory=dict)
+    source_sections: list[RuleSourceSection] = Field(default_factory=list)
+
+    @field_validator("program_scope")
+    @classmethod
+    def validate_program_scope_non_empty_and_unique(cls, value: list[str]) -> list[str]:
+        normalized = [item for item in value if item]
+        if not normalized:
+            raise ValueError("program_scope must contain at least one program_id")
+        if len(normalized) != len(set(normalized)):
+            raise ValueError("program_scope must not contain duplicate program_id values")
+        return normalized
 
 
 class ExerciseAlternative(BaseModel):
@@ -190,6 +252,88 @@ class UserOverlayConstraints(BaseModel):
     current_week_index: int = Field(ge=1)
 
 
+class UserProgramState(BaseModel):
+    program_id: str = Field(min_length=1)
+    phase_id: str = Field(min_length=1)
+    week_index: int = Field(ge=1)
+    day_id: str | None = None
+    session_id: str | None = None
+    last_generated_week_start: date | None = None
+
+
+class ExercisePerformanceEntry(BaseModel):
+    exercise_id: str = Field(min_length=1)
+    performed_at: datetime
+    set_index: int = Field(ge=1)
+    reps: int = Field(ge=1)
+    weight: float = Field(ge=0)
+    rpe: float | None = Field(default=None, ge=1, le=10)
+
+
+class ProgressionStateEntry(BaseModel):
+    exercise_id: str = Field(min_length=1)
+    current_working_weight: float = Field(ge=0)
+    exposure_count: int = Field(ge=0)
+    consecutive_under_target_exposures: int = Field(ge=0)
+    last_progression_action: str = Field(min_length=1)
+    last_updated_at: datetime | None = None
+
+
+class FatigueState(BaseModel):
+    recovery_state: Literal["low", "normal", "high_fatigue"] = "normal"
+    severe_soreness_count: int = Field(ge=0)
+    session_rpe_avg: float | None = Field(default=None, ge=1, le=10)
+    soreness_by_muscle: dict[str, Literal["none", "mild", "moderate", "severe"]] = Field(default_factory=dict)
+    flagged_muscles: list[str] = Field(default_factory=list)
+
+
+class AdherenceState(BaseModel):
+    latest_adherence_score: int = Field(ge=1, le=5)
+    rolling_average_score: float | None = Field(default=None, ge=1, le=5)
+    missed_session_count: int = Field(ge=0)
+
+
+class StallState(BaseModel):
+    stalled_exercise_ids: list[str] = Field(default_factory=list)
+    consecutive_underperformance_weeks: int = Field(ge=0)
+    phase_stagnation_weeks: int = Field(ge=0)
+
+
+class GenerationState(BaseModel):
+    prior_generated_weeks_by_program: dict[str, int] = Field(default_factory=dict)
+    under_target_muscles: list[str] = Field(default_factory=list)
+    mesocycle_trigger_weeks_effective: int | None = Field(default=None, ge=1)
+
+    @field_validator("prior_generated_weeks_by_program")
+    @classmethod
+    def validate_non_negative_generated_week_counts(cls, value: dict[str, int]) -> dict[str, int]:
+        for program_id, count in value.items():
+            if count < 0:
+                raise ValueError(f"prior_generated_weeks_by_program[{program_id}] must be non-negative")
+        return value
+
+
+class UserTrainingState(BaseModel):
+    user_program_state: UserProgramState
+    exercise_performance_history: list[ExercisePerformanceEntry] = Field(default_factory=list)
+    progression_state_per_exercise: list[ProgressionStateEntry] = Field(default_factory=list)
+    fatigue_state: FatigueState
+    adherence_state: AdherenceState
+    stall_state: StallState
+    generation_state: GenerationState = Field(default_factory=GenerationState)
+
+    @field_validator("progression_state_per_exercise")
+    @classmethod
+    def validate_unique_progression_state_exercise_ids(
+        cls,
+        value: list[ProgressionStateEntry],
+    ) -> list[ProgressionStateEntry]:
+        exercise_ids = [entry.exercise_id for entry in value]
+        if len(exercise_ids) != len(set(exercise_ids)):
+            raise ValueError("progression_state_per_exercise must have unique exercise_id values")
+        return value
+
+
 class BlueprintWarmupStep(BaseModel):
     percent: int = Field(ge=1, le=100)
     reps: int = Field(ge=1)
@@ -201,6 +345,7 @@ class BlueprintWorkSet(BaseModel):
     rep_target: RepTarget
     rir_target: int | None = Field(default=None, ge=0, le=6)
     rpe_target: float | None = Field(default=None, ge=1, le=10)
+    load_target: str | None = None
 
 
 class ProgramBlueprintSlot(BaseModel):
@@ -220,10 +365,31 @@ class ProgramBlueprintDay(BaseModel):
     day_name: str = Field(min_length=1)
     slots: list[ProgramBlueprintSlot] = Field(default_factory=list)
 
+    @field_validator("slots")
+    @classmethod
+    def validate_slots_unique_ids_and_order(cls, value: list[ProgramBlueprintSlot]) -> list[ProgramBlueprintSlot]:
+        slot_ids = [slot.slot_id for slot in value]
+        if len(slot_ids) != len(set(slot_ids)):
+            raise ValueError("slots must have unique slot_id values per day")
+
+        order_indices = [slot.order_index for slot in value]
+        if len(order_indices) != len(set(order_indices)):
+            raise ValueError("slots must have unique order_index values per day")
+
+        return value
+
 
 class ProgramBlueprintWeekTemplate(BaseModel):
     week_template_id: str = Field(min_length=1)
     days: list[ProgramBlueprintDay] = Field(default_factory=list)
+
+    @field_validator("days")
+    @classmethod
+    def validate_days_unique_ids(cls, value: list[ProgramBlueprintDay]) -> list[ProgramBlueprintDay]:
+        day_ids = [day.day_id for day in value]
+        if len(day_ids) != len(set(day_ids)):
+            raise ValueError("days must have unique day_id values per week_template")
+        return value
 
 
 class ProgramBlueprint(BaseModel):
@@ -244,6 +410,22 @@ class ProgramBlueprint(BaseModel):
             raise ValueError("week_sequence length must match total_weeks")
         return value
 
+    @model_validator(mode="after")
+    def validate_week_templates_cover_sequence(self) -> "ProgramBlueprint":
+        if not self.week_templates:
+            raise ValueError("week_templates must not be empty")
+
+        template_ids = [template.week_template_id for template in self.week_templates]
+        if len(template_ids) != len(set(template_ids)):
+            raise ValueError("week_templates must have unique week_template_id values")
+
+        template_id_set = set(template_ids)
+        missing = [template_id for template_id in self.week_sequence if template_id not in template_id_set]
+        if missing:
+            raise ValueError(f"week_sequence references unknown week_template_id values: {', '.join(sorted(set(missing)))}")
+
+        return self
+
 
 class ProgramOnboardingPackage(BaseModel):
     program_id: str = Field(min_length=1)
@@ -253,6 +435,14 @@ class ProgramOnboardingPackage(BaseModel):
     exercise_library: list[ExerciseKnowledgeEntry] = Field(default_factory=list)
     program_intent: ProgramIntent
     frequency_adaptation_rules: FrequencyAdaptationRules
+
+    @model_validator(mode="after")
+    def validate_program_id_alignment(self) -> "ProgramOnboardingPackage":
+        if self.program_id != self.blueprint.program_id:
+            raise ValueError("program_id must match blueprint.program_id")
+        if self.program_id != self.program_intent.program_id:
+            raise ValueError("program_id must match program_intent.program_id")
+        return self
 
 
 class AdaptationDecision(BaseModel):
@@ -287,3 +477,4 @@ class FrequencyAdaptationResult(BaseModel):
     weak_areas: list[str] = Field(default_factory=list)
     weeks: list[FrequencyAdaptationWeekResult] = Field(default_factory=list)
     rejoin_policy: str = Field(min_length=1)
+    decision_trace: dict[str, Any]

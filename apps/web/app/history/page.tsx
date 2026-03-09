@@ -7,7 +7,10 @@ import { UiIcon } from "@/components/ui/icons";
 import {
   api,
   type CoachingRecommendationTimelineEntry,
+  getProgramDisplayName,
   type HistoryAnalyticsResponse,
+  type HistoryCalendarResponse,
+  type HistoryDayDetailResponse,
 } from "@/lib/api";
 
 function formatTimestamp(iso: string): string {
@@ -16,6 +19,527 @@ function formatTimestamp(iso: string): string {
     return iso;
   }
   return parsed.toLocaleString();
+}
+
+function formatSummaryLabel(value: string): string {
+  return value
+    .replaceAll("_", " ")
+    .trim()
+    .split(/\s+/)
+    .map((part) => (part.length ? part[0].toUpperCase() + part.slice(1) : part))
+    .join(" ");
+}
+
+function formatSignedDelta(value: number): string {
+  return `${value >= 0 ? "+" : ""}${value}`;
+}
+
+function formatPlannedSuffix(plannedSets?: number | null, delta?: number | null): string {
+  let text = "";
+  if (typeof plannedSets === "number") {
+    text += ` / ${plannedSets} planned`;
+  }
+  if (typeof delta === "number") {
+    text += ` (${formatSignedDelta(delta)})`;
+  }
+  return text;
+}
+
+type CalendarViewMode = "week" | "month";
+type CalendarCompletionFilter = "all" | "completed" | "missed" | "pr_days";
+
+function calendarRangeForMode(mode: CalendarViewMode, windowOffset: number): { startDate: string; endDate: string } {
+  const windowDays = mode === "week" ? 7 : 28;
+  const end = new Date();
+  end.setDate(end.getDate() - (Math.max(0, windowOffset) * windowDays));
+  const start = new Date(end);
+  start.setDate(end.getDate() - (windowDays - 1));
+  return {
+    startDate: start.toISOString().slice(0, 10),
+    endDate: end.toISOString().slice(0, 10),
+  };
+}
+
+function uniqueSorted(values: string[]): string[] {
+  return Array.from(new Set(values.filter((value) => value.trim().length > 0))).sort((a, b) => a.localeCompare(b));
+}
+
+function filterCalendarDays(
+  days: HistoryCalendarResponse["days"],
+  completion: CalendarCompletionFilter,
+  program: string,
+  muscle: string,
+): HistoryCalendarResponse["days"] {
+  return days.filter((day) => {
+    if (completion === "completed" && !day.completed) {
+      return false;
+    }
+    if (completion === "missed" && day.completed) {
+      return false;
+    }
+    if (completion === "pr_days" && day.pr_count <= 0) {
+      return false;
+    }
+    if (program !== "all" && !day.program_ids.includes(program)) {
+      return false;
+    }
+    if (muscle !== "all" && !day.muscles.includes(muscle)) {
+      return false;
+    }
+    return true;
+  });
+}
+
+function dayClassName(isSelected: boolean, isCompleted: boolean): string {
+  if (isSelected) {
+    return "border-[var(--ui-edge-active)] bg-[var(--ui-accent-active)] text-white";
+  }
+  if (isCompleted) {
+    return "border-red-500/40 bg-red-500/10 text-zinc-100";
+  }
+  return "border-white/10 bg-zinc-900/70 text-zinc-400";
+}
+
+function calendarTrendMetrics(days: HistoryCalendarResponse["days"]): {
+  completionPct: number;
+  recent7: number;
+  previous7: number;
+  weekdayChampion: string;
+  prDays: number;
+} {
+  if (days.length === 0) {
+    return { completionPct: 0, recent7: 0, previous7: 0, weekdayChampion: "n/a", prDays: 0 };
+  }
+
+  const ordered = [...days].sort((a, b) => a.date.localeCompare(b.date));
+  const completedTotal = ordered.filter((day) => day.completed).length;
+  const completionPct = Math.round((completedTotal / Math.max(1, ordered.length)) * 100);
+
+  const recent7 = ordered.slice(-7).filter((day) => day.completed).length;
+  const previous7 = ordered.slice(-14, -7).filter((day) => day.completed).length;
+  const prDays = ordered.filter((day) => day.pr_count > 0).length;
+
+  const weekdayCounts: Record<number, number> = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+  for (const day of ordered) {
+    if (day.completed) {
+      weekdayCounts[day.weekday] += 1;
+    }
+  }
+
+  let championWeekday = 0;
+  let championValue = -1;
+  for (let weekday = 0; weekday < 7; weekday += 1) {
+    const value = weekdayCounts[weekday] ?? 0;
+    if (value > championValue) {
+      championWeekday = weekday;
+      championValue = value;
+    }
+  }
+  const weekdayLabel = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][championWeekday] ?? "Mon";
+  return { completionPct, recent7, previous7, weekdayChampion: weekdayLabel, prDays };
+}
+
+function previousSameWeekdayDay(
+  days: HistoryCalendarResponse["days"],
+  selectedDay: string | null,
+): HistoryCalendarResponse["days"][number] | null {
+  if (!selectedDay) {
+    return null;
+  }
+  const selected = days.find((day) => day.date === selectedDay);
+  if (!selected) {
+    return null;
+  }
+
+  const ordered = [...days]
+    .filter((day) => day.date < selected.date && day.weekday === selected.weekday)
+    .sort((a, b) => b.date.localeCompare(a.date));
+  return ordered.length > 0 ? ordered[0] : null;
+}
+
+function roundOneDecimal(value: number): number {
+  return Math.round(value * 10) / 10;
+}
+
+function resolveProgressionHeadline(
+  adherencePct: number,
+  prHighlightsCount: number,
+  pendingRecommendations: number,
+): string {
+  if (adherencePct >= 75 && prHighlightsCount > 0) {
+    return "Progression is compounding.";
+  }
+  if (adherencePct < 65) {
+    return "Consistency is the limiter.";
+  }
+  if (pendingRecommendations > 0) {
+    return "Coach recommendations need follow-through.";
+  }
+  return "Trend data is building.";
+}
+
+function resolveBodyweightSignal(points: HistoryAnalyticsResponse["bodyweight_trend"]): {
+  label: string;
+  detail: string;
+} {
+  if (points.length < 2) {
+    return { label: "No trend", detail: "Need at least two check-ins." };
+  }
+  const first = points[0].body_weight;
+  const last = points.at(-1)?.body_weight ?? first;
+  const delta = roundOneDecimal(last - first);
+  return {
+    label: `${delta >= 0 ? "+" : ""}${delta} kg`,
+    detail: `${first} kg to ${last} kg across the visible window`,
+  };
+}
+
+function resolveCoachQueue(entries: CoachingRecommendationTimelineEntry[]): {
+  pending: number;
+  latestLabel: string;
+} {
+  const pending = entries.filter((entry) => entry.status !== "applied").length;
+  const latest = entries[0];
+  return {
+    pending,
+    latestLabel: latest ? formatSummaryLabel(latest.recommendation_type) : "No coach actions logged",
+  };
+}
+
+function HistoryCalendarPanel() {
+  const [calendar, setCalendar] = useState<HistoryCalendarResponse | null>(null);
+  const [calendarStatus, setCalendarStatus] = useState("Loading calendar history...");
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [dayDetail, setDayDetail] = useState<HistoryDayDetailResponse | null>(null);
+  const [dayDetailStatus, setDayDetailStatus] = useState("Select a day to inspect performed exercises.");
+  const [viewMode, setViewMode] = useState<CalendarViewMode>("month");
+  const [windowOffset, setWindowOffset] = useState(0);
+  const [completionFilter, setCompletionFilter] = useState<CalendarCompletionFilter>("all");
+  const [selectedProgram, setSelectedProgram] = useState("all");
+  const [selectedMuscle, setSelectedMuscle] = useState("all");
+
+  const allDays = useMemo(() => calendar?.days ?? [], [calendar]);
+  const programOptions = useMemo(
+    () => uniqueSorted(allDays.flatMap((day) => day.program_ids)),
+    [allDays],
+  );
+  const muscleOptions = useMemo(
+    () => uniqueSorted(allDays.flatMap((day) => day.muscles)),
+    [allDays],
+  );
+  const filteredDays = useMemo(
+    () => filterCalendarDays(allDays, completionFilter, selectedProgram, selectedMuscle),
+    [allDays, completionFilter, selectedProgram, selectedMuscle],
+  );
+  const trends = useMemo(() => calendarTrendMetrics(allDays), [allDays]);
+  const selectedCalendarDay = useMemo(
+    () => allDays.find((day) => day.date === selectedDay) ?? null,
+    [allDays, selectedDay],
+  );
+  const previousSameWeekday = useMemo(() => previousSameWeekdayDay(filteredDays, selectedDay), [filteredDays, selectedDay]);
+  const weekdayComparison = useMemo(() => {
+    if (!selectedCalendarDay || !previousSameWeekday) {
+      return null;
+    }
+    return {
+      setDelta: selectedCalendarDay.set_count - previousSameWeekday.set_count,
+      volumeDelta: roundOneDecimal(selectedCalendarDay.total_volume - previousSameWeekday.total_volume),
+      prDelta: selectedCalendarDay.pr_count - previousSameWeekday.pr_count,
+    };
+  }, [selectedCalendarDay, previousSameWeekday]);
+
+  useEffect(() => {
+    setWindowOffset(0);
+  }, [viewMode]);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const { startDate, endDate } = calendarRangeForMode(viewMode, windowOffset);
+        const payload = await api.getHistoryCalendar(startDate, endDate);
+        if (!mounted) {
+          return;
+        }
+        if (!Array.isArray(payload.days) || payload.days.length === 0) {
+          setCalendar(null);
+          setCalendarStatus("No calendar history yet.");
+          setSelectedDay(null);
+          setDayDetail(null);
+          setDayDetailStatus("Select a day to inspect performed exercises.");
+          return;
+        }
+        setCalendar(payload);
+        setCalendarStatus("");
+        const latestCompleted = [...payload.days].reverse().find((day) => day.completed);
+        setSelectedDay(latestCompleted?.date ?? payload.days.at(-1)?.date ?? null);
+      } catch {
+        if (!mounted) {
+          return;
+        }
+        setCalendar(null);
+        setCalendarStatus("Unable to load calendar history.");
+        setSelectedDay(null);
+        setDayDetail(null);
+        setDayDetailStatus("Select a day to inspect performed exercises.");
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [viewMode, windowOffset]);
+
+  useEffect(() => {
+    if (selectedProgram !== "all" && !programOptions.includes(selectedProgram)) {
+      setSelectedProgram("all");
+    }
+  }, [programOptions, selectedProgram]);
+
+  useEffect(() => {
+    if (selectedMuscle !== "all" && !muscleOptions.includes(selectedMuscle)) {
+      setSelectedMuscle("all");
+    }
+  }, [muscleOptions, selectedMuscle]);
+
+  async function loadDayDetail(day: string) {
+    setSelectedDay(day);
+    setDayDetailStatus("Loading day detail...");
+    try {
+      const detail = await api.getHistoryDayDetail(day);
+      setDayDetail(detail);
+      const plannedSetCount = detail.totals.planned_set_count ?? 0;
+      if (detail.totals.set_count === 0 && plannedSetCount > 0) {
+        setDayDetailStatus(`No logged sets on this day. Planned sets: ${plannedSetCount}.`);
+        return;
+      }
+      if (detail.totals.set_count === 0) {
+        setDayDetailStatus("No logged sets on this day.");
+        return;
+      }
+      setDayDetailStatus("");
+    } catch {
+      setDayDetail(null);
+      setDayDetailStatus("Unable to load day detail.");
+    }
+  }
+
+  return (
+    <>
+      <div className="main-card main-card--module spacing-grid spacing-grid--tight">
+        <p className="telemetry-kicker">Training Calendar</p>
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-4">
+          <div className="space-y-1">
+            <p className="ui-meta">View</p>
+            <div className="grid grid-cols-2 gap-1">
+              <Button type="button" variant={viewMode === "week" ? "default" : "secondary"} onClick={() => setViewMode("week")}>Week</Button>
+              <Button type="button" variant={viewMode === "month" ? "default" : "secondary"} onClick={() => setViewMode("month")}>Month</Button>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <p className="ui-meta">Completion</p>
+            <select
+              className="ui-select"
+              value={completionFilter}
+              onChange={(event) => setCompletionFilter(event.target.value as CalendarCompletionFilter)}
+              aria-label="Completion filter"
+            >
+              <option value="all">All Days</option>
+              <option value="completed">Completed Only</option>
+              <option value="missed">Missed Only</option>
+              <option value="pr_days">PR Days</option>
+            </select>
+          </div>
+          <div className="space-y-1">
+            <p className="ui-meta">Program</p>
+            <select
+              className="ui-select"
+              value={selectedProgram}
+              onChange={(event) => setSelectedProgram(event.target.value)}
+              aria-label="Program filter"
+            >
+              <option value="all">All Programs</option>
+              {programOptions.map((program) => (
+                <option key={`program-filter-${program}`} value={program}>
+                  {program}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-1">
+            <p className="ui-meta">Muscle</p>
+            <select
+              className="ui-select"
+              value={selectedMuscle}
+              onChange={(event) => setSelectedMuscle(event.target.value)}
+              aria-label="Muscle filter"
+            >
+              <option value="all">All Muscles</option>
+              {muscleOptions.map((muscle) => (
+                <option key={`muscle-filter-${muscle}`} value={muscle}>
+                  {muscle}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
+          <Button type="button" variant="secondary" onClick={() => setWindowOffset((value) => value + 1)}>
+            Previous Window
+          </Button>
+          <Button type="button" variant="secondary" onClick={() => setWindowOffset((value) => Math.max(0, value - 1))} disabled={windowOffset === 0}>
+            Next Window
+          </Button>
+          <p className="telemetry-meta flex items-center justify-center rounded-md border border-white/10 bg-zinc-900/70 px-2 py-2">
+            Offset {windowOffset}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
+          <div className="rounded-md border border-white/10 bg-zinc-900/70 p-2">
+            <p className="telemetry-kicker">Completion</p>
+            <p className="telemetry-value">{trends.completionPct}%</p>
+          </div>
+          <div className="rounded-md border border-white/10 bg-zinc-900/70 p-2">
+            <p className="telemetry-kicker">Recent 7d</p>
+            <p className="telemetry-value">{trends.recent7} days</p>
+          </div>
+          <div className="rounded-md border border-white/10 bg-zinc-900/70 p-2">
+            <p className="telemetry-kicker">Previous 7d</p>
+            <p className="telemetry-value">{trends.previous7} days</p>
+          </div>
+          <div className="rounded-md border border-white/10 bg-zinc-900/70 p-2">
+            <p className="telemetry-kicker">Best Weekday</p>
+            <p className="telemetry-value">{trends.weekdayChampion}</p>
+          </div>
+          <div className="rounded-md border border-white/10 bg-zinc-900/70 p-2">
+            <p className="telemetry-kicker">PR Days</p>
+            <p className="telemetry-value">{trends.prDays}</p>
+          </div>
+        </div>
+
+        {calendar ? (
+          <>
+            <p className="telemetry-meta">
+              Window {calendar.start_date} to {calendar.end_date} ·
+              {" "}
+              Active days {calendar.active_days} · Current streak {calendar.current_streak_days} · Longest streak {calendar.longest_streak_days}
+            </p>
+            <div className="grid grid-cols-7 gap-1">
+              {filteredDays.map((day) => {
+                const dateLabel = day.date.slice(8, 10);
+                const isSelected = selectedDay === day.date;
+                const isCompleted = day.completed;
+                return (
+                  <button
+                    key={`calendar-day-${day.date}`}
+                    type="button"
+                    onClick={() => void loadDayDetail(day.date)}
+                    className={`rounded border px-2 py-2 text-xs transition-colors ${dayClassName(isSelected, isCompleted)}`}
+                    title={`${day.date}: ${day.set_count} sets, ${day.exercise_count} exercises, ${day.total_volume} volume, ${day.pr_count} PRs`}
+                  >
+                    <div>{dateLabel}</div>
+                    <div>{day.set_count}</div>
+                    {day.pr_count > 0 ? <div className="text-[10px] text-red-200">PR {day.pr_count}</div> : null}
+                  </button>
+                );
+              })}
+            </div>
+            {filteredDays.length === 0 ? <p className="text-xs text-zinc-500">No days match current filters.</p> : null}
+          </>
+        ) : (
+          <p className="text-xs text-zinc-500">{calendarStatus}</p>
+        )}
+      </div>
+
+      <div className="main-card main-card--module spacing-grid spacing-grid--tight">
+        <p className="telemetry-kicker">Selected Day Detail</p>
+        <div>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => {
+              if (previousSameWeekday) {
+                void loadDayDetail(previousSameWeekday.date);
+              }
+            }}
+            disabled={!previousSameWeekday}
+          >
+            Jump To Previous Same Weekday
+          </Button>
+          <p className="telemetry-meta mt-1">
+            {previousSameWeekday ? `Previous match: ${previousSameWeekday.date}` : "No earlier same-weekday match in current filtered view."}
+          </p>
+          {weekdayComparison && selectedCalendarDay && previousSameWeekday ? (
+            <div className="mt-2 rounded-md border border-white/10 bg-zinc-900/70 p-2">
+              <p className="telemetry-kicker">Same-Weekday Comparison</p>
+              <p className="telemetry-meta">
+                {selectedCalendarDay.date} vs {previousSameWeekday.date}
+              </p>
+              <div className="mt-2 grid grid-cols-1 gap-1 md:grid-cols-3">
+                <p className="rounded border border-white/10 bg-zinc-900/80 px-2 py-1 text-xs text-zinc-200">
+                  Sets {formatSignedDelta(weekdayComparison.setDelta)}
+                </p>
+                <p className="rounded border border-white/10 bg-zinc-900/80 px-2 py-1 text-xs text-zinc-200">
+                  Volume {formatSignedDelta(weekdayComparison.volumeDelta)}
+                </p>
+                <p className="rounded border border-white/10 bg-zinc-900/80 px-2 py-1 text-xs text-zinc-200">
+                  PR Days {formatSignedDelta(weekdayComparison.prDelta)}
+                </p>
+              </div>
+            </div>
+          ) : null}
+        </div>
+        {dayDetail && ((dayDetail.totals.set_count > 0) || ((dayDetail.totals.planned_set_count ?? 0) > 0)) ? (
+          <div className="space-y-2 text-xs text-zinc-200">
+            {dayDetailStatus ? <p className="text-xs text-zinc-500">{dayDetailStatus}</p> : null}
+            <p className="telemetry-meta">
+              {dayDetail.date} · {dayDetail.totals.set_count} sets
+              {formatPlannedSuffix(dayDetail.totals.planned_set_count, dayDetail.totals.set_delta)}
+              {` · ${dayDetail.totals.exercise_count} exercises · ${dayDetail.totals.total_volume} volume`}
+            </p>
+            {dayDetail.workouts.map((workout) => (
+              <div key={`day-workout-${workout.workout_id}`} className="rounded-md border border-white/10 bg-zinc-900/70 p-2">
+                <p className="font-medium">Workout {workout.workout_id}</p>
+                {workout.program_id ? <p className="telemetry-meta">Program: {workout.program_id}</p> : null}
+                <p className="telemetry-meta">
+                  {workout.total_sets} sets
+                  {formatPlannedSuffix(workout.planned_sets_total, workout.set_delta)}
+                  {` · ${workout.total_volume} volume`}
+                </p>
+                <div className="mt-1 space-y-1">
+                  {workout.exercises.map((exercise) => (
+                    <div key={`day-exercise-${workout.workout_id}-${exercise.exercise_id}-${exercise.primary_exercise_id ?? "none"}`} className="rounded border border-white/10 px-2 py-1">
+                      <p>
+                        {exercise.planned_name || exercise.primary_exercise_id || exercise.exercise_id}
+                        {exercise.primary_exercise_id && exercise.primary_exercise_id !== exercise.exercise_id
+                          ? ` (performed as ${exercise.exercise_id})`
+                          : ""}
+                      </p>
+                      {Array.isArray(exercise.primary_muscles) && exercise.primary_muscles.length > 0 ? (
+                        <p className="telemetry-meta">Muscles: {exercise.primary_muscles.join(", ")}</p>
+                      ) : null}
+                      <p className="telemetry-meta">
+                        {exercise.total_sets} sets
+                        {formatPlannedSuffix(exercise.planned_sets, exercise.set_delta)}
+                        {` · ${exercise.total_volume} volume`}
+                      </p>
+                      <p className="telemetry-meta">
+                        {exercise.sets.map((entry) => `#${entry.set_index} ${entry.reps}x${entry.weight}`).join(" · ")}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-zinc-500">{dayDetailStatus}</p>
+        )}
+      </div>
+    </>
+  );
 }
 
 export default function HistoryPage() {
@@ -57,6 +581,7 @@ export default function HistoryPage() {
         setTimelineEntries([]);
         setTimelineStatus("Unable to load recommendation timeline.");
       }
+
     })();
     return () => {
       mounted = false;
@@ -120,6 +645,22 @@ export default function HistoryPage() {
   const [mixHigh, mixMedium, mixLow] = adherenceMix;
   const prHighlights = dashboard?.pr_highlights ?? [];
   const measurementTrends = dashboard?.body_measurement_trends ?? [];
+  const coachQueue = useMemo(() => resolveCoachQueue(timelineEntries), [timelineEntries]);
+  const bodyweightSignal = useMemo(() => resolveBodyweightSignal(dashboard?.bodyweight_trend ?? []), [dashboard]);
+  const progressionHeadline = useMemo(
+    () => resolveProgressionHeadline(adherencePct, prHighlights.length, coachQueue.pending),
+    [adherencePct, prHighlights.length, coachQueue.pending],
+  );
+  const strengthLead = useMemo(() => {
+    if (!primaryStrengthTrend) {
+      return { hasData: false, label: "No lift trend", detail: "Log more repeated exposures." };
+    }
+    return {
+      hasData: true,
+      label: formatSummaryLabel(primaryStrengthTrend.exercise_id),
+      detail: `PR ${primaryStrengthTrend.pr_weight} kg (${primaryStrengthTrend.pr_delta >= 0 ? "+" : ""}${primaryStrengthTrend.pr_delta})`,
+    };
+  }, [primaryStrengthTrend]);
 
   const heatmap = dashboard?.volume_heatmap;
   const heatmapMax = Math.max(heatmap?.max_volume ?? 0, 1);
@@ -168,6 +709,41 @@ export default function HistoryPage() {
         <pre className="overflow-x-auto text-xs text-zinc-200">{history}</pre>
       </div>
 
+      <div className="grid grid-cols-1 gap-3 xl:grid-cols-[1.3fr_1fr_1fr_1fr]">
+        <div className="main-card main-card--module main-card--accent spacing-grid spacing-grid--tight">
+          <p className="telemetry-kicker">Progression Brief</p>
+          <p className="telemetry-value">{progressionHeadline}</p>
+          <p className="telemetry-meta">
+            {adherencePct}% adherence · {prHighlights.length} PR highlights · {coachQueue.pending} pending coach decisions
+          </p>
+          <p className="text-xs text-zinc-200">
+            {strengthLead.hasData
+              ? `${strengthLead.label} is leading the strength curve while bodyweight is ${bodyweightSignal.label}.`
+              : `Bodyweight is ${bodyweightSignal.label.toLowerCase()} and coach queue status is ${coachQueue.latestLabel.toLowerCase()}.`}
+          </p>
+        </div>
+
+        <div className="main-card main-card--shell spacing-grid spacing-grid--tight">
+          <p className="telemetry-kicker">Strength Lead</p>
+          <p className="telemetry-value">{strengthLead.label}</p>
+          <p className="telemetry-meta">{strengthLead.detail}</p>
+        </div>
+
+        <div className="main-card main-card--module spacing-grid spacing-grid--tight">
+          <p className="telemetry-kicker">Bodyweight Drift</p>
+          <p className="telemetry-value">{bodyweightSignal.label}</p>
+          <p className="telemetry-meta">{bodyweightSignal.detail}</p>
+        </div>
+
+        <div className="main-card main-card--shell spacing-grid spacing-grid--tight">
+          <p className="telemetry-kicker">Coach Queue</p>
+          <p className="telemetry-value">{coachQueue.pending} pending</p>
+          <p className="telemetry-meta">Latest: {coachQueue.latestLabel}</p>
+        </div>
+      </div>
+
+      <HistoryCalendarPanel />
+
       <div className="main-card main-card--module spacing-grid spacing-grid--tight">
         <p className="telemetry-kicker">Coaching Decision Timeline</p>
         {timelineEntries.length > 0 ? (
@@ -175,11 +751,13 @@ export default function HistoryPage() {
             {timelineEntries.map((entry) => (
               <div key={entry.recommendation_id} className="rounded-md border border-white/10 bg-zinc-900/60 p-2 text-xs text-zinc-200">
                 <p className="flex items-center justify-between gap-2">
-                  <span className="font-medium">{entry.recommendation_type.replaceAll("_", " ")}</span>
+                  <span className="font-medium">{formatSummaryLabel(entry.recommendation_type)}</span>
                   <span className="telemetry-meta uppercase">{entry.status}</span>
                 </p>
-                <p className="telemetry-meta">{entry.template_id} · {entry.current_phase} to {entry.recommended_phase}</p>
-                <p className="telemetry-meta">Progression action: {entry.progression_action}</p>
+                <p className="telemetry-meta">
+                  {getProgramDisplayName({ id: entry.template_id })} · {formatSummaryLabel(entry.current_phase)} to {formatSummaryLabel(entry.recommended_phase)}
+                </p>
+                <p className="telemetry-meta">Progression action: {formatSummaryLabel(entry.progression_action)}</p>
                 <p>Rationale: {entry.rationale}</p>
                 <p>Focus muscles: {entry.focus_muscles.length > 0 ? entry.focus_muscles.join(", ") : "none"}</p>
                 <p className="telemetry-meta">Created: {formatTimestamp(entry.created_at)}</p>
