@@ -38,4 +38,9 @@ Status legend:
 - Redesign target requires moving coaching runtime dependence to canonical templates + typed rule objects.
 - Architecture audit matrix published at `docs/redesign/Architecture_Audit_Matrix.md`.
 - Frequency adaptation preview/apply now emit stricter structured traces (`version`, ordered `steps`, machine-readable `reason_code`) and consume canonical weak-area bonus-slot rules in runtime overlay/scoring paths.
-- Doctrine distillation now extracts explicit scheduled-deload cadence hints (`deload every N weeks`) into typed canonical rule payloads when source text provides them.
+- Doctrine distillation now extracts explicit scheduled-deload cadence hints (`deload every N weeks`) and repeat-failure substitution thresholds (`after N failed exposures`) into typed canonical rule payloads when source text provides them.
+- Doctrine distillation now also extracts explicit fatigue-threshold trigger text (`session RPE avg >= X for N exposures`) into typed fatigue trigger condition strings when source text provides it.
+- Doctrine distillation fatigue-trigger provenance now prefers explicit fatigue-threshold excerpts in `source_sections` when source text provides them.
+- Decision-family decomposition has started by moving frequency-adaptation preview/apply + persistence payload builders into `core_engine/decision_frequency_adaptation.py`, reducing `intelligence.py` ownership for that family without changing router contracts.
+- Frequency-adaptation decision-family decomposition now also includes active adaptation runtime resolution/application helpers (`resolve_active_frequency_adaptation_runtime`, `apply_active_frequency_adaptation_runtime`) in `core_engine/decision_frequency_adaptation.py`.
+- Decision-family decomposition now also covers weekly-review utility boundaries via `core_engine/decision_weekly_review.py` (window/status/submit/persistence helpers), further reducing `intelligence.py` ownership without changing router contracts.

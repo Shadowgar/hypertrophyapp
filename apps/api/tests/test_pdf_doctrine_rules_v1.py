@@ -90,3 +90,91 @@ def test_build_rule_set_payload_extracts_scheduled_deload_cadence_when_present(t
     rules = AdaptiveGoldRuleSet.model_validate(payload)
 
     assert rules.deload_rules.scheduled_every_n_weeks == 6
+
+
+def test_build_rule_set_payload_extracts_repeat_failure_threshold_when_present(tmp_path: Path) -> None:
+    guide_doc = tmp_path / "guide.md"
+    guide_doc.write_text(
+        """
+        IMPORTANT PROGRAM NOTES
+        If an exercise stays under target after 2 failed exposures, switch to a compatible substitution.
+        Progress through the rep ranges given before increasing load.
+        """,
+        encoding="utf-8",
+    )
+
+    payload = build_rule_set_payload(
+        program_id="pure_bodybuilding_phase_1_full_body",
+        source_pdf="reference/The_Pure_Bodybuilding_Program - Phase 1 - Full_Body.pdf",
+        guide_doc=guide_doc,
+    )
+    rules = AdaptiveGoldRuleSet.model_validate(payload)
+
+    assert rules.substitution_rules.repeat_failure_trigger == "switch_after_2_failed_exposures"
+
+
+def test_build_rule_set_payload_extracts_early_deload_trigger_variant_when_present(tmp_path: Path) -> None:
+    guide_doc = tmp_path / "guide.md"
+    guide_doc.write_text(
+        """
+        IMPORTANT PROGRAM NOTES
+        If you see three consecutive under target sessions, schedule an early deload.
+        Progress through the rep ranges given before increasing load.
+        """,
+        encoding="utf-8",
+    )
+
+    payload = build_rule_set_payload(
+        program_id="pure_bodybuilding_phase_1_full_body",
+        source_pdf="reference/The_Pure_Bodybuilding_Program - Phase 1 - Full_Body.pdf",
+        guide_doc=guide_doc,
+    )
+    rules = AdaptiveGoldRuleSet.model_validate(payload)
+
+    assert rules.deload_rules.early_deload_trigger == "three_consecutive_under_target_sessions"
+
+
+def test_build_rule_set_payload_extracts_fatigue_rpe_threshold_when_present(tmp_path: Path) -> None:
+    guide_doc = tmp_path / "guide.md"
+    guide_doc.write_text(
+        """
+        IMPORTANT PROGRAM NOTES
+        Use an early deload when session RPE avg >= 8.5 for two exposures.
+        Progress through the rep ranges given before increasing load.
+        """,
+        encoding="utf-8",
+    )
+
+    payload = build_rule_set_payload(
+        program_id="pure_bodybuilding_phase_1_full_body",
+        source_pdf="reference/The_Pure_Bodybuilding_Program - Phase 1 - Full_Body.pdf",
+        guide_doc=guide_doc,
+    )
+    rules = AdaptiveGoldRuleSet.model_validate(payload)
+
+    assert "session_rpe_avg >= 8.5 for two exposures" in rules.fatigue_rules.high_fatigue_trigger.conditions
+
+
+def test_build_rule_set_payload_grounds_fatigue_threshold_source_section(tmp_path: Path) -> None:
+    guide_doc = tmp_path / "guide.md"
+    guide_doc.write_text(
+        """
+        IMPORTANT PROGRAM NOTES
+        Use an early deload when session RPE avg >= 8.5 for two exposures.
+        Progress through the rep ranges given before increasing load.
+        """,
+        encoding="utf-8",
+    )
+
+    payload = build_rule_set_payload(
+        program_id="pure_bodybuilding_phase_1_full_body",
+        source_pdf="reference/The_Pure_Bodybuilding_Program - Phase 1 - Full_Body.pdf",
+        guide_doc=guide_doc,
+    )
+    rules = AdaptiveGoldRuleSet.model_validate(payload)
+
+    fatigue_sections = [
+        section for section in rules.source_sections if section.field == "fatigue_rules.high_fatigue_trigger"
+    ]
+    assert fatigue_sections
+    assert "session RPE avg >= 8.5 for two exposures".lower() in fatigue_sections[0].excerpt.lower()

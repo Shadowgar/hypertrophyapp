@@ -87,6 +87,42 @@ def _extract_scheduled_deload_weeks(text: str) -> int | None:
     return None
 
 
+def _extract_repeat_failure_trigger(text: str) -> str | None:
+    match = re.search(r"after\s+(\d+)\s+failed\s+exposures?", text, re.IGNORECASE)
+    if match:
+        return f"switch_after_{int(match.group(1))}_failed_exposures"
+    return None
+
+
+def _extract_early_deload_trigger(text: str) -> str | None:
+    if re.search(r"three\s+consecutive\s+under\s+target\s+sessions?", text, re.IGNORECASE):
+        return "three_consecutive_under_target_sessions"
+    if re.search(r"repeated\s+under\s+target.{0,80}high\s+fatigue", text, re.IGNORECASE):
+        return "repeated_under_target_plus_high_fatigue"
+    return None
+
+
+def _extract_fatigue_rpe_threshold_condition(text: str) -> str | None:
+    match = re.search(
+        r"session\s+rpe\s+avg\s*>=\s*(\d+(?:\.\d+)?)\s+for\s+(two|\d+)\s+exposures?",
+        text,
+        re.IGNORECASE,
+    )
+    if not match:
+        return None
+
+    threshold = float(match.group(1))
+    exposure_token = match.group(2).strip().lower()
+    exposure_count = 2 if exposure_token == "two" else int(exposure_token)
+    if exposure_count <= 1:
+        exposure_phrase = "one exposure"
+    elif exposure_count == 2:
+        exposure_phrase = "two exposures"
+    else:
+        exposure_phrase = f"{exposure_count} exposures"
+    return f"session_rpe_avg >= {threshold:g} for {exposure_phrase}"
+
+
 def _starting_load_method(text: str) -> str:
     if re.search(r"1\s*rep\s*max|%1RM|percent\s*1RM", text, re.IGNORECASE):
         return "percent_1rm_reference"
@@ -126,9 +162,16 @@ def build_rule_set_payload(
     default_rir_target = _extract_default_rir_target(normalized_text)
     intro_weeks = _extract_intro_weeks(normalized_text)
     scheduled_deload_weeks = _extract_scheduled_deload_weeks(normalized_text)
+    repeat_failure_trigger = _extract_repeat_failure_trigger(normalized_text)
+    early_deload_trigger = _extract_early_deload_trigger(normalized_text)
+    fatigue_rpe_condition = _extract_fatigue_rpe_threshold_condition(normalized_text)
 
     intro_excerpt = _find_excerpt(normalized_text, r"first\s+\d+\s+weeks?.{0,120}?reps?\s+in\s+the\s+tank|first\s+week.{0,120}?reps?\s+in\s+the\s+tank")
     intensity_excerpt = _find_excerpt(normalized_text, r"after\s+the\s+first.{0,160}?intensity\s+will\s+increase")
+    fatigue_excerpt = _find_excerpt(
+        normalized_text,
+        r"session\s+rpe\s+avg\s*>=\s*\d+(?:\.\d+)?\s+for\s+(?:two|\d+)\s+exposures?",
+    )
     deload_excerpt = _find_excerpt(normalized_text, r"deload\s+every\s+\d+\s+weeks?|every\s+\d+\s+weeks?.{0,40}?deload")
     substitution_excerpt = _find_excerpt(normalized_text, r"exercise\s+substitutions?\s+column")
     progression_excerpt = _find_excerpt(normalized_text, r"progress\s+through\s+the\s+rep\s+ranges?")
@@ -140,7 +183,7 @@ def build_rule_set_payload(
             _source_section("starting_load_rules.default_rir_target", guide_doc, source_pdf, intro_excerpt),
             _source_section("starting_load_rules.method", guide_doc, source_pdf, warmup_excerpt or intro_excerpt),
             _source_section("progression_rules.on_success", guide_doc, source_pdf, progression_excerpt),
-            _source_section("fatigue_rules.high_fatigue_trigger", guide_doc, source_pdf, intensity_excerpt),
+            _source_section("fatigue_rules.high_fatigue_trigger", guide_doc, source_pdf, fatigue_excerpt or intensity_excerpt),
             _source_section("deload_rules.scheduled_every_n_weeks", guide_doc, source_pdf, deload_excerpt or intro_excerpt),
             _source_section("substitution_rules.equipment_mismatch", guide_doc, source_pdf, substitution_excerpt),
         ]
@@ -168,19 +211,19 @@ def build_rule_set_payload(
             "high_fatigue_trigger": {
                 "conditions": [
                     f"{intro_phrase}; avoid interpreting early underperformance as stall",
-                    "session_rpe_avg >= 9 for two exposures",
+                    fatigue_rpe_condition or "session_rpe_avg >= 9 for two exposures",
                 ]
             },
             "on_high_fatigue": {"action": "reduce_volume", "set_delta": -1},
         },
         "deload_rules": {
             "scheduled_every_n_weeks": max(4, int(scheduled_deload_weeks or (intro_weeks * 3))),
-            "early_deload_trigger": "repeated_under_target_plus_high_fatigue",
+            "early_deload_trigger": early_deload_trigger or "repeated_under_target_plus_high_fatigue",
             "on_deload": {"set_reduction_percent": 35, "load_reduction_percent": 10},
         },
         "substitution_rules": {
             "equipment_mismatch": "use_first_compatible_substitution",
-            "repeat_failure_trigger": "switch_after_three_failed_exposures",
+            "repeat_failure_trigger": repeat_failure_trigger or "switch_after_three_failed_exposures",
         },
         "rationale_templates": {
             "increase_load": "Performance exceeded target range. Increase load next exposure.",

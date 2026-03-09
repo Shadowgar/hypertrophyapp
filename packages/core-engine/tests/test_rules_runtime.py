@@ -150,6 +150,32 @@ def test_evaluate_deload_signal_matches_rule_based_underperformance_and_high_fat
     assert signal["forced_deload_reasons"] == []
 
 
+def test_evaluate_deload_signal_matches_three_consecutive_under_target_trigger_without_high_fatigue() -> None:
+    signal = evaluate_deload_signal(
+        completion_pct=92,
+        adherence_score=4,
+        soreness_rank=1,
+        average_rpe=7.0,
+        consecutive_underperformance_weeks=3,
+        rule_set={
+            "progression_rules": {
+                "on_under_target": {"after_exposures": 2},
+            },
+            "fatigue_rules": {
+                "high_fatigue_trigger": {
+                    "conditions": ["session_rpe_avg >= 9 for two exposures"]
+                }
+            },
+            "deload_rules": {
+                "early_deload_trigger": "three_consecutive_under_target_sessions"
+            },
+        },
+    )
+
+    assert signal["high_fatigue"] is False
+    assert signal["underperformance_deload_matched"] is True
+
+
 def test_evaluate_deload_signal_collects_forced_deload_reasons() -> None:
     signal = evaluate_deload_signal(
         completion_pct=65,
@@ -173,6 +199,19 @@ def test_resolve_substitution_rule_runtime_extracts_repeat_failure_threshold() -
 
     assert runtime["equipment_mismatch_strategy"] == "use_first_compatible_substitution"
     assert runtime["repeat_failure_threshold"] == 3
+
+
+def test_resolve_substitution_rule_runtime_extracts_numeric_repeat_failure_threshold() -> None:
+    runtime = resolve_substitution_rule_runtime(
+        {
+            "substitution_rules": {
+                "equipment_mismatch": "use_first_compatible_substitution",
+                "repeat_failure_trigger": "switch_after_2_failed_exposures",
+            }
+        }
+    )
+
+    assert runtime["repeat_failure_threshold"] == 2
 
 
 def test_resolve_equipment_substitution_chooses_first_compatible_candidate() -> None:

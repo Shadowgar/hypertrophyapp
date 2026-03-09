@@ -364,6 +364,35 @@ Evidence (2026-03-09, doctrine deload-cadence extraction improvement)
 - `importers/pdf_doctrine_rules_v1.py`: rule distillation now extracts explicit `deload every N weeks` doctrine hints into typed `deload_rules.scheduled_every_n_weeks` instead of relying solely on intro-week fallback heuristics.
 - `apps/api/tests/test_pdf_doctrine_rules_v1.py`: focused distiller regressions passed including the new scheduled-deload-cadence extraction case.
 
+Evidence (2026-03-09, doctrine repeat-failure trigger extraction improvement)
+- `importers/pdf_doctrine_rules_v1.py`: rule distillation now extracts explicit repeat-failure substitution thresholds (`after N failed exposures`) into typed `substitution_rules.repeat_failure_trigger` values (numeric `switch_after_N_failed_exposures` form), with existing default fallback retained when no explicit doctrine signal is present.
+- `apps/api/tests/test_pdf_doctrine_rules_v1.py`: focused distiller regressions passed including the new repeat-failure threshold extraction case.
+- `packages/core-engine/tests/test_rules_runtime.py`: focused rules-runtime regressions passed for numeric repeat-failure trigger threshold parsing compatibility.
+
+Evidence (2026-03-09, doctrine early-deload trigger extraction improvement)
+- `importers/pdf_doctrine_rules_v1.py`: rule distillation now extracts explicit early-deload trigger variants (`three consecutive under target sessions`) into typed `deload_rules.early_deload_trigger`, retaining canonical fallback when doctrine does not specify a variant.
+- `apps/api/tests/test_pdf_doctrine_rules_v1.py`: focused distiller regressions passed including the new early-deload trigger extraction case.
+- `packages/core-engine/tests/test_rules_runtime.py`: focused rules-runtime regressions passed for `three_consecutive_under_target_sessions` trigger behavior under low-fatigue underperformance.
+
+Evidence (2026-03-09, doctrine fatigue-threshold extraction improvement)
+- `importers/pdf_doctrine_rules_v1.py`: rule distillation now extracts explicit fatigue-threshold trigger text (`session RPE avg >= X for N exposures`) into normalized typed `fatigue_rules.high_fatigue_trigger.conditions` strings, retaining canonical fallback when doctrine does not specify a threshold.
+- `importers/pdf_doctrine_rules_v1.py`: fatigue-rule provenance now prefers explicit fatigue-threshold excerpts for `source_sections` when present, improving traceability of rule grounding.
+- `apps/api/tests/test_pdf_doctrine_rules_v1.py`: focused distiller regressions passed including the explicit fatigue-threshold extraction case.
+- `packages/core-engine/tests/test_rules_runtime.py`: focused rules-runtime regressions passed, confirming extracted fatigue-threshold condition strings remain runtime-compatible.
+
+Evidence (2026-03-09, frequency-adaptation decision family extraction start)
+- `packages/core-engine/core_engine/decision_frequency_adaptation.py`: frequency-adaptation preview/apply and adaptation persistence payload builders now live in a dedicated decision-family module rather than being owned only by `intelligence.py`.
+- `packages/core-engine/core_engine/decision_frequency_adaptation.py`: active adaptation state resolution/application helpers now also live in that same module (`resolve_active_frequency_adaptation_runtime`, `apply_active_frequency_adaptation_runtime`).
+- `packages/core-engine/core_engine/intelligence.py`: frequency-adaptation entry points now delegate to the dedicated decision-family module, reducing direct decision-body sprawl in the intelligence God module while preserving API behavior.
+- `packages/core-engine/core_engine/__init__.py`: frequency-adaptation public exports are now sourced from the dedicated decision-family module.
+- `packages/core-engine/tests/test_decision_frequency_adaptation.py`, `packages/core-engine/tests/test_intelligence.py`, and `apps/api/tests/test_program_frequency_adaptation_api.py`: focused regressions passed after extraction.
+
+Evidence (2026-03-09, weekly-review decision family extraction start)
+- `packages/core-engine/core_engine/decision_weekly_review.py`: weekly-review window/status/submit/persistence utility functions now live in a dedicated decision-family module.
+- `packages/core-engine/core_engine/intelligence.py`: weekly-review utility entry points now delegate to the dedicated decision-family module, reducing `intelligence.py` ownership while preserving route behavior.
+- `packages/core-engine/core_engine/__init__.py`: extracted weekly-review utility exports are now sourced from the dedicated decision-family module.
+- `packages/core-engine/tests/test_decision_weekly_review.py`, `packages/core-engine/tests/test_intelligence.py`, and `apps/api/tests/test_weekly_review.py`: focused regressions passed after extraction.
+
 Evidence (2026-03-09, adaptation onboarding program-id resolution extraction)
 - `packages/core-engine/core_engine/generation.py`: `resolve_onboarding_program_id` now owns linked-template onboarding program ID resolution for adaptation flows.
 - `apps/api/app/routers/plan.py`: adaptation preview/apply now delegate onboarding linked-program ID resolution to that helper before onboarding package loading.
