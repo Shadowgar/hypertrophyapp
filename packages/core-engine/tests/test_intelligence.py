@@ -10,28 +10,45 @@ from core_engine.intelligence import (
     build_coach_preview_payloads,
     build_coach_preview_recommendation_record_fields,
     build_coaching_recommendation_timeline_entry,
+    build_coaching_recommendation_timeline_payload,
     build_frequency_adaptation_apply_payload,
     build_generated_week_plan_payload,
     build_phase_applied_recommendation_record,
     build_repeat_failure_substitution_payload,
     build_workout_log_set_payload,
+    prepare_workout_log_set_request_runtime,
     build_workout_session_state_defaults,
     resolve_workout_log_set_plan_context,
     build_program_recommendation_payload,
     prepare_workout_session_state_persistence_payload,
     prepare_program_recommendation_runtime,
+    prepare_profile_program_recommendation_inputs,
     build_program_switch_payload,
     prepare_program_switch_runtime,
     build_specialization_applied_recommendation_record,
     build_weekly_review_decision_payload,
     build_weekly_review_performance_summary,
     prepare_weekly_review_submit_window,
+    build_weekly_review_cycle_persistence_payload,
+    build_soreness_entry_persistence_payload,
+    build_body_measurement_create_payload,
+    build_body_measurement_update_payload,
+    prepare_profile_date_window_runtime,
+    build_profile_upsert_persistence_payload,
+    build_profile_response_payload,
+    build_frequency_adaptation_persistence_state,
+    build_generated_week_adaptation_persistence_payload,
+    build_weekly_checkin_persistence_payload,
+    build_weekly_checkin_response_payload,
+    build_weekly_review_user_update_payload,
+    prepare_weekly_review_log_window_runtime,
     build_weekly_review_submit_payload,
     build_workout_performance_summary,
     build_workout_summary_payload,
     build_workout_today_session_state_payloads,
     build_workout_today_state_payloads,
     build_workout_today_payload,
+    resolve_workout_today_plan_payload,
     build_workout_today_plan_runtime,
     build_workout_today_log_runtime,
     build_workout_summary_progression_lookup_runtime,
@@ -64,6 +81,7 @@ from core_engine.intelligence import (
     resolve_latest_logged_workout_resume_state,
     resolve_program_recommendation_candidates,
     resolve_workout_completion_per_exercise,
+    resolve_workout_plan_context,
     resolve_weekly_review_window,
     resolve_workout_plan_reference,
     resolve_workout_today_session_selection,
@@ -73,6 +91,7 @@ from core_engine.intelligence import (
     summarize_program_media_and_warmups,
     resolve_workout_session_state_update,
     build_weekly_review_status_payload,
+    normalize_coaching_recommendation_timeline_limit,
     prepare_generated_week_review_overlay,
 )
 
@@ -189,6 +208,7 @@ def _sample_onboarding_package() -> dict:
             "default_training_days": 5,
             "minimum_temporary_days": 2,
             "max_temporary_weeks": 4,
+            "weak_area_bonus_slots": 2,
             "preserve_slot_roles": ["primary_compound", "secondary_compound", "weak_point"],
             "reduce_slot_roles_first": ["isolation", "accessory"],
             "daily_slot_cap_when_compressed": 10,
@@ -468,6 +488,19 @@ def test_prepare_program_recommendation_runtime_prefers_canonical_training_state
     assert trace_inputs["mesocycle_context_source"] == "training_state"
 
 
+def test_prepare_profile_program_recommendation_inputs_applies_router_fallbacks() -> None:
+    runtime = prepare_profile_program_recommendation_inputs(
+        selected_program_id=None,
+        days_available=None,
+        split_preference=None,
+        latest_plan=None,
+    )
+    assert runtime["current_program_id"] == "full_body_v1"
+    assert runtime["days_available"] == 2
+    assert runtime["split_preference"] == "full_body"
+    assert runtime["latest_plan_payload"] == {}
+
+
 def test_build_program_switch_payload_resolves_confirmation_and_unchanged_variants() -> None:
     confirmation_payload = build_program_switch_payload(
         current_program_id="ppl_v1",
@@ -637,6 +670,201 @@ def test_build_weekly_review_submit_payload_uses_summary_fault_count() -> None:
     assert payload["fault_count"] == 2
     assert math.isclose(payload["adjustments"]["global_weight_scale"], 1.0, rel_tol=1e-9, abs_tol=1e-9)
     assert payload["decision_trace"]["interpreter"] == "interpret_weekly_review_decision"
+
+
+def test_build_weekly_review_cycle_persistence_payload_shapes_faults_and_adjustments() -> None:
+    payload = build_weekly_review_cycle_persistence_payload(
+        summary={
+            "exercise_faults": [
+                {"exercise_id": "bench", "guidance": "hold"},
+                {"exercise_id": "row", "guidance": "reduce"},
+            ]
+        },
+        decision_payload={
+            "storage_adjustments": {
+                "load_adjustments": {"bench": -2.5},
+                "decision_trace": {"interpreter": "interpret_weekly_review_decision"},
+            }
+        },
+    )
+
+    assert payload["faults"] == {
+        "exercise_faults": [
+            {"exercise_id": "bench", "guidance": "hold"},
+            {"exercise_id": "row", "guidance": "reduce"},
+        ]
+    }
+    assert payload["adjustments"]["load_adjustments"]["bench"] == -2.5
+    assert payload["decision_trace"]["interpreter"] == "build_weekly_review_cycle_persistence_payload"
+
+
+def test_build_soreness_entry_persistence_payload_copies_severity_map() -> None:
+    severity_by_muscle = {"quads": "moderate", "hamstrings": "mild"}
+    payload = build_soreness_entry_persistence_payload(
+        entry_date=date(2026, 3, 2),
+        severity_by_muscle=severity_by_muscle,
+        notes="Leg day residual fatigue",
+    )
+
+    severity_by_muscle["quads"] = "severe"
+
+    assert payload["entry_date"] == date(2026, 3, 2)
+    assert payload["severity_by_muscle"] == {"quads": "moderate", "hamstrings": "mild"}
+    assert payload["notes"] == "Leg day residual fatigue"
+
+
+def test_build_body_measurement_create_payload_shapes_fields() -> None:
+    payload = build_body_measurement_create_payload(
+        measured_on=date(2026, 3, 2),
+        name="waist",
+        value=82.5,
+        unit="cm",
+    )
+    assert payload == {
+        "measured_on": date(2026, 3, 2),
+        "name": "waist",
+        "value": 82.5,
+        "unit": "cm",
+    }
+
+
+def test_build_body_measurement_update_payload_includes_only_provided_fields() -> None:
+    payload = build_body_measurement_update_payload(
+        measured_on=None,
+        name=None,
+        value=82.0,
+        unit=None,
+    )
+    assert payload == {"value": 82.0}
+
+
+def test_prepare_profile_date_window_runtime_preserves_optional_bounds() -> None:
+    runtime = prepare_profile_date_window_runtime(
+        start_date=date(2026, 3, 1),
+        end_date=date(2026, 3, 7),
+    )
+    assert runtime["start_date"] == date(2026, 3, 1)
+    assert runtime["end_date"] == date(2026, 3, 7)
+    assert runtime["decision_trace"]["interpreter"] == "prepare_profile_date_window_runtime"
+
+
+def test_build_profile_upsert_persistence_payload_defaults_selected_program() -> None:
+    payload = build_profile_upsert_persistence_payload(
+        name="Test User",
+        age=30,
+        weight=80.0,
+        gender="male",
+        split_preference="full_body",
+        selected_program_id=None,
+        training_location="home",
+        equipment_profile=["dumbbell"],
+        weak_areas=["chest"],
+        onboarding_answers={"primary_goal": "build_muscle"},
+        days_available=3,
+        nutrition_phase="maintenance",
+        calories=2500,
+        protein=180,
+        fat=70,
+        carbs=260,
+    )
+    assert payload["selected_program_id"] == "full_body_v1"
+    assert payload["onboarding_answers"] == {"primary_goal": "build_muscle"}
+
+
+def test_build_profile_response_payload_applies_profile_defaults() -> None:
+    payload = build_profile_response_payload(
+        email="coach@example.com",
+        name="Coach",
+        age=None,
+        weight=None,
+        gender=None,
+        split_preference=None,
+        selected_program_id=None,
+        training_location="home",
+        equipment_profile=None,
+        weak_areas=None,
+        onboarding_answers=None,
+        days_available=None,
+        nutrition_phase=None,
+        calories=None,
+        protein=None,
+        fat=None,
+        carbs=None,
+    )
+    assert payload["email"] == "coach@example.com"
+    assert payload["selected_program_id"] == "full_body_v1"
+    assert payload["days_available"] == 2
+    assert payload["nutrition_phase"] == "maintenance"
+    assert payload["equipment_profile"] == []
+    assert payload["onboarding_answers"] == {}
+
+
+def test_build_frequency_adaptation_persistence_state_copies_dict() -> None:
+    decision = {"persistence_state": {"program_id": "full_body_v1", "weeks_remaining": 2}}
+    payload = build_frequency_adaptation_persistence_state(decision_payload=decision)
+    decision["persistence_state"]["weeks_remaining"] = 1
+    assert payload == {"program_id": "full_body_v1", "weeks_remaining": 2}
+
+
+def test_build_generated_week_adaptation_persistence_payload_emits_state_update() -> None:
+    payload = build_generated_week_adaptation_persistence_payload(
+        adaptation_runtime={"state_updated": True, "next_state": {"program_id": "full_body_v1", "weeks_remaining": 1}}
+    )
+    assert payload["state_updated"] is True
+    assert payload["next_state"] == {"program_id": "full_body_v1", "weeks_remaining": 1}
+
+
+def test_build_weekly_checkin_persistence_payload_shapes_entry_fields() -> None:
+    payload = build_weekly_checkin_persistence_payload(
+        week_start=date(2026, 3, 9),
+        body_weight=81.2,
+        adherence_score=4,
+        notes="solid week",
+    )
+    assert payload == {
+        "week_start": date(2026, 3, 9),
+        "body_weight": 81.2,
+        "adherence_score": 4,
+        "notes": "solid week",
+    }
+
+
+def test_build_weekly_checkin_response_payload_defaults_phase() -> None:
+    payload = build_weekly_checkin_response_payload(nutrition_phase=None)
+    assert payload == {"status": "logged", "phase": "maintenance"}
+
+
+def test_build_weekly_review_user_update_payload_includes_optional_nutrition_phase() -> None:
+    payload = build_weekly_review_user_update_payload(
+        body_weight=81.0,
+        calories=2550,
+        protein=185,
+        fat=72,
+        carbs=260,
+        nutrition_phase="cut",
+    )
+    assert payload["weight"] == 81.0
+    assert payload["nutrition_phase"] == "cut"
+
+    without_phase = build_weekly_review_user_update_payload(
+        body_weight=81.0,
+        calories=2550,
+        protein=185,
+        fat=72,
+        carbs=260,
+        nutrition_phase=None,
+    )
+    assert "nutrition_phase" not in without_phase
+
+
+def test_prepare_weekly_review_log_window_runtime_builds_half_open_bounds() -> None:
+    runtime = prepare_weekly_review_log_window_runtime(
+        previous_week_start=date(2026, 3, 2),
+        week_start=date(2026, 3, 9),
+    )
+    assert runtime["window_start"].isoformat() == "2026-03-02T00:00:00"
+    assert runtime["window_end"].isoformat() == "2026-03-09T00:00:00"
+    assert runtime["decision_trace"]["interpreter"] == "prepare_weekly_review_log_window_runtime"
 
 
 def test_resolve_workout_completion_per_exercise_keeps_highest_logged_set() -> None:
@@ -841,6 +1069,22 @@ def test_resolve_workout_log_set_plan_context_normalizes_rep_range_sets_and_weig
         "planned_sets": 3,
         "planned_weight": 87.5,
     }
+
+
+def test_prepare_workout_log_set_request_runtime_falls_back_primary_exercise_id() -> None:
+    runtime = prepare_workout_log_set_request_runtime(
+        primary_exercise_id=None,
+        exercise_id="bench",
+        set_index=2,
+        reps=8,
+        weight=82.5,
+        rpe=8.0,
+    )
+    assert runtime["primary_exercise_id"] == "bench"
+    assert runtime["exercise_id"] == "bench"
+    assert runtime["set_index"] == 2
+    assert runtime["reps"] == 8
+    assert runtime["weight"] == 82.5
 
 
 def test_build_workout_session_state_defaults_seeds_expected_values() -> None:
@@ -1339,6 +1583,50 @@ def test_build_coaching_recommendation_timeline_entry_humanizes_legacy_reasons_a
     assert entry["focus_muscles"] == ["biceps", "shoulders"]
 
 
+def test_normalize_coaching_recommendation_timeline_limit_clamps_to_bounds() -> None:
+    assert normalize_coaching_recommendation_timeline_limit(-3) == 1
+    assert normalize_coaching_recommendation_timeline_limit(20) == 20
+    assert normalize_coaching_recommendation_timeline_limit(500) == 100
+
+
+def test_build_coaching_recommendation_timeline_payload_normalizes_non_dict_payloads() -> None:
+    rows = [
+        SimpleNamespace(
+            id="rec_1",
+            recommendation_type="coach_preview",
+            status="previewed",
+            template_id="full_body_v1",
+            current_phase="accumulation",
+            recommended_phase="accumulation",
+            progression_action="hold",
+            recommendation_payload=None,
+            created_at=datetime(2026, 3, 9, 8, 0),
+            applied_at=None,
+        ),
+        SimpleNamespace(
+            id="rec_2",
+            recommendation_type="specialization_decision",
+            status="applied",
+            template_id="full_body_v1",
+            current_phase="accumulation",
+            recommended_phase="accumulation",
+            progression_action="hold",
+            recommendation_payload={
+                "specialization": {"focus_muscles": ["biceps", "shoulders"]},
+            },
+            created_at=datetime(2026, 3, 9, 9, 0),
+            applied_at=datetime(2026, 3, 9, 9, 5),
+        ),
+    ]
+
+    payload = build_coaching_recommendation_timeline_payload(rows)
+
+    assert len(payload["entries"]) == 2
+    assert payload["entries"][0]["rationale"] == "No rationale recorded"
+    assert payload["entries"][0]["focus_muscles"] == []
+    assert payload["entries"][1]["focus_muscles"] == ["biceps", "shoulders"]
+
+
 def test_extract_coaching_recommendation_focus_muscles_returns_filtered_list() -> None:
     focus_muscles = extract_coaching_recommendation_focus_muscles(
         {
@@ -1718,6 +2006,26 @@ def test_build_workout_today_plan_runtime_normalizes_sessions_and_program_contex
     assert runtime["decision_trace"]["interpreter"] == "build_workout_today_plan_runtime"
 
 
+def test_resolve_workout_today_plan_payload_selects_latest_dict_payload() -> None:
+    runtime = resolve_workout_today_plan_payload(
+        plan_rows=[
+            SimpleNamespace(payload={"program_template_id": "full_body_v1", "sessions": []}),
+            SimpleNamespace(payload=None),
+        ]
+    )
+
+    assert runtime["has_plan"] is True
+    assert runtime["latest_plan_payload"]["program_template_id"] == "full_body_v1"
+    assert runtime["decision_trace"]["interpreter"] == "resolve_workout_today_plan_payload"
+
+
+def test_resolve_workout_today_plan_payload_handles_missing_plans() -> None:
+    runtime = resolve_workout_today_plan_payload(plan_rows=[])
+
+    assert runtime["has_plan"] is False
+    assert runtime["latest_plan_payload"] == {}
+
+
 def test_build_workout_today_log_runtime_projects_resume_and_completion_rows() -> None:
     runtime = build_workout_today_log_runtime(
         recent_logs=[
@@ -1892,6 +2200,46 @@ def test_resolve_workout_plan_reference_returns_none_when_unmatched() -> None:
     }
 
 
+def test_resolve_workout_plan_context_normalizes_plan_rows() -> None:
+    rows = [
+        SimpleNamespace(
+            payload={
+                "program_template_id": "full_body_v1",
+                "sessions": [
+                    {
+                        "session_id": "session-1",
+                        "exercises": [{"id": "bench"}, {"id": "row"}],
+                    }
+                ],
+            }
+        ),
+        SimpleNamespace(payload=None),
+    ]
+    context = resolve_workout_plan_context(
+        plan_rows=rows,
+        workout_id="session-1",
+        exercise_id="row",
+    )
+
+    assert context["program_id"] == "full_body_v1"
+    assert context["session"]["session_id"] == "session-1"
+    assert context["exercise"]["id"] == "row"
+    assert context["decision_trace"]["interpreter"] == "resolve_workout_plan_context"
+
+
+def test_resolve_workout_plan_context_returns_none_for_unmatched_workout() -> None:
+    context = resolve_workout_plan_context(
+        plan_rows=[SimpleNamespace(payload={"program_template_id": "full_body_v1", "sessions": []})],
+        workout_id="missing-workout",
+        exercise_id=None,
+    )
+
+    assert context["session"] is None
+    assert context["exercise"] is None
+    assert context["program_id"] is None
+    assert context["decision_trace"]["outcome"]["matched_session"] is False
+
+
 def test_resolve_weekly_review_window_rolls_sunday_into_next_review_week() -> None:
     sunday_window = resolve_weekly_review_window(today=date(2026, 3, 8))
     wednesday_window = resolve_weekly_review_window(today=date(2026, 3, 4))
@@ -1989,6 +2337,10 @@ def test_frequency_adaptation_interpreters_emit_trace_and_runtime_state() -> Non
     )
 
     assert preview["decision_trace"]["interpreter"] == "recommend_frequency_adaptation_preview"
+    assert preview["decision_trace"]["version"] == "v1"
+    assert isinstance(preview["decision_trace"]["steps"], list)
+    assert preview["decision_trace"]["outcome"]["reason_code"] == "preview_generated"
+    assert preview["decision_trace"]["outcome"]["weak_area_bonus_slots"] == 2
     assert preview["decision_trace"]["resolved_context"]["weak_area_source"] == "profile"
     assert preview["decision_trace"]["request_runtime_trace"]["interpreter"] == "prepare_frequency_adaptation_runtime_inputs"
 
@@ -2008,6 +2360,10 @@ def test_frequency_adaptation_interpreters_emit_trace_and_runtime_state() -> Non
     )
 
     assert applied["decision_trace"]["interpreter"] == "interpret_frequency_adaptation_apply"
+    assert applied["decision_trace"]["version"] == "v1"
+    assert isinstance(applied["decision_trace"]["steps"], list)
+    assert applied["decision_trace"]["outcome"]["reason_code"] == "adaptation_applied"
+    assert applied["decision_trace"]["resolved_context"]["weak_areas"] == ["chest"]
     assert applied["decision_trace"]["request_runtime_trace"]["interpreter"] == "prepare_frequency_adaptation_runtime_inputs"
 
     active = resolve_active_frequency_adaptation_runtime(

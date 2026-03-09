@@ -98,6 +98,18 @@ def test_workout_today_resumes_incomplete_session() -> None:
     assert payload["exercises"][0]["warmups"]
 
 
+def test_workout_today_returns_404_without_generated_plan() -> None:
+    _reset_db()
+    client = TestClient(app)
+    token = _register_token(client)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    _onboard_profile(client, token)
+    today = client.get("/workout/today", headers=headers)
+    assert today.status_code == 404
+    assert today.json()["detail"] == "No plan generated"
+
+
 def test_workout_today_does_not_resume_completed_session() -> None:
     _reset_db()
     client = TestClient(app)

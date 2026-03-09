@@ -68,3 +68,25 @@ def test_distill_rule_set_writes_valid_rules_json(tmp_path: Path) -> None:
     assert rules.rule_set_id == "bodybuilding_transformation_beginner_rules"
     assert rules.starting_load_rules.default_rir_target == 4
     assert rules.source_sections
+
+
+def test_build_rule_set_payload_extracts_scheduled_deload_cadence_when_present(tmp_path: Path) -> None:
+    guide_doc = tmp_path / "guide.md"
+    guide_doc.write_text(
+        """
+        IMPORTANT PROGRAM NOTES
+        For the first week of this program, most sets are taken to an RPE of ~7-8.
+        Deload every 6 weeks to manage accumulated fatigue.
+        Progress through the rep ranges given before increasing load.
+        """,
+        encoding="utf-8",
+    )
+
+    payload = build_rule_set_payload(
+        program_id="pure_bodybuilding_phase_1_full_body",
+        source_pdf="reference/The_Pure_Bodybuilding_Program - Phase 1 - Full_Body.pdf",
+        guide_doc=guide_doc,
+    )
+    rules = AdaptiveGoldRuleSet.model_validate(payload)
+
+    assert rules.deload_rules.scheduled_every_n_weeks == 6

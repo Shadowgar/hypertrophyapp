@@ -13,8 +13,12 @@ from core_engine import (
     format_program_display_name,
     prepare_coach_preview_runtime_inputs,
     prepare_generation_template_runtime,
+    prepare_generate_week_plan_runtime_inputs,
     prepare_frequency_adaptation_runtime_inputs,
+    resolve_program_display_name,
     resolve_program_guide_summary,
+    resolve_optional_rule_set,
+    resolve_onboarding_program_id,
     resolve_frequency_adaptation_request_context,
     resolve_generation_template_choice,
     resolve_program_exercise_guide,
@@ -171,6 +175,59 @@ def test_resolve_program_guide_summary_raises_when_missing() -> None:
         )
 
 
+def test_resolve_program_display_name_prefers_summary_name_then_fallback() -> None:
+    assert (
+        resolve_program_display_name(
+            program_id="full_body_v1",
+            available_program_summaries=[{"id": "full_body_v1", "name": "Full Body Gold"}],
+        )
+        == "Full Body Gold"
+    )
+    assert (
+        resolve_program_display_name(
+            program_id="upper_lower_v2",
+            available_program_summaries=[{"id": "full_body_v1", "name": "Full Body Gold"}],
+        )
+        == "Upper Lower V2"
+    )
+
+
+def test_resolve_optional_rule_set_returns_none_for_missing_or_invalid_template() -> None:
+    assert (
+        resolve_optional_rule_set(
+            template_id=None,
+            resolve_linked_program_id=lambda template_id: template_id,
+            load_rule_set=lambda linked_id: {"id": linked_id},
+        )
+        is None
+    )
+    assert (
+        resolve_optional_rule_set(
+            template_id="missing_template",
+            resolve_linked_program_id=lambda template_id: template_id,
+            load_rule_set=lambda linked_id: (_ for _ in ()).throw(FileNotFoundError(linked_id)),
+        )
+        is None
+    )
+
+
+def test_resolve_optional_rule_set_loads_linked_rule_set() -> None:
+    loaded = resolve_optional_rule_set(
+        template_id="full_body_v1",
+        resolve_linked_program_id=lambda template_id: f"{template_id}_linked",
+        load_rule_set=lambda linked_id: {"rule_set_id": linked_id},
+    )
+    assert loaded == {"rule_set_id": "full_body_v1_linked"}
+
+
+def test_resolve_onboarding_program_id_uses_linked_program_resolver() -> None:
+    onboarding_program_id = resolve_onboarding_program_id(
+        template_id="full_body_v1",
+        resolve_linked_program_id=lambda template_id: f"{template_id}_linked",
+    )
+    assert onboarding_program_id == "full_body_v1_linked"
+
+
 def test_resolve_week_generation_runtime_inputs_prefers_canonical_training_state() -> None:
     today = date(2026, 3, 5)
     user_training_state = {
@@ -226,6 +283,48 @@ def test_resolve_week_generation_runtime_inputs_prefers_canonical_training_state
     assert runtime["decision_trace"]["outcome"]["prior_generated_weeks"] == 2
     assert runtime["decision_trace"]["steps"][1]["result"]["soreness_source"] == "training_state"
     assert runtime["decision_trace"]["steps"][3]["result"]["source"] == "training_state"
+
+
+def test_prepare_generate_week_plan_runtime_inputs_normalizes_plan_inputs() -> None:
+    runtime = prepare_generate_week_plan_runtime_inputs(
+        user_name="Coach User",
+        split_preference="full_body",
+        nutrition_phase="maintenance",
+        available_equipment=["barbell", "dumbbell"],
+        generation_runtime={
+            "effective_days_available": 4,
+            "history": [{"exercise_id": "bench"}],
+            "soreness_by_muscle": {"chest": "mild"},
+            "prior_generated_weeks": 2,
+            "latest_adherence_score": 3,
+            "severe_soreness_count": 1,
+        },
+    )
+
+    assert runtime["user_profile"] == {"name": "Coach User"}
+    assert runtime["days_available"] == 4
+    assert runtime["split_preference"] == "full_body"
+    assert runtime["phase"] == "maintenance"
+    assert runtime["available_equipment"] == ["barbell", "dumbbell"]
+    assert runtime["history"] == [{"exercise_id": "bench"}]
+    assert runtime["decision_trace"]["interpreter"] == "prepare_generate_week_plan_runtime_inputs"
+
+
+def test_prepare_generate_week_plan_runtime_inputs_applies_defaults() -> None:
+    runtime = prepare_generate_week_plan_runtime_inputs(
+        user_name=None,
+        split_preference="upper_lower",
+        nutrition_phase=None,
+        available_equipment=None,
+        generation_runtime={},
+    )
+
+    assert runtime["user_profile"] == {"name": None}
+    assert runtime["phase"] == "maintenance"
+    assert runtime["available_equipment"] == []
+    assert runtime["days_available"] == 0
+    assert runtime["history"] == []
+    assert runtime["soreness_by_muscle"] == {}
 
 
 def test_build_coach_preview_context_reuses_serialized_recent_training_history() -> None:

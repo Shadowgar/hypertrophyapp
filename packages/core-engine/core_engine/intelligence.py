@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 import re
 from typing import Any, Literal, cast
 
@@ -1337,6 +1337,26 @@ def build_repeat_failure_substitution_payload(
     }
 
 
+def prepare_workout_log_set_request_runtime(
+    *,
+    primary_exercise_id: str | None,
+    exercise_id: str,
+    set_index: int,
+    reps: int,
+    weight: float,
+    rpe: float | None,
+) -> dict[str, Any]:
+    resolved_primary_exercise_id = primary_exercise_id or exercise_id
+    return {
+        "primary_exercise_id": resolved_primary_exercise_id,
+        "exercise_id": exercise_id,
+        "set_index": set_index,
+        "reps": reps,
+        "weight": weight,
+        "rpe": rpe,
+    }
+
+
 def resolve_workout_log_set_plan_context(
     *,
     planned_exercise: dict[str, Any] | None,
@@ -1448,6 +1468,30 @@ def build_workout_today_plan_runtime(
                 "selected_program_id": selected_program_id,
                 "has_mesocycle": mesocycle is not None,
                 "has_deload": deload is not None,
+            },
+        },
+    }
+
+
+def resolve_workout_today_plan_payload(
+    *,
+    plan_rows: list[Any],
+) -> dict[str, Any]:
+    latest_row = plan_rows[0] if plan_rows else None
+    latest_plan_payload = _coerce_dict(_read_attr(latest_row, "payload", {}))
+    has_plan = latest_row is not None
+    return {
+        "has_plan": has_plan,
+        "latest_plan_payload": latest_plan_payload,
+        "decision_trace": {
+            "interpreter": "resolve_workout_today_plan_payload",
+            "version": "v1",
+            "inputs": {
+                "plan_row_count": len(plan_rows),
+            },
+            "outcome": {
+                "has_plan": has_plan,
+                "has_latest_payload_dict": bool(latest_plan_payload),
             },
         },
     }
@@ -1710,6 +1754,45 @@ def resolve_workout_plan_reference(
     }
 
 
+def resolve_workout_plan_context(
+    *,
+    plan_rows: list[Any],
+    workout_id: str,
+    exercise_id: str | None = None,
+) -> dict[str, Any]:
+    plan_payloads = [
+        _coerce_dict(_read_attr(row, "payload", {}))
+        for row in plan_rows
+    ]
+    reference = resolve_workout_plan_reference(
+        plan_payloads=plan_payloads,
+        workout_id=workout_id,
+        exercise_id=exercise_id,
+    )
+    session = _coerce_dict(reference.get("session"))
+    exercise = _coerce_dict(reference.get("exercise"))
+    program_id = str(reference.get("program_id") or "").strip() or None
+    return {
+        "session": session or None,
+        "exercise": exercise or None,
+        "program_id": program_id,
+        "decision_trace": {
+            "interpreter": "resolve_workout_plan_context",
+            "version": "v1",
+            "inputs": {
+                "plan_row_count": len(plan_rows),
+                "workout_id": workout_id,
+                "has_exercise_id": bool(exercise_id),
+            },
+            "outcome": {
+                "matched_session": bool(session),
+                "matched_exercise": bool(exercise),
+                "program_id": program_id,
+            },
+        },
+    }
+
+
 def resolve_weekly_review_window(*, today: date) -> dict[str, date | bool]:
     current_week_start = today - timedelta(days=today.weekday())
     today_is_sunday = today.weekday() == 6
@@ -1813,6 +1896,266 @@ def build_weekly_review_submit_payload(
         "summary": deepcopy(summary),
         "adjustments": deepcopy(_coerce_dict(decision_payload.get("adjustments"))),
         "decision_trace": deepcopy(_coerce_dict(decision_payload.get("decision_trace"))),
+    }
+
+
+def build_weekly_review_cycle_persistence_payload(
+    *,
+    summary: dict[str, Any],
+    decision_payload: dict[str, Any],
+) -> dict[str, Any]:
+    exercise_faults = [
+        deepcopy(_coerce_dict(item))
+        for item in (summary.get("exercise_faults") or [])
+        if isinstance(item, dict)
+    ]
+    storage_adjustments = deepcopy(_coerce_dict(decision_payload.get("storage_adjustments")))
+    return {
+        "faults": {"exercise_faults": exercise_faults},
+        "adjustments": storage_adjustments,
+        "decision_trace": {
+            "interpreter": "build_weekly_review_cycle_persistence_payload",
+            "version": "v1",
+            "inputs": {
+                "fault_count": len(exercise_faults),
+                "has_storage_adjustments": bool(storage_adjustments),
+            },
+            "outcome": {
+                "fault_count": len(exercise_faults),
+                "adjustment_keys": sorted(storage_adjustments.keys()),
+            },
+        },
+    }
+
+
+def build_soreness_entry_persistence_payload(
+    *,
+    entry_date: date,
+    severity_by_muscle: dict[str, str],
+    notes: str | None,
+) -> dict[str, Any]:
+    return {
+        "entry_date": entry_date,
+        "severity_by_muscle": deepcopy(dict(severity_by_muscle)),
+        "notes": notes,
+    }
+
+
+def build_body_measurement_create_payload(
+    *,
+    measured_on: date,
+    name: str,
+    value: float,
+    unit: str,
+) -> dict[str, Any]:
+    return {
+        "measured_on": measured_on,
+        "name": name,
+        "value": value,
+        "unit": unit,
+    }
+
+
+def build_body_measurement_update_payload(
+    *,
+    measured_on: date | None,
+    name: str | None,
+    value: float | None,
+    unit: str | None,
+) -> dict[str, Any]:
+    payload: dict[str, Any] = {}
+    if measured_on is not None:
+        payload["measured_on"] = measured_on
+    if name is not None:
+        payload["name"] = name
+    if value is not None:
+        payload["value"] = value
+    if unit is not None:
+        payload["unit"] = unit
+    return payload
+
+
+def prepare_profile_date_window_runtime(
+    *,
+    start_date: date | None,
+    end_date: date | None,
+) -> dict[str, Any]:
+    return {
+        "start_date": start_date,
+        "end_date": end_date,
+        "decision_trace": {
+            "interpreter": "prepare_profile_date_window_runtime",
+            "version": "v1",
+            "inputs": {
+                "has_start_date": start_date is not None,
+                "has_end_date": end_date is not None,
+            },
+        },
+    }
+
+
+def build_profile_upsert_persistence_payload(
+    *,
+    name: str,
+    age: int,
+    weight: float,
+    gender: str,
+    split_preference: str,
+    selected_program_id: str | None,
+    training_location: str,
+    equipment_profile: list[str],
+    weak_areas: list[str] | None,
+    onboarding_answers: dict[str, Any] | None,
+    days_available: int,
+    nutrition_phase: str,
+    calories: int,
+    protein: int,
+    fat: int,
+    carbs: int,
+) -> dict[str, Any]:
+    return {
+        "name": name,
+        "age": age,
+        "weight": weight,
+        "gender": gender,
+        "split_preference": split_preference,
+        "selected_program_id": selected_program_id or "full_body_v1",
+        "training_location": training_location,
+        "equipment_profile": list(equipment_profile),
+        "weak_areas": list(weak_areas or []),
+        "onboarding_answers": deepcopy(onboarding_answers) if isinstance(onboarding_answers, dict) else None,
+        "days_available": days_available,
+        "nutrition_phase": nutrition_phase,
+        "calories": calories,
+        "protein": protein,
+        "fat": fat,
+        "carbs": carbs,
+    }
+
+
+def build_profile_response_payload(
+    *,
+    email: str,
+    name: str | None,
+    age: int | None,
+    weight: float | None,
+    gender: str | None,
+    split_preference: str | None,
+    selected_program_id: str | None,
+    training_location: str | None,
+    equipment_profile: list[str] | None,
+    weak_areas: list[str] | None,
+    onboarding_answers: dict[str, Any] | None,
+    days_available: int | None,
+    nutrition_phase: str | None,
+    calories: int | None,
+    protein: int | None,
+    fat: int | None,
+    carbs: int | None,
+) -> dict[str, Any]:
+    return {
+        "email": email,
+        "name": name,
+        "age": age or 0,
+        "weight": weight or 0,
+        "gender": gender or "",
+        "split_preference": split_preference or "",
+        "selected_program_id": selected_program_id or "full_body_v1",
+        "training_location": training_location,
+        "equipment_profile": list(equipment_profile or []),
+        "weak_areas": list(weak_areas or []),
+        "onboarding_answers": deepcopy(onboarding_answers) if isinstance(onboarding_answers, dict) else {},
+        "days_available": days_available or 2,
+        "nutrition_phase": nutrition_phase or "maintenance",
+        "calories": calories or 0,
+        "protein": protein or 0,
+        "fat": fat or 0,
+        "carbs": carbs or 0,
+    }
+
+
+def build_frequency_adaptation_persistence_state(
+    *,
+    decision_payload: dict[str, Any],
+) -> dict[str, Any]:
+    return deepcopy(_coerce_dict(decision_payload.get("persistence_state")))
+
+
+def build_generated_week_adaptation_persistence_payload(
+    *,
+    adaptation_runtime: dict[str, Any],
+) -> dict[str, Any]:
+    runtime = _coerce_dict(adaptation_runtime)
+    return {
+        "state_updated": bool(runtime.get("state_updated")),
+        "next_state": deepcopy(_coerce_dict(runtime.get("next_state"))) or None,
+    }
+
+
+def build_weekly_checkin_persistence_payload(
+    *,
+    week_start: date,
+    body_weight: float,
+    adherence_score: int,
+    notes: str | None,
+) -> dict[str, Any]:
+    return {
+        "week_start": week_start,
+        "body_weight": body_weight,
+        "adherence_score": adherence_score,
+        "notes": notes,
+    }
+
+
+def build_weekly_checkin_response_payload(
+    *,
+    nutrition_phase: str | None,
+) -> dict[str, str]:
+    return {
+        "status": "logged",
+        "phase": nutrition_phase or "maintenance",
+    }
+
+
+def build_weekly_review_user_update_payload(
+    *,
+    body_weight: float,
+    calories: int,
+    protein: int,
+    fat: int,
+    carbs: int,
+    nutrition_phase: str | None,
+) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "weight": body_weight,
+        "calories": calories,
+        "protein": protein,
+        "fat": fat,
+        "carbs": carbs,
+    }
+    if nutrition_phase:
+        payload["nutrition_phase"] = nutrition_phase
+    return payload
+
+
+def prepare_weekly_review_log_window_runtime(
+    *,
+    previous_week_start: date,
+    week_start: date,
+) -> dict[str, Any]:
+    window_start = datetime.combine(previous_week_start, datetime.min.time())
+    window_end = datetime.combine(week_start, datetime.min.time())
+    return {
+        "window_start": window_start,
+        "window_end": window_end,
+        "decision_trace": {
+            "interpreter": "prepare_weekly_review_log_window_runtime",
+            "version": "v1",
+            "inputs": {
+                "previous_week_start": previous_week_start.isoformat(),
+                "week_start": week_start.isoformat(),
+            },
+        },
     }
 
 
@@ -2253,6 +2596,28 @@ def _normalized_weak_areas(values: list[str] | None) -> list[str]:
     return list(dict.fromkeys(normalized))
 
 
+def _resolve_frequency_adaptation_context(
+    *,
+    explicit_weak_areas: list[str] | None,
+    stored_weak_areas: list[str] | None,
+    equipment_profile: list[str] | None,
+    recovery_state: str,
+    current_week_index: int,
+) -> dict[str, Any]:
+    resolved_weak_areas = _normalized_weak_areas(explicit_weak_areas)
+    weak_area_source = "request"
+    if not resolved_weak_areas:
+        resolved_weak_areas = _normalized_weak_areas(stored_weak_areas)
+        weak_area_source = "profile"
+    return {
+        "weak_areas": resolved_weak_areas,
+        "weak_area_source": weak_area_source,
+        "equipment_profile": list(equipment_profile or []),
+        "recovery_state": recovery_state,
+        "current_week_index": int(current_week_index),
+    }
+
+
 def recommend_frequency_adaptation_preview(
     *,
     onboarding_package: dict[str, Any],
@@ -2267,11 +2632,16 @@ def recommend_frequency_adaptation_preview(
     current_week_index: int,
     request_runtime_trace: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    resolved_weak_areas = _normalized_weak_areas(explicit_weak_areas)
-    weak_area_source = "request"
-    if not resolved_weak_areas:
-        resolved_weak_areas = _normalized_weak_areas(stored_weak_areas)
-        weak_area_source = "profile"
+    adaptation_rules = _coerce_dict(onboarding_package.get("frequency_adaptation_rules"))
+    weak_area_bonus_slots = max(0, int(adaptation_rules.get("weak_area_bonus_slots") or 1))
+    resolved_context = _resolve_frequency_adaptation_context(
+        explicit_weak_areas=explicit_weak_areas,
+        stored_weak_areas=stored_weak_areas,
+        equipment_profile=equipment_profile,
+        recovery_state=recovery_state,
+        current_week_index=current_week_index,
+    )
+    resolved_weak_areas = list(resolved_context["weak_areas"])
 
     overlay = {
         "available_training_days": int(target_days),
@@ -2280,33 +2650,48 @@ def recommend_frequency_adaptation_preview(
             {
                 "muscle_group": item,
                 "priority": 5,
-                "desired_extra_slots_per_week": 1,
+                "desired_extra_slots_per_week": weak_area_bonus_slots,
             }
             for item in resolved_weak_areas
         ],
-        "equipment_limits": list(equipment_profile or []),
-        "recovery_state": recovery_state,
-        "current_week_index": int(current_week_index),
+        "equipment_limits": list(resolved_context["equipment_profile"]),
+        "recovery_state": str(resolved_context["recovery_state"]),
+        "current_week_index": int(resolved_context["current_week_index"]),
     }
     result = dict(adapt_onboarding_frequency(onboarding_package=onboarding_package, overlay=overlay))
     result["decision_trace"] = {
         "interpreter": "recommend_frequency_adaptation_preview",
+        "version": "v1",
         "program_id": program_id,
         "request": {
             "current_days": int(current_days),
             "target_days": int(target_days),
             "duration_weeks": int(duration_weeks),
         },
-        "resolved_context": {
-            "weak_areas": resolved_weak_areas,
-            "weak_area_source": weak_area_source,
-            "equipment_profile": list(equipment_profile or []),
-            "recovery_state": recovery_state,
-            "current_week_index": int(current_week_index),
-        },
+        "resolved_context": dict(resolved_context),
+        "steps": [
+            {
+                "decision": "resolved_context",
+                "result": {
+                    "weak_area_source": resolved_context["weak_area_source"],
+                    "weak_area_count": len(resolved_weak_areas),
+                    "weak_area_bonus_slots": weak_area_bonus_slots,
+                    "equipment_profile_count": len(resolved_context["equipment_profile"]),
+                },
+            },
+            {
+                "decision": "generate_preview",
+                "result": {
+                    "week_count": len(result.get("weeks") or []),
+                    "rejoin_policy": result.get("rejoin_policy"),
+                },
+            },
+        ],
         "outcome": {
             "week_count": len(result.get("weeks") or []),
             "rejoin_policy": result.get("rejoin_policy"),
+            "reason_code": "preview_generated",
+            "weak_area_bonus_slots": weak_area_bonus_slots,
         },
         "request_runtime_trace": deepcopy(_coerce_dict(request_runtime_trace)),
     }
@@ -2341,9 +2726,17 @@ def interpret_frequency_adaptation_apply(
         current_week_index=current_week_index,
         request_runtime_trace=request_runtime_trace,
     )
-    resolved_weak_areas = list(preview.get("weak_areas") or [])
+    preview_trace = _coerce_dict(preview.get("decision_trace"))
+    resolved_context = _coerce_dict(preview_trace.get("resolved_context"))
+    resolved_weak_areas = [
+        str(item).strip().lower()
+        for item in (resolved_context.get("weak_areas") or preview.get("weak_areas") or [])
+        if str(item).strip()
+    ]
+    resolved_weak_areas = list(dict.fromkeys(resolved_weak_areas))
     decision_trace = {
         "interpreter": "interpret_frequency_adaptation_apply",
+        "version": "v1",
         "program_id": program_id,
         "request": {
             "target_days": int(target_days),
@@ -2351,14 +2744,32 @@ def interpret_frequency_adaptation_apply(
         },
         "resolved_context": {
             "weak_areas": resolved_weak_areas,
-            "recovery_state": recovery_state,
-            "current_week_index": int(current_week_index),
+            "weak_area_source": str(resolved_context.get("weak_area_source") or "preview"),
+            "recovery_state": str(resolved_context.get("recovery_state") or recovery_state),
+            "current_week_index": int(resolved_context.get("current_week_index") or current_week_index),
         },
-        "preview_trace": dict(preview.get("decision_trace") or {}),
+        "steps": [
+            {
+                "decision": "reuse_preview_context",
+                "result": {
+                    "has_preview_trace": bool(preview_trace),
+                    "weak_area_count": len(resolved_weak_areas),
+                },
+            },
+            {
+                "decision": "prepare_persistence_state",
+                "result": {
+                    "target_days": int(target_days),
+                    "weeks_remaining": int(duration_weeks),
+                },
+            },
+        ],
+        "preview_trace": dict(preview_trace),
         "request_runtime_trace": deepcopy(_coerce_dict(request_runtime_trace)),
         "outcome": {
             "status": "applied",
             "weeks_remaining": int(duration_weeks),
+            "reason_code": "adaptation_applied",
         },
     }
     persistence_state = {
@@ -3247,6 +3658,22 @@ def prepare_program_recommendation_runtime(
     return runtime_payload
 
 
+def prepare_profile_program_recommendation_inputs(
+    *,
+    selected_program_id: str | None,
+    days_available: int | None,
+    split_preference: str | None,
+    latest_plan: Any | None,
+) -> dict[str, Any]:
+    latest_plan_payload = _coerce_dict(_read_attr(latest_plan, "payload", {}))
+    return {
+        "current_program_id": selected_program_id or "full_body_v1",
+        "days_available": days_available or 2,
+        "split_preference": split_preference or "full_body",
+        "latest_plan_payload": latest_plan_payload,
+    }
+
+
 def build_program_switch_payload(
     *,
     current_program_id: str,
@@ -3431,6 +3858,29 @@ def build_coaching_recommendation_timeline_entry(
         "created_at": created_at,
         "applied_at": applied_at,
     }
+
+
+def normalize_coaching_recommendation_timeline_limit(limit: int) -> int:
+    return max(1, min(100, int(limit)))
+
+
+def build_coaching_recommendation_timeline_payload(rows: list[Any]) -> dict[str, Any]:
+    entries = [
+        build_coaching_recommendation_timeline_entry(
+            recommendation_id=str(_read_attr(row, "id", "") or ""),
+            recommendation_type=str(_read_attr(row, "recommendation_type", "") or ""),
+            status=str(_read_attr(row, "status", "") or ""),
+            template_id=str(_read_attr(row, "template_id", "") or ""),
+            current_phase=str(_read_attr(row, "current_phase", "") or ""),
+            recommended_phase=str(_read_attr(row, "recommended_phase", "") or ""),
+            progression_action=str(_read_attr(row, "progression_action", "") or ""),
+            recommendation_payload=_coerce_dict(_read_attr(row, "recommendation_payload", {})),
+            created_at=cast(datetime, _read_attr(row, "created_at")),
+            applied_at=cast(datetime | None, _read_attr(row, "applied_at")),
+        )
+        for row in rows
+    ]
+    return {"entries": entries}
 
 
 def build_phase_applied_recommendation_record(

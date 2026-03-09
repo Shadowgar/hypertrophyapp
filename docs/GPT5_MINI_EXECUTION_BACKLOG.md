@@ -276,6 +276,112 @@ Evidence (2026-03-09, plan guide summary resolution extraction)
 - `apps/api/app/routers/plan.py`: `GET /plan/guides/programs/{program_id}` now delegates summary lookup to that helper while preserving HTTP error mapping and template loading in-router.
 - `packages/core-engine/tests/test_generation.py` and `apps/api/tests/test_program_catalog_and_selection.py`: focused engine/API regressions passed after guide-summary extraction.
 
+Evidence (2026-03-09, coach-preview program-name resolution extraction)
+- `packages/core-engine/core_engine/generation.py`: `resolve_program_display_name` now owns deterministic template-summary name resolution with canonical fallback to formatted program ID.
+- `apps/api/app/routers/plan.py`: `POST /plan/intelligence/coach-preview` now delegates `program_name` resolution for response payload shaping to that helper instead of route-local summary/fallback logic.
+- `packages/core-engine/tests/test_generation.py` and `apps/api/tests/test_plan_intelligence_api.py`: focused engine/API regressions passed for program-name resolution behavior in coach-preview flow.
+
+Evidence (2026-03-09, weekly-review cycle persistence payload extraction)
+- `packages/core-engine/core_engine/intelligence.py`: `build_weekly_review_cycle_persistence_payload` now owns deterministic weekly-review persistence shaping for `faults.exercise_faults` and `storage_adjustments` with structured decision trace.
+- `apps/api/app/routers/profile.py`: `POST /weekly-review` now delegates `WeeklyReviewCycle.faults` and `WeeklyReviewCycle.adjustments` payload preparation to that helper while keeping SQL persistence and HTTP contracts in-router.
+- `packages/core-engine/tests/test_intelligence.py` and `apps/api/tests/test_weekly_review.py`: focused engine/API regressions passed after weekly-review persistence extraction.
+
+Evidence (2026-03-09, soreness persistence payload extraction)
+- `packages/core-engine/core_engine/intelligence.py`: `build_soreness_entry_persistence_payload` now owns deterministic soreness entry persistence payload shaping (entry date, copied severity-by-muscle mapping, and notes) for create/update flows.
+- `apps/api/app/routers/profile.py`: `POST /soreness` and `PUT /soreness/{entry_id}` now delegate persistence payload normalization to that helper while retaining SQL reads/writes and HTTP error mapping in-router.
+- `packages/core-engine/tests/test_intelligence.py` and `apps/api/tests/test_recovery_measurements.py`: focused engine/API regressions passed after soreness payload extraction.
+
+Evidence (2026-03-09, body-measurement persistence payload extraction)
+- `packages/core-engine/core_engine/intelligence.py`: `build_body_measurement_create_payload` and `build_body_measurement_update_payload` now own deterministic body-measurement persistence shaping for create and partial-update flows.
+- `apps/api/app/routers/profile.py`: `POST /body-measurements` and `PUT /body-measurements/{entry_id}` now delegate payload preparation/patch shaping to those helpers while preserving SQL persistence and HTTP error mapping in-router.
+- `packages/core-engine/tests/test_intelligence.py` and `apps/api/tests/test_recovery_measurements.py`: focused engine/API regressions passed after body-measurement payload extraction.
+
+Evidence (2026-03-09, optional rule-set loading extraction)
+- `packages/core-engine/core_engine/generation.py`: `resolve_optional_rule_set` now owns deterministic optional rule-set loading with linked-template resolution and `FileNotFoundError` fallback-to-`None`.
+- `apps/api/app/routers/plan.py` and `apps/api/app/routers/workout.py`: coach-preview/generate-week and workout today/log-set/summary rule-set loading now delegate to that helper instead of route-local linked-template fallback logic.
+- `packages/core-engine/tests/test_generation.py`, `apps/api/tests/test_program_catalog_and_selection.py`, and `apps/api/tests/test_workout_session_state.py`/`test_workout_summary.py`/`test_workout_resume.py`: focused regressions passed after optional rule-set extraction.
+
+Evidence (2026-03-09, profile date-window runtime extraction)
+- `packages/core-engine/core_engine/intelligence.py`: `prepare_profile_date_window_runtime` now owns shared start/end date-window runtime shaping for profile recovery list endpoints.
+- `apps/api/app/routers/profile.py`: `GET /soreness` and `GET /body-measurements` now delegate date-window runtime prep to that helper before applying SQL filters.
+- `packages/core-engine/tests/test_intelligence.py`, `apps/api/tests/test_recovery_measurements.py`, and `apps/api/tests/test_weekly_review.py`: focused regressions passed after date-window runtime extraction.
+
+Evidence (2026-03-09, profile upsert persistence payload extraction)
+- `packages/core-engine/core_engine/intelligence.py`: `build_profile_upsert_persistence_payload` now owns profile upsert persistence-field shaping, including selected-program defaulting and payload copy normalization.
+- `apps/api/app/routers/profile.py`: `POST /profile` now delegates persistence payload shaping to that helper before ORM persistence.
+- `packages/core-engine/tests/test_intelligence.py`, `apps/api/tests/test_profile_training_state.py`, and `apps/api/tests/test_program_recommendation_and_switch.py`: focused regressions passed after profile upsert extraction.
+
+Evidence (2026-03-09, profile program recommendation input extraction)
+- `packages/core-engine/core_engine/intelligence.py`: `prepare_profile_program_recommendation_inputs` now owns fallback input shaping for profile recommendation/switch runtime (`current_program_id`, `days_available`, `split_preference`, and latest-plan payload coercion).
+- `apps/api/app/routers/profile.py`: `/profile/program-recommendation` and `/profile/program-switch` now delegate those normalized runtime inputs to the helper before recommendation/switch interpreters run.
+- `packages/core-engine/tests/test_intelligence.py` and `apps/api/tests/test_program_recommendation_and_switch.py`: focused regressions passed after recommendation input extraction.
+
+Evidence (2026-03-09, weekly-checkin response payload extraction)
+- `packages/core-engine/core_engine/intelligence.py`: `build_weekly_checkin_response_payload` now owns deterministic weekly-checkin response shaping (`status` + nutrition-phase fallback).
+- `apps/api/app/routers/profile.py`: `POST /weekly-checkin` now delegates response payload shaping to that helper while keeping SQL writes in-router.
+- `packages/core-engine/tests/test_intelligence.py` and `apps/api/tests/test_weekly_checkin.py`: focused regressions passed after weekly-checkin response extraction.
+
+Evidence (2026-03-09, workout log-set request runtime extraction)
+- `packages/core-engine/core_engine/intelligence.py`: `prepare_workout_log_set_request_runtime` now owns deterministic log-set request normalization (`primary_exercise_id` fallback plus normalized request fields).
+- `apps/api/app/routers/workout.py`: `POST /workout/{workout_id}/log-set` now consumes that runtime payload before persistence and interpreter calls.
+- `packages/core-engine/tests/test_intelligence.py`, `apps/api/tests/test_workout_logset_feedback.py`, and `apps/api/tests/test_workout_session_state.py`: focused regressions passed after request-runtime extraction.
+
+Evidence (2026-03-09, coaching recommendation timeline payload extraction)
+- `packages/core-engine/core_engine/intelligence.py`: `normalize_coaching_recommendation_timeline_limit` now owns deterministic timeline limit clamping, and `build_coaching_recommendation_timeline_payload` now owns row-to-entry normalization (including non-dict recommendation payload coercion).
+- `apps/api/app/routers/plan.py`: `GET /plan/intelligence/recommendations` now delegates timeline limit normalization and timeline payload shaping to those helpers while keeping SQL reads and response validation in-router.
+- `packages/core-engine/tests/test_intelligence.py` and `apps/api/tests/test_plan_intelligence_api.py`: focused regressions passed after timeline extraction.
+
+Evidence (2026-03-09, generate-week runtime input payload extraction)
+- `packages/core-engine/core_engine/generation.py`: `prepare_generate_week_plan_runtime_inputs` now owns deterministic `generate_week_plan` request payload shaping from normalized generation runtime plus profile context.
+- `apps/api/app/routers/plan.py`: `POST /plan/generate-week` now delegates its `generate_week_plan` call-input normalization to that helper while keeping SQL fan-in, template/rule loading, and persistence in-router.
+- `packages/core-engine/tests/test_generation.py` and `apps/api/tests/test_program_catalog_and_selection.py`: focused regressions passed after generate-week input extraction.
+
+Evidence (2026-03-09, profile response payload extraction)
+- `packages/core-engine/core_engine/intelligence.py`: `build_profile_response_payload` now owns deterministic `GET /profile` fallback/default payload shaping.
+- `apps/api/app/routers/profile.py`: `GET /profile` now delegates response payload shaping to that helper while keeping auth and response validation in-router.
+- `packages/core-engine/tests/test_intelligence.py` and `apps/api/tests/test_profile_dev_wipe.py`: focused regressions passed after profile response extraction.
+
+Evidence (2026-03-09, workout plan-context normalization extraction)
+- `packages/core-engine/core_engine/intelligence.py`: `resolve_workout_plan_context` now owns workout-plan row payload normalization and `resolve_workout_plan_reference` orchestration for session/exercise/program context resolution.
+- `apps/api/app/routers/workout.py`: `POST /workout/{workout_id}/log-set`, `GET /workout/{workout_id}/progress`, and `GET /workout/{workout_id}/summary` now delegate plan-context normalization to that helper while keeping SQL reads and persistence in-router.
+- `packages/core-engine/tests/test_intelligence.py`, `apps/api/tests/test_workout_logset_feedback.py`, `apps/api/tests/test_workout_progress.py`, and `apps/api/tests/test_workout_summary.py`: focused regressions passed after plan-context extraction.
+
+Evidence (2026-03-09, workout-today latest-plan payload extraction)
+- `packages/core-engine/core_engine/intelligence.py`: `resolve_workout_today_plan_payload` now owns latest workout-plan row selection/payload normalization for workout-today runtime preparation.
+- `apps/api/app/routers/workout.py`: `GET /workout/today` now delegates latest-plan payload selection/coercion to that helper while keeping SQL reads and HTTP 404 mapping in-router.
+- `packages/core-engine/tests/test_intelligence.py` and `apps/api/tests/test_workout_resume.py`: focused regressions passed after workout-today plan payload extraction.
+
+Evidence (2026-03-09, frequency adaptation sovereign trace-contract hardening)
+- `packages/core-engine/core_engine/intelligence.py`: frequency adaptation preview/apply interpreters now emit stricter structured traces with explicit `version`, ordered `steps`, and machine-readable `outcome.reason_code`, and apply reuses resolved preview context for weak-area/recovery fields.
+- `packages/core-engine/tests/test_intelligence.py` and `apps/api/tests/test_program_frequency_adaptation_api.py`: focused regressions passed after trace-contract hardening.
+
+Evidence (2026-03-09, canonical weak-area bonus-slot rule consumption)
+- `packages/core-engine/core_engine/intelligence.py`: frequency adaptation preview now reads `frequency_adaptation_rules.weak_area_bonus_slots` from canonical onboarding package rules when shaping weak-area overlays.
+- `packages/core-engine/core_engine/onboarding_adaptation.py`: adaptation scoring now consumes weak-area desired extra-slot signals per muscle instead of treating weak-area pressure as a single fixed boost.
+- `packages/core-engine/tests/test_intelligence.py`, `packages/core-engine/tests/test_onboarding_adaptation.py`, and `apps/api/tests/test_program_frequency_adaptation_api.py`: focused regressions passed after rules-signal extraction.
+
+Evidence (2026-03-09, doctrine deload-cadence extraction improvement)
+- `importers/pdf_doctrine_rules_v1.py`: rule distillation now extracts explicit `deload every N weeks` doctrine hints into typed `deload_rules.scheduled_every_n_weeks` instead of relying solely on intro-week fallback heuristics.
+- `apps/api/tests/test_pdf_doctrine_rules_v1.py`: focused distiller regressions passed including the new scheduled-deload-cadence extraction case.
+
+Evidence (2026-03-09, adaptation onboarding program-id resolution extraction)
+- `packages/core-engine/core_engine/generation.py`: `resolve_onboarding_program_id` now owns linked-template onboarding program ID resolution for adaptation flows.
+- `apps/api/app/routers/plan.py`: adaptation preview/apply now delegate onboarding linked-program ID resolution to that helper before onboarding package loading.
+- `packages/core-engine/tests/test_generation.py` and `apps/api/tests/test_program_frequency_adaptation_api.py`: focused regressions passed after onboarding program-id extraction.
+
+Evidence (2026-03-09, adaptation persistence payload extraction)
+- `packages/core-engine/core_engine/intelligence.py`: `build_frequency_adaptation_persistence_state` now owns apply-flow persistence-state normalization.
+- `packages/core-engine/core_engine/intelligence.py`: `build_generated_week_adaptation_persistence_payload` now owns generate-week adaptation-state persistence shaping (`state_updated` + `next_state`).
+- `apps/api/app/routers/plan.py`: adaptation apply and generate-week persistence writes now delegate payload shaping to those helpers.
+- `packages/core-engine/tests/test_intelligence.py` and `apps/api/tests/test_program_frequency_adaptation_api.py`: focused regressions passed after adaptation persistence extractions.
+
+Evidence (2026-03-09, weekly-checkin/weekly-review profile payload extraction)
+- `packages/core-engine/core_engine/intelligence.py`: `build_weekly_checkin_persistence_payload` now owns weekly-checkin entry payload shaping.
+- `packages/core-engine/core_engine/intelligence.py`: `build_weekly_review_user_update_payload` now owns weekly-review user profile update payload shaping.
+- `packages/core-engine/core_engine/intelligence.py`: `prepare_weekly_review_log_window_runtime` now owns previous-week half-open workout-log window timestamp shaping.
+- `apps/api/app/routers/profile.py`: weekly-checkin and weekly-review now delegate those payload/window normalization seams to core-engine while keeping SQL/persistence in-router.
+- `packages/core-engine/tests/test_intelligence.py` and `apps/api/tests/test_weekly_review.py`: focused regressions passed after weekly-checkin/weekly-review payload extraction.
+
 ### Task 2.2 - Gold End-To-End Runtime Path
 - Selection -> generation -> logging -> evaluation -> adaptation.
 - Status: STARTED

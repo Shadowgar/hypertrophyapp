@@ -65,3 +65,25 @@ def test_profile_dev_wipe_removes_current_user_and_data() -> None:
 
     after = client.get("/profile", headers=headers)
     assert after.status_code == 401
+
+
+def test_profile_get_returns_default_payload_before_onboarding() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "profile-defaults@example.com", "password": "ProfileDefaults1", "name": "Defaults User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.get("/profile", headers=headers)
+    assert profile.status_code == 200
+    payload = profile.json()
+    assert payload["selected_program_id"] == "full_body_v1"
+    assert payload["days_available"] == 2
+    assert payload["nutrition_phase"] == "maintenance"
+    assert payload["equipment_profile"] == []
+    assert payload["onboarding_answers"] == {}

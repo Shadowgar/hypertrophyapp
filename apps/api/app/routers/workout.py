@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Annotated
+from typing import Annotated, cast
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -7,11 +7,13 @@ from sqlalchemy.orm import Session
 from core_engine import (
     build_repeat_failure_substitution_payload,
     build_workout_log_set_payload,
+    prepare_workout_log_set_request_runtime,
     build_workout_performance_summary,
     build_workout_summary_progression_lookup_runtime,
     build_workout_session_state_defaults,
     build_workout_today_log_runtime,
     build_workout_today_payload,
+    resolve_workout_today_plan_payload,
     build_workout_today_plan_runtime,
     build_workout_today_progression_lookup_runtime,
     build_workout_today_session_state_payloads,
@@ -19,11 +21,12 @@ from core_engine import (
     build_workout_progress_payload,
     interpret_workout_set_feedback,
     prepare_workout_session_state_persistence_payload,
+    resolve_optional_rule_set,
     resolve_latest_logged_workout_resume_state,
     resolve_workout_log_set_plan_context,
     resolve_starting_load,
     resolve_workout_completion_per_exercise,
-    resolve_workout_plan_reference,
+    resolve_workout_plan_context,
     resolve_workout_today_session_selection,
     resolve_workout_session_state_update,
     update_exercise_state_after_workout,
@@ -48,44 +51,13 @@ DbSession = Annotated[Session, Depends(get_db)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
-def _list_workout_plan_payloads(db: Session, user_id: str) -> list[dict]:
-    plans = (
+def _list_workout_plans(db: Session, user_id: str) -> list[WorkoutPlan]:
+    return (
         db.query(WorkoutPlan)
         .filter(WorkoutPlan.user_id == user_id)
         .order_by(WorkoutPlan.created_at.desc())
         .all()
     )
-    return [plan.payload if isinstance(plan.payload, dict) else {} for plan in plans]
-
-
-def _resolve_workout_plan_context(
-    db: Session,
-    user_id: str,
-    workout_id: str,
-    exercise_id: str | None = None,
-) -> dict:
-    reference = resolve_workout_plan_reference(
-        plan_payloads=_list_workout_plan_payloads(db, user_id),
-        workout_id=workout_id,
-        exercise_id=exercise_id,
-    )
-    session = reference["session"]
-    exercise = reference["exercise"]
-    program_id = reference["program_id"]
-    return {
-        "session": session if isinstance(session, dict) else None,
-        "exercise": exercise if isinstance(exercise, dict) else None,
-        "program_id": str(program_id) if program_id else None,
-    }
-
-
-def _load_workout_rule_set_from_program_id(program_id: str | None) -> dict | None:
-    if not program_id:
-        return None
-    try:
-        return load_program_rule_set(resolve_linked_program_id(program_id))
-    except FileNotFoundError:
-        return None
 
 
 def _upsert_workout_session_state(
@@ -164,11 +136,13 @@ def workout_today(
         .order_by(WorkoutPlan.created_at.desc())
         .all()
     )
-    if not plans:
+    plan_source = resolve_workout_today_plan_payload(plan_rows=plans)
+    if not bool(plan_source["has_plan"]):
         raise HTTPException(status_code=404, detail="No plan generated")
 
-    latest = plans[0].payload
-    plan_runtime = build_workout_today_plan_runtime(latest_plan_payload=latest if isinstance(latest, dict) else {})
+    plan_runtime = build_workout_today_plan_runtime(
+        latest_plan_payload=cast(dict, plan_source["latest_plan_payload"])
+    )
     sessions = plan_runtime["sessions"]
     session_ids = plan_runtime["session_ids"]
     recent_logs = []
@@ -228,7 +202,11 @@ def workout_today(
         .all()
     )
     selected_program_id = plan_runtime["selected_program_id"]
-    rule_set = _load_workout_rule_set_from_program_id(selected_program_id)
+    rule_set = resolve_optional_rule_set(
+        template_id=selected_program_id,
+        resolve_linked_program_id=resolve_linked_program_id,
+        load_rule_set=load_program_rule_set,
+    )
     progression_states: list[ExerciseState] = []
     progression_lookup_runtime = build_workout_today_progression_lookup_runtime(session_states=states)
     primary_exercise_ids = set(progression_lookup_runtime["primary_exercise_ids"])
@@ -271,12 +249,19 @@ def log_set(
     db: DbSession,
     current_user: CurrentUser,
 ) -> WorkoutSetLogResponse:
-    primary_exercise_id = payload.primary_exercise_id or payload.exercise_id
-    workout_plan_context = _resolve_workout_plan_context(
-        db,
-        user_id=current_user.id,
-        workout_id=workout_id,
+    request_runtime = prepare_workout_log_set_request_runtime(
+        primary_exercise_id=payload.primary_exercise_id,
         exercise_id=payload.exercise_id,
+        set_index=payload.set_index,
+        reps=payload.reps,
+        weight=payload.weight,
+        rpe=payload.rpe,
+    )
+    primary_exercise_id = str(request_runtime["primary_exercise_id"])
+    workout_plan_context = resolve_workout_plan_context(
+        plan_rows=_list_workout_plans(db, current_user.id),
+        workout_id=workout_id,
+        exercise_id=str(request_runtime["exercise_id"]),
     )
     planned_exercise = workout_plan_context["exercise"]
     log_set_plan_context = resolve_workout_log_set_plan_context(
@@ -287,17 +272,21 @@ def log_set(
     planned_reps_max = int(log_set_plan_context["planned_reps_max"])
     planned_sets = int(log_set_plan_context["planned_sets"])
     planned_weight = float(log_set_plan_context["planned_weight"])
-    rule_set = _load_workout_rule_set_from_program_id(workout_plan_context["program_id"])
+    rule_set = resolve_optional_rule_set(
+        template_id=workout_plan_context["program_id"],
+        resolve_linked_program_id=resolve_linked_program_id,
+        load_rule_set=load_program_rule_set,
+    )
 
     record = WorkoutSetLog(
         user_id=current_user.id,
         workout_id=workout_id,
         primary_exercise_id=primary_exercise_id,
-        exercise_id=payload.exercise_id,
-        set_index=payload.set_index,
-        reps=payload.reps,
-        weight=payload.weight,
-        rpe=payload.rpe,
+        exercise_id=str(request_runtime["exercise_id"]),
+        set_index=int(request_runtime["set_index"]),
+        reps=int(request_runtime["reps"]),
+        weight=float(request_runtime["weight"]),
+        rpe=cast(float | None, request_runtime["rpe"]),
     )
     db.add(record)
 
@@ -335,9 +324,9 @@ def log_set(
             last_progression_action=state.last_progression_action,
             fatigue_score=state.fatigue_score,
         ),
-        completed_reps=payload.reps,
+        completed_reps=int(request_runtime["reps"]),
         target_rep_range=(planned_reps_min, planned_reps_max),
-        completed_sets=payload.set_index,
+        completed_sets=int(request_runtime["set_index"]),
         planned_sets=planned_sets,
         phase_modifier=current_user.nutrition_phase or "maintenance",
         rule_set=rule_set,
@@ -361,13 +350,13 @@ def log_set(
         user_id=current_user.id,
         workout_id=workout_id,
         primary_exercise_id=primary_exercise_id,
-        exercise_id=payload.exercise_id,
+        exercise_id=str(request_runtime["exercise_id"]),
         planned_sets=planned_sets,
         planned_rep_range=(planned_reps_min, planned_reps_max),
         planned_weight=planned_weight,
-        set_index=payload.set_index,
-        reps=payload.reps,
-        weight=payload.weight,
+        set_index=int(request_runtime["set_index"]),
+        reps=int(request_runtime["reps"]),
+        weight=float(request_runtime["weight"]),
         substitution_recommendation=substitution_recommendation,
         rule_set=rule_set,
     )
@@ -377,8 +366,8 @@ def log_set(
     db.refresh(record)
 
     feedback = interpret_workout_set_feedback(
-        reps=payload.reps,
-        weight=payload.weight,
+        reps=int(request_runtime["reps"]),
+        weight=float(request_runtime["weight"]),
         planned_reps_min=planned_reps_min,
         planned_reps_max=planned_reps_max,
         planned_weight=planned_weight,
@@ -432,7 +421,10 @@ def workout_progress(
         performed_logs=list(log_runtime["completion_logs"])
     )
 
-    session = _resolve_workout_plan_context(db, current_user.id, workout_id)["session"]
+    session = resolve_workout_plan_context(
+        plan_rows=_list_workout_plans(db, current_user.id),
+        workout_id=workout_id,
+    )["session"]
     return build_workout_progress_payload(
         workout_id=workout_id,
         completed_sets_by_exercise=completed_by_ex,
@@ -449,7 +441,10 @@ def workout_summary(
     db: DbSession,
     current_user: CurrentUser,
 ) -> WorkoutSummaryResponse:
-    plan_context = _resolve_workout_plan_context(db, current_user.id, workout_id)
+    plan_context = resolve_workout_plan_context(
+        plan_rows=_list_workout_plans(db, current_user.id),
+        workout_id=workout_id,
+    )
     session = plan_context["session"]
     if not session:
         raise HTTPException(status_code=404, detail="Workout not found")
@@ -476,7 +471,11 @@ def workout_summary(
             .all()
         )
 
-    rule_set = _load_workout_rule_set_from_program_id(plan_context["program_id"])
+    rule_set = resolve_optional_rule_set(
+        template_id=plan_context["program_id"],
+        resolve_linked_program_id=resolve_linked_program_id,
+        load_rule_set=load_program_rule_set,
+    )
 
     return WorkoutSummaryResponse(
         **build_workout_performance_summary(

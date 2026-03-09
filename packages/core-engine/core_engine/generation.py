@@ -118,6 +118,41 @@ def format_program_display_name(program_id: str) -> str:
     return " ".join(part.capitalize() for part in normalized.split())
 
 
+def resolve_program_display_name(
+    *,
+    program_id: str,
+    available_program_summaries: list[dict[str, Any]],
+) -> str:
+    match = next((summary for summary in available_program_summaries if summary.get("id") == program_id), None)
+    if isinstance(match, dict):
+        name = str(match.get("name") or "").strip()
+        if name:
+            return name
+    return format_program_display_name(program_id)
+
+
+def resolve_optional_rule_set(
+    *,
+    template_id: str | None,
+    resolve_linked_program_id: Callable[[str], str],
+    load_rule_set: Callable[[str], dict[str, Any]],
+) -> dict[str, Any] | None:
+    if not template_id:
+        return None
+    try:
+        return load_rule_set(resolve_linked_program_id(template_id))
+    except FileNotFoundError:
+        return None
+
+
+def resolve_onboarding_program_id(
+    *,
+    template_id: str,
+    resolve_linked_program_id: Callable[[str], str],
+) -> str:
+    return resolve_linked_program_id(template_id)
+
+
 def resolve_program_guide_summary(
     *,
     program_id: str,
@@ -786,3 +821,51 @@ def resolve_week_generation_runtime_inputs(
             },
         },
     }
+
+
+def prepare_generate_week_plan_runtime_inputs(
+    *,
+    user_name: str | None,
+    split_preference: str,
+    nutrition_phase: str | None,
+    available_equipment: list[str] | None,
+    generation_runtime: dict[str, Any],
+) -> dict[str, Any]:
+    runtime = _coerce_dict(generation_runtime)
+    history_raw = runtime.get("history")
+    history = list(history_raw) if isinstance(history_raw, list) else []
+    soreness_by_muscle = _coerce_string_map(runtime.get("soreness_by_muscle"))
+    normalized_equipment = [str(item) for item in (available_equipment or []) if str(item).strip()]
+    latest_adherence_score_raw = runtime.get("latest_adherence_score")
+    latest_adherence_score = int(latest_adherence_score_raw) if latest_adherence_score_raw is not None else None
+
+    payload = {
+        "user_profile": {"name": user_name},
+        "days_available": int(runtime.get("effective_days_available") or 0),
+        "split_preference": split_preference,
+        "phase": str(nutrition_phase or "maintenance"),
+        "available_equipment": normalized_equipment,
+        "history": history,
+        "soreness_by_muscle": soreness_by_muscle,
+        "prior_generated_weeks": int(runtime.get("prior_generated_weeks") or 0),
+        "latest_adherence_score": latest_adherence_score,
+        "severe_soreness_count": int(runtime.get("severe_soreness_count") or 0),
+        "decision_trace": {
+            "interpreter": "prepare_generate_week_plan_runtime_inputs",
+            "version": "v1",
+            "inputs": {
+                "split_preference": split_preference,
+                "nutrition_phase": nutrition_phase,
+                "available_equipment_count": len(normalized_equipment),
+                "runtime_keys": sorted(runtime.keys()),
+            },
+            "outcome": {
+                "days_available": int(runtime.get("effective_days_available") or 0),
+                "history_count": len(history),
+                "severe_soreness_count": int(runtime.get("severe_soreness_count") or 0),
+                "latest_adherence_score": latest_adherence_score,
+                "prior_generated_weeks": int(runtime.get("prior_generated_weeks") or 0),
+            },
+        },
+    }
+    return payload

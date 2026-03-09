@@ -10,21 +10,26 @@ from core_engine import (
     build_coach_preview_context,
     build_coach_preview_payloads,
     build_coach_preview_recommendation_record_fields,
-    build_coaching_recommendation_timeline_entry,
+    build_coaching_recommendation_timeline_payload,
     build_frequency_adaptation_apply_payload,
+    build_frequency_adaptation_persistence_state,
+    build_generated_week_adaptation_persistence_payload,
     build_generated_week_plan_payload,
     build_guide_programs_payload,
     build_program_day_guide_payload,
     build_program_exercise_guide_payload,
     build_program_guide_payload,
     build_user_training_state,
-    format_program_display_name,
     prepare_coach_preview_runtime_inputs,
     prepare_coaching_apply_runtime_source,
     prepare_frequency_adaptation_runtime_inputs,
+    prepare_generate_week_plan_runtime_inputs,
     finalize_applied_coaching_recommendation,
     prepare_generation_template_runtime,
     prepare_generated_week_review_overlay,
+    resolve_program_display_name,
+    resolve_optional_rule_set,
+    resolve_onboarding_program_id,
     resolve_program_guide_summary,
     prepare_phase_apply_runtime,
     prepare_specialization_apply_runtime,
@@ -34,6 +39,7 @@ from core_engine import (
     interpret_frequency_adaptation_apply,
     recommend_coach_intelligence_preview,
     recommend_frequency_adaptation_preview,
+    normalize_coaching_recommendation_timeline_limit,
     resolve_active_frequency_adaptation_runtime,
 )
 
@@ -73,22 +79,6 @@ GUIDE_RESPONSES: dict[int | str, dict[str, Any]] = {
     422: {"description": INVALID_TEMPLATE_DETAIL},
 }
 PROFILE_INCOMPLETE_DETAIL = "Complete profile first"
-
-def _resolve_program_name(program_id: str) -> str:
-    summaries = list_program_templates()
-    match = next((summary for summary in summaries if summary.get("id") == program_id), None)
-    if isinstance(match, dict):
-        name = str(match.get("name") or "").strip()
-        if name:
-            return name
-    return format_program_display_name(program_id)
-
-
-def _load_template_rule_set(template_id: str) -> dict[str, Any] | None:
-    try:
-        return load_program_rule_set(resolve_linked_program_id(template_id))
-    except FileNotFoundError:
-        return None
 
 
 def _build_plan_decision_training_state(
@@ -259,7 +249,7 @@ def list_coaching_recommendations(
     current_user: CurrentUser,
     limit: int = 20,
 ) -> CoachingRecommendationTimelineResponse:
-    capped_limit = max(1, min(100, int(limit)))
+    capped_limit = normalize_coaching_recommendation_timeline_limit(limit)
     rows = (
         db.query(CoachingRecommendation)
         .filter(CoachingRecommendation.user_id == current_user.id)
@@ -268,23 +258,8 @@ def list_coaching_recommendations(
         .all()
     )
 
-    entries = [
-        CoachingRecommendationTimelineEntry(
-            **build_coaching_recommendation_timeline_entry(
-                recommendation_id=row.id,
-                recommendation_type=row.recommendation_type,
-                status=row.status,
-                template_id=row.template_id,
-                current_phase=row.current_phase,
-                recommended_phase=row.recommended_phase,
-                progression_action=row.progression_action,
-                recommendation_payload=row.recommendation_payload if isinstance(row.recommendation_payload, dict) else {},
-                created_at=row.created_at,
-                applied_at=row.applied_at,
-            )
-        )
-        for row in rows
-    ]
+    timeline_payload = build_coaching_recommendation_timeline_payload(rows)
+    entries = [CoachingRecommendationTimelineEntry(**entry) for entry in cast(list[dict[str, Any]], timeline_payload["entries"])]
     return CoachingRecommendationTimelineResponse(entries=entries)
 
 
@@ -460,7 +435,11 @@ def coach_intelligence_preview(
         recent_logs=history_rows,
     )
 
-    rule_set = _load_template_rule_set(selected_template_id)
+    rule_set = resolve_optional_rule_set(
+        template_id=selected_template_id,
+        resolve_linked_program_id=resolve_linked_program_id,
+        load_rule_set=load_program_rule_set,
+    )
     preview_payload = recommend_coach_intelligence_preview(
         template_id=selected_template_id,
         context=build_coach_preview_context(
@@ -492,7 +471,10 @@ def coach_intelligence_preview(
     payloads = build_coach_preview_payloads(
         recommendation_id=recommendation_record.id,
         preview_payload=preview_payload,
-        program_name=_resolve_program_name(selected_template_id),
+        program_name=resolve_program_display_name(
+            program_id=selected_template_id,
+            available_program_summaries=list_program_templates(),
+        ),
     )
     response_model = IntelligenceCoachPreviewResponse(**payloads["response_payload"])
 
@@ -546,7 +528,10 @@ def preview_frequency_adaptation(
         stored_weak_areas=current_user.weak_areas or [],
         equipment_profile=current_user.equipment_profile or [],
     )
-    onboarding_program_id = resolve_linked_program_id(str(adaptation_runtime["program_id"]))
+    onboarding_program_id = resolve_onboarding_program_id(
+        template_id=str(adaptation_runtime["program_id"]),
+        resolve_linked_program_id=resolve_linked_program_id,
+    )
     try:
         onboarding_package = load_program_onboarding_package(onboarding_program_id)
     except FileNotFoundError as exc:
@@ -613,7 +598,10 @@ def apply_frequency_adaptation(
         equipment_profile=current_user.equipment_profile or [],
     )
     selected_template_id = str(adaptation_runtime["program_id"])
-    onboarding_program_id = resolve_linked_program_id(selected_template_id)
+    onboarding_program_id = resolve_onboarding_program_id(
+        template_id=selected_template_id,
+        resolve_linked_program_id=resolve_linked_program_id,
+    )
     try:
         onboarding_package = load_program_onboarding_package(onboarding_program_id)
     except FileNotFoundError as exc:
@@ -634,7 +622,9 @@ def apply_frequency_adaptation(
         request_runtime_trace=cast(dict[str, Any], adaptation_runtime["decision_trace"]),
     )
 
-    current_user.active_frequency_adaptation = dict(decision["persistence_state"])
+    current_user.active_frequency_adaptation = build_frequency_adaptation_persistence_state(
+        decision_payload=decision,
+    )
     db.add(current_user)
     db.commit()
 
@@ -677,7 +667,11 @@ def plan_generate_week(
     selected_template_id = cast(str, template_runtime["selected_template_id"])
     template = cast(dict[str, Any], template_runtime["selected_template"])
     template_selection_trace = cast(dict[str, Any], template_runtime["decision_trace"])
-    rule_set = _load_template_rule_set(selected_template_id)
+    rule_set = resolve_optional_rule_set(
+        template_id=selected_template_id,
+        resolve_linked_program_id=resolve_linked_program_id,
+        load_rule_set=load_program_rule_set,
+    )
 
     active_frequency_adaptation = resolve_active_frequency_adaptation_runtime(
         active_state=current_user.active_frequency_adaptation,
@@ -690,19 +684,26 @@ def plan_generate_week(
         active_frequency_adaptation=active_frequency_adaptation,
     )
     generation_runtime = cast(dict[str, Any], generation_context["generation_runtime"])
+    plan_runtime_inputs = prepare_generate_week_plan_runtime_inputs(
+        user_name=current_user.name,
+        split_preference=current_user.split_preference,
+        nutrition_phase=current_user.nutrition_phase,
+        available_equipment=current_user.equipment_profile,
+        generation_runtime=generation_runtime,
+    )
 
     base_plan = generate_week_plan(
-        user_profile={"name": current_user.name},
-        days_available=cast(int, generation_runtime["effective_days_available"]),
-        split_preference=current_user.split_preference,
+        user_profile=cast(dict[str, Any], plan_runtime_inputs["user_profile"]),
+        days_available=cast(int, plan_runtime_inputs["days_available"]),
+        split_preference=cast(str, plan_runtime_inputs["split_preference"]),
         program_template=template,
-        history=cast(list[dict[str, Any]], generation_runtime["history"]),
-        phase=current_user.nutrition_phase or "maintenance",
-        available_equipment=current_user.equipment_profile or [],
-        soreness_by_muscle=cast(dict[str, str], generation_runtime["soreness_by_muscle"]),
-        prior_generated_weeks=cast(int, generation_runtime["prior_generated_weeks"]),
-        latest_adherence_score=cast(int | None, generation_runtime["latest_adherence_score"]),
-        severe_soreness_count=cast(int, generation_runtime["severe_soreness_count"]),
+        history=cast(list[dict[str, Any]], plan_runtime_inputs["history"]),
+        phase=cast(str, plan_runtime_inputs["phase"]),
+        available_equipment=cast(list[str], plan_runtime_inputs["available_equipment"]),
+        soreness_by_muscle=cast(dict[str, str], plan_runtime_inputs["soreness_by_muscle"]),
+        prior_generated_weeks=cast(int, plan_runtime_inputs["prior_generated_weeks"]),
+        latest_adherence_score=cast(int | None, plan_runtime_inputs["latest_adherence_score"]),
+        severe_soreness_count=cast(int, plan_runtime_inputs["severe_soreness_count"]),
         rule_set=rule_set,
     )
     week_start = date.fromisoformat(base_plan["week_start"])
@@ -724,9 +725,11 @@ def plan_generate_week(
         review_context=cast(dict[str, Any] | None, review_overlay["review_context"]),
     )
     plan = cast(dict[str, Any], finalized_plan["plan"])
-    adaptation_runtime = finalized_plan["adaptation_runtime"]
-    if bool(adaptation_runtime["state_updated"]):
-        current_user.active_frequency_adaptation = cast(dict[str, Any] | None, adaptation_runtime["next_state"])
+    adaptation_persistence_payload = build_generated_week_adaptation_persistence_payload(
+        adaptation_runtime=cast(dict[str, Any], finalized_plan["adaptation_runtime"]),
+    )
+    if bool(adaptation_persistence_payload["state_updated"]):
+        current_user.active_frequency_adaptation = cast(dict[str, Any] | None, adaptation_persistence_payload["next_state"])
         db.add(current_user)
 
     record = WorkoutPlan(

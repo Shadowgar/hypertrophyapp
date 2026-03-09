@@ -8,9 +8,21 @@ from core_engine import (
     build_weekly_review_decision_payload,
     build_weekly_review_status_payload,
     build_weekly_review_submit_payload,
+    build_weekly_review_cycle_persistence_payload,
+    build_soreness_entry_persistence_payload,
+    build_body_measurement_create_payload,
+    build_body_measurement_update_payload,
+    prepare_profile_date_window_runtime,
+    build_profile_upsert_persistence_payload,
+    build_profile_response_payload,
+    build_weekly_checkin_persistence_payload,
+    build_weekly_checkin_response_payload,
+    build_weekly_review_user_update_payload,
+    prepare_weekly_review_log_window_runtime,
     prepare_weekly_review_submit_window,
     interpret_weekly_review_decision,
     prepare_program_recommendation_runtime,
+    prepare_profile_program_recommendation_inputs,
     prepare_program_switch_runtime,
     resolve_weekly_review_window,
 )
@@ -98,6 +110,10 @@ def _collect_previous_week_performance_summary(
     previous_week_start: date,
     week_start: date,
 ) -> WeeklyPerformanceSummaryResponse:
+    log_window_runtime = prepare_weekly_review_log_window_runtime(
+        previous_week_start=previous_week_start,
+        week_start=week_start,
+    )
     previous_plan = (
         db.query(WorkoutPlan)
         .filter(WorkoutPlan.user_id == user_id, WorkoutPlan.week_start == previous_week_start)
@@ -108,8 +124,8 @@ def _collect_previous_week_performance_summary(
         db.query(WorkoutSetLog)
         .filter(
             WorkoutSetLog.user_id == user_id,
-            WorkoutSetLog.created_at >= datetime.combine(previous_week_start, datetime.min.time()),
-            WorkoutSetLog.created_at < datetime.combine(week_start, datetime.min.time()),
+            WorkoutSetLog.created_at >= cast(datetime, log_window_runtime["window_start"]),
+            WorkoutSetLog.created_at < cast(datetime, log_window_runtime["window_end"]),
         )
         .all()
     )
@@ -126,23 +142,25 @@ def _collect_previous_week_performance_summary(
 @router.get("/profile")
 def get_profile(current_user: CurrentUser) -> ProfileResponse:
     return ProfileResponse(
-        email=current_user.email,
-        name=current_user.name,
-        age=current_user.age or 0,
-        weight=current_user.weight or 0,
-        gender=current_user.gender or "",
-        split_preference=current_user.split_preference or "",
-        selected_program_id=current_user.selected_program_id or "full_body_v1",
-        training_location=current_user.training_location,
-        equipment_profile=current_user.equipment_profile or [],
-        weak_areas=current_user.weak_areas or [],
-        onboarding_answers=current_user.onboarding_answers or {},
-        days_available=current_user.days_available or 2,
-        nutrition_phase=current_user.nutrition_phase or "maintenance",
-        calories=current_user.calories or 0,
-        protein=current_user.protein or 0,
-        fat=current_user.fat or 0,
-        carbs=current_user.carbs or 0,
+        **build_profile_response_payload(
+            email=current_user.email,
+            name=current_user.name,
+            age=current_user.age,
+            weight=current_user.weight,
+            gender=current_user.gender,
+            split_preference=current_user.split_preference,
+            selected_program_id=current_user.selected_program_id,
+            training_location=current_user.training_location,
+            equipment_profile=current_user.equipment_profile,
+            weak_areas=current_user.weak_areas,
+            onboarding_answers=current_user.onboarding_answers,
+            days_available=current_user.days_available,
+            nutrition_phase=current_user.nutrition_phase,
+            calories=current_user.calories,
+            protein=current_user.protein,
+            fat=current_user.fat,
+            carbs=current_user.carbs,
+        )
     )
 
 
@@ -206,22 +224,26 @@ def upsert_profile(
     db: DbSession,
     current_user: CurrentUser,
 ) -> ProfileResponse:
-    current_user.name = payload.name
-    current_user.age = payload.age
-    current_user.weight = payload.weight
-    current_user.gender = payload.gender
-    current_user.split_preference = payload.split_preference
-    current_user.selected_program_id = payload.selected_program_id or "full_body_v1"
-    current_user.training_location = payload.training_location
-    current_user.equipment_profile = payload.equipment_profile
-    current_user.weak_areas = payload.weak_areas
-    current_user.onboarding_answers = payload.onboarding_answers
-    current_user.days_available = payload.days_available
-    current_user.nutrition_phase = payload.nutrition_phase
-    current_user.calories = payload.calories
-    current_user.protein = payload.protein
-    current_user.fat = payload.fat
-    current_user.carbs = payload.carbs
+    persistence_payload = build_profile_upsert_persistence_payload(
+        name=payload.name,
+        age=payload.age,
+        weight=payload.weight,
+        gender=payload.gender,
+        split_preference=payload.split_preference,
+        selected_program_id=payload.selected_program_id,
+        training_location=payload.training_location,
+        equipment_profile=payload.equipment_profile,
+        weak_areas=payload.weak_areas,
+        onboarding_answers=payload.onboarding_answers,
+        days_available=payload.days_available,
+        nutrition_phase=payload.nutrition_phase,
+        calories=payload.calories,
+        protein=payload.protein,
+        fat=payload.fat,
+        carbs=payload.carbs,
+    )
+    for key, value in persistence_payload.items():
+        setattr(current_user, key, value)
 
     db.add(current_user)
     db.commit()
@@ -235,11 +257,13 @@ def program_recommendation(
     db: DbSession,
     current_user: CurrentUser,
 ) -> ProgramRecommendationResponse:
-    current_program_id = current_user.selected_program_id or "full_body_v1"
-    days_available = current_user.days_available or 2
-    split_preference = current_user.split_preference or "full_body"
     latest_plan = _latest_plan(db, current_user.id)
-    latest_plan_payload = latest_plan.payload if latest_plan and isinstance(latest_plan.payload, dict) else {}
+    recommendation_inputs = prepare_profile_program_recommendation_inputs(
+        selected_program_id=current_user.selected_program_id,
+        days_available=current_user.days_available,
+        split_preference=current_user.split_preference,
+        latest_plan=latest_plan,
+    )
     training_state = _build_program_recommendation_training_state(
         db,
         current_user=current_user,
@@ -247,12 +271,12 @@ def program_recommendation(
     )
 
     runtime = prepare_program_recommendation_runtime(
-        current_program_id=current_program_id,
+        current_program_id=cast(str, recommendation_inputs["current_program_id"]),
         available_program_summaries=list_program_templates(),
-        days_available=days_available,
-        split_preference=split_preference,
+        days_available=cast(int, recommendation_inputs["days_available"]),
+        split_preference=cast(str, recommendation_inputs["split_preference"]),
         latest_adherence_score=None,
-        latest_plan_payload=latest_plan_payload,
+        latest_plan_payload=cast(dict[str, Any], recommendation_inputs["latest_plan_payload"]),
         user_training_state=training_state,
         generated_at=datetime.now(UTC),
     )
@@ -266,11 +290,13 @@ def switch_program(
     db: DbSession,
     current_user: CurrentUser,
 ) -> ProgramSwitchResponse:
-    days_available = current_user.days_available or 2
-    split_preference = current_user.split_preference or "full_body"
-    current_program_id = current_user.selected_program_id or "full_body_v1"
     latest_plan = _latest_plan(db, current_user.id)
-    latest_plan_payload = latest_plan.payload if latest_plan and isinstance(latest_plan.payload, dict) else {}
+    recommendation_inputs = prepare_profile_program_recommendation_inputs(
+        selected_program_id=current_user.selected_program_id,
+        days_available=current_user.days_available,
+        split_preference=current_user.split_preference,
+        latest_plan=latest_plan,
+    )
     training_state = _build_program_recommendation_training_state(
         db,
         current_user=current_user,
@@ -278,18 +304,18 @@ def switch_program(
     )
 
     recommendation_runtime = prepare_program_recommendation_runtime(
-        current_program_id=current_program_id,
+        current_program_id=cast(str, recommendation_inputs["current_program_id"]),
         available_program_summaries=list_program_templates(),
-        days_available=days_available,
-        split_preference=split_preference,
+        days_available=cast(int, recommendation_inputs["days_available"]),
+        split_preference=cast(str, recommendation_inputs["split_preference"]),
         latest_adherence_score=None,
-        latest_plan_payload=latest_plan_payload,
+        latest_plan_payload=cast(dict[str, Any], recommendation_inputs["latest_plan_payload"]),
         user_training_state=training_state,
     )
 
     try:
         runtime = prepare_program_switch_runtime(
-            current_program_id=current_program_id,
+            current_program_id=cast(str, recommendation_inputs["current_program_id"]),
             target_program_id=payload.target_program_id,
             confirm=payload.confirm,
             compatible_program_ids=cast(list[str], recommendation_runtime["compatible_program_ids"]),
@@ -313,16 +339,22 @@ def weekly_checkin(
     db: DbSession,
     current_user: CurrentUser,
 ) -> dict:
-    entry = WeeklyCheckin(
-        user_id=current_user.id,
+    persistence_payload = build_weekly_checkin_persistence_payload(
         week_start=payload.week_start,
         body_weight=payload.body_weight,
         adherence_score=payload.adherence_score,
         notes=payload.notes,
     )
+    entry = WeeklyCheckin(
+        user_id=current_user.id,
+        week_start=cast(date, persistence_payload["week_start"]),
+        body_weight=cast(float, persistence_payload["body_weight"]),
+        adherence_score=cast(int, persistence_payload["adherence_score"]),
+        notes=cast(str | None, persistence_payload["notes"]),
+    )
     db.add(entry)
     db.commit()
-    return {"status": "logged", "phase": current_user.nutrition_phase or "maintenance"}
+    return build_weekly_checkin_response_payload(nutrition_phase=current_user.nutrition_phase)
 
 
 @router.get("/weekly-review/status")
@@ -383,14 +415,21 @@ def submit_weekly_review(
         protein=payload.protein,
         adherence_score=payload.adherence_score,
     )
+    review_persistence_payload = build_weekly_review_cycle_persistence_payload(
+        summary=summary_payload,
+        decision_payload=decision_payload,
+    )
 
-    current_user.weight = payload.body_weight
-    current_user.calories = payload.calories
-    current_user.protein = payload.protein
-    current_user.fat = payload.fat
-    current_user.carbs = payload.carbs
-    if payload.nutrition_phase:
-        current_user.nutrition_phase = payload.nutrition_phase
+    user_update_payload = build_weekly_review_user_update_payload(
+        body_weight=payload.body_weight,
+        calories=payload.calories,
+        protein=payload.protein,
+        fat=payload.fat,
+        carbs=payload.carbs,
+        nutrition_phase=payload.nutrition_phase,
+    )
+    for key, value in user_update_payload.items():
+        setattr(current_user, key, value)
     db.add(current_user)
 
     checkin_entry = WeeklyCheckin(
@@ -414,8 +453,8 @@ def submit_weekly_review(
         carbs=payload.carbs,
         adherence_score=payload.adherence_score,
         notes=payload.notes,
-        faults={"exercise_faults": [item.model_dump(mode="json") for item in summary.exercise_faults]},
-        adjustments=dict(decision_payload["storage_adjustments"]),
+        faults=cast(dict[str, Any], review_persistence_payload["faults"]),
+        adjustments=cast(dict[str, Any], review_persistence_payload["adjustments"]),
         summary=summary_payload,
     )
     db.add(review_entry)
@@ -438,11 +477,15 @@ def list_soreness_entries(
     start_date: Annotated[date | None, Query()] = None,
     end_date: Annotated[date | None, Query()] = None,
 ) -> Sequence[SorenessEntry]:
+    date_window_runtime = prepare_profile_date_window_runtime(
+        start_date=start_date,
+        end_date=end_date,
+    )
     query = db.query(SorenessEntry).filter(SorenessEntry.user_id == current_user.id)
-    if start_date is not None:
-        query = query.filter(SorenessEntry.entry_date >= start_date)
-    if end_date is not None:
-        query = query.filter(SorenessEntry.entry_date <= end_date)
+    if date_window_runtime["start_date"] is not None:
+        query = query.filter(SorenessEntry.entry_date >= cast(date, date_window_runtime["start_date"]))
+    if date_window_runtime["end_date"] is not None:
+        query = query.filter(SorenessEntry.entry_date <= cast(date, date_window_runtime["end_date"]))
     return query.order_by(SorenessEntry.entry_date.desc(), SorenessEntry.created_at.desc()).all()
 
 
@@ -452,11 +495,16 @@ def create_soreness_entry(
     db: DbSession,
     current_user: CurrentUser,
 ) -> SorenessEntry:
+    persistence_payload = build_soreness_entry_persistence_payload(
+        entry_date=payload.entry_date,
+        severity_by_muscle=payload.severity_by_muscle,
+        notes=payload.notes,
+    )
     entry = SorenessEntry(
         user_id=current_user.id,
-        entry_date=payload.entry_date,
-        severity_by_muscle=dict(payload.severity_by_muscle),
-        notes=payload.notes,
+        entry_date=cast(date, persistence_payload["entry_date"]),
+        severity_by_muscle=cast(dict[str, str], persistence_payload["severity_by_muscle"]),
+        notes=cast(str | None, persistence_payload["notes"]),
     )
     db.add(entry)
     db.commit()
@@ -479,9 +527,14 @@ def update_soreness_entry(
     if not entry:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Soreness entry not found")
 
-    entry.entry_date = payload.entry_date
-    entry.severity_by_muscle = dict(payload.severity_by_muscle)
-    entry.notes = payload.notes
+    persistence_payload = build_soreness_entry_persistence_payload(
+        entry_date=payload.entry_date,
+        severity_by_muscle=payload.severity_by_muscle,
+        notes=payload.notes,
+    )
+    entry.entry_date = cast(date, persistence_payload["entry_date"])
+    entry.severity_by_muscle = cast(dict[str, str], persistence_payload["severity_by_muscle"])
+    entry.notes = cast(str | None, persistence_payload["notes"])
     db.add(entry)
     db.commit()
     db.refresh(entry)
@@ -512,11 +565,15 @@ def list_body_measurements(
     start_date: Annotated[date | None, Query()] = None,
     end_date: Annotated[date | None, Query()] = None,
 ) -> Sequence[BodyMeasurementEntry]:
+    date_window_runtime = prepare_profile_date_window_runtime(
+        start_date=start_date,
+        end_date=end_date,
+    )
     query = db.query(BodyMeasurementEntry).filter(BodyMeasurementEntry.user_id == current_user.id)
-    if start_date is not None:
-        query = query.filter(BodyMeasurementEntry.measured_on >= start_date)
-    if end_date is not None:
-        query = query.filter(BodyMeasurementEntry.measured_on <= end_date)
+    if date_window_runtime["start_date"] is not None:
+        query = query.filter(BodyMeasurementEntry.measured_on >= cast(date, date_window_runtime["start_date"]))
+    if date_window_runtime["end_date"] is not None:
+        query = query.filter(BodyMeasurementEntry.measured_on <= cast(date, date_window_runtime["end_date"]))
     return query.order_by(BodyMeasurementEntry.measured_on.desc(), BodyMeasurementEntry.created_at.desc()).all()
 
 
@@ -530,12 +587,18 @@ def create_body_measurement(
     db: DbSession,
     current_user: CurrentUser,
 ) -> BodyMeasurementEntry:
-    entry = BodyMeasurementEntry(
-        user_id=current_user.id,
+    persistence_payload = build_body_measurement_create_payload(
         measured_on=payload.measured_on,
         name=payload.name,
         value=payload.value,
         unit=payload.unit,
+    )
+    entry = BodyMeasurementEntry(
+        user_id=current_user.id,
+        measured_on=cast(date, persistence_payload["measured_on"]),
+        name=cast(str, persistence_payload["name"]),
+        value=cast(float, persistence_payload["value"]),
+        unit=cast(str, persistence_payload["unit"]),
     )
     db.add(entry)
     db.commit()
@@ -558,14 +621,14 @@ def update_body_measurement(
     if not entry:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Measurement entry not found")
 
-    if payload.measured_on is not None:
-        entry.measured_on = payload.measured_on
-    if payload.name is not None:
-        entry.name = payload.name
-    if payload.value is not None:
-        entry.value = payload.value
-    if payload.unit is not None:
-        entry.unit = payload.unit
+    persistence_payload = build_body_measurement_update_payload(
+        measured_on=payload.measured_on,
+        name=payload.name,
+        value=payload.value,
+        unit=payload.unit,
+    )
+    for key, value in persistence_payload.items():
+        setattr(entry, key, value)
 
     db.add(entry)
     db.commit()

@@ -38,11 +38,21 @@ def _closest_anchor(index: int, anchors: list[int]) -> int:
     return min(anchors, key=lambda item: (abs(item - index), item))
 
 
-def _slot_score(slot: dict[str, Any], weak_areas: set[str]) -> int:
+def _slot_score(
+    slot: dict[str, Any],
+    weak_areas: set[str],
+    weak_area_bonus_by_muscle: dict[str, int],
+    default_weak_area_bonus_slots: int,
+) -> int:
     score = _ROLE_SCORE.get(str(slot.get("slot_role") or "accessory"), 30)
     muscles = {str(m).strip().lower() for m in slot.get("primary_muscles") or [] if str(m).strip()}
-    if muscles.intersection(weak_areas):
-        score += 35
+    overlapping = muscles.intersection(weak_areas)
+    if overlapping:
+        overlap_bonus_slots = max(
+            max(default_weak_area_bonus_slots, 0),
+            max((weak_area_bonus_by_muscle.get(muscle, default_weak_area_bonus_slots) for muscle in overlapping), default=0),
+        )
+        score += 35 + (max(overlap_bonus_slots, 0) * 10)
     return score
 
 
@@ -70,11 +80,17 @@ def adapt_onboarding_frequency(
     duration_weeks = int(overlay.get("temporary_duration_weeks") or 1)
     current_week = max(1, int(overlay.get("current_week_index") or 1))
 
-    weak_areas = {
-        str(entry.get("muscle_group") or "").strip().lower()
-        for entry in overlay.get("weak_areas") or []
-        if isinstance(entry, dict)
-    }
+    default_weak_area_bonus_slots = int(adaptation_rules.get("weak_area_bonus_slots") or 1)
+    weak_area_bonus_by_muscle: dict[str, int] = {}
+    for entry in overlay.get("weak_areas") or []:
+        if not isinstance(entry, dict):
+            continue
+        muscle_group = str(entry.get("muscle_group") or "").strip().lower()
+        if not muscle_group:
+            continue
+        desired_bonus_slots = int(entry.get("desired_extra_slots_per_week") or default_weak_area_bonus_slots)
+        weak_area_bonus_by_muscle[muscle_group] = max(0, desired_bonus_slots)
+    weak_areas = set(weak_area_bonus_by_muscle.keys())
 
     week_templates = {
         str(item.get("week_template_id") or ""): item
@@ -150,7 +166,12 @@ def adapt_onboarding_frequency(
             for slot in authored_day.get("slots") or []:
                 exercise_id = str(slot.get("exercise_id") or "unknown_exercise")
                 slot_role = str(slot.get("slot_role") or "accessory")
-                score = _slot_score(slot, weak_areas)
+                score = _slot_score(
+                    slot,
+                    weak_areas,
+                    weak_area_bonus_by_muscle,
+                    default_weak_area_bonus_slots,
+                )
                 muscles = {str(m).strip().lower() for m in slot.get("primary_muscles") or [] if str(m).strip()}
 
                 if muscles.intersection(weak_areas) or slot_role in preserve_roles or score >= 85:
@@ -192,7 +213,18 @@ def adapt_onboarding_frequency(
 
         for adapted_day in adapted_days:
             slots_with_scores = sorted(
-                [(_slot_score(slot, weak_areas), slot) for slot in adapted_day["_slots"]],
+                [
+                    (
+                        _slot_score(
+                            slot,
+                            weak_areas,
+                            weak_area_bonus_by_muscle,
+                            default_weak_area_bonus_slots,
+                        ),
+                        slot,
+                    )
+                    for slot in adapted_day["_slots"]
+                ],
                 key=lambda item: item[0],
                 reverse=True,
             )

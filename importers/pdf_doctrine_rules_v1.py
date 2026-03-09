@@ -77,6 +77,16 @@ def _extract_intro_weeks(text: str) -> int:
     return 1
 
 
+def _extract_scheduled_deload_weeks(text: str) -> int | None:
+    match = re.search(r"deload\s+every\s+(\d+)\s+weeks?", text, re.IGNORECASE)
+    if match:
+        return int(match.group(1))
+    match = re.search(r"every\s+(\d+)\s+weeks?.{0,40}?deload", text, re.IGNORECASE)
+    if match:
+        return int(match.group(1))
+    return None
+
+
 def _starting_load_method(text: str) -> str:
     if re.search(r"1\s*rep\s*max|%1RM|percent\s*1RM", text, re.IGNORECASE):
         return "percent_1rm_reference"
@@ -115,9 +125,11 @@ def build_rule_set_payload(
     starting_method = _starting_load_method(normalized_text)
     default_rir_target = _extract_default_rir_target(normalized_text)
     intro_weeks = _extract_intro_weeks(normalized_text)
+    scheduled_deload_weeks = _extract_scheduled_deload_weeks(normalized_text)
 
     intro_excerpt = _find_excerpt(normalized_text, r"first\s+\d+\s+weeks?.{0,120}?reps?\s+in\s+the\s+tank|first\s+week.{0,120}?reps?\s+in\s+the\s+tank")
     intensity_excerpt = _find_excerpt(normalized_text, r"after\s+the\s+first.{0,160}?intensity\s+will\s+increase")
+    deload_excerpt = _find_excerpt(normalized_text, r"deload\s+every\s+\d+\s+weeks?|every\s+\d+\s+weeks?.{0,40}?deload")
     substitution_excerpt = _find_excerpt(normalized_text, r"exercise\s+substitutions?\s+column")
     progression_excerpt = _find_excerpt(normalized_text, r"progress\s+through\s+the\s+rep\s+ranges?")
     warmup_excerpt = _find_excerpt(normalized_text, r"general\s+warm-?up|exercise-specific\s+warm-?up")
@@ -129,7 +141,7 @@ def build_rule_set_payload(
             _source_section("starting_load_rules.method", guide_doc, source_pdf, warmup_excerpt or intro_excerpt),
             _source_section("progression_rules.on_success", guide_doc, source_pdf, progression_excerpt),
             _source_section("fatigue_rules.high_fatigue_trigger", guide_doc, source_pdf, intensity_excerpt),
-            _source_section("deload_rules.scheduled_every_n_weeks", guide_doc, source_pdf, intro_excerpt),
+            _source_section("deload_rules.scheduled_every_n_weeks", guide_doc, source_pdf, deload_excerpt or intro_excerpt),
             _source_section("substitution_rules.equipment_mismatch", guide_doc, source_pdf, substitution_excerpt),
         ]
         if item is not None
@@ -162,7 +174,7 @@ def build_rule_set_payload(
             "on_high_fatigue": {"action": "reduce_volume", "set_delta": -1},
         },
         "deload_rules": {
-            "scheduled_every_n_weeks": max(4, intro_weeks * 3),
+            "scheduled_every_n_weeks": max(4, int(scheduled_deload_weeks or (intro_weeks * 3))),
             "early_deload_trigger": "repeated_under_target_plus_high_fatigue",
             "on_deload": {"set_reduction_percent": 35, "load_reduction_percent": 10},
         },
