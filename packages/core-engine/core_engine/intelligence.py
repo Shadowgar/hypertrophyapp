@@ -11,20 +11,80 @@ from .decision_frequency_adaptation import (
     build_frequency_adaptation_persistence_state as _build_frequency_adaptation_persistence_state,
     build_generated_week_adaptation_persistence_payload as _build_generated_week_adaptation_persistence_payload,
     interpret_frequency_adaptation_apply as _interpret_frequency_adaptation_apply,
+    prepare_frequency_adaptation_route_runtime as _prepare_frequency_adaptation_route_runtime,
     recommend_frequency_adaptation_preview as _recommend_frequency_adaptation_preview,
     resolve_active_frequency_adaptation_runtime as _resolve_active_frequency_adaptation_runtime,
 )
+from .decision_coach_preview import (
+    build_applied_coaching_recommendation_record_values as _build_applied_coaching_recommendation_record_values,
+    build_applied_coaching_recommendation_response as _build_applied_coaching_recommendation_response,
+    finalize_applied_coaching_recommendation_commit_runtime as _finalize_applied_coaching_recommendation_commit_runtime,
+    prepare_coaching_apply_route_finalize_runtime as _prepare_coaching_apply_route_finalize_runtime,
+    build_coaching_recommendation_timeline_entry as _build_coaching_recommendation_timeline_entry,
+    build_coaching_recommendation_timeline_payload as _build_coaching_recommendation_timeline_payload,
+    build_phase_applied_recommendation_record as _build_phase_applied_recommendation_record,
+    build_coach_preview_payloads as _build_coach_preview_payloads,
+    build_coach_preview_recommendation_record_fields as _build_coach_preview_recommendation_record_fields,
+    finalize_coach_preview_commit_runtime as _finalize_coach_preview_commit_runtime,
+    build_specialization_applied_recommendation_record as _build_specialization_applied_recommendation_record,
+    extract_coaching_recommendation_focus_muscles as _extract_coaching_recommendation_focus_muscles,
+    finalize_applied_coaching_recommendation as _finalize_applied_coaching_recommendation,
+    interpret_coach_phase_apply_decision as _interpret_coach_phase_apply_decision,
+    interpret_coach_specialization_apply_decision as _interpret_coach_specialization_apply_decision,
+    normalize_coaching_recommendation_timeline_limit as _normalize_coaching_recommendation_timeline_limit,
+    prepare_coaching_apply_runtime_source as _prepare_coaching_apply_runtime_source,
+    prepare_applied_coaching_recommendation_commit_runtime as _prepare_applied_coaching_recommendation_commit_runtime,
+    prepare_coach_preview_commit_runtime as _prepare_coach_preview_commit_runtime,
+    prepare_coaching_apply_commit_runtime as _prepare_coaching_apply_commit_runtime,
+    prepare_coaching_apply_decision_runtime as _prepare_coaching_apply_decision_runtime,
+    prepare_coaching_apply_route_runtime as _prepare_coaching_apply_route_runtime,
+    prepare_phase_apply_runtime as _prepare_phase_apply_runtime,
+    prepare_specialization_apply_runtime as _prepare_specialization_apply_runtime,
+    recommend_coach_intelligence_preview as _recommend_coach_intelligence_preview,
+    resolve_coaching_recommendation_rationale as _resolve_coaching_recommendation_rationale,
+)
+from .decision_program_recommendation import (
+    build_program_recommendation_payload as _build_program_recommendation_payload,
+    build_program_switch_payload as _build_program_switch_payload,
+    humanize_program_reason as _humanize_program_reason,
+    prepare_profile_program_recommendation_inputs as _prepare_profile_program_recommendation_inputs,
+    prepare_profile_program_recommendation_route_runtime as _prepare_profile_program_recommendation_route_runtime,
+    prepare_program_recommendation_runtime as _prepare_program_recommendation_runtime,
+    prepare_program_switch_runtime as _prepare_program_switch_runtime,
+    recommend_program_selection as _recommend_program_selection,
+    resolve_program_recommendation_candidates as _resolve_program_recommendation_candidates,
+)
+from .decision_progression import (
+    derive_readiness_score as _derive_readiness_score,
+    evaluate_schedule_adaptation as _evaluate_schedule_adaptation,
+    humanize_phase_transition_reason as _humanize_phase_transition_reason,
+    humanize_progression_reason as _humanize_progression_reason,
+    recommend_phase_transition as _recommend_phase_transition,
+    recommend_progression_action as _recommend_progression_action,
+)
 from .decision_weekly_review import (
+    apply_weekly_review_adjustments_to_plan as _apply_weekly_review_adjustments_to_plan,
+    build_weekly_review_performance_summary as _build_weekly_review_performance_summary,
+    build_weekly_review_decision_payload as _build_weekly_review_decision_payload,
     build_weekly_review_cycle_persistence_payload as _build_weekly_review_cycle_persistence_payload,
     build_weekly_review_status_payload as _build_weekly_review_status_payload,
     build_weekly_review_submit_payload as _build_weekly_review_submit_payload,
     build_weekly_review_user_update_payload as _build_weekly_review_user_update_payload,
+    interpret_weekly_review_decision as _interpret_weekly_review_decision,
     prepare_weekly_review_log_window_runtime as _prepare_weekly_review_log_window_runtime,
     prepare_weekly_review_submit_window as _prepare_weekly_review_submit_window,
     resolve_weekly_review_window as _resolve_weekly_review_window,
+    summarize_weekly_review_performance as _summarize_weekly_review_performance,
 )
+from .progression import ExerciseState as _ProgressionExerciseState
+from .progression import update_exercise_state_after_workout as _update_exercise_state_after_workout
 from .scheduler import generate_week_plan
-from .rules_runtime import evaluate_deload_signal, resolve_adaptive_rule_runtime, resolve_repeat_failure_substitution
+from .rules_runtime import (
+    evaluate_deload_signal,
+    resolve_adaptive_rule_runtime,
+    resolve_repeat_failure_substitution,
+    resolve_starting_load,
+)
 from .warmups import compute_warmups
 
 
@@ -59,29 +119,6 @@ _PHASE_TRANSITION_REASON_MESSAGES = {
     "intensification_fatigue_cap": "End intensification and deload before fatigue outpaces recovery.",
     "continue_intensification": "Stay in intensification. Current performance still supports heavier work in this phase.",
     "phase_apply": "Apply the recommended phase transition.",
-}
-
-_WEEKLY_REVIEW_GUIDANCE_MESSAGES = {
-    "recovery_limited_reduce_load_and_complete_quality_volume": "Recovery signals are limited. Reduce load slightly and complete high-quality volume before pushing progression.",
-    "target_fault_exercises_with_controlled_progression": "Several exercises need cleaner execution. Target those faults with controlled progression before raising overall stress.",
-    "progressive_overload_ready": "Readiness is solid. Continue progressive overload next week.",
-}
-
-_WEEKLY_REVIEW_ADJUSTMENT_MESSAGES = {
-    "maintain": "No exercise-specific override is required.",
-    "missed_exercise_restart_conservative": "This exercise was missed last week. Restart slightly lighter and rebuild exposure.",
-    "low_completion_secure_volume": "Completion was low. Trim intensity slightly and secure the planned volume first.",
-    "below_target_reps_reduce_or_hold": "Reps fell below target. Hold or slightly reduce load until rep quality returns.",
-    "above_target_reps_progress_load": "Reps exceeded target with sufficient readiness. Progress load next week.",
-    "weak_point_bounded_extra_practice": "This is a weak-point candidate with good readiness, so add a small bounded practice set.",
-}
-
-_WEEKLY_REVIEW_FAULT_GUIDANCE_MESSAGES = {
-    "rebuild_exposure_with_conservative_load": "Rebuild exposure with a slightly conservative load after the missed exercise.",
-    "complete_all_planned_sets_before_progression": "Complete all planned sets before pushing progression again.",
-    "reduce_or_hold_load_and_recover": "Hold or slightly reduce load and recover until reps return to target.",
-    "increase_load_next_exposure": "Performance was above target. Increase load on the next exposure.",
-    "maintain_or_microload": "Performance stayed in range. Maintain load or microload if the next exposure stays clean.",
 }
 
 _WORKOUT_GUIDANCE_STATIC_MESSAGES = {
@@ -121,11 +158,6 @@ _IN_SESSION_WEIGHT_SCALE_DOWN_AGGRESSIVE = 0.95
 _IN_SESSION_WEIGHT_SCALE_MIN = 0.9
 _IN_SESSION_WEIGHT_SCALE_MAX = 1.05
 
-_REVIEW_SET_DELTA_MIN = -1
-_REVIEW_SET_DELTA_MAX = 1
-_REVIEW_ADDITIONAL_SET_CAP = 2
-_REVIEW_INTENSITY_MIN_SCALE = 0.93
-_REVIEW_INTENSITY_MAX_SCALE = 1.03
 _WEAK_POINT_MAX_BOOSTED_EXERCISES = 2
 _WEAK_POINT_SET_DELTA_CAP = 1
 _WEAK_POINT_TOTAL_SET_BUDGET = 2
@@ -234,10 +266,6 @@ def _resolve_rep_range(rep_range: Any) -> tuple[int, int]:
     return minimum, maximum
 
 
-def _empty_performance_bucket() -> dict[str, float]:
-    return {"sets": 0.0, "reps_sum": 0.0, "weight_sum": 0.0}
-
-
 def _deload_response(config: dict[str, Any], reason: str) -> dict[str, Any]:
     return {
         "action": "deload",
@@ -282,281 +310,6 @@ def _accumulation_phase_transition(
     return {"next_phase": "accumulation", "reason": "continue_accumulation"}
 
 
-def _accumulate_single_planned_exercise(planned_index: dict[str, dict[str, Any]], exercise: dict[str, Any]) -> None:
-    primary_exercise_id = str(exercise.get("primary_exercise_id") or exercise.get("id") or "")
-    if not primary_exercise_id:
-        return
-
-    planned_sets = int(exercise.get("sets", 0) or 0)
-    target_min, target_max = _resolve_rep_range(exercise.get("rep_range"))
-    target_weight = float(exercise.get("recommended_working_weight", 0) or 0)
-    bucket = planned_index.setdefault(
-        primary_exercise_id,
-        {
-            "exercise_id": str(exercise.get("id") or primary_exercise_id),
-            "name": str(exercise.get("name") or primary_exercise_id),
-            "planned_sets": 0,
-            "target_min_sum": 0,
-            "target_max_sum": 0,
-            "target_count": 0,
-            "target_weight_sum": 0.0,
-            "target_weight_count": 0,
-        },
-    )
-    bucket["planned_sets"] += max(0, planned_sets)
-    bucket["target_min_sum"] += target_min
-    bucket["target_max_sum"] += target_max
-    bucket["target_count"] += 1
-    if target_weight > 0:
-        bucket["target_weight_sum"] += target_weight
-        bucket["target_weight_count"] += 1
-
-
-def _accumulate_planned_index(payload: dict[str, Any]) -> dict[str, dict[str, Any]]:
-    planned_index: dict[str, dict[str, Any]] = {}
-    for session in payload.get("sessions") or []:
-        for exercise in session.get("exercises") or []:
-            if isinstance(exercise, dict):
-                _accumulate_single_planned_exercise(planned_index, exercise)
-    return planned_index
-
-
-def _collect_performed_index(logs: list[dict[str, Any]], planned_index: dict[str, dict[str, Any]]) -> dict[str, dict[str, float]]:
-    performed_index: dict[str, dict[str, float]] = {}
-    for row in logs:
-        key = str(row.get("primary_exercise_id") or row.get("exercise_id") or "")
-        if key not in planned_index:
-            continue
-        bucket = performed_index.setdefault(key, _empty_performance_bucket())
-        bucket["sets"] += 1
-        bucket["reps_sum"] += float(row.get("reps", 0) or 0)
-        bucket["weight_sum"] += float(row.get("weight", 0) or 0)
-    return performed_index
-
-
-def _resolve_weekly_fault_reasons(
-    completed_sets: int,
-    completion_pct: int,
-    average_reps: float,
-    target_min: int,
-    target_max: int,
-) -> tuple[int, list[str]]:
-    fault_score = 0
-    fault_reasons: list[str] = []
-
-    if completed_sets == 0:
-        return 3, ["missed_exercise"]
-
-    if completion_pct < 85:
-        fault_score += 2
-        fault_reasons.append("low_completion")
-    if average_reps < target_min:
-        fault_score += 2
-        fault_reasons.append("below_target_reps")
-    if average_reps > target_max:
-        fault_score += 1
-        fault_reasons.append("above_target_reps")
-    return fault_score, fault_reasons
-
-
-def _resolve_weekly_fault_guidance(
-    completed_sets: int,
-    completion_pct: int,
-    average_reps: float,
-    target_min: int,
-    target_max: int,
-) -> str:
-    if completed_sets == 0:
-        return "rebuild_exposure_with_conservative_load"
-    if completion_pct < 85:
-        return "complete_all_planned_sets_before_progression"
-    if average_reps < target_min:
-        return "reduce_or_hold_load_and_recover"
-    if average_reps > target_max:
-        return "increase_load_next_exposure"
-    return "maintain_or_microload"
-
-
-def _resolve_weekly_fault_level(fault_score: int) -> str:
-    if fault_score >= 3:
-        return "high"
-    if fault_score == 2:
-        return "medium"
-    if fault_score == 1:
-        return "low"
-    return "none"
-
-
-def _build_weekly_exercise_fault(
-    primary_exercise_id: str,
-    planned: dict[str, Any],
-    performed: dict[str, float],
-) -> tuple[dict[str, Any], int, int]:
-    planned_sets = int(planned["planned_sets"])
-    target_count = max(1, int(planned["target_count"]))
-    target_min = int(round(planned["target_min_sum"] / target_count))
-    target_max = int(round(planned["target_max_sum"] / target_count))
-
-    target_weight_count = int(planned["target_weight_count"])
-    target_weight = (
-        float(planned["target_weight_sum"]) / max(1, target_weight_count)
-        if target_weight_count > 0
-        else 0.0
-    )
-    completed_sets = int(performed["sets"])
-    average_reps = float(performed["reps_sum"]) / completed_sets if completed_sets > 0 else 0.0
-    average_weight = float(performed["weight_sum"]) / completed_sets if completed_sets > 0 else 0.0
-    completion_pct = int((completed_sets / max(1, planned_sets)) * 100)
-
-    fault_score, fault_reasons = _resolve_weekly_fault_reasons(completed_sets, completion_pct, average_reps, target_min, target_max)
-    return (
-        {
-            "primary_exercise_id": primary_exercise_id,
-            "exercise_id": str(planned["exercise_id"]),
-            "name": str(planned["name"]),
-            "planned_sets": planned_sets,
-            "completed_sets": completed_sets,
-            "completion_pct": completion_pct,
-            "target_reps_min": target_min,
-            "target_reps_max": target_max,
-            "average_performed_reps": round(average_reps, 2),
-            "target_weight": round(target_weight, 2),
-            "average_performed_weight": round(average_weight, 2),
-            "guidance": _resolve_weekly_fault_guidance(completed_sets, completion_pct, average_reps, target_min, target_max),
-            "fault_score": fault_score,
-            "fault_level": _resolve_weekly_fault_level(fault_score),
-            "fault_reasons": fault_reasons,
-        },
-        planned_sets,
-        completed_sets,
-    )
-
-
-def _weekly_review_fault_guidance_rationale(guidance: str) -> str:
-    return _WEEKLY_REVIEW_FAULT_GUIDANCE_MESSAGES.get(guidance, _humanize_reason_code(guidance))
-
-
-def _weekly_review_adjustment_rationale(rationale: str) -> str:
-    return _WEEKLY_REVIEW_ADJUSTMENT_MESSAGES.get(rationale, _humanize_reason_code(rationale))
-
-
-def _weekly_review_global_guidance_rationale(guidance: str) -> str:
-    return _WEEKLY_REVIEW_GUIDANCE_MESSAGES.get(guidance, _humanize_reason_code(guidance))
-
-
-def _clamp_review_set_delta(value: int) -> int:
-    return max(_REVIEW_SET_DELTA_MIN, min(_REVIEW_SET_DELTA_MAX, value))
-
-
-def _clamp_review_intensity_scale(value: float) -> float:
-    return max(_REVIEW_INTENSITY_MIN_SCALE, min(_REVIEW_INTENSITY_MAX_SCALE, value))
-
-
-def _resolve_global_review_adjustments(
-    *,
-    calories_per_kg: float,
-    protein_per_kg: float,
-    adherence_score: int,
-    base_set_delta: int,
-    base_weight_scale: float,
-    base_readiness: int,
-) -> tuple[int, float, int, list[dict[str, Any]]]:
-    global_set_delta = base_set_delta
-    global_weight_scale = base_weight_scale
-    readiness_score = base_readiness
-    applied_rules: list[dict[str, Any]] = []
-
-    if calories_per_kg < 24:
-        global_set_delta -= 1
-        global_weight_scale *= 0.95
-        readiness_score -= 20
-        applied_rules.append({"rule": "low_calories_per_kg", "matched": True, "details": {"calories_per_kg": round(calories_per_kg, 2)}})
-    elif calories_per_kg < 28:
-        global_weight_scale *= 0.975
-        readiness_score -= 10
-        applied_rules.append({"rule": "moderate_calories_per_kg", "matched": True, "details": {"calories_per_kg": round(calories_per_kg, 2)}})
-    elif calories_per_kg > 35 and adherence_score >= 4:
-        global_weight_scale *= 1.01
-        readiness_score += 5
-        applied_rules.append({"rule": "surplus_with_adherence", "matched": True, "details": {"calories_per_kg": round(calories_per_kg, 2), "adherence_score": adherence_score}})
-
-    if protein_per_kg < 1.6:
-        global_weight_scale *= 0.98
-        readiness_score -= 15
-        applied_rules.append({"rule": "low_protein_per_kg", "matched": True, "details": {"protein_per_kg": round(protein_per_kg, 2)}})
-    elif protein_per_kg >= 2.0:
-        readiness_score += 3
-        applied_rules.append({"rule": "high_protein_per_kg", "matched": True, "details": {"protein_per_kg": round(protein_per_kg, 2)}})
-
-    if adherence_score <= 2:
-        global_weight_scale *= 0.98
-        readiness_score -= 15
-        applied_rules.append({"rule": "low_adherence", "matched": True, "details": {"adherence_score": adherence_score}})
-
-    return global_set_delta, global_weight_scale, readiness_score, applied_rules
-
-
-def _resolve_weekly_review_exercise_override(
-    row: dict[str, Any],
-    *,
-    readiness_score: int,
-    allow_weak_point_boost: bool,
-) -> dict[str, Any] | None:
-    if int(row.get("fault_score", 0) or 0) <= 0:
-        return None
-
-    fault_reasons = [str(reason) for reason in row.get("fault_reasons") or []]
-    set_delta = 0
-    weight_scale = 1.0
-    rationale = "maintain"
-
-    if "missed_exercise" in fault_reasons:
-        weight_scale *= 0.95
-        rationale = "missed_exercise_restart_conservative"
-    elif "low_completion" in fault_reasons:
-        weight_scale *= 0.975
-        rationale = "low_completion_secure_volume"
-
-    if "below_target_reps" in fault_reasons:
-        weight_scale *= 0.975
-        rationale = "below_target_reps_reduce_or_hold"
-
-    if "above_target_reps" in fault_reasons and readiness_score >= 70:
-        weight_scale *= 1.025
-        rationale = "above_target_reps_progress_load"
-
-    weak_point_boost_blocked = any(reason in fault_reasons for reason in ("missed_exercise", "low_completion", "below_target_reps"))
-    if (
-        allow_weak_point_boost
-        and not weak_point_boost_blocked
-        and int(row.get("completion_pct", 0) or 0) >= _WEAK_POINT_MIN_COMPLETION_FOR_BOOST
-        and readiness_score >= _WEAK_POINT_MIN_READINESS_FOR_BOOST
-    ):
-        set_delta = min(_WEAK_POINT_SET_DELTA_CAP, set_delta + 1)
-        rationale = "weak_point_bounded_extra_practice"
-
-    set_delta = _clamp_int(set_delta, -1, _WEAK_POINT_SET_DELTA_CAP)
-    weight_scale = _clamp_scale(weight_scale, _WEAK_POINT_INTENSITY_MIN_SCALE, _WEAK_POINT_INTENSITY_MAX_SCALE)
-    return {
-        "primary_exercise_id": str(row.get("primary_exercise_id") or ""),
-        "set_delta": set_delta,
-        "weight_scale": round(weight_scale, 3),
-        "rationale": rationale,
-    }
-
-
-def _resolve_weekly_review_global_guidance(readiness_score: int, faulty_exercise_count: int) -> str:
-    if readiness_score < 55:
-        return "recovery_limited_reduce_load_and_complete_quality_volume"
-    if faulty_exercise_count > 0:
-        return "target_fault_exercises_with_controlled_progression"
-    return "progressive_overload_ready"
-
-
-def _round_to_increment(weight: float, increment: float = 2.5) -> float:
-    return round(max(5.0, weight) / increment) * increment
-
-
 def summarize_weekly_review_performance(
     *,
     previous_week_start: date,
@@ -564,63 +317,12 @@ def summarize_weekly_review_performance(
     previous_plan_payload: dict[str, Any],
     performed_logs: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    planned_index = _accumulate_planned_index(previous_plan_payload)
-    performed_index = _collect_performed_index(performed_logs, planned_index)
-
-    exercise_faults: list[dict[str, Any]] = []
-    planned_sets_total = 0
-    completed_sets_total = 0
-    fault_steps: list[dict[str, Any]] = []
-
-    for primary_exercise_id, planned in planned_index.items():
-        fault, planned_sets, completed_sets = _build_weekly_exercise_fault(
-            primary_exercise_id,
-            planned,
-            performed_index.get(primary_exercise_id, _empty_performance_bucket()),
-        )
-        planned_sets_total += planned_sets
-        completed_sets_total += completed_sets
-        exercise_faults.append(fault)
-        fault_steps.append(
-            {
-                "exercise_id": primary_exercise_id,
-                "fault_score": fault["fault_score"],
-                "fault_reasons": list(fault["fault_reasons"]),
-                "guidance": fault["guidance"],
-                "guidance_rationale": _weekly_review_fault_guidance_rationale(str(fault["guidance"])),
-            }
-        )
-
-    exercise_faults.sort(key=lambda row: (-int(row["fault_score"]), int(row["completion_pct"]), str(row["name"])))
-    completion_pct = int((completed_sets_total / max(1, planned_sets_total)) * 100)
-    faulty_exercise_count = sum(1 for row in exercise_faults if int(row["fault_score"]) > 0)
-
-    return {
-        "previous_week_start": previous_week_start,
-        "previous_week_end": week_start - timedelta(days=1),
-        "planned_sets_total": planned_sets_total,
-        "completed_sets_total": completed_sets_total,
-        "completion_pct": completion_pct,
-        "faulty_exercise_count": faulty_exercise_count,
-        "exercise_faults": exercise_faults,
-        "decision_trace": {
-            "interpreter": "summarize_weekly_review_performance",
-            "version": "v1",
-            "inputs": {
-                "previous_week_start": previous_week_start.isoformat(),
-                "week_start": week_start.isoformat(),
-                "planned_exercise_count": len(planned_index),
-                "performed_log_count": len(performed_logs),
-            },
-            "steps": fault_steps,
-            "outcome": {
-                "planned_sets_total": planned_sets_total,
-                "completed_sets_total": completed_sets_total,
-                "completion_pct": completion_pct,
-                "faulty_exercise_count": faulty_exercise_count,
-            },
-        },
-    }
+    return _summarize_weekly_review_performance(
+        previous_week_start=previous_week_start,
+        week_start=week_start,
+        previous_plan_payload=previous_plan_payload,
+        performed_logs=performed_logs,
+    )
 
 
 def build_weekly_review_performance_summary(
@@ -630,21 +332,11 @@ def build_weekly_review_performance_summary(
     previous_plan: Any | None,
     performed_logs: list[Any],
 ) -> dict[str, Any]:
-    previous_plan_payload = _coerce_dict(_read_attr(previous_plan, "payload", {}))
-    serialized_logs = [
-        {
-            "primary_exercise_id": _read_attr(row, "primary_exercise_id"),
-            "exercise_id": _read_attr(row, "exercise_id"),
-            "reps": _read_attr(row, "reps"),
-            "weight": _read_attr(row, "weight"),
-        }
-        for row in performed_logs
-    ]
-    return summarize_weekly_review_performance(
+    return _build_weekly_review_performance_summary(
         previous_week_start=previous_week_start,
         week_start=week_start,
-        previous_plan_payload=previous_plan_payload,
-        performed_logs=serialized_logs,
+        previous_plan=previous_plan,
+        performed_logs=performed_logs,
     )
 
 
@@ -656,238 +348,26 @@ def interpret_weekly_review_decision(
     protein: int,
     adherence_score: int,
 ) -> dict[str, Any]:
-    calories_per_kg = float(calories) / max(1.0, body_weight)
-    protein_per_kg = float(protein) / max(1.0, body_weight)
-    global_set_delta = 0
-    global_weight_scale = 1.0
-    readiness_score = 100
-
-    global_set_delta, global_weight_scale, readiness_score, applied_global_rules = _resolve_global_review_adjustments(
-        calories_per_kg=calories_per_kg,
-        protein_per_kg=protein_per_kg,
+    return _interpret_weekly_review_decision(
+        summary=summary,
+        body_weight=body_weight,
+        calories=calories,
+        protein=protein,
         adherence_score=adherence_score,
-        base_set_delta=global_set_delta,
-        base_weight_scale=global_weight_scale,
-        base_readiness=readiness_score,
     )
-
-    exercise_faults = [item for item in summary.get("exercise_faults") or [] if isinstance(item, dict)]
-    weak_point_exercises = [str(row.get("primary_exercise_id") or "") for row in exercise_faults if int(row.get("fault_score", 0) or 0) > 0][:3]
-    overrides: list[dict[str, Any]] = []
-    override_steps: list[dict[str, Any]] = []
-    boosted_exercise_ids: list[str] = []
-    remaining_set_budget = _WEAK_POINT_TOTAL_SET_BUDGET
-
-    for row in exercise_faults:
-        primary_exercise_id = str(row.get("primary_exercise_id") or "")
-        allow_weak_point_boost = (
-            primary_exercise_id in weak_point_exercises
-            and len(boosted_exercise_ids) < _WEAK_POINT_MAX_BOOSTED_EXERCISES
-            and remaining_set_budget > 0
-        )
-        override = _resolve_weekly_review_exercise_override(
-            row,
-            readiness_score=readiness_score,
-            allow_weak_point_boost=allow_weak_point_boost,
-        )
-        if override is not None:
-            overrides.append(override)
-            override_steps.append(
-                {
-                    "exercise_id": primary_exercise_id,
-                    "fault_reasons": list(row.get("fault_reasons") or []),
-                    "override": {
-                        **override,
-                        "rationale_text": _weekly_review_adjustment_rationale(str(override["rationale"])),
-                    },
-                }
-            )
-            if int(override["set_delta"]) > 0:
-                boosted_exercise_ids.append(primary_exercise_id)
-                remaining_set_budget = max(0, remaining_set_budget - int(override["set_delta"]))
-
-    readiness_score = _clamp_int(readiness_score, 1, 100)
-    global_guidance = _resolve_weekly_review_global_guidance(readiness_score, int(summary.get("faulty_exercise_count", 0) or 0))
-    global_guidance_rationale = _weekly_review_global_guidance_rationale(global_guidance)
-    response_adjustments = {
-        "global_set_delta": global_set_delta,
-        "global_weight_scale": round(global_weight_scale, 3),
-        "weak_point_exercises": weak_point_exercises,
-        "exercise_overrides": overrides,
-    }
-    decision_trace = {
-        "interpreter": "interpret_weekly_review_decision",
-        "version": "v1",
-        "inputs": {
-            "body_weight": body_weight,
-            "calories": calories,
-            "protein": protein,
-            "adherence_score": adherence_score,
-            "calories_per_kg": round(calories_per_kg, 3),
-            "protein_per_kg": round(protein_per_kg, 3),
-            "summary_completion_pct": int(summary.get("completion_pct", 0) or 0),
-            "faulty_exercise_count": int(summary.get("faulty_exercise_count", 0) or 0),
-        },
-        "steps": [
-            {
-                "decision": "global_adjustments",
-                "result": {
-                    "global_set_delta": global_set_delta,
-                    "global_weight_scale": round(global_weight_scale, 3),
-                    "readiness_score": readiness_score,
-                    "matched_rules": applied_global_rules,
-                },
-            },
-            {
-                "decision": "weak_point_candidates",
-                "result": {
-                    "weak_point_exercises": weak_point_exercises,
-                    "max_boosted_exercises": _WEAK_POINT_MAX_BOOSTED_EXERCISES,
-                    "remaining_set_budget": remaining_set_budget,
-                },
-            },
-            {"decision": "exercise_overrides", "result": override_steps},
-        ],
-        "outcome": {
-            "readiness_score": readiness_score,
-            "global_guidance": global_guidance,
-            "global_guidance_rationale": global_guidance_rationale,
-            "global_set_delta": response_adjustments["global_set_delta"],
-            "global_weight_scale": response_adjustments["global_weight_scale"],
-            "weak_point_exercises": weak_point_exercises,
-            "boosted_exercise_ids": boosted_exercise_ids,
-        },
-    }
-    storage_adjustments = {
-        "global": {
-            "set_delta": response_adjustments["global_set_delta"],
-            "weight_scale": response_adjustments["global_weight_scale"],
-        },
-        "weak_point_exercises": response_adjustments["weak_point_exercises"],
-        "exercise_overrides": {
-            item["primary_exercise_id"]: {
-                "set_delta": item["set_delta"],
-                "weight_scale": item["weight_scale"],
-                "rationale": item["rationale"],
-            }
-            for item in response_adjustments["exercise_overrides"]
-        },
-        "weak_point_boosted_exercises": boosted_exercise_ids,
-        "weak_point_caps": {
-            "max_boosted_exercises": _WEAK_POINT_MAX_BOOSTED_EXERCISES,
-            "max_set_delta_per_exercise": _WEAK_POINT_SET_DELTA_CAP,
-            "max_total_weak_point_set_delta": _WEAK_POINT_TOTAL_SET_BUDGET,
-            "intensity_min_scale": _WEAK_POINT_INTENSITY_MIN_SCALE,
-            "intensity_max_scale": _WEAK_POINT_INTENSITY_MAX_SCALE,
-        },
-        "decision_trace": decision_trace,
-    }
-    return {
-        "readiness_score": readiness_score,
-        "global_guidance": global_guidance,
-        "adjustments": response_adjustments,
-        "storage_adjustments": storage_adjustments,
-        "decision_trace": decision_trace,
-    }
-
-
-def _resolve_weekly_review_plan_adjustments(
-    adjustments: dict[str, Any],
-) -> tuple[int, float, dict[str, Any], list[str]]:
-    global_adjustments = _coerce_dict(adjustments.get("global"))
-    global_set_delta = _clamp_review_set_delta(int(global_adjustments.get("set_delta", 0) or 0))
-    global_weight_scale = _clamp_review_intensity_scale(
-        _clamp_scale(float(global_adjustments.get("weight_scale", 1.0) or 1.0), 0.8, 1.2)
-    )
-    exercise_overrides = _coerce_dict(adjustments.get("exercise_overrides"))
-    weak_points_raw = adjustments.get("weak_point_exercises")
-    weak_points = [str(item) for item in weak_points_raw] if isinstance(weak_points_raw, list) else []
-    return global_set_delta, global_weight_scale, exercise_overrides, weak_points
-
-
-def _apply_weekly_review_adjustment_to_exercise(
-    exercise: dict[str, Any],
-    *,
-    global_set_delta: int,
-    global_weight_scale: float,
-    exercise_overrides: dict[str, Any],
-) -> None:
-    primary_exercise_id = str(exercise.get("primary_exercise_id") or exercise.get("id") or "")
-    per_exercise = _coerce_dict(exercise_overrides.get(primary_exercise_id))
-    exercise_set_delta = _clamp_review_set_delta(int(per_exercise.get("set_delta", 0) or 0))
-    exercise_weight_scale = _clamp_review_intensity_scale(
-        _clamp_scale(float(per_exercise.get("weight_scale", 1.0) or 1.0), 0.8, 1.2)
-    )
-
-    original_sets = int(exercise.get("sets", 1) or 1)
-    adjusted_sets = original_sets + global_set_delta + exercise_set_delta
-    max_sets = max(1, original_sets + _REVIEW_ADDITIONAL_SET_CAP)
-    exercise["sets"] = max(1, min(max_sets, adjusted_sets))
-
-    original_weight = float(exercise.get("recommended_working_weight", 20) or 20)
-    scaled_weight = original_weight * global_weight_scale * exercise_weight_scale
-    exercise["recommended_working_weight"] = _round_to_increment(scaled_weight)
-
-    rationale = per_exercise.get("rationale")
-    if rationale:
-        exercise["adaptive_rationale"] = str(rationale)
-
-
-def _build_weekly_review_adaptive_review(
-    *,
-    global_set_delta: int,
-    global_weight_scale: float,
-    weak_points: list[str],
-    review_context: dict[str, Any] | None,
-    decision_trace: dict[str, Any] | None,
-) -> dict[str, Any]:
-    adaptive_review = {
-        "global_set_delta": global_set_delta,
-        "global_weight_scale": global_weight_scale,
-        "weak_point_exercises": weak_points,
-    }
-    if isinstance(review_context, dict):
-        week_start = review_context.get("week_start")
-        reviewed_on = review_context.get("reviewed_on")
-        if week_start:
-            adaptive_review["week_start"] = str(week_start)
-        if reviewed_on:
-            adaptive_review["reviewed_on"] = str(reviewed_on)
-    if isinstance(decision_trace, dict):
-        adaptive_review["decision_trace"] = decision_trace
-    return adaptive_review
 
 
 def apply_weekly_review_adjustments_to_plan(
     *,
     plan: dict[str, Any],
-    review_adjustments: dict[str, Any],
+    review_adjustments: dict[str, Any] | None,
     review_context: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    adjustments = review_adjustments if isinstance(review_adjustments, dict) else {}
-    global_set_delta, global_weight_scale, exercise_overrides, weak_points = _resolve_weekly_review_plan_adjustments(
-        adjustments
-    )
-
-    for session in plan.get("sessions") or []:
-        for exercise in session.get("exercises") or []:
-            if not isinstance(exercise, dict):
-                continue
-            _apply_weekly_review_adjustment_to_exercise(
-                exercise,
-                global_set_delta=global_set_delta,
-                global_weight_scale=global_weight_scale,
-                exercise_overrides=exercise_overrides,
-            )
-
-    plan["adaptive_review"] = _build_weekly_review_adaptive_review(
-        global_set_delta=global_set_delta,
-        global_weight_scale=global_weight_scale,
-        weak_points=weak_points,
+    return _apply_weekly_review_adjustments_to_plan(
+        plan_payload=plan,
+        review_adjustments=review_adjustments,
         review_context=review_context,
-        decision_trace=_coerce_dict(adjustments.get("decision_trace")) or None,
     )
-    return plan
 
 
 def _humanize_workout_guidance(guidance: str) -> str:
@@ -1374,6 +854,220 @@ def prepare_workout_log_set_request_runtime(
     }
 
 
+def prepare_workout_exercise_state_runtime(
+    *,
+    existing_state: Any | None,
+    primary_exercise_id: str,
+    planned_exercise: dict[str, Any] | None,
+    planned_weight: float,
+    planned_sets: int,
+    planned_reps_min: int,
+    planned_reps_max: int,
+    completed_set_index: int,
+    completed_reps: int,
+    nutrition_phase: str | None,
+    equipment_profile: list[str] | None,
+    rule_set: dict[str, Any] | None,
+) -> dict[str, Any]:
+    starting_load_runtime: dict[str, Any] | None = None
+    if existing_state is not None:
+        initial_state_values = {
+            "current_working_weight": float(_read_attr(existing_state, "current_working_weight") or planned_weight),
+            "exposure_count": int(_read_attr(existing_state, "exposure_count") or 0),
+            "consecutive_under_target_exposures": int(_read_attr(existing_state, "consecutive_under_target_exposures") or 0),
+            "last_progression_action": str(_read_attr(existing_state, "last_progression_action") or "hold"),
+            "fatigue_score": int(_read_attr(existing_state, "fatigue_score") or 0),
+        }
+    else:
+        starting_load_runtime = resolve_starting_load(
+            planned_exercise=planned_exercise,
+            fallback_weight=planned_weight,
+            rule_set=rule_set,
+        )
+        initial_state_values = {
+            "current_working_weight": float(starting_load_runtime["working_weight"]),
+            "exposure_count": 0,
+            "consecutive_under_target_exposures": 0,
+            "last_progression_action": "hold",
+            "fatigue_score": 0,
+        }
+
+    updated_state = _update_exercise_state_after_workout(
+        exercise_state=_ProgressionExerciseState(
+            exercise_id=primary_exercise_id,
+            current_working_weight=float(initial_state_values["current_working_weight"]),
+            exposure_count=int(initial_state_values["exposure_count"]),
+            consecutive_under_target_exposures=int(initial_state_values["consecutive_under_target_exposures"]),
+            last_progression_action=str(initial_state_values["last_progression_action"]),
+            fatigue_score=int(initial_state_values["fatigue_score"]),
+        ),
+        completed_reps=int(completed_reps),
+        target_rep_range=(int(planned_reps_min), int(planned_reps_max)),
+        completed_sets=int(completed_set_index),
+        planned_sets=max(1, int(planned_sets)),
+        phase_modifier=nutrition_phase or "maintenance",
+        rule_set=rule_set,
+    )
+    state_values = {
+        "current_working_weight": float(updated_state.current_working_weight),
+        "exposure_count": int(updated_state.exposure_count),
+        "consecutive_under_target_exposures": int(updated_state.consecutive_under_target_exposures),
+        "last_progression_action": str(updated_state.last_progression_action),
+        "fatigue_score": int(updated_state.fatigue_score),
+    }
+    substitution_recommendation = build_repeat_failure_substitution_payload(
+        planned_exercise=planned_exercise,
+        exercise_state=updated_state,
+        equipment_profile=equipment_profile,
+        rule_set=rule_set,
+    )
+    return {
+        "initial_state_values": initial_state_values,
+        "state_values": state_values,
+        "starting_load_runtime": deepcopy(starting_load_runtime),
+        "substitution_recommendation": deepcopy(substitution_recommendation),
+        "decision_trace": {
+            "interpreter": "prepare_workout_exercise_state_runtime",
+            "version": "v1",
+            "inputs": {
+                "primary_exercise_id": primary_exercise_id,
+                "planned_reps_min": int(planned_reps_min),
+                "planned_reps_max": int(planned_reps_max),
+                "planned_sets": int(planned_sets),
+                "completed_set_index": int(completed_set_index),
+                "completed_reps": int(completed_reps),
+                "has_existing_state": existing_state is not None,
+                "has_rule_set": isinstance(rule_set, dict),
+            },
+            "outcome": {
+                "current_working_weight": float(updated_state.current_working_weight),
+                "exposure_count": int(updated_state.exposure_count),
+                "consecutive_under_target_exposures": int(updated_state.consecutive_under_target_exposures),
+                "last_progression_action": str(updated_state.last_progression_action),
+                "has_starting_load_runtime": starting_load_runtime is not None,
+                "has_substitution_recommendation": substitution_recommendation is not None,
+            },
+        },
+    }
+
+
+def prepare_workout_log_set_decision_runtime(
+    *,
+    user_id: str,
+    workout_id: str,
+    request_runtime: dict[str, Any],
+    planned_exercise: dict[str, Any] | None,
+    existing_exercise_state: Any | None,
+    nutrition_phase: str | None,
+    equipment_profile: list[str] | None,
+    rule_set: dict[str, Any] | None,
+) -> dict[str, Any]:
+    log_set_plan_context = resolve_workout_log_set_plan_context(
+        planned_exercise=planned_exercise,
+        fallback_weight=float(request_runtime["weight"]),
+    )
+    planned_reps_min = int(log_set_plan_context["planned_reps_min"])
+    planned_reps_max = int(log_set_plan_context["planned_reps_max"])
+    planned_sets = int(log_set_plan_context["planned_sets"])
+    planned_weight = float(log_set_plan_context["planned_weight"])
+    primary_exercise_id = str(request_runtime["primary_exercise_id"])
+    exercise_id = str(request_runtime["exercise_id"])
+    set_index = int(request_runtime["set_index"])
+    reps = int(request_runtime["reps"])
+    weight = float(request_runtime["weight"])
+
+    exercise_state_runtime = prepare_workout_exercise_state_runtime(
+        existing_state=existing_exercise_state,
+        primary_exercise_id=primary_exercise_id,
+        planned_exercise=planned_exercise,
+        planned_weight=planned_weight,
+        planned_sets=planned_sets,
+        planned_reps_min=planned_reps_min,
+        planned_reps_max=planned_reps_max,
+        completed_set_index=set_index,
+        completed_reps=reps,
+        nutrition_phase=nutrition_phase,
+        equipment_profile=equipment_profile,
+        rule_set=rule_set,
+    )
+    next_working_weight = float(_coerce_dict(exercise_state_runtime["state_values"])["current_working_weight"])
+    feedback = interpret_workout_set_feedback(
+        reps=reps,
+        weight=weight,
+        planned_reps_min=planned_reps_min,
+        planned_reps_max=planned_reps_max,
+        planned_weight=planned_weight,
+        next_working_weight=next_working_weight,
+        rule_set=rule_set,
+    )
+    initial_state_values = _coerce_dict(exercise_state_runtime["initial_state_values"])
+    state_values = _coerce_dict(exercise_state_runtime["state_values"])
+    starting_load_runtime = cast(dict[str, Any] | None, exercise_state_runtime["starting_load_runtime"])
+    substitution_recommendation = cast(dict[str, Any] | None, exercise_state_runtime["substitution_recommendation"])
+    return {
+        "record_values": {
+            "user_id": user_id,
+            "workout_id": workout_id,
+            "primary_exercise_id": primary_exercise_id,
+            "exercise_id": exercise_id,
+            "set_index": set_index,
+            "reps": reps,
+            "weight": weight,
+            "rpe": request_runtime.get("rpe"),
+        },
+        "planned_reps_min": planned_reps_min,
+        "planned_reps_max": planned_reps_max,
+        "planned_sets": planned_sets,
+        "planned_weight": planned_weight,
+        "exercise_state_runtime": exercise_state_runtime,
+        "exercise_state_create_values": {
+            "user_id": user_id,
+            "exercise_id": primary_exercise_id,
+            **initial_state_values,
+        },
+        "exercise_state_update_values": state_values,
+        "starting_load_runtime": deepcopy(starting_load_runtime),
+        "substitution_recommendation": deepcopy(substitution_recommendation),
+        "feedback": feedback,
+        "session_state_inputs": {
+            "primary_exercise_id": primary_exercise_id,
+            "exercise_id": exercise_id,
+            "planned_sets": planned_sets,
+            "planned_rep_range": (planned_reps_min, planned_reps_max),
+            "planned_weight": planned_weight,
+            "set_index": set_index,
+            "reps": reps,
+            "weight": weight,
+            "substitution_recommendation": substitution_recommendation,
+            "rule_set": rule_set,
+        },
+        "decision_trace": {
+            "interpreter": "prepare_workout_log_set_decision_runtime",
+            "version": "v1",
+            "inputs": {
+                "user_id": user_id,
+                "workout_id": workout_id,
+                "primary_exercise_id": primary_exercise_id,
+                "exercise_id": exercise_id,
+                "set_index": set_index,
+                "reps": reps,
+                "weight": weight,
+                "has_existing_exercise_state": existing_exercise_state is not None,
+            },
+            "outcome": {
+                "planned_reps_min": planned_reps_min,
+                "planned_reps_max": planned_reps_max,
+                "planned_sets": planned_sets,
+                "planned_weight": planned_weight,
+                "next_working_weight": next_working_weight,
+                "guidance": str(_coerce_dict(feedback).get("guidance") or ""),
+                "has_starting_load_runtime": starting_load_runtime is not None,
+                "has_substitution_recommendation": substitution_recommendation is not None,
+            },
+        },
+    }
+
+
 def resolve_workout_log_set_plan_context(
     *,
     planned_exercise: dict[str, Any] | None,
@@ -1447,6 +1141,69 @@ def prepare_workout_session_state_persistence_payload(
     return {
         "state": deepcopy(_coerce_dict(reduction.get("state"))),
         "live_recommendation": deepcopy(_coerce_dict(reduction.get("live_recommendation"))),
+    }
+
+
+def prepare_workout_session_state_upsert_runtime(
+    *,
+    existing_state: Any | None,
+    primary_exercise_id: str,
+    planned_sets: int,
+    planned_reps_min: int,
+    planned_reps_max: int,
+    planned_weight: float,
+    set_index: int,
+    reps: int,
+    weight: float,
+    substitution_recommendation: dict[str, Any] | None,
+    rule_set: dict[str, Any] | None,
+) -> dict[str, Any]:
+    create_values: dict[str, Any] | None = None
+    if existing_state is None:
+        create_values = build_workout_session_state_defaults(
+            primary_exercise_id=primary_exercise_id,
+            planned_sets=planned_sets,
+            planned_reps_min=planned_reps_min,
+            planned_reps_max=planned_reps_max,
+            planned_weight=planned_weight,
+        )
+
+    reduction = prepare_workout_session_state_persistence_payload(
+        existing_state=existing_state,
+        primary_exercise_id=primary_exercise_id,
+        planned_sets=planned_sets,
+        planned_reps_min=planned_reps_min,
+        planned_reps_max=planned_reps_max,
+        planned_weight=planned_weight,
+        set_index=set_index,
+        reps=reps,
+        weight=weight,
+        substitution_recommendation=substitution_recommendation,
+        rule_set=rule_set,
+    )
+    update_values = _coerce_dict(reduction.get("state"))
+    live_recommendation = _coerce_dict(reduction.get("live_recommendation"))
+    return {
+        "create_values": deepcopy(create_values),
+        "update_values": update_values,
+        "live_recommendation": live_recommendation,
+        "decision_trace": {
+            "interpreter": "prepare_workout_session_state_upsert_runtime",
+            "version": "v1",
+            "inputs": {
+                "has_existing_state": existing_state is not None,
+                "primary_exercise_id": primary_exercise_id,
+                "planned_sets": planned_sets,
+                "planned_reps_min": planned_reps_min,
+                "planned_reps_max": planned_reps_max,
+            },
+            "outcome": {
+                "created_state_defaults": create_values is not None,
+                "completed_sets": int(update_values.get("completed_sets") or 0),
+                "remaining_sets": int(update_values.get("remaining_sets") or 0),
+                "guidance": str(live_recommendation.get("guidance") or ""),
+            },
+        },
     }
 
 
@@ -1846,20 +1603,13 @@ def build_weekly_review_decision_payload(
     protein: int,
     adherence_score: int,
 ) -> dict[str, Any]:
-    decision = interpret_weekly_review_decision(
+    return _build_weekly_review_decision_payload(
         summary=summary,
         body_weight=body_weight,
         calories=calories,
         protein=protein,
         adherence_score=adherence_score,
     )
-    return {
-        "readiness_score": int(decision.get("readiness_score") or 0),
-        "global_guidance": str(decision.get("global_guidance") or ""),
-        "adjustments": deepcopy(_coerce_dict(decision.get("adjustments"))),
-        "storage_adjustments": deepcopy(_coerce_dict(decision.get("storage_adjustments"))),
-        "decision_trace": deepcopy(_coerce_dict(decision.get("decision_trace"))),
-    }
 
 
 def build_weekly_review_submit_payload(
@@ -2602,6 +2352,21 @@ def interpret_frequency_adaptation_apply(
 
 def build_frequency_adaptation_apply_payload(decision: dict[str, Any]) -> dict[str, Any]:
     return _build_frequency_adaptation_apply_payload(decision)
+
+
+def prepare_frequency_adaptation_route_runtime(
+    *,
+    adaptation_runtime: dict[str, Any],
+    onboarding_package: dict[str, Any],
+    decision_kind: str,
+    applied_at: str | None = None,
+) -> dict[str, Any]:
+    return _prepare_frequency_adaptation_route_runtime(
+        adaptation_runtime=adaptation_runtime,
+        onboarding_package=onboarding_package,
+        decision_kind=decision_kind,
+        applied_at=applied_at,
+    )
 
 
 def resolve_active_frequency_adaptation_runtime(
@@ -3376,6 +3141,55 @@ def prepare_profile_program_recommendation_inputs(
     }
 
 
+def prepare_profile_program_recommendation_route_runtime(
+    *,
+    selected_program_id: str | None,
+    days_available: int | None,
+    split_preference: str | None,
+    latest_plan: Any | None,
+    available_program_summaries: list[dict[str, Any]],
+    latest_adherence_score: int | None,
+    user_training_state: dict[str, Any] | None = None,
+    generated_at: datetime | None = None,
+) -> dict[str, Any]:
+    recommendation_inputs = prepare_profile_program_recommendation_inputs(
+        selected_program_id=selected_program_id,
+        days_available=days_available,
+        split_preference=split_preference,
+        latest_plan=latest_plan,
+    )
+    recommendation_runtime = prepare_program_recommendation_runtime(
+        current_program_id=cast(str, recommendation_inputs["current_program_id"]),
+        available_program_summaries=available_program_summaries,
+        days_available=cast(int, recommendation_inputs["days_available"]),
+        split_preference=cast(str, recommendation_inputs["split_preference"]),
+        latest_adherence_score=latest_adherence_score,
+        latest_plan_payload=cast(dict[str, Any], recommendation_inputs["latest_plan_payload"]),
+        user_training_state=user_training_state,
+        generated_at=generated_at,
+    )
+    decision = _coerce_dict(recommendation_runtime.get("decision"))
+    return {
+        "recommendation_inputs": recommendation_inputs,
+        "recommendation_runtime": recommendation_runtime,
+        "decision_trace": {
+            "interpreter": "prepare_profile_program_recommendation_route_runtime",
+            "version": "v1",
+            "inputs": {
+                "selected_program_id": selected_program_id,
+                "days_available": days_available,
+                "split_preference": split_preference,
+                "generated_at_provided": generated_at is not None,
+            },
+            "outcome": {
+                "current_program_id": recommendation_inputs["current_program_id"],
+                "compatible_program_count": len(recommendation_runtime.get("compatible_program_ids") or []),
+                "recommended_program_id": str(decision.get("recommended_program_id") or ""),
+            },
+        },
+    }
+
+
 def build_program_switch_payload(
     *,
     current_program_id: str,
@@ -3445,6 +3259,19 @@ def prepare_program_switch_runtime(
     }
 
 
+# Stable compatibility surface while program recommendation ownership moves into
+# the dedicated decision-family module.
+humanize_program_reason = _humanize_program_reason
+resolve_program_recommendation_candidates = _resolve_program_recommendation_candidates
+recommend_program_selection = _recommend_program_selection
+build_program_recommendation_payload = _build_program_recommendation_payload
+prepare_program_recommendation_runtime = _prepare_program_recommendation_runtime
+prepare_profile_program_recommendation_inputs = _prepare_profile_program_recommendation_inputs
+prepare_profile_program_recommendation_route_runtime = _prepare_profile_program_recommendation_route_runtime
+build_program_switch_payload = _build_program_switch_payload
+prepare_program_switch_runtime = _prepare_program_switch_runtime
+
+
 def humanize_progression_reason(
     progression: dict[str, Any],
     *,
@@ -3500,37 +3327,16 @@ def humanize_specialization_reason(specialization: dict[str, Any]) -> str:
 
 
 def resolve_coaching_recommendation_rationale(recommendation_payload: dict[str, Any]) -> str:
-    phase_transition = _coerce_dict(recommendation_payload.get("phase_transition"))
-    progression = _coerce_dict(recommendation_payload.get("progression"))
-    specialization = _coerce_dict(recommendation_payload.get("specialization"))
-
-    for candidate in (
-        phase_transition.get("rationale"),
-        progression.get("rationale"),
-    ):
-        text = str(candidate or "").strip()
-        if text:
-            return text
-
-    if str(phase_transition.get("reason") or "").strip():
-        return humanize_phase_transition_reason(phase_transition)
-
-    if str(progression.get("reason") or "").strip():
-        return humanize_progression_reason(progression)
-
-    specialization_rationale = humanize_specialization_reason(specialization)
-    if specialization_rationale:
-        return specialization_rationale
-
-    return "No rationale recorded"
+    return _resolve_coaching_recommendation_rationale(
+        recommendation_payload,
+        humanize_phase_transition_reason=humanize_phase_transition_reason,
+        humanize_progression_reason=humanize_progression_reason,
+        humanize_specialization_reason=humanize_specialization_reason,
+    )
 
 
 def extract_coaching_recommendation_focus_muscles(recommendation_payload: dict[str, Any]) -> list[str]:
-    specialization = _coerce_dict(recommendation_payload.get("specialization"))
-    raw_focus = specialization.get("focus_muscles")
-    if not isinstance(raw_focus, list):
-        return []
-    return [str(item) for item in raw_focus if str(item).strip()]
+    return _extract_coaching_recommendation_focus_muscles(recommendation_payload)
 
 
 def build_coaching_recommendation_timeline_entry(
@@ -3546,43 +3352,34 @@ def build_coaching_recommendation_timeline_entry(
     created_at: datetime,
     applied_at: datetime | None,
 ) -> dict[str, Any]:
-    payload = _coerce_dict(recommendation_payload)
-    return {
-        "recommendation_id": recommendation_id,
-        "recommendation_type": recommendation_type,
-        "status": status,
-        "template_id": template_id,
-        "current_phase": current_phase,
-        "recommended_phase": recommended_phase,
-        "progression_action": progression_action,
-        "rationale": resolve_coaching_recommendation_rationale(payload),
-        "focus_muscles": extract_coaching_recommendation_focus_muscles(payload),
-        "created_at": created_at,
-        "applied_at": applied_at,
-    }
+    return _build_coaching_recommendation_timeline_entry(
+        recommendation_id=recommendation_id,
+        recommendation_type=recommendation_type,
+        status=status,
+        template_id=template_id,
+        current_phase=current_phase,
+        recommended_phase=recommended_phase,
+        progression_action=progression_action,
+        recommendation_payload=recommendation_payload,
+        created_at=created_at,
+        applied_at=applied_at,
+        humanize_phase_transition_reason=humanize_phase_transition_reason,
+        humanize_progression_reason=humanize_progression_reason,
+        humanize_specialization_reason=humanize_specialization_reason,
+    )
 
 
 def normalize_coaching_recommendation_timeline_limit(limit: int) -> int:
-    return max(1, min(100, int(limit)))
+    return _normalize_coaching_recommendation_timeline_limit(limit)
 
 
 def build_coaching_recommendation_timeline_payload(rows: list[Any]) -> dict[str, Any]:
-    entries = [
-        build_coaching_recommendation_timeline_entry(
-            recommendation_id=str(_read_attr(row, "id", "") or ""),
-            recommendation_type=str(_read_attr(row, "recommendation_type", "") or ""),
-            status=str(_read_attr(row, "status", "") or ""),
-            template_id=str(_read_attr(row, "template_id", "") or ""),
-            current_phase=str(_read_attr(row, "current_phase", "") or ""),
-            recommended_phase=str(_read_attr(row, "recommended_phase", "") or ""),
-            progression_action=str(_read_attr(row, "progression_action", "") or ""),
-            recommendation_payload=_coerce_dict(_read_attr(row, "recommendation_payload", {})),
-            created_at=cast(datetime, _read_attr(row, "created_at")),
-            applied_at=cast(datetime | None, _read_attr(row, "applied_at")),
-        )
-        for row in rows
-    ]
-    return {"entries": entries}
+    return _build_coaching_recommendation_timeline_payload(
+        rows,
+        humanize_phase_transition_reason=humanize_phase_transition_reason,
+        humanize_progression_reason=humanize_progression_reason,
+        humanize_specialization_reason=humanize_specialization_reason,
+    )
 
 
 def build_phase_applied_recommendation_record(
@@ -3593,18 +3390,13 @@ def build_phase_applied_recommendation_record(
     source_recommendation_id: str,
     next_phase: str,
 ) -> dict[str, Any]:
-    return {
-        "template_id": template_id,
-        "recommendation_type": "phase_decision",
-        "current_phase": current_phase,
-        "recommended_phase": next_phase,
-        "progression_action": progression_action,
-        "request_payload": {
-            "source_recommendation_id": source_recommendation_id,
-            "confirm": True,
-        },
-        "status": "applied",
-    }
+    return _build_phase_applied_recommendation_record(
+        template_id=template_id,
+        current_phase=current_phase,
+        progression_action=progression_action,
+        source_recommendation_id=source_recommendation_id,
+        next_phase=next_phase,
+    )
 
 
 def build_specialization_applied_recommendation_record(
@@ -3615,42 +3407,32 @@ def build_specialization_applied_recommendation_record(
     progression_action: str,
     source_recommendation_id: str,
 ) -> dict[str, Any]:
-    return {
-        "template_id": template_id,
-        "recommendation_type": "specialization_decision",
-        "current_phase": current_phase,
-        "recommended_phase": recommended_phase,
-        "progression_action": progression_action,
-        "request_payload": {
-            "source_recommendation_id": source_recommendation_id,
-            "confirm": True,
-        },
-        "status": "applied",
-    }
+    return _build_specialization_applied_recommendation_record(
+        template_id=template_id,
+        current_phase=current_phase,
+        recommended_phase=recommended_phase,
+        progression_action=progression_action,
+        source_recommendation_id=source_recommendation_id,
+    )
 
 
 def prepare_coaching_apply_runtime_source(source_recommendation: Any) -> dict[str, Any]:
-    recommendation_payload_raw = _read_attr(source_recommendation, "recommendation_payload", {})
-    recommendation_payload = _coerce_dict(recommendation_payload_raw)
-    return {
-        "recommendation_id": str(_read_attr(source_recommendation, "id", "") or ""),
-        "recommendation_payload": recommendation_payload,
-        "template_id": str(_read_attr(source_recommendation, "template_id", "") or ""),
-        "current_phase": str(_read_attr(source_recommendation, "current_phase", "") or ""),
-        "recommended_phase": str(_read_attr(source_recommendation, "recommended_phase", "") or ""),
-        "progression_action": str(_read_attr(source_recommendation, "progression_action", "") or ""),
-        "decision_trace": {
-            "interpreter": "prepare_coaching_apply_runtime_source",
-            "version": "v1",
-            "inputs": {
-                "has_recommendation_payload_dict": isinstance(recommendation_payload_raw, dict),
-            },
-            "outcome": {
-                "recommendation_id": str(_read_attr(source_recommendation, "id", "") or ""),
-                "template_id": str(_read_attr(source_recommendation, "template_id", "") or ""),
-            },
-        },
-    }
+    return _prepare_coaching_apply_runtime_source(source_recommendation)
+
+
+def prepare_coaching_apply_decision_runtime(
+    *,
+    decision_kind: str,
+    source_runtime: dict[str, Any],
+    confirm: bool,
+) -> dict[str, Any]:
+    return _prepare_coaching_apply_decision_runtime(
+        decision_kind=decision_kind,
+        source_runtime=source_runtime,
+        confirm=confirm,
+        prepare_phase_runtime=prepare_phase_apply_runtime,
+        prepare_specialization_runtime=prepare_specialization_apply_runtime,
+    )
 
 
 def prepare_phase_apply_runtime(
@@ -3663,33 +3445,17 @@ def prepare_phase_apply_runtime(
     current_phase: str,
     progression_action: str,
 ) -> dict[str, Any]:
-    phase_transition = recommendation_payload.get("phase_transition")
-    if not isinstance(phase_transition, dict):
-        raise ValueError("Recommendation is missing phase transition details")
-
-    normalized_phase_transition = dict(phase_transition)
-    if "next_phase" not in normalized_phase_transition and fallback_next_phase:
-        normalized_phase_transition["next_phase"] = str(fallback_next_phase)
-
-    decision_payload = interpret_coach_phase_apply_decision(
+    return _prepare_phase_apply_runtime(
         recommendation_id=recommendation_id,
-        phase_transition=normalized_phase_transition,
+        recommendation_payload=recommendation_payload,
+        fallback_next_phase=fallback_next_phase,
         confirm=confirm,
+        template_id=template_id,
+        current_phase=current_phase,
+        progression_action=progression_action,
+        interpret_phase_apply_decision=interpret_coach_phase_apply_decision,
+        build_phase_applied_record=build_phase_applied_recommendation_record,
     )
-
-    runtime_payload: dict[str, Any] = {
-        "payload_value": normalized_phase_transition,
-        "decision_payload": decision_payload,
-    }
-    if confirm:
-        runtime_payload["record_fields"] = build_phase_applied_recommendation_record(
-            template_id=template_id,
-            current_phase=current_phase,
-            progression_action=progression_action,
-            source_recommendation_id=recommendation_id,
-            next_phase=cast(str, decision_payload["next_phase"]),
-        )
-    return runtime_payload
 
 
 def prepare_specialization_apply_runtime(
@@ -3702,30 +3468,17 @@ def prepare_specialization_apply_runtime(
     recommended_phase: str,
     progression_action: str,
 ) -> dict[str, Any]:
-    specialization = recommendation_payload.get("specialization")
-    if not isinstance(specialization, dict):
-        raise ValueError("Recommendation is missing specialization details")
-
-    normalized_specialization = dict(specialization)
-    decision_payload = interpret_coach_specialization_apply_decision(
+    return _prepare_specialization_apply_runtime(
         recommendation_id=recommendation_id,
-        specialization=normalized_specialization,
+        recommendation_payload=recommendation_payload,
         confirm=confirm,
+        template_id=template_id,
+        current_phase=current_phase,
+        recommended_phase=recommended_phase,
+        progression_action=progression_action,
+        interpret_specialization_apply_decision=interpret_coach_specialization_apply_decision,
+        build_specialization_applied_record=build_specialization_applied_recommendation_record,
     )
-
-    runtime_payload: dict[str, Any] = {
-        "payload_value": normalized_specialization,
-        "decision_payload": decision_payload,
-    }
-    if confirm:
-        runtime_payload["record_fields"] = build_specialization_applied_recommendation_record(
-            template_id=template_id,
-            current_phase=current_phase,
-            recommended_phase=recommended_phase,
-            progression_action=progression_action,
-            source_recommendation_id=recommendation_id,
-        )
-    return runtime_payload
 
 
 def finalize_applied_coaching_recommendation(
@@ -3735,26 +3488,115 @@ def finalize_applied_coaching_recommendation(
     decision_payload: dict[str, Any],
     applied_recommendation_id: str,
 ) -> dict[str, Any]:
-    decision_trace = _coerce_dict(decision_payload.get("decision_trace"))
-    outcome = _coerce_dict(decision_trace.get("outcome"))
-    finalized_trace = {
-        **decision_trace,
-        "outcome": {
-            **outcome,
-            "applied_recommendation_id": applied_recommendation_id,
-        },
-    }
-    return {
-        "recommendation_payload": {
-            payload_key: dict(payload_value),
-            "decision_trace": finalized_trace,
-        },
-        "response_payload": {
-            **decision_payload,
-            "applied_recommendation_id": applied_recommendation_id,
-            "decision_trace": finalized_trace,
-        },
-    }
+    return _finalize_applied_coaching_recommendation(
+        payload_key=payload_key,
+        payload_value=payload_value,
+        decision_payload=decision_payload,
+        applied_recommendation_id=applied_recommendation_id,
+    )
+
+
+def build_applied_coaching_recommendation_response(
+    *,
+    payload_key: str,
+    payload_value: dict[str, Any],
+    decision_payload: dict[str, Any],
+    applied_recommendation_id: str,
+) -> dict[str, Any]:
+    return _build_applied_coaching_recommendation_response(
+        payload_key=payload_key,
+        payload_value=payload_value,
+        decision_payload=decision_payload,
+        applied_recommendation_id=applied_recommendation_id,
+    )
+
+
+def build_applied_coaching_recommendation_record_values(
+    *,
+    user_id: str,
+    applied_at: Any,
+    record_fields: dict[str, Any],
+) -> dict[str, Any]:
+    return _build_applied_coaching_recommendation_record_values(
+        user_id=user_id,
+        applied_at=applied_at,
+        record_fields=record_fields,
+    )
+
+
+def prepare_applied_coaching_recommendation_commit_runtime(
+    *,
+    user_id: str,
+    applied_at: Any,
+    record_fields: dict[str, Any],
+    payload_key: str,
+    payload_value: dict[str, Any],
+    decision_payload: dict[str, Any],
+) -> dict[str, Any]:
+    return _prepare_applied_coaching_recommendation_commit_runtime(
+        user_id=user_id,
+        applied_at=applied_at,
+        record_fields=record_fields,
+        payload_key=payload_key,
+        payload_value=payload_value,
+        decision_payload=decision_payload,
+    )
+
+
+def prepare_coaching_apply_commit_runtime(
+    *,
+    decision_kind: str,
+    user_id: str,
+    applied_at: Any,
+    apply_runtime: dict[str, Any],
+) -> dict[str, Any]:
+    return _prepare_coaching_apply_commit_runtime(
+        decision_kind=decision_kind,
+        user_id=user_id,
+        applied_at=applied_at,
+        apply_runtime=apply_runtime,
+    )
+
+
+def prepare_coaching_apply_route_runtime(
+    *,
+    decision_kind: str,
+    source_runtime: dict[str, Any],
+    confirm: bool,
+    user_id: str,
+    applied_at: Any,
+) -> dict[str, Any]:
+    return _prepare_coaching_apply_route_runtime(
+        decision_kind=decision_kind,
+        source_runtime=source_runtime,
+        confirm=confirm,
+        user_id=user_id,
+        applied_at=applied_at,
+        prepare_apply_decision_runtime=prepare_coaching_apply_decision_runtime,
+        prepare_apply_commit_runtime=prepare_coaching_apply_commit_runtime,
+    )
+
+
+def finalize_applied_coaching_recommendation_commit_runtime(
+    *,
+    prepared_runtime: dict[str, Any],
+    applied_recommendation_id: str,
+) -> dict[str, Any]:
+    return _finalize_applied_coaching_recommendation_commit_runtime(
+        prepared_runtime=prepared_runtime,
+        applied_recommendation_id=applied_recommendation_id,
+    )
+
+
+def prepare_coaching_apply_route_finalize_runtime(
+    *,
+    route_runtime: dict[str, Any],
+    applied_recommendation_id: str | None = None,
+) -> dict[str, Any]:
+    return _prepare_coaching_apply_route_finalize_runtime(
+        route_runtime=route_runtime,
+        applied_recommendation_id=applied_recommendation_id,
+    )
 
 
 def derive_readiness_score(
@@ -3782,122 +3624,6 @@ def derive_readiness_score(
     return max(0, min(100, readiness))
 
 
-def _coach_preview_schedule_payload(schedule: dict[str, Any], *, from_days: int, to_days: int) -> dict[str, Any]:
-    return {
-        "from_days": int(schedule.get("from_days") or from_days),
-        "to_days": int(schedule.get("to_days") or to_days),
-        "kept_sessions": [str(item) for item in schedule.get("kept_sessions") or []],
-        "dropped_sessions": [str(item) for item in schedule.get("dropped_sessions") or []],
-        "added_sessions": [str(item) for item in schedule.get("added_sessions") or []],
-        "risk_level": str(schedule.get("risk_level") or "low"),
-        "muscle_set_delta": {str(key): int(value) for key, value in (schedule.get("muscle_set_delta") or {}).items()},
-        "tradeoffs": [str(item) for item in schedule.get("tradeoffs") or []],
-    }
-
-
-def _coach_preview_effective_readiness_score(
-    preview_request: dict[str, Any],
-    progression_payload: dict[str, Any],
-) -> int:
-    provided = preview_request.get("readiness_score")
-    if provided is not None:
-        return int(provided)
-    return derive_readiness_score(
-        completion_pct=int(preview_request.get("completion_pct") or 0),
-        adherence_score=int(preview_request.get("adherence_score") or 1),
-        soreness_level=str(preview_request.get("soreness_level") or "none"),
-        progression_action=str(progression_payload.get("action") or "hold"),
-    )
-
-
-def _coach_preview_progression_payload(
-    preview_request: dict[str, Any],
-    *,
-    rule_set: dict[str, Any] | None,
-) -> dict[str, Any]:
-    progression = recommend_progression_action(
-        completion_pct=int(preview_request.get("completion_pct") or 0),
-        adherence_score=int(preview_request.get("adherence_score") or 1),
-        soreness_level=str(preview_request.get("soreness_level") or "none"),
-        average_rpe=cast(float | None, preview_request.get("average_rpe")),
-        consecutive_underperformance_weeks=int(preview_request.get("stagnation_weeks") or 0),
-        rule_set=rule_set,
-    )
-    return {
-        **progression,
-        "rationale": humanize_progression_reason(progression, rule_set=rule_set),
-    }
-
-
-def _coach_preview_trace(
-    *,
-    template_id: str,
-    split_preference: str,
-    phase: str,
-    preview_request: dict[str, Any],
-    schedule_payload: dict[str, Any],
-    progression_payload: dict[str, Any],
-    effective_readiness_score: int,
-    phase_transition_payload: dict[str, Any],
-    specialization: dict[str, Any],
-    media_warmups: dict[str, Any],
-    request_runtime_trace: dict[str, Any] | None = None,
-    template_runtime_trace: dict[str, Any] | None = None,
-) -> dict[str, Any]:
-    return {
-        "interpreter": "recommend_coach_intelligence_preview",
-        "version": "v1",
-        "inputs": {
-            "template_id": template_id,
-            "split_preference": split_preference,
-            "phase": phase,
-            "from_days": int(preview_request.get("from_days") or 0),
-            "to_days": int(preview_request.get("to_days") or 0),
-            "completion_pct": int(preview_request.get("completion_pct") or 0),
-            "adherence_score": int(preview_request.get("adherence_score") or 1),
-            "soreness_level": str(preview_request.get("soreness_level") or "none"),
-            "average_rpe": preview_request.get("average_rpe"),
-            "current_phase": str(preview_request.get("current_phase") or "accumulation"),
-            "weeks_in_phase": int(preview_request.get("weeks_in_phase") or 1),
-            "stagnation_weeks": int(preview_request.get("stagnation_weeks") or 0),
-            "readiness_score_provided": preview_request.get("readiness_score"),
-            "lagging_muscles": [str(item) for item in preview_request.get("lagging_muscles") or []],
-            "target_min_sets": int(preview_request.get("target_min_sets") or 8),
-        },
-        "steps": [
-            {"decision": "schedule_adaptation", "result": schedule_payload},
-            {"decision": "progression", "result": progression_payload},
-            {
-                "decision": "readiness_score",
-                "result": {
-                    "provided": preview_request.get("readiness_score") is not None,
-                    "value": effective_readiness_score,
-                },
-            },
-            {"decision": "phase_transition", "result": phase_transition_payload},
-            {"decision": "specialization", "result": specialization},
-            {
-                "decision": "media_warmups",
-                "result": {
-                    "total_exercises": int(media_warmups.get("total_exercises") or 0),
-                    "video_linked_exercises": int(media_warmups.get("video_linked_exercises") or 0),
-                    "video_coverage_pct": float(media_warmups.get("video_coverage_pct") or 0.0),
-                    "sample_warmup_count": len(media_warmups.get("sample_warmups") or []),
-                },
-            },
-        ],
-        "outputs": {
-            "template_id": template_id,
-            "progression_action": progression_payload["action"],
-            "next_phase": phase_transition_payload["next_phase"],
-            "focus_muscles": specialization.get("focus_muscles") or [],
-            "risk_level": schedule_payload["risk_level"],
-        },
-        "request_runtime_trace": deepcopy(_coerce_dict(request_runtime_trace)),
-        "template_runtime_trace": deepcopy(_coerce_dict(template_runtime_trace)),
-    }
-
-
 def recommend_coach_intelligence_preview(
     *,
     template_id: str,
@@ -3907,70 +3633,22 @@ def recommend_coach_intelligence_preview(
     request_runtime_trace: dict[str, Any] | None = None,
     template_runtime_trace: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    split_preference = str(context.get("split_preference") or "full_body")
-    program_template = _coerce_dict(context.get("program_template"))
-    phase = str(context.get("phase") or "maintenance")
-    from_days = int(preview_request.get("from_days") or 2)
-    to_days = int(preview_request.get("to_days") or 2)
-
-    schedule = evaluate_schedule_adaptation(
-        user_profile=_coerce_dict(context.get("user_profile")),
-        split_preference=split_preference,
-        program_template=program_template,
-        history=list(preview_request.get("history") or context.get("history") or []),
-        phase=phase,
-        from_days=from_days,
-        to_days=to_days,
-        available_equipment=context.get("available_equipment"),
-    )
-    schedule_payload = _coach_preview_schedule_payload(schedule, from_days=from_days, to_days=to_days)
-
-    progression_payload = _coach_preview_progression_payload(preview_request, rule_set=rule_set)
-
-    effective_readiness_score = _coach_preview_effective_readiness_score(preview_request, progression_payload)
-
-    phase_transition = recommend_phase_transition(
-        current_phase=cast(ProgramPhase, str(preview_request.get("current_phase") or "accumulation")),
-        weeks_in_phase=int(preview_request.get("weeks_in_phase") or 1),
-        readiness_score=effective_readiness_score,
-        progression_action=cast(ProgressionAction, str(progression_payload.get("action") or "hold")),
-        stagnation_weeks=int(preview_request.get("stagnation_weeks") or 0),
+    return _recommend_coach_intelligence_preview(
+        template_id=template_id,
+        context=context,
+        preview_request=preview_request,
         rule_set=rule_set,
+        request_runtime_trace=request_runtime_trace,
+        template_runtime_trace=template_runtime_trace,
+        evaluate_schedule_adaptation=evaluate_schedule_adaptation,
+        recommend_progression_action=recommend_progression_action,
+        humanize_progression_reason=humanize_progression_reason,
+        derive_readiness_score=derive_readiness_score,
+        recommend_phase_transition=recommend_phase_transition,
+        humanize_phase_transition_reason=humanize_phase_transition_reason,
+        recommend_specialization_adjustments=recommend_specialization_adjustments,
+        summarize_program_media_and_warmups=summarize_program_media_and_warmups,
     )
-    phase_transition_payload = {
-        **phase_transition,
-        "rationale": humanize_phase_transition_reason(phase_transition),
-    }
-
-    specialization = recommend_specialization_adjustments(
-        weekly_volume_by_muscle=(schedule.get("to_plan") or {}).get("weekly_volume_by_muscle", {}),
-        lagging_muscles=[str(item) for item in preview_request.get("lagging_muscles") or []],
-        target_min_sets=int(preview_request.get("target_min_sets") or 8),
-    )
-    media_warmups = summarize_program_media_and_warmups(program_template)
-
-    return {
-        "template_id": template_id,
-        "schedule": schedule_payload,
-        "progression": progression_payload,
-        "phase_transition": phase_transition_payload,
-        "specialization": specialization,
-        "media_warmups": media_warmups,
-        "decision_trace": _coach_preview_trace(
-            template_id=template_id,
-            split_preference=split_preference,
-            phase=phase,
-            preview_request=preview_request,
-            schedule_payload=schedule_payload,
-            progression_payload=progression_payload,
-            effective_readiness_score=effective_readiness_score,
-            phase_transition_payload=phase_transition_payload,
-            specialization=specialization,
-            media_warmups=media_warmups,
-            request_runtime_trace=request_runtime_trace,
-            template_runtime_trace=template_runtime_trace,
-        ),
-    }
 
 
 def build_coach_preview_payloads(
@@ -3979,15 +3657,11 @@ def build_coach_preview_payloads(
     preview_payload: dict[str, Any],
     program_name: str,
 ) -> dict[str, dict[str, Any]]:
-    response_payload = {
-        **deepcopy(preview_payload),
-        "recommendation_id": recommendation_id,
-        "program_name": program_name,
-    }
-    return {
-        "response_payload": deepcopy(response_payload),
-        "recommendation_payload": deepcopy(response_payload),
-    }
+    return _build_coach_preview_payloads(
+        recommendation_id=recommendation_id,
+        preview_payload=preview_payload,
+        program_name=program_name,
+    )
 
 
 def build_coach_preview_recommendation_record_fields(
@@ -3996,16 +3670,39 @@ def build_coach_preview_recommendation_record_fields(
     preview_request: dict[str, Any],
     preview_payload: dict[str, Any],
 ) -> dict[str, Any]:
-    return {
-        "template_id": template_id,
-        "recommendation_type": "coach_preview",
-        "current_phase": str(preview_request.get("current_phase") or ""),
-        "recommended_phase": str(_coerce_dict(preview_payload.get("phase_transition")).get("next_phase") or ""),
-        "progression_action": str(_coerce_dict(preview_payload.get("progression")).get("action") or ""),
-        "request_payload": deepcopy(preview_request),
-        "recommendation_payload": {},
-        "status": "previewed",
-    }
+    return _build_coach_preview_recommendation_record_fields(
+        template_id=template_id,
+        preview_request=preview_request,
+        preview_payload=preview_payload,
+    )
+
+
+def prepare_coach_preview_commit_runtime(
+    *,
+    user_id: str,
+    template_id: str,
+    preview_request: dict[str, Any],
+    preview_payload: dict[str, Any],
+    program_name: str,
+) -> dict[str, Any]:
+    return _prepare_coach_preview_commit_runtime(
+        user_id=user_id,
+        template_id=template_id,
+        preview_request=preview_request,
+        preview_payload=preview_payload,
+        program_name=program_name,
+    )
+
+
+def finalize_coach_preview_commit_runtime(
+    *,
+    prepared_runtime: dict[str, Any],
+    recommendation_id: str,
+) -> dict[str, Any]:
+    return _finalize_coach_preview_commit_runtime(
+        prepared_runtime=prepared_runtime,
+        recommendation_id=recommendation_id,
+    )
 
 
 def interpret_coach_phase_apply_decision(
@@ -4014,47 +3711,12 @@ def interpret_coach_phase_apply_decision(
     phase_transition: dict[str, Any],
     confirm: bool,
 ) -> dict[str, Any]:
-    next_phase_raw = str(phase_transition.get("next_phase") or "").strip()
-    allowed_phases = {"accumulation", "intensification", "deload"}
-    if next_phase_raw not in allowed_phases:
-        raise ValueError("Recommendation has unsupported next phase")
-    next_phase = cast(ProgramPhase, next_phase_raw)
-
-    reason = str(phase_transition.get("reason") or "phase_apply")
-    rationale = str(phase_transition.get("rationale") or humanize_phase_transition_reason({"reason": reason}))
-    status = "applied" if confirm else "confirmation_required"
-    applied = bool(confirm)
-
-    return {
-        "status": status,
-        "recommendation_id": recommendation_id,
-        "requires_confirmation": not confirm,
-        "applied": applied,
-        "next_phase": next_phase,
-        "reason": reason,
-        "rationale": rationale,
-        "decision_trace": {
-            "interpreter": "interpret_coach_phase_apply_decision",
-            "version": "v1",
-            "inputs": {
-                "recommendation_id": recommendation_id,
-                "confirm": confirm,
-                "next_phase": next_phase,
-                "reason": reason,
-            },
-            "steps": [
-                _decision_step("phase_transition_present", True, {"next_phase": next_phase}),
-                _decision_step("confirmation_received", confirm),
-            ],
-            "outcome": {
-                "status": status,
-                "applied": applied,
-                "next_phase": next_phase,
-                "reason": reason,
-                "rationale": rationale,
-            },
-        },
-    }
+    return _interpret_coach_phase_apply_decision(
+        recommendation_id=recommendation_id,
+        phase_transition=phase_transition,
+        confirm=confirm,
+        humanize_phase_transition_reason=humanize_phase_transition_reason,
+    )
 
 
 def interpret_coach_specialization_apply_decision(
@@ -4063,45 +3725,11 @@ def interpret_coach_specialization_apply_decision(
     specialization: dict[str, Any],
     confirm: bool,
 ) -> dict[str, Any]:
-    focus_muscles = [str(item) for item in specialization.get("focus_muscles") or []]
-    focus_adjustments = {str(key): int(value) for key, value in (specialization.get("focus_adjustments") or {}).items()}
-    donor_adjustments = {str(key): int(value) for key, value in (specialization.get("donor_adjustments") or {}).items()}
-    uncompensated_added_sets = int(specialization.get("uncompensated_added_sets") or 0)
-
-    status = "applied" if confirm else "confirmation_required"
-    applied = bool(confirm)
-
-    return {
-        "status": status,
-        "recommendation_id": recommendation_id,
-        "requires_confirmation": not confirm,
-        "applied": applied,
-        "focus_muscles": focus_muscles,
-        "focus_adjustments": focus_adjustments,
-        "donor_adjustments": donor_adjustments,
-        "uncompensated_added_sets": uncompensated_added_sets,
-        "decision_trace": {
-            "interpreter": "interpret_coach_specialization_apply_decision",
-            "version": "v1",
-            "inputs": {
-                "recommendation_id": recommendation_id,
-                "confirm": confirm,
-                "focus_muscles": focus_muscles,
-                "focus_adjustment_keys": sorted(focus_adjustments.keys()),
-                "donor_adjustment_keys": sorted(donor_adjustments.keys()),
-            },
-            "steps": [
-                _decision_step("specialization_present", True, {"focus_muscle_count": len(focus_muscles)}),
-                _decision_step("confirmation_received", confirm),
-            ],
-            "outcome": {
-                "status": status,
-                "applied": applied,
-                "focus_muscles": focus_muscles,
-                "uncompensated_added_sets": uncompensated_added_sets,
-            },
-        },
-    }
+    return _interpret_coach_specialization_apply_decision(
+        recommendation_id=recommendation_id,
+        specialization=specialization,
+        confirm=confirm,
+    )
 
 
 def recommend_progression_action(
@@ -4183,6 +3811,16 @@ def recommend_phase_transition(
     if progression_action == "deload" or weeks_in_phase >= min(4, scheduled_deload_weeks) or stagnation_weeks >= 2:
         return {"next_phase": "deload", "reason": "intensification_fatigue_cap"}
     return {"next_phase": "intensification", "reason": "continue_intensification"}
+
+
+# Stable compatibility surface while progression/phase-transition ownership
+# moves into the dedicated decision-family module.
+evaluate_schedule_adaptation = _evaluate_schedule_adaptation
+humanize_progression_reason = _humanize_progression_reason
+humanize_phase_transition_reason = _humanize_phase_transition_reason
+derive_readiness_score = _derive_readiness_score
+recommend_progression_action = _recommend_progression_action
+recommend_phase_transition = _recommend_phase_transition
 
 
 def recommend_specialization_adjustments(

@@ -3,12 +3,10 @@ from typing import Annotated, Any, Sequence, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from core_engine import (
-    build_weekly_review_performance_summary,
     build_user_training_state,
-    build_weekly_review_decision_payload,
-    build_weekly_review_status_payload,
-    build_weekly_review_submit_payload,
-    build_weekly_review_cycle_persistence_payload,
+    prepare_weekly_review_status_route_runtime,
+    prepare_weekly_review_summary_route_runtime,
+    prepare_weekly_review_submit_route_runtime,
     build_soreness_entry_persistence_payload,
     build_body_measurement_create_payload,
     build_body_measurement_update_payload,
@@ -17,12 +15,10 @@ from core_engine import (
     build_profile_response_payload,
     build_weekly_checkin_persistence_payload,
     build_weekly_checkin_response_payload,
-    build_weekly_review_user_update_payload,
+    build_plan_decision_training_state,
     prepare_weekly_review_log_window_runtime,
     prepare_weekly_review_submit_window,
-    interpret_weekly_review_decision,
-    prepare_program_recommendation_runtime,
-    prepare_profile_program_recommendation_inputs,
+    prepare_profile_program_recommendation_route_runtime,
     prepare_program_switch_runtime,
     resolve_weekly_review_window,
 )
@@ -91,12 +87,11 @@ def _build_program_recommendation_training_state(
         .limit(4)
         .all()
     )
-    return build_user_training_state(
+    return build_plan_decision_training_state(
         selected_program_id=current_user.selected_program_id,
         latest_plan=latest_plan,
-        recent_workout_logs=[],
-        exercise_states=[],
         latest_soreness_entry=None,
+        recent_workout_logs=[],
         recent_checkins=recent_checkins,
         recent_review_cycles=recent_reviews,
         prior_plans=[],
@@ -129,13 +124,14 @@ def _collect_previous_week_performance_summary(
         )
         .all()
     )
+    summary_runtime = prepare_weekly_review_summary_route_runtime(
+        previous_week_start=previous_week_start,
+        week_start=week_start,
+        previous_plan=previous_plan,
+        performed_logs=logs,
+    )
     return WeeklyPerformanceSummaryResponse(
-        **build_weekly_review_performance_summary(
-            previous_week_start=previous_week_start,
-            week_start=week_start,
-            previous_plan=previous_plan,
-            performed_logs=logs,
-        )
+        **cast(dict[str, Any], summary_runtime["summary_payload"])
     )
 
 
@@ -258,28 +254,22 @@ def program_recommendation(
     current_user: CurrentUser,
 ) -> ProgramRecommendationResponse:
     latest_plan = _latest_plan(db, current_user.id)
-    recommendation_inputs = prepare_profile_program_recommendation_inputs(
-        selected_program_id=current_user.selected_program_id,
-        days_available=current_user.days_available,
-        split_preference=current_user.split_preference,
-        latest_plan=latest_plan,
-    )
     training_state = _build_program_recommendation_training_state(
         db,
         current_user=current_user,
         latest_plan=latest_plan,
     )
-
-    runtime = prepare_program_recommendation_runtime(
-        current_program_id=cast(str, recommendation_inputs["current_program_id"]),
+    route_runtime = prepare_profile_program_recommendation_route_runtime(
+        selected_program_id=current_user.selected_program_id,
+        days_available=current_user.days_available,
+        split_preference=current_user.split_preference,
+        latest_plan=latest_plan,
         available_program_summaries=list_program_templates(),
-        days_available=cast(int, recommendation_inputs["days_available"]),
-        split_preference=cast(str, recommendation_inputs["split_preference"]),
         latest_adherence_score=None,
-        latest_plan_payload=cast(dict[str, Any], recommendation_inputs["latest_plan_payload"]),
         user_training_state=training_state,
         generated_at=datetime.now(UTC),
     )
+    runtime = cast(dict[str, Any], route_runtime["recommendation_runtime"])
 
     return ProgramRecommendationResponse(**runtime["response_payload"])
 
@@ -291,27 +281,22 @@ def switch_program(
     current_user: CurrentUser,
 ) -> ProgramSwitchResponse:
     latest_plan = _latest_plan(db, current_user.id)
-    recommendation_inputs = prepare_profile_program_recommendation_inputs(
-        selected_program_id=current_user.selected_program_id,
-        days_available=current_user.days_available,
-        split_preference=current_user.split_preference,
-        latest_plan=latest_plan,
-    )
     training_state = _build_program_recommendation_training_state(
         db,
         current_user=current_user,
         latest_plan=latest_plan,
     )
-
-    recommendation_runtime = prepare_program_recommendation_runtime(
-        current_program_id=cast(str, recommendation_inputs["current_program_id"]),
+    route_runtime = prepare_profile_program_recommendation_route_runtime(
+        selected_program_id=current_user.selected_program_id,
+        days_available=current_user.days_available,
+        split_preference=current_user.split_preference,
+        latest_plan=latest_plan,
         available_program_summaries=list_program_templates(),
-        days_available=cast(int, recommendation_inputs["days_available"]),
-        split_preference=cast(str, recommendation_inputs["split_preference"]),
         latest_adherence_score=None,
-        latest_plan_payload=cast(dict[str, Any], recommendation_inputs["latest_plan_payload"]),
         user_training_state=training_state,
     )
+    recommendation_inputs = cast(dict[str, Any], route_runtime["recommendation_inputs"])
+    recommendation_runtime = cast(dict[str, Any], route_runtime["recommendation_runtime"])
 
     try:
         runtime = prepare_program_switch_runtime(
@@ -378,13 +363,12 @@ def weekly_review_status(
         previous_week_start=previous_week_start,
         week_start=week_start,
     )
-    return WeeklyReviewStatusResponse(
-        **build_weekly_review_status_payload(
-            today=today,
-            existing_review_submitted=existing_review is not None,
-            previous_week_summary=summary.model_dump(mode="json"),
-        )
+    status_runtime = prepare_weekly_review_status_route_runtime(
+        today=today,
+        existing_review_submitted=existing_review is not None,
+        previous_week_summary=summary.model_dump(mode="json"),
     )
+    return WeeklyReviewStatusResponse(**cast(dict[str, Any], status_runtime["response_payload"]))
 
 
 @router.post("/weekly-review")
@@ -408,40 +392,7 @@ def submit_weekly_review(
         week_start=week_start,
     )
     summary_payload = summary.model_dump(mode="json")
-    decision_payload = build_weekly_review_decision_payload(
-        summary=summary_payload,
-        body_weight=payload.body_weight,
-        calories=payload.calories,
-        protein=payload.protein,
-        adherence_score=payload.adherence_score,
-    )
-    review_persistence_payload = build_weekly_review_cycle_persistence_payload(
-        summary=summary_payload,
-        decision_payload=decision_payload,
-    )
-
-    user_update_payload = build_weekly_review_user_update_payload(
-        body_weight=payload.body_weight,
-        calories=payload.calories,
-        protein=payload.protein,
-        fat=payload.fat,
-        carbs=payload.carbs,
-        nutrition_phase=payload.nutrition_phase,
-    )
-    for key, value in user_update_payload.items():
-        setattr(current_user, key, value)
-    db.add(current_user)
-
-    checkin_entry = WeeklyCheckin(
-        user_id=current_user.id,
-        week_start=week_start,
-        body_weight=payload.body_weight,
-        adherence_score=payload.adherence_score,
-        notes=payload.notes,
-    )
-    db.add(checkin_entry)
-
-    review_entry = WeeklyReviewCycle(
+    route_runtime = prepare_weekly_review_submit_route_runtime(
         user_id=current_user.id,
         reviewed_on=today,
         week_start=week_start,
@@ -453,21 +404,28 @@ def submit_weekly_review(
         carbs=payload.carbs,
         adherence_score=payload.adherence_score,
         notes=payload.notes,
-        faults=cast(dict[str, Any], review_persistence_payload["faults"]),
-        adjustments=cast(dict[str, Any], review_persistence_payload["adjustments"]),
-        summary=summary_payload,
+        nutrition_phase=payload.nutrition_phase,
+        summary_payload=summary_payload,
+    )
+    user_update_payload = cast(dict[str, Any], route_runtime["user_update_payload"])
+    for key, value in user_update_payload.items():
+        setattr(current_user, key, value)
+    db.add(current_user)
+
+    submit_persistence_values = cast(dict[str, Any], route_runtime["submit_persistence_values"])
+
+    checkin_entry = WeeklyCheckin(
+        **cast(dict[str, Any], submit_persistence_values["checkin_values"])
+    )
+    db.add(checkin_entry)
+
+    review_entry = WeeklyReviewCycle(
+        **cast(dict[str, Any], submit_persistence_values["review_values"])
     )
     db.add(review_entry)
     db.commit()
 
-    return WeeklyReviewSubmitResponse(
-        **build_weekly_review_submit_payload(
-            week_start=week_start,
-            previous_week_start=previous_week_start,
-            summary=summary_payload,
-            decision_payload=decision_payload,
-        )
-    )
+    return WeeklyReviewSubmitResponse(**cast(dict[str, Any], route_runtime["response_payload"]))
 
 
 @router.get("/soreness", response_model=list[SorenessEntryResponse])

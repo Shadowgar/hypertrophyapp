@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from types import SimpleNamespace
 
-from core_engine import build_user_training_state
+from core_engine import build_plan_decision_training_state, build_user_training_state
 
 
 def test_build_user_training_state_assembles_canonical_runtime_payload() -> None:
@@ -138,3 +138,24 @@ def test_build_user_training_state_assembles_canonical_runtime_payload() -> None
         "under_target_muscles": ["biceps", "rear_delts"],
         "mesocycle_trigger_weeks_effective": 5,
     }
+
+
+def test_build_plan_decision_training_state_uses_canonical_builder_defaults() -> None:
+    payload = build_plan_decision_training_state(
+        selected_program_id="full_body_v1",
+        latest_plan=SimpleNamespace(
+            week_start=date(2026, 3, 2),
+            payload={
+                "program_template_id": "full_body_v1",
+                "phase": "accumulation",
+                "mesocycle": {"week_index": 2},
+                "sessions": [],
+            },
+        ),
+        latest_soreness_entry=None,
+    )
+
+    assert payload["user_program_state"]["program_id"] == "full_body_v1"
+    assert payload["user_program_state"]["week_index"] == 2
+    assert payload["exercise_performance_history"] == []
+    assert payload["progression_state_per_exercise"] == []

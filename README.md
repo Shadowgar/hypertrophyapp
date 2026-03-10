@@ -46,6 +46,67 @@ Developer notes
 - Use direct venv executables in `apps/api` (e.g., `.venv/bin/python`) instead of `source`-ing activation scripts.
 - Keep business logic in `packages/core-engine` and leave routers limited to SQL and HTTP concerns.
 
+## Key Endpoints (API)
+
+- **Auth**
+   - `POST /auth/register` — create account
+   - `POST /auth/login` — obtain auth token
+   - `POST /auth/password-reset/request` and `POST /auth/password-reset/confirm`
+   - `POST /auth/dev/wipe-user` — developer-only wipe (environment gated)
+
+- **Profile & Onboarding**
+   - `GET /profile`, `POST /profile` — profile upsert and read
+   - `GET /profile/training-state` — canonical `UserTrainingState` payload
+   - `GET /profile/program-recommendation`, `POST /profile/program-switch`
+   - `POST /weekly-checkin`, `POST /weekly-review`
+   - `POST /profile/dev/wipe` — clear current test user data (dev only)
+
+- **Plan / Coaching**
+   - `POST /plan/generate-week` — generate a deterministic week plan
+   - `POST /plan/intelligence/coach-preview` — preview coaching recommendations
+   - `POST /plan/adaptation/preview` and `POST /plan/adaptation/apply` — frequency adaptation flows
+   - `GET /plan/intelligence/recommendations` — timeline of persisted recommendations
+   - `GET /plan/guides/programs/{program_id}` — program guide summary
+
+- **Workout**
+   - `GET /workout/today` — today's session or resume candidate
+   - `POST /workout/{workout_id}/log-set` — log a set (may return `starting_load_decision_trace` or `substitution_recommendation`)
+   - `GET /workout/{workout_id}/progress`, `GET /workout/{workout_id}/summary`
+
+- **History**
+   - `GET /history/calendar` and `GET /history/day/{day}`
+
+Notes: many engine responses include a `decision_trace` field for auditability; check plan/workout preview and adaptation responses for `decision_trace` and `request_runtime_trace` fields.
+
+## Developer Quickstart (local dev)
+
+1. Set up API venv and install deps:
+
+    `cd apps/api && python3 -m venv .venv && .venv/bin/python -m ensurepip --upgrade && .venv/bin/pip install -r requirements.txt`
+
+    (install local engine package for editable testing)
+    `cd apps/api && .venv/bin/python -m pip install -e ../../packages/core-engine`
+
+2. Run API locally:
+
+    `cd apps/api && .venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload`
+
+3. Run web dev:
+
+    `cd apps/web && npm install && npm run dev`
+
+4. Run focused API tests (SQLite override):
+
+    `cd apps/api && TEST_DATABASE_URL=sqlite:///./test_local.db .venv/bin/python -m pytest tests/test_workout_*.py -q`
+
+5. Clean temp DB files after runs:
+
+    `rm -f apps/api/test_local*.sqlite3`
+
+Common gotchas:
+- If `apps/api/.venv` is missing pip, run apt and ensurepip then install deps (see `docs/debugging.md` notes in repo memory).
+- If `./scripts/mini_validate.sh` fails due to Docker image snapshot issues, rebuild the API image: `docker compose build --no-cache api`.
+
 
 ## Current Status
 

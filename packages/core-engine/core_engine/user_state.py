@@ -489,3 +489,25 @@ def build_user_training_state(
             latest_plan_payload=latest_plan_payload,
         ),
     }
+
+
+def build_plan_decision_training_state(
+    *,
+    selected_program_id: str | None,
+    latest_plan: Any | None,
+    latest_soreness_entry: Any | None,
+    recent_workout_logs: list[Any] | None = None,
+    recent_checkins: list[Any] | None = None,
+    recent_review_cycles: list[Any] | None = None,
+    prior_plans: list[Any] | None = None,
+) -> dict[str, Any]:
+    return build_user_training_state(
+        selected_program_id=selected_program_id,
+        latest_plan=latest_plan,
+        recent_workout_logs=list(recent_workout_logs or []),
+        exercise_states=[],
+        latest_soreness_entry=latest_soreness_entry,
+        recent_checkins=list(recent_checkins or []),
+        recent_review_cycles=list(recent_review_cycles or []),
+        prior_plans=list(prior_plans or []),
+    )

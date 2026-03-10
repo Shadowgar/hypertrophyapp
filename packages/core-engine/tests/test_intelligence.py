@@ -16,13 +16,17 @@ from core_engine.intelligence import (
     build_phase_applied_recommendation_record,
     build_repeat_failure_substitution_payload,
     build_workout_log_set_payload,
+    prepare_workout_exercise_state_runtime,
+    prepare_workout_log_set_decision_runtime,
     prepare_workout_log_set_request_runtime,
     build_workout_session_state_defaults,
+    prepare_workout_session_state_upsert_runtime,
     resolve_workout_log_set_plan_context,
     build_program_recommendation_payload,
     prepare_workout_session_state_persistence_payload,
     prepare_program_recommendation_runtime,
     prepare_profile_program_recommendation_inputs,
+    prepare_profile_program_recommendation_route_runtime,
     build_program_switch_payload,
     prepare_program_switch_runtime,
     build_specialization_applied_recommendation_record,
@@ -499,6 +503,29 @@ def test_prepare_profile_program_recommendation_inputs_applies_router_fallbacks(
     assert runtime["days_available"] == 2
     assert runtime["split_preference"] == "full_body"
     assert runtime["latest_plan_payload"] == {}
+
+
+def test_prepare_profile_program_recommendation_route_runtime_combines_inputs_and_runtime() -> None:
+    runtime = prepare_profile_program_recommendation_route_runtime(
+        selected_program_id="ppl_v1",
+        days_available=3,
+        split_preference="ppl",
+        latest_plan={"payload": {"mesocycle": {"week_index": 3}}},
+        available_program_summaries=[
+            {"id": "upper_lower_v1", "split": "ppl", "days_supported": [3], "session_count": 5},
+            {"id": "ppl_v1", "split": "ppl", "days_supported": [3], "session_count": 3},
+        ],
+        latest_adherence_score=4,
+        user_training_state=None,
+        generated_at=datetime(2026, 3, 9, tzinfo=UTC),
+    )
+
+    inputs = runtime["recommendation_inputs"]
+    recommendation_runtime = runtime["recommendation_runtime"]
+    assert inputs["current_program_id"] == "ppl_v1"
+    assert recommendation_runtime["decision"]["recommended_program_id"] == "upper_lower_v1"
+    assert recommendation_runtime["response_payload"]["recommended_program_id"] == "upper_lower_v1"
+    assert runtime["decision_trace"]["interpreter"] == "prepare_profile_program_recommendation_route_runtime"
 
 
 def test_build_program_switch_payload_resolves_confirmation_and_unchanged_variants() -> None:
@@ -1125,6 +1152,93 @@ def test_prepare_workout_session_state_persistence_payload_wraps_reducer_output(
     assert state["last_guidance"] == "remaining_sets_reduce_load_focus_target_reps"
     assert live["guidance"] == "remaining_sets_reduce_load_focus_target_reps"
     assert live["decision_trace"]["interpreter"] == "recommend_live_workout_adjustment"
+
+
+def test_prepare_workout_session_state_upsert_runtime_shapes_create_update_and_live_payloads() -> None:
+    runtime = prepare_workout_session_state_upsert_runtime(
+        existing_state=None,
+        primary_exercise_id="bench",
+        planned_sets=3,
+        planned_reps_min=8,
+        planned_reps_max=12,
+        planned_weight=100.0,
+        set_index=1,
+        reps=7,
+        weight=100.0,
+        substitution_recommendation=None,
+        rule_set=_sample_rule_set(),
+    )
+
+    assert runtime["create_values"]["primary_exercise_id"] == "bench"
+    assert runtime["update_values"]["completed_sets"] == 1
+    assert runtime["live_recommendation"]["guidance"] == "remaining_sets_reduce_load_focus_target_reps"
+    assert runtime["decision_trace"]["interpreter"] == "prepare_workout_session_state_upsert_runtime"
+
+
+def test_prepare_workout_exercise_state_runtime_builds_initial_and_updated_state_payloads() -> None:
+    runtime = prepare_workout_exercise_state_runtime(
+        existing_state=None,
+        primary_exercise_id="bench_press",
+        planned_exercise={
+            "id": "bench_press",
+            "name": "Bench Press",
+            "start_weight": 100.0,
+            "substitution_candidates": [{"exercise_id": "machine_press", "name": "Machine Press"}],
+        },
+        planned_weight=100.0,
+        planned_sets=3,
+        planned_reps_min=8,
+        planned_reps_max=10,
+        completed_set_index=1,
+        completed_reps=10,
+        nutrition_phase="maintenance",
+        equipment_profile=["barbell"],
+        rule_set=_sample_rule_set(),
+    )
+
+    assert runtime["initial_state_values"]["current_working_weight"] >= 5.0
+    assert runtime["state_values"]["exposure_count"] == 1
+    assert runtime["state_values"]["last_progression_action"] in {"progress", "hold", "deload"}
+    assert runtime["decision_trace"]["interpreter"] == "prepare_workout_exercise_state_runtime"
+
+
+def test_prepare_workout_log_set_decision_runtime_prepares_exercise_state_persistence_payloads() -> None:
+    request_runtime = prepare_workout_log_set_request_runtime(
+        primary_exercise_id=None,
+        exercise_id="bench_press",
+        set_index=1,
+        reps=9,
+        weight=100.0,
+        rpe=8.0,
+    )
+    runtime = prepare_workout_log_set_decision_runtime(
+        user_id="user_1",
+        workout_id="workout_1",
+        request_runtime=request_runtime,
+        planned_exercise={
+            "id": "bench_press",
+            "name": "Bench Press",
+            "sets": 3,
+            "rep_range": [8, 10],
+            "recommended_working_weight": 100.0,
+            "estimated_1rm": 150.0,
+            "substitution_candidates": ["machine_press"],
+        },
+        existing_exercise_state=None,
+        nutrition_phase="maintenance",
+        equipment_profile=["machine"],
+        rule_set=_sample_rule_set(),
+    )
+
+    create_values = runtime["exercise_state_create_values"]
+    update_values = runtime["exercise_state_update_values"]
+    assert create_values["user_id"] == "user_1"
+    assert create_values["exercise_id"] == "bench_press"
+    assert create_values["current_working_weight"] >= 5.0
+    assert update_values["exposure_count"] == 1
+    assert runtime["session_state_inputs"]["substitution_recommendation"] == runtime["substitution_recommendation"]
+    assert runtime["decision_trace"]["interpreter"] == "prepare_workout_log_set_decision_runtime"
+    assert runtime["decision_trace"]["outcome"]["has_starting_load_runtime"] is True
 
 
 def test_build_workout_today_state_payloads_merges_state_counts_and_hydrates_live_guidance() -> None:

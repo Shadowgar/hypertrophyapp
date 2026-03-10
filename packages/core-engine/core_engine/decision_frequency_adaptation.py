@@ -244,6 +244,85 @@ def build_generated_week_adaptation_persistence_payload(
     }
 
 
+def prepare_frequency_adaptation_route_runtime(
+    *,
+    adaptation_runtime: dict[str, Any],
+    onboarding_package: dict[str, Any],
+    decision_kind: str,
+    applied_at: str | None = None,
+) -> dict[str, Any]:
+    runtime = _coerce_dict(adaptation_runtime)
+    decision_mode = str(decision_kind).strip().lower()
+    if decision_mode not in {"preview", "apply"}:
+        raise ValueError(f"Unsupported decision kind: {decision_kind}")
+
+    shared_kwargs = {
+        "onboarding_package": onboarding_package,
+        "program_id": str(runtime["program_id"]),
+        "current_days": int(runtime["current_days"]),
+        "target_days": int(runtime["target_days"]),
+        "duration_weeks": int(runtime["duration_weeks"]),
+        "explicit_weak_areas": list(runtime.get("explicit_weak_areas") or []),
+        "stored_weak_areas": list(runtime.get("stored_weak_areas") or []),
+        "equipment_profile": list(runtime.get("equipment_profile") or []),
+        "recovery_state": str(runtime["recovery_state"]),
+        "current_week_index": int(runtime["current_week_index"]),
+        "request_runtime_trace": deepcopy(_coerce_dict(runtime.get("decision_trace"))),
+    }
+
+    if decision_mode == "preview":
+        preview_payload = recommend_frequency_adaptation_preview(**shared_kwargs)
+        return {
+            "decision_kind": "preview",
+            "preview_payload": preview_payload,
+            "decision_trace": {
+                "interpreter": "prepare_frequency_adaptation_route_runtime",
+                "version": "v1",
+                "inputs": {
+                    "decision_kind": "preview",
+                    "program_id": shared_kwargs["program_id"],
+                    "target_days": shared_kwargs["target_days"],
+                    "duration_weeks": shared_kwargs["duration_weeks"],
+                },
+                "outcome": {
+                    "week_count": len(preview_payload.get("weeks") or []),
+                },
+            },
+        }
+
+    if not isinstance(applied_at, str) or not applied_at.strip():
+        raise ValueError("applied_at is required for adaptation apply runtime")
+
+    decision = interpret_frequency_adaptation_apply(
+        **shared_kwargs,
+        applied_at=applied_at,
+    )
+    persistence_state = build_frequency_adaptation_persistence_state(
+        decision_payload=decision,
+    )
+    response_payload = build_frequency_adaptation_apply_payload(decision)
+    return {
+        "decision_kind": "apply",
+        "decision": decision,
+        "persistence_state": persistence_state,
+        "response_payload": response_payload,
+        "decision_trace": {
+            "interpreter": "prepare_frequency_adaptation_route_runtime",
+            "version": "v1",
+            "inputs": {
+                "decision_kind": "apply",
+                "program_id": shared_kwargs["program_id"],
+                "target_days": shared_kwargs["target_days"],
+                "duration_weeks": shared_kwargs["duration_weeks"],
+            },
+            "outcome": {
+                "status": str(decision.get("status") or ""),
+                "weeks_remaining": int(decision.get("weeks_remaining") or 0),
+            },
+        },
+    }
+
+
 def resolve_active_frequency_adaptation_runtime(
     *,
     active_state: dict[str, Any] | None,

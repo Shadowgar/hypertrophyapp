@@ -8,37 +8,34 @@ from sqlalchemy.orm import Session
 from core_engine import (
     apply_active_frequency_adaptation_runtime,
     build_coach_preview_context,
-    build_coach_preview_payloads,
-    build_coach_preview_recommendation_record_fields,
+    finalize_coach_preview_commit_runtime,
     build_coaching_recommendation_timeline_payload,
-    build_frequency_adaptation_apply_payload,
-    build_frequency_adaptation_persistence_state,
-    build_generated_week_adaptation_persistence_payload,
-    build_generated_week_plan_payload,
     build_guide_programs_payload,
     build_program_day_guide_payload,
     build_program_exercise_guide_payload,
     build_program_guide_payload,
-    build_user_training_state,
+    build_plan_decision_training_state,
+    prepare_coach_preview_decision_context,
+    prepare_coach_preview_commit_runtime,
+    prepare_coach_preview_route_runtime,
     prepare_coach_preview_runtime_inputs,
+    prepare_coaching_apply_route_finalize_runtime,
+    prepare_coaching_apply_route_runtime,
     prepare_coaching_apply_runtime_source,
-    prepare_frequency_adaptation_runtime_inputs,
-    prepare_generate_week_plan_runtime_inputs,
-    finalize_applied_coaching_recommendation,
+    prepare_frequency_adaptation_route_runtime,
+    prepare_frequency_adaptation_decision_runtime,
+    prepare_generate_week_finalize_runtime,
+    prepare_generate_week_review_lookup_runtime,
+    prepare_generate_week_scheduler_runtime,
     prepare_generation_template_runtime,
-    prepare_generated_week_review_overlay,
+    prepare_plan_generation_decision_runtime,
     resolve_program_display_name,
     resolve_optional_rule_set,
     resolve_onboarding_program_id,
     resolve_program_guide_summary,
-    prepare_phase_apply_runtime,
-    prepare_specialization_apply_runtime,
     resolve_program_exercise_guide,
-    resolve_week_generation_runtime_inputs,
     generate_week_plan,
-    interpret_frequency_adaptation_apply,
     recommend_coach_intelligence_preview,
-    recommend_frequency_adaptation_preview,
     normalize_coaching_recommendation_timeline_limit,
     resolve_active_frequency_adaptation_runtime,
 )
@@ -81,28 +78,6 @@ GUIDE_RESPONSES: dict[int | str, dict[str, Any]] = {
 PROFILE_INCOMPLETE_DETAIL = "Complete profile first"
 
 
-def _build_plan_decision_training_state(
-    *,
-    current_user: User,
-    latest_plan: WorkoutPlan | None,
-    latest_soreness: SorenessEntry | None,
-    recent_logs: list[WorkoutSetLog] | None = None,
-    recent_checkins: list[WeeklyCheckin] | None = None,
-    recent_review_cycles: list[WeeklyReviewCycle] | None = None,
-    prior_plans: list[WorkoutPlan] | None = None,
-) -> dict[str, Any]:
-    return build_user_training_state(
-        selected_program_id=current_user.selected_program_id,
-        latest_plan=latest_plan,
-        recent_workout_logs=list(recent_logs or []),
-        exercise_states=[],
-        latest_soreness_entry=latest_soreness,
-        recent_checkins=list(recent_checkins or []),
-        recent_review_cycles=list(recent_review_cycles or []),
-        prior_plans=list(prior_plans or []),
-    )
-
-
 def _prepare_plan_generation_runtime(
     *,
     db: Session,
@@ -139,29 +114,20 @@ def _prepare_plan_generation_runtime(
         .limit(3)
         .all()
     )
-    training_state = _build_plan_decision_training_state(
-        current_user=current_user,
-        latest_plan=latest_plan,
-        latest_soreness=latest_soreness,
-        recent_logs=history_rows,
-        recent_checkins=[latest_checkin] if latest_checkin is not None else [],
-        recent_review_cycles=recent_review_cycles,
-        prior_plans=prior_plans,
-    )
-    generation_runtime = resolve_week_generation_runtime_inputs(
+    runtime = prepare_plan_generation_decision_runtime(
         selected_template_id=selected_template_id,
         current_days_available=current_user.days_available,
         active_frequency_adaptation=active_frequency_adaptation,
-        user_training_state=training_state,
-        history_rows=[],
-        latest_soreness_entry=None,
-        latest_checkin=None,
-        prior_plans=[],
+        selected_program_id=current_user.selected_program_id,
+        latest_plan=latest_plan,
+        latest_soreness_entry=latest_soreness,
+        recent_workout_logs=history_rows,
+        recent_checkins=[latest_checkin] if latest_checkin is not None else [],
+        recent_review_cycles=recent_review_cycles,
+        prior_plans=prior_plans,
+        build_plan_decision_training_state=build_plan_decision_training_state,
     )
-    return {
-        "training_state": training_state,
-        "generation_runtime": generation_runtime,
-    }
+    return runtime
 
 
 @router.get("/plan/programs", response_model=list[ProgramTemplateSummary])
@@ -240,6 +206,56 @@ def _resolve_preview_recommendation(db: Session, *, user_id: str, recommendation
     return recommendation
 
 
+def _apply_coaching_decision_route(
+    *,
+    db: Session,
+    current_user: User,
+    recommendation_id: str,
+    confirm: bool,
+    decision_kind: Literal["phase", "specialization"],
+) -> dict[str, Any]:
+    source_recommendation = _resolve_preview_recommendation(
+        db,
+        user_id=current_user.id,
+        recommendation_id=recommendation_id,
+    )
+    source_runtime = prepare_coaching_apply_runtime_source(source_recommendation)
+    try:
+        route_runtime = prepare_coaching_apply_route_runtime(
+            decision_kind=decision_kind,
+            source_runtime=source_runtime,
+            confirm=confirm,
+            user_id=current_user.id,
+            applied_at=_utcnow_naive(),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    if not confirm:
+        finalized_runtime = prepare_coaching_apply_route_finalize_runtime(
+            route_runtime=route_runtime,
+        )
+        return cast(dict[str, Any], finalized_runtime["response_payload"])
+
+    commit_runtime = cast(dict[str, Any], route_runtime["commit_runtime"])
+    applied_record = CoachingRecommendation(
+        **cast(dict[str, Any], commit_runtime["record_values"])
+    )
+    db.add(applied_record)
+    db.flush()
+
+    finalized_runtime = prepare_coaching_apply_route_finalize_runtime(
+        route_runtime=route_runtime,
+        applied_recommendation_id=applied_record.id,
+    )
+    recommendation_payload = cast(dict[str, Any] | None, finalized_runtime["recommendation_payload"])
+    if recommendation_payload is not None:
+        applied_record.recommendation_payload = recommendation_payload
+
+    db.commit()
+    return cast(dict[str, Any], finalized_runtime["response_payload"])
+
+
 @router.get(
     "/plan/intelligence/recommendations",
     response_model=CoachingRecommendationTimelineResponse,
@@ -273,49 +289,14 @@ def apply_phase_decision(
     db: DbSession,
     current_user: CurrentUser,
 ) -> ApplyPhaseDecisionResponse:
-    source_recommendation = _resolve_preview_recommendation(
-        db,
-        user_id=current_user.id,
+    response_payload = _apply_coaching_decision_route(
+        db=db,
+        current_user=current_user,
         recommendation_id=payload.recommendation_id,
+        confirm=payload.confirm,
+        decision_kind="phase",
     )
-    source_runtime = prepare_coaching_apply_runtime_source(source_recommendation)
-
-    try:
-        runtime = prepare_phase_apply_runtime(
-            recommendation_id=cast(str, source_runtime["recommendation_id"]),
-            recommendation_payload=cast(dict[str, Any], source_runtime["recommendation_payload"]),
-            fallback_next_phase=cast(str, source_runtime["recommended_phase"]),
-            confirm=payload.confirm,
-            template_id=cast(str, source_runtime["template_id"]),
-            current_phase=cast(str, source_runtime["current_phase"]),
-            progression_action=cast(str, source_runtime["progression_action"]),
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-
-    if not payload.confirm:
-        return ApplyPhaseDecisionResponse(**runtime["decision_payload"])
-
-    applied_record = CoachingRecommendation(
-        user_id=current_user.id,
-        recommendation_payload={},
-        applied_at=_utcnow_naive(),
-        **cast(dict[str, Any], runtime["record_fields"]),
-    )
-    db.add(applied_record)
-    db.flush()
-
-    finalized = finalize_applied_coaching_recommendation(
-        payload_key="phase_transition",
-        payload_value=cast(dict[str, Any], runtime["payload_value"]),
-        decision_payload=cast(dict[str, Any], runtime["decision_payload"]),
-        applied_recommendation_id=applied_record.id,
-    )
-    applied_record.recommendation_payload = finalized["recommendation_payload"]
-
-    db.commit()
-
-    return ApplyPhaseDecisionResponse(**finalized["response_payload"])
+    return ApplyPhaseDecisionResponse(**response_payload)
 
 
 @router.post(
@@ -328,48 +309,14 @@ def apply_specialization_decision(
     db: DbSession,
     current_user: CurrentUser,
 ) -> ApplySpecializationDecisionResponse:
-    source_recommendation = _resolve_preview_recommendation(
-        db,
-        user_id=current_user.id,
+    response_payload = _apply_coaching_decision_route(
+        db=db,
+        current_user=current_user,
         recommendation_id=payload.recommendation_id,
+        confirm=payload.confirm,
+        decision_kind="specialization",
     )
-    source_runtime = prepare_coaching_apply_runtime_source(source_recommendation)
-    try:
-        runtime = prepare_specialization_apply_runtime(
-            recommendation_id=cast(str, source_runtime["recommendation_id"]),
-            recommendation_payload=cast(dict[str, Any], source_runtime["recommendation_payload"]),
-            confirm=payload.confirm,
-            template_id=cast(str, source_runtime["template_id"]),
-            current_phase=cast(str, source_runtime["current_phase"]),
-            recommended_phase=cast(str, source_runtime["recommended_phase"]),
-            progression_action=cast(str, source_runtime["progression_action"]),
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-
-    if not payload.confirm:
-        return ApplySpecializationDecisionResponse(**runtime["decision_payload"])
-
-    applied_record = CoachingRecommendation(
-        user_id=current_user.id,
-        recommendation_payload={},
-        applied_at=_utcnow_naive(),
-        **cast(dict[str, Any], runtime["record_fields"]),
-    )
-    db.add(applied_record)
-    db.flush()
-
-    finalized = finalize_applied_coaching_recommendation(
-        payload_key="specialization",
-        payload_value=cast(dict[str, Any], runtime["payload_value"]),
-        decision_payload=cast(dict[str, Any], runtime["decision_payload"]),
-        applied_recommendation_id=applied_record.id,
-    )
-    applied_record.recommendation_payload = finalized["recommendation_payload"]
-
-    db.commit()
-
-    return ApplySpecializationDecisionResponse(**finalized["response_payload"])
+    return ApplySpecializationDecisionResponse(**response_payload)
 
 
 @router.post(
@@ -428,11 +375,17 @@ def coach_intelligence_preview(
         .limit(100)
         .all()
     )
-    training_state = _build_plan_decision_training_state(
-        current_user=current_user,
+    preview_context_runtime = prepare_coach_preview_decision_context(
+        user_name=current_user.name,
+        split_preference=current_user.split_preference,
+        template=template,
         latest_plan=latest_plan,
-        latest_soreness=None,
-        recent_logs=history_rows,
+        recent_workout_logs=history_rows,
+        selected_program_id=current_user.selected_program_id,
+        nutrition_phase=current_user.nutrition_phase,
+        available_equipment=current_user.equipment_profile,
+        build_plan_decision_training_state=build_plan_decision_training_state,
+        build_coach_preview_context=build_coach_preview_context,
     )
 
     rule_set = resolve_optional_rule_set(
@@ -440,41 +393,32 @@ def coach_intelligence_preview(
         resolve_linked_program_id=resolve_linked_program_id,
         load_rule_set=load_program_rule_set,
     )
-    preview_payload = recommend_coach_intelligence_preview(
+    program_name = resolve_program_display_name(
+        program_id=selected_template_id,
+        available_program_summaries=list_program_templates(),
+    )
+    route_runtime = prepare_coach_preview_route_runtime(
+        user_id=current_user.id,
         template_id=selected_template_id,
-        context=build_coach_preview_context(
-            user_name=current_user.name,
-            split_preference=current_user.split_preference,
-            template=template,
-            history_rows=[],
-            user_training_state=training_state,
-            nutrition_phase=current_user.nutrition_phase or "maintenance",
-            available_equipment=current_user.equipment_profile or [],
-        ),
+        context=cast(dict[str, Any], preview_context_runtime["context"]),
         preview_request=preview_request,
         rule_set=rule_set,
         request_runtime_trace=cast(dict[str, Any], preview_runtime["decision_trace"]),
         template_runtime_trace=cast(dict[str, Any], template_runtime["decision_trace"]),
+        program_name=program_name,
+        recommend_coach_intelligence_preview=recommend_coach_intelligence_preview,
+        prepare_coach_preview_commit_runtime=prepare_coach_preview_commit_runtime,
     )
-
+    commit_runtime = cast(dict[str, Any], route_runtime["commit_runtime"])
     recommendation_record = CoachingRecommendation(
-        user_id=current_user.id,
-        **build_coach_preview_recommendation_record_fields(
-            template_id=selected_template_id,
-            preview_request=preview_request,
-            preview_payload=preview_payload,
-        ),
+        **cast(dict[str, Any], commit_runtime["record_values"]),
     )
     db.add(recommendation_record)
     db.flush()
 
-    payloads = build_coach_preview_payloads(
+    payloads = finalize_coach_preview_commit_runtime(
+        prepared_runtime=commit_runtime,
         recommendation_id=recommendation_record.id,
-        preview_payload=preview_payload,
-        program_name=resolve_program_display_name(
-            program_id=selected_template_id,
-            available_program_summaries=list_program_templates(),
-        ),
     )
     response_model = IntelligenceCoachPreviewResponse(**payloads["response_payload"])
 
@@ -512,22 +456,20 @@ def preview_frequency_adaptation(
         .order_by(SorenessEntry.entry_date.desc(), SorenessEntry.created_at.desc())
         .first()
     )
-    training_state = _build_plan_decision_training_state(
-        current_user=current_user,
-        latest_plan=latest_plan,
-        latest_soreness=latest_soreness,
-    )
-    adaptation_runtime = prepare_frequency_adaptation_runtime_inputs(
+    adaptation_decision_runtime = prepare_frequency_adaptation_decision_runtime(
         requested_program_id=payload.program_id,
         selected_program_id=current_user.selected_program_id,
-        user_training_state=training_state,
+        latest_plan=latest_plan,
+        latest_soreness_entry=latest_soreness,
         current_days_available=current_user.days_available,
         target_days=payload.target_days,
         duration_weeks=payload.duration_weeks,
         explicit_weak_areas=payload.weak_areas,
         stored_weak_areas=current_user.weak_areas or [],
         equipment_profile=current_user.equipment_profile or [],
+        build_plan_decision_training_state=build_plan_decision_training_state,
     )
+    adaptation_runtime = cast(dict[str, Any], adaptation_decision_runtime["adaptation_runtime"])
     onboarding_program_id = resolve_onboarding_program_id(
         template_id=str(adaptation_runtime["program_id"]),
         resolve_linked_program_id=resolve_linked_program_id,
@@ -537,19 +479,12 @@ def preview_frequency_adaptation(
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
-    raw_result = recommend_frequency_adaptation_preview(
+    route_runtime = prepare_frequency_adaptation_route_runtime(
+        adaptation_runtime=adaptation_runtime,
         onboarding_package=onboarding_package,
-        program_id=onboarding_program_id,
-        current_days=int(adaptation_runtime["current_days"]),
-        target_days=int(adaptation_runtime["target_days"]),
-        duration_weeks=int(adaptation_runtime["duration_weeks"]),
-        explicit_weak_areas=cast(list[str], adaptation_runtime["explicit_weak_areas"]),
-        stored_weak_areas=cast(list[str], adaptation_runtime["stored_weak_areas"]),
-        equipment_profile=cast(list[str], adaptation_runtime["equipment_profile"]),
-        recovery_state=str(adaptation_runtime["recovery_state"]),
-        current_week_index=int(adaptation_runtime["current_week_index"]),
-        request_runtime_trace=cast(dict[str, Any], adaptation_runtime["decision_trace"]),
+        decision_kind="preview",
     )
+    raw_result = cast(dict[str, Any], route_runtime["preview_payload"])
     return FrequencyAdaptationResult.model_validate(raw_result)
 
 
@@ -581,22 +516,20 @@ def apply_frequency_adaptation(
         .order_by(SorenessEntry.entry_date.desc(), SorenessEntry.created_at.desc())
         .first()
     )
-    training_state = _build_plan_decision_training_state(
-        current_user=current_user,
-        latest_plan=latest_plan,
-        latest_soreness=latest_soreness,
-    )
-    adaptation_runtime = prepare_frequency_adaptation_runtime_inputs(
+    adaptation_decision_runtime = prepare_frequency_adaptation_decision_runtime(
         requested_program_id=payload.program_id,
         selected_program_id=current_user.selected_program_id,
-        user_training_state=training_state,
+        latest_plan=latest_plan,
+        latest_soreness_entry=latest_soreness,
         current_days_available=current_user.days_available,
         target_days=payload.target_days,
         duration_weeks=payload.duration_weeks,
         explicit_weak_areas=payload.weak_areas,
         stored_weak_areas=current_user.weak_areas or [],
         equipment_profile=current_user.equipment_profile or [],
+        build_plan_decision_training_state=build_plan_decision_training_state,
     )
+    adaptation_runtime = cast(dict[str, Any], adaptation_decision_runtime["adaptation_runtime"])
     selected_template_id = str(adaptation_runtime["program_id"])
     onboarding_program_id = resolve_onboarding_program_id(
         template_id=selected_template_id,
@@ -607,28 +540,18 @@ def apply_frequency_adaptation(
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
-    decision = interpret_frequency_adaptation_apply(
+    route_runtime = prepare_frequency_adaptation_route_runtime(
+        adaptation_runtime=adaptation_runtime,
         onboarding_package=onboarding_package,
-        program_id=selected_template_id,
-        current_days=int(adaptation_runtime["current_days"]),
-        target_days=int(adaptation_runtime["target_days"]),
-        duration_weeks=int(adaptation_runtime["duration_weeks"]),
-        explicit_weak_areas=cast(list[str], adaptation_runtime["explicit_weak_areas"]),
-        stored_weak_areas=cast(list[str], adaptation_runtime["stored_weak_areas"]),
-        equipment_profile=cast(list[str], adaptation_runtime["equipment_profile"]),
-        recovery_state=str(adaptation_runtime["recovery_state"]),
-        current_week_index=int(adaptation_runtime["current_week_index"]),
+        decision_kind="apply",
         applied_at=datetime.now().isoformat(),
-        request_runtime_trace=cast(dict[str, Any], adaptation_runtime["decision_trace"]),
     )
 
-    current_user.active_frequency_adaptation = build_frequency_adaptation_persistence_state(
-        decision_payload=decision,
-    )
+    current_user.active_frequency_adaptation = cast(dict[str, Any], route_runtime["persistence_state"])
     db.add(current_user)
     db.commit()
 
-    return FrequencyAdaptationApplyResponse(**build_frequency_adaptation_apply_payload(decision))
+    return FrequencyAdaptationApplyResponse(**cast(dict[str, Any], route_runtime["response_payload"]))
 
 
 @router.post(
@@ -684,61 +607,41 @@ def plan_generate_week(
         active_frequency_adaptation=active_frequency_adaptation,
     )
     generation_runtime = cast(dict[str, Any], generation_context["generation_runtime"])
-    plan_runtime_inputs = prepare_generate_week_plan_runtime_inputs(
+    scheduler_runtime = prepare_generate_week_scheduler_runtime(
         user_name=current_user.name,
         split_preference=current_user.split_preference,
         nutrition_phase=current_user.nutrition_phase,
         available_equipment=current_user.equipment_profile,
         generation_runtime=generation_runtime,
-    )
-
-    base_plan = generate_week_plan(
-        user_profile=cast(dict[str, Any], plan_runtime_inputs["user_profile"]),
-        days_available=cast(int, plan_runtime_inputs["days_available"]),
-        split_preference=cast(str, plan_runtime_inputs["split_preference"]),
         program_template=template,
-        history=cast(list[dict[str, Any]], plan_runtime_inputs["history"]),
-        phase=cast(str, plan_runtime_inputs["phase"]),
-        available_equipment=cast(list[str], plan_runtime_inputs["available_equipment"]),
-        soreness_by_muscle=cast(dict[str, str], plan_runtime_inputs["soreness_by_muscle"]),
-        prior_generated_weeks=cast(int, plan_runtime_inputs["prior_generated_weeks"]),
-        latest_adherence_score=cast(int | None, plan_runtime_inputs["latest_adherence_score"]),
-        severe_soreness_count=cast(int, plan_runtime_inputs["severe_soreness_count"]),
         rule_set=rule_set,
     )
-    week_start = date.fromisoformat(base_plan["week_start"])
+
+    base_plan = generate_week_plan(**cast(dict[str, Any], scheduler_runtime["scheduler_kwargs"]))
+    review_lookup_runtime = prepare_generate_week_review_lookup_runtime(base_plan=base_plan)
+    week_start = cast(date, review_lookup_runtime["week_start"])
     review_cycle = (
         db.query(WeeklyReviewCycle)
         .filter(WeeklyReviewCycle.user_id == current_user.id, WeeklyReviewCycle.week_start == week_start)
         .order_by(WeeklyReviewCycle.created_at.desc())
         .first()
     )
-    review_overlay = prepare_generated_week_review_overlay(review_cycle)
-
-    finalized_plan = build_generated_week_plan_payload(
+    finalize_runtime = prepare_generate_week_finalize_runtime(
+        user_id=current_user.id,
         base_plan=base_plan,
         template_selection_trace=template_selection_trace,
         generation_runtime_trace=cast(dict[str, Any], generation_runtime["decision_trace"]),
         selected_template_id=selected_template_id,
         active_frequency_adaptation=active_frequency_adaptation,
-        review_adjustments=cast(dict[str, Any] | None, review_overlay["review_adjustments"]),
-        review_context=cast(dict[str, Any] | None, review_overlay["review_context"]),
+        review_cycle=review_cycle,
     )
-    plan = cast(dict[str, Any], finalized_plan["plan"])
-    adaptation_persistence_payload = build_generated_week_adaptation_persistence_payload(
-        adaptation_runtime=cast(dict[str, Any], finalized_plan["adaptation_runtime"]),
-    )
+    plan = cast(dict[str, Any], finalize_runtime["response_payload"])
+    adaptation_persistence_payload = cast(dict[str, Any], finalize_runtime["adaptation_persistence_payload"])
     if bool(adaptation_persistence_payload["state_updated"]):
         current_user.active_frequency_adaptation = cast(dict[str, Any] | None, adaptation_persistence_payload["next_state"])
         db.add(current_user)
 
-    record = WorkoutPlan(
-        user_id=current_user.id,
-        week_start=week_start,
-        split=plan["split"],
-        phase=plan["phase"],
-        payload=plan,
-    )
+    record = WorkoutPlan(**cast(dict[str, Any], finalize_runtime["record_values"]))
     db.add(record)
     db.commit()
 

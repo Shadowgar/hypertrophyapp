@@ -3,7 +3,13 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Any, Callable
 
-from .intelligence import order_generation_template_candidates, recommend_generation_template_selection
+from .decision_frequency_adaptation import build_generated_week_adaptation_persistence_payload
+from .intelligence import (
+    build_generated_week_plan_payload,
+    order_generation_template_candidates,
+    prepare_generated_week_review_overlay,
+    recommend_generation_template_selection,
+)
 from .scheduler import generate_week_plan
 
 
@@ -482,6 +488,65 @@ def prepare_frequency_adaptation_runtime_inputs(
     }
 
 
+def prepare_frequency_adaptation_decision_runtime(
+    *,
+    requested_program_id: str | None,
+    selected_program_id: str | None,
+    latest_plan: Any | None,
+    latest_soreness_entry: Any | None,
+    current_days_available: int,
+    target_days: int,
+    duration_weeks: int,
+    explicit_weak_areas: list[str],
+    stored_weak_areas: list[str],
+    equipment_profile: list[str],
+    build_plan_decision_training_state: Callable[..., dict[str, Any]],
+) -> dict[str, Any]:
+    training_state = build_plan_decision_training_state(
+        selected_program_id=selected_program_id,
+        latest_plan=latest_plan,
+        latest_soreness_entry=latest_soreness_entry,
+    )
+    adaptation_runtime = prepare_frequency_adaptation_runtime_inputs(
+        requested_program_id=requested_program_id,
+        selected_program_id=selected_program_id,
+        user_training_state=training_state,
+        current_days_available=current_days_available,
+        target_days=target_days,
+        duration_weeks=duration_weeks,
+        explicit_weak_areas=explicit_weak_areas,
+        stored_weak_areas=stored_weak_areas,
+        equipment_profile=equipment_profile,
+    )
+    return {
+        "training_state": training_state,
+        "adaptation_runtime": adaptation_runtime,
+        "context_trace": _coerce_dict(adaptation_runtime.get("context_trace")),
+        "decision_trace": {
+            "interpreter": "prepare_frequency_adaptation_decision_runtime",
+            "version": "v1",
+            "inputs": {
+                "requested_program_id": requested_program_id,
+                "selected_program_id": selected_program_id,
+                "current_days_available": int(current_days_available),
+                "target_days": int(target_days),
+                "duration_weeks": int(duration_weeks),
+                "explicit_weak_area_count": len(explicit_weak_areas),
+                "stored_weak_area_count": len(stored_weak_areas),
+                "equipment_profile_count": len(equipment_profile),
+                "has_latest_plan": latest_plan is not None,
+                "has_latest_soreness_entry": latest_soreness_entry is not None,
+            },
+            "outcome": {
+                "program_id": str(adaptation_runtime.get("program_id") or ""),
+                "recovery_state": str(adaptation_runtime.get("recovery_state") or ""),
+                "current_week_index": int(adaptation_runtime.get("current_week_index") or 1),
+            },
+            "adaptation_runtime_trace": _coerce_dict(adaptation_runtime.get("decision_trace")),
+        },
+    }
+
+
 def summarize_generation_template_viability(
     *,
     template: dict[str, Any],
@@ -823,6 +888,71 @@ def resolve_week_generation_runtime_inputs(
     }
 
 
+def prepare_plan_generation_decision_runtime(
+    *,
+    selected_template_id: str,
+    current_days_available: int,
+    active_frequency_adaptation: dict[str, Any] | None,
+    selected_program_id: str | None,
+    latest_plan: Any | None,
+    latest_soreness_entry: Any | None,
+    recent_workout_logs: list[Any],
+    recent_checkins: list[Any],
+    recent_review_cycles: list[Any],
+    prior_plans: list[Any],
+    build_plan_decision_training_state: Callable[..., dict[str, Any]],
+) -> dict[str, Any]:
+    latest_checkin = recent_checkins[0] if recent_checkins else None
+    training_state = build_plan_decision_training_state(
+        selected_program_id=selected_program_id,
+        latest_plan=latest_plan,
+        latest_soreness_entry=latest_soreness_entry,
+        recent_workout_logs=recent_workout_logs,
+        recent_checkins=recent_checkins,
+        recent_review_cycles=recent_review_cycles,
+        prior_plans=prior_plans,
+    )
+    generation_runtime = resolve_week_generation_runtime_inputs(
+        selected_template_id=selected_template_id,
+        current_days_available=current_days_available,
+        active_frequency_adaptation=active_frequency_adaptation,
+        user_training_state=training_state,
+        history_rows=[],
+        latest_soreness_entry=latest_soreness_entry,
+        latest_checkin=latest_checkin,
+        prior_plans=prior_plans,
+    )
+    return {
+        "training_state": training_state,
+        "generation_runtime": generation_runtime,
+        "decision_trace": {
+            "interpreter": "prepare_plan_generation_decision_runtime",
+            "version": "v1",
+            "inputs": {
+                "selected_template_id": selected_template_id,
+                "selected_program_id": selected_program_id,
+                "current_days_available": int(current_days_available),
+                "has_active_frequency_adaptation": bool(active_frequency_adaptation),
+                "has_latest_plan": latest_plan is not None,
+                "has_latest_soreness_entry": latest_soreness_entry is not None,
+                "recent_workout_log_count": len(recent_workout_logs),
+                "recent_checkin_count": len(recent_checkins),
+                "recent_review_cycle_count": len(recent_review_cycles),
+                "prior_plan_count": len(prior_plans),
+            },
+            "outcome": {
+                "effective_days_available": int(generation_runtime.get("effective_days_available") or 0),
+                "history_count": len(generation_runtime.get("history") or []),
+                "severe_soreness_count": int(generation_runtime.get("severe_soreness_count") or 0),
+                "latest_adherence_score": generation_runtime.get("latest_adherence_score"),
+                "prior_generated_weeks": int(generation_runtime.get("prior_generated_weeks") or 0),
+            },
+            "user_training_state_trace": _coerce_dict(training_state.get("decision_trace")),
+            "generation_runtime_trace": _coerce_dict(generation_runtime.get("decision_trace")),
+        },
+    }
+
+
 def prepare_generate_week_plan_runtime_inputs(
     *,
     user_name: str | None,
@@ -869,3 +999,130 @@ def prepare_generate_week_plan_runtime_inputs(
         },
     }
     return payload
+
+
+def prepare_generate_week_scheduler_runtime(
+    *,
+    user_name: str | None,
+    split_preference: str,
+    nutrition_phase: str | None,
+    available_equipment: list[str] | None,
+    generation_runtime: dict[str, Any],
+    program_template: dict[str, Any],
+    rule_set: dict[str, Any] | None,
+) -> dict[str, Any]:
+    plan_runtime_inputs = prepare_generate_week_plan_runtime_inputs(
+        user_name=user_name,
+        split_preference=split_preference,
+        nutrition_phase=nutrition_phase,
+        available_equipment=available_equipment,
+        generation_runtime=generation_runtime,
+    )
+    scheduler_kwargs = {
+        "user_profile": dict(plan_runtime_inputs.get("user_profile") or {}),
+        "days_available": int(plan_runtime_inputs.get("days_available") or 0),
+        "split_preference": str(plan_runtime_inputs.get("split_preference") or ""),
+        "program_template": dict(program_template),
+        "history": list(plan_runtime_inputs.get("history") or []),
+        "phase": str(plan_runtime_inputs.get("phase") or "maintenance"),
+        "available_equipment": list(plan_runtime_inputs.get("available_equipment") or []),
+        "soreness_by_muscle": dict(plan_runtime_inputs.get("soreness_by_muscle") or {}),
+        "prior_generated_weeks": int(plan_runtime_inputs.get("prior_generated_weeks") or 0),
+        "latest_adherence_score": plan_runtime_inputs.get("latest_adherence_score"),
+        "severe_soreness_count": int(plan_runtime_inputs.get("severe_soreness_count") or 0),
+        "rule_set": _coerce_dict(rule_set) or None,
+    }
+    return {
+        "scheduler_kwargs": scheduler_kwargs,
+        "decision_trace": {
+            "interpreter": "prepare_generate_week_scheduler_runtime",
+            "version": "v1",
+            "inputs": {
+                "template_id": str(program_template.get("id") or ""),
+                "has_rule_set": bool(rule_set),
+            },
+            "plan_input_trace": _coerce_dict(plan_runtime_inputs.get("decision_trace")),
+            "outcome": {
+                "days_available": int(scheduler_kwargs["days_available"]),
+                "history_count": len(scheduler_kwargs["history"]),
+                "severe_soreness_count": int(scheduler_kwargs["severe_soreness_count"]),
+                "latest_adherence_score": scheduler_kwargs["latest_adherence_score"],
+                "prior_generated_weeks": int(scheduler_kwargs["prior_generated_weeks"]),
+            },
+        },
+    }
+
+
+def prepare_generate_week_review_lookup_runtime(
+    *,
+    base_plan: dict[str, Any],
+) -> dict[str, Any]:
+    week_start = date.fromisoformat(str(base_plan.get("week_start") or ""))
+    return {
+        "week_start": week_start,
+        "decision_trace": {
+            "interpreter": "prepare_generate_week_review_lookup_runtime",
+            "version": "v1",
+            "inputs": {
+                "has_week_start": bool(base_plan.get("week_start")),
+            },
+            "outcome": {
+                "week_start": week_start.isoformat(),
+            },
+        },
+    }
+
+
+def prepare_generate_week_finalize_runtime(
+    *,
+    user_id: str,
+    base_plan: dict[str, Any],
+    template_selection_trace: dict[str, Any],
+    generation_runtime_trace: dict[str, Any],
+    selected_template_id: str,
+    active_frequency_adaptation: dict[str, Any] | None,
+    review_cycle: Any | None,
+) -> dict[str, Any]:
+    review_overlay = prepare_generated_week_review_overlay(review_cycle)
+    finalized_plan = build_generated_week_plan_payload(
+        base_plan=base_plan,
+        template_selection_trace=template_selection_trace,
+        generation_runtime_trace=generation_runtime_trace,
+        selected_template_id=selected_template_id,
+        active_frequency_adaptation=active_frequency_adaptation,
+        review_adjustments=_coerce_dict(review_overlay.get("review_adjustments")) or None,
+        review_context=_coerce_dict(review_overlay.get("review_context")) or None,
+    )
+    response_payload = _coerce_dict(finalized_plan.get("plan"))
+    adaptation_persistence_payload = build_generated_week_adaptation_persistence_payload(
+        adaptation_runtime=_coerce_dict(finalized_plan.get("adaptation_runtime")),
+    )
+    week_start = date.fromisoformat(str(response_payload.get("week_start") or base_plan.get("week_start") or ""))
+    record_values = {
+        "user_id": user_id,
+        "week_start": week_start,
+        "split": str(response_payload.get("split") or ""),
+        "phase": str(response_payload.get("phase") or ""),
+        "payload": response_payload,
+    }
+    return {
+        "week_start": week_start,
+        "response_payload": response_payload,
+        "record_values": record_values,
+        "adaptation_persistence_payload": adaptation_persistence_payload,
+        "decision_trace": {
+            "interpreter": "prepare_generate_week_finalize_runtime",
+            "version": "v1",
+            "inputs": {
+                "selected_template_id": selected_template_id,
+                "has_active_frequency_adaptation": bool(active_frequency_adaptation),
+                "has_review_cycle": review_cycle is not None,
+            },
+            "review_overlay_trace": _coerce_dict(review_overlay.get("decision_trace")),
+            "outcome": {
+                "week_start": week_start.isoformat(),
+                "state_updated": bool(adaptation_persistence_payload.get("state_updated")),
+                "session_count": len(response_payload.get("sessions") or []),
+            },
+        },
+    }

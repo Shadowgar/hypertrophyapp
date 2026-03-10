@@ -14,7 +14,12 @@ from core_engine import (
     prepare_coach_preview_runtime_inputs,
     prepare_generation_template_runtime,
     prepare_generate_week_plan_runtime_inputs,
+    prepare_generate_week_review_lookup_runtime,
+    prepare_generate_week_scheduler_runtime,
+    prepare_generate_week_finalize_runtime,
     prepare_frequency_adaptation_runtime_inputs,
+    prepare_frequency_adaptation_decision_runtime,
+    prepare_plan_generation_decision_runtime,
     resolve_program_display_name,
     resolve_program_guide_summary,
     resolve_optional_rule_set,
@@ -327,6 +332,99 @@ def test_prepare_generate_week_plan_runtime_inputs_applies_defaults() -> None:
     assert runtime["soreness_by_muscle"] == {}
 
 
+def test_prepare_generate_week_scheduler_runtime_shapes_generate_week_call_args() -> None:
+    runtime = prepare_generate_week_scheduler_runtime(
+        user_name="Coach User",
+        split_preference="full_body",
+        nutrition_phase="maintenance",
+        available_equipment=["barbell", "dumbbell"],
+        generation_runtime={
+            "effective_days_available": 4,
+            "history": [{"exercise_id": "bench"}],
+            "soreness_by_muscle": {"chest": "mild"},
+            "prior_generated_weeks": 2,
+            "latest_adherence_score": 3,
+            "severe_soreness_count": 1,
+        },
+        program_template={"id": "full_body_v1", "sessions": []},
+        rule_set={"progression_rules": {"on_success": {"percent": 2.5}}},
+    )
+
+    scheduler_kwargs = runtime["scheduler_kwargs"]
+    assert scheduler_kwargs["user_profile"] == {"name": "Coach User"}
+    assert scheduler_kwargs["days_available"] == 4
+    assert scheduler_kwargs["split_preference"] == "full_body"
+    assert scheduler_kwargs["phase"] == "maintenance"
+    assert scheduler_kwargs["available_equipment"] == ["barbell", "dumbbell"]
+    assert scheduler_kwargs["program_template"]["id"] == "full_body_v1"
+    assert scheduler_kwargs["rule_set"]["progression_rules"]["on_success"]["percent"] == 2.5
+    assert runtime["decision_trace"]["interpreter"] == "prepare_generate_week_scheduler_runtime"
+    assert runtime["decision_trace"]["plan_input_trace"]["interpreter"] == "prepare_generate_week_plan_runtime_inputs"
+
+
+def test_prepare_generate_week_review_lookup_runtime_parses_week_start() -> None:
+    runtime = prepare_generate_week_review_lookup_runtime(
+        base_plan={"week_start": "2026-03-09"}
+    )
+
+    assert runtime["week_start"] == date(2026, 3, 9)
+    assert runtime["decision_trace"]["interpreter"] == "prepare_generate_week_review_lookup_runtime"
+    assert runtime["decision_trace"]["outcome"]["week_start"] == "2026-03-09"
+
+
+def test_prepare_generate_week_finalize_runtime_shapes_response_and_record_values() -> None:
+    runtime = prepare_generate_week_finalize_runtime(
+        user_id="user_123",
+        base_plan={
+            "week_start": "2026-03-09",
+            "split": "full_body",
+            "phase": "maintenance",
+            "sessions": [
+                {
+                    "exercises": [
+                        {
+                            "id": "bench",
+                            "primary_exercise_id": "bench",
+                            "sets": 3,
+                            "recommended_working_weight": 100,
+                        }
+                    ]
+                }
+            ],
+        },
+        template_selection_trace={"interpreter": "recommend_generation_template_selection", "selected_template_id": "full_body_v1"},
+        generation_runtime_trace={"interpreter": "resolve_week_generation_runtime_inputs", "outcome": {"effective_days_available": 3}},
+        selected_template_id="full_body_v1",
+        active_frequency_adaptation={
+            "template_id": "full_body_v1",
+            "program_id": "full_body_v1",
+            "target_days": 3,
+            "duration_weeks": 2,
+            "weeks_remaining": 2,
+            "weak_areas": ["chest"],
+            "last_applied_week_start": None,
+            "decision_trace": {"interpreter": "interpret_frequency_adaptation_apply"},
+        },
+        review_cycle=SimpleNamespace(
+            week_start=date(2026, 3, 9),
+            reviewed_on=date(2026, 3, 10),
+            adjustments={
+                "global": {"set_delta": 1, "weight_scale": 0.95},
+                "exercise_overrides": {},
+            },
+        ),
+    )
+
+    assert runtime["week_start"] == date(2026, 3, 9)
+    assert runtime["response_payload"]["sessions"][0]["exercises"][0]["sets"] == 4
+    assert runtime["record_values"]["user_id"] == "user_123"
+    assert runtime["record_values"]["split"] == "full_body"
+    assert runtime["record_values"]["phase"] == "maintenance"
+    assert runtime["adaptation_persistence_payload"]["state_updated"] is True
+    assert runtime["decision_trace"]["interpreter"] == "prepare_generate_week_finalize_runtime"
+    assert runtime["decision_trace"]["review_overlay_trace"]["interpreter"] == "prepare_generated_week_review_overlay"
+
+
 def test_build_coach_preview_context_reuses_serialized_recent_training_history() -> None:
     history_rows = [
         SimpleNamespace(
@@ -496,8 +594,79 @@ def test_prepare_frequency_adaptation_runtime_inputs_reuses_context_and_shapes_e
     assert runtime["stored_weak_areas"] == ["hamstrings"]
     assert runtime["equipment_profile"] == ["barbell", "bench"]
     assert runtime["decision_trace"]["interpreter"] == "prepare_frequency_adaptation_runtime_inputs"
+
+
+def test_prepare_frequency_adaptation_decision_runtime_builds_training_state_then_runtime() -> None:
+    runtime = prepare_frequency_adaptation_decision_runtime(
+        requested_program_id="full_body_v1",
+        selected_program_id="full_body_v1",
+        latest_plan={"id": "plan_1"},
+        latest_soreness_entry={"entry_date": "2026-03-09"},
+        current_days_available=5,
+        target_days=3,
+        duration_weeks=2,
+        explicit_weak_areas=["chest"],
+        stored_weak_areas=["back"],
+        equipment_profile=["barbell"],
+        build_plan_decision_training_state=lambda **kwargs: {
+            "program_id": kwargs["selected_program_id"],
+            "has_plan": kwargs["latest_plan"] is not None,
+        },
+    )
+
+    assert runtime["training_state"]["program_id"] == "full_body_v1"
+    assert runtime["adaptation_runtime"]["target_days"] == 3
+    assert runtime["decision_trace"]["interpreter"] == "prepare_frequency_adaptation_decision_runtime"
     assert runtime["decision_trace"]["outcome"]["program_id"] == "full_body_v1"
     assert runtime["context_trace"]["interpreter"] == "resolve_frequency_adaptation_request_context"
+
+
+def test_prepare_plan_generation_decision_runtime_builds_canonical_training_state_and_generation_runtime() -> None:
+    runtime = prepare_plan_generation_decision_runtime(
+        selected_template_id="upper_lower_v1",
+        current_days_available=5,
+        active_frequency_adaptation={"target_days": 4},
+        selected_program_id="upper_lower_v1",
+        latest_plan=SimpleNamespace(payload={"program_template_id": "upper_lower_v1"}),
+        latest_soreness_entry=SimpleNamespace(severity_by_muscle={"chest": "mild"}),
+        recent_workout_logs=[
+            SimpleNamespace(
+                exercise_id="bench_press",
+                primary_exercise_id="bench_press",
+                weight=82.5,
+                reps=8,
+                rir=2,
+                completed=True,
+                created_at=datetime(2026, 3, 9, 9, 0),
+            )
+        ],
+        recent_checkins=[SimpleNamespace(adherence_score=4)],
+        recent_review_cycles=[SimpleNamespace(reviewed_on=date(2026, 3, 8))],
+        prior_plans=[],
+        build_plan_decision_training_state=lambda **kwargs: {
+            "user_program_state": {
+                "program_id": kwargs["selected_program_id"],
+                "week_index": 3,
+            },
+            "adherence_state": {"latest_adherence_score": 4},
+            "fatigue_state": {"soreness_by_muscle": {"chest": "mild"}},
+            "exercise_performance_history": [{"exercise_id": "bench_press"}],
+            "generation_state": {"prior_generated_weeks_by_program": {"upper_lower_v1": 2}},
+            "source_flags": {
+                "has_latest_plan": kwargs["latest_plan"] is not None,
+                "checkin_count": len(kwargs["recent_checkins"]),
+                "review_cycle_count": len(kwargs["recent_review_cycles"]),
+            },
+        },
+    )
+
+    assert runtime["training_state"]["source_flags"]["has_latest_plan"] is True
+    assert runtime["training_state"]["source_flags"]["checkin_count"] == 1
+    assert runtime["generation_runtime"]["effective_days_available"] == 4
+    assert runtime["generation_runtime"]["latest_adherence_score"] == 4
+    assert runtime["generation_runtime"]["prior_generated_weeks"] == 2
+    assert runtime["generation_runtime"]["decision_trace"]["interpreter"] == "resolve_week_generation_runtime_inputs"
+    assert runtime["decision_trace"]["interpreter"] == "prepare_plan_generation_decision_runtime"
 
 
 def test_resolve_week_generation_runtime_inputs_prefers_canonical_training_state_history_and_adherence() -> None:

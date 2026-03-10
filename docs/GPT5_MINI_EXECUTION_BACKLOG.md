@@ -1,6 +1,6 @@
 # GPT-5-mini Execution Backlog - Adaptive Coaching Rebuild
 
-Last updated: 2026-03-09
+Last updated: 2026-03-10
 
 ## Priority 0 - Foundation (In Progress)
 
@@ -242,6 +242,48 @@ Evidence (2026-03-09, coach apply source-runtime extraction)
 - `apps/api/app/routers/plan.py`: apply-phase/apply-specialization now use that shared helper before `prepare_phase_apply_runtime` / `prepare_specialization_apply_runtime`, reducing route-local recommendation-payload coercion.
 - `packages/core-engine/tests/test_intelligence.py` and `apps/api/tests/test_plan_intelligence_api.py`: focused regressions passed for apply route behavior after source-runtime extraction.
 
+Evidence (2026-03-09, coach apply interpreter and applied-record extraction)
+- `packages/core-engine/core_engine/decision_coach_preview.py`: coach apply decision interpretation and applied-record payload builders now own `interpret_coach_phase_apply_decision`, `interpret_coach_specialization_apply_decision`, `build_phase_applied_recommendation_record`, and `build_specialization_applied_recommendation_record`.
+- `packages/core-engine/core_engine/intelligence.py`: stable public wrappers now delegate those decision-family internals to `decision_coach_preview.py` so router contracts remain unchanged.
+- `packages/core-engine/tests/test_decision_coach_preview.py`, `packages/core-engine/tests/test_intelligence.py`, and `apps/api/tests/test_plan_intelligence_api.py`: focused module/engine/API regressions passed for the extracted apply-decision seam.
+
+Evidence (2026-03-09, coach apply finalization payload extraction)
+- `packages/core-engine/core_engine/decision_coach_preview.py`: `finalize_applied_coaching_recommendation` now owns deterministic apply-finalization payload shaping (applied recommendation ID trace injection and response payload enrichment).
+- `packages/core-engine/core_engine/intelligence.py`: stable public wrapper now delegates finalization to the coach-preview decision module.
+- `packages/core-engine/tests/test_decision_coach_preview.py` and `apps/api/tests/test_plan_intelligence_api.py`: focused regressions passed after apply-finalization extraction.
+
+Evidence (2026-03-09, coach-preview recommendation assembly extraction)
+- `packages/core-engine/core_engine/decision_coach_preview.py`: coach-preview recommendation assembly internals now own schedule/progression payload shaping, readiness-score fallback handling, decision-trace packaging, and `recommend_coach_intelligence_preview` orchestration.
+- `packages/core-engine/core_engine/intelligence.py`: `recommend_coach_intelligence_preview` now delegates to the decision module via stable wrapper entrypoint while injecting existing decision dependencies (schedule adaptation, progression/phase/specialization interpreters, humanizers, and media/warmup summarization).
+- `packages/core-engine/tests/test_decision_coach_preview.py`, `packages/core-engine/tests/test_intelligence.py`, and `apps/api/tests/test_plan_intelligence_api.py`: focused module/engine/API regressions passed after coach-preview assembly extraction.
+
+Evidence (2026-03-09, coaching recommendation timeline extraction)
+- `packages/core-engine/core_engine/decision_coach_preview.py`: timeline rationale normalization and payload shaping now own `resolve_coaching_recommendation_rationale`, `extract_coaching_recommendation_focus_muscles`, `build_coaching_recommendation_timeline_entry`, `build_coaching_recommendation_timeline_payload`, and `normalize_coaching_recommendation_timeline_limit`.
+- `packages/core-engine/core_engine/intelligence.py`: stable public wrappers now delegate timeline shaping internals to `decision_coach_preview.py` while preserving endpoint contracts.
+- `packages/core-engine/tests/test_decision_coach_preview.py`, `packages/core-engine/tests/test_intelligence.py`, and `apps/api/tests/test_plan_intelligence_api.py`: focused module/engine/API regressions passed after timeline extraction.
+
+Evidence (2026-03-09, shared plan/profile training-state assembly extraction)
+- `packages/core-engine/core_engine/user_state.py`: `build_plan_decision_training_state` now owns shared plan/profile training-state payload assembly defaults on top of canonical `build_user_training_state` (logs/checkins/reviews/prior-plans coercion with no router-local exercise-state dependency).
+- `apps/api/app/routers/plan.py` and `apps/api/app/routers/profile.py`: plan generate-week/coach-preview/adaptation and profile recommendation runtime prep now reuse that helper instead of route-local training-state shaping functions.
+- `packages/core-engine/tests/test_user_state.py`, `apps/api/tests/test_plan_intelligence_api.py`, `apps/api/tests/test_program_frequency_adaptation_api.py`, `apps/api/tests/test_profile_training_state.py`, and `apps/api/tests/test_program_recommendation_and_switch.py`: focused engine/API regressions passed after shared training-state extraction.
+
+Evidence (2026-03-09, apply response finalization helper extraction)
+- `packages/core-engine/core_engine/decision_coach_preview.py`: `build_applied_coaching_recommendation_response` now owns shared apply response finalization wiring for coach apply endpoints by delegating deterministic payload/trace finalization through the decision-family module.
+- `packages/core-engine/core_engine/intelligence.py`: stable wrapper now delegates apply response finalization to the decision module.
+- `apps/api/app/routers/plan.py`: apply-phase and apply-specialization now call the shared helper instead of route-local finalization wiring.
+- `packages/core-engine/tests/test_decision_coach_preview.py`, `packages/core-engine/tests/test_intelligence.py`, and `apps/api/tests/test_plan_intelligence_api.py`: focused regressions passed after apply response helper extraction.
+
+Evidence (2026-03-09, applied recommendation record-values extraction)
+- `packages/core-engine/core_engine/decision_coach_preview.py`: `build_applied_coaching_recommendation_record_values` now owns deterministic applied-record constructor payload shaping (`user_id`, empty initial recommendation payload, applied timestamp, and normalized record fields).
+- `packages/core-engine/core_engine/intelligence.py`: stable wrapper now delegates applied-record constructor payload shaping to the decision module.
+- `apps/api/app/routers/plan.py`: apply-phase and apply-specialization now reuse this shared helper when creating `CoachingRecommendation` applied records.
+- `packages/core-engine/tests/test_decision_coach_preview.py`, `packages/core-engine/tests/test_intelligence.py`, and `apps/api/tests/test_plan_intelligence_api.py`: focused regressions passed after applied-record payload extraction.
+
+Evidence (2026-03-09, coach-preview context runtime extraction)
+- `packages/core-engine/core_engine/decision_coach_preview.py`: `prepare_coach_preview_decision_context` now owns deterministic coach-preview context prep by combining canonical training-state assembly and context payload defaults (`nutrition_phase`, equipment list normalization) with structured trace metadata.
+- `apps/api/app/routers/plan.py`: `POST /plan/intelligence/coach-preview` now delegates training-state/context shaping to the shared helper before calling `recommend_coach_intelligence_preview`.
+- `packages/core-engine/tests/test_decision_coach_preview.py`, `packages/core-engine/tests/test_intelligence.py`, and `apps/api/tests/test_plan_intelligence_api.py`: focused regressions passed after coach-preview context extraction.
+
 Evidence (2026-03-09, weekly-review submit window extraction)
 - `packages/core-engine/core_engine/intelligence.py`: `prepare_weekly_review_submit_window` now owns weekly-review submit week-window resolution (requested week override vs runtime default window, plus previous-week derivation) with structured decision trace.
 - `apps/api/app/routers/profile.py`: `POST /weekly-review` now delegates week-window shaping to the new helper before summary/decision/persistence orchestration.
@@ -256,6 +298,11 @@ Evidence (2026-03-09, workout-today log projection runtime extraction)
 - `packages/core-engine/core_engine/intelligence.py`: `build_workout_today_log_runtime` now owns deterministic workout-log projection for workout-today resume and completion inputs (normalized `workout_id` rows plus selected-session `exercise_id`/`set_index` rows) with structured decision trace.
 - `apps/api/app/routers/workout.py`: `GET /workout/today` now delegates both resume and completion log projection inputs through that helper before calling resume/completion interpreters.
 - `packages/core-engine/tests/test_intelligence.py`, `apps/api/tests/test_workout_resume.py`, and `apps/api/tests/test_workout_session_state.py`: focused regressions passed after log-runtime extraction.
+
+Evidence (2026-03-09, workout log-set persistence payload extraction)
+- `packages/core-engine/core_engine/intelligence.py`: `prepare_workout_log_set_decision_runtime` now also shapes deterministic `ExerciseState` persistence payloads (`exercise_state_create_values`, `exercise_state_update_values`, `starting_load_runtime`, and `substitution_recommendation`) alongside existing log-set decision/runtime output.
+- `apps/api/app/routers/workout.py`: `POST /workout/{workout_id}/log-set` now uses those core-engine payloads directly for `ExerciseState` create/update persistence while preserving in-router SQL writes and commit flow.
+- Focused validation passed for this slice: `packages/core-engine/tests/test_intelligence.py -k \"prepare_workout_log_set_decision_runtime or prepare_workout_exercise_state_runtime\"` and `apps/api/tests/test_workout_logset_feedback.py`.
 
 Evidence (2026-03-09, workout-progress completion projection extraction)
 - `apps/api/app/routers/workout.py`: `GET /workout/{workout_id}/progress` now reuses `build_workout_today_log_runtime` for deterministic completion-log projection before completed-set aggregation.
@@ -389,9 +436,26 @@ Evidence (2026-03-09, frequency-adaptation decision family extraction start)
 
 Evidence (2026-03-09, weekly-review decision family extraction start)
 - `packages/core-engine/core_engine/decision_weekly_review.py`: weekly-review window/status/submit/persistence utility functions now live in a dedicated decision-family module.
+- `packages/core-engine/core_engine/decision_weekly_review.py`: weekly-review decision interpretation and decision-payload builders now also live in that dedicated module (`interpret_weekly_review_decision`, `build_weekly_review_decision_payload`).
+- `packages/core-engine/core_engine/decision_weekly_review.py`: weekly-review plan-adjustment application helpers now also live in that module (`apply_weekly_review_adjustments_to_plan` and its helper chain for set/weight override projection + adaptive-review payload shaping).
 - `packages/core-engine/core_engine/intelligence.py`: weekly-review utility entry points now delegate to the dedicated decision-family module, reducing `intelligence.py` ownership while preserving route behavior.
-- `packages/core-engine/core_engine/__init__.py`: extracted weekly-review utility exports are now sourced from the dedicated decision-family module.
+- `packages/core-engine/core_engine/intelligence.py`: extracted weekly-review helper duplicates (guidance/rationale/global-adjustment/override helpers) were removed from `intelligence.py` after delegation, completing this slice’s ownership cleanup without route contract changes.
+- `packages/core-engine/core_engine/__init__.py`: extracted weekly-review utility and plan-adjustment exports are now sourced from the dedicated decision-family module.
 - `packages/core-engine/tests/test_decision_weekly_review.py`, `packages/core-engine/tests/test_intelligence.py`, and `apps/api/tests/test_weekly_review.py`: focused regressions passed after extraction.
+
+Evidence (2026-03-09, coach-preview decision family extraction start)
+- `packages/core-engine/core_engine/decision_coach_preview.py`: coach-preview response payload and recommendation-record-field shaping now live in a dedicated decision-family module (`build_coach_preview_payloads`, `build_coach_preview_recommendation_record_fields`).
+- `packages/core-engine/core_engine/decision_coach_preview.py`: coach-apply source/runtime prep internals now also live in that module (`prepare_coaching_apply_runtime_source`, `prepare_phase_apply_runtime`, `prepare_specialization_apply_runtime`) with callback-injected decision/apply record hooks.
+- `packages/core-engine/core_engine/intelligence.py`: those coach-preview payload helpers now delegate to the dedicated decision module, reducing additional payload-shaping ownership in `intelligence.py`.
+- `packages/core-engine/core_engine/intelligence.py`: stable public signatures for apply-phase/specialization runtime prep remain wrapper-owned while delegating low-level prep logic to the decision module, preserving router call contracts.
+- `packages/core-engine/core_engine/__init__.py`: coach-preview payload-shaping exports are sourced from `decision_coach_preview.py`; apply-runtime prep exports continue to route through the stable `intelligence.py` wrappers.
+- `packages/core-engine/tests/test_decision_coach_preview.py`, `packages/core-engine/tests/test_intelligence.py`, and `apps/api/tests/test_plan_intelligence_api.py`: focused regressions passed after extraction.
+
+Evidence (2026-03-09, plan generate-week runtime assembly extraction)
+- `packages/core-engine/core_engine/generation.py`: `prepare_plan_generation_decision_runtime` now owns canonical training-state assembly wiring into `resolve_week_generation_runtime_inputs` for generate-week runtime preparation, with structured trace output.
+- `apps/api/app/routers/plan.py`: `_prepare_plan_generation_runtime` now keeps SQL reads only and delegates deterministic runtime payload prep to that core-engine helper.
+- `packages/core-engine/core_engine/generation.py`: `prepare_frequency_adaptation_decision_runtime` now exposes top-level `context_trace`, preserving the adaptation request-context trace contract expected by generation runtime tests.
+- `packages/core-engine/tests/test_generation.py`, `apps/api/tests/test_plan_intelligence_api.py`, `apps/api/tests/test_program_catalog_and_selection.py`, and `apps/api/tests/test_program_frequency_adaptation_api.py`: focused regressions passed after this extraction.
 
 Evidence (2026-03-09, adaptation onboarding program-id resolution extraction)
 - `packages/core-engine/core_engine/generation.py`: `resolve_onboarding_program_id` now owns linked-template onboarding program ID resolution for adaptation flows.
@@ -410,6 +474,131 @@ Evidence (2026-03-09, weekly-checkin/weekly-review profile payload extraction)
 - `packages/core-engine/core_engine/intelligence.py`: `prepare_weekly_review_log_window_runtime` now owns previous-week half-open workout-log window timestamp shaping.
 - `apps/api/app/routers/profile.py`: weekly-checkin and weekly-review now delegate those payload/window normalization seams to core-engine while keeping SQL/persistence in-router.
 - `packages/core-engine/tests/test_intelligence.py` and `apps/api/tests/test_weekly_review.py`: focused regressions passed after weekly-checkin/weekly-review payload extraction.
+
+Evidence (2026-03-09, weekly-review performance-summary decision-family extraction)
+- `packages/core-engine/core_engine/decision_weekly_review.py`: weekly-review summary derivation now also lives in this module via `summarize_weekly_review_performance` and `build_weekly_review_performance_summary`, including planned-vs-performed aggregation, exercise fault scoring, and structured trace packaging.
+- `packages/core-engine/core_engine/intelligence.py`: weekly-review summary entrypoints now delegate to the decision-family module wrappers, reducing direct weekly-review ownership in the intelligence module while preserving router contracts.
+- `packages/core-engine/core_engine/__init__.py`: package exports for weekly-review performance summary helpers are now sourced from `decision_weekly_review.py` to match module ownership boundaries.
+- `packages/core-engine/core_engine/intelligence.py`: duplicate weekly-review summary helper internals were removed after delegation, leaving `decision_weekly_review.py` as the single owner for that summary/fault-scoring decision chain.
+- `packages/core-engine/tests/test_decision_weekly_review.py`, `packages/core-engine/tests/test_intelligence.py`, and `apps/api/tests/test_weekly_review.py`: focused regressions passed after extraction.
+
+Evidence (2026-03-09, coach-apply commit runtime extraction)
+- `packages/core-engine/core_engine/decision_coach_preview.py`: apply confirm-path commit runtime now has dedicated helpers (`prepare_applied_coaching_recommendation_commit_runtime`, `finalize_applied_coaching_recommendation_commit_runtime`) for deterministic record-value shaping and post-flush response/recommendation payload finalization.
+- `packages/core-engine/core_engine/intelligence.py` and `packages/core-engine/core_engine/__init__.py`: stable wrapper/public export surface now includes those commit-runtime helpers for router consumption.
+- `apps/api/app/routers/plan.py`: apply-phase and apply-specialization confirm paths now share the commit-runtime helper flow instead of duplicated route-local payload wiring.
+- `packages/core-engine/tests/test_decision_coach_preview.py` and `apps/api/tests/test_plan_intelligence_api.py`: focused regressions passed after extraction.
+
+Evidence (2026-03-09, coach-apply request runtime branch extraction)
+- `packages/core-engine/core_engine/decision_coach_preview.py`: apply decision-request branch runtime prep now also lives in this module via `prepare_coaching_apply_decision_runtime` (source-runtime normalization, phase/specialization argument shaping, and trace metadata).
+- `packages/core-engine/core_engine/intelligence.py` and `packages/core-engine/core_engine/__init__.py`: stable wrapper/public export surface now includes `prepare_coaching_apply_decision_runtime` for router usage.
+- `apps/api/app/routers/plan.py`: apply-phase/apply-specialization now share this helper for source-runtime branch wiring, removing duplicated route-local field unpacking before interpreter runtime prep.
+- `packages/core-engine/tests/test_decision_coach_preview.py` and `apps/api/tests/test_plan_intelligence_api.py`: focused regressions passed after extraction.
+
+Evidence (2026-03-09, coach-apply commit payload-key mapping extraction)
+- `packages/core-engine/core_engine/decision_coach_preview.py`: apply commit-runtime payload-key selection now also lives in this module via `prepare_coaching_apply_commit_runtime` (`phase` -> `phase_transition`, `specialization` -> `specialization`) with unsupported-kind guardrails.
+- `packages/core-engine/core_engine/intelligence.py` and `packages/core-engine/core_engine/__init__.py`: stable wrapper/public export surface now includes `prepare_coaching_apply_commit_runtime` for router usage.
+- `apps/api/app/routers/plan.py`: apply-phase/apply-specialization confirm paths now share this helper for commit-runtime preparation, removing duplicated route-local payload-key mapping.
+- `packages/core-engine/tests/test_decision_coach_preview.py` and `apps/api/tests/test_plan_intelligence_api.py`: focused regressions passed after extraction.
+
+Evidence (2026-03-09, coach-apply route branching runtime extraction)
+- `packages/core-engine/core_engine/decision_coach_preview.py`: apply route branching runtime now also lives in this module via `prepare_coaching_apply_route_runtime`, unifying preflight response payload selection and confirm-path commit-runtime preparation behind one deterministic helper.
+- `packages/core-engine/core_engine/intelligence.py` and `packages/core-engine/core_engine/__init__.py`: stable wrapper/public export surface now includes `prepare_coaching_apply_route_runtime` for router usage.
+- `apps/api/app/routers/plan.py`: apply-phase/apply-specialization now share this helper for preflight/confirm branching, removing remaining duplicated route-local branching glue while keeping DB writes and HTTP mapping in-router.
+- `packages/core-engine/tests/test_decision_coach_preview.py` and `apps/api/tests/test_plan_intelligence_api.py`: focused regressions passed after extraction.
+
+Evidence (2026-03-09, weekly-review submit persistence-value extraction)
+- `packages/core-engine/core_engine/decision_weekly_review.py`: weekly-review submit persistence value shaping now also lives in this module via `prepare_weekly_review_submit_persistence_values`, producing deterministic `WeeklyCheckin` and `WeeklyReviewCycle` constructor payloads plus trace metadata.
+- `packages/core-engine/core_engine/__init__.py`: package export surface now includes `prepare_weekly_review_submit_persistence_values`.
+- `apps/api/app/routers/profile.py`: weekly-review submit now delegates checkin/review constructor value preparation to that helper, removing remaining route-local persistence field wiring while keeping SQL writes in-router.
+- `packages/core-engine/tests/test_decision_weekly_review.py` and `apps/api/tests/test_weekly_review.py`: focused regressions passed after extraction.
+
+Evidence (2026-03-09, coach-preview commit runtime extraction)
+- `packages/core-engine/core_engine/decision_coach_preview.py`: coach-preview commit runtime now also lives in this module via `prepare_coach_preview_commit_runtime` and `finalize_coach_preview_commit_runtime`, centralizing recommendation-record constructor payload shaping and post-flush response/recommendation payload finalization.
+- `packages/core-engine/core_engine/intelligence.py` and `packages/core-engine/core_engine/__init__.py`: stable wrapper/public export surface now includes these coach-preview commit runtime helpers for router usage.
+- `apps/api/app/routers/plan.py`: coach-preview now delegates record constructor payload prep and post-flush payload finalization to shared helpers, reducing route-local deterministic commit wiring while keeping DB writes in-router.
+- `packages/core-engine/tests/test_decision_coach_preview.py` and `apps/api/tests/test_plan_intelligence_api.py`: focused regressions passed after extraction.
+
+Evidence (2026-03-09, workout log-set exercise-state runtime extraction)
+- `packages/core-engine/core_engine/intelligence.py`: workout log-set exercise-state runtime now also lives in this module via `prepare_workout_exercise_state_runtime`, centralizing existing-state normalization, first-exposure starting-load fallback, progression update payload shaping, and repeat-failure substitution payload preparation.
+- `packages/core-engine/core_engine/__init__.py`: package export surface now includes `prepare_workout_exercise_state_runtime`.
+- `apps/api/app/routers/workout.py`: log-set now delegates exercise-state runtime prep to that helper; route retains ORM query/create/add/commit while deterministic state field mapping moves to core-engine.
+- `packages/core-engine/tests/test_intelligence.py`, `apps/api/tests/test_workout_logset_feedback.py`, `apps/api/tests/test_workout_summary.py`, and `apps/api/tests/test_workout_progress.py`: focused regressions passed after extraction.
+
+Evidence (2026-03-09, frequency-adaptation route runtime extraction)
+- `packages/core-engine/core_engine/decision_frequency_adaptation.py`: adaptation preview/apply route orchestration now also lives in this module via `prepare_frequency_adaptation_route_runtime`, centralizing shared runtime-argument shaping, preview/apply interpreter dispatch, and apply response/persistence payload shaping.
+- `packages/core-engine/core_engine/intelligence.py` and `packages/core-engine/core_engine/__init__.py`: stable wrapper and export surface now include `prepare_frequency_adaptation_route_runtime`.
+- `apps/api/app/routers/plan.py`: adaptation preview/apply endpoints now share this helper instead of duplicating deterministic interpreter argument wiring and apply payload construction; routes keep SQL reads, onboarding package load, persistence commit, and HTTP mapping.
+- `packages/core-engine/tests/test_decision_frequency_adaptation.py` and `apps/api/tests/test_program_frequency_adaptation_api.py`: focused regressions passed after extraction.
+
+Evidence (2026-03-09, coach-preview route runtime extraction)
+- `packages/core-engine/core_engine/decision_coach_preview.py`: coach-preview route composition now also lives in this module via `prepare_coach_preview_route_runtime`, centralizing preview interpreter dispatch and commit-runtime preparation behind one decision-family helper.
+- `packages/core-engine/core_engine/__init__.py`: package export surface now includes `prepare_coach_preview_route_runtime`.
+- `apps/api/app/routers/plan.py`: `POST /plan/intelligence/coach-preview` now delegates deterministic preview/commit composition to this helper instead of route-local wiring; route keeps SQL reads, template/rule loading, DB persistence, and HTTP mapping.
+- `packages/core-engine/tests/test_decision_coach_preview.py` and `apps/api/tests/test_plan_intelligence_api.py`: focused regressions passed after extraction.
+
+Evidence (2026-03-09, profile recommendation route-runtime extraction)
+- `packages/core-engine/core_engine/intelligence.py`: profile recommendation route composition now also lives in this module via `prepare_profile_program_recommendation_route_runtime`, centralizing fallback input shaping + recommendation runtime prep behind one deterministic helper.
+- `packages/core-engine/core_engine/__init__.py`: package export surface now includes `prepare_profile_program_recommendation_route_runtime`.
+- `apps/api/app/routers/profile.py`: program recommendation and program switch endpoints now share this helper instead of duplicating recommendation input/runtime wiring.
+- `packages/core-engine/tests/test_intelligence.py` and `apps/api/tests/test_program_recommendation_and_switch.py`: focused regressions passed after extraction.
+
+Evidence (2026-03-09, weekly-review submit route-runtime extraction)
+- `packages/core-engine/core_engine/decision_weekly_review.py`: weekly-review submit route composition now also lives in this module via `prepare_weekly_review_submit_route_runtime`, centralizing decision payload shaping, review persistence payload shaping, user update payload shaping, submit persistence value shaping, and final response payload shaping.
+- `packages/core-engine/core_engine/__init__.py`: package export surface now includes `prepare_weekly_review_submit_route_runtime`.
+- `apps/api/app/routers/profile.py`: `POST /weekly-review` now reuses this helper instead of route-local composition across multiple weekly-review decision/persistence builders.
+- `packages/core-engine/tests/test_decision_weekly_review.py` and `apps/api/tests/test_weekly_review.py`: focused regressions passed after extraction.
+
+Evidence (2026-03-09, coach apply route-finalize extraction)
+- `packages/core-engine/core_engine/decision_coach_preview.py`: apply finalize branching now also lives in this module via `prepare_coaching_apply_route_finalize_runtime`, centralizing preflight response passthrough vs confirm-path commit finalization and recommendation payload shaping.
+- `packages/core-engine/core_engine/intelligence.py` and `packages/core-engine/core_engine/__init__.py`: stable wrapper/export surface now includes `prepare_coaching_apply_route_finalize_runtime`.
+- `apps/api/app/routers/plan.py`: apply-phase/apply-specialization now reuse this helper for deterministic final response/recommendation payload preparation after route runtime assembly and optional DB flush.
+- `packages/core-engine/tests/test_decision_coach_preview.py` and `apps/api/tests/test_plan_intelligence_api.py`: focused regressions passed after extraction.
+
+Evidence (2026-03-09, workout session-state upsert runtime extraction)
+- `packages/core-engine/core_engine/intelligence.py`: workout session-state upsert payload composition now also lives in this module via `prepare_workout_session_state_upsert_runtime`, centralizing create-default seeding and persisted update/live recommendation payload preparation.
+- `packages/core-engine/core_engine/__init__.py`: package export surface now includes `prepare_workout_session_state_upsert_runtime`.
+- `apps/api/app/routers/workout.py`: `_upsert_workout_session_state` now delegates deterministic state payload composition to this helper while keeping ORM fetch/create/add in-router.
+- `packages/core-engine/tests/test_intelligence.py`, `apps/api/tests/test_workout_session_state.py`, and `apps/api/tests/test_workout_logset_feedback.py`: focused regressions passed after extraction.
+
+Evidence (2026-03-09, weekly-review status/summary route-runtime extraction)
+- `packages/core-engine/core_engine/decision_weekly_review.py`: weekly-review route composition now also includes `prepare_weekly_review_summary_route_runtime` and `prepare_weekly_review_status_route_runtime`, centralizing previous-week summary payload shaping and weekly-review status response payload/window shaping.
+- `packages/core-engine/core_engine/__init__.py`: package export surface now includes both weekly-review status/summary route-runtime helpers.
+- `apps/api/app/routers/profile.py`: `GET /weekly-review/status` and `_collect_previous_week_performance_summary` now reuse those helpers instead of route-local summary/status payload composition.
+- `packages/core-engine/tests/test_decision_weekly_review.py` and `apps/api/tests/test_weekly_review.py`: focused regressions passed after extraction.
+
+Evidence (2026-03-09, plan apply-route orchestration consolidation)
+- `apps/api/app/routers/plan.py`: apply-phase and apply-specialization now share `_apply_coaching_decision_route`, consolidating repeated route orchestration (recommendation lookup, apply runtime dispatch, preflight-vs-confirm branching, optional applied-record flush/commit, and response payload return).
+- `apps/api/tests/test_plan_intelligence_api.py`: focused regressions passed after consolidation (`9` tests).
+
+Evidence (2026-03-10, workout route-runtime extraction)
+- `packages/core-engine/core_engine/decision_workout_session.py`: workout route-runtime composition now also lives in a dedicated decision-family module via `prepare_workout_today_plan_route_runtime`, `prepare_workout_today_selection_route_runtime`, `prepare_workout_today_response_runtime`, `prepare_workout_progress_route_runtime`, and `prepare_workout_summary_route_runtime`, centralizing deterministic plan selection, resume selection, payload hydration, progress shaping, and summary lookup prep with structured traces.
+- `packages/core-engine/core_engine/__init__.py`: package export surface now includes the new workout route-runtime helpers.
+- `apps/api/app/routers/workout.py`: `GET /workout/today`, `GET /workout/{workout_id}/progress`, and `GET /workout/{workout_id}/summary` now delegate those deterministic composition paths to the workout decision-family helper while keeping SQL reads, optional rule-set loading, persistence, and HTTP error mapping in-router.
+- `packages/core-engine/tests/test_decision_workout_session.py`, `apps/api/tests/test_workout_resume.py`, `apps/api/tests/test_workout_progress.py`, `apps/api/tests/test_workout_summary.py`, and `apps/api/tests/test_workout_session_state.py`: focused regressions passed after extraction.
+
+Evidence (2026-03-10, generate-week route-runtime extraction)
+- `packages/core-engine/core_engine/generation.py`: generate-week route-runtime composition now also includes `prepare_generate_week_scheduler_runtime`, `prepare_generate_week_review_lookup_runtime`, and `prepare_generate_week_finalize_runtime`, centralizing scheduler kwargs, `week_start` review lookup parsing, review-overlay/finalized-plan shaping, adaptation persistence shaping, and `WorkoutPlan` record values with structured traces.
+- `packages/core-engine/core_engine/__init__.py`: package export surface now includes the new generate-week route-runtime helpers.
+- `apps/api/app/routers/plan.py`: `POST /plan/generate-week` now delegates route-local scheduler argument assembly, `week_start` parsing, finalized plan shaping, adaptation persistence payload shaping, and `WorkoutPlan` constructor payload wiring to those helpers while keeping SQL reads, review-cycle lookup, DB writes, and HTTP error mapping in-router.
+- `packages/core-engine/tests/test_generation.py`, `apps/api/tests/test_program_catalog_and_selection.py`, `apps/api/tests/test_program_frequency_adaptation_api.py`, and `apps/api/tests/test_weekly_review.py`: focused regressions passed after extraction.
+
+Evidence (2026-03-10, completed workout-family route-runtime extraction)
+- `packages/core-engine/core_engine/decision_workout_session.py`: the workout decision-family now also includes `prepare_workout_log_set_context_route_runtime`, `prepare_workout_log_set_decision_route_runtime`, `prepare_workout_session_state_route_runtime`, `prepare_workout_log_set_response_runtime`, `prepare_workout_today_progression_route_runtime`, and `prepare_workout_summary_response_runtime`, centralizing the remaining deterministic `log-set`, `today`, and `summary` route glue with structured traces.
+- `packages/core-engine/core_engine/__init__.py`: package export surface now includes the expanded workout decision-family helpers.
+- `apps/api/app/routers/workout.py`: `POST /workout/{workout_id}/log-set` now delegates request/context shaping, decision-runtime prep, session-state upsert payload shaping, and final response payload shaping to the workout decision-family helper; `GET /workout/today` now also delegates progression-id/rule-set prep there; `GET /workout/{workout_id}/summary` now also delegates final summary response shaping there.
+- `packages/core-engine/tests/test_decision_workout_session.py`, `apps/api/tests/test_workout_resume.py`, `apps/api/tests/test_workout_progress.py`, `apps/api/tests/test_workout_summary.py`, `apps/api/tests/test_workout_session_state.py`, and `apps/api/tests/test_workout_logset_feedback.py`: focused regressions passed after the completed workout-family extraction.
+
+Evidence (2026-03-10, program recommendation decision-family extraction)
+- `packages/core-engine/core_engine/decision_program_recommendation.py`: program recommendation/switch ownership now lives in a dedicated decision-family module (`resolve_program_recommendation_candidates`, `recommend_program_selection`, `prepare_program_recommendation_runtime`, `prepare_profile_program_recommendation_route_runtime`, `build_program_switch_payload`, and `prepare_program_switch_runtime`), preserving structured candidate-resolution and selection traces.
+- `packages/core-engine/core_engine/intelligence.py`: stable public entrypoints for those recommendation/switch helpers now delegate to the dedicated decision-family module so existing router and test imports keep the same surface while ownership moves out of the god module.
+- `packages/core-engine/core_engine/__init__.py`: package exports for recommendation/switch helpers are now sourced from the dedicated decision-family module.
+- `packages/core-engine/tests/test_decision_program_recommendation.py`, `packages/core-engine/tests/test_intelligence.py`, and `apps/api/tests/test_program_recommendation_and_switch.py`: focused regressions passed after extraction.
+
+Evidence (2026-03-10, progression decision-family extraction)
+- `packages/core-engine/core_engine/decision_progression.py`: schedule adaptation, readiness scoring, progression action selection, progression rationale humanization, and phase-transition selection/humanization now live in a dedicated decision-family module.
+- `packages/core-engine/core_engine/intelligence.py`: stable public entrypoints for schedule/progression/phase-transition helpers now delegate to the dedicated decision-family module so coach-preview and other consumers keep the existing import surface while ownership moves out of the god module.
+- `packages/core-engine/core_engine/__init__.py`: package exports for those progression helpers are now sourced from the dedicated decision-family module.
+- `packages/core-engine/tests/test_decision_progression.py`, `packages/core-engine/tests/test_intelligence.py`, and `apps/api/tests/test_plan_intelligence_api.py`: focused regressions passed after extraction.
 
 ### Task 2.2 - Gold End-To-End Runtime Path
 - Selection -> generation -> logging -> evaluation -> adaptation.
