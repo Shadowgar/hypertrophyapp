@@ -78,6 +78,9 @@ class ProfileUpsert(BaseModel):
     weak_areas: list[str] = Field(default_factory=list)
     onboarding_answers: dict[str, Any] = Field(default_factory=dict)
     days_available: int = Field(ge=2, le=5)
+    session_time_budget_minutes: int | None = Field(default=None, ge=15, le=240)
+    movement_restrictions: list[str] = Field(default_factory=list)
+    near_failure_tolerance: Literal["low", "moderate", "high"] | None = None
     nutrition_phase: str
     calories: int
     protein: int
@@ -97,6 +100,9 @@ class WeeklyCheckinRequest(BaseModel):
     week_start: date
     body_weight: float = Field(gt=0)
     adherence_score: int = Field(ge=1, le=5)
+    sleep_quality: int | None = Field(default=None, ge=1, le=5)
+    stress_level: int | None = Field(default=None, ge=1, le=5)
+    pain_flags: list[str] = Field(default_factory=list)
     notes: str | None = None
 
     @field_validator("week_start")
@@ -286,6 +292,10 @@ class PhaseTransitionResponse(BaseModel):
     next_phase: Literal["accumulation", "intensification", "deload"]
     reason: str
     rationale: str
+    authored_sequence_complete: bool = False
+    transition_pending: bool = False
+    recommended_action: str | None = None
+    post_authored_behavior: str | None = None
 
 
 class SpecializationPreviewResponse(BaseModel):

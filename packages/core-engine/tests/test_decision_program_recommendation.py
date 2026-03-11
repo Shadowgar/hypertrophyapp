@@ -176,3 +176,29 @@ def test_build_program_recommendation_payload_merges_candidate_resolution_trace(
 
     assert payload["generated_at"] == generated_at
     assert payload["decision_trace"]["candidate_resolution"]["interpreter"] == "resolve_program_recommendation_candidates"
+
+
+def test_recommend_program_selection_rotates_when_authored_sequence_is_complete() -> None:
+    decision = recommend_program_selection(
+        current_program_id="adaptive_full_body_gold_v0_1",
+        compatible_program_summaries=[
+            {"id": "adaptive_full_body_gold_v0_1", "split": "full_body", "days_supported": [3], "session_count": 3},
+            {"id": "full_body_v1", "split": "full_body", "days_supported": [3], "session_count": 3},
+        ],
+        days_available=3,
+        latest_adherence_score=4,
+        latest_plan_payload={
+            "mesocycle": {
+                "week_index": 10,
+                "trigger_weeks_effective": 10,
+                "authored_sequence_complete": True,
+                "phase_transition_pending": True,
+                "phase_transition_reason": "authored_sequence_complete",
+                "post_authored_behavior": "hold_last_authored_week",
+            }
+        },
+    )
+
+    assert decision["recommended_program_id"] == "full_body_v1"
+    assert decision["reason"] == "mesocycle_complete_rotate"
+    assert decision["decision_trace"]["selected_program_id"] == "full_body_v1"

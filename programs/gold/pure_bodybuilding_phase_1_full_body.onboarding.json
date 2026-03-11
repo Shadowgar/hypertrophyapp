@@ -34,14 +34,31 @@
                 "order_index": 1,
                 "exercise_id": "lat_pulldown_wide",
                 "slot_role": "primary_compound",
-                "primary_muscles": ["back", "biceps"],
+                "primary_muscles": [
+                  "back",
+                  "biceps"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=CAwf7n6Luuc",
                 "warmup_prescription": [
-                  {"percent": 50, "reps": 8},
-                  {"percent": 70, "reps": 5}
+                  {
+                    "percent": 50,
+                    "reps": 8
+                  },
+                  {
+                    "percent": 70,
+                    "reps": 5
+                  }
                 ],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 8, "max": 10}, "rir_target": 2}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 8,
+                      "max": 10
+                    },
+                    "rir_target": 2
+                  }
                 ],
                 "notes": "Slow negative and chest up at the bottom of each rep."
               },
@@ -50,15 +67,36 @@
                 "order_index": 2,
                 "exercise_id": "bench_press_barbell",
                 "slot_role": "primary_compound",
-                "primary_muscles": ["chest", "triceps", "shoulders"],
+                "primary_muscles": [
+                  "chest",
+                  "triceps",
+                  "shoulders"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=rT7DgCr-3pg",
                 "warmup_prescription": [
-                  {"percent": 50, "reps": 8},
-                  {"percent": 70, "reps": 5},
-                  {"percent": 85, "reps": 2}
+                  {
+                    "percent": 50,
+                    "reps": 8
+                  },
+                  {
+                    "percent": 70,
+                    "reps": 5
+                  },
+                  {
+                    "percent": 85,
+                    "reps": 2
+                  }
                 ],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 6, "max": 8}, "rir_target": 2}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 6,
+                      "max": 8
+                    },
+                    "rir_target": 2
+                  }
                 ],
                 "notes": "Pause briefly on chest and keep bar path stable."
               },
@@ -67,14 +105,31 @@
                 "order_index": 3,
                 "exercise_id": "hack_squat",
                 "slot_role": "secondary_compound",
-                "primary_muscles": ["quads", "glutes"],
+                "primary_muscles": [
+                  "quads",
+                  "glutes"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=0tn5K9NlCfo",
                 "warmup_prescription": [
-                  {"percent": 50, "reps": 8},
-                  {"percent": 70, "reps": 5}
+                  {
+                    "percent": 50,
+                    "reps": 8
+                  },
+                  {
+                    "percent": 70,
+                    "reps": 5
+                  }
                 ],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 8, "max": 10}, "rir_target": 2}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 8,
+                      "max": 10
+                    },
+                    "rir_target": 2
+                  }
                 ],
                 "notes": "Controlled depth and constant tension."
               },
@@ -83,13 +138,46 @@
                 "order_index": 4,
                 "exercise_id": "lateral_raise_cable",
                 "slot_role": "isolation",
-                "primary_muscles": ["shoulders"],
+                "primary_muscles": [
+                  "shoulders"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=3VcKaXpzqRo",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 2, "rep_target": {"min": 12, "max": 15}, "rir_target": 1}
+                  {
+                    "set_type": "work",
+                    "sets": 2,
+                    "rep_target": {
+                      "min": 12,
+                      "max": 15
+                    },
+                    "rir_target": 1
+                  }
                 ],
                 "notes": "Keep scapula depressed and control swing."
+              },
+              {
+                "slot_id": "fb1_core",
+                "order_index": 5,
+                "exercise_id": "cable_crunch",
+                "slot_role": "accessory",
+                "primary_muscles": [
+                  "abs"
+                ],
+                "video_url": null,
+                "warmup_prescription": [],
+                "work_sets": [
+                  {
+                    "set_type": "work",
+                    "sets": 2,
+                    "rep_target": {
+                      "min": 10,
+                      "max": 15
+                    },
+                    "rir_target": 1
+                  }
+                ],
+                "notes": "Finish the session with controlled trunk flexion and full abdominal shortening."
               }
             ]
           },
@@ -102,14 +190,32 @@
                 "order_index": 1,
                 "exercise_id": "romanian_deadlift",
                 "slot_role": "primary_compound",
-                "primary_muscles": ["hamstrings", "glutes", "back"],
+                "primary_muscles": [
+                  "hamstrings",
+                  "glutes",
+                  "back"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=2SHsk9AzdjA",
                 "warmup_prescription": [
-                  {"percent": 50, "reps": 8},
-                  {"percent": 70, "reps": 5}
+                  {
+                    "percent": 50,
+                    "reps": 8
+                  },
+                  {
+                    "percent": 70,
+                    "reps": 5
+                  }
                 ],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 6, "max": 8}, "rir_target": 2}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 6,
+                      "max": 8
+                    },
+                    "rir_target": 2
+                  }
                 ],
                 "notes": "Push hips back and maintain neutral spine."
               },
@@ -118,13 +224,28 @@
                 "order_index": 2,
                 "exercise_id": "incline_dumbbell_press",
                 "slot_role": "secondary_compound",
-                "primary_muscles": ["chest", "triceps", "shoulders"],
+                "primary_muscles": [
+                  "chest",
+                  "triceps",
+                  "shoulders"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=8iPEnn-ltC8",
                 "warmup_prescription": [
-                  {"percent": 50, "reps": 8}
+                  {
+                    "percent": 50,
+                    "reps": 8
+                  }
                 ],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 8, "max": 10}, "rir_target": 2}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 8,
+                      "max": 10
+                    },
+                    "rir_target": 2
+                  }
                 ],
                 "notes": "Elbows at 45 degrees and full ROM."
               },
@@ -133,11 +254,22 @@
                 "order_index": 3,
                 "exercise_id": "chest_supported_row",
                 "slot_role": "secondary_compound",
-                "primary_muscles": ["back", "biceps"],
+                "primary_muscles": [
+                  "back",
+                  "biceps"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=GYX7Qm9JQKM",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 8, "max": 12}, "rir_target": 2}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 8,
+                      "max": 12
+                    },
+                    "rir_target": 2
+                  }
                 ],
                 "notes": "Pause on contraction and avoid momentum."
               },
@@ -146,11 +278,21 @@
                 "order_index": 4,
                 "exercise_id": "leg_curl_seated",
                 "slot_role": "isolation",
-                "primary_muscles": ["hamstrings"],
+                "primary_muscles": [
+                  "hamstrings"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=1Tq3QdYUuHs",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 2, "rep_target": {"min": 10, "max": 14}, "rir_target": 1}
+                  {
+                    "set_type": "work",
+                    "sets": 2,
+                    "rep_target": {
+                      "min": 10,
+                      "max": 14
+                    },
+                    "rir_target": 1
+                  }
                 ],
                 "notes": "Squeeze peak contraction and control eccentric."
               }
@@ -165,11 +307,22 @@
                 "order_index": 1,
                 "exercise_id": "pullup_assisted_neutral",
                 "slot_role": "primary_compound",
-                "primary_muscles": ["back", "biceps"],
+                "primary_muscles": [
+                  "back",
+                  "biceps"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=eGo4IYlbE5g",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 6, "max": 10}, "rir_target": 2}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 6,
+                      "max": 10
+                    },
+                    "rir_target": 2
+                  }
                 ],
                 "notes": "Drive elbows down and keep torso controlled."
               },
@@ -178,13 +331,27 @@
                 "order_index": 2,
                 "exercise_id": "overhead_press_seated_db",
                 "slot_role": "primary_compound",
-                "primary_muscles": ["shoulders", "triceps"],
+                "primary_muscles": [
+                  "shoulders",
+                  "triceps"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=qEwKCR5JCog",
                 "warmup_prescription": [
-                  {"percent": 50, "reps": 8}
+                  {
+                    "percent": 50,
+                    "reps": 8
+                  }
                 ],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 8, "max": 10}, "rir_target": 2}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 8,
+                      "max": 10
+                    },
+                    "rir_target": 2
+                  }
                 ],
                 "notes": "Neutral spine and no excessive lean back."
               },
@@ -193,11 +360,22 @@
                 "order_index": 3,
                 "exercise_id": "split_squat_db",
                 "slot_role": "secondary_compound",
-                "primary_muscles": ["quads", "glutes"],
+                "primary_muscles": [
+                  "quads",
+                  "glutes"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=2C-uNgKwPLE",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 2, "rep_target": {"min": 10, "max": 12}, "rir_target": 2}
+                  {
+                    "set_type": "work",
+                    "sets": 2,
+                    "rep_target": {
+                      "min": 10,
+                      "max": 12
+                    },
+                    "rir_target": 2
+                  }
                 ],
                 "notes": "Control knee tracking and stay balanced."
               },
@@ -206,11 +384,21 @@
                 "order_index": 4,
                 "exercise_id": "triceps_pushdown_rope",
                 "slot_role": "isolation",
-                "primary_muscles": ["triceps"],
+                "primary_muscles": [
+                  "triceps"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=vB5OHsJ3EME",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 2, "rep_target": {"min": 12, "max": 15}, "rir_target": 1}
+                  {
+                    "set_type": "work",
+                    "sets": 2,
+                    "rep_target": {
+                      "min": 12,
+                      "max": 15
+                    },
+                    "rir_target": 1
+                  }
                 ],
                 "notes": "Lock upper arm in place and extend fully."
               }
@@ -225,14 +413,31 @@
                 "order_index": 1,
                 "exercise_id": "hack_squat",
                 "slot_role": "primary_compound",
-                "primary_muscles": ["quads", "glutes"],
+                "primary_muscles": [
+                  "quads",
+                  "glutes"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=0tn5K9NlCfo",
                 "warmup_prescription": [
-                  {"percent": 50, "reps": 8},
-                  {"percent": 70, "reps": 5}
+                  {
+                    "percent": 50,
+                    "reps": 8
+                  },
+                  {
+                    "percent": 70,
+                    "reps": 5
+                  }
                 ],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 6, "max": 8}, "rir_target": 2}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 6,
+                      "max": 8
+                    },
+                    "rir_target": 2
+                  }
                 ],
                 "notes": "Drive through midfoot and control eccentric."
               },
@@ -241,11 +446,22 @@
                 "order_index": 2,
                 "exercise_id": "row_machine_chest_supported",
                 "slot_role": "secondary_compound",
-                "primary_muscles": ["back", "biceps"],
+                "primary_muscles": [
+                  "back",
+                  "biceps"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=roCP6wCXPqo",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 8, "max": 10}, "rir_target": 2}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 8,
+                      "max": 10
+                    },
+                    "rir_target": 2
+                  }
                 ],
                 "notes": "Keep ribcage down and pull elbows back."
               },
@@ -254,11 +470,21 @@
                 "order_index": 3,
                 "exercise_id": "dumbbell_curl_incline",
                 "slot_role": "isolation",
-                "primary_muscles": ["biceps"],
+                "primary_muscles": [
+                  "biceps"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=soxrZlIl35U",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 2, "rep_target": {"min": 10, "max": 12}, "rir_target": 1}
+                  {
+                    "set_type": "work",
+                    "sets": 2,
+                    "rep_target": {
+                      "min": 10,
+                      "max": 12
+                    },
+                    "rir_target": 1
+                  }
                 ],
                 "notes": "Supinate hard and control lowering phase."
               },
@@ -267,11 +493,21 @@
                 "order_index": 4,
                 "exercise_id": "calf_raise_seated",
                 "slot_role": "isolation",
-                "primary_muscles": ["calves"],
+                "primary_muscles": [
+                  "calves"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=YMmgqO8Jo-k",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 2, "rep_target": {"min": 12, "max": 15}, "rir_target": 1}
+                  {
+                    "set_type": "work",
+                    "sets": 2,
+                    "rep_target": {
+                      "min": 12,
+                      "max": 15
+                    },
+                    "rir_target": 1
+                  }
                 ],
                 "notes": "Pause at stretch and peak contraction."
               }
@@ -286,11 +522,21 @@
                 "order_index": 1,
                 "exercise_id": "weak_chest_cable_fly",
                 "slot_role": "weak_point",
-                "primary_muscles": ["chest"],
+                "primary_muscles": [
+                  "chest"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=eozdVDA78K0",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 12, "max": 15}, "rir_target": 1}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 12,
+                      "max": 15
+                    },
+                    "rir_target": 1
+                  }
                 ],
                 "notes": "Prioritize pec stretch and squeeze."
               },
@@ -299,11 +545,21 @@
                 "order_index": 2,
                 "exercise_id": "weak_ham_leg_curl",
                 "slot_role": "weak_point",
-                "primary_muscles": ["hamstrings"],
+                "primary_muscles": [
+                  "hamstrings"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=1Tq3QdYUuHs",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 10, "max": 14}, "rir_target": 1}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 10,
+                      "max": 14
+                    },
+                    "rir_target": 1
+                  }
                 ],
                 "notes": "Full ROM and strict eccentric for hamstring tension."
               },
@@ -312,11 +568,21 @@
                 "order_index": 3,
                 "exercise_id": "dumbbell_curl_incline",
                 "slot_role": "isolation",
-                "primary_muscles": ["biceps"],
+                "primary_muscles": [
+                  "biceps"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=soxrZlIl35U",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 2, "rep_target": {"min": 10, "max": 12}, "rir_target": 1}
+                  {
+                    "set_type": "work",
+                    "sets": 2,
+                    "rep_target": {
+                      "min": 10,
+                      "max": 12
+                    },
+                    "rir_target": 1
+                  }
                 ],
                 "notes": "Control tempo and full elbow extension."
               },
@@ -325,11 +591,21 @@
                 "order_index": 4,
                 "exercise_id": "triceps_pushdown_rope",
                 "slot_role": "isolation",
-                "primary_muscles": ["triceps"],
+                "primary_muscles": [
+                  "triceps"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=vB5OHsJ3EME",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 2, "rep_target": {"min": 12, "max": 15}, "rir_target": 1}
+                  {
+                    "set_type": "work",
+                    "sets": 2,
+                    "rep_target": {
+                      "min": 12,
+                      "max": 15
+                    },
+                    "rir_target": 1
+                  }
                 ],
                 "notes": "Lock elbows and finish with full extension."
               }
@@ -349,11 +625,22 @@
                 "order_index": 1,
                 "exercise_id": "lat_pulldown_wide",
                 "slot_role": "primary_compound",
-                "primary_muscles": ["back", "biceps"],
+                "primary_muscles": [
+                  "back",
+                  "biceps"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=CAwf7n6Luuc",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 8, "max": 11}, "rir_target": 1}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 8,
+                      "max": 11
+                    },
+                    "rir_target": 1
+                  }
                 ],
                 "notes": "Progress reps before adding load."
               },
@@ -362,11 +649,23 @@
                 "order_index": 2,
                 "exercise_id": "bench_press_barbell",
                 "slot_role": "primary_compound",
-                "primary_muscles": ["chest", "triceps", "shoulders"],
+                "primary_muscles": [
+                  "chest",
+                  "triceps",
+                  "shoulders"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=rT7DgCr-3pg",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 6, "max": 9}, "rir_target": 1}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 6,
+                      "max": 9
+                    },
+                    "rir_target": 1
+                  }
                 ],
                 "notes": "Add load only when all sets hit top rep target."
               }
@@ -381,11 +680,23 @@
                 "order_index": 1,
                 "exercise_id": "romanian_deadlift",
                 "slot_role": "primary_compound",
-                "primary_muscles": ["hamstrings", "glutes", "back"],
+                "primary_muscles": [
+                  "hamstrings",
+                  "glutes",
+                  "back"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=2SHsk9AzdjA",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 6, "max": 9}, "rir_target": 1}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 6,
+                      "max": 9
+                    },
+                    "rir_target": 1
+                  }
                 ],
                 "notes": "Maintain hinge quality before progression."
               },
@@ -394,11 +705,23 @@
                 "order_index": 2,
                 "exercise_id": "incline_dumbbell_press",
                 "slot_role": "secondary_compound",
-                "primary_muscles": ["chest", "shoulders", "triceps"],
+                "primary_muscles": [
+                  "chest",
+                  "shoulders",
+                  "triceps"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=8iPEnn-ltC8",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 8, "max": 11}, "rir_target": 1}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 8,
+                      "max": 11
+                    },
+                    "rir_target": 1
+                  }
                 ],
                 "notes": "Full range and stable shoulder position."
               }
@@ -413,11 +736,22 @@
                 "order_index": 1,
                 "exercise_id": "overhead_press_seated_db",
                 "slot_role": "primary_compound",
-                "primary_muscles": ["shoulders", "triceps"],
+                "primary_muscles": [
+                  "shoulders",
+                  "triceps"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=qEwKCR5JCog",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 8, "max": 10}, "rir_target": 1}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 8,
+                      "max": 10
+                    },
+                    "rir_target": 1
+                  }
                 ],
                 "notes": "Keep ribs down and avoid over-arching."
               }
@@ -432,11 +766,22 @@
                 "order_index": 1,
                 "exercise_id": "hack_squat",
                 "slot_role": "primary_compound",
-                "primary_muscles": ["quads", "glutes"],
+                "primary_muscles": [
+                  "quads",
+                  "glutes"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=0tn5K9NlCfo",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 6, "max": 9}, "rir_target": 1}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 6,
+                      "max": 9
+                    },
+                    "rir_target": 1
+                  }
                 ],
                 "notes": "Progress only with full depth consistency."
               }
@@ -451,11 +796,21 @@
                 "order_index": 1,
                 "exercise_id": "weak_chest_cable_fly",
                 "slot_role": "weak_point",
-                "primary_muscles": ["chest"],
+                "primary_muscles": [
+                  "chest"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=eozdVDA78K0",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 12, "max": 15}, "rir_target": 1}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 12,
+                      "max": 15
+                    },
+                    "rir_target": 1
+                  }
                 ],
                 "notes": "Weak-point chest priority day."
               },
@@ -464,11 +819,21 @@
                 "order_index": 2,
                 "exercise_id": "weak_ham_leg_curl",
                 "slot_role": "weak_point",
-                "primary_muscles": ["hamstrings"],
+                "primary_muscles": [
+                  "hamstrings"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=1Tq3QdYUuHs",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 10, "max": 14}, "rir_target": 1}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 10,
+                      "max": 14
+                    },
+                    "rir_target": 1
+                  }
                 ],
                 "notes": "Weak-point hamstring priority day."
               }
@@ -488,11 +853,23 @@
                 "order_index": 1,
                 "exercise_id": "bench_press_barbell",
                 "slot_role": "primary_compound",
-                "primary_muscles": ["chest", "triceps", "shoulders"],
+                "primary_muscles": [
+                  "chest",
+                  "triceps",
+                  "shoulders"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=rT7DgCr-3pg",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 2, "rep_target": {"min": 6, "max": 8}, "rir_target": 3}
+                  {
+                    "set_type": "work",
+                    "sets": 2,
+                    "rep_target": {
+                      "min": 6,
+                      "max": 8
+                    },
+                    "rir_target": 3
+                  }
                 ],
                 "notes": "Deload week: reduced sets and lower perceived effort."
               },
@@ -501,11 +878,22 @@
                 "order_index": 2,
                 "exercise_id": "lat_pulldown_wide",
                 "slot_role": "secondary_compound",
-                "primary_muscles": ["back", "biceps"],
+                "primary_muscles": [
+                  "back",
+                  "biceps"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=CAwf7n6Luuc",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 2, "rep_target": {"min": 8, "max": 10}, "rir_target": 3}
+                  {
+                    "set_type": "work",
+                    "sets": 2,
+                    "rep_target": {
+                      "min": 8,
+                      "max": 10
+                    },
+                    "rir_target": 3
+                  }
                 ],
                 "notes": "Deload week: keep movement quality high."
               }
@@ -520,11 +908,23 @@
                 "order_index": 1,
                 "exercise_id": "romanian_deadlift",
                 "slot_role": "primary_compound",
-                "primary_muscles": ["hamstrings", "glutes", "back"],
+                "primary_muscles": [
+                  "hamstrings",
+                  "glutes",
+                  "back"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=2SHsk9AzdjA",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 2, "rep_target": {"min": 6, "max": 8}, "rir_target": 3}
+                  {
+                    "set_type": "work",
+                    "sets": 2,
+                    "rep_target": {
+                      "min": 6,
+                      "max": 8
+                    },
+                    "rir_target": 3
+                  }
                 ],
                 "notes": "Deload week: maintain pattern with reduced stress."
               }
@@ -539,11 +939,22 @@
                 "order_index": 1,
                 "exercise_id": "overhead_press_seated_db",
                 "slot_role": "secondary_compound",
-                "primary_muscles": ["shoulders", "triceps"],
+                "primary_muscles": [
+                  "shoulders",
+                  "triceps"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=qEwKCR5JCog",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 2, "rep_target": {"min": 8, "max": 10}, "rir_target": 3}
+                  {
+                    "set_type": "work",
+                    "sets": 2,
+                    "rep_target": {
+                      "min": 8,
+                      "max": 10
+                    },
+                    "rir_target": 3
+                  }
                 ],
                 "notes": "Deload week: focus on clean reps."
               }
@@ -558,11 +969,22 @@
                 "order_index": 1,
                 "exercise_id": "hack_squat",
                 "slot_role": "secondary_compound",
-                "primary_muscles": ["quads", "glutes"],
+                "primary_muscles": [
+                  "quads",
+                  "glutes"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=0tn5K9NlCfo",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 2, "rep_target": {"min": 8, "max": 10}, "rir_target": 3}
+                  {
+                    "set_type": "work",
+                    "sets": 2,
+                    "rep_target": {
+                      "min": 8,
+                      "max": 10
+                    },
+                    "rir_target": 3
+                  }
                 ],
                 "notes": "Deload week: lower load and avoid failure."
               }
@@ -577,11 +999,21 @@
                 "order_index": 1,
                 "exercise_id": "weak_chest_cable_fly",
                 "slot_role": "weak_point",
-                "primary_muscles": ["chest"],
+                "primary_muscles": [
+                  "chest"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=eozdVDA78K0",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 2, "rep_target": {"min": 12, "max": 15}, "rir_target": 3}
+                  {
+                    "set_type": "work",
+                    "sets": 2,
+                    "rep_target": {
+                      "min": 12,
+                      "max": 15
+                    },
+                    "rir_target": 3
+                  }
                 ],
                 "notes": "Deload week: keep weak-point skill exposure with reduced effort."
               },
@@ -590,11 +1022,21 @@
                 "order_index": 2,
                 "exercise_id": "weak_ham_leg_curl",
                 "slot_role": "weak_point",
-                "primary_muscles": ["hamstrings"],
+                "primary_muscles": [
+                  "hamstrings"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=1Tq3QdYUuHs",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 2, "rep_target": {"min": 10, "max": 14}, "rir_target": 3}
+                  {
+                    "set_type": "work",
+                    "sets": 2,
+                    "rep_target": {
+                      "min": 10,
+                      "max": 14
+                    },
+                    "rir_target": 3
+                  }
                 ],
                 "notes": "Deload week: maintain weak-point movement quality."
               }
@@ -614,11 +1056,23 @@
                 "order_index": 1,
                 "exercise_id": "bench_press_barbell",
                 "slot_role": "primary_compound",
-                "primary_muscles": ["chest", "triceps", "shoulders"],
+                "primary_muscles": [
+                  "chest",
+                  "triceps",
+                  "shoulders"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=rT7DgCr-3pg",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 5, "max": 7}, "rir_target": 1}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 5,
+                      "max": 7
+                    },
+                    "rir_target": 1
+                  }
                 ],
                 "notes": "Intensity phase: lower reps with heavier load."
               }
@@ -633,11 +1087,23 @@
                 "order_index": 1,
                 "exercise_id": "romanian_deadlift",
                 "slot_role": "primary_compound",
-                "primary_muscles": ["hamstrings", "glutes", "back"],
+                "primary_muscles": [
+                  "hamstrings",
+                  "glutes",
+                  "back"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=2SHsk9AzdjA",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 5, "max": 7}, "rir_target": 1}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 5,
+                      "max": 7
+                    },
+                    "rir_target": 1
+                  }
                 ],
                 "notes": "Intensity phase: progression weighted by execution quality."
               }
@@ -652,11 +1118,22 @@
                 "order_index": 1,
                 "exercise_id": "pullup_assisted_neutral",
                 "slot_role": "primary_compound",
-                "primary_muscles": ["back", "biceps"],
+                "primary_muscles": [
+                  "back",
+                  "biceps"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=eGo4IYlbE5g",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 6, "max": 8}, "rir_target": 1}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 6,
+                      "max": 8
+                    },
+                    "rir_target": 1
+                  }
                 ],
                 "notes": "Intensity phase: keep reps crisp and controlled."
               }
@@ -671,11 +1148,22 @@
                 "order_index": 1,
                 "exercise_id": "hack_squat",
                 "slot_role": "primary_compound",
-                "primary_muscles": ["quads", "glutes"],
+                "primary_muscles": [
+                  "quads",
+                  "glutes"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=0tn5K9NlCfo",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 6, "max": 8}, "rir_target": 1}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 6,
+                      "max": 8
+                    },
+                    "rir_target": 1
+                  }
                 ],
                 "notes": "Intensity phase: maintain depth and technical consistency."
               }
@@ -690,11 +1178,21 @@
                 "order_index": 1,
                 "exercise_id": "weak_chest_cable_fly",
                 "slot_role": "weak_point",
-                "primary_muscles": ["chest"],
+                "primary_muscles": [
+                  "chest"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=eozdVDA78K0",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 10, "max": 12}, "rir_target": 1}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 10,
+                      "max": 12
+                    },
+                    "rir_target": 1
+                  }
                 ],
                 "notes": "Keep weak-point focus while intensity rises."
               },
@@ -703,11 +1201,21 @@
                 "order_index": 2,
                 "exercise_id": "weak_ham_leg_curl",
                 "slot_role": "weak_point",
-                "primary_muscles": ["hamstrings"],
+                "primary_muscles": [
+                  "hamstrings"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=1Tq3QdYUuHs",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 10, "max": 12}, "rir_target": 1}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 10,
+                      "max": 12
+                    },
+                    "rir_target": 1
+                  }
                 ],
                 "notes": "Keep weak-point hamstring priority under intensity."
               }
@@ -727,11 +1235,23 @@
                 "order_index": 1,
                 "exercise_id": "bench_press_barbell",
                 "slot_role": "primary_compound",
-                "primary_muscles": ["chest", "triceps", "shoulders"],
+                "primary_muscles": [
+                  "chest",
+                  "triceps",
+                  "shoulders"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=rT7DgCr-3pg",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 4, "max": 6}, "rir_target": 1}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 4,
+                      "max": 6
+                    },
+                    "rir_target": 1
+                  }
                 ],
                 "notes": "Top-end week in phase 1 block before transition."
               }
@@ -746,11 +1266,23 @@
                 "order_index": 1,
                 "exercise_id": "romanian_deadlift",
                 "slot_role": "primary_compound",
-                "primary_muscles": ["hamstrings", "glutes", "back"],
+                "primary_muscles": [
+                  "hamstrings",
+                  "glutes",
+                  "back"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=2SHsk9AzdjA",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 4, "max": 6}, "rir_target": 1}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 4,
+                      "max": 6
+                    },
+                    "rir_target": 1
+                  }
                 ],
                 "notes": "Top-end week with strict form priority."
               }
@@ -765,11 +1297,22 @@
                 "order_index": 1,
                 "exercise_id": "pullup_assisted_neutral",
                 "slot_role": "primary_compound",
-                "primary_muscles": ["back", "biceps"],
+                "primary_muscles": [
+                  "back",
+                  "biceps"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=eGo4IYlbE5g",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 5, "max": 7}, "rir_target": 1}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 5,
+                      "max": 7
+                    },
+                    "rir_target": 1
+                  }
                 ],
                 "notes": "Weighted progression only with clean reps."
               }
@@ -784,11 +1327,22 @@
                 "order_index": 1,
                 "exercise_id": "hack_squat",
                 "slot_role": "primary_compound",
-                "primary_muscles": ["quads", "glutes"],
+                "primary_muscles": [
+                  "quads",
+                  "glutes"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=0tn5K9NlCfo",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 5, "max": 7}, "rir_target": 1}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 5,
+                      "max": 7
+                    },
+                    "rir_target": 1
+                  }
                 ],
                 "notes": "High effort week with technical cap at RIR 1."
               }
@@ -803,11 +1357,21 @@
                 "order_index": 1,
                 "exercise_id": "weak_chest_cable_fly",
                 "slot_role": "weak_point",
-                "primary_muscles": ["chest"],
+                "primary_muscles": [
+                  "chest"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=eozdVDA78K0",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 10, "max": 12}, "rir_target": 1}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 10,
+                      "max": 12
+                    },
+                    "rir_target": 1
+                  }
                 ],
                 "notes": "Keep weak-point chest work stable in top-end week."
               },
@@ -816,11 +1380,21 @@
                 "order_index": 2,
                 "exercise_id": "weak_ham_leg_curl",
                 "slot_role": "weak_point",
-                "primary_muscles": ["hamstrings"],
+                "primary_muscles": [
+                  "hamstrings"
+                ],
                 "video_url": "https://www.youtube.com/watch?v=1Tq3QdYUuHs",
                 "warmup_prescription": [],
                 "work_sets": [
-                  {"set_type": "work", "sets": 3, "rep_target": {"min": 10, "max": 12}, "rir_target": 1}
+                  {
+                    "set_type": "work",
+                    "sets": 3,
+                    "rep_target": {
+                      "min": 10,
+                      "max": 12
+                    },
+                    "rir_target": 1
+                  }
                 ],
                 "notes": "Keep weak-point hamstring work stable in top-end week."
               }
@@ -834,18 +1408,36 @@
     {
       "exercise_id": "bench_press_barbell",
       "canonical_name": "Barbell Bench Press",
-      "aliases": ["Bench Press", "Flat Barbell Bench"],
+      "aliases": [
+        "Bench Press",
+        "Flat Barbell Bench"
+      ],
       "execution": "Set shoulders down and back, touch lower chest, and press with consistent bar path.",
-      "coaching_cues": ["Create a stable arch", "Leg drive through the floor", "Control eccentric"],
-      "primary_muscles": ["chest", "triceps"],
-      "secondary_muscles": ["shoulders"],
-      "equipment_tags": ["barbell", "bench"],
+      "coaching_cues": [
+        "Create a stable arch",
+        "Leg drive through the floor",
+        "Control eccentric"
+      ],
+      "primary_muscles": [
+        "chest",
+        "triceps"
+      ],
+      "secondary_muscles": [
+        "shoulders"
+      ],
+      "equipment_tags": [
+        "barbell",
+        "bench"
+      ],
       "movement_pattern": "horizontal_press",
       "valid_substitutions": [
         {
           "exercise_id": "incline_dumbbell_press",
           "rationale": "Closest free-weight press when flat bench setup is unavailable.",
-          "equipment_tags": ["dumbbell", "bench"]
+          "equipment_tags": [
+            "dumbbell",
+            "bench"
+          ]
         }
       ],
       "default_video_url": "https://www.youtube.com/watch?v=rT7DgCr-3pg",
@@ -854,18 +1446,33 @@
     {
       "exercise_id": "lat_pulldown_wide",
       "canonical_name": "Wide Grip Lat Pulldown",
-      "aliases": ["Lat Pulldown"],
+      "aliases": [
+        "Lat Pulldown"
+      ],
       "execution": "Initiate with scapular depression and pull elbows to torso while keeping chest tall.",
-      "coaching_cues": ["Drive elbows down", "Avoid shrugging", "Pause at contraction"],
-      "primary_muscles": ["back"],
-      "secondary_muscles": ["biceps"],
-      "equipment_tags": ["cable"],
+      "coaching_cues": [
+        "Drive elbows down",
+        "Avoid shrugging",
+        "Pause at contraction"
+      ],
+      "primary_muscles": [
+        "back"
+      ],
+      "secondary_muscles": [
+        "biceps"
+      ],
+      "equipment_tags": [
+        "cable"
+      ],
       "movement_pattern": "vertical_pull",
       "valid_substitutions": [
         {
           "exercise_id": "pullup_assisted_neutral",
           "rationale": "Bodyweight vertical pull alternative for similar lat stimulus.",
-          "equipment_tags": ["bodyweight", "machine"]
+          "equipment_tags": [
+            "bodyweight",
+            "machine"
+          ]
         }
       ],
       "default_video_url": "https://www.youtube.com/watch?v=CAwf7n6Luuc",
@@ -874,18 +1481,32 @@
     {
       "exercise_id": "hack_squat",
       "canonical_name": "Hack Squat",
-      "aliases": ["Machine Hack Squat"],
+      "aliases": [
+        "Machine Hack Squat"
+      ],
       "execution": "Use controlled descent to full depth while maintaining knee tracking over toes.",
-      "coaching_cues": ["Brace core", "Drive through midfoot", "Control depth"],
-      "primary_muscles": ["quads"],
-      "secondary_muscles": ["glutes"],
-      "equipment_tags": ["machine"],
+      "coaching_cues": [
+        "Brace core",
+        "Drive through midfoot",
+        "Control depth"
+      ],
+      "primary_muscles": [
+        "quads"
+      ],
+      "secondary_muscles": [
+        "glutes"
+      ],
+      "equipment_tags": [
+        "machine"
+      ],
       "movement_pattern": "squat",
       "valid_substitutions": [
         {
           "exercise_id": "split_squat_db",
           "rationale": "Lower-body quad-dominant substitute when hack squat machine is unavailable.",
-          "equipment_tags": ["dumbbell"]
+          "equipment_tags": [
+            "dumbbell"
+          ]
         }
       ],
       "default_video_url": "https://www.youtube.com/watch?v=0tn5K9NlCfo",
@@ -894,18 +1515,34 @@
     {
       "exercise_id": "romanian_deadlift",
       "canonical_name": "Romanian Deadlift",
-      "aliases": ["RDL"],
+      "aliases": [
+        "RDL"
+      ],
       "execution": "Push hips back with slight knee bend and maintain neutral spine throughout hinge.",
-      "coaching_cues": ["Hip hinge first", "Keep lats tight", "Stretch hamstrings"],
-      "primary_muscles": ["hamstrings", "glutes"],
-      "secondary_muscles": ["back"],
-      "equipment_tags": ["barbell", "dumbbell"],
+      "coaching_cues": [
+        "Hip hinge first",
+        "Keep lats tight",
+        "Stretch hamstrings"
+      ],
+      "primary_muscles": [
+        "hamstrings",
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "back"
+      ],
+      "equipment_tags": [
+        "barbell",
+        "dumbbell"
+      ],
       "movement_pattern": "hinge",
       "valid_substitutions": [
         {
           "exercise_id": "leg_curl_seated",
           "rationale": "Direct hamstring substitute when hinge loading is constrained.",
-          "equipment_tags": ["machine"]
+          "equipment_tags": [
+            "machine"
+          ]
         }
       ],
       "default_video_url": "https://www.youtube.com/watch?v=2SHsk9AzdjA",
@@ -914,18 +1551,35 @@
     {
       "exercise_id": "incline_dumbbell_press",
       "canonical_name": "Incline Dumbbell Press",
-      "aliases": ["Incline DB Press"],
+      "aliases": [
+        "Incline DB Press"
+      ],
       "execution": "Press with forearms vertical and lower dumbbells to upper chest under control.",
-      "coaching_cues": ["Keep shoulder blades set", "Elbows at 45 degrees", "Full ROM"],
-      "primary_muscles": ["chest"],
-      "secondary_muscles": ["shoulders", "triceps"],
-      "equipment_tags": ["dumbbell", "bench"],
+      "coaching_cues": [
+        "Keep shoulder blades set",
+        "Elbows at 45 degrees",
+        "Full ROM"
+      ],
+      "primary_muscles": [
+        "chest"
+      ],
+      "secondary_muscles": [
+        "shoulders",
+        "triceps"
+      ],
+      "equipment_tags": [
+        "dumbbell",
+        "bench"
+      ],
       "movement_pattern": "incline_press",
       "valid_substitutions": [
         {
           "exercise_id": "bench_press_barbell",
           "rationale": "Primary horizontal press substitute for similar pressing demand.",
-          "equipment_tags": ["barbell", "bench"]
+          "equipment_tags": [
+            "barbell",
+            "bench"
+          ]
         }
       ],
       "default_video_url": "https://www.youtube.com/watch?v=8iPEnn-ltC8",
@@ -934,18 +1588,33 @@
     {
       "exercise_id": "chest_supported_row",
       "canonical_name": "Chest Supported Row",
-      "aliases": ["Supported Row"],
+      "aliases": [
+        "Supported Row"
+      ],
       "execution": "Pull elbows back and pause without extending lumbar spine.",
-      "coaching_cues": ["Lead with elbows", "Pause at top", "No torso swing"],
-      "primary_muscles": ["back"],
-      "secondary_muscles": ["biceps"],
-      "equipment_tags": ["dumbbell", "machine"],
+      "coaching_cues": [
+        "Lead with elbows",
+        "Pause at top",
+        "No torso swing"
+      ],
+      "primary_muscles": [
+        "back"
+      ],
+      "secondary_muscles": [
+        "biceps"
+      ],
+      "equipment_tags": [
+        "dumbbell",
+        "machine"
+      ],
       "movement_pattern": "horizontal_pull",
       "valid_substitutions": [
         {
           "exercise_id": "row_machine_chest_supported",
           "rationale": "Machine variation for stable loading and similar pull angle.",
-          "equipment_tags": ["machine"]
+          "equipment_tags": [
+            "machine"
+          ]
         }
       ],
       "default_video_url": "https://www.youtube.com/watch?v=GYX7Qm9JQKM",
@@ -954,18 +1623,34 @@
     {
       "exercise_id": "overhead_press_seated_db",
       "canonical_name": "Seated Dumbbell Overhead Press",
-      "aliases": ["Seated DB OHP"],
+      "aliases": [
+        "Seated DB OHP"
+      ],
       "execution": "Press overhead with neutral torso and avoid lumbar extension.",
-      "coaching_cues": ["Brace core", "Press in slight arc", "Control descent"],
-      "primary_muscles": ["shoulders"],
-      "secondary_muscles": ["triceps"],
-      "equipment_tags": ["dumbbell", "bench"],
+      "coaching_cues": [
+        "Brace core",
+        "Press in slight arc",
+        "Control descent"
+      ],
+      "primary_muscles": [
+        "shoulders"
+      ],
+      "secondary_muscles": [
+        "triceps"
+      ],
+      "equipment_tags": [
+        "dumbbell",
+        "bench"
+      ],
       "movement_pattern": "vertical_press",
       "valid_substitutions": [
         {
           "exercise_id": "bench_press_barbell",
           "rationale": "Pressing pattern substitute when seated overhead setup is unavailable.",
-          "equipment_tags": ["barbell", "bench"]
+          "equipment_tags": [
+            "barbell",
+            "bench"
+          ]
         }
       ],
       "default_video_url": "https://www.youtube.com/watch?v=qEwKCR5JCog",
@@ -974,18 +1659,33 @@
     {
       "exercise_id": "pullup_assisted_neutral",
       "canonical_name": "Neutral Grip Assisted Pull-Up",
-      "aliases": ["Assisted Pull-Up"],
+      "aliases": [
+        "Assisted Pull-Up"
+      ],
       "execution": "Drive elbows down with controlled full stretch and no lower-body swing.",
-      "coaching_cues": ["Depress scapula first", "Control eccentric", "Chest to bar path"],
-      "primary_muscles": ["back"],
-      "secondary_muscles": ["biceps"],
-      "equipment_tags": ["machine", "bodyweight"],
+      "coaching_cues": [
+        "Depress scapula first",
+        "Control eccentric",
+        "Chest to bar path"
+      ],
+      "primary_muscles": [
+        "back"
+      ],
+      "secondary_muscles": [
+        "biceps"
+      ],
+      "equipment_tags": [
+        "machine",
+        "bodyweight"
+      ],
       "movement_pattern": "vertical_pull",
       "valid_substitutions": [
         {
           "exercise_id": "lat_pulldown_wide",
           "rationale": "Closest vertical pull substitute with scalable loading.",
-          "equipment_tags": ["cable"]
+          "equipment_tags": [
+            "cable"
+          ]
         }
       ],
       "default_video_url": "https://www.youtube.com/watch?v=eGo4IYlbE5g",
@@ -994,18 +1694,33 @@
     {
       "exercise_id": "weak_chest_cable_fly",
       "canonical_name": "Cable Fly (Weak-Point Chest)",
-      "aliases": ["Weak Point Chest Fly"],
+      "aliases": [
+        "Weak Point Chest Fly"
+      ],
       "execution": "Maintain constant pec tension and avoid shoulder shrugging.",
-      "coaching_cues": ["Stretch chest at bottom", "Squeeze through midline", "Control return"],
-      "primary_muscles": ["chest"],
-      "secondary_muscles": ["shoulders"],
-      "equipment_tags": ["cable"],
+      "coaching_cues": [
+        "Stretch chest at bottom",
+        "Squeeze through midline",
+        "Control return"
+      ],
+      "primary_muscles": [
+        "chest"
+      ],
+      "secondary_muscles": [
+        "shoulders"
+      ],
+      "equipment_tags": [
+        "cable"
+      ],
       "movement_pattern": "horizontal_adduction",
       "valid_substitutions": [
         {
           "exercise_id": "incline_dumbbell_press",
           "rationale": "Alternative chest-focused movement if cable setup is unavailable.",
-          "equipment_tags": ["dumbbell", "bench"]
+          "equipment_tags": [
+            "dumbbell",
+            "bench"
+          ]
         }
       ],
       "default_video_url": "https://www.youtube.com/watch?v=eozdVDA78K0",
@@ -1014,22 +1729,262 @@
     {
       "exercise_id": "weak_ham_leg_curl",
       "canonical_name": "Leg Curl (Weak-Point Hamstrings)",
-      "aliases": ["Weak Point Hamstring Curl"],
+      "aliases": [
+        "Weak Point Hamstring Curl"
+      ],
       "execution": "Curl through full range with controlled eccentric and no hip lift.",
-      "coaching_cues": ["Pull with heels", "Pause at contraction", "Slow negative"],
-      "primary_muscles": ["hamstrings"],
+      "coaching_cues": [
+        "Pull with heels",
+        "Pause at contraction",
+        "Slow negative"
+      ],
+      "primary_muscles": [
+        "hamstrings"
+      ],
       "secondary_muscles": [],
-      "equipment_tags": ["machine"],
+      "equipment_tags": [
+        "machine"
+      ],
       "movement_pattern": "knee_flexion",
       "valid_substitutions": [
         {
           "exercise_id": "romanian_deadlift",
           "rationale": "Posterior-chain substitute when curl machine is unavailable.",
-          "equipment_tags": ["barbell", "dumbbell"]
+          "equipment_tags": [
+            "barbell",
+            "dumbbell"
+          ]
         }
       ],
       "default_video_url": "https://www.youtube.com/watch?v=1Tq3QdYUuHs",
       "slot_usage_rationale": "Dedicated weak-area slot to preserve hamstring emphasis under day compression."
+    },
+    {
+      "exercise_id": "dumbbell_curl_incline",
+      "canonical_name": "Incline Dumbbell Curl",
+      "aliases": [
+        "Incline DB Curl"
+      ],
+      "execution": "Keep elbows behind the torso and supinate hard through the top of each rep.",
+      "coaching_cues": [
+        "Let biceps lengthen",
+        "Supinate hard",
+        "No shoulder swing"
+      ],
+      "primary_muscles": [
+        "biceps"
+      ],
+      "secondary_muscles": [
+        "forearms"
+      ],
+      "equipment_tags": [
+        "dumbbell",
+        "bench"
+      ],
+      "movement_pattern": "elbow_flexion",
+      "valid_substitutions": [],
+      "default_video_url": "https://www.youtube.com/watch?v=soxrZlIl35U",
+      "slot_usage_rationale": "Direct arm-isolation slot used to preserve biceps volume after compounds."
+    },
+    {
+      "exercise_id": "triceps_pushdown_rope",
+      "canonical_name": "Rope Triceps Pushdown",
+      "aliases": [
+        "Rope Pushdown"
+      ],
+      "execution": "Keep upper arms pinned and fully extend the elbows while separating the rope at the bottom.",
+      "coaching_cues": [
+        "Pin elbows in place",
+        "Spread rope apart",
+        "Control eccentric"
+      ],
+      "primary_muscles": [
+        "triceps"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "cable"
+      ],
+      "movement_pattern": "elbow_extension",
+      "valid_substitutions": [],
+      "default_video_url": "https://www.youtube.com/watch?v=vB5OHsJ3EME",
+      "slot_usage_rationale": "Direct arm-isolation slot used to preserve triceps volume after compounds."
+    },
+    {
+      "exercise_id": "lateral_raise_cable",
+      "canonical_name": "Cable Lateral Raise",
+      "aliases": [
+        "Cable Lateral"
+      ],
+      "execution": "Raise through the scapular plane with minimal torso sway and steady cable tension.",
+      "coaching_cues": [
+        "Lead with elbows",
+        "Keep trap quiet",
+        "Control lowering"
+      ],
+      "primary_muscles": [
+        "shoulders"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "cable"
+      ],
+      "movement_pattern": "shoulder_abduction",
+      "valid_substitutions": [],
+      "default_video_url": "https://www.youtube.com/watch?v=3VcKaXpzqRo",
+      "slot_usage_rationale": "Direct delt-isolation slot to preserve shoulder volume without excess systemic fatigue."
+    },
+    {
+      "exercise_id": "leg_curl_seated",
+      "canonical_name": "Leg Curl Seated",
+      "aliases": [
+        "Seated Leg Curl",
+        "Machine Seated Leg Curl"
+      ],
+      "execution": "Curl through full range with hips pinned and controlled eccentric tempo.",
+      "coaching_cues": [
+        "Keep hips down",
+        "Pause at squeeze",
+        "Control eccentric"
+      ],
+      "primary_muscles": [
+        "hamstrings"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "machine"
+      ],
+      "movement_pattern": "knee_flexion",
+      "valid_substitutions": [
+        {
+          "exercise_id": "romanian_deadlift",
+          "rationale": "Posterior-chain substitute when curl machine is unavailable.",
+          "equipment_tags": [
+            "barbell",
+            "dumbbell"
+          ]
+        }
+      ],
+      "default_video_url": "https://www.youtube.com/watch?v=1Tq3QdYUuHs",
+      "slot_usage_rationale": "Hamstring isolation slot that preserves knee-flexion work alongside hinge loading."
+    },
+    {
+      "exercise_id": "row_machine_chest_supported",
+      "canonical_name": "Row Machine Chest Supported",
+      "aliases": [
+        "Machine Chest Supported Row"
+      ],
+      "execution": "Brace chest against pad, pull elbows back, and pause briefly in peak contraction.",
+      "coaching_cues": [
+        "Stay glued to pad",
+        "Drive elbows back",
+        "Pause the squeeze"
+      ],
+      "primary_muscles": [
+        "back"
+      ],
+      "secondary_muscles": [
+        "biceps"
+      ],
+      "equipment_tags": [
+        "machine"
+      ],
+      "movement_pattern": "horizontal_pull",
+      "valid_substitutions": [
+        {
+          "exercise_id": "row_chest_supported",
+          "rationale": "Closest chest-supported row pattern when dedicated machine is unavailable.",
+          "equipment_tags": [
+            "machine",
+            "bench",
+            "dumbbell"
+          ]
+        }
+      ],
+      "default_video_url": "https://www.youtube.com/watch?v=roCP6wCXPqo",
+      "slot_usage_rationale": "Back-volume slot used to preserve supported rowing without extra low-back fatigue."
+    },
+    {
+      "exercise_id": "split_squat_db",
+      "canonical_name": "Split Squat Db",
+      "aliases": [
+        "DB Split Squat",
+        "Dumbbell Split Squat"
+      ],
+      "execution": "Take a stable stance, descend under control, and drive through the front leg.",
+      "coaching_cues": [
+        "Stay balanced",
+        "Track knee over toes",
+        "Use full range"
+      ],
+      "primary_muscles": [
+        "quads",
+        "glutes"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "movement_pattern": "lunge",
+      "valid_substitutions": [
+        {
+          "exercise_id": "hack_squat",
+          "rationale": "Machine quad-dominant alternative when available.",
+          "equipment_tags": [
+            "machine"
+          ]
+        }
+      ],
+      "default_video_url": "https://www.youtube.com/watch?v=2C-uNgKwPLE",
+      "slot_usage_rationale": "Single-leg lower-body slot that preserves quad/glute stimulus when machine options are limited."
+    },
+    {
+      "exercise_id": "calf_raise_seated",
+      "canonical_name": "Seated Calf Raise",
+      "aliases": [
+        "Machine Seated Calf Raise"
+      ],
+      "execution": "Move through a full stretch and peak contraction without bouncing.",
+      "coaching_cues": [
+        "Pause in stretch",
+        "Drive big toe down",
+        "Squeeze at top"
+      ],
+      "primary_muscles": [
+        "calves"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "machine"
+      ],
+      "movement_pattern": "plantar_flexion",
+      "valid_substitutions": [],
+      "default_video_url": "https://www.youtube.com/watch?v=YMmgqO8Jo-k",
+      "slot_usage_rationale": "Direct calf slot used to keep lower-leg hypertrophy work in the weekly plan."
+    },
+    {
+      "exercise_id": "cable_crunch",
+      "canonical_name": "Cable Crunch",
+      "aliases": [
+        "Rope Cable Crunch"
+      ],
+      "execution": "Crunch down through the trunk while keeping hips stable and abs shortened hard at the bottom.",
+      "coaching_cues": [
+        "Round through abs",
+        "Keep hips quiet",
+        "Control the eccentric"
+      ],
+      "primary_muscles": [
+        "abs"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "cable"
+      ],
+      "movement_pattern": "trunk_flexion",
+      "valid_substitutions": [],
+      "default_video_url": null,
+      "slot_usage_rationale": "Direct trunk-flexion slot to preserve core work without adding much systemic fatigue."
     }
   ],
   "program_intent": {
@@ -1069,11 +2024,26 @@
     "weak_area_bonus_slots": 1,
     "daily_slot_cap_when_compressed": 8,
     "coverage_targets": [
-      {"muscle_group": "chest", "minimum_weekly_slots": 2},
-      {"muscle_group": "back", "minimum_weekly_slots": 2},
-      {"muscle_group": "quads", "minimum_weekly_slots": 2},
-      {"muscle_group": "hamstrings", "minimum_weekly_slots": 2},
-      {"muscle_group": "shoulders", "minimum_weekly_slots": 2}
+      {
+        "muscle_group": "chest",
+        "minimum_weekly_slots": 2
+      },
+      {
+        "muscle_group": "back",
+        "minimum_weekly_slots": 2
+      },
+      {
+        "muscle_group": "quads",
+        "minimum_weekly_slots": 2
+      },
+      {
+        "muscle_group": "hamstrings",
+        "minimum_weekly_slots": 2
+      },
+      {
+        "muscle_group": "shoulders",
+        "minimum_weekly_slots": 2
+      }
     ],
     "reintegration_policy": "When temporary constraints end, resume next authored week in sequence while preserving updated progression state for all carried lifts."
   }

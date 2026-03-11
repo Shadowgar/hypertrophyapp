@@ -92,6 +92,7 @@ def _prepare_plan_generation_runtime(
         .limit(100)
         .all()
     )
+    exercise_states = db.query(ExerciseState).filter(ExerciseState.user_id == current_user.id).all()
     prior_plans = db.query(WorkoutPlan).filter(WorkoutPlan.user_id == current_user.id).all()
     latest_plan = max(prior_plans, key=lambda plan: plan.created_at) if prior_plans else None
 
@@ -119,9 +120,18 @@ def _prepare_plan_generation_runtime(
         current_days_available=current_user.days_available,
         active_frequency_adaptation=active_frequency_adaptation,
         selected_program_id=current_user.selected_program_id,
+        split_preference=current_user.split_preference,
+        training_location=current_user.training_location,
+        equipment_profile=list(current_user.equipment_profile or []),
+        weak_areas=list(current_user.weak_areas or []),
+        nutrition_phase=current_user.nutrition_phase,
+        session_time_budget_minutes=current_user.session_time_budget_minutes,
+        movement_restrictions=list(current_user.movement_restrictions or []),
+        near_failure_tolerance=current_user.near_failure_tolerance,
         latest_plan=latest_plan,
         latest_soreness_entry=latest_soreness,
         recent_workout_logs=history_rows,
+        exercise_states=exercise_states,
         recent_checkins=[latest_checkin] if latest_checkin is not None else [],
         recent_review_cycles=recent_review_cycles,
         prior_plans=prior_plans,
@@ -375,12 +385,19 @@ def coach_intelligence_preview(
         .limit(100)
         .all()
     )
+    latest_checkin = (
+        db.query(WeeklyCheckin)
+        .filter(WeeklyCheckin.user_id == current_user.id, WeeklyCheckin.week_start <= date.today())
+        .order_by(WeeklyCheckin.week_start.desc(), WeeklyCheckin.created_at.desc())
+        .first()
+    )
     preview_context_runtime = prepare_coach_preview_decision_context(
         user_name=current_user.name,
         split_preference=current_user.split_preference,
         template=template,
         latest_plan=latest_plan,
         recent_workout_logs=history_rows,
+        recent_checkins=[latest_checkin] if latest_checkin is not None else [],
         selected_program_id=current_user.selected_program_id,
         nutrition_phase=current_user.nutrition_phase,
         available_equipment=current_user.equipment_profile,

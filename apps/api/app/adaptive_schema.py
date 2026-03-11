@@ -36,6 +36,7 @@ class AdaptiveSlot(BaseModel):
     slot_id: str = Field(min_length=1)
     order_index: int = Field(ge=1)
     exercise_id: str = Field(min_length=1)
+    slot_role: str | None = None
     video_url: str | None = None
     warmup_prescription: list[WarmupStep] = Field(default_factory=list)
     work_sets: list[WorkSetPrescription] = Field(default_factory=list)
@@ -45,6 +46,7 @@ class AdaptiveSlot(BaseModel):
 class AdaptiveDay(BaseModel):
     day_id: str = Field(min_length=1)
     day_name: str = Field(min_length=1)
+    day_role: str | None = None
     slots: list[AdaptiveSlot] = Field(default_factory=list)
 
     @field_validator("slots")
@@ -63,6 +65,7 @@ class AdaptiveDay(BaseModel):
 
 class AdaptiveWeek(BaseModel):
     week_index: int = Field(ge=1)
+    week_role: str | None = None
     days: list[AdaptiveDay] = Field(default_factory=list)
 
     @field_validator("days")
@@ -293,16 +296,48 @@ class AdherenceState(BaseModel):
     missed_session_count: int = Field(ge=0)
 
 
+class ReadinessState(BaseModel):
+    sleep_quality: int | None = Field(default=None, ge=1, le=5)
+    stress_level: int | None = Field(default=None, ge=1, le=5)
+    pain_flags: list[str] = Field(default_factory=list)
+    recovery_risk_flags: list[str] = Field(default_factory=list)
+
+
+class ConstraintState(BaseModel):
+    days_available: int | None = Field(default=None, ge=2, le=5)
+    split_preference: str | None = None
+    training_location: str | None = None
+    equipment_profile: list[str] = Field(default_factory=list)
+    weak_areas: list[str] = Field(default_factory=list)
+    nutrition_phase: str | None = None
+    session_time_budget_minutes: int | None = Field(default=None, ge=15, le=240)
+    movement_restrictions: list[str] = Field(default_factory=list)
+    near_failure_tolerance: Literal["low", "moderate", "high"] | None = None
+
+
 class StallState(BaseModel):
     stalled_exercise_ids: list[str] = Field(default_factory=list)
     consecutive_underperformance_weeks: int = Field(ge=0)
     phase_stagnation_weeks: int = Field(ge=0)
 
 
+class LatestMesocycleState(BaseModel):
+    week_index: int | None = Field(default=None, ge=1)
+    trigger_weeks_effective: int | None = Field(default=None, ge=1)
+    authored_week_index: int | None = Field(default=None, ge=1)
+    authored_week_role: str | None = None
+    authored_sequence_length: int | None = Field(default=None, ge=1)
+    authored_sequence_complete: bool = False
+    phase_transition_pending: bool = False
+    phase_transition_reason: str | None = None
+    post_authored_behavior: str | None = None
+
+
 class GenerationState(BaseModel):
     prior_generated_weeks_by_program: dict[str, int] = Field(default_factory=dict)
     under_target_muscles: list[str] = Field(default_factory=list)
     mesocycle_trigger_weeks_effective: int | None = Field(default=None, ge=1)
+    latest_mesocycle: LatestMesocycleState = Field(default_factory=LatestMesocycleState)
 
     @field_validator("prior_generated_weeks_by_program")
     @classmethod
@@ -319,6 +354,8 @@ class UserTrainingState(BaseModel):
     progression_state_per_exercise: list[ProgressionStateEntry] = Field(default_factory=list)
     fatigue_state: FatigueState
     adherence_state: AdherenceState
+    readiness_state: ReadinessState = Field(default_factory=ReadinessState)
+    constraint_state: ConstraintState
     stall_state: StallState
     generation_state: GenerationState = Field(default_factory=GenerationState)
 

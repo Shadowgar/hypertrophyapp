@@ -1,6 +1,7 @@
 from core_engine.decision_progression import (
     derive_readiness_score,
     evaluate_schedule_adaptation,
+    evaluate_stimulus_fatigue_response,
     recommend_phase_transition,
     recommend_progression_action,
 )
@@ -208,3 +209,92 @@ def test_derive_readiness_score_penalizes_soreness_and_deload_state() -> None:
     )
 
     assert readiness == 62
+
+
+def test_derive_readiness_score_penalizes_low_sleep_high_stress_and_pain_flags() -> None:
+    readiness = derive_readiness_score(
+        completion_pct=70,
+        adherence_score=4,
+        soreness_level="none",
+        progression_action="hold",
+        sleep_quality=2,
+        stress_level=4,
+        pain_flags=["elbow_flexion"],
+    )
+
+    assert readiness == 50
+
+
+def test_evaluate_stimulus_fatigue_response_classifies_high_stimulus_low_fatigue_state() -> None:
+    snapshot = evaluate_stimulus_fatigue_response(
+        completion_pct=96,
+        adherence_score=5,
+        soreness_level="none",
+        average_rpe=8.0,
+        consecutive_underperformance_weeks=0,
+    )
+
+    assert snapshot["stimulus_quality"] == "high"
+    assert snapshot["fatigue_cost"] == "low"
+    assert snapshot["recoverability"] == "high"
+    assert snapshot["progression_eligibility"] is True
+    assert snapshot["deload_pressure"] == "low"
+    assert snapshot["substitution_pressure"] == "low"
+
+
+def test_recommend_progression_action_emits_sfr_snapshot_for_high_fatigue_low_recovery() -> None:
+    decision = recommend_progression_action(
+        completion_pct=72,
+        adherence_score=3,
+        soreness_level="moderate",
+        average_rpe=9.2,
+        consecutive_underperformance_weeks=2,
+        sleep_quality=2,
+        stress_level=4,
+        pain_flags=["elbow_flexion"],
+    )
+
+    snapshot = decision["stimulus_fatigue_response"]
+
+    assert snapshot["stimulus_quality"] == "low"
+    assert snapshot["fatigue_cost"] == "high"
+    assert snapshot["recoverability"] == "low"
+    assert snapshot["progression_eligibility"] is False
+    assert snapshot["deload_pressure"] == "high"
+    assert snapshot["substitution_pressure"] == "high"
+
+
+def test_recommend_progression_action_deloads_when_sfr_shows_high_pressure_and_low_recoverability() -> None:
+    decision = recommend_progression_action(
+        completion_pct=88,
+        adherence_score=4,
+        soreness_level="mild",
+        average_rpe=8.6,
+        consecutive_underperformance_weeks=1,
+        sleep_quality=2,
+        stress_level=4,
+        pain_flags=["elbow_flexion"],
+    )
+
+    assert decision["action"] == "deload"
+    assert decision["reason"] == "sfr_high_deload_pressure"
+    assert decision["stimulus_fatigue_response"]["recoverability"] == "low"
+
+
+def test_recommend_phase_transition_marks_authored_sequence_completion_as_pending_rotation() -> None:
+    transition = recommend_phase_transition(
+        current_phase="intensification",
+        weeks_in_phase=4,
+        readiness_score=78,
+        progression_action="hold",
+        stagnation_weeks=0,
+        authored_sequence_complete=True,
+        phase_transition_pending=True,
+        post_authored_behavior="hold_last_authored_week",
+    )
+
+    assert transition["next_phase"] == "intensification"
+    assert transition["reason"] == "authored_sequence_complete"
+    assert transition["transition_pending"] is True
+    assert transition["recommended_action"] == "rotate_program"
+    assert transition["post_authored_behavior"] == "hold_last_authored_week"

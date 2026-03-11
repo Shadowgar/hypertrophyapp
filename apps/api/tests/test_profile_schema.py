@@ -116,3 +116,31 @@ def test_profile_upsert_accepts_onboarding_answers_payload() -> None:
     )
 
     assert payload.onboarding_answers["primary_goal"] == "build_muscle"
+
+
+def test_profile_upsert_accepts_coaching_constraint_fields() -> None:
+    payload = ProfileUpsert(
+        name="Test",
+        age=30,
+        weight=80,
+        gender="male",
+        split_preference="full_body",
+        selected_program_id="full_body_v1",
+        training_location="gym",
+        equipment_profile=["dumbbell", "machine"],
+        weak_areas=["chest"],
+        onboarding_answers={},
+        days_available=4,
+        nutrition_phase="maintenance",
+        calories=2500,
+        protein=180,
+        fat=70,
+        carbs=260,
+        session_time_budget_minutes=75,
+        movement_restrictions=["deep_knee_flexion", "overhead_pressing"],
+        near_failure_tolerance="moderate",
+    )
+
+    assert payload.session_time_budget_minutes == 75
+    assert payload.movement_restrictions == ["deep_knee_flexion", "overhead_pressing"]
+    assert payload.near_failure_tolerance == "moderate"

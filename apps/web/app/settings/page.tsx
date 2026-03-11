@@ -24,6 +24,18 @@ function parseLaggingMuscles(raw: string): string[] {
     .filter((item) => item.length > 0);
 }
 
+function formatTransitionAction(action?: string | null): string {
+  const normalized = (action ?? "").trim();
+  if (!normalized) {
+    return "Review next step";
+  }
+  return normalized
+    .split("_")
+    .filter((part) => part.length > 0)
+    .map((part) => part[0].toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 export default function SettingsPage() {
   const router = useRouter();
   const [theme] = useState("dark");
@@ -351,7 +363,18 @@ export default function SettingsPage() {
               <p>Progression: {coachPreview.progression.action}</p>
               <p>{resolveReasonText(coachPreview.progression.rationale, coachPreview.progression.reason)}</p>
               <p>Phase Recommendation: {coachPreview.phase_transition.next_phase}</p>
-              <p>{resolveReasonText(coachPreview.phase_transition.rationale, coachPreview.phase_transition.reason)}</p>
+              {!coachPreview.phase_transition.transition_pending ? (
+                <p>{resolveReasonText(coachPreview.phase_transition.rationale, coachPreview.phase_transition.reason)}</p>
+              ) : null}
+              {coachPreview.phase_transition.transition_pending ? (
+                <div className="mt-2 rounded-md border border-zinc-700/80 bg-zinc-950/50 p-2">
+                  <p className="font-medium text-zinc-100">Program Transition</p>
+                  <p>Current block complete</p>
+                  <p>Recommendation: {formatTransitionAction(coachPreview.phase_transition.recommended_action)}</p>
+                  <p>{resolveReasonText(undefined, coachPreview.phase_transition.post_authored_behavior)}</p>
+                  <p>{resolveReasonText(coachPreview.phase_transition.rationale, coachPreview.phase_transition.reason)}</p>
+                </div>
+              ) : null}
               <p>Adaptation Risk: {coachPreview.schedule.risk_level}</p>
               <p>Focus Muscles: {coachPreview.specialization.focus_muscles.join(", ") || "none"}</p>
             </div>

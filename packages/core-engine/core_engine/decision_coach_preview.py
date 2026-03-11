@@ -3,6 +3,8 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any, Callable
 
+from .warmups import compute_warmups
+
 
 def _decision_step(rule: str, matched: bool, details: dict[str, Any] | None = None) -> dict[str, Any]:
     payload: dict[str, Any] = {
@@ -164,6 +166,7 @@ def prepare_coach_preview_decision_context(
     template: dict[str, Any],
     latest_plan: Any | None,
     recent_workout_logs: list[Any],
+    recent_checkins: list[Any] | None = None,
     selected_program_id: str | None,
     nutrition_phase: str | None,
     available_equipment: list[str] | None,
@@ -175,6 +178,7 @@ def prepare_coach_preview_decision_context(
         latest_plan=latest_plan,
         latest_soreness_entry=None,
         recent_workout_logs=recent_workout_logs,
+        recent_checkins=list(recent_checkins or []),
     )
     context = build_coach_preview_context(
         user_name=user_name,
@@ -195,6 +199,7 @@ def prepare_coach_preview_decision_context(
                 "split_preference": split_preference,
                 "selected_program_id": selected_program_id,
                 "recent_log_count": len(recent_workout_logs),
+                "recent_checkin_count": len(recent_checkins or []),
                 "nutrition_phase_provided": bool(nutrition_phase),
                 "equipment_count": len(available_equipment or []),
             },
@@ -508,6 +513,89 @@ def build_specialization_applied_recommendation_record(
     }
 
 
+def recommend_specialization_adjustments(
+    *,
+    weekly_volume_by_muscle: dict[str, int],
+    lagging_muscles: list[str],
+    max_focus_muscles: int = 2,
+    target_min_sets: int = 8,
+) -> dict[str, Any]:
+    normalized_lagging = {
+        muscle.strip().lower()
+        for muscle in lagging_muscles
+        if muscle and muscle.strip().lower() in weekly_volume_by_muscle
+    }
+    ranked_focus = sorted(
+        normalized_lagging,
+        key=lambda muscle: (int(weekly_volume_by_muscle.get(muscle, 0)), muscle),
+    )[: max(1, int(max_focus_muscles))]
+
+    focus_adjustments: dict[str, int] = {}
+    for muscle in ranked_focus:
+        current_sets = int(weekly_volume_by_muscle.get(muscle, 0))
+        focus_adjustments[muscle] = 2 if current_sets < target_min_sets else 1
+
+    total_added_sets = sum(focus_adjustments.values())
+    donor_candidates = sorted(
+        [
+            (muscle, int(sets))
+            for muscle, sets in weekly_volume_by_muscle.items()
+            if muscle not in ranked_focus and int(sets) > target_min_sets
+        ],
+        key=lambda row: (-row[1], row[0]),
+    )
+
+    donor_adjustments: dict[str, int] = {}
+    remaining = total_added_sets
+    for donor, sets in donor_candidates:
+        if remaining <= 0:
+            break
+        allowed_drop = min(1, sets - target_min_sets)
+        if allowed_drop <= 0:
+            continue
+        donor_adjustments[donor] = -allowed_drop
+        remaining -= allowed_drop
+
+    return {
+        "focus_muscles": ranked_focus,
+        "focus_adjustments": focus_adjustments,
+        "donor_adjustments": donor_adjustments,
+        "uncompensated_added_sets": max(0, remaining),
+    }
+
+
+def summarize_program_media_and_warmups(program_template: dict[str, Any]) -> dict[str, Any]:
+    exercises: list[dict[str, Any]] = []
+    for session in program_template.get("sessions", []):
+        exercises.extend(session.get("exercises", []))
+
+    total_exercises = len(exercises)
+    with_video = 0
+    sample_warmups: list[dict[str, Any]] = []
+
+    for exercise in exercises:
+        video = exercise.get("video") if isinstance(exercise.get("video"), dict) else {}
+        if isinstance(video, dict) and str(video.get("youtube_url") or "").strip():
+            with_video += 1
+
+        start_weight = float(exercise.get("start_weight") or 0)
+        if start_weight > 0 and len(sample_warmups) < 3:
+            sample_warmups.append(
+                {
+                    "exercise_id": str(exercise.get("id") or ""),
+                    "warmups": compute_warmups(start_weight),
+                }
+            )
+
+    coverage_pct = round((with_video / total_exercises) * 100, 1) if total_exercises else 0.0
+    return {
+        "total_exercises": total_exercises,
+        "video_linked_exercises": with_video,
+        "video_coverage_pct": coverage_pct,
+        "sample_warmups": sample_warmups,
+    }
+
+
 def finalize_applied_coaching_recommendation(
     *,
     payload_key: str,
@@ -551,29 +639,45 @@ def _coach_preview_schedule_payload(schedule: dict[str, Any], *, from_days: int,
 
 
 def _coach_preview_effective_readiness_score(
+    context: dict[str, Any],
     preview_request: dict[str, Any],
     progression_payload: dict[str, Any],
     *,
     derive_readiness_score: Callable[..., int],
-) -> int:
+) -> tuple[int, str]:
     provided = preview_request.get("readiness_score")
     if provided is not None:
-        return int(provided)
+        return int(provided), "request_readiness_score"
+
+    readiness_state = _coerce_dict(context.get("readiness_state"))
+    sleep_quality = readiness_state.get("sleep_quality")
+    stress_level = readiness_state.get("stress_level")
+    pain_flags = [str(item) for item in readiness_state.get("pain_flags") or [] if str(item).strip()]
+
     return derive_readiness_score(
         completion_pct=int(preview_request.get("completion_pct") or 0),
         adherence_score=int(preview_request.get("adherence_score") or 1),
         soreness_level=str(preview_request.get("soreness_level") or "none"),
         progression_action=str(progression_payload.get("action") or "hold"),
-    )
+        sleep_quality=int(sleep_quality) if sleep_quality is not None else None,
+        stress_level=int(stress_level) if stress_level is not None else None,
+        pain_flags=pain_flags,
+    ), ("context_readiness_state" if readiness_state else "request_metrics_only")
 
 
 def _coach_preview_progression_payload(
+    context: dict[str, Any],
     preview_request: dict[str, Any],
     *,
     rule_set: dict[str, Any] | None,
     recommend_progression_action: Callable[..., dict[str, Any]],
     humanize_progression_reason: Callable[..., str],
 ) -> dict[str, Any]:
+    readiness_state = _coerce_dict(context.get("readiness_state"))
+    sleep_quality = readiness_state.get("sleep_quality")
+    stress_level = readiness_state.get("stress_level")
+    pain_flags = [str(item) for item in readiness_state.get("pain_flags") or [] if str(item).strip()]
+
     progression = recommend_progression_action(
         completion_pct=int(preview_request.get("completion_pct") or 0),
         adherence_score=int(preview_request.get("adherence_score") or 1),
@@ -581,6 +685,9 @@ def _coach_preview_progression_payload(
         average_rpe=preview_request.get("average_rpe"),
         consecutive_underperformance_weeks=int(preview_request.get("stagnation_weeks") or 0),
         rule_set=rule_set,
+        sleep_quality=int(sleep_quality) if sleep_quality is not None else None,
+        stress_level=int(stress_level) if stress_level is not None else None,
+        pain_flags=pain_flags,
     )
     return {
         **progression,
@@ -597,6 +704,7 @@ def _coach_preview_trace(
     schedule_payload: dict[str, Any],
     progression_payload: dict[str, Any],
     effective_readiness_score: int,
+    effective_readiness_source: str,
     phase_transition_payload: dict[str, Any],
     specialization: dict[str, Any],
     media_warmups: dict[str, Any],
@@ -630,6 +738,7 @@ def _coach_preview_trace(
                 "decision": "readiness_score",
                 "result": {
                     "provided": preview_request.get("readiness_score") is not None,
+                    "source": effective_readiness_source,
                     "value": effective_readiness_score,
                 },
             },
@@ -649,6 +758,7 @@ def _coach_preview_trace(
             "template_id": template_id,
             "progression_action": progression_payload.get("action"),
             "next_phase": phase_transition_payload.get("next_phase"),
+            "phase_transition_pending": bool(phase_transition_payload.get("transition_pending")),
             "focus_muscles": specialization.get("focus_muscles") or [],
             "risk_level": schedule_payload.get("risk_level"),
         },
@@ -693,17 +803,21 @@ def recommend_coach_intelligence_preview(
     schedule_payload = _coach_preview_schedule_payload(schedule, from_days=from_days, to_days=to_days)
 
     progression_payload = _coach_preview_progression_payload(
+        context,
         preview_request,
         rule_set=rule_set,
         recommend_progression_action=recommend_progression_action,
         humanize_progression_reason=humanize_progression_reason,
     )
 
-    effective_readiness_score = _coach_preview_effective_readiness_score(
+    effective_readiness_score, effective_readiness_source = _coach_preview_effective_readiness_score(
+        context,
         preview_request,
         progression_payload,
         derive_readiness_score=derive_readiness_score,
     )
+
+    latest_mesocycle = _coerce_dict(context.get("latest_mesocycle"))
 
     phase_transition = recommend_phase_transition(
         current_phase=str(preview_request.get("current_phase") or "accumulation"),
@@ -712,6 +826,18 @@ def recommend_coach_intelligence_preview(
         progression_action=str(progression_payload.get("action") or "hold"),
         stagnation_weeks=int(preview_request.get("stagnation_weeks") or 0),
         rule_set=rule_set,
+        authored_sequence_complete=bool(latest_mesocycle.get("authored_sequence_complete")),
+        phase_transition_pending=bool(latest_mesocycle.get("phase_transition_pending")),
+        phase_transition_reason=(
+            str(latest_mesocycle.get("phase_transition_reason"))
+            if str(latest_mesocycle.get("phase_transition_reason") or "").strip()
+            else None
+        ),
+        post_authored_behavior=(
+            str(latest_mesocycle.get("post_authored_behavior"))
+            if str(latest_mesocycle.get("post_authored_behavior") or "").strip()
+            else None
+        ),
     )
     phase_transition_payload = {
         **phase_transition,
@@ -740,6 +866,7 @@ def recommend_coach_intelligence_preview(
             schedule_payload=schedule_payload,
             progression_payload=progression_payload,
             effective_readiness_score=effective_readiness_score,
+            effective_readiness_source=effective_readiness_source,
             phase_transition_payload=phase_transition_payload,
             specialization=specialization,
             media_warmups=media_warmups,

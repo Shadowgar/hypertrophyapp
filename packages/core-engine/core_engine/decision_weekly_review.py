@@ -4,6 +4,8 @@ from copy import deepcopy
 from datetime import date, datetime, timedelta
 from typing import Any, cast
 
+from .decision_progression import evaluate_stimulus_fatigue_response
+
 
 _WEEKLY_REVIEW_GUIDANCE_MESSAGES = {
     "recovery_limited_reduce_load_and_complete_quality_volume": "Recovery signals are limited. Reduce load slightly and complete high-quality volume before pushing progression.",
@@ -17,6 +19,7 @@ _WEEKLY_REVIEW_ADJUSTMENT_MESSAGES = {
     "low_completion_secure_volume": "Completion was low. Trim intensity slightly and secure the planned volume first.",
     "below_target_reps_reduce_or_hold": "Reps fell below target. Hold or slightly reduce load until rep quality returns.",
     "above_target_reps_progress_load": "Reps exceeded target with sufficient readiness. Progress load next week.",
+    "recovery_limited_hold_progression": "Recovery is constrained. Hold progression on this exercise until recoverability improves.",
     "weak_point_bounded_extra_practice": "This is a weak-point candidate with good readiness, so add a small bounded practice set.",
 }
 
@@ -50,6 +53,10 @@ def _read_attr(value: Any, key: str, default: Any = None) -> Any:
     if isinstance(value, dict):
         return value.get(key, default)
     return getattr(value, key, default)
+
+
+def _normalize_string_list(values: list[str] | None) -> list[str]:
+    return [str(item).strip() for item in (values or []) if str(item).strip()]
 
 
 def _looks_like_human_rationale(value: str) -> bool:
@@ -155,11 +162,55 @@ def _resolve_global_review_adjustments(
     return global_set_delta, global_weight_scale, readiness_score, applied_rules
 
 
+def _resolve_readiness_state_adjustments(
+    *,
+    readiness_state: dict[str, Any] | None,
+    base_readiness: int,
+) -> tuple[int, str, list[dict[str, Any]]]:
+    normalized_readiness_state = _coerce_dict(readiness_state)
+    if not normalized_readiness_state:
+        return base_readiness, "none", []
+
+    sleep_quality_raw = normalized_readiness_state.get("sleep_quality")
+    stress_level_raw = normalized_readiness_state.get("stress_level")
+    pain_flags = _normalize_string_list(normalized_readiness_state.get("pain_flags"))
+
+    sleep_quality = int(sleep_quality_raw) if sleep_quality_raw is not None else None
+    stress_level = int(stress_level_raw) if stress_level_raw is not None else None
+    readiness_score = base_readiness
+    applied_rules: list[dict[str, Any]] = []
+
+    if sleep_quality is not None:
+        normalized_sleep = _clamp_int(sleep_quality, 1, 5)
+        if normalized_sleep <= 2:
+            readiness_score -= 8
+            applied_rules.append({"rule": "low_sleep", "matched": True, "details": {"sleep_quality": normalized_sleep}})
+        elif normalized_sleep == 3:
+            readiness_score -= 3
+            applied_rules.append({"rule": "moderate_sleep", "matched": True, "details": {"sleep_quality": normalized_sleep}})
+
+    if stress_level is not None:
+        normalized_stress = _clamp_int(stress_level, 1, 5)
+        if normalized_stress >= 4:
+            readiness_score -= 8
+            applied_rules.append({"rule": "high_stress", "matched": True, "details": {"stress_level": normalized_stress}})
+        elif normalized_stress == 3:
+            readiness_score -= 3
+            applied_rules.append({"rule": "moderate_stress", "matched": True, "details": {"stress_level": normalized_stress}})
+
+    if pain_flags:
+        readiness_score -= 6
+        applied_rules.append({"rule": "pain_flags_present", "matched": True, "details": {"pain_flags": pain_flags}})
+
+    return readiness_score, "context_readiness_state", applied_rules
+
+
 def _resolve_weekly_review_exercise_override(
     row: dict[str, Any],
     *,
     readiness_score: int,
     allow_weak_point_boost: bool,
+    allow_positive_progression: bool = True,
 ) -> dict[str, Any] | None:
     if int(row.get("fault_score", 0) or 0) <= 0:
         return None
@@ -180,9 +231,11 @@ def _resolve_weekly_review_exercise_override(
         weight_scale *= 0.975
         rationale = "below_target_reps_reduce_or_hold"
 
-    if "above_target_reps" in fault_reasons and readiness_score >= 70:
+    if "above_target_reps" in fault_reasons and readiness_score >= 70 and allow_positive_progression:
         weight_scale *= 1.025
         rationale = "above_target_reps_progress_load"
+    elif "above_target_reps" in fault_reasons and not allow_positive_progression:
+        rationale = "recovery_limited_hold_progression"
 
     weak_point_boost_blocked = any(reason in fault_reasons for reason in ("missed_exercise", "low_completion", "below_target_reps"))
     if (
@@ -204,7 +257,82 @@ def _resolve_weekly_review_exercise_override(
     }
 
 
-def _resolve_weekly_review_global_guidance(readiness_score: int, faulty_exercise_count: int) -> str:
+def _resolve_stimulus_fatigue_adjustments(
+    *,
+    stimulus_fatigue_response: dict[str, Any] | None,
+    base_set_delta: int,
+    base_weight_scale: float,
+) -> tuple[int, float, bool, bool, list[dict[str, Any]]]:
+    sfr = _coerce_dict(stimulus_fatigue_response)
+    if not sfr:
+        return (
+            _clamp_review_set_delta(base_set_delta),
+            _clamp_review_intensity_scale(base_weight_scale),
+            True,
+            True,
+            [],
+        )
+
+    deload_pressure = str(sfr.get("deload_pressure") or "low")
+    recoverability = str(sfr.get("recoverability") or "moderate")
+    fatigue_cost = str(sfr.get("fatigue_cost") or "moderate")
+    substitution_pressure = str(sfr.get("substitution_pressure") or "low")
+
+    global_set_delta = base_set_delta
+    global_weight_scale = base_weight_scale
+    allow_positive_progression = True
+    allow_weak_point_boost = True
+    applied_rules: list[dict[str, Any]] = []
+
+    if deload_pressure == "high" and recoverability == "low":
+        global_set_delta -= 1
+        global_weight_scale *= 0.95
+        allow_positive_progression = False
+        allow_weak_point_boost = False
+        applied_rules.append(
+            {
+                "rule": "sfr_recovery_limited_deload_pressure",
+                "matched": True,
+                "details": {
+                    "deload_pressure": deload_pressure,
+                    "recoverability": recoverability,
+                },
+            }
+        )
+    elif recoverability == "low" or fatigue_cost == "high" or substitution_pressure == "high":
+        global_weight_scale *= 0.975
+        allow_positive_progression = False
+        allow_weak_point_boost = False
+        applied_rules.append(
+            {
+                "rule": "sfr_recovery_limited_progression_cap",
+                "matched": True,
+                "details": {
+                    "fatigue_cost": fatigue_cost,
+                    "recoverability": recoverability,
+                    "substitution_pressure": substitution_pressure,
+                },
+            }
+        )
+
+    return (
+        _clamp_review_set_delta(global_set_delta),
+        _clamp_review_intensity_scale(global_weight_scale),
+        allow_positive_progression,
+        allow_weak_point_boost,
+        applied_rules,
+    )
+
+
+def _resolve_weekly_review_global_guidance(
+    readiness_score: int,
+    faulty_exercise_count: int,
+    *,
+    stimulus_fatigue_response: dict[str, Any] | None = None,
+) -> str:
+    sfr = _coerce_dict(stimulus_fatigue_response)
+    if str(sfr.get("recoverability") or "") == "low" or str(sfr.get("deload_pressure") or "") == "high":
+        return "recovery_limited_reduce_load_and_complete_quality_volume"
     if readiness_score < 55:
         return "recovery_limited_reduce_load_and_complete_quality_volume"
     if faulty_exercise_count > 0:
@@ -591,9 +719,16 @@ def interpret_weekly_review_decision(
     calories: int,
     protein: int,
     adherence_score: int,
+    readiness_state: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     calories_per_kg = float(calories) / max(1.0, body_weight)
     protein_per_kg = float(protein) / max(1.0, body_weight)
+    normalized_readiness_state = _coerce_dict(readiness_state)
+    sleep_quality_raw = normalized_readiness_state.get("sleep_quality")
+    stress_level_raw = normalized_readiness_state.get("stress_level")
+    pain_flags = _normalize_string_list(normalized_readiness_state.get("pain_flags"))
+    sleep_quality = int(sleep_quality_raw) if sleep_quality_raw is not None else None
+    stress_level = int(stress_level_raw) if stress_level_raw is not None else None
     global_set_delta = 0
     global_weight_scale = 1.0
     readiness_score = 100
@@ -605,6 +740,27 @@ def interpret_weekly_review_decision(
         base_set_delta=global_set_delta,
         base_weight_scale=global_weight_scale,
         base_readiness=readiness_score,
+    )
+    readiness_score, readiness_source, readiness_state_rules = _resolve_readiness_state_adjustments(
+        readiness_state=readiness_state,
+        base_readiness=readiness_score,
+    )
+    stimulus_fatigue_response = evaluate_stimulus_fatigue_response(
+        completion_pct=int(summary.get("completion_pct", 0) or 0),
+        adherence_score=adherence_score,
+        soreness_level="none",
+        average_rpe=None,
+        consecutive_underperformance_weeks=0,
+        sleep_quality=sleep_quality,
+        stress_level=stress_level,
+        pain_flags=pain_flags,
+    )
+    global_set_delta, global_weight_scale, allow_positive_progression, allow_weak_point_boosts, sfr_adjustment_rules = (
+        _resolve_stimulus_fatigue_adjustments(
+            stimulus_fatigue_response=stimulus_fatigue_response,
+            base_set_delta=global_set_delta,
+            base_weight_scale=global_weight_scale,
+        )
     )
 
     exercise_faults = [item for item in summary.get("exercise_faults") or [] if isinstance(item, dict)]
@@ -620,11 +776,13 @@ def interpret_weekly_review_decision(
             primary_exercise_id in weak_point_exercises
             and len(boosted_exercise_ids) < _WEAK_POINT_MAX_BOOSTED_EXERCISES
             and remaining_set_budget > 0
+            and allow_weak_point_boosts
         )
         override = _resolve_weekly_review_exercise_override(
             row,
             readiness_score=readiness_score,
             allow_weak_point_boost=allow_weak_point_boost,
+            allow_positive_progression=allow_positive_progression,
         )
         if override is not None:
             overrides.append(override)
@@ -643,7 +801,11 @@ def interpret_weekly_review_decision(
                 remaining_set_budget = max(0, remaining_set_budget - int(override["set_delta"]))
 
     readiness_score = _clamp_int(readiness_score, 1, 100)
-    global_guidance = _resolve_weekly_review_global_guidance(readiness_score, int(summary.get("faulty_exercise_count", 0) or 0))
+    global_guidance = _resolve_weekly_review_global_guidance(
+        readiness_score,
+        int(summary.get("faulty_exercise_count", 0) or 0),
+        stimulus_fatigue_response=stimulus_fatigue_response,
+    )
     global_guidance_rationale = _weekly_review_global_guidance_rationale(global_guidance)
     response_adjustments = {
         "global_set_delta": global_set_delta,
@@ -663,6 +825,7 @@ def interpret_weekly_review_decision(
             "protein_per_kg": round(protein_per_kg, 3),
             "summary_completion_pct": int(summary.get("completion_pct", 0) or 0),
             "faulty_exercise_count": int(summary.get("faulty_exercise_count", 0) or 0),
+            "readiness_state_present": bool(_coerce_dict(readiness_state)),
         },
         "steps": [
             {
@@ -672,6 +835,28 @@ def interpret_weekly_review_decision(
                     "global_weight_scale": round(global_weight_scale, 3),
                     "readiness_score": readiness_score,
                     "matched_rules": applied_global_rules,
+                },
+            },
+            {
+                "decision": "readiness_state_adjustments",
+                "result": {
+                    "source": readiness_source,
+                    "readiness_score": readiness_score,
+                    "matched_rules": readiness_state_rules,
+                },
+            },
+            {
+                "decision": "stimulus_fatigue_response",
+                "result": deepcopy(stimulus_fatigue_response),
+            },
+            {
+                "decision": "stimulus_fatigue_adjustments",
+                "result": {
+                    "global_set_delta": global_set_delta,
+                    "global_weight_scale": round(global_weight_scale, 3),
+                    "allow_positive_progression": allow_positive_progression,
+                    "allow_weak_point_boost": allow_weak_point_boosts,
+                    "matched_rules": sfr_adjustment_rules,
                 },
             },
             {
@@ -692,6 +877,7 @@ def interpret_weekly_review_decision(
             "global_weight_scale": response_adjustments["global_weight_scale"],
             "weak_point_exercises": weak_point_exercises,
             "boosted_exercise_ids": boosted_exercise_ids,
+            "stimulus_fatigue_response": deepcopy(stimulus_fatigue_response),
         },
     }
     storage_adjustments = {
@@ -734,6 +920,7 @@ def build_weekly_review_decision_payload(
     calories: int,
     protein: int,
     adherence_score: int,
+    readiness_state: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     decision = interpret_weekly_review_decision(
         summary=summary,
@@ -741,6 +928,7 @@ def build_weekly_review_decision_payload(
         calories=calories,
         protein=protein,
         adherence_score=adherence_score,
+        readiness_state=readiness_state,
     )
     return {
         "readiness_score": int(decision.get("readiness_score") or 0),
@@ -980,6 +1168,7 @@ def prepare_weekly_review_submit_route_runtime(
     notes: str | None,
     nutrition_phase: str | None,
     summary_payload: dict[str, Any],
+    readiness_state: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     decision_payload = build_weekly_review_decision_payload(
         summary=summary_payload,
@@ -987,6 +1176,7 @@ def prepare_weekly_review_submit_route_runtime(
         calories=calories,
         protein=protein,
         adherence_score=adherence_score,
+        readiness_state=readiness_state,
     )
     review_persistence_payload = build_weekly_review_cycle_persistence_payload(
         summary=summary_payload,

@@ -65,6 +65,103 @@ def test_interpret_weekly_review_decision_emits_structured_decision_trace() -> N
     assert payload["decision_trace"]["interpreter"] == "interpret_weekly_review_decision"
 
 
+def test_interpret_weekly_review_decision_consumes_readiness_state_with_trace_source() -> None:
+    decision = interpret_weekly_review_decision(
+        summary={
+            "completion_pct": 100,
+            "faulty_exercise_count": 0,
+            "exercise_faults": [],
+        },
+        body_weight=80.0,
+        calories=2800,
+        protein=160,
+        adherence_score=4,
+        readiness_state={
+            "sleep_quality": 2,
+            "stress_level": 4,
+            "pain_flags": ["elbow_flexion"],
+        },
+    )
+
+    readiness_step = next(
+        step for step in decision["decision_trace"]["steps"] if step["decision"] == "readiness_state_adjustments"
+    )
+
+    assert decision["readiness_score"] == 81
+    assert readiness_step["result"]["source"] == "context_readiness_state"
+    assert [rule["rule"] for rule in readiness_step["result"]["matched_rules"]] == [
+        "low_sleep",
+        "high_stress",
+        "pain_flags_present",
+    ]
+
+
+def test_interpret_weekly_review_decision_uses_sfr_snapshot_for_recovery_limited_guidance() -> None:
+    decision = interpret_weekly_review_decision(
+        summary={
+            "completion_pct": 92,
+            "faulty_exercise_count": 1,
+            "exercise_faults": [],
+        },
+        body_weight=80.0,
+        calories=2800,
+        protein=160,
+        adherence_score=4,
+        readiness_state={
+            "sleep_quality": 2,
+            "stress_level": 4,
+            "pain_flags": ["elbow_flexion"],
+        },
+    )
+
+    sfr_step = next(
+        step for step in decision["decision_trace"]["steps"] if step["decision"] == "stimulus_fatigue_response"
+    )
+
+    assert decision["global_guidance"] == "recovery_limited_reduce_load_and_complete_quality_volume"
+    assert sfr_step["result"]["recoverability"] == "low"
+    assert sfr_step["result"]["deload_pressure"] == "high"
+
+
+def test_interpret_weekly_review_decision_uses_sfr_to_bound_adjustments_and_suppress_positive_overrides() -> None:
+    decision = interpret_weekly_review_decision(
+        summary={
+            "completion_pct": 100,
+            "faulty_exercise_count": 1,
+            "exercise_faults": [
+                {
+                    "primary_exercise_id": "bench_press",
+                    "fault_score": 1,
+                    "fault_reasons": ["above_target_reps"],
+                    "completion_pct": 100,
+                }
+            ],
+        },
+        body_weight=80.0,
+        calories=2500,
+        protein=150,
+        adherence_score=5,
+        readiness_state={
+            "sleep_quality": 2,
+            "stress_level": 4,
+            "pain_flags": ["elbow_flexion"],
+        },
+    )
+
+    sfr_adjustment_step = next(
+        step for step in decision["decision_trace"]["steps"] if step["decision"] == "stimulus_fatigue_adjustments"
+    )
+    override = decision["adjustments"]["exercise_overrides"][0]
+
+    assert decision["adjustments"]["global_set_delta"] == -1
+    assert decision["adjustments"]["global_weight_scale"] == 0.95
+    assert override["set_delta"] == 0
+    assert override["weight_scale"] == 1.0
+    assert override["rationale"] == "recovery_limited_hold_progression"
+    assert sfr_adjustment_step["result"]["allow_positive_progression"] is False
+    assert sfr_adjustment_step["result"]["allow_weak_point_boost"] is False
+
+
 def test_apply_weekly_review_adjustments_to_plan_sets_adaptive_review() -> None:
     adjusted = apply_weekly_review_adjustments_to_plan(
         plan_payload={

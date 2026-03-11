@@ -1,5 +1,5 @@
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from fastapi.testclient import TestClient
 
@@ -9,7 +9,7 @@ configure_test_database("test_plan_intelligence_api")
 
 from app.database import Base, SessionLocal, engine
 from app.main import app
-from app.models import CoachingRecommendation
+from app.models import CoachingRecommendation, WorkoutPlan
 
 TEST_CREDENTIAL = f"T{uuid.uuid4().hex[:15]}"
 
@@ -163,11 +163,66 @@ def test_coach_preview_uses_canonical_rules_for_underperformance_without_high_fa
 
     assert response.status_code == 200
     payload = response.json()
+    progression_step = next(
+        step for step in payload["decision_trace"]["steps"] if step.get("decision") == "progression"
+    )
     assert payload["progression"]["action"] == "hold"
     assert payload["progression"]["reason"] == "under_target_without_high_fatigue"
     assert payload["progression"]["rationale"] == (
         "Performance is below target without clear high-fatigue signals. Hold load and accumulate cleaner exposures before changing phase or deloading."
     )
+    assert progression_step["result"]["stimulus_fatigue_response"]["deload_pressure"] == "high"
+    assert progression_step["result"]["stimulus_fatigue_response"]["fatigue_cost"] == "low"
+
+
+def test_coach_preview_uses_canonical_readiness_state_when_request_score_omitted() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_and_onboard(client)
+    today = datetime.now(UTC).date()
+    current_monday = today - timedelta(days=today.weekday())
+
+    checkin = client.post(
+        "/weekly-checkin",
+        headers=headers,
+        json={
+            "week_start": current_monday.isoformat(),
+            "body_weight": 84.0,
+            "adherence_score": 4,
+            "sleep_quality": 2,
+            "stress_level": 4,
+            "pain_flags": ["elbow_flexion"],
+            "notes": "Recovery limited",
+        },
+    )
+    assert checkin.status_code == 200
+
+    response = client.post(
+        "/plan/intelligence/coach-preview",
+        headers=headers,
+        json={
+            "template_id": "full_body_v1",
+            "from_days": 5,
+            "to_days": 3,
+            "completion_pct": 95,
+            "adherence_score": 4,
+            "soreness_level": "mild",
+            "average_rpe": 8.5,
+            "current_phase": "deload",
+            "weeks_in_phase": 1,
+            "stagnation_weeks": 0,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    readiness_step = next(
+        step for step in payload["decision_trace"]["steps"] if step.get("decision") == "readiness_score"
+    )
+    assert readiness_step["result"]["provided"] is False
+    assert readiness_step["result"]["source"] == "context_readiness_state"
+    assert payload["phase_transition"]["next_phase"] == "deload"
+    assert payload["phase_transition"]["reason"] == "extend_deload_low_readiness"
 
 
 def test_apply_phase_decision_requires_confirmation_then_applies() -> None:
@@ -381,3 +436,97 @@ def test_recommendation_timeline_humanizes_legacy_reason_codes_without_stored_ra
     assert payload["entries"][0]["rationale"] == (
         "Stay in accumulation. Current readiness and momentum do not justify a phase change yet."
     )
+
+
+def test_coach_preview_surfaces_authored_sequence_completion_for_adaptive_gold() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "intelligence-gold@example.com", "password": TEST_CREDENTIAL, "name": "Gold Coach User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Gold Coach User",
+            "age": 31,
+            "weight": 84,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "adaptive_full_body_gold_v0_1",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "dumbbell", "bench", "machine", "cable"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2700,
+            "protein": 180,
+            "fat": 75,
+            "carbs": 300,
+        },
+    )
+    assert profile.status_code == 200
+
+    today = datetime.now(UTC).date()
+    monday = today - timedelta(days=today.weekday())
+    with SessionLocal() as db:
+        recommendation = db.query(CoachingRecommendation).first()
+        assert recommendation is None
+        from app.models import User
+
+        user = db.query(User).filter(User.email == "intelligence-gold@example.com").first()
+        assert user is not None
+        db.add(
+            WorkoutPlan(
+                user_id=user.id,
+                week_start=monday - timedelta(days=7),
+                split="full_body",
+                phase="intensification",
+                payload={
+                    "program_template_id": "adaptive_full_body_gold_v0_1",
+                    "phase": "intensification",
+                    "mesocycle": {
+                        "week_index": 10,
+                        "trigger_weeks_effective": 10,
+                        "authored_week_index": 10,
+                        "authored_week_role": "intensification",
+                        "authored_sequence_length": 10,
+                        "authored_sequence_complete": True,
+                        "phase_transition_pending": True,
+                        "phase_transition_reason": "authored_sequence_complete",
+                        "post_authored_behavior": "hold_last_authored_week",
+                    },
+                    "sessions": [],
+                },
+            )
+        )
+        db.commit()
+
+    response = client.post(
+        "/plan/intelligence/coach-preview",
+        headers=headers,
+        json={
+            "template_id": "adaptive_full_body_gold_v0_1",
+            "from_days": 3,
+            "to_days": 3,
+            "completion_pct": 92,
+            "adherence_score": 4,
+            "soreness_level": "mild",
+            "average_rpe": 8.5,
+            "current_phase": "intensification",
+            "weeks_in_phase": 4,
+            "stagnation_weeks": 0,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["phase_transition"]["reason"] == "authored_sequence_complete"
+    assert payload["phase_transition"]["transition_pending"] is True
+    assert payload["phase_transition"]["recommended_action"] == "rotate_program"
+    assert payload["phase_transition"]["post_authored_behavior"] == "hold_last_authored_week"

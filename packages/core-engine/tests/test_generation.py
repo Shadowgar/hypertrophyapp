@@ -290,6 +290,45 @@ def test_resolve_week_generation_runtime_inputs_prefers_canonical_training_state
     assert runtime["decision_trace"]["steps"][3]["result"]["source"] == "training_state"
 
 
+def test_resolve_week_generation_runtime_inputs_derives_sfr_from_readiness_state() -> None:
+    user_training_state = {
+        "fatigue_state": {
+            "soreness_by_muscle": {"chest": "severe", "back": "mild"},
+            "session_rpe_avg": 9.1,
+        },
+        "adherence_state": {
+            "latest_adherence_score": 3,
+        },
+        "readiness_state": {
+            "sleep_quality": 2,
+            "stress_level": 4,
+            "pain_flags": ["shoulder_irritation"],
+        },
+    }
+
+    runtime = resolve_week_generation_runtime_inputs(
+        selected_template_id="full_body_v1",
+        current_days_available=4,
+        active_frequency_adaptation=None,
+        user_training_state=user_training_state,
+        history_rows=[],
+        latest_soreness_entry=None,
+        latest_checkin=None,
+        prior_plans=[],
+    )
+
+    snapshot = runtime["stimulus_fatigue_response"]
+    assert snapshot["fatigue_cost"] == "high"
+    assert snapshot["recoverability"] == "low"
+    assert snapshot["deload_pressure"] == "high"
+    assert snapshot["substitution_pressure"] == "high"
+    sfr_step = next(
+        step for step in runtime["decision_trace"]["steps"] if step["decision"] == "stimulus_fatigue_response"
+    )
+    assert sfr_step["result"]["completion_pct_proxy"] == 80
+    assert runtime["decision_trace"]["outcome"]["stimulus_fatigue_response"]["deload_pressure"] == "high"
+
+
 def test_prepare_generate_week_plan_runtime_inputs_normalizes_plan_inputs() -> None:
     runtime = prepare_generate_week_plan_runtime_inputs(
         user_name="Coach User",
@@ -303,10 +342,16 @@ def test_prepare_generate_week_plan_runtime_inputs_normalizes_plan_inputs() -> N
             "prior_generated_weeks": 2,
             "latest_adherence_score": 3,
             "severe_soreness_count": 1,
+            "session_time_budget_minutes": 45,
+            "movement_restrictions": ["overhead_pressing"],
         },
     )
 
-    assert runtime["user_profile"] == {"name": "Coach User"}
+    assert runtime["user_profile"] == {
+        "name": "Coach User",
+        "session_time_budget_minutes": 45,
+        "movement_restrictions": ["overhead_pressing"],
+    }
     assert runtime["days_available"] == 4
     assert runtime["split_preference"] == "full_body"
     assert runtime["phase"] == "maintenance"
@@ -324,7 +369,11 @@ def test_prepare_generate_week_plan_runtime_inputs_applies_defaults() -> None:
         generation_runtime={},
     )
 
-    assert runtime["user_profile"] == {"name": None}
+    assert runtime["user_profile"] == {
+        "name": None,
+        "session_time_budget_minutes": None,
+        "movement_restrictions": [],
+    }
     assert runtime["phase"] == "maintenance"
     assert runtime["available_equipment"] == []
     assert runtime["days_available"] == 0
@@ -345,13 +394,19 @@ def test_prepare_generate_week_scheduler_runtime_shapes_generate_week_call_args(
             "prior_generated_weeks": 2,
             "latest_adherence_score": 3,
             "severe_soreness_count": 1,
+            "session_time_budget_minutes": 45,
+            "movement_restrictions": ["overhead_pressing"],
         },
         program_template={"id": "full_body_v1", "sessions": []},
         rule_set={"progression_rules": {"on_success": {"percent": 2.5}}},
     )
 
     scheduler_kwargs = runtime["scheduler_kwargs"]
-    assert scheduler_kwargs["user_profile"] == {"name": "Coach User"}
+    assert scheduler_kwargs["user_profile"] == {
+        "name": "Coach User",
+        "session_time_budget_minutes": 45,
+        "movement_restrictions": ["overhead_pressing"],
+    }
     assert scheduler_kwargs["days_available"] == 4
     assert scheduler_kwargs["split_preference"] == "full_body"
     assert scheduler_kwargs["phase"] == "maintenance"
@@ -459,6 +514,7 @@ def test_build_coach_preview_context_reuses_serialized_recent_training_history()
         "split_preference": "full_body",
         "program_template": template,
         "history": serialized_history,
+        "readiness_state": {},
         "phase": "maintenance",
         "available_equipment": ["barbell", "bench"],
     }

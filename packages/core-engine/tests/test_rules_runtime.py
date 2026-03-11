@@ -214,6 +214,13 @@ def test_resolve_substitution_rule_runtime_extracts_numeric_repeat_failure_thres
     assert runtime["repeat_failure_threshold"] == 2
 
 
+def test_resolve_substitution_rule_runtime_defaults_repeat_failure_threshold() -> None:
+    runtime = resolve_substitution_rule_runtime(None)
+
+    assert runtime["equipment_mismatch_strategy"] == "use_first_compatible_substitution"
+    assert runtime["repeat_failure_threshold"] == 3
+
+
 def test_resolve_equipment_substitution_chooses_first_compatible_candidate() -> None:
     result = resolve_equipment_substitution(
         exercise_id="barbell_row",

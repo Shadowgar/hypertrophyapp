@@ -1,6 +1,6 @@
 # GPT-5-mini Execution Backlog - Adaptive Coaching Rebuild
 
-Last updated: 2026-03-10
+Last updated: 2026-03-11
 
 ## Priority 0 - Foundation (In Progress)
 
@@ -13,6 +13,184 @@ Last updated: 2026-03-10
 Evidence (2026-03-07)
 - `docs/AI_CONTINUATION_GOVERNANCE.md`: repository law for decision-runtime sovereignty, legacy containment, and trace requirements.
 - `apps/api/app/routers/profile.py` and `packages/core-engine/core_engine/intelligence.py`: program recommendation is the first decision family being migrated behind a core-engine interpreter with a structured decision trace.
+
+Direction Lock (2026-03-10)
+- Router glue is no longer the dominant risk.
+- `docs/current_state_decision_runtime_map.md` is now the operational current-state authority source for local-branch decision ownership; prefer it over stale public-branch or historical handoff assumptions.
+- Current dominant risks are:
+  - authority ambiguity and wrapper drift in `packages/core-engine/core_engine/intelligence.py`
+  - shallow first-class coaching state in `apps/api/app/models.py`
+  - an early-stage deterministic stimulus-fatigue-response layer that is now live but not yet broadly consumed for bounded adjustment decisions
+  - documentation drift between historical evidence logs and actual local-branch ownership
+- Immediate coding target:
+  - keep shrinking mixed-owner seams in `packages/core-engine/core_engine/intelligence.py` where they block coaching-state or SFR work outside the now-façade-only workout family, while extending generated-week pressure only from existing persisted state, canonical constraints, and deterministic template metadata
+- Do not add broad new product features before the following sequence is complete:
+  1. `docs/current_state_decision_runtime_map.md`
+  2. live workout guidance extraction out of `intelligence.py`
+  3. first-class coaching constraint state
+  4. weekly-checkin-backed readiness/recovery state
+  5. deterministic SFR scoring
+
+Evidence (2026-03-10, live workout guidance extraction)
+- `packages/core-engine/core_engine/decision_live_workout_guidance.py`: new decision-family owner now centralizes feedback interpretation, in-session adjustment recommendation, hydrated live guidance payloads, session-state guidance updates, and session-guidance summaries.
+- `packages/core-engine/core_engine/intelligence.py`: live workout guidance helpers now delegate to thin compatibility wrappers over the dedicated decision-family module instead of owning real logic directly.
+- `packages/core-engine/tests/test_decision_live_workout_guidance.py`: focused owner-module regression coverage proves the new decision-family boundary and preserves the prior guidance/trace behavior.
+- `packages/core-engine/tests/test_intelligence.py`: compatibility-wrapper regressions remain green for live workout guidance, session-state update, and session-guidance summary paths.
+- `apps/api/tests/test_workout_logset_feedback.py`, `apps/api/tests/test_workout_session_state.py`, and `apps/api/tests/test_workout_summary.py`: focused API regressions remained green after the extraction.
+
+Evidence (2026-03-10, coaching constraint state expansion)
+- `apps/api/app/models.py` and `apps/api/alembic/versions/0014_user_coaching_constraints.py`: `User` now persists `session_time_budget_minutes`, `movement_restrictions`, and `near_failure_tolerance`.
+- `apps/api/app/schemas.py` and `packages/core-engine/core_engine/intelligence.py`: profile upsert/response contracts now accept and emit the new coaching constraint fields with deterministic default shaping.
+- `apps/api/app/adaptive_schema.py` and `packages/core-engine/core_engine/user_state.py`: canonical `UserTrainingState` now includes `constraint_state`, and plan-decision training-state helpers now consume the same normalized profile constraint payload.
+- `apps/api/app/routers/profile.py`: `GET /profile`, `POST /profile`, and `GET /profile/training-state` now thread the coaching constraint fields through profile persistence and canonical user-state assembly.
+- `packages/core-engine/tests/test_user_state.py`, `packages/core-engine/tests/test_intelligence.py`, `apps/api/tests/test_profile_schema.py`, `apps/api/tests/test_user_training_state_schema_contract.py`, `apps/api/tests/test_profile_training_state.py`, `apps/api/tests/test_profile_dev_wipe.py`, and `apps/api/tests/test_program_recommendation_and_switch.py`: focused engine/API regressions passed for the new constraint-state contract.
+
+Evidence (2026-03-10, weekly-checkin readiness state expansion)
+- `apps/api/app/models.py` and `apps/api/alembic/versions/0015_weekly_checkin_readiness_fields.py`: `WeeklyCheckin` now persists `sleep_quality`, `stress_level`, and `pain_flags`.
+- `apps/api/app/schemas.py` and `packages/core-engine/core_engine/intelligence.py`: weekly-checkin contracts and persistence payload shaping now accept and preserve the new readiness fields.
+- `apps/api/app/adaptive_schema.py` and `packages/core-engine/core_engine/user_state.py`: canonical `UserTrainingState` now includes `readiness_state` with derived `recovery_risk_flags`.
+- `apps/api/app/routers/profile.py`: `POST /weekly-checkin` now persists the readiness fields, and `GET /profile/training-state` surfaces the derived readiness state.
+- `packages/core-engine/tests/test_user_state.py`, `apps/api/tests/test_weekly_checkin.py`, `apps/api/tests/test_user_training_state_schema_contract.py`, `apps/api/tests/test_profile_training_state.py`, `apps/api/tests/test_weekly_review.py`, and `apps/api/tests/test_program_recommendation_and_switch.py`: focused and widened regressions passed for the new readiness-state contract.
+
+Evidence (2026-03-10, readiness-state consumption in coach preview)
+- `packages/core-engine/core_engine/decision_progression.py`: `derive_readiness_score` now accepts optional `sleep_quality`, `stress_level`, and `pain_flags`, applying deterministic readiness penalties for poor sleep, high stress, and active pain flags.
+- `packages/core-engine/core_engine/generation.py` and `packages/core-engine/core_engine/decision_coach_preview.py`: coach-preview context now carries canonical `readiness_state`, and the preview interpreter now uses it when the request omits `readiness_score`.
+- `packages/core-engine/tests/test_decision_progression.py`, `packages/core-engine/tests/test_decision_coach_preview.py`, and `apps/api/tests/test_plan_intelligence_api.py`: focused engine/API regressions now verify readiness penalties and coach-preview consumption of canonical readiness state.
+
+Evidence (2026-03-10, readiness-state consumption in weekly review)
+- `packages/core-engine/core_engine/decision_weekly_review.py`: weekly-review decisions now accept canonical `readiness_state`, apply deterministic readiness penalties, and trace the readiness-state source plus matched rules.
+- `apps/api/app/routers/profile.py`: weekly-review submit now builds canonical decision training state and passes `readiness_state` into the weekly-review decision family before persistence.
+- `packages/core-engine/tests/test_decision_weekly_review.py` and `apps/api/tests/test_weekly_review.py`: focused engine/API regressions now verify weekly-review readiness penalties from the latest persisted check-in.
+
+Evidence (2026-03-10, first deterministic SFR layer)
+- `packages/core-engine/core_engine/decision_progression.py`: the progression family now emits a derived `stimulus_fatigue_response` snapshot covering stimulus quality, fatigue cost, recoverability, progression eligibility, deload pressure, and substitution pressure.
+- `packages/core-engine/core_engine/decision_coach_preview.py`: coach-preview now forwards canonical readiness inputs into progression scoring, and the progression trace step carries the SFR snapshot end-to-end.
+- `packages/core-engine/tests/test_decision_progression.py`, `packages/core-engine/tests/test_decision_coach_preview.py`, and `apps/api/tests/test_plan_intelligence_api.py`: focused engine/API regressions now verify both the SFR classification itself and its presence in coach-preview traces.
+
+Evidence (2026-03-10, SFR now affects real decisions)
+- `packages/core-engine/core_engine/decision_progression.py`: progression decisions now deload when SFR indicates both high deload pressure and low recoverability, instead of leaving that state as trace-only context.
+- `packages/core-engine/core_engine/decision_weekly_review.py`: weekly-review guidance now uses the SFR snapshot to force recovery-limited guidance when recovery is clearly constrained.
+- `packages/core-engine/tests/test_decision_progression.py`, `packages/core-engine/tests/test_decision_weekly_review.py`, and `apps/api/tests/test_weekly_review.py`: focused engine/API regressions now verify the SFR-driven behavior changes.
+
+Evidence (2026-03-10, SFR now bounds weekly-review adjustment payloads)
+- `packages/core-engine/core_engine/decision_weekly_review.py`: weekly-review now applies recovery-limited global set/load adjustments and suppresses positive progression or weak-point boost overrides when SFR shows constrained recoverability.
+- `packages/core-engine/tests/test_decision_weekly_review.py`, `packages/core-engine/tests/test_intelligence.py`, and `apps/api/tests/test_weekly_review.py`: focused engine/wrapper/API regressions now verify the new bounded-adjustment behavior and the persisted no-boost outcome.
+
+Evidence (2026-03-10, generated-week movement restrictions)
+- `packages/core-engine/core_engine/generation.py` and `packages/core-engine/core_engine/scheduler.py`: canonical `constraint_state.movement_restrictions` now flow through plan-generation runtime into generated-week scheduling, where exercises with deterministic restricted `movement_pattern` values are filtered out during session construction.
+- `packages/core-engine/tests/test_generation.py`, `packages/core-engine/tests/test_scheduler.py`, and `apps/api/tests/test_program_catalog_and_selection.py`: focused engine and API regressions passed for movement-restriction filtering from persisted profile state.
+
+Evidence (2026-03-10, generated-week session time budget)
+- `packages/core-engine/core_engine/generation.py` and `packages/core-engine/core_engine/scheduler.py`: canonical `constraint_state.session_time_budget_minutes` now flows through plan-generation runtime into generated-week scheduling, where low time budgets deterministically cap per-session exercise count without introducing new request-surface heuristics.
+- `packages/core-engine/tests/test_generation.py`, `packages/core-engine/tests/test_scheduler.py`, and `apps/api/tests/test_program_catalog_and_selection.py`: focused engine and API regressions passed for low-time session budgeting from persisted profile state.
+
+Evidence (2026-03-10, generated-week exercise recovery pressure)
+- `packages/core-engine/core_engine/scheduler.py`: generated-week now derives bounded exercise-level recovery pressure from persisted `progression_state_per_exercise`, using `fatigue_score`, `last_progression_action`, and under-target streaks to reduce planned load/sets and elevate substitution pressure without inventing new runtime inputs.
+- `packages/core-engine/tests/test_scheduler.py`, `packages/core-engine/tests/test_generation.py`, and `apps/api/tests/test_program_catalog_and_selection.py`: focused engine and API regressions passed after the new exercise-recovery-pressure path landed.
+
+Evidence (2026-03-10, workout facade cleanup)
+- `packages/core-engine/core_engine/intelligence.py`: workout helper compatibility entrypoints now preserve the legacy public surface while delegating to `decision_workout_session.py`, including session-state persistence/upsert helpers and workout-today/summary lookup runtimes.
+- `packages/core-engine/tests/test_decision_workout_session.py`, `packages/core-engine/tests/test_intelligence.py`, and `apps/api/tests/test_workout_logset_feedback.py` plus related workout API suites: focused owner-module, compatibility-wrapper, and API regressions passed after the wrapper cleanup.
+
+Evidence (2026-03-10, SFR now affects generated week output)
+- `packages/core-engine/core_engine/generation.py`: week-generation runtime now derives an SFR snapshot from canonical readiness/fatigue/adherence inputs and carries it through `prepare_generate_week_plan_runtime_inputs`.
+- `packages/core-engine/core_engine/scheduler.py`: generated-week mesocycle logic now triggers `early_sfr_recovery` deloads when SFR shows high deload pressure with low recoverability, and planned exercises now emit structured `substitution_pressure` / `substitution_guidance`.
+- `packages/core-engine/tests/test_generation.py`, `packages/core-engine/tests/test_scheduler.py`, and `apps/api/tests/test_program_catalog_and_selection.py`: focused engine/API regressions now verify generation-time SFR tracing, recovery deload activation, and generated exercise substitution-pressure shaping.
+
+Evidence (2026-03-10, generated-week repeat-failure substitution)
+- `apps/api/app/routers/plan.py`, `packages/core-engine/core_engine/user_state.py`, and `packages/core-engine/core_engine/generation.py`: generate-week canonical runtime assembly now fans persisted `ExerciseState` rows into `build_plan_decision_training_state`, preserves canonical `progression_state_per_exercise`, and carries it through scheduler-runtime shaping.
+- `packages/core-engine/core_engine/scheduler.py`: planned exercise assembly now applies `resolve_repeat_failure_substitution` during week generation, preserves `primary_exercise_id`, and emits structured `repeat_failure_substitution` payloads when the under-target threshold is met.
+- `packages/core-engine/core_engine/rules_runtime.py`: substitution runtime now keeps the default repeat-failure threshold (`3`) even without a linked rule set, matching the documented fallback doctrine.
+- `packages/core-engine/tests/test_scheduler.py`, `packages/core-engine/tests/test_rules_runtime.py`, and `apps/api/tests/test_program_catalog_and_selection.py`: focused engine/API regressions now verify generated-week repeat-failure auto-substitution and the shared fallback threshold.
+
+Evidence (2026-03-10, adaptive gold runtime loader support)
+- `apps/api/app/program_loader.py`: runtime template loading now includes `programs/gold/*.json`, adapts `AdaptiveGoldProgramTemplate` payloads into the existing `CanonicalProgramTemplate` contract, and falls back to `docs/rules/gold/*.rules.json` when canonical rules do not contain the requested program scope.
+- `apps/api/tests/test_program_loader.py`: focused loader regressions now verify that `adaptive_full_body_gold_v0_1` is loadable as a runtime template and resolves its matching gold rule set.
+- `apps/api/tests/test_program_catalog_and_selection.py`: focused API regressions now verify that the adaptive gold sample appears in `/plan/programs` and can drive `POST /plan/generate-week` as a first-class runtime program.
+
+Evidence (2026-03-10, first adaptive gold end-to-end runtime scenario)
+- `apps/api/tests/test_program_catalog_and_selection.py`: the adaptive gold sample now has a real persisted runtime scenario covering `POST /plan/generate-week` -> `POST /workout/{workout_id}/log-set` -> `POST /weekly-review` -> next `POST /plan/generate-week`, proving the program remains selected across the loop and that the second generated week carries the saved weekly-review adaptive overlay on the gold path.
+
+Evidence (2026-03-10, adaptive gold repeat-failure substitution path)
+- `apps/api/app/program_loader.py`: adaptive-gold runtime template adaptation now hydrates canonical exercise names, movement patterns, primary muscles, and valid substitution metadata from `programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json` instead of dropping that knowledge at the loader boundary.
+- `apps/api/app/template_schema.py` and `packages/core-engine/core_engine/scheduler.py`: canonical exercises now preserve optional substitution metadata so generated-week auto-substitution can update substituted exercise id/name/movement/equipment payloads instead of only swapping the display label.
+- `apps/api/tests/test_program_loader.py` and `apps/api/tests/test_program_catalog_and_selection.py`: focused loader/API regressions now verify that the adaptive gold runtime template surfaces `Incline Dumbbell Press` as the valid bench substitute and that generated-week actually auto-substitutes on the gold path when failed-exposure state reaches the doctrine threshold.
+
+Evidence (2026-03-10, expanded adaptive gold runtime proof)
+- `apps/api/tests/test_program_catalog_and_selection.py`: the adaptive-gold API path now also proves canonical-readiness-driven `early_sfr_recovery` deload behavior and persisted weekly-review overlay application on the next generated week, in addition to the already-covered base generate-week, log-set, weekly-review, and repeat-failure substitution scenarios.
+- The gold-path suite now covers five focused runtime proofs on `adaptive_full_body_gold_v0_1`: first generation, persisted log-set + weekly review loop, repeat-failure substitution, canonical readiness recovery deload, and saved adaptive-review application.
+
+Evidence (2026-03-10, adaptive gold workout continuity)
+- `apps/api/tests/test_workout_session_state.py`: focused workout regressions now verify that `GET /workout/today` reflects the same adaptive-gold repeat-failure substitution selected during generated-week planning and that `POST /workout/{workout_id}/log-set` preserves substitution guidance continuity into the subsequent `GET /workout/today` payload on the gold program.
+- `apps/api/tests/test_workout_resume.py` and `apps/api/tests/test_workout_logset_feedback.py`: adjacent workout resume/log-set suites remain green after the new gold-path continuity coverage, confirming no regression in the broader workout runtime contract.
+
+Evidence (2026-03-10, adaptive gold second-exercise doctrine coverage)
+- `apps/api/tests/test_program_catalog_and_selection.py`: adaptive-gold generated-week substitution proof now covers both current exercise families in the sample, including the aliased `row_chest_supported` -> `Row Machine Chest Supported` repeat-failure path.
+- `packages/core-engine/core_engine/scheduler.py`: substitution metadata fallback now preserves original movement/equipment/muscle metadata when the substitute entry is only partially described, instead of overwriting valid source metadata with explicit `None` values.
+- `apps/api/tests/test_workout_session_state.py`: workout-side substitution continuity is now also proven for the second adaptive-gold exercise family, not only the bench press path.
+
+Evidence (2026-03-10, adaptive gold sample expansion to third exercise family)
+- `programs/gold/adaptive_full_body_gold_v0_1.json`: the authored adaptive-gold sample now includes a third onboarding-backed vertical-pull slot (`lat_pulldown_wide`) while keeping the same single-session runtime shape.
+- `apps/api/tests/test_program_loader.py`: loader regressions now verify that the adaptive-gold runtime template exposes the third vertical-pull exercise and its canonical substitute (`Neutral Grip Assisted Pull-Up`).
+- `apps/api/tests/test_program_catalog_and_selection.py` and `apps/api/tests/test_workout_session_state.py`: adaptive-gold doctrine proof now covers generated-week and workout-side continuity for the third exercise family as well, including repeat-failure/equipment-driven substitution to `pullup_assisted_neutral`.
+
+Evidence (2026-03-10, adaptive gold sample expansion to fourth exercise family)
+- `programs/gold/adaptive_full_body_gold_v0_1.json`: the authored adaptive-gold sample now includes a fourth lower-body slot (`hack_squat`) while preserving the same single-session loader/runtime contract.
+- `apps/api/tests/test_program_loader.py`: loader regressions now verify that the adaptive-gold runtime template exposes the lower-body slot and its canonical fallback substitute label (`Split Squat Db`).
+- `apps/api/tests/test_program_catalog_and_selection.py` and `apps/api/tests/test_workout_session_state.py`: adaptive-gold doctrine proof now covers generated-week and workout continuity for the fourth exercise family too, including repeat-failure substitution from `hack_squat` to `split_squat_db`.
+
+Evidence (2026-03-10, adaptive gold sample expansion to core/ab work)
+- `programs/gold/adaptive_full_body_gold_v0_1.json`: the authored adaptive-gold sample now includes a fifth core slot (`cable_crunch`) while preserving the same single-session loader/runtime contract.
+- `apps/api/tests/test_program_loader.py`: loader regressions now verify that the adaptive-gold runtime template exposes the new core/ab slot with canonical runtime fields.
+- `apps/api/tests/test_program_catalog_and_selection.py` and `apps/api/tests/test_workout_session_state.py`: adaptive-gold runtime proof now verifies that generated-week and `GET /workout/today` both retain the core slot when cable equipment is available.
+
+Evidence (2026-03-10, adaptive gold sample expansion to hinge/posterior-chain work)
+- `programs/gold/adaptive_full_body_gold_v0_1.json`: the authored adaptive-gold sample now includes a sixth posterior-chain slot (`romanian_deadlift`) while preserving the same single-session loader/runtime contract.
+- `apps/api/tests/test_program_loader.py`: loader regressions now verify that the adaptive-gold runtime template exposes the hinge slot with canonical movement metadata and substitute label (`Leg Curl Seated`).
+- `apps/api/tests/test_program_catalog_and_selection.py` and `apps/api/tests/test_workout_session_state.py`: adaptive-gold runtime proof now verifies that generated-week and `GET /workout/today` both retain the hinge slot when barbell/dumbbell equipment is available.
+
+Evidence (2026-03-10, adaptive gold sample expansion to accessory + weak-point work)
+- `programs/gold/adaptive_full_body_gold_v0_1.json`: the authored adaptive-gold sample now includes two additional onboarding-backed weak-area/accessory slots: `weak_chest_cable_fly` and `weak_ham_leg_curl`.
+- `apps/api/tests/test_program_loader.py`: loader regressions now verify that the adaptive-gold runtime template exposes both weak-point slots with canonical movement metadata and valid substitute labels.
+- `apps/api/tests/test_program_catalog_and_selection.py` and `apps/api/tests/test_workout_session_state.py`: adaptive-gold runtime proof now verifies that generated-week and `GET /workout/today` both retain the chest and hamstring weak-point slots when cable/machine equipment is available.
+
+Evidence (2026-03-10, canonical arm-isolation gap closed on adaptive gold)
+- `programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json`: the gold onboarding exercise library now includes canonical entries for `dumbbell_curl_incline` and `triceps_pushdown_rope`, closing the prior arm-isolation metadata gap.
+- `programs/gold/adaptive_full_body_gold_v0_1.json`: the authored adaptive-gold sample now includes both arm-isolation slots, bringing the adaptive-gold authored week to ten total slots across three authored days instead of one oversized session.
+- `apps/api/app/program_loader.py`, `apps/api/app/adaptive_schema.py`, and `apps/api/app/template_schema.py`: adaptive-gold runtime loading now preserves `slot_role` and derives `days_supported` from authored day count, so the gold runtime path can validate real multi-day doctrine instead of a flattened single-session surrogate.
+- `packages/core-engine/core_engine/scheduler.py` and `packages/core-engine/tests/test_scheduler.py`: generated-week capping/compression now preserves weak-point structure through slot-role priority and fallback weak-point day ranking, instead of trimming only by authored order.
+- `apps/api/tests/test_program_catalog_and_selection.py`: adaptive-gold API proof now verifies weak-point preservation under constrained time/frequency, including three-day-to-two-day compression and low time-budget bounded removal that still keeps the selected-session weak-point slot.
+- `apps/api/tests/test_workout_session_state.py`: adaptive-gold workout proof now verifies the correct multi-day `today` contract, where no-date-match fallback returns the first authored day only and therefore excludes later-day hinge and arm-isolation slots while preserving Day A weak-point/core work.
+- `programs/gold/adaptive_full_body_gold_v0_1.json`: the adaptive-gold sample now also includes a distinct authored week 2, so the gold baseline is no longer a single repeated week.
+- `apps/api/app/template_schema.py` and `apps/api/app/program_loader.py`: the canonical adaptive-gold runtime template now preserves `authored_weeks`, keeping week variants available to generation instead of collapsing everything to week 1.
+- `packages/core-engine/core_engine/scheduler.py`: generate-week now selects authored week variants from `prior_generated_weeks` before day compression and time-budget capping, so later authored weeks still honor the same weak-point preservation rules.
+- `apps/api/tests/test_program_loader.py` and `apps/api/tests/test_program_catalog_and_selection.py`: focused regressions now prove authored week preservation, second-week selection, and week-2 weak-point preservation under constrained time/frequency.
+- `programs/gold/adaptive_full_body_gold_v0_1.json`: the adaptive-gold sample now also includes an authored week 3 progression step and an explicit authored week-4 deload.
+- `apps/api/app/adaptive_schema.py`, `apps/api/app/template_schema.py`, and `apps/api/app/program_loader.py`: adaptive-gold runtime loading now preserves optional `week_role` so authored deload doctrine survives the loader boundary instead of being inferred downstream.
+- `packages/core-engine/core_engine/scheduler.py` and `packages/core-engine/tests/test_scheduler.py`: mesocycle output now records `authored_week_index` and `authored_week_role`, and authored deload weeks now activate `deload.active` with `deload_reason == \"authored_deload\"` before any frequency/time compression logic runs.
+- `apps/api/tests/test_program_catalog_and_selection.py`: focused regressions now prove third-week selection and authored week-4 deload selection on the adaptive-gold API path.
+- `programs/gold/adaptive_full_body_gold_v0_1.json`: the adaptive-gold sample now extends to a 10-week authored mesocycle aligned to the onboarding package sequence `build_a / build_b / build_a / build_b / build_a / deload / intens_a / intens_b / intens_a / intens_b`, instead of stopping at an early 4-week proof slice.
+- `apps/api/tests/test_program_loader.py` and `apps/api/tests/test_program_catalog_and_selection.py`: focused regressions now prove the full later-week contract, including week-2 Build-B selection (`6-9`), week-6 authored deload selection, and weeks 8 and 10 intensification selection (`4-6`) on the adaptive-gold API path.
+- `packages/core-engine/core_engine/scheduler.py` and `packages/core-engine/tests/test_scheduler.py`: when an authored deload overlaps the generic cadence, the mesocycle trace now prefers `authored_deload` as the primary reason instead of mixing it with the generic scheduled reason.
+- `docs/plans/2026-03-11-user-testing-rollout-plan.md`: user testing now has an explicit rollout plan covering internal dogfooding and closed beta on desktop and mobile browsers, so release readiness is no longer implicit.
+- `packages/core-engine/core_engine/scheduler.py`: post-authored-sequence behavior is now explicit. When `prior_generated_weeks` exceeds the final authored week, generated-week holds the last authored week as the deterministic fallback while surfacing `authored_sequence_complete`, `phase_transition_pending`, `phase_transition_reason == "authored_sequence_complete"`, and `post_authored_behavior == "hold_last_authored_week"` in `mesocycle`.
+- `packages/core-engine/tests/test_scheduler.py` and `apps/api/tests/test_program_catalog_and_selection.py`: focused engine/API regressions now prove the post-week-10 contract on the adaptive-gold path instead of leaving that edge case implicit.
+- `packages/core-engine/core_engine/user_state.py` and `apps/api/app/adaptive_schema.py`: canonical training state now preserves that same post-authored-sequence context in `generation_state.latest_mesocycle`, so downstream decision families no longer need to rediscover it from raw latest-plan payloads.
+- `packages/core-engine/core_engine/decision_progression.py` and `packages/core-engine/core_engine/decision_coach_preview.py`: coach-preview phase transition now surfaces authored-sequence completion as first-class coaching guidance with `transition_pending`, `recommended_action == "rotate_program"`, and `post_authored_behavior == "hold_last_authored_week"` instead of burying the signal in scheduler output only.
+- `packages/core-engine/core_engine/decision_program_recommendation.py`: explicit authored-sequence completion now outranks day-adaptation upgrades when recommending the next template, so the app can recommend rotating off the completed adaptive-gold block instead of pretending it is still mid-mesocycle.
+- `packages/core-engine/tests/test_decision_progression.py`, `packages/core-engine/tests/test_decision_coach_preview.py`, `packages/core-engine/tests/test_decision_program_recommendation.py`, `packages/core-engine/tests/test_user_state.py`, `apps/api/tests/test_plan_intelligence_api.py`, `apps/api/tests/test_program_recommendation_and_switch.py`, and `apps/api/tests/test_profile_training_state.py`: focused regressions now prove that post-week-10 transition state survives the full path from latest plan -> canonical state -> coach preview -> program recommendation -> API payloads.
+- `apps/api/tests/test_program_loader.py`, `apps/api/tests/test_program_catalog_and_selection.py`, and `apps/api/tests/test_workout_session_state.py`: focused loader/generate-week/workout regressions now verify that the biceps and triceps isolation slots survive the runtime path with canonical names, movement patterns, and equipment tags.
+
+Evidence (2026-03-10, coach-preview specialization/media ownership extraction)
+- `packages/core-engine/core_engine/decision_coach_preview.py`: specialization-adjustment and program-media/warmup summarization helpers now live in the coach-preview decision-family module instead of `intelligence.py`.
+- `packages/core-engine/core_engine/intelligence.py`: those specialization/media entrypoints now delegate through thin compatibility wrappers.
+- `packages/core-engine/core_engine/__init__.py`: package exports now source those helpers from the decision-family module.
+- `packages/core-engine/tests/test_decision_coach_preview.py`, `packages/core-engine/tests/test_intelligence.py`, and `apps/api/tests/test_plan_intelligence_api.py`: focused engine/wrapper/API regressions now verify the new ownership boundary.
+
+Evidence (2026-03-10, workout summary and exercise-state ownership extraction)
+- `packages/core-engine/core_engine/decision_workout_session.py`: now owns workout performance summary, log-set request/runtime shaping, session-state defaults/persistence helpers, workout-today plan/log/progression runtime helpers, and repeat-failure substitution payload shaping used by the workout route-runtime family.
+- `packages/core-engine/core_engine/__init__.py`: package exports for those workout helper families now source from `decision_workout_session.py`.
+- `packages/core-engine/tests/test_decision_workout_session.py`, `packages/core-engine/tests/test_intelligence.py`, and `apps/api/tests/test_workout_logset_feedback.py`, `tests/test_workout_session_state.py`, `tests/test_workout_summary.py`, `tests/test_workout_resume.py`, `tests/test_workout_progress.py`: focused engine/wrapper/API regressions now verify the moved workout ownership path.
 
 ### Task 0.1 - Ingestion-Centered Architecture Audit
 - Identify code to keep/isolate/deprecate/delete.
@@ -679,3 +857,13 @@ Scope
 Stretch (post-MVP)
 - DONE: personal records/best set badges surfaced on calendar days.
 - DONE: fast jump to same weekday history (e.g., previous Mondays) for progression comparison.
+## Recently Completed
+
+- surfaced post-authored-sequence transition guidance in web coaching UI
+- added lightweight internal tester docs for desktop/mobile browser dogfooding
+
+## Next Likely Batch
+
+1. run a focused responsive QA pass on the real web app against the tester runbook
+2. tighten any mobile-browser layout issues in onboarding, today, weekly review, and history
+3. keep broader doctrine/library migration separate from tester-readiness fixes

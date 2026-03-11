@@ -158,7 +158,7 @@ def resolve_substitution_rule_runtime(rule_set: dict[str, Any] | None) -> dict[s
         substitution_rules.get("equipment_mismatch") or "use_first_compatible_substitution"
     )
     repeat_failure_trigger = str(substitution_rules.get("repeat_failure_trigger") or "")
-    repeat_failure_threshold = None
+    repeat_failure_threshold = 3
     match = re.search(r"switch_after_([a-z]+|\d+)_failed_exposures", repeat_failure_trigger)
     if match:
         raw_threshold = match.group(1)

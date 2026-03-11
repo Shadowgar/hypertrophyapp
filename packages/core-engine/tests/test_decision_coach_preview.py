@@ -26,7 +26,9 @@ from core_engine.decision_coach_preview import (
     prepare_coach_preview_decision_context,
     prepare_phase_apply_runtime,
     prepare_specialization_apply_runtime,
+    recommend_specialization_adjustments,
     recommend_coach_intelligence_preview,
+    summarize_program_media_and_warmups,
 )
 
 
@@ -248,6 +250,56 @@ def test_build_specialization_applied_recommendation_record_shapes_apply_metadat
     assert record["request_payload"]["confirm"] is True
 
 
+def test_recommend_specialization_adjustments_prioritizes_low_volume_lagging_muscles() -> None:
+    adjustments = recommend_specialization_adjustments(
+        weekly_volume_by_muscle={
+            "chest": 12,
+            "back": 13,
+            "quads": 11,
+            "hamstrings": 10,
+            "glutes": 10,
+            "shoulders": 6,
+            "biceps": 5,
+            "triceps": 9,
+            "calves": 7,
+        },
+        lagging_muscles=["biceps", "shoulders", "calves"],
+        max_focus_muscles=2,
+        target_min_sets=8,
+    )
+
+    assert adjustments["focus_muscles"] == ["biceps", "shoulders"]
+    assert adjustments["focus_adjustments"]["biceps"] >= 1
+    assert adjustments["focus_adjustments"]["shoulders"] >= 1
+
+
+def test_summarize_program_media_and_warmups_reports_video_coverage() -> None:
+    summary = summarize_program_media_and_warmups(
+        {
+            "sessions": [
+                {
+                    "exercises": [
+                        {
+                            "id": "bench",
+                            "start_weight": 100,
+                            "video": {"youtube_url": "https://example.com/bench"},
+                        },
+                        {"id": "row", "start_weight": 90},
+                        {"id": "squat", "start_weight": 140},
+                        {"id": "curl", "start_weight": 25},
+                    ]
+                },
+                {"exercises": [{"id": "dip"}, {"id": "lateral_raise"}]},
+            ]
+        }
+    )
+
+    assert summary["total_exercises"] == 6
+    assert summary["video_linked_exercises"] == 1
+    assert summary["video_coverage_pct"] > 0
+    assert len(summary["sample_warmups"]) == 3
+
+
 def test_finalize_applied_coaching_recommendation_appends_applied_recommendation_id() -> None:
     finalized = finalize_applied_coaching_recommendation(
         payload_key="phase_transition",
@@ -380,6 +432,141 @@ def test_recommend_coach_intelligence_preview_uses_provided_readiness_score() ->
     )
     assert readiness_step["result"]["provided"] is True
     assert readiness_step["result"]["value"] == 61
+
+
+def test_recommend_coach_intelligence_preview_uses_context_readiness_state_when_score_not_provided() -> None:
+    captured: dict[str, object] = {}
+
+    def _derive_readiness_score(**kwargs: object) -> int:
+        captured.update(kwargs)
+        return 50
+
+    preview = recommend_coach_intelligence_preview(
+        template_id="full_body_v1",
+        context={
+            "program_template": {},
+            "user_profile": {},
+            "readiness_state": {
+                "sleep_quality": 2,
+                "stress_level": 4,
+                "pain_flags": ["elbow_flexion"],
+            },
+        },
+        preview_request={
+            "from_days": 3,
+            "to_days": 3,
+            "completion_pct": 95,
+            "adherence_score": 4,
+            "soreness_level": "mild",
+            "current_phase": "deload",
+            "weeks_in_phase": 1,
+            "stagnation_weeks": 0,
+        },
+        rule_set=None,
+        evaluate_schedule_adaptation=lambda **_: {
+            "from_days": 3,
+            "to_days": 3,
+            "kept_sessions": [],
+            "dropped_sessions": [],
+            "added_sessions": [],
+            "risk_level": "low",
+            "muscle_set_delta": {},
+            "to_plan": {"weekly_volume_by_muscle": {}},
+        },
+        recommend_progression_action=lambda **_: {"action": "progress", "reason": "maintain"},
+        humanize_progression_reason=lambda *_args, **_kwargs: "Progress",
+        derive_readiness_score=_derive_readiness_score,
+        recommend_phase_transition=lambda **kwargs: {"next_phase": kwargs["current_phase"], "reason": "continue"},
+        humanize_phase_transition_reason=lambda *_args, **_kwargs: "Continue",
+        recommend_specialization_adjustments=lambda **_: {
+            "focus_muscles": [],
+            "focus_adjustments": {},
+            "donor_adjustments": {},
+            "uncompensated_added_sets": 0,
+        },
+        summarize_program_media_and_warmups=lambda *_args, **_kwargs: {
+            "total_exercises": 0,
+            "video_linked_exercises": 0,
+            "video_coverage_pct": 0.0,
+            "sample_warmups": [],
+        },
+    )
+
+    readiness_step = next(
+        step for step in preview["decision_trace"]["steps"] if step.get("decision") == "readiness_score"
+    )
+    assert captured["sleep_quality"] == 2
+    assert captured["stress_level"] == 4
+    assert captured["pain_flags"] == ["elbow_flexion"]
+    assert readiness_step["result"]["provided"] is False
+    assert readiness_step["result"]["source"] == "context_readiness_state"
+    assert readiness_step["result"]["value"] == 50
+
+
+def test_recommend_coach_intelligence_preview_traces_stimulus_fatigue_response_snapshot() -> None:
+    preview = recommend_coach_intelligence_preview(
+        template_id="full_body_v1",
+        context={"program_template": {}, "user_profile": {}},
+        preview_request={
+            "from_days": 5,
+            "to_days": 3,
+            "completion_pct": 90,
+            "adherence_score": 4,
+            "soreness_level": "mild",
+            "average_rpe": 8.0,
+            "current_phase": "accumulation",
+            "weeks_in_phase": 3,
+            "stagnation_weeks": 2,
+        },
+        rule_set=None,
+        evaluate_schedule_adaptation=lambda **_: {
+            "from_days": 5,
+            "to_days": 3,
+            "kept_sessions": [],
+            "dropped_sessions": [],
+            "added_sessions": [],
+            "risk_level": "low",
+            "muscle_set_delta": {},
+            "to_plan": {"weekly_volume_by_muscle": {}},
+        },
+        recommend_progression_action=lambda **_: {
+            "action": "hold",
+            "reason": "under_target_without_high_fatigue",
+            "load_scale": 1.0,
+            "set_delta": 0,
+            "stimulus_fatigue_response": {
+                "stimulus_quality": "moderate",
+                "fatigue_cost": "moderate",
+                "recoverability": "moderate",
+                "progression_eligibility": False,
+                "deload_pressure": "moderate",
+                "substitution_pressure": "low",
+            },
+        },
+        humanize_progression_reason=lambda *_args, **_kwargs: "Hold",
+        derive_readiness_score=lambda **_: 63,
+        recommend_phase_transition=lambda **kwargs: {"next_phase": kwargs["current_phase"], "reason": "continue"},
+        humanize_phase_transition_reason=lambda *_args, **_kwargs: "Continue",
+        recommend_specialization_adjustments=lambda **_: {
+            "focus_muscles": [],
+            "focus_adjustments": {},
+            "donor_adjustments": {},
+            "uncompensated_added_sets": 0,
+        },
+        summarize_program_media_and_warmups=lambda *_args, **_kwargs: {
+            "total_exercises": 0,
+            "video_linked_exercises": 0,
+            "video_coverage_pct": 0.0,
+            "sample_warmups": [],
+        },
+    )
+
+    progression_step = next(
+        step for step in preview["decision_trace"]["steps"] if step.get("decision") == "progression"
+    )
+
+    assert progression_step["result"]["stimulus_fatigue_response"]["deload_pressure"] == "moderate"
+    assert progression_step["result"]["stimulus_fatigue_response"]["progression_eligibility"] is False
 
 
 def test_timeline_helpers_build_entries_and_clamp_limits() -> None:
@@ -694,3 +881,76 @@ def test_prepare_coach_preview_decision_context_builds_training_state_and_contex
     assert result["context"]["equipment"] == []
     assert result["context"]["state_program"] == "full_body_v1"
     assert result["decision_trace"]["interpreter"] == "prepare_coach_preview_decision_context"
+
+
+def test_recommend_coach_intelligence_preview_surfaces_authored_sequence_completion() -> None:
+    captured_phase_kwargs: dict[str, object] = {}
+
+    def _recommend_phase_transition(**kwargs: object) -> dict[str, object]:
+        captured_phase_kwargs.update(kwargs)
+        return {
+            "next_phase": kwargs["current_phase"],
+            "reason": "authored_sequence_complete",
+            "transition_pending": kwargs["phase_transition_pending"],
+            "recommended_action": "rotate_program",
+            "post_authored_behavior": kwargs["post_authored_behavior"],
+        }
+
+    preview = recommend_coach_intelligence_preview(
+        template_id="adaptive_full_body_gold_v0_1",
+        context={
+            "program_template": {},
+            "user_profile": {},
+            "latest_mesocycle": {
+                "authored_sequence_complete": True,
+                "phase_transition_pending": True,
+                "phase_transition_reason": "authored_sequence_complete",
+                "post_authored_behavior": "hold_last_authored_week",
+            },
+        },
+        preview_request={
+            "from_days": 3,
+            "to_days": 3,
+            "completion_pct": 92,
+            "adherence_score": 4,
+            "soreness_level": "mild",
+            "current_phase": "intensification",
+            "weeks_in_phase": 4,
+            "stagnation_weeks": 0,
+        },
+        rule_set=None,
+        evaluate_schedule_adaptation=lambda **_: {
+            "from_days": 3,
+            "to_days": 3,
+            "kept_sessions": [],
+            "dropped_sessions": [],
+            "added_sessions": [],
+            "risk_level": "low",
+            "muscle_set_delta": {},
+            "to_plan": {"weekly_volume_by_muscle": {}},
+        },
+        recommend_progression_action=lambda **_: {"action": "hold", "reason": "maintain"},
+        humanize_progression_reason=lambda *_args, **_kwargs: "Hold",
+        derive_readiness_score=lambda **_: 70,
+        recommend_phase_transition=_recommend_phase_transition,
+        humanize_phase_transition_reason=lambda *_args, **_kwargs: "The authored mesocycle is complete. Rotate to a fresh next step.",
+        recommend_specialization_adjustments=lambda **_: {
+            "focus_muscles": [],
+            "focus_adjustments": {},
+            "donor_adjustments": {},
+            "uncompensated_added_sets": 0,
+        },
+        summarize_program_media_and_warmups=lambda *_args, **_kwargs: {
+            "total_exercises": 0,
+            "video_linked_exercises": 0,
+            "video_coverage_pct": 0.0,
+            "sample_warmups": [],
+        },
+    )
+
+    assert captured_phase_kwargs["authored_sequence_complete"] is True
+    assert captured_phase_kwargs["phase_transition_pending"] is True
+    assert captured_phase_kwargs["post_authored_behavior"] == "hold_last_authored_week"
+    assert preview["phase_transition"]["reason"] == "authored_sequence_complete"
+    assert preview["phase_transition"]["transition_pending"] is True
+    assert preview["phase_transition"]["recommended_action"] == "rotate_program"

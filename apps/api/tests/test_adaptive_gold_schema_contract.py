@@ -23,6 +23,7 @@ def test_gold_program_template_validates_against_adaptive_schema() -> None:
     assert template.phases[0].weeks
     assert template.phases[0].weeks[0].days
     assert template.phases[0].weeks[0].days[0].slots
+    assert template.phases[0].weeks[0].days[0].day_role is not None
 
 
 def test_gold_rule_set_validates_and_scopes_to_gold_program() -> None:

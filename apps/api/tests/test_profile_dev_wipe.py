@@ -86,4 +86,8 @@ def test_profile_get_returns_default_payload_before_onboarding() -> None:
     assert payload["days_available"] == 2
     assert payload["nutrition_phase"] == "maintenance"
     assert payload["equipment_profile"] == []
+    assert payload["weak_areas"] == []
     assert payload["onboarding_answers"] == {}
+    assert payload["session_time_budget_minutes"] is None
+    assert payload["movement_restrictions"] == []
+    assert payload["near_failure_tolerance"] is None

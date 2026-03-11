@@ -76,6 +76,16 @@ from .decision_weekly_review import (
     resolve_weekly_review_window as _resolve_weekly_review_window,
     summarize_weekly_review_performance as _summarize_weekly_review_performance,
 )
+from .decision_live_workout_guidance import (
+    _humanize_workout_guidance as _decision_humanize_workout_guidance,
+    _resolve_workout_set_guidance as _decision_resolve_workout_set_guidance,
+    _workout_guidance_rationale as _decision_workout_guidance_rationale,
+    hydrate_live_workout_recommendation as _hydrate_live_workout_recommendation,
+    interpret_workout_set_feedback as _interpret_workout_set_feedback,
+    recommend_live_workout_adjustment as _recommend_live_workout_adjustment,
+    resolve_workout_session_state_update as _resolve_workout_session_state_update,
+    summarize_workout_session_guidance as _summarize_workout_session_guidance,
+)
 from .progression import ExerciseState as _ProgressionExerciseState
 from .progression import update_exercise_state_after_workout as _update_exercise_state_after_workout
 from .scheduler import generate_week_plan
@@ -120,43 +130,6 @@ _PHASE_TRANSITION_REASON_MESSAGES = {
     "continue_intensification": "Stay in intensification. Current performance still supports heavier work in this phase.",
     "phase_apply": "Apply the recommended phase transition.",
 }
-
-_WORKOUT_GUIDANCE_STATIC_MESSAGES = {
-    "remaining_sets_hold_load_and_match_target_reps": "Keep the same load for the remaining sets and match the programmed rep target.",
-    "remaining_sets_increase_load_keep_reps_controlled": "Reps are well above target. Increase load slightly and keep the next sets controlled.",
-    "incomplete_session_finish_remaining_sets_next_exposure": "Finish the remaining planned sets before making a progression decision.",
-    "finish_all_planned_sets_for_reliable_progression": "Complete every planned set so the next load decision is based on a full session.",
-    "solid_execution_maintain_progression": "Execution matched the plan. Keep the current progression path.",
-}
-
-_WORKOUT_GUIDANCE_TEMPLATE_MESSAGES = {
-    "above_target_reps_increase_load_next_exposure": (
-        "increase_load",
-        "Performance exceeded the target range. Increase load next exposure.",
-    ),
-    "within_target_reps_hold_or_microload": (
-        "hold_load",
-        "Performance stayed in range. Hold load and keep building reps.",
-    ),
-    "session_complete_hold_load_for_next_exposure": (
-        "hold_load",
-        "Session complete. Hold load for the next exposure unless performance trends clearly change.",
-    ),
-    "performance_below_target_adjust_load_and_recover": (
-        "reduce_load",
-        "Session performance stayed below target. Adjust load down and recover before the next exposure.",
-    ),
-    "performance_above_target_progress_load": (
-        "increase_load",
-        "Session performance was above target. Progress load next exposure.",
-    ),
-}
-
-_IN_SESSION_WEIGHT_SCALE_UP = 1.025
-_IN_SESSION_WEIGHT_SCALE_DOWN_MILD = 0.975
-_IN_SESSION_WEIGHT_SCALE_DOWN_AGGRESSIVE = 0.95
-_IN_SESSION_WEIGHT_SCALE_MIN = 0.9
-_IN_SESSION_WEIGHT_SCALE_MAX = 1.05
 
 _WEAK_POINT_MAX_BOOSTED_EXERCISES = 2
 _WEAK_POINT_SET_DELTA_CAP = 1
@@ -347,6 +320,7 @@ def interpret_weekly_review_decision(
     calories: int,
     protein: int,
     adherence_score: int,
+    readiness_state: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     return _interpret_weekly_review_decision(
         summary=summary,
@@ -354,6 +328,7 @@ def interpret_weekly_review_decision(
         calories=calories,
         protein=protein,
         adherence_score=adherence_score,
+        readiness_state=readiness_state,
     )
 
 
@@ -371,68 +346,15 @@ def apply_weekly_review_adjustments_to_plan(
 
 
 def _humanize_workout_guidance(guidance: str) -> str:
-    phrase = guidance.replace("_", " ").strip()
-    if not phrase:
-        return "Follow the planned progression."
-    return phrase[:1].upper() + phrase[1:] + "."
-
-
-def _under_target_after_exposures(rule_set: dict[str, Any] | None) -> int:
-    progression_rules = _rule_dict(rule_set, "progression_rules")
-    on_under_target = _coerce_dict(progression_rules.get("on_under_target"))
-    value = on_under_target.get("after_exposures")
-    return int(value) if isinstance(value, int) and value > 0 else 1
+    return _decision_humanize_workout_guidance(guidance)
 
 
 def _workout_guidance_rationale(guidance: str, *, rule_set: dict[str, Any] | None = None) -> str:
-    static_message = _WORKOUT_GUIDANCE_STATIC_MESSAGES.get(guidance)
-    if static_message is not None:
-        return static_message
-
-    template_message = _WORKOUT_GUIDANCE_TEMPLATE_MESSAGES.get(guidance)
-    if template_message is not None:
-        template_key, fallback = template_message
-        return _rule_rationale(rule_set, template_key, fallback)
-
-    under_target_after = _under_target_after_exposures(rule_set)
-    if guidance == "below_target_reps_reduce_or_hold_load":
-        if under_target_after > 1:
-            return (
-                "Performance fell below the target range. Hold load on the first miss and "
-                f"only reduce if it repeats across {under_target_after} exposures."
-            )
-        return _rule_rationale(
-            rule_set,
-            "reduce_load",
-            "Performance fell below target. Reduce load next exposure to restore rep quality.",
-        )
-
-    if guidance == "remaining_sets_reduce_load_focus_target_reps":
-        if under_target_after > 1:
-            return "Reps dropped below target. Trim load slightly within the session so the remaining sets stay on target."
-        return _rule_rationale(
-            rule_set,
-            "reduce_load",
-            "Reps dropped below target. Reduce load slightly and bring the remaining sets back into range.",
-        )
-
-    return _humanize_workout_guidance(guidance)
+    return _decision_workout_guidance_rationale(guidance, rule_set=rule_set)
 
 
 def _resolve_workout_set_guidance(reps: int, min_reps: int, max_reps: int) -> str:
-    if reps < min_reps:
-        return "below_target_reps_reduce_or_hold_load"
-    if reps > max_reps:
-        return "above_target_reps_increase_load_next_exposure"
-    return "within_target_reps_hold_or_microload"
-
-
-def _round_to_microload(weight: float) -> float:
-    return round(max(5.0, weight) / 2.5) * 2.5
-
-
-def _bounded_in_session_weight_scale(scale: float) -> float:
-    return max(_IN_SESSION_WEIGHT_SCALE_MIN, min(_IN_SESSION_WEIGHT_SCALE_MAX, scale))
+    return _decision_resolve_workout_set_guidance(reps, min_reps, max_reps)
 
 
 def _resolve_workout_summary_guidance(
@@ -472,38 +394,16 @@ def hydrate_live_workout_recommendation(
     substitution_recommendation: dict[str, Any] | None = None,
     rule_set: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    guidance_rationale = _workout_guidance_rationale(guidance, rule_set=rule_set)
-    decision_trace = {
-        "interpreter": "hydrate_live_workout_recommendation",
-        "version": "v1",
-        "inputs": {
-            "completed_sets": completed_sets,
-            "remaining_sets": remaining_sets,
-            "recommended_reps_min": recommended_reps_min,
-            "recommended_reps_max": recommended_reps_max,
-            "recommended_weight": recommended_weight,
-            "guidance": guidance,
-        },
-        "steps": [],
-        "outcome": {
-            "guidance": guidance,
-            "guidance_rationale": guidance_rationale,
-            "substitution_recommendation": deepcopy(substitution_recommendation),
-        },
-    }
-    payload = {
-        "completed_sets": completed_sets,
-        "remaining_sets": remaining_sets,
-        "recommended_reps_min": recommended_reps_min,
-        "recommended_reps_max": recommended_reps_max,
-        "recommended_weight": recommended_weight,
-        "guidance": guidance,
-        "guidance_rationale": guidance_rationale,
-        "decision_trace": decision_trace,
-    }
-    if substitution_recommendation is not None:
-        payload["substitution_recommendation"] = deepcopy(substitution_recommendation)
-    return payload
+    return _hydrate_live_workout_recommendation(
+        completed_sets=completed_sets,
+        remaining_sets=remaining_sets,
+        recommended_reps_min=recommended_reps_min,
+        recommended_reps_max=recommended_reps_max,
+        recommended_weight=recommended_weight,
+        guidance=guidance,
+        substitution_recommendation=substitution_recommendation,
+        rule_set=rule_set,
+    )
 
 
 def resolve_workout_session_state_update(
@@ -520,60 +420,19 @@ def resolve_workout_session_state_update(
     substitution_recommendation: dict[str, Any] | None = None,
     rule_set: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    history = [_coerce_dict(item) for item in (existing_set_history or [])]
-    next_entry = {
-        "set_index": set_index,
-        "reps": reps,
-        "weight": float(weight),
-    }
-
-    replaced = False
-    for idx, item in enumerate(history):
-        if int(item.get("set_index", -1)) == set_index:
-            history[idx] = next_entry
-            replaced = True
-            break
-    if not replaced:
-        history.append(next_entry)
-
-    history.sort(key=lambda row: int(row.get("set_index", 0)))
-
-    completed_sets = min(planned_sets, len(history))
-    total_reps = sum(int(item.get("reps", 0) or 0) for item in history)
-    total_weight = sum(float(item.get("weight", 0) or 0) for item in history)
-    average_reps = (total_reps / len(history)) if history else float(reps)
-
-    live_recommendation = recommend_live_workout_adjustment(
+    return _resolve_workout_session_state_update(
+        existing_set_history=existing_set_history,
+        primary_exercise_id=primary_exercise_id,
+        planned_sets=planned_sets,
         planned_reps_min=planned_reps_min,
         planned_reps_max=planned_reps_max,
-        planned_sets=planned_sets,
-        completed_sets=completed_sets,
-        last_reps=reps,
-        last_weight=weight,
-        average_reps=average_reps,
+        planned_weight=planned_weight,
+        set_index=set_index,
+        reps=reps,
+        weight=weight,
         substitution_recommendation=substitution_recommendation,
         rule_set=rule_set,
     )
-
-    return {
-        "state": {
-            "primary_exercise_id": primary_exercise_id,
-            "planned_sets": planned_sets,
-            "planned_reps_min": planned_reps_min,
-            "planned_reps_max": planned_reps_max,
-            "planned_weight": planned_weight,
-            "completed_sets": int(live_recommendation["completed_sets"]),
-            "total_logged_reps": total_reps,
-            "total_logged_weight": round(total_weight, 2),
-            "set_history": history,
-            "remaining_sets": int(live_recommendation["remaining_sets"]),
-            "recommended_reps_min": int(live_recommendation["recommended_reps_min"]),
-            "recommended_reps_max": int(live_recommendation["recommended_reps_max"]),
-            "recommended_weight": float(live_recommendation["recommended_weight"]),
-            "last_guidance": str(live_recommendation["guidance"]),
-        },
-        "live_recommendation": live_recommendation,
-    }
 
 
 def recommend_live_workout_adjustment(
@@ -588,74 +447,17 @@ def recommend_live_workout_adjustment(
     substitution_recommendation: dict[str, Any] | None = None,
     rule_set: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    remaining_sets = max(planned_sets - completed_sets, 0)
-    recommended_reps_min = planned_reps_min
-    recommended_reps_max = planned_reps_max
-    guidance = "remaining_sets_hold_load_and_match_target_reps"
-    scale = 1.0
-    matched_rule = "hold_remaining_sets"
-
-    if remaining_sets <= 0:
-        guidance = "session_complete_hold_load_for_next_exposure"
-        matched_rule = "session_complete"
-    elif last_reps < planned_reps_min or average_reps < planned_reps_min:
-        guidance = "remaining_sets_reduce_load_focus_target_reps"
-        scale = _IN_SESSION_WEIGHT_SCALE_DOWN_AGGRESSIVE if completed_sets >= 2 else _IN_SESSION_WEIGHT_SCALE_DOWN_MILD
-        recommended_reps_max = min(planned_reps_max, planned_reps_min + 2)
-        matched_rule = "under_target_reps"
-    elif last_reps > planned_reps_max + 1 and average_reps >= planned_reps_max:
-        guidance = "remaining_sets_increase_load_keep_reps_controlled"
-        scale = _IN_SESSION_WEIGHT_SCALE_UP
-        recommended_reps_min = max(planned_reps_min, planned_reps_max - 2)
-        matched_rule = "above_target_reps"
-
-    recommended_weight = _round_to_microload(last_weight * _bounded_in_session_weight_scale(scale))
-    guidance_rationale = _workout_guidance_rationale(guidance, rule_set=rule_set)
-    decision_trace = {
-        "interpreter": "recommend_live_workout_adjustment",
-        "version": "v1",
-        "inputs": {
-            "planned_reps_min": planned_reps_min,
-            "planned_reps_max": planned_reps_max,
-            "planned_sets": planned_sets,
-            "completed_sets": completed_sets,
-            "remaining_sets": remaining_sets,
-            "last_reps": last_reps,
-            "last_weight": last_weight,
-            "average_reps": round(average_reps, 2),
-        },
-        "steps": [
-            {
-                "decision": "in_session_adjustment_rule",
-                "result": {
-                    "matched_rule": matched_rule,
-                    "guidance": guidance,
-                    "weight_scale": round(scale, 3),
-                },
-            }
-        ],
-        "outcome": {
-            "recommended_reps_min": recommended_reps_min,
-            "recommended_reps_max": max(recommended_reps_min, recommended_reps_max),
-            "recommended_weight": recommended_weight,
-            "guidance": guidance,
-            "guidance_rationale": guidance_rationale,
-            "substitution_recommendation": deepcopy(substitution_recommendation),
-        },
-    }
-    payload = {
-        "completed_sets": completed_sets,
-        "remaining_sets": remaining_sets,
-        "recommended_reps_min": recommended_reps_min,
-        "recommended_reps_max": max(recommended_reps_min, recommended_reps_max),
-        "recommended_weight": recommended_weight,
-        "guidance": guidance,
-        "guidance_rationale": guidance_rationale,
-        "decision_trace": decision_trace,
-    }
-    if substitution_recommendation is not None:
-        payload["substitution_recommendation"] = deepcopy(substitution_recommendation)
-    return payload
+    return _recommend_live_workout_adjustment(
+        planned_reps_min=planned_reps_min,
+        planned_reps_max=planned_reps_max,
+        planned_sets=planned_sets,
+        completed_sets=completed_sets,
+        last_reps=last_reps,
+        last_weight=last_weight,
+        average_reps=average_reps,
+        substitution_recommendation=substitution_recommendation,
+        rule_set=rule_set,
+    )
 
 
 def interpret_workout_set_feedback(
@@ -668,48 +470,15 @@ def interpret_workout_set_feedback(
     next_working_weight: float,
     rule_set: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    guidance = _resolve_workout_set_guidance(reps, planned_reps_min, planned_reps_max)
-    rep_delta = 0
-    if reps > planned_reps_max:
-        rep_delta = reps - planned_reps_max
-    elif reps < planned_reps_min:
-        rep_delta = reps - planned_reps_min
-    weight_delta = round(weight - planned_weight, 2)
-    guidance_rationale = _workout_guidance_rationale(guidance, rule_set=rule_set)
-    decision_trace = {
-        "interpreter": "interpret_workout_set_feedback",
-        "version": "v1",
-        "inputs": {
-            "reps": reps,
-            "weight": weight,
-            "planned_reps_min": planned_reps_min,
-            "planned_reps_max": planned_reps_max,
-            "planned_weight": planned_weight,
-        },
-        "steps": [
-            {
-                "decision": "set_feedback_guidance",
-                "result": {
-                    "guidance": guidance,
-                    "rep_delta": rep_delta,
-                    "weight_delta": weight_delta,
-                },
-            }
-        ],
-        "outcome": {
-            "guidance": guidance,
-            "guidance_rationale": guidance_rationale,
-            "next_working_weight": next_working_weight,
-        },
-    }
-    return {
-        "rep_delta": rep_delta,
-        "weight_delta": weight_delta,
-        "next_working_weight": next_working_weight,
-        "guidance": guidance,
-        "guidance_rationale": guidance_rationale,
-        "decision_trace": decision_trace,
-    }
+    return _interpret_workout_set_feedback(
+        reps=reps,
+        weight=weight,
+        planned_reps_min=planned_reps_min,
+        planned_reps_max=planned_reps_max,
+        planned_weight=planned_weight,
+        next_working_weight=next_working_weight,
+        rule_set=rule_set,
+    )
 
 
 def build_workout_progress_payload(
@@ -801,37 +570,14 @@ def build_repeat_failure_substitution_payload(
     equipment_profile: list[str] | None,
     rule_set: dict[str, Any] | None,
 ) -> dict[str, Any] | None:
-    exercise = _coerce_dict(planned_exercise)
-    if exercise_state is None:
-        return None
+    from .decision_workout_session import build_repeat_failure_substitution_payload as _impl
 
-    substitutions = exercise.get("substitution_candidates") or exercise.get("substitutions") or []
-    if not isinstance(substitutions, list) or not substitutions:
-        return None
-
-    runtime = resolve_repeat_failure_substitution(
-        exercise_id=str(exercise.get("primary_exercise_id") or exercise.get("id") or _read_attr(exercise_state, "exercise_id") or ""),
-        exercise_name=str(exercise.get("name") or _read_attr(exercise_state, "exercise_id") or ""),
-        substitution_candidates=[str(candidate) for candidate in substitutions if str(candidate).strip()],
-        consecutive_under_target_exposures=int(_read_attr(exercise_state, "consecutive_under_target_exposures") or 0),
-        equipment_set=_normalized_equipment_profile(equipment_profile),
+    return _impl(
+        planned_exercise=planned_exercise,
+        exercise_state=exercise_state,
+        equipment_profile=equipment_profile,
         rule_set=rule_set,
     )
-    if not runtime["recommend_substitution"]:
-        return None
-
-    threshold = runtime["repeat_failure_threshold"]
-    if threshold is None:
-        return None
-
-    return {
-        "recommended_name": str(runtime["recommended_name"]),
-        "compatible_substitutions": list(runtime["compatible_substitutions"]),
-        "failed_exposure_count": int(_read_attr(exercise_state, "consecutive_under_target_exposures") or 0),
-        "trigger_threshold": int(threshold),
-        "reason": "repeat_failure_threshold_reached",
-        "decision_trace": dict(runtime["decision_trace"]),
-    }
 
 
 def prepare_workout_log_set_request_runtime(
@@ -843,15 +589,16 @@ def prepare_workout_log_set_request_runtime(
     weight: float,
     rpe: float | None,
 ) -> dict[str, Any]:
-    resolved_primary_exercise_id = primary_exercise_id or exercise_id
-    return {
-        "primary_exercise_id": resolved_primary_exercise_id,
-        "exercise_id": exercise_id,
-        "set_index": set_index,
-        "reps": reps,
-        "weight": weight,
-        "rpe": rpe,
-    }
+    from .decision_workout_session import prepare_workout_log_set_request_runtime as _impl
+
+    return _impl(
+        primary_exercise_id=primary_exercise_id,
+        exercise_id=exercise_id,
+        set_index=set_index,
+        reps=reps,
+        weight=weight,
+        rpe=rpe,
+    )
 
 
 def prepare_workout_exercise_state_runtime(
@@ -869,86 +616,22 @@ def prepare_workout_exercise_state_runtime(
     equipment_profile: list[str] | None,
     rule_set: dict[str, Any] | None,
 ) -> dict[str, Any]:
-    starting_load_runtime: dict[str, Any] | None = None
-    if existing_state is not None:
-        initial_state_values = {
-            "current_working_weight": float(_read_attr(existing_state, "current_working_weight") or planned_weight),
-            "exposure_count": int(_read_attr(existing_state, "exposure_count") or 0),
-            "consecutive_under_target_exposures": int(_read_attr(existing_state, "consecutive_under_target_exposures") or 0),
-            "last_progression_action": str(_read_attr(existing_state, "last_progression_action") or "hold"),
-            "fatigue_score": int(_read_attr(existing_state, "fatigue_score") or 0),
-        }
-    else:
-        starting_load_runtime = resolve_starting_load(
-            planned_exercise=planned_exercise,
-            fallback_weight=planned_weight,
-            rule_set=rule_set,
-        )
-        initial_state_values = {
-            "current_working_weight": float(starting_load_runtime["working_weight"]),
-            "exposure_count": 0,
-            "consecutive_under_target_exposures": 0,
-            "last_progression_action": "hold",
-            "fatigue_score": 0,
-        }
+    from .decision_workout_session import prepare_workout_exercise_state_runtime as _impl
 
-    updated_state = _update_exercise_state_after_workout(
-        exercise_state=_ProgressionExerciseState(
-            exercise_id=primary_exercise_id,
-            current_working_weight=float(initial_state_values["current_working_weight"]),
-            exposure_count=int(initial_state_values["exposure_count"]),
-            consecutive_under_target_exposures=int(initial_state_values["consecutive_under_target_exposures"]),
-            last_progression_action=str(initial_state_values["last_progression_action"]),
-            fatigue_score=int(initial_state_values["fatigue_score"]),
-        ),
-        completed_reps=int(completed_reps),
-        target_rep_range=(int(planned_reps_min), int(planned_reps_max)),
-        completed_sets=int(completed_set_index),
-        planned_sets=max(1, int(planned_sets)),
-        phase_modifier=nutrition_phase or "maintenance",
-        rule_set=rule_set,
-    )
-    state_values = {
-        "current_working_weight": float(updated_state.current_working_weight),
-        "exposure_count": int(updated_state.exposure_count),
-        "consecutive_under_target_exposures": int(updated_state.consecutive_under_target_exposures),
-        "last_progression_action": str(updated_state.last_progression_action),
-        "fatigue_score": int(updated_state.fatigue_score),
-    }
-    substitution_recommendation = build_repeat_failure_substitution_payload(
+    return _impl(
+        existing_state=existing_state,
+        primary_exercise_id=primary_exercise_id,
         planned_exercise=planned_exercise,
-        exercise_state=updated_state,
+        planned_weight=planned_weight,
+        planned_sets=planned_sets,
+        planned_reps_min=planned_reps_min,
+        planned_reps_max=planned_reps_max,
+        completed_set_index=completed_set_index,
+        completed_reps=completed_reps,
+        nutrition_phase=nutrition_phase,
         equipment_profile=equipment_profile,
         rule_set=rule_set,
     )
-    return {
-        "initial_state_values": initial_state_values,
-        "state_values": state_values,
-        "starting_load_runtime": deepcopy(starting_load_runtime),
-        "substitution_recommendation": deepcopy(substitution_recommendation),
-        "decision_trace": {
-            "interpreter": "prepare_workout_exercise_state_runtime",
-            "version": "v1",
-            "inputs": {
-                "primary_exercise_id": primary_exercise_id,
-                "planned_reps_min": int(planned_reps_min),
-                "planned_reps_max": int(planned_reps_max),
-                "planned_sets": int(planned_sets),
-                "completed_set_index": int(completed_set_index),
-                "completed_reps": int(completed_reps),
-                "has_existing_state": existing_state is not None,
-                "has_rule_set": isinstance(rule_set, dict),
-            },
-            "outcome": {
-                "current_working_weight": float(updated_state.current_working_weight),
-                "exposure_count": int(updated_state.exposure_count),
-                "consecutive_under_target_exposures": int(updated_state.consecutive_under_target_exposures),
-                "last_progression_action": str(updated_state.last_progression_action),
-                "has_starting_load_runtime": starting_load_runtime is not None,
-                "has_substitution_recommendation": substitution_recommendation is not None,
-            },
-        },
-    }
 
 
 def prepare_workout_log_set_decision_runtime(
@@ -962,110 +645,18 @@ def prepare_workout_log_set_decision_runtime(
     equipment_profile: list[str] | None,
     rule_set: dict[str, Any] | None,
 ) -> dict[str, Any]:
-    log_set_plan_context = resolve_workout_log_set_plan_context(
-        planned_exercise=planned_exercise,
-        fallback_weight=float(request_runtime["weight"]),
-    )
-    planned_reps_min = int(log_set_plan_context["planned_reps_min"])
-    planned_reps_max = int(log_set_plan_context["planned_reps_max"])
-    planned_sets = int(log_set_plan_context["planned_sets"])
-    planned_weight = float(log_set_plan_context["planned_weight"])
-    primary_exercise_id = str(request_runtime["primary_exercise_id"])
-    exercise_id = str(request_runtime["exercise_id"])
-    set_index = int(request_runtime["set_index"])
-    reps = int(request_runtime["reps"])
-    weight = float(request_runtime["weight"])
+    from .decision_workout_session import prepare_workout_log_set_decision_runtime as _impl
 
-    exercise_state_runtime = prepare_workout_exercise_state_runtime(
-        existing_state=existing_exercise_state,
-        primary_exercise_id=primary_exercise_id,
+    return _impl(
+        user_id=user_id,
+        workout_id=workout_id,
+        request_runtime=request_runtime,
         planned_exercise=planned_exercise,
-        planned_weight=planned_weight,
-        planned_sets=planned_sets,
-        planned_reps_min=planned_reps_min,
-        planned_reps_max=planned_reps_max,
-        completed_set_index=set_index,
-        completed_reps=reps,
+        existing_exercise_state=existing_exercise_state,
         nutrition_phase=nutrition_phase,
         equipment_profile=equipment_profile,
         rule_set=rule_set,
     )
-    next_working_weight = float(_coerce_dict(exercise_state_runtime["state_values"])["current_working_weight"])
-    feedback = interpret_workout_set_feedback(
-        reps=reps,
-        weight=weight,
-        planned_reps_min=planned_reps_min,
-        planned_reps_max=planned_reps_max,
-        planned_weight=planned_weight,
-        next_working_weight=next_working_weight,
-        rule_set=rule_set,
-    )
-    initial_state_values = _coerce_dict(exercise_state_runtime["initial_state_values"])
-    state_values = _coerce_dict(exercise_state_runtime["state_values"])
-    starting_load_runtime = cast(dict[str, Any] | None, exercise_state_runtime["starting_load_runtime"])
-    substitution_recommendation = cast(dict[str, Any] | None, exercise_state_runtime["substitution_recommendation"])
-    return {
-        "record_values": {
-            "user_id": user_id,
-            "workout_id": workout_id,
-            "primary_exercise_id": primary_exercise_id,
-            "exercise_id": exercise_id,
-            "set_index": set_index,
-            "reps": reps,
-            "weight": weight,
-            "rpe": request_runtime.get("rpe"),
-        },
-        "planned_reps_min": planned_reps_min,
-        "planned_reps_max": planned_reps_max,
-        "planned_sets": planned_sets,
-        "planned_weight": planned_weight,
-        "exercise_state_runtime": exercise_state_runtime,
-        "exercise_state_create_values": {
-            "user_id": user_id,
-            "exercise_id": primary_exercise_id,
-            **initial_state_values,
-        },
-        "exercise_state_update_values": state_values,
-        "starting_load_runtime": deepcopy(starting_load_runtime),
-        "substitution_recommendation": deepcopy(substitution_recommendation),
-        "feedback": feedback,
-        "session_state_inputs": {
-            "primary_exercise_id": primary_exercise_id,
-            "exercise_id": exercise_id,
-            "planned_sets": planned_sets,
-            "planned_rep_range": (planned_reps_min, planned_reps_max),
-            "planned_weight": planned_weight,
-            "set_index": set_index,
-            "reps": reps,
-            "weight": weight,
-            "substitution_recommendation": substitution_recommendation,
-            "rule_set": rule_set,
-        },
-        "decision_trace": {
-            "interpreter": "prepare_workout_log_set_decision_runtime",
-            "version": "v1",
-            "inputs": {
-                "user_id": user_id,
-                "workout_id": workout_id,
-                "primary_exercise_id": primary_exercise_id,
-                "exercise_id": exercise_id,
-                "set_index": set_index,
-                "reps": reps,
-                "weight": weight,
-                "has_existing_exercise_state": existing_exercise_state is not None,
-            },
-            "outcome": {
-                "planned_reps_min": planned_reps_min,
-                "planned_reps_max": planned_reps_max,
-                "planned_sets": planned_sets,
-                "planned_weight": planned_weight,
-                "next_working_weight": next_working_weight,
-                "guidance": str(_coerce_dict(feedback).get("guidance") or ""),
-                "has_starting_load_runtime": starting_load_runtime is not None,
-                "has_substitution_recommendation": substitution_recommendation is not None,
-            },
-        },
-    }
 
 
 def resolve_workout_log_set_plan_context(
@@ -1073,16 +664,9 @@ def resolve_workout_log_set_plan_context(
     planned_exercise: dict[str, Any] | None,
     fallback_weight: float,
 ) -> dict[str, Any]:
-    exercise = _coerce_dict(planned_exercise)
-    planned_reps_min, planned_reps_max = _resolve_rep_range(exercise.get("rep_range"))
-    planned_sets = int(exercise.get("sets", 3) or 3)
-    planned_weight = float(exercise.get("recommended_working_weight", fallback_weight) or fallback_weight)
-    return {
-        "planned_reps_min": planned_reps_min,
-        "planned_reps_max": planned_reps_max,
-        "planned_sets": planned_sets,
-        "planned_weight": planned_weight,
-    }
+    from .decision_workout_session import resolve_workout_log_set_plan_context as _impl
+
+    return _impl(planned_exercise=planned_exercise, fallback_weight=fallback_weight)
 
 
 def build_workout_session_state_defaults(
@@ -1093,22 +677,15 @@ def build_workout_session_state_defaults(
     planned_reps_max: int,
     planned_weight: float,
 ) -> dict[str, Any]:
-    return {
-        "primary_exercise_id": primary_exercise_id,
-        "planned_sets": planned_sets,
-        "planned_reps_min": planned_reps_min,
-        "planned_reps_max": planned_reps_max,
-        "planned_weight": planned_weight,
-        "completed_sets": 0,
-        "total_logged_reps": 0,
-        "total_logged_weight": 0.0,
-        "set_history": [],
-        "remaining_sets": planned_sets,
-        "recommended_reps_min": planned_reps_min,
-        "recommended_reps_max": planned_reps_max,
-        "recommended_weight": planned_weight,
-        "last_guidance": "remaining_sets_hold_load_and_match_target_reps",
-    }
+    from .decision_workout_session import build_workout_session_state_defaults as _impl
+
+    return _impl(
+        primary_exercise_id=primary_exercise_id,
+        planned_sets=planned_sets,
+        planned_reps_min=planned_reps_min,
+        planned_reps_max=planned_reps_max,
+        planned_weight=planned_weight,
+    )
 
 
 def prepare_workout_session_state_persistence_payload(
@@ -1125,8 +702,10 @@ def prepare_workout_session_state_persistence_payload(
     substitution_recommendation: dict[str, Any] | None,
     rule_set: dict[str, Any] | None,
 ) -> dict[str, Any]:
-    reduction = resolve_workout_session_state_update(
-        existing_set_history=list(_read_attr(existing_state, "set_history") or []),
+    from .decision_workout_session import prepare_workout_session_state_persistence_payload as _impl
+
+    return _impl(
+        existing_state=existing_state,
         primary_exercise_id=primary_exercise_id,
         planned_sets=planned_sets,
         planned_reps_min=planned_reps_min,
@@ -1138,10 +717,6 @@ def prepare_workout_session_state_persistence_payload(
         substitution_recommendation=substitution_recommendation,
         rule_set=rule_set,
     )
-    return {
-        "state": deepcopy(_coerce_dict(reduction.get("state"))),
-        "live_recommendation": deepcopy(_coerce_dict(reduction.get("live_recommendation"))),
-    }
 
 
 def prepare_workout_session_state_upsert_runtime(
@@ -1158,17 +733,9 @@ def prepare_workout_session_state_upsert_runtime(
     substitution_recommendation: dict[str, Any] | None,
     rule_set: dict[str, Any] | None,
 ) -> dict[str, Any]:
-    create_values: dict[str, Any] | None = None
-    if existing_state is None:
-        create_values = build_workout_session_state_defaults(
-            primary_exercise_id=primary_exercise_id,
-            planned_sets=planned_sets,
-            planned_reps_min=planned_reps_min,
-            planned_reps_max=planned_reps_max,
-            planned_weight=planned_weight,
-        )
+    from .decision_workout_session import prepare_workout_session_state_upsert_runtime as _impl
 
-    reduction = prepare_workout_session_state_persistence_payload(
+    return _impl(
         existing_state=existing_state,
         primary_exercise_id=primary_exercise_id,
         planned_sets=planned_sets,
@@ -1181,70 +748,18 @@ def prepare_workout_session_state_upsert_runtime(
         substitution_recommendation=substitution_recommendation,
         rule_set=rule_set,
     )
-    update_values = _coerce_dict(reduction.get("state"))
-    live_recommendation = _coerce_dict(reduction.get("live_recommendation"))
-    return {
-        "create_values": deepcopy(create_values),
-        "update_values": update_values,
-        "live_recommendation": live_recommendation,
-        "decision_trace": {
-            "interpreter": "prepare_workout_session_state_upsert_runtime",
-            "version": "v1",
-            "inputs": {
-                "has_existing_state": existing_state is not None,
-                "primary_exercise_id": primary_exercise_id,
-                "planned_sets": planned_sets,
-                "planned_reps_min": planned_reps_min,
-                "planned_reps_max": planned_reps_max,
-            },
-            "outcome": {
-                "created_state_defaults": create_values is not None,
-                "completed_sets": int(update_values.get("completed_sets") or 0),
-                "remaining_sets": int(update_values.get("remaining_sets") or 0),
-                "guidance": str(live_recommendation.get("guidance") or ""),
-            },
-        },
-    }
 
 
 def build_workout_today_plan_runtime(
     *,
     latest_plan_payload: dict[str, Any] | None,
+    selected_program_name: str | None = None,
 ) -> dict[str, Any]:
-    payload = _coerce_dict(latest_plan_payload)
-    sessions = [
-        _coerce_dict(session)
-        for session in (payload.get("sessions") or [])
-        if isinstance(session, dict)
-    ]
-    session_ids = [
-        str(session.get("session_id") or "")
-        for session in sessions
-        if str(session.get("session_id") or "")
-    ]
-    selected_program_id = str(payload.get("program_template_id") or "").strip() or None
-    mesocycle = _coerce_dict(payload.get("mesocycle")) if isinstance(payload.get("mesocycle"), dict) else None
-    deload = _coerce_dict(payload.get("deload")) if isinstance(payload.get("deload"), dict) else None
+    from .decision_workout_session import build_workout_today_plan_runtime as _impl
 
-    return {
-        "sessions": sessions,
-        "session_ids": session_ids,
-        "selected_program_id": selected_program_id,
-        "mesocycle": mesocycle,
-        "deload": deload,
-        "decision_trace": {
-            "interpreter": "build_workout_today_plan_runtime",
-            "version": "v1",
-            "inputs": {"has_latest_plan_payload": bool(payload)},
-            "outcome": {
-                "session_count": len(sessions),
-                "session_id_count": len(session_ids),
-                "selected_program_id": selected_program_id,
-                "has_mesocycle": mesocycle is not None,
-                "has_deload": deload is not None,
-            },
-        },
-    }
+    return _impl(
+        latest_plan_payload=latest_plan_payload,
+    )
 
 
 def resolve_workout_today_plan_payload(
@@ -1276,96 +791,27 @@ def build_workout_today_log_runtime(
     recent_logs: list[Any],
     selected_session_logs: list[Any],
 ) -> dict[str, Any]:
-    resume_logs = [
-        {"workout_id": str(_read_attr(row, "workout_id") or "")}
-        for row in recent_logs
-        if str(_read_attr(row, "workout_id") or "")
-    ]
-    completion_logs = [
-        {
-            "exercise_id": str(_read_attr(row, "exercise_id") or ""),
-            "set_index": int(_read_attr(row, "set_index") or 0),
-        }
-        for row in selected_session_logs
-        if str(_read_attr(row, "exercise_id") or "")
-    ]
-    return {
-        "resume_logs": resume_logs,
-        "completion_logs": completion_logs,
-        "decision_trace": {
-            "interpreter": "build_workout_today_log_runtime",
-            "version": "v1",
-            "inputs": {
-                "recent_log_count": len(recent_logs),
-                "selected_session_log_count": len(selected_session_logs),
-            },
-            "outcome": {
-                "resume_log_count": len(resume_logs),
-                "completion_log_count": len(completion_logs),
-            },
-        },
-    }
+    from .decision_workout_session import build_workout_today_log_runtime as _impl
+
+    return _impl(recent_logs=recent_logs, selected_session_logs=selected_session_logs)
 
 
 def build_workout_summary_progression_lookup_runtime(
     *,
     planned_session: dict[str, Any] | None,
 ) -> dict[str, Any]:
-    session = _coerce_dict(planned_session)
-    primary_exercise_ids: list[str] = []
-    seen: set[str] = set()
-    for exercise in session.get("exercises") or []:
-        if not isinstance(exercise, dict):
-            continue
-        normalized = str(exercise.get("primary_exercise_id") or exercise.get("id") or "")
-        if not normalized or normalized in seen:
-            continue
-        seen.add(normalized)
-        primary_exercise_ids.append(normalized)
+    from .decision_workout_session import build_workout_summary_progression_lookup_runtime as _impl
 
-    return {
-        "primary_exercise_ids": primary_exercise_ids,
-        "decision_trace": {
-            "interpreter": "build_workout_summary_progression_lookup_runtime",
-            "version": "v1",
-            "inputs": {
-                "planned_exercise_count": len(
-                    [exercise for exercise in session.get("exercises") or [] if isinstance(exercise, dict)]
-                ),
-            },
-            "outcome": {
-                "primary_exercise_id_count": len(primary_exercise_ids),
-            },
-        },
-    }
+    return _impl(planned_session=planned_session)
 
 
 def build_workout_today_progression_lookup_runtime(
     *,
     session_states: list[Any],
 ) -> dict[str, Any]:
-    primary_exercise_ids: list[str] = []
-    seen: set[str] = set()
-    for row in session_states:
-        normalized = str(_read_attr(row, "primary_exercise_id") or "")
-        if not normalized or normalized in seen:
-            continue
-        seen.add(normalized)
-        primary_exercise_ids.append(normalized)
+    from .decision_workout_session import build_workout_today_progression_lookup_runtime as _impl
 
-    return {
-        "primary_exercise_ids": primary_exercise_ids,
-        "decision_trace": {
-            "interpreter": "build_workout_today_progression_lookup_runtime",
-            "version": "v1",
-            "inputs": {
-                "session_state_count": len(session_states),
-            },
-            "outcome": {
-                "primary_exercise_id_count": len(primary_exercise_ids),
-            },
-        },
-    }
+    return _impl(session_states=session_states)
 
 
 def build_workout_today_session_state_payloads(
@@ -1376,41 +822,15 @@ def build_workout_today_session_state_payloads(
     equipment_profile: list[str] | None,
     rule_set: dict[str, Any] | None,
 ) -> list[dict[str, Any]]:
-    planned_exercise_by_id = {
-        str(_coerce_dict(exercise).get("id") or ""): _coerce_dict(exercise)
-        for exercise in planned_session.get("exercises") or []
-        if str(_coerce_dict(exercise).get("id") or "")
-    }
-    progression_state_by_exercise = {
-        str(_read_attr(row, "exercise_id") or ""): row
-        for row in progression_states
-        if str(_read_attr(row, "exercise_id") or "")
-    }
+    from .decision_workout_session import build_workout_today_session_state_payloads as _impl
 
-    payloads: list[dict[str, Any]] = []
-    for row in session_states:
-        exercise_id = str(_read_attr(row, "exercise_id") or "")
-        primary_exercise_id = str(_read_attr(row, "primary_exercise_id") or "")
-        substitution_recommendation = build_repeat_failure_substitution_payload(
-            planned_exercise=planned_exercise_by_id.get(exercise_id),
-            exercise_state=progression_state_by_exercise.get(primary_exercise_id),
-            equipment_profile=equipment_profile,
-            rule_set=rule_set,
-        )
-        payloads.append(
-            {
-                "exercise_id": exercise_id,
-                "completed_sets": int(_read_attr(row, "completed_sets") or 0),
-                "remaining_sets": int(_read_attr(row, "remaining_sets") or 0),
-                "recommended_reps_min": int(_read_attr(row, "recommended_reps_min") or 0),
-                "recommended_reps_max": int(_read_attr(row, "recommended_reps_max") or 0),
-                "recommended_weight": float(_read_attr(row, "recommended_weight") or 0),
-                "last_guidance": str(_read_attr(row, "last_guidance") or ""),
-                "substitution_recommendation": substitution_recommendation,
-            }
-        )
-
-    return payloads
+    return _impl(
+        session_states=session_states,
+        planned_session=planned_session,
+        progression_states=progression_states,
+        equipment_profile=equipment_profile,
+        rule_set=rule_set,
+    )
 
 
 def resolve_latest_logged_workout_resume_state(
@@ -1602,6 +1022,7 @@ def build_weekly_review_decision_payload(
     calories: int,
     protein: int,
     adherence_score: int,
+    readiness_state: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     return _build_weekly_review_decision_payload(
         summary=summary,
@@ -1609,6 +1030,7 @@ def build_weekly_review_decision_payload(
         calories=calories,
         protein=protein,
         adherence_score=adherence_score,
+        readiness_state=readiness_state,
     )
 
 
@@ -1717,6 +1139,9 @@ def build_profile_upsert_persistence_payload(
     weak_areas: list[str] | None,
     onboarding_answers: dict[str, Any] | None,
     days_available: int,
+    session_time_budget_minutes: int | None,
+    movement_restrictions: list[str] | None,
+    near_failure_tolerance: str | None,
     nutrition_phase: str,
     calories: int,
     protein: int,
@@ -1735,6 +1160,9 @@ def build_profile_upsert_persistence_payload(
         "weak_areas": list(weak_areas or []),
         "onboarding_answers": deepcopy(onboarding_answers) if isinstance(onboarding_answers, dict) else None,
         "days_available": days_available,
+        "session_time_budget_minutes": session_time_budget_minutes,
+        "movement_restrictions": list(movement_restrictions or []),
+        "near_failure_tolerance": near_failure_tolerance,
         "nutrition_phase": nutrition_phase,
         "calories": calories,
         "protein": protein,
@@ -1757,6 +1185,9 @@ def build_profile_response_payload(
     weak_areas: list[str] | None,
     onboarding_answers: dict[str, Any] | None,
     days_available: int | None,
+    session_time_budget_minutes: int | None,
+    movement_restrictions: list[str] | None,
+    near_failure_tolerance: str | None,
     nutrition_phase: str | None,
     calories: int | None,
     protein: int | None,
@@ -1776,6 +1207,9 @@ def build_profile_response_payload(
         "weak_areas": list(weak_areas or []),
         "onboarding_answers": deepcopy(onboarding_answers) if isinstance(onboarding_answers, dict) else {},
         "days_available": days_available or 2,
+        "session_time_budget_minutes": session_time_budget_minutes,
+        "movement_restrictions": list(movement_restrictions or []),
+        "near_failure_tolerance": near_failure_tolerance,
         "nutrition_phase": nutrition_phase or "maintenance",
         "calories": calories or 0,
         "protein": protein or 0,
@@ -1803,12 +1237,18 @@ def build_weekly_checkin_persistence_payload(
     week_start: date,
     body_weight: float,
     adherence_score: int,
+    sleep_quality: int | None,
+    stress_level: int | None,
+    pain_flags: list[str] | None,
     notes: str | None,
 ) -> dict[str, Any]:
     return {
         "week_start": week_start,
         "body_weight": body_weight,
         "adherence_score": adherence_score,
+        "sleep_quality": sleep_quality,
+        "stress_level": stress_level,
+        "pain_flags": list(pain_flags or []),
         "notes": notes,
     }
 
@@ -1953,22 +1393,13 @@ def build_workout_performance_summary(
     progression_states: list[Any],
     rule_set: dict[str, Any] | None,
 ) -> dict[str, Any]:
-    logs_by_exercise = group_workout_logs_by_exercise(
-        performed_logs=[_serialize_workout_summary_log_row(row) for row in performed_logs]
-    )
-    next_working_weight_by_exercise = _progression_weight_by_exercise(progression_states)
-    exercise_summaries, planned_total, completed_total = _build_workout_summary_exercise_summaries(
-        planned_session=planned_session,
-        logs_by_exercise=logs_by_exercise,
-        next_working_weight_by_exercise=next_working_weight_by_exercise,
-        rule_set=rule_set,
-    )
+    from .decision_workout_session import build_workout_performance_summary as _impl
 
-    return build_workout_summary_payload(
+    return _impl(
         workout_id=workout_id,
-        completed_total=completed_total,
-        planned_total=planned_total,
-        exercise_summaries=exercise_summaries,
+        planned_session=planned_session,
+        performed_logs=performed_logs,
+        progression_states=progression_states,
         rule_set=rule_set,
     )
 
@@ -1981,23 +1412,15 @@ def build_workout_summary_payload(
     exercise_summaries: list[dict[str, Any]],
     rule_set: dict[str, Any] | None,
 ) -> dict[str, Any]:
-    overall_summary = summarize_workout_session_guidance(
+    from .decision_workout_session import build_workout_summary_payload as _impl
+
+    return _impl(
         workout_id=workout_id,
         completed_total=completed_total,
         planned_total=planned_total,
         exercise_summaries=exercise_summaries,
         rule_set=rule_set,
     )
-    return {
-        "workout_id": workout_id,
-        "completed_total": completed_total,
-        "planned_total": planned_total,
-        "percent_complete": int(overall_summary["percent_complete"]),
-        "overall_guidance": str(overall_summary["overall_guidance"]),
-        "overall_rationale": str(overall_summary["overall_rationale"]),
-        "decision_trace": dict(overall_summary["decision_trace"]),
-        "exercises": exercise_summaries,
-    }
 
 
 def build_workout_today_state_payloads(
@@ -2006,29 +1429,13 @@ def build_workout_today_state_payloads(
     completed_sets_by_exercise: dict[str, int],
     rule_set: dict[str, Any] | None,
 ) -> dict[str, Any]:
-    merged_completed_sets = dict(completed_sets_by_exercise)
-    live_recommendations_by_exercise: dict[str, dict[str, Any]] = {}
+    from .decision_workout_session import build_workout_today_state_payloads as _impl
 
-    for state in session_states:
-        exercise_id = str(state.get("exercise_id") or "")
-        if not exercise_id:
-            continue
-        merged_completed_sets[exercise_id] = int(state.get("completed_sets") or 0)
-        live_recommendations_by_exercise[exercise_id] = hydrate_live_workout_recommendation(
-            completed_sets=int(state.get("completed_sets") or 0),
-            remaining_sets=int(state.get("remaining_sets") or 0),
-            recommended_reps_min=int(state.get("recommended_reps_min") or 0),
-            recommended_reps_max=int(state.get("recommended_reps_max") or 0),
-            recommended_weight=float(state.get("recommended_weight") or 0),
-            guidance=str(state.get("last_guidance") or ""),
-            substitution_recommendation=_coerce_dict(state.get("substitution_recommendation")) or None,
-            rule_set=rule_set,
-        )
-
-    return {
-        "completed_sets_by_exercise": merged_completed_sets,
-        "live_recommendations_by_exercise": live_recommendations_by_exercise,
-    }
+    return _impl(
+        session_states=session_states,
+        completed_sets_by_exercise=completed_sets_by_exercise,
+        rule_set=rule_set,
+    )
 
 
 def build_workout_today_payload(
@@ -2041,28 +1448,17 @@ def build_workout_today_payload(
     resume_selected: bool,
     daily_quote: dict[str, Any],
 ) -> dict[str, Any]:
-    payload = dict(selected_session)
-    exercises: list[dict[str, Any]] = []
+    from .decision_workout_session import build_workout_today_payload as _impl
 
-    for raw_exercise in selected_session.get("exercises") or []:
-        exercise = dict(_coerce_dict(raw_exercise))
-        exercise_id = str(exercise.get("id") or "")
-        recommended_weight = float(exercise.get("recommended_working_weight", 20) or 20)
-        exercise["warmups"] = compute_warmups(recommended_weight, 3)
-        exercise["completed_sets"] = int(completed_sets_by_exercise.get(exercise_id, 0) or 0)
-
-        live_recommendation = live_recommendations_by_exercise.get(exercise_id)
-        if isinstance(live_recommendation, dict):
-            exercise["live_recommendation"] = dict(live_recommendation)
-
-        exercises.append(exercise)
-
-    payload["exercises"] = exercises
-    payload["mesocycle"] = _coerce_dict(mesocycle) if mesocycle is not None else mesocycle
-    payload["deload"] = _coerce_dict(deload) if deload is not None else deload
-    payload["resume"] = resume_selected
-    payload["daily_quote"] = dict(_coerce_dict(daily_quote))
-    return payload
+    return _impl(
+        selected_session=selected_session,
+        mesocycle=mesocycle,
+        deload=deload,
+        completed_sets_by_exercise=completed_sets_by_exercise,
+        live_recommendations_by_exercise=live_recommendations_by_exercise,
+        resume_selected=resume_selected,
+        daily_quote=daily_quote,
+    )
 
 
 def summarize_workout_exercise_performance(
@@ -2072,76 +1468,14 @@ def summarize_workout_exercise_performance(
     next_working_weight: float,
     rule_set: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    exercise_id = str(exercise.get("id") or "")
-    planned_sets = int(exercise.get("sets", 3) or 3)
-    rep_range = exercise.get("rep_range") or [8, 12]
-    planned_min = int(rep_range[0]) if len(rep_range) > 0 else 8
-    planned_max = int(rep_range[1]) if len(rep_range) > 1 else planned_min
-    if planned_min > planned_max:
-        planned_min, planned_max = planned_max, planned_min
-    planned_weight = float(exercise.get("recommended_working_weight", 0) or 0)
+    from .decision_workout_session import summarize_workout_exercise_performance as _impl
 
-    performed_sets = len(performed_logs)
-    if performed_logs:
-        average_reps = sum(float(row.get("reps", 0) or 0) for row in performed_logs) / performed_sets
-        average_weight = sum(float(row.get("weight", 0) or 0) for row in performed_logs) / performed_sets
-    else:
-        average_reps = 0.0
-        average_weight = 0.0
-
-    completion_pct = int((performed_sets / max(planned_sets, 1)) * 100)
-    rep_target_mid = (planned_min + planned_max) / 2
-    rep_delta = round(average_reps - rep_target_mid, 2) if performed_sets else round(-rep_target_mid, 2)
-    weight_delta = round(average_weight - planned_weight, 2) if performed_sets else round(-planned_weight, 2)
-    guidance = _resolve_workout_summary_guidance(performed_sets, planned_sets, average_reps, planned_min, planned_max)
-    guidance_rationale = _workout_guidance_rationale(guidance, rule_set=rule_set)
-    decision_trace = {
-        "interpreter": "summarize_workout_exercise_performance",
-        "version": "v1",
-        "inputs": {
-            "exercise_id": exercise_id,
-            "planned_sets": planned_sets,
-            "planned_reps_min": planned_min,
-            "planned_reps_max": planned_max,
-            "planned_weight": planned_weight,
-            "performed_set_count": performed_sets,
-        },
-        "steps": [
-            {
-                "decision": "exercise_summary_guidance",
-                "result": {
-                    "guidance": guidance,
-                    "completion_pct": completion_pct,
-                    "average_reps": round(average_reps, 2),
-                    "average_weight": round(average_weight, 2),
-                },
-            }
-        ],
-        "outcome": {
-            "guidance": guidance,
-            "guidance_rationale": guidance_rationale,
-            "next_working_weight": round(next_working_weight, 2),
-        },
-    }
-    return {
-        "exercise_id": exercise_id,
-        "primary_exercise_id": exercise.get("primary_exercise_id"),
-        "name": str(exercise.get("name") or exercise_id),
-        "planned_sets": planned_sets,
-        "planned_reps_min": planned_min,
-        "planned_reps_max": planned_max,
-        "planned_weight": planned_weight,
-        "performed_sets": performed_sets,
-        "average_performed_reps": round(average_reps, 2),
-        "average_performed_weight": round(average_weight, 2),
-        "completion_pct": completion_pct,
-        "rep_delta": rep_delta,
-        "weight_delta": weight_delta,
-        "next_working_weight": round(next_working_weight, 2),
-        "guidance": guidance,
-        "guidance_rationale": guidance_rationale,
-        "decision_trace": decision_trace,
-    }
+    return _impl(
+        exercise=exercise,
+        performed_logs=performed_logs,
+        next_working_weight=next_working_weight,
+        rule_set=rule_set,
+    )
 
 
 def summarize_workout_session_guidance(
@@ -2152,41 +1486,13 @@ def summarize_workout_session_guidance(
     exercise_summaries: list[dict[str, Any]],
     rule_set: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    percent_complete = int((completed_total / max(planned_total, 1)) * 100)
-    overall_guidance = _resolve_workout_overall_guidance(percent_complete, exercise_summaries)
-    overall_rationale = _workout_guidance_rationale(overall_guidance, rule_set=rule_set)
-    decision_trace = {
-        "interpreter": "summarize_workout_session_guidance",
-        "version": "v1",
-        "inputs": {
-            "workout_id": workout_id,
-            "completed_total": completed_total,
-            "planned_total": planned_total,
-            "exercise_count": len(exercise_summaries),
-        },
-        "steps": [
-            {
-                "decision": "overall_summary_guidance",
-                "result": {
-                    "percent_complete": percent_complete,
-                    "exercise_guidance": [str(item.get("guidance") or "") for item in exercise_summaries],
-                },
-            }
-        ],
-        "outcome": {
-            "overall_guidance": overall_guidance,
-            "overall_rationale": overall_rationale,
-        },
-    }
-    return {
-        "workout_id": workout_id,
-        "completed_total": completed_total,
-        "planned_total": planned_total,
-        "percent_complete": percent_complete,
-        "overall_guidance": overall_guidance,
-        "overall_rationale": overall_rationale,
-        "decision_trace": decision_trace,
-    }
+    return _summarize_workout_session_guidance(
+        workout_id=workout_id,
+        completed_total=completed_total,
+        planned_total=planned_total,
+        exercise_summaries=exercise_summaries,
+        rule_set=rule_set,
+    )
 
 
 def _muscle_set_delta(
@@ -3830,77 +3136,17 @@ def recommend_specialization_adjustments(
     max_focus_muscles: int = 2,
     target_min_sets: int = 8,
 ) -> dict[str, Any]:
-    normalized_lagging = {
-        muscle.strip().lower()
-        for muscle in lagging_muscles
-        if muscle and muscle.strip().lower() in weekly_volume_by_muscle
-    }
-    ranked_focus = sorted(
-        normalized_lagging,
-        key=lambda muscle: (int(weekly_volume_by_muscle.get(muscle, 0)), muscle),
-    )[: max(1, int(max_focus_muscles))]
+    from .decision_coach_preview import recommend_specialization_adjustments as _recommend_specialization_adjustments
 
-    focus_adjustments: dict[str, int] = {}
-    for muscle in ranked_focus:
-        current_sets = int(weekly_volume_by_muscle.get(muscle, 0))
-        focus_adjustments[muscle] = 2 if current_sets < target_min_sets else 1
-
-    total_added_sets = sum(focus_adjustments.values())
-    donor_candidates = sorted(
-        [
-            (muscle, int(sets))
-            for muscle, sets in weekly_volume_by_muscle.items()
-            if muscle not in ranked_focus and int(sets) > target_min_sets
-        ],
-        key=lambda row: (-row[1], row[0]),
+    return _recommend_specialization_adjustments(
+        weekly_volume_by_muscle=weekly_volume_by_muscle,
+        lagging_muscles=lagging_muscles,
+        max_focus_muscles=max_focus_muscles,
+        target_min_sets=target_min_sets,
     )
-
-    donor_adjustments: dict[str, int] = {}
-    remaining = total_added_sets
-    for donor, sets in donor_candidates:
-        if remaining <= 0:
-            break
-        allowed_drop = min(1, sets - target_min_sets)
-        if allowed_drop <= 0:
-            continue
-        donor_adjustments[donor] = -allowed_drop
-        remaining -= allowed_drop
-
-    return {
-        "focus_muscles": ranked_focus,
-        "focus_adjustments": focus_adjustments,
-        "donor_adjustments": donor_adjustments,
-        "uncompensated_added_sets": max(0, remaining),
-    }
 
 
 def summarize_program_media_and_warmups(program_template: dict[str, Any]) -> dict[str, Any]:
-    exercises: list[dict[str, Any]] = []
-    for session in program_template.get("sessions", []):
-        exercises.extend(session.get("exercises", []))
+    from .decision_coach_preview import summarize_program_media_and_warmups as _summarize_program_media_and_warmups
 
-    total_exercises = len(exercises)
-    with_video = 0
-    sample_warmups: list[dict[str, Any]] = []
-
-    for exercise in exercises:
-        video = exercise.get("video") if isinstance(exercise.get("video"), dict) else {}
-        if isinstance(video, dict) and str(video.get("youtube_url") or "").strip():
-            with_video += 1
-
-        start_weight = float(exercise.get("start_weight") or 0)
-        if start_weight > 0 and len(sample_warmups) < 3:
-            sample_warmups.append(
-                {
-                    "exercise_id": str(exercise.get("id") or ""),
-                    "warmups": compute_warmups(start_weight),
-                }
-            )
-
-    coverage_pct = round((with_video / total_exercises) * 100, 1) if total_exercises else 0.0
-    return {
-        "total_exercises": total_exercises,
-        "video_linked_exercises": with_video,
-        "video_coverage_pct": coverage_pct,
-        "sample_warmups": sample_warmups,
-    }
+    return _summarize_program_media_and_warmups(program_template)

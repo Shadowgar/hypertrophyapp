@@ -76,6 +76,7 @@ from core_engine.intelligence import (
     build_workout_progress_payload,
     evaluate_schedule_adaptation,
     extract_coaching_recommendation_focus_muscles,
+    derive_readiness_score,
     humanize_program_reason,
     recommend_phase_transition,
     recommend_program_selection,
@@ -653,6 +654,20 @@ def test_build_weekly_review_decision_payload_wraps_interpreter_output() -> None
     assert "storage_adjustments" in decision_payload
 
 
+def test_derive_readiness_score_supports_readiness_state_inputs() -> None:
+    readiness = derive_readiness_score(
+        completion_pct=70,
+        adherence_score=4,
+        soreness_level="none",
+        progression_action="hold",
+        sleep_quality=2,
+        stress_level=4,
+        pain_flags=["elbow_flexion"],
+    )
+
+    assert readiness == 50
+
+
 def test_build_weekly_review_decision_payload_does_not_alias_response_and_storage_data() -> None:
     decision_payload = build_weekly_review_decision_payload(
         summary={
@@ -793,9 +808,15 @@ def test_build_profile_upsert_persistence_payload_defaults_selected_program() ->
         protein=180,
         fat=70,
         carbs=260,
+        session_time_budget_minutes=75,
+        movement_restrictions=["deep_knee_flexion"],
+        near_failure_tolerance="moderate",
     )
     assert payload["selected_program_id"] == "full_body_v1"
     assert payload["onboarding_answers"] == {"primary_goal": "build_muscle"}
+    assert payload["session_time_budget_minutes"] == 75
+    assert payload["movement_restrictions"] == ["deep_knee_flexion"]
+    assert payload["near_failure_tolerance"] == "moderate"
 
 
 def test_build_profile_response_payload_applies_profile_defaults() -> None:
@@ -817,6 +838,9 @@ def test_build_profile_response_payload_applies_profile_defaults() -> None:
         protein=None,
         fat=None,
         carbs=None,
+        session_time_budget_minutes=None,
+        movement_restrictions=None,
+        near_failure_tolerance=None,
     )
     assert payload["email"] == "coach@example.com"
     assert payload["selected_program_id"] == "full_body_v1"
@@ -824,6 +848,9 @@ def test_build_profile_response_payload_applies_profile_defaults() -> None:
     assert payload["nutrition_phase"] == "maintenance"
     assert payload["equipment_profile"] == []
     assert payload["onboarding_answers"] == {}
+    assert payload["movement_restrictions"] == []
+    assert payload["session_time_budget_minutes"] is None
+    assert payload["near_failure_tolerance"] is None
 
 
 def test_build_frequency_adaptation_persistence_state_copies_dict() -> None:

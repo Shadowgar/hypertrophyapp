@@ -127,6 +127,234 @@ def test_generate_week_plan_threads_substitution_rules_into_equipment_swap_polic
     assert exercise["substitution_decision_trace"]["outcome"]["auto_substituted"] is True
 
 
+def test_generate_week_plan_auto_substitutes_after_repeat_failure_threshold() -> None:
+    template = {
+        "id": "repeat_failure_generation_test",
+        "sessions": [
+            {
+                "name": "A",
+                "exercises": [
+                    {
+                        "id": "db_press",
+                        "name": "DB Press",
+                        "equipment_tags": ["dumbbell"],
+                        "substitution_candidates": ["DB Floor Press"],
+                    }
+                ],
+            }
+        ],
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=2,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+        available_equipment=["dumbbell"],
+        progression_state_per_exercise=[
+            {
+                "exercise_id": "db_press",
+                "consecutive_under_target_exposures": 3,
+                "last_progression_action": "hold",
+            }
+        ],
+        rule_set={
+            "substitution_rules": {
+                "repeat_failure_trigger": "switch_after_three_failed_exposures",
+            }
+        },
+    )
+
+    exercise = plan["sessions"][0]["exercises"][0]
+    assert exercise["id"] == "db_floor_press"
+    assert exercise["name"] == "DB Floor Press"
+    assert exercise["primary_exercise_id"] == "db_press"
+    assert exercise["repeat_failure_substitution"]["recommended_name"] == "DB Floor Press"
+    assert exercise["repeat_failure_substitution"]["failed_exposure_count"] == 3
+    assert exercise["repeat_failure_substitution"]["decision_trace"]["interpreter"] == "resolve_repeat_failure_substitution"
+
+
+def test_generate_week_plan_applies_exercise_recovery_pressure_from_progression_state() -> None:
+    template = {
+        "id": "exercise_recovery_pressure_test",
+        "sessions": [
+            {
+                "name": "A",
+                "exercises": [
+                    {
+                        "id": "incline_press",
+                        "name": "Incline DB Press",
+                        "sets": 4,
+                        "start_weight": 100,
+                        "substitution_candidates": ["Machine Incline Press", "DB Floor Press"],
+                    }
+                ],
+            }
+        ],
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=2,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+        available_equipment=["machine", "dumbbell"],
+        progression_state_per_exercise=[
+            {
+                "exercise_id": "incline_press",
+                "consecutive_under_target_exposures": 2,
+                "last_progression_action": "reduce_load",
+                "fatigue_score": 0.85,
+            }
+        ],
+    )
+
+    exercise = plan["sessions"][0]["exercises"][0]
+    assert exercise["sets"] == 3
+    assert exercise["recommended_working_weight"] == 95.0
+    assert exercise["substitution_pressure"] == "high"
+    assert exercise["substitution_guidance"] == "prefer_compatible_variants_if_recovery_constraints_persist"
+    assert exercise["repeat_failure_substitution"] is None
+
+
+def test_generate_week_plan_limits_session_exercises_for_low_time_budget() -> None:
+    template = {
+        "id": "time_budget_generation_test",
+        "sessions": [
+            {
+                "name": "A",
+                "exercises": [{"id": f"lift_{idx}", "name": f"Lift {idx}", "sets": 3} for idx in range(1, 7)],
+            }
+        ],
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=2,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+        session_time_budget_minutes=30,
+    )
+
+    exercises = plan["sessions"][0]["exercises"]
+    assert [exercise["id"] for exercise in exercises] == ["lift_1", "lift_2", "lift_3"]
+
+
+def test_generate_week_plan_preserves_weak_point_slots_when_time_budget_caps_session() -> None:
+    template = {
+        "id": "time_budget_weak_point_preservation",
+        "sessions": [
+            {
+                "name": "A",
+                "exercises": [
+                    {"id": "bench", "name": "Bench", "sets": 3, "slot_role": "primary_compound"},
+                    {"id": "row", "name": "Row", "sets": 3, "slot_role": "secondary_compound"},
+                    {"id": "curl", "name": "Curl", "sets": 2, "slot_role": "isolation"},
+                    {"id": "weak_chest", "name": "Weak Chest Fly", "sets": 2, "slot_role": "weak_point"},
+                    {"id": "pushdown", "name": "Pushdown", "sets": 2, "slot_role": "isolation"},
+                ],
+            }
+        ],
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=2,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+        session_time_budget_minutes=30,
+    )
+
+    exercises = plan["sessions"][0]["exercises"]
+    assert [exercise["id"] for exercise in exercises] == ["bench", "row", "weak_chest"]
+
+
+def test_generate_week_plan_preserves_weak_point_day_under_frequency_compression() -> None:
+    template = {
+        "id": "frequency_weak_point_preservation",
+        "sessions": [
+            {
+                "name": "Day A",
+                "exercises": [{"id": "bench", "name": "Bench", "slot_role": "primary_compound", "primary_muscles": ["chest"]}],
+            },
+            {
+                "name": "Day B",
+                "exercises": [{"id": "row", "name": "Row", "slot_role": "secondary_compound", "primary_muscles": ["back"]}],
+            },
+            {
+                "name": "Day C",
+                "exercises": [
+                    {"id": "weak_chest", "name": "Weak Chest Fly", "slot_role": "weak_point", "primary_muscles": ["chest"]},
+                    {"id": "weak_ham", "name": "Weak Ham Curl", "slot_role": "weak_point", "primary_muscles": ["hamstrings"]},
+                ],
+            },
+            {
+                "name": "Day D",
+                "exercises": [{"id": "rdl", "name": "RDL", "slot_role": "primary_compound", "primary_muscles": ["hamstrings"]}],
+            },
+        ],
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=2,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+    )
+
+    titles = [session["title"] for session in plan["sessions"]]
+    assert len(titles) == 2
+    assert "Day C" in titles
+
+
+def test_generate_week_plan_filters_restricted_movement_patterns() -> None:
+    template = {
+        "id": "movement_restriction_generation_test",
+        "sessions": [
+            {
+                "name": "A",
+                "exercises": [
+                    {
+                        "id": "ohp",
+                        "name": "Overhead Press",
+                        "sets": 3,
+                        "movement_pattern": "vertical_press",
+                    },
+                    {
+                        "id": "row",
+                        "name": "Chest Supported Row",
+                        "sets": 3,
+                        "movement_pattern": "horizontal_pull",
+                    },
+                ],
+            }
+        ],
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=2,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+        movement_restrictions=["overhead_pressing"],
+    )
+
+    exercises = plan["sessions"][0]["exercises"]
+    assert [exercise["id"] for exercise in exercises] == ["row"]
+
+
 def test_generate_week_plan_compresses_sessions_evenly_for_two_days() -> None:
     template = {
         "id": "compression_two_day",
@@ -380,6 +608,52 @@ def test_generate_week_plan_mild_soreness_does_not_change_weight() -> None:
     assert plan["sessions"][0]["exercises"][0]["recommended_working_weight"] == pytest.approx(32.5)
 
 
+def test_generate_week_plan_uses_sfr_for_early_recovery_deload_and_substitution_pressure() -> None:
+    template = {
+        "id": "sfr_recovery_deload_test",
+        "deload": {"trigger_weeks": 6, "set_reduction_pct": 35, "load_reduction_pct": 10},
+        "sessions": [
+            {
+                "name": "Session A",
+                "exercises": [
+                    {
+                        "id": "press",
+                        "name": "DB Press",
+                        "sets": 4,
+                        "start_weight": 50,
+                        "primary_muscles": ["chest", "triceps"],
+                        "substitution_candidates": ["Machine Press"],
+                    }
+                ],
+            }
+        ],
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=2,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+        stimulus_fatigue_response={
+            "stimulus_quality": "low",
+            "fatigue_cost": "high",
+            "recoverability": "low",
+            "progression_eligibility": False,
+            "deload_pressure": "high",
+            "substitution_pressure": "high",
+        },
+    )
+
+    assert plan["mesocycle"]["is_deload_week"] is True
+    assert plan["mesocycle"]["deload_reason"] == "early_sfr_recovery"
+    exercise = plan["sessions"][0]["exercises"][0]
+    assert exercise["sets"] == 3
+    assert exercise["substitution_pressure"] == "high"
+    assert exercise["substitution_guidance"] == "prefer_compatible_variants_if_recovery_constraints_persist"
+
+
 def test_generate_week_plan_tracks_weekly_volume_and_coverage() -> None:
     template = {
         "id": "volume_tracking_test",
@@ -497,6 +771,310 @@ def test_generate_week_plan_applies_scheduled_deload_at_trigger_week() -> None:
     assert plan["deload"]["active"] is True
     assert ex["sets"] == 3
     assert ex["recommended_working_weight"] == pytest.approx(90.0)
+
+
+def test_generate_week_plan_applies_authored_deload_week() -> None:
+    template = {
+        "id": "authored_deload_test",
+        "deload": {"trigger_weeks": 6, "set_reduction_pct": 40, "load_reduction_pct": 10},
+        "sessions": [
+            {
+                "name": "Week 1 A",
+                "exercises": [
+                    {
+                        "id": "bench",
+                        "name": "Bench Press",
+                        "sets": 5,
+                        "start_weight": 100,
+                        "primary_muscles": ["chest"],
+                    }
+                ],
+            }
+        ],
+        "authored_weeks": [
+            {
+                "week_index": 1,
+                "sessions": [
+                    {
+                        "name": "Week 1 A",
+                        "exercises": [
+                            {
+                                "id": "bench",
+                                "name": "Bench Press",
+                                "sets": 5,
+                                "start_weight": 100,
+                                "primary_muscles": ["chest"],
+                            }
+                        ],
+                    }
+                ],
+            },
+            {
+                "week_index": 4,
+                "week_role": "deload",
+                "sessions": [
+                    {
+                        "name": "Week 4 Deload",
+                        "exercises": [
+                            {
+                                "id": "bench",
+                                "name": "Bench Press",
+                                "sets": 5,
+                                "start_weight": 100,
+                                "primary_muscles": ["chest"],
+                            }
+                        ],
+                    }
+                ],
+            },
+        ],
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=2,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+        prior_generated_weeks=3,
+    )
+
+    ex = plan["sessions"][0]["exercises"][0]
+    assert plan["mesocycle"]["is_deload_week"] is True
+    assert plan["mesocycle"]["deload_reason"] == "authored_deload"
+    assert plan["mesocycle"]["authored_week_index"] == 4
+    assert plan["mesocycle"]["authored_week_role"] == "deload"
+    assert plan["deload"]["active"] is True
+    assert ex["sets"] == 3
+    assert ex["recommended_working_weight"] == pytest.approx(90.0)
+
+
+def test_generate_week_plan_prefers_authored_deload_reason_when_scheduled_and_authored_overlap() -> None:
+    template = {
+        "id": "authored_deload_overlap_test",
+        "deload": {"trigger_weeks": 6, "set_reduction_pct": 40, "load_reduction_pct": 10},
+        "sessions": [
+            {
+                "name": "Week 1 A",
+                "exercises": [
+                    {
+                        "id": "bench",
+                        "name": "Bench Press",
+                        "sets": 5,
+                        "start_weight": 100,
+                        "primary_muscles": ["chest"],
+                    }
+                ],
+            }
+        ],
+        "authored_weeks": [
+            {
+                "week_index": 1,
+                "week_role": "accumulation",
+                "sessions": [
+                    {
+                        "name": "Week 1 A",
+                        "exercises": [
+                            {
+                                "id": "bench",
+                                "name": "Bench Press",
+                                "sets": 5,
+                                "start_weight": 100,
+                                "primary_muscles": ["chest"],
+                            }
+                        ],
+                    }
+                ],
+            },
+            {
+                "week_index": 6,
+                "week_role": "deload",
+                "sessions": [
+                    {
+                        "name": "Week 6 Deload",
+                        "exercises": [
+                            {
+                                "id": "bench",
+                                "name": "Bench Press",
+                                "sets": 5,
+                                "start_weight": 100,
+                                "primary_muscles": ["chest"],
+                            }
+                        ],
+                    }
+                ],
+            },
+        ],
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=2,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+        prior_generated_weeks=5,
+    )
+
+    assert plan["mesocycle"]["is_deload_week"] is True
+    assert plan["mesocycle"]["deload_reason"] == "authored_deload"
+    assert plan["mesocycle"]["authored_week_role"] == "deload"
+
+
+def test_generate_week_plan_marks_authored_sequence_complete_after_last_authored_week() -> None:
+    template = {
+        "id": "authored_sequence_complete_test",
+        "deload": {"trigger_weeks": 6, "set_reduction_pct": 35, "load_reduction_pct": 10},
+        "sessions": [
+            {
+                "name": "Week 1 A",
+                "exercises": [
+                    {
+                        "id": "bench",
+                        "name": "Bench Press",
+                        "sets": 5,
+                        "start_weight": 100,
+                        "primary_muscles": ["chest"],
+                    }
+                ],
+            }
+        ],
+        "authored_weeks": [
+            {
+                "week_index": 1,
+                "week_role": "accumulation",
+                "sessions": [
+                    {
+                        "name": "Week 1 A",
+                        "exercises": [
+                            {
+                                "id": "bench",
+                                "name": "Bench Press",
+                                "sets": 5,
+                                "start_weight": 100,
+                                "primary_muscles": ["chest"],
+                            }
+                        ],
+                    }
+                ],
+            },
+            {
+                "week_index": 10,
+                "week_role": "intensification",
+                "sessions": [
+                    {
+                        "name": "Week 10 A",
+                        "exercises": [
+                            {
+                                "id": "bench",
+                                "name": "Bench Press",
+                                "sets": 4,
+                                "start_weight": 105,
+                                "primary_muscles": ["chest"],
+                            }
+                        ],
+                    }
+                ],
+            },
+        ],
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=2,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+        prior_generated_weeks=10,
+    )
+
+    assert plan["mesocycle"]["authored_week_index"] == 10
+    assert plan["mesocycle"]["authored_week_role"] == "intensification"
+    assert plan["mesocycle"]["authored_sequence_length"] == 2
+    assert plan["mesocycle"]["authored_sequence_complete"] is True
+    assert plan["mesocycle"]["phase_transition_pending"] is True
+    assert plan["mesocycle"]["phase_transition_reason"] == "authored_sequence_complete"
+    assert plan["mesocycle"]["post_authored_behavior"] == "hold_last_authored_week"
+
+
+def test_generate_week_plan_preserves_weak_point_arms_day_when_compressing_five_day_authored_source() -> None:
+    template = {
+        "id": "five_day_authored_test",
+        "deload": {"trigger_weeks": 6, "set_reduction_pct": 35, "load_reduction_pct": 10},
+        "sessions": [
+            {"name": "Full Body #1", "day_role": "full_body_1", "exercises": [{"id": "lat", "name": "Lat Pulldown", "sets": 3, "start_weight": 100, "slot_role": "primary_compound", "primary_muscles": ["back"]}]},
+            {"name": "Full Body #2", "day_role": "full_body_2", "exercises": [{"id": "rdl", "name": "RDL", "sets": 3, "start_weight": 100, "slot_role": "primary_compound", "primary_muscles": ["hamstrings"]}]},
+            {"name": "Full Body #3", "day_role": "full_body_3", "exercises": [{"id": "ohp", "name": "OHP", "sets": 3, "start_weight": 60, "slot_role": "primary_compound", "primary_muscles": ["shoulders"]}]},
+            {"name": "Full Body #4", "day_role": "full_body_4", "exercises": [{"id": "hack", "name": "Hack Squat", "sets": 3, "start_weight": 140, "slot_role": "primary_compound", "primary_muscles": ["quads"]}]},
+            {"name": "Arms & Weak Points", "day_role": "weak_point_arms", "exercises": [{"id": "weak_chest", "name": "Weak Chest Fly", "sets": 2, "start_weight": 30, "slot_role": "weak_point", "primary_muscles": ["chest"]}]},
+        ],
+        "authored_weeks": [
+            {
+                "week_index": 1,
+                "week_role": "accumulation",
+                "sessions": [
+                    {"name": "Full Body #1", "day_role": "full_body_1", "exercises": [{"id": "lat", "name": "Lat Pulldown", "sets": 3, "start_weight": 100, "slot_role": "primary_compound", "primary_muscles": ["back"]}]},
+                    {"name": "Full Body #2", "day_role": "full_body_2", "exercises": [{"id": "rdl", "name": "RDL", "sets": 3, "start_weight": 100, "slot_role": "primary_compound", "primary_muscles": ["hamstrings"]}]},
+                    {"name": "Full Body #3", "day_role": "full_body_3", "exercises": [{"id": "ohp", "name": "OHP", "sets": 3, "start_weight": 60, "slot_role": "primary_compound", "primary_muscles": ["shoulders"]}]},
+                    {"name": "Full Body #4", "day_role": "full_body_4", "exercises": [{"id": "hack", "name": "Hack Squat", "sets": 3, "start_weight": 140, "slot_role": "primary_compound", "primary_muscles": ["quads"]}]},
+                    {"name": "Arms & Weak Points", "day_role": "weak_point_arms", "exercises": [{"id": "weak_chest", "name": "Weak Chest Fly", "sets": 2, "start_weight": 30, "slot_role": "weak_point", "primary_muscles": ["chest"]}]},
+                ],
+            }
+        ],
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=4,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+        prior_generated_weeks=0,
+    )
+
+    assert any(session["title"] == "Arms & Weak Points" for session in plan["sessions"])
+
+
+def test_generate_week_plan_keeps_all_primary_compound_patterns_when_compressing_five_days_to_three() -> None:
+    template = {
+        "id": "five_day_primary_patterns_test",
+        "deload": {"trigger_weeks": 6, "set_reduction_pct": 35, "load_reduction_pct": 10},
+        "sessions": [],
+        "authored_weeks": [
+            {
+                "week_index": 1,
+                "week_role": "accumulation",
+                "sessions": [
+                    {"name": "Full Body #1", "day_role": "full_body_1", "exercises": [{"id": "lat", "name": "Lat Pulldown", "sets": 3, "start_weight": 100, "slot_role": "primary_compound", "primary_muscles": ["back"]}]},
+                    {"name": "Full Body #2", "day_role": "full_body_2", "exercises": [{"id": "rdl", "name": "RDL", "sets": 3, "start_weight": 100, "slot_role": "primary_compound", "primary_muscles": ["hamstrings"]}]},
+                    {"name": "Full Body #3", "day_role": "full_body_3", "exercises": [{"id": "ohp", "name": "OHP", "sets": 3, "start_weight": 60, "slot_role": "primary_compound", "primary_muscles": ["shoulders"]}]},
+                    {"name": "Full Body #4", "day_role": "full_body_4", "exercises": [{"id": "hack", "name": "Hack Squat", "sets": 3, "start_weight": 140, "slot_role": "primary_compound", "primary_muscles": ["quads"]}]},
+                    {"name": "Arms & Weak Points", "day_role": "weak_point_arms", "exercises": [{"id": "weak_chest", "name": "Weak Chest Fly", "sets": 2, "start_weight": 30, "slot_role": "weak_point", "primary_muscles": ["chest"]}]},
+                ],
+            }
+        ],
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=3,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+        prior_generated_weeks=0,
+    )
+
+    movement_patterns = {
+        exercise["id"]
+        for session in plan["sessions"]
+        for exercise in session["exercises"]
+    }
+    assert {"lat", "rdl", "ohp", "hack"}.issubset(movement_patterns)
 
 
 def test_generate_week_plan_applies_early_deload_trigger_from_soreness_or_adherence() -> None:

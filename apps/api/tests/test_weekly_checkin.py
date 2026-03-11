@@ -42,6 +42,9 @@ def test_weekly_checkin_accepts_valid_payload() -> None:
             "week_start": _current_monday().isoformat(),
             "body_weight": 82.5,
             "adherence_score": 4,
+            "sleep_quality": 2,
+            "stress_level": 4,
+            "pain_flags": ["elbow_flexion"],
             "notes": "Good week",
         },
     )

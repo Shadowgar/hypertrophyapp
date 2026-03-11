@@ -13,10 +13,12 @@ class CanonicalExercise(BaseModel):
     rep_range: list[int]
     start_weight: float = Field(ge=0)
     priority: str = "standard"
+    slot_role: str | None = None
     movement_pattern: str | None = None
     primary_muscles: list[str] = []
     equipment_tags: list[str] = []
     substitution_candidates: list[str] = []
+    substitution_metadata: dict[str, dict[str, object]] = {}
     notes: str | None = None
     video: VideoMetadata | None = None
 
@@ -32,8 +34,15 @@ class CanonicalExercise(BaseModel):
 
 class CanonicalSession(BaseModel):
     name: str
+    day_role: str | None = None
     day_offset: int | None = Field(default=None, ge=0, le=6)
     exercises: list[CanonicalExercise]
+
+
+class CanonicalAuthoredWeek(BaseModel):
+    week_index: int = Field(ge=1)
+    week_role: str | None = None
+    sessions: list[CanonicalSession]
 
 
 class DeloadConfig(BaseModel):
@@ -55,6 +64,7 @@ class CanonicalProgramTemplate(BaseModel):
     deload: DeloadConfig
     progression: ProgressionConfig
     sessions: list[CanonicalSession]
+    authored_weeks: list[CanonicalAuthoredWeek] = []
 
     @field_validator("days_supported")
     @classmethod

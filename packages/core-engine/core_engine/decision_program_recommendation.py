@@ -10,7 +10,7 @@ _PROGRAM_REASON_MESSAGES = {
     "low_adherence_keep_program": "Recent adherence is low. Keep the current program stable before rotating templates.",
     "days_adaptation_upgrade": "A different compatible template can preserve weekly coverage better at the current day availability.",
     "coverage_gap_rotate": "The latest plan left a coverage gap. Rotate to a compatible template with better distribution.",
-    "mesocycle_complete_rotate": "The current mesocycle appears complete. Rotate to a fresh compatible template.",
+    "mesocycle_complete_rotate": "The current authored mesocycle appears complete. Rotate to a fresh compatible template instead of extending the same block indefinitely.",
     "maintain_current_program": "The current program remains compatible and no stronger rotation signal is present.",
     "target_matches_current": "The requested program already matches the current selection.",
 }
@@ -147,6 +147,12 @@ def _rotate_for_program_mesocycle_completion(
     if not isinstance(mesocycle, dict):
         return None
 
+    if bool(mesocycle.get("authored_sequence_complete")) or bool(mesocycle.get("phase_transition_pending")):
+        index = compatible_program_ids.index(current_program_id)
+        next_index = (index + 1) % len(compatible_program_ids)
+        recommended = compatible_program_ids[next_index]
+        return recommended if recommended != current_program_id else None
+
     week_index = int(mesocycle.get("week_index", 1) or 1)
     trigger_weeks = int(mesocycle.get("trigger_weeks_effective", 6) or 6)
     if week_index < trigger_weeks:
@@ -211,7 +217,8 @@ def _resolve_program_recommendation_plan_context(
 
     week_index = program_state.get("week_index")
     trigger_weeks_effective = generation_state.get("mesocycle_trigger_weeks_effective")
-    if week_index is not None or trigger_weeks_effective is not None:
+    latest_mesocycle = _coerce_dict(generation_state.get("latest_mesocycle"))
+    if week_index is not None or trigger_weeks_effective is not None or latest_mesocycle:
         resolved_payload["mesocycle"] = {
             **_coerce_dict(resolved_payload.get("mesocycle")),
             **({"week_index": int(week_index)} if week_index is not None else {}),
@@ -220,6 +227,7 @@ def _resolve_program_recommendation_plan_context(
                 if trigger_weeks_effective is not None
                 else {}
             ),
+            **latest_mesocycle,
         }
         sources["mesocycle_context_source"] = "training_state"
 
@@ -274,6 +282,10 @@ def _program_selection_rotation_decision(
     latest_adherence_score: int | None,
     latest_plan_payload: dict[str, Any],
 ) -> tuple[str, str, list[dict[str, Any]]]:
+    mesocycle = latest_plan_payload.get("mesocycle") if isinstance(latest_plan_payload.get("mesocycle"), dict) else {}
+    explicit_mesocycle_complete = bool(
+        mesocycle.get("authored_sequence_complete") or mesocycle.get("phase_transition_pending")
+    )
     steps = [
         _decision_step("current_not_compatible", False),
         _decision_step(
@@ -282,6 +294,28 @@ def _program_selection_rotation_decision(
             {"latest_adherence_score": latest_adherence_score},
         ),
     ]
+
+    if explicit_mesocycle_complete:
+        rotated = _rotate_for_program_mesocycle_completion(
+            current_program_id,
+            compatible_program_ids,
+            latest_plan_payload,
+        )
+        steps.append(
+            _decision_step(
+                "mesocycle_complete_rotate",
+                bool(rotated),
+                {
+                    "candidate_program_id": rotated,
+                    "week_index": int(mesocycle.get("week_index", 1) or 1),
+                    "trigger_weeks_effective": int(mesocycle.get("trigger_weeks_effective", 6) or 6),
+                    "authored_sequence_complete": bool(mesocycle.get("authored_sequence_complete")),
+                    "phase_transition_pending": bool(mesocycle.get("phase_transition_pending")),
+                },
+            )
+        )
+        if rotated:
+            return "mesocycle_complete_rotate", rotated, steps
 
     rotated = _rotate_for_program_adaptation_upgrade(
         current_program_id=current_program_id,
@@ -323,7 +357,6 @@ def _program_selection_rotation_decision(
         compatible_program_ids,
         latest_plan_payload,
     )
-    mesocycle = latest_plan_payload.get("mesocycle") if isinstance(latest_plan_payload.get("mesocycle"), dict) else {}
     steps.append(
         _decision_step(
             "mesocycle_complete_rotate",
@@ -332,6 +365,8 @@ def _program_selection_rotation_decision(
                 "candidate_program_id": rotated,
                 "week_index": int(mesocycle.get("week_index", 1) or 1),
                 "trigger_weeks_effective": int(mesocycle.get("trigger_weeks_effective", 6) or 6),
+                "authored_sequence_complete": bool(mesocycle.get("authored_sequence_complete")),
+                "phase_transition_pending": bool(mesocycle.get("phase_transition_pending")),
             },
         )
     )

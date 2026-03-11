@@ -45,8 +45,12 @@ test("Week page coaching panel previews and auto-applies phase decision", async 
     },
     phase_transition: {
       next_phase: "accumulation",
-      reason: "continue_accumulation",
-      rationale: "Stay in accumulation. Current readiness and momentum do not justify a phase change yet.",
+      reason: "authored_sequence_complete",
+      rationale: "The authored mesocycle is complete. Rotate to a fresh next step.",
+      authored_sequence_complete: true,
+      transition_pending: true,
+      recommended_action: "rotate_program",
+      post_authored_behavior: "hold_last_authored_week",
     },
     specialization: {
       focus_muscles: ["biceps"],
@@ -123,9 +127,11 @@ test("Week page coaching panel previews and auto-applies phase decision", async 
   expect(
     screen.getByText(/Performance is stable but not yet strong enough to progress\. Hold the current load and accumulate cleaner work\./i),
   ).toBeInTheDocument();
-  expect(
-    screen.getByText(/Stay in accumulation\. Current readiness and momentum do not justify a phase change yet\./i),
-  ).toBeInTheDocument();
+  expect(screen.getByText(/Program Transition/i)).toBeInTheDocument();
+  expect(screen.getByText(/Current block complete/i)).toBeInTheDocument();
+  expect(screen.getByText(/Rotate program/i)).toBeInTheDocument();
+  expect(screen.getByText(/Holding the last authored week until a new program is selected\./i)).toBeInTheDocument();
+  expect(screen.getByText(/The authored mesocycle is complete\. Rotate to a fresh next step\./i)).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole("button", { name: /Apply phase decision/i }));
   await waitFor(() => {

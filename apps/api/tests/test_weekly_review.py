@@ -195,6 +195,57 @@ def test_submit_weekly_review_updates_profile_and_returns_adjustments() -> None:
     assert profile_payload["carbs"] == 280
 
 
+def test_submit_weekly_review_uses_canonical_readiness_state_from_latest_checkin() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_and_onboard(client)
+
+    week_start = _current_monday()
+    checkin_response = client.post(
+        "/weekly-checkin",
+        headers=headers,
+        json={
+            "week_start": week_start.isoformat(),
+            "body_weight": 82.0,
+            "adherence_score": 4,
+            "sleep_quality": 2,
+            "stress_level": 4,
+            "pain_flags": ["elbow_flexion"],
+            "notes": "recovering poorly",
+        },
+    )
+    assert checkin_response.status_code == 200
+
+    response = client.post(
+        "/weekly-review",
+        headers=headers,
+        json={
+            "body_weight": 80.0,
+            "calories": 2800,
+            "protein": 160,
+            "fat": 70,
+            "carbs": 320,
+            "adherence_score": 4,
+            "notes": "good sessions but poor recovery",
+        },
+    )
+    assert response.status_code == 200
+
+    payload = response.json()
+    readiness_step = next(
+        step for step in payload["decision_trace"]["steps"] if step["decision"] == "readiness_state_adjustments"
+    )
+
+    assert payload["readiness_score"] == 81
+    assert payload["global_guidance"] == "recovery_limited_reduce_load_and_complete_quality_volume"
+    assert readiness_step["result"]["source"] == "context_readiness_state"
+    assert [rule["rule"] for rule in readiness_step["result"]["matched_rules"]] == [
+        "low_sleep",
+        "high_stress",
+        "pain_flags_present",
+    ]
+
+
 def test_generate_week_uses_saved_weekly_review_adjustments() -> None:
     _reset_db()
     client = TestClient(app)
@@ -294,3 +345,70 @@ def test_weekly_review_weak_point_boost_is_bounded() -> None:
         assert decision_trace.get("interpreter") == "interpret_weekly_review_decision"
         assert caps.get("max_boosted_exercises") == 2
         assert caps.get("max_set_delta_per_exercise") == 1
+
+
+def test_weekly_review_sfr_bounds_adjustments_and_suppresses_positive_overrides() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_and_onboard(client)
+    _seed_previous_week_plan_and_logs_for_faults("weeklyreview@example.com")
+
+    week_start = _current_monday()
+    checkin_response = client.post(
+        "/weekly-checkin",
+        headers=headers,
+        json={
+            "week_start": week_start.isoformat(),
+            "body_weight": 82.0,
+            "adherence_score": 5,
+            "sleep_quality": 2,
+            "stress_level": 4,
+            "pain_flags": ["elbow_flexion"],
+            "notes": "recovery is constrained",
+        },
+    )
+    assert checkin_response.status_code == 200
+
+    response = client.post(
+        "/weekly-review",
+        headers=headers,
+        json={
+            "body_weight": 80.0,
+            "calories": 2500,
+            "protein": 150,
+            "fat": 70,
+            "carbs": 300,
+            "adherence_score": 5,
+            "notes": "performance looked good but recovery is poor",
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()
+
+    adjustments = payload["adjustments"]
+    overrides = adjustments["exercise_overrides"]
+    boosted = [item for item in overrides if int(item["set_delta"]) > 0]
+    sfr_adjustment_step = next(
+        step for step in payload["decision_trace"]["steps"] if step["decision"] == "stimulus_fatigue_adjustments"
+    )
+
+    assert payload["global_guidance"] == "recovery_limited_reduce_load_and_complete_quality_volume"
+    assert adjustments["global_set_delta"] == -1
+    assert math.isclose(float(adjustments["global_weight_scale"]), 0.95, rel_tol=1e-9, abs_tol=1e-9)
+    assert boosted == []
+    assert all(float(item["weight_scale"]) <= 1.0 for item in overrides)
+    assert all(item["rationale"] != "weak_point_bounded_extra_practice" for item in overrides)
+    assert sfr_adjustment_step["result"]["allow_positive_progression"] is False
+    assert sfr_adjustment_step["result"]["allow_weak_point_boost"] is False
+
+    monday = _review_week_start()
+    with SessionLocal() as session:
+        cycle = (
+            session.query(WeeklyReviewCycle)
+            .filter(WeeklyReviewCycle.week_start == monday)
+            .order_by(WeeklyReviewCycle.created_at.desc())
+            .first()
+        )
+        assert cycle is not None
+        stored = cycle.adjustments if isinstance(cycle.adjustments, dict) else {}
+        assert stored.get("weak_point_boosted_exercises") == []

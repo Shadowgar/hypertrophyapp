@@ -89,6 +89,15 @@ def _build_program_recommendation_training_state(
     )
     return build_plan_decision_training_state(
         selected_program_id=current_user.selected_program_id,
+        days_available=current_user.days_available,
+        split_preference=current_user.split_preference,
+        training_location=current_user.training_location,
+        equipment_profile=current_user.equipment_profile,
+        weak_areas=current_user.weak_areas,
+        nutrition_phase=current_user.nutrition_phase,
+        session_time_budget_minutes=current_user.session_time_budget_minutes,
+        movement_restrictions=current_user.movement_restrictions,
+        near_failure_tolerance=current_user.near_failure_tolerance,
         latest_plan=latest_plan,
         latest_soreness_entry=None,
         recent_workout_logs=[],
@@ -151,6 +160,9 @@ def get_profile(current_user: CurrentUser) -> ProfileResponse:
             weak_areas=current_user.weak_areas,
             onboarding_answers=current_user.onboarding_answers,
             days_available=current_user.days_available,
+            session_time_budget_minutes=current_user.session_time_budget_minutes,
+            movement_restrictions=current_user.movement_restrictions,
+            near_failure_tolerance=current_user.near_failure_tolerance,
             nutrition_phase=current_user.nutrition_phase,
             calories=current_user.calories,
             protein=current_user.protein,
@@ -203,6 +215,15 @@ def get_training_state(
 
     payload = build_user_training_state(
         selected_program_id=current_user.selected_program_id,
+        days_available=current_user.days_available,
+        split_preference=current_user.split_preference,
+        training_location=current_user.training_location,
+        equipment_profile=current_user.equipment_profile,
+        weak_areas=current_user.weak_areas,
+        nutrition_phase=current_user.nutrition_phase,
+        session_time_budget_minutes=current_user.session_time_budget_minutes,
+        movement_restrictions=current_user.movement_restrictions,
+        near_failure_tolerance=current_user.near_failure_tolerance,
         latest_plan=latest_plan,
         recent_workout_logs=recent_logs,
         exercise_states=exercise_states,
@@ -232,6 +253,9 @@ def upsert_profile(
         weak_areas=payload.weak_areas,
         onboarding_answers=payload.onboarding_answers,
         days_available=payload.days_available,
+        session_time_budget_minutes=payload.session_time_budget_minutes,
+        movement_restrictions=payload.movement_restrictions,
+        near_failure_tolerance=payload.near_failure_tolerance,
         nutrition_phase=payload.nutrition_phase,
         calories=payload.calories,
         protein=payload.protein,
@@ -328,6 +352,9 @@ def weekly_checkin(
         week_start=payload.week_start,
         body_weight=payload.body_weight,
         adherence_score=payload.adherence_score,
+        sleep_quality=payload.sleep_quality,
+        stress_level=payload.stress_level,
+        pain_flags=payload.pain_flags,
         notes=payload.notes,
     )
     entry = WeeklyCheckin(
@@ -335,6 +362,9 @@ def weekly_checkin(
         week_start=cast(date, persistence_payload["week_start"]),
         body_weight=cast(float, persistence_payload["body_weight"]),
         adherence_score=cast(int, persistence_payload["adherence_score"]),
+        sleep_quality=cast(int | None, persistence_payload["sleep_quality"]),
+        stress_level=cast(int | None, persistence_payload["stress_level"]),
+        pain_flags=cast(list[str], persistence_payload["pain_flags"]),
         notes=cast(str | None, persistence_payload["notes"]),
     )
     db.add(entry)
@@ -392,6 +422,11 @@ def submit_weekly_review(
         week_start=week_start,
     )
     summary_payload = summary.model_dump(mode="json")
+    training_state = _build_program_recommendation_training_state(
+        db,
+        current_user=current_user,
+        latest_plan=_latest_plan(db, current_user.id),
+    )
     route_runtime = prepare_weekly_review_submit_route_runtime(
         user_id=current_user.id,
         reviewed_on=today,
@@ -406,6 +441,7 @@ def submit_weekly_review(
         notes=payload.notes,
         nutrition_phase=payload.nutrition_phase,
         summary_payload=summary_payload,
+        readiness_state=cast(dict[str, Any], training_state.get("readiness_state") or {}),
     )
     user_update_payload = cast(dict[str, Any], route_runtime["user_update_payload"])
     for key, value in user_update_payload.items():

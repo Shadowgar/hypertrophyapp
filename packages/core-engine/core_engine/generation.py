@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Any, Callable
 
+from .decision_progression import evaluate_stimulus_fatigue_response
 from .decision_frequency_adaptation import build_generated_week_adaptation_persistence_payload
 from .intelligence import (
     build_generated_week_plan_payload,
@@ -43,6 +44,12 @@ def _coerce_string_map(value: Any) -> dict[str, str]:
         for key, item in value.items()
         if str(key).strip() and str(item).strip()
     }
+
+
+def _coerce_string_list(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [str(item).strip() for item in value if str(item).strip()]
 
 
 def _serialize_training_state_history(user_training_state: dict[str, Any]) -> list[dict[str, Any]]:
@@ -300,6 +307,10 @@ def build_coach_preview_context(
         "split_preference": split_preference,
         "program_template": template,
         "history": history,
+        "readiness_state": _coerce_dict(normalized_training_state.get("readiness_state")),
+        "latest_mesocycle": _coerce_dict(
+            _coerce_dict(normalized_training_state.get("generation_state")).get("latest_mesocycle")
+        ),
         "phase": nutrition_phase,
         "available_equipment": available_equipment,
     }
@@ -789,6 +800,105 @@ def _resolve_generation_prior_weeks(
     return _count_prior_generated_weeks(selected_template_id, prior_plans), "prior_plans"
 
 
+def _resolve_generation_readiness_state(
+    *,
+    normalized_training_state: dict[str, Any],
+    latest_checkin: Any | None,
+) -> tuple[dict[str, Any], str]:
+    readiness_state = _coerce_dict(normalized_training_state.get("readiness_state"))
+    if readiness_state:
+        return {
+            "sleep_quality": readiness_state.get("sleep_quality"),
+            "stress_level": readiness_state.get("stress_level"),
+            "pain_flags": _coerce_string_list(readiness_state.get("pain_flags")),
+            "recovery_risk_flags": _coerce_string_list(readiness_state.get("recovery_risk_flags")),
+        }, "training_state"
+
+    if latest_checkin is None:
+        return {
+            "sleep_quality": None,
+            "stress_level": None,
+            "pain_flags": [],
+            "recovery_risk_flags": [],
+        }, "default"
+
+    pain_flags = _coerce_string_list(_read_attr(latest_checkin, "pain_flags", []))
+    recovery_risk_flags: list[str] = []
+    sleep_quality = _read_attr(latest_checkin, "sleep_quality")
+    stress_level = _read_attr(latest_checkin, "stress_level")
+    if sleep_quality is not None and int(sleep_quality) <= 2:
+        recovery_risk_flags.append("low_sleep")
+    if stress_level is not None and int(stress_level) >= 4:
+        recovery_risk_flags.append("high_stress")
+    if pain_flags:
+        recovery_risk_flags.append("pain_flags_present")
+    return {
+        "sleep_quality": int(sleep_quality) if sleep_quality is not None else None,
+        "stress_level": int(stress_level) if stress_level is not None else None,
+        "pain_flags": pain_flags,
+        "recovery_risk_flags": sorted(recovery_risk_flags),
+    }, "latest_checkin"
+
+
+def _generation_completion_proxy(adherence_score: int | None) -> tuple[int, str]:
+    if adherence_score is None:
+        return 85, "default"
+    clamped = max(1, min(5, int(adherence_score)))
+    return {
+        1: 55,
+        2: 68,
+        3: 80,
+        4: 90,
+        5: 96,
+    }[clamped], "latest_adherence_score"
+
+
+def _generation_soreness_level(fatigue_state: dict[str, Any], severe_soreness_count: int) -> str:
+    if severe_soreness_count >= 2:
+        return "severe"
+    if severe_soreness_count == 1:
+        return "moderate"
+
+    flagged_muscles = _coerce_string_list(fatigue_state.get("flagged_muscles"))
+    if len(flagged_muscles) >= 2:
+        return "moderate"
+    if flagged_muscles:
+        return "mild"
+    return "none"
+
+
+def _resolve_generation_stimulus_fatigue_response(
+    *,
+    fatigue_state: dict[str, Any],
+    readiness_state: dict[str, Any],
+    latest_adherence_score: int | None,
+    severe_soreness_count: int,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    completion_pct_proxy, completion_proxy_source = _generation_completion_proxy(latest_adherence_score)
+    soreness_level = _generation_soreness_level(fatigue_state, severe_soreness_count)
+    average_rpe = fatigue_state.get("session_rpe_avg")
+    sleep_quality = readiness_state.get("sleep_quality")
+    stress_level = readiness_state.get("stress_level")
+    pain_flags = _coerce_string_list(readiness_state.get("pain_flags"))
+
+    snapshot = evaluate_stimulus_fatigue_response(
+        completion_pct=completion_pct_proxy,
+        adherence_score=max(1, min(5, int(latest_adherence_score or 3))),
+        soreness_level=soreness_level,
+        average_rpe=float(average_rpe) if isinstance(average_rpe, (int, float)) else None,
+        consecutive_underperformance_weeks=0,
+        sleep_quality=int(sleep_quality) if sleep_quality is not None else None,
+        stress_level=int(stress_level) if stress_level is not None else None,
+        pain_flags=pain_flags,
+    )
+    return snapshot, {
+        "completion_pct_proxy": completion_pct_proxy,
+        "completion_pct_proxy_source": completion_proxy_source,
+        "soreness_level": soreness_level,
+        "average_rpe": float(average_rpe) if isinstance(average_rpe, (int, float)) else None,
+    }
+
+
 def resolve_week_generation_runtime_inputs(
     *,
     selected_template_id: str,
@@ -826,6 +936,17 @@ def resolve_week_generation_runtime_inputs(
         generation_state=generation_state,
         prior_plans=prior_plans,
     )
+    readiness_state, readiness_source = _resolve_generation_readiness_state(
+        normalized_training_state=normalized_training_state,
+        latest_checkin=latest_checkin,
+    )
+    constraint_state = _coerce_dict(normalized_training_state.get("constraint_state"))
+    stimulus_fatigue_response, sfr_trace = _resolve_generation_stimulus_fatigue_response(
+        fatigue_state=fatigue_state,
+        readiness_state=readiness_state,
+        latest_adherence_score=latest_adherence_score,
+        severe_soreness_count=severe_soreness_count,
+    )
 
     return {
         "effective_days_available": int(effective_days_available),
@@ -834,6 +955,15 @@ def resolve_week_generation_runtime_inputs(
         "severe_soreness_count": int(severe_soreness_count),
         "latest_adherence_score": int(latest_adherence_score) if latest_adherence_score is not None else None,
         "prior_generated_weeks": int(prior_generated_weeks),
+        "readiness_state": readiness_state,
+        "movement_restrictions": list(constraint_state.get("movement_restrictions") or []),
+        "session_time_budget_minutes": (
+            int(constraint_state.get("session_time_budget_minutes"))
+            if constraint_state.get("session_time_budget_minutes") is not None
+            else None
+        ),
+        "progression_state_per_exercise": list(normalized_training_state.get("progression_state_per_exercise") or []),
+        "stimulus_fatigue_response": stimulus_fatigue_response,
         "decision_trace": {
             "interpreter": "resolve_week_generation_runtime_inputs",
             "version": "v1",
@@ -844,6 +974,7 @@ def resolve_week_generation_runtime_inputs(
                 "has_user_training_state": bool(normalized_training_state),
                 "history_row_count": len(history_rows),
                 "prior_plan_count": len(prior_plans),
+                "progression_state_count": len(list(normalized_training_state.get("progression_state_per_exercise") or [])),
             },
             "steps": [
                 {
@@ -860,6 +991,13 @@ def resolve_week_generation_runtime_inputs(
                         "severe_soreness_count": int(severe_soreness_count),
                         "latest_adherence_score": int(latest_adherence_score) if latest_adherence_score is not None else None,
                         "latest_adherence_score_source": adherence_source,
+                        "readiness_source": readiness_source,
+                        "movement_restriction_count": len(list(constraint_state.get("movement_restrictions") or [])),
+                        "session_time_budget_minutes": (
+                            int(constraint_state.get("session_time_budget_minutes"))
+                            if constraint_state.get("session_time_budget_minutes") is not None
+                            else None
+                        ),
                     },
                 },
                 {
@@ -876,6 +1014,13 @@ def resolve_week_generation_runtime_inputs(
                         "source": prior_generation_source,
                     },
                 },
+                {
+                    "decision": "stimulus_fatigue_response",
+                    "result": {
+                        **sfr_trace,
+                        **stimulus_fatigue_response,
+                    },
+                },
             ],
             "outcome": {
                 "effective_days_available": int(effective_days_available),
@@ -883,6 +1028,7 @@ def resolve_week_generation_runtime_inputs(
                 "severe_soreness_count": int(severe_soreness_count),
                 "latest_adherence_score": int(latest_adherence_score) if latest_adherence_score is not None else None,
                 "prior_generated_weeks": int(prior_generated_weeks),
+                "stimulus_fatigue_response": stimulus_fatigue_response,
             },
         },
     }
@@ -894,9 +1040,18 @@ def prepare_plan_generation_decision_runtime(
     current_days_available: int,
     active_frequency_adaptation: dict[str, Any] | None,
     selected_program_id: str | None,
+    split_preference: str | None = None,
+    training_location: str | None = None,
+    equipment_profile: list[str] | None = None,
+    weak_areas: list[str] | None = None,
+    nutrition_phase: str | None = None,
+    session_time_budget_minutes: int | None = None,
+    movement_restrictions: list[str] | None = None,
+    near_failure_tolerance: str | None = None,
     latest_plan: Any | None,
     latest_soreness_entry: Any | None,
     recent_workout_logs: list[Any],
+    exercise_states: list[Any] | None = None,
     recent_checkins: list[Any],
     recent_review_cycles: list[Any],
     prior_plans: list[Any],
@@ -905,9 +1060,19 @@ def prepare_plan_generation_decision_runtime(
     latest_checkin = recent_checkins[0] if recent_checkins else None
     training_state = build_plan_decision_training_state(
         selected_program_id=selected_program_id,
+        days_available=current_days_available,
+        split_preference=split_preference,
+        training_location=training_location,
+        equipment_profile=equipment_profile,
+        weak_areas=weak_areas,
+        nutrition_phase=nutrition_phase,
+        session_time_budget_minutes=session_time_budget_minutes,
+        movement_restrictions=movement_restrictions,
+        near_failure_tolerance=near_failure_tolerance,
         latest_plan=latest_plan,
         latest_soreness_entry=latest_soreness_entry,
         recent_workout_logs=recent_workout_logs,
+        exercise_states=list(exercise_states or []),
         recent_checkins=recent_checkins,
         recent_review_cycles=recent_review_cycles,
         prior_plans=prior_plans,
@@ -936,6 +1101,7 @@ def prepare_plan_generation_decision_runtime(
                 "has_latest_plan": latest_plan is not None,
                 "has_latest_soreness_entry": latest_soreness_entry is not None,
                 "recent_workout_log_count": len(recent_workout_logs),
+                "exercise_state_count": len(list(exercise_states or [])),
                 "recent_checkin_count": len(recent_checkins),
                 "recent_review_cycle_count": len(recent_review_cycles),
                 "prior_plan_count": len(prior_plans),
@@ -968,9 +1134,19 @@ def prepare_generate_week_plan_runtime_inputs(
     normalized_equipment = [str(item) for item in (available_equipment or []) if str(item).strip()]
     latest_adherence_score_raw = runtime.get("latest_adherence_score")
     latest_adherence_score = int(latest_adherence_score_raw) if latest_adherence_score_raw is not None else None
+    progression_state_per_exercise = list(runtime.get("progression_state_per_exercise") or [])
+    movement_restrictions = [str(item) for item in (runtime.get("movement_restrictions") or []) if str(item).strip()]
+    session_time_budget_minutes_raw = runtime.get("session_time_budget_minutes")
+    session_time_budget_minutes = (
+        int(session_time_budget_minutes_raw) if session_time_budget_minutes_raw is not None else None
+    )
 
     payload = {
-        "user_profile": {"name": user_name},
+        "user_profile": {
+            "name": user_name,
+            "session_time_budget_minutes": session_time_budget_minutes,
+            "movement_restrictions": movement_restrictions,
+        },
         "days_available": int(runtime.get("effective_days_available") or 0),
         "split_preference": split_preference,
         "phase": str(nutrition_phase or "maintenance"),
@@ -980,6 +1156,8 @@ def prepare_generate_week_plan_runtime_inputs(
         "prior_generated_weeks": int(runtime.get("prior_generated_weeks") or 0),
         "latest_adherence_score": latest_adherence_score,
         "severe_soreness_count": int(runtime.get("severe_soreness_count") or 0),
+        "progression_state_per_exercise": progression_state_per_exercise,
+        "stimulus_fatigue_response": _coerce_dict(runtime.get("stimulus_fatigue_response")),
         "decision_trace": {
             "interpreter": "prepare_generate_week_plan_runtime_inputs",
             "version": "v1",
@@ -994,7 +1172,11 @@ def prepare_generate_week_plan_runtime_inputs(
                 "history_count": len(history),
                 "severe_soreness_count": int(runtime.get("severe_soreness_count") or 0),
                 "latest_adherence_score": latest_adherence_score,
+                "progression_state_count": len(progression_state_per_exercise),
                 "prior_generated_weeks": int(runtime.get("prior_generated_weeks") or 0),
+                "movement_restriction_count": len(movement_restrictions),
+                "session_time_budget_minutes": session_time_budget_minutes,
+                "stimulus_fatigue_response": _coerce_dict(runtime.get("stimulus_fatigue_response")),
             },
         },
     }
@@ -1030,6 +1212,14 @@ def prepare_generate_week_scheduler_runtime(
         "prior_generated_weeks": int(plan_runtime_inputs.get("prior_generated_weeks") or 0),
         "latest_adherence_score": plan_runtime_inputs.get("latest_adherence_score"),
         "severe_soreness_count": int(plan_runtime_inputs.get("severe_soreness_count") or 0),
+        "session_time_budget_minutes": _coerce_dict(plan_runtime_inputs.get("user_profile")).get(
+            "session_time_budget_minutes"
+        ),
+        "movement_restrictions": list(
+            _coerce_dict(plan_runtime_inputs.get("user_profile")).get("movement_restrictions") or []
+        ),
+        "progression_state_per_exercise": list(plan_runtime_inputs.get("progression_state_per_exercise") or []),
+        "stimulus_fatigue_response": _coerce_dict(plan_runtime_inputs.get("stimulus_fatigue_response")) or None,
         "rule_set": _coerce_dict(rule_set) or None,
     }
     return {

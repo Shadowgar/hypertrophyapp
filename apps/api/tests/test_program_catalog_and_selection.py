@@ -7,8 +7,9 @@ from test_db import configure_test_database
 
 configure_test_database("test_program_catalog_and_selection")
 
-from app.database import Base, engine
+from app.database import Base, SessionLocal, engine
 from app.main import app
+from app.models import ExerciseState, User, WeeklyReviewCycle, WorkoutPlan
 from app.routers import plan as plan_router
 
 TEST_CREDENTIAL = f"T{uuid.uuid4().hex[:15]}"
@@ -36,6 +37,7 @@ def test_program_catalog_lists_templates() -> None:
         "pure_bodybuilding_phase_2_full_body_sheet",
         "pure_bodybuilding_phase_2_full_body_sheet_1",
     }.issubset(ids)
+    assert "adaptive_full_body_gold_v0_1" in ids
 
 
 def test_generate_week_uses_selected_program_when_template_not_passed() -> None:
@@ -81,6 +83,1335 @@ def test_generate_week_uses_selected_program_when_template_not_passed() -> None:
     assert plan["template_selection_trace"]["selected_template_id"] == "ppl_v1"
     assert plan["generation_runtime_trace"]["interpreter"] == "resolve_week_generation_runtime_inputs"
     assert plan["generation_runtime_trace"]["outcome"]["effective_days_available"] == 3
+
+
+def test_generate_week_supports_adaptive_gold_runtime_program() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "gold-catalog@example.com", "password": TEST_CREDENTIAL, "name": "Gold User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Gold User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "adaptive_full_body_gold_v0_1",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "bench"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+
+    assert plan["program_template_id"] == "adaptive_full_body_gold_v0_1"
+    assert plan["template_selection_trace"]["selected_template_id"] == "adaptive_full_body_gold_v0_1"
+    assert len(plan["sessions"]) == 3
+    assert plan["sessions"][0]["title"] == "Full Body #1"
+    assert any(
+        exercise["id"] == "bench_press_barbell"
+        for exercise in plan["sessions"][0]["exercises"]
+    )
+
+
+def test_adaptive_gold_generate_week_includes_core_slot_when_equipment_available() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "gold-core-slot@example.com", "password": TEST_CREDENTIAL, "name": "Gold Core User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Gold Core User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "adaptive_full_body_gold_v0_1",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "bench", "cable", "machine"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+
+    exercises = [exercise for session in plan["sessions"] for exercise in session["exercises"]]
+    core_exercise = next(item for item in exercises if item["id"] == "cable_crunch")
+    assert core_exercise["name"] == "Cable Crunch"
+    assert core_exercise["rep_range"] == [10, 15]
+    assert "cable" in core_exercise["equipment_tags"]
+
+
+def test_adaptive_gold_generate_week_includes_hinge_slot_when_equipment_available() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "gold-hinge-slot@example.com", "password": TEST_CREDENTIAL, "name": "Gold Hinge User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Gold Hinge User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "adaptive_full_body_gold_v0_1",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "bench", "cable", "machine", "dumbbell"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+
+    exercises = [exercise for session in plan["sessions"] for exercise in session["exercises"]]
+    hinge_exercise = next(item for item in exercises if item["id"] == "romanian_deadlift")
+    assert hinge_exercise["name"] == "Romanian Deadlift"
+    assert hinge_exercise["movement_pattern"] == "hinge"
+    assert set(hinge_exercise["equipment_tags"]) == {"barbell", "dumbbell"}
+
+
+def test_adaptive_gold_generate_week_includes_weak_point_slots_when_equipment_available() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "gold-weak-slots@example.com", "password": TEST_CREDENTIAL, "name": "Gold Weak User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Gold Weak User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "adaptive_full_body_gold_v0_1",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "bench", "cable", "machine", "dumbbell"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+
+    exercises = [exercise for session in plan["sessions"] for exercise in session["exercises"]]
+    chest_weak = next(item for item in exercises if item["id"] == "weak_chest_cable_fly")
+    ham_weak = next(item for item in exercises if item["id"] == "weak_ham_leg_curl")
+
+    assert chest_weak["name"] == "Cable Fly (Weak-Point Chest)"
+    assert chest_weak["movement_pattern"] == "horizontal_adduction"
+    assert "cable" in chest_weak["equipment_tags"]
+
+    assert ham_weak["name"] == "Leg Curl (Weak-Point Hamstrings)"
+    assert ham_weak["movement_pattern"] == "knee_flexion"
+    assert "machine" in ham_weak["equipment_tags"]
+
+
+def test_adaptive_gold_generate_week_includes_arm_isolation_slots_when_equipment_available() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "gold-arm-slots@example.com", "password": TEST_CREDENTIAL, "name": "Gold Arm User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Gold Arm User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "adaptive_full_body_gold_v0_1",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "bench", "cable", "machine", "dumbbell"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+
+    exercises = [exercise for session in plan["sessions"] for exercise in session["exercises"]]
+    biceps = next(item for item in exercises if item["id"] == "dumbbell_curl_incline")
+    triceps = next(item for item in exercises if item["id"] == "triceps_pushdown_rope")
+
+    assert biceps["name"] == "Incline Dumbbell Curl"
+    assert biceps["movement_pattern"] == "elbow_flexion"
+    assert set(biceps["equipment_tags"]) == {"dumbbell", "bench"}
+
+    assert triceps["name"] == "Rope Triceps Pushdown"
+    assert triceps["movement_pattern"] == "elbow_extension"
+    assert "cable" in triceps["equipment_tags"]
+
+
+def test_adaptive_gold_generate_week_preserves_weak_point_days_when_frequency_compresses() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "gold-weak-compression@example.com", "password": TEST_CREDENTIAL, "name": "Gold Compression User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Gold Compression User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "adaptive_full_body_gold_v0_1",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "bench", "cable", "machine", "dumbbell"],
+            "days_available": 2,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+
+    titles = [session["title"] for session in plan["sessions"]]
+    assert len(titles) == 2
+    assert "Full Body #1" in titles
+    assert "Arms & Weak Points" in titles
+
+    exercises = [exercise for session in plan["sessions"] for exercise in session["exercises"]]
+    assert any(exercise["id"] == "weak_chest_cable_fly" for exercise in exercises)
+    assert any(exercise["id"] == "weak_ham_leg_curl" for exercise in exercises)
+
+
+def test_adaptive_gold_generate_week_bounds_time_budget_while_preserving_weak_point_slot() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "gold-weak-time-budget@example.com", "password": TEST_CREDENTIAL, "name": "Gold Time User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Gold Time User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "adaptive_full_body_gold_v0_1",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "bench", "cable", "machine", "dumbbell"],
+            "days_available": 3,
+            "session_time_budget_minutes": 30,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+
+    day_a = next(session for session in plan["sessions"] if session["title"] == "Full Body #1")
+    kept_ids = [exercise["id"] for exercise in day_a["exercises"]]
+    assert kept_ids == [
+        "lat_pulldown_wide",
+        "bench_press_barbell",
+        "hack_squat",
+    ]
+
+
+def test_adaptive_gold_generate_week_selects_second_authored_week_after_prior_week() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "gold-week-two@example.com", "password": TEST_CREDENTIAL, "name": "Gold Week Two User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Gold Week Two User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "adaptive_full_body_gold_v0_1",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "bench", "cable", "machine", "dumbbell"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    monday = date.today() - timedelta(days=date.today().weekday())
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == "gold-week-two@example.com").first()
+        assert user is not None
+        db.add(
+            WorkoutPlan(
+                user_id=user.id,
+                week_start=monday - timedelta(days=7),
+                split="full_body",
+                phase="accumulation",
+                payload={
+                    "program_template_id": "adaptive_full_body_gold_v0_1",
+                    "sessions": [],
+                },
+            )
+        )
+        db.commit()
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+
+    day_a = next(session for session in plan["sessions"] if session["title"] == "Full Body #1")
+    lat_slot = next(exercise for exercise in day_a["exercises"] if exercise["id"] == "lat_pulldown_wide")
+    bench_slot = next(exercise for exercise in day_a["exercises"] if exercise["id"] == "bench_press_barbell")
+    assert lat_slot["rep_range"] == [8, 11]
+    assert bench_slot["rep_range"] == [6, 9]
+    assert plan["generation_runtime_trace"]["outcome"]["prior_generated_weeks"] == 1
+
+
+def test_adaptive_gold_week_two_preserves_weak_point_structure_under_constraints() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "gold-week-two-constraints@example.com", "password": TEST_CREDENTIAL, "name": "Gold Week Two Constraints"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Gold Week Two Constraints",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "adaptive_full_body_gold_v0_1",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "bench", "cable", "machine", "dumbbell"],
+            "days_available": 2,
+            "session_time_budget_minutes": 30,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    monday = date.today() - timedelta(days=date.today().weekday())
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == "gold-week-two-constraints@example.com").first()
+        assert user is not None
+        db.add(
+            WorkoutPlan(
+                user_id=user.id,
+                week_start=monday - timedelta(days=7),
+                split="full_body",
+                phase="accumulation",
+                payload={
+                    "program_template_id": "adaptive_full_body_gold_v0_1",
+                    "sessions": [],
+                },
+            )
+        )
+        db.commit()
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+
+    titles = [session["title"] for session in plan["sessions"]]
+    assert titles == ["Full Body #1", "Arms & Weak Points"]
+
+    day_a = next(session for session in plan["sessions"] if session["title"] == "Full Body #1")
+    kept_ids = [exercise["id"] for exercise in day_a["exercises"]]
+    assert kept_ids == [
+        "lat_pulldown_wide",
+        "bench_press_barbell",
+        "romanian_deadlift",
+    ]
+    assert any(exercise["id"] == "weak_ham_leg_curl" for exercise in plan["sessions"][1]["exercises"])
+
+
+def test_adaptive_gold_generate_week_selects_third_authored_week_after_two_prior_weeks() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "gold-week-three@example.com", "password": TEST_CREDENTIAL, "name": "Gold Week Three User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Gold Week Three User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "adaptive_full_body_gold_v0_1",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "bench", "cable", "machine", "dumbbell"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    monday = date.today() - timedelta(days=date.today().weekday())
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == "gold-week-three@example.com").first()
+        assert user is not None
+        db.add_all(
+            [
+                WorkoutPlan(
+                    user_id=user.id,
+                    week_start=monday - timedelta(days=14),
+                    split="full_body",
+                    phase="accumulation",
+                    payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []},
+                ),
+                WorkoutPlan(
+                    user_id=user.id,
+                    week_start=monday - timedelta(days=7),
+                    split="full_body",
+                    phase="accumulation",
+                    payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []},
+                ),
+            ]
+        )
+        db.commit()
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+
+    day_a = next(session for session in plan["sessions"] if session["title"] == "Full Body #1")
+    bench_slot = next(exercise for exercise in day_a["exercises"] if exercise["id"] == "bench_press_barbell")
+    assert bench_slot["rep_range"] == [6, 8]
+    assert plan["generation_runtime_trace"]["outcome"]["prior_generated_weeks"] == 2
+    assert plan["mesocycle"]["authored_week_index"] == 3
+    assert plan["mesocycle"]["authored_week_role"] == "accumulation"
+
+
+def test_adaptive_gold_generate_week_uses_authored_deload_week_six() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "gold-week-six-deload@example.com", "password": TEST_CREDENTIAL, "name": "Gold Week Six User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Gold Week Six User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "adaptive_full_body_gold_v0_1",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "bench", "cable", "machine", "dumbbell"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    monday = date.today() - timedelta(days=date.today().weekday())
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == "gold-week-six-deload@example.com").first()
+        assert user is not None
+        db.add_all(
+            [
+                WorkoutPlan(
+                    user_id=user.id,
+                    week_start=monday - timedelta(days=35),
+                    split="full_body",
+                    phase="accumulation",
+                    payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []},
+                ),
+                WorkoutPlan(
+                    user_id=user.id,
+                    week_start=monday - timedelta(days=28),
+                    split="full_body",
+                    phase="accumulation",
+                    payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []},
+                ),
+                WorkoutPlan(
+                    user_id=user.id,
+                    week_start=monday - timedelta(days=21),
+                    split="full_body",
+                    phase="accumulation",
+                    payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []},
+                ),
+                WorkoutPlan(
+                    user_id=user.id,
+                    week_start=monday - timedelta(days=14),
+                    split="full_body",
+                    phase="accumulation",
+                    payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []},
+                ),
+                WorkoutPlan(
+                    user_id=user.id,
+                    week_start=monday - timedelta(days=7),
+                    split="full_body",
+                    phase="accumulation",
+                    payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []},
+                ),
+            ]
+        )
+        db.commit()
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+
+    day_a = next(session for session in plan["sessions"] if session["title"] == "Full Body #1")
+    assert plan["generation_runtime_trace"]["outcome"]["prior_generated_weeks"] == 5
+    assert plan["mesocycle"]["authored_week_index"] == 6
+    assert plan["mesocycle"]["authored_week_role"] == "deload"
+    assert plan["mesocycle"]["is_deload_week"] is True
+    assert plan["mesocycle"]["deload_reason"] == "authored_deload"
+    assert plan["deload"]["active"] is True
+    assert all(exercise["sets"] < 3 for exercise in day_a["exercises"])
+
+
+def test_adaptive_gold_generate_week_selects_week_eight_intensification() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "gold-week-eight@example.com", "password": TEST_CREDENTIAL, "name": "Gold Week Eight User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Gold Week Eight User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "adaptive_full_body_gold_v0_1",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "bench", "cable", "machine", "dumbbell"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    monday = date.today() - timedelta(days=date.today().weekday())
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == "gold-week-eight@example.com").first()
+        assert user is not None
+        db.add_all(
+            [
+                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=49), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
+                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=42), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
+                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=35), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
+                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=28), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
+                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=21), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
+                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=14), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
+                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=7), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
+            ]
+        )
+        db.commit()
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+
+    day_a = next(session for session in plan["sessions"] if session["title"] == "Full Body #1")
+    bench_slot = next(exercise for exercise in day_a["exercises"] if exercise["id"] == "bench_press_barbell")
+    assert bench_slot["rep_range"] == [4, 6]
+    assert plan["generation_runtime_trace"]["outcome"]["prior_generated_weeks"] == 7
+    assert plan["mesocycle"]["authored_week_index"] == 8
+    assert plan["mesocycle"]["authored_week_role"] == "intensification"
+
+
+def test_adaptive_gold_generate_week_selects_week_ten_intensification() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "gold-week-ten@example.com", "password": TEST_CREDENTIAL, "name": "Gold Week Ten User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Gold Week Ten User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "adaptive_full_body_gold_v0_1",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "bench", "cable", "machine", "dumbbell"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    monday = date.today() - timedelta(days=date.today().weekday())
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == "gold-week-ten@example.com").first()
+        assert user is not None
+        db.add_all(
+            [
+                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=63), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
+                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=56), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
+                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=49), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
+                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=42), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
+                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=35), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
+                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=28), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
+                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=21), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
+                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=14), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
+                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=7), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
+            ]
+        )
+        db.commit()
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+
+    day_a = next(session for session in plan["sessions"] if session["title"] == "Full Body #1")
+    bench_slot = next(exercise for exercise in day_a["exercises"] if exercise["id"] == "bench_press_barbell")
+    assert bench_slot["rep_range"] == [4, 6]
+    assert plan["generation_runtime_trace"]["outcome"]["prior_generated_weeks"] == 9
+    assert plan["mesocycle"]["authored_week_index"] == 10
+    assert plan["mesocycle"]["authored_week_role"] == "intensification"
+
+
+def test_adaptive_gold_generate_week_marks_transition_pending_after_authored_sequence_complete() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "gold-post-week-ten@example.com", "password": TEST_CREDENTIAL, "name": "Gold Post Week Ten User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Gold Post Week Ten User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "adaptive_full_body_gold_v0_1",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "bench", "cable", "machine", "dumbbell"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    monday = date.today() - timedelta(days=date.today().weekday())
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == "gold-post-week-ten@example.com").first()
+        assert user is not None
+        db.add_all(
+            [
+                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=70), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
+                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=63), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
+                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=56), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
+                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=49), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
+                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=42), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
+                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=35), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
+                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=28), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
+                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=21), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
+                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=14), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
+                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=7), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
+            ]
+        )
+        db.commit()
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+
+    day_a = next(session for session in plan["sessions"] if session["title"] == "Full Body #1")
+    bench_slot = next(exercise for exercise in day_a["exercises"] if exercise["id"] == "bench_press_barbell")
+    assert bench_slot["rep_range"] == [4, 6]
+    assert plan["generation_runtime_trace"]["outcome"]["prior_generated_weeks"] == 10
+    assert plan["mesocycle"]["authored_week_index"] == 10
+    assert plan["mesocycle"]["authored_week_role"] == "intensification"
+    assert plan["mesocycle"]["authored_sequence_complete"] is True
+    assert plan["mesocycle"]["phase_transition_pending"] is True
+    assert plan["mesocycle"]["phase_transition_reason"] == "authored_sequence_complete"
+    assert plan["mesocycle"]["post_authored_behavior"] == "hold_last_authored_week"
+
+
+def test_adaptive_gold_runtime_path_survives_logset_and_weekly_review() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "gold-runtime-flow@example.com", "password": TEST_CREDENTIAL, "name": "Gold Flow User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Gold Flow User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "adaptive_full_body_gold_v0_1",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "bench"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    initial_generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert initial_generate.status_code == 200
+    initial_plan = initial_generate.json()
+    first_session = initial_plan["sessions"][0]
+    first_exercise = first_session["exercises"][0]
+
+    log_response = client.post(
+        f"/workout/{first_session['session_id']}/log-set",
+        headers=headers,
+        json={
+            "primary_exercise_id": first_exercise.get("primary_exercise_id"),
+            "exercise_id": first_exercise["id"],
+            "set_index": 1,
+            "reps": max(1, first_exercise["rep_range"][0] - 2),
+            "weight": float(first_exercise["recommended_working_weight"]),
+        },
+    )
+    assert log_response.status_code == 200
+    log_payload = log_response.json()
+    assert log_payload["decision_trace"]["interpreter"] == "interpret_workout_set_feedback"
+    assert log_payload["guidance"] == "below_target_reps_reduce_or_hold_load"
+
+    review_response = client.post(
+        "/weekly-review",
+        headers=headers,
+        json={
+            "body_weight": 81.5,
+            "calories": 2550,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 270,
+            "adherence_score": 2,
+            "notes": "Gold path recovery and adherence check",
+        },
+    )
+    assert review_response.status_code == 200
+    review_payload = review_response.json()
+    assert review_payload["status"] == "review_logged"
+    assert review_payload["decision_trace"]["interpreter"] == "interpret_weekly_review_decision"
+
+    next_generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert next_generate.status_code == 200
+    next_plan = next_generate.json()
+
+    assert next_plan["program_template_id"] == "adaptive_full_body_gold_v0_1"
+    assert next_plan["template_selection_trace"]["selected_template_id"] == "adaptive_full_body_gold_v0_1"
+    assert next_plan["adaptive_review"]["decision_trace"]["interpreter"] == "interpret_weekly_review_decision"
+    assert next_plan["adaptive_review"]["global_weight_scale"] <= 1.0
+    assert len(next_plan["sessions"]) == 3
+    assert any(
+        exercise["id"] == "bench_press_barbell"
+        for exercise in next_plan["sessions"][0]["exercises"]
+    )
+
+
+def test_adaptive_gold_generate_week_uses_repeat_failure_substitution() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "gold-repeat-failure@example.com", "password": TEST_CREDENTIAL, "name": "Gold Repeat User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Gold Repeat User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "adaptive_full_body_gold_v0_1",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "bench", "dumbbell"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    with SessionLocal() as session:
+        user = session.query(User).filter(User.email == "gold-repeat-failure@example.com").first()
+        assert user is not None
+        session.add(
+            ExerciseState(
+                user_id=user.id,
+                exercise_id="bench_press_barbell",
+                current_working_weight=20.0,
+                exposure_count=5,
+                consecutive_under_target_exposures=3,
+                last_progression_action="hold",
+                fatigue_score=0,
+            )
+        )
+        session.commit()
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+
+    exercise = next(
+        item
+        for session in plan["sessions"]
+        for item in session["exercises"]
+        if item.get("primary_exercise_id") == "bench_press_barbell"
+    )
+    assert exercise["id"] == "incline_dumbbell_press"
+    assert exercise["name"] == "Incline Dumbbell Press"
+    assert exercise["primary_exercise_id"] == "bench_press_barbell"
+    assert exercise["movement_pattern"] == "incline_press"
+    assert exercise["repeat_failure_substitution"]["recommended_name"] == "Incline Dumbbell Press"
+    assert exercise["repeat_failure_substitution"]["failed_exposure_count"] == 3
+
+
+def test_adaptive_gold_generate_week_uses_repeat_failure_substitution_for_second_exercise() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "gold-repeat-failure-row@example.com", "password": TEST_CREDENTIAL, "name": "Gold Repeat Row User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Gold Repeat Row User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "adaptive_full_body_gold_v0_1",
+            "training_location": "gym",
+            "equipment_profile": ["dumbbell", "machine"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    with SessionLocal() as session:
+        user = session.query(User).filter(User.email == "gold-repeat-failure-row@example.com").first()
+        assert user is not None
+        session.add(
+            ExerciseState(
+                user_id=user.id,
+                exercise_id="row_chest_supported",
+                current_working_weight=20.0,
+                exposure_count=5,
+                consecutive_under_target_exposures=3,
+                last_progression_action="hold",
+                fatigue_score=0,
+            )
+        )
+        session.commit()
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+
+    exercise = next(
+        item
+        for session in plan["sessions"]
+        for item in session["exercises"]
+        if item.get("primary_exercise_id") == "row_chest_supported"
+    )
+    assert exercise["id"] == "row_machine_chest_supported"
+    assert exercise["name"] == "Row Machine Chest Supported"
+    assert exercise["primary_exercise_id"] == "row_chest_supported"
+    assert exercise["movement_pattern"] == "horizontal_pull"
+    assert exercise["repeat_failure_substitution"]["recommended_name"] == "Row Machine Chest Supported"
+    assert exercise["repeat_failure_substitution"]["failed_exposure_count"] == 3
+
+
+def test_adaptive_gold_generate_week_uses_repeat_failure_substitution_for_third_exercise() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "gold-repeat-failure-pulldown@example.com", "password": TEST_CREDENTIAL, "name": "Gold Repeat Pulldown User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Gold Repeat Pulldown User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "adaptive_full_body_gold_v0_1",
+            "training_location": "gym",
+            "equipment_profile": ["bodyweight", "machine"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    with SessionLocal() as session:
+        user = session.query(User).filter(User.email == "gold-repeat-failure-pulldown@example.com").first()
+        assert user is not None
+        session.add(
+            ExerciseState(
+                user_id=user.id,
+                exercise_id="lat_pulldown_wide",
+                current_working_weight=20.0,
+                exposure_count=5,
+                consecutive_under_target_exposures=3,
+                last_progression_action="hold",
+                fatigue_score=0,
+            )
+        )
+        session.commit()
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+
+    exercise = next(
+        item
+        for item in plan["sessions"][0]["exercises"]
+        if item.get("primary_exercise_id") == "lat_pulldown_wide"
+    )
+    assert exercise["id"] == "pullup_assisted_neutral"
+    assert exercise["name"] == "Neutral Grip Assisted Pull-Up"
+    assert exercise["primary_exercise_id"] == "lat_pulldown_wide"
+    assert exercise["movement_pattern"] == "vertical_pull"
+    assert exercise["repeat_failure_substitution"]["recommended_name"] == "Neutral Grip Assisted Pull-Up"
+    assert exercise["repeat_failure_substitution"]["failed_exposure_count"] == 3
+
+
+def test_adaptive_gold_generate_week_uses_repeat_failure_substitution_for_fourth_exercise() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "gold-repeat-failure-squat@example.com", "password": TEST_CREDENTIAL, "name": "Gold Repeat Squat User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Gold Repeat Squat User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "adaptive_full_body_gold_v0_1",
+            "training_location": "gym",
+            "equipment_profile": ["machine", "dumbbell", "barbell", "bench"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    with SessionLocal() as session:
+        user = session.query(User).filter(User.email == "gold-repeat-failure-squat@example.com").first()
+        assert user is not None
+        session.add(
+            ExerciseState(
+                user_id=user.id,
+                exercise_id="hack_squat",
+                current_working_weight=20.0,
+                exposure_count=5,
+                consecutive_under_target_exposures=3,
+                last_progression_action="hold",
+                fatigue_score=0,
+            )
+        )
+        session.commit()
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+
+    exercise = next(
+        item
+        for item in plan["sessions"][0]["exercises"]
+        if item.get("primary_exercise_id") == "hack_squat"
+    )
+    assert exercise["id"] == "split_squat_db"
+    assert exercise["name"] == "Split Squat Db"
+    assert exercise["primary_exercise_id"] == "hack_squat"
+    assert exercise["movement_pattern"] == "lunge"
+    assert exercise["repeat_failure_substitution"]["recommended_name"] == "Split Squat Db"
+    assert exercise["repeat_failure_substitution"]["failed_exposure_count"] == 3
+
+
+def test_adaptive_gold_generate_week_uses_canonical_readiness_state_for_sfr_recovery_deload() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "gold-sfr@example.com", "password": TEST_CREDENTIAL, "name": "Gold SFR User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Gold SFR User",
+            "age": 33,
+            "weight": 85,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "adaptive_full_body_gold_v0_1",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "bench", "dumbbell"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    monday = date.today() - timedelta(days=date.today().weekday())
+    weekly_checkin = client.post(
+        "/weekly-checkin",
+        headers=headers,
+        json={
+            "week_start": monday.isoformat(),
+            "body_weight": 84.5,
+            "adherence_score": 3,
+            "sleep_quality": 1,
+            "stress_level": 5,
+            "pain_flags": ["shoulder_irritation"],
+            "notes": "gold path recovery is poor",
+        },
+    )
+    assert weekly_checkin.status_code == 200
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+
+    assert plan["program_template_id"] == "adaptive_full_body_gold_v0_1"
+    assert plan["mesocycle"]["is_deload_week"] is True
+    assert plan["mesocycle"]["deload_reason"] == "early_sfr_recovery"
+    assert plan["deload"]["active"] is True
+    assert plan["generation_runtime_trace"]["outcome"]["stimulus_fatigue_response"]["deload_pressure"] == "high"
+    assert plan["generation_runtime_trace"]["outcome"]["stimulus_fatigue_response"]["substitution_pressure"] == "high"
+
+
+def test_adaptive_gold_generate_week_uses_saved_weekly_review_adjustments() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "gold-adaptive-review@example.com", "password": TEST_CREDENTIAL, "name": "Gold Review User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Gold Review User",
+            "age": 31,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "adaptive_full_body_gold_v0_1",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "bench", "dumbbell"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2500,
+            "protein": 170,
+            "fat": 70,
+            "carbs": 260,
+        },
+    )
+    assert profile.status_code == 200
+
+    monday = date.today() - timedelta(days=date.today().weekday())
+    with SessionLocal() as session:
+        user = session.query(User).filter(User.email == "gold-adaptive-review@example.com").first()
+        assert user is not None
+        session.add(
+            WeeklyReviewCycle(
+                user_id=user.id,
+                reviewed_on=date.today(),
+                week_start=monday,
+                previous_week_start=monday - timedelta(days=7),
+                body_weight=81.5,
+                calories=2450,
+                protein=175,
+                fat=68,
+                carbs=250,
+                adherence_score=3,
+                notes="gold adaptive review",
+                faults={"exercise_faults": []},
+                adjustments={
+                    "global": {"set_delta": -1, "weight_scale": 0.95},
+                    "weak_point_exercises": [],
+                    "exercise_overrides": {},
+                    "decision_trace": {
+                        "interpreter": "interpret_weekly_review_decision",
+                        "outcome": {"global_set_delta": -1, "global_weight_scale": 0.95},
+                    },
+                },
+                summary={"planned_sets_total": 0, "completed_sets_total": 0},
+            )
+        )
+        session.commit()
+
+    generated = client.post("/plan/generate-week", headers=headers, json={})
+    assert generated.status_code == 200
+    payload = generated.json()
+
+    assert payload["program_template_id"] == "adaptive_full_body_gold_v0_1"
+    assert payload["adaptive_review"]["global_set_delta"] == -1
+    assert float(payload["adaptive_review"]["global_weight_scale"]) == 0.95
+    assert payload["adaptive_review"]["decision_trace"]["interpreter"] == "interpret_weekly_review_decision"
+    assert payload["sessions"][0]["exercises"][0]["sets"] >= 2
 
 
 def test_generate_week_applies_latest_soreness_modifiers() -> None:
@@ -271,6 +1602,284 @@ def test_generate_week_includes_mesocycle_and_deload_payload() -> None:
     assert plan["deload"]["active"] is True
     assert plan["generation_runtime_trace"]["outcome"]["severe_soreness_count"] == 2
     assert plan["generation_runtime_trace"]["outcome"]["latest_adherence_score"] == 2
+
+
+def test_generate_week_uses_canonical_readiness_state_for_sfr_recovery_deload() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "generation-sfr@example.com", "password": TEST_CREDENTIAL, "name": "Generation SFR User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Generation SFR User",
+            "age": 33,
+            "weight": 85,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "full_body_v1",
+            "training_location": "home",
+            "equipment_profile": ["dumbbell", "bodyweight"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    monday = date.today() - timedelta(days=date.today().weekday())
+    weekly_checkin = client.post(
+        "/weekly-checkin",
+        headers=headers,
+        json={
+            "week_start": monday.isoformat(),
+            "body_weight": 84.5,
+            "adherence_score": 3,
+            "sleep_quality": 1,
+            "stress_level": 5,
+            "pain_flags": ["shoulder_irritation"],
+            "notes": "recovery is poor",
+        },
+    )
+    assert weekly_checkin.status_code == 200
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+
+    assert plan["mesocycle"]["is_deload_week"] is True
+    assert plan["mesocycle"]["deload_reason"] == "early_sfr_recovery"
+    assert plan["deload"]["active"] is True
+    assert plan["generation_runtime_trace"]["outcome"]["stimulus_fatigue_response"]["deload_pressure"] == "high"
+    assert plan["generation_runtime_trace"]["outcome"]["stimulus_fatigue_response"]["substitution_pressure"] == "high"
+
+
+def test_generate_week_uses_repeat_failure_state_to_substitute_exercise(monkeypatch) -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    template = {
+        "id": "repeat_failure_generation_v1",
+        "sessions": [
+            {
+                "name": "Upper",
+                "exercises": [
+                    {
+                        "id": "db_press",
+                        "name": "DB Press",
+                        "sets": 3,
+                        "rep_range": [8, 10],
+                        "start_weight": 25,
+                        "equipment_tags": ["dumbbell"],
+                        "substitution_candidates": ["DB Floor Press"],
+                    }
+                ],
+            }
+        ],
+    }
+
+    monkeypatch.setattr(
+        plan_router,
+        "list_program_templates",
+        lambda: [{"id": "repeat_failure_generation_v1", "split": "full_body", "days_supported": [3]}],
+    )
+    monkeypatch.setattr(plan_router, "load_program_template", lambda template_id: template)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "repeat-failure-generate@example.com", "password": TEST_CREDENTIAL, "name": "Repeat Failure User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Repeat Failure User",
+            "age": 29,
+            "weight": 81,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "repeat_failure_generation_v1",
+            "training_location": "home",
+            "equipment_profile": ["dumbbell"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    with SessionLocal() as session:
+        user = session.query(User).filter(User.email == "repeat-failure-generate@example.com").first()
+        assert user is not None
+        session.add(
+            ExerciseState(
+                user_id=user.id,
+                exercise_id="db_press",
+                current_working_weight=25.0,
+                exposure_count=5,
+                consecutive_under_target_exposures=3,
+                last_progression_action="hold",
+                fatigue_score=0,
+            )
+        )
+        session.commit()
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+
+    exercise = plan["sessions"][0]["exercises"][0]
+    assert exercise["id"] == "db_floor_press"
+    assert exercise["name"] == "DB Floor Press"
+    assert exercise["primary_exercise_id"] == "db_press"
+    assert exercise["repeat_failure_substitution"]["recommended_name"] == "DB Floor Press"
+    assert exercise["repeat_failure_substitution"]["failed_exposure_count"] == 3
+
+
+def test_generate_week_respects_profile_session_time_budget(monkeypatch) -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    template = {
+        "id": "time_budget_generation_v1",
+        "sessions": [
+            {
+                "name": "Upper",
+                "exercises": [
+                    {"id": "lift_1", "name": "Lift 1", "sets": 3},
+                    {"id": "lift_2", "name": "Lift 2", "sets": 3},
+                    {"id": "lift_3", "name": "Lift 3", "sets": 3},
+                    {"id": "lift_4", "name": "Lift 4", "sets": 3},
+                    {"id": "lift_5", "name": "Lift 5", "sets": 3},
+                    {"id": "lift_6", "name": "Lift 6", "sets": 3},
+                ],
+            }
+        ],
+    }
+
+    monkeypatch.setattr(
+        plan_router,
+        "list_program_templates",
+        lambda: [{"id": "time_budget_generation_v1", "split": "full_body", "days_supported": [3]}],
+    )
+    monkeypatch.setattr(plan_router, "load_program_template", lambda template_id: template)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "time-budget-generate@example.com", "password": TEST_CREDENTIAL, "name": "Time Budget User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Time Budget User",
+            "age": 29,
+            "weight": 81,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "time_budget_generation_v1",
+            "training_location": "home",
+            "equipment_profile": ["dumbbell"],
+            "days_available": 3,
+            "session_time_budget_minutes": 30,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+
+    assert [exercise["id"] for exercise in plan["sessions"][0]["exercises"]] == ["lift_1", "lift_2", "lift_3"]
+
+
+def test_generate_week_respects_profile_movement_restrictions(monkeypatch) -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    template = {
+        "id": "movement_restriction_generation_v1",
+        "sessions": [
+            {
+                "name": "Upper",
+                "exercises": [
+                    {"id": "ohp", "name": "Overhead Press", "sets": 3, "movement_pattern": "vertical_press"},
+                    {"id": "row", "name": "Chest Supported Row", "sets": 3, "movement_pattern": "horizontal_pull"},
+                ],
+            }
+        ],
+    }
+
+    monkeypatch.setattr(
+        plan_router,
+        "list_program_templates",
+        lambda: [{"id": "movement_restriction_generation_v1", "split": "full_body", "days_supported": [3]}],
+    )
+    monkeypatch.setattr(plan_router, "load_program_template", lambda template_id: template)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "movement-restriction-generate@example.com", "password": TEST_CREDENTIAL, "name": "Movement Restriction User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Movement Restriction User",
+            "age": 29,
+            "weight": 81,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "movement_restriction_generation_v1",
+            "training_location": "home",
+            "equipment_profile": ["dumbbell"],
+            "days_available": 3,
+            "movement_restrictions": ["overhead_pressing"],
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+
+    assert [exercise["id"] for exercise in plan["sessions"][0]["exercises"]] == ["row"]
 
 
 def test_generate_week_falls_back_to_equipment_safe_template(monkeypatch) -> None:

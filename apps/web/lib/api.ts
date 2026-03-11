@@ -247,6 +247,10 @@ export type IntelligenceCoachPreviewResponse = {
     next_phase: "accumulation" | "intensification" | "deload";
     reason: string;
     rationale?: string;
+    authored_sequence_complete?: boolean;
+    transition_pending?: boolean;
+    recommended_action?: string | null;
+    post_authored_behavior?: string | null;
   };
   specialization: {
     focus_muscles: string[];
@@ -289,6 +293,7 @@ const REASON_MESSAGES: Record<string, string> = {
   extend_deload_low_readiness: "Stay in deload because readiness is still too low to resume hard training.",
   intensification_fatigue_cap: "End intensification and deload before fatigue outpaces recovery.",
   continue_intensification: "Stay in intensification. Current performance still supports heavier work in this phase.",
+  authored_sequence_complete: "The authored mesocycle is complete. Rotate to a fresh next step.",
   low_completion: "session completion has been too low",
   low_adherence: "adherence has dropped below the target threshold",
   high_soreness: "fatigue and soreness are elevated",
@@ -299,6 +304,8 @@ const REASON_MESSAGES: Record<string, string> = {
   days_adaptation_upgrade: "A different compatible template can preserve weekly coverage better at the current day availability.",
   coverage_gap_rotate: "The latest plan left a coverage gap. Rotate to a compatible template with better distribution.",
   mesocycle_complete_rotate: "The current mesocycle appears complete. Rotate to a fresh compatible template.",
+  rotate_program: "Rotate program.",
+  hold_last_authored_week: "Holding the last authored week until a new program is selected.",
   maintain_current_program: "The current program remains compatible and no stronger rotation signal is present.",
   target_matches_current: "The requested program already matches the current selection.",
 };

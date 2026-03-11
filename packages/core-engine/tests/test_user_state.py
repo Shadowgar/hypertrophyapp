@@ -7,6 +7,15 @@ from core_engine import build_plan_decision_training_state, build_user_training_
 def test_build_user_training_state_assembles_canonical_runtime_payload() -> None:
     payload = build_user_training_state(
         selected_program_id="full_body_v1",
+        days_available=4,
+        split_preference="full_body",
+        training_location="gym",
+        equipment_profile=["barbell", "bench"],
+        weak_areas=["biceps"],
+        nutrition_phase="maintenance",
+        session_time_budget_minutes=75,
+        movement_restrictions=["deep_knee_flexion"],
+        near_failure_tolerance="moderate",
         latest_plan=SimpleNamespace(
             week_start=date(2026, 3, 2),
             payload={
@@ -55,7 +64,12 @@ def test_build_user_training_state_assembles_canonical_runtime_payload() -> None
             severity_by_muscle={"chest": "severe", "back": "severe", "quads": "mild"}
         ),
         recent_checkins=[
-            SimpleNamespace(adherence_score=4),
+            SimpleNamespace(
+                adherence_score=4,
+                sleep_quality=2,
+                stress_level=4,
+                pain_flags=["elbow_flexion", "deep_knee_flexion"],
+            ),
             SimpleNamespace(adherence_score=3),
         ],
         recent_review_cycles=[
@@ -128,6 +142,23 @@ def test_build_user_training_state_assembles_canonical_runtime_payload() -> None
         "rolling_average_score": 3.5,
         "missed_session_count": 1,
     }
+    assert payload["readiness_state"] == {
+        "sleep_quality": 2,
+        "stress_level": 4,
+        "pain_flags": ["elbow_flexion", "deep_knee_flexion"],
+        "recovery_risk_flags": ["high_stress", "low_sleep", "pain_flags_present"],
+    }
+    assert payload["constraint_state"] == {
+        "days_available": 4,
+        "split_preference": "full_body",
+        "training_location": "gym",
+        "equipment_profile": ["barbell", "bench"],
+        "weak_areas": ["biceps"],
+        "nutrition_phase": "maintenance",
+        "session_time_budget_minutes": 75,
+        "movement_restrictions": ["deep_knee_flexion"],
+        "near_failure_tolerance": "moderate",
+    }
     assert payload["stall_state"] == {
         "stalled_exercise_ids": ["bench_press_barbell"],
         "consecutive_underperformance_weeks": 2,
@@ -137,12 +168,32 @@ def test_build_user_training_state_assembles_canonical_runtime_payload() -> None
         "prior_generated_weeks_by_program": {"full_body_v1": 2, "other_template": 1},
         "under_target_muscles": ["biceps", "rear_delts"],
         "mesocycle_trigger_weeks_effective": 5,
+        "latest_mesocycle": {
+            "week_index": 3,
+            "trigger_weeks_effective": 5,
+            "authored_week_index": None,
+            "authored_week_role": None,
+            "authored_sequence_length": None,
+            "authored_sequence_complete": False,
+            "phase_transition_pending": False,
+            "phase_transition_reason": None,
+            "post_authored_behavior": None,
+        },
     }
 
 
 def test_build_plan_decision_training_state_uses_canonical_builder_defaults() -> None:
     payload = build_plan_decision_training_state(
         selected_program_id="full_body_v1",
+        days_available=3,
+        split_preference="upper_lower",
+        training_location="home",
+        equipment_profile=["dumbbell"],
+        weak_areas=["rear_delts"],
+        nutrition_phase="maintenance",
+        session_time_budget_minutes=60,
+        movement_restrictions=["overhead_pressing"],
+        near_failure_tolerance="high",
         latest_plan=SimpleNamespace(
             week_start=date(2026, 3, 2),
             payload={
@@ -157,5 +208,60 @@ def test_build_plan_decision_training_state_uses_canonical_builder_defaults() ->
 
     assert payload["user_program_state"]["program_id"] == "full_body_v1"
     assert payload["user_program_state"]["week_index"] == 2
+    assert payload["readiness_state"] == {
+        "sleep_quality": None,
+        "stress_level": None,
+        "pain_flags": [],
+        "recovery_risk_flags": [],
+    }
+    assert payload["constraint_state"] == {
+        "days_available": 3,
+        "split_preference": "upper_lower",
+        "training_location": "home",
+        "equipment_profile": ["dumbbell"],
+        "weak_areas": ["rear_delts"],
+        "nutrition_phase": "maintenance",
+        "session_time_budget_minutes": 60,
+        "movement_restrictions": ["overhead_pressing"],
+        "near_failure_tolerance": "high",
+    }
     assert payload["exercise_performance_history"] == []
     assert payload["progression_state_per_exercise"] == []
+
+
+def test_build_plan_decision_training_state_preserves_latest_mesocycle_transition_flags() -> None:
+    payload = build_plan_decision_training_state(
+        selected_program_id="adaptive_full_body_gold_v0_1",
+        latest_plan=SimpleNamespace(
+            week_start=date(2026, 3, 2),
+            payload={
+                "program_template_id": "adaptive_full_body_gold_v0_1",
+                "phase": "intensification",
+                "mesocycle": {
+                    "week_index": 10,
+                    "trigger_weeks_effective": 10,
+                    "authored_week_index": 10,
+                    "authored_week_role": "intensification",
+                    "authored_sequence_length": 10,
+                    "authored_sequence_complete": True,
+                    "phase_transition_pending": True,
+                    "phase_transition_reason": "authored_sequence_complete",
+                    "post_authored_behavior": "hold_last_authored_week",
+                },
+                "sessions": [],
+            },
+        ),
+        latest_soreness_entry=None,
+    )
+
+    assert payload["generation_state"]["latest_mesocycle"] == {
+        "week_index": 10,
+        "trigger_weeks_effective": 10,
+        "authored_week_index": 10,
+        "authored_week_role": "intensification",
+        "authored_sequence_length": 10,
+        "authored_sequence_complete": True,
+        "phase_transition_pending": True,
+        "phase_transition_reason": "authored_sequence_complete",
+        "post_authored_behavior": "hold_last_authored_week",
+    }

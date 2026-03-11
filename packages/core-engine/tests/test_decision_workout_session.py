@@ -1,6 +1,9 @@
 from types import SimpleNamespace
 
 from core_engine.decision_workout_session import (
+    build_workout_performance_summary,
+    build_workout_today_plan_runtime,
+    prepare_workout_exercise_state_runtime,
     prepare_workout_log_set_context_route_runtime,
     prepare_workout_log_set_decision_route_runtime,
     prepare_workout_log_set_response_runtime,
@@ -13,6 +16,34 @@ from core_engine.decision_workout_session import (
     prepare_workout_today_response_runtime,
     prepare_workout_today_selection_route_runtime,
 )
+
+
+def _sample_rule_set() -> dict:
+    return {
+        "progression_rules": {
+            "on_success": {"percent": 2.5},
+            "on_under_target": {"reduce_percent": 2.0, "after_exposures": 2},
+        },
+        "deload_rules": {
+            "scheduled_every_n_weeks": 4,
+            "early_deload_trigger": "three_consecutive_under_target_exposures",
+            "on_deload": {"load_reduction_percent": 10},
+        },
+        "fatigue_rules": {
+            "high_fatigue_trigger": {
+                "conditions": ["session_rpe_avg >= 9", "intro phase lasts 2 weeks"],
+            },
+            "on_high_fatigue": {"set_delta": -1},
+        },
+        "rationale_templates": {
+            "increase_load": "Increase the load next time.",
+            "hold_load": "Hold the load until reps stabilize.",
+            "deload": "Take a short deload.",
+            "below_target_reps_reduce_or_hold_load": "Reps fell short, so reduce or hold the load next time.",
+            "within_target_reps_hold_or_microload": "Reps were on target, so hold steady or microload next time.",
+            "above_target_reps_increase_load_next_exposure": "Reps were above target, so increase load next time.",
+        },
+    }
 
 
 def test_prepare_workout_today_plan_route_runtime_builds_queryable_plan_context() -> None:
@@ -38,6 +69,82 @@ def test_prepare_workout_today_plan_route_runtime_builds_queryable_plan_context(
     assert runtime["mesocycle"] == {"week_index": 2}
     assert runtime["deload"] == {"active": False}
     assert runtime["decision_trace"]["interpreter"] == "prepare_workout_today_plan_route_runtime"
+
+
+def test_build_workout_today_plan_runtime_normalizes_sessions_and_program_context() -> None:
+    runtime = build_workout_today_plan_runtime(
+        latest_plan_payload={
+            "program_template_id": "full_body_v1",
+            "mesocycle": {"week_index": 2},
+            "deload": {"active": False},
+            "sessions": [
+                {"session_id": "full_body_v1-day-1", "name": "Day 1"},
+                {"session_id": "full_body_v1-day-2", "name": "Day 2"},
+            ],
+        }
+    )
+
+    assert runtime["selected_program_id"] == "full_body_v1"
+    assert runtime["session_ids"] == ["full_body_v1-day-1", "full_body_v1-day-2"]
+    assert runtime["mesocycle"] == {"week_index": 2}
+    assert runtime["deload"] == {"active": False}
+    assert runtime["decision_trace"]["interpreter"] == "build_workout_today_plan_runtime"
+
+
+def test_prepare_workout_exercise_state_runtime_builds_initial_and_updated_state_payloads() -> None:
+    runtime = prepare_workout_exercise_state_runtime(
+        existing_state=None,
+        primary_exercise_id="bench_press",
+        planned_exercise={
+            "id": "bench_press",
+            "name": "Bench Press",
+            "start_weight": 100.0,
+            "substitution_candidates": ["Machine Press"],
+        },
+        planned_weight=100.0,
+        planned_sets=3,
+        planned_reps_min=8,
+        planned_reps_max=10,
+        completed_set_index=1,
+        completed_reps=10,
+        nutrition_phase="maintenance",
+        equipment_profile=["machine"],
+        rule_set=_sample_rule_set(),
+    )
+
+    assert runtime["initial_state_values"]["current_working_weight"] >= 5.0
+    assert runtime["state_values"]["exposure_count"] == 1
+    assert runtime["state_values"]["last_progression_action"] in {"progress", "hold", "deload"}
+    assert runtime["decision_trace"]["interpreter"] == "prepare_workout_exercise_state_runtime"
+
+
+def test_build_workout_performance_summary_normalizes_rows_and_progression_state() -> None:
+    payload = build_workout_performance_summary(
+        workout_id="session-1",
+        planned_session={
+            "exercises": [
+                {
+                    "id": "bench",
+                    "name": "Bench Press",
+                    "sets": 3,
+                    "rep_range": [8, 10],
+                    "recommended_working_weight": 100.0,
+                }
+            ]
+        },
+        performed_logs=[
+            SimpleNamespace(exercise_id="bench", set_index=1, reps=8, weight=100.0),
+            SimpleNamespace(exercise_id="bench", set_index=2, reps=9, weight=100.0),
+        ],
+        progression_states=[SimpleNamespace(exercise_id="bench", current_working_weight=102.5)],
+        rule_set=_sample_rule_set(),
+    )
+
+    assert payload["workout_id"] == "session-1"
+    assert payload["completed_total"] == 2
+    assert payload["planned_total"] == 3
+    assert payload["exercises"][0]["next_working_weight"] == 102.5
+    assert payload["decision_trace"]["interpreter"] == "summarize_workout_session_guidance"
 
 
 def test_prepare_workout_today_selection_route_runtime_prefers_incomplete_resume_session() -> None:

@@ -313,6 +313,64 @@ def _build_adherence_state(
     }
 
 
+def _build_readiness_state(*, recent_checkins: list[Any]) -> dict[str, Any]:
+    latest_checkin = recent_checkins[0] if recent_checkins else None
+    sleep_quality_raw = _read_attr(latest_checkin, "sleep_quality") if latest_checkin is not None else None
+    stress_level_raw = _read_attr(latest_checkin, "stress_level") if latest_checkin is not None else None
+    pain_flags = _normalize_string_list(
+        _read_attr(latest_checkin, "pain_flags", []) if latest_checkin is not None else []
+    )
+
+    sleep_quality = int(sleep_quality_raw) if sleep_quality_raw is not None else None
+    stress_level = int(stress_level_raw) if stress_level_raw is not None else None
+
+    recovery_risk_flags: list[str] = []
+    if sleep_quality is not None and sleep_quality <= 2:
+        recovery_risk_flags.append("low_sleep")
+    if stress_level is not None and stress_level >= 4:
+        recovery_risk_flags.append("high_stress")
+    if pain_flags:
+        recovery_risk_flags.append("pain_flags_present")
+
+    return {
+        "sleep_quality": sleep_quality,
+        "stress_level": stress_level,
+        "pain_flags": pain_flags,
+        "recovery_risk_flags": sorted(recovery_risk_flags),
+    }
+
+
+def _normalize_string_list(values: list[str] | None) -> list[str]:
+    return [str(item).strip() for item in (values or []) if str(item).strip()]
+
+
+def _build_constraint_state(
+    *,
+    days_available: int | None,
+    split_preference: str | None,
+    training_location: str | None,
+    equipment_profile: list[str] | None,
+    weak_areas: list[str] | None,
+    nutrition_phase: str | None,
+    session_time_budget_minutes: int | None,
+    movement_restrictions: list[str] | None,
+    near_failure_tolerance: str | None,
+) -> dict[str, Any]:
+    return {
+        "days_available": int(days_available) if days_available is not None else None,
+        "split_preference": split_preference,
+        "training_location": training_location,
+        "equipment_profile": _normalize_string_list(equipment_profile),
+        "weak_areas": _normalize_string_list(weak_areas),
+        "nutrition_phase": nutrition_phase,
+        "session_time_budget_minutes": (
+            int(session_time_budget_minutes) if session_time_budget_minutes is not None else None
+        ),
+        "movement_restrictions": _normalize_string_list(movement_restrictions),
+        "near_failure_tolerance": near_failure_tolerance,
+    }
+
+
 def _build_progression_state(exercise_states: list[Any]) -> list[dict[str, Any]]:
     return sorted(
         [
@@ -425,12 +483,62 @@ def _build_generation_state(
             if isinstance(trigger_weeks_effective, (int, float)) or str(trigger_weeks_effective).isdigit()
             else None
         ),
+        "latest_mesocycle": {
+            "week_index": (
+                max(1, int(mesocycle["week_index"]))
+                if isinstance(mesocycle.get("week_index"), (int, float)) or str(mesocycle.get("week_index")).isdigit()
+                else None
+            ),
+            "trigger_weeks_effective": (
+                max(1, int(trigger_weeks_effective))
+                if isinstance(trigger_weeks_effective, (int, float)) or str(trigger_weeks_effective).isdigit()
+                else None
+            ),
+            "authored_week_index": (
+                max(1, int(mesocycle["authored_week_index"]))
+                if isinstance(mesocycle.get("authored_week_index"), (int, float))
+                or str(mesocycle.get("authored_week_index")).isdigit()
+                else None
+            ),
+            "authored_week_role": (
+                str(mesocycle.get("authored_week_role"))
+                if str(mesocycle.get("authored_week_role") or "").strip()
+                else None
+            ),
+            "authored_sequence_length": (
+                max(1, int(mesocycle["authored_sequence_length"]))
+                if isinstance(mesocycle.get("authored_sequence_length"), (int, float))
+                or str(mesocycle.get("authored_sequence_length")).isdigit()
+                else None
+            ),
+            "authored_sequence_complete": bool(mesocycle.get("authored_sequence_complete")),
+            "phase_transition_pending": bool(mesocycle.get("phase_transition_pending")),
+            "phase_transition_reason": (
+                str(mesocycle.get("phase_transition_reason"))
+                if str(mesocycle.get("phase_transition_reason") or "").strip()
+                else None
+            ),
+            "post_authored_behavior": (
+                str(mesocycle.get("post_authored_behavior"))
+                if str(mesocycle.get("post_authored_behavior") or "").strip()
+                else None
+            ),
+        },
     }
 
 
 def build_user_training_state(
     *,
     selected_program_id: str | None,
+    days_available: int | None = None,
+    split_preference: str | None = None,
+    training_location: str | None = None,
+    equipment_profile: list[str] | None = None,
+    weak_areas: list[str] | None = None,
+    nutrition_phase: str | None = None,
+    session_time_budget_minutes: int | None = None,
+    movement_restrictions: list[str] | None = None,
+    near_failure_tolerance: str | None = None,
     latest_plan: Any | None,
     recent_workout_logs: list[Any],
     exercise_states: list[Any],
@@ -483,6 +591,18 @@ def build_user_training_state(
         "progression_state_per_exercise": progression_state,
         "fatigue_state": fatigue_state,
         "adherence_state": adherence_state,
+        "readiness_state": _build_readiness_state(recent_checkins=recent_checkins),
+        "constraint_state": _build_constraint_state(
+            days_available=days_available,
+            split_preference=split_preference,
+            training_location=training_location,
+            equipment_profile=equipment_profile,
+            weak_areas=weak_areas,
+            nutrition_phase=nutrition_phase,
+            session_time_budget_minutes=session_time_budget_minutes,
+            movement_restrictions=movement_restrictions,
+            near_failure_tolerance=near_failure_tolerance,
+        ),
         "stall_state": stall_state,
         "generation_state": _build_generation_state(
             prior_plans=prior_plans,
@@ -494,18 +614,37 @@ def build_user_training_state(
 def build_plan_decision_training_state(
     *,
     selected_program_id: str | None,
+    days_available: int | None = None,
+    split_preference: str | None = None,
+    training_location: str | None = None,
+    equipment_profile: list[str] | None = None,
+    weak_areas: list[str] | None = None,
+    nutrition_phase: str | None = None,
+    session_time_budget_minutes: int | None = None,
+    movement_restrictions: list[str] | None = None,
+    near_failure_tolerance: str | None = None,
     latest_plan: Any | None,
     latest_soreness_entry: Any | None,
     recent_workout_logs: list[Any] | None = None,
+    exercise_states: list[Any] | None = None,
     recent_checkins: list[Any] | None = None,
     recent_review_cycles: list[Any] | None = None,
     prior_plans: list[Any] | None = None,
 ) -> dict[str, Any]:
     return build_user_training_state(
         selected_program_id=selected_program_id,
+        days_available=days_available,
+        split_preference=split_preference,
+        training_location=training_location,
+        equipment_profile=equipment_profile,
+        weak_areas=weak_areas,
+        nutrition_phase=nutrition_phase,
+        session_time_budget_minutes=session_time_budget_minutes,
+        movement_restrictions=movement_restrictions,
+        near_failure_tolerance=near_failure_tolerance,
         latest_plan=latest_plan,
         recent_workout_logs=list(recent_workout_logs or []),
-        exercise_states=[],
+        exercise_states=list(exercise_states or []),
         latest_soreness_entry=latest_soreness_entry,
         recent_checkins=list(recent_checkins or []),
         recent_review_cycles=list(recent_review_cycles or []),

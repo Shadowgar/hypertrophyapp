@@ -46,6 +46,9 @@ def _register_and_onboard(client: TestClient) -> tuple[dict[str, str], str]:
             "protein": 180,
             "fat": 70,
             "carbs": 280,
+            "session_time_budget_minutes": 75,
+            "movement_restrictions": ["deep_knee_flexion"],
+            "near_failure_tolerance": "moderate",
         },
     )
     assert profile.status_code == 200
@@ -123,6 +126,9 @@ def test_profile_training_state_returns_canonical_runtime_payload() -> None:
                 week_start=current_week_start,
                 body_weight=82.0,
                 adherence_score=4,
+                sleep_quality=2,
+                stress_level=4,
+                pain_flags=["elbow_flexion"],
                 notes="solid week",
             )
         )
@@ -164,6 +170,23 @@ def test_profile_training_state_returns_canonical_runtime_payload() -> None:
         "rolling_average_score": 4.0,
         "missed_session_count": 0,
     }
+    assert payload["readiness_state"] == {
+        "sleep_quality": 2,
+        "stress_level": 4,
+        "pain_flags": ["elbow_flexion"],
+        "recovery_risk_flags": ["high_stress", "low_sleep", "pain_flags_present"],
+    }
+    assert payload["constraint_state"] == {
+        "days_available": 3,
+        "split_preference": "full_body",
+        "training_location": "gym",
+        "equipment_profile": ["barbell", "dumbbell", "bench", "rack"],
+        "weak_areas": [],
+        "nutrition_phase": "maintenance",
+        "session_time_budget_minutes": 75,
+        "movement_restrictions": ["deep_knee_flexion"],
+        "near_failure_tolerance": "moderate",
+    }
     assert payload["stall_state"] == {
         "stalled_exercise_ids": ["bench_press_barbell"],
         "consecutive_underperformance_weeks": 1,
@@ -173,4 +196,15 @@ def test_profile_training_state_returns_canonical_runtime_payload() -> None:
         "prior_generated_weeks_by_program": {"full_body_v1": 1},
         "under_target_muscles": ["biceps", "rear_delts"],
         "mesocycle_trigger_weeks_effective": 5,
+        "latest_mesocycle": {
+            "week_index": 3,
+            "trigger_weeks_effective": 5,
+            "authored_week_index": None,
+            "authored_week_role": None,
+            "authored_sequence_length": None,
+            "authored_sequence_complete": False,
+            "phase_transition_pending": False,
+            "phase_transition_reason": None,
+            "post_authored_behavior": None,
+        },
     }

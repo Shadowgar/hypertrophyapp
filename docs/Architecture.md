@@ -1,6 +1,6 @@
 # Architecture - Adaptive Coaching Target State
 
-Last updated: 2026-03-07
+Last updated: 2026-03-10
 
 ## Runtime Boundary
 
@@ -9,6 +9,8 @@ Runtime reads only:
 - canonical coaching rules
 - exercise catalog
 - user training state
+
+Adaptive gold assets may enter runtime only after they are adapted at the loader boundary into the same canonical runtime template/rule contracts. Runtime does not special-case raw gold schema payloads downstream.
 
 Runtime does not read raw `reference/*.pdf` or `reference/*.xlsx`.
 Runtime does not depend on `docs/guides/generated/*.md` text artifacts.
@@ -28,6 +30,8 @@ Runtime does not depend on `docs/guides/generated/*.md` text artifacts.
 
 4. User State Service
 - Stores logs and progression state
+- Stores profile constraints and canonical `constraint_state`
+- Stores weekly-checkin-backed readiness inputs and canonical `readiness_state`
 - Stores fatigue/adherence/stall markers
 
 5. Decision Engine
@@ -53,6 +57,26 @@ Meaningful coaching decisions include:
 - deload triggers
 - phase transitions
 - weak-point adjustments
+
+## Operational Authority Map
+
+Current local-branch ownership is tracked in:
+- `docs/current_state_decision_runtime_map.md`
+
+Use that file as the operational source of truth for:
+- authoritative module ownership by decision family
+- canonical inputs and outputs
+- trace expectations
+- what routers may still do
+- whether `intelligence.py` is acting as a thin façade or still owns live logic
+
+Current dominant risks have shifted:
+- router glue is no longer the dominant architectural risk
+- authority ambiguity and wrapper drift in `packages/core-engine/core_engine/intelligence.py` is now a primary risk
+- shallow first-class coaching state is now a primary modeling risk
+- the deterministic stimulus-fatigue-response layer is now live but still early-stage and not yet broadly consumed for bounded adjustment decisions
+- canonical `readiness_state` is now present and influences both coach-preview and weekly-review scoring
+- the first deterministic `stimulus_fatigue_response` layer now exists in the progression family, now feeds generated-week deload/substitution pressure and weekly-review bounded adjustments, and now sits alongside canonical repeat-failure generation-time substitution powered by persisted `ExerciseState`; broader exercise-level generation use is still pending
 
 6. API/UI Layer
 - Program selection
