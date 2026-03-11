@@ -19,6 +19,7 @@ test("Week page sends template_id when override selected", async () => {
       {
         session_id: "upper_lower-1",
         title: "Upper 1",
+        day_role: "full_body_1",
         date: "2026-03-10",
         exercises: [
           {
@@ -29,22 +30,25 @@ test("Week page sends template_id when override selected", async () => {
             rep_range: [6, 8],
             recommended_working_weight: 82.5,
             primary_muscles: ["chest", "triceps"],
+            slot_role: "primary_compound",
           },
         ],
       },
       {
         session_id: "upper_lower-2",
-        title: "Lower 1",
+        title: "Arms & Weak Points",
+        day_role: "weak_point_arms",
         date: "2026-03-12",
         exercises: [
           {
-            id: "squat",
-            name: "Squat",
-            primary_exercise_id: "squat",
-            sets: 4,
-            rep_range: [5, 8],
-            recommended_working_weight: 120,
-            primary_muscles: ["quads", "glutes"],
+            id: "bayesian_curl",
+            name: "Bayesian Curl",
+            primary_exercise_id: "bayesian_curl",
+            sets: 3,
+            rep_range: [10, 15],
+            recommended_working_weight: 17.5,
+            primary_muscles: ["biceps"],
+            slot_role: "weak_point",
           },
         ],
       },
@@ -63,6 +67,10 @@ test("Week page sends template_id when override selected", async () => {
       trigger_weeks_effective: 6,
       is_deload_week: false,
       deload_reason: "scheduled",
+      authored_week_index: 1,
+      authored_week_role: "adaptation",
+      authored_sequence_complete: false,
+      post_authored_behavior: "in_authored_sequence",
     },
     deload: {
       active: false,
@@ -142,7 +150,12 @@ test("Week page sends template_id when override selected", async () => {
   expect(screen.getAllByText(/Upper Lower/i).length).toBeGreaterThan(0);
   expect(screen.getByText(/Coverage Radar/i)).toBeInTheDocument();
   expect(screen.getByText(/Bring up back\./i)).toBeInTheDocument();
+  expect(screen.getByText(/Authored block: Week 1 · Adaptation/i)).toBeInTheDocument();
+  expect(screen.getByText(/Arms & Weak Points emphasis is scheduled this week\./i)).toBeInTheDocument();
   expect(screen.getByText(/Lead slot: Bench Press · 4 sets · 6-8 reps @ 82.5 kg/i)).toBeInTheDocument();
+  expect(screen.getByText(/Session intent: Arms & Weak Points/i)).toBeInTheDocument();
+  expect(screen.getByText(/Current context/i)).toBeInTheDocument();
+  expect(screen.getByText(/Week 1 adaptation block/i)).toBeInTheDocument();
   expect(screen.getByText(/Adaptive Review Carryover/i)).toBeInTheDocument();
   expect(screen.getByText(/Frequency Adaptation Runtime/i)).toBeInTheDocument();
 

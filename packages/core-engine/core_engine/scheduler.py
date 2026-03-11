@@ -607,14 +607,25 @@ def _merge_dropped_sessions_into_selected(
     return [(index, merged_by_index[index]) for index in selected_indices]
 
 
-def _select_capped_exercises(exercises: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
+def _select_capped_exercises(
+    exercises: list[dict[str, Any]],
+    limit: int,
+    *,
+    day_role: str | None = None,
+) -> list[dict[str, Any]]:
     if limit >= len(exercises):
         return exercises
+
+    role_priority = dict(_SLOT_ROLE_PRIORITY)
+    if str(day_role or "").strip().lower() == "weak_point_arms":
+        role_priority["weak_point"] = 120
+        role_priority["primary_compound"] = 70
+        role_priority["secondary_compound"] = 60
 
     ranked = sorted(
         enumerate(exercises),
         key=lambda item: (
-            -_SLOT_ROLE_PRIORITY.get(_exercise_slot_role(item[1]), 30),
+            -role_priority.get(_exercise_slot_role(item[1]), 30),
             item[0],
         ),
     )
@@ -650,6 +661,28 @@ def _select_sessions_with_continuity(
     selected_indices: list[int] = []
     covered_priority: set[str] = set()
     covered_muscles: set[str] = set()
+
+    # Preserve the first authored day as the block anchor and keep the explicit
+    # weak-point / arms day when we compress a fuller authored week.
+    required_indices: list[int] = []
+    weak_point_index: int | None = None
+    for index, session in enumerate(base_sessions):
+        day_role = _session_day_role(session)
+        if day_role == "weak_point_arms" and weak_point_index is None:
+            weak_point_index = index
+
+    if base_sessions:
+        required_indices.append(0)
+    if weak_point_index is not None and weak_point_index not in required_indices:
+        required_indices.append(weak_point_index)
+
+    for index in required_indices[:days_available]:
+        if index in selected_indices:
+            continue
+        selected_indices.append(index)
+        session_primary_ids, session_muscles = session_profiles[index]
+        covered_priority.update(session_primary_ids)
+        covered_muscles.update(session_muscles)
 
     while len(selected_indices) < days_available:
         best_index: int | None = None
@@ -872,7 +905,11 @@ def generate_week_plan(
         if not exercises:
             continue
         if session_exercise_cap is not None:
-            exercises = _select_capped_exercises(exercises, session_exercise_cap)
+            exercises = _select_capped_exercises(
+                exercises,
+                session_exercise_cap,
+                day_role=str(session.get("day_role") or "").strip() or None,
+            )
 
         planned_sessions.append(
             {

@@ -127,8 +127,10 @@ def test_generate_week_supports_adaptive_gold_runtime_program() -> None:
     assert plan["template_selection_trace"]["selected_template_id"] == "adaptive_full_body_gold_v0_1"
     assert len(plan["sessions"]) == 3
     assert plan["sessions"][0]["title"] == "Full Body #1"
+    assert plan["mesocycle"]["authored_week_index"] == 1
+    assert plan["mesocycle"]["authored_week_role"] == "adaptation"
     assert any(
-        exercise["id"] == "bench_press_barbell"
+        exercise["id"] == "paused_barbell_rdl"
         for exercise in plan["sessions"][0]["exercises"]
     )
 
@@ -174,7 +176,7 @@ def test_adaptive_gold_generate_week_includes_core_slot_when_equipment_available
     exercises = [exercise for session in plan["sessions"] for exercise in session["exercises"]]
     core_exercise = next(item for item in exercises if item["id"] == "cable_crunch")
     assert core_exercise["name"] == "Cable Crunch"
-    assert core_exercise["rep_range"] == [10, 15]
+    assert core_exercise["rep_range"] == [10, 12]
     assert "cable" in core_exercise["equipment_tags"]
 
 
@@ -217,10 +219,10 @@ def test_adaptive_gold_generate_week_includes_hinge_slot_when_equipment_availabl
     plan = generate.json()
 
     exercises = [exercise for session in plan["sessions"] for exercise in session["exercises"]]
-    hinge_exercise = next(item for item in exercises if item["id"] == "romanian_deadlift")
-    assert hinge_exercise["name"] == "Romanian Deadlift"
+    hinge_exercise = next(item for item in exercises if item["id"] == "paused_barbell_rdl")
+    assert hinge_exercise["name"] == "Paused Barbell RDL"
     assert hinge_exercise["movement_pattern"] == "hinge"
-    assert set(hinge_exercise["equipment_tags"]) == {"barbell", "dumbbell"}
+    assert set(hinge_exercise["equipment_tags"]) == {"barbell"}
 
 
 def test_adaptive_gold_generate_week_includes_weak_point_slots_when_equipment_available() -> None:
@@ -262,16 +264,16 @@ def test_adaptive_gold_generate_week_includes_weak_point_slots_when_equipment_av
     plan = generate.json()
 
     exercises = [exercise for session in plan["sessions"] for exercise in session["exercises"]]
-    chest_weak = next(item for item in exercises if item["id"] == "weak_chest_cable_fly")
-    ham_weak = next(item for item in exercises if item["id"] == "weak_ham_leg_curl")
+    chest_weak = next(item for item in exercises if item["id"] == "weak_point_exercise_1")
+    ham_weak = next(item for item in exercises if item["id"] == "weak_point_exercise_2_optional")
 
-    assert chest_weak["name"] == "Cable Fly (Weak-Point Chest)"
-    assert chest_weak["movement_pattern"] == "horizontal_adduction"
-    assert "cable" in chest_weak["equipment_tags"]
+    assert chest_weak["name"] == "Weak Point Exercise 1"
+    assert chest_weak["movement_pattern"] == "accessory"
+    assert chest_weak["equipment_tags"] == []
 
-    assert ham_weak["name"] == "Leg Curl (Weak-Point Hamstrings)"
-    assert ham_weak["movement_pattern"] == "knee_flexion"
-    assert "machine" in ham_weak["equipment_tags"]
+    assert ham_weak["name"] == "Weak Point Exercise 2 (optional)"
+    assert ham_weak["movement_pattern"] == "accessory"
+    assert ham_weak["equipment_tags"] == []
 
 
 def test_adaptive_gold_generate_week_includes_arm_isolation_slots_when_equipment_available() -> None:
@@ -313,15 +315,15 @@ def test_adaptive_gold_generate_week_includes_arm_isolation_slots_when_equipment
     plan = generate.json()
 
     exercises = [exercise for session in plan["sessions"] for exercise in session["exercises"]]
-    biceps = next(item for item in exercises if item["id"] == "dumbbell_curl_incline")
-    triceps = next(item for item in exercises if item["id"] == "triceps_pushdown_rope")
+    biceps = next(item for item in exercises if item["id"] == "bayesian_cable_curl")
+    triceps = next(item for item in exercises if item["id"] == "triceps_pressdown_bar")
 
-    assert biceps["name"] == "Incline Dumbbell Curl"
-    assert biceps["movement_pattern"] == "elbow_flexion"
-    assert set(biceps["equipment_tags"]) == {"dumbbell", "bench"}
+    assert biceps["name"] == "Bayesian Cable Curl"
+    assert biceps["movement_pattern"] == "curl"
+    assert set(biceps["equipment_tags"]) == {"cable"}
 
-    assert triceps["name"] == "Rope Triceps Pushdown"
-    assert triceps["movement_pattern"] == "elbow_extension"
+    assert triceps["name"] == "Triceps Pressdown (Bar)"
+    assert triceps["movement_pattern"] == "triceps_extension"
     assert "cable" in triceps["equipment_tags"]
 
 
@@ -369,8 +371,8 @@ def test_adaptive_gold_generate_week_preserves_weak_point_days_when_frequency_co
     assert "Arms & Weak Points" in titles
 
     exercises = [exercise for session in plan["sessions"] for exercise in session["exercises"]]
-    assert any(exercise["id"] == "weak_chest_cable_fly" for exercise in exercises)
-    assert any(exercise["id"] == "weak_ham_leg_curl" for exercise in exercises)
+    assert any(exercise["id"] == "weak_point_exercise_1" for exercise in exercises)
+    assert any(exercise["id"] == "bayesian_cable_curl" for exercise in exercises)
 
 
 def test_adaptive_gold_generate_week_bounds_time_budget_while_preserving_weak_point_slot() -> None:
@@ -415,9 +417,9 @@ def test_adaptive_gold_generate_week_bounds_time_budget_while_preserving_weak_po
     day_a = next(session for session in plan["sessions"] if session["title"] == "Full Body #1")
     kept_ids = [exercise["id"] for exercise in day_a["exercises"]]
     assert kept_ids == [
-        "lat_pulldown_wide",
-        "bench_press_barbell",
-        "hack_squat",
+        "low_incline_smith_machine_press",
+        "leg_press",
+        "seated_db_shoulder_press",
     ]
 
 
@@ -478,11 +480,13 @@ def test_adaptive_gold_generate_week_selects_second_authored_week_after_prior_we
     plan = generate.json()
 
     day_a = next(session for session in plan["sessions"] if session["title"] == "Full Body #1")
-    lat_slot = next(exercise for exercise in day_a["exercises"] if exercise["id"] == "lat_pulldown_wide")
-    bench_slot = next(exercise for exercise in day_a["exercises"] if exercise["id"] == "bench_press_barbell")
-    assert lat_slot["rep_range"] == [8, 11]
-    assert bench_slot["rep_range"] == [6, 9]
+    lat_slot = next(exercise for exercise in day_a["exercises"] if exercise["id"] == "cross_body_lat_pull_around")
+    bench_slot = next(exercise for exercise in day_a["exercises"] if exercise["id"] == "low_incline_smith_machine_press")
+    assert lat_slot["rep_range"] == [10, 12]
+    assert bench_slot["rep_range"] == [8, 10]
     assert plan["generation_runtime_trace"]["outcome"]["prior_generated_weeks"] == 1
+    assert plan["mesocycle"]["authored_week_index"] == 2
+    assert plan["mesocycle"]["authored_week_role"] == "adaptation"
 
 
 def test_adaptive_gold_week_two_preserves_weak_point_structure_under_constraints() -> None:
@@ -548,11 +552,11 @@ def test_adaptive_gold_week_two_preserves_weak_point_structure_under_constraints
     day_a = next(session for session in plan["sessions"] if session["title"] == "Full Body #1")
     kept_ids = [exercise["id"] for exercise in day_a["exercises"]]
     assert kept_ids == [
-        "lat_pulldown_wide",
-        "bench_press_barbell",
-        "romanian_deadlift",
+        "low_incline_smith_machine_press",
+        "leg_press",
+        "seated_db_shoulder_press",
     ]
-    assert any(exercise["id"] == "weak_ham_leg_curl" for exercise in plan["sessions"][1]["exercises"])
+    assert any(exercise["id"] == "weak_point_exercise_2_optional" for exercise in plan["sessions"][1]["exercises"])
 
 
 def test_adaptive_gold_generate_week_selects_third_authored_week_after_two_prior_weeks() -> None:
@@ -617,12 +621,11 @@ def test_adaptive_gold_generate_week_selects_third_authored_week_after_two_prior
     assert generate.status_code == 200
     plan = generate.json()
 
-    day_a = next(session for session in plan["sessions"] if session["title"] == "Full Body #1")
-    bench_slot = next(exercise for exercise in day_a["exercises"] if exercise["id"] == "bench_press_barbell")
-    assert bench_slot["rep_range"] == [6, 8]
     assert plan["generation_runtime_trace"]["outcome"]["prior_generated_weeks"] == 2
     assert plan["mesocycle"]["authored_week_index"] == 3
     assert plan["mesocycle"]["authored_week_role"] == "accumulation"
+    day_a = next(session for session in plan["sessions"] if session["title"] == "Full Body #1")
+    assert any(exercise["id"] == "low_incline_smith_machine_press" for exercise in day_a["exercises"])
 
 
 def test_adaptive_gold_generate_week_uses_authored_deload_week_six() -> None:
@@ -711,9 +714,9 @@ def test_adaptive_gold_generate_week_uses_authored_deload_week_six() -> None:
     day_a = next(session for session in plan["sessions"] if session["title"] == "Full Body #1")
     assert plan["generation_runtime_trace"]["outcome"]["prior_generated_weeks"] == 5
     assert plan["mesocycle"]["authored_week_index"] == 6
-    assert plan["mesocycle"]["authored_week_role"] == "deload"
+    assert plan["mesocycle"]["authored_week_role"] == "intensification"
     assert plan["mesocycle"]["is_deload_week"] is True
-    assert plan["mesocycle"]["deload_reason"] == "authored_deload"
+    assert plan["mesocycle"]["deload_reason"] == "scheduled"
     assert plan["deload"]["active"] is True
     assert all(exercise["sets"] < 3 for exercise in day_a["exercises"])
 
@@ -774,8 +777,8 @@ def test_adaptive_gold_generate_week_selects_week_eight_intensification() -> Non
     plan = generate.json()
 
     day_a = next(session for session in plan["sessions"] if session["title"] == "Full Body #1")
-    bench_slot = next(exercise for exercise in day_a["exercises"] if exercise["id"] == "bench_press_barbell")
-    assert bench_slot["rep_range"] == [4, 6]
+    squat_slot = next(exercise for exercise in day_a["exercises"] if exercise["id"] == "smith_machine_squat")
+    assert squat_slot["rep_range"] == [4, 6]
     assert plan["generation_runtime_trace"]["outcome"]["prior_generated_weeks"] == 7
     assert plan["mesocycle"]["authored_week_index"] == 8
     assert plan["mesocycle"]["authored_week_role"] == "intensification"
@@ -839,8 +842,8 @@ def test_adaptive_gold_generate_week_selects_week_ten_intensification() -> None:
     plan = generate.json()
 
     day_a = next(session for session in plan["sessions"] if session["title"] == "Full Body #1")
-    bench_slot = next(exercise for exercise in day_a["exercises"] if exercise["id"] == "bench_press_barbell")
-    assert bench_slot["rep_range"] == [4, 6]
+    squat_slot = next(exercise for exercise in day_a["exercises"] if exercise["id"] == "smith_machine_squat")
+    assert squat_slot["rep_range"] == [4, 6]
     assert plan["generation_runtime_trace"]["outcome"]["prior_generated_weeks"] == 9
     assert plan["mesocycle"]["authored_week_index"] == 10
     assert plan["mesocycle"]["authored_week_role"] == "intensification"
@@ -905,8 +908,8 @@ def test_adaptive_gold_generate_week_marks_transition_pending_after_authored_seq
     plan = generate.json()
 
     day_a = next(session for session in plan["sessions"] if session["title"] == "Full Body #1")
-    bench_slot = next(exercise for exercise in day_a["exercises"] if exercise["id"] == "bench_press_barbell")
-    assert bench_slot["rep_range"] == [4, 6]
+    squat_slot = next(exercise for exercise in day_a["exercises"] if exercise["id"] == "smith_machine_squat")
+    assert squat_slot["rep_range"] == [4, 6]
     assert plan["generation_runtime_trace"]["outcome"]["prior_generated_weeks"] == 10
     assert plan["mesocycle"]["authored_week_index"] == 10
     assert plan["mesocycle"]["authored_week_role"] == "intensification"
@@ -1000,7 +1003,7 @@ def test_adaptive_gold_runtime_path_survives_logset_and_weekly_review() -> None:
     assert next_plan["adaptive_review"]["global_weight_scale"] <= 1.0
     assert len(next_plan["sessions"]) == 3
     assert any(
-        exercise["id"] == "bench_press_barbell"
+        exercise["id"] == "paused_barbell_rdl"
         for exercise in next_plan["sessions"][0]["exercises"]
     )
 
@@ -1045,7 +1048,7 @@ def test_adaptive_gold_generate_week_uses_repeat_failure_substitution() -> None:
         session.add(
             ExerciseState(
                 user_id=user.id,
-                exercise_id="bench_press_barbell",
+                exercise_id="low_incline_smith_machine_press",
                 current_working_weight=20.0,
                 exposure_count=5,
                 consecutive_under_target_exposures=3,
@@ -1063,13 +1066,13 @@ def test_adaptive_gold_generate_week_uses_repeat_failure_substitution() -> None:
         item
         for session in plan["sessions"]
         for item in session["exercises"]
-        if item.get("primary_exercise_id") == "bench_press_barbell"
+        if item.get("primary_exercise_id") == "low_incline_smith_machine_press"
     )
-    assert exercise["id"] == "incline_dumbbell_press"
-    assert exercise["name"] == "Incline Dumbbell Press"
-    assert exercise["primary_exercise_id"] == "bench_press_barbell"
-    assert exercise["movement_pattern"] == "incline_press"
-    assert exercise["repeat_failure_substitution"]["recommended_name"] == "Incline Dumbbell Press"
+    assert exercise["id"] == "low_incline_db_press"
+    assert exercise["name"] == "Low Incline DB Press"
+    assert exercise["primary_exercise_id"] == "low_incline_smith_machine_press"
+    assert exercise["movement_pattern"] == "horizontal_press"
+    assert exercise["repeat_failure_substitution"]["recommended_name"] == "Low Incline DB Press"
     assert exercise["repeat_failure_substitution"]["failed_exposure_count"] == 3
 
 
@@ -1113,7 +1116,7 @@ def test_adaptive_gold_generate_week_uses_repeat_failure_substitution_for_second
         session.add(
             ExerciseState(
                 user_id=user.id,
-                exercise_id="row_chest_supported",
+                exercise_id="chest_supported_machine_row",
                 current_working_weight=20.0,
                 exposure_count=5,
                 consecutive_under_target_exposures=3,
@@ -1131,13 +1134,13 @@ def test_adaptive_gold_generate_week_uses_repeat_failure_substitution_for_second
         item
         for session in plan["sessions"]
         for item in session["exercises"]
-        if item.get("primary_exercise_id") == "row_chest_supported"
+        if item.get("primary_exercise_id") == "chest_supported_machine_row"
     )
-    assert exercise["id"] == "row_machine_chest_supported"
-    assert exercise["name"] == "Row Machine Chest Supported"
-    assert exercise["primary_exercise_id"] == "row_chest_supported"
+    assert exercise["id"] == "chest_supported_t_bar_row"
+    assert exercise["name"] == "Chest Supported T Bar Row"
+    assert exercise["primary_exercise_id"] == "chest_supported_machine_row"
     assert exercise["movement_pattern"] == "horizontal_pull"
-    assert exercise["repeat_failure_substitution"]["recommended_name"] == "Row Machine Chest Supported"
+    assert exercise["repeat_failure_substitution"]["recommended_name"] == "Chest Supported T Bar Row"
     assert exercise["repeat_failure_substitution"]["failed_exposure_count"] == 3
 
 
@@ -1181,7 +1184,7 @@ def test_adaptive_gold_generate_week_uses_repeat_failure_substitution_for_third_
         session.add(
             ExerciseState(
                 user_id=user.id,
-                exercise_id="lat_pulldown_wide",
+                exercise_id="cross_body_lat_pull_around",
                 current_working_weight=20.0,
                 exposure_count=5,
                 consecutive_under_target_exposures=3,
@@ -1198,13 +1201,13 @@ def test_adaptive_gold_generate_week_uses_repeat_failure_substitution_for_third_
     exercise = next(
         item
         for item in plan["sessions"][0]["exercises"]
-        if item.get("primary_exercise_id") == "lat_pulldown_wide"
+        if item.get("primary_exercise_id") == "cross_body_lat_pull_around"
     )
-    assert exercise["id"] == "pullup_assisted_neutral"
-    assert exercise["name"] == "Neutral Grip Assisted Pull-Up"
-    assert exercise["primary_exercise_id"] == "lat_pulldown_wide"
+    assert exercise["id"] == "half_kneeling_1_arm_lat_pulldown"
+    assert exercise["name"] == "Half Kneeling 1 Arm Lat Pulldown"
+    assert exercise["primary_exercise_id"] == "cross_body_lat_pull_around"
     assert exercise["movement_pattern"] == "vertical_pull"
-    assert exercise["repeat_failure_substitution"]["recommended_name"] == "Neutral Grip Assisted Pull-Up"
+    assert exercise["repeat_failure_substitution"]["recommended_name"] == "Half Kneeling 1 Arm Lat Pulldown"
     assert exercise["repeat_failure_substitution"]["failed_exposure_count"] == 3
 
 
@@ -1248,7 +1251,7 @@ def test_adaptive_gold_generate_week_uses_repeat_failure_substitution_for_fourth
         session.add(
             ExerciseState(
                 user_id=user.id,
-                exercise_id="hack_squat",
+                exercise_id="leg_press",
                 current_working_weight=20.0,
                 exposure_count=5,
                 consecutive_under_target_exposures=3,
@@ -1265,13 +1268,13 @@ def test_adaptive_gold_generate_week_uses_repeat_failure_substitution_for_fourth
     exercise = next(
         item
         for item in plan["sessions"][0]["exercises"]
-        if item.get("primary_exercise_id") == "hack_squat"
+        if item.get("primary_exercise_id") == "leg_press"
     )
-    assert exercise["id"] == "split_squat_db"
-    assert exercise["name"] == "Split Squat Db"
-    assert exercise["primary_exercise_id"] == "hack_squat"
-    assert exercise["movement_pattern"] == "lunge"
-    assert exercise["repeat_failure_substitution"]["recommended_name"] == "Split Squat Db"
+    assert exercise["id"] == "belt_squat"
+    assert exercise["name"] == "Belt Squat"
+    assert exercise["primary_exercise_id"] == "leg_press"
+    assert exercise["movement_pattern"] == "squat"
+    assert exercise["repeat_failure_substitution"]["recommended_name"] == "Belt Squat"
     assert exercise["repeat_failure_substitution"]["failed_exposure_count"] == 3
 
 

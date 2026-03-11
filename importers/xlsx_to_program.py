@@ -6,6 +6,7 @@ Runtime services must never read XLSX/PDF. This script is explicitly build-time 
 
 import argparse
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from pathlib import Path
 import json
 import re
@@ -41,6 +42,140 @@ _EXERCISE_META_LABELS = {
 _SPLIT_DAY_LABEL_RE = re.compile(r"^(?:full\s*body|upper|lower|push|pull|legs?)\s*#?\s*\d+$", re.IGNORECASE)
 _BLOCK_PREFIX = "block "
 _PHASE_PREFIX = "phase "
+_EXCEL_DATE_EPOCH = datetime(1899, 12, 30)
+_EXERCISE_PREFIX_RE = re.compile(r"^(?:(?:superset)\s+)?[a-z]\d+\s*:\s*", re.IGNORECASE)
+_EXERCISE_METADATA_OVERRIDES: dict[str, dict[str, object]] = {
+    "cross_body_lat_pull_around": {
+        "movement_pattern": "vertical_pull",
+        "primary_muscles": ["lats"],
+        "equipment_tags": ["cable"],
+    },
+    "low_incline_smith_machine_press": {
+        "movement_pattern": "horizontal_press",
+        "primary_muscles": ["chest", "triceps", "front_delts"],
+        "equipment_tags": ["machine"],
+    },
+    "machine_hip_adduction": {
+        "movement_pattern": "hip_adduction",
+        "primary_muscles": ["adductors"],
+        "equipment_tags": ["machine"],
+    },
+    "leg_press": {
+        "movement_pattern": "squat",
+        "primary_muscles": ["quads", "glutes"],
+        "equipment_tags": ["machine"],
+    },
+    "lying_paused_rope_face_pull": {
+        "movement_pattern": "horizontal_pull",
+        "primary_muscles": ["rear_delts", "upper_back"],
+        "equipment_tags": ["cable"],
+    },
+    "seated_db_shoulder_press": {
+        "movement_pattern": "vertical_press",
+        "primary_muscles": ["front_delts", "triceps"],
+        "equipment_tags": ["dumbbell"],
+    },
+    "paused_barbell_rdl": {
+        "movement_pattern": "hinge",
+        "primary_muscles": ["hamstrings", "glutes", "erectors"],
+        "equipment_tags": ["barbell"],
+    },
+    "chest_supported_machine_row": {
+        "movement_pattern": "horizontal_pull",
+        "primary_muscles": ["lats", "mid_back", "biceps"],
+        "equipment_tags": ["machine"],
+    },
+    "hammer_preacher_curl": {
+        "movement_pattern": "curl",
+        "primary_muscles": ["biceps", "brachialis"],
+        "equipment_tags": ["dumbbell"],
+    },
+    "cuffed_behind_the_back_lateral_raise": {
+        "movement_pattern": "lateral_raise",
+        "primary_muscles": ["side_delts"],
+        "equipment_tags": ["cable"],
+    },
+    "assisted_pull_up": {
+        "movement_pattern": "vertical_pull",
+        "primary_muscles": ["lats", "biceps"],
+        "equipment_tags": ["bodyweight", "machine"],
+    },
+    "paused_assisted_dip": {
+        "movement_pattern": "horizontal_press",
+        "primary_muscles": ["chest", "triceps", "front_delts"],
+        "equipment_tags": ["bodyweight", "machine"],
+    },
+    "seated_leg_curl": {
+        "movement_pattern": "leg_curl",
+        "primary_muscles": ["hamstrings"],
+        "equipment_tags": ["machine"],
+    },
+    "lying_leg_curl": {
+        "movement_pattern": "leg_curl",
+        "primary_muscles": ["hamstrings"],
+        "equipment_tags": ["machine"],
+    },
+    "leg_extension": {
+        "movement_pattern": "knee_extension",
+        "primary_muscles": ["quads"],
+        "equipment_tags": ["machine"],
+    },
+    "cable_paused_shrug_in": {
+        "movement_pattern": "shrug",
+        "primary_muscles": ["traps"],
+        "equipment_tags": ["cable"],
+    },
+    "roman_chair_leg_raise": {
+        "movement_pattern": "core",
+        "primary_muscles": ["abs"],
+        "equipment_tags": ["bodyweight"],
+    },
+    "bent_over_cable_pec_flye": {
+        "movement_pattern": "chest_fly",
+        "primary_muscles": ["chest"],
+        "equipment_tags": ["cable"],
+    },
+    "neutral_grip_lat_pulldown": {
+        "movement_pattern": "vertical_pull",
+        "primary_muscles": ["lats", "biceps"],
+        "equipment_tags": ["cable"],
+    },
+    "leg_press_calf_press": {
+        "movement_pattern": "plantar_flexion",
+        "primary_muscles": ["calves"],
+        "equipment_tags": ["machine"],
+    },
+    "cable_reverse_flye": {
+        "movement_pattern": "reverse_flye",
+        "primary_muscles": ["rear_delts", "upper_back"],
+        "equipment_tags": ["cable"],
+    },
+    "bayesian_cable_curl": {
+        "movement_pattern": "curl",
+        "primary_muscles": ["biceps"],
+        "equipment_tags": ["cable"],
+    },
+    "triceps_pressdown_bar": {
+        "movement_pattern": "triceps_extension",
+        "primary_muscles": ["triceps"],
+        "equipment_tags": ["cable"],
+    },
+    "constant_tension_preacher_curl": {
+        "movement_pattern": "curl",
+        "primary_muscles": ["biceps"],
+        "equipment_tags": ["machine"],
+    },
+    "cable_triceps_kickback": {
+        "movement_pattern": "triceps_extension",
+        "primary_muscles": ["triceps"],
+        "equipment_tags": ["cable"],
+    },
+    "standing_calf_raise": {
+        "movement_pattern": "plantar_flexion",
+        "primary_muscles": ["calves"],
+        "equipment_tags": ["machine"],
+    },
+}
 
 
 @dataclass(slots=True)
@@ -97,8 +232,12 @@ class ParsedStructuredSheetResult:
     diagnostics: list[ImportDiagnostic]
 
 
+def _exercise_metadata_override(exercise_name: str) -> dict[str, object]:
+    return _EXERCISE_METADATA_OVERRIDES.get(slugify(normalize_exercise_name(exercise_name)), {})
+
+
 def infer_equipment_tags_from_name(exercise_name: str) -> list[str]:
-    tags: list[str] = []
+    tags: list[str] = [str(tag) for tag in (_exercise_metadata_override(exercise_name).get("equipment_tags") or [])]
     for pattern, equipment_tag in _EQUIPMENT_RULES:
         if pattern.search(exercise_name) and equipment_tag not in tags:
             tags.append(equipment_tag)
@@ -106,19 +245,23 @@ def infer_equipment_tags_from_name(exercise_name: str) -> list[str]:
 
 
 def infer_movement_pattern(exercise_name: str) -> str | None:
+    override = _exercise_metadata_override(exercise_name)
+    if override.get("movement_pattern"):
+        return str(override["movement_pattern"])
+
     normalized = exercise_name.lower()
     rules: tuple[tuple[tuple[str, ...], str], ...] = (
-        (("bench", "press"), "horizontal_press"),
         (("shoulder press", "overhead"), "vertical_press"),
-        (("row",), "horizontal_pull"),
-        (("pulldown", "pull-up", "chin-up"), "vertical_pull"),
         (("squat", "leg press", "split squat"), "squat"),
+        (("triceps", "pushdown", "extension"), "triceps_extension"),
+        (("pulldown", "pull-up", "chin-up", "pull around"), "vertical_pull"),
+        (("row", "face pull"), "horizontal_pull"),
         (("rdl", "deadlift", "hinge", "hyperextension"), "hinge"),
         (("lunge",), "lunge"),
-        (("calf",), "calf_raise"),
+        (("calf",), "plantar_flexion"),
         (("lateral raise",), "lateral_raise"),
         (("curl",), "curl"),
-        (("triceps", "extension", "pushdown"), "triceps_extension"),
+        (("bench", "press", "dip"), "horizontal_press"),
     )
     for keywords, pattern in rules:
         if any(keyword in normalized for keyword in keywords):
@@ -126,7 +269,12 @@ def infer_movement_pattern(exercise_name: str) -> str | None:
     return None
 
 
-def infer_primary_muscles(movement_pattern: str | None) -> list[str]:
+def infer_primary_muscles(movement_pattern: str | None, exercise_name: str | None = None) -> list[str]:
+    if exercise_name:
+        override = _exercise_metadata_override(exercise_name)
+        if override.get("primary_muscles"):
+            return [str(muscle) for muscle in override["primary_muscles"]]
+
     mapping: dict[str, list[str]] = {
         "horizontal_press": ["chest", "triceps", "front_delts"],
         "vertical_press": ["front_delts", "triceps"],
@@ -135,10 +283,17 @@ def infer_primary_muscles(movement_pattern: str | None) -> list[str]:
         "squat": ["quads", "glutes"],
         "hinge": ["hamstrings", "glutes", "erectors"],
         "lunge": ["quads", "glutes"],
-        "calf_raise": ["calves"],
+        "plantar_flexion": ["calves"],
         "lateral_raise": ["side_delts"],
         "curl": ["biceps"],
         "triceps_extension": ["triceps"],
+        "leg_curl": ["hamstrings"],
+        "knee_extension": ["quads"],
+        "core": ["abs"],
+        "hip_adduction": ["adductors"],
+        "shrug": ["traps"],
+        "reverse_flye": ["rear_delts", "upper_back"],
+        "chest_fly": ["chest"],
     }
     if movement_pattern is None:
         return []
@@ -148,6 +303,10 @@ def infer_primary_muscles(movement_pattern: str | None) -> list[str]:
 def slugify(value: str) -> str:
     slug = re.sub(r"[^a-z0-9]+", "_", value.lower()).strip("_")
     return slug or "exercise"
+
+
+def normalize_exercise_name(raw_value: str) -> str:
+    return _EXERCISE_PREFIX_RE.sub("", raw_value).strip()
 
 
 def parse_rep_range(raw_value: str) -> list[int]:
@@ -272,6 +431,36 @@ def _read_shared_strings(workbook_zip: zipfile.ZipFile) -> list[str]:
     return shared_strings
 
 
+def _read_style_number_formats(workbook_zip: zipfile.ZipFile) -> dict[int, str]:
+    if "xl/styles.xml" not in workbook_zip.namelist():
+        return {}
+
+    styles_root = ET.fromstring(workbook_zip.read("xl/styles.xml"))
+    custom_numfmts = {
+        int(node.attrib.get("numFmtId", "0")): node.attrib.get("formatCode", "")
+        for node in styles_root.findall("a:numFmts/a:numFmt", _NS)
+    }
+    builtins = {
+        14: "m/d/yyyy",
+        15: "d-mmm-yy",
+        16: "d-mmm",
+        17: "mmm-yy",
+        22: "m/d/yyyy h:mm",
+    }
+    custom_numfmts.update(builtins)
+
+    cell_xfs = styles_root.find("a:cellXfs", _NS)
+    if cell_xfs is None:
+        return {}
+
+    style_formats: dict[int, str] = {}
+    for index, xf in enumerate(cell_xfs.findall("a:xf", _NS)):
+        num_fmt_id = int(xf.attrib.get("numFmtId", "0"))
+        if num_fmt_id in custom_numfmts:
+            style_formats[index] = custom_numfmts[num_fmt_id]
+    return style_formats
+
+
 def _read_sheet_targets(workbook_zip: zipfile.ZipFile) -> list[tuple[str, str]]:
     workbook_root = ET.fromstring(workbook_zip.read("xl/workbook.xml"))
     rels_root = ET.fromstring(workbook_zip.read("xl/_rels/workbook.xml.rels"))
@@ -303,7 +492,20 @@ def _column_index_from_reference(reference: str) -> int:
     return max(col_index - 1, 0)
 
 
-def _resolve_cell_value(cell: ET.Element, shared_strings: list[str]) -> str:
+def _format_excel_date(raw: str, format_code: str) -> str:
+    try:
+        serial = float(raw)
+    except ValueError:
+        return raw
+
+    dt = _EXCEL_DATE_EPOCH + timedelta(days=serial)
+    normalized_format = format_code.lower().replace("\\", "")
+    if "m-d" in normalized_format and "y" not in normalized_format:
+        return f"{dt.month}-{dt.day}"
+    return raw
+
+
+def _resolve_cell_value(cell: ET.Element, shared_strings: list[str], style_number_formats: dict[int, str]) -> str:
     cell_type = cell.attrib.get("t")
     inline_node = cell.find("a:is/a:t", _NS)
     if inline_node is not None:
@@ -316,10 +518,19 @@ def _resolve_cell_value(cell: ET.Element, shared_strings: list[str]) -> str:
     raw = value_node.text or ""
     if cell_type == "s" and raw.isdigit() and int(raw) < len(shared_strings):
         return shared_strings[int(raw)]
+    style_index = cell.attrib.get("s")
+    if style_index is not None:
+        format_code = style_number_formats.get(int(style_index))
+        if format_code:
+            return _format_excel_date(raw, format_code)
     return raw
 
 
-def _parse_sheet_rows(sheet_xml: bytes, shared_strings: list[str]) -> list[list[str]]:
+def _parse_sheet_rows(
+    sheet_xml: bytes,
+    shared_strings: list[str],
+    style_number_formats: dict[int, str],
+) -> list[list[str]]:
     sheet_root = ET.fromstring(sheet_xml)
     rows: list[list[str]] = []
     for row in sheet_root.findall("a:sheetData/a:row", _NS):
@@ -328,7 +539,7 @@ def _parse_sheet_rows(sheet_xml: bytes, shared_strings: list[str]) -> list[list[
             col_index = _column_index_from_reference(cell.attrib.get("r", ""))
             while len(row_values) < col_index:
                 row_values.append("")
-            row_values.append(_resolve_cell_value(cell, shared_strings))
+            row_values.append(_resolve_cell_value(cell, shared_strings, style_number_formats))
         rows.append(normalize_row(row_values))
     return rows
 
@@ -336,22 +547,46 @@ def _parse_sheet_rows(sheet_xml: bytes, shared_strings: list[str]) -> list[list[
 def read_xlsx_sheets(path: Path) -> list[ParsedSheet]:
     with zipfile.ZipFile(path) as workbook_zip:
         shared_strings = _read_shared_strings(workbook_zip)
+        style_number_formats = _read_style_number_formats(workbook_zip)
         targets = _read_sheet_targets(workbook_zip)
         sheets: list[ParsedSheet] = []
         for sheet_name, target in targets:
             if not target or target not in workbook_zip.namelist():
                 continue
-            rows = _parse_sheet_rows(workbook_zip.read(target), shared_strings)
+            rows = _parse_sheet_rows(workbook_zip.read(target), shared_strings, style_number_formats)
             sheets.append(ParsedSheet(name=sheet_name, rows=rows))
         return sheets
 
 
 def _find_header_index(rows: list[list[str]]) -> int:
+    best_index = -1
+    best_score = -1
     for idx, row in enumerate(rows):
-        lowered = " ".join(value.lower() for value in row if value)
-        if "exercise" in lowered and "working sets" in lowered and "reps" in lowered:
-            return idx
-    return -1
+        normalized = [_normalize_label(value) for value in row if value.strip()]
+        if not normalized:
+            continue
+
+        has_exercise = any(label == "exercise" for label in normalized)
+        has_working_sets = any("working sets" in label for label in normalized)
+        has_reps = any(label == "reps" for label in normalized)
+        if not (has_exercise and has_working_sets and has_reps):
+            continue
+
+        signal_tokens = (
+            "last set intensity technique",
+            "warm up sets",
+            "early set rpe",
+            "last set rpe",
+            "rest",
+            "substitution option 1",
+            "substitution option 2",
+            "notes",
+        )
+        score = sum(any(token in label for label in normalized) for token in signal_tokens)
+        if score > best_score:
+            best_score = score
+            best_index = idx
+    return best_index
 
 
 def _extract_substitution_candidates(row: list[str], mapped: dict[str, int]) -> list[str]:
@@ -444,7 +679,13 @@ def _is_structural_session_label(value: str) -> bool:
         return True
     if normalized in _SESSION_META_LABELS:
         return True
-    return normalized.startswith("week ") or normalized.startswith(_BLOCK_PREFIX) or normalized.startswith(_PHASE_PREFIX)
+    return (
+        normalized.startswith("week ")
+        or normalized.startswith(_BLOCK_PREFIX)
+        or normalized.startswith(_PHASE_PREFIX)
+        or normalized.startswith("semi deload")
+        or normalized.startswith("deload week")
+    )
 
 
 def _is_structural_exercise_label(value: str) -> bool:
@@ -455,18 +696,21 @@ def _is_structural_exercise_label(value: str) -> bool:
         return True
     if normalized.startswith("week ") or normalized.startswith(_BLOCK_PREFIX) or normalized.startswith(_PHASE_PREFIX):
         return True
+    if normalized.startswith("semi deload") or normalized.startswith("deload week"):
+        return True
     if _SPLIT_DAY_LABEL_RE.match(normalized):
         return True
     return False
 
 
 def _parse_exercise_row(row: list[str], mapped: dict[str, int], exercise_idx: int) -> dict | None:
-    exercise_name = column_value(row, exercise_idx)
-    if not exercise_name:
+    raw_exercise_name = column_value(row, exercise_idx)
+    if not raw_exercise_name:
         return None
 
-    if _is_structural_exercise_label(exercise_name):
+    if _is_structural_exercise_label(raw_exercise_name):
         return None
+    exercise_name = normalize_exercise_name(raw_exercise_name)
 
     working_sets_raw = column_value(row, mapped["working_sets"])
     reps_raw = column_value(row, mapped["reps"])
@@ -483,7 +727,7 @@ def _parse_exercise_row(row: list[str], mapped: dict[str, int], exercise_idx: in
             "rep_range": parse_rep_range(reps_raw),
             "start_weight": 20,
             "movement_pattern": movement_pattern,
-            "primary_muscles": infer_primary_muscles(movement_pattern),
+            "primary_muscles": infer_primary_muscles(movement_pattern, exercise_name),
             "substitution_candidates": _extract_substitution_candidates(row, mapped),
             "notes": notes,
             "video": _extract_youtube_url(row, mapped),
@@ -524,6 +768,26 @@ def _append_structured_session(
         phase.weeks.append(week)
 
     week.sessions.append({"name": session_name, "exercises": list(exercises)})
+
+
+def _initial_phase_context(
+    rows: list[list[str]],
+    *,
+    header_row_index: int,
+    session_idx: int,
+    exercise_idx: int,
+    fallback_phase_name: str,
+) -> tuple[str, str]:
+    for scan_index in range(header_row_index, -1, -1):
+        row = normalize_row(rows[scan_index])
+        if not any(row):
+            continue
+        session_candidate = column_value(row, session_idx)
+        exercise_name = column_value(row, exercise_idx)
+        phase_label = _parse_phase_label(session_candidate, exercise_name)
+        if phase_label:
+            return phase_label, _phase_id_from_name(phase_label, 1)
+    return fallback_phase_name, _phase_id_from_name(fallback_phase_name, 1)
 
 
 def _transition_structured_context(
@@ -810,8 +1074,13 @@ def parse_sheet_to_structured_sessions(sheet: ParsedSheet) -> ParsedStructuredSh
 
     diagnostics: list[ImportDiagnostic] = []
     phases: list[StructuredPhase] = []
-    current_phase_name = sheet.name
-    current_phase_id = _phase_id_from_name(sheet.name, 1)
+    current_phase_name, current_phase_id = _initial_phase_context(
+        sheet.rows,
+        header_row_index=header_row_index,
+        session_idx=mapped["session"],
+        exercise_idx=exercise_idx,
+        fallback_phase_name=sheet.name,
+    )
     current_week_index = 1
     current_session_name: str | None = None
     current_exercises: list[dict] = []

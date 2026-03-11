@@ -13,6 +13,7 @@ import {
 type CoachingIntelligencePanelProps = {
   contextLabel: string;
   templateId?: string | null;
+  contextNote?: string | null;
 };
 
 function parseLaggingMuscles(raw: string): string[] {
@@ -36,6 +37,7 @@ function formatTransitionAction(action?: string | null): string {
 
 export default function CoachingIntelligencePanel({
   contextLabel,
+  contextNote,
   templateId,
 }: Readonly<CoachingIntelligencePanelProps>) {
   const [profileTemplateId, setProfileTemplateId] = useState<string | null>(null);
@@ -144,6 +146,12 @@ export default function CoachingIntelligencePanel({
       <p className="telemetry-kicker">Coaching Intelligence</p>
       <p className="telemetry-meta">Surface: {contextLabel}</p>
       <p className="telemetry-meta">Template: {resolvedTemplateId ?? "profile-selected"}</p>
+      {contextNote ? (
+        <div className="rounded-md border border-white/10 bg-zinc-950/50 p-2">
+          <p className="ui-meta">Current context</p>
+          <p className="text-xs text-zinc-200">{contextNote}</p>
+        </div>
+      ) : null}
 
       <div className="grid grid-cols-2 gap-2">
         <label htmlFor={`${contextLabel}-preview-from-days`} className="ui-meta">From Days</label>

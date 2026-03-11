@@ -1,210 +1,261 @@
 # Phase 1 Fidelity Diff
 
 Last updated: 2026-03-11
-Status: Working audit for fidelity-first execution wave
+Status: Working audit for the current source-reconciliation wave
 
 ## Purpose
 
-Compare the current adaptive-gold runtime path against the richer authored doctrine represented by:
+Compare the current adaptive-gold runtime path against the actual Phase 1 full-body workbook/PDF doctrine so the next code wave improves the right source artifact.
 
-- `programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json`
+Primary references:
+- `reference/Pure Bodybuilding Phase 1 - Full Body Sheet.xlsx`
 - `reference/The_Pure_Bodybuilding_Program - Phase 1 - Full_Body.pdf`
 - `reference/Hypertrophy Handbook (Jeff Nippard) (z-library.sk, 1lib.sk, z-lib.sk).pdf`
-
-This document exists to keep the next code wave grounded in the actual Phase 1 source instead of continuing to expand a compressed approximation.
+- `programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json`
+- `programs/gold/adaptive_full_body_gold_v0_1.json`
 
 ## High-Level Verdict
 
-The current adaptive-gold runtime path is directionally aligned with the Phase 1 full-body doctrine, but it is still materially compressed relative to the real authored source.
+The key architectural gap is no longer day-count compression.
 
-Current runtime shape:
-- `3` live sessions (`Full Body A/B/C`)
-- `days_supported` starts at `[2, 3]`
-- weak-point and arms logic is present, but partially collapsed into the reduced session set
+That gap is now fixed enough to be useful:
+- runtime starts from a real authored five-day source
+- `day_role` survives the loader boundary
+- scheduler compresses from five authored days down to 4/3/2 when needed
+- weak-point day and primary compounds survive constrained compression much better than before
 
-Authored source shape:
-- `5` training days per week
-- `4` full-body sessions plus `1` dedicated `Arms & Weak Points` day
-- first `2` weeks are explicitly lower-intensity adaptation weeks
-- later weeks intensify
-- weak-point work is its own doctrinal feature, not just extra accessory work
+The current highest-value mismatch is now source doctrine fidelity:
+- the live runtime still uses a materially different Week 1 / Week 2 exercise lineup than the actual workbook
+- the first two weeks are adaptation weeks in the workbook/PDF, but that distinction is still under-modeled in the source artifacts
+- the workbook’s Early Set / Last Set effort structure and last-set intensity techniques are still mostly flattened in the runtime-safe representation
 
-## Authored Week Structure
+## What Is Already Aligned
 
-Onboarding package week templates:
+The current adaptive-gold path now matches the workbook/PDF on:
+- 10-week mesocycle length
+- 5-day authored week shape
+- dedicated `Arms & Weak Points` day as a first-class day
+- explicit authored deload week
+- explicit post-sequence transition state
+- deterministic downward compression from authored truth instead of authored-as-compressed-truth
 
-- `wk_build_a`
-- `wk_build_b`
-- `wk_deload`
-- `wk_intens_a`
-- `wk_intens_b`
+This is an important correction. We are now improving a structurally credible full-body runtime path instead of a three-day surrogate.
 
-Each template preserves `5` authored days:
+## Actual Workbook/PDF Doctrine Confirmed
 
-- `fb1` `Full Body #1`
-- `fb2` `Full Body #2`
-- `fb3` `Full Body #3`
-- `fb4` `Full Body #4`
-- `fb5` `Arms & Weak Points`
+Confirmed from the workbook/PDF pair:
+- first 2 weeks are lower-intensity adaptation weeks for the higher training frequency
+- most sets in weeks 1-2 live around `~7-8` or `~8-9` RPE instead of the later `9-10` push
+- working sets are explicitly split into `Early Sets` and `Last Set`
+- the `Arms & Weak Points` day is not optional fluff; it is a real doctrinal day
+- substitutions are authored as part of the program, not a runtime afterthought
+- last-set intensity techniques are exercise-specific and vary across weeks
 
-Current runtime gap:
-- runtime loader currently emits only `3` sessions per authored week
-- days `fb4` and `fb5` are not represented as standalone authored runtime sessions
+Confirmed from the handbook:
+- Early Sets generally stop shy of failure while the Last Set often goes to failure
+- RDL-family work intentionally stays farther from failure because of recovery cost
+- the weak-point day can be skipped only as an explicit frequency concession, not because it is low-value by default
+- if no obvious weak point is known, shoulders are the default weak-point recommendation
 
-## Authored 5-Day Session Structure
+## Workbook Week 1 vs Current Runtime Week 1
 
-### Authored `wk_build_a`
+### Workbook Week 1 - Full Body #1
+Workbook:
+- `Cross-Body Lat Pull-Around`
+- `Low Incline Smith Machine Press`
+- `Machine Hip Adduction`
+- `Leg Press`
+- `Lying Paused Rope Face Pull`
+- `Cable Crunch`
 
-- `fb1`:
-  - `lat_pulldown_wide`
-  - `bench_press_barbell`
-  - `hack_squat`
-  - `lateral_raise_cable`
-- `fb2`:
-  - `romanian_deadlift`
-  - `incline_dumbbell_press`
-  - `chest_supported_row`
-  - `leg_curl_seated`
-- `fb3`:
-  - `pullup_assisted_neutral`
-  - `overhead_press_seated_db`
-  - `split_squat_db`
-  - `triceps_pushdown_rope`
-- `fb4`:
-  - `hack_squat`
-  - `row_machine_chest_supported`
-  - `dumbbell_curl_incline`
-  - `calf_raise_seated`
-- `fb5` `Arms & Weak Points`:
-  - `weak_chest_cable_fly`
-  - `weak_ham_leg_curl`
-  - `dumbbell_curl_incline`
-  - `triceps_pushdown_rope`
+Current runtime:
+- `lat_pulldown_wide`
+- `bench_press_barbell`
+- `hack_squat`
+- `lateral_raise_cable`
+- `cable_crunch`
 
-### Current runtime week-1 structure
+Gap:
+- lats, chest, quad/adductor, rear-delt, and abs intent are present
+- but exercise selection is materially different
+- the current runtime is closer to a simplified bodybuilding day than the actual workbook day
 
-- `Full Body A`:
-  - `bench_press_barbell`
-  - `row_chest_supported`
-  - `lat_pulldown_wide`
-  - `hack_squat`
-  - `cable_crunch`
-  - `weak_chest_cable_fly`
-- `Full Body B`:
-  - `romanian_deadlift`
-  - `weak_ham_leg_curl`
-- `Full Body C`:
-  - `dumbbell_curl_incline`
-  - `triceps_pushdown_rope`
+### Workbook Week 1 - Full Body #2
+Workbook:
+- `Seated DB Shoulder Press`
+- `Paused Barbell RDL`
+- `Chest-Supported Machine Row`
+- `Hammer Preacher Curl`
+- `Cuffed Behind-The-Back Lateral Raise`
+- `Overhead Cable Triceps Extension (Bar)`
 
-### Concrete structural gaps
-
-1. `fb4` is missing as a standalone runtime day.
-- lost:
-  - second squat exposure
-  - machine chest-supported row exposure
-  - calf work
-
-2. `fb5` is collapsed into mixed runtime sessions instead of remaining a dedicated day.
-- weak-point and arms intent exists, but not as a clearly separate authored day
-
-3. `fb2` and `fb3` are underrepresented.
+Current runtime:
+- `romanian_deadlift`
 - `incline_dumbbell_press`
-- `chest_supported_row`
+- `row_chest_supported`
+- `leg_curl_seated`
+
+Gap:
+- the workbook day is shoulder/hamstring/row/arm focused
+- the current runtime day is still much closer to the older simplified onboarding package than the actual workbook lineup
+- this is one of the highest-value day-level mismatches to fix next
+
+### Workbook Week 1 - Full Body #3
+Workbook:
+- `Assisted Pull-Up`
+- `Paused Assisted Dip`
+- `Seated Leg Curl`
+- `Leg Extension`
+- `Cable Paused Shrug-In`
+- `Roman Chair Leg Raise`
+
+Current runtime:
 - `pullup_assisted_neutral`
 - `overhead_press_seated_db`
 - `split_squat_db`
-- `leg_curl_seated`
-- `lateral_raise_cable`
-- `calf_raise_seated`
-  are either missing or not preserved in the live runtime session set
+- `triceps_pushdown_rope`
 
-## Slot Roles And Weak-Point Semantics
+Gap:
+- vertical pull intent survives, but the rest of the day diverges heavily
+- workbook uses a tighter superset-driven, lower-rest, pull/push/hamstring/quad/trap/abs structure
+- runtime currently loses that feel entirely
 
-The onboarding package preserves richer slot-role semantics than the current runtime path expresses day-to-day.
+### Workbook Week 1 - Full Body #4
+Workbook:
+- `Lying Leg Curl`
+- `Hack Squat`
+- `Bent-Over Cable Pec Flye`
+- `Neutral-Grip Lat Pulldown`
+- `Leg Press Calf Press`
+- `Cable Reverse Flye (Mechanical Dropset)`
 
-Authored source uses:
-- `primary_compound`
-- `secondary_compound`
-- `isolation`
-- `weak_point`
-
-Current runtime issues:
-- slot roles survive at the exercise level for the reduced session set
-- but the larger doctrinal meaning of the dedicated `Arms & Weak Points` day is lost because day-level intent is not preserved
-- weak-point work is present, but runtime does not currently preserve the authored distinction between:
-  - standard session accessory work
-  - weak-point day work
-
-## Intro Weeks, Intensification, And Deload Semantics
-
-Confirmed from the source PDF:
-- first `2` weeks are lower-intensity adaptation weeks for the higher training frequency
-- first `2` weeks use fewer intensity techniques
-- after week `2`, intensity rises and most sets are pushed closer to failure
-- working sets are separated into `Early Sets` and `Last Sets`
-- weak-point day behavior depends on recovery and can include optional second weak-point exercise only if recovered
-
-Current runtime status:
-- runtime preserves a `10`-week authored mesocycle
-- runtime preserves generic `accumulation`, `deload`, and `intensification` week roles
-- runtime does **not yet** preserve the stronger source distinction that the first two weeks are specific adaptation weeks for frequency ramp-up
-- runtime does **not yet** express `Early Sets` vs `Last Sets` semantics in a user-visible or rules-visible way
-
-## Exercise-Library Gaps
-
-Exercises present in onboarding source but not currently represented in the live runtime week-1 session set include:
-
-- `incline_dumbbell_press`
-- `pullup_assisted_neutral`
-- `overhead_press_seated_db`
-- `split_squat_db`
-- `lateral_raise_cable`
-- `leg_curl_seated`
+Current runtime:
+- `hack_squat`
 - `row_machine_chest_supported`
+- `dumbbell_curl_incline`
 - `calf_raise_seated`
 
-This means the current live runtime path is still missing meaningful upper-chest, vertical-pull, overhead-press, unilateral-leg, delt, hamstring-isolation, and calf doctrine from the authored source.
+Gap:
+- the current runtime keeps only part of the lower-body and calf intent
+- workbook includes chest, lats, and rear-delt mechanical dropset work that runtime does not currently preserve
 
-## Runtime Output Gaps
+### Workbook Week 1 - Arms & Weak Points
+Workbook:
+- `Weak Point Exercise 1`
+- `Weak Point Exercise 2 (optional)`
+- `Bayesian Cable Curl`
+- `Triceps Pressdown (Bar)`
+- `Bottom-2/3 Constant Tension Preacher Curl`
+- `Cable Triceps Kickback`
+- `Standing Calf Raise`
 
-### Loader output gaps
+Current runtime:
+- `weak_chest_cable_fly`
+- `weak_ham_leg_curl`
+- `dumbbell_curl_incline`
+- `triceps_pushdown_rope`
 
-Current `load_program_template("adaptive_full_body_gold_v0_1")` returns:
-- `days_supported == [2, 3]`
-- `3` sessions in `sessions`
-- `3` sessions per authored week in `authored_weeks`
+Gap:
+- runtime preserves the weak-point day concept, which is important
+- but it underrepresents the authored arm-day depth and currently hardcodes weak-point selections instead of presenting the authored weak-point slot structure
 
-Phase 1 source implications:
-- authored source truth is `5` days
-- runtime should preserve that richer authored structure before compression
-- constrained schedules should be derived from `5` down to `4/3/2`, not authored directly as `3`
+## Workbook Week 2 vs Current Runtime Week 2
 
-### Scheduler output gaps
+Week 2 in the workbook is not just a rep-range tweak.
+It keeps the same five-day structure but changes intensity-technique usage and specific exercise selection details.
 
-Scheduler currently adapts from the already-compressed `3`-session authored runtime.
+Concrete week-2 workbook examples:
+- `Cuffed Behind-The-Back Lateral Raise` uses `Myo-reps`
+- `Overhead Cable Triceps Extension (Bar)` uses a `Dropset`
+- the first two weeks still live in the adaptation RPE band instead of later-phase near-failure work
 
-That means:
-- compression logic has less doctrine to preserve
-- weak-point and arms semantics are already partially collapsed before adaptation begins
-- four-day and five-day fidelity cannot be achieved from the current runtime template shape
+Current runtime week 2:
+- does preserve a distinct authored week instead of silently repeating week 1
+- but still does not preserve the actual workbook exercise lineup or the richer intensity-technique semantics
 
-## Most Important Gap To Fix First
+## Exercise-Library Gaps Relative To The Workbook
 
-The single highest-value mismatch is this:
+The workbook prominently uses exercises that are still missing or under-modeled in the current gold source path, including:
+- `cross_body_lat_pull_around`
+- `low_incline_smith_machine_press`
+- `machine_hip_adduction`
+- `leg_press`
+- `lying_paused_rope_face_pull`
+- `seated_db_shoulder_press`
+- `paused_barbell_rdl`
+- `chest_supported_machine_row`
+- `hammer_preacher_curl`
+- `cuffed_behind_the_back_lateral_raise`
+- `assisted_pull_up`
+- `paused_assisted_dip`
+- `cable_paused_shrug_in`
+- `roman_chair_leg_raise`
+- `bent_over_cable_pec_flye`
+- `neutral_grip_lat_pulldown`
+- `leg_press_calf_press`
+- `cable_reverse_flye`
+- `bayesian_cable_curl`
+- `triceps_pressdown_bar`
+- `constant_tension_preacher_curl`
+- `cable_triceps_kickback`
+- `standing_calf_raise`
 
-**The live runtime path starts from a `3`-session authored week when the real Phase 1 doctrine starts from a `5`-day authored week.**
+These are not small cosmetic differences. They change how the block feels in the gym.
 
-That gap should be fixed before broadening more features, because it affects:
-- fidelity
-- adaptation quality
-- weak-point preservation
-- session feel
-- user trust
+## Semantic Gaps Still Open
+
+### 1. Adaptation-week semantics
+Current runtime still treats weeks 1-5 broadly as `accumulation`.
+Source doctrine says weeks 1-2 are specifically adaptation weeks.
+
+Missing runtime semantics:
+- adaptation-specific week role or subtype
+- explicit lower-intensity effort modeling for weeks 1-2
+- reduced intensity-technique usage in weeks 1-2
+
+### 2. Early Set / Last Set structure
+Current runtime still flattens most exercises into one work-set prescription shape.
+Source doctrine uses:
+- Early Set RPE
+- Last Set RPE
+- Last-Set Intensity Technique
+
+This is a major fidelity gap.
+
+### 3. Weak-point day structure
+Current runtime preserves the day but not its authored slot structure.
+Source doctrine expects:
+- 1 mandatory weak-point slot
+- 1 optional weak-point slot
+- multiple authored arm isolations
+- calf work on the day
+
+### 4. Real workbook exercise lineup
+Current runtime still uses many simplified or older gold-sample exercise choices instead of the real workbook lineup.
+
+## Most Important Gap To Fix Next
+
+The next highest-value fix is no longer structural day count.
+It is this:
+
+- the source workbook now parses cleanly into 10 weeks / 5 authored days / real Phase 1 exercise ids
+- key exercise metadata quality is now materially better at the importer boundary:
+  - `leg_press` now resolves to `squat` with quad/glute emphasis
+  - `seated_db_shoulder_press` now resolves to `vertical_press`
+  - `triceps_pressdown_bar` now resolves to `triceps_extension`
+  - `bayesian_cable_curl` now resolves to `curl`
+- the loader can now flatten a source-backed multi-phase adaptive bundle into one authored runtime sequence instead of stopping after the first phase
+
+The next remaining gap is therefore the live artifact migration itself:
+- move `programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json` and `programs/gold/adaptive_full_body_gold_v0_1.json` from the older simplified exercise set toward the repaired source-backed workbook output
+- preserve runtime semantics already proven valuable (`day_role`, `slot_role`, bounded compression, weak-point preservation, authored sequence state)
+
+**replace the current Week 1 / Week 2 exercise lineup in the onboarding/runtime gold path with the actual workbook-backed lineup and preserve the first-two-weeks adaptation semantics while doing it.**
 
 ## Immediate Coding Implications
 
-1. adaptive gold runtime artifact should move closer to the `5`-day authored structure
-2. loader/schema should preserve richer authored week/day semantics
-3. scheduler should compress from `5` days downward only when needed
-4. product UI should show clearer authored block intent once the richer runtime structure exists
+1. update the gold onboarding package exercise library with the real Week 1 / Week 2 workbook exercises and authored substitution options
+2. update the adaptive-gold runtime artifact so Week 1 / Week 2 actually follow the workbook day structure
+3. add source-backed week-1/week-2 loader/API tests before changing runtime code
+4. add adaptation-week semantics for the first two weeks in a runtime-safe way
+5. keep scheduler compression logic deterministic, but drive it from the corrected authored source instead of the older simplified lineup

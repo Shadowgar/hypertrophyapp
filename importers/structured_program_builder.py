@@ -16,6 +16,13 @@ _WEAK_POINT_LABEL = "weak point"
 _PRIMARY_COMPOUND_TOKENS = ("squat", "bench", "deadlift", "pull-up", "pulldown", "press", "row")
 _SECONDARY_COMPOUND_TOKENS = ("split squat", "rdl", "leg press", "incline")
 _ISOLATION_TOKENS = ("curl", "extension", "raise", "fly", "pushdown", "calf")
+_DAY_ROLE_BY_NAME = {
+    "full body #1": "full_body_1",
+    "full body #2": "full_body_2",
+    "full body #3": "full_body_3",
+    "full body #4": "full_body_4",
+    "arms & weak points": "weak_point_arms",
+}
 
 
 def collect_sessions_from_workbook(
@@ -120,6 +127,10 @@ def coaching_cues(notes: str | None) -> list[str]:
         return []
     parts = [part.strip() for part in notes.replace("!", ".").split(".")]
     return [part for part in parts if part][:3]
+
+
+def day_role(session_name: str) -> str | None:
+    return _DAY_ROLE_BY_NAME.get(session_name.strip().lower())
 
 
 def _normalized_rep_target(exercise: dict[str, Any]) -> dict[str, int]:
@@ -229,6 +240,7 @@ def _build_blueprint_day(session: dict[str, Any], *, day_counter: int) -> dict[s
     return {
         "day_id": f"d{day_counter}",
         "day_name": session_name,
+        "day_role": day_role(session_name),
         "slots": slots,
     }
 
@@ -379,6 +391,7 @@ def _build_gold_day(day: dict[str, Any], *, week_index: int, day_index: int) -> 
                 "slot_id": f"{week_day_id}_s{order_index}",
                 "order_index": order_index,
                 "exercise_id": str(slot.get("exercise_id") or "unknown_exercise"),
+                "slot_role": slot.get("slot_role"),
                 "video_url": slot.get("video_url"),
                 "warmup_prescription": list(slot.get("warmup_prescription") or []),
                 "work_sets": _build_gold_work_sets(slot),
@@ -389,6 +402,7 @@ def _build_gold_day(day: dict[str, Any], *, week_index: int, day_index: int) -> 
     return {
         "day_id": week_day_id,
         "day_name": str(day.get("day_name") or f"Day {day_index}"),
+        "day_role": day.get("day_role"),
         "slots": slots,
     }
 
@@ -399,6 +413,21 @@ def _build_gold_week(week_template: dict[str, Any], *, week_index: int) -> dict[
         for day_index, day in enumerate(week_template["days"], start=1)
     ]
     return {"week_index": week_index, "days": days}
+
+
+def _infer_authored_week_role(phase_name: str, *, week_index_in_phase: int, total_phase_weeks: int) -> str | None:
+    lowered = phase_name.strip().lower()
+    if "build" in lowered:
+        if week_index_in_phase <= min(2, total_phase_weeks):
+            return "adaptation"
+        return "accumulation"
+    if "novelty" in lowered:
+        return "intensification"
+    if "deload" in lowered:
+        return "deload"
+    if "intens" in lowered:
+        return "intensification"
+    return None
 
 
 def build_adaptive_gold_program_template(
@@ -421,12 +450,20 @@ def build_adaptive_gold_program_template(
             templates = build_week_templates_from_structured_phases([raw_phase])
             if not templates:
                 continue
+            raw_phase_name = str(raw_phase.get("phase_name") or phase_name)
             emitted_phases.append(
                 {
                     "phase_id": str(raw_phase.get("phase_id") or phase_id),
-                    "phase_name": str(raw_phase.get("phase_name") or phase_name),
+                    "phase_name": raw_phase_name,
                     "weeks": [
-                        _build_gold_week(template, week_index=index)
+                        {
+                            **_build_gold_week(template, week_index=index),
+                            "week_role": _infer_authored_week_role(
+                                raw_phase_name,
+                                week_index_in_phase=index,
+                                total_phase_weeks=len(templates),
+                            ),
+                        }
                         for index, template in enumerate(templates, start=1)
                     ],
                 }

@@ -72,8 +72,8 @@ def build_program_template(
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(json.dumps(validated.model_dump(mode="json"), indent=2), encoding="utf-8")
 
-    week_template = build_blueprint_week_template(sessions)
     emitted_week_count = sum(len(phase.weeks) for phase in validated.phases)
+    representative_day_count = len(validated.phases[0].weeks[0].days) if validated.phases and validated.phases[0].weeks else 0
     report_destination = report_output or destination.with_name(f"{destination.stem}.import_report.json")
     report_destination.parent.mkdir(parents=True, exist_ok=True)
     report_payload = build_import_report(
@@ -85,7 +85,7 @@ def build_program_template(
         output_path=destination,
         total_weeks=emitted_week_count,
         phase_count=len(validated.phases),
-        day_count=len(week_template["days"]),
+        day_count=representative_day_count,
     )
     report_destination.write_text(json.dumps(report_payload, indent=2), encoding="utf-8")
 

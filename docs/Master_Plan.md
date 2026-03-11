@@ -178,10 +178,12 @@ Reference:
 	- the same loader boundary resolves `docs/rules/gold/adaptive_full_body_gold_v0_1.rules.json` when canonical rules do not already contain that program scope.
 - The adaptive gold sample is now a real authored mesocycle instead of a short proof stub:
 	- `programs/gold/adaptive_full_body_gold_v0_1.json` now follows a 10-week authored sequence aligned to the onboarding package cadence: `build_a / build_b / build_a / build_b / build_a / deload / intens_a / intens_b / intens_a / intens_b`.
-	- runtime loader contracts preserve all 10 authored weeks with explicit `week_role` values.
+	- runtime loader contracts preserve all 10 authored weeks with explicit `week_role` values and a five-day authored source (`Full Body #1-#4` plus `Arms & Weak Points`) rather than the earlier compressed three-day surrogate.
+	- generated-week compression now starts from that five-day authored truth and preserves both the dedicated weak-point/arms day and all primary compound movement patterns when adapting downward.
 	- generate-week now proves week-6 authored deload plus later intensification-week selection on the gold runtime path.
 	- post-week-10 behavior is now explicit: generated-week holds the final authored week as the deterministic fallback while surfacing `authored_sequence_complete` and `phase_transition_pending` in `mesocycle`.
 	- that same post-week-10 signal now propagates through canonical training state and downstream coaching layers: coach-preview can explicitly tell the user the authored mesocycle is complete and recommend rotating programs, and program recommendation now treats authored-sequence completion as a first-class rotation trigger instead of a hidden scheduler-only flag.
+	- the next fidelity step is reconciling the onboarding/runtime artifacts against the actual workbook/PDF exercise lineup and effort structure before broader user testing or wider library migration.
 - Onboarding testing reliability improvements:
 	- `POST /auth/dev/wipe-user` (dev-only by config) supports wipe-by-email reset when register/login is blocked by stale test accounts.
 	- Onboarding screen now includes explicit `Wipe Test User By Email` and `Wipe Current Logged-In User Data` controls.

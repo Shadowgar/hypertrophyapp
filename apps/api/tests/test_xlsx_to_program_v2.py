@@ -146,3 +146,54 @@ def test_build_program_template_preserves_authored_phases_weeks_and_set_semantic
     assert backoff_slot.work_sets[0].set_type == "backoff"
     assert backoff_slot.work_sets[0].load_target == "72.5-75%"
     assert backoff_slot.work_sets[0].rpe_target == pytest.approx(8.0)
+
+
+REFERENCE_PHASE1_WORKBOOK = REPO_ROOT / "reference" / "Pure Bodybuilding Phase 1 - Full Body Sheet.xlsx"
+
+
+@pytest.mark.skipif(not REFERENCE_PHASE1_WORKBOOK.exists(), reason="reference workbook not available")
+def test_build_program_template_parses_phase1_reference_workbook_structure(tmp_path: Path) -> None:
+    output = tmp_path / "phase1_reference_program.json"
+    report = tmp_path / "phase1_reference_program.import_report.json"
+
+    destination, report_destination = build_program_template(
+        input_file=REFERENCE_PHASE1_WORKBOOK,
+        program_id="phase1_reference_program",
+        total_weeks=10,
+        output_file=output,
+        sheet_name=None,
+        program_name="Phase 1 Reference Program",
+        report_output=report,
+    )
+
+    payload = json.loads(destination.read_text(encoding="utf-8"))
+    template = AdaptiveGoldProgramTemplate.model_validate(payload)
+    report_payload = json.loads(report_destination.read_text(encoding="utf-8"))
+
+    assert len(template.phases) >= 2
+    assert sum(len(phase.weeks) for phase in template.phases) >= 10
+    first_week_days = template.phases[0].weeks[0].days
+    assert [day.day_name for day in first_week_days] == [
+        "Full Body #1",
+        "Full Body #2",
+        "Full Body #3",
+        "Full Body #4",
+        "Arms & Weak Points",
+    ]
+    assert [day.day_role for day in first_week_days] == [
+        "full_body_1",
+        "full_body_2",
+        "full_body_3",
+        "full_body_4",
+        "weak_point_arms",
+    ]
+    first_day_exercises = [slot.exercise_id for slot in first_week_days[0].slots]
+    assert first_day_exercises[:3] == [
+        "cross_body_lat_pull_around",
+        "low_incline_smith_machine_press",
+        "machine_hip_adduction",
+    ]
+    assert first_week_days[0].slots[1].exercise_id == "low_incline_smith_machine_press"
+    assert first_week_days[0].slots[1].slot_role == "primary_compound"
+    assert report_payload["day_count"] == 5
+    assert report_payload["diagnostic_count"] < 40

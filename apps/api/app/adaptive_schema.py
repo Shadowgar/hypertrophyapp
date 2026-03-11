@@ -400,6 +400,7 @@ class ProgramBlueprintSlot(BaseModel):
 class ProgramBlueprintDay(BaseModel):
     day_id: str = Field(min_length=1)
     day_name: str = Field(min_length=1)
+    day_role: str | None = None
     slots: list[ProgramBlueprintSlot] = Field(default_factory=list)
 
     @field_validator("slots")

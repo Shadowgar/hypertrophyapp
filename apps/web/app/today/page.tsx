@@ -32,6 +32,53 @@ const MUSCLE_GROUPS = [
   "calves",
 ] as const;
 
+function formatRoleLabel(value: string | null | undefined): string | null {
+  const normalized = value?.trim();
+  if (!normalized) {
+    return null;
+  }
+  if (normalized === "weak_point_arms") {
+    return "Arms & Weak Points";
+  }
+  return normalized
+    .replaceAll("_", " ")
+    .trim()
+    .split(/\s+/)
+    .map((part) => (part.length ? part[0].toUpperCase() + part.slice(1) : part))
+    .join(" ");
+}
+
+function formatAuthoredBlockLabel(workout: WorkoutSession | null | undefined): string | null {
+  const authoredWeekIndex =
+    typeof workout?.mesocycle?.authored_week_index === "number" ? workout.mesocycle.authored_week_index : null;
+  const authoredWeekRole = formatRoleLabel(workout?.mesocycle?.authored_week_role);
+  if (authoredWeekIndex === null && !authoredWeekRole) {
+    return null;
+  }
+  return `Authored block: ${authoredWeekIndex !== null ? `Week ${authoredWeekIndex}` : "Current"} · ${authoredWeekRole ?? "Unspecified"}`;
+}
+
+function countSlotRole(exercises: WorkoutExercise[], slotRole: string): number {
+  return exercises.filter((exercise) => exercise.slot_role === slotRole).length;
+}
+
+function buildTodayContextNote(workout: WorkoutSession | null): string | null {
+  if (!workout) {
+    return null;
+  }
+  const dayRole = formatRoleLabel(workout.day_role);
+  const authoredWeekIndex =
+    typeof workout.mesocycle?.authored_week_index === "number" ? workout.mesocycle.authored_week_index : null;
+  const authoredWeekRole = formatRoleLabel(workout.mesocycle?.authored_week_role)?.toLowerCase() ?? null;
+  if (dayRole && authoredWeekIndex !== null && authoredWeekRole) {
+    return `Today follows ${dayRole} in week ${authoredWeekIndex} of the ${authoredWeekRole} block.`;
+  }
+  if (dayRole) {
+    return `Today follows ${dayRole}.`;
+  }
+  return null;
+}
+
 function createInitialSorenessState(): Record<string, SorenessSeverity> {
   return Object.fromEntries(MUSCLE_GROUPS.map((muscle) => [muscle, "none"])) as Record<string, SorenessSeverity>;
 }
@@ -101,9 +148,14 @@ function SessionIntentCard({
   workoutProgress: { completed: number; planned: number; percent: number } | null;
 }>) {
   const leadExercise = workout.exercises[0];
+  const authoredDayLabel = formatRoleLabel(workout.day_role);
+  const authoredBlockLabel = formatAuthoredBlockLabel(workout);
+  const weakPointSlotCount = countSlotRole(workout.exercises, "weak_point");
   const remainingSets = workoutProgress ? Math.max(0, workoutProgress.planned - workoutProgress.completed) : null;
   let intentLabel = "Primary hypertrophy exposure";
-  if (workout.deload?.active) {
+  if (authoredDayLabel) {
+    intentLabel = authoredDayLabel;
+  } else if (workout.deload?.active) {
     intentLabel = "Deload execution";
   } else if (workout.resume) {
     intentLabel = "Resume and finish";
@@ -131,6 +183,9 @@ function SessionIntentCard({
           Lead exercise: {leadExercise.name} for {leadExercise.sets} sets of {leadExercise.rep_range[0]}-{leadExercise.rep_range[1]} reps @ {leadExercise.recommended_working_weight} kg.
         </p>
       ) : null}
+      {authoredDayLabel ? <p className="telemetry-meta">Authored day: {authoredDayLabel}</p> : null}
+      {authoredBlockLabel ? <p className="telemetry-meta">{authoredBlockLabel}</p> : null}
+      {weakPointSlotCount > 0 ? <p className="telemetry-meta">Weak-point slots planned: {weakPointSlotCount}</p> : null}
       <p className="telemetry-meta">{pacingLine}</p>
       <p className="text-xs text-zinc-200">{cautionLine}</p>
     </div>
@@ -497,6 +552,7 @@ export default function TodayPage() {
   const swapTarget = workout?.exercises.find((exercise) => exercise.id === swapTargetExerciseId) ?? null;
   const swapTargetCurrentIndex = swapTarget ? (swapIndexByExercise[swapTarget.id] ?? 0) : 0;
   const activeProgramId = workout ? extractProgramId(workout.session_id) : null;
+  const coachingContextNote = buildTodayContextNote(workout);
   const healthStatus = resolveHealthStatus(health);
 
   return (
@@ -518,7 +574,7 @@ export default function TodayPage() {
         </Button>
       </div>
 
-      <CoachingIntelligencePanel contextLabel="Today" templateId={activeProgramId} />
+      <CoachingIntelligencePanel contextLabel="Today" templateId={activeProgramId} contextNote={coachingContextNote} />
 
       {message ? <div className="main-card main-card--shell ui-body-sm">{message}</div> : null}
 

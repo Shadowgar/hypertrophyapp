@@ -156,11 +156,10 @@ Evidence (2026-03-10, adaptive gold sample expansion to accessory + weak-point w
 
 Evidence (2026-03-10, canonical arm-isolation gap closed on adaptive gold)
 - `programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json`: the gold onboarding exercise library now includes canonical entries for `dumbbell_curl_incline` and `triceps_pushdown_rope`, closing the prior arm-isolation metadata gap.
-- `programs/gold/adaptive_full_body_gold_v0_1.json`: the authored adaptive-gold sample now includes both arm-isolation slots, bringing the adaptive-gold authored week to ten total slots across three authored days instead of one oversized session.
-- `apps/api/app/program_loader.py`, `apps/api/app/adaptive_schema.py`, and `apps/api/app/template_schema.py`: adaptive-gold runtime loading now preserves `slot_role` and derives `days_supported` from authored day count, so the gold runtime path can validate real multi-day doctrine instead of a flattened single-session surrogate.
-- `packages/core-engine/core_engine/scheduler.py` and `packages/core-engine/tests/test_scheduler.py`: generated-week capping/compression now preserves weak-point structure through slot-role priority and fallback weak-point day ranking, instead of trimming only by authored order.
-- `apps/api/tests/test_program_catalog_and_selection.py`: adaptive-gold API proof now verifies weak-point preservation under constrained time/frequency, including three-day-to-two-day compression and low time-budget bounded removal that still keeps the selected-session weak-point slot.
-- `apps/api/tests/test_workout_session_state.py`: adaptive-gold workout proof now verifies the correct multi-day `today` contract, where no-date-match fallback returns the first authored day only and therefore excludes later-day hinge and arm-isolation slots while preserving Day A weak-point/core work.
+- `programs/gold/adaptive_full_body_gold_v0_1.json`: the adaptive-gold sample now includes both arm-isolation slots inside a richer authored week rather than serving as evidence for the old compressed three-day shape.
+- `apps/api/app/program_loader.py`, `apps/api/app/adaptive_schema.py`, and `apps/api/app/template_schema.py`: adaptive-gold runtime loading now preserves `day_role` as well as `slot_role`, and keeps the authored five-day structure through the runtime boundary while still exposing deterministic `days_supported` compression targets.
+- `packages/core-engine/core_engine/scheduler.py` and `packages/core-engine/tests/test_scheduler.py`: generated-week compression now starts from the authored five-day source, preserves the dedicated `weak_point_arms` day when possible, and keeps all primary compound patterns alive by merging dropped-day work into retained sessions instead of trimming only by authored order.
+- `apps/api/tests/test_program_catalog_and_selection.py` and `apps/api/tests/test_workout_session_state.py`: adaptive-gold API/workout proof now verifies the authored five-day runtime shape plus bounded compression behavior, replacing the earlier three-day proof as the fidelity baseline.
 - `programs/gold/adaptive_full_body_gold_v0_1.json`: the adaptive-gold sample now also includes a distinct authored week 2, so the gold baseline is no longer a single repeated week.
 - `apps/api/app/template_schema.py` and `apps/api/app/program_loader.py`: the canonical adaptive-gold runtime template now preserves `authored_weeks`, keeping week variants available to generation instead of collapsing everything to week 1.
 - `packages/core-engine/core_engine/scheduler.py`: generate-week now selects authored week variants from `prior_generated_weeks` before day compression and time-budget capping, so later authored weeks still honor the same weak-point preservation rules.
@@ -180,6 +179,27 @@ Evidence (2026-03-10, canonical arm-isolation gap closed on adaptive gold)
 - `packages/core-engine/core_engine/decision_program_recommendation.py`: explicit authored-sequence completion now outranks day-adaptation upgrades when recommending the next template, so the app can recommend rotating off the completed adaptive-gold block instead of pretending it is still mid-mesocycle.
 - `packages/core-engine/tests/test_decision_progression.py`, `packages/core-engine/tests/test_decision_coach_preview.py`, `packages/core-engine/tests/test_decision_program_recommendation.py`, `packages/core-engine/tests/test_user_state.py`, `apps/api/tests/test_plan_intelligence_api.py`, `apps/api/tests/test_program_recommendation_and_switch.py`, and `apps/api/tests/test_profile_training_state.py`: focused regressions now prove that post-week-10 transition state survives the full path from latest plan -> canonical state -> coach preview -> program recommendation -> API payloads.
 - `apps/api/tests/test_program_loader.py`, `apps/api/tests/test_program_catalog_and_selection.py`, and `apps/api/tests/test_workout_session_state.py`: focused loader/generate-week/workout regressions now verify that the biceps and triceps isolation slots survive the runtime path with canonical names, movement patterns, and equipment tags.
+
+Evidence (2026-03-11, Phase 1 fidelity-first five-day authored runtime)
+- `programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json` and `programs/gold/adaptive_full_body_gold_v0_1.json`: the adaptive-gold path now starts from a five-day authored source with explicit `day_role` values for `Full Body #1-#4` and `Arms & Weak Points` instead of the older compressed three-day surrogate.
+- `apps/api/app/program_loader.py`, `apps/api/app/adaptive_schema.py`, and `apps/api/app/template_schema.py`: loader/schema contracts now preserve that richer authored day metadata through the runtime template boundary.
+- `packages/core-engine/core_engine/scheduler.py` and `packages/core-engine/tests/test_scheduler.py`: bounded frequency compression now preserves the weak-point day and all primary compound patterns when compressing from five authored days to three by merging dropped-day work into retained anchor sessions.
+- `apps/api/tests/test_program_loader.py`, `apps/api/tests/test_program_catalog_and_selection.py`, and `apps/api/tests/test_workout_session_state.py`: focused loader/API/workout regressions now validate the authored five-day runtime shape and the new compression behavior end to end.
+
+Evidence (2026-03-11, source-truth import pipeline repaired for real Phase 1 workbook)
+- `importers/xlsx_to_program.py`: workbook header detection now correctly selects the real `Exercise / Working Sets / Reps` header row instead of top-of-sheet note blocks; Excel `m-d` serial cells are converted back into readable warm-up strings; and superset prefixes are stripped before exercise ids are slugged.
+- `apps/api/tests/test_xlsx_to_onboarding_v2.py` and `apps/api/tests/test_xlsx_to_program_v2.py`: source-backed regressions now prove the real workbook imports as 10 weeks / 5 authored days with the actual Phase 1 day names and first-day exercise ids.
+- `importers/xlsx_to_program.py`: key workbook exercise metadata is now corrected at the source boundary through improved inference/overrides, including `leg_press -> squat`, `seated_db_shoulder_press -> vertical_press`, `triceps_pressdown_bar -> triceps_extension`, and `bayesian_cable_curl -> curl`.
+- `apps/api/app/program_loader.py` and `apps/api/tests/test_program_loader.py`: the adaptive-gold loader can now flatten all authored weeks from a source-backed multi-phase adaptive bundle instead of dropping everything after the first phase.
+
+Immediate next target (2026-03-11)
+- Migrate the live gold onboarding/runtime artifacts from the repaired workbook pipeline into the actual runtime path.
+- Preserve already-proven runtime semantics during that migration:
+  - `day_role`
+  - `slot_role`
+  - weak-point preservation under compression
+  - authored sequence / transition state
+  - adaptive-gold API/workout continuity
 
 Evidence (2026-03-10, coach-preview specialization/media ownership extraction)
 - `packages/core-engine/core_engine/decision_coach_preview.py`: specialization-adjustment and program-media/warmup summarization helpers now live in the coach-preview decision-family module instead of `intelligence.py`.

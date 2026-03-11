@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+import sys
 
 import pytest
 from pydantic import ValidationError
@@ -10,6 +11,13 @@ configure_test_database("test_program_loader")
 
 from app.config import settings
 from app.program_loader import load_program_rule_set, load_program_template
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from importers.xlsx_to_onboarding_v2 import build_onboarding_package
+from importers.xlsx_to_program_v2 import build_program_template
 
 
 def test_load_program_template_validates_existing_template() -> None:
@@ -37,12 +45,12 @@ def test_load_program_template_supports_adaptive_gold_runtime_template() -> None
     assert len(authored_weeks) == 10
     assert [week["week_index"] for week in authored_weeks] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     assert [week.get("week_role") for week in authored_weeks] == [
+        "adaptation",
+        "adaptation",
         "accumulation",
         "accumulation",
         "accumulation",
-        "accumulation",
-        "accumulation",
-        "deload",
+        "intensification",
         "intensification",
         "intensification",
         "intensification",
@@ -57,85 +65,151 @@ def test_load_program_template_supports_adaptive_gold_runtime_template() -> None
     ]
 
     assert [exercise["id"] for exercise in day_1] == [
-        "lat_pulldown_wide",
-        "bench_press_barbell",
-        "hack_squat",
-        "lateral_raise_cable",
+        "cross_body_lat_pull_around",
+        "low_incline_smith_machine_press",
+        "machine_hip_adduction",
+        "leg_press",
+        "lying_paused_rope_face_pull",
         "cable_crunch",
     ]
     assert [exercise["slot_role"] for exercise in day_1] == [
+        "accessory",
         "primary_compound",
+        "accessory",
         "primary_compound",
-        "secondary_compound",
-        "isolation",
+        "accessory",
         "accessory",
     ]
-    assert day_1[0]["name"] == "Wide Grip Lat Pulldown"
-    assert day_1[0]["rep_range"] == [8, 10]
+    assert day_1[0]["name"] == "Cross-Body Lat Pull-Around"
+    assert day_1[0]["rep_range"] == [10, 12]
     assert day_1[0]["movement_pattern"] == "vertical_pull"
-    assert day_1[0]["substitution_candidates"] == ["Neutral Grip Assisted Pull-Up"]
-    assert day_1[1]["name"] == "Barbell Bench Press"
-    assert day_1[1]["rep_range"] == [6, 8]
+    assert day_1[0]["substitution_candidates"] == ["Half Kneeling 1 Arm Lat Pulldown", "Neutral Grip Pullup"]
+    assert day_1[1]["name"] == "Low Incline Smith Machine Press"
+    assert day_1[1]["rep_range"] == [8, 10]
     assert day_1[1]["movement_pattern"] == "horizontal_press"
-    assert day_1[1]["substitution_candidates"] == ["Incline Dumbbell Press"]
-    assert day_1[2]["name"] == "Hack Squat"
-    assert day_1[2]["substitution_candidates"] == ["Split Squat Db"]
+    assert day_1[1]["substitution_candidates"] == ["Low Incline Machine Press", "Low Incline DB Press"]
+    assert day_1[2]["name"] == "Machine Hip Adduction"
+    assert day_1[2]["movement_pattern"] == "hip_adduction"
+    assert day_1[3]["name"] == "Leg Press"
+    assert day_1[3]["substitution_candidates"] == ["Belt Squat", "High Bar Back Squat"]
 
     assert [exercise["id"] for exercise in day_2] == [
-        "romanian_deadlift",
-        "incline_dumbbell_press",
-        "row_chest_supported",
-        "leg_curl_seated",
+        "seated_db_shoulder_press",
+        "paused_barbell_rdl",
+        "chest_supported_machine_row",
+        "hammer_preacher_curl",
+        "cuffed_behind_the_back_lateral_raise",
+        "overhead_cable_triceps_extension_bar",
     ]
     assert [exercise["slot_role"] for exercise in day_2] == [
         "primary_compound",
         "secondary_compound",
-        "secondary_compound",
+        "primary_compound",
+        "isolation",
+        "isolation",
         "isolation",
     ]
-    assert day_2[0]["movement_pattern"] == "hinge"
-    assert day_2[0]["substitution_candidates"] == ["Leg Curl Seated"]
+    assert day_2[0]["movement_pattern"] == "vertical_press"
+    assert day_2[0]["substitution_candidates"] == ["Seated Barbell Shoulder Press", "Standing Db Arnold Press"]
+    assert day_2[1]["movement_pattern"] == "hinge"
+    assert day_2[1]["substitution_candidates"] == ["Paused Db Rdl", "Glute Ham Raise"]
+    assert day_2[5]["movement_pattern"] == "vertical_press"
 
     assert [exercise["id"] for exercise in day_3] == [
-        "pullup_assisted_neutral",
-        "overhead_press_seated_db",
-        "split_squat_db",
-        "triceps_pushdown_rope",
+        "assisted_pull_up",
+        "paused_assisted_dip",
+        "seated_leg_curl",
+        "leg_extension",
+        "cable_paused_shrug_in",
+        "roman_chair_leg_raise",
     ]
     assert day_3[0]["movement_pattern"] == "vertical_pull"
-    assert day_3[1]["movement_pattern"] == "vertical_press"
+    assert day_3[1]["movement_pattern"] == "horizontal_press"
+    assert day_3[5]["movement_pattern"] == "core"
 
     assert [exercise["id"] for exercise in day_4] == [
+        "lying_leg_curl",
         "hack_squat",
-        "row_machine_chest_supported",
-        "dumbbell_curl_incline",
-        "calf_raise_seated",
+        "bent_over_cable_pec_flye",
+        "neutral_grip_lat_pulldown",
+        "leg_press_calf_press",
+        "cable_reverse_flye_mechanical_dropset",
     ]
-    assert day_4[2]["movement_pattern"] == "elbow_flexion"
-    assert day_4[3]["movement_pattern"] == "plantar_flexion"
+    assert day_4[1]["movement_pattern"] == "squat"
+    assert day_4[4]["movement_pattern"] == "plantar_flexion"
+    assert day_4[5]["movement_pattern"] == "accessory"
 
     assert [exercise["id"] for exercise in day_5] == [
-        "weak_chest_cable_fly",
-        "weak_ham_leg_curl",
-        "dumbbell_curl_incline",
-        "triceps_pushdown_rope",
+        "weak_point_exercise_1",
+        "weak_point_exercise_2_optional",
+        "bayesian_cable_curl",
+        "triceps_pressdown_bar",
+        "bottom_2_3_constant_tension_preacher_curl",
+        "cable_triceps_kickback",
+        "standing_calf_raise",
     ]
     assert [exercise["slot_role"] for exercise in day_5] == [
         "weak_point",
         "weak_point",
-        "isolation",
-        "isolation",
+        "weak_point",
+        "weak_point",
+        "weak_point",
+        "weak_point",
+        "weak_point",
     ]
-    assert day_5[0]["name"] == "Cable Fly (Weak-Point Chest)"
-    assert day_5[1]["name"] == "Leg Curl (Weak-Point Hamstrings)"
-    assert day_5[2]["name"] == "Incline Dumbbell Curl"
-    assert day_5[3]["name"] == "Rope Triceps Pushdown"
+    assert day_5[0]["name"] == "Weak Point Exercise 1"
+    assert day_5[1]["name"] == "Weak Point Exercise 2 (optional)"
+    assert day_5[2]["name"] == "Bayesian Cable Curl"
+    assert day_5[3]["name"] == "Triceps Pressdown (Bar)"
 
-    assert week_two_day_a[0]["id"] == "lat_pulldown_wide"
-    assert week_two_day_a[0]["rep_range"] == [8, 11]
-    assert week_two_day_a[1]["id"] == "bench_press_barbell"
-    assert week_two_day_a[1]["rep_range"] == [6, 9]
+    assert week_two_day_a[0]["id"] == "cross_body_lat_pull_around"
+    assert week_two_day_a[0]["rep_range"] == [10, 12]
+    assert week_two_day_a[1]["id"] == "low_incline_smith_machine_press"
+    assert week_two_day_a[1]["rep_range"] == [8, 10]
     assert week_two_day_a[1]["sets"] == 3
+
+
+REFERENCE_PHASE1_WORKBOOK = REPO_ROOT / "reference" / "Pure Bodybuilding Phase 1 - Full Body Sheet.xlsx"
+
+
+@pytest.mark.skipif(not REFERENCE_PHASE1_WORKBOOK.exists(), reason="reference workbook not available")
+def test_load_program_template_flattens_all_authored_phase_weeks_for_source_backed_adaptive_gold(tmp_path: Path) -> None:
+    gold_dir = tmp_path / "gold"
+    gold_dir.mkdir(parents=True, exist_ok=True)
+
+    build_onboarding_package(
+        input_file=REFERENCE_PHASE1_WORKBOOK,
+        source_pdf="reference/The_Pure_Bodybuilding_Program - Phase 1 - Full_Body.pdf",
+        program_id="pure_bodybuilding_phase_1_full_body",
+        total_weeks=10,
+        output_file=gold_dir / "pure_bodybuilding_phase_1_full_body.onboarding.json",
+        sheet_name=None,
+    )
+    build_program_template(
+        input_file=REFERENCE_PHASE1_WORKBOOK,
+        program_id="adaptive_full_body_gold_v0_1",
+        total_weeks=10,
+        output_file=gold_dir / "adaptive_full_body_gold_v0_1.json",
+        sheet_name=None,
+        program_name="Adaptive Full Body Gold v0.1",
+        report_output=gold_dir / "adaptive_full_body_gold_v0_1.import_report.json",
+    )
+
+    previous_programs_dir = settings.programs_dir
+    settings.programs_dir = str(tmp_path)
+    try:
+        template = load_program_template("adaptive_full_body_gold_v0_1")
+    finally:
+        settings.programs_dir = previous_programs_dir
+
+    assert len(template["sessions"]) == 5
+    assert len(template["authored_weeks"]) == 10
+    assert [week["week_index"] for week in template["authored_weeks"]] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    assert [exercise["id"] for exercise in template["sessions"][0]["exercises"][:3]] == [
+        "cross_body_lat_pull_around",
+        "low_incline_smith_machine_press",
+        "machine_hip_adduction",
+    ]
 
 
 def test_load_program_template_raises_on_invalid_schema(tmp_path: Path) -> None:

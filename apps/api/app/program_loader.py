@@ -290,12 +290,14 @@ def _infer_adaptive_day_role(day: Any, fallback_index: int) -> str:
 def _adaptive_gold_to_runtime_template(payload: dict[str, Any]) -> dict[str, Any]:
     validated = AdaptiveGoldProgramTemplate.model_validate(payload)
     exercise_library = _load_adaptive_gold_exercise_library(validated.program_id)
-    first_phase = next((phase for phase in validated.phases if phase.weeks), None)
-    if first_phase is None:
+    authored_phase_weeks = [
+        week
+        for phase in validated.phases
+        for week in phase.weeks
+        if week.days
+    ]
+    if not authored_phase_weeks:
         raise ValueError("adaptive gold template must contain at least one phase with weeks")
-    authored_weeks = [week for week in first_phase.weeks if week.days]
-    if not authored_weeks:
-        raise ValueError("adaptive gold template must contain at least one week with days")
 
     def _week_sessions(week: Any) -> list[dict[str, Any]]:
         sessions: list[dict[str, Any]] = []
@@ -313,16 +315,16 @@ def _adaptive_gold_to_runtime_template(payload: dict[str, Any]) -> dict[str, Any
             )
         return sessions
 
-    first_week_sessions = _week_sessions(authored_weeks[0])
+    first_week_sessions = _week_sessions(authored_phase_weeks[0])
     runtime_authored_weeks = [
         {
-            "week_index": int(week.week_index),
+            "week_index": sequence_index,
             "week_role": str(week.week_role).strip() if week.week_role else None,
             "sessions": _week_sessions(week),
         }
-        for week in authored_weeks
+        for sequence_index, week in enumerate(authored_phase_weeks, start=1)
     ]
-    max_days_supported = max(len(week.days) for week in authored_weeks)
+    max_days_supported = max(len(week.days) for week in authored_phase_weeks)
 
     return CanonicalProgramTemplate.model_validate(
         {

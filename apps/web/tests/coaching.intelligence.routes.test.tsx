@@ -255,6 +255,52 @@ test("Today page renders coaching panel and preview result", async () => {
     if (url.endsWith("/health")) {
       return Promise.resolve(new Response(JSON.stringify({ status: "ok", date: "2026-03-06" }), { status: 200 }));
     }
+    if (url.endsWith("/workout/today")) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            session_id: "adaptive_full_body_gold_v0_1-day5",
+            title: "Arms & Weak Points",
+            date: "2026-03-12",
+            resume: false,
+            day_role: "weak_point_arms",
+            mesocycle: {
+              week_index: 1,
+              trigger_weeks_base: 6,
+              trigger_weeks_effective: 6,
+              is_deload_week: false,
+              deload_reason: "none",
+              authored_week_index: 1,
+              authored_week_role: "adaptation",
+              authored_sequence_complete: false,
+              post_authored_behavior: "in_authored_sequence",
+            },
+            deload: {
+              active: false,
+              set_reduction_pct: 0,
+              load_reduction_pct: 0,
+              reason: "none",
+            },
+            exercises: [
+              {
+                id: "bayesian_curl",
+                primary_exercise_id: "bayesian_curl",
+                name: "Bayesian Curl",
+                sets: 3,
+                rep_range: [10, 15],
+                recommended_working_weight: 17.5,
+                slot_role: "weak_point",
+                substitution_candidates: [],
+              },
+            ],
+          }),
+          { status: 200 },
+        ),
+      );
+    }
+    if (url.includes("/soreness")) {
+      return Promise.resolve(new Response(JSON.stringify([{ id: "s1", entry_date: "2026-03-03" }]), { status: 200 }));
+    }
     if (url.endsWith("/profile")) {
       return Promise.resolve(
         new Response(
@@ -318,6 +364,13 @@ test("Today page renders coaching panel and preview result", async () => {
   await waitFor(() => {
     expect(screen.getByText(/Coaching Intelligence/i)).toBeInTheDocument();
   });
+
+  fireEvent.click(screen.getByRole("button", { name: /Load Today Workout/i }));
+
+  await waitFor(() => {
+    expect(screen.getByText(/Current context/i)).toBeInTheDocument();
+  });
+  expect(screen.getByText(/Today follows Arms & Weak Points/i)).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole("button", { name: /Generate coaching preview/i }));
 

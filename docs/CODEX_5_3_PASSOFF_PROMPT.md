@@ -123,8 +123,8 @@ Latest completed slices in this branch:
    - the authored adaptive-gold sample now also includes a sixth hinge/posterior-chain slot (`romanian_deadlift`), and focused loader/generation/workout tests now prove that the hinge slot survives the runtime path when barbell/dumbbell equipment is available
    - the authored adaptive-gold sample now also includes onboarding-backed accessory/weak-point chest and hamstring slots (`weak_chest_cable_fly`, `weak_ham_leg_curl`), and focused loader/generation/workout tests now prove that those weak-area slots survive the runtime path when cable/machine equipment is available
    - the canonical gold onboarding library now also includes arm-isolation entries (`dumbbell_curl_incline`, `triceps_pushdown_rope`), and the authored adaptive-gold sample plus focused loader/generation/workout tests now prove that those biceps/triceps slots survive the runtime path with canonical metadata
-   - the authored adaptive-gold sample is now a real three-day week (`Full Body A/B/C`) instead of one oversized session, and adaptive-gold runtime loading now preserves authored day count plus per-slot `slot_role`
-   - focused scheduler/API/workout tests now prove weak-point preservation under constrained time/frequency: weak-point days survive three-day-to-two-day compression and weak-point slots survive bounded time-budget capping on the selected session
+   - the adaptive-gold runtime now starts from a real authored five-day source (`Full Body #1-#4` plus `Arms & Weak Points`), and adaptive-gold runtime loading now preserves `day_role` plus per-slot `slot_role` through the canonical loader boundary
+   - focused scheduler/API/workout tests now prove weak-point and primary-compound preservation under constrained time/frequency: the dedicated weak-point day survives where possible and primary compound patterns survive five-day-to-three-day compression through dropped-session exercise merging
    - the adaptive-gold sample now preserves `authored_weeks` through the runtime loader path and extends to a full 10-week authored mesocycle aligned to the onboarding sequence `build_a / build_b / build_a / build_b / build_a / deload / intens_a / intens_b / intens_a / intens_b`
    - adaptive/template schemas preserve optional `week_role`, and scheduler records `mesocycle.authored_week_index` / `mesocycle.authored_week_role` while preferring `authored_deload` as the primary reason when authored and generic deload cadence overlap
    - focused loader/API tests now prove week-2 Build-B selection (`6-9`), week-6 authored deload selection, and weeks 8 and 10 intensification selection (`4-6`) on the gold runtime path
@@ -139,7 +139,16 @@ Current best next seam:
 2. Keep `packages/core-engine/core_engine/decision_live_workout_guidance.py` authoritative and do not add new live-guidance logic back into `intelligence.py`.
 3. Generate-week now already consumes canonical `progression_state_per_exercise` and repeat-failure substitution; do not re-implement that path in routers or wrappers.
 4. The workout family is now façade-only in `intelligence.py`; do not reintroduce workout ownership there.
-5. The adaptive gold sample is now loadable at runtime and covers the first persisted end-to-end path, repeat-failure substitution, recovery-limited deload, next-week overlay carry-forward, workout-side substitution/guidance continuity, multi-day authored week structure, a 10-week authored mesocycle, authored deload-week doctrine, explicit post-week-10 transition-pending behavior, coach-preview/program-recommendation propagation of that transition state, and weak-point preservation under constrained time/frequency; the next high-value seam is turning that stable gold path into real desktop/mobile browser user testing and then broadening canonical library coverage before larger product expansion.
+5. The Phase 1 workbook import pipeline is no longer the blocker:
+   - real workbook headers parse correctly
+   - Excel `m-d` serial cells decode correctly
+   - superset prefixes no longer pollute exercise ids
+   - key workbook exercise metadata is now materially corrected
+   - the loader can flatten source-backed multi-phase adaptive bundles
+6. The next high-value seam is live gold-artifact migration:
+   - align `programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json`
+   - align `programs/gold/adaptive_full_body_gold_v0_1.json`
+   - preserve already-proven runtime semantics while moving toward the real workbook/PDF exercise lineup and intent before broader user testing or wider library migration
 
 Recommended workflow:
 

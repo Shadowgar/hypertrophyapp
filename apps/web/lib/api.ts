@@ -7,6 +7,7 @@ export type WorkoutExercise = {
   sets: number;
   rep_range: [number, number];
   recommended_working_weight: number;
+  slot_role?: string | null;
   substitution_candidates?: string[];
   notes?: string | null;
   completed_sets?: number;
@@ -31,6 +32,7 @@ export type WorkoutSession = {
   session_id: string;
   title: string;
   date: string;
+  day_role?: string | null;
   resume?: boolean;
   daily_quote?: {
     text: string;
@@ -39,6 +41,11 @@ export type WorkoutSession = {
   };
   mesocycle?: {
     week_index: number;
+    authored_week_index?: number | null;
+    authored_week_role?: string | null;
+    authored_sequence_complete?: boolean;
+    phase_transition_pending?: boolean;
+    post_authored_behavior?: string | null;
     trigger_weeks_base: number;
     trigger_weeks_effective: number;
     is_deload_week: boolean;
@@ -111,6 +118,7 @@ export type GeneratedWeekExercise = {
   sets: number;
   rep_range: [number, number];
   recommended_working_weight: number;
+  slot_role?: string | null;
   primary_muscles?: string[];
   substitution_candidates?: string[];
   notes?: string | null;
@@ -121,6 +129,7 @@ export type GeneratedWeekSession = {
   session_id: string;
   title: string;
   date: string;
+  day_role?: string | null;
   exercises: GeneratedWeekExercise[];
 };
 
@@ -144,6 +153,11 @@ export type GeneratedWeekPlan = {
   };
   mesocycle: {
     week_index: number;
+    authored_week_index?: number | null;
+    authored_week_role?: string | null;
+    authored_sequence_complete?: boolean;
+    phase_transition_pending?: boolean;
+    post_authored_behavior?: string | null;
     trigger_weeks_base: number;
     trigger_weeks_effective: number;
     is_deload_week: boolean;

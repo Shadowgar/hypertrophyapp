@@ -10,19 +10,38 @@ beforeEach(() => {
 test("Today page loads workout and shows exercises", async () => {
   const workout = {
     session_id: "ppl_v1-day1",
-    title: "Push Day",
+    title: "Arms & Weak Points",
     date: new Date().toISOString().slice(0, 10),
     resume: false,
+    day_role: "weak_point_arms",
+    mesocycle: {
+      week_index: 1,
+      trigger_weeks_base: 6,
+      trigger_weeks_effective: 6,
+      is_deload_week: false,
+      deload_reason: "none",
+      authored_week_index: 1,
+      authored_week_role: "adaptation",
+      authored_sequence_complete: false,
+      post_authored_behavior: "in_authored_sequence",
+    },
+    deload: {
+      active: false,
+      set_reduction_pct: 0,
+      load_reduction_pct: 0,
+      reason: "none",
+    },
     exercises: [
       {
         id: "ex-1",
-        name: "Bench Press",
+        name: "Bayesian Curl",
         sets: 3,
         rep_range: [8, 12],
-        recommended_working_weight: 60,
-        substitution_candidates: ["Push-Up"],
+        recommended_working_weight: 17.5,
+        substitution_candidates: ["Cable Curl"],
         notes: "Focus on full ROM",
         video: null,
+        slot_role: "weak_point",
       },
     ],
   };
@@ -48,14 +67,19 @@ test("Today page loads workout and shows exercises", async () => {
   const loadBtn = screen.getByRole("button", { name: /Load Today Workout/i });
   fireEvent.click(loadBtn);
 
-  await waitFor(() => expect(screen.getAllByText(/Bench Press/i).length).toBeGreaterThan(0));
+  await waitFor(() => expect(screen.getAllByText(/Bayesian Curl/i).length).toBeGreaterThan(0));
 
   expect(screen.getByText(/Session Intent/i)).toBeInTheDocument();
-  expect(screen.getByText(/Lead exercise: Bench Press for 3 sets of 8-12 reps @ 60 kg\./i)).toBeInTheDocument();
+  expect(screen.getByText(/Authored day: Arms & Weak Points/i)).toBeInTheDocument();
+  expect(screen.getByText(/Authored block: Week 1 · Adaptation/i)).toBeInTheDocument();
+  expect(screen.getByText(/Weak-point slots planned: 1/i)).toBeInTheDocument();
+  expect(screen.getByText(/Lead exercise: Bayesian Curl for 3 sets of 8-12 reps @ 17.5 kg\./i)).toBeInTheDocument();
   expect(screen.getByText(/Between-Set Coach/i)).toBeInTheDocument();
-  expect(screen.getByText(/Live lane: Bench Press/i)).toBeInTheDocument();
-  expect(screen.getByText(/Start with 8-12 reps @ 60 kg\./i)).toBeInTheDocument();
+  expect(screen.getByText(/Live lane: Bayesian Curl/i)).toBeInTheDocument();
+  expect(screen.getByText(/Start with 8-12 reps @ 17.5 kg\./i)).toBeInTheDocument();
+  expect(screen.getByText(/Current context/i)).toBeInTheDocument();
+  expect(screen.getByText(/Today follows Arms & Weak Points/i)).toBeInTheDocument();
 
-  const guideLink = screen.getByRole("link", { name: /Bench Press/i });
+  const guideLink = screen.getByRole("link", { name: /Bayesian Curl/i });
   expect(guideLink).toHaveAttribute("href", "/guides/ppl_v1/exercise/ex-1");
 });

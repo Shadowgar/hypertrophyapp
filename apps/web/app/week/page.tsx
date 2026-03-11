@@ -16,6 +16,54 @@ function formatLabel(value: string): string {
     .join(" ");
 }
 
+function formatRoleLabel(value: string | null | undefined): string | null {
+  const normalized = value?.trim();
+  if (!normalized) {
+    return null;
+  }
+  if (normalized === "weak_point_arms") {
+    return "Arms & Weak Points";
+  }
+  return formatLabel(normalized);
+}
+
+function formatAuthoredBlockLabel(plan: Pick<GeneratedWeekPlan, "mesocycle"> | null | undefined): string | null {
+  const authoredWeekIndex =
+    typeof plan?.mesocycle?.authored_week_index === "number" ? plan.mesocycle.authored_week_index : null;
+  const authoredWeekRole = formatRoleLabel(plan?.mesocycle?.authored_week_role);
+  if (authoredWeekIndex === null && !authoredWeekRole) {
+    return null;
+  }
+  return `Authored block: ${authoredWeekIndex !== null ? `Week ${authoredWeekIndex}` : "Current"} · ${authoredWeekRole ?? "Unspecified"}`;
+}
+
+function countSlotRole(exercises: GeneratedWeekExercise[], slotRole: string): number {
+  return exercises.filter((exercise) => exercise.slot_role === slotRole).length;
+}
+
+function hasWeakPointEmphasis(plan: GeneratedWeekPlan): boolean {
+  return plan.sessions.some(
+    (session) => session.day_role === "weak_point_arms" || countSlotRole(session.exercises, "weak_point") > 0,
+  );
+}
+
+function buildWeekContextNote(plan: GeneratedWeekPlan | null): string | null {
+  if (!plan) {
+    return null;
+  }
+  const authoredWeekIndex =
+    typeof plan.mesocycle.authored_week_index === "number" ? plan.mesocycle.authored_week_index : null;
+  const authoredWeekRole = formatRoleLabel(plan.mesocycle.authored_week_role)?.toLowerCase() ?? null;
+  const parts: string[] = [];
+  if (authoredWeekIndex !== null && authoredWeekRole) {
+    parts.push(`Week ${authoredWeekIndex} ${authoredWeekRole} block.`);
+  }
+  if (hasWeakPointEmphasis(plan)) {
+    parts.push("Arms & Weak Points emphasis is scheduled.");
+  }
+  return parts.length > 0 ? parts.join(" ") : null;
+}
+
 function formatSignedPercent(scale: number): string {
   const delta = Math.round((scale - 1) * 100);
   return `${delta >= 0 ? "+" : ""}${delta}%`;
@@ -57,6 +105,8 @@ function WeekOverviewCards({ plan, selectedProgramId }: Readonly<{ plan: Generat
     .slice(0, 4);
   const coveredMuscles = plan.muscle_coverage.covered_muscles ?? [];
   const underTarget = plan.muscle_coverage.under_target_muscles ?? [];
+  const authoredBlockLabel = formatAuthoredBlockLabel(plan);
+  const weakPointScheduled = hasWeakPointEmphasis(plan);
 
   return (
     <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
@@ -70,6 +120,8 @@ function WeekOverviewCards({ plan, selectedProgramId }: Readonly<{ plan: Generat
           Source: {selectedProgramId ? "Manual override" : "Server-selected recommendation"}
         </p>
         <p className="telemetry-meta">Missed day policy: {formatLabel(plan.missed_day_policy)}</p>
+        {authoredBlockLabel ? <p className="telemetry-meta">{authoredBlockLabel}</p> : null}
+        {weakPointScheduled ? <p className="text-xs text-zinc-200">Arms & Weak Points emphasis is scheduled this week.</p> : null}
       </div>
 
       <div className="main-card main-card--module main-card--accent spacing-grid spacing-grid--tight">
@@ -131,6 +183,8 @@ function WeekExecutionCards({ plan }: Readonly<{ plan: GeneratedWeekPlan }>) {
         <div className="space-y-2">
           {plan.sessions.map((session, index) => {
             const totalSets = session.exercises.reduce((sum, exercise) => sum + exercise.sets, 0);
+            const dayRoleLabel = formatRoleLabel(session.day_role);
+            const weakPointSlotCount = countSlotRole(session.exercises, "weak_point");
             return (
               <div key={session.session_id} className="rounded-md border border-white/10 bg-zinc-900/70 p-3 text-xs text-zinc-200">
                 <div className="flex items-start justify-between gap-3">
@@ -143,9 +197,11 @@ function WeekExecutionCards({ plan }: Readonly<{ plan: GeneratedWeekPlan }>) {
                   </span>
                 </div>
                 <p className="mt-2">Lead slot: {formatLeadExercise(session.exercises[0])}</p>
+                {dayRoleLabel ? <p className="telemetry-meta mt-1">Session intent: {dayRoleLabel}</p> : null}
                 <p className="telemetry-meta mt-1">
                   Coverage: {uniqueMuscles(session.exercises).join(", ") || "Untracked"}
                 </p>
+                {weakPointSlotCount > 0 ? <p className="telemetry-meta mt-1">Weak-point slots: {weakPointSlotCount}</p> : null}
               </div>
             );
           })}
@@ -222,6 +278,7 @@ export default function WeekPage() {
       leadSession: plan.sessions[0] ?? null,
     };
   }, [plan]);
+  const coachingContextNote = useMemo(() => buildWeekContextNote(plan), [plan]);
 
   async function generate() {
     try {
@@ -281,7 +338,7 @@ export default function WeekPage() {
           </Button>
         </div>
       </div>
-      <CoachingIntelligencePanel contextLabel="Week Plan" templateId={selectedProgramId} />
+      <CoachingIntelligencePanel contextLabel="Week Plan" templateId={selectedProgramId} contextNote={coachingContextNote} />
       <div className="main-card main-card--shell spacing-grid spacing-grid--tight">
         <p className="telemetry-kicker">Planner Status</p>
         <p className="text-sm text-zinc-200">{planStatus}</p>

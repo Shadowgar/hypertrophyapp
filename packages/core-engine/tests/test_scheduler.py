@@ -1039,6 +1039,118 @@ def test_generate_week_plan_preserves_weak_point_arms_day_when_compressing_five_
     assert any(session["title"] == "Arms & Weak Points" for session in plan["sessions"])
 
 
+def test_generate_week_plan_keeps_first_authored_day_when_compressing_five_days_to_three() -> None:
+    template = {
+        "id": "five_day_anchor_test",
+        "deload": {"trigger_weeks": 6, "set_reduction_pct": 35, "load_reduction_pct": 10},
+        "sessions": [],
+        "authored_weeks": [
+            {
+                "week_index": 1,
+                "week_role": "adaptation",
+                "sessions": [
+                    {"name": "Full Body #1", "day_role": "full_body_1", "exercises": [{"id": "lat", "name": "Lat Pulldown", "sets": 3, "start_weight": 100, "slot_role": "accessory", "primary_muscles": ["back"]}]},
+                    {"name": "Full Body #2", "day_role": "full_body_2", "exercises": [{"id": "rdl", "name": "RDL", "sets": 3, "start_weight": 100, "slot_role": "secondary_compound", "primary_muscles": ["hamstrings"]}]},
+                    {"name": "Full Body #3", "day_role": "full_body_3", "exercises": [{"id": "pullup", "name": "Pull-Up", "sets": 3, "start_weight": 0, "slot_role": "primary_compound", "primary_muscles": ["back"]}]},
+                    {"name": "Full Body #4", "day_role": "full_body_4", "exercises": [{"id": "hack", "name": "Hack Squat", "sets": 3, "start_weight": 140, "slot_role": "primary_compound", "primary_muscles": ["quads"]}]},
+                    {"name": "Arms & Weak Points", "day_role": "weak_point_arms", "exercises": [{"id": "weak_chest", "name": "Weak Chest Fly", "sets": 2, "start_weight": 30, "slot_role": "weak_point", "primary_muscles": ["chest"]}]},
+                ],
+            }
+        ],
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=3,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+        prior_generated_weeks=0,
+    )
+
+    titles = [session["title"] for session in plan["sessions"]]
+    assert "Full Body #1" in titles
+    assert "Arms & Weak Points" in titles
+
+
+def test_generate_week_plan_keeps_first_authored_day_when_compressing_five_days_to_two() -> None:
+    template = {
+        "id": "five_day_two_day_anchor_test",
+        "deload": {"trigger_weeks": 6, "set_reduction_pct": 35, "load_reduction_pct": 10},
+        "sessions": [],
+        "authored_weeks": [
+            {
+                "week_index": 1,
+                "week_role": "adaptation",
+                "sessions": [
+                    {"name": "Full Body #1", "day_role": "full_body_1", "exercises": [{"id": "lat", "name": "Lat Pulldown", "sets": 3, "start_weight": 100, "slot_role": "accessory", "primary_muscles": ["back"]}]},
+                    {"name": "Full Body #2", "day_role": "full_body_2", "exercises": [{"id": "rdl", "name": "RDL", "sets": 3, "start_weight": 100, "slot_role": "secondary_compound", "primary_muscles": ["hamstrings"]}]},
+                    {"name": "Full Body #3", "day_role": "full_body_3", "exercises": [{"id": "pullup", "name": "Pull-Up", "sets": 3, "start_weight": 0, "slot_role": "primary_compound", "primary_muscles": ["back"]}]},
+                    {"name": "Full Body #4", "day_role": "full_body_4", "exercises": [{"id": "hack", "name": "Hack Squat", "sets": 3, "start_weight": 140, "slot_role": "primary_compound", "primary_muscles": ["quads"]}]},
+                    {"name": "Arms & Weak Points", "day_role": "weak_point_arms", "exercises": [{"id": "weak_chest", "name": "Weak Chest Fly", "sets": 2, "start_weight": 30, "slot_role": "weak_point", "primary_muscles": ["chest"]}]},
+                ],
+            }
+        ],
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=2,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+        prior_generated_weeks=0,
+    )
+
+    titles = [session["title"] for session in plan["sessions"]]
+    assert titles == ["Full Body #1", "Arms & Weak Points"]
+
+
+def test_generate_week_plan_preserves_weak_point_slots_when_capping_merged_weak_point_day() -> None:
+    template = {
+        "id": "five_day_weak_point_cap_test",
+        "deload": {"trigger_weeks": 6, "set_reduction_pct": 35, "load_reduction_pct": 10},
+        "sessions": [],
+        "authored_weeks": [
+            {
+                "week_index": 1,
+                "week_role": "adaptation",
+                "sessions": [
+                    {"name": "Full Body #1", "day_role": "full_body_1", "exercises": [{"id": "press", "name": "Press", "sets": 3, "start_weight": 100, "slot_role": "primary_compound", "primary_muscles": ["chest"]}]},
+                    {"name": "Full Body #2", "day_role": "full_body_2", "exercises": [{"id": "rdl", "name": "RDL", "sets": 3, "start_weight": 100, "slot_role": "secondary_compound", "primary_muscles": ["hamstrings"]}]},
+                    {"name": "Full Body #3", "day_role": "full_body_3", "exercises": [{"id": "pullup", "name": "Pull-Up", "sets": 3, "start_weight": 0, "slot_role": "primary_compound", "primary_muscles": ["back"]}]},
+                    {"name": "Full Body #4", "day_role": "full_body_4", "exercises": [{"id": "hack", "name": "Hack Squat", "sets": 3, "start_weight": 140, "slot_role": "primary_compound", "primary_muscles": ["quads"]}]},
+                    {
+                        "name": "Arms & Weak Points",
+                        "day_role": "weak_point_arms",
+                        "exercises": [
+                            {"id": "weak_1", "name": "Weak Point 1", "sets": 2, "start_weight": 30, "slot_role": "weak_point", "primary_muscles": ["chest"]},
+                            {"id": "weak_2", "name": "Weak Point 2", "sets": 2, "start_weight": 30, "slot_role": "weak_point", "primary_muscles": ["hamstrings"]},
+                            {"id": "curl", "name": "Curl", "sets": 2, "start_weight": 20, "slot_role": "weak_point", "primary_muscles": ["biceps"]},
+                        ],
+                    },
+                ],
+            }
+        ],
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=2,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+        prior_generated_weeks=0,
+        session_time_budget_minutes=30,
+    )
+
+    weak_day = next(session for session in plan["sessions"] if session["title"] == "Arms & Weak Points")
+    assert [exercise["id"] for exercise in weak_day["exercises"]] == ["weak_1", "weak_2", "curl"]
+
+
 def test_generate_week_plan_keeps_all_primary_compound_patterns_when_compressing_five_days_to_three() -> None:
     template = {
         "id": "five_day_primary_patterns_test",
