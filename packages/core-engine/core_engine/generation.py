@@ -1055,6 +1055,13 @@ def prepare_generate_week_plan_runtime_inputs(
     session_time_budget_minutes = (
         int(session_time_budget_minutes_raw) if session_time_budget_minutes_raw is not None else None
     )
+    runtime_trace = _coerce_dict(runtime.get("decision_trace"))
+    runtime_outcome = _coerce_dict(runtime_trace.get("outcome"))
+    stimulus_fatigue_response_source = str(
+        runtime.get("stimulus_fatigue_response_source")
+        or runtime_outcome.get("stimulus_fatigue_response_source")
+        or ""
+    )
 
     payload = {
         "user_profile": {
@@ -1073,6 +1080,7 @@ def prepare_generate_week_plan_runtime_inputs(
         "severe_soreness_count": int(runtime.get("severe_soreness_count") or 0),
         "progression_state_per_exercise": progression_state_per_exercise,
         "stimulus_fatigue_response": _coerce_dict(runtime.get("stimulus_fatigue_response")),
+        "stimulus_fatigue_response_source": stimulus_fatigue_response_source,
         "decision_trace": {
             "interpreter": "prepare_generate_week_plan_runtime_inputs",
             "version": "v1",
@@ -1091,6 +1099,7 @@ def prepare_generate_week_plan_runtime_inputs(
                 "prior_generated_weeks": int(runtime.get("prior_generated_weeks") or 0),
                 "movement_restriction_count": len(movement_restrictions),
                 "session_time_budget_minutes": session_time_budget_minutes,
+                "stimulus_fatigue_response_source": stimulus_fatigue_response_source,
                 "stimulus_fatigue_response": _coerce_dict(runtime.get("stimulus_fatigue_response")),
             },
         },
@@ -1135,6 +1144,7 @@ def prepare_generate_week_scheduler_runtime(
         ),
         "progression_state_per_exercise": list(plan_runtime_inputs.get("progression_state_per_exercise") or []),
         "stimulus_fatigue_response": _coerce_dict(plan_runtime_inputs.get("stimulus_fatigue_response")) or None,
+        "stimulus_fatigue_response_source": str(plan_runtime_inputs.get("stimulus_fatigue_response_source") or ""),
         "rule_set": _coerce_dict(rule_set) or None,
     }
     return {
@@ -1153,6 +1163,7 @@ def prepare_generate_week_scheduler_runtime(
                 "severe_soreness_count": int(scheduler_kwargs["severe_soreness_count"]),
                 "latest_adherence_score": scheduler_kwargs["latest_adherence_score"],
                 "prior_generated_weeks": int(scheduler_kwargs["prior_generated_weeks"]),
+                "stimulus_fatigue_response_source": str(scheduler_kwargs["stimulus_fatigue_response_source"] or ""),
             },
         },
     }

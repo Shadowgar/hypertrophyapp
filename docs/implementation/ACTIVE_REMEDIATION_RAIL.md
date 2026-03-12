@@ -11,17 +11,18 @@ Last updated: 2026-03-12
 - Canonical training/coaching state now preserves a derived `stimulus_fatigue_response` snapshot assembled from persisted readiness, adherence, soreness, and stall inputs, and generated-week runtime now prefers that canonical snapshot instead of recomputing it when present.
 - Coach preview trace/context plumbing now surfaces canonical `coaching_state.stimulus_fatigue_response` as persisted recovery-pressure context without changing request-time progression scoring ownership.
 - Weekly review now prefers canonical `coaching_state.stimulus_fatigue_response` as persisted recovery-pressure context when present, while keeping fallback SFR derivation owner-bound inside `decision_weekly_review.py`.
+- Generated-week scheduler / `rules_runtime.py` trace plumbing now carries the consumed `stimulus_fatigue_response` source, so mesocycle scheduling explicitly records whether recovery-pressure context came from canonical coaching state or an upstream fallback without re-owning SFR derivation.
 - Tier 4A structural, doctrinal, and felt-behavior audits currently call the audited gold path ready for internal dogfood.
 - `intelligence.py` is down to compatibility forwarding for the extracted recommendation, progression, weekly-review, and coach-preview seams. It is not a valid place to add new coaching meaning.
 
 ## Latest Completed Slice
 
-- Extended `packages/core-engine/core_engine/decision_weekly_review.py` so weekly review now prefers persisted `coaching_state.stimulus_fatigue_response`, emits an explicit SFR source in trace/output, and still falls back to local weekly-review-owned SFR derivation when canonical context is unavailable.
-- Threaded canonical `coaching_state` into the active weekly-review route and added focused regressions proving both the canonical-source path and the weekly-review fallback-source boundary.
+- Extended generated-week prep and `packages/core-engine/core_engine/rules_runtime.py` so scheduler mesocycle traces now preserve the upstream `stimulus_fatigue_response_source`, while leaving SFR derivation ownership in generation/runtime assembly rather than moving it into scheduler policy code.
+- Added focused generation and rules-runtime regressions proving canonical coaching-state SFR sources and upstream fallback sources survive scheduler trace plumbing unchanged.
 
 ## Next Recommended Action
 
-- Extend generated-week scheduler / `rules_runtime.py` trace plumbing to surface whether consumed `stimulus_fatigue_response` arrived from canonical coaching-state context or an upstream fallback, while keeping actual SFR derivation owner-bound outside `rules_runtime.py`, and prove that boundary with focused generation/rules-runtime trace tests.
+- Extend response-facing generated-week payload helpers to surface scheduler mesocycle `stimulus_fatigue_response_source` at a stable top-level trace location, while keeping SFR derivation and scheduler policy ownership unchanged, and prove that boundary with focused generated-week payload tests.
 
 ## Closed Work Do Not Reopen Without Evidence
 

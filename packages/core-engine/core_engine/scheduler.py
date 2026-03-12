@@ -370,6 +370,7 @@ def generate_week_plan(
     movement_restrictions: list[str] | None = None,
     progression_state_per_exercise: list[dict[str, Any]] | None = None,
     stimulus_fatigue_response: dict[str, Any] | None = None,
+    stimulus_fatigue_response_source: str | None = None,
     rule_set: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     days_available = max(2, min(7, days_available))
@@ -423,6 +424,7 @@ def generate_week_plan(
         ),
         authored_sequence_complete=bool(authored_week_runtime.get("sequence_complete")),
         stimulus_fatigue_response=stimulus_fatigue_response,
+        stimulus_fatigue_response_source=stimulus_fatigue_response_source,
         phase=phase,
         rule_set=rule_set,
     )

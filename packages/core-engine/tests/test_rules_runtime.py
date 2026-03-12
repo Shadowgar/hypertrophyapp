@@ -486,6 +486,7 @@ def test_resolve_scheduler_mesocycle_runtime_uses_canonical_early_deload_trigger
             "deload_pressure": "high",
             "recoverability": "low",
         },
+        stimulus_fatigue_response_source="derived_from_training_state_inputs",
         phase="maintenance",
         rule_set=_scheduler_rule_set(),
     )
@@ -494,6 +495,10 @@ def test_resolve_scheduler_mesocycle_runtime_uses_canonical_early_deload_trigger
     assert runtime["deload_reason"] == "early_soreness+early_adherence+early_sfr_recovery"
     assert runtime["phase_transition_reason"] == "authored_sequence_complete"
     assert runtime["post_authored_behavior"] == "hold_last_authored_week"
+    assert runtime["decision_trace"]["inputs"]["stimulus_fatigue_response_source"] == "derived_from_training_state_inputs"
+    assert runtime["decision_trace"]["outcome"]["stimulus_fatigue_response_source"] == (
+        "derived_from_training_state_inputs"
+    )
 
 
 def test_resolve_scheduler_session_exercise_cap_uses_canonical_time_budget_rules() -> None:

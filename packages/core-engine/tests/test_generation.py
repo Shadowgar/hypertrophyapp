@@ -545,6 +545,44 @@ def test_prepare_generate_week_scheduler_runtime_shapes_generate_week_call_args(
     assert runtime["decision_trace"]["plan_input_trace"]["interpreter"] == "prepare_generate_week_plan_runtime_inputs"
 
 
+def test_prepare_generate_week_scheduler_runtime_threads_sfr_source_from_generation_runtime_trace() -> None:
+    runtime = prepare_generate_week_scheduler_runtime(
+        user_name="Coach User",
+        split_preference="full_body",
+        nutrition_phase="maintenance",
+        available_equipment=["barbell"],
+        generation_runtime={
+            "effective_days_available": 4,
+            "stimulus_fatigue_response": {
+                "stimulus_quality": "moderate",
+                "fatigue_cost": "low",
+                "recoverability": "high",
+                "progression_eligibility": False,
+                "deload_pressure": "low",
+                "substitution_pressure": "low",
+                "signals": {
+                    "stimulus": ["high_completion"],
+                    "fatigue": [],
+                    "recoverability": [],
+                },
+            },
+            "decision_trace": {
+                "outcome": {
+                    "stimulus_fatigue_response_source": "coaching_state.stimulus_fatigue_response",
+                }
+            },
+        },
+        program_template={"id": "full_body_v1", "sessions": []},
+        rule_set=None,
+    )
+
+    scheduler_kwargs = runtime["scheduler_kwargs"]
+    assert scheduler_kwargs["stimulus_fatigue_response_source"] == "coaching_state.stimulus_fatigue_response"
+    assert runtime["decision_trace"]["outcome"]["stimulus_fatigue_response_source"] == (
+        "coaching_state.stimulus_fatigue_response"
+    )
+
+
 def test_prepare_generate_week_review_lookup_runtime_parses_week_start() -> None:
     runtime = prepare_generate_week_review_lookup_runtime(
         base_plan={"week_start": "2026-03-09"}

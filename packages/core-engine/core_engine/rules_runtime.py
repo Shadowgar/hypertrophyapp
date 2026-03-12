@@ -204,6 +204,7 @@ def resolve_scheduler_mesocycle_runtime(
     authored_sequence_length: int | None,
     authored_sequence_complete: bool,
     stimulus_fatigue_response: dict[str, Any] | None,
+    stimulus_fatigue_response_source: str | None = None,
     phase: str,
     rule_set: dict[str, Any] | None,
 ) -> dict[str, Any]:
@@ -240,6 +241,7 @@ def resolve_scheduler_mesocycle_runtime(
     )
 
     normalized_sfr = _coerce_dict(stimulus_fatigue_response)
+    normalized_sfr_source = str(stimulus_fatigue_response_source or "").strip()
     early_sfr_recovery = (
         bool(sfr_trigger)
         and str(normalized_sfr.get("deload_pressure") or "").strip().lower()
@@ -310,6 +312,7 @@ def resolve_scheduler_mesocycle_runtime(
                 "authored_sequence_complete": bool(authored_sequence_complete),
                 "template_trigger_weeks": int(template_deload.get("trigger_weeks", 6) or 6),
                 "rule_trigger_weeks": rule_trigger_weeks if rule_trigger_weeks > 0 else None,
+                "stimulus_fatigue_response_source": normalized_sfr_source,
                 "stimulus_fatigue_response": dict(normalized_sfr),
             },
             "steps": [
@@ -326,6 +329,7 @@ def resolve_scheduler_mesocycle_runtime(
                     "result": {
                         "scheduled_deload": scheduled_deload,
                         "authored_deload": authored_deload,
+                        "stimulus_fatigue_response_source": normalized_sfr_source,
                         "early_triggers": {
                             "severe_soreness": early_soreness,
                             "low_adherence": early_adherence,
@@ -339,6 +343,7 @@ def resolve_scheduler_mesocycle_runtime(
                 "is_deload_week": bool(reasons),
                 "deload_reason": "+".join(reasons) if reasons else "none",
                 "trigger_weeks_source": trigger_weeks_source,
+                "stimulus_fatigue_response_source": normalized_sfr_source,
             },
         },
     }
