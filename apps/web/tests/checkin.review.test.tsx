@@ -170,12 +170,15 @@ test("check-in page surfaces review command center and adaptive output", async (
   fireEvent.click(screen.getByRole("button", { name: /Save Weekly Review/i }));
 
   await waitFor(() => {
-    expect(screen.getByText(/Readiness 78/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Readiness 78/i).length).toBeGreaterThan(0);
   });
 
-  expect(screen.getByText(/Primed to push/i)).toBeInTheDocument();
-  expect(screen.getAllByText(/Progressive overload ready\./i).length).toBeGreaterThan(0);
-  expect(screen.getAllByText(/Bench/i).length).toBeGreaterThan(0);
+  expect(screen.queryByText(/Primed to push/i)).not.toBeInTheDocument();
+  expect(screen.queryByText(/Progressive overload ready\./i)).not.toBeInTheDocument();
+  expect(screen.getAllByText(/progressive_overload_ready/i).length).toBeGreaterThan(0);
+  expect(screen.getAllByText(/^bench$/).length).toBeGreaterThan(0);
+  expect(screen.getByText(/below_target_reps_reduce_or_hold/i)).toBeInTheDocument();
+  expect(screen.getByText(/weak_point_bounded_extra_practice/i)).toBeInTheDocument();
   expect(screen.getByText(/Adaptive Output/i)).toBeInTheDocument();
   expect(screen.getByText(/Load Scale/i)).toBeInTheDocument();
 });

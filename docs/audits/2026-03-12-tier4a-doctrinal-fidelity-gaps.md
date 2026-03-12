@@ -5,7 +5,7 @@ Branch: `main`
 
 ## Verdict
 
-Tier 4A is not ready.
+Tier 4A is ready.
 
 ## Current Doctrinal State
 
@@ -13,17 +13,13 @@ Tier 4A is not ready.
 - Workout-today selection authority now lives under `decision_workout_session.py`.
 - Progression family outputs now carry `decision_trace` directly.
 - The reviewed UI surfaces in this pass now prefer authoritative rationale fields over local explanation fabrication.
+- Check-in now renders authoritative/raw weekly-review fields directly instead of converting codes into coaching prose.
+- `intelligence.py` now passes through specialization/coaching rationale fields without local code humanization.
 
 ## Remaining Doctrinal Gaps
 
-1. `apps/web/app/checkin/page.tsx`
-   - still converts runtime codes into coaching-style language locally
-   - still derives user-facing readiness meaning from score bands instead of authoritative explanation classification
-   - still humanizes weekly-review guidance and fault guidance in the UI layer
-
-2. `packages/core-engine/core_engine/intelligence.py`
-   - specialization rationale resolution still depends on local explanation helper ownership instead of living entirely inside the coach-preview decision family
+None confirmed in the audited Tier 4A scope.
 
 ## Doctrinal Risk
 
-The branch is now much closer to truthful gold-path behavior, but internal users can still be shown coaching meaning that did not originate from a named owner trace. That keeps the gold path below Tier 4A honesty.
+The audited Tier 4A surfaces no longer create coaching meaning outside named owners. Gold-path doctrinal fidelity is sufficient for internal dogfood.

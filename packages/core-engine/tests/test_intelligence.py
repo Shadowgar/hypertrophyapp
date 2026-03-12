@@ -78,10 +78,12 @@ from core_engine.intelligence import (
     extract_coaching_recommendation_focus_muscles,
     derive_readiness_score,
     humanize_program_reason,
+    humanize_specialization_reason,
     recommend_phase_transition,
     recommend_program_selection,
     recommend_progression_action,
     recommend_specialization_adjustments,
+    resolve_coaching_recommendation_rationale,
     resolve_active_frequency_adaptation_runtime,
     resolve_latest_logged_workout_resume_state,
     resolve_program_recommendation_candidates,
@@ -280,6 +282,16 @@ def test_intelligence_source_does_not_redefine_program_or_progression_decision_o
         "recommend_phase_transition",
     ):
         assert f"def {symbol}(" not in source
+
+
+def test_humanize_specialization_reason_returns_authoritative_fields_without_humanization() -> None:
+    assert humanize_specialization_reason({"rationale": "Keep chest emphasis for one more block."}) == "Keep chest emphasis for one more block."
+    assert humanize_specialization_reason({"reason": "focus_chest"}) == "focus_chest"
+
+
+def test_resolve_coaching_recommendation_rationale_passes_through_existing_fields() -> None:
+    assert resolve_coaching_recommendation_rationale({"progression": {"rationale": "Hold load."}}) == "Hold load."
+    assert resolve_coaching_recommendation_rationale({"specialization": {"reason": "focus_chest"}}) == "focus_chest"
 
 
 def test_progression_action_recommends_deload_for_low_readiness() -> None:
