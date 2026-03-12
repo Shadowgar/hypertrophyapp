@@ -81,7 +81,34 @@ Represent training programs with explicit coaching semantics and no ambiguity.
 - `deload_rules`
 - `phase_transition_rules`
 - `substitution_rules`
+- `generated_week_scheduler_rules`
 - `rationale_templates`
+
+### `generated_week_scheduler_rules`
+
+Canonical scheduler doctrine for generated-week execution on the adaptive gold path.
+
+- `mesocycle`
+  - `sequence_completion_phase_transition_reason`
+  - `post_authored_sequence_behavior`
+  - optional `soreness_deload_trigger`
+  - optional `adherence_deload_trigger`
+  - optional `stimulus_fatigue_deload_trigger`
+- `exercise_adjustment`
+  - ordered `policies[]` with explicit `match_policy`, conditions, and adjustments
+  - `default_adjustment`
+  - `substitution_pressure_guidance`
+- `session_selection`
+  - `recent_history_exercise_limit`
+  - `anchor_first_session_when_day_roles_present`
+  - `required_day_roles_when_compressed`
+  - `structural_slot_role_priority`
+  - `day_role_priority`
+  - `missed_day_policy`
+- `session_exercise_cap`
+  - `time_budget_thresholds[]`
+  - `default_slot_role_priority`
+  - optional `day_role_slot_role_priority_overrides`
 
 ## User Training State Contract
 

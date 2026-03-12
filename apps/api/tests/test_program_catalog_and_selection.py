@@ -1421,7 +1421,7 @@ def test_adaptive_gold_generate_week_uses_saved_weekly_review_adjustments() -> N
     assert payload["sessions"][0]["exercises"][0]["sets"] >= 2
 
 
-def test_generate_week_applies_latest_soreness_modifiers() -> None:
+def test_generate_week_does_not_invent_soreness_weight_adjustments_without_scheduler_doctrine() -> None:
     _reset_db()
     client = TestClient(app)
 
@@ -1487,8 +1487,8 @@ def test_generate_week_applies_latest_soreness_modifiers() -> None:
     assert baseline_pull["id"] == "row"
     assert adjusted_push["id"] == "bench"
     assert adjusted_pull["id"] == "row"
-    assert adjusted_push["recommended_working_weight"] < baseline_push["recommended_working_weight"]
-    assert adjusted_pull["recommended_working_weight"] < baseline_pull["recommended_working_weight"]
+    assert adjusted_push["recommended_working_weight"] == baseline_push["recommended_working_weight"]
+    assert adjusted_pull["recommended_working_weight"] == baseline_pull["recommended_working_weight"]
 
 
 def test_generate_week_includes_weekly_volume_and_coverage_payload() -> None:
@@ -1604,9 +1604,9 @@ def test_generate_week_includes_mesocycle_and_deload_payload() -> None:
     plan = generate.json()
 
     assert plan["program_template_id"] == "full_body_v1"
-    assert plan["mesocycle"]["is_deload_week"] is True
-    assert plan["mesocycle"]["deload_reason"] == "early_soreness+early_adherence"
-    assert plan["deload"]["active"] is True
+    assert plan["mesocycle"]["is_deload_week"] is False
+    assert plan["mesocycle"]["deload_reason"] == "none"
+    assert plan["deload"]["active"] is False
     assert plan["generation_runtime_trace"]["outcome"]["severe_soreness_count"] == 2
     assert plan["generation_runtime_trace"]["outcome"]["latest_adherence_score"] == 2
 
@@ -1665,9 +1665,9 @@ def test_generate_week_uses_canonical_readiness_state_for_sfr_recovery_deload() 
     assert generate.status_code == 200
     plan = generate.json()
 
-    assert plan["mesocycle"]["is_deload_week"] is True
-    assert plan["mesocycle"]["deload_reason"] == "early_sfr_recovery"
-    assert plan["deload"]["active"] is True
+    assert plan["mesocycle"]["is_deload_week"] is False
+    assert plan["mesocycle"]["deload_reason"] == "none"
+    assert plan["deload"]["active"] is False
     assert plan["generation_runtime_trace"]["outcome"]["stimulus_fatigue_response"]["deload_pressure"] == "high"
     assert plan["generation_runtime_trace"]["outcome"]["stimulus_fatigue_response"]["substitution_pressure"] == "high"
 
@@ -1761,7 +1761,7 @@ def test_generate_week_uses_repeat_failure_state_to_substitute_exercise(monkeypa
     assert exercise["repeat_failure_substitution"]["failed_exposure_count"] == 3
 
 
-def test_generate_week_respects_profile_session_time_budget(monkeypatch) -> None:
+def test_generate_week_keeps_all_exercises_without_canonical_time_budget_cap_rules(monkeypatch) -> None:
     _reset_db()
     client = TestClient(app)
 
@@ -1824,7 +1824,14 @@ def test_generate_week_respects_profile_session_time_budget(monkeypatch) -> None
     assert generate.status_code == 200
     plan = generate.json()
 
-    assert [exercise["id"] for exercise in plan["sessions"][0]["exercises"]] == ["lift_1", "lift_2", "lift_3"]
+    assert [exercise["id"] for exercise in plan["sessions"][0]["exercises"]] == [
+        "lift_1",
+        "lift_2",
+        "lift_3",
+        "lift_4",
+        "lift_5",
+        "lift_6",
+    ]
 
 
 def test_generate_week_respects_profile_movement_restrictions(monkeypatch) -> None:

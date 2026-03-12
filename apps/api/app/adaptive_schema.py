@@ -160,6 +160,83 @@ class SubstitutionRules(BaseModel):
     repeat_failure_trigger: str = Field(min_length=1)
 
 
+class SchedulerSorenessDeloadTrigger(BaseModel):
+    minimum_severe_count: int = Field(ge=1)
+    reason: str = Field(min_length=1)
+
+
+class SchedulerAdherenceDeloadTrigger(BaseModel):
+    maximum_score: int = Field(ge=1, le=5)
+    reason: str = Field(min_length=1)
+
+
+class SchedulerStimulusFatigueDeloadTrigger(BaseModel):
+    deload_pressure: str = Field(min_length=1)
+    recoverability: str = Field(min_length=1)
+    reason: str = Field(min_length=1)
+
+
+class SchedulerMesocycleRules(BaseModel):
+    sequence_completion_phase_transition_reason: str = Field(min_length=1)
+    post_authored_sequence_behavior: str = Field(min_length=1)
+    soreness_deload_trigger: SchedulerSorenessDeloadTrigger | None = None
+    adherence_deload_trigger: SchedulerAdherenceDeloadTrigger | None = None
+    stimulus_fatigue_deload_trigger: SchedulerStimulusFatigueDeloadTrigger | None = None
+
+
+class SchedulerExerciseAdjustmentConditions(BaseModel):
+    minimum_fatigue_score: float | None = Field(default=None, ge=0, le=1)
+    minimum_consecutive_under_target_exposures: int | None = Field(default=None, ge=1)
+    last_progression_actions: list[str] = Field(default_factory=list)
+
+
+class SchedulerExerciseAdjustmentAction(BaseModel):
+    load_scale: float = Field(gt=0)
+    set_delta: int
+    substitution_pressure: str = Field(min_length=1)
+    substitution_guidance: str | None = None
+
+
+class SchedulerExerciseAdjustmentPolicy(BaseModel):
+    policy_id: str = Field(min_length=1)
+    match_policy: Literal["all", "any"] = "all"
+    conditions: SchedulerExerciseAdjustmentConditions
+    adjustment: SchedulerExerciseAdjustmentAction
+
+
+class SchedulerExerciseAdjustmentRules(BaseModel):
+    policies: list[SchedulerExerciseAdjustmentPolicy] = Field(default_factory=list)
+    default_adjustment: SchedulerExerciseAdjustmentAction
+    substitution_pressure_guidance: dict[str, str | None] = Field(default_factory=dict)
+
+
+class SchedulerSessionSelectionRules(BaseModel):
+    recent_history_exercise_limit: int = Field(ge=1, le=12)
+    anchor_first_session_when_day_roles_present: bool = False
+    required_day_roles_when_compressed: list[str] = Field(default_factory=list)
+    structural_slot_role_priority: dict[str, int] = Field(default_factory=dict)
+    day_role_priority: dict[str, int] = Field(default_factory=dict)
+    missed_day_policy: str = Field(min_length=1)
+
+
+class SchedulerTimeBudgetThreshold(BaseModel):
+    maximum_minutes: int = Field(ge=1)
+    exercise_limit: int = Field(ge=1)
+
+
+class SchedulerSessionExerciseCapRules(BaseModel):
+    time_budget_thresholds: list[SchedulerTimeBudgetThreshold] = Field(default_factory=list)
+    default_slot_role_priority: dict[str, int] = Field(default_factory=dict)
+    day_role_slot_role_priority_overrides: dict[str, dict[str, int]] = Field(default_factory=dict)
+
+
+class GeneratedWeekSchedulerRules(BaseModel):
+    mesocycle: SchedulerMesocycleRules
+    exercise_adjustment: SchedulerExerciseAdjustmentRules
+    session_selection: SchedulerSessionSelectionRules
+    session_exercise_cap: SchedulerSessionExerciseCapRules
+
+
 class RuleSourceSection(BaseModel):
     field: str = Field(min_length=1)
     source_doc: str = Field(min_length=1)
@@ -178,6 +255,7 @@ class AdaptiveGoldRuleSet(BaseModel):
     fatigue_rules: FatigueRules
     deload_rules: DeloadRules
     substitution_rules: SubstitutionRules
+    generated_week_scheduler_rules: GeneratedWeekSchedulerRules | None = None
     rationale_templates: dict[str, str] = Field(default_factory=dict)
     source_sections: list[RuleSourceSection] = Field(default_factory=list)
 

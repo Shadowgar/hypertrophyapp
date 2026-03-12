@@ -5,6 +5,135 @@ import pytest
 from core_engine import generate_week_plan
 
 
+def _scheduler_rule_set() -> dict[str, object]:
+    return {
+        "progression_rules": {
+            "on_success": {"percent": 2.5},
+            "on_under_target": {"reduce_percent": 2.5, "after_exposures": 2},
+        },
+        "fatigue_rules": {
+            "high_fatigue_trigger": {
+                "conditions": ["session_rpe_avg >= 9", "under_target_exposures >= 2"]
+            },
+            "on_high_fatigue": {"action": "reduce_volume", "set_delta": -1},
+        },
+        "deload_rules": {
+            "scheduled_every_n_weeks": 6,
+            "early_deload_trigger": "three_consecutive_under_target_sessions",
+            "on_deload": {"set_reduction_percent": 35, "load_reduction_percent": 10},
+        },
+        "substitution_rules": {
+            "equipment_mismatch": "use_first_compatible_substitution",
+            "repeat_failure_trigger": "switch_after_three_failed_exposures",
+        },
+        "generated_week_scheduler_rules": {
+            "mesocycle": {
+                "sequence_completion_phase_transition_reason": "authored_sequence_complete",
+                "post_authored_sequence_behavior": "hold_last_authored_week",
+                "soreness_deload_trigger": {
+                    "minimum_severe_count": 2,
+                    "reason": "early_soreness",
+                },
+                "adherence_deload_trigger": {
+                    "maximum_score": 2,
+                    "reason": "early_adherence",
+                },
+                "stimulus_fatigue_deload_trigger": {
+                    "deload_pressure": "high",
+                    "recoverability": "low",
+                    "reason": "early_sfr_recovery",
+                },
+            },
+            "exercise_adjustment": {
+                "policies": [
+                    {
+                        "policy_id": "high_fatigue_reduce_load_and_sets",
+                        "match_policy": "all",
+                        "conditions": {
+                            "minimum_fatigue_score": 0.8,
+                            "last_progression_actions": ["reduce_load"],
+                        },
+                        "adjustment": {
+                            "load_scale": 0.95,
+                            "set_delta": -1,
+                            "substitution_pressure": "high",
+                            "substitution_guidance": (
+                                "prefer_compatible_variants_if_recovery_constraints_persist"
+                            ),
+                        },
+                    },
+                    {
+                        "policy_id": "moderate_recovery_pressure",
+                        "match_policy": "any",
+                        "conditions": {
+                            "minimum_fatigue_score": 0.7,
+                            "minimum_consecutive_under_target_exposures": 2,
+                            "last_progression_actions": ["reduce_load"],
+                        },
+                        "adjustment": {
+                            "load_scale": 0.95,
+                            "set_delta": 0,
+                            "substitution_pressure": "moderate",
+                            "substitution_guidance": (
+                                "compatible_variants_available_if_recovery_constraints_persist"
+                            ),
+                        },
+                    },
+                ],
+                "default_adjustment": {
+                    "load_scale": 1.0,
+                    "set_delta": 0,
+                    "substitution_pressure": "low",
+                    "substitution_guidance": None,
+                },
+                "substitution_pressure_guidance": {
+                    "moderate": "compatible_variants_available_if_recovery_constraints_persist",
+                    "high": "prefer_compatible_variants_if_recovery_constraints_persist",
+                },
+            },
+            "session_selection": {
+                "recent_history_exercise_limit": 6,
+                "anchor_first_session_when_day_roles_present": True,
+                "required_day_roles_when_compressed": ["weak_point_arms"],
+                "structural_slot_role_priority": {
+                    "weak_point": 120,
+                    "primary_compound": 110,
+                    "secondary_compound": 80,
+                },
+                "day_role_priority": {
+                    "weak_point_arms": 100,
+                    "full_body_1": 80,
+                    "full_body_2": 80,
+                    "full_body_3": 80,
+                    "full_body_4": 80,
+                },
+                "missed_day_policy": "roll-forward-priority-lifts",
+            },
+            "session_exercise_cap": {
+                "time_budget_thresholds": [
+                    {"maximum_minutes": 30, "exercise_limit": 3},
+                    {"maximum_minutes": 45, "exercise_limit": 4},
+                    {"maximum_minutes": 60, "exercise_limit": 5},
+                ],
+                "default_slot_role_priority": {
+                    "primary_compound": 100,
+                    "weak_point": 90,
+                    "secondary_compound": 80,
+                    "accessory": 50,
+                    "isolation": 40,
+                },
+                "day_role_slot_role_priority_overrides": {
+                    "weak_point_arms": {
+                        "weak_point": 120,
+                        "primary_compound": 30,
+                        "secondary_compound": 20,
+                    }
+                },
+            },
+        },
+    }
+
+
 def test_generate_week_plan_respects_days_available() -> None:
     template = {
         "id": "full_body_v1",
@@ -211,6 +340,7 @@ def test_generate_week_plan_applies_exercise_recovery_pressure_from_progression_
                 "fatigue_score": 0.85,
             }
         ],
+        rule_set=_scheduler_rule_set(),
     )
 
     exercise = plan["sessions"][0]["exercises"][0]
@@ -242,6 +372,7 @@ def test_generate_week_plan_limits_session_exercises_for_low_time_budget() -> No
         history=[],
         phase="maintenance",
         session_time_budget_minutes=30,
+        rule_set=_scheduler_rule_set(),
     )
 
     exercises = plan["sessions"][0]["exercises"]
@@ -273,6 +404,7 @@ def test_generate_week_plan_preserves_weak_point_slots_when_time_budget_caps_ses
         history=[],
         phase="maintenance",
         session_time_budget_minutes=30,
+        rule_set=_scheduler_rule_set(),
     )
 
     exercises = plan["sessions"][0]["exercises"]
@@ -312,6 +444,7 @@ def test_generate_week_plan_preserves_weak_point_day_under_frequency_compression
         program_template=template,
         history=[],
         phase="maintenance",
+        rule_set=_scheduler_rule_set(),
     )
 
     titles = [session["title"] for session in plan["sessions"]]
@@ -450,6 +583,7 @@ def test_generate_week_plan_preserves_priority_lifts_when_days_compress() -> Non
         program_template=template,
         history=history,
         phase="maintenance",
+        rule_set=_scheduler_rule_set(),
     )
 
     assert [session["title"] for session in plan["sessions"]] == ["Day B", "Day C"]
@@ -526,7 +660,7 @@ def test_generate_week_plan_honors_template_day_offsets() -> None:
     ]
 
 
-def test_generate_week_plan_applies_deterministic_soreness_modifiers() -> None:
+def test_generate_week_plan_does_not_invent_soreness_load_modifiers() -> None:
     template = {
         "id": "soreness_modifier_test",
         "sessions": [
@@ -574,9 +708,9 @@ def test_generate_week_plan_applies_deterministic_soreness_modifiers() -> None:
     assert baseline["sessions"][0]["session_id"] == soreness_adjusted["sessions"][0]["session_id"]
     assert [item["id"] for item in baseline_exercises] == [item["id"] for item in adjusted_exercises]
     assert baseline_exercises[0]["recommended_working_weight"] == 100
-    assert adjusted_exercises[0]["recommended_working_weight"] == pytest.approx(92.5)
+    assert adjusted_exercises[0]["recommended_working_weight"] == pytest.approx(100.0)
     assert baseline_exercises[1]["recommended_working_weight"] == 100
-    assert adjusted_exercises[1]["recommended_working_weight"] == pytest.approx(97.5)
+    assert adjusted_exercises[1]["recommended_working_weight"] == pytest.approx(100.0)
 
 
 def test_generate_week_plan_mild_soreness_does_not_change_weight() -> None:
@@ -646,6 +780,7 @@ def test_generate_week_plan_uses_sfr_for_early_recovery_deload_and_substitution_
             "deload_pressure": "high",
             "substitution_pressure": "high",
         },
+        rule_set=_scheduler_rule_set(),
     )
 
     assert plan["mesocycle"]["is_deload_week"] is True
@@ -992,6 +1127,7 @@ def test_generate_week_plan_marks_authored_sequence_complete_after_last_authored
         history=[],
         phase="maintenance",
         prior_generated_weeks=10,
+        rule_set=_scheduler_rule_set(),
     )
 
     assert plan["mesocycle"]["authored_week_index"] == 10
@@ -1105,6 +1241,7 @@ def test_generate_week_plan_keeps_first_authored_day_when_compressing_five_days_
         history=[],
         phase="maintenance",
         prior_generated_weeks=0,
+        rule_set=_scheduler_rule_set(),
     )
 
     titles = [session["title"] for session in plan["sessions"]]
@@ -1152,6 +1289,7 @@ def test_generate_week_plan_preserves_weak_point_slots_when_capping_merged_weak_
         phase="maintenance",
         prior_generated_weeks=0,
         session_time_budget_minutes=30,
+        rule_set=_scheduler_rule_set(),
     )
 
     weak_day = next(session for session in plan["sessions"] if session["title"] == "Arms & Weak Points")
@@ -1226,6 +1364,7 @@ def test_generate_week_plan_applies_early_deload_trigger_from_soreness_or_adhere
         prior_generated_weeks=1,
         latest_adherence_score=2,
         severe_soreness_count=2,
+        rule_set=_scheduler_rule_set(),
     )
 
     ex = plan["sessions"][0]["exercises"][0]

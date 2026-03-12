@@ -248,6 +248,13 @@ def test_load_program_rule_set_supports_adaptive_gold_runtime_program() -> None:
     assert rule_set["rule_set_id"] == "adaptive_full_body_gold_v0_1_rules"
     assert "adaptive_full_body_gold_v0_1" in rule_set["program_scope"]
     assert rule_set["deload_rules"]["scheduled_every_n_weeks"] == 6
+    assert rule_set["generated_week_scheduler_rules"]["mesocycle"]["adherence_deload_trigger"]["maximum_score"] == 2
+    assert rule_set["generated_week_scheduler_rules"]["exercise_adjustment"]["policies"][0]["policy_id"] == (
+        "high_fatigue_reduce_load_and_sets"
+    )
+    assert rule_set["generated_week_scheduler_rules"]["session_selection"]["missed_day_policy"] == (
+        "roll-forward-priority-lifts"
+    )
 
 
 @pytest.mark.parametrize(

@@ -10,10 +10,140 @@ from core_engine.rules_runtime import (
     resolve_scheduler_exercise_adjustment_runtime,
     resolve_scheduler_mesocycle_runtime,
     resolve_progression_rule_runtime,
+    resolve_scheduler_session_exercise_cap,
     resolve_scheduler_session_selection,
     resolve_starting_load,
     resolve_substitution_rule_runtime,
 )
+
+
+def _scheduler_rule_set() -> dict[str, object]:
+    return {
+        "progression_rules": {
+            "on_success": {"percent": 2.5},
+            "on_under_target": {"reduce_percent": 2.5, "after_exposures": 2},
+        },
+        "fatigue_rules": {
+            "high_fatigue_trigger": {
+                "conditions": ["session_rpe_avg >= 9", "under_target_exposures >= 2"]
+            },
+            "on_high_fatigue": {"action": "reduce_volume", "set_delta": -1},
+        },
+        "deload_rules": {
+            "scheduled_every_n_weeks": 6,
+            "early_deload_trigger": "three_consecutive_under_target_sessions",
+            "on_deload": {"set_reduction_percent": 35, "load_reduction_percent": 10},
+        },
+        "substitution_rules": {
+            "equipment_mismatch": "use_first_compatible_substitution",
+            "repeat_failure_trigger": "switch_after_three_failed_exposures",
+        },
+        "generated_week_scheduler_rules": {
+            "mesocycle": {
+                "sequence_completion_phase_transition_reason": "authored_sequence_complete",
+                "post_authored_sequence_behavior": "hold_last_authored_week",
+                "soreness_deload_trigger": {
+                    "minimum_severe_count": 2,
+                    "reason": "early_soreness",
+                },
+                "adherence_deload_trigger": {
+                    "maximum_score": 2,
+                    "reason": "early_adherence",
+                },
+                "stimulus_fatigue_deload_trigger": {
+                    "deload_pressure": "high",
+                    "recoverability": "low",
+                    "reason": "early_sfr_recovery",
+                },
+            },
+            "exercise_adjustment": {
+                "policies": [
+                    {
+                        "policy_id": "high_fatigue_reduce_load_and_sets",
+                        "match_policy": "all",
+                        "conditions": {
+                            "minimum_fatigue_score": 0.8,
+                            "last_progression_actions": ["reduce_load"],
+                        },
+                        "adjustment": {
+                            "load_scale": 0.95,
+                            "set_delta": -1,
+                            "substitution_pressure": "high",
+                            "substitution_guidance": (
+                                "prefer_compatible_variants_if_recovery_constraints_persist"
+                            ),
+                        },
+                    },
+                    {
+                        "policy_id": "moderate_recovery_pressure",
+                        "match_policy": "any",
+                        "conditions": {
+                            "minimum_fatigue_score": 0.7,
+                            "minimum_consecutive_under_target_exposures": 2,
+                            "last_progression_actions": ["reduce_load"],
+                        },
+                        "adjustment": {
+                            "load_scale": 0.95,
+                            "set_delta": 0,
+                            "substitution_pressure": "moderate",
+                            "substitution_guidance": (
+                                "compatible_variants_available_if_recovery_constraints_persist"
+                            ),
+                        },
+                    },
+                ],
+                "default_adjustment": {
+                    "load_scale": 1.0,
+                    "set_delta": 0,
+                    "substitution_pressure": "low",
+                    "substitution_guidance": None,
+                },
+                "substitution_pressure_guidance": {
+                    "moderate": "compatible_variants_available_if_recovery_constraints_persist",
+                    "high": "prefer_compatible_variants_if_recovery_constraints_persist",
+                },
+            },
+            "session_selection": {
+                "recent_history_exercise_limit": 6,
+                "anchor_first_session_when_day_roles_present": True,
+                "required_day_roles_when_compressed": ["weak_point_arms"],
+                "structural_slot_role_priority": {
+                    "weak_point": 120,
+                    "primary_compound": 110,
+                    "secondary_compound": 80,
+                },
+                "day_role_priority": {
+                    "weak_point_arms": 100,
+                    "full_body_1": 80,
+                    "full_body_2": 80,
+                    "full_body_3": 80,
+                    "full_body_4": 80,
+                },
+                "missed_day_policy": "roll-forward-priority-lifts",
+            },
+            "session_exercise_cap": {
+                "time_budget_thresholds": [
+                    {"maximum_minutes": 30, "exercise_limit": 3},
+                    {"maximum_minutes": 45, "exercise_limit": 4},
+                    {"maximum_minutes": 60, "exercise_limit": 5},
+                ],
+                "default_slot_role_priority": {
+                    "primary_compound": 100,
+                    "weak_point": 90,
+                    "secondary_compound": 80,
+                    "accessory": 50,
+                    "isolation": 40,
+                },
+                "day_role_slot_role_priority_overrides": {
+                    "weak_point_arms": {
+                        "weak_point": 120,
+                        "primary_compound": 30,
+                        "secondary_compound": 20,
+                    }
+                },
+            },
+        },
+    }
 
 
 def test_resolve_progression_rule_runtime_uses_rule_overrides() -> None:
@@ -254,6 +384,7 @@ def test_resolve_scheduler_exercise_adjustment_runtime_carries_named_owner_trace
             "fatigue_score": 0.85,
         },
         stimulus_substitution_pressure="moderate",
+        rule_set=_scheduler_rule_set(),
     )
 
     assert runtime["set_delta"] == -1
@@ -291,12 +422,49 @@ def test_resolve_scheduler_session_selection_returns_named_missed_day_policy_tra
         ],
         history=[],
         days_available=2,
+        rule_set=_scheduler_rule_set(),
     )
 
     assert selection["selected_indices"] == [0, 2]
     assert selection["missed_day_policy"] == "roll-forward-priority-lifts"
     assert selection["decision_trace"]["interpreter"] == "resolve_scheduler_session_selection"
     assert selection["decision_trace"]["outcome"]["required_session_indices"] == [0, 2]
+
+
+def test_resolve_scheduler_mesocycle_runtime_uses_canonical_early_deload_triggers() -> None:
+    runtime = resolve_scheduler_mesocycle_runtime(
+        template_deload={"trigger_weeks": 6},
+        prior_generated_weeks=1,
+        latest_adherence_score=2,
+        severe_soreness_count=2,
+        authored_week_index=10,
+        authored_week_role="intensification",
+        authored_sequence_length=10,
+        authored_sequence_complete=True,
+        stimulus_fatigue_response={
+            "deload_pressure": "high",
+            "recoverability": "low",
+        },
+        phase="maintenance",
+        rule_set=_scheduler_rule_set(),
+    )
+
+    assert runtime["is_deload_week"] is True
+    assert runtime["deload_reason"] == "early_soreness+early_adherence+early_sfr_recovery"
+    assert runtime["phase_transition_reason"] == "authored_sequence_complete"
+    assert runtime["post_authored_behavior"] == "hold_last_authored_week"
+
+
+def test_resolve_scheduler_session_exercise_cap_uses_canonical_time_budget_rules() -> None:
+    runtime = resolve_scheduler_session_exercise_cap(
+        session_time_budget_minutes=30,
+        day_role="weak_point_arms",
+        slot_roles=["primary_compound", "weak_point", "isolation", "weak_point"],
+        rule_set=_scheduler_rule_set(),
+    )
+
+    assert runtime["exercise_limit"] == 3
+    assert runtime["kept_indices"] == [1, 2, 3]
 
 
 def test_resolve_equipment_substitution_chooses_first_compatible_candidate() -> None:

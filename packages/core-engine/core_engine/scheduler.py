@@ -13,15 +13,6 @@ from .rules_runtime import (
     resolve_scheduler_session_selection,
 )
 
-
-_SORENESS_LEVEL_ORDER = {"none": 0, "mild": 1, "moderate": 2, "severe": 3}
-_SORENESS_WEIGHT_FACTOR = {
-    "none": 1.0,
-    "mild": 1.0,
-    "moderate": 0.975,
-    "severe": 0.925,
-}
-
 _MUSCLE_ALIASES = {
     "chest": "chest",
     "pec": "chest",
@@ -68,32 +59,6 @@ def _normalize_muscle_label(value: str | None) -> str | None:
     return _MUSCLE_ALIASES.get(normalized)
 
 
-def _token_mapped_muscles(name: str) -> set[str]:
-    lowered = name.lower()
-    mapped: set[str] = set()
-
-    if any(token in lowered for token in ("bench", "chest", "pec", "fly", "press")):
-        mapped.add("chest")
-    if any(token in lowered for token in ("row", "pulldown", "pull up", "pull-up", "pullup", "lat")):
-        mapped.add("back")
-    if any(token in lowered for token in ("squat", "leg press", "lunge", "extension", "adductor")):
-        mapped.add("quads")
-    if any(token in lowered for token in ("rdl", "deadlift", "leg curl", "hamstring")):
-        mapped.add("hamstrings")
-    if any(token in lowered for token in ("glute", "hip thrust")):
-        mapped.add("glutes")
-    if any(token in lowered for token in ("shoulder", "delt", "lateral raise", "ohp", "overhead")):
-        mapped.add("shoulders")
-    if "curl" in lowered and "leg curl" not in lowered:
-        mapped.add("biceps")
-    if any(token in lowered for token in ("tricep", "pushdown", "skull crusher", "extension")):
-        mapped.add("triceps")
-    if "calf" in lowered:
-        mapped.add("calves")
-
-    return mapped
-
-
 def _resolve_exercise_muscles(exercise: dict[str, Any]) -> set[str]:
     resolved: set[str] = set()
 
@@ -102,59 +67,17 @@ def _resolve_exercise_muscles(exercise: dict[str, Any]) -> set[str]:
         if normalized:
             resolved.add(normalized)
 
-    movement_pattern = exercise.get("movement_pattern")
-    normalized_movement = _normalize_muscle_label(movement_pattern)
-    if normalized_movement:
-        resolved.add(normalized_movement)
-
-    if not resolved:
-        resolved.update(_token_mapped_muscles(exercise.get("name", "")))
+    for muscle in exercise.get("secondary_muscles") or []:
+        normalized = _normalize_muscle_label(muscle)
+        if normalized:
+            resolved.add(normalized)
 
     return resolved
-
-
-def _normalize_soreness_by_muscle(soreness_by_muscle: dict[str, str] | None) -> dict[str, str]:
-    normalized: dict[str, str] = {}
-    for muscle, severity in (soreness_by_muscle or {}).items():
-        normalized_muscle = _normalize_muscle_label(muscle)
-        if not normalized_muscle:
-            continue
-        normalized_severity = (severity or "none").lower()
-        if normalized_severity not in _SORENESS_LEVEL_ORDER:
-            normalized_severity = "none"
-
-        existing = normalized.get(normalized_muscle, "none")
-        if _SORENESS_LEVEL_ORDER[normalized_severity] >= _SORENESS_LEVEL_ORDER[existing]:
-            normalized[normalized_muscle] = normalized_severity
-
-    return normalized
-
-
-def _resolve_exercise_soreness(exercise: dict[str, Any], soreness_by_muscle: dict[str, str]) -> str:
-    muscles = _resolve_exercise_muscles(exercise)
-    if not muscles:
-        return "none"
-
-    severity = "none"
-    for muscle in muscles:
-        candidate = soreness_by_muscle.get(muscle, "none")
-        if _SORENESS_LEVEL_ORDER[candidate] > _SORENESS_LEVEL_ORDER[severity]:
-            severity = candidate
-
-    return severity
-
-
-def _apply_soreness_modifier(weight: float, severity: str) -> float:
-    factor = _SORENESS_WEIGHT_FACTOR.get(severity, 1.0)
-    adjusted = max(5.0, weight * factor)
-    return round(adjusted / 2.5) * 2.5
-
-
-def _normalize_percentage(value: Any, fallback: int) -> int:
+def _normalize_percentage(value: Any) -> int | None:
     try:
         parsed = int(value)
     except (TypeError, ValueError):
-        parsed = fallback
+        return None
     return max(0, min(100, parsed))
 
 
@@ -202,7 +125,6 @@ def _build_planned_exercise(
     exercise: dict[str, Any],
     history_index: dict[str, dict[str, Any]],
     equipment_set: set[str],
-    soreness_by_muscle: dict[str, str],
     *,
     is_deload_week: bool,
     set_reduction_pct: int,
@@ -220,8 +142,6 @@ def _build_planned_exercise(
     )
     previous = history_index.get(exercise.get("id"), {})
     recommended = float(previous.get("next_working_weight") or exercise.get("start_weight", 20))
-    soreness_severity = _resolve_exercise_soreness(exercise, soreness_by_muscle)
-    recommended = _apply_soreness_modifier(recommended, soreness_severity)
     planned_sets = int(exercise.get("sets", 3) or 3)
     if is_deload_week:
         planned_sets, recommended = _apply_deload_modifiers(
@@ -233,6 +153,7 @@ def _build_planned_exercise(
     exercise_adjustment_runtime = resolve_scheduler_exercise_adjustment_runtime(
         progression_state=progression_state,
         stimulus_substitution_pressure=substitution_pressure,
+        rule_set=rule_set,
     )
     planned_sets = max(1, planned_sets + int(exercise_adjustment_runtime["set_delta"]))
     recommended = max(5.0, recommended * float(exercise_adjustment_runtime["load_scale"]))
@@ -498,6 +419,7 @@ def generate_week_plan(
         session_profiles=_build_session_selection_profiles(base_sessions),
         history=history,
         days_available=days_available,
+        rule_set=rule_set,
     )
     selected_base_sessions = [
         (index, base_sessions[index])
@@ -515,7 +437,6 @@ def generate_week_plan(
         if str(item.get("exercise_id") or "").strip()
     }
     equipment_set = _build_equipment_set(available_equipment)
-    normalized_soreness = _normalize_soreness_by_muscle(soreness_by_muscle)
     normalized_movement_restrictions = _normalize_movement_restrictions(movement_restrictions)
     mesocycle = resolve_scheduler_mesocycle_runtime(
         template_deload=program_template.get("deload"),
@@ -540,8 +461,22 @@ def generate_week_plan(
     )
 
     deload_config = program_template.get("deload") or {}
-    set_reduction_pct = _normalize_percentage(deload_config.get("set_reduction_pct"), 35)
-    load_reduction_pct = _normalize_percentage(deload_config.get("load_reduction_pct"), 10)
+    deload_rules = (rule_set or {}).get("deload_rules") if isinstance(rule_set, dict) else {}
+    on_deload_rules = deload_rules.get("on_deload") if isinstance(deload_rules, dict) else {}
+    set_reduction_pct = (
+        _normalize_percentage(on_deload_rules.get("set_reduction_percent"))
+        if isinstance(on_deload_rules, dict)
+        else None
+    )
+    if set_reduction_pct is None:
+        set_reduction_pct = _normalize_percentage(deload_config.get("set_reduction_pct")) or 0
+    load_reduction_pct = (
+        _normalize_percentage(on_deload_rules.get("load_reduction_percent"))
+        if isinstance(on_deload_rules, dict)
+        else None
+    )
+    if load_reduction_pct is None:
+        load_reduction_pct = _normalize_percentage(deload_config.get("load_reduction_pct")) or 0
     deload = {
         "active": mesocycle["is_deload_week"],
         "set_reduction_pct": set_reduction_pct,
@@ -563,7 +498,6 @@ def generate_week_plan(
                 exercise,
                 history_index,
                 equipment_set,
-                normalized_soreness,
                 is_deload_week=bool(deload["active"]),
                 set_reduction_pct=set_reduction_pct,
                 load_reduction_pct=load_reduction_pct,
@@ -585,6 +519,7 @@ def generate_week_plan(
             session_time_budget_minutes=session_time_budget_minutes,
             day_role=str(session.get("day_role") or "").strip() or None,
             slot_roles=[_exercise_slot_role(exercise) for exercise in exercises],
+            rule_set=rule_set,
         )
         exercises = [
             exercise
