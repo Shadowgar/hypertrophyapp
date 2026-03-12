@@ -57,6 +57,7 @@ def test_build_user_training_state_assembles_canonical_runtime_payload() -> None
                 exposure_count=6,
                 consecutive_under_target_exposures=3,
                 last_progression_action="hold",
+                fatigue_score=0.85,
                 last_updated_at=datetime(2026, 3, 3, 9, 30),
             )
         ],
@@ -127,6 +128,7 @@ def test_build_user_training_state_assembles_canonical_runtime_payload() -> None
             "exposure_count": 6,
             "consecutive_under_target_exposures": 3,
             "last_progression_action": "hold",
+            "fatigue_score": 0.85,
             "last_updated_at": datetime(2026, 3, 3, 9, 30),
         }
     ]

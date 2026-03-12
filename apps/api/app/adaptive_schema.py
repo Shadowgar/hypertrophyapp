@@ -364,6 +364,7 @@ class ProgressionStateEntry(BaseModel):
     exposure_count: int = Field(ge=0)
     consecutive_under_target_exposures: int = Field(ge=0)
     last_progression_action: str = Field(min_length=1)
+    fatigue_score: float = Field(default=0.0, ge=0, le=1)
     last_updated_at: datetime | None = None
 
 

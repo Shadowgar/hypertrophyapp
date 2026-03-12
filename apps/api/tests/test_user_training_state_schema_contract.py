@@ -34,6 +34,7 @@ def test_user_training_state_validates_against_canonical_contract() -> None:
                     "exposure_count": 6,
                     "consecutive_under_target_exposures": 1,
                     "last_progression_action": "hold",
+                    "fatigue_score": 0.35,
                     "last_updated_at": datetime(2026, 3, 7, 9, 30),
                 }
             ],
@@ -111,6 +112,7 @@ def test_user_training_state_validates_against_canonical_contract() -> None:
     assert state.user_program_state.program_id == "full_body_v1"
     assert state.exercise_performance_history[0].exercise_id == "bench_press_barbell"
     assert state.progression_state_per_exercise[0].last_progression_action == "hold"
+    assert state.progression_state_per_exercise[0].fatigue_score == 0.35
     assert state.readiness_state.sleep_quality == 2
     assert state.coaching_state.readiness.sleep_quality == 2
     assert state.coaching_state.mesocycle.week_index == 3

@@ -167,7 +167,7 @@ class ExerciseState(Base):
     exposure_count: Mapped[int] = mapped_column(Integer, default=0)
     consecutive_under_target_exposures: Mapped[int] = mapped_column(Integer, default=0)
     last_progression_action: Mapped[str] = mapped_column(String, default="hold")
-    fatigue_score: Mapped[float] = mapped_column(Float, default=0)
+    fatigue_score: Mapped[float] = mapped_column(Float, default=0.0)
     last_updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive, onupdate=_utcnow_naive)
 
 

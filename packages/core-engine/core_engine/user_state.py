@@ -382,6 +382,7 @@ def _build_progression_state(exercise_states: list[Any]) -> list[dict[str, Any]]
                     _read_attr(state, "consecutive_under_target_exposures", 0) or 0
                 ),
                 "last_progression_action": str(_read_attr(state, "last_progression_action", "hold") or "hold"),
+                "fatigue_score": max(0.0, min(1.0, float(_read_attr(state, "fatigue_score", 0.0) or 0.0))),
                 "last_updated_at": _read_attr(state, "last_updated_at"),
             }
             for state in exercise_states

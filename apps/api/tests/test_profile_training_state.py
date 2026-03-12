@@ -109,7 +109,7 @@ def test_profile_training_state_returns_canonical_runtime_payload() -> None:
                 exposure_count=6,
                 consecutive_under_target_exposures=3,
                 last_progression_action="hold",
-                fatigue_score=0,
+                fatigue_score=0.85,
             )
         )
         session.add(
@@ -162,7 +162,15 @@ def test_profile_training_state_returns_canonical_runtime_payload() -> None:
     assert payload["user_program_state"]["session_id"] == "full_body_v1-session-today"
     assert payload["user_program_state"]["last_generated_week_start"] == current_week_start.isoformat()
     assert payload["exercise_performance_history"][0]["exercise_id"] == "bench_press_barbell"
-    assert payload["progression_state_per_exercise"][0]["consecutive_under_target_exposures"] == 3
+    assert payload["progression_state_per_exercise"][0] == {
+        "exercise_id": "bench_press_barbell",
+        "current_working_weight": 100.0,
+        "exposure_count": 6,
+        "consecutive_under_target_exposures": 3,
+        "last_progression_action": "hold",
+        "fatigue_score": 0.85,
+        "last_updated_at": payload["progression_state_per_exercise"][0]["last_updated_at"],
+    }
     assert payload["fatigue_state"]["recovery_state"] == "high_fatigue"
     assert payload["fatigue_state"]["soreness_by_muscle"] == {"chest": "severe", "back": "severe"}
     assert payload["adherence_state"] == {

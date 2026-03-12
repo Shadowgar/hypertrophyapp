@@ -7,8 +7,17 @@ Last updated: 2026-03-12
 - Blocker 1 is complete.
 - Blocker 2 is complete.
 - Blocker 3 is complete.
+- Canonical `progression_state_per_exercise` now preserves persisted `ExerciseState.fatigue_score`, so first-class user training state no longer drops exercise-level recovery-pressure input before downstream owner consumption.
 - Tier 4A structural, doctrinal, and felt-behavior audits currently call the audited gold path ready for internal dogfood.
 - `intelligence.py` is down to compatibility forwarding for the extracted recommendation, progression, weekly-review, and coach-preview seams. It is not a valid place to add new coaching meaning.
+
+## Latest Completed Slice
+
+- Threaded persisted `ExerciseState.fatigue_score` through canonical user training state via `packages/core-engine/core_engine/user_state.py` and the adaptive-schema training-state contract, with focused engine and API regressions covering the assembler and `/profile/training-state`.
+
+## Next Recommended Action
+
+- Add a canonical `stimulus_fatigue_response` snapshot to assembled training/coaching state using already-persisted readiness, adherence, soreness, and stall inputs, then update focused schema and owner-boundary tests so downstream decision families can consume one authoritative recovery-pressure snapshot instead of recomputing it ad hoc.
 
 ## Closed Work Do Not Reopen Without Evidence
 
