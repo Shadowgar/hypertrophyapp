@@ -3,6 +3,7 @@ import math
 from types import SimpleNamespace
 
 import pytest
+import core_engine.intelligence as intelligence_module
 
 from core_engine.intelligence import (
     apply_active_frequency_adaptation_runtime,
@@ -68,11 +69,9 @@ from core_engine.intelligence import (
     interpret_frequency_adaptation_apply,
     interpret_workout_set_feedback,
     interpret_weekly_review_decision,
-    order_generation_template_candidates,
     recommend_live_workout_adjustment,
     recommend_coach_intelligence_preview,
     recommend_frequency_adaptation_preview,
-    recommend_generation_template_selection,
     build_workout_progress_payload,
     evaluate_schedule_adaptation,
     extract_coaching_recommendation_focus_muscles,
@@ -98,6 +97,10 @@ from core_engine.intelligence import (
     build_weekly_review_status_payload,
     normalize_coaching_recommendation_timeline_limit,
     prepare_generated_week_review_overlay,
+)
+from core_engine.decision_generated_week import (
+    order_generation_template_candidates,
+    recommend_generation_template_selection,
 )
 
 
@@ -2536,6 +2539,11 @@ def test_generation_template_selection_orders_candidates_for_adaptation_and_spli
     )
 
     assert ordered[:3] == ["ppl_v1", "upper_lower_v1", "full_body_v1"]
+
+
+def test_intelligence_module_no_longer_defines_generation_template_selection_helpers() -> None:
+    assert "order_generation_template_candidates" not in intelligence_module.__dict__
+    assert "recommend_generation_template_selection" not in intelligence_module.__dict__
 
 
 def test_generation_template_selection_returns_trace_for_viable_candidate() -> None:

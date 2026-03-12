@@ -29,14 +29,11 @@ from .generation import (
     prepare_frequency_adaptation_runtime_inputs,
     prepare_frequency_adaptation_decision_runtime,
     prepare_plan_generation_decision_runtime,
-    prepare_generation_template_runtime,
     resolve_program_exercise_guide,
     resolve_program_guide_summary,
     resolve_frequency_adaptation_request_context,
-    resolve_generation_template_choice,
     resolve_week_generation_runtime_inputs,
     serialize_recent_training_history,
-    summarize_generation_template_viability,
 )
 from .history import build_history_analytics, build_history_calendar, build_history_day_detail
 from .scheduler import generate_week_plan
@@ -65,7 +62,10 @@ from .decision_coach_preview import (
 from .decision_generated_week import (
     build_generated_week_plan_payload,
     order_generation_template_candidates,
+    prepare_generation_template_runtime,
     recommend_generation_template_selection,
+    resolve_generation_template_choice,
+    summarize_generation_template_viability,
 )
 from .decision_program_recommendation import (
     build_program_recommendation_payload,

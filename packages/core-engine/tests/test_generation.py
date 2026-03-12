@@ -32,6 +32,11 @@ from core_engine import (
 )
 
 
+def test_generation_template_runtime_exports_come_from_generated_week_owner() -> None:
+    assert prepare_generation_template_runtime.__module__ == "core_engine.decision_generated_week"
+    assert resolve_generation_template_choice.__module__ == "core_engine.decision_generated_week"
+
+
 def test_resolve_generation_template_choice_falls_back_to_first_viable_candidate() -> None:
     unusable_template = {
         "id": "ppl_v1",

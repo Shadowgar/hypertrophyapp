@@ -69,7 +69,7 @@ A layer allowed to render outcomes for humans, but not to invent or alter coachi
 | `decision_program_recommendation.py` | Policy owner | Program recommendation and switch advice live here. |
 | `decision_frequency_adaptation.py` | Policy owner | Frequency-adaptation policy lives here. |
 | `decision_coach_preview.py` | Policy owner | Coach preview and apply family logic lives here. |
-| `decision_generated_week.py` | Policy owner | Generated-week template selection, top-level week decision ownership, and authoritative generated-week trace emission live here. |
+| `decision_generated_week.py` | Policy owner | Generated-week template selection preparation, final selection authority, top-level week decision ownership, and authoritative generated-week trace emission live here. |
 | `decision_workout_session.py` | Policy owner | Workout-session family outputs and runtime decisions live here. |
 | `decision_live_workout_guidance.py` | Policy owner | Live set feedback and workout guidance policy live here. |
 

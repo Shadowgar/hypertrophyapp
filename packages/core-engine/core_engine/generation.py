@@ -5,8 +5,6 @@ from typing import Any, Callable
 
 from .decision_generated_week import (
     build_generated_week_plan_payload,
-    resolve_generation_template_choice as decision_resolve_generation_template_choice,
-    summarize_generation_template_viability as decision_summarize_generation_template_viability,
 )
 from .decision_progression import evaluate_stimulus_fatigue_response
 from .decision_frequency_adaptation import build_generated_week_adaptation_persistence_payload
@@ -555,107 +553,6 @@ def prepare_frequency_adaptation_decision_runtime(
             },
             "adaptation_runtime_trace": _coerce_dict(adaptation_runtime.get("decision_trace")),
         },
-    }
-
-
-def summarize_generation_template_viability(
-    *,
-    template: dict[str, Any],
-    days_available: int,
-    split_preference: str,
-    nutrition_phase: str,
-    available_equipment: list[str],
-) -> dict[str, int]:
-    return decision_summarize_generation_template_viability(
-        template=template,
-        days_available=days_available,
-        split_preference=split_preference,
-        nutrition_phase=nutrition_phase,
-        available_equipment=available_equipment,
-    )
-
-
-def resolve_generation_template_choice(
-    *,
-    explicit_template_id: str | None,
-    explicit_template: dict[str, Any] | None,
-    profile_template_id: str | None,
-    split_preference: str,
-    days_available: int,
-    nutrition_phase: str,
-    available_equipment: list[str],
-    candidate_summaries: list[dict[str, Any]],
-    loaded_candidate_templates: dict[str, dict[str, Any]],
-) -> dict[str, Any]:
-    return decision_resolve_generation_template_choice(
-        explicit_template_id=explicit_template_id,
-        explicit_template=explicit_template,
-        profile_template_id=profile_template_id,
-        split_preference=split_preference,
-        days_available=days_available,
-        nutrition_phase=nutrition_phase,
-        available_equipment=available_equipment,
-        candidate_summaries=candidate_summaries,
-        loaded_candidate_templates=loaded_candidate_templates,
-    )
-
-
-def prepare_generation_template_runtime(
-    *,
-    explicit_template_id: str | None,
-    profile_template_id: str | None,
-    split_preference: str,
-    days_available: int,
-    nutrition_phase: str,
-    available_equipment: list[str],
-    candidate_summaries: list[dict[str, Any]],
-    load_template: Callable[[str], dict[str, Any]],
-    ignored_loader_exceptions: tuple[type[BaseException], ...] = (FileNotFoundError, KeyError),
-) -> dict[str, Any]:
-    if explicit_template_id:
-        explicit_template = load_template(explicit_template_id)
-        selection = resolve_generation_template_choice(
-            explicit_template_id=explicit_template_id,
-            explicit_template=explicit_template,
-            profile_template_id=profile_template_id,
-            split_preference=split_preference,
-            days_available=days_available,
-            nutrition_phase=nutrition_phase,
-            available_equipment=available_equipment,
-            candidate_summaries=[],
-            loaded_candidate_templates={},
-        )
-        return {
-            "selected_template_id": explicit_template_id,
-            "selected_template": explicit_template,
-            "decision_trace": dict(selection["decision_trace"]),
-        }
-
-    loaded_candidate_templates: dict[str, dict[str, Any]] = {}
-    for summary in candidate_summaries:
-        candidate_id = str(summary.get("id") or "")
-        if not candidate_id:
-            continue
-        try:
-            loaded_candidate_templates[candidate_id] = load_template(candidate_id)
-        except ignored_loader_exceptions:
-            continue
-
-    selection = resolve_generation_template_choice(
-        explicit_template_id=None,
-        explicit_template=None,
-        profile_template_id=profile_template_id,
-        split_preference=split_preference,
-        days_available=days_available,
-        nutrition_phase=nutrition_phase,
-        available_equipment=available_equipment,
-        candidate_summaries=candidate_summaries,
-        loaded_candidate_templates=loaded_candidate_templates,
-    )
-    return {
-        "selected_template_id": str(selection["selected_template_id"]),
-        "selected_template": dict(selection["selected_template"]),
-        "decision_trace": dict(selection["decision_trace"]),
     }
 
 
