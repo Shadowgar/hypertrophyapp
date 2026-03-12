@@ -1,5 +1,6 @@
 from datetime import UTC, date, datetime
 import math
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -257,6 +258,28 @@ def test_schedule_adaptation_reports_tradeoffs_and_muscle_delta() -> None:
     assert result["dropped_sessions"]
     assert any("density" in item.lower() for item in result["tradeoffs"])
     assert isinstance(result["muscle_set_delta"], dict)
+
+
+def test_intelligence_source_does_not_redefine_program_or_progression_decision_owners() -> None:
+    source = Path(intelligence_module.__file__).read_text()
+
+    for symbol in (
+        "humanize_program_reason",
+        "resolve_program_recommendation_candidates",
+        "recommend_program_selection",
+        "build_program_recommendation_payload",
+        "prepare_program_recommendation_runtime",
+        "prepare_profile_program_recommendation_inputs",
+        "prepare_profile_program_recommendation_route_runtime",
+        "build_program_switch_payload",
+        "prepare_program_switch_runtime",
+        "humanize_progression_reason",
+        "humanize_phase_transition_reason",
+        "derive_readiness_score",
+        "recommend_progression_action",
+        "recommend_phase_transition",
+    ):
+        assert f"def {symbol}(" not in source
 
 
 def test_progression_action_recommends_deload_for_low_readiness() -> None:

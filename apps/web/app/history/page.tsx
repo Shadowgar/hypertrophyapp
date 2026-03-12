@@ -21,15 +21,6 @@ function formatTimestamp(iso: string): string {
   return parsed.toLocaleString();
 }
 
-function formatSummaryLabel(value: string): string {
-  return value
-    .replaceAll("_", " ")
-    .trim()
-    .split(/\s+/)
-    .map((part) => (part.length ? part[0].toUpperCase() + part.slice(1) : part))
-    .join(" ");
-}
-
 function formatSignedDelta(value: number): string {
   return `${value >= 0 ? "+" : ""}${value}`;
 }
@@ -161,23 +152,6 @@ function roundOneDecimal(value: number): number {
   return Math.round(value * 10) / 10;
 }
 
-function resolveProgressionHeadline(
-  adherencePct: number,
-  prHighlightsCount: number,
-  pendingRecommendations: number,
-): string {
-  if (adherencePct >= 75 && prHighlightsCount > 0) {
-    return "Progression is compounding.";
-  }
-  if (adherencePct < 65) {
-    return "Consistency is the limiter.";
-  }
-  if (pendingRecommendations > 0) {
-    return "Coach recommendations need follow-through.";
-  }
-  return "Trend data is building.";
-}
-
 function resolveBodyweightSignal(points: HistoryAnalyticsResponse["bodyweight_trend"]): {
   label: string;
   detail: string;
@@ -196,13 +170,15 @@ function resolveBodyweightSignal(points: HistoryAnalyticsResponse["bodyweight_tr
 
 function resolveCoachQueue(entries: CoachingRecommendationTimelineEntry[]): {
   pending: number;
-  latestLabel: string;
+  latestType: string | null;
+  latestRationale: string | null;
 } {
   const pending = entries.filter((entry) => entry.status !== "applied").length;
   const latest = entries[0];
   return {
     pending,
-    latestLabel: latest ? formatSummaryLabel(latest.recommendation_type) : "No coach actions logged",
+    latestType: latest?.recommendation_type ?? null,
+    latestRationale: latest?.rationale?.trim() || null,
   };
 }
 
@@ -647,17 +623,13 @@ export default function HistoryPage() {
   const measurementTrends = dashboard?.body_measurement_trends ?? [];
   const coachQueue = useMemo(() => resolveCoachQueue(timelineEntries), [timelineEntries]);
   const bodyweightSignal = useMemo(() => resolveBodyweightSignal(dashboard?.bodyweight_trend ?? []), [dashboard]);
-  const progressionHeadline = useMemo(
-    () => resolveProgressionHeadline(adherencePct, prHighlights.length, coachQueue.pending),
-    [adherencePct, prHighlights.length, coachQueue.pending],
-  );
   const strengthLead = useMemo(() => {
     if (!primaryStrengthTrend) {
       return { hasData: false, label: "No lift trend", detail: "Log more repeated exposures." };
     }
     return {
       hasData: true,
-      label: formatSummaryLabel(primaryStrengthTrend.exercise_id),
+      label: primaryStrengthTrend.exercise_id,
       detail: `PR ${primaryStrengthTrend.pr_weight} kg (${primaryStrengthTrend.pr_delta >= 0 ? "+" : ""}${primaryStrengthTrend.pr_delta})`,
     };
   }, [primaryStrengthTrend]);
@@ -712,15 +684,11 @@ export default function HistoryPage() {
       <div className="grid grid-cols-1 gap-3 xl:grid-cols-[1.3fr_1fr_1fr_1fr]">
         <div className="main-card main-card--module main-card--accent spacing-grid spacing-grid--tight">
           <p className="telemetry-kicker">Progression Brief</p>
-          <p className="telemetry-value">{progressionHeadline}</p>
+          <p className="telemetry-value">{prHighlights.length} PR highlights</p>
           <p className="telemetry-meta">
             {adherencePct}% adherence · {prHighlights.length} PR highlights · {coachQueue.pending} pending coach decisions
           </p>
-          <p className="text-xs text-zinc-200">
-            {strengthLead.hasData
-              ? `${strengthLead.label} is leading the strength curve while bodyweight is ${bodyweightSignal.label}.`
-              : `Bodyweight is ${bodyweightSignal.label.toLowerCase()} and coach queue status is ${coachQueue.latestLabel.toLowerCase()}.`}
-          </p>
+          {coachQueue.latestRationale ? <p className="text-xs text-zinc-200">Latest rationale: {coachQueue.latestRationale}</p> : null}
         </div>
 
         <div className="main-card main-card--shell spacing-grid spacing-grid--tight">
@@ -738,7 +706,7 @@ export default function HistoryPage() {
         <div className="main-card main-card--shell spacing-grid spacing-grid--tight">
           <p className="telemetry-kicker">Coach Queue</p>
           <p className="telemetry-value">{coachQueue.pending} pending</p>
-          <p className="telemetry-meta">Latest: {coachQueue.latestLabel}</p>
+          <p className="telemetry-meta">Latest type: {coachQueue.latestType ?? "none"}</p>
         </div>
       </div>
 
@@ -751,13 +719,13 @@ export default function HistoryPage() {
             {timelineEntries.map((entry) => (
               <div key={entry.recommendation_id} className="rounded-md border border-white/10 bg-zinc-900/60 p-2 text-xs text-zinc-200">
                 <p className="flex items-center justify-between gap-2">
-                  <span className="font-medium">{formatSummaryLabel(entry.recommendation_type)}</span>
+                  <span className="font-medium">{entry.recommendation_type}</span>
                   <span className="telemetry-meta uppercase">{entry.status}</span>
                 </p>
                 <p className="telemetry-meta">
-                  {getProgramDisplayName({ id: entry.template_id })} · {formatSummaryLabel(entry.current_phase)} to {formatSummaryLabel(entry.recommended_phase)}
+                  {getProgramDisplayName({ id: entry.template_id })} · {entry.current_phase} to {entry.recommended_phase}
                 </p>
-                <p className="telemetry-meta">Progression action: {formatSummaryLabel(entry.progression_action)}</p>
+                <p className="telemetry-meta">Progression action: {entry.progression_action}</p>
                 <p>Rationale: {entry.rationale}</p>
                 <p>Focus muscles: {entry.focus_muscles.length > 0 ? entry.focus_muscles.join(", ") : "none"}</p>
                 <p className="telemetry-meta">Created: {formatTimestamp(entry.created_at)}</p>

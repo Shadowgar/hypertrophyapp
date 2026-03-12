@@ -180,8 +180,10 @@ test("Settings coaching panel previews and applies intelligence decisions", asyn
     screen.getByText(/Performance is stable but not yet strong enough to progress\. Hold the current load and accumulate cleaner work\./i),
   ).toBeInTheDocument();
   expect(screen.getByText(/Program Transition/i)).toBeInTheDocument();
-  expect(screen.getByText(/Current block complete/i)).toBeInTheDocument();
-  expect(screen.getByText(/Rotate program/i)).toBeInTheDocument();
+  expect(screen.queryByText(/Current block complete/i)).not.toBeInTheDocument();
+  expect(screen.getByText(/Recommended action: rotate_program/i)).toBeInTheDocument();
+  expect(screen.queryByText(/Rotate program/i)).not.toBeInTheDocument();
+  expect(screen.getByText(/Post-authored behavior: hold_last_authored_week/i)).toBeInTheDocument();
   expect(screen.getByText(/hold_last_authored_week/i)).toBeInTheDocument();
   expect(screen.getByText(/The authored mesocycle is complete\. Rotate to a fresh next step\./i)).toBeInTheDocument();
 

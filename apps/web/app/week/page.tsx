@@ -51,17 +51,7 @@ function buildWeekContextNote(plan: GeneratedWeekPlan | null): string | null {
   if (!plan) {
     return null;
   }
-  const authoredWeekIndex =
-    typeof plan.mesocycle.authored_week_index === "number" ? plan.mesocycle.authored_week_index : null;
-  const authoredWeekRole = formatRoleLabel(plan.mesocycle.authored_week_role)?.toLowerCase() ?? null;
-  const parts: string[] = [];
-  if (authoredWeekIndex !== null && authoredWeekRole) {
-    parts.push(`Week ${authoredWeekIndex} ${authoredWeekRole} block.`);
-  }
-  if (hasWeakPointEmphasis(plan)) {
-    parts.push("Arms & Weak Points emphasis is scheduled.");
-  }
-  return parts.length > 0 ? parts.join(" ") : null;
+  return resolveGeneratedWeekReasonSummary(plan.decision_trace);
 }
 
 function formatSignedPercent(scale: number): string {
@@ -125,17 +115,16 @@ function WeekOverviewCards({ plan, selectedProgramId }: Readonly<{ plan: Generat
 
       <div className="main-card main-card--module main-card--accent spacing-grid spacing-grid--tight">
         <p className="telemetry-kicker">Mesocycle Posture</p>
-        <p className="telemetry-value">
-          {plan.deload.active ? "Deload Precision" : "Progressive Overload"}
-        </p>
+        <p className="telemetry-value">{plan.deload.active ? "deload" : "standard"}</p>
         <p className="telemetry-meta">
           Week {plan.mesocycle.week_index}/{plan.mesocycle.trigger_weeks_effective}
         </p>
-        <p className="text-xs text-zinc-200">
-          {plan.deload.active
-            ? `Reduced training targets are active: volume trims ${plan.deload.set_reduction_pct}% and load trims ${plan.deload.load_reduction_pct}%.`
-            : "Standard set and load targets remain active for this authored week."}
-        </p>
+        <p className="text-xs text-zinc-200">Deload reason: {plan.deload.reason}</p>
+        {plan.deload.active ? (
+          <p className="text-xs text-zinc-200">
+            Set reduction: {plan.deload.set_reduction_pct}% · Load reduction: {plan.deload.load_reduction_pct}%
+          </p>
+        ) : null}
       </div>
 
       <div className="main-card main-card--module spacing-grid spacing-grid--tight">
@@ -146,11 +135,7 @@ function WeekOverviewCards({ plan, selectedProgramId }: Readonly<{ plan: Generat
         <p className="telemetry-meta">
           Minimum {plan.muscle_coverage.minimum_sets_per_muscle ?? 0} sets per muscle
         </p>
-        <p className="text-xs text-zinc-200">
-          {underTarget.length > 0
-            ? `Under target muscles: ${underTarget.join(", ")}.`
-            : "All tracked muscles clear the minimum set floor."}
-        </p>
+        <p className="text-xs text-zinc-200">Under target muscles: {underTarget.length > 0 ? underTarget.join(", ") : "none"}</p>
         <div className="space-y-1 text-xs text-zinc-300">
           {weeklyVolumeEntries.map(([muscle, sets]) => (
             <div key={`volume-${muscle}`} className="flex items-center justify-between rounded-md border border-white/10 bg-zinc-900/70 px-2 py-1">

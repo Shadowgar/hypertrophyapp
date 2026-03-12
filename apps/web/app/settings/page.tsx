@@ -24,18 +24,6 @@ function parseLaggingMuscles(raw: string): string[] {
     .filter((item) => item.length > 0);
 }
 
-function formatTransitionAction(action?: string | null): string {
-  const normalized = (action ?? "").trim();
-  if (!normalized) {
-    return "Review next step";
-  }
-  return normalized
-    .split("_")
-    .filter((part) => part.length > 0)
-    .map((part) => part[0].toUpperCase() + part.slice(1))
-    .join(" ");
-}
-
 export default function SettingsPage() {
   const router = useRouter();
   const [theme] = useState("dark");
@@ -109,7 +97,7 @@ export default function SettingsPage() {
       if (response.requires_confirmation) {
         setPendingSwitch({
           targetProgramId: selectedProgramId,
-          rationale: resolveReasonText(response.rationale, response.reason),
+          rationale: resolveReasonText(response.rationale, response.reason) ?? response.reason,
         });
         setStatus("Confirm program switch");
       } else if (response.applied) {
@@ -199,7 +187,8 @@ export default function SettingsPage() {
     setApplyStatus(confirm ? "Applying phase decision..." : "Checking phase decision...");
     try {
       const response = await api.applyPhaseDecision({ recommendation_id: recommendationId, confirm });
-      setApplyStatus(`Phase: ${response.status} (${resolveReasonText(response.rationale, response.reason)})`);
+      const explanation = resolveReasonText(response.rationale, response.reason);
+      setApplyStatus(explanation ? `Phase: ${response.status} (${explanation})` : `Phase: ${response.status}`);
     } catch {
       setApplyStatus("Phase apply failed");
     }
@@ -283,9 +272,11 @@ export default function SettingsPage() {
           <p>
             Recommended Program: {recommendation ? getProgramDisplayName({ id: recommendation.recommended_program_id }) : "not available"}
           </p>
-          <p>
-            Reason: {recommendation ? resolveReasonText(recommendation.rationale, recommendation.reason) : "not available"}
-          </p>
+          {recommendation && resolveReasonText(recommendation.rationale, recommendation.reason) ? (
+            <p>
+              Reason: {resolveReasonText(recommendation.rationale, recommendation.reason)}
+            </p>
+          ) : null}
         </div>
 
         <div className="rounded-md border border-zinc-800 p-3 text-xs text-zinc-300 space-y-2">
@@ -361,18 +352,25 @@ export default function SettingsPage() {
               <p>Program: {coachPreview.program_name}</p>
               <p>Recommendation ID: {coachPreview.recommendation_id}</p>
               <p>Progression: {coachPreview.progression.action}</p>
-              <p>{resolveReasonText(coachPreview.progression.rationale, coachPreview.progression.reason)}</p>
+              {resolveReasonText(coachPreview.progression.rationale, coachPreview.progression.reason) ? (
+                <p>{resolveReasonText(coachPreview.progression.rationale, coachPreview.progression.reason)}</p>
+              ) : null}
               <p>Phase Recommendation: {coachPreview.phase_transition.next_phase}</p>
-              {!coachPreview.phase_transition.transition_pending ? (
+              {!coachPreview.phase_transition.transition_pending && resolveReasonText(coachPreview.phase_transition.rationale, coachPreview.phase_transition.reason) ? (
                 <p>{resolveReasonText(coachPreview.phase_transition.rationale, coachPreview.phase_transition.reason)}</p>
               ) : null}
               {coachPreview.phase_transition.transition_pending ? (
                 <div className="mt-2 rounded-md border border-zinc-700/80 bg-zinc-950/50 p-2">
                   <p className="font-medium text-zinc-100">Program Transition</p>
-                  <p>Current block complete</p>
-                  <p>Recommendation: {formatTransitionAction(coachPreview.phase_transition.recommended_action)}</p>
-                  <p>{resolveReasonText(undefined, coachPreview.phase_transition.post_authored_behavior)}</p>
-                  <p>{resolveReasonText(coachPreview.phase_transition.rationale, coachPreview.phase_transition.reason)}</p>
+                  {coachPreview.phase_transition.recommended_action ? (
+                    <p>Recommended action: {coachPreview.phase_transition.recommended_action}</p>
+                  ) : null}
+                  {coachPreview.phase_transition.post_authored_behavior ? (
+                    <p>Post-authored behavior: {coachPreview.phase_transition.post_authored_behavior}</p>
+                  ) : null}
+                  {resolveReasonText(coachPreview.phase_transition.rationale, coachPreview.phase_transition.reason) ? (
+                    <p>{resolveReasonText(coachPreview.phase_transition.rationale, coachPreview.phase_transition.reason)}</p>
+                  ) : null}
                 </div>
               ) : null}
               <p>Adaptation Risk: {coachPreview.schedule.risk_level}</p>

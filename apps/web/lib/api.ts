@@ -297,14 +297,14 @@ export type ApplyPhaseDecisionResponse = {
   decision_trace: Record<string, unknown>;
 };
 
-export function resolveReasonText(rationale?: string | null, reason?: string | null): string {
+export function resolveReasonText(rationale?: string | null, reason?: string | null): string | null {
   const preferred = rationale?.trim();
   if (preferred) {
     return preferred;
   }
   const fallback = reason?.trim();
   if (!fallback) {
-    return "No rationale available.";
+    return null;
   }
   return fallback;
 }

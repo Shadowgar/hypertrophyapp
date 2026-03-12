@@ -164,7 +164,12 @@ test("Week page sends template_id when override selected", async () => {
   expect(screen.getByText(/Lead slot: Bench Press · 4 sets · 6-8 reps @ 82.5 kg/i)).toBeInTheDocument();
   expect(screen.getByText(/Session intent: Arms & Weak Points/i)).toBeInTheDocument();
   expect(screen.getByText(/Current context/i)).toBeInTheDocument();
-  expect(screen.getByText(/Week 1 adaptation block/i)).toBeInTheDocument();
+  expect(screen.queryByText(/Week 1 adaptation block/i)).not.toBeInTheDocument();
+  expect(
+    screen.getAllByText(
+      /Selected Upper\/Lower as the explicit template override and generated a four-day training week from canonical state\./i,
+    ).length,
+  ).toBeGreaterThan(1);
   expect(screen.getByText(/Adaptive Review Carryover/i)).toBeInTheDocument();
   expect(screen.getByText(/Frequency Adaptation Runtime/i)).toBeInTheDocument();
 
