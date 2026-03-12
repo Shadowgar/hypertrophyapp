@@ -246,6 +246,58 @@ def test_submit_weekly_review_uses_canonical_readiness_state_from_latest_checkin
     ]
 
 
+def test_submit_weekly_review_prefers_canonical_coaching_state_sfr_from_training_state() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_and_onboard(client)
+    _seed_previous_week_plan_and_logs_for_faults("weeklyreview@example.com")
+
+    week_start = _current_monday()
+    checkin_response = client.post(
+        "/weekly-checkin",
+        headers=headers,
+        json={
+            "week_start": week_start.isoformat(),
+            "body_weight": 82.0,
+            "adherence_score": 1,
+            "sleep_quality": 5,
+            "stress_level": 1,
+            "pain_flags": [],
+            "notes": "adherence dipped but recovery is fine",
+        },
+    )
+    assert checkin_response.status_code == 200
+
+    response = client.post(
+        "/weekly-review",
+        headers=headers,
+        json={
+            "body_weight": 80.0,
+            "calories": 3000,
+            "protein": 200,
+            "fat": 75,
+            "carbs": 350,
+            "adherence_score": 5,
+            "notes": "request metrics look strong",
+        },
+    )
+    assert response.status_code == 200
+
+    payload = response.json()
+    sfr_step = next(
+        step for step in payload["decision_trace"]["steps"] if step["decision"] == "stimulus_fatigue_response"
+    )
+    stimulus_signals = payload["decision_trace"]["outcome"]["stimulus_fatigue_response"]["signals"]["stimulus"]
+
+    assert sfr_step["result"]["source"] == "coaching_state.stimulus_fatigue_response"
+    assert payload["decision_trace"]["outcome"]["stimulus_fatigue_response_source"] == (
+        "coaching_state.stimulus_fatigue_response"
+    )
+    assert payload["decision_trace"]["outcome"]["stimulus_fatigue_response"]["stimulus_quality"] == "low"
+    assert "low_adherence" in stimulus_signals
+    assert "high_adherence" not in stimulus_signals
+
+
 def test_generate_week_uses_saved_weekly_review_adjustments() -> None:
     _reset_db()
     client = TestClient(app)

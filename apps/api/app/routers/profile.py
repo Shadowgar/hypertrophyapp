@@ -442,6 +442,7 @@ def submit_weekly_review(
         nutrition_phase=payload.nutrition_phase,
         summary_payload=summary_payload,
         readiness_state=cast(dict[str, Any], training_state.get("readiness_state") or {}),
+        coaching_state=cast(dict[str, Any], training_state.get("coaching_state") or {}),
     )
     user_update_payload = cast(dict[str, Any], route_runtime["user_update_payload"])
     for key, value in user_update_payload.items():

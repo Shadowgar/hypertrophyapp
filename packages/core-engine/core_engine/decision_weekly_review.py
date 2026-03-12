@@ -205,6 +205,70 @@ def _resolve_readiness_state_adjustments(
     return readiness_score, "context_readiness_state", applied_rules
 
 
+def _coerce_stimulus_fatigue_response_snapshot(value: Any) -> dict[str, Any]:
+    snapshot = _coerce_dict(value)
+    if not snapshot:
+        return {}
+
+    signals = _coerce_dict(snapshot.get("signals"))
+    normalized = {
+        "stimulus_quality": str(snapshot.get("stimulus_quality") or "").strip().lower(),
+        "fatigue_cost": str(snapshot.get("fatigue_cost") or "").strip().lower(),
+        "recoverability": str(snapshot.get("recoverability") or "").strip().lower(),
+        "progression_eligibility": bool(snapshot.get("progression_eligibility")),
+        "deload_pressure": str(snapshot.get("deload_pressure") or "").strip().lower(),
+        "substitution_pressure": str(snapshot.get("substitution_pressure") or "").strip().lower(),
+        "signals": {
+            "stimulus": _normalize_string_list(signals.get("stimulus")),
+            "fatigue": _normalize_string_list(signals.get("fatigue")),
+            "recoverability": _normalize_string_list(signals.get("recoverability")),
+        },
+    }
+    required_fields = (
+        "stimulus_quality",
+        "fatigue_cost",
+        "recoverability",
+        "deload_pressure",
+        "substitution_pressure",
+    )
+    if any(not normalized[field] for field in required_fields):
+        return {}
+    return normalized
+
+
+def _resolve_weekly_review_stimulus_fatigue_response(
+    *,
+    summary: dict[str, Any],
+    adherence_score: int,
+    readiness_state: dict[str, Any] | None,
+    coaching_state: dict[str, Any] | None,
+) -> tuple[dict[str, Any], str]:
+    canonical_snapshot = _coerce_stimulus_fatigue_response_snapshot(
+        _coerce_dict(coaching_state).get("stimulus_fatigue_response")
+    )
+    if canonical_snapshot:
+        return canonical_snapshot, "coaching_state.stimulus_fatigue_response"
+
+    normalized_readiness_state = _coerce_dict(readiness_state)
+    sleep_quality_raw = normalized_readiness_state.get("sleep_quality")
+    stress_level_raw = normalized_readiness_state.get("stress_level")
+    pain_flags = _normalize_string_list(normalized_readiness_state.get("pain_flags"))
+    sleep_quality = int(sleep_quality_raw) if sleep_quality_raw is not None else None
+    stress_level = int(stress_level_raw) if stress_level_raw is not None else None
+
+    snapshot = evaluate_stimulus_fatigue_response(
+        completion_pct=int(summary.get("completion_pct", 0) or 0),
+        adherence_score=adherence_score,
+        soreness_level="none",
+        average_rpe=None,
+        consecutive_underperformance_weeks=0,
+        sleep_quality=sleep_quality,
+        stress_level=stress_level,
+        pain_flags=pain_flags,
+    )
+    return _coerce_stimulus_fatigue_response_snapshot(snapshot), "weekly_review_inputs"
+
+
 def _resolve_weekly_review_exercise_override(
     row: dict[str, Any],
     *,
@@ -720,15 +784,10 @@ def interpret_weekly_review_decision(
     protein: int,
     adherence_score: int,
     readiness_state: dict[str, Any] | None = None,
+    coaching_state: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     calories_per_kg = float(calories) / max(1.0, body_weight)
     protein_per_kg = float(protein) / max(1.0, body_weight)
-    normalized_readiness_state = _coerce_dict(readiness_state)
-    sleep_quality_raw = normalized_readiness_state.get("sleep_quality")
-    stress_level_raw = normalized_readiness_state.get("stress_level")
-    pain_flags = _normalize_string_list(normalized_readiness_state.get("pain_flags"))
-    sleep_quality = int(sleep_quality_raw) if sleep_quality_raw is not None else None
-    stress_level = int(stress_level_raw) if stress_level_raw is not None else None
     global_set_delta = 0
     global_weight_scale = 1.0
     readiness_score = 100
@@ -745,15 +804,11 @@ def interpret_weekly_review_decision(
         readiness_state=readiness_state,
         base_readiness=readiness_score,
     )
-    stimulus_fatigue_response = evaluate_stimulus_fatigue_response(
-        completion_pct=int(summary.get("completion_pct", 0) or 0),
+    stimulus_fatigue_response, stimulus_fatigue_response_source = _resolve_weekly_review_stimulus_fatigue_response(
+        summary=summary,
         adherence_score=adherence_score,
-        soreness_level="none",
-        average_rpe=None,
-        consecutive_underperformance_weeks=0,
-        sleep_quality=sleep_quality,
-        stress_level=stress_level,
-        pain_flags=pain_flags,
+        readiness_state=readiness_state,
+        coaching_state=coaching_state,
     )
     global_set_delta, global_weight_scale, allow_positive_progression, allow_weak_point_boosts, sfr_adjustment_rules = (
         _resolve_stimulus_fatigue_adjustments(
@@ -826,6 +881,11 @@ def interpret_weekly_review_decision(
             "summary_completion_pct": int(summary.get("completion_pct", 0) or 0),
             "faulty_exercise_count": int(summary.get("faulty_exercise_count", 0) or 0),
             "readiness_state_present": bool(_coerce_dict(readiness_state)),
+            "coaching_state_sfr_present": bool(
+                _coerce_stimulus_fatigue_response_snapshot(
+                    _coerce_dict(coaching_state).get("stimulus_fatigue_response")
+                )
+            ),
         },
         "steps": [
             {
@@ -847,7 +907,10 @@ def interpret_weekly_review_decision(
             },
             {
                 "decision": "stimulus_fatigue_response",
-                "result": deepcopy(stimulus_fatigue_response),
+                "result": {
+                    "source": stimulus_fatigue_response_source,
+                    **deepcopy(stimulus_fatigue_response),
+                },
             },
             {
                 "decision": "stimulus_fatigue_adjustments",
@@ -877,6 +940,7 @@ def interpret_weekly_review_decision(
             "global_weight_scale": response_adjustments["global_weight_scale"],
             "weak_point_exercises": weak_point_exercises,
             "boosted_exercise_ids": boosted_exercise_ids,
+            "stimulus_fatigue_response_source": stimulus_fatigue_response_source,
             "stimulus_fatigue_response": deepcopy(stimulus_fatigue_response),
         },
     }
@@ -921,6 +985,7 @@ def build_weekly_review_decision_payload(
     protein: int,
     adherence_score: int,
     readiness_state: dict[str, Any] | None = None,
+    coaching_state: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     decision = interpret_weekly_review_decision(
         summary=summary,
@@ -929,6 +994,7 @@ def build_weekly_review_decision_payload(
         protein=protein,
         adherence_score=adherence_score,
         readiness_state=readiness_state,
+        coaching_state=coaching_state,
     )
     return {
         "readiness_score": int(decision.get("readiness_score") or 0),
@@ -1169,6 +1235,7 @@ def prepare_weekly_review_submit_route_runtime(
     nutrition_phase: str | None,
     summary_payload: dict[str, Any],
     readiness_state: dict[str, Any] | None = None,
+    coaching_state: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     decision_payload = build_weekly_review_decision_payload(
         summary=summary_payload,
@@ -1177,6 +1244,7 @@ def prepare_weekly_review_submit_route_runtime(
         protein=protein,
         adherence_score=adherence_score,
         readiness_state=readiness_state,
+        coaching_state=coaching_state,
     )
     review_persistence_payload = build_weekly_review_cycle_persistence_payload(
         summary=summary_payload,

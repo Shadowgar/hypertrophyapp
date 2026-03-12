@@ -119,8 +119,53 @@ def test_interpret_weekly_review_decision_uses_sfr_snapshot_for_recovery_limited
     )
 
     assert decision["global_guidance"] == "recovery_limited_reduce_load_and_complete_quality_volume"
+    assert sfr_step["result"]["source"] == "weekly_review_inputs"
     assert sfr_step["result"]["recoverability"] == "low"
     assert sfr_step["result"]["deload_pressure"] == "high"
+    assert decision["decision_trace"]["outcome"]["stimulus_fatigue_response_source"] == "weekly_review_inputs"
+
+
+def test_interpret_weekly_review_decision_prefers_canonical_coaching_state_sfr_with_trace_source() -> None:
+    canonical_snapshot = {
+        "stimulus_quality": "low",
+        "fatigue_cost": "high",
+        "recoverability": "low",
+        "progression_eligibility": False,
+        "deload_pressure": "high",
+        "substitution_pressure": "moderate",
+        "signals": {
+            "stimulus": ["low_adherence"],
+            "fatigue": ["high_stress"],
+            "recoverability": ["stress_limited", "fatigue_limited"],
+        },
+    }
+
+    decision = interpret_weekly_review_decision(
+        summary={
+            "completion_pct": 100,
+            "faulty_exercise_count": 0,
+            "exercise_faults": [],
+        },
+        body_weight=80.0,
+        calories=2800,
+        protein=160,
+        adherence_score=5,
+        coaching_state={
+            "stimulus_fatigue_response": canonical_snapshot,
+        },
+    )
+
+    sfr_step = next(
+        step for step in decision["decision_trace"]["steps"] if step["decision"] == "stimulus_fatigue_response"
+    )
+
+    assert decision["global_guidance"] == "recovery_limited_reduce_load_and_complete_quality_volume"
+    assert sfr_step["result"]["source"] == "coaching_state.stimulus_fatigue_response"
+    assert sfr_step["result"]["deload_pressure"] == "high"
+    assert decision["decision_trace"]["outcome"]["stimulus_fatigue_response_source"] == (
+        "coaching_state.stimulus_fatigue_response"
+    )
+    assert decision["decision_trace"]["outcome"]["stimulus_fatigue_response"] == canonical_snapshot
 
 
 def test_interpret_weekly_review_decision_uses_sfr_to_bound_adjustments_and_suppress_positive_overrides() -> None:

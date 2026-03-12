@@ -517,6 +517,100 @@ def test_recommend_coach_intelligence_preview_prefers_context_coaching_state_whe
     assert coaching_state_step["result"]["stagnation_weeks"] == 2
 
 
+def test_recommend_coach_intelligence_preview_traces_canonical_sfr_context_without_overwriting_progression_snapshot() -> None:
+    canonical_snapshot = {
+        "stimulus_quality": "moderate",
+        "fatigue_cost": "low",
+        "recoverability": "high",
+        "progression_eligibility": True,
+        "deload_pressure": "low",
+        "substitution_pressure": "low",
+        "signals": {
+            "stimulus": ["recent_completion_strong"],
+            "fatigue": [],
+            "recoverability": ["sleep_supportive"],
+        },
+    }
+    progression_snapshot = {
+        "stimulus_quality": "low",
+        "fatigue_cost": "high",
+        "recoverability": "low",
+        "progression_eligibility": False,
+        "deload_pressure": "high",
+        "substitution_pressure": "moderate",
+    }
+
+    preview = recommend_coach_intelligence_preview(
+        template_id="full_body_v1",
+        context={
+            "program_template": {},
+            "user_profile": {},
+            "coaching_state": {
+                "readiness": {},
+                "stall": {},
+                "mesocycle": {},
+                "stimulus_fatigue_response": canonical_snapshot,
+            },
+        },
+        preview_request={
+            "from_days": 3,
+            "to_days": 3,
+            "completion_pct": 82,
+            "adherence_score": 3,
+            "soreness_level": "moderate",
+            "average_rpe": 9.0,
+            "current_phase": "accumulation",
+            "weeks_in_phase": 2,
+            "stagnation_weeks": 0,
+        },
+        rule_set=None,
+        evaluate_schedule_adaptation=lambda **_: {
+            "from_days": 3,
+            "to_days": 3,
+            "kept_sessions": [],
+            "dropped_sessions": [],
+            "added_sessions": [],
+            "risk_level": "low",
+            "muscle_set_delta": {},
+            "to_plan": {"weekly_volume_by_muscle": {}},
+        },
+        recommend_progression_action=lambda **_: {
+            "action": "hold",
+            "reason": "under_target_without_high_fatigue",
+            "stimulus_fatigue_response": progression_snapshot,
+        },
+        humanize_progression_reason=lambda *_args, **_kwargs: "Hold",
+        derive_readiness_score=lambda **_: 63,
+        recommend_phase_transition=lambda **kwargs: {"next_phase": kwargs["current_phase"], "reason": "continue"},
+        humanize_phase_transition_reason=lambda *_args, **_kwargs: "Continue",
+        recommend_specialization_adjustments=lambda **_: {
+            "focus_muscles": [],
+            "focus_adjustments": {},
+            "donor_adjustments": {},
+            "uncompensated_added_sets": 0,
+        },
+        summarize_program_media_and_warmups=lambda *_args, **_kwargs: {
+            "total_exercises": 0,
+            "video_linked_exercises": 0,
+            "video_coverage_pct": 0.0,
+            "sample_warmups": [],
+        },
+    )
+
+    coaching_state_step = next(
+        step for step in preview["decision_trace"]["steps"] if step.get("decision") == "canonical_coaching_state"
+    )
+    progression_step = next(
+        step for step in preview["decision_trace"]["steps"] if step.get("decision") == "progression"
+    )
+
+    assert coaching_state_step["result"]["stimulus_fatigue_response_source"] == "coaching_state.stimulus_fatigue_response"
+    assert coaching_state_step["result"]["stimulus_fatigue_response"] == canonical_snapshot
+    assert preview["progression"]["stimulus_fatigue_response"] == progression_snapshot
+    assert progression_step["result"]["stimulus_fatigue_response"] == progression_snapshot
+    assert progression_step["result"]["stimulus_fatigue_response"] != canonical_snapshot
+
+
 def test_recommend_coach_intelligence_preview_ignores_legacy_preview_context_fields_without_canonical_state() -> None:
     captured: dict[str, object] = {}
     captured_phase_kwargs: dict[str, object] = {}

@@ -709,6 +709,11 @@ def _resolve_coach_preview_canonical_state(
     mesocycle_state = _coerce_dict(coaching_state.get("mesocycle"))
     mesocycle_source = "coaching_state.mesocycle" if mesocycle_state else "unavailable"
 
+    stimulus_fatigue_response = _coerce_dict(coaching_state.get("stimulus_fatigue_response"))
+    stimulus_fatigue_response_source = (
+        "coaching_state.stimulus_fatigue_response" if stimulus_fatigue_response else "unavailable"
+    )
+
     stagnation_weeks_raw = preview_request.get("stagnation_weeks")
     if stagnation_weeks_raw is not None:
         stagnation_weeks = int(stagnation_weeks_raw)
@@ -725,9 +730,11 @@ def _resolve_coach_preview_canonical_state(
         "readiness_state": readiness_state,
         "stall_state": stall_state,
         "mesocycle_state": mesocycle_state,
+        "stimulus_fatigue_response": stimulus_fatigue_response,
         "readiness_source": readiness_source,
         "stall_source": stall_source,
         "mesocycle_source": mesocycle_source,
+        "stimulus_fatigue_response_source": stimulus_fatigue_response_source,
         "stagnation_weeks": stagnation_weeks,
         "stagnation_source": stagnation_source,
     }
@@ -778,6 +785,12 @@ def _coach_preview_trace(
                     "readiness_source": str(canonical_state.get("readiness_source") or "unavailable"),
                     "stall_source": str(canonical_state.get("stall_source") or "preview_request"),
                     "mesocycle_source": str(canonical_state.get("mesocycle_source") or "unavailable"),
+                    "stimulus_fatigue_response_source": str(
+                        canonical_state.get("stimulus_fatigue_response_source") or "unavailable"
+                    ),
+                    "stimulus_fatigue_response": deepcopy(
+                        _coerce_dict(canonical_state.get("stimulus_fatigue_response"))
+                    ),
                     "stagnation_source": str(canonical_state.get("stagnation_source") or "default_zero"),
                     "stagnation_weeks": int(canonical_state.get("stagnation_weeks") or 0),
                 },

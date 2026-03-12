@@ -9,17 +9,19 @@ Last updated: 2026-03-12
 - Blocker 3 is complete.
 - Canonical `progression_state_per_exercise` now preserves persisted `ExerciseState.fatigue_score`, so first-class user training state no longer drops exercise-level recovery-pressure input before downstream owner consumption.
 - Canonical training/coaching state now preserves a derived `stimulus_fatigue_response` snapshot assembled from persisted readiness, adherence, soreness, and stall inputs, and generated-week runtime now prefers that canonical snapshot instead of recomputing it when present.
+- Coach preview trace/context plumbing now surfaces canonical `coaching_state.stimulus_fatigue_response` as persisted recovery-pressure context without changing request-time progression scoring ownership.
+- Weekly review now prefers canonical `coaching_state.stimulus_fatigue_response` as persisted recovery-pressure context when present, while keeping fallback SFR derivation owner-bound inside `decision_weekly_review.py`.
 - Tier 4A structural, doctrinal, and felt-behavior audits currently call the audited gold path ready for internal dogfood.
 - `intelligence.py` is down to compatibility forwarding for the extracted recommendation, progression, weekly-review, and coach-preview seams. It is not a valid place to add new coaching meaning.
 
 ## Latest Completed Slice
 
-- Added canonical `stimulus_fatigue_response` to assembled `UserTrainingState` and nested `coaching_state`, deriving it in `packages/core-engine/core_engine/user_state.py` from already-persisted readiness, adherence, soreness, and stall inputs through the progression owner.
-- Updated `packages/core-engine/core_engine/generation.py` to prefer `coaching_state.stimulus_fatigue_response` (and top-level canonical fallback) before deriving a new generated-week runtime snapshot, with focused owner-boundary regressions proving canonical consumption.
+- Extended `packages/core-engine/core_engine/decision_weekly_review.py` so weekly review now prefers persisted `coaching_state.stimulus_fatigue_response`, emits an explicit SFR source in trace/output, and still falls back to local weekly-review-owned SFR derivation when canonical context is unavailable.
+- Threaded canonical `coaching_state` into the active weekly-review route and added focused regressions proving both the canonical-source path and the weekly-review fallback-source boundary.
 
 ## Next Recommended Action
 
-- Extend `decision_coach_preview.py` trace/context plumbing to surface canonical `coaching_state.stimulus_fatigue_response` as persisted recovery-pressure context, while keeping request-time progression scoring owner-bound to `decision_progression.py`, and prove that boundary with focused trace tests.
+- Extend generated-week scheduler / `rules_runtime.py` trace plumbing to surface whether consumed `stimulus_fatigue_response` arrived from canonical coaching-state context or an upstream fallback, while keeping actual SFR derivation owner-bound outside `rules_runtime.py`, and prove that boundary with focused generation/rules-runtime trace tests.
 
 ## Closed Work Do Not Reopen Without Evidence
 
