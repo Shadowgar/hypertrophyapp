@@ -314,7 +314,10 @@ def test_resolve_week_generation_runtime_inputs_derives_sfr_from_canonical_coach
                 "sleep_quality": 2,
                 "stress_level": 4,
                 "pain_flags": ["shoulder_irritation"],
+                "recovery_risk_flags": ["high_stress", "low_sleep", "pain_flags_present"],
             },
+            "mesocycle": {"week_index": 3},
+            "stall": {"consecutive_underperformance_weeks": 1},
         },
     }
 
@@ -345,8 +348,10 @@ def test_resolve_week_generation_runtime_inputs_derives_sfr_from_canonical_coach
             "sleep_quality": 2,
             "stress_level": 4,
             "pain_flags": ["shoulder_irritation"],
-            "recovery_risk_flags": [],
-        }
+            "recovery_risk_flags": ["high_stress", "low_sleep", "pain_flags_present"],
+        },
+        "mesocycle": {"week_index": 3},
+        "stall": {"consecutive_underperformance_weeks": 1},
     }
     assert sfr_step["result"]["completion_pct_proxy"] == 80
     assert recovery_inputs_step["result"]["readiness_source"] == "coaching_state.readiness"
@@ -360,6 +365,9 @@ def test_resolve_week_generation_runtime_inputs_marks_top_level_readiness_state_
         current_days_available=4,
         active_frequency_adaptation=None,
         user_training_state={
+            "coaching_state": {
+                "mesocycle": {"week_index": 4},
+            },
             "readiness_state": {
                 "sleep_quality": 2,
                 "stress_level": 4,
@@ -382,7 +390,8 @@ def test_resolve_week_generation_runtime_inputs_marks_top_level_readiness_state_
             "stress_level": 4,
             "pain_flags": ["shoulder_irritation"],
             "recovery_risk_flags": ["high_stress", "low_sleep", "pain_flags_present"],
-        }
+        },
+        "mesocycle": {"week_index": 4},
     }
     assert runtime["readiness_state"] == {
         "sleep_quality": 2,

@@ -744,9 +744,12 @@ def _resolve_generation_stimulus_fatigue_response(
 
 def _build_generation_runtime_coaching_state(
     *,
+    normalized_training_state: dict[str, Any],
     readiness_state: dict[str, Any],
 ) -> dict[str, Any]:
+    coaching_state = _coerce_dict(normalized_training_state.get("coaching_state"))
     return {
+        **coaching_state,
         "readiness": {
             "sleep_quality": readiness_state.get("sleep_quality"),
             "stress_level": readiness_state.get("stress_level"),
@@ -812,7 +815,10 @@ def resolve_week_generation_runtime_inputs(
         "severe_soreness_count": int(severe_soreness_count),
         "latest_adherence_score": int(latest_adherence_score) if latest_adherence_score is not None else None,
         "prior_generated_weeks": int(prior_generated_weeks),
-        "coaching_state": _build_generation_runtime_coaching_state(readiness_state=readiness_state),
+        "coaching_state": _build_generation_runtime_coaching_state(
+            normalized_training_state=normalized_training_state,
+            readiness_state=readiness_state,
+        ),
         "readiness_state": readiness_state,
         "movement_restrictions": list(constraint_state.get("movement_restrictions") or []),
         "session_time_budget_minutes": (
