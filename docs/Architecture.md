@@ -1,6 +1,6 @@
 # Architecture - Adaptive Coaching Target State
 
-Last updated: 2026-03-10
+Last updated: 2026-03-12
 
 ## Runtime Boundary
 
@@ -23,7 +23,7 @@ Runtime does not depend on `docs/guides/generated/*.md` text artifacts.
 
 2. Rules Runtime Service
 - Loads typed coaching rules per program scope
-- Evaluates progression, fatigue, deload, transition, substitution decisions
+- Evaluates progression, fatigue, deload, transition, substitution, and generated-week scheduler policy runtimes
 
 3. Exercise Catalog Service
 - Canonical exercise IDs, aliases, muscles, equipment, default media, substitutions
@@ -76,7 +76,7 @@ Current dominant risks have shifted:
 - shallow first-class coaching state is now a primary modeling risk
 - the deterministic stimulus-fatigue-response layer is now live but still early-stage and not yet broadly consumed for bounded adjustment decisions
 - canonical `readiness_state` is now present and influences both coach-preview and weekly-review scoring
-- the first deterministic `stimulus_fatigue_response` layer now exists in the progression family, now feeds generated-week deload/substitution pressure and weekly-review bounded adjustments, and now sits alongside canonical repeat-failure generation-time substitution powered by persisted `ExerciseState`; broader exercise-level generation use is still pending
+- the first deterministic `stimulus_fatigue_response` layer now exists in the progression family, now feeds generated-week deload/substitution pressure through `rules_runtime.py` and weekly-review bounded adjustments, and now sits alongside canonical repeat-failure generation-time substitution powered by persisted `ExerciseState`; broader exercise-level generation use is still pending
 
 6. API/UI Layer
 - Program selection

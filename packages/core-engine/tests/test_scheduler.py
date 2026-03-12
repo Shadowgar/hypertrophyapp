@@ -218,6 +218,8 @@ def test_generate_week_plan_applies_exercise_recovery_pressure_from_progression_
     assert exercise["recommended_working_weight"] == 95.0
     assert exercise["substitution_pressure"] == "high"
     assert exercise["substitution_guidance"] == "prefer_compatible_variants_if_recovery_constraints_persist"
+    assert exercise["recovery_adjustment_trace"]["interpreter"] == "resolve_scheduler_exercise_adjustment_runtime"
+    assert exercise["recovery_adjustment_trace"]["outcome"]["merged_substitution_pressure"] == "high"
     assert exercise["repeat_failure_substitution"] is None
 
 
@@ -768,6 +770,7 @@ def test_generate_week_plan_applies_scheduled_deload_at_trigger_week() -> None:
     assert plan["mesocycle"]["is_deload_week"] is True
     assert plan["mesocycle"]["deload_reason"] == "scheduled"
     assert plan["mesocycle"]["week_index"] == 6
+    assert plan["mesocycle"]["decision_trace"]["interpreter"] == "resolve_scheduler_mesocycle_runtime"
     assert plan["deload"]["active"] is True
     assert ex["sets"] == 3
     assert ex["recommended_working_weight"] == pytest.approx(90.0)
@@ -1106,6 +1109,10 @@ def test_generate_week_plan_keeps_first_authored_day_when_compressing_five_days_
 
     titles = [session["title"] for session in plan["sessions"]]
     assert titles == ["Full Body #1", "Arms & Weak Points"]
+    assert plan["session_selection_trace"]["interpreter"] == "resolve_scheduler_session_selection"
+    assert plan["missed_day_policy"] == "roll-forward-priority-lifts"
+    assert plan["missed_day_policy_trace"]["interpreter"] == "resolve_scheduler_session_selection"
+    assert plan["missed_day_policy_trace"]["outcome"]["missed_day_policy"] == "roll-forward-priority-lifts"
 
 
 def test_generate_week_plan_preserves_weak_point_slots_when_capping_merged_weak_point_day() -> None:
@@ -1227,3 +1234,38 @@ def test_generate_week_plan_applies_early_deload_trigger_from_soreness_or_adhere
     assert plan["deload"]["active"] is True
     assert ex["sets"] == 3
     assert ex["recommended_working_weight"] == pytest.approx(72.5)
+
+
+def test_generate_week_plan_does_not_invent_cut_specific_mesocycle_cadence() -> None:
+    template = {
+        "id": "cut_mesocycle_trace_test",
+        "deload": {"trigger_weeks": 6, "set_reduction_pct": 35, "load_reduction_pct": 10},
+        "sessions": [
+            {
+                "name": "A",
+                "exercises": [
+                    {
+                        "id": "bench",
+                        "name": "Bench Press",
+                        "sets": 4,
+                        "start_weight": 100,
+                        "primary_muscles": ["chest"],
+                    }
+                ],
+            }
+        ],
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=2,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="cut",
+        prior_generated_weeks=4,
+    )
+
+    assert plan["mesocycle"]["trigger_weeks_effective"] == 6
+    assert plan["mesocycle"]["week_index"] == 5
+    assert plan["mesocycle"]["decision_trace"]["inputs"]["phase"] == "cut"

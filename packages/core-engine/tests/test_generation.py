@@ -528,6 +528,7 @@ def test_build_coach_preview_context_reuses_serialized_recent_training_history()
         "program_template": template,
         "history": serialized_history,
         "readiness_state": {},
+        "latest_mesocycle": {},
         "phase": "maintenance",
         "available_equipment": ["barbell", "bench"],
     }

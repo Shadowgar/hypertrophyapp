@@ -7,7 +7,10 @@ from core_engine.rules_runtime import (
     resolve_equipment_substitution,
     resolve_repeat_failure_substitution,
     resolve_adaptive_rule_runtime,
+    resolve_scheduler_exercise_adjustment_runtime,
+    resolve_scheduler_mesocycle_runtime,
     resolve_progression_rule_runtime,
+    resolve_scheduler_session_selection,
     resolve_starting_load,
     resolve_substitution_rule_runtime,
 )
@@ -105,6 +108,27 @@ def test_resolve_adaptive_rule_runtime_extracts_fatigue_and_deload_config() -> N
     assert runtime["scheduled_deload_weeks"] == 6
     assert runtime["early_deload_trigger"] == "repeated_under_target_plus_high_fatigue"
     assert runtime["deload_load_scale"] == pytest.approx(0.9)
+
+
+def test_resolve_scheduler_mesocycle_runtime_does_not_invent_cut_deload_cadence() -> None:
+    runtime = resolve_scheduler_mesocycle_runtime(
+        template_deload={"trigger_weeks": 6},
+        prior_generated_weeks=4,
+        latest_adherence_score=None,
+        severe_soreness_count=0,
+        authored_week_index=None,
+        authored_week_role=None,
+        authored_sequence_length=None,
+        authored_sequence_complete=False,
+        stimulus_fatigue_response=None,
+        phase="cut",
+        rule_set=None,
+    )
+
+    assert runtime["trigger_weeks_effective"] == 6
+    assert runtime["week_index"] == 5
+    assert runtime["decision_trace"]["interpreter"] == "resolve_scheduler_mesocycle_runtime"
+    assert runtime["decision_trace"]["outcome"]["trigger_weeks_source"] == "template.deload.trigger_weeks"
 
 
 def test_extract_rule_threshold_helpers_parse_conditions() -> None:
@@ -219,6 +243,60 @@ def test_resolve_substitution_rule_runtime_defaults_repeat_failure_threshold() -
 
     assert runtime["equipment_mismatch_strategy"] == "use_first_compatible_substitution"
     assert runtime["repeat_failure_threshold"] == 3
+
+
+def test_resolve_scheduler_exercise_adjustment_runtime_carries_named_owner_trace() -> None:
+    runtime = resolve_scheduler_exercise_adjustment_runtime(
+        progression_state={
+            "exercise_id": "incline_press",
+            "consecutive_under_target_exposures": 2,
+            "last_progression_action": "reduce_load",
+            "fatigue_score": 0.85,
+        },
+        stimulus_substitution_pressure="moderate",
+    )
+
+    assert runtime["set_delta"] == -1
+    assert runtime["load_scale"] == pytest.approx(0.95)
+    assert runtime["substitution_pressure"] == "high"
+    assert runtime["substitution_guidance"] == "prefer_compatible_variants_if_recovery_constraints_persist"
+    assert runtime["decision_trace"]["interpreter"] == "resolve_scheduler_exercise_adjustment_runtime"
+    assert runtime["decision_trace"]["outcome"]["merged_substitution_pressure"] == "high"
+
+
+def test_resolve_scheduler_session_selection_returns_named_missed_day_policy_trace() -> None:
+    selection = resolve_scheduler_session_selection(
+        session_profiles=[
+            {
+                "index": 0,
+                "day_role": "full_body_1",
+                "primary_exercise_ids": ["lat"],
+                "muscles": ["back"],
+                "slot_roles": ["primary_compound"],
+            },
+            {
+                "index": 1,
+                "day_role": "full_body_2",
+                "primary_exercise_ids": ["rdl"],
+                "muscles": ["hamstrings"],
+                "slot_roles": ["primary_compound"],
+            },
+            {
+                "index": 2,
+                "day_role": "weak_point_arms",
+                "primary_exercise_ids": ["weak_chest"],
+                "muscles": ["chest"],
+                "slot_roles": ["weak_point"],
+            },
+        ],
+        history=[],
+        days_available=2,
+    )
+
+    assert selection["selected_indices"] == [0, 2]
+    assert selection["missed_day_policy"] == "roll-forward-priority-lifts"
+    assert selection["decision_trace"]["interpreter"] == "resolve_scheduler_session_selection"
+    assert selection["decision_trace"]["outcome"]["required_session_indices"] == [0, 2]
 
 
 def test_resolve_equipment_substitution_chooses_first_compatible_candidate() -> None:

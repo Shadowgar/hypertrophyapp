@@ -174,6 +174,564 @@ def resolve_substitution_rule_runtime(rule_set: dict[str, Any] | None) -> dict[s
     }
 
 
+def resolve_scheduler_mesocycle_runtime(
+    *,
+    template_deload: dict[str, Any] | None,
+    prior_generated_weeks: int,
+    latest_adherence_score: int | None,
+    severe_soreness_count: int,
+    authored_week_index: int | None,
+    authored_week_role: str | None,
+    authored_sequence_length: int | None,
+    authored_sequence_complete: bool,
+    stimulus_fatigue_response: dict[str, Any] | None,
+    phase: str,
+    rule_set: dict[str, Any] | None,
+) -> dict[str, Any]:
+    deload_rules = _coerce_dict(_coerce_dict(rule_set).get("deload_rules"))
+    template_deload = _coerce_dict(template_deload)
+    rule_trigger_weeks = int(deload_rules.get("scheduled_every_n_weeks") or 0)
+    if rule_trigger_weeks > 0:
+        trigger_weeks_base = max(1, rule_trigger_weeks)
+        trigger_weeks_source = "rule_set.deload_rules.scheduled_every_n_weeks"
+    else:
+        trigger_weeks_base = max(1, int(template_deload.get("trigger_weeks", 6) or 6))
+        trigger_weeks_source = "template.deload.trigger_weeks"
+
+    trigger_weeks_effective = trigger_weeks_base
+    weeks_completed_prior = max(0, int(prior_generated_weeks))
+    week_index = (weeks_completed_prior % trigger_weeks_effective) + 1
+    scheduled_deload = week_index == trigger_weeks_effective
+
+    normalized_adherence = None
+    if latest_adherence_score is not None:
+        normalized_adherence = max(1, min(5, int(latest_adherence_score)))
+    early_soreness = max(0, int(severe_soreness_count)) >= 2
+    early_adherence = normalized_adherence is not None and normalized_adherence <= 2
+
+    normalized_sfr = _coerce_dict(stimulus_fatigue_response)
+    early_sfr_recovery = (
+        str(normalized_sfr.get("deload_pressure") or "low") == "high"
+        and str(normalized_sfr.get("recoverability") or "moderate") == "low"
+    )
+
+    reasons: list[str] = []
+    authored_deload = str(authored_week_role or "").lower() == "deload"
+    if authored_deload:
+        reasons.append("authored_deload")
+    elif scheduled_deload:
+        reasons.append("scheduled")
+    if early_soreness:
+        reasons.append("early_soreness")
+    if early_adherence:
+        reasons.append("early_adherence")
+    if early_sfr_recovery and not (early_soreness or early_adherence):
+        reasons.append("early_sfr_recovery")
+
+    return {
+        "weeks_completed_prior": weeks_completed_prior,
+        "week_index": week_index,
+        "authored_week_index": int(authored_week_index) if authored_week_index is not None else None,
+        "authored_week_role": str(authored_week_role or "accumulation"),
+        "authored_sequence_length": (
+            int(authored_sequence_length)
+            if authored_sequence_length is not None
+            else None
+        ),
+        "authored_sequence_complete": bool(authored_sequence_complete),
+        "phase_transition_pending": bool(authored_sequence_complete),
+        "phase_transition_reason": (
+            "authored_sequence_complete"
+            if authored_sequence_complete
+            else "none"
+        ),
+        "post_authored_behavior": (
+            "hold_last_authored_week"
+            if authored_sequence_complete
+            else "in_authored_sequence"
+        ),
+        "trigger_weeks_base": trigger_weeks_base,
+        "trigger_weeks_effective": trigger_weeks_effective,
+        "is_deload_week": bool(reasons),
+        "deload_reason": "+".join(reasons) if reasons else "none",
+        "early_triggers": {
+            "severe_soreness": early_soreness,
+            "low_adherence": early_adherence,
+            "sfr_recovery": early_sfr_recovery,
+        },
+        "decision_trace": {
+            "interpreter": "resolve_scheduler_mesocycle_runtime",
+            "version": "v1",
+            "inputs": {
+                "phase": str(phase or "maintenance"),
+                "prior_generated_weeks": weeks_completed_prior,
+                "latest_adherence_score": normalized_adherence,
+                "severe_soreness_count": max(0, int(severe_soreness_count)),
+                "authored_week_index": authored_week_index,
+                "authored_week_role": str(authored_week_role or ""),
+                "authored_sequence_length": authored_sequence_length,
+                "authored_sequence_complete": bool(authored_sequence_complete),
+                "template_trigger_weeks": int(template_deload.get("trigger_weeks", 6) or 6),
+                "rule_trigger_weeks": rule_trigger_weeks if rule_trigger_weeks > 0 else None,
+                "stimulus_fatigue_response": dict(normalized_sfr),
+            },
+            "steps": [
+                {
+                    "decision": "resolve_trigger_weeks",
+                    "result": {
+                        "trigger_weeks_base": trigger_weeks_base,
+                        "trigger_weeks_effective": trigger_weeks_effective,
+                        "trigger_weeks_source": trigger_weeks_source,
+                    },
+                },
+                {
+                    "decision": "evaluate_deload_triggers",
+                    "result": {
+                        "scheduled_deload": scheduled_deload,
+                        "authored_deload": authored_deload,
+                        "early_triggers": {
+                            "severe_soreness": early_soreness,
+                            "low_adherence": early_adherence,
+                            "sfr_recovery": early_sfr_recovery,
+                        },
+                    },
+                },
+            ],
+            "outcome": {
+                "week_index": week_index,
+                "is_deload_week": bool(reasons),
+                "deload_reason": "+".join(reasons) if reasons else "none",
+                "trigger_weeks_source": trigger_weeks_source,
+            },
+        },
+    }
+
+
+def _merge_substitution_pressure(*pressures: str | None) -> str:
+    rank = {"low": 0, "moderate": 1, "high": 2}
+    resolved = "low"
+    for pressure in pressures:
+        normalized = str(pressure or "low").lower()
+        if rank.get(normalized, 0) > rank[resolved]:
+            resolved = normalized
+    return resolved
+
+
+def resolve_scheduler_exercise_adjustment_runtime(
+    *,
+    progression_state: dict[str, Any] | None,
+    stimulus_substitution_pressure: str | None,
+) -> dict[str, Any]:
+    state = _coerce_dict(progression_state)
+    fatigue_score = max(0.0, min(1.0, float(state.get("fatigue_score") or 0.0)))
+    failed_exposures = int(state.get("consecutive_under_target_exposures") or 0)
+    last_action = str(state.get("last_progression_action") or "hold")
+
+    if fatigue_score >= 0.8 and last_action == "reduce_load":
+        load_scale = 0.95
+        set_delta = -1
+        progression_substitution_pressure = "high"
+    elif fatigue_score >= 0.7 or failed_exposures >= 2 or last_action == "reduce_load":
+        load_scale = 0.95 if fatigue_score >= 0.7 or last_action == "reduce_load" else 1.0
+        set_delta = 0
+        progression_substitution_pressure = "moderate"
+    else:
+        load_scale = 1.0
+        set_delta = 0
+        progression_substitution_pressure = "low"
+
+    merged_substitution_pressure = _merge_substitution_pressure(
+        stimulus_substitution_pressure,
+        progression_substitution_pressure,
+    )
+    substitution_guidance = None
+    if merged_substitution_pressure == "high":
+        substitution_guidance = "prefer_compatible_variants_if_recovery_constraints_persist"
+    elif merged_substitution_pressure == "moderate":
+        substitution_guidance = "compatible_variants_available_if_recovery_constraints_persist"
+
+    return {
+        "load_scale": load_scale,
+        "set_delta": set_delta,
+        "substitution_pressure": merged_substitution_pressure,
+        "substitution_guidance": substitution_guidance,
+        "decision_trace": {
+            "interpreter": "resolve_scheduler_exercise_adjustment_runtime",
+            "version": "v1",
+            "inputs": {
+                "exercise_id": str(state.get("exercise_id") or ""),
+                "fatigue_score": fatigue_score,
+                "consecutive_under_target_exposures": failed_exposures,
+                "last_progression_action": last_action,
+                "stimulus_substitution_pressure": str(stimulus_substitution_pressure or "low"),
+            },
+            "steps": [
+                {
+                    "decision": "evaluate_progression_state_recovery_pressure",
+                    "result": {
+                        "load_scale": load_scale,
+                        "set_delta": set_delta,
+                        "progression_substitution_pressure": progression_substitution_pressure,
+                    },
+                },
+                {
+                    "decision": "merge_generation_substitution_pressure",
+                    "result": {
+                        "merged_substitution_pressure": merged_substitution_pressure,
+                        "substitution_guidance": substitution_guidance,
+                    },
+                },
+            ],
+            "outcome": {
+                "load_scale": load_scale,
+                "set_delta": set_delta,
+                "merged_substitution_pressure": merged_substitution_pressure,
+                "substitution_guidance": substitution_guidance,
+            },
+        },
+    }
+
+
+def _spread_indices(total: int, count: int) -> list[int]:
+    if count <= 1:
+        return [0]
+    return [round(step * (total - 1) / (count - 1)) for step in range(count)]
+
+
+def _normalize_indices(indices: list[int], total: int, count: int) -> list[int]:
+    normalized: list[int] = []
+    for index in indices:
+        if index not in normalized:
+            normalized.append(index)
+    if len(normalized) < count:
+        for index in range(total):
+            if index not in normalized:
+                normalized.append(index)
+            if len(normalized) == count:
+                break
+    normalized.sort()
+    return normalized[:count]
+
+
+def _select_session_indices_evenly(session_count: int, days_available: int) -> list[int]:
+    return _normalize_indices(
+        _spread_indices(session_count, days_available),
+        session_count,
+        days_available,
+    )
+
+
+def _history_exercise_key(history_item: dict[str, Any]) -> str | None:
+    primary_exercise_id = str(history_item.get("primary_exercise_id") or "").strip()
+    if primary_exercise_id:
+        return primary_exercise_id
+
+    exercise_id = str(history_item.get("exercise_id") or "").strip()
+    return exercise_id or None
+
+
+def _rank_history_priority_exercises(history: list[dict[str, Any]], limit: int = 6) -> list[str]:
+    if not history:
+        return []
+
+    weighted_counts: dict[str, float] = {}
+    total = len(history)
+    denominator = max(1, total - 1)
+    for index, item in enumerate(history):
+        exercise_key = _history_exercise_key(item)
+        if not exercise_key:
+            continue
+
+        recency_weight = 1.0 + ((total - index - 1) / denominator)
+        weighted_counts[exercise_key] = weighted_counts.get(exercise_key, 0.0) + recency_weight
+
+    ranked = sorted(weighted_counts.items(), key=lambda pair: (-pair[1], pair[0]))
+    return [exercise_id for exercise_id, _ in ranked[:limit]]
+
+
+def _rank_structural_priority_exercises(
+    session_profiles: list[dict[str, Any]],
+    limit: int = 6,
+) -> list[str]:
+    ranked: list[tuple[int, int, str]] = []
+    seen: set[str] = set()
+    ordinal = 0
+    boosted_role_priority = {
+        "weak_point": 120,
+        "primary_compound": 110,
+        "secondary_compound": 80,
+    }
+    for session in session_profiles:
+        exercise_ids = [
+            str(item).strip()
+            for item in session.get("primary_exercise_ids") or []
+            if str(item).strip()
+        ]
+        slot_roles = [
+            str(item).strip().lower()
+            for item in session.get("slot_roles") or []
+            if str(item).strip()
+        ]
+        for exercise_id, slot_role in zip(exercise_ids, slot_roles):
+            if slot_role not in boosted_role_priority or exercise_id in seen:
+                continue
+            seen.add(exercise_id)
+            ranked.append((boosted_role_priority[slot_role], ordinal, exercise_id))
+            ordinal += 1
+
+    ranked.sort(key=lambda item: (-item[0], item[1], item[2]))
+    return [exercise_id for _, _, exercise_id in ranked[:limit]]
+
+
+def _priority_weight(exercise_ids: set[str], priority_weights: dict[str, int]) -> int:
+    return sum(priority_weights.get(exercise_id, 0) for exercise_id in exercise_ids)
+
+
+def _session_distance_score(index: int, selected_indices: list[int], total_sessions: int) -> float:
+    if not selected_indices:
+        return 0.0
+    nearest_distance = min(abs(index - selected) for selected in selected_indices)
+    return nearest_distance / max(1, total_sessions - 1)
+
+
+def _required_session_indices(session_profiles: list[dict[str, Any]]) -> list[int]:
+    required: list[int] = []
+    weak_point_index: int | None = None
+    has_explicit_day_roles = any(str(session.get("day_role") or "").strip() for session in session_profiles)
+
+    for session in session_profiles:
+        index = int(session.get("index") or 0)
+        day_role = str(session.get("day_role") or "").strip().lower()
+        if day_role == "weak_point_arms" and weak_point_index is None:
+            weak_point_index = index
+
+    if session_profiles and has_explicit_day_roles:
+        required.append(int(session_profiles[0].get("index") or 0))
+    if weak_point_index is not None and weak_point_index not in required:
+        required.append(weak_point_index)
+    return required
+
+
+def _select_sessions_with_continuity(
+    session_profiles: list[dict[str, Any]],
+    days_available: int,
+    priority_targets: list[str],
+) -> tuple[list[int], str]:
+    priority_weights = {
+        exercise_id: len(priority_targets) - index
+        for index, exercise_id in enumerate(priority_targets)
+    }
+    normalized_profiles = [
+        {
+            "index": int(session.get("index") or 0),
+            "day_role": str(session.get("day_role") or "").strip().lower(),
+            "primary_exercise_ids": {
+                str(item).strip()
+                for item in session.get("primary_exercise_ids") or []
+                if str(item).strip()
+            },
+            "muscles": {
+                str(item).strip()
+                for item in session.get("muscles") or []
+                if str(item).strip()
+            },
+        }
+        for session in session_profiles
+    ]
+    if not any(
+        _priority_weight(profile["primary_exercise_ids"], priority_weights) > 0
+        for profile in normalized_profiles
+    ):
+        return _select_session_indices_evenly(len(session_profiles), days_available), "even_spread_fallback"
+
+    selected_indices: list[int] = []
+    covered_priority: set[str] = set()
+    covered_muscles: set[str] = set()
+    day_role_priority = {
+        "weak_point_arms": 100,
+        "full_body_1": 80,
+        "full_body_2": 80,
+        "full_body_3": 80,
+        "full_body_4": 80,
+    }
+
+    for index in _required_session_indices(session_profiles)[:days_available]:
+        if index in selected_indices:
+            continue
+        selected_indices.append(index)
+        profile = next(item for item in normalized_profiles if item["index"] == index)
+        covered_priority.update(profile["primary_exercise_ids"])
+        covered_muscles.update(profile["muscles"])
+
+    while len(selected_indices) < days_available:
+        best_index: int | None = None
+        best_score: tuple[int, int, int, int, int, float] | None = None
+
+        for profile in normalized_profiles:
+            index = profile["index"]
+            if index in selected_indices:
+                continue
+
+            new_priority_ids = profile["primary_exercise_ids"] - covered_priority
+            score = (
+                _priority_weight(new_priority_ids, priority_weights),
+                day_role_priority.get(profile["day_role"], 0),
+                len(profile["muscles"] - covered_muscles),
+                _priority_weight(profile["primary_exercise_ids"], priority_weights),
+                len(profile["muscles"]),
+                _session_distance_score(index, selected_indices, len(session_profiles)),
+            )
+            if best_score is None or score > best_score or (score == best_score and index < best_index):
+                best_index = index
+                best_score = score
+
+        if best_index is None:
+            break
+
+        selected_indices.append(best_index)
+        profile = next(item for item in normalized_profiles if item["index"] == best_index)
+        covered_priority.update(profile["primary_exercise_ids"])
+        covered_muscles.update(profile["muscles"])
+
+    if len(selected_indices) != days_available:
+        return _select_session_indices_evenly(len(session_profiles), days_available), "even_spread_fallback"
+
+    selected_indices.sort()
+    return selected_indices, "continuity_priority"
+
+
+def resolve_scheduler_session_selection(
+    *,
+    session_profiles: list[dict[str, Any]],
+    history: list[dict[str, Any]],
+    days_available: int,
+) -> dict[str, Any]:
+    normalized_days_available = max(1, int(days_available))
+    if normalized_days_available >= len(session_profiles):
+        selected_indices = [int(session.get("index") or 0) for session in session_profiles]
+        selection_strategy = "all_sessions_retained"
+        priority_targets: list[str] = []
+        priority_target_source = "not_needed"
+    else:
+        priority_targets = _rank_history_priority_exercises(history)
+        priority_target_source = "history"
+        if not priority_targets:
+            priority_targets = _rank_structural_priority_exercises(session_profiles)
+            priority_target_source = "session_structure" if priority_targets else "none"
+
+        if not priority_targets:
+            selected_indices = _select_session_indices_evenly(len(session_profiles), normalized_days_available)
+            selection_strategy = "even_spread_fallback"
+        else:
+            selected_indices, selection_strategy = _select_sessions_with_continuity(
+                session_profiles,
+                normalized_days_available,
+                priority_targets,
+            )
+
+    required_indices = _required_session_indices(session_profiles)
+    missed_day_policy = "roll-forward-priority-lifts"
+    return {
+        "selected_indices": selected_indices,
+        "missed_day_policy": missed_day_policy,
+        "decision_trace": {
+            "interpreter": "resolve_scheduler_session_selection",
+            "version": "v1",
+            "inputs": {
+                "session_count": len(session_profiles),
+                "days_available": normalized_days_available,
+                "history_count": len(history),
+            },
+            "steps": [
+                {
+                    "decision": "resolve_priority_targets",
+                    "result": {
+                        "priority_target_source": priority_target_source,
+                        "priority_targets": list(priority_targets),
+                        "required_session_indices": required_indices,
+                    },
+                },
+                {
+                    "decision": "select_session_indices",
+                    "result": {
+                        "selection_strategy": selection_strategy,
+                        "selected_indices": list(selected_indices),
+                    },
+                },
+            ],
+            "outcome": {
+                "selected_indices": list(selected_indices),
+                "required_session_indices": required_indices,
+                "selection_strategy": selection_strategy,
+                "missed_day_policy": missed_day_policy,
+            },
+        },
+    }
+
+
+def resolve_scheduler_session_exercise_cap(
+    *,
+    session_time_budget_minutes: int | None,
+    day_role: str | None,
+    slot_roles: list[str],
+) -> dict[str, Any]:
+    normalized_day_role = str(day_role or "").strip().lower()
+    if session_time_budget_minutes is None:
+        limit = None
+    elif session_time_budget_minutes <= 30:
+        limit = 3
+    elif session_time_budget_minutes <= 45:
+        limit = 4
+    elif session_time_budget_minutes <= 60:
+        limit = 5
+    else:
+        limit = None
+
+    role_priority = {
+        "primary_compound": 100,
+        "weak_point": 90,
+        "secondary_compound": 80,
+        "accessory": 50,
+        "isolation": 40,
+    }
+    if normalized_day_role == "weak_point_arms":
+        role_priority["weak_point"] = 120
+        role_priority["primary_compound"] = 70
+        role_priority["secondary_compound"] = 60
+
+    normalized_slot_roles = [str(role or "").strip().lower() for role in slot_roles]
+    if limit is None or limit >= len(normalized_slot_roles):
+        kept_indices = list(range(len(normalized_slot_roles)))
+    else:
+        ranked = sorted(
+            enumerate(normalized_slot_roles),
+            key=lambda item: (-role_priority.get(item[1], 30), item[0]),
+        )
+        kept_indices = sorted(index for index, _ in ranked[:limit])
+
+    return {
+        "exercise_limit": limit,
+        "kept_indices": kept_indices,
+        "decision_trace": {
+            "interpreter": "resolve_scheduler_session_exercise_cap",
+            "version": "v1",
+            "inputs": {
+                "session_time_budget_minutes": (
+                    int(session_time_budget_minutes)
+                    if session_time_budget_minutes is not None
+                    else None
+                ),
+                "day_role": normalized_day_role,
+                "slot_roles": list(normalized_slot_roles),
+            },
+            "outcome": {
+                "exercise_limit": limit,
+                "kept_indices": list(kept_indices),
+            },
+        },
+    }
+
+
 def _compatible_substitution_candidates(
     *,
     substitution_candidates: list[str],
