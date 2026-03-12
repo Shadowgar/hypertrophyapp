@@ -16,6 +16,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from core_engine.rules_runtime import resolve_adaptive_rule_runtime, resolve_equipment_substitution
 from importers.xlsx_to_onboarding_v2 import build_onboarding_package
 from importers.xlsx_to_program_v2 import build_program_template
 
@@ -240,6 +241,53 @@ def test_load_program_rule_set_validates_existing_rules() -> None:
     assert rule_set["rule_set_id"] == "pure_bodybuilding_phase_1_full_body_rules"
     assert "pure_bodybuilding_phase_1_full_body" in rule_set["program_scope"]
     assert rule_set["progression_rules"]["on_success"]["percent"] == pytest.approx(2.5)
+
+
+def test_load_program_rule_set_carries_traceable_phase1_manual_grounding() -> None:
+    rule_set = load_program_rule_set("pure_bodybuilding_phase_1_full_body")
+
+    source_sections = {section["field"]: section for section in rule_set["source_sections"]}
+
+    assert set(source_sections) == {
+        "starting_load_rules.default_rir_target",
+        "starting_load_rules.method",
+        "progression_rules.success_condition",
+        "fatigue_rules.high_fatigue_trigger.conditions[0]",
+        "substitution_rules.equipment_mismatch",
+    }
+    assert source_sections["starting_load_rules.default_rir_target"]["source_pdf"] == (
+        "reference/The_Pure_Bodybuilding_Program - Phase 1 - Full_Body.pdf"
+    )
+    assert "first 2 weeks" in source_sections["starting_load_rules.default_rir_target"]["excerpt"]
+    assert "leaving 1-3 reps in the tank" in source_sections["starting_load_rules.default_rir_target"]["excerpt"]
+    assert "progress through the rep ranges given" in source_sections["progression_rules.success_condition"]["excerpt"]
+    assert "Substitution Option 1" in source_sections["substitution_rules.equipment_mismatch"]["excerpt"]
+    assert "intro phase lasts 2 weeks" in rule_set["fatigue_rules"]["high_fatigue_trigger"]["conditions"][0]
+    assert "fatigue_rules.high_fatigue_trigger.conditions[1]" not in source_sections
+    assert "deload_rules.scheduled_every_n_weeks" not in source_sections
+    assert "substitution_rules.repeat_failure_trigger" not in source_sections
+
+
+def test_phase1_manual_grounding_survives_runtime_without_fallback_substitution_strategy() -> None:
+    rule_set = load_program_rule_set("pure_bodybuilding_phase_1_full_body")
+
+    adaptive_runtime = resolve_adaptive_rule_runtime(rule_set)
+    substitution_runtime = resolve_equipment_substitution(
+        exercise_id="machine_hip_adduction",
+        exercise_name="Machine Hip Adduction",
+        exercise_equipment_tags=["machine"],
+        substitution_candidates=["Cable Hip Adduction", "Copenhagen Hip Adduction"],
+        equipment_set={"cable"},
+        rule_set=rule_set,
+    )
+
+    assert adaptive_runtime["intro_weeks"] == 2
+    assert rule_set["substitution_rules"]["equipment_mismatch"] == "use_authored_substitution_columns"
+    assert substitution_runtime["auto_substituted"] is True
+    assert substitution_runtime["selected_name"] == "Cable Hip Adduction"
+    assert substitution_runtime["decision_trace"]["inputs"]["equipment_mismatch_strategy"] == (
+        "use_authored_substitution_columns"
+    )
 
 
 def test_load_program_rule_set_supports_adaptive_gold_runtime_program() -> None:

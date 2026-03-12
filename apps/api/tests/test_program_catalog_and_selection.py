@@ -1690,6 +1690,90 @@ def test_generate_week_uses_canonical_readiness_state_for_sfr_recovery_deload() 
     assert plan["generation_runtime_trace"]["outcome"]["stimulus_fatigue_response"]["substitution_pressure"] == "high"
 
 
+def test_generate_week_response_falls_back_to_generation_runtime_sfr_source_when_mesocycle_trace_missing(
+    monkeypatch,
+) -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "generation-sfr-fallback@example.com", "password": TEST_CREDENTIAL, "name": "Fallback User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Fallback User",
+            "age": 33,
+            "weight": 85,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "full_body_v1",
+            "training_location": "home",
+            "equipment_profile": ["dumbbell", "bodyweight"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    original_prepare_runtime = plan_router._prepare_plan_generation_runtime
+    original_generate_week_plan = plan_router.generate_week_plan
+
+    def _patched_prepare_runtime(*args, **kwargs):
+        runtime = original_prepare_runtime(*args, **kwargs)
+        generation_runtime = dict(runtime["generation_runtime"])
+        generation_runtime_trace = dict(generation_runtime.get("decision_trace") or {})
+        generation_runtime_outcome = dict(generation_runtime_trace.get("outcome") or {})
+        generation_runtime_outcome["stimulus_fatigue_response_source"] = "derived_from_training_state_inputs"
+        generation_runtime_trace["outcome"] = generation_runtime_outcome
+        generation_runtime["decision_trace"] = generation_runtime_trace
+        return {
+            **runtime,
+            "generation_runtime": generation_runtime,
+        }
+
+    def _patched_generate_week_plan(*args, **kwargs):
+        plan = original_generate_week_plan(*args, **kwargs)
+        mesocycle = dict(plan.get("mesocycle") or {})
+        mesocycle.pop("decision_trace", None)
+        plan["mesocycle"] = mesocycle
+        return plan
+
+    monkeypatch.setattr(plan_router, "_prepare_plan_generation_runtime", _patched_prepare_runtime)
+    monkeypatch.setattr(plan_router, "generate_week_plan", _patched_generate_week_plan)
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+
+    assert "decision_trace" not in plan["mesocycle"]
+    assert plan["generation_runtime_trace"]["outcome"]["stimulus_fatigue_response_source"] == (
+        "derived_from_training_state_inputs"
+    )
+    assert plan["decision_trace"]["canonical_inputs"]["stimulus_fatigue_response_source"] == (
+        "derived_from_training_state_inputs"
+    )
+    assert plan["decision_trace"]["policy_basis"]["week_generation"]["stimulus_fatigue_response_source"] == (
+        "derived_from_training_state_inputs"
+    )
+    assert plan["decision_trace"]["execution_steps"][1]["result"]["stimulus_fatigue_response_source"] == (
+        "derived_from_training_state_inputs"
+    )
+    assert plan["decision_trace"]["outcome"]["stimulus_fatigue_response_source"] == (
+        "derived_from_training_state_inputs"
+    )
+
+
 def test_generate_week_uses_repeat_failure_state_to_substitute_exercise(monkeypatch) -> None:
     _reset_db()
     client = TestClient(app)

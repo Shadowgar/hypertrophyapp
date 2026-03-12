@@ -19,12 +19,12 @@ Last updated: 2026-03-12
 
 ## Latest Completed Slice
 
-- Extended `apps/api/tests/test_program_catalog_and_selection.py` so shipped generated-week API responses now assert the top-level plan `decision_trace` preserves scheduler mesocycle `stimulus_fatigue_response_source` on active canonical-SFR paths.
-- Verified the API-facing surface without changing generated-week owners: payload helper ownership stays in `decision_generated_week.py`, scheduler policy stays in `rules_runtime.py`, and SFR derivation stays upstream.
+- Extended `apps/api/tests/test_program_catalog_and_selection.py` so shipped generated-week API responses now assert the top-level plan `decision_trace` preserves the fallback `stimulus_fatigue_response_source` when mesocycle trace context is absent and the response must fall back to generation runtime output.
+- Verified the API-facing fallback path without changing generated-week owners: payload helper ownership stays in `decision_generated_week.py`, scheduler policy stays in `rules_runtime.py`, and SFR derivation stays upstream.
 
 ## Next Recommended Action
 
-- Extend API-facing generated-week response tests to assert the shipped plan `decision_trace` preserves the fallback `stimulus_fatigue_response_source` when mesocycle trace context must fall back to generation runtime output, while keeping payload-helper, scheduler-policy, and SFR-derivation ownership unchanged.
+- Extend API-facing generated-week response tests to assert the shipped plan `decision_trace` preserves `stimulus_fatigue_response_source` on scheduled-deload paths where mesocycle trace context remains present, while keeping payload-helper, scheduler-policy, and SFR-derivation ownership unchanged.
 
 ## Closed Work Do Not Reopen Without Evidence
 

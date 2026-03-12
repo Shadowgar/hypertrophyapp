@@ -38,6 +38,18 @@ def test_loader_lists_and_loads_onboarding_packages() -> None:
     assert loaded["blueprint"]["default_training_days"] == 5
 
 
+def test_gold_onboarding_package_preserves_manual_backed_phase_intent() -> None:
+    loaded = load_program_onboarding_package("pure_bodybuilding_phase_1_full_body")
+    intent = loaded["program_intent"]
+
+    assert "Arms & Weak Points day" in intent["phase_goal"]
+    assert "rep ranges" in intent["progression_philosophy"]
+    assert "first 2 weeks" in intent["fatigue_management"]
+    assert any(item.startswith("Weak Point Exercise 2 only when recovered") for item in intent["flexible_elements"])
+    assert "Weak-point chest and hamstrings coverage." not in intent["preserve_when_frequency_reduced"]
+    assert "User-selected weak-point stimulus." in intent["preserve_when_frequency_reduced"]
+
+
 def test_user_overlay_constraints_accept_two_to_five_days() -> None:
     for days in (2, 3, 4, 5):
         overlay = UserOverlayConstraints.model_validate(

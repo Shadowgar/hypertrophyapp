@@ -12218,23 +12218,23 @@
   ],
   "program_intent": {
     "program_id": "pure_bodybuilding_phase_1_full_body",
-    "phase_goal": "Drive hypertrophy across all major muscle groups with high-quality weekly full-body exposure.",
-    "progression_philosophy": "Double progression with conservative load increases after top-end rep attainment.",
-    "fatigue_management": "Use scheduled recovery and temporary volume reduction when readiness drops.",
+    "phase_goal": "Drive full-body hypertrophy across four full-body sessions plus a dedicated Arms & Weak Points day.",
+    "progression_philosophy": "Progress through the authored rep ranges while using the Hypertrophy Handbook to interpret last-set intensity techniques and substitutions.",
+    "fatigue_management": "Use the first 2 weeks as an adaptation ramp at ~7-8/~8-9 RPE with fewer intensity techniques before pushing most sets to 9-10 RPE.",
     "non_negotiables": [
-      "Preserve weekly full-body coverage.",
-      "Preserve priority compounds before accessories.",
-      "Preserve weak-point stimulus under compression."
+      "Preserve the four full-body sessions plus the Arms & Weak Points day.",
+      "Preserve the authored Early Sets / Last Set effort structure.",
+      "Preserve authored substitution options and weak-point slots."
     ],
     "flexible_elements": [
-      "Accessory isolation slot count.",
-      "Session exercise ordering among non-priority slots.",
-      "Temporary set reductions during fatigue spikes."
+      "Weak Point Exercise 2 only when recovered.",
+      "User-selected weak-point exercise choice from the authored table.",
+      "Session exercise ordering inside authored day intent."
     ],
     "preserve_when_frequency_reduced": [
       "Primary compound slots.",
-      "Weak-point chest and hamstrings coverage.",
-      "Progression continuity for carried lifts."
+      "User-selected weak-point stimulus.",
+      "Progression continuity across authored rep ranges."
     ]
   },
   "frequency_adaptation_rules": {

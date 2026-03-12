@@ -1045,7 +1045,10 @@ def resolve_equipment_substitution(
 
     strategy = str(substitution_runtime["equipment_mismatch_strategy"])
     if not original_compatible and compatible_candidates:
-        if strategy == "use_first_compatible_substitution":
+        if strategy in {
+            "use_first_compatible_substitution",
+            "use_authored_substitution_columns",
+        }:
             selected_name = compatible_candidates[0]
             auto_substituted = True
 
