@@ -105,6 +105,10 @@ from core_engine.decision_generated_week import (
     order_generation_template_candidates,
     recommend_generation_template_selection,
 )
+from core_engine.decision_coach_preview import (
+    humanize_specialization_reason as specialization_reason_owner,
+    resolve_authoritative_coaching_recommendation_rationale as coaching_rationale_owner,
+)
 from core_engine.decision_program_recommendation import humanize_program_reason as program_reason_owner
 
 
@@ -296,6 +300,11 @@ def test_intelligence_source_does_not_redefine_program_or_progression_decision_o
 
 def test_humanize_program_reason_is_a_direct_alias_to_the_decision_owner() -> None:
     assert humanize_program_reason is program_reason_owner
+
+
+def test_intelligence_compatibility_surface_is_alias_only_for_coaching_rationale_helpers() -> None:
+    assert humanize_specialization_reason is specialization_reason_owner
+    assert resolve_coaching_recommendation_rationale is coaching_rationale_owner
 
 
 def test_humanize_specialization_reason_returns_authoritative_fields_without_humanization() -> None:

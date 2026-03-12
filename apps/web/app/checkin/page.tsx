@@ -97,19 +97,12 @@ export default function CheckinPage() {
   const previousSummary = reviewResult?.summary ?? reviewStatus?.previous_week_summary ?? null;
   const readinessScore = reviewResult?.readiness_score ?? null;
   const readinessTone = resolveReadinessTone(readinessScore);
-  const readinessLabel = readinessScore === null ? "Awaiting review result" : `Readiness ${readinessScore}`;
   const reviewGuidance = reviewResult?.global_guidance?.trim() || null;
   const weakPointExercises = reviewResult?.adjustments.weak_point_exercises ?? [];
   const calorieValue = Number(calories || 0);
   const proteinValue = Number(protein || 0);
   const fatValue = Number(fat || 0);
   const carbsValue = Number(carbs || 0);
-  let volumeShiftLabel = "Awaiting output";
-  if (reviewResult) {
-    const sign = reviewResult.adjustments.global_set_delta >= 0 ? "+" : "";
-    volumeShiftLabel = `${sign}${reviewResult.adjustments.global_set_delta} set delta`;
-  }
-  const loadScaleLabel = reviewResult ? `${reviewResult.adjustments.global_weight_scale.toFixed(2)}x target` : "Awaiting output";
 
   return (
     <div className="space-y-4">
@@ -140,11 +133,11 @@ export default function CheckinPage() {
           <div className="telemetry-header">
             <div>
               <p className="telemetry-kicker">Review Command Center</p>
-              <p className="telemetry-value">{readinessLabel}</p>
+              <p className="telemetry-value">{readinessScore === null ? "Awaiting review result" : readinessScore}</p>
             </div>
             <span className="telemetry-status">
               <span className={`status-dot status-dot--${readinessTone}`} />
-              {readinessScore === null ? "Pending" : `Readiness ${readinessScore}`}
+              {readinessScore === null ? "Pending" : readinessScore}
             </span>
           </div>
           {reviewGuidance ? (
@@ -155,11 +148,15 @@ export default function CheckinPage() {
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
               <p className="telemetry-kicker">Volume Shift</p>
-              <p className="text-sm text-zinc-100">{volumeShiftLabel}</p>
+              <p className="text-sm text-zinc-100">
+                {reviewResult ? reviewResult.adjustments.global_set_delta : "Awaiting output"}
+              </p>
             </div>
             <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
               <p className="telemetry-kicker">Load Scale</p>
-              <p className="text-sm text-zinc-100">{loadScaleLabel}</p>
+              <p className="text-sm text-zinc-100">
+                {reviewResult ? reviewResult.adjustments.global_weight_scale : "Awaiting output"}
+              </p>
             </div>
             <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
               <p className="telemetry-kicker">Weak Point Targets</p>
@@ -333,7 +330,10 @@ export default function CheckinPage() {
       {reviewResult ? (
         <div className="main-card main-card--module spacing-grid spacing-grid--tight">
           <p className="telemetry-kicker">Adaptive Output</p>
-          <p className="telemetry-meta text-zinc-300">Readiness score: {reviewResult.readiness_score}</p>
+          <div className="space-y-1">
+            <p className="telemetry-meta text-zinc-300">Readiness score</p>
+            <p className="text-sm text-zinc-100">{reviewResult.readiness_score}</p>
+          </div>
           {reviewGuidance ? <p className="telemetry-meta text-zinc-300">{reviewGuidance}</p> : null}
           <div className="space-y-1">
             <p className="telemetry-meta text-zinc-300">Weak points</p>
