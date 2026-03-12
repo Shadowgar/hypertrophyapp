@@ -742,6 +742,20 @@ def _resolve_generation_stimulus_fatigue_response(
     }
 
 
+def _build_generation_runtime_coaching_state(
+    *,
+    readiness_state: dict[str, Any],
+) -> dict[str, Any]:
+    return {
+        "readiness": {
+            "sleep_quality": readiness_state.get("sleep_quality"),
+            "stress_level": readiness_state.get("stress_level"),
+            "pain_flags": _coerce_string_list(readiness_state.get("pain_flags")),
+            "recovery_risk_flags": _coerce_string_list(readiness_state.get("recovery_risk_flags")),
+        }
+    }
+
+
 def resolve_week_generation_runtime_inputs(
     *,
     selected_template_id: str,
@@ -798,6 +812,7 @@ def resolve_week_generation_runtime_inputs(
         "severe_soreness_count": int(severe_soreness_count),
         "latest_adherence_score": int(latest_adherence_score) if latest_adherence_score is not None else None,
         "prior_generated_weeks": int(prior_generated_weeks),
+        "coaching_state": _build_generation_runtime_coaching_state(readiness_state=readiness_state),
         "readiness_state": readiness_state,
         "movement_restrictions": list(constraint_state.get("movement_restrictions") or []),
         "session_time_budget_minutes": (
@@ -871,6 +886,7 @@ def resolve_week_generation_runtime_inputs(
                 "severe_soreness_count": int(severe_soreness_count),
                 "latest_adherence_score": int(latest_adherence_score) if latest_adherence_score is not None else None,
                 "prior_generated_weeks": int(prior_generated_weeks),
+                "readiness_source": readiness_source,
                 "stimulus_fatigue_response": stimulus_fatigue_response,
             },
         },

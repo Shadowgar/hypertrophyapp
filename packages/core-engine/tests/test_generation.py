@@ -340,8 +340,17 @@ def test_resolve_week_generation_runtime_inputs_derives_sfr_from_canonical_coach
     recovery_inputs_step = next(
         step for step in runtime["decision_trace"]["steps"] if step["decision"] == "recovery_inputs"
     )
+    assert runtime["coaching_state"] == {
+        "readiness": {
+            "sleep_quality": 2,
+            "stress_level": 4,
+            "pain_flags": ["shoulder_irritation"],
+            "recovery_risk_flags": [],
+        }
+    }
     assert sfr_step["result"]["completion_pct_proxy"] == 80
     assert recovery_inputs_step["result"]["readiness_source"] == "coaching_state.readiness"
+    assert runtime["decision_trace"]["outcome"]["readiness_source"] == "coaching_state.readiness"
     assert runtime["decision_trace"]["outcome"]["stimulus_fatigue_response"]["deload_pressure"] == "high"
 
 
@@ -367,6 +376,14 @@ def test_resolve_week_generation_runtime_inputs_marks_top_level_readiness_state_
     recovery_inputs_step = next(
         step for step in runtime["decision_trace"]["steps"] if step["decision"] == "recovery_inputs"
     )
+    assert runtime["coaching_state"] == {
+        "readiness": {
+            "sleep_quality": 2,
+            "stress_level": 4,
+            "pain_flags": ["shoulder_irritation"],
+            "recovery_risk_flags": ["high_stress", "low_sleep", "pain_flags_present"],
+        }
+    }
     assert runtime["readiness_state"] == {
         "sleep_quality": 2,
         "stress_level": 4,
@@ -374,6 +391,7 @@ def test_resolve_week_generation_runtime_inputs_marks_top_level_readiness_state_
         "recovery_risk_flags": ["high_stress", "low_sleep", "pain_flags_present"],
     }
     assert recovery_inputs_step["result"]["readiness_source"] == "legacy_training_state.readiness_state"
+    assert runtime["decision_trace"]["outcome"]["readiness_source"] == "legacy_training_state.readiness_state"
 
 
 def test_prepare_generate_week_plan_runtime_inputs_normalizes_plan_inputs() -> None:
