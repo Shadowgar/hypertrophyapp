@@ -638,6 +638,16 @@ def _resolve_generation_readiness_state(
     normalized_training_state: dict[str, Any],
     latest_checkin: Any | None,
 ) -> tuple[dict[str, Any], str]:
+    coaching_state = _coerce_dict(normalized_training_state.get("coaching_state"))
+    readiness_state = _coerce_dict(coaching_state.get("readiness"))
+    if readiness_state:
+        return {
+            "sleep_quality": readiness_state.get("sleep_quality"),
+            "stress_level": readiness_state.get("stress_level"),
+            "pain_flags": _coerce_string_list(readiness_state.get("pain_flags")),
+            "recovery_risk_flags": _coerce_string_list(readiness_state.get("recovery_risk_flags")),
+        }, "coaching_state.readiness"
+
     readiness_state = _coerce_dict(normalized_training_state.get("readiness_state"))
     if readiness_state:
         return {
@@ -645,7 +655,7 @@ def _resolve_generation_readiness_state(
             "stress_level": readiness_state.get("stress_level"),
             "pain_flags": _coerce_string_list(readiness_state.get("pain_flags")),
             "recovery_risk_flags": _coerce_string_list(readiness_state.get("recovery_risk_flags")),
-        }, "training_state"
+        }, "legacy_training_state.readiness_state"
 
     if latest_checkin is None:
         return {

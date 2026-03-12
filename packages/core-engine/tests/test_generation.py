@@ -295,7 +295,7 @@ def test_resolve_week_generation_runtime_inputs_prefers_canonical_training_state
     assert runtime["decision_trace"]["steps"][3]["result"]["source"] == "training_state"
 
 
-def test_resolve_week_generation_runtime_inputs_derives_sfr_from_readiness_state() -> None:
+def test_resolve_week_generation_runtime_inputs_derives_sfr_from_canonical_coaching_state_readiness() -> None:
     user_training_state = {
         "fatigue_state": {
             "soreness_by_muscle": {"chest": "severe", "back": "mild"},
@@ -305,9 +305,16 @@ def test_resolve_week_generation_runtime_inputs_derives_sfr_from_readiness_state
             "latest_adherence_score": 3,
         },
         "readiness_state": {
-            "sleep_quality": 2,
-            "stress_level": 4,
-            "pain_flags": ["shoulder_irritation"],
+            "sleep_quality": 5,
+            "stress_level": 1,
+            "pain_flags": [],
+        },
+        "coaching_state": {
+            "readiness": {
+                "sleep_quality": 2,
+                "stress_level": 4,
+                "pain_flags": ["shoulder_irritation"],
+            },
         },
     }
 
@@ -330,8 +337,43 @@ def test_resolve_week_generation_runtime_inputs_derives_sfr_from_readiness_state
     sfr_step = next(
         step for step in runtime["decision_trace"]["steps"] if step["decision"] == "stimulus_fatigue_response"
     )
+    recovery_inputs_step = next(
+        step for step in runtime["decision_trace"]["steps"] if step["decision"] == "recovery_inputs"
+    )
     assert sfr_step["result"]["completion_pct_proxy"] == 80
+    assert recovery_inputs_step["result"]["readiness_source"] == "coaching_state.readiness"
     assert runtime["decision_trace"]["outcome"]["stimulus_fatigue_response"]["deload_pressure"] == "high"
+
+
+def test_resolve_week_generation_runtime_inputs_marks_top_level_readiness_state_as_legacy_fallback() -> None:
+    runtime = resolve_week_generation_runtime_inputs(
+        selected_template_id="full_body_v1",
+        current_days_available=4,
+        active_frequency_adaptation=None,
+        user_training_state={
+            "readiness_state": {
+                "sleep_quality": 2,
+                "stress_level": 4,
+                "pain_flags": ["shoulder_irritation"],
+                "recovery_risk_flags": ["high_stress", "low_sleep", "pain_flags_present"],
+            },
+        },
+        history_rows=[],
+        latest_soreness_entry=None,
+        latest_checkin=None,
+        prior_plans=[],
+    )
+
+    recovery_inputs_step = next(
+        step for step in runtime["decision_trace"]["steps"] if step["decision"] == "recovery_inputs"
+    )
+    assert runtime["readiness_state"] == {
+        "sleep_quality": 2,
+        "stress_level": 4,
+        "pain_flags": ["shoulder_irritation"],
+        "recovery_risk_flags": ["high_stress", "low_sleep", "pain_flags_present"],
+    }
+    assert recovery_inputs_step["result"]["readiness_source"] == "legacy_training_state.readiness_state"
 
 
 def test_prepare_generate_week_plan_runtime_inputs_normalizes_plan_inputs() -> None:
