@@ -654,6 +654,49 @@ def test_prepare_generate_week_finalize_runtime_shapes_response_and_record_value
     assert runtime["decision_trace"]["review_overlay_trace"]["interpreter"] == "prepare_generated_week_review_overlay"
 
 
+def test_prepare_generate_week_finalize_runtime_surfaces_mesocycle_sfr_source_on_top_level_trace() -> None:
+    runtime = prepare_generate_week_finalize_runtime(
+        user_id="user_123",
+        base_plan={
+            "week_start": "2026-03-09",
+            "split": "full_body",
+            "phase": "maintenance",
+            "mesocycle": {
+                "is_deload_week": True,
+                "deload_reason": "early_sfr_recovery",
+                "decision_trace": {
+                    "interpreter": "resolve_scheduler_mesocycle_runtime",
+                    "outcome": {
+                        "stimulus_fatigue_response_source": "coaching_state.stimulus_fatigue_response",
+                    },
+                },
+            },
+            "sessions": [],
+        },
+        template_selection_trace={
+            "interpreter": "recommend_generation_template_selection",
+            "selected_template_id": "full_body_v1",
+        },
+        generation_runtime_trace={
+            "interpreter": "resolve_week_generation_runtime_inputs",
+            "outcome": {
+                "effective_days_available": 3,
+                "stimulus_fatigue_response_source": "derived_from_training_state_inputs",
+            },
+        },
+        selected_template_id="full_body_v1",
+        active_frequency_adaptation=None,
+        review_cycle=None,
+    )
+
+    trace = runtime["response_payload"]["decision_trace"]
+
+    assert trace["canonical_inputs"]["stimulus_fatigue_response_source"] == (
+        "coaching_state.stimulus_fatigue_response"
+    )
+    assert trace["outcome"]["stimulus_fatigue_response_source"] == "coaching_state.stimulus_fatigue_response"
+
+
 def test_build_coach_preview_context_reuses_serialized_recent_training_history() -> None:
     history_rows = [
         SimpleNamespace(

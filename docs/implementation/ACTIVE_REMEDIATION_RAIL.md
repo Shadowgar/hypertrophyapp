@@ -12,17 +12,18 @@ Last updated: 2026-03-12
 - Coach preview trace/context plumbing now surfaces canonical `coaching_state.stimulus_fatigue_response` as persisted recovery-pressure context without changing request-time progression scoring ownership.
 - Weekly review now prefers canonical `coaching_state.stimulus_fatigue_response` as persisted recovery-pressure context when present, while keeping fallback SFR derivation owner-bound inside `decision_weekly_review.py`.
 - Generated-week scheduler / `rules_runtime.py` trace plumbing now carries the consumed `stimulus_fatigue_response` source, so mesocycle scheduling explicitly records whether recovery-pressure context came from canonical coaching state or an upstream fallback without re-owning SFR derivation.
+- Response-facing generated-week payload helpers now surface scheduler mesocycle `stimulus_fatigue_response_source` on the top-level generated-week `decision_trace`, while keeping SFR derivation and scheduler policy ownership unchanged.
 - Tier 4A structural, doctrinal, and felt-behavior audits currently call the audited gold path ready for internal dogfood.
 - `intelligence.py` is down to compatibility forwarding for the extracted recommendation, progression, weekly-review, and coach-preview seams. It is not a valid place to add new coaching meaning.
 
 ## Latest Completed Slice
 
-- Extended generated-week prep and `packages/core-engine/core_engine/rules_runtime.py` so scheduler mesocycle traces now preserve the upstream `stimulus_fatigue_response_source`, while leaving SFR derivation ownership in generation/runtime assembly rather than moving it into scheduler policy code.
-- Added focused generation and rules-runtime regressions proving canonical coaching-state SFR sources and upstream fallback sources survive scheduler trace plumbing unchanged.
+- Extended `packages/core-engine/core_engine/decision_generated_week.py` so response-facing generated-week `decision_trace` now surfaces the scheduler mesocycle `stimulus_fatigue_response_source` at stable top-level trace locations, preferring the mesocycle trace source and falling back to generation runtime trace when needed.
+- Added focused generated-week payload regressions proving the finalized response trace preserves the scheduler mesocycle SFR source independently of the older generation runtime fallback.
 
 ## Next Recommended Action
 
-- Extend response-facing generated-week payload helpers to surface scheduler mesocycle `stimulus_fatigue_response_source` at a stable top-level trace location, while keeping SFR derivation and scheduler policy ownership unchanged, and prove that boundary with focused generated-week payload tests.
+- Extend API-facing generated-week response tests to assert the shipped plan `decision_trace` preserves scheduler mesocycle `stimulus_fatigue_response_source`, while keeping payload-helper, scheduler-policy, and SFR-derivation ownership unchanged.
 
 ## Closed Work Do Not Reopen Without Evidence
 

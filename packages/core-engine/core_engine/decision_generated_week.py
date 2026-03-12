@@ -464,6 +464,21 @@ def _generated_week_alternative_resolution(template_selection_trace: dict[str, A
     }
 
 
+def _resolve_generated_week_sfr_source(
+    *,
+    final_plan: dict[str, Any],
+    generation_runtime_trace: dict[str, Any],
+) -> str:
+    mesocycle_trace = _coerce_dict(_coerce_dict(_coerce_dict(final_plan.get("mesocycle")).get("decision_trace")))
+    mesocycle_outcome = _coerce_dict(mesocycle_trace.get("outcome"))
+    mesocycle_source = str(mesocycle_outcome.get("stimulus_fatigue_response_source") or "").strip()
+    if mesocycle_source:
+        return mesocycle_source
+
+    runtime_outcome = _coerce_dict(generation_runtime_trace.get("outcome"))
+    return str(runtime_outcome.get("stimulus_fatigue_response_source") or "").strip()
+
+
 def _generated_week_decision_trace(
     *,
     final_plan: dict[str, Any],
@@ -477,6 +492,10 @@ def _generated_week_decision_trace(
     adaptation_trace = _coerce_dict(_coerce_dict(final_plan.get("applied_frequency_adaptation")).get("decision_trace"))
     review_trace = _coerce_dict(review_overlay_trace)
     review_outcome = _coerce_dict(review_trace.get("outcome"))
+    stimulus_fatigue_response_source = _resolve_generated_week_sfr_source(
+        final_plan=final_plan,
+        generation_runtime_trace=generation_runtime_trace,
+    )
     return {
         "interpreter": "recommend_generated_week",
         "version": "v1",
@@ -490,6 +509,7 @@ def _generated_week_decision_trace(
             "prior_generated_weeks": runtime_outcome.get("prior_generated_weeks"),
             "latest_adherence_score": runtime_outcome.get("latest_adherence_score"),
             "severe_soreness_count": runtime_outcome.get("severe_soreness_count"),
+            "stimulus_fatigue_response_source": stimulus_fatigue_response_source,
             "stimulus_fatigue_response": deepcopy(runtime_outcome.get("stimulus_fatigue_response")),
         },
         "policy_basis": {
@@ -500,6 +520,7 @@ def _generated_week_decision_trace(
             "week_generation": {
                 "reason": "scheduler.generate_week_plan",
                 "deload_active": bool(_coerce_dict(final_plan.get("deload")).get("active")),
+                "stimulus_fatigue_response_source": stimulus_fatigue_response_source,
             },
             "review_overlay": {
                 "reason": str(review_trace.get("interpreter") or ""),
@@ -521,6 +542,7 @@ def _generated_week_decision_trace(
                     "session_count": len(final_plan.get("sessions") or []),
                     "week_start": final_plan.get("week_start"),
                     "deload_active": bool(_coerce_dict(final_plan.get("deload")).get("active")),
+                    "stimulus_fatigue_response_source": stimulus_fatigue_response_source,
                 },
             },
             {
@@ -540,6 +562,7 @@ def _generated_week_decision_trace(
             "review_applied": bool(final_plan.get("adaptive_review")),
             "frequency_adaptation_applied": bool(final_plan.get("applied_frequency_adaptation")),
             "state_updated": bool(adaptation_runtime.get("state_updated")),
+            "stimulus_fatigue_response_source": stimulus_fatigue_response_source,
         },
         "reason_summary": _generation_reason_summary(
             final_plan=final_plan,
