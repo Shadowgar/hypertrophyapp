@@ -165,9 +165,9 @@ Expected: file removed if created.
 
 **Files:**
 - Modify: `docs/current_state_decision_runtime_map.md`
-- Modify: `docs/GPT5_MINI_HANDOFF.md`
-- Modify: `docs/GPT5_MINI_EXECUTION_BACKLOG.md`
-- Modify: `docs/Master_Plan_Checkmark_Audit.md`
+- Modify: `docs/archive/ai-handoffs/GPT5_MINI_HANDOFF.md`
+- Modify: `docs/archive/ai-handoffs/GPT5_MINI_EXECUTION_BACKLOG.md`
+- Modify: `docs/audits/Master_Plan_Checkmark_Audit.md`
 
 **Step 1: Mark the new owner**
 

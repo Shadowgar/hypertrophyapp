@@ -62,8 +62,8 @@ Expected: PASS.
 - Create: `docs/testing/INTERNAL_TESTER_RUNBOOK.md`
 - Create: `docs/testing/INTERNAL_TEST_ISSUE_TEMPLATE.md`
 - Modify: `docs/plans/2026-03-11-user-testing-rollout-plan.md`
-- Modify: `docs/GPT5_MINI_HANDOFF.md`
-- Modify: `docs/GPT5_MINI_EXECUTION_BACKLOG.md`
+- Modify: `docs/archive/ai-handoffs/GPT5_MINI_HANDOFF.md`
+- Modify: `docs/archive/ai-handoffs/GPT5_MINI_EXECUTION_BACKLOG.md`
 
 **Step 1: Write concise tester docs**
 - Runbook should cover:

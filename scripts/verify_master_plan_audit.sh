@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-AUDIT_FILE="$ROOT/docs/Master_Plan_Checkmark_Audit.md"
+AUDIT_FILE="$ROOT/docs/audits/Master_Plan_Checkmark_Audit.md"
 
 if [[ ! -f "$AUDIT_FILE" ]]; then
   echo "[FAIL] Missing audit file: $AUDIT_FILE"

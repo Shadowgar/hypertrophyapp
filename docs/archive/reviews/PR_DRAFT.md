@@ -16,7 +16,7 @@ Files of interest
 
 Validation performed
 - Ran `./scripts/mini_preflight.sh` — passed.
-- Ran `./scripts/mini_validate.sh` — full output recorded in `docs/mini_validate_output.txt` and shows:
+- Ran `./scripts/mini_validate.sh` — full output recorded in `docs/archive/temp/mini_validate_output.txt` and shows:
 
 ```
 9 passed, 65 warnings
@@ -25,7 +25,7 @@ Next.js build succeeded (static pages generated)
 ```
 
 Notes / Guardrails
-- This work follows the locked contracts in `docs/GPT5_MINI_HANDOFF.md` — no runtime PDF/XLSX parsing, deterministic planning from `/programs/*.json`.
+- This work follows the locked contracts in `docs/archive/ai-handoffs/GPT5_MINI_HANDOFF.md` — no runtime PDF/XLSX parsing, deterministic planning from `/programs/*.json`.
 - Do NOT change `packages/core-engine/**`, `apps/api/alembic/**`, or auth semantics without Codex review.
 
 Suggested reviewers: backend owner, frontend owner, QA.

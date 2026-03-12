@@ -135,8 +135,8 @@ Migration invariants:
 
 Any contract change here requires synchronized updates to:
 
-- `docs/High_Risk_Contracts.md`
-- `docs/GPT5_MINI_HANDOFF.md`
+- `docs/contracts/High_Risk_Contracts.md`
+- `docs/DOCUMENTATION_STATUS.md`
 - `docs/Master_Plan.md`
 
 
@@ -163,4 +163,3 @@ Any contract change here requires synchronized updates to:
   - `passlib` and `python-jose` deprecation warnings removed from validation output.
   - `mini_validate` run now reports clean test results without warning spam in the default path.
 - Drift prevention protocol for next sessions: run `./scripts/mini_preflight.sh` and `./scripts/mini_next_task.sh` before implementation, and `./scripts/mini_validate.sh` before commit/push.
-

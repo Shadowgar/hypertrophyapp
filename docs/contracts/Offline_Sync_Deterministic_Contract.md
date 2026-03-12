@@ -140,7 +140,7 @@ Any change to these semantics requires coordinated updates to:
 - API handlers and replay persistence logic
 - Web offline queue client logic
 - tests for idempotency/conflict behavior
-- `docs/High_Risk_Contracts.md` and `docs/GPT5_MINI_HANDOFF.md`
+- `docs/contracts/High_Risk_Contracts.md` and `docs/DOCUMENTATION_STATUS.md`
 
 
 
@@ -166,4 +166,3 @@ Any change to these semantics requires coordinated updates to:
   - `passlib` and `python-jose` deprecation warnings removed from validation output.
   - `mini_validate` run now reports clean test results without warning spam in the default path.
 - Drift prevention protocol for next sessions: run `./scripts/mini_preflight.sh` and `./scripts/mini_next_task.sh` before implementation, and `./scripts/mini_validate.sh` before commit/push.
-

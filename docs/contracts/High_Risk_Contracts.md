@@ -75,7 +75,7 @@ Scope: endpoints consumed by current web flows.
 
 Scope: deterministic offline queue/replay and sync status semantics.
 
-- Canonical contract document: `docs/Offline_Sync_Deterministic_Contract.md`
+- Canonical contract document: `docs/contracts/Offline_Sync_Deterministic_Contract.md`
 - Replay must be idempotent via `(client_id, op_id)` semantics.
 - Ordering and conflict resolution behavior must remain deterministic.
 - Sync status states/transitions must match the contract state machine.
@@ -84,7 +84,7 @@ Scope: deterministic offline queue/replay and sync status semantics.
 
 Scope: secrets handling, rate limiting, backup/restore, and failure drill requirements.
 
-- Canonical contract document: `docs/Security_Hardening_Architecture.md`
+- Canonical contract document: `docs/architecture/Security_Hardening_Architecture.md`
 - Secrets strategy must enforce runtime-only secret injection and rotation boundaries.
 - Rate limiting behavior must return deterministic `429` semantics.
 - Backup/restore and failure drills must follow scripted, verifiable procedures.
@@ -93,7 +93,7 @@ Scope: secrets handling, rate limiting, backup/restore, and failure drill requir
 
 Scope: OAuth (Google/Apple) and Passkey (WebAuthn) architecture and identity-linking semantics.
 
-- Canonical contract document: `docs/Auth_Expansion_Architecture.md`
+- Canonical contract document: `docs/architecture/Auth_Expansion_Architecture.md`
 - Auth methods are additive and must preserve existing password/JWT flows.
 - Identity linking across methods must be deterministic and conflict-safe.
 - Auth endpoint error semantics (`401/409/422`) must remain predictable and testable.
@@ -103,7 +103,7 @@ Scope: OAuth (Google/Apple) and Passkey (WebAuthn) architecture and identity-lin
 Before merging changes in these areas:
 - Run focused API tests for changed contract surfaces.
 - Run web tests/build for affected consumers.
-- Update this file and `docs/GPT5_MINI_HANDOFF.md` if any contract boundary changes.
+- Update this file and `docs/DOCUMENTATION_STATUS.md` if any contract boundary changes.
 
 
 
@@ -129,4 +129,3 @@ Before merging changes in these areas:
   - `passlib` and `python-jose` deprecation warnings removed from validation output.
   - `mini_validate` run now reports clean test results without warning spam in the default path.
 - Drift prevention protocol for next sessions: run `./scripts/mini_preflight.sh` and `./scripts/mini_next_task.sh` before implementation, and `./scripts/mini_validate.sh` before commit/push.
-

@@ -5,10 +5,10 @@ Last updated: 2026-03-07
 ## Start Sequence
 
 1. Read:
-- `docs/AI_CONTINUATION_GOVERNANCE.md`
+- `docs/archive/ai-handoffs/AI_CONTINUATION_GOVERNANCE.md`
 - `docs/Master_Plan.md`
 - `docs/redesign/Adaptive_Coaching_Redesign.md`
-- `docs/GPT5_MINI_EXECUTION_BACKLOG.md`
+- `docs/archive/ai-handoffs/GPT5_MINI_EXECUTION_BACKLOG.md`
 
 2. Preflight:
 ```bash

@@ -130,8 +130,8 @@ This document sets architecture and contracts. It does not claim all implementat
 
 If these contracts change, update in the same session:
 
-- `docs/High_Risk_Contracts.md`
-- `docs/GPT5_MINI_HANDOFF.md`
+- `docs/contracts/High_Risk_Contracts.md`
+- `docs/DOCUMENTATION_STATUS.md`
 - `docs/Master_Plan.md`
 
 
@@ -158,4 +158,3 @@ If these contracts change, update in the same session:
   - `passlib` and `python-jose` deprecation warnings removed from validation output.
   - `mini_validate` run now reports clean test results without warning spam in the default path.
 - Drift prevention protocol for next sessions: run `./scripts/mini_preflight.sh` and `./scripts/mini_next_task.sh` before implementation, and `./scripts/mini_validate.sh` before commit/push.
-

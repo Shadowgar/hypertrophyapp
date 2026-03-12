@@ -1,5 +1,9 @@
 # AI Continuation Governance - Adaptive Coaching Rebuild
 
+Archive status: historical AI-operational guidance only.
+Current constitutional authority lives in `docs/architecture/GOVERNANCE_CONSTITUTION.md`.
+Current runtime ownership authority lives in `docs/architecture/RUNTIME_AUTHORITY_MAP.md` and `docs/current_state_decision_runtime_map.md`.
+
 Last updated: 2026-03-07
 
 ## Purpose
@@ -10,12 +14,12 @@ Read this before implementing new coaching behavior.
 
 ## Required Read Order
 
-1. `docs/AI_CONTINUATION_GOVERNANCE.md`
+1. `docs/archive/ai-handoffs/AI_CONTINUATION_GOVERNANCE.md`
 2. `docs/Master_Plan.md`
 3. `docs/Architecture.md`
-4. `docs/Working_Agreements.md`
-5. `docs/GPT5_MINI_EXECUTION_BACKLOG.md`
-6. `docs/EXHAUSTIVE_PROJECT_REVIEW_2026-03-07.md`
+4. `docs/process/Working_Agreements.md`
+5. `docs/archive/ai-handoffs/GPT5_MINI_EXECUTION_BACKLOG.md`
+6. `docs/archive/reviews/EXHAUSTIVE_PROJECT_REVIEW_2026-03-07.md`
 
 ## Current Architectural Diagnosis
 

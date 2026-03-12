@@ -10,10 +10,10 @@ Rebuild the platform into a deterministic adaptive hypertrophy coaching system b
 
 ## Active Baseline Docs
 
-- `docs/AI_CONTINUATION_GOVERNANCE.md`
+- `docs/archive/ai-handoffs/AI_CONTINUATION_GOVERNANCE.md`
 - `docs/Master_Plan.md`
 - `docs/redesign/Adaptive_Coaching_Redesign.md`
-- `docs/GPT5_MINI_EXECUTION_BACKLOG.md`
+- `docs/archive/ai-handoffs/GPT5_MINI_EXECUTION_BACKLOG.md`
 
 ## Current State Snapshot
 

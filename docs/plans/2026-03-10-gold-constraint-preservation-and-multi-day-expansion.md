@@ -59,10 +59,10 @@ Run focused adaptive-gold loader/API/workout tests.
 ### Task 3: Update docs with new current-state truth
 
 **Files:**
-- Modify: `docs/GPT5_MINI_EXECUTION_BACKLOG.md`
-- Modify: `docs/GPT5_MINI_HANDOFF.md`
-- Modify: `docs/Master_Plan_Checkmark_Audit.md`
-- Modify: `docs/CODEX_5_3_PASSOFF_PROMPT.md`
+- Modify: `docs/archive/ai-handoffs/GPT5_MINI_EXECUTION_BACKLOG.md`
+- Modify: `docs/archive/ai-handoffs/GPT5_MINI_HANDOFF.md`
+- Modify: `docs/audits/Master_Plan_Checkmark_Audit.md`
+- Modify: `docs/archive/ai-handoffs/CODEX_5_3_PASSOFF_PROMPT.md`
 
 **Step 1: Update evidence**
 - Record that adaptive gold is now multi-day authored doctrine.

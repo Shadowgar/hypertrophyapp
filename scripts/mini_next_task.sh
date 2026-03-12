@@ -13,7 +13,7 @@ BACKLOG_TASK="$(awk '
       exit
     }
   }
-' docs/GPT5_MINI_EXECUTION_BACKLOG.md || true)"
+' docs/archive/ai-handoffs/GPT5_MINI_EXECUTION_BACKLOG.md || true)"
 
 if [[ -n "${BACKLOG_TASK:-}" ]]; then
   echo "BACKLOG: ${BACKLOG_TASK}"
@@ -38,4 +38,4 @@ if [[ -n "${MASTER_TASK:-}" ]]; then
   exit 0
 fi
 
-echo "No incomplete task found in docs/GPT5_MINI_EXECUTION_BACKLOG.md or docs/Master_Plan.md"
+echo "No incomplete task found in docs/archive/ai-handoffs/GPT5_MINI_EXECUTION_BACKLOG.md or docs/Master_Plan.md"

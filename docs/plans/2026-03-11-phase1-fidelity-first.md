@@ -284,9 +284,9 @@ git add apps/web/lib/api.ts apps/web/app/week/page.tsx apps/web/app/today/page.t
 
 **Files:**
 - Modify: `docs/Master_Plan.md`
-- Modify: `docs/GPT5_MINI_HANDOFF.md`
-- Modify: `docs/GPT5_MINI_EXECUTION_BACKLOG.md`
-- Modify: `docs/Master_Plan_Checkmark_Audit.md`
+- Modify: `docs/archive/ai-handoffs/GPT5_MINI_HANDOFF.md`
+- Modify: `docs/archive/ai-handoffs/GPT5_MINI_EXECUTION_BACKLOG.md`
+- Modify: `docs/audits/Master_Plan_Checkmark_Audit.md`
 - Modify: `docs/current_state_decision_runtime_map.md`
 - Modify: `docs/DOCUMENTATION_STATUS.md`
 
@@ -318,6 +318,6 @@ Expected:
 **Step 4: Commit**
 
 ```bash
-git add docs/Master_Plan.md docs/GPT5_MINI_HANDOFF.md docs/GPT5_MINI_EXECUTION_BACKLOG.md docs/Master_Plan_Checkmark_Audit.md docs/current_state_decision_runtime_map.md docs/DOCUMENTATION_STATUS.md
+git add docs/Master_Plan.md docs/archive/ai-handoffs/GPT5_MINI_HANDOFF.md docs/archive/ai-handoffs/GPT5_MINI_EXECUTION_BACKLOG.md docs/audits/Master_Plan_Checkmark_Audit.md docs/current_state_decision_runtime_map.md docs/DOCUMENTATION_STATUS.md
  git commit -m "docs: record phase1 fidelity-first execution evidence"
 ```

@@ -5,10 +5,10 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 required_files=(
-  "docs/GPT5_MINI_HANDOFF.md"
-  "docs/GPT5_MINI_EXECUTION_BACKLOG.md"
-  "docs/GPT5_MINI_RUNBOOK.md"
-  "docs/GPT5_MINI_SUCCESS_PLAN.md"
+  "docs/archive/ai-handoffs/GPT5_MINI_HANDOFF.md"
+  "docs/archive/ai-handoffs/GPT5_MINI_EXECUTION_BACKLOG.md"
+  "docs/archive/ai-handoffs/GPT5_MINI_RUNBOOK.md"
+  "docs/archive/ai-handoffs/GPT5_MINI_SUCCESS_PLAN.md"
   "docs/Master_Plan.md"
 )
 

@@ -11,7 +11,7 @@ Last updated: 2026-03-11
 - Status: STARTED
 
 Evidence (2026-03-07)
-- `docs/AI_CONTINUATION_GOVERNANCE.md`: repository law for decision-runtime sovereignty, legacy containment, and trace requirements.
+- `docs/archive/ai-handoffs/AI_CONTINUATION_GOVERNANCE.md`: repository law for decision-runtime sovereignty, legacy containment, and trace requirements.
 - `apps/api/app/routers/profile.py` and `packages/core-engine/core_engine/intelligence.py`: program recommendation is the first decision family being migrated behind a core-engine interpreter with a structured decision trace.
 
 Direction Lock (2026-03-10)

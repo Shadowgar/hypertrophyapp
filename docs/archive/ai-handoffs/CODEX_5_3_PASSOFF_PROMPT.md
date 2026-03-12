@@ -12,15 +12,15 @@ You must continue the deterministic adaptive hypertrophy coaching rebuild withou
 
 Start by reading these docs in order:
 
-1. `docs/AI_CONTINUATION_GOVERNANCE.md`
+1. `docs/archive/ai-handoffs/AI_CONTINUATION_GOVERNANCE.md`
 2. `docs/Master_Plan.md`
 3. `docs/Architecture.md`
 4. `docs/current_state_decision_runtime_map.md`
 5. `docs/redesign/Adaptive_Coaching_Redesign.md`
-6. `docs/GPT5_MINI_HANDOFF.md`
-7. `docs/GPT5_MINI_EXECUTION_BACKLOG.md`
-8. `docs/Master_Plan_Checkmark_Audit.md`
-9. `docs/CODEX_5_3_PASSOFF_PROMPT.md`
+6. `docs/archive/ai-handoffs/GPT5_MINI_HANDOFF.md`
+7. `docs/archive/ai-handoffs/GPT5_MINI_EXECUTION_BACKLOG.md`
+8. `docs/audits/Master_Plan_Checkmark_Audit.md`
+9. `docs/archive/ai-handoffs/CODEX_5_3_PASSOFF_PROMPT.md`
 
 Then inspect these implementation files before changing code:
 
@@ -159,9 +159,9 @@ Recommended workflow:
 5. Run focused engine and/or API tests tied to that seam.
 6. If the boundary meaningfully changes, update:
    - `docs/current_state_decision_runtime_map.md`
-   - `docs/GPT5_MINI_HANDOFF.md`
-   - `docs/GPT5_MINI_EXECUTION_BACKLOG.md`
-   - `docs/Master_Plan_Checkmark_Audit.md` when evidence materially changes
+   - `docs/archive/ai-handoffs/GPT5_MINI_HANDOFF.md`
+   - `docs/archive/ai-handoffs/GPT5_MINI_EXECUTION_BACKLOG.md`
+   - `docs/audits/Master_Plan_Checkmark_Audit.md` when evidence materially changes
 7. Clean up temporary SQLite files.
 8. Report exactly what changed, what passed, whether `mini_validate` was run, and what the next likely seam is.
 

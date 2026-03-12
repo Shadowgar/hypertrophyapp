@@ -8,7 +8,7 @@ Purpose: classify ingestion-centered and adjacent modules into keep/isolate/depr
 
 | Path | Why keep | Required follow-up |
 | --- | --- | --- |
-| `importers/xlsx_to_program.py` | Build-time XLSX importer and normalization entrypoint. | Implement importer v2 contracts from `docs/Canonical_Program_Schema.md`. |
+| `importers/xlsx_to_program.py` | Build-time XLSX importer and normalization entrypoint. | Implement importer v2 contracts from `docs/contracts/Canonical_Program_Schema.md`. |
 | `importers/reference_corpus_ingest.py` | Build-time provenance catalog generation from `/reference`. | Keep output as provenance only; do not expose as runtime coaching input. |
 | `importers/ingestion_quality_report.py` | Quality diagnostics for canonical program coverage. | Extend with v2 schema conformance metrics. |
 | `scripts/generate_ingestion_quality_report.py` | Deterministic generation of report artifacts in `docs/validation/`. | Keep in CI/local validation path. |

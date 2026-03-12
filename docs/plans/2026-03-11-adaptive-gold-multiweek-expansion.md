@@ -50,10 +50,10 @@
 ### Task 4: Update evidence docs and verify
 
 **Files:**
-- Modify: `docs/GPT5_MINI_HANDOFF.md`
-- Modify: `docs/GPT5_MINI_EXECUTION_BACKLOG.md`
-- Modify: `docs/Master_Plan_Checkmark_Audit.md`
-- Modify: `docs/CODEX_5_3_PASSOFF_PROMPT.md`
+- Modify: `docs/archive/ai-handoffs/GPT5_MINI_HANDOFF.md`
+- Modify: `docs/archive/ai-handoffs/GPT5_MINI_EXECUTION_BACKLOG.md`
+- Modify: `docs/audits/Master_Plan_Checkmark_Audit.md`
+- Modify: `docs/archive/ai-handoffs/CODEX_5_3_PASSOFF_PROMPT.md`
 
 **Steps:**
 1. Record multi-week authored doctrine support and week-selection proof.

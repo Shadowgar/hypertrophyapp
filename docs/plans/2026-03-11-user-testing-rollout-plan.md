@@ -1,6 +1,6 @@
 # User Testing Rollout Plan
 
-> **For Codex:** Keep this aligned with `docs/Master_Plan.md`, `docs/GPT5_MINI_HANDOFF.md`, and `docs/GPT5_MINI_SUCCESS_PLAN.md` as release readiness evolves.
+> **For Codex:** Keep this aligned with `docs/Master_Plan.md`, `docs/archive/ai-handoffs/GPT5_MINI_HANDOFF.md`, and `docs/archive/ai-handoffs/GPT5_MINI_SUCCESS_PLAN.md` as release readiness evolves.
 
 **Goal:** Create a practical path for real user testing on desktop and mobile without derailing the deterministic coaching rebuild.
 

@@ -6,13 +6,13 @@ Use this prompt at the start of every mini session:
 You are GPT-5-mini continuing work in this repository.
 
 Before writing code:
-1. Read `docs/GPT5_MINI_HANDOFF.md`, `docs/GPT5_MINI_EXECUTION_BACKLOG.md`, `docs/GPT5_MINI_RUNBOOK.md`, and `docs/GPT5_MINI_SUCCESS_PLAN.md`.
+1. Read `docs/archive/ai-handoffs/GPT5_MINI_HANDOFF.md`, `docs/archive/ai-handoffs/GPT5_MINI_EXECUTION_BACKLOG.md`, `docs/archive/ai-handoffs/GPT5_MINI_RUNBOOK.md`, and `docs/archive/ai-handoffs/GPT5_MINI_SUCCESS_PLAN.md`.
 2. Run `./scripts/mini_session.sh` (preferred) or `./scripts/mini_preflight.sh`.
 3. Pick the highest-priority backlog task (command below) and continue until complete.
 4. You may edit any repository area required to complete the task.
 
 ```bash
-cd /home/rocco/hypertrophyapp && awk '/^### Task/{task=$0} /^ Status:/{if($0 !~ /COMPLETED/){print task; exit}}' docs/GPT5_MINI_EXECUTION_BACKLOG.md
+cd /home/rocco/hypertrophyapp && awk '/^### Task/{task=$0} /^ Status:/{if($0 !~ /COMPLETED/){print task; exit}}' docs/archive/ai-handoffs/GPT5_MINI_EXECUTION_BACKLOG.md
 ```
 
 After coding:

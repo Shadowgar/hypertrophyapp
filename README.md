@@ -132,8 +132,8 @@ Common gotchas:
 
 Reference contracts:
 - `docs/Architecture.md`
-- `docs/High_Risk_Contracts.md`
-- `docs/Canonical_Program_Schema.md`
+- `docs/contracts/High_Risk_Contracts.md`
+- `docs/contracts/Canonical_Program_Schema.md`
 
 ## Quick Start
 
@@ -200,9 +200,9 @@ Behavior:
 - These controls are for local/dev environments and should not be enabled for production deployments.
 
 Related docs:
-- `docs/Onboarding_and_Flows.md`
+- `docs/flows/Onboarding_and_Flows.md`
 - `docs/redesign/Onboarding_Reference_Process_Map.md`
-- `docs/Auth_Expansion_Architecture.md`
+- `docs/architecture/Auth_Expansion_Architecture.md`
 
 ## History Calendar API (MVP)
 
@@ -238,18 +238,21 @@ Notes:
 
 ## Documentation Map
 
-Execution and priority:
-- `docs/Master_Plan.md`
-- `docs/GPT5_MINI_EXECUTION_BACKLOG.md`
-- `docs/GPT5_MINI_HANDOFF.md`
-
-Architecture and contracts:
+Read first:
+- `docs/DOCUMENTATION_STATUS.md`
+- `docs/architecture/GOVERNANCE_CONSTITUTION.md`
+- `docs/architecture/RUNTIME_AUTHORITY_MAP.md`
+- `docs/current_state_decision_runtime_map.md`
 - `docs/Architecture.md`
-- `docs/Canonical_Program_Schema.md`
-- `docs/High_Risk_Contracts.md`
-- `docs/Offline_Sync_Deterministic_Contract.md`
-- `docs/Security_Hardening_Architecture.md`
-- `docs/Auth_Expansion_Architecture.md`
+- `docs/Master_Plan.md`
+
+Supporting contracts:
+- `docs/Architecture.md`
+- `docs/contracts/Canonical_Program_Schema.md`
+- `docs/contracts/High_Risk_Contracts.md`
+- `docs/contracts/Offline_Sync_Deterministic_Contract.md`
+- `docs/architecture/Security_Hardening_Architecture.md`
+- `docs/architecture/Auth_Expansion_Architecture.md`
 
 Onboarding redesign/parity:
 - `docs/redesign/Onboarding_Reference_Analysis_Batch1.md`
@@ -257,31 +260,7 @@ Onboarding redesign/parity:
 - `docs/redesign/Onboarding_Reference_Analysis_Batch3.md`
 - `docs/redesign/Onboarding_Reference_Process_Map.md`
 
-## AI Mini Runbook (GPT-5-mini)
-
-- **Mission:** Rebuild the platform into a deterministic adaptive hypertrophy coaching system (Excel-derived structured templates + PDF-derived explicit coaching rules).
-- **Key runbook docs:** `docs/GPT5_MINI_HANDOFF.md`, `docs/GPT5_MINI_EXECUTION_BACKLOG.md`, `docs/GPT5_MINI_RUNBOOK.md`, `docs/GPT5_MINI_SUCCESS_PLAN.md`, `docs/GPT5_MINI_BOOTSTRAP_PROMPT.md`, `docs/GPT5_MINI_PASSOFF_PROMPT.md`.
-
-- **Start sequence:**
-   - Run the preflight: `./scripts/mini_preflight.sh` (or preferred `./scripts/mini_session.sh`).
-   - Pick the next highest-priority task: `./scripts/mini_next_task.sh`.
-   - Implement a single focused seam, run focused tests, then run full validation.
-
-- **Ingestion modes:** `./scripts/reference_ingest.sh [ci|local-metadata|local-full]` (see `docs/GPT5_MINI_RUNBOOK.md`).
-
-- **Validation / Delivery:**
-   - Focused tests: run from `apps/api` or `packages/core-engine` with the direct `.venv/bin/python -m pytest` pattern.
-   - Full gate: `./scripts/mini_validate.sh` (runs API tests, web tests, and Next.js production build).
-   - Quality checks: `./scripts/verify_master_plan_audit.sh`, `./scripts/verify_guides_checksums.py`.
-
-**Execution Backlog Snapshot (high-level priorities)**
-
-- Priority 0 — Decision Runtime Sovereignty: move meaningful coaching decisions behind `packages/core-engine` interpreters, emit structured `decision_trace`, and contain legacy router paths.
-- Priority 1 — Importer & Rules: Excel importer v2 (preserve phases/weeks/slots, emit diagnostics) and PDF doctrine rule distillation (typed rule payloads with provenance).
-- Priority 2 — Deterministic Adaptation Core: deterministic generate -> evaluate -> adapt loop; frequency-adaptation preview/apply and coach-preview flows.
-- Priority 3 — Scale & Hardening: gold-sample migration, scenario/regression expansion, onboarding reliability, and archive hygiene.
-
-See `docs/GPT5_MINI_EXECUTION_BACKLOG.md` for the full task list and evidence log.
+Archived AI handoff/runbook material now lives under `docs/archive/ai-handoffs/`. Treat it as historical context, not architectural authority.
 
 ## Monorepo Layout
 
@@ -299,4 +278,3 @@ See `docs/GPT5_MINI_EXECUTION_BACKLOG.md` for the full task list and evidence lo
 Mini-validate (runs on PRs):
 
 ![mini-validate](https://github.com/Shadowgar/hypertrophyapp/actions/workflows/mini-validate.yml/badge.svg)
-

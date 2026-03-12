@@ -1,83 +1,100 @@
 # Documentation Status
 
-Last updated: 2026-03-11
+Last updated: 2026-03-12
 
-Purpose: make the `docs/` folder legible so future work stays aligned. This file is the map, not the doctrine. The doctrine still lives in the source-of-truth docs listed below.
+Purpose: this is the canonical documentation index. Use it to determine what is authoritative, what is supporting, and what is archived.
 
-## Source Of Truth
-These should drive engineering decisions first.
+## Read First
 
-- `docs/AI_CONTINUATION_GOVERNANCE.md`: repository law for sovereignty, traces, and anti-drift rules. Status: current.
-- `docs/Master_Plan.md`: project direction, phase ordering, and current delta. Status: current.
-- `docs/Architecture.md`: runtime architecture and system intent. Status: current.
-- `docs/current_state_decision_runtime_map.md`: current owner map for decision families. Status: current.
-- `docs/GPT5_MINI_HANDOFF.md`: branch-local implementation state and immediate next work. Status: current.
-- `docs/GPT5_MINI_EXECUTION_BACKLOG.md`: execution evidence log and ordered backlog. Status: current.
-- `docs/Master_Plan_Checkmark_Audit.md`: audit-style evidence summary against the master plan. Status: current.
-- `docs/CODEX_5_3_PASSOFF_PROMPT.md`: operational passoff for the next coding agent. Status: current.
+1. `docs/DOCUMENTATION_STATUS.md`
+2. `docs/architecture/GOVERNANCE_CONSTITUTION.md`
+3. `docs/architecture/RUNTIME_AUTHORITY_MAP.md`
+4. `docs/current_state_decision_runtime_map.md`
+5. `docs/Architecture.md`
+6. `docs/Master_Plan.md`
 
-## Active Supporting Docs
-These are active and useful, but not the first place to resolve architectural disputes.
+## Authoritative Docs
 
-- `docs/GPT5_MINI_SUCCESS_PLAN.md`: success and readiness framing. Status: current, supports release/beta thinking.
-- `docs/Onboarding_and_Flows.md`: product flow summary. Status: current for core user flows.
-- `docs/Canonical_Program_Schema.md`: schema intent reference. Status: supporting.
-- `docs/High_Risk_Contracts.md`: contract-risk reference. Status: supporting.
-- `docs/Offline_Sync_Deterministic_Contract.md`: offline/mobile sync contract. Status: supporting.
-- `docs/Security_Hardening_Architecture.md`: security hardening reference. Status: supporting.
-- `docs/Auth_Expansion_Architecture.md`: auth architecture reference. Status: supporting.
-- `docs/Working_Agreements.md`: team/process conventions. Status: supporting.
-- `docs/Hyperdrive_Screenshot_Parity_Checklist.md`: responsive/parity checklist. Status: supporting.
-- `docs/plans/2026-03-11-user-testing-rollout-plan.md`: current user-testing rollout plan. Status: current supporting plan.
+These are the only documents that should settle architectural authority disputes.
 
-## Active Plan Docs
-These are execution snapshots for specific implementation waves.
+- `docs/architecture/GOVERNANCE_CONSTITUTION.md`
+  Constitutional authority for sovereignty, trust, traces, and architectural law.
+- `docs/architecture/RUNTIME_AUTHORITY_MAP.md`
+  Permanent ownership map for runtime authority.
+- `docs/current_state_decision_runtime_map.md`
+  Operational current-state ownership map for the branch reality.
+- `docs/Architecture.md`
+  Active runtime architecture and boundary description.
+- `docs/Master_Plan.md`
+  Project direction and execution order.
 
-- `docs/plans/2026-03-10-live-workout-guidance-extraction.md`: completed/active reference.
-- `docs/plans/2026-03-10-gold-constraint-preservation-and-multi-day-expansion.md`: completed/active reference.
-- `docs/plans/2026-03-11-adaptive-gold-multiweek-expansion.md`: completed/active reference.
-- `docs/plans/2026-03-11-adaptive-gold-authored-deload-expansion.md`: completed/active reference.
-- `docs/plans/2026-03-11-user-testing-rollout-plan.md`: current user-testing rollout plan.
+## Top-Level Daily Drivers
 
-## Historical / Reference Docs
-These are still useful context, but should not override the source-of-truth docs.
+Top-level `docs/` is intentionally limited to:
 
-- `docs/GPT5_MINI_BOOTSTRAP_PROMPT.md`: historical setup prompt. Status: historical.
-- `docs/GPT5_MINI_PASSOFF_PROMPT.md`: older passoff prompt. Status: historical.
-- `docs/GPT5_MINI_RUNBOOK.md`: older operational runbook. Status: historical/supporting.
-- `docs/PR_DRAFT.md`: temporary PR material. Status: historical.
-- `docs/EXHAUSTIVE_PROJECT_REVIEW_2026-03-07.md`: historical review snapshot. Status: historical.
-- `docs/DESIGN_INTENT_COMPARISON_2026-03-07.md`: historical comparison snapshot. Status: historical.
-- `docs/OpenClaw_Integration_Stub.md`: stub/reference only. Status: historical or future-facing.
+- `docs/DOCUMENTATION_STATUS.md`
+- `docs/Master_Plan.md`
+- `docs/Architecture.md`
+- `docs/current_state_decision_runtime_map.md`
 
-## Redesign Folder
-These documents explain the redesign rationale and earlier migration thinking. They remain valuable but are no longer the day-to-day source of truth.
+Everything else should live in a supporting folder or archive.
 
-- `docs/redesign/Adaptive_Coaching_Redesign.md`: still a primary design reference, but subordinate to current-state docs for ownership details.
-- `docs/redesign/Architecture_Audit_Matrix.md`: historical audit output. Status: reference.
-- `docs/redesign/Onboarding_Reference_Analysis_Batch1.md`: reference.
-- `docs/redesign/Onboarding_Reference_Analysis_Batch2.md`: reference.
-- `docs/redesign/Onboarding_Reference_Analysis_Batch3.md`: reference.
-- `docs/redesign/Onboarding_Reference_Process_Map.md`: reference.
-- `docs/redesign/Program_Onboarding_Architecture_Phase1.md`: reference, still useful for workbook-driven doctrine structure.
+## Supporting Docs
 
-## Guides Folder
-These are build-time and provenance artifacts. They are explicitly not runtime coaching authority.
+These are active references, but they are subordinate to the authoritative set above.
 
-- `docs/guides/FULL_EXTRACTION_RUNBOOK.md`: build-time extraction reference.
-- `docs/guides/asset_catalog.json`: artifact index.
-- `docs/guides/provenance_index.json`: provenance artifact.
-- `docs/guides/generated/*`: generated reference material only. Do not treat as runtime inputs.
+- `docs/architecture/`
+  Supporting architecture references, milestones, remediation checklists, and trust-model material.
+- `docs/contracts/`
+  Active schema and contract docs:
+  `Canonical_Program_Schema.md`, `High_Risk_Contracts.md`, `Offline_Sync_Deterministic_Contract.md`
+- `docs/audits/`
+  Audit evidence and review snapshots used to evaluate branch reality.
+- `docs/validation/`
+  Validation evidence and generated reports.
+- `docs/testing/`
+  Testing runbooks and internal tester guidance.
+- `docs/flows/`
+  Product-flow and onboarding flow references.
+- `docs/process/`
+  Contributor/process references such as working agreements.
+- `docs/ui-parity/`
+  UI parity checklists and capture folders.
+- `docs/plans/`
+  Implementation plans and execution-wave planning artifacts.
+- `docs/redesign/`
+  Legacy redesign/reference material that still informs current structure but is not day-to-day authority.
+- `docs/guides/`
+  Build-time extraction and provenance artifacts only. Not runtime coaching authority.
 
-## Validation Folder
-These are evidence artifacts.
+## Archived Docs
 
-- `docs/validation/ingestion_quality_report.md`
-- `docs/validation/ingestion_quality_report.json`
-- `docs/validation/mobile_perf_metrics.md`
-- `docs/validation/mobile_perf_metrics.json`
+These are preserved for history, AI handoff context, or review evidence. They are not authoritative.
 
-Status for all: supporting evidence, not planning authority.
+- `docs/archive/ai-handoffs/`
+  Archived AI prompts, handoffs, runbooks, backlogs, and temporary governance scaffolding.
+  `AI_CONTINUATION_GOVERNANCE.md` is archived here and explicitly demoted; constitutional governance now lives in `docs/architecture/GOVERNANCE_CONSTITUTION.md`.
+- `docs/archive/reviews/`
+  Historical review snapshots and draft review material.
+- `docs/archive/historical/`
+  Historical stubs and deferred-reference documents.
+- `docs/archive/temp/`
+  Temporary output artifacts retained only as historical evidence.
 
-## Current Direction In One Paragraph
-The project is building a deterministic hypertrophy coaching platform with canonical templates, canonical rules, canonical user state, and a core-engine decision runtime that explains itself. The adaptive-gold path is the current validation spine and now includes a 10-week authored mesocycle. The next major work is validating post-week-10 behavior, broadening doctrine coverage, and preparing safe desktop/mobile browser user testing.
+## Structure Rules
+
+- Do not create new top-level docs unless they belong in the daily-driver set.
+- If a document governs architecture, prefer updating an existing authoritative doc instead of creating a peer.
+- If a doc is AI-operational, dated, temporary, or handoff-specific, archive it instead of keeping it at the top level.
+- If a doc becomes stale but still contains useful evidence, move it to archive rather than deleting it.
+
+## Quick Classification Guide
+
+- Architectural law: `docs/architecture/GOVERNANCE_CONSTITUTION.md`
+- Runtime ownership: `docs/architecture/RUNTIME_AUTHORITY_MAP.md`
+- Current branch ownership reality: `docs/current_state_decision_runtime_map.md`
+- System architecture: `docs/Architecture.md`
+- Project direction: `docs/Master_Plan.md`
+- Contracts and schemas: `docs/contracts/`
+- Audits and evidence: `docs/audits/`, `docs/validation/`
+- Historical or AI-operational context: `docs/archive/`

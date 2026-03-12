@@ -12,12 +12,12 @@ Your job is to continue the deterministic adaptive hypertrophy coaching rebuild 
 
 Read these files first, in this order:
 
-1. `docs/AI_CONTINUATION_GOVERNANCE.md`
+1. `docs/archive/ai-handoffs/AI_CONTINUATION_GOVERNANCE.md`
 2. `docs/Master_Plan.md`
 3. `docs/redesign/Adaptive_Coaching_Redesign.md`
-4. `docs/GPT5_MINI_HANDOFF.md`
-5. `docs/GPT5_MINI_EXECUTION_BACKLOG.md`
-6. `docs/Master_Plan_Checkmark_Audit.md`
+4. `docs/archive/ai-handoffs/GPT5_MINI_HANDOFF.md`
+5. `docs/archive/ai-handoffs/GPT5_MINI_EXECUTION_BACKLOG.md`
+6. `docs/audits/Master_Plan_Checkmark_Audit.md`
 7. `README.md`
 
 Then inspect these implementation files before making changes:
@@ -102,9 +102,9 @@ Validation protocol:
 Documentation protocol:
 
 1. If you move a meaningful boundary into core-engine, update:
-   - `docs/GPT5_MINI_HANDOFF.md`
-   - `docs/GPT5_MINI_EXECUTION_BACKLOG.md`
-   - `docs/Master_Plan_Checkmark_Audit.md` when the evidence summary materially changes
+   - `docs/archive/ai-handoffs/GPT5_MINI_HANDOFF.md`
+   - `docs/archive/ai-handoffs/GPT5_MINI_EXECUTION_BACKLOG.md`
+   - `docs/audits/Master_Plan_Checkmark_Audit.md` when the evidence summary materially changes
 2. If the change is only internal router cleanup with no new architectural boundary, docs can stay unchanged unless the handoff would become misleading.
 
 What to avoid:

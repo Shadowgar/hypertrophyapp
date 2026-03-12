@@ -150,8 +150,8 @@ Derived rollups:
 ### Evidence
 
 - `docs/Architecture.md`
-- `docs/High_Risk_Contracts.md`
-- `docs/Master_Plan_Checkmark_Audit.md`
+- `docs/contracts/High_Risk_Contracts.md`
+- `docs/audits/Master_Plan_Checkmark_Audit.md`
 - `apps/api/tests/test_runtime_source_boundaries.py`
 
 ### Remaining work
@@ -354,7 +354,7 @@ Derived rollups:
 - `apps/api/tests/*`
 - `apps/web/tests/*`
 - `scripts/mini_validate.sh`
-- `docs/Master_Plan_Checkmark_Audit.md`
+- `docs/audits/Master_Plan_Checkmark_Audit.md`
 
 ### What is not done
 
