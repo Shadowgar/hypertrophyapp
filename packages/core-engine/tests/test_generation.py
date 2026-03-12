@@ -528,8 +528,6 @@ def test_build_coach_preview_context_reuses_serialized_recent_training_history()
         "program_template": template,
         "history": serialized_history,
         "coaching_state": {},
-        "readiness_state": {},
-        "latest_mesocycle": {},
         "phase": "maintenance",
         "available_equipment": ["barbell", "bench"],
     }
@@ -608,6 +606,8 @@ def test_build_coach_preview_context_prefers_canonical_training_state_history() 
             "phase_transition_pending": True,
         },
     }
+    assert "readiness_state" not in context
+    assert "latest_mesocycle" not in context
 
 
 def test_prepare_coach_preview_runtime_inputs_normalizes_days_and_trace() -> None:

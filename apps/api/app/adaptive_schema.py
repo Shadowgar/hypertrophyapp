@@ -448,7 +448,9 @@ class UserTrainingState(BaseModel):
     fatigue_state: FatigueState
     adherence_state: AdherenceState
     readiness_state: ReadinessState = Field(default_factory=ReadinessState)
-    coaching_state: CoachingState
+    coaching_state: CoachingState = Field(
+        description="Canonical coaching decision state used by preview and coaching runtime surfaces."
+    )
     constraint_state: ConstraintState
     stall_state: StallState
     generation_state: GenerationState = Field(default_factory=GenerationState)

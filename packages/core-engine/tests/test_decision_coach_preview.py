@@ -517,6 +517,88 @@ def test_recommend_coach_intelligence_preview_prefers_context_coaching_state_whe
     assert coaching_state_step["result"]["stagnation_weeks"] == 2
 
 
+def test_recommend_coach_intelligence_preview_ignores_legacy_preview_context_fields_without_canonical_state() -> None:
+    captured: dict[str, object] = {}
+    captured_phase_kwargs: dict[str, object] = {}
+
+    def _derive_readiness_score(**kwargs: object) -> int:
+        captured.update(kwargs)
+        return 48
+
+    def _recommend_phase_transition(**kwargs: object) -> dict[str, object]:
+        captured_phase_kwargs.update(kwargs)
+        return {"next_phase": kwargs["current_phase"], "reason": "continue"}
+
+    preview = recommend_coach_intelligence_preview(
+        template_id="full_body_v1",
+        context={
+            "program_template": {},
+            "user_profile": {},
+            "readiness_state": {
+                "sleep_quality": 1,
+                "stress_level": 5,
+                "pain_flags": ["legacy_flag"],
+            },
+            "latest_mesocycle": {
+                "authored_sequence_complete": True,
+                "phase_transition_pending": True,
+                "phase_transition_reason": "legacy_transition",
+                "post_authored_behavior": "legacy_hold",
+            },
+        },
+        preview_request={
+            "from_days": 3,
+            "to_days": 3,
+            "completion_pct": 90,
+            "adherence_score": 4,
+            "soreness_level": "mild",
+            "current_phase": "accumulation",
+            "weeks_in_phase": 2,
+        },
+        rule_set=None,
+        evaluate_schedule_adaptation=lambda **_: {
+            "from_days": 3,
+            "to_days": 3,
+            "kept_sessions": [],
+            "dropped_sessions": [],
+            "added_sessions": [],
+            "risk_level": "low",
+            "muscle_set_delta": {},
+            "to_plan": {"weekly_volume_by_muscle": {}},
+        },
+        recommend_progression_action=lambda **_: {"action": "hold", "reason": "maintain"},
+        humanize_progression_reason=lambda *_args, **_kwargs: "Hold",
+        derive_readiness_score=_derive_readiness_score,
+        recommend_phase_transition=_recommend_phase_transition,
+        humanize_phase_transition_reason=lambda *_args, **_kwargs: "Continue",
+        recommend_specialization_adjustments=lambda **_: {
+            "focus_muscles": [],
+            "focus_adjustments": {},
+            "donor_adjustments": {},
+            "uncompensated_added_sets": 0,
+        },
+        summarize_program_media_and_warmups=lambda *_args, **_kwargs: {
+            "total_exercises": 0,
+            "video_linked_exercises": 0,
+            "video_coverage_pct": 0.0,
+            "sample_warmups": [],
+        },
+    )
+
+    coaching_state_step = next(
+        step for step in preview["decision_trace"]["steps"] if step.get("decision") == "canonical_coaching_state"
+    )
+    assert captured["sleep_quality"] is None
+    assert captured["stress_level"] is None
+    assert captured["pain_flags"] == []
+    assert captured_phase_kwargs["authored_sequence_complete"] is False
+    assert captured_phase_kwargs["phase_transition_pending"] is False
+    assert captured_phase_kwargs["phase_transition_reason"] is None
+    assert captured_phase_kwargs["post_authored_behavior"] is None
+    assert coaching_state_step["result"]["readiness_source"] == "unavailable"
+    assert coaching_state_step["result"]["mesocycle_source"] == "unavailable"
+
+
 def test_recommend_coach_intelligence_preview_traces_stimulus_fatigue_response_snapshot() -> None:
     preview = recommend_coach_intelligence_preview(
         template_id="full_body_v1",

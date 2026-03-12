@@ -701,19 +701,13 @@ def _resolve_coach_preview_canonical_state(
     coaching_state = _coerce_dict(context.get("coaching_state"))
 
     readiness_state = _coerce_dict(coaching_state.get("readiness"))
-    readiness_source = "coaching_state.readiness"
-    if not readiness_state:
-        readiness_state = _coerce_dict(context.get("readiness_state"))
-        readiness_source = "legacy_context.readiness_state" if readiness_state else "unavailable"
+    readiness_source = "coaching_state.readiness" if readiness_state else "unavailable"
 
     stall_state = _coerce_dict(coaching_state.get("stall"))
     stall_source = "coaching_state.stall" if stall_state else "preview_request"
 
     mesocycle_state = _coerce_dict(coaching_state.get("mesocycle"))
-    mesocycle_source = "coaching_state.mesocycle"
-    if not mesocycle_state:
-        mesocycle_state = _coerce_dict(context.get("latest_mesocycle"))
-        mesocycle_source = "legacy_context.latest_mesocycle" if mesocycle_state else "unavailable"
+    mesocycle_source = "coaching_state.mesocycle" if mesocycle_state else "unavailable"
 
     stagnation_weeks_raw = preview_request.get("stagnation_weeks")
     if stagnation_weeks_raw is not None:
