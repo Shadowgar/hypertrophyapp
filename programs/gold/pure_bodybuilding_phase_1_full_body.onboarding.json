@@ -12228,14 +12228,9 @@
     ],
     "flexible_elements": [
       "Weak Point Exercise 2 only when recovered.",
-      "User-selected weak-point exercise choice from the authored table.",
-      "Session exercise ordering inside authored day intent."
+      "User-selected weak-point exercise choice from the authored table."
     ],
-    "preserve_when_frequency_reduced": [
-      "Primary compound slots.",
-      "User-selected weak-point stimulus.",
-      "Progression continuity across authored rep ranges."
-    ]
+    "preserve_when_frequency_reduced": []
   },
   "frequency_adaptation_rules": {
     "default_training_days": 5,
