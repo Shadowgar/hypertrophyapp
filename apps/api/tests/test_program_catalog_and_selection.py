@@ -79,6 +79,10 @@ def test_generate_week_uses_selected_program_when_template_not_passed() -> None:
     plan = generate.json()
     assert len(plan["sessions"]) > 0
     assert plan["sessions"][0]["session_id"].startswith("ppl_v1-")
+    assert plan["decision_trace"]["owner_family"] == "generated_week"
+    assert plan["decision_trace"]["canonical_inputs"]["selected_template_id"] == "ppl_v1"
+    assert plan["decision_trace"]["execution_steps"][0]["step"] == "template_selection"
+    assert plan["decision_trace"]["reason_summary"]
     assert plan["template_selection_trace"]["interpreter"] == "recommend_generation_template_selection"
     assert plan["template_selection_trace"]["selected_template_id"] == "ppl_v1"
     assert plan["generation_runtime_trace"]["interpreter"] == "resolve_week_generation_runtime_inputs"

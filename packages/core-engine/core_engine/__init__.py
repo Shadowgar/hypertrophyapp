@@ -62,6 +62,11 @@ from .decision_coach_preview import (
     recommend_specialization_adjustments,
     summarize_program_media_and_warmups,
 )
+from .decision_generated_week import (
+    build_generated_week_plan_payload,
+    order_generation_template_candidates,
+    recommend_generation_template_selection,
+)
 from .decision_program_recommendation import (
     build_program_recommendation_payload,
     build_program_switch_payload,
@@ -143,7 +148,6 @@ from .intelligence import (
     build_applied_coaching_recommendation_response,
     build_applied_coaching_recommendation_record_values,
     finalize_applied_coaching_recommendation_commit_runtime,
-    build_generated_week_plan_payload,
     build_phase_applied_recommendation_record,
     build_workout_log_set_payload,
     prepare_coaching_apply_runtime_source,
@@ -170,8 +174,6 @@ from .intelligence import (
     humanize_specialization_reason,
     interpret_coach_phase_apply_decision,
     interpret_coach_specialization_apply_decision,
-    order_generation_template_candidates,
-    recommend_generation_template_selection,
     recommend_coach_intelligence_preview,
     resolve_coaching_recommendation_rationale,
     resolve_latest_logged_workout_resume_state,

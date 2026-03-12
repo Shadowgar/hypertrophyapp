@@ -189,6 +189,7 @@ export type GeneratedWeekPlan = {
   };
   template_selection_trace: Record<string, unknown>;
   generation_runtime_trace: Record<string, unknown>;
+  decision_trace?: Record<string, unknown>;
 };
 
 export function getProgramDisplayName(program: ProgramTemplateOption): string {

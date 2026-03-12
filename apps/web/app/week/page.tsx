@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import CoachingIntelligencePanel from "@/components/coaching-intelligence-panel";
 import { Button } from "@/components/ui/button";
 import { UiIcon } from "@/components/ui/icons";
-import { api, getProgramDisplayName, resolveReasonText, type GeneratedWeekExercise, type GeneratedWeekPlan, type ProgramTemplateOption } from "@/lib/api";
+import { api, getProgramDisplayName, type GeneratedWeekExercise, type GeneratedWeekPlan, type ProgramTemplateOption } from "@/lib/api";
 
 function formatLabel(value: string): string {
   return value
@@ -84,10 +84,9 @@ function formatSessionDate(value: string): string {
   return parsed.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 }
 
-function resolveSelectionReason(trace: Record<string, unknown> | undefined): string {
-  const rationale = typeof trace?.rationale === "string" ? trace.rationale : null;
-  const reason = typeof trace?.reason === "string" ? trace.reason : null;
-  return resolveReasonText(rationale, reason);
+function resolveGeneratedWeekReasonSummary(trace: Record<string, unknown> | undefined): string | null {
+  const reasonSummary = typeof trace?.reason_summary === "string" ? trace.reason_summary.trim() : "";
+  return reasonSummary.length > 0 ? reasonSummary : null;
 }
 
 function numberFromTrace(source: Record<string, unknown> | undefined, key: string): number | null {
@@ -134,10 +133,9 @@ function WeekOverviewCards({ plan, selectedProgramId }: Readonly<{ plan: Generat
         </p>
         <p className="text-xs text-zinc-200">
           {plan.deload.active
-            ? `Volume trims ${plan.deload.set_reduction_pct}% and load trims ${plan.deload.load_reduction_pct}% this week.`
-            : "Run full-volume exposures and accumulate clean reps before the next review gate."}
+            ? `Reduced training targets are active: volume trims ${plan.deload.set_reduction_pct}% and load trims ${plan.deload.load_reduction_pct}%.`
+            : "Standard set and load targets remain active for this authored week."}
         </p>
-        <p className="telemetry-meta">Reason: {resolveReasonText(undefined, plan.mesocycle.deload_reason || plan.deload.reason)}</p>
       </div>
 
       <div className="main-card main-card--module spacing-grid spacing-grid--tight">
@@ -149,7 +147,9 @@ function WeekOverviewCards({ plan, selectedProgramId }: Readonly<{ plan: Generat
           Minimum {plan.muscle_coverage.minimum_sets_per_muscle ?? 0} sets per muscle
         </p>
         <p className="text-xs text-zinc-200">
-          {underTarget.length > 0 ? `Bring up ${underTarget.join(", ")}.` : "All tracked muscles clear the minimum set floor."}
+          {underTarget.length > 0
+            ? `Under target muscles: ${underTarget.join(", ")}.`
+            : "All tracked muscles clear the minimum set floor."}
         </p>
         <div className="space-y-1 text-xs text-zinc-300">
           {weeklyVolumeEntries.map(([muscle, sets]) => (
@@ -172,9 +172,11 @@ function WeekExecutionCards({ plan }: Readonly<{ plan: GeneratedWeekPlan }>) {
   const priorWeeks = numberFromTrace(runtimeOutcome, "prior_generated_weeks");
   const latestAdherence = numberFromTrace(runtimeOutcome, "latest_adherence_score");
   const templateTrace = plan.template_selection_trace ?? {};
+  const decisionTrace = plan.decision_trace ?? {};
   const candidateIds = stringListFromUnknown(templateTrace.ordered_candidate_ids);
   const adaptiveReview = plan.adaptive_review;
   const frequencyAdaptation = plan.applied_frequency_adaptation;
+  const reasonSummary = resolveGeneratedWeekReasonSummary(decisionTrace);
 
   return (
     <div className="grid grid-cols-1 gap-3 xl:grid-cols-[1.3fr_1fr]">
@@ -211,7 +213,7 @@ function WeekExecutionCards({ plan }: Readonly<{ plan: GeneratedWeekPlan }>) {
       <div className="space-y-3">
         <div className="main-card main-card--shell spacing-grid spacing-grid--tight">
           <p className="telemetry-kicker">Generation Read</p>
-          <p className="text-xs text-zinc-200">{resolveSelectionReason(templateTrace)}</p>
+          {reasonSummary ? <p className="text-xs text-zinc-200">{reasonSummary}</p> : null}
           <div className="grid grid-cols-2 gap-2 text-xs text-zinc-300">
             <div className="rounded-md border border-white/10 bg-zinc-900/70 p-2">Effective days: {effectiveDays ?? plan.user.days_available}</div>
             <div className="rounded-md border border-white/10 bg-zinc-900/70 p-2">Prior generated weeks: {priorWeeks ?? 0}</div>

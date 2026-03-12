@@ -93,7 +93,6 @@ test("Week page sends template_id when override selected", async () => {
     },
     template_selection_trace: {
       selected_template_id: "upper_lower",
-      reason: "explicit_template_override",
       ordered_candidate_ids: ["upper_lower", "full_body_v1"],
     },
     generation_runtime_trace: {
@@ -103,6 +102,11 @@ test("Week page sends template_id when override selected", async () => {
         latest_adherence_score: 4,
         severe_soreness_count: 0,
       },
+    },
+    decision_trace: {
+      owner_family: "generated_week",
+      reason_summary:
+        "Selected Upper/Lower as the explicit template override and generated a four-day training week from canonical state.",
     },
   };
 
@@ -149,7 +153,12 @@ test("Week page sends template_id when override selected", async () => {
 
   expect(screen.getAllByText(/Upper Lower/i).length).toBeGreaterThan(0);
   expect(screen.getByText(/Coverage Radar/i)).toBeInTheDocument();
-  expect(screen.getByText(/Bring up back\./i)).toBeInTheDocument();
+  expect(
+    screen.getAllByText(
+      /Selected Upper\/Lower as the explicit template override and generated a four-day training week from canonical state\./i,
+    ).length,
+  ).toBeGreaterThan(0);
+  expect(screen.queryByText(/No rationale available\./i)).not.toBeInTheDocument();
   expect(screen.getByText(/Authored block: Week 1 · Adaptation/i)).toBeInTheDocument();
   expect(screen.getByText(/Arms & Weak Points emphasis is scheduled this week\./i)).toBeInTheDocument();
   expect(screen.getByText(/Lead slot: Bench Press · 4 sets · 6-8 reps @ 82.5 kg/i)).toBeInTheDocument();

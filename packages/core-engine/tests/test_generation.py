@@ -476,6 +476,14 @@ def test_prepare_generate_week_finalize_runtime_shapes_response_and_record_value
     assert runtime["record_values"]["split"] == "full_body"
     assert runtime["record_values"]["phase"] == "maintenance"
     assert runtime["adaptation_persistence_payload"]["state_updated"] is True
+    assert runtime["response_payload"]["decision_trace"]["owner_family"] == "generated_week"
+    assert runtime["response_payload"]["decision_trace"]["canonical_inputs"]["selected_template_id"] == "full_body_v1"
+    assert runtime["response_payload"]["decision_trace"]["policy_basis"]["template_selection"]["reason"] == (
+        "recommend_generation_template_selection"
+    )
+    assert runtime["response_payload"]["decision_trace"]["execution_steps"][0]["step"] == "template_selection"
+    assert runtime["response_payload"]["decision_trace"]["reason_summary"]
+    assert runtime["response_payload"]["decision_trace"]["alternative_resolution"]["status"] == "candidates_considered"
     assert runtime["decision_trace"]["interpreter"] == "prepare_generate_week_finalize_runtime"
     assert runtime["decision_trace"]["review_overlay_trace"]["interpreter"] == "prepare_generated_week_review_overlay"
 

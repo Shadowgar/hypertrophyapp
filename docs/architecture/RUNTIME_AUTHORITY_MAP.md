@@ -69,6 +69,7 @@ A layer allowed to render outcomes for humans, but not to invent or alter coachi
 | `decision_program_recommendation.py` | Policy owner | Program recommendation and switch advice live here. |
 | `decision_frequency_adaptation.py` | Policy owner | Frequency-adaptation policy lives here. |
 | `decision_coach_preview.py` | Policy owner | Coach preview and apply family logic lives here. |
+| `decision_generated_week.py` | Policy owner | Generated-week template selection, top-level week decision ownership, and authoritative generated-week trace emission live here. |
 | `decision_workout_session.py` | Policy owner | Workout-session family outputs and runtime decisions live here. |
 | `decision_live_workout_guidance.py` | Policy owner | Live set feedback and workout guidance policy live here. |
 
@@ -95,7 +96,7 @@ A layer allowed to render outcomes for humans, but not to invent or alter coachi
 
 | Module or layer | Constitutional role | Notes |
 | --- | --- | --- |
-| `generation.py` | Orchestrator | Routes canonical generation inputs into execution and owner modules. |
+| `generation.py` | Orchestrator | Routes canonical generation inputs into `decision_generated_week.py`, scheduler execution, and persistence/finalization helpers. |
 | `intelligence.py` | Orchestrator only (target) | Compatibility and forwarding layer only. |
 | API routers | Orchestrators | IO, SQL, persistence, and HTTP concerns only. |
 
@@ -133,4 +134,3 @@ Those meanings must come from:
 - State assemblers collect and normalize canonical inputs without changing meaning.
 - Orchestrators call owners, persist outputs, and return data without reinterpretation.
 - Presentation layers render outputs without inventing rationale.
-

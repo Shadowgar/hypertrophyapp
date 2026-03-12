@@ -3,14 +3,14 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Any, Callable
 
+from .decision_generated_week import (
+    build_generated_week_plan_payload,
+    resolve_generation_template_choice as decision_resolve_generation_template_choice,
+    summarize_generation_template_viability as decision_summarize_generation_template_viability,
+)
 from .decision_progression import evaluate_stimulus_fatigue_response
 from .decision_frequency_adaptation import build_generated_week_adaptation_persistence_payload
-from .intelligence import (
-    build_generated_week_plan_payload,
-    order_generation_template_candidates,
-    prepare_generated_week_review_overlay,
-    recommend_generation_template_selection,
-)
+from .intelligence import prepare_generated_week_review_overlay
 from .scheduler import generate_week_plan
 
 
@@ -566,20 +566,13 @@ def summarize_generation_template_viability(
     nutrition_phase: str,
     available_equipment: list[str],
 ) -> dict[str, int]:
-    preview = generate_week_plan(
-        user_profile={"name": "preview"},
+    return decision_summarize_generation_template_viability(
+        template=template,
         days_available=days_available,
         split_preference=split_preference,
-        program_template=template,
-        history=[],
-        phase=nutrition_phase,
+        nutrition_phase=nutrition_phase,
         available_equipment=available_equipment,
     )
-    sessions = preview.get("sessions") or []
-    return {
-        "session_count": len(sessions),
-        "exercise_count": sum(len(session.get("exercises") or []) for session in sessions),
-    }
 
 
 def resolve_generation_template_choice(
@@ -594,71 +587,17 @@ def resolve_generation_template_choice(
     candidate_summaries: list[dict[str, Any]],
     loaded_candidate_templates: dict[str, dict[str, Any]],
 ) -> dict[str, Any]:
-    if explicit_template_id:
-        if explicit_template is None:
-            raise FileNotFoundError("No valid program templates available for generation")
-        selection = recommend_generation_template_selection(
-            explicit_template_id=explicit_template_id,
-            profile_template_id=profile_template_id,
-            split_preference=split_preference,
-            days_available=days_available,
-            candidate_summaries=[],
-            candidate_evaluations=[],
-        )
-        return {
-            "selected_template_id": explicit_template_id,
-            "selected_template": explicit_template,
-            "decision_trace": dict(selection["decision_trace"]),
-        }
-
-    ordered_candidates = order_generation_template_candidates(
-        preferred_template_id=profile_template_id,
-        split_preference=split_preference,
-        days_available=days_available,
-        candidate_summaries=candidate_summaries,
-    )
-
-    candidate_evaluations: list[dict[str, Any]] = []
-    templates_by_id: dict[str, dict[str, Any]] = {}
-    for candidate_id in ordered_candidates:
-        candidate_template = loaded_candidate_templates.get(candidate_id)
-        if not isinstance(candidate_template, dict):
-            candidate_evaluations.append({"template_id": candidate_id, "status": "unavailable"})
-            continue
-        templates_by_id[candidate_id] = candidate_template
-        viability = summarize_generation_template_viability(
-            template=candidate_template,
-            days_available=days_available,
-            split_preference=split_preference,
-            nutrition_phase=nutrition_phase,
-            available_equipment=available_equipment,
-        )
-        candidate_evaluations.append(
-            {
-                "template_id": candidate_id,
-                "status": "loaded",
-                **viability,
-            }
-        )
-
-    selection = recommend_generation_template_selection(
-        explicit_template_id=None,
+    return decision_resolve_generation_template_choice(
+        explicit_template_id=explicit_template_id,
+        explicit_template=explicit_template,
         profile_template_id=profile_template_id,
         split_preference=split_preference,
         days_available=days_available,
+        nutrition_phase=nutrition_phase,
+        available_equipment=available_equipment,
         candidate_summaries=candidate_summaries,
-        candidate_evaluations=candidate_evaluations,
+        loaded_candidate_templates=loaded_candidate_templates,
     )
-    selected_template_id = str(selection["selected_template_id"])
-    selected_template = templates_by_id.get(selected_template_id)
-    if selected_template is None:
-        raise FileNotFoundError("No valid program templates available for generation")
-
-    return {
-        "selected_template_id": selected_template_id,
-        "selected_template": selected_template,
-        "decision_trace": dict(selection["decision_trace"]),
-    }
 
 
 def prepare_generation_template_runtime(
@@ -1282,6 +1221,7 @@ def prepare_generate_week_finalize_runtime(
         active_frequency_adaptation=active_frequency_adaptation,
         review_adjustments=_coerce_dict(review_overlay.get("review_adjustments")) or None,
         review_context=_coerce_dict(review_overlay.get("review_context")) or None,
+        review_overlay_trace=_coerce_dict(review_overlay.get("decision_trace")) or None,
     )
     response_payload = _coerce_dict(finalized_plan.get("plan"))
     adaptation_persistence_payload = build_generated_week_adaptation_persistence_payload(
