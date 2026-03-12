@@ -100,36 +100,6 @@ from .warmups import compute_warmups
 ProgressionAction = Literal["progress", "hold", "deload"]
 ProgramPhase = Literal["accumulation", "intensification", "deload"]
 
-
-_PROGRAM_REASON_MESSAGES = {
-    "no_compatible_programs": "No compatible program was found for the current availability, so keep the current selection.",
-    "current_not_compatible": "The current program no longer matches the available training days or split preference. Move to the first compatible option.",
-    "low_adherence_keep_program": "Recent adherence is low. Keep the current program stable before rotating templates.",
-    "days_adaptation_upgrade": "A different compatible template can preserve weekly coverage better at the current day availability.",
-    "coverage_gap_rotate": "The latest plan left a coverage gap. Rotate to a compatible template with better distribution.",
-    "mesocycle_complete_rotate": "The current mesocycle appears complete. Rotate to a fresh compatible template.",
-    "maintain_current_program": "The current program remains compatible and no stronger rotation signal is present.",
-    "target_matches_current": "The requested program already matches the current selection.",
-}
-
-_PROGRESSION_REASON_CLAUSES = {
-    "low_completion": "session completion has been too low",
-    "low_adherence": "adherence has dropped below the target threshold",
-    "high_soreness": "fatigue and soreness are elevated",
-}
-
-_PHASE_TRANSITION_REASON_MESSAGES = {
-    "resume_accumulation": "Deload work appears sufficient. Resume accumulation and rebuild workload.",
-    "extend_deload_low_readiness": "Stay in deload because readiness is still too low to resume hard training.",
-    "intro_phase_protection": "Stay in accumulation. Early underperformance is still within the intro phase and should not be treated as a true stall.",
-    "accumulation_stall": "Accumulation has stalled. Transition into deload to recover before rebuilding momentum.",
-    "accumulation_complete": "Accumulation has run its course and readiness is high enough to move into intensification.",
-    "continue_accumulation": "Stay in accumulation. Current readiness and momentum do not justify a phase change yet.",
-    "intensification_fatigue_cap": "End intensification and deload before fatigue outpaces recovery.",
-    "continue_intensification": "Stay in intensification. Current performance still supports heavier work in this phase.",
-    "phase_apply": "Apply the recommended phase transition.",
-}
-
 _WEAK_POINT_MAX_BOOSTED_EXERCISES = 2
 _WEAK_POINT_SET_DELTA_CAP = 1
 _WEAK_POINT_TOTAL_SET_BUDGET = 2

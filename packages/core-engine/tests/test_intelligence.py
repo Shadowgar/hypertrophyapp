@@ -283,6 +283,13 @@ def test_intelligence_source_does_not_redefine_program_or_progression_decision_o
     ):
         assert f"def {symbol}(" not in source
 
+    for residue in (
+        "_PROGRAM_REASON_MESSAGES",
+        "_PROGRESSION_REASON_CLAUSES",
+        "_PHASE_TRANSITION_REASON_MESSAGES",
+    ):
+        assert residue not in source
+
 
 def test_humanize_specialization_reason_returns_authoritative_fields_without_humanization() -> None:
     assert humanize_specialization_reason({"rationale": "Keep chest emphasis for one more block."}) == "Keep chest emphasis for one more block."
