@@ -1,7 +1,9 @@
 from datetime import date, timedelta
+from pathlib import Path
 
 import pytest
 
+import core_engine.scheduler as scheduler_module
 from core_engine import generate_week_plan
 
 
@@ -1090,6 +1092,24 @@ def test_generate_week_plan_uses_bounded_deload_noop_without_authoritative_polic
     assert plan["deload"]["decision_trace"]["outcome"]["source"] == "bounded_non_authoritative_noop"
     assert ex["sets"] == 5
     assert ex["recommended_working_weight"] == pytest.approx(100.0)
+
+
+def test_scheduler_source_does_not_define_local_soreness_or_muscle_doctrine_helpers() -> None:
+    source = Path(scheduler_module.__file__).read_text(encoding="utf-8")
+
+    forbidden_names = [
+        "_SORENESS_WEIGHT_FACTOR",
+        "_apply_soreness_modifier",
+        "_MUSCLE_ALIASES",
+        "_TRACKED_MUSCLES",
+        "_MIN_SETS_PER_MUSCLE",
+        "_normalize_muscle_label",
+        "_token_mapped_muscles",
+        "_resolve_exercise_muscles",
+    ]
+
+    for name in forbidden_names:
+        assert name not in source
 
 
 def test_generate_week_plan_prefers_authored_deload_reason_when_scheduled_and_authored_overlap() -> None:

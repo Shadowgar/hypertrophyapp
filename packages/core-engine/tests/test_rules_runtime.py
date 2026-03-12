@@ -1,5 +1,6 @@
 import pytest
 
+import core_engine
 from core_engine.rules_runtime import (
     evaluate_deload_signal,
     extract_fatigue_rpe_threshold,
@@ -565,6 +566,12 @@ def test_resolve_scheduler_deload_runtime_returns_bounded_noop_without_authorita
     assert runtime["set_reduction_pct"] == 0
     assert runtime["load_reduction_pct"] == 0
     assert runtime["decision_trace"]["outcome"]["source"] == "bounded_non_authoritative_noop"
+
+
+def test_core_engine_exports_scheduler_runtime_ownership_helpers() -> None:
+    assert hasattr(core_engine, "resolve_scheduler_deload_runtime")
+    assert hasattr(core_engine, "resolve_scheduler_exercise_muscles_runtime")
+    assert hasattr(core_engine, "resolve_scheduler_muscle_coverage_runtime")
 
 
 def test_resolve_equipment_substitution_chooses_first_compatible_candidate() -> None:
