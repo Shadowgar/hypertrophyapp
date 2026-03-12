@@ -137,6 +137,43 @@
           "secondary_compound": 20
         }
       }
+    },
+    "muscle_coverage": {
+      "tracked_muscles": [
+        "chest",
+        "back",
+        "quads",
+        "hamstrings",
+        "glutes",
+        "shoulders",
+        "biceps",
+        "triceps",
+        "calves"
+      ],
+      "minimum_sets_per_muscle": 2,
+      "authored_label_normalization": {
+        "chest": "chest",
+        "pec": "chest",
+        "pecs": "chest",
+        "back": "back",
+        "lats": "back",
+        "lat": "back",
+        "mid_back": "back",
+        "upper_back": "back",
+        "erectors": "back",
+        "quads": "quads",
+        "quadriceps": "quads",
+        "hamstrings": "hamstrings",
+        "glutes": "glutes",
+        "shoulders": "shoulders",
+        "delts": "shoulders",
+        "front_delts": "shoulders",
+        "rear_delts": "shoulders",
+        "side_delts": "shoulders",
+        "biceps": "biceps",
+        "triceps": "triceps",
+        "calves": "calves"
+      }
     }
   },
   "rationale_templates": {

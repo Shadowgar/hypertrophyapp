@@ -38,6 +38,20 @@ def _normalize_exercise_key(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", value.strip().lower()).strip("_")
 
 
+def _normalize_scheduler_label(value: Any) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", str(value or "").strip().lower()).strip("_")
+
+
+def _coerce_percentage(value: Any) -> int | None:
+    if isinstance(value, bool):
+        return None
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return None
+    return max(0, min(100, parsed))
+
+
 def _scheduler_rule_dict(rule_set: dict[str, Any] | None, key: str) -> dict[str, Any]:
     scheduler_rules = _coerce_dict(_coerce_dict(rule_set).get("generated_week_scheduler_rules"))
     return _coerce_dict(scheduler_rules.get(key))
@@ -825,6 +839,147 @@ def resolve_scheduler_session_exercise_cap(
             "outcome": {
                 "exercise_limit": limit,
                 "kept_indices": list(kept_indices),
+            },
+        },
+    }
+
+
+def resolve_scheduler_muscle_coverage_runtime(
+    *,
+    rule_set: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    muscle_coverage_rules = _scheduler_rule_dict(rule_set, "muscle_coverage")
+    tracked_muscles = [
+        _normalize_scheduler_label(item)
+        for item in muscle_coverage_rules.get("tracked_muscles") or []
+        if _normalize_scheduler_label(item)
+    ]
+    minimum_sets_per_muscle = int(muscle_coverage_rules.get("minimum_sets_per_muscle") or 0)
+    authored_label_normalization = {
+        _normalize_scheduler_label(key): _normalize_scheduler_label(value)
+        for key, value in _coerce_dict(muscle_coverage_rules.get("authored_label_normalization")).items()
+        if _normalize_scheduler_label(key) and _normalize_scheduler_label(value)
+    }
+
+    return {
+        "tracked_muscles": tracked_muscles,
+        "minimum_sets_per_muscle": minimum_sets_per_muscle,
+        "authored_label_normalization": authored_label_normalization,
+        "decision_trace": {
+            "interpreter": "resolve_scheduler_muscle_coverage_runtime",
+            "version": "v1",
+            "inputs": {
+                "has_scheduler_rule_contract": bool(muscle_coverage_rules),
+            },
+            "outcome": {
+                "tracked_muscles": list(tracked_muscles),
+                "minimum_sets_per_muscle": minimum_sets_per_muscle,
+                "normalization_label_count": len(authored_label_normalization),
+            },
+        },
+    }
+
+
+def resolve_scheduler_exercise_muscles_runtime(
+    *,
+    exercise: dict[str, Any] | None,
+    rule_set: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    exercise_dict = _coerce_dict(exercise)
+    coverage_runtime = resolve_scheduler_muscle_coverage_runtime(rule_set=rule_set)
+    normalization_map = coverage_runtime["authored_label_normalization"]
+
+    explicit_labels: list[str] = []
+    for field in ("primary_muscles", "secondary_muscles"):
+        for item in exercise_dict.get(field) or []:
+            normalized_label = _normalize_scheduler_label(item)
+            if normalized_label:
+                explicit_labels.append(normalized_label)
+
+    normalized_muscles: list[str] = []
+    unmapped_labels: list[str] = []
+    for label in explicit_labels:
+        normalized = normalization_map.get(label)
+        if normalized and normalized not in normalized_muscles:
+            normalized_muscles.append(normalized)
+        elif normalized is None and label not in unmapped_labels:
+            unmapped_labels.append(label)
+
+    normalized_muscles.sort()
+    unmapped_labels.sort()
+    input_source = (
+        "explicit_authored_muscle_metadata"
+        if explicit_labels
+        else "no_explicit_authored_muscle_metadata"
+    )
+
+    return {
+        "normalized_muscles": normalized_muscles,
+        "decision_trace": {
+            "interpreter": "resolve_scheduler_exercise_muscles_runtime",
+            "version": "v1",
+            "inputs": {
+                "exercise_id": str(exercise_dict.get("id") or ""),
+                "exercise_name": str(exercise_dict.get("name") or ""),
+                "primary_muscles": list(exercise_dict.get("primary_muscles") or []),
+                "secondary_muscles": list(exercise_dict.get("secondary_muscles") or []),
+            },
+            "outcome": {
+                "input_source": input_source,
+                "normalized_muscles": list(normalized_muscles),
+                "unmapped_authored_labels": list(unmapped_labels),
+            },
+        },
+    }
+
+
+def resolve_scheduler_deload_runtime(
+    *,
+    template_deload: dict[str, Any] | None,
+    is_deload_week: bool,
+    mesocycle_decision_trace: dict[str, Any] | None,
+    rule_set: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    template_deload_dict = _coerce_dict(template_deload)
+    deload_rules = _coerce_dict(_coerce_dict(rule_set).get("deload_rules"))
+    on_deload = _coerce_dict(deload_rules.get("on_deload"))
+
+    source = "bounded_non_authoritative_noop"
+    set_reduction_pct = 0
+    load_reduction_pct = 0
+
+    rule_set_set_reduction = _coerce_percentage(on_deload.get("set_reduction_percent"))
+    rule_set_load_reduction = _coerce_percentage(on_deload.get("load_reduction_percent"))
+    template_set_reduction = _coerce_percentage(template_deload_dict.get("set_reduction_pct"))
+    template_load_reduction = _coerce_percentage(template_deload_dict.get("load_reduction_pct"))
+
+    if rule_set_set_reduction is not None and rule_set_load_reduction is not None:
+        source = "rule_set.deload_rules.on_deload"
+        set_reduction_pct = rule_set_set_reduction
+        load_reduction_pct = rule_set_load_reduction
+    elif template_set_reduction is not None and template_load_reduction is not None:
+        source = "template.deload"
+        set_reduction_pct = template_set_reduction
+        load_reduction_pct = template_load_reduction
+
+    return {
+        "active": bool(is_deload_week),
+        "set_reduction_pct": set_reduction_pct,
+        "load_reduction_pct": load_reduction_pct,
+        "decision_trace": {
+            "interpreter": "resolve_scheduler_deload_runtime",
+            "version": "v1",
+            "inputs": {
+                "is_deload_week": bool(is_deload_week),
+                "template_deload": dict(template_deload_dict),
+                "mesocycle_interpreter": str(_coerce_dict(mesocycle_decision_trace).get("interpreter") or ""),
+                "has_rule_set_on_deload": bool(on_deload),
+            },
+            "outcome": {
+                "source": source,
+                "active": bool(is_deload_week),
+                "set_reduction_pct": set_reduction_pct,
+                "load_reduction_pct": load_reduction_pct,
             },
         },
     }

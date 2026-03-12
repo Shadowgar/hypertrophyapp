@@ -109,6 +109,10 @@ Canonical scheduler doctrine for generated-week execution on the adaptive gold p
   - `time_budget_thresholds[]`
   - `default_slot_role_priority`
   - optional `day_role_slot_role_priority_overrides`
+- `muscle_coverage`
+  - `tracked_muscles[]`
+  - `minimum_sets_per_muscle`
+  - `authored_label_normalization`
 
 ## User Training State Contract
 

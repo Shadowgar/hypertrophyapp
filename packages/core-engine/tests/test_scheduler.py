@@ -130,6 +130,43 @@ def _scheduler_rule_set() -> dict[str, object]:
                     }
                 },
             },
+            "muscle_coverage": {
+                "tracked_muscles": [
+                    "chest",
+                    "back",
+                    "quads",
+                    "hamstrings",
+                    "glutes",
+                    "shoulders",
+                    "biceps",
+                    "triceps",
+                    "calves",
+                ],
+                "minimum_sets_per_muscle": 2,
+                "authored_label_normalization": {
+                    "chest": "chest",
+                    "pec": "chest",
+                    "pecs": "chest",
+                    "back": "back",
+                    "lats": "back",
+                    "lat": "back",
+                    "mid_back": "back",
+                    "upper_back": "back",
+                    "erectors": "back",
+                    "quads": "quads",
+                    "quadriceps": "quads",
+                    "hamstrings": "hamstrings",
+                    "glutes": "glutes",
+                    "shoulders": "shoulders",
+                    "delts": "shoulders",
+                    "front_delts": "shoulders",
+                    "rear_delts": "shoulders",
+                    "side_delts": "shoulders",
+                    "biceps": "biceps",
+                    "triceps": "triceps",
+                    "calves": "calves",
+                },
+            },
         },
     }
 
@@ -791,7 +828,7 @@ def test_generate_week_plan_uses_sfr_for_early_recovery_deload_and_substitution_
     assert exercise["substitution_guidance"] == "prefer_compatible_variants_if_recovery_constraints_persist"
 
 
-def test_generate_week_plan_tracks_weekly_volume_and_coverage() -> None:
+def test_generate_week_plan_tracks_weekly_volume_and_coverage_from_canonical_muscle_contract() -> None:
     template = {
         "id": "volume_tracking_test",
         "sessions": [
@@ -822,6 +859,7 @@ def test_generate_week_plan_tracks_weekly_volume_and_coverage() -> None:
         program_template=template,
         history=[],
         phase="maintenance",
+        rule_set=_scheduler_rule_set(),
     )
 
     volume = plan["weekly_volume_by_muscle"]
@@ -840,7 +878,7 @@ def test_generate_week_plan_tracks_weekly_volume_and_coverage() -> None:
     assert "hamstrings" in coverage["under_target_muscles"]
 
 
-def test_generate_week_plan_counts_untracked_exercises_for_coverage() -> None:
+def test_generate_week_plan_does_not_infer_muscle_coverage_from_exercise_name_tokens() -> None:
     template = {
         "id": "coverage_untracked_test",
         "sessions": [
@@ -849,7 +887,7 @@ def test_generate_week_plan_counts_untracked_exercises_for_coverage() -> None:
                 "exercises": [
                     {
                         "id": "mystery",
-                        "name": "X1",
+                        "name": "Lat Raise Pec Deck",
                         "sets": 3,
                     }
                 ],
@@ -864,6 +902,7 @@ def test_generate_week_plan_counts_untracked_exercises_for_coverage() -> None:
         program_template=template,
         history=[],
         phase="maintenance",
+        rule_set=_scheduler_rule_set(),
     )
 
     coverage = plan["muscle_coverage"]
@@ -986,6 +1025,71 @@ def test_generate_week_plan_applies_authored_deload_week() -> None:
     assert plan["deload"]["active"] is True
     assert ex["sets"] == 3
     assert ex["recommended_working_weight"] == pytest.approx(90.0)
+
+
+def test_generate_week_plan_uses_bounded_deload_noop_without_authoritative_policy() -> None:
+    template = {
+        "id": "authored_deload_noop_test",
+        "sessions": [
+            {
+                "name": "Base Week",
+                "exercises": [
+                    {
+                        "id": "bench",
+                        "name": "Bench Press",
+                        "sets": 5,
+                        "start_weight": 100,
+                        "primary_muscles": ["chest"],
+                    }
+                ],
+            }
+        ],
+        "authored_weeks": [
+            {
+                "week_index": 1,
+                "week_role": "deload",
+                "sessions": [
+                    {
+                        "name": "Deload Week",
+                        "exercises": [
+                            {
+                                "id": "bench",
+                                "name": "Bench Press",
+                                "sets": 5,
+                                "start_weight": 100,
+                                "primary_muscles": ["chest"],
+                            }
+                        ],
+                    }
+                ],
+            }
+        ],
+    }
+
+    rule_set = _scheduler_rule_set()
+    rule_set["deload_rules"] = {
+        "scheduled_every_n_weeks": 6,
+        "early_deload_trigger": "three_consecutive_under_target_sessions",
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=2,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+        rule_set=rule_set,
+    )
+
+    ex = plan["sessions"][0]["exercises"][0]
+    assert plan["mesocycle"]["is_deload_week"] is True
+    assert plan["deload"]["active"] is True
+    assert plan["deload"]["set_reduction_pct"] == 0
+    assert plan["deload"]["load_reduction_pct"] == 0
+    assert plan["deload"]["decision_trace"]["outcome"]["source"] == "bounded_non_authoritative_noop"
+    assert ex["sets"] == 5
+    assert ex["recommended_working_weight"] == pytest.approx(100.0)
 
 
 def test_generate_week_plan_prefers_authored_deload_reason_when_scheduled_and_authored_overlap() -> None:

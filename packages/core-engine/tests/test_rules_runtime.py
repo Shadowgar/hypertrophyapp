@@ -7,8 +7,11 @@ from core_engine.rules_runtime import (
     resolve_equipment_substitution,
     resolve_repeat_failure_substitution,
     resolve_adaptive_rule_runtime,
+    resolve_scheduler_deload_runtime,
     resolve_scheduler_exercise_adjustment_runtime,
+    resolve_scheduler_exercise_muscles_runtime,
     resolve_scheduler_mesocycle_runtime,
+    resolve_scheduler_muscle_coverage_runtime,
     resolve_progression_rule_runtime,
     resolve_scheduler_session_exercise_cap,
     resolve_scheduler_session_selection,
@@ -140,6 +143,43 @@ def _scheduler_rule_set() -> dict[str, object]:
                         "primary_compound": 30,
                         "secondary_compound": 20,
                     }
+                },
+            },
+            "muscle_coverage": {
+                "tracked_muscles": [
+                    "chest",
+                    "back",
+                    "quads",
+                    "hamstrings",
+                    "glutes",
+                    "shoulders",
+                    "biceps",
+                    "triceps",
+                    "calves",
+                ],
+                "minimum_sets_per_muscle": 2,
+                "authored_label_normalization": {
+                    "chest": "chest",
+                    "pec": "chest",
+                    "pecs": "chest",
+                    "back": "back",
+                    "lats": "back",
+                    "lat": "back",
+                    "mid_back": "back",
+                    "upper_back": "back",
+                    "erectors": "back",
+                    "quads": "quads",
+                    "quadriceps": "quads",
+                    "hamstrings": "hamstrings",
+                    "glutes": "glutes",
+                    "shoulders": "shoulders",
+                    "delts": "shoulders",
+                    "front_delts": "shoulders",
+                    "rear_delts": "shoulders",
+                    "side_delts": "shoulders",
+                    "biceps": "biceps",
+                    "triceps": "triceps",
+                    "calves": "calves",
                 },
             },
         },
@@ -465,6 +505,66 @@ def test_resolve_scheduler_session_exercise_cap_uses_canonical_time_budget_rules
 
     assert runtime["exercise_limit"] == 3
     assert runtime["kept_indices"] == [1, 2, 3]
+
+
+def test_resolve_scheduler_muscle_coverage_runtime_uses_canonical_contract() -> None:
+    runtime = resolve_scheduler_muscle_coverage_runtime(rule_set=_scheduler_rule_set())
+
+    assert runtime["tracked_muscles"] == [
+        "chest",
+        "back",
+        "quads",
+        "hamstrings",
+        "glutes",
+        "shoulders",
+        "biceps",
+        "triceps",
+        "calves",
+    ]
+    assert runtime["minimum_sets_per_muscle"] == 2
+    assert runtime["decision_trace"]["interpreter"] == "resolve_scheduler_muscle_coverage_runtime"
+
+
+def test_resolve_scheduler_exercise_muscles_runtime_normalizes_only_explicit_authored_metadata() -> None:
+    runtime = resolve_scheduler_exercise_muscles_runtime(
+        exercise={
+            "name": "Lat Raise Pec Deck",
+            "primary_muscles": ["lats", "mid_back"],
+            "secondary_muscles": ["rear_delts", "biceps"],
+        },
+        rule_set=_scheduler_rule_set(),
+    )
+
+    assert runtime["normalized_muscles"] == ["back", "biceps", "shoulders"]
+    assert runtime["decision_trace"]["outcome"]["input_source"] == "explicit_authored_muscle_metadata"
+
+
+def test_resolve_scheduler_exercise_muscles_runtime_does_not_infer_from_tokens_without_authored_metadata() -> None:
+    runtime = resolve_scheduler_exercise_muscles_runtime(
+        exercise={
+            "name": "Lat Raise Pec Deck",
+        },
+        rule_set=_scheduler_rule_set(),
+    )
+
+    assert runtime["normalized_muscles"] == []
+    assert runtime["decision_trace"]["outcome"]["input_source"] == "no_explicit_authored_muscle_metadata"
+
+
+def test_resolve_scheduler_deload_runtime_returns_bounded_noop_without_authoritative_policy() -> None:
+    runtime = resolve_scheduler_deload_runtime(
+        template_deload={"trigger_weeks": 6},
+        is_deload_week=True,
+        mesocycle_decision_trace={"interpreter": "resolve_scheduler_mesocycle_runtime"},
+        rule_set={
+            "generated_week_scheduler_rules": _scheduler_rule_set()["generated_week_scheduler_rules"],
+        },
+    )
+
+    assert runtime["active"] is True
+    assert runtime["set_reduction_pct"] == 0
+    assert runtime["load_reduction_pct"] == 0
+    assert runtime["decision_trace"]["outcome"]["source"] == "bounded_non_authoritative_noop"
 
 
 def test_resolve_equipment_substitution_chooses_first_compatible_candidate() -> None:

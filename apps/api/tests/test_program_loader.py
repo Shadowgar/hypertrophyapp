@@ -255,6 +255,11 @@ def test_load_program_rule_set_supports_adaptive_gold_runtime_program() -> None:
     assert rule_set["generated_week_scheduler_rules"]["session_selection"]["missed_day_policy"] == (
         "roll-forward-priority-lifts"
     )
+    assert rule_set["generated_week_scheduler_rules"]["muscle_coverage"]["minimum_sets_per_muscle"] == 2
+    assert (
+        rule_set["generated_week_scheduler_rules"]["muscle_coverage"]["authored_label_normalization"]["lats"]
+        == "back"
+    )
 
 
 @pytest.mark.parametrize(

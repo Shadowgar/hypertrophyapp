@@ -230,11 +230,18 @@ class SchedulerSessionExerciseCapRules(BaseModel):
     day_role_slot_role_priority_overrides: dict[str, dict[str, int]] = Field(default_factory=dict)
 
 
+class SchedulerMuscleCoverageRules(BaseModel):
+    tracked_muscles: list[str] = Field(default_factory=list)
+    minimum_sets_per_muscle: int = Field(ge=0)
+    authored_label_normalization: dict[str, str] = Field(default_factory=dict)
+
+
 class GeneratedWeekSchedulerRules(BaseModel):
     mesocycle: SchedulerMesocycleRules
     exercise_adjustment: SchedulerExerciseAdjustmentRules
     session_selection: SchedulerSessionSelectionRules
     session_exercise_cap: SchedulerSessionExerciseCapRules
+    muscle_coverage: SchedulerMuscleCoverageRules
 
 
 class RuleSourceSection(BaseModel):

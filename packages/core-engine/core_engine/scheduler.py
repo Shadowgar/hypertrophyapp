@@ -7,78 +7,14 @@ from .equipment import resolve_equipment_tags
 from .rules_runtime import (
     resolve_equipment_substitution,
     resolve_repeat_failure_substitution,
+    resolve_scheduler_deload_runtime,
     resolve_scheduler_exercise_adjustment_runtime,
+    resolve_scheduler_exercise_muscles_runtime,
     resolve_scheduler_mesocycle_runtime,
+    resolve_scheduler_muscle_coverage_runtime,
     resolve_scheduler_session_exercise_cap,
     resolve_scheduler_session_selection,
 )
-
-_MUSCLE_ALIASES = {
-    "chest": "chest",
-    "pec": "chest",
-    "pecs": "chest",
-    "back": "back",
-    "lats": "back",
-    "lat": "back",
-    "mid_back": "back",
-    "upper_back": "back",
-    "erectors": "back",
-    "quads": "quads",
-    "quadriceps": "quads",
-    "hamstrings": "hamstrings",
-    "glutes": "glutes",
-    "shoulders": "shoulders",
-    "delts": "shoulders",
-    "front_delts": "shoulders",
-    "rear_delts": "shoulders",
-    "side_delts": "shoulders",
-    "biceps": "biceps",
-    "triceps": "triceps",
-    "calves": "calves",
-}
-
-_TRACKED_MUSCLES = (
-    "chest",
-    "back",
-    "quads",
-    "hamstrings",
-    "glutes",
-    "shoulders",
-    "biceps",
-    "triceps",
-    "calves",
-)
-
-_MIN_SETS_PER_MUSCLE = 2
-
-
-def _normalize_muscle_label(value: str | None) -> str | None:
-    if not value:
-        return None
-    normalized = re.sub(r"[^a-z]+", "_", value.strip().lower()).strip("_")
-    return _MUSCLE_ALIASES.get(normalized)
-
-
-def _resolve_exercise_muscles(exercise: dict[str, Any]) -> set[str]:
-    resolved: set[str] = set()
-
-    for muscle in exercise.get("primary_muscles") or []:
-        normalized = _normalize_muscle_label(muscle)
-        if normalized:
-            resolved.add(normalized)
-
-    for muscle in exercise.get("secondary_muscles") or []:
-        normalized = _normalize_muscle_label(muscle)
-        if normalized:
-            resolved.add(normalized)
-
-    return resolved
-def _normalize_percentage(value: Any) -> int | None:
-    try:
-        parsed = int(value)
-    except (TypeError, ValueError):
-        return None
-    return max(0, min(100, parsed))
 
 
 def _apply_deload_modifiers(sets: int, weight: float, *, set_reduction_pct: int, load_reduction_pct: int) -> tuple[int, float]:
@@ -244,7 +180,11 @@ def _exercise_slot_role(exercise: dict[str, Any]) -> str:
     return str(exercise.get("slot_role") or "").strip().lower()
 
 
-def _session_profile(session: dict[str, Any]) -> tuple[set[str], set[str]]:
+def _session_profile(
+    session: dict[str, Any],
+    *,
+    rule_set: dict[str, Any] | None,
+) -> tuple[set[str], set[str]]:
     primary_exercise_ids: set[str] = set()
     muscles: set[str] = set()
 
@@ -252,15 +192,23 @@ def _session_profile(session: dict[str, Any]) -> tuple[set[str], set[str]]:
         primary_exercise_id = str(exercise.get("primary_exercise_id") or exercise.get("id") or "").strip()
         if primary_exercise_id:
             primary_exercise_ids.add(primary_exercise_id)
-        muscles.update(_resolve_exercise_muscles(exercise))
+        exercise_muscle_runtime = resolve_scheduler_exercise_muscles_runtime(
+            exercise=exercise,
+            rule_set=rule_set,
+        )
+        muscles.update(exercise_muscle_runtime["normalized_muscles"])
 
     return primary_exercise_ids, muscles
 
 
-def _build_session_selection_profiles(base_sessions: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _build_session_selection_profiles(
+    base_sessions: list[dict[str, Any]],
+    *,
+    rule_set: dict[str, Any] | None,
+) -> list[dict[str, Any]]:
     profiles: list[dict[str, Any]] = []
     for index, session in enumerate(base_sessions):
-        primary_exercise_ids, muscles = _session_profile(session)
+        primary_exercise_ids, muscles = _session_profile(session, rule_set=rule_set)
         slot_roles = [
             _exercise_slot_role(exercise)
             for exercise in session.get("exercises") or []
@@ -360,13 +308,24 @@ def _resolve_authored_week_runtime(
     }
 
 
-def _compute_weekly_volume_and_coverage(planned_sessions: list[dict[str, Any]]) -> tuple[dict[str, int], dict[str, Any]]:
-    volume_by_muscle = dict.fromkeys(_TRACKED_MUSCLES, 0)
+def _compute_weekly_volume_and_coverage(
+    planned_sessions: list[dict[str, Any]],
+    *,
+    rule_set: dict[str, Any] | None,
+) -> tuple[dict[str, int], dict[str, Any]]:
+    coverage_runtime = resolve_scheduler_muscle_coverage_runtime(rule_set=rule_set)
+    tracked_muscles = list(coverage_runtime["tracked_muscles"])
+    minimum_sets_per_muscle = int(coverage_runtime["minimum_sets_per_muscle"])
+    volume_by_muscle = dict.fromkeys(tracked_muscles, 0)
     untracked_exercise_count = 0
 
     for session in planned_sessions:
         for exercise in session.get("exercises", []):
-            resolved_muscles = _resolve_exercise_muscles(exercise)
+            exercise_muscle_runtime = resolve_scheduler_exercise_muscles_runtime(
+                exercise=exercise,
+                rule_set=rule_set,
+            )
+            resolved_muscles = set(exercise_muscle_runtime["normalized_muscles"])
             tracked_muscles = [muscle for muscle in resolved_muscles if muscle in volume_by_muscle]
             if not tracked_muscles:
                 untracked_exercise_count += 1
@@ -377,14 +336,14 @@ def _compute_weekly_volume_and_coverage(planned_sessions: list[dict[str, Any]]) 
                 volume_by_muscle[muscle] += sets
 
     under_target_muscles = [
-        muscle for muscle in _TRACKED_MUSCLES if volume_by_muscle[muscle] < _MIN_SETS_PER_MUSCLE
+        muscle for muscle in volume_by_muscle if volume_by_muscle[muscle] < minimum_sets_per_muscle
     ]
     covered_muscles = [
-        muscle for muscle in _TRACKED_MUSCLES if volume_by_muscle[muscle] >= _MIN_SETS_PER_MUSCLE
+        muscle for muscle in volume_by_muscle if volume_by_muscle[muscle] >= minimum_sets_per_muscle
     ]
 
     return volume_by_muscle, {
-        "minimum_sets_per_muscle": _MIN_SETS_PER_MUSCLE,
+        "minimum_sets_per_muscle": minimum_sets_per_muscle,
         "covered_muscles": covered_muscles,
         "under_target_muscles": under_target_muscles,
         "untracked_exercise_count": untracked_exercise_count,
@@ -416,7 +375,7 @@ def generate_week_plan(
     authored_week_runtime = _resolve_authored_week_runtime(program_template, prior_generated_weeks)
     base_sessions = list(authored_week_runtime.get("sessions") or [])
     session_selection_runtime = resolve_scheduler_session_selection(
-        session_profiles=_build_session_selection_profiles(base_sessions),
+        session_profiles=_build_session_selection_profiles(base_sessions, rule_set=rule_set),
         history=history,
         days_available=days_available,
         rule_set=rule_set,
@@ -460,29 +419,20 @@ def generate_week_plan(
         rule_set=rule_set,
     )
 
-    deload_config = program_template.get("deload") or {}
-    deload_rules = (rule_set or {}).get("deload_rules") if isinstance(rule_set, dict) else {}
-    on_deload_rules = deload_rules.get("on_deload") if isinstance(deload_rules, dict) else {}
-    set_reduction_pct = (
-        _normalize_percentage(on_deload_rules.get("set_reduction_percent"))
-        if isinstance(on_deload_rules, dict)
-        else None
+    deload_runtime = resolve_scheduler_deload_runtime(
+        template_deload=program_template.get("deload"),
+        is_deload_week=bool(mesocycle["is_deload_week"]),
+        mesocycle_decision_trace=mesocycle["decision_trace"],
+        rule_set=rule_set,
     )
-    if set_reduction_pct is None:
-        set_reduction_pct = _normalize_percentage(deload_config.get("set_reduction_pct")) or 0
-    load_reduction_pct = (
-        _normalize_percentage(on_deload_rules.get("load_reduction_percent"))
-        if isinstance(on_deload_rules, dict)
-        else None
-    )
-    if load_reduction_pct is None:
-        load_reduction_pct = _normalize_percentage(deload_config.get("load_reduction_pct")) or 0
+    set_reduction_pct = int(deload_runtime["set_reduction_pct"])
+    load_reduction_pct = int(deload_runtime["load_reduction_pct"])
     deload = {
-        "active": mesocycle["is_deload_week"],
+        "active": bool(deload_runtime["active"]),
         "set_reduction_pct": set_reduction_pct,
         "load_reduction_pct": load_reduction_pct,
         "reason": mesocycle["deload_reason"],
-        "decision_trace": dict(mesocycle["decision_trace"]),
+        "decision_trace": dict(deload_runtime["decision_trace"]),
     }
 
     planned_sessions: list[dict[str, Any]] = []
@@ -538,7 +488,10 @@ def generate_week_plan(
             }
         )
 
-    weekly_volume_by_muscle, muscle_coverage = _compute_weekly_volume_and_coverage(planned_sessions)
+    weekly_volume_by_muscle, muscle_coverage = _compute_weekly_volume_and_coverage(
+        planned_sessions,
+        rule_set=rule_set,
+    )
 
     return {
         "program_template_id": program_template.get("id", "template"),
