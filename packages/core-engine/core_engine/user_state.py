@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Any
 
+from .decision_progression import evaluate_stimulus_fatigue_response
 from .intelligence import resolve_latest_logged_workout_resume_state, resolve_workout_today_session_selection
 
 
@@ -313,6 +314,35 @@ def _build_adherence_state(
     }
 
 
+def _completion_pct_proxy_from_adherence(latest_adherence_score: int | None) -> int:
+    if latest_adherence_score is None:
+        return 85
+
+    normalized_adherence = max(1, min(5, int(latest_adherence_score)))
+    return {
+        1: 55,
+        2: 68,
+        3: 80,
+        4: 90,
+        5: 96,
+    }[normalized_adherence]
+
+
+def _resolve_soreness_level_for_sfr(fatigue_state: dict[str, Any]) -> str:
+    severe_soreness_count = int(fatigue_state.get("severe_soreness_count") or 0)
+    if severe_soreness_count >= 2:
+        return "severe"
+    if severe_soreness_count == 1:
+        return "moderate"
+
+    flagged_muscles = _normalize_string_list(fatigue_state.get("flagged_muscles"))
+    if len(flagged_muscles) >= 2:
+        return "moderate"
+    if flagged_muscles:
+        return "mild"
+    return "none"
+
+
 def _build_readiness_state(*, recent_checkins: list[Any]) -> dict[str, Any]:
     latest_checkin = recent_checkins[0] if recent_checkins else None
     sleep_quality_raw = _read_attr(latest_checkin, "sleep_quality") if latest_checkin is not None else None
@@ -412,6 +442,48 @@ def _build_stall_state(
         "stalled_exercise_ids": stalled_exercise_ids,
         "consecutive_underperformance_weeks": max(review_stagnation_weeks, state_stagnation_weeks),
         "phase_stagnation_weeks": review_stagnation_weeks,
+    }
+
+
+def _build_stimulus_fatigue_response(
+    *,
+    readiness_state: dict[str, Any],
+    fatigue_state: dict[str, Any],
+    adherence_state: dict[str, Any],
+    stall_state: dict[str, Any],
+) -> dict[str, Any]:
+    latest_adherence_score = adherence_state.get("latest_adherence_score")
+    sleep_quality = readiness_state.get("sleep_quality")
+    stress_level = readiness_state.get("stress_level")
+    average_rpe = fatigue_state.get("session_rpe_avg")
+    pain_flags = _normalize_string_list(readiness_state.get("pain_flags"))
+    snapshot = evaluate_stimulus_fatigue_response(
+        completion_pct=_completion_pct_proxy_from_adherence(
+            int(latest_adherence_score) if latest_adherence_score is not None else None
+        ),
+        adherence_score=max(1, min(5, int(latest_adherence_score or 3))),
+        soreness_level=_resolve_soreness_level_for_sfr(fatigue_state),
+        average_rpe=float(average_rpe) if isinstance(average_rpe, (int, float)) else None,
+        consecutive_underperformance_weeks=max(
+            int(stall_state.get("consecutive_underperformance_weeks") or 0),
+            int(stall_state.get("phase_stagnation_weeks") or 0),
+        ),
+        sleep_quality=int(sleep_quality) if sleep_quality is not None else None,
+        stress_level=int(stress_level) if stress_level is not None else None,
+        pain_flags=pain_flags,
+    )
+    return {
+        "stimulus_quality": str(snapshot.get("stimulus_quality") or ""),
+        "fatigue_cost": str(snapshot.get("fatigue_cost") or ""),
+        "recoverability": str(snapshot.get("recoverability") or ""),
+        "progression_eligibility": bool(snapshot.get("progression_eligibility")),
+        "deload_pressure": str(snapshot.get("deload_pressure") or ""),
+        "substitution_pressure": str(snapshot.get("substitution_pressure") or ""),
+        "signals": {
+            "stimulus": _normalize_string_list(_coerce_dict(snapshot.get("signals")).get("stimulus")),
+            "fatigue": _normalize_string_list(_coerce_dict(snapshot.get("signals")).get("fatigue")),
+            "recoverability": _normalize_string_list(_coerce_dict(snapshot.get("signals")).get("recoverability")),
+        },
     }
 
 
@@ -534,6 +606,7 @@ def _build_coaching_state(
     fatigue_state: dict[str, Any],
     adherence_state: dict[str, Any],
     stall_state: dict[str, Any],
+    stimulus_fatigue_response: dict[str, Any],
     generation_state: dict[str, Any],
 ) -> dict[str, Any]:
     return {
@@ -541,6 +614,7 @@ def _build_coaching_state(
         "fatigue": dict(fatigue_state),
         "adherence": dict(adherence_state),
         "stall": dict(stall_state),
+        "stimulus_fatigue_response": dict(stimulus_fatigue_response),
         "mesocycle": dict(_coerce_dict(generation_state.get("latest_mesocycle"))),
     }
 
@@ -595,6 +669,12 @@ def build_user_training_state(
     stall_state = _build_stall_state(progression_state, recent_review_cycles)
     performance_history = _build_performance_history(normalized_logs)
     readiness_state = _build_readiness_state(recent_checkins=recent_checkins)
+    stimulus_fatigue_response = _build_stimulus_fatigue_response(
+        readiness_state=readiness_state,
+        fatigue_state=fatigue_state,
+        adherence_state=adherence_state,
+        stall_state=stall_state,
+    )
     generation_state = _build_generation_state(
         prior_plans=prior_plans,
         latest_plan_payload=latest_plan_payload,
@@ -615,11 +695,13 @@ def build_user_training_state(
         "fatigue_state": fatigue_state,
         "adherence_state": adherence_state,
         "readiness_state": readiness_state,
+        "stimulus_fatigue_response": stimulus_fatigue_response,
         "coaching_state": _build_coaching_state(
             readiness_state=readiness_state,
             fatigue_state=fatigue_state,
             adherence_state=adherence_state,
             stall_state=stall_state,
+            stimulus_fatigue_response=stimulus_fatigue_response,
             generation_state=generation_state,
         ),
         "constraint_state": _build_constraint_state(

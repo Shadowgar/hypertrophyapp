@@ -50,6 +50,37 @@ def _coerce_string_list(value: Any) -> list[str]:
     return [str(item).strip() for item in value if str(item).strip()]
 
 
+def _coerce_stimulus_fatigue_response_snapshot(value: Any) -> dict[str, Any]:
+    snapshot = _coerce_dict(value)
+    if not snapshot:
+        return {}
+
+    signals = _coerce_dict(snapshot.get("signals"))
+    normalized = {
+        "stimulus_quality": str(snapshot.get("stimulus_quality") or "").strip().lower(),
+        "fatigue_cost": str(snapshot.get("fatigue_cost") or "").strip().lower(),
+        "recoverability": str(snapshot.get("recoverability") or "").strip().lower(),
+        "progression_eligibility": bool(snapshot.get("progression_eligibility")),
+        "deload_pressure": str(snapshot.get("deload_pressure") or "").strip().lower(),
+        "substitution_pressure": str(snapshot.get("substitution_pressure") or "").strip().lower(),
+        "signals": {
+            "stimulus": _coerce_string_list(signals.get("stimulus")),
+            "fatigue": _coerce_string_list(signals.get("fatigue")),
+            "recoverability": _coerce_string_list(signals.get("recoverability")),
+        },
+    }
+    required_fields = (
+        "stimulus_quality",
+        "fatigue_cost",
+        "recoverability",
+        "deload_pressure",
+        "substitution_pressure",
+    )
+    if any(not normalized[field] for field in required_fields):
+        return {}
+    return normalized
+
+
 def _serialize_training_state_history(user_training_state: dict[str, Any]) -> list[dict[str, Any]]:
     performance_history = user_training_state.get("exercise_performance_history") or []
     if not isinstance(performance_history, list):
@@ -712,11 +743,27 @@ def _generation_soreness_level(fatigue_state: dict[str, Any], severe_soreness_co
 
 def _resolve_generation_stimulus_fatigue_response(
     *,
+    normalized_training_state: dict[str, Any],
     fatigue_state: dict[str, Any],
     readiness_state: dict[str, Any],
     latest_adherence_score: int | None,
     severe_soreness_count: int,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
+    coaching_state = _coerce_dict(normalized_training_state.get("coaching_state"))
+    canonical_snapshot = _coerce_stimulus_fatigue_response_snapshot(coaching_state.get("stimulus_fatigue_response"))
+    if canonical_snapshot:
+        return canonical_snapshot, {
+            "source": "coaching_state.stimulus_fatigue_response",
+        }
+
+    canonical_snapshot = _coerce_stimulus_fatigue_response_snapshot(
+        normalized_training_state.get("stimulus_fatigue_response")
+    )
+    if canonical_snapshot:
+        return canonical_snapshot, {
+            "source": "training_state.stimulus_fatigue_response",
+        }
+
     completion_pct_proxy, completion_proxy_source = _generation_completion_proxy(latest_adherence_score)
     soreness_level = _generation_soreness_level(fatigue_state, severe_soreness_count)
     average_rpe = fatigue_state.get("session_rpe_avg")
@@ -734,7 +781,8 @@ def _resolve_generation_stimulus_fatigue_response(
         stress_level=int(stress_level) if stress_level is not None else None,
         pain_flags=pain_flags,
     )
-    return snapshot, {
+    return _coerce_stimulus_fatigue_response_snapshot(snapshot), {
+        "source": "derived_from_training_state_inputs",
         "completion_pct_proxy": completion_pct_proxy,
         "completion_pct_proxy_source": completion_proxy_source,
         "soreness_level": soreness_level,
@@ -802,6 +850,7 @@ def resolve_week_generation_runtime_inputs(
     )
     constraint_state = _coerce_dict(normalized_training_state.get("constraint_state"))
     stimulus_fatigue_response, sfr_trace = _resolve_generation_stimulus_fatigue_response(
+        normalized_training_state=normalized_training_state,
         fatigue_state=fatigue_state,
         readiness_state=readiness_state,
         latest_adherence_score=latest_adherence_score,
@@ -893,6 +942,7 @@ def resolve_week_generation_runtime_inputs(
                 "latest_adherence_score": int(latest_adherence_score) if latest_adherence_score is not None else None,
                 "prior_generated_weeks": int(prior_generated_weeks),
                 "readiness_source": readiness_source,
+                "stimulus_fatigue_response_source": str(sfr_trace.get("source") or ""),
                 "stimulus_fatigue_response": stimulus_fatigue_response,
             },
         },

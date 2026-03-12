@@ -150,6 +150,19 @@ def test_build_user_training_state_assembles_canonical_runtime_payload() -> None
         "pain_flags": ["elbow_flexion", "deep_knee_flexion"],
         "recovery_risk_flags": ["high_stress", "low_sleep", "pain_flags_present"],
     }
+    assert payload["stimulus_fatigue_response"] == {
+        "stimulus_quality": "low",
+        "fatigue_cost": "high",
+        "recoverability": "low",
+        "progression_eligibility": False,
+        "deload_pressure": "high",
+        "substitution_pressure": "high",
+        "signals": {
+            "stimulus": ["high_completion", "high_adherence", "underperformance_streak"],
+            "fatigue": ["elevated_soreness", "low_sleep", "high_stress", "pain_flags_present"],
+            "recoverability": ["sleep_limited", "stress_limited", "pain_limited", "fatigue_limited"],
+        },
+    }
     assert payload["constraint_state"] == {
         "days_available": 4,
         "split_preference": "full_body",
@@ -206,6 +219,19 @@ def test_build_user_training_state_assembles_canonical_runtime_payload() -> None
             "consecutive_underperformance_weeks": 2,
             "phase_stagnation_weeks": 2,
         },
+        "stimulus_fatigue_response": {
+            "stimulus_quality": "low",
+            "fatigue_cost": "high",
+            "recoverability": "low",
+            "progression_eligibility": False,
+            "deload_pressure": "high",
+            "substitution_pressure": "high",
+            "signals": {
+                "stimulus": ["high_completion", "high_adherence", "underperformance_streak"],
+                "fatigue": ["elevated_soreness", "low_sleep", "high_stress", "pain_flags_present"],
+                "recoverability": ["sleep_limited", "stress_limited", "pain_limited", "fatigue_limited"],
+            },
+        },
         "mesocycle": {
             "week_index": 3,
             "trigger_weeks_effective": 5,
@@ -252,6 +278,19 @@ def test_build_plan_decision_training_state_uses_canonical_builder_defaults() ->
         "pain_flags": [],
         "recovery_risk_flags": [],
     }
+    assert payload["stimulus_fatigue_response"] == {
+        "stimulus_quality": "moderate",
+        "fatigue_cost": "low",
+        "recoverability": "moderate",
+        "progression_eligibility": False,
+        "deload_pressure": "low",
+        "substitution_pressure": "low",
+        "signals": {
+            "stimulus": [],
+            "fatigue": [],
+            "recoverability": [],
+        },
+    }
     assert payload["constraint_state"] == {
         "days_available": 3,
         "split_preference": "upper_lower",
@@ -288,6 +327,19 @@ def test_build_plan_decision_training_state_uses_canonical_builder_defaults() ->
             "stalled_exercise_ids": [],
             "consecutive_underperformance_weeks": 0,
             "phase_stagnation_weeks": 0,
+        },
+        "stimulus_fatigue_response": {
+            "stimulus_quality": "moderate",
+            "fatigue_cost": "low",
+            "recoverability": "moderate",
+            "progression_eligibility": False,
+            "deload_pressure": "low",
+            "substitution_pressure": "low",
+            "signals": {
+                "stimulus": [],
+                "fatigue": [],
+                "recoverability": [],
+            },
         },
         "mesocycle": {
             "week_index": 2,

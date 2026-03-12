@@ -184,6 +184,19 @@ def test_profile_training_state_returns_canonical_runtime_payload() -> None:
         "pain_flags": ["elbow_flexion"],
         "recovery_risk_flags": ["high_stress", "low_sleep", "pain_flags_present"],
     }
+    assert payload["stimulus_fatigue_response"] == {
+        "stimulus_quality": "moderate",
+        "fatigue_cost": "high",
+        "recoverability": "low",
+        "progression_eligibility": False,
+        "deload_pressure": "high",
+        "substitution_pressure": "high",
+        "signals": {
+            "stimulus": ["high_completion", "high_adherence"],
+            "fatigue": ["elevated_soreness", "low_sleep", "high_stress", "pain_flags_present"],
+            "recoverability": ["sleep_limited", "stress_limited", "pain_limited", "fatigue_limited"],
+        },
+    }
     assert payload["constraint_state"] == {
         "days_available": 3,
         "split_preference": "full_body",
@@ -200,6 +213,7 @@ def test_profile_training_state_returns_canonical_runtime_payload() -> None:
         "consecutive_underperformance_weeks": 1,
         "phase_stagnation_weeks": 1,
     }
+    assert payload["coaching_state"]["stimulus_fatigue_response"] == payload["stimulus_fatigue_response"]
     assert payload["generation_state"] == {
         "prior_generated_weeks_by_program": {"full_body_v1": 1},
         "under_target_muscles": ["biceps", "rear_delts"],

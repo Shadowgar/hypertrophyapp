@@ -359,6 +359,60 @@ def test_resolve_week_generation_runtime_inputs_derives_sfr_from_canonical_coach
     assert runtime["decision_trace"]["outcome"]["stimulus_fatigue_response"]["deload_pressure"] == "high"
 
 
+def test_resolve_week_generation_runtime_inputs_prefers_canonical_sfr_snapshot_from_coaching_state() -> None:
+    canonical_snapshot = {
+        "stimulus_quality": "moderate",
+        "fatigue_cost": "low",
+        "recoverability": "high",
+        "progression_eligibility": False,
+        "deload_pressure": "low",
+        "substitution_pressure": "low",
+        "signals": {
+            "stimulus": ["high_completion"],
+            "fatigue": [],
+            "recoverability": [],
+        },
+    }
+    runtime = resolve_week_generation_runtime_inputs(
+        selected_template_id="full_body_v1",
+        current_days_available=4,
+        active_frequency_adaptation=None,
+        user_training_state={
+            "fatigue_state": {
+                "soreness_by_muscle": {"chest": "severe", "back": "mild"},
+                "session_rpe_avg": 9.1,
+            },
+            "adherence_state": {
+                "latest_adherence_score": 3,
+            },
+            "coaching_state": {
+                "readiness": {
+                    "sleep_quality": 2,
+                    "stress_level": 4,
+                    "pain_flags": ["shoulder_irritation"],
+                    "recovery_risk_flags": ["high_stress", "low_sleep", "pain_flags_present"],
+                },
+                "stall": {"consecutive_underperformance_weeks": 1},
+                "stimulus_fatigue_response": canonical_snapshot,
+            },
+        },
+        history_rows=[],
+        latest_soreness_entry=None,
+        latest_checkin=None,
+        prior_plans=[],
+    )
+
+    sfr_step = next(
+        step for step in runtime["decision_trace"]["steps"] if step["decision"] == "stimulus_fatigue_response"
+    )
+    assert runtime["stimulus_fatigue_response"] == canonical_snapshot
+    assert runtime["coaching_state"]["stimulus_fatigue_response"] == canonical_snapshot
+    assert sfr_step["result"]["source"] == "coaching_state.stimulus_fatigue_response"
+    assert runtime["decision_trace"]["outcome"]["stimulus_fatigue_response_source"] == (
+        "coaching_state.stimulus_fatigue_response"
+    )
+
+
 def test_resolve_week_generation_runtime_inputs_marks_top_level_readiness_state_as_legacy_fallback() -> None:
     runtime = resolve_week_generation_runtime_inputs(
         selected_template_id="full_body_v1",

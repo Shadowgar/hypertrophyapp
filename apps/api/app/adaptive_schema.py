@@ -389,6 +389,22 @@ class ReadinessState(BaseModel):
     recovery_risk_flags: list[str] = Field(default_factory=list)
 
 
+class StimulusFatigueResponseSignals(BaseModel):
+    stimulus: list[str] = Field(default_factory=list)
+    fatigue: list[str] = Field(default_factory=list)
+    recoverability: list[str] = Field(default_factory=list)
+
+
+class StimulusFatigueResponseState(BaseModel):
+    stimulus_quality: Literal["low", "moderate", "high"]
+    fatigue_cost: Literal["low", "moderate", "high"]
+    recoverability: Literal["low", "moderate", "high"]
+    progression_eligibility: bool = False
+    deload_pressure: Literal["low", "moderate", "high"]
+    substitution_pressure: Literal["low", "moderate", "high"]
+    signals: StimulusFatigueResponseSignals = Field(default_factory=StimulusFatigueResponseSignals)
+
+
 class ConstraintState(BaseModel):
     days_available: int | None = Field(default=None, ge=2, le=5)
     split_preference: str | None = None
@@ -424,6 +440,7 @@ class CoachingState(BaseModel):
     fatigue: FatigueState
     adherence: AdherenceState
     stall: StallState
+    stimulus_fatigue_response: StimulusFatigueResponseState | None = None
     mesocycle: LatestMesocycleState = Field(default_factory=LatestMesocycleState)
 
 
@@ -449,6 +466,7 @@ class UserTrainingState(BaseModel):
     fatigue_state: FatigueState
     adherence_state: AdherenceState
     readiness_state: ReadinessState = Field(default_factory=ReadinessState)
+    stimulus_fatigue_response: StimulusFatigueResponseState | None = None
     coaching_state: CoachingState = Field(
         description="Canonical coaching decision state used by preview and coaching runtime surfaces."
     )

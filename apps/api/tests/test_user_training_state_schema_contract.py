@@ -56,6 +56,19 @@ def test_user_training_state_validates_against_canonical_contract() -> None:
                 "pain_flags": ["elbow_flexion"],
                 "recovery_risk_flags": ["high_stress", "low_sleep", "pain_flags_present"],
             },
+            "stimulus_fatigue_response": {
+                "stimulus_quality": "moderate",
+                "fatigue_cost": "high",
+                "recoverability": "low",
+                "progression_eligibility": False,
+                "deload_pressure": "high",
+                "substitution_pressure": "high",
+                "signals": {
+                    "stimulus": ["high_completion", "high_adherence"],
+                    "fatigue": ["low_sleep", "high_stress", "pain_flags_present"],
+                    "recoverability": ["sleep_limited", "stress_limited", "pain_limited", "fatigue_limited"],
+                },
+            },
             "coaching_state": {
                 "readiness": {
                     "sleep_quality": 2,
@@ -79,6 +92,19 @@ def test_user_training_state_validates_against_canonical_contract() -> None:
                     "stalled_exercise_ids": ["bench_press_barbell"],
                     "consecutive_underperformance_weeks": 1,
                     "phase_stagnation_weeks": 0,
+                },
+                "stimulus_fatigue_response": {
+                    "stimulus_quality": "moderate",
+                    "fatigue_cost": "high",
+                    "recoverability": "low",
+                    "progression_eligibility": False,
+                    "deload_pressure": "high",
+                    "substitution_pressure": "high",
+                    "signals": {
+                        "stimulus": ["high_completion", "high_adherence"],
+                        "fatigue": ["low_sleep", "high_stress", "pain_flags_present"],
+                        "recoverability": ["sleep_limited", "stress_limited", "pain_limited", "fatigue_limited"],
+                    },
                 },
                 "mesocycle": {
                     "week_index": 3,
@@ -114,7 +140,11 @@ def test_user_training_state_validates_against_canonical_contract() -> None:
     assert state.progression_state_per_exercise[0].last_progression_action == "hold"
     assert state.progression_state_per_exercise[0].fatigue_score == 0.35
     assert state.readiness_state.sleep_quality == 2
+    assert state.stimulus_fatigue_response is not None
+    assert state.stimulus_fatigue_response.deload_pressure == "high"
     assert state.coaching_state.readiness.sleep_quality == 2
+    assert state.coaching_state.stimulus_fatigue_response is not None
+    assert state.coaching_state.stimulus_fatigue_response.recoverability == "low"
     assert state.coaching_state.mesocycle.week_index == 3
     assert state.readiness_state.recovery_risk_flags == ["high_stress", "low_sleep", "pain_flags_present"]
 
