@@ -183,7 +183,7 @@ def _exercise_slot_role(exercise: dict[str, Any]) -> str:
 def _session_profile(
     session: dict[str, Any],
     *,
-    rule_set: dict[str, Any] | None,
+    muscle_coverage_runtime: dict[str, Any],
 ) -> tuple[set[str], set[str]]:
     primary_exercise_ids: set[str] = set()
     muscles: set[str] = set()
@@ -194,7 +194,7 @@ def _session_profile(
             primary_exercise_ids.add(primary_exercise_id)
         exercise_muscle_runtime = resolve_scheduler_exercise_muscles_runtime(
             exercise=exercise,
-            rule_set=rule_set,
+            muscle_coverage_runtime=muscle_coverage_runtime,
         )
         muscles.update(exercise_muscle_runtime["normalized_muscles"])
 
@@ -204,11 +204,14 @@ def _session_profile(
 def _build_session_selection_profiles(
     base_sessions: list[dict[str, Any]],
     *,
-    rule_set: dict[str, Any] | None,
+    muscle_coverage_runtime: dict[str, Any],
 ) -> list[dict[str, Any]]:
     profiles: list[dict[str, Any]] = []
     for index, session in enumerate(base_sessions):
-        primary_exercise_ids, muscles = _session_profile(session, rule_set=rule_set)
+        primary_exercise_ids, muscles = _session_profile(
+            session,
+            muscle_coverage_runtime=muscle_coverage_runtime,
+        )
         slot_roles = [
             _exercise_slot_role(exercise)
             for exercise in session.get("exercises") or []
@@ -311,11 +314,10 @@ def _resolve_authored_week_runtime(
 def _compute_weekly_volume_and_coverage(
     planned_sessions: list[dict[str, Any]],
     *,
-    rule_set: dict[str, Any] | None,
+    muscle_coverage_runtime: dict[str, Any],
 ) -> tuple[dict[str, int], dict[str, Any]]:
-    coverage_runtime = resolve_scheduler_muscle_coverage_runtime(rule_set=rule_set)
-    tracked_muscles = list(coverage_runtime["tracked_muscles"])
-    minimum_sets_per_muscle = int(coverage_runtime["minimum_sets_per_muscle"])
+    tracked_muscles = list(muscle_coverage_runtime["tracked_muscles"])
+    minimum_sets_per_muscle = int(muscle_coverage_runtime["minimum_sets_per_muscle"])
     volume_by_muscle = dict.fromkeys(tracked_muscles, 0)
     untracked_exercise_count = 0
 
@@ -323,16 +325,18 @@ def _compute_weekly_volume_and_coverage(
         for exercise in session.get("exercises", []):
             exercise_muscle_runtime = resolve_scheduler_exercise_muscles_runtime(
                 exercise=exercise,
-                rule_set=rule_set,
+                muscle_coverage_runtime=muscle_coverage_runtime,
             )
             resolved_muscles = set(exercise_muscle_runtime["normalized_muscles"])
-            tracked_muscles = [muscle for muscle in resolved_muscles if muscle in volume_by_muscle]
-            if not tracked_muscles:
+            tracked_exercise_muscles = [
+                muscle for muscle in resolved_muscles if muscle in volume_by_muscle
+            ]
+            if not tracked_exercise_muscles:
                 untracked_exercise_count += 1
                 continue
 
             sets = int(exercise.get("sets", 0) or 0)
-            for muscle in tracked_muscles:
+            for muscle in tracked_exercise_muscles:
                 volume_by_muscle[muscle] += sets
 
     under_target_muscles = [
@@ -374,8 +378,12 @@ def generate_week_plan(
 
     authored_week_runtime = _resolve_authored_week_runtime(program_template, prior_generated_weeks)
     base_sessions = list(authored_week_runtime.get("sessions") or [])
+    muscle_coverage_runtime = resolve_scheduler_muscle_coverage_runtime(rule_set=rule_set)
     session_selection_runtime = resolve_scheduler_session_selection(
-        session_profiles=_build_session_selection_profiles(base_sessions, rule_set=rule_set),
+        session_profiles=_build_session_selection_profiles(
+            base_sessions,
+            muscle_coverage_runtime=muscle_coverage_runtime,
+        ),
         history=history,
         days_available=days_available,
         rule_set=rule_set,
@@ -490,7 +498,7 @@ def generate_week_plan(
 
     weekly_volume_by_muscle, muscle_coverage = _compute_weekly_volume_and_coverage(
         planned_sessions,
-        rule_set=rule_set,
+        muscle_coverage_runtime=muscle_coverage_runtime,
     )
 
     return {

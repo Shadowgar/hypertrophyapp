@@ -527,13 +527,14 @@ def test_resolve_scheduler_muscle_coverage_runtime_uses_canonical_contract() -> 
 
 
 def test_resolve_scheduler_exercise_muscles_runtime_normalizes_only_explicit_authored_metadata() -> None:
+    muscle_coverage_runtime = resolve_scheduler_muscle_coverage_runtime(rule_set=_scheduler_rule_set())
     runtime = resolve_scheduler_exercise_muscles_runtime(
         exercise={
             "name": "Lat Raise Pec Deck",
             "primary_muscles": ["lats", "mid_back"],
             "secondary_muscles": ["rear_delts", "biceps"],
         },
-        rule_set=_scheduler_rule_set(),
+        muscle_coverage_runtime=muscle_coverage_runtime,
     )
 
     assert runtime["normalized_muscles"] == ["back", "biceps", "shoulders"]
@@ -541,15 +542,31 @@ def test_resolve_scheduler_exercise_muscles_runtime_normalizes_only_explicit_aut
 
 
 def test_resolve_scheduler_exercise_muscles_runtime_does_not_infer_from_tokens_without_authored_metadata() -> None:
+    muscle_coverage_runtime = resolve_scheduler_muscle_coverage_runtime(rule_set=_scheduler_rule_set())
     runtime = resolve_scheduler_exercise_muscles_runtime(
         exercise={
             "name": "Lat Raise Pec Deck",
         },
-        rule_set=_scheduler_rule_set(),
+        muscle_coverage_runtime=muscle_coverage_runtime,
     )
 
     assert runtime["normalized_muscles"] == []
     assert runtime["decision_trace"]["outcome"]["input_source"] == "no_explicit_authored_muscle_metadata"
+
+
+def test_resolve_scheduler_exercise_muscles_runtime_can_consume_pre_resolved_coverage_runtime() -> None:
+    muscle_coverage_runtime = resolve_scheduler_muscle_coverage_runtime(rule_set=_scheduler_rule_set())
+
+    runtime = resolve_scheduler_exercise_muscles_runtime(
+        exercise={
+            "id": "row",
+            "primary_muscles": ["lats"],
+            "secondary_muscles": ["biceps"],
+        },
+        muscle_coverage_runtime=muscle_coverage_runtime,
+    )
+
+    assert runtime["normalized_muscles"] == ["back", "biceps"]
 
 
 def test_resolve_scheduler_deload_runtime_returns_bounded_noop_without_authoritative_policy() -> None:

@@ -883,10 +883,15 @@ def resolve_scheduler_muscle_coverage_runtime(
 def resolve_scheduler_exercise_muscles_runtime(
     *,
     exercise: dict[str, Any] | None,
+    muscle_coverage_runtime: dict[str, Any] | None = None,
     rule_set: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     exercise_dict = _coerce_dict(exercise)
-    coverage_runtime = resolve_scheduler_muscle_coverage_runtime(rule_set=rule_set)
+    coverage_runtime = (
+        _coerce_dict(muscle_coverage_runtime)
+        if muscle_coverage_runtime is not None
+        else resolve_scheduler_muscle_coverage_runtime(rule_set=rule_set)
+    )
     normalization_map = coverage_runtime["authored_label_normalization"]
 
     explicit_labels: list[str] = []
