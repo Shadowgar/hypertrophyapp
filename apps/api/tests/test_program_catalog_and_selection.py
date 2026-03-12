@@ -1340,6 +1340,15 @@ def test_adaptive_gold_generate_week_uses_canonical_readiness_state_for_sfr_reco
     assert plan["mesocycle"]["is_deload_week"] is True
     assert plan["mesocycle"]["deload_reason"] == "early_sfr_recovery"
     assert plan["deload"]["active"] is True
+    assert plan["decision_trace"]["canonical_inputs"]["stimulus_fatigue_response_source"] == (
+        "coaching_state.stimulus_fatigue_response"
+    )
+    assert plan["decision_trace"]["policy_basis"]["week_generation"]["stimulus_fatigue_response_source"] == (
+        "coaching_state.stimulus_fatigue_response"
+    )
+    assert plan["decision_trace"]["outcome"]["stimulus_fatigue_response_source"] == (
+        "coaching_state.stimulus_fatigue_response"
+    )
     assert plan["generation_runtime_trace"]["outcome"]["stimulus_fatigue_response"]["deload_pressure"] == "high"
     assert plan["generation_runtime_trace"]["outcome"]["stimulus_fatigue_response"]["substitution_pressure"] == "high"
 
@@ -1668,6 +1677,15 @@ def test_generate_week_uses_canonical_readiness_state_for_sfr_recovery_deload() 
     assert plan["mesocycle"]["is_deload_week"] is False
     assert plan["mesocycle"]["deload_reason"] == "none"
     assert plan["deload"]["active"] is False
+    assert plan["decision_trace"]["canonical_inputs"]["stimulus_fatigue_response_source"] == (
+        "coaching_state.stimulus_fatigue_response"
+    )
+    assert plan["decision_trace"]["policy_basis"]["week_generation"]["stimulus_fatigue_response_source"] == (
+        "coaching_state.stimulus_fatigue_response"
+    )
+    assert plan["decision_trace"]["outcome"]["stimulus_fatigue_response_source"] == (
+        "coaching_state.stimulus_fatigue_response"
+    )
     assert plan["generation_runtime_trace"]["outcome"]["stimulus_fatigue_response"]["deload_pressure"] == "high"
     assert plan["generation_runtime_trace"]["outcome"]["stimulus_fatigue_response"]["substitution_pressure"] == "high"
 
