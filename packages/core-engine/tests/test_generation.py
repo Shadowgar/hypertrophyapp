@@ -527,6 +527,7 @@ def test_build_coach_preview_context_reuses_serialized_recent_training_history()
         "split_preference": "full_body",
         "program_template": template,
         "history": serialized_history,
+        "coaching_state": {},
         "readiness_state": {},
         "latest_mesocycle": {},
         "phase": "maintenance",
@@ -550,6 +551,23 @@ def test_build_coach_preview_context_prefers_canonical_training_state_history() 
             )
         ],
         user_training_state={
+            "coaching_state": {
+                "readiness": {
+                    "sleep_quality": 2,
+                    "stress_level": 4,
+                    "pain_flags": ["elbow_flexion"],
+                    "recovery_risk_flags": ["high_stress", "low_sleep", "pain_flags_present"],
+                },
+                "stall": {
+                    "stalled_exercise_ids": ["row"],
+                    "consecutive_underperformance_weeks": 2,
+                    "phase_stagnation_weeks": 1,
+                },
+                "mesocycle": {
+                    "authored_sequence_complete": True,
+                    "phase_transition_pending": True,
+                },
+            },
             "exercise_performance_history": [
                 {
                     "exercise_id": "row",
@@ -573,6 +591,23 @@ def test_build_coach_preview_context_prefers_canonical_training_state_history() 
             "created_at": "2026-03-06T09:00:00",
         }
     ]
+    assert context["coaching_state"] == {
+        "readiness": {
+            "sleep_quality": 2,
+            "stress_level": 4,
+            "pain_flags": ["elbow_flexion"],
+            "recovery_risk_flags": ["high_stress", "low_sleep", "pain_flags_present"],
+        },
+        "stall": {
+            "stalled_exercise_ids": ["row"],
+            "consecutive_underperformance_weeks": 2,
+            "phase_stagnation_weeks": 1,
+        },
+        "mesocycle": {
+            "authored_sequence_complete": True,
+            "phase_transition_pending": True,
+        },
+    }
 
 
 def test_prepare_coach_preview_runtime_inputs_normalizes_days_and_trace() -> None:

@@ -639,17 +639,16 @@ def _coach_preview_schedule_payload(schedule: dict[str, Any], *, from_days: int,
 
 
 def _coach_preview_effective_readiness_score(
-    context: dict[str, Any],
+    *,
+    readiness_state: dict[str, Any],
     preview_request: dict[str, Any],
     progression_payload: dict[str, Any],
-    *,
     derive_readiness_score: Callable[..., int],
 ) -> tuple[int, str]:
     provided = preview_request.get("readiness_score")
     if provided is not None:
         return int(provided), "request_readiness_score"
 
-    readiness_state = _coerce_dict(context.get("readiness_state"))
     sleep_quality = readiness_state.get("sleep_quality")
     stress_level = readiness_state.get("stress_level")
     pain_flags = [str(item) for item in readiness_state.get("pain_flags") or [] if str(item).strip()]
@@ -662,18 +661,18 @@ def _coach_preview_effective_readiness_score(
         sleep_quality=int(sleep_quality) if sleep_quality is not None else None,
         stress_level=int(stress_level) if stress_level is not None else None,
         pain_flags=pain_flags,
-    ), ("context_readiness_state" if readiness_state else "request_metrics_only")
+    ), ("context_coaching_state" if readiness_state else "request_metrics_only")
 
 
 def _coach_preview_progression_payload(
-    context: dict[str, Any],
-    preview_request: dict[str, Any],
     *,
+    readiness_state: dict[str, Any],
+    stagnation_weeks: int,
+    preview_request: dict[str, Any],
     rule_set: dict[str, Any] | None,
     recommend_progression_action: Callable[..., dict[str, Any]],
     humanize_progression_reason: Callable[..., str],
 ) -> dict[str, Any]:
-    readiness_state = _coerce_dict(context.get("readiness_state"))
     sleep_quality = readiness_state.get("sleep_quality")
     stress_level = readiness_state.get("stress_level")
     pain_flags = [str(item) for item in readiness_state.get("pain_flags") or [] if str(item).strip()]
@@ -683,7 +682,7 @@ def _coach_preview_progression_payload(
         adherence_score=int(preview_request.get("adherence_score") or 1),
         soreness_level=str(preview_request.get("soreness_level") or "none"),
         average_rpe=preview_request.get("average_rpe"),
-        consecutive_underperformance_weeks=int(preview_request.get("stagnation_weeks") or 0),
+        consecutive_underperformance_weeks=int(stagnation_weeks),
         rule_set=rule_set,
         sleep_quality=int(sleep_quality) if sleep_quality is not None else None,
         stress_level=int(stress_level) if stress_level is not None else None,
@@ -695,12 +694,58 @@ def _coach_preview_progression_payload(
     }
 
 
+def _resolve_coach_preview_canonical_state(
+    context: dict[str, Any],
+    preview_request: dict[str, Any],
+) -> dict[str, Any]:
+    coaching_state = _coerce_dict(context.get("coaching_state"))
+
+    readiness_state = _coerce_dict(coaching_state.get("readiness"))
+    readiness_source = "coaching_state.readiness"
+    if not readiness_state:
+        readiness_state = _coerce_dict(context.get("readiness_state"))
+        readiness_source = "legacy_context.readiness_state" if readiness_state else "unavailable"
+
+    stall_state = _coerce_dict(coaching_state.get("stall"))
+    stall_source = "coaching_state.stall" if stall_state else "preview_request"
+
+    mesocycle_state = _coerce_dict(coaching_state.get("mesocycle"))
+    mesocycle_source = "coaching_state.mesocycle"
+    if not mesocycle_state:
+        mesocycle_state = _coerce_dict(context.get("latest_mesocycle"))
+        mesocycle_source = "legacy_context.latest_mesocycle" if mesocycle_state else "unavailable"
+
+    stagnation_weeks_raw = preview_request.get("stagnation_weeks")
+    if stagnation_weeks_raw is not None:
+        stagnation_weeks = int(stagnation_weeks_raw)
+        stagnation_source = "preview_request"
+    else:
+        stagnation_weeks = int(
+            stall_state.get("consecutive_underperformance_weeks")
+            or stall_state.get("phase_stagnation_weeks")
+            or 0
+        )
+        stagnation_source = "coaching_state.stall" if stall_state else "default_zero"
+
+    return {
+        "readiness_state": readiness_state,
+        "stall_state": stall_state,
+        "mesocycle_state": mesocycle_state,
+        "readiness_source": readiness_source,
+        "stall_source": stall_source,
+        "mesocycle_source": mesocycle_source,
+        "stagnation_weeks": stagnation_weeks,
+        "stagnation_source": stagnation_source,
+    }
+
+
 def _coach_preview_trace(
     *,
     template_id: str,
     split_preference: str,
     phase: str,
     preview_request: dict[str, Any],
+    canonical_state: dict[str, Any],
     schedule_payload: dict[str, Any],
     progression_payload: dict[str, Any],
     effective_readiness_score: int,
@@ -733,6 +778,16 @@ def _coach_preview_trace(
         },
         "steps": [
             {"decision": "schedule_adaptation", "result": schedule_payload},
+            {
+                "decision": "canonical_coaching_state",
+                "result": {
+                    "readiness_source": str(canonical_state.get("readiness_source") or "unavailable"),
+                    "stall_source": str(canonical_state.get("stall_source") or "preview_request"),
+                    "mesocycle_source": str(canonical_state.get("mesocycle_source") or "unavailable"),
+                    "stagnation_source": str(canonical_state.get("stagnation_source") or "default_zero"),
+                    "stagnation_weeks": int(canonical_state.get("stagnation_weeks") or 0),
+                },
+            },
             {"decision": "progression", "result": progression_payload},
             {
                 "decision": "readiness_score",
@@ -801,30 +856,31 @@ def recommend_coach_intelligence_preview(
         available_equipment=context.get("available_equipment"),
     )
     schedule_payload = _coach_preview_schedule_payload(schedule, from_days=from_days, to_days=to_days)
+    canonical_state = _resolve_coach_preview_canonical_state(context, preview_request)
 
     progression_payload = _coach_preview_progression_payload(
-        context,
-        preview_request,
+        readiness_state=_coerce_dict(canonical_state.get("readiness_state")),
+        stagnation_weeks=int(canonical_state.get("stagnation_weeks") or 0),
+        preview_request=preview_request,
         rule_set=rule_set,
         recommend_progression_action=recommend_progression_action,
         humanize_progression_reason=humanize_progression_reason,
     )
 
     effective_readiness_score, effective_readiness_source = _coach_preview_effective_readiness_score(
-        context,
-        preview_request,
-        progression_payload,
+        readiness_state=_coerce_dict(canonical_state.get("readiness_state")),
+        preview_request=preview_request,
+        progression_payload=progression_payload,
         derive_readiness_score=derive_readiness_score,
     )
-
-    latest_mesocycle = _coerce_dict(context.get("latest_mesocycle"))
+    latest_mesocycle = _coerce_dict(canonical_state.get("mesocycle_state"))
 
     phase_transition = recommend_phase_transition(
         current_phase=str(preview_request.get("current_phase") or "accumulation"),
         weeks_in_phase=int(preview_request.get("weeks_in_phase") or 1),
         readiness_score=effective_readiness_score,
         progression_action=str(progression_payload.get("action") or "hold"),
-        stagnation_weeks=int(preview_request.get("stagnation_weeks") or 0),
+        stagnation_weeks=int(canonical_state.get("stagnation_weeks") or 0),
         rule_set=rule_set,
         authored_sequence_complete=bool(latest_mesocycle.get("authored_sequence_complete")),
         phase_transition_pending=bool(latest_mesocycle.get("phase_transition_pending")),
@@ -863,6 +919,7 @@ def recommend_coach_intelligence_preview(
             split_preference=split_preference,
             phase=phase,
             preview_request=preview_request,
+            canonical_state=canonical_state,
             schedule_payload=schedule_payload,
             progression_payload=progression_payload,
             effective_readiness_score=effective_readiness_score,

@@ -55,6 +55,35 @@ def test_user_training_state_validates_against_canonical_contract() -> None:
                 "pain_flags": ["elbow_flexion"],
                 "recovery_risk_flags": ["high_stress", "low_sleep", "pain_flags_present"],
             },
+            "coaching_state": {
+                "readiness": {
+                    "sleep_quality": 2,
+                    "stress_level": 4,
+                    "pain_flags": ["elbow_flexion"],
+                    "recovery_risk_flags": ["high_stress", "low_sleep", "pain_flags_present"],
+                },
+                "fatigue": {
+                    "recovery_state": "normal",
+                    "severe_soreness_count": 0,
+                    "session_rpe_avg": 8.0,
+                    "soreness_by_muscle": {},
+                    "flagged_muscles": [],
+                },
+                "adherence": {
+                    "latest_adherence_score": 4,
+                    "rolling_average_score": 4.25,
+                    "missed_session_count": 1,
+                },
+                "stall": {
+                    "stalled_exercise_ids": ["bench_press_barbell"],
+                    "consecutive_underperformance_weeks": 1,
+                    "phase_stagnation_weeks": 0,
+                },
+                "mesocycle": {
+                    "week_index": 3,
+                    "trigger_weeks_effective": 5,
+                },
+            },
             "constraint_state": {
                 "days_available": 4,
                 "split_preference": "full_body",
@@ -83,6 +112,8 @@ def test_user_training_state_validates_against_canonical_contract() -> None:
     assert state.exercise_performance_history[0].exercise_id == "bench_press_barbell"
     assert state.progression_state_per_exercise[0].last_progression_action == "hold"
     assert state.readiness_state.sleep_quality == 2
+    assert state.coaching_state.readiness.sleep_quality == 2
+    assert state.coaching_state.mesocycle.week_index == 3
     assert state.readiness_state.recovery_risk_flags == ["high_stress", "low_sleep", "pain_flags_present"]
 
 
@@ -124,6 +155,28 @@ def test_user_training_state_rejects_duplicate_progression_entries() -> None:
                 "readiness_state": {
                     "pain_flags": [],
                     "recovery_risk_flags": [],
+                },
+                "coaching_state": {
+                    "readiness": {
+                        "pain_flags": [],
+                        "recovery_risk_flags": [],
+                    },
+                    "fatigue": {
+                        "recovery_state": "normal",
+                        "severe_soreness_count": 0,
+                        "soreness_by_muscle": {},
+                        "flagged_muscles": [],
+                    },
+                    "adherence": {
+                        "latest_adherence_score": 4,
+                        "missed_session_count": 0,
+                    },
+                    "stall": {
+                        "stalled_exercise_ids": [],
+                        "consecutive_underperformance_weeks": 0,
+                        "phase_stagnation_weeks": 0,
+                    },
+                    "mesocycle": {},
                 },
                 "constraint_state": {
                     "days_available": 3,
@@ -177,6 +230,30 @@ def test_user_training_state_rejects_invalid_nested_ranges() -> None:
                     "stress_level": 6,
                     "pain_flags": [],
                     "recovery_risk_flags": [],
+                },
+                "coaching_state": {
+                    "readiness": {
+                        "sleep_quality": 0,
+                        "stress_level": 6,
+                        "pain_flags": [],
+                        "recovery_risk_flags": [],
+                    },
+                    "fatigue": {
+                        "recovery_state": "high_fatigue",
+                        "severe_soreness_count": -1,
+                        "soreness_by_muscle": {},
+                        "flagged_muscles": [],
+                    },
+                    "adherence": {
+                        "latest_adherence_score": 6,
+                        "missed_session_count": -1,
+                    },
+                    "stall": {
+                        "stalled_exercise_ids": [],
+                        "consecutive_underperformance_weeks": -1,
+                        "phase_stagnation_weeks": -1,
+                    },
+                    "mesocycle": {},
                 },
                 "constraint_state": {
                     "days_available": 1,

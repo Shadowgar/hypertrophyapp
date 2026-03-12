@@ -305,6 +305,7 @@ def build_coach_preview_context(
         "split_preference": split_preference,
         "program_template": template,
         "history": history,
+        "coaching_state": _coerce_dict(normalized_training_state.get("coaching_state")),
         "readiness_state": _coerce_dict(normalized_training_state.get("readiness_state")),
         "latest_mesocycle": _coerce_dict(
             _coerce_dict(normalized_training_state.get("generation_state")).get("latest_mesocycle")

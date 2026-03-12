@@ -434,7 +434,7 @@ def test_recommend_coach_intelligence_preview_uses_provided_readiness_score() ->
     assert readiness_step["result"]["value"] == 61
 
 
-def test_recommend_coach_intelligence_preview_uses_context_readiness_state_when_score_not_provided() -> None:
+def test_recommend_coach_intelligence_preview_prefers_context_coaching_state_when_score_not_provided() -> None:
     captured: dict[str, object] = {}
 
     def _derive_readiness_score(**kwargs: object) -> int:
@@ -446,10 +446,19 @@ def test_recommend_coach_intelligence_preview_uses_context_readiness_state_when_
         context={
             "program_template": {},
             "user_profile": {},
-            "readiness_state": {
-                "sleep_quality": 2,
-                "stress_level": 4,
-                "pain_flags": ["elbow_flexion"],
+            "coaching_state": {
+                "readiness": {
+                    "sleep_quality": 2,
+                    "stress_level": 4,
+                    "pain_flags": ["elbow_flexion"],
+                    "recovery_risk_flags": ["high_stress", "low_sleep", "pain_flags_present"],
+                },
+                "stall": {
+                    "stalled_exercise_ids": [],
+                    "consecutive_underperformance_weeks": 2,
+                    "phase_stagnation_weeks": 1,
+                },
+                "mesocycle": {},
             },
         },
         preview_request={
@@ -460,7 +469,6 @@ def test_recommend_coach_intelligence_preview_uses_context_readiness_state_when_
             "soreness_level": "mild",
             "current_phase": "deload",
             "weeks_in_phase": 1,
-            "stagnation_weeks": 0,
         },
         rule_set=None,
         evaluate_schedule_adaptation=lambda **_: {
@@ -495,12 +503,18 @@ def test_recommend_coach_intelligence_preview_uses_context_readiness_state_when_
     readiness_step = next(
         step for step in preview["decision_trace"]["steps"] if step.get("decision") == "readiness_score"
     )
+    coaching_state_step = next(
+        step for step in preview["decision_trace"]["steps"] if step.get("decision") == "canonical_coaching_state"
+    )
     assert captured["sleep_quality"] == 2
     assert captured["stress_level"] == 4
     assert captured["pain_flags"] == ["elbow_flexion"]
     assert readiness_step["result"]["provided"] is False
-    assert readiness_step["result"]["source"] == "context_readiness_state"
+    assert readiness_step["result"]["source"] == "context_coaching_state"
     assert readiness_step["result"]["value"] == 50
+    assert coaching_state_step["result"]["readiness_source"] == "coaching_state.readiness"
+    assert coaching_state_step["result"]["stall_source"] == "coaching_state.stall"
+    assert coaching_state_step["result"]["stagnation_weeks"] == 2
 
 
 def test_recommend_coach_intelligence_preview_traces_stimulus_fatigue_response_snapshot() -> None:
@@ -901,11 +915,13 @@ def test_recommend_coach_intelligence_preview_surfaces_authored_sequence_complet
         context={
             "program_template": {},
             "user_profile": {},
-            "latest_mesocycle": {
-                "authored_sequence_complete": True,
-                "phase_transition_pending": True,
-                "phase_transition_reason": "authored_sequence_complete",
-                "post_authored_behavior": "hold_last_authored_week",
+            "coaching_state": {
+                "mesocycle": {
+                    "authored_sequence_complete": True,
+                    "phase_transition_pending": True,
+                    "phase_transition_reason": "authored_sequence_complete",
+                    "post_authored_behavior": "hold_last_authored_week",
+                }
             },
         },
         preview_request={

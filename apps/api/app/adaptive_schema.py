@@ -418,6 +418,14 @@ class LatestMesocycleState(BaseModel):
     post_authored_behavior: str | None = None
 
 
+class CoachingState(BaseModel):
+    readiness: ReadinessState = Field(default_factory=ReadinessState)
+    fatigue: FatigueState
+    adherence: AdherenceState
+    stall: StallState
+    mesocycle: LatestMesocycleState = Field(default_factory=LatestMesocycleState)
+
+
 class GenerationState(BaseModel):
     prior_generated_weeks_by_program: dict[str, int] = Field(default_factory=dict)
     under_target_muscles: list[str] = Field(default_factory=list)
@@ -440,6 +448,7 @@ class UserTrainingState(BaseModel):
     fatigue_state: FatigueState
     adherence_state: AdherenceState
     readiness_state: ReadinessState = Field(default_factory=ReadinessState)
+    coaching_state: CoachingState
     constraint_state: ConstraintState
     stall_state: StallState
     generation_state: GenerationState = Field(default_factory=GenerationState)

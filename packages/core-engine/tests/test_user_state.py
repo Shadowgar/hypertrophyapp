@@ -180,6 +180,42 @@ def test_build_user_training_state_assembles_canonical_runtime_payload() -> None
             "post_authored_behavior": None,
         },
     }
+    assert payload["coaching_state"] == {
+        "readiness": {
+            "sleep_quality": 2,
+            "stress_level": 4,
+            "pain_flags": ["elbow_flexion", "deep_knee_flexion"],
+            "recovery_risk_flags": ["high_stress", "low_sleep", "pain_flags_present"],
+        },
+        "fatigue": {
+            "recovery_state": "high_fatigue",
+            "severe_soreness_count": 2,
+            "session_rpe_avg": 8.5,
+            "soreness_by_muscle": {"chest": "severe", "back": "severe", "quads": "mild"},
+            "flagged_muscles": ["back", "chest"],
+        },
+        "adherence": {
+            "latest_adherence_score": 4,
+            "rolling_average_score": 3.5,
+            "missed_session_count": 1,
+        },
+        "stall": {
+            "stalled_exercise_ids": ["bench_press_barbell"],
+            "consecutive_underperformance_weeks": 2,
+            "phase_stagnation_weeks": 2,
+        },
+        "mesocycle": {
+            "week_index": 3,
+            "trigger_weeks_effective": 5,
+            "authored_week_index": None,
+            "authored_week_role": None,
+            "authored_sequence_length": None,
+            "authored_sequence_complete": False,
+            "phase_transition_pending": False,
+            "phase_transition_reason": None,
+            "post_authored_behavior": None,
+        },
+    }
 
 
 def test_build_plan_decision_training_state_uses_canonical_builder_defaults() -> None:
@@ -227,6 +263,42 @@ def test_build_plan_decision_training_state_uses_canonical_builder_defaults() ->
     }
     assert payload["exercise_performance_history"] == []
     assert payload["progression_state_per_exercise"] == []
+    assert payload["coaching_state"] == {
+        "readiness": {
+            "sleep_quality": None,
+            "stress_level": None,
+            "pain_flags": [],
+            "recovery_risk_flags": [],
+        },
+        "fatigue": {
+            "recovery_state": "normal",
+            "severe_soreness_count": 0,
+            "session_rpe_avg": None,
+            "soreness_by_muscle": {},
+            "flagged_muscles": [],
+        },
+        "adherence": {
+            "latest_adherence_score": 3,
+            "rolling_average_score": None,
+            "missed_session_count": 0,
+        },
+        "stall": {
+            "stalled_exercise_ids": [],
+            "consecutive_underperformance_weeks": 0,
+            "phase_stagnation_weeks": 0,
+        },
+        "mesocycle": {
+            "week_index": 2,
+            "trigger_weeks_effective": None,
+            "authored_week_index": None,
+            "authored_week_role": None,
+            "authored_sequence_length": None,
+            "authored_sequence_complete": False,
+            "phase_transition_pending": False,
+            "phase_transition_reason": None,
+            "post_authored_behavior": None,
+        },
+    }
 
 
 def test_build_plan_decision_training_state_preserves_latest_mesocycle_transition_flags() -> None:

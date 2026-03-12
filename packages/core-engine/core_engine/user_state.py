@@ -527,6 +527,23 @@ def _build_generation_state(
     }
 
 
+def _build_coaching_state(
+    *,
+    readiness_state: dict[str, Any],
+    fatigue_state: dict[str, Any],
+    adherence_state: dict[str, Any],
+    stall_state: dict[str, Any],
+    generation_state: dict[str, Any],
+) -> dict[str, Any]:
+    return {
+        "readiness": dict(readiness_state),
+        "fatigue": dict(fatigue_state),
+        "adherence": dict(adherence_state),
+        "stall": dict(stall_state),
+        "mesocycle": dict(_coerce_dict(generation_state.get("latest_mesocycle"))),
+    }
+
+
 def build_user_training_state(
     *,
     selected_program_id: str | None,
@@ -576,6 +593,11 @@ def build_user_training_state(
     progression_state = _build_progression_state(exercise_states)
     stall_state = _build_stall_state(progression_state, recent_review_cycles)
     performance_history = _build_performance_history(normalized_logs)
+    readiness_state = _build_readiness_state(recent_checkins=recent_checkins)
+    generation_state = _build_generation_state(
+        prior_plans=prior_plans,
+        latest_plan_payload=latest_plan_payload,
+    )
 
     return {
         "user_program_state": _build_user_program_state(
@@ -591,7 +613,14 @@ def build_user_training_state(
         "progression_state_per_exercise": progression_state,
         "fatigue_state": fatigue_state,
         "adherence_state": adherence_state,
-        "readiness_state": _build_readiness_state(recent_checkins=recent_checkins),
+        "readiness_state": readiness_state,
+        "coaching_state": _build_coaching_state(
+            readiness_state=readiness_state,
+            fatigue_state=fatigue_state,
+            adherence_state=adherence_state,
+            stall_state=stall_state,
+            generation_state=generation_state,
+        ),
         "constraint_state": _build_constraint_state(
             days_available=days_available,
             split_preference=split_preference,
@@ -604,10 +633,7 @@ def build_user_training_state(
             near_failure_tolerance=near_failure_tolerance,
         ),
         "stall_state": stall_state,
-        "generation_state": _build_generation_state(
-            prior_plans=prior_plans,
-            latest_plan_payload=latest_plan_payload,
-        ),
+        "generation_state": generation_state,
     }
 
 
