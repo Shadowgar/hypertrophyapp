@@ -98,9 +98,8 @@ export default function CheckinPage() {
   const readinessScore = reviewResult?.readiness_score ?? null;
   const readinessTone = resolveReadinessTone(readinessScore);
   const readinessLabel = readinessScore === null ? "Awaiting review result" : `Readiness ${readinessScore}`;
-  const weakPointLabel = reviewResult?.adjustments.weak_point_exercises.length
-    ? reviewResult.adjustments.weak_point_exercises.join(", ")
-    : "None";
+  const reviewGuidance = reviewResult?.global_guidance?.trim() || null;
+  const weakPointExercises = reviewResult?.adjustments.weak_point_exercises ?? [];
   const calorieValue = Number(calories || 0);
   const proteinValue = Number(protein || 0);
   const fatValue = Number(fat || 0);
@@ -148,9 +147,11 @@ export default function CheckinPage() {
               {readinessScore === null ? "Pending" : `Readiness ${readinessScore}`}
             </span>
           </div>
-          <p className="telemetry-meta text-zinc-300">
-            {reviewResult?.global_guidance || "No review result recorded."}
-          </p>
+          {reviewGuidance ? (
+            <p className="telemetry-meta text-zinc-300">{reviewGuidance}</p>
+          ) : (
+            <p className="telemetry-meta text-zinc-300">No review result recorded.</p>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
               <p className="telemetry-kicker">Volume Shift</p>
@@ -162,7 +163,15 @@ export default function CheckinPage() {
             </div>
             <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
               <p className="telemetry-kicker">Weak Point Targets</p>
-              <p className="text-sm text-zinc-100">{weakPointLabel}</p>
+              {weakPointExercises.length ? (
+                <div className="space-y-1 text-sm text-zinc-100">
+                  {weakPointExercises.map((exerciseId) => (
+                    <p key={exerciseId}>{exerciseId}</p>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-zinc-100">None</p>
+              )}
             </div>
             <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
               <p className="telemetry-kicker">Fault Count</p>
@@ -217,8 +226,8 @@ export default function CheckinPage() {
                 </p>
                 <p>
                   Target {fault.target_reps_min}-{fault.target_reps_max} reps @ {fault.target_weight} kg
-                  {fault.guidance ? ` · ${fault.guidance}` : ""}
                 </p>
+                {fault.guidance ? <p>{fault.guidance}</p> : null}
               </div>
             ))}
           </div>
@@ -325,16 +334,25 @@ export default function CheckinPage() {
         <div className="main-card main-card--module spacing-grid spacing-grid--tight">
           <p className="telemetry-kicker">Adaptive Output</p>
           <p className="telemetry-meta text-zinc-300">Readiness score: {reviewResult.readiness_score}</p>
-          <p className="telemetry-meta text-zinc-300">Guidance: {reviewResult.global_guidance}</p>
-          <p className="telemetry-meta text-zinc-300">Weak points: {weakPointLabel}</p>
+          {reviewGuidance ? <p className="telemetry-meta text-zinc-300">{reviewGuidance}</p> : null}
+          <div className="space-y-1">
+            <p className="telemetry-meta text-zinc-300">Weak points</p>
+            {weakPointExercises.length ? (
+              <div className="space-y-1 text-sm text-zinc-100">
+                {weakPointExercises.map((exerciseId) => (
+                  <p key={exerciseId}>{exerciseId}</p>
+                ))}
+              </div>
+            ) : (
+              <p className="telemetry-meta text-zinc-300">None</p>
+            )}
+          </div>
           <div className="space-y-2">
             {reviewResult.adjustments.exercise_overrides.slice(0, 5).map((item) => (
               <div key={item.primary_exercise_id} className="rounded-md border border-zinc-800 bg-zinc-900/40 p-2 text-xs text-zinc-300">
                 <p className="font-semibold text-zinc-100">{item.primary_exercise_id}</p>
-                <p>
-                  set_delta {item.set_delta}, weight_scale {item.weight_scale}
-                  {item.rationale ? ` · ${item.rationale}` : ""}
-                </p>
+                <p>set_delta {item.set_delta}, weight_scale {item.weight_scale}</p>
+                {item.rationale ? <p>{item.rationale}</p> : null}
               </div>
             ))}
           </div>

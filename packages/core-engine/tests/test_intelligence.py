@@ -105,6 +105,7 @@ from core_engine.decision_generated_week import (
     order_generation_template_candidates,
     recommend_generation_template_selection,
 )
+from core_engine.decision_program_recommendation import humanize_program_reason as program_reason_owner
 
 
 def _sample_rule_set() -> dict:
@@ -267,6 +268,8 @@ def test_intelligence_source_does_not_redefine_program_or_progression_decision_o
 
     for symbol in (
         "humanize_program_reason",
+        "humanize_specialization_reason",
+        "resolve_coaching_recommendation_rationale",
         "resolve_program_recommendation_candidates",
         "recommend_program_selection",
         "build_program_recommendation_payload",
@@ -291,13 +294,18 @@ def test_intelligence_source_does_not_redefine_program_or_progression_decision_o
         assert residue not in source
 
 
+def test_humanize_program_reason_is_a_direct_alias_to_the_decision_owner() -> None:
+    assert humanize_program_reason is program_reason_owner
+
+
 def test_humanize_specialization_reason_returns_authoritative_fields_without_humanization() -> None:
     assert humanize_specialization_reason({"rationale": "Keep chest emphasis for one more block."}) == "Keep chest emphasis for one more block."
     assert humanize_specialization_reason({"reason": "focus_chest"}) == "focus_chest"
 
 
-def test_resolve_coaching_recommendation_rationale_passes_through_existing_fields() -> None:
+def test_resolve_coaching_recommendation_rationale_prefers_authoritative_rationale_then_raw_reason() -> None:
     assert resolve_coaching_recommendation_rationale({"progression": {"rationale": "Hold load."}}) == "Hold load."
+    assert resolve_coaching_recommendation_rationale({"phase_transition": {"reason": "phase_complete_deload"}}) == "phase_complete_deload"
     assert resolve_coaching_recommendation_rationale({"specialization": {"reason": "focus_chest"}}) == "focus_chest"
 
 

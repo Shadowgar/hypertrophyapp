@@ -908,6 +908,43 @@ def resolve_coaching_recommendation_rationale(
     return "No rationale recorded"
 
 
+def humanize_specialization_reason(specialization: dict[str, Any]) -> str:
+    for candidate in (
+        specialization.get("rationale"),
+        specialization.get("reason"),
+    ):
+        text = str(candidate or "").strip()
+        if text:
+            return text
+    return ""
+
+
+def resolve_authoritative_coaching_recommendation_rationale(recommendation_payload: dict[str, Any]) -> str:
+    phase_transition = _coerce_dict(recommendation_payload.get("phase_transition"))
+    progression = _coerce_dict(recommendation_payload.get("progression"))
+    specialization = _coerce_dict(recommendation_payload.get("specialization"))
+
+    for candidate in (
+        phase_transition.get("rationale"),
+        progression.get("rationale"),
+        specialization.get("rationale"),
+    ):
+        text = str(candidate or "").strip()
+        if text:
+            return text
+
+    for candidate in (
+        phase_transition.get("reason"),
+        progression.get("reason"),
+        specialization.get("reason"),
+    ):
+        text = str(candidate or "").strip()
+        if text:
+            return text
+
+    return "No rationale recorded"
+
+
 def extract_coaching_recommendation_focus_muscles(recommendation_payload: dict[str, Any]) -> list[str]:
     specialization = _coerce_dict(recommendation_payload.get("specialization"))
     raw_focus = specialization.get("focus_muscles")

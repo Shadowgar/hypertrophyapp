@@ -29,6 +29,7 @@ from .decision_coach_preview import (
     build_specialization_applied_recommendation_record as _build_specialization_applied_recommendation_record,
     extract_coaching_recommendation_focus_muscles as _extract_coaching_recommendation_focus_muscles,
     finalize_applied_coaching_recommendation as _finalize_applied_coaching_recommendation,
+    humanize_specialization_reason as _humanize_specialization_reason,
     interpret_coach_phase_apply_decision as _interpret_coach_phase_apply_decision,
     interpret_coach_specialization_apply_decision as _interpret_coach_specialization_apply_decision,
     normalize_coaching_recommendation_timeline_limit as _normalize_coaching_recommendation_timeline_limit,
@@ -41,6 +42,7 @@ from .decision_coach_preview import (
     prepare_phase_apply_runtime as _prepare_phase_apply_runtime,
     prepare_specialization_apply_runtime as _prepare_specialization_apply_runtime,
     recommend_coach_intelligence_preview as _recommend_coach_intelligence_preview,
+    resolve_authoritative_coaching_recommendation_rationale as _resolve_authoritative_coaching_recommendation_rationale,
 )
 from .decision_program_recommendation import (
     build_program_recommendation_payload as _build_program_recommendation_payload,
@@ -1880,32 +1882,8 @@ prepare_profile_program_recommendation_inputs = _prepare_profile_program_recomme
 prepare_profile_program_recommendation_route_runtime = _prepare_profile_program_recommendation_route_runtime
 build_program_switch_payload = _build_program_switch_payload
 prepare_program_switch_runtime = _prepare_program_switch_runtime
-
-
-def humanize_specialization_reason(specialization: dict[str, Any]) -> str:
-    rationale = str(specialization.get("rationale") or "").strip()
-    if rationale:
-        return rationale
-    reason = str(specialization.get("reason") or "").strip()
-    return reason
-
-
-def resolve_coaching_recommendation_rationale(recommendation_payload: dict[str, Any]) -> str:
-    phase_transition = _coerce_dict(recommendation_payload.get("phase_transition"))
-    progression = _coerce_dict(recommendation_payload.get("progression"))
-    specialization = _coerce_dict(recommendation_payload.get("specialization"))
-
-    for container in (phase_transition, progression, specialization):
-        rationale = str(container.get("rationale") or "").strip()
-        if rationale:
-            return rationale
-
-    for container in (phase_transition, progression, specialization):
-        reason = str(container.get("reason") or "").strip()
-        if reason:
-            return reason
-
-    return "No rationale recorded"
+humanize_specialization_reason = _humanize_specialization_reason
+resolve_coaching_recommendation_rationale = _resolve_authoritative_coaching_recommendation_rationale
 
 
 def extract_coaching_recommendation_focus_muscles(recommendation_payload: dict[str, Any]) -> list[str]:
