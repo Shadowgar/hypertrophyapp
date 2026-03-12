@@ -158,6 +158,8 @@ def test_recommend_progression_action_recommends_deload_for_low_readiness() -> N
     assert decision["action"] == "deload"
     assert decision["set_delta"] == -1
     assert decision["load_scale"] < 1.0
+    assert decision["decision_trace"]["interpreter"] == "recommend_progression_action"
+    assert decision["decision_trace"]["outcome"]["action"] == "deload"
 
 
 def test_recommend_progression_action_holds_underperformance_without_high_fatigue_when_rules_loaded() -> None:
@@ -186,6 +188,8 @@ def test_recommend_phase_transition_respects_intro_phase_protection_from_rules()
 
     assert transition["next_phase"] == "accumulation"
     assert transition["reason"] == "intro_phase_protection"
+    assert transition["decision_trace"]["interpreter"] == "recommend_phase_transition"
+    assert transition["decision_trace"]["outcome"]["next_phase"] == "accumulation"
 
 
 def test_recommend_phase_transition_moves_to_deload_when_stalled() -> None:
@@ -225,6 +229,23 @@ def test_derive_readiness_score_penalizes_low_sleep_high_stress_and_pain_flags()
     assert readiness == 50
 
 
+def test_derive_readiness_score_emits_decision_trace() -> None:
+    readiness = derive_readiness_score(
+        completion_pct=70,
+        adherence_score=4,
+        soreness_level="none",
+        progression_action="hold",
+        sleep_quality=2,
+        stress_level=4,
+        pain_flags=["elbow_flexion"],
+    )
+
+    assert isinstance(readiness, int)
+    assert readiness == 50
+    assert readiness.decision_trace["interpreter"] == "derive_readiness_score"
+    assert readiness.decision_trace["outcome"]["readiness_score"] == 50
+
+
 def test_evaluate_stimulus_fatigue_response_classifies_high_stimulus_low_fatigue_state() -> None:
     snapshot = evaluate_stimulus_fatigue_response(
         completion_pct=96,
@@ -240,6 +261,8 @@ def test_evaluate_stimulus_fatigue_response_classifies_high_stimulus_low_fatigue
     assert snapshot["progression_eligibility"] is True
     assert snapshot["deload_pressure"] == "low"
     assert snapshot["substitution_pressure"] == "low"
+    assert snapshot["decision_trace"]["interpreter"] == "evaluate_stimulus_fatigue_response"
+    assert snapshot["decision_trace"]["outcome"]["recoverability"] == "high"
 
 
 def test_recommend_progression_action_emits_sfr_snapshot_for_high_fatigue_low_recovery() -> None:

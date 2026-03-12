@@ -838,33 +838,12 @@ def resolve_latest_logged_workout_resume_state(
     sessions: list[dict[str, Any]],
     performed_logs: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    session_by_id = {
-        str(session.get("session_id") or ""): session
-        for session in sessions
-        if str(session.get("session_id") or "")
-    }
-    if not session_by_id or not performed_logs:
-        return {
-            "latest_logged_workout_id": None,
-            "latest_logged_session_incomplete": False,
-        }
+    from .decision_workout_session import resolve_latest_logged_workout_resume_state as _impl
 
-    latest_logged_workout_id = str(performed_logs[0].get("workout_id") or "")
-    latest_logged_session = session_by_id.get(latest_logged_workout_id)
-    if latest_logged_session is None:
-        return {
-            "latest_logged_workout_id": latest_logged_workout_id or None,
-            "latest_logged_session_incomplete": False,
-        }
-
-    planned_sets = sum(int(exercise.get("sets", 3) or 3) for exercise in latest_logged_session.get("exercises", []))
-    logged_sets = sum(
-        1 for row in performed_logs if str(row.get("workout_id") or "") == latest_logged_workout_id
+    return _impl(
+        sessions=sessions,
+        performed_logs=performed_logs,
     )
-    return {
-        "latest_logged_workout_id": latest_logged_workout_id,
-        "latest_logged_session_incomplete": logged_sets < planned_sets,
-    }
 
 
 def resolve_workout_today_session_selection(
@@ -874,35 +853,14 @@ def resolve_workout_today_session_selection(
     latest_logged_session_incomplete: bool,
     today_iso: str,
 ) -> dict[str, Any]:
-    session_by_id = {
-        str(session.get("session_id") or ""): session
-        for session in sessions
-        if str(session.get("session_id") or "")
-    }
+    from .decision_workout_session import resolve_workout_today_session_selection as _impl
 
-    if latest_logged_workout_id:
-        candidate = session_by_id.get(str(latest_logged_workout_id))
-        if candidate is not None and latest_logged_session_incomplete:
-            return {
-                "selected_session": candidate,
-                "resume_selected": True,
-                "selection_reason": "resume_incomplete_session",
-            }
-
-    today_match = next((session for session in sessions if str(session.get("date") or "") == today_iso), None)
-    if today_match is not None:
-        return {
-            "selected_session": today_match,
-            "resume_selected": False,
-            "selection_reason": "today_match",
-        }
-
-    first_session = sessions[0] if sessions else None
-    return {
-        "selected_session": first_session,
-        "resume_selected": False,
-        "selection_reason": "first_session_fallback" if first_session is not None else "no_sessions",
-    }
+    return _impl(
+        sessions=sessions,
+        latest_logged_workout_id=latest_logged_workout_id,
+        latest_logged_session_incomplete=latest_logged_session_incomplete,
+        today_iso=today_iso,
+    )
 
 
 def resolve_workout_plan_reference(

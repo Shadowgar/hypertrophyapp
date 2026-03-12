@@ -27,11 +27,9 @@ from .intelligence import (
     prepare_workout_log_set_decision_runtime,
     prepare_workout_log_set_request_runtime,
     prepare_workout_session_state_upsert_runtime,
-    resolve_latest_logged_workout_resume_state,
     resolve_workout_completion_per_exercise,
     resolve_workout_plan_context,
     resolve_workout_today_plan_payload,
-    resolve_workout_today_session_selection,
 )
 from .rules_runtime import resolve_repeat_failure_substitution, resolve_starting_load
 from .warmups import compute_warmups
@@ -442,6 +440,103 @@ def build_workout_today_plan_runtime(
                 "selected_program_id": selected_program_id,
                 "has_mesocycle": mesocycle is not None,
                 "has_deload": deload is not None,
+            },
+        },
+    }
+
+
+def resolve_latest_logged_workout_resume_state(
+    *,
+    sessions: list[dict[str, Any]],
+    performed_logs: list[dict[str, Any]],
+) -> dict[str, Any]:
+    session_by_id = {
+        str(session.get("session_id") or ""): session
+        for session in sessions
+        if str(session.get("session_id") or "")
+    }
+    latest_logged_workout_id = None
+    latest_logged_session_incomplete = False
+
+    if session_by_id and performed_logs:
+        latest_logged_workout_id = str(performed_logs[0].get("workout_id") or "") or None
+        latest_logged_session = session_by_id.get(str(latest_logged_workout_id or ""))
+        if latest_logged_session is not None:
+            planned_sets = sum(int(exercise.get("sets", 3) or 3) for exercise in latest_logged_session.get("exercises", []))
+            logged_sets = sum(
+                1 for row in performed_logs if str(row.get("workout_id") or "") == latest_logged_workout_id
+            )
+            latest_logged_session_incomplete = logged_sets < planned_sets
+
+    return {
+        "latest_logged_workout_id": latest_logged_workout_id,
+        "latest_logged_session_incomplete": latest_logged_session_incomplete,
+        "decision_trace": {
+            "interpreter": "resolve_latest_logged_workout_resume_state",
+            "version": "v1",
+            "inputs": {
+                "session_count": len(sessions),
+                "performed_log_count": len(performed_logs),
+            },
+            "outcome": {
+                "latest_logged_workout_id": latest_logged_workout_id,
+                "latest_logged_session_incomplete": latest_logged_session_incomplete,
+            },
+        },
+    }
+
+
+def resolve_workout_today_session_selection(
+    *,
+    sessions: list[dict[str, Any]],
+    latest_logged_workout_id: str | None,
+    latest_logged_session_incomplete: bool,
+    today_iso: str,
+) -> dict[str, Any]:
+    session_by_id = {
+        str(session.get("session_id") or ""): session
+        for session in sessions
+        if str(session.get("session_id") or "")
+    }
+
+    selected_session: dict[str, Any] | None = None
+    resume_selected = False
+    selection_reason = "no_sessions"
+
+    if latest_logged_workout_id:
+        candidate = session_by_id.get(str(latest_logged_workout_id))
+        if candidate is not None and latest_logged_session_incomplete:
+            selected_session = candidate
+            resume_selected = True
+            selection_reason = "resume_incomplete_session"
+
+    if selected_session is None:
+        today_match = next((session for session in sessions if str(session.get("date") or "") == today_iso), None)
+        if today_match is not None:
+            selected_session = today_match
+            selection_reason = "today_match"
+
+    if selected_session is None and sessions:
+        selected_session = sessions[0]
+        selection_reason = "first_session_fallback"
+
+    return {
+        "selected_session": selected_session,
+        "resume_selected": resume_selected,
+        "selection_reason": selection_reason,
+        "decision_trace": {
+            "interpreter": "resolve_workout_today_session_selection",
+            "version": "v1",
+            "inputs": {
+                "session_count": len(sessions),
+                "latest_logged_workout_id": latest_logged_workout_id,
+                "latest_logged_session_incomplete": latest_logged_session_incomplete,
+                "today_iso": today_iso,
+            },
+            "outcome": {
+                "selected_session_id": str(_coerce_dict(selected_session).get("session_id") or "") or None,
+                "resume_selected": resume_selected,
+                "selection_reason": selection_reason,
             },
         },
     }
@@ -1028,6 +1123,8 @@ def prepare_workout_today_selection_route_runtime(
                 "today_iso": today_iso,
             },
             "log_runtime_trace": deepcopy(_coerce_dict(log_runtime.get("decision_trace"))),
+            "resume_runtime_trace": deepcopy(_coerce_dict(resume_runtime.get("decision_trace"))),
+            "selection_trace": deepcopy(_coerce_dict(selection.get("decision_trace"))),
             "steps": [
                 {
                     "decision": "resolve_resume_context",

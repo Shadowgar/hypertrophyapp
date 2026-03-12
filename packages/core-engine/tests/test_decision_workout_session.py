@@ -15,6 +15,8 @@ from core_engine.decision_workout_session import (
     prepare_workout_today_progression_route_runtime,
     prepare_workout_today_response_runtime,
     prepare_workout_today_selection_route_runtime,
+    resolve_latest_logged_workout_resume_state,
+    resolve_workout_today_session_selection,
 )
 
 
@@ -164,6 +166,41 @@ def test_prepare_workout_today_selection_route_runtime_prefers_incomplete_resume
     assert runtime["resume_selected"] is True
     assert runtime["selection_reason"] == "resume_incomplete_session"
     assert runtime["decision_trace"]["interpreter"] == "prepare_workout_today_selection_route_runtime"
+    assert runtime["decision_trace"]["resume_runtime_trace"]["interpreter"] == "resolve_latest_logged_workout_resume_state"
+    assert runtime["decision_trace"]["selection_trace"]["interpreter"] == "resolve_workout_today_session_selection"
+
+
+def test_resolve_latest_logged_workout_resume_state_emits_decision_trace() -> None:
+    runtime = resolve_latest_logged_workout_resume_state(
+        sessions=[
+            {"session_id": "day-1", "exercises": [{"id": "bench", "sets": 3}]},
+            {"session_id": "day-2", "exercises": [{"id": "row", "sets": 3}]},
+        ],
+        performed_logs=[{"workout_id": "day-1"}],
+    )
+
+    assert runtime["latest_logged_workout_id"] == "day-1"
+    assert runtime["latest_logged_session_incomplete"] is True
+    assert runtime["decision_trace"]["interpreter"] == "resolve_latest_logged_workout_resume_state"
+    assert runtime["decision_trace"]["outcome"]["latest_logged_session_incomplete"] is True
+
+
+def test_resolve_workout_today_session_selection_emits_decision_trace() -> None:
+    selection = resolve_workout_today_session_selection(
+        sessions=[
+            {"session_id": "day-1", "date": "2026-03-05"},
+            {"session_id": "day-2", "date": "2026-03-07"},
+        ],
+        latest_logged_workout_id="day-1",
+        latest_logged_session_incomplete=True,
+        today_iso="2026-03-07",
+    )
+
+    assert selection["selected_session"]["session_id"] == "day-1"
+    assert selection["resume_selected"] is True
+    assert selection["selection_reason"] == "resume_incomplete_session"
+    assert selection["decision_trace"]["interpreter"] == "resolve_workout_today_session_selection"
+    assert selection["decision_trace"]["outcome"]["selection_reason"] == "resume_incomplete_session"
 
 
 def test_prepare_workout_today_response_runtime_builds_final_today_payload() -> None:

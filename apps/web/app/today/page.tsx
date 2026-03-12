@@ -131,13 +131,12 @@ function resolveHealthStatus(health: string): "green" | "yellow" | "red" {
   return "red";
 }
 
-function resolveGuidanceText(rationale?: string | null, guidance?: string | null): string {
+export function resolveGuidanceText(rationale?: string | null, guidance?: string | null): string {
   const preferred = rationale?.trim();
   if (preferred) {
     return preferred;
   }
-  const fallback = guidance?.trim();
-  return fallback || "Follow the planned progression.";
+  return guidance?.trim() ?? "";
 }
 
 function SessionIntentCard({

@@ -10,6 +10,18 @@ ProgressionAction = Literal["progress", "hold", "deload"]
 ProgramPhase = Literal["accumulation", "intensification", "deload"]
 
 
+class TracedReadinessScore(int):
+    decision_trace: dict[str, Any]
+
+    def __new__(cls, value: int, decision_trace: dict[str, Any]) -> "TracedReadinessScore":
+        instance = int.__new__(cls, value)
+        instance.decision_trace = decision_trace
+        return instance
+
+    def __reduce__(self) -> tuple[Any, tuple[int, dict[str, Any]]]:
+        return (self.__class__, (int(self), self.decision_trace))
+
+
 _PROGRESSION_REASON_CLAUSES = {
     "low_completion": "session completion has been too low",
     "low_adherence": "adherence has dropped below the target threshold",
@@ -288,7 +300,7 @@ def derive_readiness_score(
     sleep_quality: int | None = None,
     stress_level: int | None = None,
     pain_flags: list[str] | None = None,
-) -> int:
+) -> TracedReadinessScore:
     soreness_penalty_by_level = {
         "none": 0,
         "mild": 4,
@@ -300,25 +312,68 @@ def derive_readiness_score(
         "hold": 5,
         "deload": 18,
     }
-    soreness_penalty = soreness_penalty_by_level.get(soreness_level.lower(), 0)
-    readiness = int((0.65 * completion_pct) + (8 * adherence_score))
+    normalized_completion_pct = max(0, min(100, int(completion_pct)))
+    normalized_adherence = max(1, min(5, int(adherence_score)))
+    normalized_soreness = str(soreness_level or "none").strip().lower()
+    normalized_progression_action = str(progression_action or "hold").strip()
+    soreness_penalty = soreness_penalty_by_level.get(normalized_soreness, 0)
+    readiness = int((0.65 * normalized_completion_pct) + (8 * normalized_adherence))
     readiness -= soreness_penalty
-    readiness -= action_penalty.get(progression_action, 0)
+    readiness -= action_penalty.get(normalized_progression_action, 0)
+    sleep_penalty = 0
     if sleep_quality is not None:
         normalized_sleep = max(1, min(5, int(sleep_quality)))
         if normalized_sleep <= 2:
-            readiness -= 8
+            sleep_penalty = 8
         elif normalized_sleep == 3:
-            readiness -= 3
+            sleep_penalty = 3
+        readiness -= sleep_penalty
+    else:
+        normalized_sleep = None
+    stress_penalty = 0
     if stress_level is not None:
         normalized_stress = max(1, min(5, int(stress_level)))
         if normalized_stress >= 4:
-            readiness -= 8
+            stress_penalty = 8
         elif normalized_stress == 3:
-            readiness -= 3
+            stress_penalty = 3
+        readiness -= stress_penalty
+    else:
+        normalized_stress = None
+    pain_penalty = 0
     if pain_flags:
-        readiness -= 6
-    return max(0, min(100, readiness))
+        pain_penalty = 6
+        readiness -= pain_penalty
+    normalized_readiness = max(0, min(100, readiness))
+    decision_trace = {
+        "interpreter": "derive_readiness_score",
+        "version": "v1",
+        "inputs": {
+            "completion_pct": normalized_completion_pct,
+            "adherence_score": normalized_adherence,
+            "soreness_level": normalized_soreness,
+            "progression_action": normalized_progression_action,
+            "sleep_quality": normalized_sleep,
+            "stress_level": normalized_stress,
+            "pain_flags": [str(flag).strip() for flag in (pain_flags or []) if str(flag).strip()],
+        },
+        "steps": [
+            {
+                "decision": "apply_penalties",
+                "result": {
+                    "soreness_penalty": soreness_penalty,
+                    "action_penalty": action_penalty.get(normalized_progression_action, 0),
+                    "sleep_penalty": sleep_penalty,
+                    "stress_penalty": stress_penalty,
+                    "pain_penalty": pain_penalty,
+                },
+            }
+        ],
+        "outcome": {
+            "readiness_score": normalized_readiness,
+        },
+    }
+    return TracedReadinessScore(normalized_readiness, decision_trace)
 
 
 def evaluate_stimulus_fatigue_response(
@@ -416,6 +471,38 @@ def evaluate_stimulus_fatigue_response(
     else:
         substitution_pressure = "low"
 
+    decision_trace = {
+        "interpreter": "evaluate_stimulus_fatigue_response",
+        "version": "v1",
+        "inputs": {
+            "completion_pct": completion_pct,
+            "adherence_score": adherence_score,
+            "soreness_level": str(soreness_level or "").strip().lower(),
+            "average_rpe": normalized_rpe,
+            "consecutive_underperformance_weeks": underperf,
+            "sleep_quality": normalized_sleep,
+            "stress_level": normalized_stress,
+            "pain_flags": normalized_pain_flags,
+        },
+        "steps": [
+            {
+                "decision": "classify_stimulus_fatigue_recovery",
+                "result": {
+                    "stimulus_signals": list(stimulus_signals),
+                    "fatigue_signals": list(fatigue_signals),
+                    "recoverability_signals": list(recoverability_signals),
+                },
+            }
+        ],
+        "outcome": {
+            "stimulus_quality": stimulus_quality,
+            "fatigue_cost": fatigue_cost,
+            "recoverability": recoverability,
+            "progression_eligibility": progression_eligibility,
+            "deload_pressure": deload_pressure,
+            "substitution_pressure": substitution_pressure,
+        },
+    }
     return {
         "stimulus_quality": stimulus_quality,
         "fatigue_cost": fatigue_cost,
@@ -428,6 +515,7 @@ def evaluate_stimulus_fatigue_response(
             "fatigue": fatigue_signals,
             "recoverability": recoverability_signals,
         },
+        "decision_trace": decision_trace,
     }
 
 
@@ -467,50 +555,84 @@ def recommend_progression_action(
         rule_set=rule_set,
     )
 
+    decision: dict[str, Any]
     if deload_signal["forced_deload_reasons"]:
-        return {
+        decision = {
             **_deload_response(
-            config,
-            "+".join(cast(list[str], deload_signal["forced_deload_reasons"])) or str(config["deload_reason"]),
+                config,
+                "+".join(cast(list[str], deload_signal["forced_deload_reasons"])) or str(config["deload_reason"]),
             ),
             "stimulus_fatigue_response": stimulus_fatigue_response,
         }
-
-    if (
+    elif (
         stimulus_fatigue_response["deload_pressure"] == "high"
         and stimulus_fatigue_response["recoverability"] == "low"
     ):
-        return {
+        decision = {
             **_deload_response(config, "sfr_high_deload_pressure"),
             "stimulus_fatigue_response": stimulus_fatigue_response,
         }
-
-    if underperf >= int(config["underperf_threshold"]):
+    elif underperf >= int(config["underperf_threshold"]):
         if bool(deload_signal["underperformance_deload_matched"]):
-            return {
+            decision = {
                 **_deload_response(config, str(config["deload_reason"])),
                 "stimulus_fatigue_response": stimulus_fatigue_response,
             }
-        return {
-            **_hold_response("under_target_without_high_fatigue"),
-            "stimulus_fatigue_response": stimulus_fatigue_response,
-        }
-
-    if (
+        else:
+            decision = {
+                **_hold_response("under_target_without_high_fatigue"),
+                "stimulus_fatigue_response": stimulus_fatigue_response,
+            }
+    elif (
         completion_pct >= 95
         and adherence_score >= 4
         and soreness_rank <= 1
         and (average_rpe is None or float(average_rpe) <= 9.0)
     ):
-        return {
+        decision = {
             **_progress_response(config),
             "stimulus_fatigue_response": stimulus_fatigue_response,
         }
+    else:
+        decision = {
+            **_hold_response(config["hold_reason"]),
+            "stimulus_fatigue_response": stimulus_fatigue_response,
+        }
 
-    return {
-        **_hold_response(config["hold_reason"]),
-        "stimulus_fatigue_response": stimulus_fatigue_response,
+    decision["decision_trace"] = {
+        "interpreter": "recommend_progression_action",
+        "version": "v1",
+        "inputs": {
+            "completion_pct": completion_pct,
+            "adherence_score": adherence_score,
+            "soreness_level": str(soreness_level or "").strip().lower(),
+            "average_rpe": float(average_rpe) if isinstance(average_rpe, (int, float)) else None,
+            "consecutive_underperformance_weeks": underperf,
+            "sleep_quality": sleep_quality,
+            "stress_level": stress_level,
+            "pain_flags": [str(item).strip() for item in (pain_flags or []) if str(item).strip()],
+        },
+        "steps": [
+            {
+                "decision": "evaluate_stimulus_fatigue_response",
+                "result": cast(dict[str, Any], stimulus_fatigue_response["decision_trace"]).get("outcome", {}),
+            },
+            {
+                "decision": "evaluate_deload_signal",
+                "result": {
+                    "forced_deload_reasons": list(cast(list[str], deload_signal["forced_deload_reasons"])),
+                    "underperformance_deload_matched": bool(deload_signal["underperformance_deload_matched"]),
+                },
+            },
+        ],
+        "outcome": {
+            "action": str(decision.get("action") or ""),
+            "reason": str(decision.get("reason") or ""),
+            "load_scale": float(decision.get("load_scale") or 0),
+            "set_delta": int(decision.get("set_delta") or 0),
+        },
     }
+    return decision
 
 
 def recommend_phase_transition(
@@ -533,12 +655,13 @@ def recommend_phase_transition(
     intro_weeks = int(adaptive_runtime["intro_weeks"])
     scheduled_deload_weeks = int(adaptive_runtime["scheduled_deload_weeks"])
 
+    transition: dict[str, Any]
     if (
         bool(authored_sequence_complete)
         or bool(phase_transition_pending)
         or str(phase_transition_reason or "").strip() == "authored_sequence_complete"
     ):
-        return {
+        transition = {
             "next_phase": current_phase,
             "reason": "authored_sequence_complete",
             "authored_sequence_complete": True,
@@ -546,21 +669,52 @@ def recommend_phase_transition(
             "recommended_action": "rotate_program",
             "post_authored_behavior": str(post_authored_behavior or "hold_last_authored_week"),
         }
-
-    if current_phase == "deload":
+    elif current_phase == "deload":
         if readiness_score >= 70:
-            return {"next_phase": "accumulation", "reason": "deload_complete"}
-        return {"next_phase": "deload", "reason": "extend_deload_low_readiness"}
-
-    if current_phase == "accumulation":
-        return _accumulation_phase_transition(
+            transition = {"next_phase": "accumulation", "reason": "deload_complete"}
+        else:
+            transition = {"next_phase": "deload", "reason": "extend_deload_low_readiness"}
+    elif current_phase == "accumulation":
+        transition = _accumulation_phase_transition(
             weeks_in_phase=weeks_in_phase,
             readiness_score=readiness_score,
             progression_action=progression_action,
             stagnation_weeks=stagnation_weeks,
             intro_weeks=intro_weeks,
         )
+    elif progression_action == "deload" or weeks_in_phase >= min(4, scheduled_deload_weeks) or stagnation_weeks >= 2:
+        transition = {"next_phase": "deload", "reason": "intensification_fatigue_cap"}
+    else:
+        transition = {"next_phase": "intensification", "reason": "continue_intensification"}
 
-    if progression_action == "deload" or weeks_in_phase >= min(4, scheduled_deload_weeks) or stagnation_weeks >= 2:
-        return {"next_phase": "deload", "reason": "intensification_fatigue_cap"}
-    return {"next_phase": "intensification", "reason": "continue_intensification"}
+    transition["decision_trace"] = {
+        "interpreter": "recommend_phase_transition",
+        "version": "v1",
+        "inputs": {
+            "current_phase": current_phase,
+            "weeks_in_phase": weeks_in_phase,
+            "readiness_score": readiness_score,
+            "progression_action": progression_action,
+            "stagnation_weeks": stagnation_weeks,
+            "authored_sequence_complete": bool(authored_sequence_complete),
+            "phase_transition_pending": bool(phase_transition_pending),
+            "phase_transition_reason": str(phase_transition_reason or ""),
+            "post_authored_behavior": str(post_authored_behavior or ""),
+        },
+        "steps": [
+            {
+                "decision": "phase_transition_policy",
+                "result": {
+                    "intro_weeks": intro_weeks,
+                    "scheduled_deload_weeks": scheduled_deload_weeks,
+                },
+            }
+        ],
+        "outcome": {
+            "next_phase": str(transition.get("next_phase") or ""),
+            "reason": str(transition.get("reason") or ""),
+            "transition_pending": bool(transition.get("transition_pending")),
+            "recommended_action": str(transition.get("recommended_action") or ""),
+        },
+    }
+    return transition

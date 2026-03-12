@@ -130,7 +130,7 @@ test("Week page coaching panel previews and auto-applies phase decision", async 
   expect(screen.getByText(/Program Transition/i)).toBeInTheDocument();
   expect(screen.getByText(/Current block complete/i)).toBeInTheDocument();
   expect(screen.getByText(/Rotate program/i)).toBeInTheDocument();
-  expect(screen.getByText(/Holding the last authored week until a new program is selected\./i)).toBeInTheDocument();
+  expect(screen.getByText(/hold_last_authored_week/i)).toBeInTheDocument();
   expect(screen.getByText(/The authored mesocycle is complete\. Rotate to a fresh next step\./i)).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole("button", { name: /Apply phase decision/i }));

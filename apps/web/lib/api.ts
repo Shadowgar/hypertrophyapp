@@ -297,61 +297,6 @@ export type ApplyPhaseDecisionResponse = {
   decision_trace: Record<string, unknown>;
 };
 
-const REASON_MESSAGES: Record<string, string> = {
-  maintain_until_stable: "Performance is stable but not yet strong enough to progress. Hold the current load and accumulate cleaner work.",
-  under_target_without_high_fatigue: "Performance is below target without clear high-fatigue signals. Hold load and accumulate cleaner exposures before changing phase or deloading.",
-  continue_accumulation: "Stay in accumulation. Current readiness and momentum do not justify a phase change yet.",
-  accumulation_complete: "Accumulation has run its course and readiness is high enough to move into intensification.",
-  accumulation_stall: "Accumulation has stalled. Transition into deload to recover before rebuilding momentum.",
-  intro_phase_protection: "Stay in accumulation. Early underperformance is still within the intro phase and should not be treated as a true stall.",
-  resume_accumulation: "Deload work appears sufficient. Resume accumulation and rebuild workload.",
-  extend_deload_low_readiness: "Stay in deload because readiness is still too low to resume hard training.",
-  intensification_fatigue_cap: "End intensification and deload before fatigue outpaces recovery.",
-  continue_intensification: "Stay in intensification. Current performance still supports heavier work in this phase.",
-  authored_sequence_complete: "The authored mesocycle is complete. Rotate to a fresh next step.",
-  low_completion: "session completion has been too low",
-  low_adherence: "adherence has dropped below the target threshold",
-  high_soreness: "fatigue and soreness are elevated",
-  phase_apply: "Apply the recommended phase transition.",
-  no_compatible_programs: "No compatible program was found for the current availability, so keep the current selection.",
-  current_not_compatible: "The current program no longer matches the available training days or split preference. Move to the first compatible option.",
-  low_adherence_keep_program: "Recent adherence is low. Keep the current program stable before rotating templates.",
-  days_adaptation_upgrade: "A different compatible template can preserve weekly coverage better at the current day availability.",
-  coverage_gap_rotate: "The latest plan left a coverage gap. Rotate to a compatible template with better distribution.",
-  mesocycle_complete_rotate: "The current mesocycle appears complete. Rotate to a fresh compatible template.",
-  rotate_program: "Rotate program.",
-  hold_last_authored_week: "Holding the last authored week until a new program is selected.",
-  maintain_current_program: "The current program remains compatible and no stronger rotation signal is present.",
-  target_matches_current: "The requested program already matches the current selection.",
-};
-
-function humanizeReasonCode(reason: string): string {
-  const normalized = reason.trim();
-  if (!normalized) {
-    return "No rationale available.";
-  }
-  if (!normalized.includes("_") && !normalized.includes("+")) {
-    return normalized;
-  }
-  if (normalized.includes("+")) {
-    const clauses = normalized
-      .split("+")
-      .map((token) => REASON_MESSAGES[token] ?? token.replaceAll("_", " "))
-      .filter((token) => token.length > 0);
-    if (clauses.length === 0) {
-      return "No rationale available.";
-    }
-    if (clauses.length === 1) {
-      return `Deload because ${clauses[0]}.`;
-    }
-    if (clauses.length === 2) {
-      return `Deload because ${clauses[0]} and ${clauses[1]}.`;
-    }
-    return `Deload because ${clauses.slice(0, -1).join(", ")}, and ${clauses.at(-1)}.`;
-  }
-  return REASON_MESSAGES[normalized] ?? `${normalized.replaceAll("_", " ")}.`;
-}
-
 export function resolveReasonText(rationale?: string | null, reason?: string | null): string {
   const preferred = rationale?.trim();
   if (preferred) {
@@ -361,7 +306,7 @@ export function resolveReasonText(rationale?: string | null, reason?: string | n
   if (!fallback) {
     return "No rationale available.";
   }
-  return humanizeReasonCode(fallback);
+  return fallback;
 }
 
 export type ApplySpecializationDecisionResponse = {
