@@ -44,6 +44,12 @@ Current branch reality:
 - week/today UI now shows those authored execution details directly
 - the next product seam after that is program-specific temporary 5-days-to-3-days adaptation for this same path
 
+Current product order for active implementation is:
+1. workbook-faithful Pure Bodybuilding Phase 1 package
+2. runtime/API carry-through of authored fields
+3. visible week/today authored execution detail
+4. only then program-specific temporary frequency adaptation
+
 Immediate direction:
 - keep one-program-first as the primary delivery track
 - preserve explicit schemas, deterministic rules, and structured traces on the Phase 1 path

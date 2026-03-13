@@ -29,6 +29,12 @@ Current branch reality is:
 - the next bounded product seam is program-specific temporary frequency adaptation for this same Phase 1 path
 - live program-identity cleanup remains downstream of that adaptation seam so the administered full-body path is no longer split across legacy aliases
 
+Current product order for active implementation is:
+1. workbook-faithful Pure Bodybuilding Phase 1 package
+2. runtime/API carry-through of authored fields
+3. visible week/today authored execution detail
+4. only then program-specific temporary frequency adaptation
+
 Secondary architectural risks still matter, but they are no longer the primary product bottleneck:
 - authority ambiguity and historical wrapper drift in [intelligence.py](/home/rocco/hypertrophyapp/packages/core-engine/core_engine/intelligence.py)
 - shallow first-class coaching state in [models.py](/home/rocco/hypertrophyapp/apps/api/app/models.py) beyond canonical `constraint_state`, weekly-checkin-backed `readiness_state`, and persisted coaching-state SFR snapshot

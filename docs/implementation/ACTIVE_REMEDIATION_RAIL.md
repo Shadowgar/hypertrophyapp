@@ -10,6 +10,12 @@ Last updated: 2026-03-13
 - Program-specific temporary 5-days-to-3-days adaptation for Pure Bodybuilding Phase 1 Full Body is still the next unfinished product seam, not completed work on this branch.
 - `intelligence.py` remains compatibility forwarding only. It is not a valid place to add new coaching meaning.
 
+Current product order for active implementation is:
+1. workbook-faithful Pure Bodybuilding Phase 1 package
+2. runtime/API carry-through of authored fields
+3. visible week/today authored execution detail
+4. only then program-specific temporary frequency adaptation
+
 ## Latest Completed Slice
 
 - Re-centered the active rail around the actual administered-product order on the current branch.
