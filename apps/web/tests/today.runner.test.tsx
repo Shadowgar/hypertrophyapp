@@ -39,8 +39,19 @@ test("Today page loads workout and shows exercises", async () => {
         rep_range: [8, 12],
         recommended_working_weight: 17.5,
         substitution_candidates: ["Cable Curl"],
+        last_set_intensity_technique: "Long-length Partials",
+        warm_up_sets: "1",
+        working_sets: "3",
+        reps: "8-12",
+        early_set_rpe: "~9",
+        last_set_rpe: "10",
+        rest: "~1-2 min",
+        substitution_option_1: "Cable Curl",
+        substitution_option_2: "DB Curl",
+        demo_url: "https://example.com/bayesian-demo",
+        video_url: "https://example.com/bayesian-video",
         notes: "Focus on full ROM",
-        video: null,
+        video: { youtube_url: "https://example.com/bayesian-video" },
         slot_role: "weak_point",
       },
     ],
@@ -77,6 +88,12 @@ test("Today page loads workout and shows exercises", async () => {
   expect(screen.getByText(/Between-Set Coach/i)).toBeInTheDocument();
   expect(screen.getByText(/Live lane: Bayesian Curl/i)).toBeInTheDocument();
   expect(screen.getByText(/Start with 8-12 reps @ 17.5 kg\./i)).toBeInTheDocument();
+  expect(screen.getByText(/Early-set RPE: ~9/i)).toBeInTheDocument();
+  expect(screen.getByText(/Last-set RPE: 10/i)).toBeInTheDocument();
+  expect(screen.getByText(/Technique: Long-length Partials/i)).toBeInTheDocument();
+  expect(screen.getByText(/Rest: ~1-2 min/i)).toBeInTheDocument();
+  expect(screen.getByText(/Authored substitutions: Cable Curl \/ DB Curl/i)).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: /Demo link/i })).toHaveAttribute("href", "https://example.com/bayesian-video");
   expect(screen.getByText(/Current context/i)).toBeInTheDocument();
   expect(screen.getByText(/Today follows Arms & Weak Points/i)).toBeInTheDocument();
 

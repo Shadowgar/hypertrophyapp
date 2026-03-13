@@ -211,6 +211,74 @@ def test_generate_week_plan_respects_days_available() -> None:
     assert first_exercise["equipment_tags"] == []
 
 
+def test_generate_week_plan_preserves_authored_execution_details() -> None:
+    template = {
+        "id": "authored_slot_runtime_test",
+        "sessions": [
+            {
+                "name": "A",
+                "exercises": [
+                    {
+                        "id": "bayesian_curl",
+                        "primary_exercise_id": "bayesian_curl",
+                        "name": "Bayesian Curl",
+                        "sets": 3,
+                        "rep_range": [10, 12],
+                        "start_weight": 17.5,
+                        "slot_role": "weak_point",
+                        "substitution_candidates": ["Cable Curl", "Machine Curl"],
+                        "last_set_intensity_technique": "Dropset",
+                        "warm_up_sets": "1",
+                        "working_sets": "3",
+                        "reps": "10-12",
+                        "early_set_rpe": "~9",
+                        "last_set_rpe": "10",
+                        "rest": "~1-2 min",
+                        "tracking_set_1": "20",
+                        "tracking_set_2": "22.5",
+                        "tracking_set_3": "25",
+                        "tracking_set_4": None,
+                        "substitution_option_1": "Cable Curl",
+                        "substitution_option_2": "Machine Curl",
+                        "demo_url": "https://example.com/bayesian-curl-demo",
+                        "video_url": "https://example.com/bayesian-curl-video",
+                        "notes": "Keep your upper arm fixed behind your torso.",
+                        "video": {"youtube_url": "https://example.com/bayesian-curl-video"},
+                    }
+                ],
+            }
+        ],
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=3,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+    )
+
+    first_exercise = plan["sessions"][0]["exercises"][0]
+    assert first_exercise["last_set_intensity_technique"] == "Dropset"
+    assert first_exercise["warm_up_sets"] == "1"
+    assert first_exercise["working_sets"] == "3"
+    assert first_exercise["reps"] == "10-12"
+    assert first_exercise["early_set_rpe"] == "~9"
+    assert first_exercise["last_set_rpe"] == "10"
+    assert first_exercise["rest"] == "~1-2 min"
+    assert first_exercise["tracking_set_1"] == "20"
+    assert first_exercise["tracking_set_2"] == "22.5"
+    assert first_exercise["tracking_set_3"] == "25"
+    assert first_exercise["tracking_set_4"] is None
+    assert first_exercise["substitution_option_1"] == "Cable Curl"
+    assert first_exercise["substitution_option_2"] == "Machine Curl"
+    assert first_exercise["demo_url"] == "https://example.com/bayesian-curl-demo"
+    assert first_exercise["video_url"] == "https://example.com/bayesian-curl-video"
+    assert first_exercise["video"] == {"youtube_url": "https://example.com/bayesian-curl-video"}
+    assert first_exercise["notes"] == "Keep your upper arm fixed behind your torso."
+
+
 def test_generate_week_plan_filters_by_available_equipment() -> None:
     template = {
         "id": "equipment_filter_test",

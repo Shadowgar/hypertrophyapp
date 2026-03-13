@@ -57,6 +57,26 @@ def _slugify(value: str) -> str:
     return slug or "exercise"
 
 
+def _authored_execution_fields(exercise: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "last_set_intensity_technique": exercise.get("last_set_intensity_technique"),
+        "warm_up_sets": exercise.get("warm_up_sets"),
+        "working_sets": exercise.get("working_sets"),
+        "reps": exercise.get("reps"),
+        "early_set_rpe": exercise.get("early_set_rpe"),
+        "last_set_rpe": exercise.get("last_set_rpe"),
+        "rest": exercise.get("rest"),
+        "tracking_set_1": exercise.get("tracking_set_1"),
+        "tracking_set_2": exercise.get("tracking_set_2"),
+        "tracking_set_3": exercise.get("tracking_set_3"),
+        "tracking_set_4": exercise.get("tracking_set_4"),
+        "substitution_option_1": exercise.get("substitution_option_1"),
+        "substitution_option_2": exercise.get("substitution_option_2"),
+        "demo_url": exercise.get("demo_url"),
+        "video_url": exercise.get("video_url"),
+    }
+
+
 def _build_planned_exercise(
     exercise: dict[str, Any],
     history_index: dict[str, dict[str, Any]],
@@ -173,6 +193,7 @@ def _build_planned_exercise(
         "video": planned_video,
         "equipment_tags": planned_equipment_tags,
         "slot_role": exercise.get("slot_role"),
+        **_authored_execution_fields(exercise),
     }
 
 

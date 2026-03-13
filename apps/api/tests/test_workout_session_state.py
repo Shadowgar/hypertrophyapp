@@ -390,7 +390,8 @@ def test_adaptive_gold_today_matches_selected_generated_session() -> None:
 
     generated = client.post("/plan/generate-week", headers=headers, json={})
     assert generated.status_code == 200
-    generated_sessions = generated.json()["sessions"]
+    generated_payload = generated.json()
+    generated_sessions = generated_payload["sessions"]
     today_iso = date.today().isoformat()
     selected_session = next(
         (session for session in generated_sessions if session["date"] == today_iso),
@@ -404,6 +405,25 @@ def test_adaptive_gold_today_matches_selected_generated_session() -> None:
     expected_ids = [exercise["id"] for exercise in selected_session["exercises"]]
     assert payload["session_id"] == selected_session["session_id"]
     assert exercise_ids == expected_ids
+    selected_exercise = selected_session["exercises"][0]
+    matching = next(item for item in payload["exercises"] if item["id"] == selected_exercise["id"])
+    assert matching["last_set_intensity_technique"] == selected_exercise["last_set_intensity_technique"]
+    assert matching["warm_up_sets"] == selected_exercise["warm_up_sets"]
+    assert matching["working_sets"] == selected_exercise["working_sets"]
+    assert matching["reps"] == selected_exercise["reps"]
+    assert matching["early_set_rpe"] == selected_exercise["early_set_rpe"]
+    assert matching["last_set_rpe"] == selected_exercise["last_set_rpe"]
+    assert matching["rest"] == selected_exercise["rest"]
+    assert matching["tracking_set_1"] == selected_exercise["tracking_set_1"]
+    assert matching["tracking_set_2"] == selected_exercise["tracking_set_2"]
+    assert matching["tracking_set_3"] == selected_exercise["tracking_set_3"]
+    assert matching["tracking_set_4"] == selected_exercise["tracking_set_4"]
+    assert matching["substitution_option_1"] == selected_exercise["substitution_option_1"]
+    assert matching["substitution_option_2"] == selected_exercise["substitution_option_2"]
+    assert matching["demo_url"] == selected_exercise["demo_url"]
+    assert matching["video_url"] == selected_exercise["video_url"]
+    assert matching["notes"] == selected_exercise["notes"]
+    assert matching["video"] == selected_exercise["video"]
 
 
 def test_adaptive_gold_today_only_includes_weak_point_slots_from_selected_session() -> None:

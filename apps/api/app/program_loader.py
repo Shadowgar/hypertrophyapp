@@ -199,16 +199,10 @@ def _infer_equipment_tags(exercise_id: str) -> list[str]:
 
 
 def _load_adaptive_gold_exercise_library(program_id: str) -> dict[str, dict[str, Any]]:
-    onboarding_program_id = ADAPTIVE_GOLD_ONBOARDING_PROGRAM_IDS.get(program_id)
-    if not onboarding_program_id:
+    package = _load_adaptive_gold_onboarding_package(program_id)
+    if package is None:
         return {}
 
-    candidate = _resolve_onboarding_path() / f"{onboarding_program_id}.onboarding.json"
-    if not candidate.exists():
-        return {}
-
-    raw = json.loads(candidate.read_text(encoding="utf-8"))
-    package = ProgramOnboardingPackage.model_validate(raw)
     knowledge: dict[str, dict[str, Any]] = {}
     for entry in package.exercise_library:
         payload = entry.model_dump(mode="json")
@@ -216,14 +210,32 @@ def _load_adaptive_gold_exercise_library(program_id: str) -> dict[str, dict[str,
     return knowledge
 
 
+def _load_adaptive_gold_onboarding_package(program_id: str) -> ProgramOnboardingPackage | None:
+    onboarding_program_id = ADAPTIVE_GOLD_ONBOARDING_PROGRAM_IDS.get(program_id)
+    if not onboarding_program_id:
+        return None
+
+    candidate = _resolve_onboarding_path() / f"{onboarding_program_id}.onboarding.json"
+    if not candidate.exists():
+        return None
+
+    raw = json.loads(candidate.read_text(encoding="utf-8"))
+    return ProgramOnboardingPackage.model_validate(raw)
+
+
 def _adaptive_slot_to_runtime_exercise(
     slot: dict[str, Any],
     exercise_library: dict[str, dict[str, Any]],
+    authored_slot: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    exercise_id = str(slot.get("exercise_id") or "").strip()
+    slot_source = dict(slot)
+    if authored_slot:
+        slot_source.update(authored_slot)
+
+    exercise_id = str(slot_source.get("exercise_id") or slot.get("exercise_id") or "").strip()
     library_exercise_id = ADAPTIVE_GOLD_EXERCISE_ID_ALIASES.get(exercise_id, exercise_id)
     exercise_knowledge = exercise_library.get(library_exercise_id) or {}
-    work_sets = slot.get("work_sets") or []
+    work_sets = slot_source.get("work_sets") or []
     first_work_set = work_sets[0] if isinstance(work_sets, list) and work_sets else {}
     rep_target = first_work_set.get("rep_target") if isinstance(first_work_set, dict) else {}
     total_sets = sum(
@@ -250,6 +262,11 @@ def _adaptive_slot_to_runtime_exercise(
                 "youtube_url": candidate_knowledge.get("default_video_url"),
             },
         }
+    resolved_video_url = (
+        slot_source.get("video_url")
+        or slot_source.get("demo_url")
+        or exercise_knowledge.get("default_video_url")
+    )
     return {
         "id": exercise_id,
         "primary_exercise_id": exercise_id,
@@ -267,8 +284,23 @@ def _adaptive_slot_to_runtime_exercise(
         "equipment_tags": list(exercise_knowledge.get("equipment_tags") or _infer_equipment_tags(exercise_id)),
         "substitution_candidates": substitution_candidates,
         "substitution_metadata": substitution_metadata,
-        "notes": slot.get("notes"),
-        "video": {"youtube_url": slot.get("video_url") or exercise_knowledge.get("default_video_url")},
+        "last_set_intensity_technique": slot_source.get("last_set_intensity_technique"),
+        "warm_up_sets": slot_source.get("warm_up_sets"),
+        "working_sets": slot_source.get("working_sets"),
+        "reps": slot_source.get("reps"),
+        "early_set_rpe": slot_source.get("early_set_rpe"),
+        "last_set_rpe": slot_source.get("last_set_rpe"),
+        "rest": slot_source.get("rest"),
+        "tracking_set_1": slot_source.get("tracking_set_1"),
+        "tracking_set_2": slot_source.get("tracking_set_2"),
+        "tracking_set_3": slot_source.get("tracking_set_3"),
+        "tracking_set_4": slot_source.get("tracking_set_4"),
+        "substitution_option_1": slot_source.get("substitution_option_1"),
+        "substitution_option_2": slot_source.get("substitution_option_2"),
+        "demo_url": slot_source.get("demo_url"),
+        "video_url": slot_source.get("video_url"),
+        "notes": slot_source.get("notes"),
+        "video": {"youtube_url": resolved_video_url},
     }
 
 
@@ -290,6 +322,12 @@ def _infer_adaptive_day_role(day: Any, fallback_index: int) -> str:
 def _adaptive_gold_to_runtime_template(payload: dict[str, Any]) -> dict[str, Any]:
     validated = AdaptiveGoldProgramTemplate.model_validate(payload)
     exercise_library = _load_adaptive_gold_exercise_library(validated.program_id)
+    onboarding_package = _load_adaptive_gold_onboarding_package(validated.program_id)
+    onboarding_templates_by_id = (
+        {template.week_template_id: template for template in onboarding_package.blueprint.week_templates}
+        if onboarding_package is not None
+        else {}
+    )
     authored_phase_weeks = [
         week
         for phase in validated.phases
@@ -299,28 +337,62 @@ def _adaptive_gold_to_runtime_template(payload: dict[str, Any]) -> dict[str, Any
     if not authored_phase_weeks:
         raise ValueError("adaptive gold template must contain at least one phase with weeks")
 
-    def _week_sessions(week: Any) -> list[dict[str, Any]]:
+    def _resolve_onboarding_week(sequence_index: int) -> Any | None:
+        if onboarding_package is None:
+            return None
+        if sequence_index < 1 or sequence_index > len(onboarding_package.blueprint.week_sequence):
+            return None
+        template_id = onboarding_package.blueprint.week_sequence[sequence_index - 1]
+        return onboarding_templates_by_id.get(template_id)
+
+    def _resolve_authored_slot(day: Any | None, slot: Any, slot_index: int) -> dict[str, Any] | None:
+        if day is None:
+            return None
+        authored_slots = list(getattr(day, "slots", []) or [])
+        if slot_index < len(authored_slots):
+            candidate = authored_slots[slot_index]
+            if str(getattr(candidate, "exercise_id", "") or "") == str(getattr(slot, "exercise_id", "") or ""):
+                return candidate.model_dump(mode="json")
+        slot_order_index = int(getattr(slot, "order_index", slot_index + 1) or slot_index + 1)
+        slot_exercise_id = str(getattr(slot, "exercise_id", "") or "")
+        for candidate in authored_slots:
+            if (
+                str(getattr(candidate, "exercise_id", "") or "") == slot_exercise_id
+                and int(getattr(candidate, "order_index", 0) or 0) == slot_order_index
+            ):
+                return candidate.model_dump(mode="json")
+        return None
+
+    def _week_sessions(week: Any, sequence_index: int) -> list[dict[str, Any]]:
+        onboarding_week = _resolve_onboarding_week(sequence_index)
         sessions: list[dict[str, Any]] = []
         for index, day in enumerate(week.days):
+            onboarding_day = None
+            if onboarding_week is not None and index < len(onboarding_week.days):
+                onboarding_day = onboarding_week.days[index]
             sessions.append(
                 {
                     "name": day.day_name,
                     "day_role": _infer_adaptive_day_role(day, index),
                     "day_offset": min(6, index),
                     "exercises": [
-                        _adaptive_slot_to_runtime_exercise(slot.model_dump(mode="json"), exercise_library)
-                        for slot in day.slots
+                        _adaptive_slot_to_runtime_exercise(
+                            slot.model_dump(mode="json"),
+                            exercise_library,
+                            authored_slot=_resolve_authored_slot(onboarding_day, slot, slot_index),
+                        )
+                        for slot_index, slot in enumerate(day.slots)
                     ],
                 }
             )
         return sessions
 
-    first_week_sessions = _week_sessions(authored_phase_weeks[0])
+    first_week_sessions = _week_sessions(authored_phase_weeks[0], 1)
     runtime_authored_weeks = [
         {
             "week_index": sequence_index,
             "week_role": str(week.week_role).strip() if week.week_role else None,
-            "sessions": _week_sessions(week),
+            "sessions": _week_sessions(week, sequence_index),
         }
         for sequence_index, week in enumerate(authored_phase_weeks, start=1)
     ]

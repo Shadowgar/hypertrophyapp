@@ -31,6 +31,18 @@ test("Week page sends template_id when override selected", async () => {
             recommended_working_weight: 82.5,
             primary_muscles: ["chest", "triceps"],
             slot_role: "primary_compound",
+            last_set_intensity_technique: "Long-length Partials",
+            warm_up_sets: "2",
+            working_sets: "4",
+            reps: "6-8",
+            early_set_rpe: "~7-8",
+            last_set_rpe: "~9",
+            rest: "~2-3 min",
+            substitution_option_1: "Machine Press",
+            substitution_option_2: "DB Bench Press",
+            demo_url: "https://example.com/bench-demo",
+            video_url: "https://example.com/bench-video",
+            notes: "Drive through the full foot and keep the upper back pinned.",
           },
         ],
       },
@@ -162,6 +174,12 @@ test("Week page sends template_id when override selected", async () => {
   expect(screen.getByText(/Authored block: Week 1 · Adaptation/i)).toBeInTheDocument();
   expect(screen.getByText(/Arms & Weak Points emphasis is scheduled this week\./i)).toBeInTheDocument();
   expect(screen.getByText(/Lead slot: Bench Press · 4 sets · 6-8 reps @ 82.5 kg/i)).toBeInTheDocument();
+  expect(screen.getByText(/Early-set RPE: ~7-8/i)).toBeInTheDocument();
+  expect(screen.getByText(/Last-set RPE: ~9/i)).toBeInTheDocument();
+  expect(screen.getByText(/Technique: Long-length Partials/i)).toBeInTheDocument();
+  expect(screen.getByText(/Rest: ~2-3 min/i)).toBeInTheDocument();
+  expect(screen.getByText(/Authored substitutions: Machine Press \/ DB Bench Press/i)).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: /Demo link/i })).toHaveAttribute("href", "https://example.com/bench-video");
   expect(screen.getByText(/Session intent: Arms & Weak Points/i)).toBeInTheDocument();
   expect(screen.getByText(/Current context/i)).toBeInTheDocument();
   expect(screen.queryByText(/Week 1 adaptation block/i)).not.toBeInTheDocument();

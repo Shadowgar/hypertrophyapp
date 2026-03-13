@@ -1,6 +1,29 @@
 import { API_BASE_URL } from "@/lib/env";
 
-export type WorkoutExercise = {
+type ExerciseVideo = {
+  youtube_url?: string;
+} | null;
+
+type AuthoredExecutionFields = {
+  last_set_intensity_technique?: string | null;
+  warm_up_sets?: string | null;
+  working_sets?: string | null;
+  reps?: string | null;
+  early_set_rpe?: string | null;
+  last_set_rpe?: string | null;
+  rest?: string | null;
+  tracking_set_1?: string | null;
+  tracking_set_2?: string | null;
+  tracking_set_3?: string | null;
+  tracking_set_4?: string | null;
+  substitution_option_1?: string | null;
+  substitution_option_2?: string | null;
+  demo_url?: string | null;
+  video_url?: string | null;
+  video?: ExerciseVideo;
+};
+
+export type WorkoutExercise = AuthoredExecutionFields & {
   id: string;
   primary_exercise_id?: string;
   name: string;
@@ -12,9 +35,6 @@ export type WorkoutExercise = {
   notes?: string | null;
   completed_sets?: number;
   live_recommendation?: WorkoutLiveRecommendation;
-  video?: {
-    youtube_url?: string;
-  } | null;
 };
 
 export type WorkoutLiveRecommendation = {
@@ -111,7 +131,7 @@ export type ProgramTemplateOption = {
   days_supported?: number[];
 };
 
-export type GeneratedWeekExercise = {
+export type GeneratedWeekExercise = AuthoredExecutionFields & {
   id: string;
   primary_exercise_id?: string | null;
   name: string;

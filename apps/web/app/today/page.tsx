@@ -121,6 +121,24 @@ function resolveExerciseName(exercise: WorkoutExercise, swapIndexByExercise: Swa
   return substitutions[selectedIndex - 1] ?? exercise.name;
 }
 
+function resolveExerciseMediaUrl(exercise: WorkoutExercise): string | null {
+  const preferred = exercise.video?.youtube_url ?? exercise.video_url ?? exercise.demo_url;
+  return typeof preferred === "string" && preferred.trim().length > 0 ? preferred : null;
+}
+
+function resolveAuthoredSubstitutions(exercise: WorkoutExercise): string[] {
+  return [exercise.substitution_option_1, exercise.substitution_option_2].filter(
+    (value, index, source): value is string =>
+      typeof value === "string" && value.trim().length > 0 && source.indexOf(value) === index,
+  );
+}
+
+function resolveTrackingLoads(exercise: WorkoutExercise): string[] {
+  return [exercise.tracking_set_1, exercise.tracking_set_2, exercise.tracking_set_3, exercise.tracking_set_4].filter(
+    (value): value is string => typeof value === "string" && value.trim().length > 0,
+  );
+}
+
 function resolveHealthStatus(health: string): "green" | "yellow" | "red" {
   if (health === "ok") {
     return "green";
@@ -270,6 +288,41 @@ function WorkoutSummaryCard({ summary }: Readonly<{ summary: WorkoutSummary | nu
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+function ExerciseExecutionDetails({ exercise }: Readonly<{ exercise: WorkoutExercise }>) {
+  const substitutions = resolveAuthoredSubstitutions(exercise);
+  const trackingLoads = resolveTrackingLoads(exercise);
+  const mediaUrl = resolveExerciseMediaUrl(exercise);
+  const hasPrescription = Boolean(exercise.warm_up_sets || exercise.working_sets || exercise.reps);
+
+  return (
+    <div className="rounded-md border border-zinc-800 bg-zinc-900/40 p-2 text-xs text-zinc-300">
+      {hasPrescription ? (
+        <p>
+          Authored prescription: {exercise.warm_up_sets ?? "0"} warm-up sets · {exercise.working_sets ?? String(exercise.sets)} working sets · {exercise.reps ?? `${exercise.rep_range[0]}-${exercise.rep_range[1]}`}
+        </p>
+      ) : null}
+      <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
+        {exercise.early_set_rpe ? <span>Early-set RPE: {exercise.early_set_rpe}</span> : null}
+        {exercise.last_set_rpe ? <span>Last-set RPE: {exercise.last_set_rpe}</span> : null}
+        {exercise.last_set_intensity_technique ? <span>Technique: {exercise.last_set_intensity_technique}</span> : null}
+        {exercise.rest ? <span>Rest: {exercise.rest}</span> : null}
+      </div>
+      {trackingLoads.length > 0 ? <p className="mt-1">Tracking loads: {trackingLoads.join(" / ")}</p> : null}
+      {substitutions.length > 0 ? <p className="mt-1">Authored substitutions: {substitutions.join(" / ")}</p> : null}
+      {mediaUrl ? (
+        <a
+          className="mt-1 inline-flex text-zinc-100 underline decoration-zinc-500 underline-offset-2"
+          href={mediaUrl}
+          rel="noreferrer"
+          target="_blank"
+        >
+          Demo link
+        </a>
+      ) : null}
     </div>
   );
 }
@@ -591,7 +644,8 @@ export default function TodayPage() {
 
           {workout.exercises.map((exercise) => {
             const notesOpen = notesOpenByExercise[exercise.id] ?? false;
-            const hasVideo = Boolean(exercise.video?.youtube_url);
+            const mediaUrl = resolveExerciseMediaUrl(exercise);
+            const hasVideo = Boolean(mediaUrl);
             const substitutions = exercise.substitution_candidates ?? [];
             const selectedName = resolveExerciseName(exercise, swapIndexByExercise);
             const guideHref = activeProgramId
@@ -618,14 +672,15 @@ export default function TodayPage() {
                   </div>
                 </div>
 
+                <ExerciseExecutionDetails exercise={exercise} />
+
                 <div className="ui-segmented ui-segmented--auto">
                   <Button
                     className="h-8 px-3 text-xs"
                     disabled={!hasVideo}
                     onClick={() => {
-                      const url = exercise.video?.youtube_url;
-                      if (url) {
-                        window.open(url, "_blank", "noopener,noreferrer");
+                      if (mediaUrl) {
+                        window.open(mediaUrl, "_blank", "noopener,noreferrer");
                       }
                     }}
                     type="button"

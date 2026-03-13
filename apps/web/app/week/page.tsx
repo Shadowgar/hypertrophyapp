@@ -66,6 +66,64 @@ function formatLeadExercise(exercise: GeneratedWeekExercise | undefined): string
   return `${exercise.name} · ${exercise.sets} sets · ${exercise.rep_range[0]}-${exercise.rep_range[1]} reps @ ${exercise.recommended_working_weight} kg`;
 }
 
+function resolveExerciseMediaUrl(exercise: GeneratedWeekExercise): string | null {
+  const preferred = exercise.video?.youtube_url ?? exercise.video_url ?? exercise.demo_url;
+  return typeof preferred === "string" && preferred.trim().length > 0 ? preferred : null;
+}
+
+function resolveAuthoredSubstitutions(exercise: GeneratedWeekExercise): string[] {
+  return [exercise.substitution_option_1, exercise.substitution_option_2].filter(
+    (value, index, source): value is string =>
+      typeof value === "string" && value.trim().length > 0 && source.indexOf(value) === index,
+  );
+}
+
+function resolveTrackingLoads(exercise: GeneratedWeekExercise): string[] {
+  return [exercise.tracking_set_1, exercise.tracking_set_2, exercise.tracking_set_3, exercise.tracking_set_4].filter(
+    (value): value is string => typeof value === "string" && value.trim().length > 0,
+  );
+}
+
+function ExerciseExecutionDetails({ exercise }: Readonly<{ exercise: GeneratedWeekExercise }>) {
+  const substitutions = resolveAuthoredSubstitutions(exercise);
+  const trackingLoads = resolveTrackingLoads(exercise);
+  const mediaUrl = resolveExerciseMediaUrl(exercise);
+  const hasPrescription = Boolean(exercise.warm_up_sets || exercise.working_sets || exercise.reps);
+
+  return (
+    <div className="rounded-md border border-white/10 bg-black/20 p-2 text-[11px] text-zinc-300">
+      <p className="font-semibold text-zinc-100">{exercise.name}</p>
+      <p className="telemetry-meta">
+        {exercise.sets} sets · {exercise.rep_range[0]}-{exercise.rep_range[1]} reps · {exercise.recommended_working_weight} kg
+      </p>
+      {hasPrescription ? (
+        <p className="mt-1">
+          Authored prescription: {exercise.warm_up_sets ?? "0"} warm-up sets · {exercise.working_sets ?? String(exercise.sets)} working sets · {exercise.reps ?? `${exercise.rep_range[0]}-${exercise.rep_range[1]}`}
+        </p>
+      ) : null}
+      <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
+        {exercise.early_set_rpe ? <span>Early-set RPE: {exercise.early_set_rpe}</span> : null}
+        {exercise.last_set_rpe ? <span>Last-set RPE: {exercise.last_set_rpe}</span> : null}
+        {exercise.last_set_intensity_technique ? <span>Technique: {exercise.last_set_intensity_technique}</span> : null}
+        {exercise.rest ? <span>Rest: {exercise.rest}</span> : null}
+      </div>
+      {trackingLoads.length > 0 ? <p className="mt-1">Tracking loads: {trackingLoads.join(" / ")}</p> : null}
+      {substitutions.length > 0 ? <p className="mt-1">Authored substitutions: {substitutions.join(" / ")}</p> : null}
+      {mediaUrl ? (
+        <a
+          className="mt-1 inline-flex text-zinc-100 underline decoration-zinc-500 underline-offset-2"
+          href={mediaUrl}
+          rel="noreferrer"
+          target="_blank"
+        >
+          Demo link
+        </a>
+      ) : null}
+      {exercise.notes ? <p className="mt-1">{exercise.notes}</p> : null}
+    </div>
+  );
+}
+
 function formatSessionDate(value: string): string {
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) {
@@ -189,6 +247,11 @@ function WeekExecutionCards({ plan }: Readonly<{ plan: GeneratedWeekPlan }>) {
                   Coverage: {uniqueMuscles(session.exercises).join(", ") || "Untracked"}
                 </p>
                 {weakPointSlotCount > 0 ? <p className="telemetry-meta mt-1">Weak-point slots: {weakPointSlotCount}</p> : null}
+                <div className="mt-3 space-y-2">
+                  {session.exercises.map((exercise) => (
+                    <ExerciseExecutionDetails key={`${session.session_id}-${exercise.id}`} exercise={exercise} />
+                  ))}
+                </div>
               </div>
             );
           })}

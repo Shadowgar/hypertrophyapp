@@ -139,6 +139,61 @@ def test_generate_week_supports_adaptive_gold_runtime_program() -> None:
     )
 
 
+def test_adaptive_gold_generate_week_carries_authored_execution_details() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "gold-authored-runtime@example.com", "password": TEST_CREDENTIAL, "name": "Gold Runtime User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Gold Runtime User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "adaptive_full_body_gold_v0_1",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "bench", "cable", "machine", "dumbbell"],
+            "days_available": 5,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+
+    first_exercise = plan["sessions"][0]["exercises"][0]
+    assert first_exercise["id"] == "cross_body_lat_pull_around"
+    assert first_exercise["last_set_intensity_technique"] == "Long-length Partials (on all reps of the last set)"
+    assert first_exercise["warm_up_sets"] == "1.0"
+    assert first_exercise["working_sets"] == "3.0"
+    assert first_exercise["reps"] == "10-12"
+    assert first_exercise["early_set_rpe"] == "~7-8"
+    assert first_exercise["last_set_rpe"] == "~8-9"
+    assert first_exercise["rest"] == "~2-3 min"
+    assert first_exercise["substitution_option_1"] == "Half-Kneeling 1-Arm Lat Pulldown"
+    assert first_exercise["substitution_option_2"] == "Neutral-Grip Pullup"
+    assert first_exercise["demo_url"] == "https://youtu.be/8W67lZ5mwTU?si=Xri6ms5QPmM-PZc8"
+    assert first_exercise["video_url"] == "https://youtu.be/8W67lZ5mwTU?si=Xri6ms5QPmM-PZc8"
+    assert first_exercise["video"]["youtube_url"] == "https://youtu.be/8W67lZ5mwTU?si=Xri6ms5QPmM-PZc8"
+    assert first_exercise["notes"].startswith("Try to keep the cable and your wrist aligned")
+
+
 def test_adaptive_gold_generate_week_includes_core_slot_when_equipment_available() -> None:
     _reset_db()
     client = TestClient(app)

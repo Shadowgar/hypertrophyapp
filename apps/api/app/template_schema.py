@@ -19,6 +19,21 @@ class CanonicalExercise(BaseModel):
     equipment_tags: list[str] = []
     substitution_candidates: list[str] = []
     substitution_metadata: dict[str, dict[str, object]] = {}
+    last_set_intensity_technique: str | None = None
+    warm_up_sets: str | None = None
+    working_sets: str | None = None
+    reps: str | None = None
+    early_set_rpe: str | None = None
+    last_set_rpe: str | None = None
+    rest: str | None = None
+    tracking_set_1: str | None = None
+    tracking_set_2: str | None = None
+    tracking_set_3: str | None = None
+    tracking_set_4: str | None = None
+    substitution_option_1: str | None = None
+    substitution_option_2: str | None = None
+    demo_url: str | None = None
+    video_url: str | None = None
     notes: str | None = None
     video: VideoMetadata | None = None
 
