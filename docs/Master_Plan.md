@@ -42,7 +42,7 @@ Current branch reality:
 - the workbook-faithful Phase 1 onboarding package now exists as a rich authoritative artifact
 - runtime/API week-generation and today-session paths now carry the authored slot fields through
 - week/today UI now shows those authored execution details directly
-- temporary 5-days-to-3-days adaptation is now becoming program-specific for this same path
+- the next product seam after that is program-specific temporary 5-days-to-3-days adaptation for this same path
 
 Immediate direction:
 - keep one-program-first as the primary delivery track
@@ -174,10 +174,6 @@ Reference:
 	- `programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json` explicitly preserves authored slot fields, top-level notes/warm-up/weak-point sections, week labels, block labels, special banners, and workbook-backed video links.
 	- the runtime loader/API path now carries those authored execution fields into generated-week and today workout exercises.
 	- week/today surfaces now show early-set RPE, last-set RPE, last-set intensity technique, rest, authored substitutions, and demo links directly from the authoritative package/runtime data.
-- Pure Bodybuilding Phase 1 temporary frequency adaptation is now program-aware on the live branch:
-	- the 5-days-to-3-days preview/apply path emits an explicit `pure_bodybuilding_phase_1_full_body_5_to_3` policy trace with preserved day roles, merged day roles, and preservation focus.
-	- generated-week `applied_frequency_adaptation` now carries that same policy metadata forward.
-	- active adaptation state now targets the selected runtime template while preserving the real onboarding program identity, so apply -> generate-week survives alias differences on the current branch.
 - The adaptive gold sample is now a real authored mesocycle instead of a short proof stub:
 	- `programs/gold/adaptive_full_body_gold_v0_1.json` now follows a 10-week authored sequence aligned to the onboarding package cadence: `build_a / build_b / build_a / build_b / build_a / deload / intens_a / intens_b / intens_a / intens_b`.
 	- runtime loader contracts preserve all 10 authored weeks with explicit `week_role` values and a five-day authored source (`Full Body #1-#4` plus `Arms & Weak Points`) rather than the earlier compressed three-day surrogate.
@@ -185,7 +181,7 @@ Reference:
 	- generate-week now proves week-6 authored deload plus later intensification-week selection on the gold runtime path.
 	- post-week-10 behavior is now explicit: generated-week holds the final authored week as the deterministic fallback while surfacing `authored_sequence_complete` and `phase_transition_pending` in `mesocycle`.
 	- that same post-week-10 signal now propagates through canonical training state and downstream coaching layers: coach-preview can explicitly tell the user the authored mesocycle is complete and recommend rotating programs, and program recommendation now treats authored-sequence completion as a first-class rotation trigger instead of a hidden scheduler-only flag.
-	- the next fidelity step is reconciling the onboarding/runtime artifacts against the actual workbook/PDF exercise lineup and effort structure before broader user testing or wider library migration.
+	- the next fidelity step after visible Phase 1 runtime delivery is program-specific temporary frequency adaptation, followed by reconciling the live administered identity across the onboarding/runtime artifacts before broader user testing or wider library migration.
 - Onboarding testing reliability improvements:
 	- `POST /auth/dev/wipe-user` (dev-only by config) supports wipe-by-email reset when register/login is blocked by stale test accounts.
 	- Onboarding screen now includes explicit `Wipe Test User By Email` and `Wipe Current Logged-In User Data` controls.
