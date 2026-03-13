@@ -55,8 +55,8 @@ def test_gold_onboarding_package_preserves_phase1_workbook_sections_and_authored
     blueprint = payload["blueprint"]
 
     first_slot = blueprint["week_templates"][0]["days"][0]["slots"][0]
-    first_library_entry = next(
-        entry for entry in payload["exercise_library"] if entry["exercise_id"] == first_slot["exercise_id"]
+    first_catalog_entry = next(
+        entry for entry in payload["exercise_catalog"] if entry["exercise_id"] == first_slot["exercise_id"]
     )
     week_5 = blueprint["week_templates"][4]
 
@@ -89,8 +89,18 @@ def test_gold_onboarding_package_preserves_phase1_workbook_sections_and_authored
     assert first_slot["video_url"] == "https://youtu.be/8W67lZ5mwTU?si=Xri6ms5QPmM-PZc8"
     assert first_slot["demo_url"] == first_slot["video_url"]
     assert first_slot["notes"].startswith("Try to keep the cable and your wrist aligned in a straight line")
-    assert first_library_entry["default_video_url"] == first_slot["video_url"]
+    assert first_catalog_entry["default_video_url"] == first_slot["video_url"]
 
+    assert "exercise_catalog" in payload
+    assert "important_program_notes" in payload
+    assert "warm_up_protocol" in payload
+    assert "weak_points_table" in payload
+    assert payload["important_program_notes"][0].startswith("Perform a full general warm-up")
+    assert payload["warm_up_protocol"]["general_warm_up"][0] == {
+        "label": "5-10 minutes",
+        "instruction": "Light cardio on machine on your choice of machine (treadmill, stairmaster, elliptical, bike, etc.)",
+    }
+    assert payload["weak_points_table"][0]["weak_point"] == "Shoulders"
     assert "important_program_notes" in blueprint
     assert "warm_up_protocol" in blueprint
     assert "weak_points_table" in blueprint

@@ -238,6 +238,15 @@ def test_build_onboarding_package_preserves_phase1_reference_sections_and_week_b
     payload = json.loads(destination.read_text(encoding="utf-8"))
     package = ProgramOnboardingPackage.model_validate(payload)
 
+    assert package.important_program_notes[0] == (
+        "Perform a full general warm-up and exercise-specific warm-up every workout as outlined below "
+        "(should only take 5-10 mins max)"
+    )
+    assert package.warm_up_protocol is not None
+    assert package.warm_up_protocol.general_warm_up[0].label == "5-10 minutes"
+    assert package.weak_points_table[0].weak_point == "Shoulders"
+    assert package.exercise_catalog[0].default_video_url is not None
+
     assert package.blueprint.important_program_notes[0] == (
         "Perform a full general warm-up and exercise-specific warm-up every workout as outlined below "
         "(should only take 5-10 mins max)"

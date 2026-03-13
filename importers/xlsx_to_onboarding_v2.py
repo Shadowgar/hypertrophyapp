@@ -312,12 +312,17 @@ def build_onboarding_package(
             "manual curation is required for this program."
         )
 
+    exercise_catalog = build_exercise_library(sessions)
     package = {
         "program_id": program_id,
         "version": "0.2.0",
         "source_pdf": source_pdf,
         "blueprint": blueprint,
-        "exercise_library": build_exercise_library(sessions),
+        "exercise_library": exercise_catalog,
+        "exercise_catalog": exercise_catalog,
+        "important_program_notes": list(blueprint.get("important_program_notes") or []),
+        "warm_up_protocol": blueprint.get("warm_up_protocol"),
+        "weak_points_table": list(blueprint.get("weak_points_table") or []),
         "program_intent": _build_program_intent(program_id=program_id, input_file=input_file, rows=selected_sheets[0].rows),
         "frequency_adaptation_rules": {
             "default_training_days": 5,

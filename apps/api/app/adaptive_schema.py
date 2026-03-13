@@ -622,6 +622,10 @@ class ProgramOnboardingPackage(BaseModel):
     source_pdf: str = Field(min_length=1)
     blueprint: ProgramBlueprint
     exercise_library: list[ExerciseKnowledgeEntry] = Field(default_factory=list)
+    exercise_catalog: list[ExerciseKnowledgeEntry] = Field(default_factory=list)
+    important_program_notes: list[str] = Field(default_factory=list)
+    warm_up_protocol: BlueprintWarmUpProtocol | None = None
+    weak_points_table: list[WeakPointTableEntry] = Field(default_factory=list)
     program_intent: ProgramIntent
     frequency_adaptation_rules: FrequencyAdaptationRules
 
@@ -631,6 +635,14 @@ class ProgramOnboardingPackage(BaseModel):
             raise ValueError("program_id must match blueprint.program_id")
         if self.program_id != self.program_intent.program_id:
             raise ValueError("program_id must match program_intent.program_id")
+        if not self.exercise_catalog:
+            self.exercise_catalog = list(self.exercise_library)
+        if not self.important_program_notes:
+            self.important_program_notes = list(self.blueprint.important_program_notes)
+        if self.warm_up_protocol is None:
+            self.warm_up_protocol = self.blueprint.warm_up_protocol
+        if not self.weak_points_table:
+            self.weak_points_table = list(self.blueprint.weak_points_table)
         return self
 
 

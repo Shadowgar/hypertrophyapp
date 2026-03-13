@@ -15909,6 +15909,2169 @@
       "slot_usage_rationale": "Used in Arms & Weak Points to preserve session intent and progression continuity."
     }
   ],
+  "exercise_catalog": [
+    {
+      "exercise_id": "cross_body_lat_pull_around",
+      "canonical_name": "Cross-Body Lat Pull-Around",
+      "aliases": [
+        "Cross-Body Lat Pull-Around"
+      ],
+      "execution": "Try to keep the cable and your wrist aligned in a straight line throughout the pull. Feel a nice, deep lat stretch at the top.",
+      "coaching_cues": [
+        "Try to keep the cable and your wrist aligned in a straight line throughout the pull",
+        "Feel a nice, deep lat stretch at the top"
+      ],
+      "primary_muscles": [
+        "lats"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "cable"
+      ],
+      "movement_pattern": "vertical_pull",
+      "valid_substitutions": [
+        {
+          "exercise_id": "half_kneeling_1_arm_lat_pulldown",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        },
+        {
+          "exercise_id": "neutral_grip_pullup",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        }
+      ],
+      "default_video_url": "https://youtu.be/8W67lZ5mwTU?si=Xri6ms5QPmM-PZc8",
+      "slot_usage_rationale": "Used in Full Body #1 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "low_incline_smith_machine_press",
+      "canonical_name": "Low Incline Smith Machine Press",
+      "aliases": [
+        "Low Incline Smith Machine Press"
+      ],
+      "execution": "Set the bench at a ~15\u00b0 incline. 1 second pause on the chest on each rep while maintaining tension on the pecs.",
+      "coaching_cues": [
+        "Set the bench at a ~15\u00b0 incline",
+        "1 second pause on the chest on each rep while maintaining tension on the pecs"
+      ],
+      "primary_muscles": [
+        "chest",
+        "triceps",
+        "front_delts"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "machine"
+      ],
+      "movement_pattern": "horizontal_press",
+      "valid_substitutions": [
+        {
+          "exercise_id": "low_incline_machine_press",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "machine"
+          ]
+        },
+        {
+          "exercise_id": "low_incline_db_press",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        }
+      ],
+      "default_video_url": "https://youtu.be/2ITgeRy2z2s?si=0dvsrZDJUxuU74tR",
+      "slot_usage_rationale": "Used in Full Body #1 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "machine_hip_adduction",
+      "canonical_name": "Machine Hip Adduction",
+      "aliases": [
+        "Machine Hip Adduction"
+      ],
+      "execution": "Mind-muscle connection with your inner thighs. These are great for adding thigh mass from the front! Push them hard!",
+      "coaching_cues": [
+        "Mind-muscle connection with your inner thighs",
+        "These are great for adding thigh mass from the front",
+        "Push them hard"
+      ],
+      "primary_muscles": [
+        "adductors"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "machine"
+      ],
+      "movement_pattern": "hip_adduction",
+      "valid_substitutions": [
+        {
+          "exercise_id": "cable_hip_adduction",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "cable"
+          ]
+        },
+        {
+          "exercise_id": "copenhagen_hip_adduction",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        }
+      ],
+      "default_video_url": "https://youtu.be/FMSCZYu1JhE?si=LI50IqTAYxKN3Q3F",
+      "slot_usage_rationale": "Used in Full Body #1 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "leg_press",
+      "canonical_name": "Leg Press",
+      "aliases": [
+        "Leg Press"
+      ],
+      "execution": "Feet lower on the platform for more quad focus. Get as deep as you can without excessive back rounding. Control the negative and do a slight pause at the bottom of each rep. Try to add a little weight each week at the same rep count.",
+      "coaching_cues": [
+        "Feet lower on the platform for more quad focus",
+        "Get as deep as you can without excessive back rounding",
+        "Control the negative and do a slight pause at the bottom of each rep"
+      ],
+      "primary_muscles": [
+        "quads",
+        "glutes"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "machine"
+      ],
+      "movement_pattern": "squat",
+      "valid_substitutions": [
+        {
+          "exercise_id": "belt_squat",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        },
+        {
+          "exercise_id": "high_bar_back_squat",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        }
+      ],
+      "default_video_url": "https://youtu.be/1yKAQLVV_XI?si=tYRSPpQpNHTQZT7r",
+      "slot_usage_rationale": "Used in Full Body #1 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "lying_paused_rope_face_pull",
+      "canonical_name": "Lying Paused Rope Face Pull",
+      "aliases": [
+        "Lying Paused Rope Face Pull"
+      ],
+      "execution": "Pause for 1-2 seconds in the squeeze of each rep. Contract the rear delts hard!",
+      "coaching_cues": [
+        "Pause for 1-2 seconds in the squeeze of each rep",
+        "Contract the rear delts hard"
+      ],
+      "primary_muscles": [
+        "rear_delts",
+        "upper_back"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "cable"
+      ],
+      "movement_pattern": "horizontal_pull",
+      "valid_substitutions": [
+        {
+          "exercise_id": "rope_face_pull",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        },
+        {
+          "exercise_id": "bent_over_reverse_db_flye",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        }
+      ],
+      "default_video_url": "https://youtu.be/jTmI3Q1iQUk?si=H9Hh-bs_KYoZnTSW",
+      "slot_usage_rationale": "Used in Full Body #1 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "cable_crunch",
+      "canonical_name": "Cable Crunch",
+      "aliases": [
+        "Cable Crunch"
+      ],
+      "execution": "Round your lower back as you crunch. Maintain a mind-muscle connection with your 6-pack.",
+      "coaching_cues": [
+        "Round your lower back as you crunch",
+        "Maintain a mind-muscle connection with your 6-pack"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "cable"
+      ],
+      "movement_pattern": "accessory",
+      "valid_substitutions": [
+        {
+          "exercise_id": "machine_crunch",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "machine"
+          ]
+        },
+        {
+          "exercise_id": "plate_weighted_crunch",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        }
+      ],
+      "default_video_url": "https://youtu.be/epBrpaGHMcg?si=7ho0_BfkYxXA9SBV",
+      "slot_usage_rationale": "Used in Full Body #1 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "seated_db_shoulder_press",
+      "canonical_name": "Seated DB Shoulder Press",
+      "aliases": [
+        "Seated DB Shoulder Press"
+      ],
+      "execution": "Slightly rotate the dumbbells in on the negative and flare your elbows out as you push.",
+      "coaching_cues": [
+        "Slightly rotate the dumbbells in on the negative and flare your elbows out as you push"
+      ],
+      "primary_muscles": [
+        "front_delts",
+        "triceps"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "movement_pattern": "vertical_press",
+      "valid_substitutions": [
+        {
+          "exercise_id": "seated_barbell_shoulder_press",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "barbell"
+          ]
+        },
+        {
+          "exercise_id": "standing_db_arnold_press",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        }
+      ],
+      "default_video_url": "https://youtu.be/B8PB5RPhTWQ?si=rGaPEOmMgAu65VAE",
+      "slot_usage_rationale": "Used in Full Body #2 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "paused_barbell_rdl",
+      "canonical_name": "Paused Barbell RDL",
+      "aliases": [
+        "Paused Barbell RDL"
+      ],
+      "execution": "The RPE is intentionally low here because these will cause a lot of muscle damage. Don't be tempted to go too heavy. 1 second pause at the bottom of each rep. To keep tension on the hamstrings, stop about 75% of the way to full lockout on each rep (i.e. stay in the bottom 3/4 of the range of motion).",
+      "coaching_cues": [
+        "The RPE is intentionally low here because these will cause a lot of muscle damage",
+        "Don't be tempted to go too heavy",
+        "1 second pause at the bottom of each rep"
+      ],
+      "primary_muscles": [
+        "hamstrings",
+        "glutes",
+        "erectors"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "barbell"
+      ],
+      "movement_pattern": "hinge",
+      "valid_substitutions": [
+        {
+          "exercise_id": "paused_db_rdl",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        },
+        {
+          "exercise_id": "glute_ham_raise",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        }
+      ],
+      "default_video_url": "https://youtu.be/74uXdbCYZQY?si=ao3eR7kTfii_BqWl",
+      "slot_usage_rationale": "Used in Full Body #2 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "chest_supported_machine_row",
+      "canonical_name": "Chest-Supported Machine Row",
+      "aliases": [
+        "Chest-Supported Machine Row"
+      ],
+      "execution": "Flare elbows out at roughly 45\u00b0 and squeeze your shoulder blades together hard at the top of each rep.",
+      "coaching_cues": [
+        "Flare elbows out at roughly 45\u00b0 and squeeze your shoulder blades together hard at the top of each rep"
+      ],
+      "primary_muscles": [
+        "lats",
+        "mid_back",
+        "biceps"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "machine"
+      ],
+      "movement_pattern": "horizontal_pull",
+      "valid_substitutions": [
+        {
+          "exercise_id": "chest_supported_t_bar_row",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        },
+        {
+          "exercise_id": "helms_row",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        }
+      ],
+      "default_video_url": "https://youtu.be/ijsSiWSzYw0?si=ADBJRkNSajLiVayN",
+      "slot_usage_rationale": "Used in Full Body #2 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "hammer_preacher_curl",
+      "canonical_name": "Hammer Preacher Curl",
+      "aliases": [
+        "Hammer Preacher Curl"
+      ],
+      "execution": "These will target the brachialis and forearms hard. Squeeze the dumbbell hard in the middle of the handle and curl about 3/4 of the way up (i.e. stay in the bottom 3/4 of the curl).",
+      "coaching_cues": [
+        "These will target the brachialis and forearms hard",
+        "Squeeze the dumbbell hard in the middle of the handle and curl about 3/4 of the way up (i",
+        "e"
+      ],
+      "primary_muscles": [
+        "biceps",
+        "brachialis"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "movement_pattern": "curl",
+      "valid_substitutions": [
+        {
+          "exercise_id": "fat_grip_preacher_curl",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        },
+        {
+          "exercise_id": "hammer_curl",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        }
+      ],
+      "default_video_url": "https://youtu.be/dEdnC3ca-Yg?si=3u4iC-WIgb0it58j",
+      "slot_usage_rationale": "Used in Full Body #2 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "cuffed_behind_the_back_lateral_raise",
+      "canonical_name": "Cuffed Behind-The-Back Lateral Raise",
+      "aliases": [
+        "Cuffed Behind-The-Back Lateral Raise"
+      ],
+      "execution": "Raise the cables up and out in a \"Y\" motion. Really try to connect with the middle delt fibers as you sweep the weight up and out.",
+      "coaching_cues": [
+        "Raise the cables up and out in a \"Y\" motion",
+        "Really try to connect with the middle delt fibers as you sweep the weight up and out"
+      ],
+      "primary_muscles": [
+        "side_delts"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "cable"
+      ],
+      "movement_pattern": "lateral_raise",
+      "valid_substitutions": [
+        {
+          "exercise_id": "cross_body_cable_y_raise",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "cable"
+          ]
+        },
+        {
+          "exercise_id": "db_lateral_raise",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        }
+      ],
+      "default_video_url": "https://youtu.be/fjiOCmFljDM?si=BKrXjBpi9gubjgVg",
+      "slot_usage_rationale": "Used in Full Body #2 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "overhead_cable_triceps_extension_bar",
+      "canonical_name": "Overhead Cable Triceps Extension (Bar)",
+      "aliases": [
+        "Overhead Cable Triceps Extension (Bar)"
+      ],
+      "execution": "Feel a nasty stretch on the triceps throughout the entire negative. Pause for 1 second in the stretch part of each rep.",
+      "coaching_cues": [
+        "Feel a nasty stretch on the triceps throughout the entire negative",
+        "Pause for 1 second in the stretch part of each rep"
+      ],
+      "primary_muscles": [
+        "front_delts",
+        "triceps"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "cable"
+      ],
+      "movement_pattern": "vertical_press",
+      "valid_substitutions": [
+        {
+          "exercise_id": "overhead_cable_triceps_extension_rope",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "cable"
+          ]
+        },
+        {
+          "exercise_id": "db_skull_crusher",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        }
+      ],
+      "default_video_url": "https://youtu.be/9_I1PqZAjdA?si=WharR_85DB87S11C",
+      "slot_usage_rationale": "Used in Full Body #2 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "assisted_pull_up",
+      "canonical_name": "Assisted Pull-Up",
+      "aliases": [
+        "Assisted Pull-Up"
+      ],
+      "execution": "Slow 2-3 second negative. Feel your lats pulling apart on the way down. Slight 0.5-1 second pause at the bottom, then lift your chest up and drive your elbows down as you lift yourself up. Don't be afraid to use assistance. Keep the form tight and controlled!",
+      "coaching_cues": [
+        "Slow 2-3 second negative",
+        "Feel your lats pulling apart on the way down",
+        "Slight 0"
+      ],
+      "primary_muscles": [
+        "lats",
+        "biceps"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "bodyweight",
+        "machine"
+      ],
+      "movement_pattern": "vertical_pull",
+      "valid_substitutions": [
+        {
+          "exercise_id": "lat_pulldown",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        },
+        {
+          "exercise_id": "machine_pulldown",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "machine"
+          ]
+        }
+      ],
+      "default_video_url": "https://youtu.be/iZQNHZuvfUQ?si=HbK5zxsfGHiDqYPT",
+      "slot_usage_rationale": "Used in Full Body #3 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "paused_assisted_dip",
+      "canonical_name": "Paused Assisted Dip",
+      "aliases": [
+        "Paused Assisted Dip"
+      ],
+      "execution": "Slow 2-3 second negative. 1-2 second pause at the bottom. Explode with control on the way up. Go as deep as your shoulders comfortably allow, trying to at least break a 90\u00b0 elbow angle.",
+      "coaching_cues": [
+        "Slow 2-3 second negative",
+        "1-2 second pause at the bottom",
+        "Explode with control on the way up"
+      ],
+      "primary_muscles": [
+        "chest",
+        "triceps",
+        "front_delts"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "bodyweight",
+        "machine"
+      ],
+      "movement_pattern": "horizontal_press",
+      "valid_substitutions": [
+        {
+          "exercise_id": "decline_machine_chest_press",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "machine"
+          ]
+        },
+        {
+          "exercise_id": "decline_barbell_press",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "barbell"
+          ]
+        }
+      ],
+      "default_video_url": "https://youtu.be/RyGOGviYWts?si=I8nT4hN37uUDkW5M",
+      "slot_usage_rationale": "Used in Full Body #3 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "seated_leg_curl",
+      "canonical_name": "Seated Leg Curl",
+      "aliases": [
+        "Seated Leg Curl"
+      ],
+      "execution": "Lean forward over the machine to get a maximum stretch in your hamstrings.",
+      "coaching_cues": [
+        "Lean forward over the machine to get a maximum stretch in your hamstrings"
+      ],
+      "primary_muscles": [
+        "hamstrings"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "machine"
+      ],
+      "movement_pattern": "leg_curl",
+      "valid_substitutions": [
+        {
+          "exercise_id": "lying_leg_curl",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "machine"
+          ]
+        },
+        {
+          "exercise_id": "nordic_ham_curl",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        }
+      ],
+      "default_video_url": "https://youtu.be/yv0aAY7M1mk?si=gWlSMWsY7YXnjE7c",
+      "slot_usage_rationale": "Used in Full Body #3 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "leg_extension",
+      "canonical_name": "Leg Extension",
+      "aliases": [
+        "Leg Extension"
+      ],
+      "execution": "Set the seat back as far as it will go while still feeling comfortable. Grab the handles as hard as you can to pull your butt down into the seat. Use a 2-3 second negative. Feel your quads pulling apart on the negative.",
+      "coaching_cues": [
+        "Set the seat back as far as it will go while still feeling comfortable",
+        "Grab the handles as hard as you can to pull your butt down into the seat",
+        "Use a 2-3 second negative"
+      ],
+      "primary_muscles": [
+        "quads"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "machine"
+      ],
+      "movement_pattern": "knee_extension",
+      "valid_substitutions": [
+        {
+          "exercise_id": "db_step_up",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        },
+        {
+          "exercise_id": "reverse_nordic",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        }
+      ],
+      "default_video_url": "https://youtu.be/uFbNtqP966A?si=AMbutqVPt7YGZ6OP",
+      "slot_usage_rationale": "Used in Full Body #3 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "cable_paused_shrug_in",
+      "canonical_name": "Cable Paused Shrug-In",
+      "aliases": [
+        "Cable Paused Shrug-In"
+      ],
+      "execution": "Shrug up and in. Think about shrugging \"up to your ears\". 1-2 second pause in the squeeze (at the top) of each rep, then another 1-2 second pause in the stretch (at the bottom) of each rep.",
+      "coaching_cues": [
+        "Shrug up and in",
+        "Think about shrugging \"up to your ears\"",
+        "1-2 second pause in the squeeze (at the top) of each rep, then another 1-2 second pause in the stretch (at the bottom) of each rep"
+      ],
+      "primary_muscles": [
+        "traps"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "cable"
+      ],
+      "movement_pattern": "shrug",
+      "valid_substitutions": [
+        {
+          "exercise_id": "machine_shrug",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "machine"
+          ]
+        },
+        {
+          "exercise_id": "db_shrug",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        }
+      ],
+      "default_video_url": "https://youtu.be/Hy6f1Lz_PiA?si=8cXi9pxq1eBZzZ8w",
+      "slot_usage_rationale": "Used in Full Body #3 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "roman_chair_leg_raise",
+      "canonical_name": "Roman Chair Leg Raise",
+      "aliases": [
+        "Roman Chair Leg Raise"
+      ],
+      "execution": "Allow your lower back to round as you curl your legs up. 10-20 reps is a broad range on purpose: just go until you hit RPE 9-10 (0-1 reps shy of failure) with controlled form.",
+      "coaching_cues": [
+        "Allow your lower back to round as you curl your legs up",
+        "10-20 reps is a broad range on purpose: just go until you hit RPE 9-10 (0-1 reps shy of failure) with controlled form"
+      ],
+      "primary_muscles": [
+        "abs"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "bodyweight"
+      ],
+      "movement_pattern": "core",
+      "valid_substitutions": [
+        {
+          "exercise_id": "hanging_leg_raise",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        },
+        {
+          "exercise_id": "reverse_crunch",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        }
+      ],
+      "default_video_url": "https://youtu.be/irOzFVqJ0IE?si=thMkPeBnfLceaDfy",
+      "slot_usage_rationale": "Used in Full Body #3 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "lying_leg_curl",
+      "canonical_name": "Lying Leg Curl",
+      "aliases": [
+        "Lying Leg Curl"
+      ],
+      "execution": "Because we did seated hamstring work yesterday, these are mainly meant to get the knees nice and warmed up before hack squats. Don't push these too hard today, just feel the hamstrings moving the weight under control.",
+      "coaching_cues": [
+        "Because we did seated hamstring work yesterday, these are mainly meant to get the knees nice and warmed up before hack squats",
+        "Don't push these too hard today, just feel the hamstrings moving the weight under control"
+      ],
+      "primary_muscles": [
+        "hamstrings"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "machine"
+      ],
+      "movement_pattern": "leg_curl",
+      "valid_substitutions": [
+        {
+          "exercise_id": "seated_leg_curl",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "machine"
+          ]
+        },
+        {
+          "exercise_id": "nordic_ham_curl",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        }
+      ],
+      "default_video_url": "https://youtu.be/sX4tGtcc62k?si=yCEC27DIHbq7_h84",
+      "slot_usage_rationale": "Used in Full Body #4 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "hack_squat",
+      "canonical_name": "Hack Squat",
+      "aliases": [
+        "Hack Squat"
+      ],
+      "execution": "We're using a reverse pyramid on this exercise. Warm-up as usual to your first working set for 4 reps. This first set will be your heaviest set. Then for set 2, drop the weight back ~10-15% and do 6 reps. Then for set 3, drop the weight back another 10-15% and do 8 reps.",
+      "coaching_cues": [
+        "We're using a reverse pyramid on this exercise",
+        "Warm-up as usual to your first working set for 4 reps",
+        "This first set will be your heaviest set"
+      ],
+      "primary_muscles": [
+        "quads",
+        "glutes"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [],
+      "movement_pattern": "squat",
+      "valid_substitutions": [
+        {
+          "exercise_id": "machine_squat",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "machine"
+          ]
+        },
+        {
+          "exercise_id": "front_squat",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        }
+      ],
+      "default_video_url": "https://youtu.be/TWUnnDK8rck?si=fdr0Tuwm6csuB1-P",
+      "slot_usage_rationale": "Used in Full Body #4 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "bent_over_cable_pec_flye",
+      "canonical_name": "Bent-Over Cable Pec Flye",
+      "aliases": [
+        "Bent-Over Cable Pec Flye"
+      ],
+      "execution": "Lean forward until your torso is parallel with the floor, flye straight out and down toward the floor. Stretch and squeeze the pecs! Stay locked in.",
+      "coaching_cues": [
+        "Lean forward until your torso is parallel with the floor, flye straight out and down toward the floor",
+        "Stretch and squeeze the pecs",
+        "Stay locked in"
+      ],
+      "primary_muscles": [
+        "chest"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "cable"
+      ],
+      "movement_pattern": "chest_fly",
+      "valid_substitutions": [
+        {
+          "exercise_id": "pec_deck",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        },
+        {
+          "exercise_id": "db_flye",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        }
+      ],
+      "default_video_url": "https://youtu.be/-7bVljkNWAs?si=k1rKZHUngkPpDhB0",
+      "slot_usage_rationale": "Used in Full Body #4 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "neutral_grip_lat_pulldown",
+      "canonical_name": "Neutral-Grip Lat Pulldown",
+      "aliases": [
+        "Neutral-Grip Lat Pulldown"
+      ],
+      "execution": "Do these pulldowns with the handle more out in front of you, more like a cross between pullover and a pulldown. Focus on feeling your lats working more than the weight you're using.",
+      "coaching_cues": [
+        "Do these pulldowns with the handle more out in front of you, more like a cross between pullover and a pulldown",
+        "Focus on feeling your lats working more than the weight you're using"
+      ],
+      "primary_muscles": [
+        "lats",
+        "biceps"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "cable"
+      ],
+      "movement_pattern": "vertical_pull",
+      "valid_substitutions": [
+        {
+          "exercise_id": "neutral_grip_pull_up",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        },
+        {
+          "exercise_id": "machine_pulldown",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "machine"
+          ]
+        }
+      ],
+      "default_video_url": "https://youtu.be/eiFpSJiyHnA?si=7SOYQSA6KX7-mX4Y",
+      "slot_usage_rationale": "Used in Full Body #4 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "leg_press_calf_press",
+      "canonical_name": "Leg Press Calf Press",
+      "aliases": [
+        "Leg Press Calf Press"
+      ],
+      "execution": "1-2 second pause at the bottom of each rep. Instead of just going up onto your toes, think about rolling your ankle back and forth on the balls of your feet.",
+      "coaching_cues": [
+        "1-2 second pause at the bottom of each rep",
+        "Instead of just going up onto your toes, think about rolling your ankle back and forth on the balls of your feet"
+      ],
+      "primary_muscles": [
+        "calves"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "machine"
+      ],
+      "movement_pattern": "plantar_flexion",
+      "valid_substitutions": [
+        {
+          "exercise_id": "donkey_calf_raise",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        },
+        {
+          "exercise_id": "seated_calf_raise",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        }
+      ],
+      "default_video_url": "https://youtu.be/S6DTPNZ_-F4?si=qG_l9219p7rnD1jw",
+      "slot_usage_rationale": "Used in Full Body #4 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "cable_reverse_flye_mechanical_dropset",
+      "canonical_name": "Cable Reverse Flye (Mechanical Dropset)",
+      "aliases": [
+        "Cable Reverse Flye (Mechanical Dropset)"
+      ],
+      "execution": "You'll probably want to watch the video for this one. Take ~3 big steps back from the cable machine and do your first 5 reps. After those first 5 reps, immediately (without resting) take 1 step forward and do another 4 reps. Then (without resting) take another step forward and do at least another 3 reps (or until you hit RPE 9-10).",
+      "coaching_cues": [
+        "You'll probably want to watch the video for this one",
+        "Take ~3 big steps back from the cable machine and do your first 5 reps",
+        "After those first 5 reps, immediately (without resting) take 1 step forward and do another 4 reps"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "cable"
+      ],
+      "movement_pattern": "accessory",
+      "valid_substitutions": [
+        {
+          "exercise_id": "reverse_pec_deck",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        },
+        {
+          "exercise_id": "bent_over_reverse_db_flye",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        }
+      ],
+      "default_video_url": "https://youtu.be/nN5RV1arpfM?si=QMyPtoqRDuAq3bme",
+      "slot_usage_rationale": "Used in Full Body #4 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "weak_point_exercise_1",
+      "canonical_name": "Weak Point Exercise 1",
+      "aliases": [
+        "Weak Point Exercise 1"
+      ],
+      "execution": "Decide on your weak point using The Weak Point Table in your Hypertrophy Handbook. Perform ONE of the exercises listed under Exercise 1 for the sets and reps provided here.",
+      "coaching_cues": [
+        "Decide on your weak point using The Weak Point Table in your Hypertrophy Handbook",
+        "Perform ONE of the exercises listed under Exercise 1 for the sets and reps provided here"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "equipment_tags": [],
+      "movement_pattern": "accessory",
+      "valid_substitutions": [
+        {
+          "exercise_id": "see_the_weak_point_table_for_sub_options",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        }
+      ],
+      "default_video_url": null,
+      "slot_usage_rationale": "Used in Arms & Weak Points to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "weak_point_exercise_2_optional",
+      "canonical_name": "Weak Point Exercise 2 (optional)",
+      "aliases": [
+        "Weak Point Exercise 2 (optional)"
+      ],
+      "execution": "If your weak point is feeling recovered (not sore or fatigued) then feel free to hit Exercise 2. If your weak point is feeling tired or sore, do not perform the second weak point exercise this week.",
+      "coaching_cues": [
+        "If your weak point is feeling recovered (not sore or fatigued) then feel free to hit Exercise 2",
+        "If your weak point is feeling tired or sore, do not perform the second weak point exercise this week"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "equipment_tags": [],
+      "movement_pattern": "accessory",
+      "valid_substitutions": [
+        {
+          "exercise_id": "see_the_weak_point_table_for_sub_options",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        }
+      ],
+      "default_video_url": null,
+      "slot_usage_rationale": "Used in Arms & Weak Points to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "bayesian_cable_curl",
+      "canonical_name": "Bayesian Cable Curl",
+      "aliases": [
+        "Bayesian Cable Curl"
+      ],
+      "execution": "If you have a left-right bicep size imbalance, do these 1 arm at a time, starting with the weaker arm. Take the weaker arm to an RPE of 9-10. Then match the reps with the other arm (stop once you've matched the reps, even if the RPE is lower). If you don't have a size imbalance, do these both arms at the same time.",
+      "coaching_cues": [
+        "If you have a left-right bicep size imbalance, do these 1 arm at a time, starting with the weaker arm",
+        "Take the weaker arm to an RPE of 9-10",
+        "Then match the reps with the other arm (stop once you've matched the reps, even if the RPE is lower)"
+      ],
+      "primary_muscles": [
+        "biceps"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "cable"
+      ],
+      "movement_pattern": "curl",
+      "valid_substitutions": [
+        {
+          "exercise_id": "db_incline_curl",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        },
+        {
+          "exercise_id": "db_scott_curl",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        }
+      ],
+      "default_video_url": "https://youtu.be/CWH5J_7kzjM?si=BNJ2VJlL7mIVMPtI",
+      "slot_usage_rationale": "Used in Arms & Weak Points to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "triceps_pressdown_bar",
+      "canonical_name": "Triceps Pressdown (Bar)",
+      "aliases": [
+        "Triceps Pressdown (Bar)"
+      ],
+      "execution": "These are meant to be fairly heavy, which is why we're using a bar instead of a rope. Aim to add some weight week to week at the set rep target. Always keep the form tight as you overload the triceps.",
+      "coaching_cues": [
+        "These are meant to be fairly heavy, which is why we're using a bar instead of a rope",
+        "Aim to add some weight week to week at the set rep target",
+        "Always keep the form tight as you overload the triceps"
+      ],
+      "primary_muscles": [
+        "triceps"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "cable"
+      ],
+      "movement_pattern": "triceps_extension",
+      "valid_substitutions": [
+        {
+          "exercise_id": "triceps_pressdown_rope",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        },
+        {
+          "exercise_id": "close_grip_assisted_dip",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        }
+      ],
+      "default_video_url": "https://youtu.be/o4eazahiXQw?si=y__rWd2YvxOUtDYX",
+      "slot_usage_rationale": "Used in Arms & Weak Points to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "bottom_2_3_constant_tension_preacher_curl",
+      "canonical_name": "Bottom-2/3 Constant Tension Preacher Curl",
+      "aliases": [
+        "Bottom-2/3 Constant Tension Preacher Curl"
+      ],
+      "execution": "Stay in the bottom 2/3 of the curl. Don't squeeze all the way up to the top. Keep your triceps firmly pinned against the pad as you curl. No pausing at the top or bottom: constant tension on the biceps!",
+      "coaching_cues": [
+        "Stay in the bottom 2/3 of the curl",
+        "Don't squeeze all the way up to the top",
+        "Keep your triceps firmly pinned against the pad as you curl"
+      ],
+      "primary_muscles": [
+        "biceps"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [],
+      "movement_pattern": "curl",
+      "valid_substitutions": [
+        {
+          "exercise_id": "bottom_2_3_ez_bar_curl",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        },
+        {
+          "exercise_id": "spider_curl",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        }
+      ],
+      "default_video_url": "https://youtu.be/vHBedP8oeCA?si=HII241lcHu35OtJQ",
+      "slot_usage_rationale": "Used in Arms & Weak Points to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "cable_triceps_kickback",
+      "canonical_name": "Cable Triceps Kickback",
+      "aliases": [
+        "Cable Triceps Kickback"
+      ],
+      "execution": "There are two ways you can do this: upright or bent over. Choose the one that feels more comfortable for you. The main thing is that when you're in the full squeeze, your shoulder should be positioned back behind your torso.",
+      "coaching_cues": [
+        "There are two ways you can do this: upright or bent over",
+        "Choose the one that feels more comfortable for you",
+        "The main thing is that when you're in the full squeeze, your shoulder should be positioned back behind your torso"
+      ],
+      "primary_muscles": [
+        "triceps"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "cable"
+      ],
+      "movement_pattern": "triceps_extension",
+      "valid_substitutions": [
+        {
+          "exercise_id": "bench_dip",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        },
+        {
+          "exercise_id": "db_triceps_kickback",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        }
+      ],
+      "default_video_url": "https://youtu.be/oRxTKRtP8RE?si=XJw72x4dE-MA5OND",
+      "slot_usage_rationale": "Used in Arms & Weak Points to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "standing_calf_raise",
+      "canonical_name": "Standing Calf Raise",
+      "aliases": [
+        "Standing Calf Raise"
+      ],
+      "execution": "1-2 second pause at the bottom of each rep. Instead of just going up onto your toes, think about rolling your ankle back and forth on the balls of your feet.",
+      "coaching_cues": [
+        "1-2 second pause at the bottom of each rep",
+        "Instead of just going up onto your toes, think about rolling your ankle back and forth on the balls of your feet"
+      ],
+      "primary_muscles": [
+        "calves"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "machine"
+      ],
+      "movement_pattern": "plantar_flexion",
+      "valid_substitutions": [
+        {
+          "exercise_id": "leg_press_calf_press",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "machine"
+          ]
+        },
+        {
+          "exercise_id": "donkey_calf_raise",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        }
+      ],
+      "default_video_url": "https://youtu.be/6lR2JdxUh7w?si=utdEyg6L5QPIbRlr",
+      "slot_usage_rationale": "Used in Arms & Weak Points to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "lat_focused_cable_row",
+      "canonical_name": "Lat-Focused Cable Row",
+      "aliases": [
+        "Lat-Focused Cable Row"
+      ],
+      "execution": "Keep your torso locked in a fixed position (don't lean forward on the negative). Drive your elbows down and back to engage the lats. Keep your elbows tucked in to your sides.",
+      "coaching_cues": [
+        "Keep your torso locked in a fixed position (don't lean forward on the negative)",
+        "Drive your elbows down and back to engage the lats",
+        "Keep your elbows tucked in to your sides"
+      ],
+      "primary_muscles": [
+        "lats",
+        "mid_back",
+        "biceps"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "cable"
+      ],
+      "movement_pattern": "horizontal_pull",
+      "valid_substitutions": [
+        {
+          "exercise_id": "half_kneeling_1_arm_lat_pulldown",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        },
+        {
+          "exercise_id": "elbows_in_1_arm_db_row",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        }
+      ],
+      "default_video_url": "https://youtu.be/w11Kqjm-ycE?si=vdQVBE3epp7rZcGq",
+      "slot_usage_rationale": "Used in Full Body #1 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "low_incline_db_press",
+      "canonical_name": "Low Incline DB Press",
+      "aliases": [
+        "Low Incline DB Press"
+      ],
+      "execution": "Set the bench at a ~15\u00b0 incline. Do a slight elbow tuck on the negative and then flare as you push (assuming this doesn't bother your shoulders). Nice, smooth reps here. No pausing at the top or bottom: constant tension on the pecs!",
+      "coaching_cues": [
+        "Set the bench at a ~15\u00b0 incline",
+        "Do a slight elbow tuck on the negative and then flare as you push (assuming this doesn't bother your shoulders)",
+        "Nice, smooth reps here"
+      ],
+      "primary_muscles": [
+        "chest",
+        "triceps",
+        "front_delts"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "movement_pattern": "horizontal_press",
+      "valid_substitutions": [
+        {
+          "exercise_id": "low_incline_machine_press",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "machine"
+          ]
+        },
+        {
+          "exercise_id": "low_incline_barbell_press",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "barbell"
+          ]
+        }
+      ],
+      "default_video_url": "https://youtu.be/YmlMsvNGTKA?si=P7Qexe1SXv1Icu0w",
+      "slot_usage_rationale": "Used in Full Body #1 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "smith_machine_squat",
+      "canonical_name": "Smith Machine Squat",
+      "aliases": [
+        "Smith Machine Squat"
+      ],
+      "execution": "We're using a reverse pyramid on this exercise. Warm-up as usual to your first working set for 4 reps. This first set will be your heaviest set. Then for set 2, drop the weight back ~10-15% and do 6 reps. Then for set 3, drop the weight back another 10-15% and do 8 reps.",
+      "coaching_cues": [
+        "We're using a reverse pyramid on this exercise",
+        "Warm-up as usual to your first working set for 4 reps",
+        "This first set will be your heaviest set"
+      ],
+      "primary_muscles": [
+        "quads",
+        "glutes"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "machine"
+      ],
+      "movement_pattern": "squat",
+      "valid_substitutions": [
+        {
+          "exercise_id": "machine_squat",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "machine"
+          ]
+        },
+        {
+          "exercise_id": "db_bulgarian_split_squat",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        }
+      ],
+      "default_video_url": "https://youtu.be/lWIEZ6NxPMk?si=fblBN32GGEo7jTIL",
+      "slot_usage_rationale": "Used in Full Body #1 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "reverse_pec_deck_w_integrated_partials",
+      "canonical_name": "Reverse Pec Deck (w/ Integrated Partials)",
+      "aliases": [
+        "Reverse Pec Deck (w/ Integrated Partials)"
+      ],
+      "execution": "Sweep the weight out instead of pulling the weight back. Mind-muscle connection with rear delts. On all sets, alternate full-ROM reps and half-ROM reps (i.e. do 1 rep with full-ROM, then 1 rep half-ROM (in the stretched/bottom half), then 1 rep full-ROM, then 1 rep half-ROM). Repeat until you've reached the target reps and an RPE of 9-10.",
+      "coaching_cues": [
+        "Sweep the weight out instead of pulling the weight back",
+        "Mind-muscle connection with rear delts",
+        "On all sets, alternate full-ROM reps and half-ROM reps (i"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "equipment_tags": [],
+      "movement_pattern": "accessory",
+      "valid_substitutions": [
+        {
+          "exercise_id": "reverse_cable_flye_w_integrated_partials",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "cable"
+          ]
+        },
+        {
+          "exercise_id": "bent_over_reverse_db_flye_w_integrated_partials",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        }
+      ],
+      "default_video_url": "https://youtu.be/KDeYqB9GYeg?si=ow0bUSizZ37nALcv",
+      "slot_usage_rationale": "Used in Full Body #1 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "chest_supported_t_bar_row_kelso_shrug",
+      "canonical_name": "Chest-Supported T-Bar Row + Kelso Shrug",
+      "aliases": [
+        "Chest-Supported T-Bar Row + Kelso Shrug"
+      ],
+      "execution": "Do 8-10 reps as a normal T-Bar row, driving your elbows back at roughly 45\u00b0 and squeezing your shoulder blades together. Without resting, do another 4-6 reps as Kelso Shrugs (just squeeze your shoulder blades together without rowing all the way back with your arms).",
+      "coaching_cues": [
+        "Do 8-10 reps as a normal T-Bar row, driving your elbows back at roughly 45\u00b0 and squeezing your shoulder blades together",
+        "Without resting, do another 4-6 reps as Kelso Shrugs (just squeeze your shoulder blades together without rowing all the way back with your arms)"
+      ],
+      "primary_muscles": [
+        "lats",
+        "mid_back",
+        "biceps"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [],
+      "movement_pattern": "horizontal_pull",
+      "valid_substitutions": [
+        {
+          "exercise_id": "machine_chest_supported_row_kelso_shrug",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "machine"
+          ]
+        },
+        {
+          "exercise_id": "incline_chest_supported_db_row_kelso_shrug",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        }
+      ],
+      "default_video_url": "https://youtu.be/qsmjaYao9pA?si=idGb6F0ISNvVCvgQ",
+      "slot_usage_rationale": "Used in Full Body #2 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "machine_shoulder_press",
+      "canonical_name": "Machine Shoulder Press",
+      "aliases": [
+        "Machine Shoulder Press"
+      ],
+      "execution": "Ensure that your elbows break at least 90\u00b0. Mind-muscle connection with your delts. Smooth, controlled reps.",
+      "coaching_cues": [
+        "Ensure that your elbows break at least 90\u00b0",
+        "Mind-muscle connection with your delts",
+        "Smooth, controlled reps"
+      ],
+      "primary_muscles": [
+        "front_delts",
+        "triceps"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "machine"
+      ],
+      "movement_pattern": "vertical_press",
+      "valid_substitutions": [
+        {
+          "exercise_id": "cable_shoulder_press",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "cable"
+          ]
+        },
+        {
+          "exercise_id": "seated_db_shoulder_press",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        }
+      ],
+      "default_video_url": "https://youtu.be/SCQVmN1gYsk?si=3CYsC33wBPXyRO5a",
+      "slot_usage_rationale": "Used in Full Body #2 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "slow_eccentric_db_rdl",
+      "canonical_name": "Slow-Eccentric DB RDL",
+      "aliases": [
+        "Slow-Eccentric DB RDL"
+      ],
+      "execution": "The RPE is intentionally low here because these will cause a lot of muscle damage. Don't be tempted to go too heavy. Lower the dumbbells with a 3-4 second negative. If you want to target more glutes, squeeze them hard at the top as you get to full lockout. If you want to target more hamstrings, only go to 3/4 of full lockout and maintain constant tension on your hamstrings.",
+      "coaching_cues": [
+        "The RPE is intentionally low here because these will cause a lot of muscle damage",
+        "Don't be tempted to go too heavy",
+        "Lower the dumbbells with a 3-4 second negative"
+      ],
+      "primary_muscles": [
+        "hamstrings",
+        "glutes",
+        "erectors"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "movement_pattern": "hinge",
+      "valid_substitutions": [
+        {
+          "exercise_id": "slow_eccentric_barbell_rdl",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "barbell"
+          ]
+        },
+        {
+          "exercise_id": "slow_eccentric_glute_ham_raise",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        }
+      ],
+      "default_video_url": "https://youtu.be/9XIvGzgvoE0?si=Z6JqAw9oC1LYwS8G",
+      "slot_usage_rationale": "Used in Full Body #2 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "concentration_cable_curl",
+      "canonical_name": "Concentration Cable Curl",
+      "aliases": [
+        "Concentration Cable Curl"
+      ],
+      "execution": "Do concentration curls on one arm, rest ~0.5-1 min, do triceps extensions for the same arm, rest ~0.5-1 min, do concentration curls on the other arm, rest ~0.5-1 min, do triceps extensions on the other arm, rest ~0.5-1 min, repeat.",
+      "coaching_cues": [
+        "Do concentration curls on one arm, rest ~0",
+        "5-1 min, do triceps extensions for the same arm, rest ~0",
+        "5-1 min, do concentration curls on the other arm, rest ~0"
+      ],
+      "primary_muscles": [
+        "biceps"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "cable"
+      ],
+      "movement_pattern": "curl",
+      "valid_substitutions": [
+        {
+          "exercise_id": "db_concentration_curl",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        },
+        {
+          "exercise_id": "db_preacher_curl",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        }
+      ],
+      "default_video_url": "https://youtu.be/BFZyW_7ld0c?si=TGuD_qllZSSSCAQt",
+      "slot_usage_rationale": "Used in Full Body #2 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "single_arm_overhead_cable_triceps_extension",
+      "canonical_name": "Single-arm Overhead Cable Triceps Extension",
+      "aliases": [
+        "Single-arm Overhead Cable Triceps Extension"
+      ],
+      "execution": "Execute with controlled tempo and full range of motion.",
+      "coaching_cues": [],
+      "primary_muscles": [
+        "front_delts",
+        "triceps"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "cable"
+      ],
+      "movement_pattern": "vertical_press",
+      "valid_substitutions": [
+        {
+          "exercise_id": "db_skull_crusher",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        },
+        {
+          "exercise_id": "floor_skull_crusher",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        }
+      ],
+      "default_video_url": "https://youtu.be/eNHOA90QcAg?si=ByNaCK9v0w3UV6nJ",
+      "slot_usage_rationale": "Used in Full Body #2 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "dual_handle_lat_pulldown_mid_back_lats",
+      "canonical_name": "Dual-Handle Lat Pulldown (Mid-back + Lats)",
+      "aliases": [
+        "Dual-Handle Lat Pulldown (Mid-back + Lats)"
+      ],
+      "execution": "Lean back by ~15\u00b0 and drive your elbows down as you squeeze your shoulder blades together. This should feel like a mix of lats and mid-traps.",
+      "coaching_cues": [
+        "Lean back by ~15\u00b0 and drive your elbows down as you squeeze your shoulder blades together",
+        "This should feel like a mix of lats and mid-traps"
+      ],
+      "primary_muscles": [
+        "lats",
+        "biceps"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [],
+      "movement_pattern": "vertical_pull",
+      "valid_substitutions": [
+        {
+          "exercise_id": "overhand_lat_pulldown",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        },
+        {
+          "exercise_id": "pull_up",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        }
+      ],
+      "default_video_url": "https://youtu.be/NwQ5Ch5t5Vk?si=JHztlva6LI2NPBDC",
+      "slot_usage_rationale": "Used in Full Body #3 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "decline_machine_chest_press",
+      "canonical_name": "Decline Machine Chest Press",
+      "aliases": [
+        "Decline Machine Chest Press"
+      ],
+      "execution": "Feel your pecs stretching apart on the negative. Mind-muscle connection with lower pecs.",
+      "coaching_cues": [
+        "Feel your pecs stretching apart on the negative",
+        "Mind-muscle connection with lower pecs"
+      ],
+      "primary_muscles": [
+        "chest",
+        "triceps",
+        "front_delts"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "machine"
+      ],
+      "movement_pattern": "horizontal_press",
+      "valid_substitutions": [
+        {
+          "exercise_id": "decline_smith_machine_press",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "machine"
+          ]
+        },
+        {
+          "exercise_id": "decline_barbell_press",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "barbell"
+          ]
+        }
+      ],
+      "default_video_url": "https://youtu.be/AABuMGK9H28?si=mfptJbyROZdqYONM",
+      "slot_usage_rationale": "Used in Full Body #3 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "machine_hip_abduction",
+      "canonical_name": "Machine Hip Abduction",
+      "aliases": [
+        "Machine Hip Abduction"
+      ],
+      "execution": "If possible, use pads to increase the range of motion on the machine. Lean forward and grab onto the machine rails to stretch the glutes further.",
+      "coaching_cues": [
+        "If possible, use pads to increase the range of motion on the machine",
+        "Lean forward and grab onto the machine rails to stretch the glutes further"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "machine"
+      ],
+      "movement_pattern": "accessory",
+      "valid_substitutions": [
+        {
+          "exercise_id": "cable_hip_abduction",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "cable"
+          ]
+        },
+        {
+          "exercise_id": "lateral_band_walk",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        }
+      ],
+      "default_video_url": "https://youtu.be/Jq4YWyLSh_o?si=AuSzrFPZsetijxD9",
+      "slot_usage_rationale": "Used in Full Body #3 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "super_rom_db_lateral_raise",
+      "canonical_name": "Super-ROM DB Lateral Raise",
+      "aliases": [
+        "Super-ROM DB Lateral Raise"
+      ],
+      "execution": "Perform lateral raises as normal, except going until your hands are up overhead. As you break parallel, you will use more upper traps to move the weight. Feel free to squeeze your upper traps at the top. If you feel shoulder pain when going all the way up, try pointing your thumb up or simply stop at parallel and do normal lateral raises.",
+      "coaching_cues": [
+        "Perform lateral raises as normal, except going until your hands are up overhead",
+        "As you break parallel, you will use more upper traps to move the weight",
+        "Feel free to squeeze your upper traps at the top"
+      ],
+      "primary_muscles": [
+        "side_delts"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "movement_pattern": "lateral_raise",
+      "valid_substitutions": [
+        {
+          "exercise_id": "cable_upright_row",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "cable"
+          ]
+        },
+        {
+          "exercise_id": "db_lateral_raise",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        }
+      ],
+      "default_video_url": "https://youtu.be/nW5pGot-Hok?si=KBs5mqWrKlsFmmSB",
+      "slot_usage_rationale": "Used in Full Body #3 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "medicine_ball_russian_twists",
+      "canonical_name": "Medicine Ball Russian Twists",
+      "aliases": [
+        "Medicine Ball Russian Twists"
+      ],
+      "execution": "Keep the ball held out far from your body on the sides and control the reps, don't just rush through them to get the set done.",
+      "coaching_cues": [
+        "Keep the ball held out far from your body on the sides and control the reps, don't just rush through them to get the set done"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "equipment_tags": [],
+      "movement_pattern": "accessory",
+      "valid_substitutions": [
+        {
+          "exercise_id": "half_kneeling_pallof_press",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        },
+        {
+          "exercise_id": "bicycle_crunch",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        }
+      ],
+      "default_video_url": "https://youtu.be/eJF2gdt9PcE?si=c4cxy6yd-PQl894w",
+      "slot_usage_rationale": "Used in Full Body #3 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "smith_machine_reverse_lunge",
+      "canonical_name": "Smith Machine Reverse Lunge",
+      "aliases": [
+        "Smith Machine Reverse Lunge"
+      ],
+      "execution": "Set one leg back on the negative and then drive the weight up using your front leg. Try to minimize assistance from your back leg.",
+      "coaching_cues": [
+        "Set one leg back on the negative and then drive the weight up using your front leg",
+        "Try to minimize assistance from your back leg"
+      ],
+      "primary_muscles": [
+        "quads",
+        "glutes"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "machine"
+      ],
+      "movement_pattern": "lunge",
+      "valid_substitutions": [
+        {
+          "exercise_id": "db_reverse_lunge",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        },
+        {
+          "exercise_id": "db_walking_lunge",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        }
+      ],
+      "default_video_url": "https://youtu.be/D0KZo_gBsw0?si=pXF5dGzA5At7d2ZZ",
+      "slot_usage_rationale": "Used in Full Body #4 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "pec_deck_w_integrated_partials",
+      "canonical_name": "Pec Deck (w/ Integrated Partials)",
+      "aliases": [
+        "Pec Deck (w/ Integrated Partials)"
+      ],
+      "execution": "Set up the pec deck to allow for maximum stretch. On all sets, alternate full-ROM reps and half-ROM reps (i.e. do 1 rep with full-ROM, then 1 rep half-ROM (in the stretched/bottom half), then 1 rep full-ROM, then 1 rep half-ROM). Repeat until you've reached the target reps and an RPE of 9-10.",
+      "coaching_cues": [
+        "Set up the pec deck to allow for maximum stretch",
+        "On all sets, alternate full-ROM reps and half-ROM reps (i",
+        "e"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "equipment_tags": [],
+      "movement_pattern": "accessory",
+      "valid_substitutions": [
+        {
+          "exercise_id": "bent_over_cable_pec_flye_w_integrated_partials",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "cable"
+          ]
+        },
+        {
+          "exercise_id": "db_flye_w_integrated_partials",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        }
+      ],
+      "default_video_url": "https://youtu.be/NPa8YvUg4CM?si=bOG_qrUBbSQZmdUh",
+      "slot_usage_rationale": "Used in Full Body #4 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "super_rom_overhand_cable_row",
+      "canonical_name": "Super-ROM Overhand Cable Row",
+      "aliases": [
+        "Super-ROM Overhand Cable Row"
+      ],
+      "execution": "Set up a wide grip pulldown bar on a seated cable row. Using a double overhand grip, perform rows while leaning forward on the negative and then extend your torso to be upright as you finish the row.",
+      "coaching_cues": [
+        "Set up a wide grip pulldown bar on a seated cable row",
+        "Using a double overhand grip, perform rows while leaning forward on the negative and then extend your torso to be upright as you finish the row"
+      ],
+      "primary_muscles": [
+        "lats",
+        "mid_back",
+        "biceps"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "cable"
+      ],
+      "movement_pattern": "horizontal_pull",
+      "valid_substitutions": [
+        {
+          "exercise_id": "overhand_machine_row",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "machine"
+          ]
+        },
+        {
+          "exercise_id": "arm_out_single_arm_db_row",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        }
+      ],
+      "default_video_url": "https://youtu.be/a7AH8W7dQIw?si=g9bcPnOzJOJUb9ZP",
+      "slot_usage_rationale": "Used in Full Body #4 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "db_calf_jumps",
+      "canonical_name": "DB Calf Jumps",
+      "aliases": [
+        "DB Calf Jumps"
+      ],
+      "execution": "Hold a dumbbell and perform a jumping motion without actually leaving the floor, using a slight knee bend, but mostly relying on your calves/ankles to drive the \"jump\". I believe I built a lot of calf mass by doing jump rope; these are meant to provide a similar stimulus, but with more tension.",
+      "coaching_cues": [
+        "Hold a dumbbell and perform a jumping motion without actually leaving the floor, using a slight knee bend, but mostly relying on your calves/ankles to drive the \"jump\"",
+        "I believe I built a lot of calf mass by doing jump rope; these are meant to provide a similar stimulus, but with more tension"
+      ],
+      "primary_muscles": [
+        "calves"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "movement_pattern": "plantar_flexion",
+      "valid_substitutions": [
+        {
+          "exercise_id": "leg_press_calf_jumps",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": []
+        },
+        {
+          "exercise_id": "standing_calf_raise",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "machine"
+          ]
+        }
+      ],
+      "default_video_url": "https://youtu.be/JkY3nBTbRac?si=OkcEZCoWd5yXEKIm",
+      "slot_usage_rationale": "Used in Full Body #4 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "rear_delt_45_cable_flye",
+      "canonical_name": "Rear Delt 45\u00b0 Cable Flye",
+      "aliases": [
+        "Rear Delt 45\u00b0 Cable Flye"
+      ],
+      "execution": "Pull with one arm at a time, bracing with your non-working hand against the machine. Try to align your arm and the cable in a straight line at the bottom of the flye.",
+      "coaching_cues": [
+        "Pull with one arm at a time, bracing with your non-working hand against the machine",
+        "Try to align your arm and the cable in a straight line at the bottom of the flye"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "cable"
+      ],
+      "movement_pattern": "accessory",
+      "valid_substitutions": [
+        {
+          "exercise_id": "reverse_cable_flye",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "cable"
+          ]
+        },
+        {
+          "exercise_id": "bent_over_reverse_db_flye",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        }
+      ],
+      "default_video_url": "https://youtu.be/8iXorduqXC8?si=KsBp4Kw2A5cfS8np",
+      "slot_usage_rationale": "Used in Full Body #4 to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "slow_eccentric_ez_bar_skull_crusher",
+      "canonical_name": "Slow-Eccentric EZ-Bar Skull Crusher",
+      "aliases": [
+        "Slow-Eccentric EZ-Bar Skull Crusher"
+      ],
+      "execution": "Use a 3-4 second negative. Arc the EZ-bar slightly back behind your head. When you extend, keep the bar back behind your eye line. Use the inside (closer) grip option and allow the elbows to flare to a degree that feels comfortable.",
+      "coaching_cues": [
+        "Use a 3-4 second negative",
+        "Arc the EZ-bar slightly back behind your head",
+        "When you extend, keep the bar back behind your eye line"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "equipment_tags": [],
+      "movement_pattern": "accessory",
+      "valid_substitutions": [
+        {
+          "exercise_id": "slow_eccentric_db_skull_crusher",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        },
+        {
+          "exercise_id": "slow_eccentric_db_french_press",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        }
+      ],
+      "default_video_url": "https://youtu.be/opVMIWzaNFY?si=7KyS-lxZAhkAeXy0",
+      "slot_usage_rationale": "Used in Arms & Weak Points to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "slow_eccentric_bayesian_curl",
+      "canonical_name": "Slow-Eccentric Bayesian Curl",
+      "aliases": [
+        "Slow-Eccentric Bayesian Curl"
+      ],
+      "execution": "Use a 3-4 second negative and a slight pause at the bottom of each rep to emphasize stretching your biceps.",
+      "coaching_cues": [
+        "Use a 3-4 second negative and a slight pause at the bottom of each rep to emphasize stretching your biceps"
+      ],
+      "primary_muscles": [
+        "biceps"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [],
+      "movement_pattern": "curl",
+      "valid_substitutions": [
+        {
+          "exercise_id": "slow_eccentric_db_incline_curl",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        },
+        {
+          "exercise_id": "slow_eccentric_db_scott_curl",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        }
+      ],
+      "default_video_url": "https://youtu.be/Kf2kXBoIgM0?si=CPKymGP3dK_UjDbh",
+      "slot_usage_rationale": "Used in Arms & Weak Points to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "triceps_diverging_pressdown_long_rope_or_2_ropes",
+      "canonical_name": "Triceps Diverging Pressdown (Long Rope or 2 Ropes)",
+      "aliases": [
+        "Triceps Diverging Pressdown (Long Rope or 2 Ropes)"
+      ],
+      "execution": "Use two long ropes or one long rope. Lean slightly forward, flare your elbows slightly out and keep your arms back in line with your torso. Then do triceps pressdowns, getting a full, big squeeze at the bottom.",
+      "coaching_cues": [
+        "Use two long ropes or one long rope",
+        "Lean slightly forward, flare your elbows slightly out and keep your arms back in line with your torso",
+        "Then do triceps pressdowns, getting a full, big squeeze at the bottom"
+      ],
+      "primary_muscles": [
+        "triceps"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [],
+      "movement_pattern": "triceps_extension",
+      "valid_substitutions": [
+        {
+          "exercise_id": "cable_triceps_kickback",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "cable"
+          ]
+        },
+        {
+          "exercise_id": "db_triceps_kickback",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        }
+      ],
+      "default_video_url": "https://youtu.be/20tbMlP71Nc?si=ZUNY4jHvVVIIVJft",
+      "slot_usage_rationale": "Used in Arms & Weak Points to preserve session intent and progression continuity."
+    },
+    {
+      "exercise_id": "hammer_curl",
+      "canonical_name": "Hammer Curl",
+      "aliases": [
+        "Hammer Curl"
+      ],
+      "execution": "Squeeze the dumbbell hard in the middle of the handle as you curl. Using liquid chalk on these will prevent your grip from slipping, keeping your hand in the middle of the handle throughout the set (as opposed to resting against the head of the dumbbell).",
+      "coaching_cues": [
+        "Squeeze the dumbbell hard in the middle of the handle as you curl",
+        "Using liquid chalk on these will prevent your grip from slipping, keeping your hand in the middle of the handle throughout the set (as opposed to resting against the head of the dumbbell)"
+      ],
+      "primary_muscles": [
+        "biceps"
+      ],
+      "secondary_muscles": [],
+      "equipment_tags": [],
+      "movement_pattern": "curl",
+      "valid_substitutions": [
+        {
+          "exercise_id": "inverse_db_zottman_curl",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        },
+        {
+          "exercise_id": "fat_grip_db_curl",
+          "rationale": "Workbook substitution option",
+          "equipment_tags": [
+            "dumbbell"
+          ]
+        }
+      ],
+      "default_video_url": "https://youtu.be/xY3sQXYhk7A?si=MyS3CfPOCOOWtsHl",
+      "slot_usage_rationale": "Used in Arms & Weak Points to preserve session intent and progression continuity."
+    }
+  ],
+  "important_program_notes": [
+    "Perform a full general warm-up and exercise-specific warm-up every workout as outlined below (should only take 5-10 mins max)",
+    "Note that for the first 2 weeks of this Full Body version of the program, most sets in this program are taken to an RPE of ~7-8 or ~8-9. This means you will be leaving 1-3 reps in the tank on most exercises. This only lasts for the first two weeks (to get you adapted to the higher training frequency). For these first two weeks, there are also fewer intensity techniques used. After the first two weeks, the intensity will increase and most sets will be taken to an RPE of 9-10. This means you will push most sets within ~1 rep of failure or to failure. Make sure you are focused mentally before starting each working set!",
+    "All working sets are broken up into Early Sets and Last Sets. The Early Sets are all the sets that come before your Last Set. Usually the Early Sets should be a little bit easier than the later sets (slightly lower RPE) whereas the Last Set is pushed to failure on most (but not all exercises). See the Pure Hypertrophy Handbook for a full explanation of RPE.",
+    "There is a Weak Point & Arms day in this program where you will select a weak point from the table below and perform 1-2 exercises for your weak point on this day. Please read The Hypertrophy Handbook for more detail.",
+    "Each exercise has a clickable link which demonstrates how to perform the exercise. I suggest watching each exercise demo before starting the workout.",
+    "All other aspects of the program, including how to understand the Last-Set Intensity Technique column, when to make an exercise substitution and how to progress through the rep ranges given is explained in The Hypertrophy Handbook. Give it a full read before starting your first workout! Let's crush it!!"
+  ],
+  "warm_up_protocol": {
+    "general_warm_up_intro": "Perform the following general warm-up before every workout (should take 5-10 mins max). \nYou can save time by doing some of the dynamic stretches as you do warm-up sets for the first exercise.",
+    "general_warm_up": [
+      {
+        "label": "5-10 minutes",
+        "instruction": "Light cardio on machine on your choice of machine (treadmill, stairmaster, elliptical, bike, etc.)"
+      },
+      {
+        "label": "10 reps per side",
+        "instruction": "Arm Swings"
+      },
+      {
+        "label": "10 reps per side",
+        "instruction": "Arm Circles"
+      },
+      {
+        "label": "10 reps per side",
+        "instruction": "Front-to-Back Leg Swings"
+      },
+      {
+        "label": "10 reps per side",
+        "instruction": "Side-to-Side Leg Swings"
+      },
+      {
+        "label": "15 reps per side",
+        "instruction": "Cable External Rotation (optional)"
+      }
+    ],
+    "exercise_specific_warm_up_intro": "Perform the following exercise-specific warm-up according to the number of warm-up sets listed in the program",
+    "exercise_specific_warm_up": [
+      {
+        "label": "1 Warm-Up Set Listed",
+        "instruction": "Use ~60% of your planned working weight for ~6-10 reps (or until you feel warm and loose)"
+      },
+      {
+        "label": "2 Warm-Up Sets Listed",
+        "instruction": "Perform a mini warm-up pyramid: \nWarm-Up Set #1 = ~50% of planned working weight for ~6-10 reps \nWarm-Up Set #2 = ~70% of planned working weight for 4-6 reps"
+      },
+      {
+        "label": "3 Warm-Up Sets Listed",
+        "instruction": "Perform a full warm-up pyramid: \nWarm-Up Set #1 = ~45% of planned working weight for ~6-10 reps \nWarm-Up Set #2 = ~65% of planned working weight for 4-6 reps\nWarm-Up Set #3 = ~85% of planned working weight for 3-4 reps"
+      }
+    ]
+  },
+  "weak_points_table": [
+    {
+      "weak_point": "Shoulders",
+      "exercise_1_options": [
+        "1. Cuffed Behind-The-Back Lateral Raise",
+        "2. Machine Lateral Raise",
+        "3. Dumbbell Lateral Raise"
+      ],
+      "exercise_2_options": [
+        "1. Machine Shoulder Press",
+        "2. Smith Machine Shoulder Press",
+        "3. Standing DB Arnold Press"
+      ],
+      "guidance": [
+        "Pick one of the options above. Do not do all of them in one day!"
+      ]
+    },
+    {
+      "weak_point": "Lats (\u201cBack Width\u201d)",
+      "exercise_1_options": [
+        "1. Cable Lat Prayer",
+        "2. DB Lat Pullover",
+        "3. Machine Lat Pullover"
+      ],
+      "exercise_2_options": [
+        "1. Lat-Focused Cable Row",
+        "2. Elbows-In 1-Arm DB Row",
+        "3. Half-Kneeling 1-Arm Lat Pulldown"
+      ],
+      "guidance": [
+        "Pick one of the options above. Do not do all of them in one day!"
+      ]
+    },
+    {
+      "weak_point": "Quads",
+      "exercise_1_options": [
+        "1. Leg Extension",
+        "2. Reverse Nordics"
+      ],
+      "exercise_2_options": [
+        "1. Single-Leg Leg Press",
+        "2. Sissy Squat"
+      ],
+      "guidance": [
+        "Pick one of the options above. Do not do all of them in one day!"
+      ]
+    },
+    {
+      "weak_point": "Glutes",
+      "exercise_1_options": [
+        "1. Machine Hip Abduction",
+        "2. Cable Hip Abduction",
+        "3. Lateral Band Walk"
+      ],
+      "exercise_2_options": [
+        "1. Barbell Hip Thrust",
+        "2. Single-Leg DB Hip Thrust"
+      ],
+      "guidance": [
+        "Pick one of the options above. Do not do all of them in one day!"
+      ]
+    },
+    {
+      "weak_point": "Chest",
+      "exercise_1_options": [
+        "1. Low Incline DB Flye",
+        "2. Low-To-High Cable Crossover"
+      ],
+      "exercise_2_options": [
+        "1. Chest Press Machine (incline if upper pecs are lagging, flat if entire chest is lagging)",
+        "2. Dumbbell Chest Press (incline if upper pecs are lagging, flat if entire chest is lagging)"
+      ],
+      "guidance": [
+        "Pick one of the options above. Do not do all of them in one day!"
+      ]
+    },
+    {
+      "weak_point": "Neck",
+      "exercise_1_options": [
+        "1. Plate-Loaded Neck Curls"
+      ],
+      "exercise_2_options": [
+        "1. Head Harness Neck Extension",
+        "2. Plate-Loaded Neck Extension"
+      ],
+      "guidance": [
+        "Pick one of the options above. Do not do all of them in one day!"
+      ]
+    },
+    {
+      "weak_point": "Hamstrings",
+      "exercise_1_options": [],
+      "exercise_2_options": [],
+      "guidance": [
+        "There is a lot of hamstrings volume in this program. If they are a weak point for you, simply focus on executing the exercises listed with your best effort and execution rather than adding more volume."
+      ]
+    },
+    {
+      "weak_point": "Calves",
+      "exercise_1_options": [],
+      "exercise_2_options": [],
+      "guidance": [
+        "Rather than adding more calf training volume, focus on the execution of the sets given in the program first. Ensure you are pausing at the bottom of each rep and reaching a high level of effort. Feel free to sprinkle in 1-2 extra sets per exercise if they are a major priority for you."
+      ]
+    },
+    {
+      "weak_point": "Mid-Back (\u201cBack Thickness\u201d)",
+      "exercise_1_options": [],
+      "exercise_2_options": [],
+      "guidance": [
+        "There is a lot of mid-back volume in this program. If this is a weak point for you, simply focus on executing the exercises listed with your best effort and execution rather than adding more volume. Really focus on squeezing your shoulder blades together on the positive and feeling your back pull apart on the negative when doing mid-back focused rows."
+      ]
+    },
+    {
+      "weak_point": "Upper Traps",
+      "exercise_1_options": [],
+      "exercise_2_options": [],
+      "guidance": [
+        "The upper traps shouldn\u2019t require a high level of volume to grow, especially when there is a lot of mid-back work. Before adding sets, focus on the execution of the sets given in the program first. Ensure you are squeezing your traps at the top of each rep and reaching a high level of effort. Feel free to sprinkle in 1-2 extra sets per exercise if they are a major priority for you."
+      ]
+    },
+    {
+      "weak_point": "Abs",
+      "exercise_1_options": [],
+      "exercise_2_options": [],
+      "guidance": [
+        "The abs shouldn\u2019t require a high level of volume to grow. If you are wanting to see your abs, your diet will be mainly responsible for lowering your level of abdominal fat to allow them to show through. Before adding sets, focus on the execution of the sets given in the program first. Ensure you are allowing your lower back to round on crunches and leg raises as you squeeze your abs. Feel free to sprinkle in 1-2 extra sets per exercise if they are a major priority for you."
+      ]
+    },
+    {
+      "weak_point": "Biceps",
+      "exercise_1_options": [],
+      "exercise_2_options": [],
+      "guidance": [
+        "Because there is a dedicated arm day in this program and the biceps will get plenty of indirect work back exercises, adding even more sets would probably not be productive and would most likely fall under the \u201cjunk volume\u201d category."
+      ]
+    },
+    {
+      "weak_point": "Triceps",
+      "exercise_1_options": [],
+      "exercise_2_options": [],
+      "guidance": [
+        "Because there is a dedicated arm day in this program and the triceps will get plenty of indirect work from pressing, adding even more sets would probably not be productive and would most likely fall under the \u201cjunk volume\u201d category."
+      ]
+    }
+  ],
   "program_intent": {
     "program_id": "pure_bodybuilding_phase_1_full_body",
     "phase_goal": "Drive hypertrophy across four full-body days plus an Arms & Weak Points day.",
