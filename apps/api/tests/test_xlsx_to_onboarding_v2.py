@@ -396,8 +396,14 @@ def test_build_onboarding_package_preserves_phase1_reference_sections_and_week_b
 
     week_1 = package.blueprint.week_templates[0]
     week_2 = package.blueprint.week_templates[1]
+    week_3 = package.blueprint.week_templates[2]
+    week_4 = package.blueprint.week_templates[3]
     week_5 = package.blueprint.week_templates[4]
     week_6 = package.blueprint.week_templates[5]
+    week_7 = package.blueprint.week_templates[6]
+    week_8 = package.blueprint.week_templates[7]
+    week_9 = package.blueprint.week_templates[8]
+    week_10 = package.blueprint.week_templates[9]
     assert week_1.block_label == "BLOCK 1: 5-WEEK BUILD PHASE"
     assert week_1.week_label == "Week 1"
     assert week_1.special_banners == ["Mandatory Rest Day", "Mandatory Rest Day"]
@@ -410,11 +416,140 @@ def test_build_onboarding_package_preserves_phase1_reference_sections_and_week_b
     assert week_2_fb2_slot5.substitution_option_1 == "Cross-Body Cable Y-Raise"
     assert week_2_fb2_slot5.substitution_option_2 == "DB Lateral Raise"
     assert week_2_fb2_slot5.video_url is not None
+    assert week_3.block_label == "BLOCK 1: 5-WEEK BUILD PHASE"
+    assert week_3.week_label == "Week 3"
+    assert week_3.special_banners == ["Mandatory Rest Day", "Mandatory Rest Day"]
+    week_3_fb1_slot6 = week_3.days[0].slots[5]
+    assert week_3_fb1_slot6.exercise == "Cable Crunch"
+    assert week_3_fb1_slot6.last_set_intensity_technique == "Myo-reps"
+    assert week_3_fb1_slot6.early_set_rpe == "~9-10"
+    assert week_3_fb1_slot6.last_set_rpe == "10.0"
+    assert week_3_fb1_slot6.substitution_option_1 == "Machine Crunch"
+    assert week_3_fb1_slot6.substitution_option_2 == "Plate-Weighted Crunch"
+    assert week_3_fb1_slot6.video_url is not None
+    assert week_4.block_label == "BLOCK 1: 5-WEEK BUILD PHASE"
+    assert week_4.week_label == "Week 4"
+    assert week_4.special_banners == ["Mandatory Rest Day", "Mandatory Rest Day"]
+    week_4_fb3_slot1 = week_4.days[2].slots[0]
+    assert week_4_fb3_slot1.exercise == "Superset A1: Assisted Pull-Up"
+    assert week_4_fb3_slot1.last_set_intensity_technique == "Long-length Partials (on all reps of the last set)"
+    assert week_4_fb3_slot1.working_sets == "4.0"
+    assert week_4_fb3_slot1.last_set_rpe == "10"
+    assert week_4_fb3_slot1.substitution_option_1 == "Lat Pulldown"
+    assert week_4_fb3_slot1.substitution_option_2 == "Machine Pulldown"
+    assert week_4_fb3_slot1.video_url is not None
     assert week_5.week_label == "Week 5"
     assert week_5.special_banners == [
         "SEMI-DELOAD WEEK: AVOID FAILURE AND TRAIN LIGHTER THIS WEEK TO PROMOTE RECOVERY AND TO PREPARE FOR THE NEXT 5 WEEKS!",
         "Mandatory Rest Day",
         "Mandatory Rest Day",
     ]
+    week_5_fb1_slot1 = week_5.days[0].slots[0]
+    assert week_5_fb1_slot1.exercise == "Cross-Body Lat Pull-Around"
+    assert week_5_fb1_slot1.early_set_rpe == "~7"
+    assert week_5_fb1_slot1.last_set_rpe == "~8"
+    assert week_5_fb1_slot1.video_url is not None
+    week_5_fb2_slot2 = week_5.days[1].slots[1]
+    assert week_5_fb2_slot2.exercise == "Paused Barbell RDL"
+    assert week_5_fb2_slot2.working_sets == "2.0"
+    assert week_5_fb2_slot2.early_set_rpe == "~5"
+    assert week_5_fb2_slot2.last_set_rpe == "~5-6"
+    assert week_5_fb2_slot2.video_url is not None
     assert week_6.block_label == "BLOCK 2: 5-WEEK NOVELTY PHASE"
     assert week_6.week_label == "Week 6"
+    assert week_6.special_banners == ["Mandatory Rest Day", "Mandatory Rest Day"]
+    week_6_fb1_slot1 = week_6.days[0].slots[0]
+    assert week_6_fb1_slot1.exercise == "Lat-Focused Cable Row"
+    assert week_6_fb1_slot1.last_set_intensity_technique == "Long-length Partials (on all reps of the last set)"
+    assert week_6_fb1_slot1.early_set_rpe == "~9"
+    assert week_6_fb1_slot1.last_set_rpe == "10"
+    assert week_6_fb1_slot1.substitution_option_1 == "Half-Kneeling 1-Arm Lat Pulldown"
+    assert week_6_fb1_slot1.substitution_option_2 == "Elbows-In 1-Arm DB Row"
+    assert week_6_fb1_slot1.video_url is not None
+    week_6_fb2_slot7 = week_6.days[1].slots[6]
+    assert week_6_fb2_slot7.exercise == "A2: Single-arm Overhead Cable Triceps Extension"
+    assert week_6_fb2_slot7.last_set_intensity_technique == "Dropset"
+    assert week_6_fb2_slot7.early_set_rpe == "~9-10"
+    assert week_6_fb2_slot7.last_set_rpe == "10.0"
+    assert week_6_fb2_slot7.substitution_option_1 == "DB Skull Crusher"
+    assert week_6_fb2_slot7.substitution_option_2 == "Floor Skull Crusher"
+    assert week_6_fb2_slot7.video_url is not None
+    assert week_7.block_label == "BLOCK 2: 5-WEEK NOVELTY PHASE"
+    assert week_7.week_label == "Week 7"
+    assert week_7.special_banners == ["Mandatory Rest Day", "Mandatory Rest Day"]
+    week_7_fb1_slot1 = week_7.days[0].slots[0]
+    assert week_7_fb1_slot1.exercise == "Lat-Focused Cable Row"
+    assert week_7_fb1_slot1.last_set_intensity_technique == "Long-length Partials (on all reps of the last set)"
+    assert week_7_fb1_slot1.early_set_rpe == "~9"
+    assert week_7_fb1_slot1.last_set_rpe == "10"
+    assert week_7_fb1_slot1.substitution_option_1 == "Half-Kneeling 1-Arm Lat Pulldown"
+    assert week_7_fb1_slot1.substitution_option_2 == "Elbows-In 1-Arm DB Row"
+    assert week_7_fb1_slot1.video_url is not None
+    week_7_fb2_slot2 = week_7.days[1].slots[1]
+    assert week_7_fb2_slot2.exercise == "Chest-Supported T-Bar Row + Kelso Shrug"
+    assert week_7_fb2_slot2.working_sets == "3.0"
+    assert week_7_fb2_slot2.reps == "8-10 + 4-6"
+    assert week_7_fb2_slot2.substitution_option_1 == "Machine Chest-Supported Row + Kelso Shrug"
+    assert week_7_fb2_slot2.substitution_option_2 == "Incline Chest-Supported DB Row + Kelso Shrug"
+    assert week_7_fb2_slot2.video_url is not None
+    assert week_8.block_label == "BLOCK 2: 5-WEEK NOVELTY PHASE"
+    assert week_8.week_label == "Week 8"
+    assert week_8.special_banners == ["Mandatory Rest Day", "Mandatory Rest Day"]
+    week_8_fb1_slot1 = week_8.days[0].slots[0]
+    assert week_8_fb1_slot1.exercise == "Lat-Focused Cable Row"
+    assert week_8_fb1_slot1.last_set_intensity_technique == "Long-length Partials (on all reps of the last set)"
+    assert week_8_fb1_slot1.early_set_rpe == "~9"
+    assert week_8_fb1_slot1.last_set_rpe == "10"
+    assert week_8_fb1_slot1.substitution_option_1 == "Half-Kneeling 1-Arm Lat Pulldown"
+    assert week_8_fb1_slot1.substitution_option_2 == "Elbows-In 1-Arm DB Row"
+    assert week_8_fb1_slot1.video_url is not None
+    week_8_arms_slot4 = week_8.days[4].slots[3]
+    assert week_8_arms_slot4.exercise == "Slow-Eccentric Bayesian Curl"
+    assert week_8_arms_slot4.last_set_intensity_technique == "Long-length Partials (on all reps of the last set)"
+    assert week_8_arms_slot4.working_sets == "3.0"
+    assert week_8_arms_slot4.reps == "10-12"
+    assert week_8_arms_slot4.substitution_option_1 == "Slow-Eccentric DB Incline Curl"
+    assert week_8_arms_slot4.substitution_option_2 == "Slow-Eccentric DB Scott Curl"
+    assert week_8_arms_slot4.video_url is not None
+    assert week_9.block_label == "BLOCK 2: 5-WEEK NOVELTY PHASE"
+    assert week_9.week_label == "Week 9"
+    assert week_9.special_banners == ["Mandatory Rest Day", "Mandatory Rest Day"]
+    week_9_fb1_slot1 = week_9.days[0].slots[0]
+    assert week_9_fb1_slot1.exercise == "Lat-Focused Cable Row"
+    assert week_9_fb1_slot1.last_set_intensity_technique == "Long-length Partials (on all reps of the last set)"
+    assert week_9_fb1_slot1.tracking_set_1 == "150.0"
+    assert week_9_fb1_slot1.tracking_set_2 == "150.0"
+    assert week_9_fb1_slot1.tracking_set_3 == "135.0"
+    assert week_9_fb1_slot1.tracking_set_4 is None
+    assert week_9_fb1_slot1.video_url is not None
+    week_9_arms_slot4 = week_9.days[4].slots[3]
+    assert week_9_arms_slot4.exercise == "Slow-Eccentric Bayesian Curl"
+    assert week_9_arms_slot4.last_set_intensity_technique == "Long-length Partials"
+    assert week_9_arms_slot4.working_sets == "3.0"
+    assert week_9_arms_slot4.reps == "10-12"
+    assert week_9_arms_slot4.substitution_option_1 == "Slow-Eccentric DB Incline Curl"
+    assert week_9_arms_slot4.substitution_option_2 == "Slow-Eccentric DB Scott Curl"
+    assert week_9_arms_slot4.video_url is not None
+    assert week_10.block_label == "BLOCK 2: 5-WEEK NOVELTY PHASE"
+    assert week_10.week_label == "Week 10"
+    assert week_10.special_banners == ["Mandatory Rest Day", "Mandatory Rest Day"]
+    week_10_fb1_slot1 = week_10.days[0].slots[0]
+    assert week_10_fb1_slot1.exercise == "Lat-Focused Cable Row"
+    assert week_10_fb1_slot1.last_set_intensity_technique == "Long-length Partials (on all reps of the last set)"
+    assert week_10_fb1_slot1.early_set_rpe == "~9"
+    assert week_10_fb1_slot1.last_set_rpe == "10"
+    assert week_10_fb1_slot1.tracking_set_1 is None
+    assert week_10_fb1_slot1.tracking_set_2 is None
+    assert week_10_fb1_slot1.tracking_set_3 is None
+    assert week_10_fb1_slot1.tracking_set_4 is None
+    assert week_10_fb1_slot1.substitution_option_1 == "Half-Kneeling 1-Arm Lat Pulldown"
+    assert week_10_fb1_slot1.substitution_option_2 == "Elbows-In 1-Arm DB Row"
+    assert week_10_fb1_slot1.video_url is not None
+    week_10_arms_slot4 = week_10.days[4].slots[3]
+    assert week_10_arms_slot4.exercise == "Slow-Eccentric Bayesian Curl"
+    assert week_10_arms_slot4.last_set_intensity_technique == "Long-length Partials (on all reps of the last set)"
+    assert week_10_arms_slot4.working_sets == "3.0"
+    assert week_10_arms_slot4.reps == "10-12"
+    assert week_10_arms_slot4.substitution_option_1 == "Slow-Eccentric DB Incline Curl"
+    assert week_10_arms_slot4.substitution_option_2 == "Slow-Eccentric DB Scott Curl"
+    assert week_10_arms_slot4.video_url is not None
