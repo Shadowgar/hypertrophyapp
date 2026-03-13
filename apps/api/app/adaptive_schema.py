@@ -533,6 +533,10 @@ class ProgramBlueprintSlot(BaseModel):
     early_set_rpe: str | None = None
     last_set_rpe: str | None = None
     rest: str | None = None
+    tracking_set_1: str | None = None
+    tracking_set_2: str | None = None
+    tracking_set_3: str | None = None
+    tracking_set_4: str | None = None
     substitution_option_1: str | None = None
     substitution_option_2: str | None = None
     demo_url: str | None = None

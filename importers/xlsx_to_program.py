@@ -358,6 +358,7 @@ def as_column_map(header: list[str]) -> dict[str, int]:
                 return idx
         return -1
 
+    tracking_load_and_reps_idx = find_index("tracking", "load", "reps")
     return {
         "session": 0,
         "exercise": find_index("exercise"),
@@ -365,6 +366,10 @@ def as_column_map(header: list[str]) -> dict[str, int]:
         "warmup_sets": find_index("warm", "sets"),
         "working_sets": find_index("working", "sets"),
         "reps": find_index("reps"),
+        "tracking_set_1": tracking_load_and_reps_idx,
+        "tracking_set_2": tracking_load_and_reps_idx + 1 if tracking_load_and_reps_idx >= 0 else -1,
+        "tracking_set_3": tracking_load_and_reps_idx + 2 if tracking_load_and_reps_idx >= 0 else -1,
+        "tracking_set_4": tracking_load_and_reps_idx + 3 if tracking_load_and_reps_idx >= 0 else -1,
         "load": find_any_index("load"),
         "percent_1rm": find_any_index("%1rm", "percent 1rm", "percentage 1rm"),
         "rpe": find_any_index("rpe", "rir"),
@@ -795,6 +800,10 @@ def _parse_exercise_row(
     early_set_rpe = column_value(row, mapped.get("early_set_rpe", -1)) or None
     last_set_rpe = column_value(row, mapped.get("last_set_rpe", -1)) or None
     rest = column_value(row, mapped.get("rest", -1)) or None
+    tracking_set_1 = column_value(row, mapped.get("tracking_set_1", -1)) or None
+    tracking_set_2 = column_value(row, mapped.get("tracking_set_2", -1)) or None
+    tracking_set_3 = column_value(row, mapped.get("tracking_set_3", -1)) or None
+    tracking_set_4 = column_value(row, mapped.get("tracking_set_4", -1)) or None
     substitution_option_1 = column_value(row, mapped.get("sub1", -1)) or None
     substitution_option_2 = column_value(row, mapped.get("sub2", -1)) or None
     video = _extract_youtube_url(
@@ -832,6 +841,10 @@ def _parse_exercise_row(
             "early_set_rpe": early_set_rpe,
             "last_set_rpe": last_set_rpe,
             "rest": rest,
+            "tracking_set_1": tracking_set_1,
+            "tracking_set_2": tracking_set_2,
+            "tracking_set_3": tracking_set_3,
+            "tracking_set_4": tracking_set_4,
             "substitution_option_1": substitution_option_1,
             "substitution_option_2": substitution_option_2,
             "demo_url": str((video or {}).get("youtube_url") or "") or None,
@@ -1341,6 +1354,10 @@ def normalize_slot_exercise(raw_exercise: dict) -> dict:
         "early_set_rpe": raw_exercise.get("early_set_rpe"),
         "last_set_rpe": raw_exercise.get("last_set_rpe"),
         "rest": raw_exercise.get("rest"),
+        "tracking_set_1": raw_exercise.get("tracking_set_1"),
+        "tracking_set_2": raw_exercise.get("tracking_set_2"),
+        "tracking_set_3": raw_exercise.get("tracking_set_3"),
+        "tracking_set_4": raw_exercise.get("tracking_set_4"),
         "substitution_option_1": raw_exercise.get("substitution_option_1"),
         "substitution_option_2": raw_exercise.get("substitution_option_2"),
     }

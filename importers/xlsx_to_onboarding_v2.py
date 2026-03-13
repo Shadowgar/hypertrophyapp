@@ -159,9 +159,15 @@ def _parse_weak_points_table(rows: list[list[str]]) -> list[dict[str, Any]]:
 def _parse_week_template_metadata(rows: list[list[str]]) -> dict[int, dict[str, Any]]:
     metadata: dict[int, dict[str, Any]] = {}
     current_block_label: str | None = None
-    pending_banners: list[str] = []
+    week_markers: list[tuple[int, int, str | None, str]] = []
 
-    for row in rows:
+    def is_semideload_banner(normalized_value: str) -> bool:
+        return normalized_value.startswith("semi deload") or normalized_value.startswith("deload week")
+
+    def is_mandatory_rest_banner(normalized_value: str) -> bool:
+        return normalized_value.startswith("mandatory rest day")
+
+    for row_index, row in enumerate(rows):
         first_value = _first_non_empty_cell(row)
         normalized = _normalize_label(first_value)
         if not normalized:
@@ -169,21 +175,32 @@ def _parse_week_template_metadata(rows: list[list[str]]) -> dict[int, dict[str, 
         if normalized.startswith("block "):
             current_block_label = first_value
             continue
-        if normalized.startswith("semi deload") or normalized.startswith("deload week"):
-            pending_banners.append(first_value)
-            continue
 
         week_match = re.match(r"week\s*(\d+)$", normalized)
         if not week_match:
             continue
 
-        week_index = int(week_match.group(1))
+        week_markers.append((int(week_match.group(1)), row_index, current_block_label, first_value))
+
+    week_banners: dict[int, list[str]] = {week_index: [] for week_index, *_ in week_markers}
+    for marker_index, (week_index, week_row_index, _block_label, _week_label) in enumerate(week_markers):
+        end_row_index = week_markers[marker_index + 1][1] if marker_index + 1 < len(week_markers) else len(rows)
+        next_week_index = week_markers[marker_index + 1][0] if marker_index + 1 < len(week_markers) else None
+        for row in rows[week_row_index + 1 : end_row_index]:
+            first_value = _first_non_empty_cell(row)
+            normalized = _normalize_label(first_value)
+            if is_mandatory_rest_banner(normalized):
+                week_banners[week_index].append(first_value)
+            elif is_semideload_banner(normalized):
+                target_week = next_week_index if next_week_index is not None else week_index
+                week_banners.setdefault(target_week, []).append(first_value)
+
+    for week_index, _week_row_index, block_label, week_label in week_markers:
         metadata[week_index] = {
-            "block_label": current_block_label,
-            "week_label": first_value,
-            "special_banners": list(pending_banners),
+            "block_label": block_label,
+            "week_label": week_label,
+            "special_banners": week_banners.get(week_index, []),
         }
-        pending_banners = []
 
     return metadata
 

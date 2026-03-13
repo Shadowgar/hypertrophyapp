@@ -69,6 +69,10 @@ def test_gold_onboarding_package_preserves_phase1_workbook_sections_and_authored
         "early_set_rpe",
         "last_set_rpe",
         "rest",
+        "tracking_set_1",
+        "tracking_set_2",
+        "tracking_set_3",
+        "tracking_set_4",
         "substitution_option_1",
         "substitution_option_2",
         "notes",
@@ -84,6 +88,10 @@ def test_gold_onboarding_package_preserves_phase1_workbook_sections_and_authored
     assert first_slot["early_set_rpe"] == "~7-8"
     assert first_slot["last_set_rpe"] == "~8-9"
     assert first_slot["rest"] == "~2-3 min"
+    assert first_slot["tracking_set_1"] is None
+    assert first_slot["tracking_set_2"] is None
+    assert first_slot["tracking_set_3"] is None
+    assert first_slot["tracking_set_4"] is None
     assert first_slot["substitution_option_1"] == "Half-Kneeling 1-Arm Lat Pulldown"
     assert first_slot["substitution_option_2"] == "Neutral-Grip Pullup"
     assert first_slot["video_url"] == "https://youtu.be/8W67lZ5mwTU?si=Xri6ms5QPmM-PZc8"
@@ -112,8 +120,21 @@ def test_gold_onboarding_package_preserves_phase1_workbook_sections_and_authored
     assert blueprint["weak_points_table"][0]["weak_point"] == "Shoulders"
     assert blueprint["week_templates"][0]["block_label"] == "BLOCK 1: 5-WEEK BUILD PHASE"
     assert blueprint["week_templates"][0]["week_label"] == "Week 1"
+    assert blueprint["week_templates"][0]["special_banners"] == ["Mandatory Rest Day", "Mandatory Rest Day"]
+    week_2 = blueprint["week_templates"][1]
+    assert week_2["block_label"] == "BLOCK 1: 5-WEEK BUILD PHASE"
+    assert week_2["week_label"] == "Week 2"
+    assert week_2["special_banners"] == ["Mandatory Rest Day", "Mandatory Rest Day"]
+    week_2_fb2_slot5 = week_2["days"][1]["slots"][4]
+    assert week_2_fb2_slot5["exercise"] == "Cuffed Behind-The-Back Lateral Raise"
+    assert week_2_fb2_slot5["last_set_intensity_technique"] == "Myo-reps"
+    assert week_2_fb2_slot5["substitution_option_1"] == "Cross-Body Cable Y-Raise"
+    assert week_2_fb2_slot5["substitution_option_2"] == "DB Lateral Raise"
+    assert week_2_fb2_slot5["video_url"] is not None
     assert week_5["special_banners"] == [
-        "SEMI-DELOAD WEEK: AVOID FAILURE AND TRAIN LIGHTER THIS WEEK TO PROMOTE RECOVERY AND TO PREPARE FOR THE NEXT 5 WEEKS!"
+        "SEMI-DELOAD WEEK: AVOID FAILURE AND TRAIN LIGHTER THIS WEEK TO PROMOTE RECOVERY AND TO PREPARE FOR THE NEXT 5 WEEKS!",
+        "Mandatory Rest Day",
+        "Mandatory Rest Day",
     ]
 
 

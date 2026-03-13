@@ -87,6 +87,104 @@ def test_build_onboarding_package_uses_current_parser_result_shape(tmp_path: Pat
     assert package.exercise_library
 
 
+def test_build_onboarding_package_preserves_tracking_sets_when_present(tmp_path: Path) -> None:
+    workbook = tmp_path / "Pure Bodybuilding Phase 1 - Full Body Sheet.xlsx"
+    output = tmp_path / "pure_bodybuilding_full_body.onboarding.json"
+    rows = [
+        [
+            "Session",
+            "Exercise",
+            "Last-Set Intensity Technique",
+            "Warm-up Sets",
+            "Working Sets",
+            "Reps",
+            "Tracking Load and Reps",
+            "",
+            "",
+            "",
+            "Early Set RPE",
+            "Last Set RPE",
+            "Rest",
+            "Substitution Option 1",
+            "Substitution Option 2",
+            "Notes",
+        ],
+        [
+            "Full Body #1",
+            "DB Bench Press",
+            "Drop Set",
+            "2",
+            "3",
+            "8-10",
+            "100x10",
+            "105x9",
+            "110x8",
+            "115x7",
+            "~7-8",
+            "~8-9",
+            "~2-3 min",
+            "Machine Chest Press",
+            "Barbell Bench Press",
+            "Control the eccentric.",
+        ],
+        [
+            "Full Body #2",
+            "Chest Supported Row",
+            "N/A",
+            "1",
+            "3",
+            "10-12",
+            "",
+            "",
+            "",
+            "",
+            "~7-8",
+            "~8-9",
+            "~2-3 min",
+            "Seated Cable Row",
+            "Machine Row",
+            "Pause at peak contraction.",
+        ],
+        [
+            "Full Body #3",
+            "Leg Press",
+            "N/A",
+            "2",
+            "3",
+            "8-10",
+            "",
+            "",
+            "",
+            "",
+            "~7-8",
+            "~8-9",
+            "~3-4 min",
+            "Hack Squat",
+            "Smith Squat",
+            "Drive through full foot.",
+        ],
+    ]
+    _write_xlsx_with_rows(workbook, rows)
+
+    destination = build_onboarding_package(
+        input_file=workbook,
+        source_pdf="reference/Pure Bodybuilding Phase 1 Full Body.pdf",
+        program_id="pure_bodybuilding_full_body",
+        total_weeks=8,
+        output_file=output,
+        sheet_name=None,
+    )
+
+    payload = json.loads(destination.read_text(encoding="utf-8"))
+    package = ProgramOnboardingPackage.model_validate(payload)
+    slot = package.blueprint.week_templates[0].days[0].slots[0]
+
+    assert slot.tracking_set_1 == "100x10"
+    assert slot.tracking_set_2 == "105x9"
+    assert slot.tracking_set_3 == "110x8"
+    assert slot.tracking_set_4 == "115x7"
+
+
 REFERENCE_PHASE1_WORKBOOK = REPO_ROOT / "reference" / "Pure Bodybuilding Phase 1 - Full Body Sheet.xlsx"
 
 
@@ -204,6 +302,10 @@ def test_build_onboarding_package_preserves_phase1_reference_workout_table_colum
     assert first_slot.early_set_rpe == "~7-8"
     assert first_slot.last_set_rpe == "~8-9"
     assert first_slot.rest == "~2-3 min"
+    assert first_slot.tracking_set_1 is None
+    assert first_slot.tracking_set_2 is None
+    assert first_slot.tracking_set_3 is None
+    assert first_slot.tracking_set_4 is None
     assert first_slot.substitution_option_1 == "Half-Kneeling 1-Arm Lat Pulldown"
     assert first_slot.substitution_option_2 == "Neutral-Grip Pullup"
     assert first_slot.notes == (
@@ -293,14 +395,26 @@ def test_build_onboarding_package_preserves_phase1_reference_sections_and_week_b
     ]
 
     week_1 = package.blueprint.week_templates[0]
+    week_2 = package.blueprint.week_templates[1]
     week_5 = package.blueprint.week_templates[4]
     week_6 = package.blueprint.week_templates[5]
     assert week_1.block_label == "BLOCK 1: 5-WEEK BUILD PHASE"
     assert week_1.week_label == "Week 1"
-    assert week_1.special_banners == []
+    assert week_1.special_banners == ["Mandatory Rest Day", "Mandatory Rest Day"]
+    assert week_2.block_label == "BLOCK 1: 5-WEEK BUILD PHASE"
+    assert week_2.week_label == "Week 2"
+    assert week_2.special_banners == ["Mandatory Rest Day", "Mandatory Rest Day"]
+    week_2_fb2_slot5 = week_2.days[1].slots[4]
+    assert week_2_fb2_slot5.exercise == "Cuffed Behind-The-Back Lateral Raise"
+    assert week_2_fb2_slot5.last_set_intensity_technique == "Myo-reps"
+    assert week_2_fb2_slot5.substitution_option_1 == "Cross-Body Cable Y-Raise"
+    assert week_2_fb2_slot5.substitution_option_2 == "DB Lateral Raise"
+    assert week_2_fb2_slot5.video_url is not None
     assert week_5.week_label == "Week 5"
     assert week_5.special_banners == [
-        "SEMI-DELOAD WEEK: AVOID FAILURE AND TRAIN LIGHTER THIS WEEK TO PROMOTE RECOVERY AND TO PREPARE FOR THE NEXT 5 WEEKS!"
+        "SEMI-DELOAD WEEK: AVOID FAILURE AND TRAIN LIGHTER THIS WEEK TO PROMOTE RECOVERY AND TO PREPARE FOR THE NEXT 5 WEEKS!",
+        "Mandatory Rest Day",
+        "Mandatory Rest Day",
     ]
     assert week_6.block_label == "BLOCK 2: 5-WEEK NOVELTY PHASE"
     assert week_6.week_label == "Week 6"
