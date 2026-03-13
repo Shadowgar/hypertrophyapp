@@ -1,6 +1,6 @@
 # Master Plan - Adaptive Coaching Rebuild
 
-Last updated: 2026-03-11
+Last updated: 2026-03-13
 
 ## Product Vision
 
@@ -34,34 +34,28 @@ Build-time pipelines may parse source files; runtime may not.
 
 ## Current Critical Gap
 
-The repository currently still contains ingestion-centered artifact generation (`docs/guides/generated/*.md` excerpts) that is useful for provenance checks but not sufficient as runtime coaching logic.
+The main product bottleneck is no longer generic architecture cleanup.
 
-The main architectural risk is still split-brain hardening, but the shape of the gap has changed.
+The current bottleneck is finishing one real administered program path around Pure Bodybuilding Phase 1 Full Body.
 
-Router glue is no longer the dominant risk.
-
-Current dominant risks are:
-- authority ambiguity and wrapper drift in `packages/core-engine/core_engine/intelligence.py`
-- shallow first-class coaching state in persistence and canonical user state
-- an early-stage deterministic stimulus-fatigue-response layer that is now live but not yet broadly consumed for bounded adjustment decisions
-- documentation drift between historical handoff logs and actual local-branch ownership
+Current branch reality:
+- the workbook-faithful Phase 1 onboarding package now exists as a rich authoritative artifact
+- runtime/API week-generation and today-session paths now carry the authored slot fields through
+- week/today UI now shows those authored execution details directly
+- temporary 5-days-to-3-days adaptation is now becoming program-specific for this same path
 
 Immediate direction:
-- keep moving decision families into `packages/core-engine` until `intelligence.py` is a thin façade or only owns explicitly temporary logic
-- emit structured decision traces or explicitly document why a family still lacks them
-- prevent legacy runtime paths from gaining new coaching behavior
-- deepen coaching state before adding broad new product surface area
+- keep one-program-first as the primary delivery track
+- preserve explicit schemas, deterministic rules, and structured traces on the Phase 1 path
+- keep broader architecture cleanup subordinate unless it directly blocks the administered Phase 1 runtime
 
 Current execution order:
-1. publish and maintain the current-state decision-runtime authority map
-2. extract live workout guidance out of `intelligence.py`
-3. reduce `intelligence.py` to façade/wrapper status where possible
-4. expand persisted coaching-state signals
-5. deepen that contract with readiness and recovery signals
-6. add a deterministic stimulus-fatigue-response layer
-7. broaden that layer across generation and weekly-review bounded adjustment decisions
-8. widen the same pressure family only where richer per-exercise state exists
-9. then broaden gold baselines and scenario tests
+1. maintain the workbook-faithful Pure Bodybuilding Phase 1 package
+2. keep authored slot fields carried through runtime/API without flattening
+3. keep week/today rendering authored execution detail directly
+4. finish program-specific temporary frequency adaptation for the Phase 1 full-body path
+5. align the live administered full-body runtime identity so it is no longer split across legacy aliases and the real Phase 1 package/runtime
+6. only then resume broader `intelligence.py`, coaching-state, and SFR cleanup where it directly helps the active product path
 
 ## Ordered Execution Plan (Do In Order)
 
@@ -176,6 +170,14 @@ Reference:
 	- `apps/api/app/program_loader.py` lists `adaptive_full_body_gold_v0_1` in the runtime catalog.
 	- the loader adapts `programs/gold/adaptive_full_body_gold_v0_1.json` into the current runtime template contract.
 	- the same loader boundary resolves `docs/rules/gold/adaptive_full_body_gold_v0_1.rules.json` when canonical rules do not already contain that program scope.
+- Pure Bodybuilding Phase 1 Full Body is now the first source-backed rich onboarding package on the branch:
+	- `programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json` explicitly preserves authored slot fields, top-level notes/warm-up/weak-point sections, week labels, block labels, special banners, and workbook-backed video links.
+	- the runtime loader/API path now carries those authored execution fields into generated-week and today workout exercises.
+	- week/today surfaces now show early-set RPE, last-set RPE, last-set intensity technique, rest, authored substitutions, and demo links directly from the authoritative package/runtime data.
+- Pure Bodybuilding Phase 1 temporary frequency adaptation is now program-aware on the live branch:
+	- the 5-days-to-3-days preview/apply path emits an explicit `pure_bodybuilding_phase_1_full_body_5_to_3` policy trace with preserved day roles, merged day roles, and preservation focus.
+	- generated-week `applied_frequency_adaptation` now carries that same policy metadata forward.
+	- active adaptation state now targets the selected runtime template while preserving the real onboarding program identity, so apply -> generate-week survives alias differences on the current branch.
 - The adaptive gold sample is now a real authored mesocycle instead of a short proof stub:
 	- `programs/gold/adaptive_full_body_gold_v0_1.json` now follows a 10-week authored sequence aligned to the onboarding package cadence: `build_a / build_b / build_a / build_b / build_a / deload / intens_a / intens_b / intens_a / intens_b`.
 	- runtime loader contracts preserve all 10 authored weeks with explicit `week_role` values and a five-day authored source (`Full Body #1-#4` plus `Arms & Weak Points`) rather than the earlier compressed three-day surrogate.

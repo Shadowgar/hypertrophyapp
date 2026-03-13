@@ -210,3 +210,61 @@ def test_frequency_adaptation_apply_completes_after_duration_weeks() -> None:
     second_payload = second_week.json()
     assert second_payload["user"]["days_available"] == 5
     assert "applied_frequency_adaptation" not in second_payload
+
+
+def test_phase1_frequency_adaptation_preview_and_runtime_expose_program_specific_policy() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_and_profile(client)
+
+    preview_response = client.post(
+        "/plan/adaptation/preview",
+        headers=headers,
+        json={
+            "program_id": "pure_bodybuilding_phase_1_full_body",
+            "target_days": 3,
+            "duration_weeks": 2,
+            "weak_areas": ["chest", "hamstrings"],
+        },
+    )
+    assert preview_response.status_code == 200
+    preview_payload = preview_response.json()
+
+    preview_week = preview_payload["weeks"][0]
+    assert preview_payload["program_id"] == "pure_bodybuilding_phase_1_full_body"
+    assert preview_week["program_policy"] == "pure_bodybuilding_phase_1_full_body_5_to_3"
+    assert preview_week["week_label"] == "Week 1"
+    assert preview_week["block_label"] == "BLOCK 1: 5-WEEK BUILD PHASE"
+    assert preview_week["adapted_days"][0]["day_name"] == "Full Body #1 + Full Body #2"
+    assert preview_week["adapted_days"][1]["day_name"] == "Full Body #3 + Full Body #4"
+    assert preview_week["adapted_days"][2]["day_name"] == "Arms & Weak Points"
+    assert preview_payload["decision_trace"]["outcome"]["policy_mode"] == "program_specific"
+    assert preview_payload["decision_trace"]["outcome"]["policy_id"] == "pure_bodybuilding_phase_1_full_body_5_to_3"
+
+    apply_response = client.post(
+        "/plan/adaptation/apply",
+        headers=headers,
+        json={
+            "program_id": "pure_bodybuilding_phase_1_full_body",
+            "target_days": 3,
+            "duration_weeks": 2,
+            "weak_areas": ["chest", "hamstrings"],
+        },
+    )
+    assert apply_response.status_code == 200
+
+    generate_response = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate_response.status_code == 200
+    generate_payload = generate_response.json()
+
+    adaptation = generate_payload["applied_frequency_adaptation"]
+    assert adaptation["policy_mode"] == "program_specific"
+    assert adaptation["policy_id"] == "pure_bodybuilding_phase_1_full_body_5_to_3"
+    assert adaptation["preservation_focus"] == [
+        "full_body_intent",
+        "weak_point_intent",
+        "progression_continuity",
+    ]
+    assert adaptation["decision_trace"]["source_trace"]["preview_trace"]["outcome"]["policy_id"] == (
+        "pure_bodybuilding_phase_1_full_body_5_to_3"
+    )

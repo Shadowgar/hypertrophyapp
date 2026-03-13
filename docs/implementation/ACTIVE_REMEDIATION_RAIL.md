@@ -1,30 +1,26 @@
 # Active Remediation Rail
 
-Last updated: 2026-03-12
+Last updated: 2026-03-13
 
 ## Current Confirmed State
 
-- Blocker 1 is complete.
-- Blocker 2 is complete.
-- Blocker 3 is complete.
-- Canonical `progression_state_per_exercise` now preserves persisted `ExerciseState.fatigue_score`, so first-class user training state no longer drops exercise-level recovery-pressure input before downstream owner consumption.
-- Canonical training/coaching state now preserves a derived `stimulus_fatigue_response` snapshot assembled from persisted readiness, adherence, soreness, and stall inputs, and generated-week runtime now prefers that canonical snapshot instead of recomputing it when present.
-- Coach preview trace/context plumbing now surfaces canonical `coaching_state.stimulus_fatigue_response` as persisted recovery-pressure context without changing request-time progression scoring ownership.
-- Weekly review now prefers canonical `coaching_state.stimulus_fatigue_response` as persisted recovery-pressure context when present, while keeping fallback SFR derivation owner-bound inside `decision_weekly_review.py`.
-- Generated-week scheduler / `rules_runtime.py` trace plumbing now carries the consumed `stimulus_fatigue_response` source, so mesocycle scheduling explicitly records whether recovery-pressure context came from canonical coaching state or an upstream fallback without re-owning SFR derivation.
-- Response-facing generated-week payload helpers now surface scheduler mesocycle `stimulus_fatigue_response_source` on the top-level generated-week `decision_trace`, while keeping SFR derivation and scheduler policy ownership unchanged.
-- API-facing generated-week response tests now assert that shipped plans preserve scheduler mesocycle `stimulus_fatigue_response_source` on the top-level `decision_trace`.
-- Tier 4A structural, doctrinal, and felt-behavior audits currently call the audited gold path ready for internal dogfood.
-- `intelligence.py` is down to compatibility forwarding for the extracted recommendation, progression, weekly-review, and coach-preview seams. It is not a valid place to add new coaching meaning.
+- `programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json` is now the real workbook-faithful Phase 1 package on this branch: authored slot fields, notes, warm-up protocol, weak-points table, week/block labels, banners, and workbook-backed video links are explicit.
+- Generated-week and today runtime exercises now carry the authored Phase 1 slot fields through the loader/API boundary instead of flattening them away.
+- Week and today surfaces now show authored execution detail directly: early-set RPE, last-set RPE, last-set intensity technique, rest, authored substitutions, demo link, and tracking loads when present.
+- Temporary 5-days-to-3-days adaptation for Pure Bodybuilding Phase 1 Full Body now emits a program-specific policy trace (`pure_bodybuilding_phase_1_full_body_5_to_3`) with preserved/merged day-role context and preservation focus.
+- Generated-week `applied_frequency_adaptation` now carries that Phase 1 policy metadata forward, and active adaptation state now survives alias differences between the selected runtime template and the real onboarding package ID.
+- `intelligence.py` remains compatibility forwarding only. It is not a valid place to add new coaching meaning.
 
 ## Latest Completed Slice
 
-- Extended `apps/api/tests/test_program_catalog_and_selection.py` so shipped generated-week API responses now assert the top-level plan `decision_trace` preserves the fallback `stimulus_fatigue_response_source` when mesocycle trace context is absent and the response must fall back to generation runtime output.
-- Verified the API-facing fallback path without changing generated-week owners: payload helper ownership stays in `decision_generated_week.py`, scheduler policy stays in `rules_runtime.py`, and SFR derivation stays upstream.
+- Extended the Phase 1 temporary frequency-adaptation seam so the real 5-to-3 compression path is program-aware instead of generic-only.
+- Preview weeks for `pure_bodybuilding_phase_1_full_body` now carry authored week/block metadata, adapted day labels/roles, action summaries, and explicit policy ID `pure_bodybuilding_phase_1_full_body_5_to_3`.
+- Apply/runtime now preserves `policy_mode`, `policy_id`, and `preservation_focus` into generated-week `applied_frequency_adaptation`.
+- Active adaptation state now targets the selected runtime template while preserving the real onboarding program identity, so Phase 1 apply -> generate-week works even when the selected runtime template still uses a legacy alias such as `full_body_v1`.
 
 ## Next Recommended Action
 
-- Extend API-facing generated-week response tests to assert the shipped plan `decision_trace` preserves `stimulus_fatigue_response_source` on scheduled-deload paths where mesocycle trace context remains present, while keeping payload-helper, scheduler-policy, and SFR-derivation ownership unchanged.
+- Align the live administered full-body program identity so the product stops splitting this path across `full_body_v1`, `adaptive_full_body_gold_v0_1`, and `pure_bodybuilding_phase_1_full_body`; make the Phase 1 authored runtime the single user-facing baseline while preserving backward-compatible alias handling where needed.
 
 ## Closed Work Do Not Reopen Without Evidence
 
@@ -41,30 +37,31 @@ If a patch does not show a regression in current code, do not spend time re-audi
 
 ## Current Target Wave
 
-Preserve Tier 4A honesty while continuing owner-boundary cleanup and canonical coaching-state deepening.
+Finish one real administered program path before reopening broad architecture-cleanup work.
 
 This wave is about:
 
+- keeping Pure Bodybuilding Phase 1 Full Body authoritative from onboarding artifact through runtime and week/today delivery
+- keeping frequency adaptation deterministic and program-aware for this same path
 - keeping `decision_*` modules as the only owners of coaching meaning
 - keeping `intelligence.py` as compatibility forwarding only
-- deepening canonical state where new deterministic behavior actually needs richer inputs
-- preventing UI and router layers from reintroducing local explanation logic
 
 ## Exact Remaining Seams
 
-1. Canonical coaching-state depth is still thinner than the decision surface now being exposed.
+1. The live full-body program identity is still split across legacy aliases and the real Phase 1 package/runtime.
    Files:
-   - `apps/api/app/models.py`
-   - `packages/core-engine/core_engine/user_state.py`
+   - `apps/api/app/program_loader.py`
+   - `apps/api/app/routers/plan.py`
+   - `apps/web/app/onboarding/page.tsx`
+   - `apps/web/app/settings/page.tsx`
 
-2. The deterministic stimulus-fatigue-response and readiness family exists, but broader owner-level consumption is still incomplete.
+2. Phase 1 temporary frequency adaptation now has the right backend policy trace, but the user-facing full-body selection path still needs to consume the same Phase 1 runtime identity cleanly.
    Files:
-   - `packages/core-engine/core_engine/decision_progression.py`
-   - `packages/core-engine/core_engine/decision_weekly_review.py`
-   - `packages/core-engine/core_engine/decision_coach_preview.py`
-   - `packages/core-engine/core_engine/rules_runtime.py`
+   - `apps/api/tests/test_program_catalog_and_selection.py`
+   - `apps/api/tests/test_program_frequency_adaptation_api.py`
+   - `apps/web/tests/settings.intelligence.test.tsx`
 
-3. `intelligence.py` still exists as a compatibility surface and must continue shrinking, not regrowing.
+3. Broader canonical coaching-state / SFR cleanup remains secondary work and should only be pulled forward when it directly helps the administered Phase 1 path.
    File:
    - `packages/core-engine/core_engine/intelligence.py`
 

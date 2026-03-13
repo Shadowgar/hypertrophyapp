@@ -1,6 +1,6 @@
 # Current-State Decision Runtime Map
 
-Last updated: 2026-03-12
+Last updated: 2026-03-13
 
 ## Purpose
 
@@ -20,9 +20,17 @@ This document is current-state truth. Historical handoff docs are evidence logs,
 
 Router glue is no longer the dominant architectural risk.
 
-Current dominant risks are:
+Current product-critical path is no longer generic architecture cleanup.
+
+Current branch reality is:
+- the [Pure Bodybuilding Phase 1 onboarding package](/home/rocco/hypertrophyapp/programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json) is now workbook-faithful and structurally rich
+- generated-week and today runtime exercises now carry the authored Phase 1 slot fields through the loader/API boundary
+- week/today surfaces now render those authored execution details directly
+- the next bounded product seam is program-specific temporary frequency adaptation for this same Phase 1 path, followed by live program-identity cleanup so the administered full-body path is no longer split across legacy aliases
+
+Secondary architectural risks still matter, but they are no longer the primary product bottleneck:
 - authority ambiguity and historical wrapper drift in [intelligence.py](/home/rocco/hypertrophyapp/packages/core-engine/core_engine/intelligence.py)
-- shallow first-class coaching state in [models.py](/home/rocco/hypertrophyapp/apps/api/app/models.py) beyond the newly-landed canonical `constraint_state`, weekly-checkin-backed `readiness_state`, and persisted coaching-state SFR snapshot
+- shallow first-class coaching state in [models.py](/home/rocco/hypertrophyapp/apps/api/app/models.py) beyond canonical `constraint_state`, weekly-checkin-backed `readiness_state`, and persisted coaching-state SFR snapshot
 - early-stage stimulus-fatigue-response logic that now affects some decisions but is not yet broadly shared across generation, substitution, and review families
 - documentation drift between historical handoff logs and actual local-branch module ownership
 
@@ -69,8 +77,8 @@ The current cleanup contract is:
 
 ## Next Phases After That
 
-After the first coaching-state expansion:
+After the current one-program-first wave:
 
-1. keep shrinking remaining mixed-owner seams in `intelligence.py` only where they materially block coaching-state or SFR work outside the now-clean workout family
-2. keep extending the same SFR, exercise-level recovery-pressure, and constraint-driven generation family only where persisted state already exists and templates expose deterministic metadata
-3. finish reconciling the adaptive-gold onboarding/runtime artifacts against the actual workbook/PDF doctrine, now that the parser, workbook metadata inference, and multi-phase loader flattening blockers are addressed; then turn the now-stable adaptive-gold path into real desktop/mobile browser dogfooding support before broader product claims
+1. finish aligning the live full-body program identity so the administered product path is not split across `full_body_v1`, `adaptive_full_body_gold_v0_1`, and the real Phase 1 onboarding package ID
+2. validate the Phase 1 path end to end on desktop/mobile browser dogfooding with the authored workout details and temporary frequency adaptation traces now visible
+3. only then keep shrinking remaining mixed-owner seams in `intelligence.py` and broadening SFR/coaching-state consumption where those changes directly support active product behavior

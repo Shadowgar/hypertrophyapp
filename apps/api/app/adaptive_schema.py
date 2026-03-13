@@ -662,6 +662,10 @@ class AdaptedDayPlan(BaseModel):
     day_id: str = Field(min_length=1)
     source_day_ids: list[str] = Field(default_factory=list)
     exercise_ids: list[str] = Field(default_factory=list)
+    day_name: str | None = None
+    source_day_names: list[str] = Field(default_factory=list)
+    day_role: str | None = None
+    source_day_roles: list[str] = Field(default_factory=list)
 
 
 class FrequencyAdaptationWeekResult(BaseModel):
@@ -671,6 +675,12 @@ class FrequencyAdaptationWeekResult(BaseModel):
     decisions: list[AdaptationDecision] = Field(default_factory=list)
     coverage_before: dict[str, int] = Field(default_factory=dict)
     coverage_after: dict[str, int] = Field(default_factory=dict)
+    week_label: str | None = None
+    block_label: str | None = None
+    special_banners: list[str] = Field(default_factory=list)
+    program_policy: str | None = None
+    preservation_focus: list[str] = Field(default_factory=list)
+    action_summary: dict[str, int] = Field(default_factory=dict)
     rationale: str = Field(min_length=1)
 
 

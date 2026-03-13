@@ -493,6 +493,7 @@ def prepare_frequency_adaptation_runtime_inputs(
 
     return {
         "program_id": str(adaptation_context["program_id"]),
+        "template_id": str(selected_program_id or adaptation_context["program_id"]),
         "current_days": int(current_days_available),
         "target_days": int(target_days),
         "duration_weeks": int(duration_weeks),
@@ -518,6 +519,7 @@ def prepare_frequency_adaptation_runtime_inputs(
             },
             "outcome": {
                 "program_id": str(adaptation_context["program_id"]),
+                "template_id": str(selected_program_id or adaptation_context["program_id"]),
                 "recovery_state": str(adaptation_context["recovery_state"]),
                 "current_week_index": int(adaptation_context["current_week_index"]),
             },

@@ -1,9 +1,19 @@
 from __future__ import annotations
 
+from collections import Counter
 from copy import deepcopy
 from typing import Any
 
 from .onboarding_adaptation import adapt_onboarding_frequency
+
+
+_PHASE1_PROGRAM_ID = "pure_bodybuilding_phase_1_full_body"
+_PHASE1_5_TO_3_POLICY_ID = "pure_bodybuilding_phase_1_full_body_5_to_3"
+_PHASE1_5_TO_3_PRESERVATION_FOCUS = [
+    "full_body_intent",
+    "weak_point_intent",
+    "progression_continuity",
+]
 
 
 def _coerce_dict(value: Any) -> dict[str, Any]:
@@ -13,6 +23,134 @@ def _coerce_dict(value: Any) -> dict[str, Any]:
 def _normalized_weak_areas(values: list[str] | None) -> list[str]:
     normalized = [str(item).strip().lower() for item in (values or []) if str(item).strip()]
     return list(dict.fromkeys(normalized))
+
+
+def _normalized_string_list(values: list[Any] | None) -> list[str]:
+    normalized = [str(item).strip() for item in (values or []) if str(item).strip()]
+    return list(dict.fromkeys(normalized))
+
+
+def _stripped_string_list(values: list[Any] | None) -> list[str]:
+    return [str(item).strip() for item in (values or []) if str(item).strip()]
+
+
+def _resolve_week_template(
+    *,
+    onboarding_package: dict[str, Any],
+    week_index: int,
+) -> dict[str, Any] | None:
+    blueprint = _coerce_dict(onboarding_package.get("blueprint"))
+    week_sequence = [str(item).strip() for item in blueprint.get("week_sequence") or [] if str(item).strip()]
+    if not week_sequence:
+        return None
+    template_id = week_sequence[(max(1, int(week_index)) - 1) % len(week_sequence)]
+    week_templates = {
+        str(item.get("week_template_id") or "").strip(): item
+        for item in blueprint.get("week_templates") or []
+        if isinstance(item, dict) and str(item.get("week_template_id") or "").strip()
+    }
+    candidate = week_templates.get(template_id)
+    return candidate if isinstance(candidate, dict) else None
+
+
+def _should_apply_phase1_5_to_3_policy(
+    *,
+    onboarding_package: dict[str, Any],
+    current_days: int,
+    target_days: int,
+) -> bool:
+    blueprint = _coerce_dict(onboarding_package.get("blueprint"))
+    default_training_days = int(
+        blueprint.get("default_training_days")
+        or _coerce_dict(onboarding_package.get("frequency_adaptation_rules")).get("default_training_days")
+        or 0
+    )
+    return (
+        str(onboarding_package.get("program_id") or "").strip() == _PHASE1_PROGRAM_ID
+        and int(current_days) == 5
+        and int(target_days) == 3
+        and default_training_days == 5
+    )
+
+
+def _decorate_phase1_5_to_3_week(
+    *,
+    week_result: dict[str, Any],
+    week_template: dict[str, Any] | None,
+) -> dict[str, Any]:
+    decorated = dict(week_result)
+    template = week_template or {}
+    days_by_id = {
+        str(day.get("day_id") or "").strip(): day
+        for day in template.get("days") or []
+        if isinstance(day, dict) and str(day.get("day_id") or "").strip()
+    }
+
+    decorated["week_label"] = str(template.get("week_label") or "").strip() or None
+    decorated["block_label"] = str(template.get("block_label") or "").strip() or None
+    decorated["special_banners"] = _stripped_string_list(template.get("special_banners"))
+    decorated["program_policy"] = _PHASE1_5_TO_3_POLICY_ID
+    decorated["preservation_focus"] = list(_PHASE1_5_TO_3_PRESERVATION_FOCUS)
+    action_summary = Counter(
+        str(decision.get("action") or "").strip().lower()
+        for decision in decorated.get("decisions") or []
+        if str(decision.get("action") or "").strip()
+    )
+    decorated["action_summary"] = {action: count for action, count in sorted(action_summary.items()) if count > 0}
+
+    adapted_days: list[dict[str, Any]] = []
+    for day in decorated.get("adapted_days") or []:
+        adapted_day = dict(day)
+        source_day_ids = _normalized_string_list(adapted_day.get("source_day_ids"))
+        source_days = [days_by_id[source_day_id] for source_day_id in source_day_ids if source_day_id in days_by_id]
+        source_day_names = _normalized_string_list(
+            [
+                source_day.get("day_name") or source_day.get("label") or source_day.get("day_id")
+                for source_day in source_days
+            ]
+        )
+        source_day_roles = _normalized_string_list([source_day.get("day_role") for source_day in source_days])
+        anchor_day = days_by_id.get(str(adapted_day.get("day_id") or "").strip(), {})
+        anchor_day_name = str(anchor_day.get("day_name") or anchor_day.get("label") or adapted_day.get("day_id") or "").strip()
+
+        adapted_day["source_day_names"] = source_day_names
+        adapted_day["source_day_roles"] = source_day_roles
+        adapted_day["day_role"] = str(anchor_day.get("day_role") or "").strip() or None
+        adapted_day["day_name"] = " + ".join(source_day_names) if len(source_day_names) > 1 else (source_day_names[0] if source_day_names else anchor_day_name or None)
+        adapted_days.append(adapted_day)
+
+    decorated["adapted_days"] = adapted_days
+    return decorated
+
+
+def _build_phase1_5_to_3_policy_trace(weeks: list[dict[str, Any]]) -> dict[str, Any]:
+    first_week = weeks[0] if weeks else {}
+    adapted_days = first_week.get("adapted_days") or []
+    preserved_day_roles = [
+        str(day.get("day_role") or "").strip()
+        for day in adapted_days
+        if str(day.get("day_role") or "").strip()
+    ]
+    merged_day_roles: list[dict[str, str]] = []
+    for day in adapted_days:
+        target_day_role = str(day.get("day_role") or "").strip()
+        if not target_day_role:
+            continue
+        for source_day_role in _normalized_string_list(day.get("source_day_roles")):
+            if source_day_role != target_day_role:
+                merged_day_roles.append(
+                    {
+                        "source_day_role": source_day_role,
+                        "target_day_role": target_day_role,
+                    }
+                )
+    return {
+        "policy_mode": "program_specific",
+        "policy_id": _PHASE1_5_TO_3_POLICY_ID,
+        "preservation_focus": list(_PHASE1_5_TO_3_PRESERVATION_FOCUS),
+        "preserved_day_roles": preserved_day_roles,
+        "merged_day_roles": merged_day_roles,
+    }
 
 
 def _resolve_frequency_adaptation_context(
@@ -41,6 +179,7 @@ def recommend_frequency_adaptation_preview(
     *,
     onboarding_package: dict[str, Any],
     program_id: str,
+    template_id: str | None = None,
     current_days: int,
     target_days: int,
     duration_weeks: int,
@@ -78,6 +217,33 @@ def recommend_frequency_adaptation_preview(
         "current_week_index": int(resolved_context["current_week_index"]),
     }
     result = dict(adapt_onboarding_frequency(onboarding_package=onboarding_package, overlay=overlay))
+    policy_trace: dict[str, Any] = {
+        "policy_mode": "generic",
+        "policy_id": None,
+        "preservation_focus": [],
+        "preserved_day_roles": [],
+        "merged_day_roles": [],
+    }
+    if _should_apply_phase1_5_to_3_policy(
+        onboarding_package=onboarding_package,
+        current_days=current_days,
+        target_days=target_days,
+    ):
+        decorated_weeks: list[dict[str, Any]] = []
+        for week in result.get("weeks") or []:
+            week_dict = dict(week)
+            week_template = _resolve_week_template(
+                onboarding_package=onboarding_package,
+                week_index=int(week_dict.get("week_index") or current_week_index),
+            )
+            decorated_weeks.append(
+                _decorate_phase1_5_to_3_week(
+                    week_result=week_dict,
+                    week_template=week_template,
+                )
+            )
+        result["weeks"] = decorated_weeks
+        policy_trace = _build_phase1_5_to_3_policy_trace(decorated_weeks)
     result["decision_trace"] = {
         "interpreter": "recommend_frequency_adaptation_preview",
         "version": "v1",
@@ -105,12 +271,17 @@ def recommend_frequency_adaptation_preview(
                     "rejoin_policy": result.get("rejoin_policy"),
                 },
             },
+            {
+                "decision": "apply_program_policy",
+                "result": dict(policy_trace),
+            },
         ],
         "outcome": {
             "week_count": len(result.get("weeks") or []),
             "rejoin_policy": result.get("rejoin_policy"),
             "reason_code": "preview_generated",
             "weak_area_bonus_slots": weak_area_bonus_slots,
+            **policy_trace,
         },
         "request_runtime_trace": deepcopy(_coerce_dict(request_runtime_trace)),
     }
@@ -121,6 +292,7 @@ def interpret_frequency_adaptation_apply(
     *,
     onboarding_package: dict[str, Any],
     program_id: str,
+    template_id: str | None = None,
     current_days: int,
     target_days: int,
     duration_weeks: int,
@@ -192,7 +364,7 @@ def interpret_frequency_adaptation_apply(
         },
     }
     persistence_state = {
-        "template_id": program_id,
+        "template_id": str(template_id or program_id),
         "program_id": program_id,
         "target_days": int(target_days),
         "duration_weeks": int(duration_weeks),
@@ -259,6 +431,7 @@ def prepare_frequency_adaptation_route_runtime(
     shared_kwargs = {
         "onboarding_package": onboarding_package,
         "program_id": str(runtime["program_id"]),
+        "template_id": str(runtime.get("template_id") or runtime["program_id"]),
         "current_days": int(runtime["current_days"]),
         "target_days": int(runtime["target_days"]),
         "duration_weeks": int(runtime["duration_weeks"]),
@@ -390,6 +563,15 @@ def apply_active_frequency_adaptation_runtime(
     week_start_iso = plan.get("week_start")
     already_applied_for_week = active_frequency_adaptation.get("last_applied_week_start") == week_start_iso
     base_trace = dict(active_frequency_adaptation.get("decision_trace") or {})
+    preview_trace = _coerce_dict(base_trace.get("preview_trace"))
+    preview_outcome = _coerce_dict(preview_trace.get("outcome"))
+    if preview_outcome.get("policy_mode") is not None:
+        adaptation_summary["policy_mode"] = preview_outcome.get("policy_mode")
+    if preview_outcome.get("policy_id") is not None:
+        adaptation_summary["policy_id"] = preview_outcome.get("policy_id")
+    preservation_focus = list(preview_outcome.get("preservation_focus") or [])
+    if preservation_focus:
+        adaptation_summary["preservation_focus"] = preservation_focus
 
     if already_applied_for_week:
         adaptation_summary["weeks_remaining_after_apply"] = int(active_frequency_adaptation["weeks_remaining"])
