@@ -500,12 +500,42 @@ class BlueprintWorkSet(BaseModel):
     load_target: str | None = None
 
 
+class WorkbookInstruction(BaseModel):
+    label: str | None = None
+    instruction: str = Field(min_length=1)
+
+
+class BlueprintWarmUpProtocol(BaseModel):
+    general_warm_up_intro: str | None = None
+    general_warm_up: list[WorkbookInstruction] = Field(default_factory=list)
+    exercise_specific_warm_up_intro: str | None = None
+    exercise_specific_warm_up: list[WorkbookInstruction] = Field(default_factory=list)
+
+
+class WeakPointTableEntry(BaseModel):
+    weak_point: str = Field(min_length=1)
+    exercise_1_options: list[str] = Field(default_factory=list)
+    exercise_2_options: list[str] = Field(default_factory=list)
+    guidance: list[str] = Field(default_factory=list)
+
+
 class ProgramBlueprintSlot(BaseModel):
     slot_id: str = Field(min_length=1)
     order_index: int = Field(ge=1)
     exercise_id: str = Field(min_length=1)
     slot_role: Literal["primary_compound", "secondary_compound", "accessory", "isolation", "weak_point"]
     primary_muscles: list[str] = Field(default_factory=list)
+    exercise: str | None = None
+    last_set_intensity_technique: str | None = None
+    warm_up_sets: str | None = None
+    working_sets: str | None = None
+    reps: str | None = None
+    early_set_rpe: str | None = None
+    last_set_rpe: str | None = None
+    rest: str | None = None
+    substitution_option_1: str | None = None
+    substitution_option_2: str | None = None
+    demo_url: str | None = None
     video_url: str | None = None
     warmup_prescription: list[BlueprintWarmupStep] = Field(default_factory=list)
     work_sets: list[BlueprintWorkSet] = Field(default_factory=list)
@@ -534,6 +564,9 @@ class ProgramBlueprintDay(BaseModel):
 
 class ProgramBlueprintWeekTemplate(BaseModel):
     week_template_id: str = Field(min_length=1)
+    block_label: str | None = None
+    week_label: str | None = None
+    special_banners: list[str] = Field(default_factory=list)
     days: list[ProgramBlueprintDay] = Field(default_factory=list)
 
     @field_validator("days")
@@ -554,6 +587,9 @@ class ProgramBlueprint(BaseModel):
     total_weeks: int = Field(ge=1, le=24)
     week_sequence: list[str] = Field(default_factory=list)
     week_templates: list[ProgramBlueprintWeekTemplate] = Field(default_factory=list)
+    important_program_notes: list[str] = Field(default_factory=list)
+    warm_up_protocol: BlueprintWarmUpProtocol | None = None
+    weak_points_table: list[WeakPointTableEntry] = Field(default_factory=list)
 
     @field_validator("week_sequence")
     @classmethod

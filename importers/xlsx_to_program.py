@@ -5,7 +5,7 @@ Runtime services must never read XLSX/PDF. This script is explicitly build-time 
 """
 
 import argparse
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
 import json
@@ -182,6 +182,7 @@ _EXERCISE_METADATA_OVERRIDES: dict[str, dict[str, object]] = {
 class ParsedSheet:
     name: str
     rows: list[list[str]]
+    hyperlinks: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass(slots=True)
@@ -360,16 +361,20 @@ def as_column_map(header: list[str]) -> dict[str, int]:
     return {
         "session": 0,
         "exercise": find_index("exercise"),
+        "last_set_intensity_technique": find_index("last", "intensity", "technique"),
         "warmup_sets": find_index("warm", "sets"),
         "working_sets": find_index("working", "sets"),
         "reps": find_index("reps"),
         "load": find_any_index("load"),
         "percent_1rm": find_any_index("%1rm", "percent 1rm", "percentage 1rm"),
         "rpe": find_any_index("rpe", "rir"),
+        "early_set_rpe": find_index("early", "rpe"),
+        "last_set_rpe": find_index("last", "rpe"),
         "rest": find_any_index("rest"),
         "sub1": find_index("substitution", "option", "1"),
         "sub2": find_index("substitution", "option", "2"),
-        "video": find_any_index("youtube", "video", "url", "link"),
+        "notes": find_index("notes"),
+        "video": find_any_index("youtube", "video", "url", "link", "demo"),
     }
 
 
@@ -380,6 +385,10 @@ def column_value(row: list[str], index: int) -> str:
 
 
 def pick_notes(row: list[str], mapped: dict[str, int]) -> str | None:
+    explicit_notes = column_value(row, mapped.get("notes", -1))
+    if explicit_notes:
+        return explicit_notes
+
     used_columns = {index for index in mapped.values() if index >= 0}
     trailing_values = [
         value
@@ -544,6 +553,30 @@ def _parse_sheet_rows(
     return rows
 
 
+def _read_sheet_hyperlinks(workbook_zip: zipfile.ZipFile, target: str, sheet_xml: bytes) -> dict[str, str]:
+    sheet_path = Path(target)
+    rels_path = str(sheet_path.parent / "_rels" / f"{sheet_path.name}.rels")
+    if rels_path not in workbook_zip.namelist():
+        return {}
+
+    rels_root = ET.fromstring(workbook_zip.read(rels_path))
+    rel_targets = {
+        rel.attrib["Id"]: rel.attrib.get("Target", "")
+        for rel in rels_root.findall("{http://schemas.openxmlformats.org/package/2006/relationships}Relationship")
+    }
+    sheet_root = ET.fromstring(sheet_xml)
+    hyperlinks: dict[str, str] = {}
+    for hyperlink in sheet_root.findall("a:hyperlinks/a:hyperlink", _NS):
+        reference = hyperlink.attrib.get("ref", "").strip()
+        relation_id = hyperlink.attrib.get("{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id")
+        if not reference or not relation_id:
+            continue
+        target_value = rel_targets.get(relation_id, "").strip()
+        if target_value:
+            hyperlinks[reference] = target_value
+    return hyperlinks
+
+
 def read_xlsx_sheets(path: Path) -> list[ParsedSheet]:
     with zipfile.ZipFile(path) as workbook_zip:
         shared_strings = _read_shared_strings(workbook_zip)
@@ -553,8 +586,10 @@ def read_xlsx_sheets(path: Path) -> list[ParsedSheet]:
         for sheet_name, target in targets:
             if not target or target not in workbook_zip.namelist():
                 continue
-            rows = _parse_sheet_rows(workbook_zip.read(target), shared_strings, style_number_formats)
-            sheets.append(ParsedSheet(name=sheet_name, rows=rows))
+            sheet_xml = workbook_zip.read(target)
+            rows = _parse_sheet_rows(sheet_xml, shared_strings, style_number_formats)
+            hyperlinks = _read_sheet_hyperlinks(workbook_zip, target, sheet_xml)
+            sheets.append(ParsedSheet(name=sheet_name, rows=rows, hyperlinks=hyperlinks))
         return sheets
 
 
@@ -597,8 +632,35 @@ def _extract_substitution_candidates(row: list[str], mapped: dict[str, int]) -> 
     ]
 
 
-def _extract_youtube_url(row: list[str], mapped: dict[str, int]) -> dict[str, str] | None:
+def _cell_reference(row_index: int, column_index: int) -> str:
+    reference = ""
+    index = column_index + 1
+    while index > 0:
+        index, remainder = divmod(index - 1, 26)
+        reference = chr(65 + remainder) + reference
+    return f"{reference}{row_index}"
+
+
+def _extract_youtube_url(
+    row: list[str],
+    mapped: dict[str, int],
+    *,
+    row_index: int,
+    exercise_idx: int,
+    hyperlinks: dict[str, str] | None = None,
+) -> dict[str, str] | None:
     candidates: list[str] = []
+    hyperlink_map = hyperlinks or {}
+
+    for column_index in (mapped.get("video", -1), exercise_idx):
+        if column_index < 0:
+            continue
+        hyperlink = hyperlink_map.get(_cell_reference(row_index, column_index), "").strip()
+        if hyperlink:
+            candidates.append(hyperlink)
+        value = column_value(row, column_index)
+        if value:
+            candidates.append(value)
 
     video_idx = mapped.get("video", -1)
     if video_idx >= 0:
@@ -703,7 +765,14 @@ def _is_structural_exercise_label(value: str) -> bool:
     return False
 
 
-def _parse_exercise_row(row: list[str], mapped: dict[str, int], exercise_idx: int) -> dict | None:
+def _parse_exercise_row(
+    row: list[str],
+    mapped: dict[str, int],
+    exercise_idx: int,
+    *,
+    row_index: int,
+    hyperlinks: dict[str, str] | None = None,
+) -> dict | None:
     raw_exercise_name = column_value(row, exercise_idx)
     if not raw_exercise_name:
         return None
@@ -719,6 +788,22 @@ def _parse_exercise_row(row: list[str], mapped: dict[str, int], exercise_idx: in
 
     movement_pattern = infer_movement_pattern(exercise_name)
     notes = pick_notes(row, mapped)
+    last_set_intensity_technique = column_value(row, mapped.get("last_set_intensity_technique", -1)) or None
+    warm_up_sets = column_value(row, mapped.get("warmup_sets", -1)) or None
+    working_sets = column_value(row, mapped.get("working_sets", -1)) or None
+    reps = column_value(row, mapped.get("reps", -1)) or None
+    early_set_rpe = column_value(row, mapped.get("early_set_rpe", -1)) or None
+    last_set_rpe = column_value(row, mapped.get("last_set_rpe", -1)) or None
+    rest = column_value(row, mapped.get("rest", -1)) or None
+    substitution_option_1 = column_value(row, mapped.get("sub1", -1)) or None
+    substitution_option_2 = column_value(row, mapped.get("sub2", -1)) or None
+    video = _extract_youtube_url(
+        row,
+        mapped,
+        row_index=row_index,
+        exercise_idx=exercise_idx,
+        hyperlinks=hyperlinks,
+    )
     return normalize_slot_exercise(
         {
             "id": slugify(exercise_name),
@@ -730,12 +815,26 @@ def _parse_exercise_row(row: list[str], mapped: dict[str, int], exercise_idx: in
             "primary_muscles": infer_primary_muscles(movement_pattern, exercise_name),
             "substitution_candidates": _extract_substitution_candidates(row, mapped),
             "notes": notes,
-            "video": _extract_youtube_url(row, mapped),
-            "set_type": _parse_set_type(exercise_name, notes),
-            "rpe_target": parse_float(column_value(row, mapped.get("rpe", -1))),
+            "video": video,
+            "set_type": _parse_set_type(
+                exercise_name,
+                " ".join(part for part in [last_set_intensity_technique, notes] if part) or None,
+            ),
+            "rpe_target": parse_float(last_set_rpe or early_set_rpe or column_value(row, mapped.get("rpe", -1))),
             "load_target": _parse_load_target(row, mapped),
             "warmup_sets": parse_int(column_value(row, mapped.get("warmup_sets", -1)), fallback=0),
             "rest_seconds": _parse_rest_seconds(column_value(row, mapped.get("rest", -1))),
+            "exercise": raw_exercise_name,
+            "last_set_intensity_technique": last_set_intensity_technique,
+            "warm_up_sets": warm_up_sets,
+            "working_sets": working_sets,
+            "reps": reps,
+            "early_set_rpe": early_set_rpe,
+            "last_set_rpe": last_set_rpe,
+            "rest": rest,
+            "substitution_option_1": substitution_option_1,
+            "substitution_option_2": substitution_option_2,
+            "demo_url": str((video or {}).get("youtube_url") or "") or None,
         }
     )
 
@@ -945,6 +1044,7 @@ def _handle_exercise_row(
     row: list[str],
     mapped: dict[str, int],
     exercise_idx: int,
+    hyperlinks: dict[str, str] | None = None,
 ) -> None:
     exercise_name = column_value(row, exercise_idx)
     if not exercise_name:
@@ -980,7 +1080,13 @@ def _handle_exercise_row(
         )
         return
 
-    parsed_exercise = _parse_exercise_row(row, mapped, exercise_idx)
+    parsed_exercise = _parse_exercise_row(
+        row,
+        mapped,
+        exercise_idx,
+        row_index=row_index,
+        hyperlinks=hyperlinks,
+    )
     if parsed_exercise is not None:
         state.current_exercises.append(parsed_exercise)
 
@@ -1002,6 +1108,9 @@ def _process_session_row(
     mapped: dict[str, int],
     exercise_idx: int,
     default_session_name: str,
+    *,
+    row_index: int,
+    hyperlinks: dict[str, str] | None = None,
 ) -> None:
     session_candidate = column_value(row, mapped["session"])
     if session_candidate and not _is_structural_session_label(session_candidate):
@@ -1011,7 +1120,13 @@ def _process_session_row(
     if state.current_session_name is None:
         state.current_session_name = default_session_name
 
-    parsed_exercise = _parse_exercise_row(row, mapped, exercise_idx)
+    parsed_exercise = _parse_exercise_row(
+        row,
+        mapped,
+        exercise_idx,
+        row_index=row_index,
+        hyperlinks=hyperlinks,
+    )
     if parsed_exercise is not None:
         state.current_exercises.append(parsed_exercise)
 
@@ -1053,6 +1168,7 @@ def parse_sheet_to_sessions(sheet: ParsedSheet) -> ParsedSheetResult:
             row=row,
             mapped=mapped,
             exercise_idx=exercise_idx,
+            hyperlinks=sheet.hyperlinks,
         )
 
     _flush_session(state)
@@ -1119,7 +1235,13 @@ def parse_sheet_to_structured_sessions(sheet: ParsedSheet) -> ParsedStructuredSh
         if current_session_name is None:
             current_session_name = sheet.name
 
-        parsed_exercise = _parse_exercise_row(row, mapped, exercise_idx)
+        parsed_exercise = _parse_exercise_row(
+            row,
+            mapped,
+            exercise_idx,
+            row_index=row_index,
+            hyperlinks=sheet.hyperlinks,
+        )
         if parsed_exercise is None:
             _append_structured_skip_diagnostic(
                 diagnostics=diagnostics,
@@ -1193,6 +1315,7 @@ def normalize_slot_exercise(raw_exercise: dict) -> dict:
         "id": raw_exercise.get("id"),
         "primary_exercise_id": raw_exercise.get("primary_exercise_id") or raw_exercise.get("id"),
         "name": name,
+        "exercise": raw_exercise.get("exercise"),
         "sets": raw_exercise.get("sets", 3),
         "rep_range": raw_exercise.get("rep_range", [8, 12]),
         "start_weight": raw_exercise.get("start_weight", 20),
@@ -1205,11 +1328,21 @@ def normalize_slot_exercise(raw_exercise: dict) -> dict:
         "substitution_candidates": list(dict.fromkeys(substitutions)),
         "notes": raw_exercise.get("notes"),
         "video": raw_exercise.get("video"),
+        "demo_url": raw_exercise.get("demo_url"),
         "set_type": raw_exercise.get("set_type", "work"),
         "rpe_target": raw_exercise.get("rpe_target"),
         "load_target": raw_exercise.get("load_target"),
         "warmup_sets": raw_exercise.get("warmup_sets", 0),
         "rest_seconds": raw_exercise.get("rest_seconds"),
+        "last_set_intensity_technique": raw_exercise.get("last_set_intensity_technique"),
+        "warm_up_sets": raw_exercise.get("warm_up_sets"),
+        "working_sets": raw_exercise.get("working_sets"),
+        "reps": raw_exercise.get("reps"),
+        "early_set_rpe": raw_exercise.get("early_set_rpe"),
+        "last_set_rpe": raw_exercise.get("last_set_rpe"),
+        "rest": raw_exercise.get("rest"),
+        "substitution_option_1": raw_exercise.get("substitution_option_1"),
+        "substitution_option_2": raw_exercise.get("substitution_option_2"),
     }
 
 

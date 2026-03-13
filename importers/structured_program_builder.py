@@ -206,6 +206,7 @@ def _build_blueprint_slot(
 
     video = _exercise_video(exercise)
     notes = _exercise_notes(exercise)
+    demo_url = str(exercise.get("demo_url") or video.get("youtube_url") or "") or None
     work_set = {
         "set_type": str(exercise.get("set_type") or "work"),
         "sets": int(exercise.get("sets") or 3),
@@ -220,7 +221,18 @@ def _build_blueprint_slot(
         "exercise_id": str(exercise.get("primary_exercise_id") or exercise.get("id") or slugify(exercise_name)),
         "slot_role": slot_role(exercise_name, session_name),
         "primary_muscles": _exercise_primary_muscles(exercise),
-        "video_url": str(video.get("youtube_url") or "") or None,
+        "exercise": str(exercise.get("exercise") or exercise_name),
+        "last_set_intensity_technique": exercise.get("last_set_intensity_technique"),
+        "warm_up_sets": exercise.get("warm_up_sets"),
+        "working_sets": exercise.get("working_sets"),
+        "reps": exercise.get("reps"),
+        "early_set_rpe": exercise.get("early_set_rpe"),
+        "last_set_rpe": exercise.get("last_set_rpe"),
+        "rest": exercise.get("rest"),
+        "substitution_option_1": exercise.get("substitution_option_1"),
+        "substitution_option_2": exercise.get("substitution_option_2"),
+        "demo_url": demo_url,
+        "video_url": demo_url,
         "warmup_prescription": _warmup_prescription(exercise),
         "work_sets": [work_set],
         "notes": notes,

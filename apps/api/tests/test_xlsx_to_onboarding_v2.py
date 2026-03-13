@@ -174,3 +174,124 @@ def test_build_onboarding_package_preserves_phase1_reference_exercise_metadata(t
     assert cable_curl.movement_pattern == "curl"
     assert cable_curl.primary_muscles == ["biceps"]
     assert "cable" in cable_curl.equipment_tags
+
+
+@pytest.mark.skipif(not REFERENCE_PHASE1_WORKBOOK.exists(), reason="reference workbook not available")
+def test_build_onboarding_package_preserves_phase1_reference_workout_table_columns_losslessly(tmp_path: Path) -> None:
+    output = tmp_path / "phase1_reference.onboarding.json"
+
+    destination = build_onboarding_package(
+        input_file=REFERENCE_PHASE1_WORKBOOK,
+        source_pdf="reference/The_Pure_Bodybuilding_Program - Phase 1 - Full_Body.pdf",
+        program_id="phase1_reference",
+        total_weeks=10,
+        output_file=output,
+        sheet_name=None,
+    )
+
+    payload = json.loads(destination.read_text(encoding="utf-8"))
+    package = ProgramOnboardingPackage.model_validate(payload)
+
+    week_1 = package.blueprint.week_templates[0]
+    first_slot = week_1.days[0].slots[0]
+    weak_point_slot = week_1.days[4].slots[0]
+
+    assert first_slot.exercise == "Cross-Body Lat Pull-Around"
+    assert first_slot.last_set_intensity_technique == "Long-length Partials (on all reps of the last set)"
+    assert first_slot.warm_up_sets == "1.0"
+    assert first_slot.working_sets == "3.0"
+    assert first_slot.reps == "10-12"
+    assert first_slot.early_set_rpe == "~7-8"
+    assert first_slot.last_set_rpe == "~8-9"
+    assert first_slot.rest == "~2-3 min"
+    assert first_slot.substitution_option_1 == "Half-Kneeling 1-Arm Lat Pulldown"
+    assert first_slot.substitution_option_2 == "Neutral-Grip Pullup"
+    assert first_slot.notes == (
+        "Try to keep the cable and your wrist aligned in a straight line throughout the pull. "
+        "Feel a nice, deep lat stretch at the top."
+    )
+    assert first_slot.demo_url == "https://youtu.be/8W67lZ5mwTU?si=Xri6ms5QPmM-PZc8"
+    assert first_slot.video_url == first_slot.demo_url
+
+    assert weak_point_slot.exercise == "Weak Point Exercise 1"
+    assert weak_point_slot.substitution_option_1 == "See The Weak Point Table for sub options"
+    assert weak_point_slot.substitution_option_2 == "See The Weak Point Table for sub options"
+    assert weak_point_slot.notes == (
+        "Decide on your weak point using The Weak Point Table in your Hypertrophy Handbook. "
+        "Perform ONE of the exercises listed under Exercise 1 for the sets and reps provided here."
+    )
+
+
+@pytest.mark.skipif(not REFERENCE_PHASE1_WORKBOOK.exists(), reason="reference workbook not available")
+def test_build_onboarding_package_preserves_phase1_reference_sections_and_week_banners(tmp_path: Path) -> None:
+    output = tmp_path / "phase1_reference.onboarding.json"
+
+    destination = build_onboarding_package(
+        input_file=REFERENCE_PHASE1_WORKBOOK,
+        source_pdf="reference/The_Pure_Bodybuilding_Program - Phase 1 - Full_Body.pdf",
+        program_id="phase1_reference",
+        total_weeks=10,
+        output_file=output,
+        sheet_name=None,
+    )
+
+    payload = json.loads(destination.read_text(encoding="utf-8"))
+    package = ProgramOnboardingPackage.model_validate(payload)
+
+    assert package.blueprint.important_program_notes[0] == (
+        "Perform a full general warm-up and exercise-specific warm-up every workout as outlined below "
+        "(should only take 5-10 mins max)"
+    )
+    assert package.blueprint.important_program_notes[-1].startswith(
+        "All other aspects of the program, including how to understand the Last-Set Intensity Technique column"
+    )
+
+    warm_up_protocol = package.blueprint.warm_up_protocol
+    assert warm_up_protocol is not None
+    assert warm_up_protocol.general_warm_up_intro.startswith(
+        "Perform the following general warm-up before every workout"
+    )
+    assert warm_up_protocol.general_warm_up[0].label == "5-10 minutes"
+    assert warm_up_protocol.general_warm_up[0].instruction.startswith("Light cardio on machine")
+    assert warm_up_protocol.exercise_specific_warm_up_intro.startswith(
+        "Perform the following exercise-specific warm-up"
+    )
+    assert warm_up_protocol.exercise_specific_warm_up[1].label == "2 Warm-Up Sets Listed"
+    assert warm_up_protocol.exercise_specific_warm_up[1].instruction.startswith(
+        "Perform a mini warm-up pyramid"
+    )
+
+    first_weak_point = package.blueprint.weak_points_table[0]
+    hamstrings = next(entry for entry in package.blueprint.weak_points_table if entry.weak_point == "Hamstrings")
+    assert first_weak_point.weak_point == "Shoulders"
+    assert first_weak_point.exercise_1_options == [
+        "1. Cuffed Behind-The-Back Lateral Raise",
+        "2. Machine Lateral Raise",
+        "3. Dumbbell Lateral Raise",
+    ]
+    assert first_weak_point.exercise_2_options == [
+        "1. Machine Shoulder Press",
+        "2. Smith Machine Shoulder Press",
+        "3. Standing DB Arnold Press",
+    ]
+    assert first_weak_point.guidance == [
+        "Pick one of the options above. Do not do all of them in one day!",
+    ]
+    assert hamstrings.exercise_1_options == []
+    assert hamstrings.exercise_2_options == []
+    assert hamstrings.guidance == [
+        "There is a lot of hamstrings volume in this program. If they are a weak point for you, simply focus on executing the exercises listed with your best effort and execution rather than adding more volume.",
+    ]
+
+    week_1 = package.blueprint.week_templates[0]
+    week_5 = package.blueprint.week_templates[4]
+    week_6 = package.blueprint.week_templates[5]
+    assert week_1.block_label == "BLOCK 1: 5-WEEK BUILD PHASE"
+    assert week_1.week_label == "Week 1"
+    assert week_1.special_banners == []
+    assert week_5.week_label == "Week 5"
+    assert week_5.special_banners == [
+        "SEMI-DELOAD WEEK: AVOID FAILURE AND TRAIN LIGHTER THIS WEEK TO PROMOTE RECOVERY AND TO PREPARE FOR THE NEXT 5 WEEKS!"
+    ]
+    assert week_6.block_label == "BLOCK 2: 5-WEEK NOVELTY PHASE"
+    assert week_6.week_label == "Week 6"
