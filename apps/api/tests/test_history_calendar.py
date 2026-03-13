@@ -118,7 +118,7 @@ def test_history_calendar_and_day_detail() -> None:
     assert day_one_entry["set_count"] == 2
     assert day_one_entry["exercise_count"] == 1
     assert day_one_entry["completed"] is True
-    assert day_one_entry["program_ids"] == ["full_body_v1"]
+    assert day_one_entry["program_ids"] == ["pure_bodybuilding_phase_1_full_body"]
     assert day_one_entry["muscles"] == ["chest"]
     assert day_one_entry["pr_count"] == 1
     assert day_one_entry["pr_exercises"] == ["bench_press"]
@@ -134,7 +134,7 @@ def test_history_calendar_and_day_detail() -> None:
     assert detail_payload["totals"]["exercise_count"] == 1
     assert len(detail_payload["workouts"]) == 1
     assert detail_payload["workouts"][0]["workout_id"] == "workout_a"
-    assert detail_payload["workouts"][0]["program_id"] == "full_body_v1"
+    assert detail_payload["workouts"][0]["program_id"] == "pure_bodybuilding_phase_1_full_body"
     assert detail_payload["workouts"][0]["planned_sets_total"] == 3
     assert detail_payload["workouts"][0]["set_delta"] == -1
     assert detail_payload["workouts"][0]["exercises"][0]["exercise_id"] == "bench_press"

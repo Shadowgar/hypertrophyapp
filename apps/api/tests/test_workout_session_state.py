@@ -207,7 +207,7 @@ def test_log_set_surfaces_repeat_failure_substitution_recommendation() -> None:
     payload = response.json()
 
     substitution = payload["live_recommendation"]["substitution_recommendation"]
-    assert substitution["recommended_name"] == "Chest Supported Row"
+    assert substitution["recommended_name"] == "Half Kneeling 1 Arm Lat Pulldown"
     assert substitution["failed_exposure_count"] == 3
     assert substitution["trigger_threshold"] == 3
 
@@ -215,7 +215,7 @@ def test_log_set_surfaces_repeat_failure_substitution_recommendation() -> None:
     assert today.status_code == 200
     today_payload = today.json()
     matching = next(item for item in today_payload["exercises"] if item["id"] == first_exercise["id"])
-    assert matching["live_recommendation"]["substitution_recommendation"]["recommended_name"] == "Chest Supported Row"
+    assert matching["live_recommendation"]["substitution_recommendation"]["recommended_name"] == "Half Kneeling 1 Arm Lat Pulldown"
 
 
 def test_adaptive_gold_workout_today_reflects_generated_repeat_failure_substitution() -> None:

@@ -7,6 +7,8 @@ from .decision_frequency_adaptation import apply_active_frequency_adaptation_run
 from .decision_weekly_review import apply_weekly_review_adjustments_to_plan
 from .scheduler import generate_week_plan
 
+_PHASE1_CANONICAL_PROGRAM_ID = "pure_bodybuilding_phase_1_full_body"
+
 
 def _coerce_dict(value: Any) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
@@ -102,8 +104,8 @@ def _ordered_generation_candidate_ids(
         predicate=lambda summary: days_available in (summary.get("days_supported") or []),
     )
 
-    if "full_body_v1" not in ordered:
-        ordered.append("full_body_v1")
+    if _PHASE1_CANONICAL_PROGRAM_ID not in ordered:
+        ordered.append(_PHASE1_CANONICAL_PROGRAM_ID)
     return ordered
 
 

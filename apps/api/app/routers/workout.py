@@ -21,7 +21,11 @@ from core_engine import (
 from ..database import get_db
 from ..deps import get_current_user
 from ..models import ExerciseState, User, WorkoutPlan, WorkoutSessionState, WorkoutSetLog
-from ..program_loader import load_program_rule_set, resolve_linked_program_id
+from ..program_loader import (
+    load_program_rule_set,
+    resolve_administered_program_id,
+    resolve_rule_program_id,
+)
 from ..schemas import (
     WorkoutLiveRecommendationResponse,
     WorkoutSetLogRequest,
@@ -159,10 +163,11 @@ def workout_today(
         .all()
     )
     selected_program_id = plan_runtime["selected_program_id"]
+    normalized_selected_program_id = resolve_administered_program_id(cast(str | None, selected_program_id))
     progression_runtime = prepare_workout_today_progression_route_runtime(
         session_states=states,
-        selected_program_id=cast(str | None, selected_program_id),
-        resolve_linked_program_id=resolve_linked_program_id,
+        selected_program_id=normalized_selected_program_id,
+        resolve_linked_program_id=resolve_rule_program_id,
         load_rule_set=load_program_rule_set,
     )
     progression_states: list[ExerciseState] = []
@@ -207,7 +212,7 @@ def log_set(
         reps=payload.reps,
         weight=payload.weight,
         rpe=payload.rpe,
-        resolve_linked_program_id=resolve_linked_program_id,
+        resolve_linked_program_id=resolve_rule_program_id,
         load_rule_set=load_program_rule_set,
     )
     primary_exercise_id = str(context_runtime["primary_exercise_id"])
@@ -295,7 +300,7 @@ def workout_summary(
     route_runtime = prepare_workout_summary_route_runtime(
         workout_id=workout_id,
         plan_rows=_list_workout_plans(db, current_user.id),
-        resolve_linked_program_id=resolve_linked_program_id,
+        resolve_linked_program_id=resolve_rule_program_id,
         load_rule_set=load_program_rule_set,
     )
     session = cast(dict | None, route_runtime["session"])

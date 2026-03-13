@@ -149,7 +149,7 @@ def test_prepare_profile_program_recommendation_inputs_applies_router_fallbacks(
         latest_plan=None,
     )
 
-    assert runtime["current_program_id"] == "full_body_v1"
+    assert runtime["current_program_id"] == "pure_bodybuilding_phase_1_full_body"
     assert runtime["days_available"] == 2
     assert runtime["split_preference"] == "full_body"
     assert runtime["latest_plan_payload"] == {}

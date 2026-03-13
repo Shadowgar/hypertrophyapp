@@ -108,7 +108,7 @@ def test_coach_preview_returns_deterministic_intelligence_payload() -> None:
     assert recommendation_id_b
     assert recommendation_id_a != recommendation_id_b
     assert payload_a == payload_b
-    assert payload_a["template_id"] == "full_body_v1"
+    assert payload_a["template_id"] == "pure_bodybuilding_phase_1_full_body"
     assert payload_a["schedule"]["from_days"] == 5
     assert payload_a["schedule"]["to_days"] == 3
     assert payload_a["decision_trace"]["interpreter"] == "recommend_coach_intelligence_preview"

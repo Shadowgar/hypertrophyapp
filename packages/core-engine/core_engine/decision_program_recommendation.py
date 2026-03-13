@@ -3,6 +3,8 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, cast
 
+_PHASE1_CANONICAL_PROGRAM_ID = "pure_bodybuilding_phase_1_full_body"
+
 
 _PROGRAM_REASON_MESSAGES = {
     "no_compatible_programs": "No compatible program was found for the current availability, so keep the current selection.",
@@ -518,7 +520,7 @@ def prepare_profile_program_recommendation_inputs(
 ) -> dict[str, Any]:
     latest_plan_payload = _coerce_dict(_read_attr(latest_plan, "payload", {}))
     return {
-        "current_program_id": selected_program_id or "full_body_v1",
+        "current_program_id": selected_program_id or _PHASE1_CANONICAL_PROGRAM_ID,
         "days_available": days_available or 2,
         "split_preference": split_preference or "full_body",
         "latest_plan_payload": latest_plan_payload,

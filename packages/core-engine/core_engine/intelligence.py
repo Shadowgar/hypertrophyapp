@@ -5,6 +5,8 @@ from datetime import date, datetime, timedelta
 import re
 from typing import Any, Literal, cast
 
+_PHASE1_CANONICAL_PROGRAM_ID = "pure_bodybuilding_phase_1_full_body"
+
 from .decision_frequency_adaptation import (
     apply_active_frequency_adaptation_runtime as _apply_active_frequency_adaptation_runtime,
     build_frequency_adaptation_apply_payload as _build_frequency_adaptation_apply_payload,
@@ -1056,7 +1058,7 @@ def build_profile_upsert_persistence_payload(
         "weight": weight,
         "gender": gender,
         "split_preference": split_preference,
-        "selected_program_id": selected_program_id or "full_body_v1",
+        "selected_program_id": selected_program_id or _PHASE1_CANONICAL_PROGRAM_ID,
         "training_location": training_location,
         "equipment_profile": list(equipment_profile),
         "weak_areas": list(weak_areas or []),
@@ -1103,7 +1105,7 @@ def build_profile_response_payload(
         "weight": weight or 0,
         "gender": gender or "",
         "split_preference": split_preference or "",
-        "selected_program_id": selected_program_id or "full_body_v1",
+        "selected_program_id": selected_program_id or _PHASE1_CANONICAL_PROGRAM_ID,
         "training_location": training_location,
         "equipment_profile": list(equipment_profile or []),
         "weak_areas": list(weak_areas or []),

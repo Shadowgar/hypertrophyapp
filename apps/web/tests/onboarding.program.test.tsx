@@ -52,7 +52,11 @@ async function completeQuestionnaireToAccountStep() {
 
 test("Onboarding wizard reaches account step with program catalog and password toggle", async () => {
   const programs = [
-    { id: "full_body_v1", name: "Full Body V1", description: "A 5-day full body" },
+    {
+      id: "pure_bodybuilding_phase_1_full_body",
+      name: "Pure Bodybuilding - Phase 1 Full Body",
+      description: "A 5-day full body",
+    },
     { id: "upper_lower", name: "Upper/Lower", description: "4 day" },
   ];
 
@@ -77,7 +81,7 @@ test("Onboarding wizard reaches account step with program catalog and password t
     expect(screen.getByLabelText(/program/i)).toBeInTheDocument();
   });
 
-  expect(screen.getByText("Full Body V1")).toBeInTheDocument();
+  expect(screen.getByText("Pure Bodybuilding - Phase 1 Full Body")).toBeInTheDocument();
 
   const password = screen.getByLabelText(/Password/i);
   expect(password).toHaveAttribute("type", "password");
@@ -86,7 +90,13 @@ test("Onboarding wizard reaches account step with program catalog and password t
 });
 
 test("Onboarding restores saved draft progress from local storage", async () => {
-  const programs = [{ id: "full_body_v1", name: "Full Body V1", description: "A 5-day full body" }];
+  const programs = [
+    {
+      id: "pure_bodybuilding_phase_1_full_body",
+      name: "Pure Bodybuilding - Phase 1 Full Body",
+      description: "A 5-day full body",
+    },
+  ];
 
   localStorage.setItem(
     ONBOARDING_DRAFT_KEY,
@@ -117,7 +127,7 @@ test("Onboarding restores saved draft progress from local storage", async () => 
       lastName: "Tester",
       email: "restored@example.com",
       weakAreasRaw: "chest",
-      selectedProgramId: "full_body_v1",
+      selectedProgramId: "pure_bodybuilding_phase_1_full_body",
     }),
   );
 

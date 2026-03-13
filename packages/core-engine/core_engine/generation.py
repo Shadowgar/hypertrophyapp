@@ -11,6 +11,14 @@ from .decision_frequency_adaptation import build_generated_week_adaptation_persi
 from .intelligence import prepare_generated_week_review_overlay
 from .scheduler import generate_week_plan
 
+PHASE1_CANONICAL_PROGRAM_ID = "pure_bodybuilding_phase_1_full_body"
+PHASE1_PROGRAM_ALIASES: set[str] = {
+    PHASE1_CANONICAL_PROGRAM_ID,
+    "full_body_v1",
+    "adaptive_full_body_gold_v0_1",
+    "pure_bodybuilding_full_body",
+}
+
 
 def _read_attr(value: Any, key: str, default: Any = None) -> Any:
     if isinstance(value, dict):
@@ -79,6 +87,13 @@ def _coerce_stimulus_fatigue_response_snapshot(value: Any) -> dict[str, Any]:
     if any(not normalized[field] for field in required_fields):
         return {}
     return normalized
+
+
+def _equivalent_program_ids(program_id: str) -> set[str]:
+    normalized = str(program_id).strip()
+    if normalized in PHASE1_PROGRAM_ALIASES:
+        return set(PHASE1_PROGRAM_ALIASES)
+    return {normalized}
 
 
 def _serialize_training_state_history(user_training_state: dict[str, Any]) -> list[dict[str, Any]]:
@@ -403,7 +418,7 @@ def resolve_frequency_adaptation_request_context(
     user_training_state: dict[str, Any] | None = None,
     latest_plan: Any | None,
     latest_soreness_entry: Any | None,
-    default_program_id: str = "full_body_v1",
+    default_program_id: str = PHASE1_CANONICAL_PROGRAM_ID,
 ) -> dict[str, Any]:
     normalized_training_state = _coerce_training_state(user_training_state)
     program_state = _coerce_dict(normalized_training_state.get("user_program_state"))
@@ -587,6 +602,7 @@ def prepare_frequency_adaptation_decision_runtime(
 
 
 def _count_prior_generated_weeks(selected_template_id: str, prior_plans: list[Any]) -> int:
+    equivalent_ids = _equivalent_program_ids(selected_template_id)
     prior_weeks_for_template: set[str] = set()
     for existing_plan in prior_plans:
         payload_data = _read_attr(existing_plan, "payload")
@@ -594,13 +610,16 @@ def _count_prior_generated_weeks(selected_template_id: str, prior_plans: list[An
         week_start = _read_attr(existing_plan, "week_start")
         week_key = _iso_date(week_start)
         program_id = payload_data.get("program_template_id")
-        if program_id == selected_template_id:
+        if str(program_id or "").strip() in equivalent_ids:
             prior_weeks_for_template.add(week_key)
             continue
 
         sessions = payload_data.get("sessions") or []
         if any(
-            str(session.get("session_id", "")).startswith(f"{selected_template_id}-")
+            any(
+                str(session.get("session_id", "")).startswith(f"{program_id}-")
+                for program_id in equivalent_ids
+            )
             for session in sessions
         ):
             prior_weeks_for_template.add(week_key)
@@ -660,8 +679,15 @@ def _resolve_generation_prior_weeks(
     prior_plans: list[Any],
 ) -> tuple[int, str]:
     prior_generated_weeks_by_program = _coerce_dict(generation_state.get("prior_generated_weeks_by_program"))
-    if selected_template_id in prior_generated_weeks_by_program:
-        return int(prior_generated_weeks_by_program[selected_template_id] or 0), "training_state"
+    equivalent_ids = _equivalent_program_ids(selected_template_id)
+    if equivalent_ids:
+        count = sum(
+            int(prior_generated_weeks_by_program.get(program_id) or 0)
+            for program_id in equivalent_ids
+            if program_id in prior_generated_weeks_by_program
+        )
+        if count > 0:
+            return count, "training_state"
 
     return _count_prior_generated_weeks(selected_template_id, prior_plans), "prior_plans"
 

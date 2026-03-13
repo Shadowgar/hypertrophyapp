@@ -43,7 +43,15 @@ from core_engine import (
 from ..database import get_db
 from ..deps import get_current_user
 from ..models import CoachingRecommendation, ExerciseState, SorenessEntry, User, WeeklyCheckin, WeeklyReviewCycle, WorkoutPlan, WorkoutSetLog
-from ..program_loader import list_program_templates, load_program_onboarding_package, load_program_rule_set, load_program_template, resolve_linked_program_id
+from ..program_loader import (
+    list_program_templates,
+    load_program_onboarding_package,
+    load_program_rule_set,
+    load_program_template,
+    resolve_administered_program_id,
+    resolve_onboarding_program_id as resolve_loader_onboarding_program_id,
+    resolve_rule_program_id,
+)
 from ..adaptive_schema import FrequencyAdaptationResult
 from ..schemas import GenerateWeekPlanRequest, ProgramTemplateSummary
 from ..schemas import (
@@ -152,31 +160,33 @@ def list_guide_programs() -> list[GuideProgramSummary]:
 
 @router.get("/plan/guides/programs/{program_id}", responses=GUIDE_RESPONSES)
 def get_program_guide(program_id: str) -> ProgramGuideResponse:
+    resolved_program_id = resolve_administered_program_id(program_id) or program_id
     try:
         summary = resolve_program_guide_summary(
-            program_id=program_id,
+            program_id=resolved_program_id,
             available_program_summaries=list_program_templates(),
         )
-        template = load_program_template(program_id)
+        template = load_program_template(resolved_program_id)
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except ValidationError as exc:
         raise HTTPException(status_code=422, detail=INVALID_TEMPLATE_DETAIL) from exc
 
-    return ProgramGuideResponse(**build_program_guide_payload(program_id=program_id, program_summary=summary, template=template))
+    return ProgramGuideResponse(**build_program_guide_payload(program_id=resolved_program_id, program_summary=summary, template=template))
 
 
 @router.get("/plan/guides/programs/{program_id}/days/{day_index}", responses=GUIDE_RESPONSES)
 def get_program_day_guide(program_id: str, day_index: int) -> ProgramDayGuideResponse:
+    resolved_program_id = resolve_administered_program_id(program_id) or program_id
     try:
-        template = load_program_template(program_id)
+        template = load_program_template(resolved_program_id)
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except ValidationError as exc:
         raise HTTPException(status_code=422, detail=INVALID_TEMPLATE_DETAIL) from exc
 
     try:
-        payload = build_program_day_guide_payload(program_id=program_id, template=template, day_index=day_index)
+        payload = build_program_day_guide_payload(program_id=resolved_program_id, template=template, day_index=day_index)
     except IndexError as exc:
         raise HTTPException(status_code=404, detail="Guide day not found")
     return ProgramDayGuideResponse(**payload)
@@ -184,8 +194,9 @@ def get_program_day_guide(program_id: str, day_index: int) -> ProgramDayGuideRes
 
 @router.get("/plan/guides/programs/{program_id}/exercise/{exercise_id}", responses=GUIDE_RESPONSES)
 def get_program_exercise_guide(program_id: str, exercise_id: str) -> ProgramExerciseGuideResponse:
+    resolved_program_id = resolve_administered_program_id(program_id) or program_id
     try:
-        template = load_program_template(program_id)
+        template = load_program_template(resolved_program_id)
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except ValidationError as exc:
@@ -194,7 +205,7 @@ def get_program_exercise_guide(program_id: str, exercise_id: str) -> ProgramExer
     exercise = resolve_program_exercise_guide(template=template, exercise_id=exercise_id)
     if exercise is None:
         raise HTTPException(status_code=404, detail="Guide exercise not found")
-    return ProgramExerciseGuideResponse(**build_program_exercise_guide_payload(program_id=program_id, exercise=exercise))
+    return ProgramExerciseGuideResponse(**build_program_exercise_guide_payload(program_id=resolved_program_id, exercise=exercise))
 
 
 def _utcnow_naive() -> datetime:
@@ -351,11 +362,13 @@ def coach_intelligence_preview(
         profile_days_available=current_user.days_available,
     )
     preview_request = cast(dict[str, Any], preview_runtime["preview_request"])
+    explicit_template_id = resolve_administered_program_id(payload.template_id) if payload.template_id else None
+    profile_template_id = resolve_administered_program_id(current_user.selected_program_id)
 
     try:
         template_runtime = prepare_generation_template_runtime(
-            explicit_template_id=payload.template_id,
-            profile_template_id=current_user.selected_program_id,
+            explicit_template_id=explicit_template_id,
+            profile_template_id=profile_template_id,
             split_preference=current_user.split_preference,
             days_available=int(preview_runtime["max_requested_days"]),
             nutrition_phase=current_user.nutrition_phase or "maintenance",
@@ -398,7 +411,7 @@ def coach_intelligence_preview(
         latest_plan=latest_plan,
         recent_workout_logs=history_rows,
         recent_checkins=[latest_checkin] if latest_checkin is not None else [],
-        selected_program_id=current_user.selected_program_id,
+        selected_program_id=profile_template_id,
         nutrition_phase=current_user.nutrition_phase,
         available_equipment=current_user.equipment_profile,
         build_plan_decision_training_state=build_plan_decision_training_state,
@@ -407,7 +420,7 @@ def coach_intelligence_preview(
 
     rule_set = resolve_optional_rule_set(
         template_id=selected_template_id,
-        resolve_linked_program_id=resolve_linked_program_id,
+        resolve_linked_program_id=resolve_rule_program_id,
         load_rule_set=load_program_rule_set,
     )
     program_name = resolve_program_display_name(
@@ -474,8 +487,8 @@ def preview_frequency_adaptation(
         .first()
     )
     adaptation_decision_runtime = prepare_frequency_adaptation_decision_runtime(
-        requested_program_id=payload.program_id,
-        selected_program_id=current_user.selected_program_id,
+        requested_program_id=resolve_administered_program_id(payload.program_id),
+        selected_program_id=resolve_administered_program_id(current_user.selected_program_id),
         latest_plan=latest_plan,
         latest_soreness_entry=latest_soreness,
         current_days_available=current_user.days_available,
@@ -489,7 +502,7 @@ def preview_frequency_adaptation(
     adaptation_runtime = cast(dict[str, Any], adaptation_decision_runtime["adaptation_runtime"])
     onboarding_program_id = resolve_onboarding_program_id(
         template_id=str(adaptation_runtime["program_id"]),
-        resolve_linked_program_id=resolve_linked_program_id,
+        resolve_linked_program_id=resolve_loader_onboarding_program_id,
     )
     try:
         onboarding_package = load_program_onboarding_package(onboarding_program_id)
@@ -534,8 +547,8 @@ def apply_frequency_adaptation(
         .first()
     )
     adaptation_decision_runtime = prepare_frequency_adaptation_decision_runtime(
-        requested_program_id=payload.program_id,
-        selected_program_id=current_user.selected_program_id,
+        requested_program_id=resolve_administered_program_id(payload.program_id),
+        selected_program_id=resolve_administered_program_id(current_user.selected_program_id),
         latest_plan=latest_plan,
         latest_soreness_entry=latest_soreness,
         current_days_available=current_user.days_available,
@@ -550,7 +563,7 @@ def apply_frequency_adaptation(
     selected_template_id = str(adaptation_runtime["program_id"])
     onboarding_program_id = resolve_onboarding_program_id(
         template_id=selected_template_id,
-        resolve_linked_program_id=resolve_linked_program_id,
+        resolve_linked_program_id=resolve_loader_onboarding_program_id,
     )
     try:
         onboarding_package = load_program_onboarding_package(onboarding_program_id)
@@ -586,11 +599,13 @@ def plan_generate_week(
 ) -> dict:
     if not current_user.days_available or not current_user.split_preference:
         raise HTTPException(status_code=400, detail=PROFILE_INCOMPLETE_DETAIL)
+    explicit_template_id = resolve_administered_program_id(payload.template_id) if payload.template_id else None
+    profile_template_id = resolve_administered_program_id(current_user.selected_program_id)
 
     try:
         template_runtime = prepare_generation_template_runtime(
-            explicit_template_id=payload.template_id,
-            profile_template_id=current_user.selected_program_id,
+            explicit_template_id=explicit_template_id,
+            profile_template_id=profile_template_id,
             split_preference=current_user.split_preference,
             days_available=current_user.days_available,
             nutrition_phase=current_user.nutrition_phase or "maintenance",
@@ -609,12 +624,18 @@ def plan_generate_week(
     template_selection_trace = cast(dict[str, Any], template_runtime["decision_trace"])
     rule_set = resolve_optional_rule_set(
         template_id=selected_template_id,
-        resolve_linked_program_id=resolve_linked_program_id,
+        resolve_linked_program_id=resolve_rule_program_id,
         load_rule_set=load_program_rule_set,
     )
 
+    active_state = dict(current_user.active_frequency_adaptation or {})
+    if active_state:
+        for key in ("template_id", "program_id"):
+            normalized = resolve_administered_program_id(str(active_state.get(key) or "").strip())
+            if normalized:
+                active_state[key] = normalized
     active_frequency_adaptation = resolve_active_frequency_adaptation_runtime(
-        active_state=current_user.active_frequency_adaptation,
+        active_state=active_state if active_state else None,
         selected_template_id=selected_template_id,
     )
     generation_context = _prepare_plan_generation_runtime(

@@ -9,8 +9,42 @@ from .config import settings
 from .adaptive_schema import AdaptiveGoldProgramTemplate, AdaptiveGoldRuleSet, ProgramOnboardingPackage
 from .template_schema import CanonicalProgramTemplate
 
+PHASE1_CANONICAL_PROGRAM_ID = "pure_bodybuilding_phase_1_full_body"
+PHASE1_RUNTIME_TEMPLATE_SOURCE_ID = "adaptive_full_body_gold_v0_1"
+PHASE1_COMPATIBILITY_ALIASES: set[str] = {
+    "full_body_v1",
+    "adaptive_full_body_gold_v0_1",
+    "pure_bodybuilding_full_body",
+    PHASE1_CANONICAL_PROGRAM_ID,
+}
+
+ADMINISTERED_PROGRAM_ID_ALIASES: dict[str, str] = {
+    alias: PHASE1_CANONICAL_PROGRAM_ID for alias in PHASE1_COMPATIBILITY_ALIASES
+}
+
+RUNTIME_TEMPLATE_SOURCE_IDS: dict[str, str] = {
+    "full_body_v1": PHASE1_RUNTIME_TEMPLATE_SOURCE_ID,
+    "adaptive_full_body_gold_v0_1": PHASE1_RUNTIME_TEMPLATE_SOURCE_ID,
+    PHASE1_CANONICAL_PROGRAM_ID: PHASE1_RUNTIME_TEMPLATE_SOURCE_ID,
+}
+
+ONBOARDING_SOURCE_IDS: dict[str, str] = {
+    "full_body_v1": PHASE1_CANONICAL_PROGRAM_ID,
+    "adaptive_full_body_gold_v0_1": PHASE1_CANONICAL_PROGRAM_ID,
+    "pure_bodybuilding_full_body": PHASE1_CANONICAL_PROGRAM_ID,
+    PHASE1_CANONICAL_PROGRAM_ID: PHASE1_CANONICAL_PROGRAM_ID,
+}
+
+RULE_SOURCE_IDS: dict[str, str] = {
+    "full_body_v1": PHASE1_CANONICAL_PROGRAM_ID,
+    "adaptive_full_body_gold_v0_1": PHASE1_CANONICAL_PROGRAM_ID,
+    "pure_bodybuilding_full_body": PHASE1_CANONICAL_PROGRAM_ID,
+    PHASE1_CANONICAL_PROGRAM_ID: PHASE1_CANONICAL_PROGRAM_ID,
+}
+
 
 PROGRAM_DESCRIPTIONS: dict[str, str] = {
+    PHASE1_CANONICAL_PROGRAM_ID: "Pure Bodybuilding Phase 1 Full Body administered baseline with authored workbook execution detail.",
     "full_body_v1": "Pure Bodybuilding-inspired full body structure with deterministic day templates.",
     "ppl_v1": "Push/Pull/Legs baseline template for balanced hypertrophy progression.",
     "upper_lower_v1": "Upper/Lower split with clear weekly distribution and recovery spacing.",
@@ -30,6 +64,7 @@ PROGRAM_DESCRIPTIONS: dict[str, str] = {
 }
 
 PROGRAM_NAMES: dict[str, str] = {
+    PHASE1_CANONICAL_PROGRAM_ID: "Pure Bodybuilding - Phase 1 Full Body",
     "adaptive_full_body_gold_v0_1": "Adaptive Full Body Gold v0.1",
     "full_body_v1": "Full Body v1",
     "ppl_v1": "Push Pull Legs v1",
@@ -63,6 +98,8 @@ LINKED_PROGRAM_IDS: dict[str, str] = {
 }
 
 ADAPTIVE_GOLD_ONBOARDING_PROGRAM_IDS: dict[str, str] = {
+    PHASE1_CANONICAL_PROGRAM_ID: PHASE1_CANONICAL_PROGRAM_ID,
+    "full_body_v1": PHASE1_CANONICAL_PROGRAM_ID,
     "adaptive_full_body_gold_v0_1": "pure_bodybuilding_phase_1_full_body",
 }
 
@@ -96,6 +133,32 @@ def _fallback_program_name(program_id: str) -> str:
     return " ".join(part.capitalize() for part in program_id.replace("-", "_").split("_") if part)
 
 
+def resolve_administered_program_id(program_id: str | None) -> str | None:
+    if program_id is None:
+        return None
+    normalized = str(program_id).strip()
+    if not normalized:
+        return None
+    return ADMINISTERED_PROGRAM_ID_ALIASES.get(normalized, normalized)
+
+
+def resolve_runtime_template_id(template_id: str) -> str:
+    normalized = str(template_id).strip()
+    if not normalized:
+        return normalized
+    return RUNTIME_TEMPLATE_SOURCE_IDS.get(normalized, normalized)
+
+
+def resolve_onboarding_program_id(program_id: str) -> str:
+    normalized = str(program_id).strip()
+    return ONBOARDING_SOURCE_IDS.get(normalized, resolve_linked_program_id(normalized))
+
+
+def resolve_rule_program_id(program_id: str) -> str:
+    normalized = str(program_id).strip()
+    return RULE_SOURCE_IDS.get(normalized, resolve_linked_program_id(normalized))
+
+
 def resolve_linked_program_id(program_id: str) -> str:
     return LINKED_PROGRAM_IDS.get(program_id, program_id)
 
@@ -117,6 +180,7 @@ def _program_signature(program: dict[str, Any]) -> str:
 
 def _catalog_id_rank(program_id: str) -> tuple[int, int, int, int, str]:
     curated_priority = {
+        PHASE1_CANONICAL_PROGRAM_ID: 0,
         "full_body_v1": 0,
         "ppl_v1": 0,
         "upper_lower_v1": 0,
@@ -438,16 +502,21 @@ def list_program_templates() -> list[dict]:
             # Runtime templates must have stable ID<->filename mapping.
             continue
 
-        templates_by_id[data["id"]] = data
-        summaries_by_id[data["id"]] = {
-            "id": data["id"],
-            "name": PROGRAM_NAMES.get(data["id"], _fallback_program_name(data["id"])),
+        canonical_id = resolve_administered_program_id(runtime_id) or runtime_id
+        if canonical_id != runtime_id:
+            data = dict(data)
+            data["id"] = canonical_id
+
+        templates_by_id[canonical_id] = data
+        summaries_by_id[canonical_id] = {
+            "id": canonical_id,
+            "name": PROGRAM_NAMES.get(canonical_id, _fallback_program_name(canonical_id)),
             "version": data["version"],
             "split": data["split"],
             "days_supported": data["days_supported"],
             "session_count": len(data["sessions"]),
             "description": PROGRAM_DESCRIPTIONS.get(
-                data["id"],
+                canonical_id,
                 f"Deterministic {data['split']} program template.",
             ),
         }
@@ -464,8 +533,11 @@ def list_program_templates() -> list[dict]:
 
 
 def load_program_template(template_id: str) -> dict:
+    source_template_id = resolve_runtime_template_id(template_id)
+    canonical_template_id = resolve_administered_program_id(template_id)
+
     for candidate in _iter_runtime_template_files():
-        if _normalized_stem(candidate) != template_id:
+        if _normalized_stem(candidate) != source_template_id:
             continue
 
         raw = json.loads(candidate.read_text(encoding="utf-8"))
@@ -474,8 +546,11 @@ def load_program_template(template_id: str) -> dict:
         else:
             validated = CanonicalProgramTemplate.model_validate(raw)
             payload = validated.model_dump()
-        if str(payload.get("id") or "") != template_id:
+        if str(payload.get("id") or "") != source_template_id:
             continue
+        if canonical_template_id and canonical_template_id != payload.get("id"):
+            payload = dict(payload)
+            payload["id"] = canonical_template_id
         return payload
 
     raise FileNotFoundError(f"Program template not found: {template_id}")
@@ -511,7 +586,7 @@ def list_program_onboarding_packages() -> list[dict[str, Any]]:
 
 
 def load_program_onboarding_package(program_id: str) -> dict[str, Any]:
-    candidate = _resolve_onboarding_path() / f"{resolve_linked_program_id(program_id)}.onboarding.json"
+    candidate = _resolve_onboarding_path() / f"{resolve_onboarding_program_id(program_id)}.onboarding.json"
     if not candidate.exists():
         raise FileNotFoundError(f"Program onboarding package not found: {program_id}")
 
@@ -520,8 +595,31 @@ def load_program_onboarding_package(program_id: str) -> dict[str, Any]:
     return validated.model_dump(mode="json")
 
 
+def _merge_phase1_scheduler_overlay(rule_set_payload: dict[str, Any]) -> dict[str, Any]:
+    if rule_set_payload.get("generated_week_scheduler_rules"):
+        return rule_set_payload
+
+    if PHASE1_CANONICAL_PROGRAM_ID not in set(rule_set_payload.get("program_scope") or []):
+        return rule_set_payload
+
+    fallback_candidate = _resolve_gold_rules_path() / f"{PHASE1_RUNTIME_TEMPLATE_SOURCE_ID}.rules.json"
+    if not fallback_candidate.exists():
+        return rule_set_payload
+
+    fallback_raw = json.loads(fallback_candidate.read_text(encoding="utf-8"))
+    fallback_validated = AdaptiveGoldRuleSet.model_validate(fallback_raw)
+    fallback_payload = fallback_validated.model_dump(mode="json")
+    scheduler_rules = fallback_payload.get("generated_week_scheduler_rules")
+    if not scheduler_rules:
+        return rule_set_payload
+
+    merged = dict(rule_set_payload)
+    merged["generated_week_scheduler_rules"] = scheduler_rules
+    return merged
+
+
 def load_program_rule_set(program_id: str) -> dict[str, Any]:
-    resolved_program_id = resolve_linked_program_id(program_id)
+    resolved_program_id = resolve_rule_program_id(program_id)
     rules_paths = [_resolve_rules_path(), _resolve_gold_rules_path()]
 
     for rules_path in rules_paths:
@@ -541,6 +639,6 @@ def load_program_rule_set(program_id: str) -> dict[str, Any]:
             validated = AdaptiveGoldRuleSet.model_validate(raw)
             payload = validated.model_dump(mode="json")
             if resolved_program_id in payload.get("program_scope", []):
-                return payload
+                return _merge_phase1_scheduler_overlay(payload)
 
     raise FileNotFoundError(f"Program rule set not found: {program_id}")

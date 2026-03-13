@@ -639,7 +639,7 @@ def build_user_training_state(
     recent_review_cycles: list[Any] | None = None,
     prior_plans: list[Any] | None = None,
     today: date | None = None,
-    default_program_id: str = "full_body_v1",
+    default_program_id: str = "pure_bodybuilding_phase_1_full_body",
     default_adherence_score: int = 3,
 ) -> dict[str, Any]:
     resolved_today = today or date.today()

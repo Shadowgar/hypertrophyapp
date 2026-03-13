@@ -1,5 +1,11 @@
 import { API_BASE_URL } from "@/lib/env";
 
+const PROGRAM_NAME_OVERRIDES: Record<string, string> = {
+  pure_bodybuilding_phase_1_full_body: "Pure Bodybuilding - Phase 1 Full Body",
+  full_body_v1: "Pure Bodybuilding - Phase 1 Full Body",
+  adaptive_full_body_gold_v0_1: "Pure Bodybuilding - Phase 1 Full Body",
+};
+
 type ExerciseVideo = {
   youtube_url?: string;
 } | null;
@@ -213,6 +219,10 @@ export type GeneratedWeekPlan = {
 };
 
 export function getProgramDisplayName(program: ProgramTemplateOption): string {
+  const aliasName = PROGRAM_NAME_OVERRIDES[program.id];
+  if (aliasName) {
+    return aliasName;
+  }
   const preferred = program.name?.trim();
   if (preferred) {
     return preferred;

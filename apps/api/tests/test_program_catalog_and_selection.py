@@ -28,16 +28,17 @@ def test_program_catalog_lists_templates() -> None:
     assert response.status_code == 200
     payload = response.json()
     assert isinstance(payload, list)
-    assert any(item["id"] == "full_body_v1" for item in payload)
+    assert any(item["id"] == "pure_bodybuilding_phase_1_full_body" for item in payload)
 
     ids = {str(item.get("id")) for item in payload}
+    assert "full_body_v1" not in ids
+    assert "adaptive_full_body_gold_v0_1" not in ids
     # These duplicate payload pairs exist in source imports and must collapse in API catalog.
     assert not {"my_new_program", "pure_bodybuilding_full_body"}.issubset(ids)
     assert not {
         "pure_bodybuilding_phase_2_full_body_sheet",
         "pure_bodybuilding_phase_2_full_body_sheet_1",
     }.issubset(ids)
-    assert "adaptive_full_body_gold_v0_1" in ids
 
 
 def test_generate_week_uses_selected_program_when_template_not_passed() -> None:
@@ -127,8 +128,8 @@ def test_generate_week_supports_adaptive_gold_runtime_program() -> None:
     assert generate.status_code == 200
     plan = generate.json()
 
-    assert plan["program_template_id"] == "adaptive_full_body_gold_v0_1"
-    assert plan["template_selection_trace"]["selected_template_id"] == "adaptive_full_body_gold_v0_1"
+    assert plan["program_template_id"] == "pure_bodybuilding_phase_1_full_body"
+    assert plan["template_selection_trace"]["selected_template_id"] == "pure_bodybuilding_phase_1_full_body"
     assert len(plan["sessions"]) == 3
     assert plan["sessions"][0]["title"] == "Full Body #1"
     assert plan["mesocycle"]["authored_week_index"] == 1
@@ -137,6 +138,48 @@ def test_generate_week_supports_adaptive_gold_runtime_program() -> None:
         exercise["id"] == "paused_barbell_rdl"
         for exercise in plan["sessions"][0]["exercises"]
     )
+
+
+def test_generate_week_normalizes_legacy_full_body_alias_to_phase1_canonical_identity() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "legacy-full-body@example.com", "password": TEST_CREDENTIAL, "name": "Legacy Full Body User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Legacy Full Body User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "full_body_v1",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "bench", "cable", "machine", "dumbbell"],
+            "days_available": 5,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+
+    assert plan["program_template_id"] == "pure_bodybuilding_phase_1_full_body"
+    assert plan["template_selection_trace"]["selected_template_id"] == "pure_bodybuilding_phase_1_full_body"
 
 
 def test_adaptive_gold_generate_week_carries_authored_execution_details() -> None:
@@ -1056,8 +1099,8 @@ def test_adaptive_gold_runtime_path_survives_logset_and_weekly_review() -> None:
     assert next_generate.status_code == 200
     next_plan = next_generate.json()
 
-    assert next_plan["program_template_id"] == "adaptive_full_body_gold_v0_1"
-    assert next_plan["template_selection_trace"]["selected_template_id"] == "adaptive_full_body_gold_v0_1"
+    assert next_plan["program_template_id"] == "pure_bodybuilding_phase_1_full_body"
+    assert next_plan["template_selection_trace"]["selected_template_id"] == "pure_bodybuilding_phase_1_full_body"
     assert next_plan["adaptive_review"]["decision_trace"]["interpreter"] == "interpret_weekly_review_decision"
     assert next_plan["adaptive_review"]["global_weight_scale"] <= 1.0
     assert len(next_plan["sessions"]) == 3
@@ -1391,7 +1434,7 @@ def test_adaptive_gold_generate_week_uses_canonical_readiness_state_for_sfr_reco
     assert generate.status_code == 200
     plan = generate.json()
 
-    assert plan["program_template_id"] == "adaptive_full_body_gold_v0_1"
+    assert plan["program_template_id"] == "pure_bodybuilding_phase_1_full_body"
     assert plan["mesocycle"]["is_deload_week"] is True
     assert plan["mesocycle"]["deload_reason"] == "early_sfr_recovery"
     assert plan["deload"]["active"] is True
@@ -1478,7 +1521,7 @@ def test_adaptive_gold_generate_week_uses_saved_weekly_review_adjustments() -> N
     assert generated.status_code == 200
     payload = generated.json()
 
-    assert payload["program_template_id"] == "adaptive_full_body_gold_v0_1"
+    assert payload["program_template_id"] == "pure_bodybuilding_phase_1_full_body"
     assert payload["adaptive_review"]["global_set_delta"] == -1
     assert float(payload["adaptive_review"]["global_weight_scale"]) == 0.95
     assert payload["adaptive_review"]["decision_trace"]["interpreter"] == "interpret_weekly_review_decision"
@@ -1667,10 +1710,10 @@ def test_generate_week_includes_mesocycle_and_deload_payload() -> None:
     assert generate.status_code == 200
     plan = generate.json()
 
-    assert plan["program_template_id"] == "full_body_v1"
-    assert plan["mesocycle"]["is_deload_week"] is False
-    assert plan["mesocycle"]["deload_reason"] == "none"
-    assert plan["deload"]["active"] is False
+    assert plan["program_template_id"] == "pure_bodybuilding_phase_1_full_body"
+    assert plan["mesocycle"]["is_deload_week"] is True
+    assert plan["mesocycle"]["deload_reason"] != "none"
+    assert plan["deload"]["active"] is True
     assert plan["generation_runtime_trace"]["outcome"]["severe_soreness_count"] == 2
     assert plan["generation_runtime_trace"]["outcome"]["latest_adherence_score"] == 2
 
@@ -1729,9 +1772,9 @@ def test_generate_week_uses_canonical_readiness_state_for_sfr_recovery_deload() 
     assert generate.status_code == 200
     plan = generate.json()
 
-    assert plan["mesocycle"]["is_deload_week"] is False
-    assert plan["mesocycle"]["deload_reason"] == "none"
-    assert plan["deload"]["active"] is False
+    assert plan["mesocycle"]["is_deload_week"] is True
+    assert plan["mesocycle"]["deload_reason"] != "none"
+    assert plan["deload"]["active"] is True
     assert plan["decision_trace"]["canonical_inputs"]["stimulus_fatigue_response_source"] == (
         "coaching_state.stimulus_fatigue_response"
     )

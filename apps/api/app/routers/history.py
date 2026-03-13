@@ -8,11 +8,23 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..deps import get_current_user
 from ..models import BodyMeasurementEntry, User, WeeklyCheckin, WorkoutPlan, WorkoutSetLog
+from ..program_loader import resolve_administered_program_id
 
 router = APIRouter()
 
 DbSession = Annotated[Session, Depends(get_db)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+_PROGRAM_ID_SCALAR_KEYS = {
+    "program_id",
+    "template_id",
+    "current_program_id",
+    "recommended_program_id",
+}
+_PROGRAM_ID_LIST_KEYS = {
+    "program_ids",
+    "compatible_program_ids",
+}
 
 
 def _monday_of(value: date) -> date:
@@ -23,6 +35,30 @@ def _date_window(start_date: date, end_date: date) -> tuple[datetime, datetime]:
     start_datetime = datetime.combine(start_date, time.min)
     end_datetime = datetime.combine(end_date + timedelta(days=1), time.min)
     return start_datetime, end_datetime
+
+
+def _normalize_program_identity_payload(value: Any, *, key_hint: str | None = None) -> Any:
+    if isinstance(value, dict):
+        normalized: dict[str, Any] = {}
+        for key, item in value.items():
+            if key in _PROGRAM_ID_SCALAR_KEYS and isinstance(item, str):
+                normalized[key] = resolve_administered_program_id(item) or item
+                continue
+            if key in _PROGRAM_ID_LIST_KEYS and isinstance(item, list):
+                collapsed: list[str] = []
+                for candidate in item:
+                    if not isinstance(candidate, str):
+                        continue
+                    resolved = resolve_administered_program_id(candidate) or candidate
+                    if resolved not in collapsed:
+                        collapsed.append(resolved)
+                normalized[key] = collapsed
+                continue
+            normalized[key] = _normalize_program_identity_payload(item, key_hint=key)
+        return normalized
+    if isinstance(value, list):
+        return [_normalize_program_identity_payload(item, key_hint=key_hint) for item in value]
+    return value
 
 
 @router.get("/history/exercise/{exercise_id}")
@@ -122,13 +158,14 @@ def get_history_analytics(
         .all()
     )
 
-    return build_history_analytics(
+    payload = build_history_analytics(
         checkin_rows=checkin_rows,
         log_rows=log_rows,
         measurement_rows=measurement_rows,
         limit_weeks=capped_weeks,
         checkin_limit=capped_checkin_limit,
     )
+    return _normalize_program_identity_payload(payload)
 
 
 @router.get("/history/calendar")
@@ -177,13 +214,14 @@ def get_history_calendar(
         .limit(24)
         .all()
     )
-    return build_history_calendar(
+    payload = build_history_calendar(
         log_rows=rows,
         all_log_rows_until_end=rows_until_end,
         plans=plans,
         start_date=resolved_start,
         end_date=resolved_end,
     )
+    return _normalize_program_identity_payload(payload)
 
 
 @router.get("/history/day/{day}")
@@ -211,4 +249,5 @@ def get_history_day_detail(
         .limit(12)
         .all()
     )
-    return build_history_day_detail(day=day, log_rows=rows, plans=plans)
+    payload = build_history_day_detail(day=day, log_rows=rows, plans=plans)
+    return _normalize_program_identity_payload(payload)

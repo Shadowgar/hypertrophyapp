@@ -40,8 +40,8 @@ test("guides index links programs to /guides/{programId}", async () => {
         new Response(
           JSON.stringify([
             {
-              id: "full_body_v1",
-              name: "Full Body V1",
+              id: "pure_bodybuilding_phase_1_full_body",
+              name: "Pure Bodybuilding - Phase 1 Full Body",
               split: "full_body",
               description: "Deterministic full-body program",
             },
@@ -56,22 +56,22 @@ test("guides index links programs to /guides/{programId}", async () => {
 
   render(<GuidesIndex />);
 
-  const link = await screen.findByRole("link", { name: /Open guide for Full Body V1/i });
-  expect(link).toHaveAttribute("href", "/guides/full_body_v1");
+  const link = await screen.findByRole("link", { name: /Open guide for Pure Bodybuilding - Phase 1 Full Body/i });
+  expect(link).toHaveAttribute("href", "/guides/pure_bodybuilding_phase_1_full_body");
 });
 
 test("program guide resolves params and links to phase route", async () => {
-  mockedParams.value = { programId: "full_body_v1" };
+  mockedParams.value = { programId: "pure_bodybuilding_phase_1_full_body" };
 
   // @ts-ignore
   globalThis.fetch.mockImplementation((input: RequestInfo | URL) => {
     const url = resolveUrl(input);
-    if (url.endsWith("/plan/guides/programs/full_body_v1")) {
+    if (url.endsWith("/plan/guides/programs/pure_bodybuilding_phase_1_full_body")) {
       return Promise.resolve(
         new Response(
           JSON.stringify({
-            id: "full_body_v1",
-            name: "Full Body V1",
+            id: "pure_bodybuilding_phase_1_full_body",
+            name: "Pure Bodybuilding - Phase 1 Full Body",
             split: "full_body",
             description: "Deterministic full-body program",
             days: [
@@ -95,21 +95,21 @@ test("program guide resolves params and links to phase route", async () => {
 
   await waitFor(() => expect(screen.getByText("Main Phase")).toBeInTheDocument());
   const phaseLink = screen.getByRole("link", { name: /Open phase guide/i });
-  expect(phaseLink).toHaveAttribute("href", "/guides/full_body_v1/phase/main");
+  expect(phaseLink).toHaveAttribute("href", "/guides/pure_bodybuilding_phase_1_full_body/phase/main");
 });
 
 test("phase and day guides preserve phase-aware routing to day and exercise pages", async () => {
-  mockedParams.value = { programId: "full_body_v1", phaseId: "main" };
+  mockedParams.value = { programId: "pure_bodybuilding_phase_1_full_body", phaseId: "main" };
 
   // @ts-ignore
   globalThis.fetch.mockImplementation((input: RequestInfo | URL) => {
     const url = resolveUrl(input);
-    if (url.endsWith("/plan/guides/programs/full_body_v1")) {
+    if (url.endsWith("/plan/guides/programs/pure_bodybuilding_phase_1_full_body")) {
       return Promise.resolve(
         new Response(
           JSON.stringify({
-            id: "full_body_v1",
-            name: "Full Body V1",
+            id: "pure_bodybuilding_phase_1_full_body",
+            name: "Pure Bodybuilding - Phase 1 Full Body",
             split: "full_body",
             description: "Deterministic full-body program",
             days: [
@@ -134,25 +134,25 @@ test("phase and day guides preserve phase-aware routing to day and exercise page
   await waitFor(() => expect(screen.getByText(/Day 1: Day 1/i)).toBeInTheDocument());
   expect(screen.getByRole("link", { name: /Open day guide/i })).toHaveAttribute(
     "href",
-    "/guides/full_body_v1/phase/main/day/1",
+    "/guides/pure_bodybuilding_phase_1_full_body/phase/main/day/1",
   );
   expect(screen.getByRole("link", { name: /Open first exercise/i })).toHaveAttribute(
     "href",
-    "/guides/full_body_v1/exercise/bench_press",
+    "/guides/pure_bodybuilding_phase_1_full_body/exercise/bench_press",
   );
 
   unmount();
 
-  mockedParams.value = { programId: "full_body_v1", phaseId: "main", dayIndex: "1" };
+  mockedParams.value = { programId: "pure_bodybuilding_phase_1_full_body", phaseId: "main", dayIndex: "1" };
 
   // @ts-ignore
   globalThis.fetch.mockImplementation((input: RequestInfo | URL) => {
     const url = resolveUrl(input);
-    if (url.endsWith("/plan/guides/programs/full_body_v1/days/1")) {
+    if (url.endsWith("/plan/guides/programs/pure_bodybuilding_phase_1_full_body/days/1")) {
       return Promise.resolve(
         new Response(
           JSON.stringify({
-            program_id: "full_body_v1",
+            program_id: "pure_bodybuilding_phase_1_full_body",
             day_index: 1,
             day_name: "Day 1",
             exercises: [
@@ -178,6 +178,6 @@ test("phase and day guides preserve phase-aware routing to day and exercise page
   expect(screen.getByText(/Main Phase/i)).toBeInTheDocument();
   expect(screen.getByRole("link", { name: /Open exercise guide/i })).toHaveAttribute(
     "href",
-    "/guides/full_body_v1/exercise/bench_press",
+    "/guides/pure_bodybuilding_phase_1_full_body/exercise/bench_press",
   );
 });

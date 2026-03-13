@@ -42,7 +42,8 @@ Current branch reality:
 - the workbook-faithful Phase 1 onboarding package now exists as a rich authoritative artifact
 - runtime/API week-generation and today-session paths now carry the authored slot fields through
 - week/today UI now shows those authored execution details directly
-- the next product seam after that is program-specific temporary 5-days-to-3-days adaptation for this same path
+- the live administered full-body identity is now unified on `pure_bodybuilding_phase_1_full_body` with legacy aliases handled for compatibility
+- the next product seam after identity unification is end-to-end dogfooding of this administered Phase 1 path
 
 Current product order for active implementation is:
 1. workbook-faithful Pure Bodybuilding Phase 1 package
@@ -59,8 +60,8 @@ Current execution order:
 1. maintain the workbook-faithful Pure Bodybuilding Phase 1 package
 2. keep authored slot fields carried through runtime/API without flattening
 3. keep week/today rendering authored execution detail directly
-4. finish program-specific temporary frequency adaptation for the Phase 1 full-body path
-5. align the live administered full-body runtime identity so it is no longer split across legacy aliases and the real Phase 1 package/runtime
+4. keep `pure_bodybuilding_phase_1_full_body` as the single administered identity, with `full_body_v1` and `adaptive_full_body_gold_v0_1` as compatibility aliases only
+5. dogfood the full administered Phase 1 path end-to-end on desktop/mobile browser
 6. only then resume broader `intelligence.py`, coaching-state, and SFR cleanup where it directly helps the active product path
 
 ## Ordered Execution Plan (Do In Order)
@@ -187,7 +188,7 @@ Reference:
 	- generate-week now proves week-6 authored deload plus later intensification-week selection on the gold runtime path.
 	- post-week-10 behavior is now explicit: generated-week holds the final authored week as the deterministic fallback while surfacing `authored_sequence_complete` and `phase_transition_pending` in `mesocycle`.
 	- that same post-week-10 signal now propagates through canonical training state and downstream coaching layers: coach-preview can explicitly tell the user the authored mesocycle is complete and recommend rotating programs, and program recommendation now treats authored-sequence completion as a first-class rotation trigger instead of a hidden scheduler-only flag.
-	- the next fidelity step after visible Phase 1 runtime delivery is program-specific temporary frequency adaptation, followed by reconciling the live administered identity across the onboarding/runtime artifacts before broader user testing or wider library migration.
+	- the next fidelity step after identity unification is end-to-end dogfooding of the canonical administered Phase 1 path before broader user testing or wider library migration.
 - Onboarding testing reliability improvements:
 	- `POST /auth/dev/wipe-user` (dev-only by config) supports wipe-by-email reset when register/login is blocked by stale test accounts.
 	- Onboarding screen now includes explicit `Wipe Test User By Email` and `Wipe Current Logged-In User Data` controls.

@@ -26,14 +26,13 @@ Current branch reality is:
 - the [Pure Bodybuilding Phase 1 onboarding package](/home/rocco/hypertrophyapp/programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json) is now workbook-faithful and structurally rich
 - generated-week and today runtime exercises now carry the authored Phase 1 slot fields through the loader/API boundary
 - week/today surfaces now render those authored execution details directly
-- the next bounded product seam is program-specific temporary frequency adaptation for this same Phase 1 path
-- live program-identity cleanup remains downstream of that adaptation seam so the administered full-body path is no longer split across legacy aliases
+- the live administered full-body identity is now unified to `pure_bodybuilding_phase_1_full_body` with compatibility aliases resolving safely
+- the next bounded product seam is end-to-end dogfooding of this real Phase 1 administered path before wider cleanup
 
 Current product order for active implementation is:
-1. workbook-faithful Pure Bodybuilding Phase 1 package
-2. runtime/API carry-through of authored fields
-3. visible week/today authored execution detail
-4. only then program-specific temporary frequency adaptation
+1. keep `pure_bodybuilding_phase_1_full_body` as the single administered Phase 1 identity (aliases compatibility-only)
+2. dogfood the canonical Phase 1 path end-to-end (onboarding -> generate-week -> today -> log-set -> checkin/review -> history)
+3. only then broaden cleanup/generalization work beyond the active program path
 
 Secondary architectural risks still matter, but they are no longer the primary product bottleneck:
 - authority ambiguity and historical wrapper drift in [intelligence.py](/home/rocco/hypertrophyapp/packages/core-engine/core_engine/intelligence.py)
@@ -86,7 +85,6 @@ The current cleanup contract is:
 
 After the current seams-0-to-3 one-program-first wave:
 
-1. implement program-specific temporary frequency adaptation for Pure Bodybuilding Phase 1 Full Body
-2. finish aligning the live full-body program identity so the administered product path is not split across `full_body_v1`, `adaptive_full_body_gold_v0_1`, and the real Phase 1 onboarding package ID
-3. validate the Phase 1 path end to end on desktop/mobile browser dogfooding with the authored workout details and adaptation traces visible on the active runtime path
-4. only then keep shrinking remaining mixed-owner seams in `intelligence.py` and broadening SFR/coaching-state consumption where those changes directly support active product behavior
+1. dogfood the Phase 1 administered path end to end on desktop/mobile browser with authored workout details and decision traces visible
+2. fix any branch-truth drift found during dogfooding on the canonical `pure_bodybuilding_phase_1_full_body` path
+3. only then keep shrinking remaining mixed-owner seams in `intelligence.py` and broaden SFR/coaching-state consumption where those changes directly support active product behavior

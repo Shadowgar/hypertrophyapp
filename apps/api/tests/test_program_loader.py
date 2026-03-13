@@ -39,7 +39,7 @@ def test_load_program_template_supports_adaptive_gold_runtime_template() -> None
     day_5 = session_by_name["Arms & Weak Points"]["exercises"]
     week_two_day_a = authored_weeks[1]["sessions"][0]["exercises"]
 
-    assert template["id"] == "adaptive_full_body_gold_v0_1"
+    assert template["id"] == "pure_bodybuilding_phase_1_full_body"
     assert template["split"] == "full_body"
     assert template["days_supported"] == [2, 3, 4, 5]
     assert len(sessions) == 5
@@ -290,24 +290,24 @@ def test_phase1_manual_grounding_survives_runtime_without_fallback_substitution_
     )
 
 
-def test_load_program_rule_set_supports_adaptive_gold_runtime_program() -> None:
+def test_load_program_rule_set_normalizes_adaptive_gold_alias_to_phase1_canonical_rules() -> None:
     rule_set = load_program_rule_set("adaptive_full_body_gold_v0_1")
 
-    assert rule_set["rule_set_id"] == "adaptive_full_body_gold_v0_1_rules"
-    assert "adaptive_full_body_gold_v0_1" in rule_set["program_scope"]
+    assert rule_set["rule_set_id"] == "pure_bodybuilding_phase_1_full_body_rules"
+    assert "pure_bodybuilding_phase_1_full_body" in rule_set["program_scope"]
     assert rule_set["deload_rules"]["scheduled_every_n_weeks"] == 6
-    assert rule_set["generated_week_scheduler_rules"]["mesocycle"]["adherence_deload_trigger"]["maximum_score"] == 2
-    assert rule_set["generated_week_scheduler_rules"]["exercise_adjustment"]["policies"][0]["policy_id"] == (
-        "high_fatigue_reduce_load_and_sets"
-    )
-    assert rule_set["generated_week_scheduler_rules"]["session_selection"]["missed_day_policy"] == (
-        "roll-forward-priority-lifts"
-    )
-    assert rule_set["generated_week_scheduler_rules"]["muscle_coverage"]["minimum_sets_per_muscle"] == 2
-    assert (
-        rule_set["generated_week_scheduler_rules"]["muscle_coverage"]["authored_label_normalization"]["lats"]
-        == "back"
-    )
+    assert rule_set["substitution_rules"]["equipment_mismatch"] == "use_authored_substitution_columns"
+    assert rule_set["starting_load_rules"]["method"] == "rep_range_rir_start"
+
+
+def test_load_program_template_normalizes_phase1_aliases_to_canonical_identity() -> None:
+    from_legacy_v1 = load_program_template("full_body_v1")
+    from_legacy_gold = load_program_template("adaptive_full_body_gold_v0_1")
+    from_canonical = load_program_template("pure_bodybuilding_phase_1_full_body")
+
+    assert from_legacy_v1["id"] == "pure_bodybuilding_phase_1_full_body"
+    assert from_legacy_gold["id"] == "pure_bodybuilding_phase_1_full_body"
+    assert from_canonical["id"] == "pure_bodybuilding_phase_1_full_body"
 
 
 @pytest.mark.parametrize(

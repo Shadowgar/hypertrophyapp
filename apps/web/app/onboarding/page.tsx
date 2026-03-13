@@ -10,11 +10,11 @@ import { API_BASE_URL } from "@/lib/env";
 
 const FALLBACK_PROGRAMS: ProgramTemplateOption[] = [
   {
-    id: "full_body_v1",
-    name: "Full Body v1",
+    id: "pure_bodybuilding_phase_1_full_body",
+    name: "Pure Bodybuilding - Phase 1 Full Body",
     split: "full_body",
     days_supported: [2, 3, 4, 5],
-    description: "Deterministic full body template for adaptive weekly scheduling.",
+    description: "Workbook-faithful full body path with authored execution detail.",
   },
   {
     id: "ppl_v1",

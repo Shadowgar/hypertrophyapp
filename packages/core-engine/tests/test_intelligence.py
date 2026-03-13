@@ -562,7 +562,7 @@ def test_prepare_profile_program_recommendation_inputs_applies_router_fallbacks(
         split_preference=None,
         latest_plan=None,
     )
-    assert runtime["current_program_id"] == "full_body_v1"
+    assert runtime["current_program_id"] == "pure_bodybuilding_phase_1_full_body"
     assert runtime["days_available"] == 2
     assert runtime["split_preference"] == "full_body"
     assert runtime["latest_plan_payload"] == {}
@@ -874,7 +874,7 @@ def test_build_profile_upsert_persistence_payload_defaults_selected_program() ->
         movement_restrictions=["deep_knee_flexion"],
         near_failure_tolerance="moderate",
     )
-    assert payload["selected_program_id"] == "full_body_v1"
+    assert payload["selected_program_id"] == "pure_bodybuilding_phase_1_full_body"
     assert payload["onboarding_answers"] == {"primary_goal": "build_muscle"}
     assert payload["session_time_budget_minutes"] == 75
     assert payload["movement_restrictions"] == ["deep_knee_flexion"]
@@ -905,7 +905,7 @@ def test_build_profile_response_payload_applies_profile_defaults() -> None:
         near_failure_tolerance=None,
     )
     assert payload["email"] == "coach@example.com"
-    assert payload["selected_program_id"] == "full_body_v1"
+    assert payload["selected_program_id"] == "pure_bodybuilding_phase_1_full_body"
     assert payload["days_available"] == 2
     assert payload["nutrition_phase"] == "maintenance"
     assert payload["equipment_profile"] == []

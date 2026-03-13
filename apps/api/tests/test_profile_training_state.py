@@ -156,7 +156,7 @@ def test_profile_training_state_returns_canonical_runtime_payload() -> None:
     assert response.status_code == 200
 
     payload = response.json()
-    assert payload["user_program_state"]["program_id"] == "full_body_v1"
+    assert payload["user_program_state"]["program_id"] == "pure_bodybuilding_phase_1_full_body"
     assert payload["user_program_state"]["phase_id"] == "accumulation"
     assert payload["user_program_state"]["week_index"] == 3
     assert payload["user_program_state"]["session_id"] == "full_body_v1-session-today"
@@ -215,7 +215,7 @@ def test_profile_training_state_returns_canonical_runtime_payload() -> None:
     }
     assert payload["coaching_state"]["stimulus_fatigue_response"] == payload["stimulus_fatigue_response"]
     assert payload["generation_state"] == {
-        "prior_generated_weeks_by_program": {"full_body_v1": 1},
+        "prior_generated_weeks_by_program": {"pure_bodybuilding_phase_1_full_body": 1},
         "under_target_muscles": ["biceps", "rear_delts"],
         "mesocycle_trigger_weeks_effective": 5,
         "latest_mesocycle": {

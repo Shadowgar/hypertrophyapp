@@ -7,26 +7,27 @@ Last updated: 2026-03-13
 - `programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json` is now the real workbook-faithful Phase 1 package on this branch: authored slot fields, notes, warm-up protocol, weak-points table, week/block labels, banners, and workbook-backed video links are explicit.
 - Generated-week and today runtime exercises now carry the authored Phase 1 slot fields through the loader/API boundary instead of flattening them away.
 - Week and today surfaces now show authored execution detail directly: early-set RPE, last-set RPE, last-set intensity technique, rest, authored substitutions, demo link, and tracking loads when present.
-- Program-specific temporary 5-days-to-3-days adaptation for Pure Bodybuilding Phase 1 Full Body is still the next unfinished product seam, not completed work on this branch.
+- Live administered identity for the first real program is now unified on `pure_bodybuilding_phase_1_full_body`; `full_body_v1` and `adaptive_full_body_gold_v0_1` now resolve as compatibility aliases on active API/web paths.
 - `intelligence.py` remains compatibility forwarding only. It is not a valid place to add new coaching meaning.
 
 Current product order for active implementation is:
 1. workbook-faithful Pure Bodybuilding Phase 1 package
 2. runtime/API carry-through of authored fields
 3. visible week/today authored execution detail
-4. only then program-specific temporary frequency adaptation
+4. unified administered identity on `pure_bodybuilding_phase_1_full_body`
+5. end-to-end dogfooding on the real Phase 1 administered path before broader cleanup/generalization
 
 ## Latest Completed Slice
 
-- Re-centered the active rail around the actual administered-product order on the current branch.
-- Confirmed that seams 1-3 are already live: the workbook-faithful Phase 1 onboarding package exists, runtime/API carry-through is live, and week/today surfaces render authored execution detail directly.
-- Demoted architecture/SFR-first cleanup language from primary-goal status so the rail matches the real user-facing bottleneck.
+- Completed live administered identity unification for the first real program path:
+  - canonical public/administered ID is now `pure_bodybuilding_phase_1_full_body`
+  - legacy IDs `full_body_v1` and `adaptive_full_body_gold_v0_1` are compatibility aliases on active API/web routes
+  - catalog, guides, profile/training-state/history payload normalization, and generation/coach-preview selection now resolve to the canonical identity
 
 ## Next Recommended Action
 
-- Implement program-specific temporary 5-days-to-3-days adaptation for Pure Bodybuilding Phase 1 Full Body.
-- Preserve full-body intent, weak-point intent, progression continuity, and authored exercise/doctrine meaning where possible.
-- Emit explicit trace explaining what was preserved, merged, deferred, or rotated before moving on to live program-identity cleanup.
+- Dogfood the canonical administered Phase 1 path end-to-end (`onboarding -> generate-week -> today/log-set -> checkin/review -> history`) and fix any branch-truth drift found on that path.
+- Keep broader architecture/generalization work downstream of dogfooding findings unless directly blocking the active administered path.
 
 ## Closed Work Do Not Reopen Without Evidence
 
