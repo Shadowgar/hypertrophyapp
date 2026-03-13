@@ -523,7 +523,7 @@ def recommend_specialization_adjustments(
     normalized_lagging = {
         muscle.strip().lower()
         for muscle in lagging_muscles
-        if muscle and muscle.strip().lower() in weekly_volume_by_muscle
+        if muscle and muscle.strip()
     }
     ranked_focus = sorted(
         normalized_lagging,
@@ -661,7 +661,7 @@ def _coach_preview_effective_readiness_score(
         sleep_quality=int(sleep_quality) if sleep_quality is not None else None,
         stress_level=int(stress_level) if stress_level is not None else None,
         pain_flags=pain_flags,
-    ), ("context_coaching_state" if readiness_state else "request_metrics_only")
+    ), ("context_readiness_state" if readiness_state else "request_metrics_only")
 
 
 def _coach_preview_progression_payload(

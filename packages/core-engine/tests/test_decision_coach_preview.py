@@ -434,7 +434,7 @@ def test_recommend_coach_intelligence_preview_uses_provided_readiness_score() ->
     assert readiness_step["result"]["value"] == 61
 
 
-def test_recommend_coach_intelligence_preview_prefers_context_coaching_state_when_score_not_provided() -> None:
+def test_recommend_coach_intelligence_preview_prefers_context_readiness_state_when_score_not_provided() -> None:
     captured: dict[str, object] = {}
 
     def _derive_readiness_score(**kwargs: object) -> int:
@@ -510,11 +510,27 @@ def test_recommend_coach_intelligence_preview_prefers_context_coaching_state_whe
     assert captured["stress_level"] == 4
     assert captured["pain_flags"] == ["elbow_flexion"]
     assert readiness_step["result"]["provided"] is False
-    assert readiness_step["result"]["source"] == "context_coaching_state"
+    assert readiness_step["result"]["source"] == "context_readiness_state"
     assert readiness_step["result"]["value"] == 50
     assert coaching_state_step["result"]["readiness_source"] == "coaching_state.readiness"
     assert coaching_state_step["result"]["stall_source"] == "coaching_state.stall"
     assert coaching_state_step["result"]["stagnation_weeks"] == 2
+
+
+def test_recommend_specialization_adjustments_preserves_requested_lagging_muscles_when_volume_absent() -> None:
+    adjustments = recommend_specialization_adjustments(
+        weekly_volume_by_muscle={
+            "chest": 12,
+            "back": 13,
+            "quads": 11,
+        },
+        lagging_muscles=["biceps", "shoulders"],
+        max_focus_muscles=2,
+        target_min_sets=8,
+    )
+
+    assert adjustments["focus_muscles"] == ["biceps", "shoulders"]
+    assert adjustments["focus_adjustments"] == {"biceps": 2, "shoulders": 2}
 
 
 def test_recommend_coach_intelligence_preview_traces_canonical_sfr_context_without_overwriting_progression_snapshot() -> None:
