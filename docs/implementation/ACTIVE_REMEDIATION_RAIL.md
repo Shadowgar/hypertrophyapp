@@ -21,7 +21,7 @@ Current product order for active implementation is:
 
 - Completed canonical-path hardening and branch-truth cleanup for the administered Phase 1 flow:
   - active API/web runtime path remains canonical on `pure_bodybuilding_phase_1_full_body` across onboarding, generated week, today/log-set, check-in/review, and history surfaces
-  - user-facing web tests/fixtures/snapshots now use `pure_bodybuilding_phase_1_full_body` as the default administered path
+  - path-facing API/web tests, fixtures, and snapshots now use `pure_bodybuilding_phase_1_full_body` as the default administered path
   - legacy IDs remain only in explicit compatibility handling/tests, not as primary user-path fixtures
 
 ## Next Recommended Action

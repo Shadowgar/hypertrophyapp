@@ -37,7 +37,7 @@ def _register_and_profile(client: TestClient) -> dict[str, str]:
             "weight": 82,
             "gender": "male",
             "split_preference": "full_body",
-            "selected_program_id": "full_body_v1",
+            "selected_program_id": "pure_bodybuilding_phase_1_full_body",
             "training_location": "home",
             "equipment_profile": ["dumbbell", "bench", "barbell"],
             "weak_areas": ["chest", "hamstrings"],
@@ -153,7 +153,7 @@ def test_frequency_adaptation_apply_persists_state_for_runtime_generation() -> N
         "/plan/adaptation/apply",
         headers=headers,
         json={
-            "program_id": "full_body_v1",
+            "program_id": "pure_bodybuilding_phase_1_full_body",
             "target_days": 3,
             "duration_weeks": 2,
             "weak_areas": ["chest"],
@@ -188,7 +188,7 @@ def test_frequency_adaptation_apply_completes_after_duration_weeks() -> None:
         "/plan/adaptation/apply",
         headers=headers,
         json={
-            "program_id": "full_body_v1",
+            "program_id": "pure_bodybuilding_phase_1_full_body",
             "target_days": 2,
             "duration_weeks": 1,
         },

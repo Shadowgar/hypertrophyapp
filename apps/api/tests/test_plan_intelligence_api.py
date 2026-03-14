@@ -37,7 +37,7 @@ def _register_and_onboard(client: TestClient) -> dict[str, str]:
             "weight": 84,
             "gender": "male",
             "split_preference": "full_body",
-            "selected_program_id": "full_body_v1",
+            "selected_program_id": "pure_bodybuilding_phase_1_full_body",
             "training_location": "gym",
             "equipment_profile": ["barbell", "dumbbell", "bench", "machine", "cable"],
             "days_available": 5,
@@ -54,7 +54,7 @@ def _register_and_onboard(client: TestClient) -> dict[str, str]:
 
 def _create_preview_and_recommendation_id(client: TestClient, headers: dict[str, str]) -> str:
     preview_payload = {
-        "template_id": "full_body_v1",
+        "template_id": "pure_bodybuilding_phase_1_full_body",
         "from_days": 5,
         "to_days": 3,
         "completion_pct": 96,
@@ -81,7 +81,7 @@ def test_coach_preview_returns_deterministic_intelligence_payload() -> None:
     headers = _register_and_onboard(client)
 
     request_payload = {
-        "template_id": "full_body_v1",
+        "template_id": "pure_bodybuilding_phase_1_full_body",
         "from_days": 5,
         "to_days": 3,
         "completion_pct": 96,
@@ -147,7 +147,7 @@ def test_coach_preview_uses_canonical_rules_for_underperformance_without_high_fa
         "/plan/intelligence/coach-preview",
         headers=headers,
         json={
-            "template_id": "full_body_v1",
+            "template_id": "pure_bodybuilding_phase_1_full_body",
             "from_days": 5,
             "to_days": 3,
             "completion_pct": 90,
@@ -201,7 +201,7 @@ def test_coach_preview_uses_canonical_readiness_state_when_request_score_omitted
         "/plan/intelligence/coach-preview",
         headers=headers,
         json={
-            "template_id": "full_body_v1",
+            "template_id": "pure_bodybuilding_phase_1_full_body",
             "from_days": 5,
             "to_days": 3,
             "completion_pct": 95,
@@ -405,7 +405,7 @@ def test_recommendation_timeline_humanizes_legacy_reason_codes_without_stored_ra
 
         legacy = CoachingRecommendation(
             user_id=resolved_user_id,
-            template_id="full_body_v1",
+            template_id="pure_bodybuilding_phase_1_full_body",
             recommendation_type="coach_preview",
             current_phase="accumulation",
             recommended_phase="accumulation",

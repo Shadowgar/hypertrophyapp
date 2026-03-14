@@ -34,7 +34,7 @@ def test_profile_dev_wipe_removes_current_user_and_data() -> None:
             "weight": 82,
             "gender": "male",
             "split_preference": "full_body",
-            "selected_program_id": "full_body_v1",
+            "selected_program_id": "pure_bodybuilding_phase_1_full_body",
             "training_location": "home",
             "equipment_profile": ["dumbbell"],
             "days_available": 3,

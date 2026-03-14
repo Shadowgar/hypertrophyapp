@@ -37,7 +37,7 @@ def _register_and_onboard(client: TestClient) -> tuple[dict[str, str], str]:
             "weight": 82,
             "gender": "male",
             "split_preference": "full_body",
-            "selected_program_id": "full_body_v1",
+            "selected_program_id": "pure_bodybuilding_phase_1_full_body",
             "training_location": "gym",
             "equipment_profile": ["barbell", "dumbbell", "bench", "rack"],
             "days_available": 3,
@@ -73,14 +73,14 @@ def test_profile_training_state_returns_canonical_runtime_payload() -> None:
                 split="full_body",
                 phase="accumulation",
                 payload={
-                    "program_template_id": "full_body_v1",
+                    "program_template_id": "pure_bodybuilding_phase_1_full_body",
                     "phase": "accumulation",
                     "week_start": current_week_start.isoformat(),
                     "mesocycle": {"week_index": 3, "trigger_weeks_effective": 5},
                     "muscle_coverage": {"under_target_muscles": ["biceps", "rear_delts"]},
                     "sessions": [
                         {
-                            "session_id": "full_body_v1-session-today",
+                            "session_id": "pure_bodybuilding_phase_1_full_body-session-today",
                             "title": "Today Session",
                             "date": today_iso,
                             "exercises": [{"id": "bench_press_barbell", "sets": 3}],
@@ -90,11 +90,11 @@ def test_profile_training_state_returns_canonical_runtime_payload() -> None:
             )
         )
         session.add(
-            WorkoutSetLog(
-                user_id=user.id,
-                workout_id="full_body_v1-session-today",
-                primary_exercise_id="bench_press_barbell",
-                exercise_id="bench_press_barbell",
+                WorkoutSetLog(
+                    user_id=user.id,
+                    workout_id="pure_bodybuilding_phase_1_full_body-session-today",
+                    primary_exercise_id="bench_press_barbell",
+                    exercise_id="bench_press_barbell",
                 set_index=1,
                 reps=8,
                 weight=100.0,
@@ -159,7 +159,7 @@ def test_profile_training_state_returns_canonical_runtime_payload() -> None:
     assert payload["user_program_state"]["program_id"] == "pure_bodybuilding_phase_1_full_body"
     assert payload["user_program_state"]["phase_id"] == "accumulation"
     assert payload["user_program_state"]["week_index"] == 3
-    assert payload["user_program_state"]["session_id"] == "full_body_v1-session-today"
+    assert payload["user_program_state"]["session_id"] == "pure_bodybuilding_phase_1_full_body-session-today"
     assert payload["user_program_state"]["last_generated_week_start"] == current_week_start.isoformat()
     assert payload["exercise_performance_history"][0]["exercise_id"] == "bench_press_barbell"
     assert payload["progression_state_per_exercise"][0] == {

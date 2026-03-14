@@ -27,7 +27,7 @@ Current branch reality is:
 - generated-week and today runtime exercises now carry the authored Phase 1 slot fields through the loader/API boundary
 - week/today surfaces now render those authored execution details directly
 - the live administered full-body identity is now unified to `pure_bodybuilding_phase_1_full_body` with compatibility aliases resolving safely
-- user-facing web fixtures/snapshots on the active path now default to `pure_bodybuilding_phase_1_full_body` instead of legacy IDs
+- API and web path-facing fixtures/snapshots now default to `pure_bodybuilding_phase_1_full_body` instead of legacy IDs
 - the next bounded product seam is end-to-end dogfooding of this real Phase 1 administered path before wider cleanup
 
 Current product order for active implementation is:

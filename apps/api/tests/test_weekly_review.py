@@ -48,7 +48,7 @@ def _register_and_onboard(client: TestClient) -> dict[str, str]:
             "weight": 82,
             "gender": "male",
             "split_preference": "full_body",
-            "selected_program_id": "full_body_v1",
+            "selected_program_id": "pure_bodybuilding_phase_1_full_body",
             "training_location": "home",
             "equipment_profile": ["dumbbell", "bodyweight"],
             "days_available": 3,
@@ -66,10 +66,10 @@ def _register_and_onboard(client: TestClient) -> dict[str, str]:
 def _seed_previous_week_plan_and_logs_for_faults(user_email: str) -> None:
     previous_monday = _review_week_start() - timedelta(days=7)
     payload = {
-        "program_template_id": "full_body_v1",
+        "program_template_id": "pure_bodybuilding_phase_1_full_body",
         "sessions": [
             {
-                "session_id": "full_body_v1-day1",
+                "session_id": "pure_bodybuilding_phase_1_full_body-day1",
                 "session_label": "Day 1",
                 "exercises": [
                     {

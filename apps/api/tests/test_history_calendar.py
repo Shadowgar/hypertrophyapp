@@ -65,7 +65,7 @@ def test_history_calendar_and_day_detail() -> None:
                                 ],
                             },
                         ],
-                        "program_template_id": "full_body_v1",
+                        "program_template_id": "pure_bodybuilding_phase_1_full_body",
                     },
                 ),
                 WorkoutSetLog(

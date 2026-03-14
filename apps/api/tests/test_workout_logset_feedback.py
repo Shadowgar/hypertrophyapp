@@ -32,7 +32,7 @@ def _onboard_profile(
     token: str,
     *,
     split_preference: str = "full_body",
-    selected_program_id: str = "full_body_v1",
+    selected_program_id: str = "pure_bodybuilding_phase_1_full_body",
     days_available: int = 3,
 ) -> None:
     response = client.post(

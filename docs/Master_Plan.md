@@ -182,7 +182,7 @@ Reference:
 	- the runtime loader/API path now carries those authored execution fields into generated-week and today workout exercises.
 	- week/today surfaces now show early-set RPE, last-set RPE, last-set intensity technique, rest, authored substitutions, and demo links directly from the authoritative package/runtime data.
 - Canonical administered-path hardening now includes user-facing fixture/snapshot truth:
-	- web path tests now default to `pure_bodybuilding_phase_1_full_body` as the primary administered identity.
+	- API and web path-facing tests now default to `pure_bodybuilding_phase_1_full_body` as the primary administered identity.
 	- legacy IDs remain in explicit compatibility coverage only.
 - The adaptive gold sample is now a real authored mesocycle instead of a short proof stub:
 	- `programs/gold/adaptive_full_body_gold_v0_1.json` now follows a 10-week authored sequence aligned to the onboarding package cadence: `build_a / build_b / build_a / build_b / build_a / deload / intens_a / intens_b / intens_a / intens_b`.
