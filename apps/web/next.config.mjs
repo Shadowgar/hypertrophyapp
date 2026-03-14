@@ -1,10 +1,3 @@
-import withPWAInit from "next-pwa";
-
-const withPWA = withPWAInit({
-  dest: "public",
-  disable: true,
-});
-
 const serverApiBaseUrl =
   process.env.SERVER_API_BASE_URL || process.env.NEXT_SERVER_API_BASE_URL || "http://localhost:8000";
 
@@ -20,4 +13,4 @@ const nextConfig = {
   },
 };
 
-export default withPWA(nextConfig);
+export default nextConfig;
