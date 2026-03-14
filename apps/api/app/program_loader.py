@@ -10,7 +10,9 @@ from .adaptive_schema import AdaptiveGoldProgramTemplate, AdaptiveGoldRuleSet, P
 from .template_schema import CanonicalProgramTemplate
 
 PHASE1_CANONICAL_PROGRAM_ID = "pure_bodybuilding_phase_1_full_body"
-PHASE1_RUNTIME_TEMPLATE_SOURCE_ID = "adaptive_full_body_gold_v0_1"
+PHASE1_CANONICAL_RUNTIME_TEMPLATE_ID = PHASE1_CANONICAL_PROGRAM_ID
+PHASE1_LEGACY_RUNTIME_TEMPLATE_ID = "adaptive_full_body_gold_v0_1"
+PHASE1_LEGACY_RULE_OVERLAY_SOURCE_ID = PHASE1_LEGACY_RUNTIME_TEMPLATE_ID
 PHASE1_COMPATIBILITY_ALIASES: set[str] = {
     "full_body_v1",
     "adaptive_full_body_gold_v0_1",
@@ -23,9 +25,13 @@ ADMINISTERED_PROGRAM_ID_ALIASES: dict[str, str] = {
 }
 
 RUNTIME_TEMPLATE_SOURCE_IDS: dict[str, str] = {
-    "full_body_v1": PHASE1_RUNTIME_TEMPLATE_SOURCE_ID,
-    "adaptive_full_body_gold_v0_1": PHASE1_RUNTIME_TEMPLATE_SOURCE_ID,
-    PHASE1_CANONICAL_PROGRAM_ID: PHASE1_RUNTIME_TEMPLATE_SOURCE_ID,
+    "full_body_v1": PHASE1_CANONICAL_RUNTIME_TEMPLATE_ID,
+    "adaptive_full_body_gold_v0_1": PHASE1_CANONICAL_RUNTIME_TEMPLATE_ID,
+    PHASE1_CANONICAL_PROGRAM_ID: PHASE1_CANONICAL_RUNTIME_TEMPLATE_ID,
+}
+
+RUNTIME_TEMPLATE_SOURCE_FALLBACK_IDS: dict[str, str] = {
+    PHASE1_CANONICAL_RUNTIME_TEMPLATE_ID: PHASE1_LEGACY_RUNTIME_TEMPLATE_ID,
 }
 
 ONBOARDING_SOURCE_IDS: dict[str, str] = {
@@ -85,7 +91,7 @@ PROGRAM_NAMES: dict[str, str] = {
 }
 
 LINKED_PROGRAM_IDS: dict[str, str] = {
-    "adaptive_full_body_gold_v0_1": "adaptive_full_body_gold_v0_1",
+    "adaptive_full_body_gold_v0_1": "pure_bodybuilding_phase_1_full_body",
     "full_body_v1": "pure_bodybuilding_phase_1_full_body",
     "ppl_v1": "pure_bodybuilding_phase_2_ppl_sheet",
     "upper_lower_v1": "pure_bodybuilding_phase_2_upper_lower_sheet",
@@ -147,6 +153,21 @@ def resolve_runtime_template_id(template_id: str) -> str:
     if not normalized:
         return normalized
     return RUNTIME_TEMPLATE_SOURCE_IDS.get(normalized, normalized)
+
+
+def _resolve_runtime_template_source_candidates(template_id: str) -> list[str]:
+    normalized = str(template_id).strip()
+    canonical_source_id = resolve_runtime_template_id(normalized)
+    candidates: list[str] = [canonical_source_id]
+
+    fallback_source_id = RUNTIME_TEMPLATE_SOURCE_FALLBACK_IDS.get(canonical_source_id)
+    if fallback_source_id and fallback_source_id not in candidates:
+        candidates.append(fallback_source_id)
+
+    if normalized and normalized not in candidates:
+        candidates.append(normalized)
+
+    return candidates
 
 
 def resolve_onboarding_program_id(program_id: str) -> str:
@@ -533,25 +554,25 @@ def list_program_templates() -> list[dict]:
 
 
 def load_program_template(template_id: str) -> dict:
-    source_template_id = resolve_runtime_template_id(template_id)
     canonical_template_id = resolve_administered_program_id(template_id)
 
-    for candidate in _iter_runtime_template_files():
-        if _normalized_stem(candidate) != source_template_id:
-            continue
+    for source_template_id in _resolve_runtime_template_source_candidates(template_id):
+        for candidate in _iter_runtime_template_files():
+            if _normalized_stem(candidate) != source_template_id:
+                continue
 
-        raw = json.loads(candidate.read_text(encoding="utf-8"))
-        if "program_id" in raw and "phases" in raw:
-            payload = _adaptive_gold_to_runtime_template(raw)
-        else:
-            validated = CanonicalProgramTemplate.model_validate(raw)
-            payload = validated.model_dump()
-        if str(payload.get("id") or "") != source_template_id:
-            continue
-        if canonical_template_id and canonical_template_id != payload.get("id"):
-            payload = dict(payload)
-            payload["id"] = canonical_template_id
-        return payload
+            raw = json.loads(candidate.read_text(encoding="utf-8"))
+            if "program_id" in raw and "phases" in raw:
+                payload = _adaptive_gold_to_runtime_template(raw)
+            else:
+                validated = CanonicalProgramTemplate.model_validate(raw)
+                payload = validated.model_dump()
+            if str(payload.get("id") or "") != source_template_id:
+                continue
+            if canonical_template_id and canonical_template_id != payload.get("id"):
+                payload = dict(payload)
+                payload["id"] = canonical_template_id
+            return payload
 
     raise FileNotFoundError(f"Program template not found: {template_id}")
 
@@ -602,7 +623,7 @@ def _merge_phase1_scheduler_overlay(rule_set_payload: dict[str, Any]) -> dict[st
     if PHASE1_CANONICAL_PROGRAM_ID not in set(rule_set_payload.get("program_scope") or []):
         return rule_set_payload
 
-    fallback_candidate = _resolve_gold_rules_path() / f"{PHASE1_RUNTIME_TEMPLATE_SOURCE_ID}.rules.json"
+    fallback_candidate = _resolve_gold_rules_path() / f"{PHASE1_LEGACY_RULE_OVERLAY_SOURCE_ID}.rules.json"
     if not fallback_candidate.exists():
         return rule_set_payload
 

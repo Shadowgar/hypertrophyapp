@@ -173,10 +173,10 @@ Reference:
 - Deterministic adaptation apply path now feeds runtime week generation:
 	- `POST /plan/adaptation/apply`
 	- `POST /plan/generate-week` consumes active adaptation state and decrements temporary duration week-by-week.
-- The adaptive gold sample now participates in a live runtime loader path:
-	- `apps/api/app/program_loader.py` lists `adaptive_full_body_gold_v0_1` in the runtime catalog.
-	- the loader adapts `programs/gold/adaptive_full_body_gold_v0_1.json` into the current runtime template contract.
-	- the same loader boundary resolves `docs/rules/gold/adaptive_full_body_gold_v0_1.rules.json` when canonical rules do not already contain that program scope.
+- The Phase 1 canonical program now owns the live runtime loader path:
+	- `apps/api/app/program_loader.py` resolves `pure_bodybuilding_phase_1_full_body` as the primary runtime template source.
+	- compatibility aliases (`full_body_v1`, `adaptive_full_body_gold_v0_1`) normalize to that canonical source at loader boundaries.
+	- canonical rules load first, with legacy gold-rule scheduler overlay used only as compatibility fallback when canonical scheduler blocks are absent.
 - Pure Bodybuilding Phase 1 Full Body is now the first source-backed rich onboarding package on the branch:
 	- `programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json` explicitly preserves authored slot fields, top-level notes/warm-up/weak-point sections, week labels, block labels, special banners, and workbook-backed video links.
 	- the runtime loader/API path now carries those authored execution fields into generated-week and today workout exercises.

@@ -10,7 +10,7 @@ from test_db import configure_test_database
 configure_test_database("test_program_loader")
 
 from app.config import settings
-from app.program_loader import load_program_rule_set, load_program_template
+from app.program_loader import load_program_rule_set, load_program_template, resolve_runtime_template_id
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
@@ -308,6 +308,22 @@ def test_load_program_template_normalizes_phase1_aliases_to_canonical_identity()
     assert from_legacy_v1["id"] == "pure_bodybuilding_phase_1_full_body"
     assert from_legacy_gold["id"] == "pure_bodybuilding_phase_1_full_body"
     assert from_canonical["id"] == "pure_bodybuilding_phase_1_full_body"
+
+
+def test_phase1_runtime_template_source_resolution_prefers_canonical_source_id() -> None:
+    assert resolve_runtime_template_id("pure_bodybuilding_phase_1_full_body") == "pure_bodybuilding_phase_1_full_body"
+    assert resolve_runtime_template_id("full_body_v1") == "pure_bodybuilding_phase_1_full_body"
+    assert resolve_runtime_template_id("adaptive_full_body_gold_v0_1") == "pure_bodybuilding_phase_1_full_body"
+
+
+def test_phase1_canonical_runtime_template_artifact_exists() -> None:
+    runtime_template_path = REPO_ROOT / "programs" / "gold" / "pure_bodybuilding_phase_1_full_body.json"
+    payload = json.loads(runtime_template_path.read_text(encoding="utf-8"))
+
+    assert runtime_template_path.exists()
+    assert payload["program_id"] == "pure_bodybuilding_phase_1_full_body"
+    assert isinstance(payload.get("phases"), list)
+    assert len(payload["phases"]) >= 1
 
 
 @pytest.mark.parametrize(

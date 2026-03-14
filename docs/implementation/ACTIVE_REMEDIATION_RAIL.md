@@ -8,6 +8,7 @@ Last updated: 2026-03-14
 - Generated-week and today runtime exercises now carry the authored Phase 1 slot fields through the loader/API boundary instead of flattening them away.
 - Week and today surfaces now show authored execution detail directly: early-set RPE, last-set RPE, last-set intensity technique, rest, authored substitutions, demo link, and tracking loads when present.
 - Live administered identity for the first real program is now unified on `pure_bodybuilding_phase_1_full_body`; `full_body_v1` and `adaptive_full_body_gold_v0_1` now resolve as compatibility aliases on active API/web paths.
+- Runtime template source selection for the active Phase 1 path is now canonicalized to `pure_bodybuilding_phase_1_full_body`; legacy runtime IDs resolve only through compatibility normalization/fallback.
 - `intelligence.py` remains compatibility forwarding only. It is not a valid place to add new coaching meaning.
 
 Current product order for active implementation is:
@@ -22,6 +23,7 @@ Current product order for active implementation is:
 - Completed canonical-path hardening and branch-truth cleanup for the administered Phase 1 flow:
   - active API/web runtime path remains canonical on `pure_bodybuilding_phase_1_full_body` across onboarding, generated week, today/log-set, check-in/review, and history surfaces
   - path-facing API/web tests, fixtures, and snapshots now use `pure_bodybuilding_phase_1_full_body` as the default administered path
+  - loader runtime-source resolution now prefers the canonical Phase 1 template source directly and keeps legacy source IDs as compatibility fallbacks only
   - legacy IDs remain only in explicit compatibility handling/tests, not as primary user-path fixtures
 
 ## Next Recommended Action
@@ -62,17 +64,11 @@ This wave is about:
    - `apps/api/app/adaptive_schema.py`
    - `apps/api/tests/test_program_frequency_adaptation_api.py`
 
-2. Maintain compatibility aliases as compatibility-only behavior while keeping canonical identity primary on user-facing paths.
-   Files:
-   - `apps/api/app/program_loader.py`
-   - `apps/api/tests/test_program_catalog_and_selection.py`
-   - `apps/web/tests/*compatibility*`
-
-3. Broader canonical coaching-state / SFR cleanup remains secondary work and should only be pulled forward when it directly helps the administered Phase 1 path.
+2. Broader canonical coaching-state / SFR cleanup remains secondary work and should only be pulled forward when it directly helps the administered Phase 1 path.
    File:
    - `packages/core-engine/core_engine/intelligence.py`
 
-4. Presentation surfaces must remain rendering-only while active implementation continues elsewhere.
+3. Presentation surfaces must remain rendering-only while active implementation continues elsewhere.
    Regression-watch files:
    - `apps/web/app/checkin/page.tsx`
    - `apps/web/app/history/page.tsx`
