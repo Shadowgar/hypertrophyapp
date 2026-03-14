@@ -16,20 +16,6 @@ const FALLBACK_PROGRAMS: ProgramTemplateOption[] = [
     days_supported: [2, 3, 4, 5],
     description: "Workbook-faithful full body path with authored execution detail.",
   },
-  {
-    id: "ppl_v1",
-    name: "Push Pull Legs v1",
-    split: "ppl",
-    days_supported: [2, 3, 4, 5],
-    description: "Deterministic PPL template with adaptive compression support.",
-  },
-  {
-    id: "upper_lower_v1",
-    name: "Upper Lower v1",
-    split: "upper_lower",
-    days_supported: [2, 3, 4, 5],
-    description: "Deterministic upper/lower template with frequency adaptation support.",
-  },
 ];
 
 const INTRO_SLIDES = [
@@ -369,13 +355,13 @@ export default function OnboardingPage() {
         }
         const normalized = Array.isArray(list) && list.length > 0 ? list : FALLBACK_PROGRAMS;
         setPrograms(normalized);
-        setProgramCatalogStatus(`Loaded ${normalized.length} training templates.`);
+        setProgramCatalogStatus(`Loaded ${normalized.length} active training template${normalized.length === 1 ? "" : "s"}.`);
       } catch {
         if (!mounted) {
           return;
         }
         setPrograms(FALLBACK_PROGRAMS);
-        setProgramCatalogStatus("Program catalog API unavailable. Using local fallback options.");
+        setProgramCatalogStatus("Program catalog API unavailable. Using local active fallback template.");
       }
     })();
     return () => {

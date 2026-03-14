@@ -23,7 +23,7 @@ from ..deps import get_current_user
 from ..models import ExerciseState, User, WorkoutPlan, WorkoutSessionState, WorkoutSetLog
 from ..program_loader import (
     load_program_rule_set,
-    resolve_administered_program_id,
+    resolve_active_administered_program_id,
     resolve_rule_program_id,
 )
 from ..schemas import (
@@ -163,7 +163,7 @@ def workout_today(
         .all()
     )
     selected_program_id = plan_runtime["selected_program_id"]
-    normalized_selected_program_id = resolve_administered_program_id(cast(str | None, selected_program_id))
+    normalized_selected_program_id = resolve_active_administered_program_id(cast(str | None, selected_program_id))
     progression_runtime = prepare_workout_today_progression_route_runtime(
         session_states=states,
         selected_program_id=normalized_selected_program_id,

@@ -9,7 +9,7 @@ beforeEach(() => {
 
 test("Today page loads workout and shows exercises", async () => {
   const workout = {
-    session_id: "ppl_v1-day1",
+    session_id: "pure_bodybuilding_phase_1_full_body-day1",
     title: "Arms & Weak Points",
     date: new Date().toISOString().slice(0, 10),
     resume: false,
@@ -98,5 +98,5 @@ test("Today page loads workout and shows exercises", async () => {
   expect(screen.getByText(/Today follows Arms & Weak Points/i)).toBeInTheDocument();
 
   const guideLink = screen.getByRole("link", { name: /Bayesian Curl/i });
-  expect(guideLink).toHaveAttribute("href", "/guides/ppl_v1/exercise/ex-1");
+  expect(guideLink).toHaveAttribute("href", "/guides/pure_bodybuilding_phase_1_full_body/exercise/ex-1");
 });

@@ -31,8 +31,11 @@ def test_program_catalog_lists_templates() -> None:
     assert any(item["id"] == "pure_bodybuilding_phase_1_full_body" for item in payload)
 
     ids = {str(item.get("id")) for item in payload}
+    assert ids == {"pure_bodybuilding_phase_1_full_body"}
     assert "full_body_v1" not in ids
     assert "adaptive_full_body_gold_v0_1" not in ids
+    assert "ppl_v1" not in ids
+    assert "upper_lower_v1" not in ids
     # These duplicate payload pairs exist in source imports and must collapse in API catalog.
     assert not {"my_new_program", "pure_bodybuilding_full_body"}.issubset(ids)
     assert not {
@@ -41,7 +44,7 @@ def test_program_catalog_lists_templates() -> None:
     }.issubset(ids)
 
 
-def test_generate_week_uses_selected_program_when_template_not_passed() -> None:
+def test_generate_week_uses_canonical_template_when_non_active_program_is_selected() -> None:
     _reset_db()
     client = TestClient(app)
 
@@ -79,13 +82,13 @@ def test_generate_week_uses_selected_program_when_template_not_passed() -> None:
     assert generate.status_code == 200
     plan = generate.json()
     assert len(plan["sessions"]) > 0
-    assert plan["sessions"][0]["session_id"].startswith("ppl_v1-")
+    assert plan["sessions"][0]["session_id"].startswith("pure_bodybuilding_phase_1_full_body-")
     assert plan["decision_trace"]["owner_family"] == "generated_week"
-    assert plan["decision_trace"]["canonical_inputs"]["selected_template_id"] == "ppl_v1"
+    assert plan["decision_trace"]["canonical_inputs"]["selected_template_id"] == "pure_bodybuilding_phase_1_full_body"
     assert plan["decision_trace"]["execution_steps"][0]["step"] == "template_selection"
     assert plan["decision_trace"]["reason_summary"]
     assert plan["template_selection_trace"]["interpreter"] == "recommend_generation_template_selection"
-    assert plan["template_selection_trace"]["selected_template_id"] == "ppl_v1"
+    assert plan["template_selection_trace"]["selected_template_id"] == "pure_bodybuilding_phase_1_full_body"
     assert plan["generation_runtime_trace"]["interpreter"] == "resolve_week_generation_runtime_inputs"
     assert plan["generation_runtime_trace"]["outcome"]["effective_days_available"] == 3
 
@@ -1548,8 +1551,8 @@ def test_generate_week_does_not_invent_soreness_weight_adjustments_without_sched
             "age": 31,
             "weight": 84,
             "gender": "male",
-            "split_preference": "ppl",
-            "selected_program_id": "ppl_v1",
+            "split_preference": "full_body",
+            "selected_program_id": "pure_bodybuilding_phase_1_full_body",
             "training_location": "gym",
             "equipment_profile": ["barbell", "bench", "rack"],
             "days_available": 3,
@@ -1590,10 +1593,8 @@ def test_generate_week_does_not_invent_soreness_weight_adjustments_without_sched
     adjusted_push = adjusted_plan["sessions"][0]["exercises"][0]
     adjusted_pull = adjusted_plan["sessions"][1]["exercises"][0]
 
-    assert baseline_push["id"] == "bench"
-    assert baseline_pull["id"] == "row"
-    assert adjusted_push["id"] == "bench"
-    assert adjusted_pull["id"] == "row"
+    assert adjusted_push["id"] == baseline_push["id"]
+    assert adjusted_pull["id"] == baseline_pull["id"]
     assert adjusted_push["recommended_working_weight"] == baseline_push["recommended_working_weight"]
     assert adjusted_pull["recommended_working_weight"] == baseline_pull["recommended_working_weight"]
 

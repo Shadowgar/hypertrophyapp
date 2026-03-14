@@ -28,7 +28,11 @@ from ..database import get_db
 from ..deps import get_current_user
 from ..models import BodyMeasurementEntry, SorenessEntry, User, WeeklyCheckin, WeeklyReviewCycle, WorkoutSetLog
 from ..models import ExerciseState, PasswordResetToken, WorkoutPlan, WorkoutSessionState
-from ..program_loader import list_program_templates, resolve_administered_program_id
+from ..program_loader import (
+    list_program_templates,
+    resolve_active_administered_program_id,
+    resolve_administered_program_id,
+)
 from ..schemas import (
     BodyMeasurementEntryCreateRequest,
     BodyMeasurementEntryResponse,
@@ -146,7 +150,7 @@ def _collect_previous_week_performance_summary(
 
 @router.get("/profile")
 def get_profile(current_user: CurrentUser) -> ProfileResponse:
-    selected_program_id = resolve_administered_program_id(current_user.selected_program_id)
+    selected_program_id = resolve_active_administered_program_id(current_user.selected_program_id)
     return ProfileResponse(
         **build_profile_response_payload(
             email=current_user.email,
@@ -214,7 +218,7 @@ def get_training_state(
         .all()
     )
 
-    selected_program_id = resolve_administered_program_id(current_user.selected_program_id)
+    selected_program_id = resolve_active_administered_program_id(current_user.selected_program_id)
     payload = build_user_training_state(
         selected_program_id=selected_program_id,
         days_available=current_user.days_available,
@@ -235,7 +239,7 @@ def get_training_state(
         prior_plans=prior_plans,
     )
     user_program_state = cast(dict[str, Any], payload.get("user_program_state") or {})
-    normalized_program_id = resolve_administered_program_id(user_program_state.get("program_id"))
+    normalized_program_id = resolve_active_administered_program_id(user_program_state.get("program_id"))
     if normalized_program_id:
         user_program_state["program_id"] = normalized_program_id
         payload["user_program_state"] = user_program_state
@@ -245,9 +249,7 @@ def get_training_state(
     if prior_by_program:
         normalized_counts: dict[str, int] = {}
         for raw_program_id, raw_count in prior_by_program.items():
-            normalized = resolve_administered_program_id(str(raw_program_id))
-            if not normalized:
-                continue
+            normalized = resolve_active_administered_program_id(str(raw_program_id))
             normalized_counts[normalized] = normalized_counts.get(normalized, 0) + int(raw_count or 0)
         generation_state["prior_generated_weeks_by_program"] = normalized_counts
         payload["generation_state"] = generation_state
@@ -261,7 +263,7 @@ def upsert_profile(
     db: DbSession,
     current_user: CurrentUser,
 ) -> ProfileResponse:
-    normalized_selected_program_id = resolve_administered_program_id(payload.selected_program_id)
+    normalized_selected_program_id = resolve_active_administered_program_id(payload.selected_program_id)
     persistence_payload = build_profile_upsert_persistence_payload(
         name=payload.name,
         age=payload.age,
@@ -298,7 +300,7 @@ def program_recommendation(
     db: DbSession,
     current_user: CurrentUser,
 ) -> ProgramRecommendationResponse:
-    selected_program_id = resolve_administered_program_id(current_user.selected_program_id)
+    selected_program_id = resolve_active_administered_program_id(current_user.selected_program_id)
     latest_plan = _latest_plan(db, current_user.id)
     training_state = _build_program_recommendation_training_state(
         db,
@@ -326,7 +328,7 @@ def switch_program(
     db: DbSession,
     current_user: CurrentUser,
 ) -> ProgramSwitchResponse:
-    selected_program_id = resolve_administered_program_id(current_user.selected_program_id)
+    selected_program_id = resolve_active_administered_program_id(current_user.selected_program_id)
     target_program_id = resolve_administered_program_id(payload.target_program_id) or payload.target_program_id
     latest_plan = _latest_plan(db, current_user.id)
     training_state = _build_program_recommendation_training_state(

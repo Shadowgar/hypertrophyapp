@@ -48,12 +48,13 @@ If a patch does not show a regression in current code, do not spend time re-audi
 
 ## Current Target Wave
 
-Finish one real administered program path before reopening broad architecture-cleanup work.
+Keep one-program-first mode explicit while hardening the real administered Phase 1 user path.
 
 This wave is about:
 
 - keeping Pure Bodybuilding Phase 1 Full Body authoritative from onboarding artifact through runtime and week/today delivery
-- completing the next bounded seam of deterministic, program-specific temporary frequency adaptation for this same path
+- enforcing `pure_bodybuilding_phase_1_full_body` as the only active administered program identity on user-facing catalog/selection paths
+- keeping legacy IDs (`full_body_v1`, `adaptive_full_body_gold_v0_1`) as compatibility aliases only at boundaries
 - keeping `decision_*` modules as the only owners of coaching meaning
 - keeping `intelligence.py` as compatibility forwarding only
 

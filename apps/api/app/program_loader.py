@@ -10,6 +10,7 @@ from .adaptive_schema import AdaptiveGoldProgramTemplate, AdaptiveGoldRuleSet, P
 from .template_schema import CanonicalProgramTemplate
 
 PHASE1_CANONICAL_PROGRAM_ID = "pure_bodybuilding_phase_1_full_body"
+ACTIVE_ADMINISTERED_PROGRAM_IDS: set[str] = {PHASE1_CANONICAL_PROGRAM_ID}
 PHASE1_CANONICAL_RUNTIME_TEMPLATE_ID = PHASE1_CANONICAL_PROGRAM_ID
 PHASE1_LEGACY_RUNTIME_TEMPLATE_ID = "adaptive_full_body_gold_v0_1"
 PHASE1_LEGACY_RULE_OVERLAY_SOURCE_ID = PHASE1_LEGACY_RUNTIME_TEMPLATE_ID
@@ -146,6 +147,13 @@ def resolve_administered_program_id(program_id: str | None) -> str | None:
     if not normalized:
         return None
     return ADMINISTERED_PROGRAM_ID_ALIASES.get(normalized, normalized)
+
+
+def resolve_active_administered_program_id(program_id: str | None) -> str:
+    normalized = resolve_administered_program_id(program_id)
+    if normalized in ACTIVE_ADMINISTERED_PROGRAM_IDS:
+        return str(normalized)
+    return PHASE1_CANONICAL_PROGRAM_ID
 
 
 def resolve_runtime_template_id(template_id: str) -> str:
@@ -504,7 +512,7 @@ def _adaptive_gold_to_runtime_template(payload: dict[str, Any]) -> dict[str, Any
     ).model_dump()
 
 
-def list_program_templates() -> list[dict]:
+def list_program_templates(*, active_only: bool = True) -> list[dict]:
     summaries_by_id: dict[str, dict] = {}
     templates_by_id: dict[str, dict[str, Any]] = {}
     for candidate in _iter_runtime_template_files():
@@ -550,7 +558,14 @@ def list_program_templates() -> list[dict]:
             winner_by_signature[signature] = template_id
 
     selected_ids = sorted(winner_by_signature.values())
-    return [summaries_by_id[key] for key in selected_ids]
+    summaries = [summaries_by_id[key] for key in selected_ids]
+    if not active_only:
+        return summaries
+
+    active_summaries = [summary for summary in summaries if summary.get("id") in ACTIVE_ADMINISTERED_PROGRAM_IDS]
+    if active_summaries:
+        return active_summaries
+    return summaries
 
 
 def load_program_template(template_id: str) -> dict:

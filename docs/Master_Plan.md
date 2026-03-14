@@ -57,6 +57,14 @@ Immediate direction:
 - preserve explicit schemas, deterministic rules, and structured traces on the Phase 1 path
 - keep broader architecture cleanup subordinate unless it directly blocks the administered Phase 1 runtime
 
+## Active Operating Mode (One Program First)
+
+Current active product mode is one-program-first.
+
+- `pure_bodybuilding_phase_1_full_body` is the only active administered program exposed on normal user catalog/selection flows.
+- `full_body_v1` and `adaptive_full_body_gold_v0_1` remain compatibility aliases for stored state, legacy links, and explicit compatibility tests.
+- Other templates (for example `ppl_v1`, `upper_lower_v1`) remain in-repo library/future assets, but are not equal active product choices during this phase.
+
 Current execution order:
 1. maintain the workbook-faithful Pure Bodybuilding Phase 1 package
 2. keep authored slot fields carried through runtime/API without flattening

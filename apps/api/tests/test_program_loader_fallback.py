@@ -13,10 +13,11 @@ def test_program_loader_fallback_to_repo_programs() -> None:
 
         summaries = list_program_templates()
         assert isinstance(summaries, list)
-        # repo includes canonical phase1 and ppl_v1 templates
+        # one-program-first mode exposes canonical phase1 template as active catalog choice
         ids = {p["id"] for p in summaries}
         assert "pure_bodybuilding_phase_1_full_body" in ids
-        assert "ppl_v1" in ids
+        assert "ppl_v1" not in ids
+        assert "upper_lower_v1" not in ids
 
         # loading specific template should work too
         tpl = load_program_template("ppl_v1")

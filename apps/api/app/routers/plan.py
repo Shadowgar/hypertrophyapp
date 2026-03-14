@@ -45,6 +45,7 @@ from ..deps import get_current_user
 from ..models import CoachingRecommendation, ExerciseState, SorenessEntry, User, WeeklyCheckin, WeeklyReviewCycle, WorkoutPlan, WorkoutSetLog
 from ..program_loader import (
     list_program_templates,
+    resolve_active_administered_program_id,
     load_program_onboarding_package,
     load_program_rule_set,
     load_program_template,
@@ -84,6 +85,14 @@ GUIDE_RESPONSES: dict[int | str, dict[str, Any]] = {
     422: {"description": INVALID_TEMPLATE_DETAIL},
 }
 PROFILE_INCOMPLETE_DETAIL = "Complete profile first"
+
+
+def _list_active_program_templates() -> list[dict[str, Any]]:
+    try:
+        return list_program_templates(active_only=True)
+    except TypeError:
+        # Test monkeypatches may provide a no-arg lambda replacement.
+        return cast(list[dict[str, Any]], list_program_templates())
 
 
 def _prepare_plan_generation_runtime(
@@ -150,12 +159,12 @@ def _prepare_plan_generation_runtime(
 
 @router.get("/plan/programs", response_model=list[ProgramTemplateSummary])
 def plan_list_programs() -> list[dict]:
-    return list_program_templates()
+    return _list_active_program_templates()
 
 
 @router.get("/plan/guides/programs")
 def list_guide_programs() -> list[GuideProgramSummary]:
-    return [GuideProgramSummary(**payload) for payload in build_guide_programs_payload(list_program_templates())]
+    return [GuideProgramSummary(**payload) for payload in build_guide_programs_payload(_list_active_program_templates())]
 
 
 @router.get("/plan/guides/programs/{program_id}", responses=GUIDE_RESPONSES)
@@ -164,7 +173,7 @@ def get_program_guide(program_id: str) -> ProgramGuideResponse:
     try:
         summary = resolve_program_guide_summary(
             program_id=resolved_program_id,
-            available_program_summaries=list_program_templates(),
+            available_program_summaries=list_program_templates(active_only=False),
         )
         template = load_program_template(resolved_program_id)
     except FileNotFoundError as exc:
@@ -362,8 +371,8 @@ def coach_intelligence_preview(
         profile_days_available=current_user.days_available,
     )
     preview_request = cast(dict[str, Any], preview_runtime["preview_request"])
-    explicit_template_id = resolve_administered_program_id(payload.template_id) if payload.template_id else None
-    profile_template_id = resolve_administered_program_id(current_user.selected_program_id)
+    explicit_template_id = resolve_active_administered_program_id(payload.template_id) if payload.template_id else None
+    profile_template_id = resolve_active_administered_program_id(current_user.selected_program_id)
 
     try:
         template_runtime = prepare_generation_template_runtime(
@@ -373,7 +382,7 @@ def coach_intelligence_preview(
             days_available=int(preview_runtime["max_requested_days"]),
             nutrition_phase=current_user.nutrition_phase or "maintenance",
             available_equipment=current_user.equipment_profile or [],
-            candidate_summaries=list_program_templates(),
+            candidate_summaries=_list_active_program_templates(),
             load_template=load_program_template,
             ignored_loader_exceptions=(FileNotFoundError, KeyError, ValidationError),
         )
@@ -425,7 +434,7 @@ def coach_intelligence_preview(
     )
     program_name = resolve_program_display_name(
         program_id=selected_template_id,
-        available_program_summaries=list_program_templates(),
+        available_program_summaries=list_program_templates(active_only=False),
     )
     route_runtime = prepare_coach_preview_route_runtime(
         user_id=current_user.id,
@@ -487,8 +496,8 @@ def preview_frequency_adaptation(
         .first()
     )
     adaptation_decision_runtime = prepare_frequency_adaptation_decision_runtime(
-        requested_program_id=resolve_administered_program_id(payload.program_id),
-        selected_program_id=resolve_administered_program_id(current_user.selected_program_id),
+        requested_program_id=resolve_active_administered_program_id(payload.program_id),
+        selected_program_id=resolve_active_administered_program_id(current_user.selected_program_id),
         latest_plan=latest_plan,
         latest_soreness_entry=latest_soreness,
         current_days_available=current_user.days_available,
@@ -547,8 +556,8 @@ def apply_frequency_adaptation(
         .first()
     )
     adaptation_decision_runtime = prepare_frequency_adaptation_decision_runtime(
-        requested_program_id=resolve_administered_program_id(payload.program_id),
-        selected_program_id=resolve_administered_program_id(current_user.selected_program_id),
+        requested_program_id=resolve_active_administered_program_id(payload.program_id),
+        selected_program_id=resolve_active_administered_program_id(current_user.selected_program_id),
         latest_plan=latest_plan,
         latest_soreness_entry=latest_soreness,
         current_days_available=current_user.days_available,
@@ -600,7 +609,7 @@ def plan_generate_week(
     if not current_user.days_available or not current_user.split_preference:
         raise HTTPException(status_code=400, detail=PROFILE_INCOMPLETE_DETAIL)
     explicit_template_id = resolve_administered_program_id(payload.template_id) if payload.template_id else None
-    profile_template_id = resolve_administered_program_id(current_user.selected_program_id)
+    profile_template_id = resolve_active_administered_program_id(current_user.selected_program_id)
 
     try:
         template_runtime = prepare_generation_template_runtime(
@@ -610,7 +619,7 @@ def plan_generate_week(
             days_available=current_user.days_available,
             nutrition_phase=current_user.nutrition_phase or "maintenance",
             available_equipment=current_user.equipment_profile or [],
-            candidate_summaries=list_program_templates(),
+            candidate_summaries=_list_active_program_templates(),
             load_template=load_program_template,
             ignored_loader_exceptions=(FileNotFoundError, KeyError, ValidationError),
         )
@@ -631,7 +640,7 @@ def plan_generate_week(
     active_state = dict(current_user.active_frequency_adaptation or {})
     if active_state:
         for key in ("template_id", "program_id"):
-            normalized = resolve_administered_program_id(str(active_state.get(key) or "").strip())
+            normalized = resolve_active_administered_program_id(str(active_state.get(key) or "").strip())
             if normalized:
                 active_state[key] = normalized
     active_frequency_adaptation = resolve_active_frequency_adaptation_runtime(

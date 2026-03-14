@@ -37,8 +37,8 @@ def _register_and_onboard(client: TestClient) -> dict[str, str]:
             "age": 30,
             "weight": 82,
             "gender": "male",
-            "split_preference": "ppl",
-            "selected_program_id": "ppl_v1",
+            "split_preference": "full_body",
+            "selected_program_id": "pure_bodybuilding_phase_1_full_body",
             "training_location": "gym",
             "equipment_profile": ["barbell", "dumbbell", "bench", "rack"],
             "days_available": 3,
@@ -65,7 +65,7 @@ def test_program_recommendation_endpoint_returns_deterministic_payload() -> None
     assert recommendation.status_code == 200
     payload = recommendation.json()
 
-    assert payload["current_program_id"] == "ppl_v1"
+    assert payload["current_program_id"] == "pure_bodybuilding_phase_1_full_body"
     assert isinstance(payload["compatible_program_ids"], list)
     assert "recommended_program_id" in payload
     assert "reason" in payload
@@ -85,12 +85,10 @@ def test_program_recommendation_prefers_high_frequency_adaptation_for_three_days
     assert recommendation.status_code == 200
     payload = recommendation.json()
 
-    assert payload["current_program_id"] == "ppl_v1"
-    assert payload["recommended_program_id"] != "ppl_v1"
-    assert payload["reason"] == "days_adaptation_upgrade"
-    assert payload["rationale"] == (
-        "A different compatible template can preserve weekly coverage better at the current day availability."
-    )
+    assert payload["current_program_id"] == "pure_bodybuilding_phase_1_full_body"
+    assert payload["recommended_program_id"] == "pure_bodybuilding_phase_1_full_body"
+    assert payload["reason"] == "maintain_current_program"
+    assert payload["rationale"] == "The current program remains compatible and no stronger rotation signal is present."
     assert payload["decision_trace"]["selected_program_id"] == payload["recommended_program_id"]
     assert payload["recommended_program_id"] in payload["decision_trace"]["candidate_resolution"]["compatible_program_ids"]
     assert payload["decision_trace"]["candidate_resolution"]["compatibility_mode"] == "days_supported_match"
@@ -104,9 +102,6 @@ def test_program_switch_requires_confirmation_then_applies() -> None:
     recommendation = client.get("/profile/program-recommendation", headers=headers)
     assert recommendation.status_code == 200
     target = recommendation.json()["recommended_program_id"]
-
-    if target == "ppl_v1":
-        target = "full_body_v1"
 
     preflight = client.post(
         "/profile/program-switch",
@@ -128,7 +123,7 @@ def test_program_switch_requires_confirmation_then_applies() -> None:
     assert apply.status_code == 200
     apply_payload = apply.json()
 
-    if target == "ppl_v1":
+    if target == "pure_bodybuilding_phase_1_full_body":
         assert apply_payload["status"] == "unchanged"
     else:
         assert apply_payload["status"] == "switched"
@@ -161,7 +156,7 @@ def test_program_recommendation_keeps_current_on_low_adherence() -> None:
     assert recommendation.status_code == 200
     payload = recommendation.json()
 
-    assert payload["recommended_program_id"] == "ppl_v1"
+    assert payload["recommended_program_id"] == "pure_bodybuilding_phase_1_full_body"
     assert payload["reason"] == "low_adherence_keep_program"
     assert payload["rationale"] == "Recent adherence is low. Keep the current program stable before rotating templates."
 
@@ -206,7 +201,7 @@ def test_program_switch_rejects_incompatible_target_program() -> None:
 
     profile = client.get("/profile", headers=headers)
     assert profile.status_code == 200
-    assert profile.json()["selected_program_id"] == "ppl_v1"
+    assert profile.json()["selected_program_id"] == "pure_bodybuilding_phase_1_full_body"
 
 
 def test_program_recommendation_rotates_when_adaptive_gold_authored_sequence_is_complete() -> None:
@@ -278,5 +273,5 @@ def test_program_recommendation_rotates_when_adaptive_gold_authored_sequence_is_
     payload = recommendation.json()
 
     assert payload["current_program_id"] == "pure_bodybuilding_phase_1_full_body"
-    assert payload["recommended_program_id"] != "pure_bodybuilding_phase_1_full_body"
-    assert payload["reason"] == "mesocycle_complete_rotate"
+    assert payload["recommended_program_id"] == "pure_bodybuilding_phase_1_full_body"
+    assert payload["reason"] == "maintain_current_program"
