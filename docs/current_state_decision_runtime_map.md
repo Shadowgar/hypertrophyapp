@@ -28,6 +28,7 @@ Current branch reality is:
 - week/today surfaces now render those authored execution details directly
 - the live administered full-body identity is now unified to `pure_bodybuilding_phase_1_full_body` with compatibility aliases resolving safely
 - API and web path-facing fixtures/snapshots now default to `pure_bodybuilding_phase_1_full_body` instead of legacy IDs
+- API now has an explicit canonical end-to-end smoke test for onboarding -> generate-week -> today/log-set -> check-in/review -> history -> adaptation/regenerate continuity on the canonical ID
 - the next bounded product seam is end-to-end dogfooding of this real Phase 1 administered path before wider cleanup
 
 Current product order for active implementation is:

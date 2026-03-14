@@ -43,6 +43,7 @@ Current branch reality:
 - runtime/API week-generation and today-session paths now carry the authored slot fields through
 - week/today UI now shows those authored execution details directly
 - the live administered full-body identity is now unified on `pure_bodybuilding_phase_1_full_body` with legacy aliases handled for compatibility
+- a canonical end-to-end API smoke path now verifies identity/continuity through generate-week, today/log-set, check-in/review, history, adaptation apply, and regenerate-week
 - the next product seam after identity unification is end-to-end dogfooding of this administered Phase 1 path
 
 Current product order for active implementation is:
@@ -184,6 +185,9 @@ Reference:
 - Canonical administered-path hardening now includes user-facing fixture/snapshot truth:
 	- API and web path-facing tests now default to `pure_bodybuilding_phase_1_full_body` as the primary administered identity.
 	- legacy IDs remain in explicit compatibility coverage only.
+- Canonical administered-path hardening now includes explicit end-to-end smoke verification:
+	- `apps/api/tests/test_phase1_canonical_path_smoke.py` validates the canonical flow through onboarding, generate-week, today/log-set, weekly check-in/review, history, adaptation apply, regenerate-week, and training-state continuity.
+	- compatibility aliases are still verified separately and explicitly (`full_body_v1`, `adaptive_full_body_gold_v0_1`), not used as the primary proof path.
 - The adaptive gold sample is now a real authored mesocycle instead of a short proof stub:
 	- `programs/gold/adaptive_full_body_gold_v0_1.json` now follows a 10-week authored sequence aligned to the onboarding package cadence: `build_a / build_b / build_a / build_b / build_a / deload / intens_a / intens_b / intens_a / intens_b`.
 	- runtime loader contracts preserve all 10 authored weeks with explicit `week_role` values and a five-day authored source (`Full Body #1-#4` plus `Arms & Weak Points`) rather than the earlier compressed three-day surrogate.

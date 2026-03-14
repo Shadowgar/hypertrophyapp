@@ -9,6 +9,7 @@ Last updated: 2026-03-14
 - Week and today surfaces now show authored execution detail directly: early-set RPE, last-set RPE, last-set intensity technique, rest, authored substitutions, demo link, and tracking loads when present.
 - Live administered identity for the first real program is now unified on `pure_bodybuilding_phase_1_full_body`; `full_body_v1` and `adaptive_full_body_gold_v0_1` now resolve as compatibility aliases on active API/web paths.
 - Runtime template source selection for the active Phase 1 path is now canonicalized to `pure_bodybuilding_phase_1_full_body`; legacy runtime IDs resolve only through compatibility normalization/fallback.
+- Canonical end-to-end API smoke coverage now exists for the administered path (onboarding -> generate-week -> today -> authored detail -> log-set -> check-in/review -> history -> adaptation apply -> regenerate-week -> training-state continuity).
 - `intelligence.py` remains compatibility forwarding only. It is not a valid place to add new coaching meaning.
 
 Current product order for active implementation is:
@@ -24,12 +25,13 @@ Current product order for active implementation is:
   - active API/web runtime path remains canonical on `pure_bodybuilding_phase_1_full_body` across onboarding, generated week, today/log-set, check-in/review, and history surfaces
   - path-facing API/web tests, fixtures, and snapshots now use `pure_bodybuilding_phase_1_full_body` as the default administered path
   - loader runtime-source resolution now prefers the canonical Phase 1 template source directly and keeps legacy source IDs as compatibility fallbacks only
+  - one explicit canonical-path smoke test now validates adaptation/regeneration continuity and authored-field availability on the active API path
   - legacy IDs remain only in explicit compatibility handling/tests, not as primary user-path fixtures
 
 ## Next Recommended Action
 
-- Implement and verify deterministic, program-specific temporary 5d->3d frequency adaptation behavior for `pure_bodybuilding_phase_1_full_body`, while preserving canonical authored intent and trace continuity.
-- Keep broader architecture/generalization work downstream unless directly blocking that adaptation seam on the active administered path.
+- Execute live dogfooding/regression hardening for the canonical Phase 1 administered path (desktop/mobile browser), and fix only user-path blockers discovered there.
+- Keep compatibility aliases explicit at boundaries, and keep broader architecture/generalization work downstream unless directly blocking canonical-path reliability.
 
 ## Closed Work Do Not Reopen Without Evidence
 
@@ -57,12 +59,17 @@ This wave is about:
 
 ## Exact Remaining Seams
 
-1. Program-specific temporary 5-days-to-3-days adaptation is not yet implemented for the real Phase 1 package/runtime path.
+1. Dogfood and harden the canonical administered Phase 1 path end to end (including adaptation/regeneration continuity) across real user flows.
    Files:
-   - `packages/core-engine/core_engine/decision_frequency_adaptation.py`
-   - `packages/core-engine/core_engine/generation.py`
-   - `apps/api/app/adaptive_schema.py`
-   - `apps/api/tests/test_program_frequency_adaptation_api.py`
+   - `apps/api/tests/test_phase1_canonical_path_smoke.py`
+   - `apps/api/tests/test_program_catalog_and_selection.py`
+   - `apps/api/tests/test_workout_session_state.py`
+   - `apps/api/tests/test_weekly_checkin.py`
+   - `apps/api/tests/test_weekly_review.py`
+   - `apps/api/tests/test_history_calendar.py`
+   - `apps/web/tests/week.program.test.tsx`
+   - `apps/web/tests/today.runner.test.tsx`
+   - `apps/web/tests/history.analytics.test.tsx`
 
 2. Broader canonical coaching-state / SFR cleanup remains secondary work and should only be pulled forward when it directly helps the administered Phase 1 path.
    File:
