@@ -38,6 +38,9 @@ export default function SettingsPage() {
   const [adaptationPreview, setAdaptationPreview] = useState<FrequencyAdaptationResult | null>(null);
   const [adaptationStatus, setAdaptationStatus] = useState<string | null>(null);
   const [adaptationApplyStatus, setAdaptationApplyStatus] = useState<string | null>(null);
+  const [adaptationApplyOutcome, setAdaptationApplyOutcome] = useState<"idle" | "success" | "failed">("idle");
+  const [postApplyGenerateStatus, setPostApplyGenerateStatus] = useState<string | null>(null);
+  const [isGeneratingPostApplyWeek, setIsGeneratingPostApplyWeek] = useState(false);
   const [previewFromDays, setPreviewFromDays] = useState<number>(5);
   const [previewToDays, setPreviewToDays] = useState<number>(3);
   const [previewDurationWeeks, setPreviewDurationWeeks] = useState<number>(4);
@@ -146,6 +149,8 @@ export default function SettingsPage() {
   async function generateAdaptationPreview() {
     setAdaptationStatus("Generating frequency adaptation...");
     setAdaptationApplyStatus(null);
+    setAdaptationApplyOutcome("idle");
+    setPostApplyGenerateStatus(null);
     try {
       const preview = await api.previewFrequencyAdaptation({
         program_id: selectedProgramId,
@@ -162,6 +167,8 @@ export default function SettingsPage() {
 
   async function applyAdaptation() {
     setAdaptationApplyStatus("Applying frequency adaptation...");
+    setAdaptationApplyOutcome("idle");
+    setPostApplyGenerateStatus(null);
     try {
       const response = await api.applyFrequencyAdaptation({
         program_id: selectedProgramId,
@@ -172,8 +179,23 @@ export default function SettingsPage() {
       setAdaptationApplyStatus(
         `Applied (${response.target_days}d for ${response.duration_weeks} weeks, ${response.weeks_remaining} remaining)`,
       );
+      setAdaptationApplyOutcome("success");
     } catch {
       setAdaptationApplyStatus("Apply frequency adaptation failed");
+      setAdaptationApplyOutcome("failed");
+    }
+  }
+
+  async function generateWeekAfterAdaptation() {
+    setIsGeneratingPostApplyWeek(true);
+    setPostApplyGenerateStatus("Generating week from adapted state...");
+    try {
+      const generatedWeek = await api.generateWeek(selectedProgramId);
+      setPostApplyGenerateStatus(`Generated week for ${getProgramDisplayName({ id: generatedWeek.program_template_id })}.`);
+    } catch {
+      setPostApplyGenerateStatus("Generate week failed. Open Week Plan and retry.");
+    } finally {
+      setIsGeneratingPostApplyWeek(false);
     }
   }
 
@@ -386,6 +408,49 @@ export default function SettingsPage() {
             Apply Frequency Adaptation
           </Button>
           <p className="telemetry-meta">{adaptationApplyStatus ?? ""}</p>
+          {adaptationApplyOutcome === "success" ? (
+            <div className="rounded-md border border-zinc-800 p-2 space-y-2">
+              <p className="telemetry-kicker">Adaptation Next Step</p>
+              <Button
+                aria-label="Generate Week Now"
+                variant="secondary"
+                className="w-full"
+                onClick={generateWeekAfterAdaptation}
+                disabled={isGeneratingPostApplyWeek}
+              >
+                {isGeneratingPostApplyWeek ? "Generating Week..." : "Generate Week Now"}
+              </Button>
+              {postApplyGenerateStatus ? <p className="telemetry-meta">{postApplyGenerateStatus}</p> : null}
+              <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                <a
+                  className="inline-flex items-center justify-center rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-100 hover:bg-zinc-800"
+                  href="/week"
+                >
+                  Open Week Plan
+                </a>
+                <a
+                  className="inline-flex items-center justify-center rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-100 hover:bg-zinc-800"
+                  href="/today"
+                >
+                  Open Today Workout
+                </a>
+              </div>
+            </div>
+          ) : null}
+          {adaptationApplyOutcome === "failed" ? (
+            <div className="rounded-md border border-zinc-800 p-2 space-y-2">
+              <p className="telemetry-kicker">Adaptation Recovery</p>
+              <Button aria-label="Retry Apply Frequency Adaptation" variant="secondary" className="w-full" onClick={applyAdaptation}>
+                Retry Apply Frequency Adaptation
+              </Button>
+              <a
+                className="inline-flex items-center justify-center rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-100 hover:bg-zinc-800"
+                href="/week"
+              >
+                Open Week Plan
+              </a>
+            </div>
+          ) : null}
           {adaptationPreview ? (
             <div className="rounded-md border border-zinc-800 p-2">
               <p>Adaptation: {adaptationPreview.from_days}d -&gt; {adaptationPreview.to_days}d</p>

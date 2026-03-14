@@ -145,6 +145,39 @@ test("Settings coaching panel previews and applies intelligence decisions", asyn
         ),
       );
     }
+    if (url.endsWith("/plan/generate-week") && init?.method === "POST") {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            program_template_id: "pure_bodybuilding_phase_1_full_body",
+            split: "full_body",
+            phase: "accumulation",
+            week_start: "2026-03-09",
+            user: { days_available: 3 },
+            sessions: [],
+            missed_day_policy: "roll-forward-priority-lifts",
+            weekly_volume_by_muscle: {},
+            muscle_coverage: {},
+            mesocycle: {
+              week_index: 1,
+              trigger_weeks_base: 10,
+              trigger_weeks_effective: 10,
+              is_deload_week: false,
+              deload_reason: "scheduled",
+            },
+            deload: {
+              active: false,
+              set_reduction_pct: 0,
+              load_reduction_pct: 0,
+              reason: "scheduled",
+            },
+            template_selection_trace: {},
+            generation_runtime_trace: {},
+          }),
+          { status: 200 },
+        ),
+      );
+    }
     if (url.endsWith("/plan/intelligence/apply-phase") && init?.method === "POST") {
       return Promise.resolve(
         new Response(
@@ -201,6 +234,14 @@ test("Settings coaching panel previews and applies intelligence decisions", asyn
 
   await waitFor(() => {
     expect(screen.getByText(/Applied \(3d for 4 weeks, 4 remaining\)/i)).toBeInTheDocument();
+  });
+  expect(screen.getByRole("button", { name: /Generate Week Now/i })).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: /Open Week Plan/i })).toHaveAttribute("href", "/week");
+  expect(screen.getByRole("link", { name: /Open Today Workout/i })).toHaveAttribute("href", "/today");
+
+  fireEvent.click(screen.getByRole("button", { name: /Generate Week Now/i }));
+  await waitFor(() => {
+    expect(screen.getByText(/Generated week for Pure Bodybuilding - Phase 1 Full Body\./i)).toBeInTheDocument();
   });
 
   fireEvent.click(screen.getByRole("button", { name: /Apply phase decision/i }));
@@ -272,4 +313,68 @@ test("Settings coaching panel previews and applies intelligence decisions", asyn
     return requestUrl.endsWith("/plan/adaptation/apply") && init?.method === "POST";
   });
   expect(adaptationApplyCall).toBeDefined();
+
+  const generateWeekCall = fetchCalls.find(([input, init]) => {
+    let requestUrl: string;
+    if (typeof input === "string") {
+      requestUrl = input;
+    } else if (input instanceof URL) {
+      requestUrl = input.toString();
+    } else {
+      requestUrl = input.url;
+    }
+    return requestUrl.endsWith("/plan/generate-week") && init?.method === "POST";
+  });
+  expect(generateWeekCall).toBeDefined();
+});
+
+test("Settings adaptation apply failure exposes retry recovery actions", async () => {
+  const profile = {
+    selected_program_id: "pure_bodybuilding_phase_1_full_body",
+    training_location: "gym",
+    equipment_profile: ["dumbbell"],
+    days_available: 5,
+  };
+
+  // @ts-ignore
+  globalThis.fetch.mockImplementation((input, init) => {
+    const url = typeof input === "string" ? input : input.url;
+    if (url.endsWith("/profile") && (!init || init.method === "GET")) {
+      return Promise.resolve(new Response(JSON.stringify(profile), { status: 200 }));
+    }
+    if (url.endsWith("/plan/programs")) {
+      return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }));
+    }
+    if (url.endsWith("/profile/program-recommendation")) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            current_program_id: "pure_bodybuilding_phase_1_full_body",
+            recommended_program_id: "pure_bodybuilding_phase_1_full_body",
+            reason: "stay",
+            compatible_program_ids: ["pure_bodybuilding_phase_1_full_body"],
+            generated_at: new Date().toISOString(),
+          }),
+          { status: 200 },
+        ),
+      );
+    }
+    if (url.endsWith("/plan/adaptation/apply") && init?.method === "POST") {
+      return Promise.resolve(new Response(JSON.stringify({ detail: "fail" }), { status: 500 }));
+    }
+    return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
+  });
+
+  render(<SettingsPage />);
+
+  await waitFor(() => {
+    expect(screen.getByRole("button", { name: /Apply frequency adaptation/i })).toBeInTheDocument();
+  });
+
+  fireEvent.click(screen.getByRole("button", { name: /Apply frequency adaptation/i }));
+  await waitFor(() => {
+    expect(screen.getByText(/Apply frequency adaptation failed/i)).toBeInTheDocument();
+  });
+  expect(screen.getByRole("button", { name: /Retry Apply Frequency Adaptation/i })).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: /Open Week Plan/i })).toHaveAttribute("href", "/week");
 });
