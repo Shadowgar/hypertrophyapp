@@ -365,6 +365,65 @@ test("history page summarizes progression signals and coach queue", async () => 
   expect(screen.getByText(/Coach Queue/i)).toBeInTheDocument();
   expect(screen.getAllByText(/1 pending/i).length).toBeGreaterThan(0);
   expect(screen.getByText(/Latest type: coach_preview/i)).toBeInTheDocument();
+  expect(screen.getByText(/No calendar history yet\./i)).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: /Retry Calendar Load/i })).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: /Open Week Plan/i })).toHaveAttribute("href", "/week");
+});
+
+test("history calendar offers retry and recovers after load failure", async () => {
+  const analyticsPayload = {
+    window: { start_date: "2026-02-01", end_date: "2026-03-05", limit_weeks: 8, checkin_limit: 24 },
+    checkins: [],
+    adherence: { average_score: 0, average_pct: 0, latest_score: 0, trend_delta: 0, high_readiness_streak: 0 },
+    bodyweight_trend: [],
+    strength_trends: [],
+    pr_highlights: [],
+    body_measurement_trends: [],
+    volume_heatmap: { max_volume: 0, weeks: [] },
+  };
+  const timelinePayload = { entries: [] };
+  const calendarPayload = {
+    start_date: "2026-03-01",
+    end_date: "2026-03-04",
+    active_days: 1,
+    current_streak_days: 1,
+    longest_streak_days: 1,
+    days: [
+      { date: "2026-03-03", weekday: 1, set_count: 2, exercise_count: 1, total_volume: 700, completed: true, program_ids: ["pure_bodybuilding_phase_1_full_body"], muscles: ["chest"], pr_count: 0, pr_exercises: [] },
+    ],
+  };
+  let calendarCalls = 0;
+
+  // @ts-ignore
+  globalThis.fetch.mockImplementation((input: RequestInfo | URL) => {
+    const url = resolveUrl(input);
+    if (url.includes("/history/analytics")) {
+      return Promise.resolve(new Response(JSON.stringify(analyticsPayload), { status: 200 }));
+    }
+    if (url.includes("/plan/intelligence/recommendations")) {
+      return Promise.resolve(new Response(JSON.stringify(timelinePayload), { status: 200 }));
+    }
+    if (url.includes("/history/calendar")) {
+      calendarCalls += 1;
+      if (calendarCalls === 1) {
+        return Promise.reject(new Error("network"));
+      }
+      return Promise.resolve(new Response(JSON.stringify(calendarPayload), { status: 200 }));
+    }
+    return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
+  });
+
+  render(<HistoryPage />);
+
+  await waitFor(() => {
+    expect(screen.getByText(/Unable to load calendar history\./i)).toBeInTheDocument();
+  });
+
+  fireEvent.click(screen.getByRole("button", { name: /Retry Calendar Load/i }));
+
+  await waitFor(() => {
+    expect(screen.getByTitle(/2026-03-03: 2 sets/i)).toBeInTheDocument();
+  });
 });
 
 test("history calendar shows planned detail on missed day with zero logged sets", async () => {
@@ -443,6 +502,7 @@ test("history calendar shows planned detail on missed day with zero logged sets"
   await waitFor(() => {
     expect(screen.getByText(/Training Calendar/i)).toBeInTheDocument();
   });
+  expect(screen.getByRole("link", { name: /Open Today Workout/i })).toHaveAttribute("href", "/today");
 
   fireEvent.click(screen.getByTitle(/2026-03-02: 0 sets/i));
 

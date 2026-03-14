@@ -316,6 +316,7 @@ export default function WeekPage() {
   const [plan, setPlan] = useState<GeneratedWeekPlan | null>(null);
   const [programs, setPrograms] = useState<ProgramTemplateOption[]>([]);
   const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const commandDeck = useMemo(() => {
     if (!plan) {
@@ -329,8 +330,12 @@ export default function WeekPage() {
     };
   }, [plan]);
   const coachingContextNote = useMemo(() => buildWeekContextNote(plan), [plan]);
+  const requiresSundayReview = planStatus.startsWith("Sunday review required.");
+  const generationFailed = planStatus.startsWith("Failed to generate week plan:");
+  const awaitingInitialGeneration = !plan && !requiresSundayReview && !generationFailed;
 
   async function generate() {
+    setIsGenerating(true);
     try {
       const reviewStatus = await api.getWeeklyReviewStatus();
       if (reviewStatus.today_is_sunday && reviewStatus.review_required) {
@@ -345,6 +350,8 @@ export default function WeekPage() {
       const detail = error instanceof Error ? error.message : "Unknown error";
       setPlan(null);
       setPlanStatus(`Failed to generate week plan: ${detail}`);
+    } finally {
+      setIsGenerating(false);
     }
   }
 
@@ -383,7 +390,7 @@ export default function WeekPage() {
           <Button aria-label="Generate week plan" className="w-full" onClick={generate}>
             <span className="inline-flex items-center gap-2">
               <UiIcon name="plan" className="ui-icon--action" />
-              Generate Week
+              {isGenerating ? "Generating Week..." : "Generate Week"}
             </span>
           </Button>
         </div>
@@ -392,6 +399,30 @@ export default function WeekPage() {
       <div className="main-card main-card--shell spacing-grid spacing-grid--tight">
         <p className="telemetry-kicker">Planner Status</p>
         <p className="text-sm text-zinc-200">{planStatus}</p>
+        {awaitingInitialGeneration ? (
+          <Button className="w-full" onClick={generate}>
+            <span className="inline-flex items-center gap-2">
+              <UiIcon name="plan" className="ui-icon--action" />
+              Generate First Week Now
+            </span>
+          </Button>
+        ) : null}
+        {requiresSundayReview ? (
+          <a
+            className="inline-flex items-center justify-center rounded-md border border-white/10 bg-zinc-900/70 px-3 py-2 text-xs text-zinc-100 hover:bg-zinc-900"
+            href="/checkin"
+          >
+            Open Check-In
+          </a>
+        ) : null}
+        {generationFailed ? (
+          <Button className="w-full" onClick={generate}>
+            <span className="inline-flex items-center gap-2">
+              <UiIcon name="plan" className="ui-icon--action" />
+              Retry Generate Week
+            </span>
+          </Button>
+        ) : null}
         {commandDeck ? (
           <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
             <div className="rounded-md border border-white/10 bg-zinc-900/70 p-2 text-xs text-zinc-200">

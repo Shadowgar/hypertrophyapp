@@ -157,6 +157,7 @@ test("Week page sends template_id when override selected", async () => {
   render(<WeekPage />);
 
   await waitFor(() => expect(screen.getByLabelText(/Program override/i)).toBeInTheDocument());
+  expect(screen.getByRole("button", { name: /Generate First Week Now/i })).toBeInTheDocument();
 
   const select = screen.getByLabelText(/Program override/i);
   fireEvent.change(select, { target: { value: "upper_lower" } });
@@ -239,5 +240,72 @@ test("Week page blocks generation when Sunday review is required", async () => {
 
   await waitFor(() => {
     expect(screen.getByText(/Sunday review required\. Open Check-In, submit weekly review, then generate the next week\./i)).toBeInTheDocument();
+  });
+  expect(screen.getByRole("link", { name: /Open Check-In/i })).toHaveAttribute("href", "/checkin");
+});
+
+test("Week page offers retry action after generation failure", async () => {
+  let generateCalls = 0;
+  const generatedPlan = {
+    program_template_id: "pure_bodybuilding_phase_1_full_body",
+    split: "full_body",
+    phase: "maintenance",
+    week_start: "2026-03-09",
+    user: { name: "Test User", days_available: 5 },
+    sessions: [],
+    missed_day_policy: "roll-forward-priority-lifts",
+    weekly_volume_by_muscle: {},
+    muscle_coverage: { minimum_sets_per_muscle: 6, covered_muscles: [], under_target_muscles: [], untracked_exercise_count: 0 },
+    mesocycle: { week_index: 1, trigger_weeks_base: 6, trigger_weeks_effective: 6, is_deload_week: false, deload_reason: "scheduled" },
+    deload: { active: false, set_reduction_pct: 0, load_reduction_pct: 0, reason: "scheduled" },
+    template_selection_trace: { selected_template_id: "pure_bodybuilding_phase_1_full_body", ordered_candidate_ids: ["pure_bodybuilding_phase_1_full_body"] },
+    generation_runtime_trace: { outcome: {} },
+    decision_trace: { owner_family: "generated_week", reason_summary: "Generated after retry." },
+  };
+
+  // @ts-ignore
+  globalThis.fetch.mockImplementation((input, init) => {
+    const url = typeof input === "string" ? input : input.url;
+    if (url.endsWith("/plan/programs")) {
+      return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }));
+    }
+    if (url.endsWith("/weekly-review/status")) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            today_is_sunday: false,
+            review_required: false,
+            current_week_start: "2026-03-10",
+            week_start: "2026-03-03",
+            previous_week_start: "2026-02-24",
+            previous_week_end: "2026-03-02",
+            existing_review_submitted: true,
+            previous_week_summary: null,
+          }),
+          { status: 200 },
+        ),
+      );
+    }
+    if (url.endsWith("/plan/generate-week") && init?.method === "POST") {
+      generateCalls += 1;
+      if (generateCalls === 1) {
+        return Promise.resolve(new Response(JSON.stringify({ detail: "boom" }), { status: 500 }));
+      }
+      return Promise.resolve(new Response(JSON.stringify(generatedPlan), { status: 200 }));
+    }
+    return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
+  });
+
+  render(<WeekPage />);
+
+  fireEvent.click(screen.getByRole("button", { name: /Generate Week/i }));
+
+  await waitFor(() => {
+    expect(screen.getByText(/Failed to generate week plan:/i)).toBeInTheDocument();
+  });
+  fireEvent.click(screen.getByRole("button", { name: /Retry Generate Week/i }));
+
+  await waitFor(() => {
+    expect(screen.getByText(/Week generated for Pure Bodybuilding - Phase 1 Full Body\./i)).toBeInTheDocument();
   });
 });

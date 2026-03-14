@@ -190,6 +190,7 @@ function HistoryCalendarPanel() {
   const [dayDetailStatus, setDayDetailStatus] = useState("Select a day to inspect performed exercises.");
   const [viewMode, setViewMode] = useState<CalendarViewMode>("month");
   const [windowOffset, setWindowOffset] = useState(0);
+  const [calendarReloadCount, setCalendarReloadCount] = useState(0);
   const [completionFilter, setCompletionFilter] = useState<CalendarCompletionFilter>("all");
   const [selectedProgram, setSelectedProgram] = useState("all");
   const [selectedMuscle, setSelectedMuscle] = useState("all");
@@ -264,7 +265,7 @@ function HistoryCalendarPanel() {
     return () => {
       mounted = false;
     };
-  }, [viewMode, windowOffset]);
+  }, [viewMode, windowOffset, calendarReloadCount]);
 
   useEffect(() => {
     if (selectedProgram !== "all" && !programOptions.includes(selectedProgram)) {
@@ -425,7 +426,20 @@ function HistoryCalendarPanel() {
             {filteredDays.length === 0 ? <p className="text-xs text-zinc-500">No days match current filters.</p> : null}
           </>
         ) : (
-          <p className="text-xs text-zinc-500">{calendarStatus}</p>
+          <div className="space-y-2">
+            <p className="text-xs text-zinc-500">{calendarStatus}</p>
+            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+              <Button type="button" variant="secondary" onClick={() => setCalendarReloadCount((value) => value + 1)}>
+                Retry Calendar Load
+              </Button>
+              <a
+                className="inline-flex items-center justify-center rounded-md border border-white/10 bg-zinc-900/70 px-3 py-2 text-xs text-zinc-100 hover:bg-zinc-900"
+                href="/week"
+              >
+                Open Week Plan
+              </a>
+            </div>
+          </div>
         )}
       </div>
 
@@ -511,7 +525,15 @@ function HistoryCalendarPanel() {
             ))}
           </div>
         ) : (
-          <p className="text-xs text-zinc-500">{dayDetailStatus}</p>
+          <div className="space-y-2">
+            <p className="text-xs text-zinc-500">{dayDetailStatus}</p>
+            <a
+              className="inline-flex items-center justify-center rounded-md border border-white/10 bg-zinc-900/70 px-3 py-2 text-xs text-zinc-100 hover:bg-zinc-900"
+              href="/today"
+            >
+              Open Today Workout
+            </a>
+          </div>
         )}
       </div>
     </>
