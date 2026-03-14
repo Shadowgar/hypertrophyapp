@@ -24,3 +24,6 @@ dist/
 build/
 coverage/
 reference/
+
+# Local sqlite test artifacts
+apps/api/.tmp*.sqlite3

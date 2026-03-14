@@ -30,6 +30,7 @@ Current product order for active implementation is:
   - added dev-only canonical dogfood reset hook: `POST /profile/dev/reset-phase1` clears user training state, clears active adaptation, and restores canonical Phase 1 selection without deleting the account
   - onboarding Developer Tools now expose this reset as `Reset Current User to Clean Phase 1`
   - focused API runs now initialize test DB config at session startup (`tests/conftest.py`) to reduce local failures caused by missing Postgres during targeted pytest runs
+  - today surface now includes a direct recovery action (`Generate Week and Reload Today`) when no workout exists yet, so canonical dogfood loops can continue without manual route-hopping
 
 ## Next Recommended Action
 

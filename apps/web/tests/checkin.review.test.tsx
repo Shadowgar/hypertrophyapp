@@ -190,4 +190,16 @@ test("check-in page surfaces review command center and adaptive output", async (
   expect(screen.getByText(/^weak_point_bounded_extra_practice$/i)).toBeInTheDocument();
   expect(screen.getByText(/Adaptive Output/i)).toBeInTheDocument();
   expect(screen.getByText(/Load Scale/i)).toBeInTheDocument();
+
+  const generateNextWeekButton = screen.getByRole("button", { name: /Generate Next Week Now/i });
+  fireEvent.click(generateNextWeekButton);
+
+  await waitFor(() => {
+    // @ts-ignore
+    const calls = globalThis.fetch.mock.calls.filter((entry) => {
+      const url = resolveUrl(entry[0]);
+      return url.includes("/plan/generate-week");
+    });
+    expect(calls.length).toBeGreaterThan(0);
+  });
 });

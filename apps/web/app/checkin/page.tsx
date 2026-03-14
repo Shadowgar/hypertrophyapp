@@ -42,6 +42,8 @@ export default function CheckinPage() {
   const [notes, setNotes] = useState("");
   const [status, setStatus] = useState("Loading weekly review...");
   const [reviewResult, setReviewResult] = useState<WeeklyReviewResponse | null>(null);
+  const [isGeneratingNextWeek, setIsGeneratingNextWeek] = useState(false);
+  const [nextWeekGenerationStatus, setNextWeekGenerationStatus] = useState<string | null>(null);
   const statusTone = resolveStatusTone(status);
 
   useEffect(() => {
@@ -91,6 +93,20 @@ export default function CheckinPage() {
       setReviewStatus(refreshedStatus);
     } catch {
       setStatus("Weekly review failed. Verify your inputs and retry.");
+    }
+  }
+
+  async function handleGenerateNextWeek() {
+    setIsGeneratingNextWeek(true);
+    setNextWeekGenerationStatus("Generating next week...");
+    try {
+      await api.generateWeek();
+      setNextWeekGenerationStatus("Next week generated. Open Week Plan to continue.");
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "Unknown error";
+      setNextWeekGenerationStatus(`Failed to generate next week: ${detail}`);
+    } finally {
+      setIsGeneratingNextWeek(false);
     }
   }
 
@@ -355,6 +371,15 @@ export default function CheckinPage() {
                 {item.rationale ? <p>{item.rationale}</p> : null}
               </div>
             ))}
+          </div>
+          <div className="space-y-2">
+            <Button className="w-full" disabled={isGeneratingNextWeek} onClick={handleGenerateNextWeek} type="button">
+              <span className="inline-flex items-center gap-2">
+                <UiIcon name="plan" className="ui-icon--action" />
+                {isGeneratingNextWeek ? "Generating Next Week..." : "Generate Next Week Now"}
+              </span>
+            </Button>
+            {nextWeekGenerationStatus ? <p className="telemetry-meta text-zinc-300">{nextWeekGenerationStatus}</p> : null}
           </div>
         </div>
       ) : null}

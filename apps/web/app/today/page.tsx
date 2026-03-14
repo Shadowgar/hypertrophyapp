@@ -377,6 +377,7 @@ export default function TodayPage() {
   const [setFeedbackByExercise, setSetFeedbackByExercise] = useState<Record<string, WorkoutSetFeedback>>({});
   const [liveRecommendationByExercise, setLiveRecommendationByExercise] = useState<Record<string, WorkoutLiveRecommendation>>({});
   const [workoutSummary, setWorkoutSummary] = useState<WorkoutSummary | null>(null);
+  const [recoveringMissingWorkout, setRecoveringMissingWorkout] = useState(false);
 
   async function loadWorkoutSummary(workoutId: string) {
     try {
@@ -461,6 +462,19 @@ export default function TodayPage() {
     } catch {
       setWorkout(null);
       setMessage("No workout available. Generate week plan first.");
+    }
+  }
+
+  async function recoverMissingWorkout() {
+    setRecoveringMissingWorkout(true);
+    setMessage("Generating canonical week...");
+    try {
+      await api.generateWeek(null);
+      await loadToday();
+    } catch {
+      setMessage("Could not generate a week yet. Try again from Week or Onboarding.");
+    } finally {
+      setRecoveringMissingWorkout(false);
     }
   }
 
@@ -621,7 +635,19 @@ export default function TodayPage() {
 
       <CoachingIntelligencePanel contextLabel="Today" templateId={activeProgramId} contextNote={coachingContextNote} />
 
-      {message ? <div className="main-card main-card--shell ui-body-sm">{message}</div> : null}
+      {message ? (
+        <div className="main-card main-card--shell space-y-2 ui-body-sm">
+          <p>{message}</p>
+          {message.startsWith("No workout available") ? (
+            <Button type="button" onClick={recoverMissingWorkout} disabled={recoveringMissingWorkout}>
+              <span className="inline-flex items-center gap-2">
+                <UiIcon name="refresh" className="ui-icon--action" />
+                {recoveringMissingWorkout ? "Generating..." : "Generate Week and Reload Today"}
+              </span>
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
 
       {workout ? (
         <div className="space-y-3">
