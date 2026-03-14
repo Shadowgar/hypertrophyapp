@@ -204,6 +204,11 @@ test("Settings coaching panel previews and applies intelligence decisions", asyn
   await waitFor(() => {
     expect(screen.getByRole("button", { name: /Generate coaching preview/i })).toBeInTheDocument();
   });
+  expect(screen.getByText(/Active administered program: Pure Bodybuilding - Phase 1 Full Body/i)).toBeInTheDocument();
+  expect(screen.getByText(/Canonical ID: pure_bodybuilding_phase_1_full_body/i)).toBeInTheDocument();
+  expect(screen.queryByText(/Recommended Program:/i)).not.toBeInTheDocument();
+  expect(screen.queryByLabelText(/Settings program selector/i)).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: /Save selected program/i })).not.toBeInTheDocument();
 
   fireEvent.click(screen.getByRole("button", { name: /Generate coaching preview/i }));
 
@@ -297,6 +302,7 @@ test("Settings coaching panel previews and applies intelligence decisions", asyn
   const adaptationRawBody = adaptationInit?.body;
   const adaptationBody = typeof adaptationRawBody === "string" ? JSON.parse(adaptationRawBody) : {};
   expect(adaptationBody).toMatchObject({
+    program_id: "pure_bodybuilding_phase_1_full_body",
     target_days: 3,
     duration_weeks: 4,
   });
@@ -313,6 +319,17 @@ test("Settings coaching panel previews and applies intelligence decisions", asyn
     return requestUrl.endsWith("/plan/adaptation/apply") && init?.method === "POST";
   });
   expect(adaptationApplyCall).toBeDefined();
+  if (!adaptationApplyCall) {
+    throw new Error("Expected adaptation apply request to be issued");
+  }
+  const adaptationApplyInit = adaptationApplyCall[1];
+  const adaptationApplyRawBody = adaptationApplyInit?.body;
+  const adaptationApplyBody = typeof adaptationApplyRawBody === "string" ? JSON.parse(adaptationApplyRawBody) : {};
+  expect(adaptationApplyBody).toMatchObject({
+    program_id: "pure_bodybuilding_phase_1_full_body",
+    target_days: 3,
+    duration_weeks: 4,
+  });
 
   const generateWeekCall = fetchCalls.find(([input, init]) => {
     let requestUrl: string;
@@ -326,6 +343,15 @@ test("Settings coaching panel previews and applies intelligence decisions", asyn
     return requestUrl.endsWith("/plan/generate-week") && init?.method === "POST";
   });
   expect(generateWeekCall).toBeDefined();
+  if (!generateWeekCall) {
+    throw new Error("Expected generate week request to be issued");
+  }
+  const generateWeekInit = generateWeekCall[1];
+  const generateWeekRawBody = generateWeekInit?.body;
+  const generateWeekBody = typeof generateWeekRawBody === "string" ? JSON.parse(generateWeekRawBody) : {};
+  expect(generateWeekBody).toMatchObject({
+    template_id: "pure_bodybuilding_phase_1_full_body",
+  });
 });
 
 test("Settings adaptation apply failure exposes retry recovery actions", async () => {
@@ -370,6 +396,7 @@ test("Settings adaptation apply failure exposes retry recovery actions", async (
   await waitFor(() => {
     expect(screen.getByRole("button", { name: /Apply frequency adaptation/i })).toBeInTheDocument();
   });
+  expect(screen.getByText(/Active administered program: Pure Bodybuilding - Phase 1 Full Body/i)).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole("button", { name: /Apply frequency adaptation/i }));
   await waitFor(() => {

@@ -12,10 +12,11 @@ import {
   resolveReasonText,
   type IntelligenceCoachPreviewResponse,
   type Profile,
-  type ProgramRecommendation,
-  type ProgramTemplateOption,
   type SorenessSeverity,
 } from "@/lib/api";
+
+const CANONICAL_PROGRAM_ID = "pure_bodybuilding_phase_1_full_body";
+const CANONICAL_PROGRAM_NAME = "Pure Bodybuilding - Phase 1 Full Body";
 
 function parseLaggingMuscles(raw: string): string[] {
   return raw
@@ -28,10 +29,6 @@ export default function SettingsPage() {
   const router = useRouter();
   const [theme] = useState("dark");
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [programs, setPrograms] = useState<ProgramTemplateOption[]>([]);
-  const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
-  const [recommendation, setRecommendation] = useState<ProgramRecommendation | null>(null);
-  const [pendingSwitch, setPendingSwitch] = useState<{ targetProgramId: string; rationale: string } | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [coachPreview, setCoachPreview] = useState<IntelligenceCoachPreviewResponse | null>(null);
   const [coachStatus, setCoachStatus] = useState<string | null>(null);
@@ -56,67 +53,13 @@ export default function SettingsPage() {
       .then((data) => {
         if (!mounted) return;
         setProfile(data);
-        setSelectedProgramId(data.selected_program_id ?? null);
         setPreviewFromDays(Math.max(2, Math.min(7, data.days_available || 5)));
         setPreviewToDays(Math.max(2, Math.min(7, Math.min(data.days_available || 5, 3))));
       })
       .catch(() => setProfile(null));
 
-    api.listPrograms()
-      .then((list) => {
-        if (!mounted) return;
-        setPrograms(list);
-      })
-      .catch(() => {});
-
-    api.getProgramRecommendation()
-      .then((data) => {
-        if (!mounted) return;
-        setRecommendation(data);
-      })
-      .catch(() => {});
-
     return () => { mounted = false };
   }, []);
-
-  async function saveProgram() {
-    if (!profile) return;
-    if (!selectedProgramId) {
-      setStatus("Choose a program first");
-      setTimeout(() => setStatus(null), 2000);
-      return;
-    }
-
-    if (selectedProgramId === (profile.selected_program_id ?? null)) {
-      setStatus("Already selected");
-      setPendingSwitch(null);
-      setTimeout(() => setStatus(null), 1500);
-      return;
-    }
-
-    setStatus("Saving...");
-    try {
-      const response = await api.switchProgram({ target_program_id: selectedProgramId, confirm: false });
-      if (response.requires_confirmation) {
-        setPendingSwitch({
-          targetProgramId: selectedProgramId,
-          rationale: resolveReasonText(response.rationale, response.reason) ?? response.reason,
-        });
-        setStatus("Confirm program switch");
-      } else if (response.applied) {
-        const updated = await api.getProfile();
-        setProfile(updated);
-        setPendingSwitch(null);
-        setStatus("Saved");
-      } else {
-        setPendingSwitch(null);
-        setStatus("No change");
-      }
-    } catch {
-      setStatus("Save failed");
-    }
-    setTimeout(() => setStatus(null), 2000);
-  }
 
   async function generateCoachPreview() {
     setCoachStatus("Generating preview...");
@@ -124,7 +67,7 @@ export default function SettingsPage() {
     setApplyStatus(null);
     try {
       const payload = {
-        template_id: selectedProgramId,
+        template_id: CANONICAL_PROGRAM_ID,
         from_days: previewFromDays,
         to_days: previewToDays,
         completion_pct: 90,
@@ -153,7 +96,7 @@ export default function SettingsPage() {
     setPostApplyGenerateStatus(null);
     try {
       const preview = await api.previewFrequencyAdaptation({
-        program_id: selectedProgramId,
+        program_id: CANONICAL_PROGRAM_ID,
         target_days: previewToDays,
         duration_weeks: previewDurationWeeks,
         weak_areas: parseLaggingMuscles(previewLaggingMuscles),
@@ -171,7 +114,7 @@ export default function SettingsPage() {
     setPostApplyGenerateStatus(null);
     try {
       const response = await api.applyFrequencyAdaptation({
-        program_id: selectedProgramId,
+        program_id: CANONICAL_PROGRAM_ID,
         target_days: previewToDays,
         duration_weeks: previewDurationWeeks,
         weak_areas: parseLaggingMuscles(previewLaggingMuscles),
@@ -190,7 +133,7 @@ export default function SettingsPage() {
     setIsGeneratingPostApplyWeek(true);
     setPostApplyGenerateStatus("Generating week from adapted state...");
     try {
-      const generatedWeek = await api.generateWeek(selectedProgramId);
+      const generatedWeek = await api.generateWeek(CANONICAL_PROGRAM_ID);
       setPostApplyGenerateStatus(`Generated week for ${getProgramDisplayName({ id: generatedWeek.program_template_id })}.`);
     } catch {
       setPostApplyGenerateStatus("Generate week failed. Open Week Plan and retry.");
@@ -232,30 +175,6 @@ export default function SettingsPage() {
     }
   }
 
-  async function confirmProgramSwitch() {
-    if (!pendingSwitch) return;
-    setStatus("Applying switch...");
-    try {
-      const response = await api.switchProgram({
-        target_program_id: pendingSwitch.targetProgramId,
-        confirm: true,
-      });
-      if (response.applied) {
-        const updated = await api.getProfile();
-        setProfile(updated);
-        const recommendationUpdated = await api.getProgramRecommendation();
-        setRecommendation(recommendationUpdated);
-        setStatus("Program switched");
-      } else {
-        setStatus("No change");
-      }
-      setPendingSwitch(null);
-    } catch {
-      setStatus("Switch failed");
-    }
-    setTimeout(() => setStatus(null), 2000);
-  }
-
   async function wipeUserData() {
     const confirmed = globalThis.confirm("This will permanently wipe your current user account and all related data. Continue?");
     if (!confirmed) {
@@ -289,14 +208,13 @@ export default function SettingsPage() {
         </div>
       </div>
       <div className="main-card main-card--module spacing-grid">
-        <p className="telemetry-kicker">Program Intelligence</p>
+        <p className="telemetry-kicker">Program Settings</p>
         <div className="rounded-md border border-zinc-800 p-3 text-xs text-zinc-300">
-          <p>
-            Recommended Program: {recommendation ? getProgramDisplayName({ id: recommendation.recommended_program_id }) : "not available"}
-          </p>
-          {recommendation && resolveReasonText(recommendation.rationale, recommendation.reason) ? (
+          <p>Active administered program: {CANONICAL_PROGRAM_NAME}</p>
+          <p>Canonical ID: {CANONICAL_PROGRAM_ID}</p>
+          {profile?.selected_program_id && profile.selected_program_id !== CANONICAL_PROGRAM_ID ? (
             <p>
-              Reason: {resolveReasonText(recommendation.rationale, recommendation.reason)}
+              Compatibility alias detected: {profile.selected_program_id} -&gt; {CANONICAL_PROGRAM_ID}
             </p>
           ) : null}
         </div>
@@ -499,56 +417,17 @@ export default function SettingsPage() {
           <p>Equipment: {(profile?.equipment_profile ?? []).join(", ") || "not set"}</p>
         </div>
 
-        <div className="space-y-2">
-          <p className="telemetry-kicker">Program Override</p>
-          <label htmlFor="settings-program" className="ui-meta">Program</label>
-          <select
-            id="settings-program"
-            className="ui-select"
-            value={selectedProgramId ?? ""}
-            onChange={(e) => setSelectedProgramId(e.target.value || null)}
-            aria-label="Settings program selector"
-            aria-describedby="settings-program-desc"
-          >
-            <option value="">Default — trainer&apos;s recommended program</option>
-            {programs.map((p) => (
-              <option key={p.id} value={p.id}>{getProgramDisplayName(p)}</option>
-            ))}
-          </select>
-          <p id="settings-program-desc" className="text-xs text-zinc-500">{selectedProgramId ? (programs.find((p) => p.id === selectedProgramId)?.description ?? "No description available.") : "Default uses trainer recommendation."}</p>
-          <div className="flex gap-2">
-            <Button aria-label="Save selected program" className="mt-2" onClick={saveProgram}>
-              <span className="inline-flex items-center gap-2">
-                <UiIcon name="save" className="ui-icon--action" />
-                Save Program
-              </span>
-            </Button>
-            {pendingSwitch ? (
-              <Button aria-label="Confirm program switch" className="mt-2" onClick={confirmProgramSwitch} variant="secondary">
-                <span className="inline-flex items-center gap-2">
-                  <UiIcon name="swap" className="ui-icon--action" />
-                  Confirm Switch
-                </span>
-              </Button>
-            ) : null}
-            <p className="telemetry-meta mt-3">{status ?? ""}</p>
-          </div>
-          {pendingSwitch ? (
-            <p className="text-xs text-zinc-500">
-              Switching to <span className="text-zinc-300">{getProgramDisplayName({ id: pendingSwitch.targetProgramId })}</span> requires confirmation ({pendingSwitch.rationale}).
-            </p>
-          ) : null}
-        </div>
-
         <div className="rounded-md border border-red-700/40 bg-red-950/20 p-3">
           <p className="telemetry-kicker">Developer Tools</p>
           <p className="telemetry-meta">Use this to wipe your current user and retest onboarding from scratch.</p>
+          <p className="telemetry-meta">Multi-program switching is intentionally hidden in one-program-first mode.</p>
           <Button className="mt-2 w-full" variant="secondary" onClick={wipeUserData}>
             <span className="inline-flex items-center gap-2">
               <UiIcon name="reset" className="ui-icon--action" />
               Wipe Current User Data
             </span>
           </Button>
+          <p className="telemetry-meta mt-2">{status ?? ""}</p>
         </div>
       </div>
     </div>
