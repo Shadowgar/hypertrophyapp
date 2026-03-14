@@ -30,6 +30,8 @@ Current branch reality is:
 - API and web path-facing fixtures/snapshots now default to `pure_bodybuilding_phase_1_full_body` instead of legacy IDs
 - API now has an explicit canonical end-to-end smoke test for onboarding -> generate-week -> today/log-set -> check-in/review -> history -> adaptation/regenerate continuity on the canonical ID
 - active user-facing catalog/selection surfaces now operate in one-program-first mode (`pure_bodybuilding_phase_1_full_body` only); other templates remain library/compatibility assets, not equal active choices
+- local dogfooding now has a dev-only authenticated reset hook (`POST /profile/dev/reset-phase1`) that clears training state and restores canonical Phase 1 selection without deleting the account
+- focused API verification is now more deterministic in local runs because test startup config sets `DATABASE_URL` early via `configure_test_database("pytest_session_default")`, preventing accidental fallback to default Postgres when unavailable
 - the next bounded product seam is end-to-end dogfooding of this real Phase 1 administered path before wider cleanup
 
 Current product order for active implementation is:

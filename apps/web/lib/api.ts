@@ -892,6 +892,11 @@ export const api = {
       method: "POST",
       body: JSON.stringify({}),
     }),
+  resetProfileToPhase1: () =>
+    request<{ status: string }>("/profile/dev/reset-phase1", {
+      method: "POST",
+      body: JSON.stringify({}),
+    }),
   devWipeUser: (payload: { email: string; confirmation: string }) =>
     request<{ status: string }>("/auth/dev/wipe-user", {
       method: "POST",

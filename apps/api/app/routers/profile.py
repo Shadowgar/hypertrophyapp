@@ -24,11 +24,13 @@ from core_engine import (
 )
 from sqlalchemy.orm import Session
 
+from ..config import settings
 from ..database import get_db
 from ..deps import get_current_user
 from ..models import BodyMeasurementEntry, SorenessEntry, User, WeeklyCheckin, WeeklyReviewCycle, WorkoutSetLog
-from ..models import ExerciseState, PasswordResetToken, WorkoutPlan, WorkoutSessionState
+from ..models import CoachingRecommendation, ExerciseState, PasswordResetToken, WorkoutPlan, WorkoutSessionState
 from ..program_loader import (
+    PHASE1_CANONICAL_PROGRAM_ID,
     list_program_templates,
     resolve_active_administered_program_id,
     resolve_administered_program_id,
@@ -60,6 +62,18 @@ router = APIRouter()
 
 DbSession = Annotated[Session, Depends(get_db)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+def _clear_user_training_state(db: Session, *, user_id: str) -> None:
+    db.query(WorkoutSessionState).filter(WorkoutSessionState.user_id == user_id).delete(synchronize_session=False)
+    db.query(WorkoutSetLog).filter(WorkoutSetLog.user_id == user_id).delete(synchronize_session=False)
+    db.query(ExerciseState).filter(ExerciseState.user_id == user_id).delete(synchronize_session=False)
+    db.query(WorkoutPlan).filter(WorkoutPlan.user_id == user_id).delete(synchronize_session=False)
+    db.query(WeeklyReviewCycle).filter(WeeklyReviewCycle.user_id == user_id).delete(synchronize_session=False)
+    db.query(WeeklyCheckin).filter(WeeklyCheckin.user_id == user_id).delete(synchronize_session=False)
+    db.query(SorenessEntry).filter(SorenessEntry.user_id == user_id).delete(synchronize_session=False)
+    db.query(BodyMeasurementEntry).filter(BodyMeasurementEntry.user_id == user_id).delete(synchronize_session=False)
+    db.query(CoachingRecommendation).filter(CoachingRecommendation.user_id == user_id).delete(synchronize_session=False)
 
 
 def _latest_plan(db: Session, user_id: str) -> WorkoutPlan | None:
@@ -679,18 +693,34 @@ def wipe_current_user_data(
     db: DbSession,
     current_user: CurrentUser,
 ) -> StatusResponse:
+    if not settings.allow_dev_wipe_endpoints:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Dev wipe endpoints disabled")
+
     user_id = current_user.id
 
-    db.query(WorkoutSessionState).filter(WorkoutSessionState.user_id == user_id).delete(synchronize_session=False)
-    db.query(WorkoutSetLog).filter(WorkoutSetLog.user_id == user_id).delete(synchronize_session=False)
-    db.query(ExerciseState).filter(ExerciseState.user_id == user_id).delete(synchronize_session=False)
-    db.query(WorkoutPlan).filter(WorkoutPlan.user_id == user_id).delete(synchronize_session=False)
-    db.query(WeeklyReviewCycle).filter(WeeklyReviewCycle.user_id == user_id).delete(synchronize_session=False)
-    db.query(WeeklyCheckin).filter(WeeklyCheckin.user_id == user_id).delete(synchronize_session=False)
-    db.query(SorenessEntry).filter(SorenessEntry.user_id == user_id).delete(synchronize_session=False)
-    db.query(BodyMeasurementEntry).filter(BodyMeasurementEntry.user_id == user_id).delete(synchronize_session=False)
+    _clear_user_training_state(db, user_id=user_id)
     db.query(PasswordResetToken).filter(PasswordResetToken.user_id == user_id).delete(synchronize_session=False)
     db.query(User).filter(User.id == user_id).delete(synchronize_session=False)
     db.commit()
 
     return StatusResponse(status="wiped")
+
+
+@router.post("/profile/dev/reset-phase1", response_model=StatusResponse)
+def reset_current_user_to_phase1(
+    db: DbSession,
+    current_user: CurrentUser,
+) -> StatusResponse:
+    if not settings.allow_dev_wipe_endpoints:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Dev wipe endpoints disabled")
+
+    _clear_user_training_state(db, user_id=current_user.id)
+
+    current_user.selected_program_id = PHASE1_CANONICAL_PROGRAM_ID
+    current_user.split_preference = "full_body"
+    current_user.days_available = 5
+    current_user.active_frequency_adaptation = None
+
+    db.add(current_user)
+    db.commit()
+    return StatusResponse(status="reset_to_phase1")

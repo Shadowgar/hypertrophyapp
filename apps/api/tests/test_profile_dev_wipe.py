@@ -91,3 +91,69 @@ def test_profile_get_returns_default_payload_before_onboarding() -> None:
     assert payload["session_time_budget_minutes"] is None
     assert payload["movement_restrictions"] == []
     assert payload["near_failure_tolerance"] is None
+
+
+def test_profile_dev_reset_phase1_clears_training_state_and_keeps_account() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "phase1-reset@example.com", "password": "Phase1Reset1", "name": "Phase 1 Reset"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Phase 1 Reset",
+            "age": 31,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "pure_bodybuilding_phase_1_full_body",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "dumbbell", "bench", "machine", "cable"],
+            "days_available": 5,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    generate_week = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate_week.status_code == 200
+
+    apply_adaptation = client.post(
+        "/plan/adaptation/apply",
+        headers=headers,
+        json={
+            "program_id": "pure_bodybuilding_phase_1_full_body",
+            "target_days": 3,
+            "duration_weeks": 2,
+            "weak_areas": ["chest", "hamstrings"],
+        },
+    )
+    assert apply_adaptation.status_code == 200
+
+    reset = client.post("/profile/dev/reset-phase1", headers=headers)
+    assert reset.status_code == 200
+    assert reset.json()["status"] == "reset_to_phase1"
+
+    profile_after = client.get("/profile", headers=headers)
+    assert profile_after.status_code == 200
+    assert profile_after.json()["selected_program_id"] == "pure_bodybuilding_phase_1_full_body"
+    assert profile_after.json()["split_preference"] == "full_body"
+    assert profile_after.json()["days_available"] == 5
+
+    generated_after_reset = client.post("/plan/generate-week", headers=headers, json={})
+    assert generated_after_reset.status_code == 200
+    payload_after_reset = generated_after_reset.json()
+    assert payload_after_reset["program_template_id"] == "pure_bodybuilding_phase_1_full_body"
+    assert len(payload_after_reset["sessions"]) == 5

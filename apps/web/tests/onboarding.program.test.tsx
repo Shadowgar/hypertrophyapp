@@ -148,3 +148,45 @@ test("Onboarding restores saved draft progress from local storage", async () => 
   expect(screen.getByText(/Recovered saved onboarding draft/i)).toBeInTheDocument();
   expect(screen.getByRole("button", { name: /Clear Saved Draft/i })).toBeInTheDocument();
 });
+
+test("Developer reset control calls canonical phase1 reset endpoint", async () => {
+  const programs = [
+    {
+      id: "pure_bodybuilding_phase_1_full_body",
+      name: "Pure Bodybuilding - Phase 1 Full Body",
+      description: "A 5-day full body",
+    },
+  ];
+
+  const originalConfirm = globalThis.confirm;
+  // @ts-ignore
+  globalThis.confirm = vi.fn(() => true);
+
+  // @ts-ignore
+  globalThis.fetch.mockImplementation((input, _init) => {
+    if (typeof input === "string" && input.endsWith("/plan/programs")) {
+      return Promise.resolve(new Response(JSON.stringify(programs), { status: 200 }));
+    }
+    if (typeof input === "string" && input.endsWith("/profile/dev/reset-phase1")) {
+      return Promise.resolve(new Response(JSON.stringify({ status: "reset_to_phase1" }), { status: 200 }));
+    }
+    return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
+  });
+
+  render(<OnboardingPage />);
+
+  await waitFor(() => {
+    expect(screen.getByRole("button", { name: /Reset Current User to Clean Phase 1/i })).toBeInTheDocument();
+  });
+
+  fireEvent.click(screen.getByRole("button", { name: /Reset Current User to Clean Phase 1/i }));
+
+  await waitFor(() => {
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      expect.stringMatching(/\/profile\/dev\/reset-phase1$/),
+      expect.any(Object),
+    );
+  });
+
+  globalThis.confirm = originalConfirm;
+});

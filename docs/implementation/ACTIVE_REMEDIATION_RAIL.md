@@ -27,10 +27,13 @@ Current product order for active implementation is:
   - loader runtime-source resolution now prefers the canonical Phase 1 template source directly and keeps legacy source IDs as compatibility fallbacks only
   - one explicit canonical-path smoke test now validates adaptation/regeneration continuity and authored-field availability on the active API path
   - legacy IDs remain only in explicit compatibility handling/tests, not as primary user-path fixtures
+  - added dev-only canonical dogfood reset hook: `POST /profile/dev/reset-phase1` clears user training state, clears active adaptation, and restores canonical Phase 1 selection without deleting the account
+  - onboarding Developer Tools now expose this reset as `Reset Current User to Clean Phase 1`
+  - focused API runs now initialize test DB config at session startup (`tests/conftest.py`) to reduce local failures caused by missing Postgres during targeted pytest runs
 
 ## Next Recommended Action
 
-- Execute live dogfooding/regression hardening for the canonical Phase 1 administered path (desktop/mobile browser), and fix only user-path blockers discovered there.
+- Execute repeated browser dogfooding on the canonical Phase 1 loop using `/profile/dev/reset-phase1`, and fix only blockers found in onboarding -> generate-week -> today/log-set -> check-in/review -> history -> adaptation/regenerate continuity.
 - Keep compatibility aliases explicit at boundaries, and keep broader architecture/generalization work downstream unless directly blocking canonical-path reliability.
 
 ## Closed Work Do Not Reopen Without Evidence

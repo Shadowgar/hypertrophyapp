@@ -73,6 +73,21 @@ Current execution order:
 5. dogfood the full administered Phase 1 path end-to-end on desktop/mobile browser
 6. only then resume broader `intelligence.py`, coaching-state, and SFR cleanup where it directly helps the active product path
 
+## Local Dogfood Loop (Canonical Path)
+
+Use this repeatable local loop for one-program-first verification:
+
+1. Log in with a local test account.
+2. Reset current account to clean Phase 1 state:
+   - `POST /profile/dev/reset-phase1`
+   - or use onboarding Developer Tools: `Reset Current User to Clean Phase 1`.
+3. Generate week (`POST /plan/generate-week`).
+4. Open today workout (`GET /workout/today`) and verify authored execution detail is present.
+5. Log a set (`POST /workout/{session_id}/log-set`).
+6. Submit weekly check-in/review (`POST /weekly-checkin`, `POST /weekly-review`).
+7. Verify history (`GET /history/calendar`).
+8. Apply temporary frequency adaptation (`POST /plan/adaptation/apply`), regenerate week, verify canonical continuity.
+
 ## Ordered Execution Plan (Do In Order)
 
 ### Phase A - Architecture Audit and Isolation

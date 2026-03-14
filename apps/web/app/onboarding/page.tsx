@@ -889,6 +889,25 @@ export default function OnboardingPage() {
     }
   }
 
+  async function resetCurrentLoggedInUserToPhase1() {
+    const confirmed = globalThis.confirm(
+      "This will clear training history/state for the current logged-in user and reset them to the canonical Phase 1 path. Continue?",
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    setStatus("Resetting current logged-in user to clean Phase 1...");
+    try {
+      await api.resetProfileToPhase1();
+      setSelectedProgramId("pure_bodybuilding_phase_1_full_body");
+      setDaysAvailable(5);
+      setStatus("Current user reset to clean Phase 1 state");
+    } catch {
+      setStatus("Current user Phase 1 reset failed (log in first or use wipe-by-email)");
+    }
+  }
+
   function renderQuestionStep() {
     if (!currentQuestion) {
       return null;
@@ -1344,11 +1363,17 @@ export default function OnboardingPage() {
       <div className="rounded-md border border-red-700/40 bg-red-950/20 p-3">
         <p className="telemetry-kicker">Developer Tools</p>
         <p className="telemetry-meta">Reset onboarding/program test state without leaving this screen.</p>
-        <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-3">
+        <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2">
           <Button type="button" variant="secondary" onClick={wipeTestUserByEmail}>
             <span className="inline-flex items-center gap-2">
               <UiIcon name="reset" className="ui-icon--action" />
               Wipe Test User By Email
+            </span>
+          </Button>
+          <Button type="button" variant="secondary" onClick={resetCurrentLoggedInUserToPhase1}>
+            <span className="inline-flex items-center gap-2">
+              <UiIcon name="reset" className="ui-icon--action" />
+              Reset Current User to Clean Phase 1
             </span>
           </Button>
           <Button type="button" variant="secondary" onClick={wipeCurrentLoggedInUserData}>
