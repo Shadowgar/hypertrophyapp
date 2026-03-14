@@ -40,9 +40,9 @@ test("history calendar lets user inspect prior day exercises", async () => {
     longest_streak_days: 1,
     days: [
       { date: "2026-03-01", weekday: 6, set_count: 0, exercise_count: 0, total_volume: 0, completed: false, program_ids: [], muscles: [], pr_count: 0, pr_exercises: [] },
-      { date: "2026-03-02", weekday: 0, set_count: 2, exercise_count: 1, total_volume: 1200, completed: true, program_ids: ["full_body_v1"], muscles: ["chest"], pr_count: 1, pr_exercises: ["bench_press"] },
-      { date: "2026-03-03", weekday: 1, set_count: 1, exercise_count: 1, total_volume: 700, completed: true, program_ids: ["full_body_v1"], muscles: ["hamstrings"], pr_count: 0, pr_exercises: [] },
-      { date: "2026-03-04", weekday: 2, set_count: 0, exercise_count: 0, total_volume: 0, completed: false, program_ids: ["full_body_v1"], muscles: ["back"], pr_count: 0, pr_exercises: [] },
+      { date: "2026-03-02", weekday: 0, set_count: 2, exercise_count: 1, total_volume: 1200, completed: true, program_ids: ["pure_bodybuilding_phase_1_full_body"], muscles: ["chest"], pr_count: 1, pr_exercises: ["bench_press"] },
+      { date: "2026-03-03", weekday: 1, set_count: 1, exercise_count: 1, total_volume: 700, completed: true, program_ids: ["pure_bodybuilding_phase_1_full_body"], muscles: ["hamstrings"], pr_count: 0, pr_exercises: [] },
+      { date: "2026-03-04", weekday: 2, set_count: 0, exercise_count: 0, total_volume: 0, completed: false, program_ids: ["pure_bodybuilding_phase_1_full_body"], muscles: ["back"], pr_count: 0, pr_exercises: [] },
     ],
   };
 
@@ -134,11 +134,11 @@ test("history calendar supports view toggles, filters, and previous weekday jump
     days: [
       { date: "2026-02-24", weekday: 1, set_count: 2, exercise_count: 1, total_volume: 900, completed: true, program_ids: ["upper_lower_v1"], muscles: ["back"], pr_count: 1, pr_exercises: ["barbell_row"] },
       { date: "2026-02-25", weekday: 2, set_count: 0, exercise_count: 0, total_volume: 0, completed: false, program_ids: ["upper_lower_v1"], muscles: ["back"], pr_count: 0, pr_exercises: [] },
-      { date: "2026-02-26", weekday: 3, set_count: 1, exercise_count: 1, total_volume: 600, completed: true, program_ids: ["full_body_v1"], muscles: ["chest"], pr_count: 1, pr_exercises: ["bench_press"] },
-      { date: "2026-02-27", weekday: 4, set_count: 0, exercise_count: 0, total_volume: 0, completed: false, program_ids: ["full_body_v1"], muscles: ["chest"], pr_count: 0, pr_exercises: [] },
-      { date: "2026-02-28", weekday: 5, set_count: 0, exercise_count: 0, total_volume: 0, completed: false, program_ids: ["full_body_v1"], muscles: ["hamstrings"], pr_count: 0, pr_exercises: [] },
-      { date: "2026-03-01", weekday: 6, set_count: 1, exercise_count: 1, total_volume: 500, completed: true, program_ids: ["full_body_v1"], muscles: ["hamstrings"], pr_count: 0, pr_exercises: [] },
-      { date: "2026-03-02", weekday: 0, set_count: 0, exercise_count: 0, total_volume: 0, completed: false, program_ids: ["full_body_v1"], muscles: ["hamstrings"], pr_count: 0, pr_exercises: [] },
+      { date: "2026-02-26", weekday: 3, set_count: 1, exercise_count: 1, total_volume: 600, completed: true, program_ids: ["pure_bodybuilding_phase_1_full_body"], muscles: ["chest"], pr_count: 1, pr_exercises: ["bench_press"] },
+      { date: "2026-02-27", weekday: 4, set_count: 0, exercise_count: 0, total_volume: 0, completed: false, program_ids: ["pure_bodybuilding_phase_1_full_body"], muscles: ["chest"], pr_count: 0, pr_exercises: [] },
+      { date: "2026-02-28", weekday: 5, set_count: 0, exercise_count: 0, total_volume: 0, completed: false, program_ids: ["pure_bodybuilding_phase_1_full_body"], muscles: ["hamstrings"], pr_count: 0, pr_exercises: [] },
+      { date: "2026-03-01", weekday: 6, set_count: 1, exercise_count: 1, total_volume: 500, completed: true, program_ids: ["pure_bodybuilding_phase_1_full_body"], muscles: ["hamstrings"], pr_count: 0, pr_exercises: [] },
+      { date: "2026-03-02", weekday: 0, set_count: 0, exercise_count: 0, total_volume: 0, completed: false, program_ids: ["pure_bodybuilding_phase_1_full_body"], muscles: ["hamstrings"], pr_count: 0, pr_exercises: [] },
       { date: "2026-03-03", weekday: 1, set_count: 3, exercise_count: 1, total_volume: 1300, completed: true, program_ids: ["upper_lower_v1"], muscles: ["back"], pr_count: 1, pr_exercises: ["barbell_row"] },
     ],
   };
@@ -317,7 +317,7 @@ test("history page summarizes progression signals and coach queue", async () => 
         recommendation_id: "rec_1",
         recommendation_type: "coach_preview",
         status: "pending",
-        template_id: "full_body_v1",
+        template_id: "pure_bodybuilding_phase_1_full_body",
         current_phase: "accumulation",
         recommended_phase: "intensification",
         progression_action: "progress",
@@ -358,13 +358,13 @@ test("history page summarizes progression signals and coach queue", async () => 
     expect(screen.getByText(/Progression Brief/i)).toBeInTheDocument();
   });
 
-  expect(screen.getByText(/Progression is compounding\./i)).toBeInTheDocument();
-  expect(screen.getAllByText(/Bench Press/i).length).toBeGreaterThan(0);
+  expect(screen.getByText(/Latest rationale: Momentum is high\./i)).toBeInTheDocument();
+  expect(screen.getAllByText(/bench_press/i).length).toBeGreaterThan(0);
   expect(screen.getAllByText(/PR 105 kg \(\+5\)/i).length).toBeGreaterThan(0);
   expect(screen.getAllByText(/\+1.5 kg/i).length).toBeGreaterThan(0);
   expect(screen.getByText(/Coach Queue/i)).toBeInTheDocument();
   expect(screen.getAllByText(/1 pending/i).length).toBeGreaterThan(0);
-  expect(screen.getByText(/Latest: Coach Preview/i)).toBeInTheDocument();
+  expect(screen.getByText(/Latest type: coach_preview/i)).toBeInTheDocument();
 });
 
 test("history calendar shows planned detail on missed day with zero logged sets", async () => {
@@ -386,9 +386,9 @@ test("history calendar shows planned detail on missed day with zero logged sets"
     current_streak_days: 0,
     longest_streak_days: 0,
     days: [
-      { date: "2026-03-01", weekday: 6, set_count: 0, exercise_count: 0, total_volume: 0, completed: false, program_ids: ["full_body_v1"], muscles: ["chest"], pr_count: 0, pr_exercises: [] },
-      { date: "2026-03-02", weekday: 0, set_count: 0, exercise_count: 0, total_volume: 0, completed: false, program_ids: ["full_body_v1"], muscles: ["chest"], pr_count: 0, pr_exercises: [] },
-      { date: "2026-03-03", weekday: 1, set_count: 0, exercise_count: 0, total_volume: 0, completed: false, program_ids: ["full_body_v1"], muscles: ["chest"], pr_count: 0, pr_exercises: [] },
+      { date: "2026-03-01", weekday: 6, set_count: 0, exercise_count: 0, total_volume: 0, completed: false, program_ids: ["pure_bodybuilding_phase_1_full_body"], muscles: ["chest"], pr_count: 0, pr_exercises: [] },
+      { date: "2026-03-02", weekday: 0, set_count: 0, exercise_count: 0, total_volume: 0, completed: false, program_ids: ["pure_bodybuilding_phase_1_full_body"], muscles: ["chest"], pr_count: 0, pr_exercises: [] },
+      { date: "2026-03-03", weekday: 1, set_count: 0, exercise_count: 0, total_volume: 0, completed: false, program_ids: ["pure_bodybuilding_phase_1_full_body"], muscles: ["chest"], pr_count: 0, pr_exercises: [] },
     ],
   };
 
@@ -398,7 +398,7 @@ test("history calendar shows planned detail on missed day with zero logged sets"
     workouts: [
       {
         workout_id: "planned_only_workout",
-        program_id: "full_body_v1",
+        program_id: "pure_bodybuilding_phase_1_full_body",
         total_sets: 0,
         planned_sets_total: 2,
         set_delta: -2,

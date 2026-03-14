@@ -16,16 +16,24 @@ beforeEach(() => {
 });
 
 test("Settings page shows selected program and saves changes", async () => {
-  const profile = { selected_program_id: "full_body_v1", training_location: "gym", equipment_profile: ["dumbbell"], days_available: 5 };
+  const profile = {
+    selected_program_id: "pure_bodybuilding_phase_1_full_body",
+    training_location: "gym",
+    equipment_profile: ["dumbbell"],
+    days_available: 5,
+  };
   const recommendation = {
-    current_program_id: "full_body_v1",
+    current_program_id: "pure_bodybuilding_phase_1_full_body",
     recommended_program_id: "upper_lower",
     reason: "mesocycle_complete_rotate",
     rationale: "The current mesocycle appears complete. Rotate to a fresh compatible template.",
-    compatible_program_ids: ["full_body_v1", "upper_lower"],
+    compatible_program_ids: ["pure_bodybuilding_phase_1_full_body", "upper_lower"],
     generated_at: new Date().toISOString(),
   };
-  const programs = [{ id: "full_body_v1", name: "Full Body V1" }, { id: "upper_lower", name: "Upper/Lower" }];
+  const programs = [
+    { id: "pure_bodybuilding_phase_1_full_body", name: "Pure Bodybuilding - Phase 1 Full Body" },
+    { id: "upper_lower", name: "Upper/Lower" },
+  ];
 
   // @ts-ignore
   globalThis.fetch.mockImplementation((input, init) => {
@@ -46,7 +54,7 @@ test("Settings page shows selected program and saves changes", async () => {
           new Response(
             JSON.stringify({
               status: "confirmation_required",
-              current_program_id: "full_body_v1",
+              current_program_id: "pure_bodybuilding_phase_1_full_body",
               target_program_id: payload.target_program_id,
               recommended_program_id: "upper_lower",
               reason: "mesocycle_complete_rotate",
@@ -62,7 +70,7 @@ test("Settings page shows selected program and saves changes", async () => {
         new Response(
           JSON.stringify({
             status: "switched",
-            current_program_id: "full_body_v1",
+            current_program_id: "pure_bodybuilding_phase_1_full_body",
             target_program_id: payload.target_program_id,
             recommended_program_id: "upper_lower",
             reason: "mesocycle_complete_rotate",

@@ -84,7 +84,7 @@ test("history page renders analytics dashboard payload", async () => {
         recommendation_id: "rec_1",
         recommendation_type: "coach_preview",
         status: "previewed",
-        template_id: "full_body_v1",
+        template_id: "pure_bodybuilding_phase_1_full_body",
         current_phase: "accumulation",
         recommended_phase: "intensification",
         progression_action: "hold",

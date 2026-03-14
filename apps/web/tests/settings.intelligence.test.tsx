@@ -18,23 +18,26 @@ beforeEach(() => {
 
 test("Settings coaching panel previews and applies intelligence decisions", async () => {
   const profile = {
-    selected_program_id: "full_body_v1",
+    selected_program_id: "pure_bodybuilding_phase_1_full_body",
     training_location: "gym",
     equipment_profile: ["dumbbell"],
     days_available: 5,
   };
   const recommendation = {
-    current_program_id: "full_body_v1",
+    current_program_id: "pure_bodybuilding_phase_1_full_body",
     recommended_program_id: "upper_lower",
     reason: "mesocycle_complete_rotate",
-    compatible_program_ids: ["full_body_v1", "upper_lower"],
+    compatible_program_ids: ["pure_bodybuilding_phase_1_full_body", "upper_lower"],
     generated_at: new Date().toISOString(),
   };
-  const programs = [{ id: "full_body_v1", name: "Full Body V1" }, { id: "upper_lower", name: "Upper/Lower" }];
+  const programs = [
+    { id: "pure_bodybuilding_phase_1_full_body", name: "Pure Bodybuilding - Phase 1 Full Body" },
+    { id: "upper_lower", name: "Upper/Lower" },
+  ];
   const preview = {
     recommendation_id: "rec_123",
-    template_id: "full_body_v1",
-    program_name: "Full Body V1",
+    template_id: "pure_bodybuilding_phase_1_full_body",
+    program_name: "Pure Bodybuilding - Phase 1 Full Body",
     schedule: {
       from_days: 5,
       to_days: 3,
@@ -132,7 +135,7 @@ test("Settings coaching panel previews and applies intelligence decisions", asyn
         new Response(
           JSON.stringify({
             status: "applied",
-            program_id: "full_body_v1",
+            program_id: "pure_bodybuilding_phase_1_full_body",
             target_days: 3,
             duration_weeks: 4,
             weeks_remaining: 4,

@@ -57,7 +57,7 @@ test("home page loads authenticated dashboard metrics", async () => {
             protein: 220,
             fat: 70,
             carbs: 300,
-            selected_program_id: "full_body_v1",
+            selected_program_id: "pure_bodybuilding_phase_1_full_body",
           }),
           { status: 200 },
         ),
@@ -68,7 +68,7 @@ test("home page loads authenticated dashboard metrics", async () => {
       return Promise.resolve(
         new Response(
           JSON.stringify({
-            session_id: "full_body_v1-day1",
+            session_id: "pure_bodybuilding_phase_1_full_body-day1",
             title: "Full Body A",
             date: "2026-03-07",
             resume: false,

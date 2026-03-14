@@ -49,7 +49,13 @@ test("visual snapshot: week route", async () => {
       return Promise.resolve(
         new Response(
           JSON.stringify([
-            { id: "full_body_v1", name: "Full Body V1", version: "1.0.0", split: "full_body", days_supported: [3, 4, 5] },
+            {
+              id: "pure_bodybuilding_phase_1_full_body",
+              name: "Pure Bodybuilding - Phase 1 Full Body",
+              version: "1.0.0",
+              split: "full_body",
+              days_supported: [3, 4, 5],
+            },
           ]),
           { status: 200 },
         ),
@@ -77,7 +83,7 @@ test("visual snapshot: settings route", async () => {
             training_location: "home",
             equipment_profile: ["dumbbell", "bodyweight"],
             days_available: 4,
-            selected_program_id: "full_body_v1",
+            selected_program_id: "pure_bodybuilding_phase_1_full_body",
           }),
           { status: 200 },
         ),
@@ -89,8 +95,8 @@ test("visual snapshot: settings route", async () => {
         new Response(
           JSON.stringify([
             {
-              id: "full_body_v1",
-              name: "Full Body V1",
+              id: "pure_bodybuilding_phase_1_full_body",
+              name: "Pure Bodybuilding - Phase 1 Full Body",
               version: "1.0.0",
               split: "full_body",
               days_supported: [3, 4, 5],
@@ -106,10 +112,10 @@ test("visual snapshot: settings route", async () => {
       return Promise.resolve(
         new Response(
           JSON.stringify({
-            current_program_id: "full_body_v1",
-            recommended_program_id: "full_body_v1",
+            current_program_id: "pure_bodybuilding_phase_1_full_body",
+            recommended_program_id: "pure_bodybuilding_phase_1_full_body",
             reason: "current_selection_is_compatible",
-            compatible_program_ids: ["full_body_v1"],
+            compatible_program_ids: ["pure_bodybuilding_phase_1_full_body"],
             generated_at: "2026-03-05T00:00:00Z",
           }),
           { status: 200 },

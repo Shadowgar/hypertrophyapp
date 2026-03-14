@@ -73,7 +73,7 @@ test("Week page coaching panel previews and auto-applies phase decision", async 
       return Promise.resolve(
         new Response(
           JSON.stringify({
-            selected_program_id: "full_body_v1",
+            selected_program_id: "pure_bodybuilding_phase_1_full_body",
             days_available: 5,
           }),
           { status: 200 },
@@ -84,7 +84,7 @@ test("Week page coaching panel previews and auto-applies phase decision", async 
       return Promise.resolve(
         new Response(
           JSON.stringify([
-            { id: "full_body_v1", name: "Full Body V1" },
+            { id: "pure_bodybuilding_phase_1_full_body", name: "Pure Bodybuilding - Phase 1 Full Body" },
             { id: "upper_lower", name: "Upper Lower" },
           ]),
           { status: 200 },
@@ -178,7 +178,7 @@ test("Check-in page renders coaching panel and preview result", async () => {
       return Promise.resolve(
         new Response(
           JSON.stringify({
-            selected_program_id: "full_body_v1",
+            selected_program_id: "pure_bodybuilding_phase_1_full_body",
             days_available: 5,
             weight: 84,
             calories: 2700,
@@ -195,7 +195,7 @@ test("Check-in page renders coaching panel and preview result", async () => {
         new Response(
           JSON.stringify({
             recommendation_id: "rec_checkin_1",
-            template_id: "full_body_v1",
+            template_id: "pure_bodybuilding_phase_1_full_body",
             program_name: "Full Body V1",
             schedule: {
               from_days: 5,
@@ -261,7 +261,7 @@ test("Today page renders coaching panel and preview result", async () => {
       return Promise.resolve(
         new Response(
           JSON.stringify({
-            session_id: "adaptive_full_body_gold_v0_1-day5",
+            session_id: "pure_bodybuilding_phase_1_full_body-day5",
             title: "Arms & Weak Points",
             date: "2026-03-12",
             resume: false,
@@ -307,7 +307,7 @@ test("Today page renders coaching panel and preview result", async () => {
       return Promise.resolve(
         new Response(
           JSON.stringify({
-            selected_program_id: "full_body_v1",
+            selected_program_id: "pure_bodybuilding_phase_1_full_body",
             days_available: 5,
           }),
           { status: 200 },
@@ -319,7 +319,7 @@ test("Today page renders coaching panel and preview result", async () => {
         new Response(
           JSON.stringify({
             recommendation_id: "rec_today_1",
-            template_id: "full_body_v1",
+            template_id: "pure_bodybuilding_phase_1_full_body",
             program_name: "Full Body V1",
             schedule: {
               from_days: 5,

@@ -54,7 +54,12 @@ test("Onboarding surfaces register validation errors", async () => {
     const url = typeof input === "string" ? input : input.url;
 
     if (url.endsWith("/plan/programs")) {
-      return Promise.resolve(new Response(JSON.stringify([{ id: "full_body_v1", name: "Full Body v1" }]), { status: 200 }));
+      return Promise.resolve(
+        new Response(
+          JSON.stringify([{ id: "pure_bodybuilding_phase_1_full_body", name: "Pure Bodybuilding - Phase 1 Full Body" }]),
+          { status: 200 },
+        ),
+      );
     }
 
     if (url.endsWith("/auth/register")) {
@@ -101,7 +106,12 @@ test("Onboarding developer wipe button calls dev wipe endpoint", async () => {
     const url = typeof input === "string" ? input : input.url;
 
     if (url.endsWith("/plan/programs")) {
-      return Promise.resolve(new Response(JSON.stringify([{ id: "full_body_v1", name: "Full Body v1" }]), { status: 200 }));
+      return Promise.resolve(
+        new Response(
+          JSON.stringify([{ id: "pure_bodybuilding_phase_1_full_body", name: "Pure Bodybuilding - Phase 1 Full Body" }]),
+          { status: 200 },
+        ),
+      );
     }
     if (url.endsWith("/auth/dev/wipe-user")) {
       return Promise.resolve(new Response(JSON.stringify({ status: "wiped" }), { status: 200 }));
@@ -147,7 +157,12 @@ test("Onboarding register request normalizes email casing and whitespace", async
     const url = typeof input === "string" ? input : input.url;
 
     if (url.endsWith("/plan/programs")) {
-      return Promise.resolve(new Response(JSON.stringify([{ id: "full_body_v1", name: "Full Body v1" }]), { status: 200 }));
+      return Promise.resolve(
+        new Response(
+          JSON.stringify([{ id: "pure_bodybuilding_phase_1_full_body", name: "Pure Bodybuilding - Phase 1 Full Body" }]),
+          { status: 200 },
+        ),
+      );
     }
     if (url.endsWith("/auth/register")) {
       return Promise.resolve(new Response(JSON.stringify({ access_token: "tok" }), { status: 200 }));
@@ -203,7 +218,12 @@ test("Onboarding password reset request button calls reset endpoint", async () =
     const url = typeof input === "string" ? input : input.url;
 
     if (url.endsWith("/plan/programs")) {
-      return Promise.resolve(new Response(JSON.stringify([{ id: "full_body_v1", name: "Full Body v1" }]), { status: 200 }));
+      return Promise.resolve(
+        new Response(
+          JSON.stringify([{ id: "pure_bodybuilding_phase_1_full_body", name: "Pure Bodybuilding - Phase 1 Full Body" }]),
+          { status: 200 },
+        ),
+      );
     }
     if (url.endsWith("/auth/password-reset/request")) {
       return Promise.resolve(new Response(JSON.stringify({ status: "accepted", reset_token: "abc123def456ghi7" }), { status: 200 }));

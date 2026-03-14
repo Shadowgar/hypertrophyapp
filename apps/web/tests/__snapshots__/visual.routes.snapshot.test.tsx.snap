@@ -311,9 +311,9 @@ exports[`visual snapshot: week route 1`] = `
           Server-selected — trainer's recommended program
         </option>
         <option
-          value="full_body_v1"
+          value="pure_bodybuilding_phase_1_full_body"
         >
-          Full Body V1
+          Pure Bodybuilding - Phase 1 Full Body
         </option>
       </select>
       <p

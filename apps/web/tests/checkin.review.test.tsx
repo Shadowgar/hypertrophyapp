@@ -88,7 +88,7 @@ test("check-in page surfaces review command center and adaptive output", async (
             protein: 220,
             fat: 70,
             carbs: 300,
-            selected_program_id: "full_body_v1",
+            selected_program_id: "pure_bodybuilding_phase_1_full_body",
           }),
           { status: 200 },
         ),

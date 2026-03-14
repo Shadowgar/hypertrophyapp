@@ -8,7 +8,10 @@ beforeEach(() => {
 });
 
 test("Week page sends template_id when override selected", async () => {
-  const programs = [{ id: "full_body_v1", name: "Full Body V1" }, { id: "upper_lower", name: "Upper/Lower" }];
+  const programs = [
+    { id: "pure_bodybuilding_phase_1_full_body", name: "Pure Bodybuilding - Phase 1 Full Body" },
+    { id: "upper_lower", name: "Upper/Lower" },
+  ];
   const generatedPlan = {
     program_template_id: "upper_lower",
     split: "upper_lower",
@@ -105,7 +108,7 @@ test("Week page sends template_id when override selected", async () => {
     },
     template_selection_trace: {
       selected_template_id: "upper_lower",
-      ordered_candidate_ids: ["upper_lower", "full_body_v1"],
+      ordered_candidate_ids: ["upper_lower", "pure_bodybuilding_phase_1_full_body"],
     },
     generation_runtime_trace: {
       outcome: {

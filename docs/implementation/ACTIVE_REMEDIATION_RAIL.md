@@ -1,6 +1,6 @@
 # Active Remediation Rail
 
-Last updated: 2026-03-13
+Last updated: 2026-03-14
 
 ## Current Confirmed State
 
@@ -19,15 +19,15 @@ Current product order for active implementation is:
 
 ## Latest Completed Slice
 
-- Completed live administered identity unification for the first real program path:
-  - canonical public/administered ID is now `pure_bodybuilding_phase_1_full_body`
-  - legacy IDs `full_body_v1` and `adaptive_full_body_gold_v0_1` are compatibility aliases on active API/web routes
-  - catalog, guides, profile/training-state/history payload normalization, and generation/coach-preview selection now resolve to the canonical identity
+- Completed canonical-path hardening and branch-truth cleanup for the administered Phase 1 flow:
+  - active API/web runtime path remains canonical on `pure_bodybuilding_phase_1_full_body` across onboarding, generated week, today/log-set, check-in/review, and history surfaces
+  - user-facing web tests/fixtures/snapshots now use `pure_bodybuilding_phase_1_full_body` as the default administered path
+  - legacy IDs remain only in explicit compatibility handling/tests, not as primary user-path fixtures
 
 ## Next Recommended Action
 
-- Dogfood the canonical administered Phase 1 path end-to-end (`onboarding -> generate-week -> today/log-set -> checkin/review -> history`) and fix any branch-truth drift found on that path.
-- Keep broader architecture/generalization work downstream of dogfooding findings unless directly blocking the active administered path.
+- Implement and verify deterministic, program-specific temporary 5d->3d frequency adaptation behavior for `pure_bodybuilding_phase_1_full_body`, while preserving canonical authored intent and trace continuity.
+- Keep broader architecture/generalization work downstream unless directly blocking that adaptation seam on the active administered path.
 
 ## Closed Work Do Not Reopen Without Evidence
 
@@ -62,12 +62,11 @@ This wave is about:
    - `apps/api/app/adaptive_schema.py`
    - `apps/api/tests/test_program_frequency_adaptation_api.py`
 
-2. The live full-body program identity is still split across legacy aliases and the real Phase 1 package/runtime, but that cleanup is downstream of the adaptation seam above.
+2. Maintain compatibility aliases as compatibility-only behavior while keeping canonical identity primary on user-facing paths.
    Files:
    - `apps/api/app/program_loader.py`
-   - `apps/api/app/routers/plan.py`
-   - `apps/web/app/onboarding/page.tsx`
-   - `apps/web/app/settings/page.tsx`
+   - `apps/api/tests/test_program_catalog_and_selection.py`
+   - `apps/web/tests/*compatibility*`
 
 3. Broader canonical coaching-state / SFR cleanup remains secondary work and should only be pulled forward when it directly helps the administered Phase 1 path.
    File:
