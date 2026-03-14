@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import { resolveGuidanceText } from "@/app/today/page";
+import { resolveGuidanceText } from "@/lib/today-guidance";
 
 test("resolveGuidanceText does not invent fallback coaching guidance", () => {
   expect(resolveGuidanceText("Authoritative guidance.", "within_target_reps_hold_or_microload")).toBe(

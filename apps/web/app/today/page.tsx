@@ -16,6 +16,7 @@ import {
   type WorkoutSetFeedback,
   type WorkoutSummary,
 } from "@/lib/api";
+import { resolveGuidanceText } from "@/lib/today-guidance";
 
 type SwapState = Record<string, number>;
 type NotesState = Record<string, boolean>;
@@ -147,14 +148,6 @@ function resolveHealthStatus(health: string): "green" | "yellow" | "red" {
     return "yellow";
   }
   return "red";
-}
-
-export function resolveGuidanceText(rationale?: string | null, guidance?: string | null): string {
-  const preferred = rationale?.trim();
-  if (preferred) {
-    return preferred;
-  }
-  return guidance?.trim() ?? "";
 }
 
 function SessionIntentCard({

@@ -82,7 +82,7 @@ def test_profile_get_returns_default_payload_before_onboarding() -> None:
     profile = client.get("/profile", headers=headers)
     assert profile.status_code == 200
     payload = profile.json()
-    assert payload["selected_program_id"] == "full_body_v1"
+    assert payload["selected_program_id"] == "pure_bodybuilding_phase_1_full_body"
     assert payload["days_available"] == 2
     assert payload["nutrition_phase"] == "maintenance"
     assert payload["equipment_profile"] == []

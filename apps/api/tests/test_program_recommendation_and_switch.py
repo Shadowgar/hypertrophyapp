@@ -277,6 +277,6 @@ def test_program_recommendation_rotates_when_adaptive_gold_authored_sequence_is_
     assert recommendation.status_code == 200
     payload = recommendation.json()
 
-    assert payload["current_program_id"] == "adaptive_full_body_gold_v0_1"
-    assert payload["recommended_program_id"] != "adaptive_full_body_gold_v0_1"
+    assert payload["current_program_id"] == "pure_bodybuilding_phase_1_full_body"
+    assert payload["recommended_program_id"] != "pure_bodybuilding_phase_1_full_body"
     assert payload["reason"] == "mesocycle_complete_rotate"

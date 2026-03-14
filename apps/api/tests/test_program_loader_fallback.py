@@ -13,9 +13,9 @@ def test_program_loader_fallback_to_repo_programs() -> None:
 
         summaries = list_program_templates()
         assert isinstance(summaries, list)
-        # repo includes full_body_v1 and ppl_v1 templates
+        # repo includes canonical phase1 and ppl_v1 templates
         ids = {p["id"] for p in summaries}
-        assert "full_body_v1" in ids
+        assert "pure_bodybuilding_phase_1_full_body" in ids
         assert "ppl_v1" in ids
 
         # loading specific template should work too
