@@ -428,10 +428,15 @@ function HistoryCalendarPanel() {
         ) : (
           <div className="space-y-2">
             <p className="text-xs text-zinc-500">{calendarStatus}</p>
+            {calendarStatus === "No calendar history yet." ? (
+              <p className="text-xs text-zinc-400">Generate your first week from Week Plan, then log workouts to see history here.</p>
+            ) : null}
             <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-              <Button type="button" variant="secondary" onClick={() => setCalendarReloadCount((value) => value + 1)}>
-                Retry Calendar Load
-              </Button>
+              {calendarStatus !== "No calendar history yet." ? (
+                <Button type="button" variant="secondary" onClick={() => setCalendarReloadCount((value) => value + 1)}>
+                  Retry Calendar Load
+                </Button>
+              ) : null}
               <a
                 className="inline-flex items-center justify-center rounded-md border border-white/10 bg-zinc-900/70 px-3 py-2 text-xs text-zinc-100 hover:bg-zinc-900"
                 href="/week"
