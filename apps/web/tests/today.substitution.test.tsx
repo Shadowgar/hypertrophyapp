@@ -67,12 +67,15 @@ test("substitution modal applies choice, keeps notes visible, and persists selec
   fireEvent.click(screen.getByRole("button", { name: /Load today's workout/i }));
   await waitFor(() => expect(screen.getAllByText(/Bench Press/i).length).toBeGreaterThan(0));
 
-  fireEvent.click(screen.getByRole("button", { name: /I don’t have this equipment/i }));
+  fireEvent.click(screen.getByRole("button", { name: /Bench Press/ }));
+  await waitFor(() => expect(screen.getByRole("dialog")).toBeInTheDocument());
+
+  fireEvent.click(screen.getByRole("button", { name: /have this equipment/i }));
   await waitFor(() => expect(screen.getByText(/Choose a substitute/i)).toBeInTheDocument());
 
   fireEvent.click(screen.getByRole("button", { name: /Push-Up/i }));
 
-  await waitFor(() => expect(screen.getByText(/^Push-Up$/i)).toBeInTheDocument());
+  await waitFor(() => expect(screen.getAllByText(/^Push-Up$/i).length).toBeGreaterThan(0));
 
   fireEvent.click(screen.getByRole("button", { name: /Notes/i }));
   await waitFor(() => {

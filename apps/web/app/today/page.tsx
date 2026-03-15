@@ -16,6 +16,7 @@ import {
   type WorkoutSummary,
 } from "@/lib/api";
 import { resolveGuidanceText } from "@/lib/today-guidance";
+import { kgToLbs, lbsToKg } from "@/lib/weight";
 
 type SwapState = Record<string, number>;
 type NotesState = Record<string, boolean>;
@@ -189,7 +190,7 @@ function SessionIntentCard({
       </div>
       {leadExercise ? (
         <p className="text-sm text-zinc-100">
-          Lead exercise: {leadExercise.name} for {leadExercise.sets} sets of {leadExercise.rep_range[0]}-{leadExercise.rep_range[1]} reps @ {leadExercise.recommended_working_weight} kg.
+          Lead exercise: {leadExercise.name} for {leadExercise.sets} sets of {leadExercise.rep_range[0]}-{leadExercise.rep_range[1]} reps @ {kgToLbs(leadExercise.recommended_working_weight)} lbs.
         </p>
       ) : null}
       {authoredDayLabel ? <p className="telemetry-meta">Authored day: {authoredDayLabel}</p> : null}
@@ -224,7 +225,7 @@ function BetweenSetCoachCard({
   const recommendation = liveRecommendationByExercise[activeExercise.id] ?? null;
   const feedback = setFeedbackByExercise[activeExercise.id] ?? null;
   const swapActive = selectedName !== activeExercise.name;
-  let coachGuidance = "Log the opening set to unlock within-session load guidance.";
+  let coachGuidance = `Do ${activeExercise.rep_range[0]}-${activeExercise.rep_range[1]} reps @ ${kgToLbs(activeExercise.recommended_working_weight)} lbs this set.`;
   if (recommendation) {
     coachGuidance = resolveGuidanceText(recommendation.guidance_rationale, recommendation.guidance);
   } else if (feedback) {
@@ -240,8 +241,8 @@ function BetweenSetCoachCard({
       <p className="text-sm text-zinc-100">{selectedName}: {completed}/{activeExercise.sets} sets complete.</p>
       <p className="text-xs text-zinc-200">
         {recommendation
-          ? `Next set target: ${recommendation.recommended_reps_min}-${recommendation.recommended_reps_max} reps @ ${recommendation.recommended_weight} kg.`
-          : `Start with ${activeExercise.rep_range[0]}-${activeExercise.rep_range[1]} reps @ ${activeExercise.recommended_working_weight} kg.`}
+          ? `Next set target: ${recommendation.recommended_reps_min}-${recommendation.recommended_reps_max} reps @ ${kgToLbs(recommendation.recommended_weight)} lbs.`
+          : `Start with ${activeExercise.rep_range[0]}-${activeExercise.rep_range[1]} reps @ ${kgToLbs(activeExercise.recommended_working_weight)} lbs.`}
       </p>
       <p className="telemetry-meta">{coachGuidance}</p>
       {swapActive ? <p className="telemetry-meta">Equipment swap active for this slot.</p> : null}
@@ -268,13 +269,13 @@ function WorkoutSummaryCard({ summary }: Readonly<{ summary: WorkoutSummary | nu
           <div key={item.exercise_id} className="rounded-md border border-zinc-800 bg-zinc-900/40 p-2 text-xs text-zinc-300">
             <p className="font-semibold text-zinc-100">{item.name}</p>
             <p>
-              Planned: {item.planned_sets} sets · {item.planned_reps_min}-{item.planned_reps_max} reps @ {item.planned_weight} kg
+              Planned: {item.planned_sets} sets · {item.planned_reps_min}-{item.planned_reps_max} reps @ {kgToLbs(item.planned_weight)} lbs
             </p>
             <p>
-              Performed: {item.performed_sets} sets · avg {item.average_performed_reps} reps @ {item.average_performed_weight} kg
+              Performed: {item.performed_sets} sets · avg {item.average_performed_reps} reps @ {kgToLbs(item.average_performed_weight)} lbs
             </p>
             <p>
-              Next: {item.next_working_weight} kg
+              Next: {kgToLbs(item.next_working_weight)} lbs
             </p>
             <p>{resolveGuidanceText(item.guidance_rationale, item.guidance)}</p>
           </div>
@@ -582,7 +583,7 @@ export default function TodayPage() {
       exercise_id: exerciseId,
       set_index: completedCount,
       reps: performed.reps,
-      weight: performed.weight,
+      weight: lbsToKg(performed.weight),
       rpe: null,
     } as const;
 
@@ -687,7 +688,7 @@ export default function TodayPage() {
                   >
                     <span className="font-medium">{selectedName}</span>
                     <span className="text-zinc-400">
-                      {completed}/{exercise.sets} · {exercise.rep_range[0]}-{exercise.rep_range[1]} reps @ {exercise.recommended_working_weight} kg
+                      {completed}/{exercise.sets} · {exercise.rep_range[0]}-{exercise.rep_range[1]} reps @ {kgToLbs(exercise.recommended_working_weight)} lbs
                     </span>
                   </button>
                 </li>
@@ -699,6 +700,123 @@ export default function TodayPage() {
           <WorkoutSummaryCard summary={workoutSummary} />
         </div>
       ) : null}
+
+      {workout && selectedExerciseId ? (() => {
+        const exercise = workout.exercises.find((e) => e.id === selectedExerciseId);
+        if (!exercise) {
+          return null;
+        }
+        const selectedName = resolveExerciseName(exercise, swapIndexByExercise);
+        const guideHref = activeProgramId
+          ? `/guides/${activeProgramId}/exercise/${exercise.primary_exercise_id ?? exercise.id}`
+          : null;
+        const completed = completedSetsByExercise[exercise.id] ?? 0;
+        const recommendation = liveRecommendationByExercise[exercise.id];
+        const feedback = setFeedbackByExercise[exercise.id];
+        const mediaUrl = resolveExerciseMediaUrl(exercise);
+        const substitutions = exercise.substitution_candidates ?? [];
+        let doThisSetLine: string;
+        if (recommendation) {
+          const guidance = resolveGuidanceText(recommendation.guidance_rationale, recommendation.guidance);
+          doThisSetLine = guidance.trim()
+            || `Next set: ${recommendation.recommended_reps_min}-${recommendation.recommended_reps_max} reps @ ${kgToLbs(recommendation.recommended_weight)} lbs`;
+        } else if (feedback) {
+          const guidance = resolveGuidanceText(feedback.guidance_rationale, feedback.guidance);
+          doThisSetLine = guidance.trim()
+            || `${exercise.rep_range[0]}-${exercise.rep_range[1]} reps @ ${kgToLbs(exercise.recommended_working_weight)} lbs this set`;
+        } else {
+          doThisSetLine = `Do ${exercise.rep_range[0]}-${exercise.rep_range[1]} reps @ ${kgToLbs(exercise.recommended_working_weight)} lbs this set`;
+        }
+        return (
+          <div className="fixed inset-0 z-50 flex flex-col bg-zinc-950" aria-modal="true" role="dialog">
+            <div className="flex min-h-[44px] items-center gap-2 border-b border-zinc-800 px-3 py-2">
+              <Button
+                type="button"
+                variant="ghost"
+                className="min-h-[44px] min-w-[44px]"
+                onClick={() => setSelectedExerciseId(null)}
+                aria-label="Back to list"
+              >
+                <UiIcon name="close" className="ui-icon--action" />
+              </Button>
+              <span className="text-sm font-medium text-zinc-100">Exercise</span>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div>
+                <h2 className="text-lg font-semibold text-zinc-100">
+                  {guideHref ? (
+                    <Link href={guideHref} className="underline decoration-zinc-500 underline-offset-2">
+                      {selectedName}
+                    </Link>
+                  ) : (
+                    selectedName
+                  )}
+                </h2>
+                <p className="ui-meta mt-1">
+                  {exercise.sets} sets · {exercise.rep_range[0]}-{exercise.rep_range[1]} reps @ {kgToLbs(exercise.recommended_working_weight)} lbs
+                </p>
+              </div>
+              <ExerciseExecutionDetails exercise={exercise} />
+              <p className="text-sm text-zinc-200">{doThisSetLine}</p>
+              <ExerciseControlModule
+                exerciseId={exercise.id}
+                note={exercise.notes}
+                totalSets={exercise.sets}
+                defaultRestSeconds={90}
+                recommendedWorkingWeight={kgToLbs(exercise.recommended_working_weight)}
+                repRange={exercise.rep_range}
+                initialCompletedSets={completed}
+                onSetComplete={handleSetComplete}
+              />
+              <div className="space-y-2">
+                <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Options</p>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="min-h-[44px] w-full justify-start sm:justify-center"
+                    disabled={!mediaUrl}
+                    onClick={() => mediaUrl && window.open(mediaUrl, "_blank", "noopener,noreferrer")}
+                  >
+                    <span className="inline-flex items-center gap-2">
+                      <UiIcon name="video" className="ui-icon--action" />
+                      Video
+                    </span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="min-h-[44px] w-full justify-start sm:justify-center"
+                    disabled={substitutions.length === 0}
+                    onClick={() => setSwapTargetExerciseId(exercise.id)}
+                  >
+                    <span className="inline-flex items-center gap-2">
+                      <UiIcon name="swap" className="ui-icon--action" />
+                      I don&apos;t have this equipment
+                    </span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="min-h-[44px] w-full justify-start sm:justify-center"
+                    onClick={() => toggleNotes(exercise.id)}
+                  >
+                    <span className="inline-flex items-center gap-2">
+                      <UiIcon name="notes" className="ui-icon--action" />
+                      Notes
+                    </span>
+                  </Button>
+                </div>
+              </div>
+              {(notesOpenByExercise[exercise.id] ?? false) && (
+                <div className="rounded-md border border-zinc-800 bg-zinc-900/40 p-2 text-xs text-zinc-300">
+                  {exercise.notes ?? "No notes for this slot."}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })() : null}
 
       {swapTarget ? (
         <div className="fixed inset-0 z-50 flex items-end bg-black/60 p-4 md:items-center md:justify-center">

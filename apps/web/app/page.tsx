@@ -15,6 +15,7 @@ import {
   type WorkoutExercise,
   type WorkoutSession,
 } from "@/lib/api";
+import { kgToLbs } from "@/lib/weight";
 
 type DashboardState = {
   profile: Profile | null;
@@ -49,7 +50,7 @@ function humanizeTokenLabel(value: string): string {
 
 function formatExercisePrescription(exercise: WorkoutExercise): string {
   const [minReps, maxReps] = exercise.rep_range;
-  return `${exercise.sets} x ${minReps}-${maxReps} @ ${exercise.recommended_working_weight} kg`;
+  return `${exercise.sets} x ${minReps}-${maxReps} @ ${kgToLbs(exercise.recommended_working_weight)} lbs`;
 }
 
 function formatLeadExercise(workout: WorkoutSession | null): string {

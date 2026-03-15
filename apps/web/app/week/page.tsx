@@ -2,10 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import CoachingIntelligencePanel from "@/components/coaching-intelligence-panel";
 import { Button } from "@/components/ui/button";
 import { UiIcon } from "@/components/ui/icons";
 import { api, getProgramDisplayName, type GeneratedWeekExercise, type GeneratedWeekPlan, type ProgramTemplateOption } from "@/lib/api";
+import { kgToLbs } from "@/lib/weight";
 
 function formatLabel(value: string): string {
   return value
@@ -47,13 +47,6 @@ function hasWeakPointEmphasis(plan: GeneratedWeekPlan): boolean {
   );
 }
 
-function buildWeekContextNote(plan: GeneratedWeekPlan | null): string | null {
-  if (!plan) {
-    return null;
-  }
-  return resolveGeneratedWeekReasonSummary(plan.decision_trace);
-}
-
 function formatSignedPercent(scale: number): string {
   const delta = Math.round((scale - 1) * 100);
   return `${delta >= 0 ? "+" : ""}${delta}%`;
@@ -63,7 +56,7 @@ function formatLeadExercise(exercise: GeneratedWeekExercise | undefined): string
   if (!exercise) {
     return "No exercises planned.";
   }
-  return `${exercise.name} · ${exercise.sets} sets · ${exercise.rep_range[0]}-${exercise.rep_range[1]} reps @ ${exercise.recommended_working_weight} kg`;
+  return `${exercise.name} · ${exercise.sets} sets · ${exercise.rep_range[0]}-${exercise.rep_range[1]} reps @ ${kgToLbs(exercise.recommended_working_weight)} lbs`;
 }
 
 function resolveExerciseMediaUrl(exercise: GeneratedWeekExercise): string | null {
@@ -94,7 +87,7 @@ function ExerciseExecutionDetails({ exercise }: Readonly<{ exercise: GeneratedWe
     <div className="rounded-md border border-white/10 bg-black/20 p-2 text-[11px] text-zinc-300">
       <p className="font-semibold text-zinc-100">{exercise.name}</p>
       <p className="telemetry-meta">
-        {exercise.sets} sets · {exercise.rep_range[0]}-{exercise.rep_range[1]} reps · {exercise.recommended_working_weight} kg
+        {exercise.sets} sets · {exercise.rep_range[0]}-{exercise.rep_range[1]} reps · {kgToLbs(exercise.recommended_working_weight)} lbs
       </p>
       {hasPrescription ? (
         <p className="mt-1">
@@ -329,7 +322,6 @@ export default function WeekPage() {
       leadSession: plan.sessions[0] ?? null,
     };
   }, [plan]);
-  const coachingContextNote = useMemo(() => buildWeekContextNote(plan), [plan]);
   const requiresSundayReview = planStatus.startsWith("Sunday review required.");
   const generationFailed = planStatus.startsWith("Failed to generate week plan:");
   const awaitingInitialGeneration = !plan && !requiresSundayReview && !generationFailed;
@@ -395,7 +387,6 @@ export default function WeekPage() {
           </Button>
         </div>
       </div>
-      <CoachingIntelligencePanel contextLabel="Week Plan" templateId={selectedProgramId} contextNote={coachingContextNote} />
       <div className="main-card main-card--shell spacing-grid spacing-grid--tight">
         <p className="telemetry-kicker">Planner Status</p>
         <p className="text-sm text-zinc-200">{planStatus}</p>

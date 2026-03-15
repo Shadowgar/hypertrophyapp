@@ -12,6 +12,7 @@ import {
   type HistoryCalendarResponse,
   type HistoryDayDetailResponse,
 } from "@/lib/api";
+import { kgToLbs } from "@/lib/weight";
 
 function formatTimestamp(iso: string): string {
   const parsed = new Date(iso);
@@ -161,10 +162,12 @@ function resolveBodyweightSignal(points: HistoryAnalyticsResponse["bodyweight_tr
   }
   const first = points[0].body_weight;
   const last = points.at(-1)?.body_weight ?? first;
-  const delta = roundOneDecimal(last - first);
+  const firstLbs = kgToLbs(first);
+  const lastLbs = kgToLbs(last);
+  const deltaLbs = roundOneDecimal(lastLbs - firstLbs);
   return {
-    label: `${delta >= 0 ? "+" : ""}${delta} kg`,
-    detail: `${first} kg to ${last} kg across the visible window`,
+    label: `${deltaLbs >= 0 ? "+" : ""}${deltaLbs} lbs`,
+    detail: `${firstLbs} lbs to ${lastLbs} lbs across the visible window`,
   };
 }
 
@@ -432,8 +435,8 @@ function HistoryCalendarPanel() {
               <p className="text-xs text-zinc-400">Generate your first week from Week Plan, then log workouts to see history here.</p>
             ) : null}
             <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-              {calendarStatus !== "No calendar history yet." ? (
-                <Button type="button" variant="secondary" onClick={() => setCalendarReloadCount((value) => value + 1)}>
+              {(calendarStatus === "No calendar history yet." || calendarStatus === "Unable to load calendar history.") ? (
+                <Button type="button" variant="secondary" onClick={() => setCalendarReloadCount((value) => value + 1)} aria-label="Retry Calendar Load">
                   Retry Calendar Load
                 </Button>
               ) : null}
@@ -657,7 +660,7 @@ export default function HistoryPage() {
     return {
       hasData: true,
       label: primaryStrengthTrend.exercise_id,
-      detail: `PR ${primaryStrengthTrend.pr_weight} kg (${primaryStrengthTrend.pr_delta >= 0 ? "+" : ""}${primaryStrengthTrend.pr_delta})`,
+      detail: `PR ${kgToLbs(primaryStrengthTrend.pr_weight)} lbs (${primaryStrengthTrend.pr_delta >= 0 ? "+" : "-"}${kgToLbs(Math.abs(primaryStrengthTrend.pr_delta))} lbs)`,
     };
   }, [primaryStrengthTrend]);
 
@@ -779,7 +782,7 @@ export default function HistoryPage() {
                     className="flex-1 rounded-sm bg-zinc-700/70"
                     style={{ height: `${Math.round(normalized)}%` }}
                     aria-label={`Week ${index + 1} bodyweight ${value}`}
-                    title={`Week ${index + 1}: ${value} kg`}
+                    title={`Week ${index + 1}: ${kgToLbs(value)} lbs`}
                   />
                 );
               })
@@ -803,12 +806,12 @@ export default function HistoryPage() {
                       key={`${primaryStrengthTrend.exercise_id}-${point.week_start}`}
                       className="flex-1 rounded-sm bg-zinc-700/70"
                       style={{ height: `${Math.round(normalized)}%` }}
-                      title={`${point.week_start}: ${point.max_weight} kg`}
+                      title={`${point.week_start}: ${kgToLbs(point.max_weight)} lbs`}
                     />
                   );
                 })}
               </div>
-              <p className="telemetry-meta">PR {primaryStrengthTrend.pr_weight} kg ({primaryStrengthTrend.pr_delta >= 0 ? "+" : ""}{primaryStrengthTrend.pr_delta})</p>
+              <p className="telemetry-meta">PR {kgToLbs(primaryStrengthTrend.pr_weight)} lbs ({primaryStrengthTrend.pr_delta >= 0 ? "+" : "-"}{kgToLbs(Math.abs(primaryStrengthTrend.pr_delta))} lbs)</p>
             </>
           ) : (
             <p className="text-xs text-zinc-500">No strength trend data</p>
@@ -824,7 +827,7 @@ export default function HistoryPage() {
                   <span>{item.exercise_id}</span>
                   <span className="inline-flex items-center gap-2">
                     <span className="status-dot status-dot--green" />
-                    {item.pr_delta >= 0 ? "+" : ""}{item.pr_delta} kg
+                    {item.pr_delta >= 0 ? "+" : "-"}{kgToLbs(Math.abs(item.pr_delta))} lbs
                   </span>
                 </p>
               ))}

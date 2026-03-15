@@ -102,7 +102,9 @@ test("Completing a set calls log-set POST and persists completed sets", async ()
 
   await waitFor(() => expect(screen.getAllByText(/Bench Press/i).length).toBeGreaterThan(0));
 
-  // find Complete Set button within the exercise control
+  fireEvent.click(screen.getByRole("button", { name: /Bench Press/ }));
+  await waitFor(() => expect(screen.getByRole("dialog")).toBeInTheDocument());
+
   const completeBtn = screen.getByRole("button", { name: /Complete Set/i });
   fireEvent.click(completeBtn);
 
@@ -131,14 +133,10 @@ test("Completing a set calls log-set POST and persists completed sets", async ()
     expect(screen.getByText(/1\/3 sets/i)).toBeInTheDocument();
   });
 
-  expect(screen.getAllByText(/Next set target: 8-10 reps @ 57.5 kg/i).length).toBeGreaterThan(0);
-
+  // Detail overlay shows live_recommendation guidance (rationale) after log-set; no raw codes
   expect(
-    screen.getByText(/Performance fell below the target range\. Hold load on the first miss and only reduce if it repeats across 2 exposures\./i),
+    screen.getByText(/Reps dropped below target\. Trim load slightly within the session so the remaining sets stay on target\./i),
   ).toBeInTheDocument();
-  expect(
-    screen.getAllByText(/Reps dropped below target\. Trim load slightly within the session so the remaining sets stay on target\./i).length,
-  ).toBeGreaterThan(0);
   expect(screen.queryByText(/below_target_reps_reduce_or_hold_load/i)).not.toBeInTheDocument();
   expect(screen.queryByText(/remaining_sets_reduce_load_focus_target_reps/i)).not.toBeInTheDocument();
 });

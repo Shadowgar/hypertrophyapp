@@ -6,6 +6,7 @@ import CoachingIntelligencePanel from "@/components/coaching-intelligence-panel"
 import { Button } from "@/components/ui/button";
 import { UiIcon } from "@/components/ui/icons";
 import { api, type WeeklyReviewResponse, type WeeklyReviewStatus } from "@/lib/api";
+import { kgToLbs } from "@/lib/weight";
 
 function resolveStatusTone(status: string): "green" | "yellow" | "red" {
   const lowered = status.toLowerCase();
@@ -235,10 +236,10 @@ export default function CheckinPage() {
                 <p className="font-semibold text-zinc-100">{fault.name}</p>
                 <p className="text-[11px] uppercase tracking-wide text-zinc-500">{fault.fault_level} fault</p>
                 <p>
-                  {fault.completed_sets}/{fault.planned_sets} sets · avg {fault.average_performed_reps} reps @ {fault.average_performed_weight} kg
+                  {fault.completed_sets}/{fault.planned_sets} sets · avg {fault.average_performed_reps} reps @ {kgToLbs(fault.average_performed_weight)} lbs
                 </p>
                 <p>
-                  Target {fault.target_reps_min}-{fault.target_reps_max} reps @ {fault.target_weight} kg
+                  Target {fault.target_reps_min}-{fault.target_reps_max} reps @ {kgToLbs(fault.target_weight)} lbs
                 </p>
                 {fault.guidance ? <p>{fault.guidance}</p> : null}
               </div>

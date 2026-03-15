@@ -177,7 +177,7 @@ test("Week page sends template_id when override selected", async () => {
   expect(screen.queryByText(/No rationale available\./i)).not.toBeInTheDocument();
   expect(screen.getByText(/Authored block: Week 1 · Adaptation/i)).toBeInTheDocument();
   expect(screen.getByText(/Arms & Weak Points emphasis is scheduled this week\./i)).toBeInTheDocument();
-  expect(screen.getByText(/Lead slot: Bench Press · 4 sets · 6-8 reps @ 82.5 kg/i)).toBeInTheDocument();
+  expect(screen.getByText(/Lead slot: Bench Press · 4 sets · 6-8 reps @ 181\.9 lbs/i)).toBeInTheDocument();
   expect(screen.getByText(/Early-set RPE: ~7-8/i)).toBeInTheDocument();
   expect(screen.getByText(/Last-set RPE: ~9/i)).toBeInTheDocument();
   expect(screen.getByText(/Technique: Long-length Partials/i)).toBeInTheDocument();
@@ -185,7 +185,6 @@ test("Week page sends template_id when override selected", async () => {
   expect(screen.getByText(/Authored substitutions: Machine Press \/ DB Bench Press/i)).toBeInTheDocument();
   expect(screen.getByRole("link", { name: /Demo link/i })).toHaveAttribute("href", "https://example.com/bench-video");
   expect(screen.getByText(/Session intent: Arms & Weak Points/i)).toBeInTheDocument();
-  expect(screen.getByText(/Current context/i)).toBeInTheDocument();
   expect(screen.queryByText(/Week 1 adaptation block/i)).not.toBeInTheDocument();
   expect(
     screen.getAllByText(

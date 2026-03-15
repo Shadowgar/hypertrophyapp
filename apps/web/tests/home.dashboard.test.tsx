@@ -184,7 +184,7 @@ test("home page loads authenticated dashboard metrics", async () => {
   expect(screen.getAllByText(/4 training days/i).length).toBeGreaterThan(0);
   expect(screen.getByText(/Coach Brief/i)).toBeInTheDocument();
   expect(screen.getByText(/Actionable/i)).toBeInTheDocument();
-  expect(screen.getByText(/Start with Bench Press: 3 x 8-12 @ 225 kg/i)).toBeInTheDocument();
+  expect(screen.getByText(/Start with Bench Press: 3 x 8-12 @ 496 lbs/i)).toBeInTheDocument();
   expect(screen.getByText(/Session Blueprint/i)).toBeInTheDocument();
   expect(screen.getByText(/Weak Areas/i)).toBeInTheDocument();
   expect(screen.getAllByText(/Chest/i).length).toBeGreaterThan(0);

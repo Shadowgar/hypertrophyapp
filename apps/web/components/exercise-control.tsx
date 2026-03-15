@@ -129,7 +129,7 @@ export default function ExerciseControlModule({
         <div className="mb-2 rounded-lg border border-white/10 bg-black/25 px-3 py-2">
           <div className="flex items-baseline gap-2">
             <span className="text-3xl font-semibold tracking-tight text-accent">{recommendedWorkingWeight}</span>
-            <span className="text-sm text-zinc-300">kg</span>
+            <span className="text-sm text-zinc-300">lbs</span>
             {repRange ? (
               <span className="ml-auto text-xs text-zinc-400">
                 {repRange[0]}-{repRange[1]} reps
@@ -150,7 +150,7 @@ export default function ExerciseControlModule({
           </div>
           {note ? <div className="text-xs text-zinc-500">{note}</div> : null}
           <div className="flex items-center gap-2">
-            <label className="text-[10px] uppercase tracking-wide text-zinc-500" htmlFor={`${exerciseId}-actual-reps`}>
+            <label className="text-xs uppercase tracking-wide text-zinc-500" htmlFor={`${exerciseId}-actual-reps`}>
               Actual reps
             </label>
             <input
@@ -161,8 +161,8 @@ export default function ExerciseControlModule({
               value={actualReps}
               onChange={(event) => setActualReps(Number(event.target.value))}
             />
-            <label className="text-[10px] uppercase tracking-wide text-zinc-500" htmlFor={`${exerciseId}-actual-weight`}>
-              Actual kg
+            <label className="text-xs uppercase tracking-wide text-zinc-500" htmlFor={`${exerciseId}-actual-weight`}>
+              Actual lbs
             </label>
             <input
               id={`${exerciseId}-actual-weight`}
@@ -177,7 +177,7 @@ export default function ExerciseControlModule({
         </div>
 
         <div
-          className="relative h-10 w-10 rounded-full border border-white/15"
+          className="relative z-0 flex-shrink-0 h-10 w-10 rounded-full border border-white/15 overflow-hidden"
           aria-label="Rest countdown ring"
           style={{
             background: `conic-gradient(rgba(220,38,38,0.9) ${(secondsLeft / restCycle) * 360}deg, rgba(255,255,255,0.08) 0deg)`,
@@ -186,21 +186,21 @@ export default function ExerciseControlModule({
           <div className="absolute inset-[4px] rounded-full bg-black/65" />
         </div>
 
-        <div className="flex gap-2">
-          <Button className="h-8 px-3 text-xs" onClick={completeSet} type="button" disabled={completedSets >= totalSets}>
+        <div className="relative z-10 flex flex-wrap gap-2 min-w-0">
+          <Button className="min-h-[44px] px-3 text-xs" onClick={completeSet} type="button" disabled={completedSets >= totalSets}>
             Complete Set
           </Button>
           {running ? (
-            <Button className="h-8 px-3 text-xs" onClick={stopTimer} type="button" variant="secondary">
+            <Button className="min-h-[44px] px-3 text-xs" onClick={stopTimer} type="button" variant="secondary">
               Stop
             </Button>
           ) : (
-            <Button className="h-8 px-3 text-xs" onClick={startTimer} type="button" variant="secondary">
+            <Button className="min-h-[44px] px-3 text-xs" onClick={startTimer} type="button" variant="secondary">
               Start
             </Button>
           )}
 
-          <Button className="h-8 px-3 text-xs" onClick={resetTimer} type="button" variant="ghost">
+          <Button className="min-h-[44px] px-3 text-xs" onClick={resetTimer} type="button" variant="ghost">
             Reset
           </Button>
         </div>
