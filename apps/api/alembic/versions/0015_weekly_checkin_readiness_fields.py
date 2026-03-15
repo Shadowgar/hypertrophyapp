@@ -19,9 +19,9 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    op.add_column("weekly_checkins", sa.Column("sleep_quality", sa.Integer(), nullable=True))
-    op.add_column("weekly_checkins", sa.Column("stress_level", sa.Integer(), nullable=True))
-    op.add_column("weekly_checkins", sa.Column("pain_flags", sa.JSON(), nullable=True))
+    op.execute("ALTER TABLE weekly_checkins ADD COLUMN IF NOT EXISTS sleep_quality INTEGER")
+    op.execute("ALTER TABLE weekly_checkins ADD COLUMN IF NOT EXISTS stress_level INTEGER")
+    op.execute("ALTER TABLE weekly_checkins ADD COLUMN IF NOT EXISTS pain_flags JSON")
 
 
 def downgrade() -> None:

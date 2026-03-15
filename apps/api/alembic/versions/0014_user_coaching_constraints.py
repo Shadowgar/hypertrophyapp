@@ -19,9 +19,9 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    op.add_column("users", sa.Column("session_time_budget_minutes", sa.Integer(), nullable=True))
-    op.add_column("users", sa.Column("movement_restrictions", sa.JSON(), nullable=True))
-    op.add_column("users", sa.Column("near_failure_tolerance", sa.String(), nullable=True))
+    op.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS session_time_budget_minutes INTEGER")
+    op.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS movement_restrictions JSON")
+    op.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS near_failure_tolerance VARCHAR")
 
 
 def downgrade() -> None:

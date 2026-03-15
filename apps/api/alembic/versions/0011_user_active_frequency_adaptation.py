@@ -17,7 +17,9 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column("users", sa.Column("active_frequency_adaptation", sa.JSON(), nullable=True))
+    # Alembic's default version_num is VARCHAR(32); our revision IDs can be longer.
+    op.execute("ALTER TABLE alembic_version ALTER COLUMN version_num TYPE VARCHAR(64)")
+    op.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS active_frequency_adaptation JSON")
 
 
 def downgrade() -> None:

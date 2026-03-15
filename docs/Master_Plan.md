@@ -1,6 +1,6 @@
 # Master Plan - Adaptive Coaching Rebuild
 
-Last updated: 2026-03-14
+Last updated: 2026-03-15
 
 ## Product Vision
 
@@ -82,7 +82,7 @@ Use this repeatable local loop for one-program-first verification:
    - `POST /profile/dev/reset-phase1`
    - or use onboarding Developer Tools: `Reset Current User to Clean Phase 1`.
 3. Generate week (`POST /plan/generate-week`).
-4. Open today workout (`GET /workout/today`) and verify authored execution detail is present.
+4. Open Today page (workout auto-loads when API health OK; same soreness/review gate as Load Today Workout) and verify authored execution detail is present.
 5. Log a set (`POST /workout/{session_id}/log-set`).
 6. Submit weekly check-in/review (`POST /weekly-checkin`, `POST /weekly-review`).
 7. Verify history (`GET /history/calendar`).
@@ -205,6 +205,7 @@ Reference:
 	- `programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json` explicitly preserves authored slot fields, top-level notes/warm-up/weak-point sections, week labels, block labels, special banners, and workbook-backed video links.
 	- the runtime loader/API path now carries those authored execution fields into generated-week and today workout exercises.
 	- week/today surfaces now show early-set RPE, last-set RPE, last-set intensity technique, rest, authored substitutions, and demo links directly from the authoritative package/runtime data.
+- Today page auto-loads the workout on mount when API health is OK (same soreness/review gate as Load Today Workout); a guard prevents double-invoke; when no week exists, the recovery action (Generate Week and Reload Today) is shown.
 - Canonical administered-path hardening now includes user-facing fixture/snapshot truth:
 	- API and web path-facing tests now default to `pure_bodybuilding_phase_1_full_body` as the primary administered identity.
 	- legacy IDs remain in explicit compatibility coverage only.
@@ -234,7 +235,10 @@ Reference:
 	- Missed days with planned sessions now return planned-only detail (zero logged sets).
 	- `/history` now renders week/month windows, older-window navigation, completion/program/muscle filters, previous-same-weekday jump, same-weekday delta cards, PR badges, and selected-day detail panel.
 - Validation gate health:
-	- `./scripts/mini_validate.sh` currently passes (`API 85 passed`, `web tests 28 passed`, `web build success`).
+	- `./scripts/mini_validate.sh` runs API tests (docker or, when docker is unavailable, local `pytest` or `python3 -m pytest` if `pytest` is not on PATH), then web tests and web build.
 - User-testing rollout now has an explicit plan:
 	- internal dogfooding should begin on the responsive web app first, using desktop and mobile browsers rather than waiting for native mobile apps.
 	- beta readiness and rollout sequencing now live in `docs/plans/2026-03-11-user-testing-rollout-plan.md`.
+- Today page redesign (mobile-first, iOS-ready) is planned:
+	- design: whole-day list at a glance, tap exercise to open detail screen; remove Session Intent card and standalone Between-Set Coach; single “Do this set” line from API guidance only.
+	- design doc and implementation checklist: `docs/plans/2026-03-15-today-page-redesign-design.md`. Implementation pending; no API or decision-engine changes.

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -74,8 +75,27 @@ export default function LoginPage() {
             Login
           </span>
         </Button>
+        <p className="ui-body-sm text-center">
+          <Link
+            href={email ? `/reset-password?email=${encodeURIComponent(email)}` : "/reset-password"}
+            className="underline decoration-[var(--ui-edge-idle)] underline-offset-2 hover:decoration-[var(--ui-edge-active)]"
+          >
+            Forgot password?
+          </Link>
+        </p>
       </form>
       <p className="ui-body-sm">Status: {status}</p>
+      {status.startsWith("Login failed") && (
+        <p className="ui-body-sm">
+          Wrong password?{" "}
+          <Link
+            href={email ? `/reset-password?email=${encodeURIComponent(email)}` : "/reset-password"}
+            className="underline decoration-[var(--ui-edge-idle)] underline-offset-2 hover:decoration-[var(--ui-edge-active)]"
+          >
+            Request a password reset
+          </Link>
+        </p>
+      )}
     </div>
   );
 }

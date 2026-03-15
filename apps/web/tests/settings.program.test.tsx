@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 import SettingsPage from "@/app/settings/page";
 
@@ -15,25 +15,13 @@ beforeEach(() => {
   globalThis.fetch = vi.fn();
 });
 
-test("Settings page shows selected program and saves changes", async () => {
+test("Settings page shows active program and config in one-program-first mode", async () => {
   const profile = {
     selected_program_id: "pure_bodybuilding_phase_1_full_body",
     training_location: "gym",
     equipment_profile: ["dumbbell"],
     days_available: 5,
   };
-  const recommendation = {
-    current_program_id: "pure_bodybuilding_phase_1_full_body",
-    recommended_program_id: "upper_lower",
-    reason: "mesocycle_complete_rotate",
-    rationale: "The current mesocycle appears complete. Rotate to a fresh compatible template.",
-    compatible_program_ids: ["pure_bodybuilding_phase_1_full_body", "upper_lower"],
-    generated_at: new Date().toISOString(),
-  };
-  const programs = [
-    { id: "pure_bodybuilding_phase_1_full_body", name: "Pure Bodybuilding - Phase 1 Full Body" },
-    { id: "upper_lower", name: "Upper/Lower" },
-  ];
 
   // @ts-ignore
   globalThis.fetch.mockImplementation((input, init) => {
@@ -42,42 +30,9 @@ test("Settings page shows selected program and saves changes", async () => {
       return Promise.resolve(new Response(JSON.stringify(profile), { status: 200 }));
     }
     if (url.endsWith("/plan/programs")) {
-      return Promise.resolve(new Response(JSON.stringify(programs), { status: 200 }));
-    }
-    if (url.endsWith("/profile/program-recommendation")) {
-      return Promise.resolve(new Response(JSON.stringify(recommendation), { status: 200 }));
-    }
-    if (url.endsWith("/profile/program-switch") && init?.method === "POST") {
-      const payload = init.body ? JSON.parse(init.body as string) : {};
-      if (!payload.confirm) {
-        return Promise.resolve(
-          new Response(
-            JSON.stringify({
-              status: "confirmation_required",
-              current_program_id: "pure_bodybuilding_phase_1_full_body",
-              target_program_id: payload.target_program_id,
-              recommended_program_id: "upper_lower",
-              reason: "mesocycle_complete_rotate",
-              rationale: "The current mesocycle appears complete. Rotate to a fresh compatible template.",
-              requires_confirmation: true,
-              applied: false,
-            }),
-            { status: 200 },
-          ),
-        );
-      }
       return Promise.resolve(
         new Response(
-          JSON.stringify({
-            status: "switched",
-            current_program_id: "pure_bodybuilding_phase_1_full_body",
-            target_program_id: payload.target_program_id,
-            recommended_program_id: "upper_lower",
-            reason: "mesocycle_complete_rotate",
-            rationale: "The current mesocycle appears complete. Rotate to a fresh compatible template.",
-            requires_confirmation: false,
-            applied: true,
-          }),
+          JSON.stringify([{ id: "pure_bodybuilding_phase_1_full_body", name: "Pure Bodybuilding - Phase 1 Full Body" }]),
           { status: 200 },
         ),
       );
@@ -88,27 +43,9 @@ test("Settings page shows selected program and saves changes", async () => {
   render(<SettingsPage />);
 
   await waitFor(() => {
-    expect(screen.getByLabelText(/Settings program selector/i)).toBeInTheDocument();
+    expect(screen.getByText(/Program Settings/i)).toBeInTheDocument();
   });
-
-  expect(screen.getByText(/The current mesocycle appears complete\. Rotate to a fresh compatible template\./i)).toBeInTheDocument();
-
-  // change program
-  const select = screen.getByLabelText(/Settings program selector/i);
-  fireEvent.change(select, { target: { value: "upper_lower" } });
-
-  const save = screen.getByRole("button", { name: /Save selected program/i });
-  fireEvent.click(save);
-
-  await waitFor(() => {
-    expect(screen.getByText(/Confirm program switch/i)).toBeInTheDocument();
-  });
-  expect(screen.queryByText(/mesocycle_complete_rotate/i)).not.toBeInTheDocument();
-
-  const confirm = screen.getByRole("button", { name: /Confirm program switch/i });
-  fireEvent.click(confirm);
-
-  await waitFor(() => {
-    expect(screen.getByText(/Program switched/i)).toBeInTheDocument();
-  });
+  expect(screen.getByText(/Active administered program/i)).toBeInTheDocument();
+  expect(screen.getByText(/Pure Bodybuilding - Phase 1 Full Body/i)).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: /Wipe Current User Data/i })).toBeInTheDocument();
 });

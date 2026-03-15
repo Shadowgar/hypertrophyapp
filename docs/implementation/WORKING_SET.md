@@ -1,6 +1,6 @@
 # Working Set
 
-Last updated: 2026-03-12
+Last updated: 2026-03-15
 
 ## Read These First
 
@@ -50,7 +50,7 @@ Open these only when the task needs them:
 - `docs/flows/`
 - `docs/process/`
 - `docs/guides/`
-- `docs/plans/`
+- `docs/plans/` — for Today page UI work see `docs/plans/2026-03-15-today-page-redesign-design.md`
 - `docs/redesign/`
 - `docs/ui-parity/`
 - `docs/validation/`

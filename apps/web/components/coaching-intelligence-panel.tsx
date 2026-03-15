@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { UiIcon } from "@/components/ui/icons";
 import {
   api,
   resolveReasonText,
@@ -232,6 +234,9 @@ export default function CoachingIntelligencePanel({
       ) : null}
 
       <p className="telemetry-meta">Recommendation ID: {applyRecommendationId || "Generate preview first"}</p>
+      <p className="ui-meta text-zinc-400">
+        Check Phase = preview only. Apply Phase = save recommendation; then submit weekly review at Check-In to apply to your plan.
+      </p>
       <div className="grid grid-cols-2 gap-2">
         <Button
           aria-label="Check phase decision"
@@ -267,6 +272,15 @@ export default function CoachingIntelligencePanel({
         </Button>
       </div>
       <p className="telemetry-meta">{applyStatus ?? ""}</p>
+      {applyStatus?.toLowerCase().includes("phase: applied") ? (
+        <Link
+          href="/checkin"
+          className="mt-2 inline-flex items-center gap-2 rounded-md border border-[var(--ui-edge-idle)] bg-[var(--ui-surface-1)] px-3 py-2 text-sm text-zinc-100 hover:border-[var(--ui-edge-active)]"
+        >
+          <UiIcon name="body" className="ui-icon--action" />
+          Go to Check-In
+        </Link>
+      ) : null}
     </div>
   );
 }

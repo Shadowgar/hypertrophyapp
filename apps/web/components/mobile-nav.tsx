@@ -11,7 +11,7 @@ const items = [
   { href: "/today", label: "Workout", icon: "workout" as const },
   { href: "/week", label: "Plan", icon: "plan" as const },
   { href: "/history", label: "Analytics", icon: "analytics" as const },
-  { href: "/checkin", label: "Body", icon: "body" as const },
+  { href: "/checkin", label: "Check-In", icon: "body" as const },
   { href: "/settings", label: "Settings", icon: "settings" as const },
 ];
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { UiIcon } from "@/components/ui/icons";
@@ -14,7 +14,8 @@ type ResetRequestResponse = {
 
 export default function ResetPasswordPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("athlete@example.com");
+  const searchParams = useSearchParams();
+  const [email, setEmail] = useState(() => searchParams.get("email") ?? "athlete@example.com");
   const [token, setToken] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);

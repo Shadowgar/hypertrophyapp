@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -385,6 +386,7 @@ export default function SettingsPage() {
         <div className="rounded-md border border-zinc-800 p-3 text-xs text-zinc-300 space-y-2">
           <p className="telemetry-kicker">Apply Coaching Decision</p>
           <p className="telemetry-meta">Recommendation ID: {applyRecommendationId || "Generate preview first"}</p>
+          <p className="text-zinc-400">Check Phase = preview only. Apply Phase = save recommendation; then submit weekly review at Check-In to apply to your plan.</p>
           <div className="grid grid-cols-2 gap-2">
             <Button aria-label="Check phase decision" variant="secondary" onClick={() => runApplyPhase(false)} disabled={!applyRecommendationId.trim()}>
               Check Phase
@@ -400,6 +402,15 @@ export default function SettingsPage() {
             </Button>
           </div>
           <p className="telemetry-meta">{applyStatus ?? ""}</p>
+          {applyStatus?.toLowerCase().includes("phase: applied") ? (
+            <Link
+              href="/checkin"
+              className="mt-2 inline-flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 hover:bg-zinc-800"
+            >
+              <UiIcon name="body" className="ui-icon--action" />
+              Go to Check-In
+            </Link>
+          ) : null}
         </div>
 
         <p className="telemetry-kicker">Display</p>

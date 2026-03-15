@@ -17,7 +17,7 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column("users", sa.Column("onboarding_answers", sa.JSON(), nullable=True))
+    op.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_answers JSON")
 
 
 def downgrade() -> None:

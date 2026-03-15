@@ -21,7 +21,11 @@ if command -v docker >/dev/null 2>&1 && (docker compose version >/dev/null 2>&1 
 	fi
 else
 	echo "- docker compose not available; running pytest locally with PYTHONPATH=."
-	(cd "$ROOT/apps/api" && PYTHONPATH=. pytest tests -q)
+	if command -v pytest >/dev/null 2>&1; then
+		(cd "$ROOT/apps/api" && PYTHONPATH=. pytest tests -q)
+	else
+		(cd "$ROOT/apps/api" && PYTHONPATH=. python3 -m pytest tests -q)
+	fi
 fi
 
 echo "[2/4] Web tests"

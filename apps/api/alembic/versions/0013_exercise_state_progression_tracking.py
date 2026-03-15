@@ -16,26 +16,12 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column(
-        "exercise_states",
-        sa.Column(
-            "consecutive_under_target_exposures",
-            sa.Integer(),
-            nullable=False,
-            server_default="0",
-        ),
+    op.execute(
+        "ALTER TABLE exercise_states ADD COLUMN IF NOT EXISTS consecutive_under_target_exposures INTEGER NOT NULL DEFAULT 0"
     )
-    op.add_column(
-        "exercise_states",
-        sa.Column(
-            "last_progression_action",
-            sa.String(),
-            nullable=False,
-            server_default="hold",
-        ),
+    op.execute(
+        "ALTER TABLE exercise_states ADD COLUMN IF NOT EXISTS last_progression_action VARCHAR NOT NULL DEFAULT 'hold'"
     )
-    op.alter_column("exercise_states", "consecutive_under_target_exposures", server_default=None)
-    op.alter_column("exercise_states", "last_progression_action", server_default=None)
 
 
 def downgrade() -> None:

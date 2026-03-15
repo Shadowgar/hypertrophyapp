@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-03-12
+Last updated: 2026-03-15
 
 Purpose: this is the canonical documentation index for implementation work. Use it to determine reading order, authority hierarchy, and where a document belongs before adding or moving anything.
 
@@ -70,7 +70,7 @@ These help implementation but do not grant authority on their own:
 - `docs/flows/`
 - `docs/process/`
 - `docs/guides/`
-- `docs/plans/`
+- `docs/plans/` — includes **Today page redesign**: `docs/plans/2026-03-15-today-page-redesign-design.md` (mobile-first list + detail; implementation pending)
 - `docs/redesign/`
 - `docs/ui-parity/`
 - `docs/rules/`
