@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import CoachingIntelligencePanel from "@/components/coaching-intelligence-panel";
 import { UiIcon } from "@/components/ui/icons";
 import ExerciseControlModule from "@/components/exercise-control";
 import {
@@ -378,6 +377,9 @@ export default function TodayPage() {
   const [liveRecommendationByExercise, setLiveRecommendationByExercise] = useState<Record<string, WorkoutLiveRecommendation>>({});
   const [workoutSummary, setWorkoutSummary] = useState<WorkoutSummary | null>(null);
   const [recoveringMissingWorkout, setRecoveringMissingWorkout] = useState(false);
+  const [selectedExerciseId, setSelectedExerciseId] = useState<string | null>(null);
+  const hasAutoLoadStarted = useRef(false);
+  const isBeginWorkoutLoadInProgress = useRef(false);
 
   async function loadWorkoutSummary(workoutId: string) {
     try {
@@ -393,6 +395,14 @@ export default function TodayPage() {
       .then((data) => setHealth(data.status))
       .catch(() => setHealth("offline"));
   }, []);
+
+  useEffect(() => {
+    if (health !== "ok" || workout !== null || hasAutoLoadStarted.current) {
+      return;
+    }
+    hasAutoLoadStarted.current = true;
+    beginWorkoutLoad();
+  }, [health, workout]);
 
   async function loadToday() {
     try {
@@ -485,6 +495,10 @@ export default function TodayPage() {
   }
 
   async function beginWorkoutLoad() {
+    if (isBeginWorkoutLoadInProgress.current) {
+      return;
+    }
+    isBeginWorkoutLoadInProgress.current = true;
     const today = new Date().toISOString().slice(0, 10);
     try {
       const reviewStatus = await api.getWeeklyReviewStatus();
@@ -502,6 +516,8 @@ export default function TodayPage() {
       setShowSorenessModal(true);
     } catch {
       setMessage("Unable to verify soreness status. Try again.");
+    } finally {
+      isBeginWorkoutLoadInProgress.current = false;
     }
   }
 
@@ -611,7 +627,6 @@ export default function TodayPage() {
   const swapTarget = workout?.exercises.find((exercise) => exercise.id === swapTargetExerciseId) ?? null;
   const swapTargetCurrentIndex = swapTarget ? (swapIndexByExercise[swapTarget.id] ?? 0) : 0;
   const activeProgramId = workout ? extractProgramId(workout.session_id) : null;
-  const coachingContextNote = buildTodayContextNote(workout);
   const healthStatus = resolveHealthStatus(health);
 
   return (
@@ -633,15 +648,22 @@ export default function TodayPage() {
         </Button>
       </div>
 
-      <CoachingIntelligencePanel contextLabel="Today" templateId={activeProgramId} contextNote={coachingContextNote} />
-
       {message ? (
         <div className="main-card main-card--shell space-y-2 ui-body-sm">
           <p>{message}</p>
+          {message.includes("Check-In") ? (
+            <Link
+              href="/checkin"
+              className="inline-flex items-center gap-2 rounded-md border border-[var(--ui-edge-idle)] bg-[var(--ui-surface-1)] px-3 py-2 text-sm text-zinc-100 hover:border-[var(--ui-edge-active)]"
+            >
+              <UiIcon name="body" className="ui-icon--action" />
+              Go to Check-In
+            </Link>
+          ) : null}
           {message.startsWith("No workout available") ? (
             <Button type="button" onClick={recoverMissingWorkout} disabled={recoveringMissingWorkout}>
               <span className="inline-flex items-center gap-2">
-                <UiIcon name="refresh" className="ui-icon--action" />
+                <UiIcon name="plan" className="ui-icon--action" />
                 {recoveringMissingWorkout ? "Generating..." : "Generate Week and Reload Today"}
               </span>
             </Button>

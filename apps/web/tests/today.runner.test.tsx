@@ -94,11 +94,13 @@ test("Today page loads workout and shows exercises", async () => {
   expect(screen.getByText(/Rest: ~1-2 min/i)).toBeInTheDocument();
   expect(screen.getByText(/Authored substitutions: Cable Curl \/ DB Curl/i)).toBeInTheDocument();
   expect(screen.getByRole("link", { name: /Demo link/i })).toHaveAttribute("href", "https://example.com/bayesian-video");
-  expect(screen.getByText(/Current context/i)).toBeInTheDocument();
-  expect(screen.getByText(/Today follows Arms & Weak Points/i)).toBeInTheDocument();
 
   const guideLink = screen.getByRole("link", { name: /Bayesian Curl/i });
   expect(guideLink).toHaveAttribute("href", "/guides/pure_bodybuilding_phase_1_full_body/exercise/ex-1");
+
+  // No detail overlay when no exercise is selected
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(screen.getAllByText(/Arms & Weak Points/i).length).toBeGreaterThan(0);
 });
 
 test("Today page can recover by generating week when no workout exists yet", async () => {
@@ -178,8 +180,6 @@ test("Today page can recover by generating week when no workout exists yet", asy
   });
 
   render(<TodayPage />);
-
-  fireEvent.click(screen.getByRole("button", { name: /Load Today Workout/i }));
 
   await waitFor(() => {
     expect(screen.getByText(/No workout available\. Generate week plan first\./i)).toBeInTheDocument();
