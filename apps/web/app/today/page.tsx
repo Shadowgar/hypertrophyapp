@@ -674,137 +674,27 @@ export default function TodayPage() {
             {workout.title} · {workoutProgress?.completed ?? 0}/{workoutProgress?.planned ?? 0} sets
           </p>
 
-          {workout.exercises.map((exercise) => {
-            const notesOpen = notesOpenByExercise[exercise.id] ?? false;
-            const mediaUrl = resolveExerciseMediaUrl(exercise);
-            const hasVideo = Boolean(mediaUrl);
-            const substitutions = exercise.substitution_candidates ?? [];
-            const selectedName = resolveExerciseName(exercise, swapIndexByExercise);
-            const guideHref = activeProgramId
-              ? `/guides/${activeProgramId}/exercise/${exercise.primary_exercise_id ?? exercise.id}`
-              : null;
-            const completed = completedSetsByExercise[exercise.id] ?? 0;
-            const status = resolveExerciseStatus(completed, exercise.sets, Boolean(workout.resume));
-
-            return (
-              <div key={exercise.id} className="main-card main-card--module spacing-grid">
-                <div className="telemetry-header items-start">
-                  <div>
-                    <p className="telemetry-kicker">Exercise Slot</p>
-                    <p className="text-sm font-semibold text-zinc-100">
-                      <ExerciseTitleLink selectedName={selectedName} guideHref={guideHref} />
-                    </p>
-                    <p className="telemetry-meta">
-                      {exercise.sets} sets · {exercise.rep_range[0]}-{exercise.rep_range[1]} reps · {exercise.recommended_working_weight} kg
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-2 py-1">
-                    <span className={`status-dot status-dot--${status}`} />
-                    <span className="text-[10px] uppercase tracking-wide text-zinc-300">{status}</span>
-                  </div>
-                </div>
-
-                <ExerciseExecutionDetails exercise={exercise} />
-
-                <div className="ui-segmented ui-segmented--auto">
-                  <Button
-                    className="h-8 px-3 text-xs"
-                    disabled={!hasVideo}
-                    onClick={() => {
-                      if (mediaUrl) {
-                        window.open(mediaUrl, "_blank", "noopener,noreferrer");
-                      }
-                    }}
+          <ul className="space-y-1" aria-label="Exercise list">
+            {workout.exercises.map((exercise) => {
+              const selectedName = resolveExerciseName(exercise, swapIndexByExercise);
+              const completed = completedSetsByExercise[exercise.id] ?? 0;
+              return (
+                <li key={exercise.id}>
+                  <button
                     type="button"
-                    variant="segment"
+                    className="flex min-h-[44px] w-full items-center justify-between gap-2 rounded-md border border-zinc-800 bg-zinc-900/50 px-3 py-2.5 text-left text-sm text-zinc-100 transition-colors hover:border-zinc-700 hover:bg-zinc-800/80"
+                    onClick={() => setSelectedExerciseId(exercise.id)}
                   >
-                    <span className="inline-flex items-center gap-2">
-                      <UiIcon name="video" className="ui-icon--action" />
-                      Video
+                    <span className="font-medium">{selectedName}</span>
+                    <span className="text-zinc-400">
+                      {completed}/{exercise.sets} · {exercise.rep_range[0]}-{exercise.rep_range[1]} reps @ {exercise.recommended_working_weight} kg
                     </span>
-                  </Button>
-                  <Button
-                    className="h-8 px-3 text-xs"
-                    disabled={substitutions.length === 0}
-                    onClick={() => setSwapTargetExerciseId(exercise.id)}
-                    type="button"
-                    variant="segment"
-                  >
-                    <span className="inline-flex items-center gap-2">
-                      <UiIcon name="swap" className="ui-icon--action" />
-                      I don’t have this equipment
-                    </span>
-                  </Button>
-                  <Button
-                    className="h-8 px-3 text-xs"
-                    onClick={() => toggleNotes(exercise.id)}
-                    type="button"
-                    variant="segment"
-                  >
-                    <span className="inline-flex items-center gap-2">
-                      <UiIcon name="notes" className="ui-icon--action" />
-                      Notes
-                    </span>
-                  </Button>
-                </div>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
 
-                <ExerciseControlModule
-                  exerciseId={exercise.id}
-                  note={exercise.notes}
-                  totalSets={exercise.sets}
-                  defaultRestSeconds={90}
-                  recommendedWorkingWeight={exercise.recommended_working_weight}
-                  repRange={exercise.rep_range}
-                  initialCompletedSets={completedSetsByExercise[exercise.id] ?? 0}
-                  onSetComplete={handleSetComplete}
-                />
-
-                {setFeedbackByExercise[exercise.id] ? (
-                  <div className="rounded-md border border-zinc-800 bg-zinc-900/40 p-2 text-xs text-zinc-300">
-                    <p>
-                      Logged: {setFeedbackByExercise[exercise.id].reps} reps @ {setFeedbackByExercise[exercise.id].weight} kg
-                    </p>
-                    <p>
-                      Planned: {setFeedbackByExercise[exercise.id].planned_reps_min}-{setFeedbackByExercise[exercise.id].planned_reps_max} reps @ {setFeedbackByExercise[exercise.id].planned_weight} kg
-                    </p>
-                    <p>
-                      Next recommendation: {setFeedbackByExercise[exercise.id].next_working_weight} kg
-                    </p>
-                    <p>
-                      {resolveGuidanceText(
-                        setFeedbackByExercise[exercise.id].guidance_rationale,
-                        setFeedbackByExercise[exercise.id].guidance,
-                      )}
-                    </p>
-                  </div>
-                ) : null}
-
-                {liveRecommendationByExercise[exercise.id] ? (
-                  <div className="rounded-md border border-zinc-800 bg-zinc-900/40 p-2 text-xs text-zinc-300">
-                    <p>
-                      Remaining sets: {liveRecommendationByExercise[exercise.id].remaining_sets}
-                    </p>
-                    <p>
-                      Next set target: {liveRecommendationByExercise[exercise.id].recommended_reps_min}-
-                      {liveRecommendationByExercise[exercise.id].recommended_reps_max} reps @ {liveRecommendationByExercise[exercise.id].recommended_weight} kg
-                    </p>
-                    <p>
-                      Guidance: {resolveGuidanceText(
-                        liveRecommendationByExercise[exercise.id].guidance_rationale,
-                        liveRecommendationByExercise[exercise.id].guidance,
-                      )}
-                    </p>
-                  </div>
-                ) : null}
-
-                {notesOpen ? (
-                  <div className="rounded-md border border-zinc-800 bg-zinc-900/40 p-2 text-xs text-zinc-300">
-                    {exercise.notes ?? "No notes for this slot."}
-                  </div>
-                ) : null}
-              </div>
-            );
-          })}
 
           <WorkoutSummaryCard summary={workoutSummary} />
         </div>

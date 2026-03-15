@@ -82,12 +82,9 @@ test("Today page loads workout and shows exercises", async () => {
 
   // Simplified top: one line session title + progress
   expect(screen.getByText(/Arms & Weak Points · 0\/0 sets/i)).toBeInTheDocument();
-  // Exercise list still shows exercise name and details (full cards until Task 3)
-  expect(screen.getByText(/Early-set RPE: ~9/i)).toBeInTheDocument();
-  expect(screen.getByText(/Technique: Long-length Partials/i)).toBeInTheDocument();
-  expect(screen.getByRole("link", { name: /Demo link/i })).toHaveAttribute("href", "https://example.com/bayesian-video");
-  const guideLink = screen.getByRole("link", { name: /Bayesian Curl/i });
-  expect(guideLink).toHaveAttribute("href", "/guides/pure_bodybuilding_phase_1_full_body/exercise/ex-1");
+  // Compact list: exercise name and prescription in tappable row
+  expect(screen.getByRole("button", { name: /Bayesian Curl/i })).toBeInTheDocument();
+  expect(screen.getByText(/0\/3 · 8-12 reps @ 17\.5 kg/)).toBeInTheDocument();
 
   // No detail overlay when no exercise is selected
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
