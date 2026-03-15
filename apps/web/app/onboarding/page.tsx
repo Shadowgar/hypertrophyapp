@@ -46,7 +46,21 @@ const GOAL_OPTIONS = [
   "something_else",
 ] as const;
 const TRAINING_AGE_OPTIONS = ["getting_started", "less_than_1_year", "1_2_years", "2_5_years", "more_than_5_years"] as const;
+const TRAINING_AGE_LABELS: Record<(typeof TRAINING_AGE_OPTIONS)[number], string> = {
+  getting_started: "Getting started",
+  less_than_1_year: "Less than 1 year",
+  "1_2_years": "1 to 2 years",
+  "2_5_years": "2 to 5 years",
+  more_than_5_years: "More than 5 years",
+};
 const FREQUENCY_OPTIONS = ["never", "once_in_a_while", "1_2_per_week", "3_4_per_week", "5_plus_per_week"] as const;
+const FREQUENCY_LABELS: Record<(typeof FREQUENCY_OPTIONS)[number], string> = {
+  never: "Never",
+  once_in_a_while: "Once in a while",
+  "1_2_per_week": "1 to 2 times per week",
+  "3_4_per_week": "3 to 4 times per week",
+  "5_plus_per_week": "5+ per week",
+};
 const MOTIVATION_OPTIONS = ["accountability", "competition", "fun", "self_motivated"] as const;
 const OBSTACLE_OPTIONS = [
   "lack_of_motivation",
@@ -63,6 +77,12 @@ const GYM_SETUP_OPTIONS = [
   "dumbbells_machines_cables",
   "machines_cables",
 ] as const;
+const GYM_SETUP_LABELS: Record<(typeof GYM_SETUP_OPTIONS)[number], string> = {
+  rack_dumbbells_machines_cables: "Rack, dumbbells, machines & cables",
+  smith_dumbbells_machines_cables: "Smith machine, dumbbells, machines & cables",
+  dumbbells_machines_cables: "Dumbbells, machines & cables",
+  machines_cables: "Machines & cables only",
+};
 const EXPERIENCE_LEVEL_OPTIONS = ["beginner", "intermediate", "advanced"] as const;
 const DURATION_OPTIONS = [30, 45, 60] as const;
 const DAYS_OPTIONS = [2, 3, 4, 5] as const;
@@ -361,7 +381,7 @@ export default function OnboardingPage() {
           return;
         }
         setPrograms(FALLBACK_PROGRAMS);
-        setProgramCatalogStatus("Program catalog API unavailable. Using local active fallback template.");
+        setProgramCatalogStatus("Using default program template. (API unreachable from this browser — check Docker containers.)");
       }
     })();
     return () => {
@@ -717,7 +737,11 @@ export default function OnboardingPage() {
     const registerError = await parseApiError(registerRes, "Registration failed");
     const looksLikeExistingAccount = registerRes.status === 400 && registerError.toLowerCase().includes("already used");
     if (!looksLikeExistingAccount) {
-      setStatus(`Registration failed: ${registerError}`);
+      const message =
+        registerError === "Registration failed" || registerError.startsWith("Registration failed:")
+          ? "Registration failed. If the program catalog above shows “unavailable”, the API may not be reachable — ensure Docker containers are running (e.g. docker compose up -d)."
+          : `Registration failed: ${registerError}`;
+      setStatus(message);
       setPhase("account");
       return null;
     }
@@ -809,6 +833,24 @@ export default function OnboardingPage() {
         await api.generateWeek(selectedProgramId);
       } catch {
         // keep onboarding successful even if initial pre-generation fails
+      }
+
+      // Submit an initial weekly review so the user is not required to do Sunday review before using the app
+      try {
+        const reviewStatus = await api.getWeeklyReviewStatus();
+        const reviewWeightKg = convertWeightToKg(Number(weightValue), weightUnit);
+        const reviewCalories = primaryGoal === "lose_fat" ? 2200 : 2600;
+        await api.submitWeeklyReview({
+          body_weight: reviewWeightKg,
+          calories: reviewCalories,
+          protein: 180,
+          fat: 70,
+          carbs: 280,
+          adherence_score: 5,
+          week_start: reviewStatus.week_start,
+        });
+      } catch {
+        // non-blocking: user can still use the app; they may see Sunday review prompt later
       }
 
       setStatus("Onboarding saved and first plan initialized");
@@ -1000,7 +1042,7 @@ export default function OnboardingPage() {
                     : "border-[var(--ui-edge-idle)] bg-[var(--ui-surface-1)] text-zinc-100"
                 }`}
               >
-                {option.replaceAll("_", " ")}
+                {TRAINING_AGE_LABELS[option]}
               </button>
             ))}
           </div>
@@ -1020,7 +1062,7 @@ export default function OnboardingPage() {
                     : "border-[var(--ui-edge-idle)] bg-[var(--ui-surface-1)] text-zinc-100"
                 }`}
               >
-                {option.replaceAll("_", " ")}
+                {FREQUENCY_LABELS[option]}
               </button>
             ))}
           </div>
@@ -1091,6 +1133,7 @@ export default function OnboardingPage() {
         }
         return (
           <div className="grid grid-cols-1 gap-2">
+            <p className="text-xs text-zinc-400">We use this to suggest exercises that match your equipment. Pick the option that best describes your main setup.</p>
             {GYM_SETUP_OPTIONS.map((option) => (
               <button
                 key={option}
@@ -1103,7 +1146,7 @@ export default function OnboardingPage() {
                     : "border-[var(--ui-edge-idle)] bg-[var(--ui-surface-1)] text-zinc-100"
                 }`}
               >
-                {option.replaceAll("_", " ")}
+                {GYM_SETUP_LABELS[option]}
               </button>
             ))}
           </div>
@@ -1261,6 +1304,9 @@ export default function OnboardingPage() {
           {renderProgress(questionIndex, questionSteps.length - 1)}
           <p className="telemetry-kicker">Step {questionIndex + 1} of {questionSteps.length}</p>
           <h2 className="text-2xl font-semibold text-zinc-100">{currentQuestion?.title}</h2>
+          {questionIndex === 0 ? (
+            <p className="text-xs text-zinc-400">Your answers are saved to your profile and used to tailor your plan: days per week, equipment, and recovery settings.</p>
+          ) : null}
           {renderQuestionStep()}
           <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
             <Button type="button" variant="secondary" onClick={goToPreviousQuestion}>Back</Button>
@@ -1283,6 +1329,11 @@ export default function OnboardingPage() {
         <form className="main-card main-card--module spacing-grid" onSubmit={submitOnboarding}>
           {renderProgress(questionSteps.length - 1, questionSteps.length - 1)}
           <p className="telemetry-kicker">Create Account</p>
+          {(status.toLowerCase().includes("failed") || status.toLowerCase().includes("error")) && status !== "Idle" ? (
+            <div className="rounded-md border border-red-500/50 bg-red-950/30 p-3 text-sm text-red-200" role="alert">
+              {status}
+            </div>
+          ) : null}
           <input aria-label="Email address" className="ui-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
           <div className="space-y-2">
             <input
@@ -1355,8 +1406,12 @@ export default function OnboardingPage() {
       {phase === "saving" ? (
         <div className="main-card main-card--module spacing-grid">
           <p className="telemetry-kicker">Finalizing</p>
-          <h2 className="text-2xl font-semibold text-zinc-100">Creating your workouts...</h2>
-          <p className="telemetry-meta">Saving profile, applying constraints, and generating your initial training week.</p>
+          <h2 className="text-2xl font-semibold text-zinc-100">{status}</h2>
+          <p className="telemetry-meta">
+            {status.toLowerCase().includes("failed") || status.toLowerCase().includes("error")
+              ? "Fix any error above and try again. Your account may already exist — try logging in or use Developer Tools to wipe the test user."
+              : "Saving profile, applying constraints, and generating your initial training week."}
+          </p>
         </div>
       ) : null}
 
