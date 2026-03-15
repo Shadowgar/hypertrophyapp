@@ -1,6 +1,6 @@
 # Current-State Decision Runtime Map
 
-Last updated: 2026-03-14
+Last updated: 2026-03-15
 
 ## Purpose
 
@@ -33,6 +33,8 @@ Current branch reality is:
 - local dogfooding now has a dev-only authenticated reset hook (`POST /profile/dev/reset-phase1`) that clears training state and restores canonical Phase 1 selection without deleting the account
 - focused API verification is now more deterministic in local runs because test startup config sets `DATABASE_URL` early via `configure_test_database("pytest_session_default")`, preventing accidental fallback to default Postgres when unavailable
 - the next bounded product seam is end-to-end dogfooding of this real Phase 1 administered path before wider cleanup
+- Today page auto-loads the workout on mount when API health is OK, using the same soreness/review gate as the explicit Load Today Workout button; a guard prevents double-invoke; when no week exists, the recovery action (Generate Week and Reload Today) is shown
+- Today page redesign implemented: list + detail overlay, simplified top, API-only guidance; see `docs/plans/2026-03-15-today-page-redesign-design.md`
 
 Current product order for active implementation is:
 1. keep `pure_bodybuilding_phase_1_full_body` as the single administered Phase 1 identity (aliases compatibility-only)

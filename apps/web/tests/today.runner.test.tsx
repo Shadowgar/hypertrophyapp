@@ -84,10 +84,58 @@ test("Today page loads workout and shows exercises", async () => {
   expect(screen.getByText(/Arms & Weak Points · 0\/0 sets/i)).toBeInTheDocument();
   // Compact list: exercise name and prescription in tappable row
   expect(screen.getByRole("button", { name: /Bayesian Curl/i })).toBeInTheDocument();
-  expect(screen.getByText(/0\/3 · 8-12 reps @ 17\.5 kg/)).toBeInTheDocument();
+  expect(screen.getByText(/0\/3 · 8-12 reps @ 38\.6 lbs/)).toBeInTheDocument();
 
   // No detail overlay when no exercise is selected
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+});
+
+test("Today page opens detail overlay on row tap and closes on back", async () => {
+  const workout = {
+    session_id: "pure_bodybuilding_phase_1_full_body-day1",
+    title: "Arms & Weak Points",
+    date: new Date().toISOString().slice(0, 10),
+    resume: false,
+    exercises: [
+      {
+        id: "ex-1",
+        name: "Bayesian Curl",
+        sets: 3,
+        rep_range: [8, 12],
+        recommended_working_weight: 17.5,
+        substitution_candidates: [],
+        notes: null,
+        video: null,
+        primary_exercise_id: "bayesian-1",
+      },
+    ],
+  };
+  // @ts-ignore
+  globalThis.fetch.mockImplementation((input, init) => {
+    const url = typeof input === "string" ? input : input.url;
+    if (url.endsWith("/health")) {
+      return Promise.resolve(new Response(JSON.stringify({ status: "ok" }), { status: 200 }));
+    }
+    if (url.endsWith("/workout/today")) {
+      return Promise.resolve(new Response(JSON.stringify(workout), { status: 200 }));
+    }
+    if (url.includes("/soreness")) {
+      return Promise.resolve(new Response(JSON.stringify([{ id: "s1", entry_date: "2026-03-03" }]), { status: 200 }));
+    }
+    return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
+  });
+
+  render(<TodayPage />);
+  fireEvent.click(screen.getByRole("button", { name: /Load today's workout/i }));
+  await waitFor(() => expect(screen.getByRole("button", { name: /Bayesian Curl/ })).toBeInTheDocument());
+
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: /Bayesian Curl/ }));
+  await waitFor(() => expect(screen.getByRole("dialog")).toBeInTheDocument());
+  expect(screen.getByRole("button", { name: /Back to list/i })).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole("button", { name: /Back to list/i }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
 });
 
 test("Today page can recover by generating week when no workout exists yet", async () => {

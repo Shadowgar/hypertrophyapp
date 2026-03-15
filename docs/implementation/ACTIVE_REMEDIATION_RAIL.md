@@ -1,6 +1,6 @@
 # Active Remediation Rail
 
-Last updated: 2026-03-14
+Last updated: 2026-03-15
 
 ## Current Confirmed State
 
@@ -31,11 +31,19 @@ Current product order for active implementation is:
   - onboarding Developer Tools now expose this reset as `Reset Current User to Clean Phase 1`
   - focused API runs now initialize test DB config at session startup (`tests/conftest.py`) to reduce local failures caused by missing Postgres during targeted pytest runs
   - today surface now includes a direct recovery action (`Generate Week and Reload Today`) when no workout exists yet, so canonical dogfood loops can continue without manual route-hopping
+  - Today page auto-loads the workout on mount when API health is OK (same soreness/review gate as the Load Today Workout button); a guard prevents double-invoke; recovery action remains when no week exists
+  - `./scripts/mini_validate.sh` when run without docker falls back to `python3 -m pytest` when `pytest` is not on PATH, so local API validation can run in more environments
+  - Settings visual/snapshot and program tests now assert one-program-first UI (Program Settings, active program display, Wipe Current User Data); no program selector in current product mode
 
 ## Next Recommended Action
 
 - Execute repeated browser dogfooding on the canonical Phase 1 loop using `/profile/dev/reset-phase1`, and fix only blockers found in onboarding -> generate-week -> today/log-set -> check-in/review -> history -> adaptation/regenerate continuity.
 - Keep compatibility aliases explicit at boundaries, and keep broader architecture/generalization work downstream unless directly blocking canonical-path reliability.
+
+## Done: Today Page Redesign
+
+- **Implemented:** Today uses a compact list at a glance and a full-screen exercise detail overlay; Session Intent and Between-Set Coach cards are removed from the main view.
+- "Do this set" on the detail overlay uses API guidance only (via `resolveGuidanceText(rationale, guidance)` or neutral prescription). Design and implementation plan: `docs/plans/2026-03-15-today-page-redesign-design.md`, `docs/plans/2026-03-15-today-page-redesign-implementation.md`.
 
 ## Closed Work Do Not Reopen Without Evidence
 
