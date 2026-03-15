@@ -627,23 +627,20 @@ export default function TodayPage() {
   const swapTarget = workout?.exercises.find((exercise) => exercise.id === swapTargetExerciseId) ?? null;
   const swapTargetCurrentIndex = swapTarget ? (swapIndexByExercise[swapTarget.id] ?? 0) : 0;
   const activeProgramId = workout ? extractProgramId(workout.session_id) : null;
-  const healthStatus = resolveHealthStatus(health);
+
+  const todayDate = new Date().toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 
   return (
     <div className="space-y-4">
-      <h1 className="ui-title-page">Today</h1>
+      <div className="flex items-baseline justify-between gap-2">
+        <h1 className="ui-title-page">Today</h1>
+        <p className="ui-meta text-zinc-400">{todayDate}</p>
+      </div>
       <div className="main-card main-card--module main-card--accent spacing-grid spacing-grid--tight">
-        <div className="telemetry-header">
-          <p className="telemetry-kicker">Runner Status</p>
-          <span className="telemetry-status">
-            <span className={`status-dot status-dot--${healthStatus}`} /> API {health}
-          </span>
-        </div>
-        <p className="telemetry-meta">Load today&apos;s workout and continue execution from the current session state.</p>
-        <Button className="mt-3 w-full" onClick={beginWorkoutLoad}>
+        <Button className="min-h-[44px] w-full" onClick={beginWorkoutLoad}>
           <span className="inline-flex items-center gap-2">
             <UiIcon name="workout" className="ui-icon--action" />
-            Load Today Workout
+            {workout ? "Reload" : "Load today's workout"}
           </span>
         </Button>
       </div>
@@ -673,15 +670,9 @@ export default function TodayPage() {
 
       {workout ? (
         <div className="space-y-3">
-          <WorkoutHeaderCard workout={workout} workoutProgress={workoutProgress} />
-          <SessionIntentCard workout={workout} workoutProgress={workoutProgress} />
-          <BetweenSetCoachCard
-            workout={workout}
-            completedSetsByExercise={completedSetsByExercise}
-            liveRecommendationByExercise={liveRecommendationByExercise}
-            setFeedbackByExercise={setFeedbackByExercise}
-            swapIndexByExercise={swapIndexByExercise}
-          />
+          <p className="ui-body-sm text-zinc-200">
+            {workout.title} · {workoutProgress?.completed ?? 0}/{workoutProgress?.planned ?? 0} sets
+          </p>
 
           {workout.exercises.map((exercise) => {
             const notesOpen = notesOpenByExercise[exercise.id] ?? false;

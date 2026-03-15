@@ -4,39 +4,25 @@ exports[`visual snapshot: today route initial state 1`] = `
 <div
   class="space-y-4"
 >
-  <h1
-    class="ui-title-page"
+  <div
+    class="flex items-baseline justify-between gap-2"
   >
-    Today
-  </h1>
+    <h1
+      class="ui-title-page"
+    >
+      Today
+    </h1>
+    <p
+      class="ui-meta text-zinc-400"
+    >
+      Sun, Mar 15
+    </p>
+  </div>
   <div
     class="main-card main-card--module main-card--accent spacing-grid spacing-grid--tight"
   >
-    <div
-      class="telemetry-header"
-    >
-      <p
-        class="telemetry-kicker"
-      >
-        Runner Status
-      </p>
-      <span
-        class="telemetry-status"
-      >
-        <span
-          class="status-dot status-dot--green"
-        />
-         API 
-        ok
-      </span>
-    </div>
-    <p
-      class="telemetry-meta"
-    >
-      Load today's workout and continue execution from the current session state.
-    </p>
     <button
-      class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 border border-[var(--ui-edge-active)] bg-[var(--ui-accent-active)] text-white shadow-[var(--ui-depth-shadow-2)] hover:bg-[rgba(220,38,38,0.25)] hover:shadow-[var(--ui-glow-active),var(--ui-depth-shadow-3)] h-10 px-4 py-2 mt-3 w-full"
+      class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 border border-[var(--ui-edge-active)] bg-[var(--ui-accent-active)] text-white shadow-[var(--ui-depth-shadow-2)] hover:bg-[rgba(220,38,38,0.25)] hover:shadow-[var(--ui-glow-active),var(--ui-depth-shadow-3)] h-10 px-4 py-2 min-h-[44px] w-full"
     >
       <span
         class="inline-flex items-center gap-2"
@@ -55,185 +41,16 @@ exports[`visual snapshot: today route initial state 1`] = `
             d="M4 10h3l2-3 6 10 2-3h3"
           />
         </svg>
-        Load Today Workout
+        Load today's workout
       </span>
     </button>
   </div>
   <div
-    class="main-card main-card--module spacing-grid spacing-grid--tight"
+    class="main-card main-card--shell space-y-2 ui-body-sm"
   >
-    <p
-      class="telemetry-kicker"
-    >
-      Coaching Intelligence
+    <p>
+      No workout loaded
     </p>
-    <p
-      class="telemetry-meta"
-    >
-      Surface: 
-      Today
-    </p>
-    <p
-      class="telemetry-meta"
-    >
-      Template: 
-      profile-selected
-    </p>
-    <div
-      class="grid grid-cols-2 gap-2"
-    >
-      <label
-        class="ui-meta"
-        for="Today-preview-from-days"
-      >
-        From Days
-      </label>
-      <input
-        class="ui-input"
-        id="Today-preview-from-days"
-        max="7"
-        min="2"
-        type="number"
-        value="5"
-      />
-      <label
-        class="ui-meta"
-        for="Today-preview-to-days"
-      >
-        To Days
-      </label>
-      <input
-        class="ui-input"
-        id="Today-preview-to-days"
-        max="7"
-        min="2"
-        type="number"
-        value="3"
-      />
-      <label
-        class="ui-meta"
-        for="Today-preview-phase"
-      >
-        Current Phase
-      </label>
-      <select
-        class="ui-select"
-        id="Today-preview-phase"
-      >
-        <option
-          value="accumulation"
-        >
-          Accumulation
-        </option>
-        <option
-          value="intensification"
-        >
-          Intensification
-        </option>
-        <option
-          value="deload"
-        >
-          Deload
-        </option>
-      </select>
-      <label
-        class="ui-meta"
-        for="Today-preview-soreness"
-      >
-        Soreness
-      </label>
-      <select
-        class="ui-select"
-        id="Today-preview-soreness"
-      >
-        <option
-          value="none"
-        >
-          None
-        </option>
-        <option
-          value="mild"
-        >
-          Mild
-        </option>
-        <option
-          value="moderate"
-        >
-          Moderate
-        </option>
-        <option
-          value="severe"
-        >
-          Severe
-        </option>
-      </select>
-    </div>
-    <label
-      class="ui-meta"
-      for="Today-preview-lagging"
-    >
-      Lagging Muscles (comma-separated)
-    </label>
-    <input
-      class="ui-input"
-      id="Today-preview-lagging"
-      value="biceps, shoulders"
-    />
-    <button
-      aria-label="Generate coaching preview"
-      class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 material-module text-white hover:border-[var(--ui-edge-active)] hover:bg-[var(--ui-accent-idle)] hover:shadow-[var(--ui-depth-shadow-3)] h-10 px-4 py-2 w-full"
-    >
-      Generate Coaching Preview
-    </button>
-    <p
-      class="telemetry-meta"
-    />
-    <p
-      class="telemetry-meta"
-    >
-      Recommendation ID: 
-      Generate preview first
-    </p>
-    <div
-      class="grid grid-cols-2 gap-2"
-    >
-      <button
-        aria-label="Check phase decision"
-        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 material-module text-white hover:border-[var(--ui-edge-active)] hover:bg-[var(--ui-accent-idle)] hover:shadow-[var(--ui-depth-shadow-3)] h-10 px-4 py-2"
-        disabled=""
-      >
-        Check Phase
-      </button>
-      <button
-        aria-label="Apply phase decision"
-        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 material-module text-white hover:border-[var(--ui-edge-active)] hover:bg-[var(--ui-accent-idle)] hover:shadow-[var(--ui-depth-shadow-3)] h-10 px-4 py-2"
-        disabled=""
-      >
-        Apply Phase
-      </button>
-      <button
-        aria-label="Check specialization decision"
-        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 material-module text-white hover:border-[var(--ui-edge-active)] hover:bg-[var(--ui-accent-idle)] hover:shadow-[var(--ui-depth-shadow-3)] h-10 px-4 py-2"
-        disabled=""
-      >
-        Check Specialization
-      </button>
-      <button
-        aria-label="Apply specialization decision"
-        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 material-module text-white hover:border-[var(--ui-edge-active)] hover:bg-[var(--ui-accent-idle)] hover:shadow-[var(--ui-depth-shadow-3)] h-10 px-4 py-2"
-        disabled=""
-      >
-        Apply Specialization
-      </button>
-    </div>
-    <p
-      class="telemetry-meta"
-    />
-  </div>
-  <div
-    class="main-card main-card--shell ui-body-sm"
-  >
-    No workout loaded
   </div>
 </div>
 `;
@@ -356,177 +173,6 @@ exports[`visual snapshot: week route 1`] = `
     </div>
   </div>
   <div
-    class="main-card main-card--module spacing-grid spacing-grid--tight"
-  >
-    <p
-      class="telemetry-kicker"
-    >
-      Coaching Intelligence
-    </p>
-    <p
-      class="telemetry-meta"
-    >
-      Surface: 
-      Week Plan
-    </p>
-    <p
-      class="telemetry-meta"
-    >
-      Template: 
-      profile-selected
-    </p>
-    <div
-      class="grid grid-cols-2 gap-2"
-    >
-      <label
-        class="ui-meta"
-        for="Week Plan-preview-from-days"
-      >
-        From Days
-      </label>
-      <input
-        class="ui-input"
-        id="Week Plan-preview-from-days"
-        max="7"
-        min="2"
-        type="number"
-        value="5"
-      />
-      <label
-        class="ui-meta"
-        for="Week Plan-preview-to-days"
-      >
-        To Days
-      </label>
-      <input
-        class="ui-input"
-        id="Week Plan-preview-to-days"
-        max="7"
-        min="2"
-        type="number"
-        value="3"
-      />
-      <label
-        class="ui-meta"
-        for="Week Plan-preview-phase"
-      >
-        Current Phase
-      </label>
-      <select
-        class="ui-select"
-        id="Week Plan-preview-phase"
-      >
-        <option
-          value="accumulation"
-        >
-          Accumulation
-        </option>
-        <option
-          value="intensification"
-        >
-          Intensification
-        </option>
-        <option
-          value="deload"
-        >
-          Deload
-        </option>
-      </select>
-      <label
-        class="ui-meta"
-        for="Week Plan-preview-soreness"
-      >
-        Soreness
-      </label>
-      <select
-        class="ui-select"
-        id="Week Plan-preview-soreness"
-      >
-        <option
-          value="none"
-        >
-          None
-        </option>
-        <option
-          value="mild"
-        >
-          Mild
-        </option>
-        <option
-          value="moderate"
-        >
-          Moderate
-        </option>
-        <option
-          value="severe"
-        >
-          Severe
-        </option>
-      </select>
-    </div>
-    <label
-      class="ui-meta"
-      for="Week Plan-preview-lagging"
-    >
-      Lagging Muscles (comma-separated)
-    </label>
-    <input
-      class="ui-input"
-      id="Week Plan-preview-lagging"
-      value="biceps, shoulders"
-    />
-    <button
-      aria-label="Generate coaching preview"
-      class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 material-module text-white hover:border-[var(--ui-edge-active)] hover:bg-[var(--ui-accent-idle)] hover:shadow-[var(--ui-depth-shadow-3)] h-10 px-4 py-2 w-full"
-    >
-      Generate Coaching Preview
-    </button>
-    <p
-      class="telemetry-meta"
-    />
-    <p
-      class="telemetry-meta"
-    >
-      Recommendation ID: 
-      Generate preview first
-    </p>
-    <div
-      class="grid grid-cols-2 gap-2"
-    >
-      <button
-        aria-label="Check phase decision"
-        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 material-module text-white hover:border-[var(--ui-edge-active)] hover:bg-[var(--ui-accent-idle)] hover:shadow-[var(--ui-depth-shadow-3)] h-10 px-4 py-2"
-        disabled=""
-      >
-        Check Phase
-      </button>
-      <button
-        aria-label="Apply phase decision"
-        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 material-module text-white hover:border-[var(--ui-edge-active)] hover:bg-[var(--ui-accent-idle)] hover:shadow-[var(--ui-depth-shadow-3)] h-10 px-4 py-2"
-        disabled=""
-      >
-        Apply Phase
-      </button>
-      <button
-        aria-label="Check specialization decision"
-        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 material-module text-white hover:border-[var(--ui-edge-active)] hover:bg-[var(--ui-accent-idle)] hover:shadow-[var(--ui-depth-shadow-3)] h-10 px-4 py-2"
-        disabled=""
-      >
-        Check Specialization
-      </button>
-      <button
-        aria-label="Apply specialization decision"
-        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 material-module text-white hover:border-[var(--ui-edge-active)] hover:bg-[var(--ui-accent-idle)] hover:shadow-[var(--ui-depth-shadow-3)] h-10 px-4 py-2"
-        disabled=""
-      >
-        Apply Specialization
-      </button>
-    </div>
-    <p
-      class="telemetry-meta"
-    />
-  </div>
-  <div
     class="main-card main-card--shell spacing-grid spacing-grid--tight"
   >
     <p
@@ -539,6 +185,36 @@ exports[`visual snapshot: week route 1`] = `
     >
       Generate a weekly plan.
     </p>
+    <button
+      class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 border border-[var(--ui-edge-active)] bg-[var(--ui-accent-active)] text-white shadow-[var(--ui-depth-shadow-2)] hover:bg-[rgba(220,38,38,0.25)] hover:shadow-[var(--ui-glow-active),var(--ui-depth-shadow-3)] h-10 px-4 py-2 w-full"
+    >
+      <span
+        class="inline-flex items-center gap-2"
+      >
+        <svg
+          aria-hidden="true"
+          class="ui-icon ui-icon--action"
+          fill="none"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.9"
+          viewBox="0 0 24 24"
+        >
+          <rect
+            height="15"
+            rx="2"
+            width="16"
+            x="4"
+            y="5"
+          />
+          <path
+            d="M8 3v4M16 3v4M7 11h10M7 15h6"
+          />
+        </svg>
+        Generate First Week Now
+      </span>
+    </button>
   </div>
 </div>
 `;

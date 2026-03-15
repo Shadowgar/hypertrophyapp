@@ -97,12 +97,10 @@ test("Completing a set calls log-set POST and persists completed sets", async ()
 
   render(<TodayPage />);
 
-  const loadBtn = screen.getByRole("button", { name: /Load Today Workout/i });
+  const loadBtn = screen.getByRole("button", { name: /Load today's workout/i });
   fireEvent.click(loadBtn);
 
   await waitFor(() => expect(screen.getAllByText(/Bench Press/i).length).toBeGreaterThan(0));
-  expect(screen.getByText(/Progress:\s*0\/3 sets \(0%\)/i)).toBeInTheDocument();
-  expect(screen.getByText(/Live lane: Bench Press/i)).toBeInTheDocument();
 
   // find Complete Set button within the exercise control
   const completeBtn = screen.getByRole("button", { name: /Complete Set/i });
@@ -130,10 +128,9 @@ test("Completing a set calls log-set POST and persists completed sets", async ()
   expect(stored["ex-1"]).toBe(1);
 
   await waitFor(() => {
-    expect(screen.getByText(/Progress:\s*1\/3 sets \(33%\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/1\/3 sets/i)).toBeInTheDocument();
   });
 
-  expect(screen.getByText(/Bench Press: 1\/3 sets complete\./i)).toBeInTheDocument();
   expect(screen.getAllByText(/Next set target: 8-10 reps @ 57.5 kg/i).length).toBeGreaterThan(0);
 
   expect(

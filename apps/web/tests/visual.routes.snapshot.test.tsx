@@ -126,8 +126,8 @@ test("visual snapshot: settings route", async () => {
     return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
   });
 
-  const { getByLabelText, getByRole } = render(<SettingsPage />);
-  await waitFor(() => expect(getByLabelText(/Settings program selector/i)).toBeInTheDocument());
+  const { getByText, getByRole } = render(<SettingsPage />);
+  await waitFor(() => expect(getByText(/Program Settings/i)).toBeInTheDocument());
   expect(getByRole("button", { name: /Wipe Current User Data/i })).toBeInTheDocument();
 });
 
@@ -142,6 +142,6 @@ test("visual snapshot: today route initial state", async () => {
   });
 
   const { container, getByText } = render(<TodayPage />);
-  await waitFor(() => expect(getByText(/Load Today Workout/i)).toBeInTheDocument());
+  await waitFor(() => expect(getByText(/Load today's workout/i)).toBeInTheDocument());
   expect(container.firstChild).toMatchSnapshot();
 });

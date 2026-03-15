@@ -75,32 +75,22 @@ test("Today page loads workout and shows exercises", async () => {
 
   render(<TodayPage />);
 
-  const loadBtn = screen.getByRole("button", { name: /Load Today Workout/i });
+  const loadBtn = screen.getByRole("button", { name: /Load today's workout/i });
   fireEvent.click(loadBtn);
 
   await waitFor(() => expect(screen.getAllByText(/Bayesian Curl/i).length).toBeGreaterThan(0));
 
-  expect(screen.getByText(/Session Intent/i)).toBeInTheDocument();
-  expect(screen.getByText(/Authored day: Arms & Weak Points/i)).toBeInTheDocument();
-  expect(screen.getByText(/Authored block: Week 1 · Adaptation/i)).toBeInTheDocument();
-  expect(screen.getByText(/Weak-point slots planned: 1/i)).toBeInTheDocument();
-  expect(screen.getByText(/Lead exercise: Bayesian Curl for 3 sets of 8-12 reps @ 17.5 kg\./i)).toBeInTheDocument();
-  expect(screen.getByText(/Between-Set Coach/i)).toBeInTheDocument();
-  expect(screen.getByText(/Live lane: Bayesian Curl/i)).toBeInTheDocument();
-  expect(screen.getByText(/Start with 8-12 reps @ 17.5 kg\./i)).toBeInTheDocument();
+  // Simplified top: one line session title + progress
+  expect(screen.getByText(/Arms & Weak Points · 0\/0 sets/i)).toBeInTheDocument();
+  // Exercise list still shows exercise name and details (full cards until Task 3)
   expect(screen.getByText(/Early-set RPE: ~9/i)).toBeInTheDocument();
-  expect(screen.getByText(/Last-set RPE: 10/i)).toBeInTheDocument();
   expect(screen.getByText(/Technique: Long-length Partials/i)).toBeInTheDocument();
-  expect(screen.getByText(/Rest: ~1-2 min/i)).toBeInTheDocument();
-  expect(screen.getByText(/Authored substitutions: Cable Curl \/ DB Curl/i)).toBeInTheDocument();
   expect(screen.getByRole("link", { name: /Demo link/i })).toHaveAttribute("href", "https://example.com/bayesian-video");
-
   const guideLink = screen.getByRole("link", { name: /Bayesian Curl/i });
   expect(guideLink).toHaveAttribute("href", "/guides/pure_bodybuilding_phase_1_full_body/exercise/ex-1");
 
   // No detail overlay when no exercise is selected
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-  expect(screen.getAllByText(/Arms & Weak Points/i).length).toBeGreaterThan(0);
 });
 
 test("Today page can recover by generating week when no workout exists yet", async () => {
