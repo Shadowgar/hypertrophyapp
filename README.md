@@ -114,11 +114,15 @@ Common gotchas:
 
 ## Current Status
 
-- Runtime architecture is deterministic and template-driven.
-- Onboarding has a multi-step funnel with profile persistence and first-plan bootstrap.
-- Frequency adaptation preview/apply is wired across API + web settings.
-- Developer-safe onboarding recovery controls exist for local test loops.
-- Calendar training history view is delivered with clickable day drill-down and progression comparison on `/history`.
+- The Phase 1 gold path (`pure_bodybuilding_phase_1_full_body`) is fully implemented end-to-end (onboarding → generate week → today → log set → weekly check-in/review → history → frequency adaptation).
+- Runtime architecture is deterministic and template-driven; all meaningful coaching decisions live in `packages/core-engine` decision-family modules and emit `decision_trace` payloads.
+- Onboarding has a multi-step funnel with profile persistence, developer-safe reset controls, and first-plan bootstrap.
+- Frequency adaptation preview/apply is wired across API + web settings for the Phase 1 program.
+- Calendar training history view is delivered with clickable day drill-down and same-weekday progression comparison on `/history`.
+- Phase C build tools for the administered program are in place:
+  - Schema validation tests for program templates, onboarding packages, and coaching rules (`apps/api/tests/test_schema_validation.py`).
+  - Canonical XLSX → template + onboarding importer v2 (`importers/xlsx_to_canonical_v2.py`).
+  - PDF-to-rules distillation v2 for typed coaching rules with provenance (`importers/pdf_doctrine_rules_v2.py`).
 
 ## Stack
 
