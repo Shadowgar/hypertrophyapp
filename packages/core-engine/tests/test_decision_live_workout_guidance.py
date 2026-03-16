@@ -75,6 +75,53 @@ def test_recommend_live_workout_adjustment_owner_module_returns_trace() -> None:
     assert live["decision_trace"]["interpreter"] == "recommend_live_workout_adjustment"
 
 
+def test_recommend_live_workout_adjustment_does_not_downshift_after_successful_set() -> None:
+    """
+    If the lifter hits the target rep range (or is only one rep below),
+    the next in-session recommendation should not reduce load.
+    """
+    module = _load_module()
+
+    live = module.recommend_live_workout_adjustment(
+        planned_reps_min=8,
+        planned_reps_max=10,
+        planned_sets=3,
+        completed_sets=1,
+        last_reps=8,
+        last_weight=80.0,
+        average_reps=8.0,
+        rule_set=_sample_rule_set(),
+    )
+
+    assert live["recommended_weight"] >= 80.0
+    assert live["guidance"] in {
+        "remaining_sets_hold_load_and_match_target_reps",
+        "remaining_sets_increase_load_keep_reps_controlled",
+    }
+
+
+def test_recommend_live_workout_adjustment_downshifts_on_clear_underperformance() -> None:
+    """
+    When the lifter clearly undershoots the lower bound (e.g. 5 reps in an 8-10 slot),
+    the next in-session recommendation is allowed to reduce load.
+    """
+    module = _load_module()
+
+    live = module.recommend_live_workout_adjustment(
+        planned_reps_min=8,
+        planned_reps_max=10,
+        planned_sets=3,
+        completed_sets=1,
+        last_reps=5,
+        last_weight=80.0,
+        average_reps=5.0,
+        rule_set=_sample_rule_set(),
+    )
+
+    assert live["guidance"] == "remaining_sets_reduce_load_focus_target_reps"
+    assert live["recommended_weight"] <= 80.0
+
+
 def test_hydrate_live_workout_recommendation_owner_module_keeps_substitution_trace() -> None:
     module = _load_module()
 

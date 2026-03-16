@@ -35,6 +35,10 @@ Use this checklist to verify the administered Pure Bodybuilding Phase 1 path end
 - **Mobile (or narrow viewport):** Repeat steps 1–10; note any layout, tap target, or loading issues.
 - **Done when:** Loop completes at least once on desktop and once on mobile; blockers (if any) are listed with steps-to-reproduce for Step 2 (fix dogfood blockers).
 
+## Known follow-ups / technical debt
+
+- **Post-onboarding login propagation is slow**: after completing onboarding and seeing the success state, the user may hit the login screen and need to wait a minute or two before credentials are accepted. Root cause appears to be a delay between registration/onboarding completion and the auth path being ready; tighten this so that login works immediately after onboarding.
+
 ## Reference
 
 - API smoke test covering this path: `apps/api/tests/test_phase1_canonical_path_smoke.py`

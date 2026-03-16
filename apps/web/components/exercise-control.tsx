@@ -43,12 +43,14 @@ export default function ExerciseControlModule({
   const [running, setRunning] = useState<boolean>(false);
   const [completedSets, setCompletedSets] = useState<number>(initialCompletedSets ?? 0);
   const [actualReps, setActualReps] = useState<number>(repRange?.[0] ?? 8);
-  const [actualWeight, setActualWeight] = useState<number>(recommendedWorkingWeight ?? 0);
+  const [actualWeightInput, setActualWeightInput] = useState<string>(
+    recommendedWorkingWeight !== undefined ? String(recommendedWorkingWeight) : "",
+  );
   const intervalRef = useRef<ReturnType<typeof globalThis.setInterval> | null>(null);
 
   useEffect(() => {
     if (recommendedWorkingWeight !== undefined) {
-      setActualWeight(recommendedWorkingWeight);
+      setActualWeightInput(String(recommendedWorkingWeight));
     }
   }, [recommendedWorkingWeight]);
 
@@ -99,9 +101,11 @@ export default function ExerciseControlModule({
   }
 
   function completeSet() {
+    const parsedWeight = Number(actualWeightInput);
+    const hasValidWeight = Number.isFinite(parsedWeight) && parsedWeight > 0;
     const safeReps = Number.isFinite(actualReps) ? Math.max(1, Math.round(actualReps)) : repRange?.[0] ?? 8;
-    const safeWeight = Number.isFinite(actualWeight)
-      ? Math.max(0, Math.round(actualWeight * 100) / 100)
+    const safeWeight = hasValidWeight
+      ? Math.max(0, Math.round(parsedWeight * 100) / 100)
       : recommendedWorkingWeight ?? 0;
 
     setCompletedSets((prev) => {
@@ -171,8 +175,8 @@ export default function ExerciseControlModule({
               type="number"
               min={0}
               step={0.5}
-              value={actualWeight}
-              onChange={(event) => setActualWeight(Number(event.target.value))}
+              value={actualWeightInput}
+              onChange={(event) => setActualWeightInput(event.target.value)}
             />
           </div>
         </div>

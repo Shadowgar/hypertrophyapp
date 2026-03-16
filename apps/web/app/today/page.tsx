@@ -792,7 +792,11 @@ export default function TodayPage() {
           doThisSetLine = `Do ${exercise.rep_range[0]}-${exercise.rep_range[1]} reps @ ${kgToLbs(exercise.recommended_working_weight)} lbs this set`;
         }
         return (
-          <div className="fixed inset-0 z-50 flex flex-col bg-zinc-950 min-h-[100dvh] max-h-[100dvh]" aria-modal="true" role="dialog">
+          <div
+            className="fixed inset-0 z-50 flex flex-col bg-zinc-950 min-h-[100dvh] max-h-[100dvh] pt-[max(0.75rem,env(safe-area-inset-top))]"
+            aria-modal="true"
+            role="dialog"
+          >
             <div className="flex min-h-[44px] shrink-0 items-center gap-2 border-b border-zinc-800 px-3 py-2">
               <Button
                 type="button"
@@ -957,6 +961,7 @@ export default function TodayPage() {
                             : `Do ${exercise.rep_range[0]}-${exercise.rep_range[1]} reps @ ${derivedWorkingLb} lb this set`}
                       </p>
                       <ExerciseControlModule
+                        key={`${exercise.id}:${derivedWorkingLb}`}
                         exerciseId={exercise.id}
                         note={exercise.notes}
                         totalSets={exercise.sets}

@@ -201,7 +201,9 @@ def recommend_live_workout_adjustment(
     if remaining_sets <= 0:
         guidance = "session_complete_hold_load_for_next_exposure"
         matched_rule = "session_complete"
-    elif last_reps < planned_reps_min or average_reps < planned_reps_min:
+    # Only treat a set as truly \"under target\" when it clearly undershoots the plan.
+    # A single rep below the minimum is treated as a hold, not an automatic downshift.
+    elif last_reps < max(planned_reps_min - 1, 0) or average_reps < max(planned_reps_min - 1, 0):
         guidance = "remaining_sets_reduce_load_focus_target_reps"
         scale = _IN_SESSION_WEIGHT_SCALE_DOWN_AGGRESSIVE if completed_sets >= 2 else _IN_SESSION_WEIGHT_SCALE_DOWN_MILD
         recommended_reps_max = min(planned_reps_max, planned_reps_min + 2)
