@@ -15,6 +15,11 @@ import {
   type WorkoutSetFeedback,
   type WorkoutSummary,
 } from "@/lib/api";
+import {
+  epleyEstimate1RMLbs,
+  warmupsFromWorkingWeightLb,
+  workingWeightFrom1RMLb,
+} from "@/lib/oneRepMax";
 import { resolveGuidanceText } from "@/lib/today-guidance";
 import { kgToLbs, lbsToKg } from "@/lib/weight";
 
@@ -320,6 +325,78 @@ function ExerciseExecutionDetails({ exercise }: Readonly<{ exercise: WorkoutExer
   );
 }
 
+function BaselineBlock({
+  exerciseId,
+  repRange,
+  currentBaseline,
+  onCalculate,
+}: Readonly<{
+  exerciseId: string;
+  repRange: [number, number];
+  currentBaseline: { weightLb: number; reps: number; estimated1RM: number; workingWeightLb: number; warmupLbs: number[] } | undefined;
+  onCalculate: (weightLb: number, reps: number) => void;
+}>) {
+  const [weightLb, setWeightLb] = useState<string>(() => (currentBaseline ? String(currentBaseline.weightLb) : ""));
+  const [reps, setReps] = useState<string>(() => (currentBaseline ? String(currentBaseline.reps) : String(repRange[0])));
+  useEffect(() => {
+    if (currentBaseline) {
+      setWeightLb(String(currentBaseline.weightLb));
+      setReps(String(currentBaseline.reps));
+    }
+  }, [currentBaseline]);
+
+  function handleCalculate() {
+    const w = Number(weightLb);
+    const r = Number(reps);
+    if (Number.isFinite(w) && w > 0 && Number.isFinite(r) && r >= 1) {
+      onCalculate(w, Math.round(r));
+    }
+  }
+
+  return (
+    <div className="rounded-lg border border-zinc-700 bg-zinc-900/60 p-3 space-y-3">
+      <p className="text-sm font-medium text-zinc-200">Your baseline</p>
+      <p className="text-xs text-zinc-400">
+        Enter a recent set (e.g. &quot;I did 100 lb × 3 reps&quot;). We&apos;ll estimate your 1RM and suggest warm-up and working weights.
+      </p>
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="flex flex-col gap-1">
+          <span className="text-xs uppercase tracking-wide text-zinc-500">Weight (lb)</span>
+          <input
+            className="ui-input h-9 w-20 px-2 text-sm"
+            type="number"
+            min={1}
+            step={2.5}
+            value={weightLb}
+            onChange={(e) => setWeightLb(e.target.value)}
+            aria-label="Baseline weight in pounds"
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-xs uppercase tracking-wide text-zinc-500">Reps</span>
+          <input
+            className="ui-input h-9 w-16 px-2 text-sm"
+            type="number"
+            min={1}
+            value={reps}
+            onChange={(e) => setReps(e.target.value)}
+            aria-label="Baseline reps"
+          />
+        </label>
+        <Button type="button" className="h-9" onClick={handleCalculate}>
+          Calculate
+        </Button>
+      </div>
+      {currentBaseline ? (
+        <div className="rounded border border-zinc-600 bg-zinc-800/40 px-3 py-2 text-xs text-zinc-200 space-y-1">
+          <p className="font-medium">Estimated 1RM: {Math.round(currentBaseline.estimated1RM)} lb</p>
+          <p>Suggested working weight: {currentBaseline.workingWeightLb} lb (for {repRange[0]}-{repRange[1]} reps)</p>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function WorkoutHeaderCard({
   workout,
   workoutProgress,
@@ -379,6 +456,12 @@ export default function TodayPage() {
   const [workoutSummary, setWorkoutSummary] = useState<WorkoutSummary | null>(null);
   const [recoveringMissingWorkout, setRecoveringMissingWorkout] = useState(false);
   const [selectedExerciseId, setSelectedExerciseId] = useState<string | null>(null);
+  /** User-entered baseline: "I did X lb × Y reps" → 1RM, working weight, warmups. Keyed by exercise id. */
+  const [baselineByExercise, setBaselineByExercise] = useState<
+    Record<string, { weightLb: number; reps: number; estimated1RM: number; workingWeightLb: number; warmupLbs: number[] }>
+  >({});
+  /** Last logged set per exercise (reps, weight) to suggest next set. Keyed by exercise id. */
+  const [lastSetByExercise, setLastSetByExercise] = useState<Record<string, { reps: number; weight: number }>>({});
   const hasAutoLoadStarted = useRef(false);
   const isBeginWorkoutLoadInProgress = useRef(false);
 
@@ -576,6 +659,7 @@ export default function TodayPage() {
     performed: { reps: number; weight: number },
   ) {
     if (!workout) return;
+    setLastSetByExercise((prev) => ({ ...prev, [exerciseId]: performed }));
     setCompletedSetsByExercise((prev) => {
       const next = { ...prev, [exerciseId]: completedCount };
       try {
@@ -588,7 +672,7 @@ export default function TodayPage() {
     });
 
     // find exercise info for payload
-    const exercise = workout.exercises.find((e) => e.id === exerciseId);
+    const exercise = (workout.exercises ?? []).find((e) => e.id === exerciseId);
     if (!exercise) return;
 
     const payload = {
@@ -790,42 +874,93 @@ export default function TodayPage() {
 
               {(() => {
                 const warmUpCount = Math.max(0, parseInt(String(exercise.warm_up_sets ?? "0"), 10) || 0);
-                const warmupWeightsKg = (exercise.warmups ?? []).slice(0, warmUpCount);
-                const hasWarmup = warmUpCount > 0 && warmupWeightsKg.length > 0;
-                if (!hasWarmup) return null;
+                const baseline = baselineByExercise[exercise.id];
+                const lastSet = lastSetByExercise[exercise.id];
+                const derivedWorkingLb =
+                  lastSet != null
+                    ? workingWeightFrom1RMLb(epleyEstimate1RMLbs(lastSet.weight, lastSet.reps))
+                    : baseline != null
+                      ? baseline.workingWeightLb
+                      : kgToLbs(exercise.recommended_working_weight);
+                const warmupLbs =
+                  baseline != null && baseline.warmupLbs.length > 0
+                    ? baseline.warmupLbs.slice(0, warmUpCount)
+                    : (exercise.warmups ?? []).slice(0, warmUpCount).map((kg) => kgToLbs(kg));
+                const hasWarmup = warmUpCount > 0 && warmupLbs.length > 0;
+
                 return (
-                  <div className="rounded-lg border border-zinc-700 bg-zinc-900/60 p-3 space-y-2">
-                    <p className="text-sm font-medium text-zinc-200">Warm-up sets</p>
-                    <p className="text-xs text-zinc-400">
-                      Based on your working weight below. Do these before your working sets.
-                    </p>
-                    <ul className="space-y-1.5" aria-label="Warm-up set weights">
-                      {warmupWeightsKg.map((kg, i) => (
-                        <li key={i} className="flex items-center justify-between text-sm text-zinc-200">
-                          <span>Warm-up set {i + 1}</span>
-                          <span className="font-medium tabular-nums">{kgToLbs(kg)} lb</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  <>
+                    <BaselineBlock
+                      exerciseId={exercise.id}
+                      repRange={exercise.rep_range}
+                      currentBaseline={baseline}
+                      onCalculate={(weightLb, reps) => {
+                        const estimated1RM = epleyEstimate1RMLbs(weightLb, reps);
+                        const workingWeightLb = workingWeightFrom1RMLb(estimated1RM);
+                        const warmupLbsCalc = warmupsFromWorkingWeightLb(workingWeightLb, warmUpCount || 3);
+                        setBaselineByExercise((prev) => ({
+                          ...prev,
+                          [exercise.id]: {
+                            weightLb,
+                            reps,
+                            estimated1RM,
+                            workingWeightLb,
+                            warmupLbs: warmupLbsCalc,
+                          },
+                        }));
+                      }}
+                    />
+
+                    {hasWarmup ? (
+                      <div className="rounded-lg border border-zinc-700 bg-zinc-900/60 p-3 space-y-2">
+                        <p className="text-sm font-medium text-zinc-200">Warm-up sets</p>
+                        <p className="text-xs text-zinc-400">
+                          {baseline != null
+                            ? "From your baseline above. Do these before your working sets."
+                            : "Based on your working weight below. Do these before your working sets."}
+                        </p>
+                        <ul className="space-y-1.5" aria-label="Warm-up set weights">
+                          {warmupLbs.map((lb, i) => (
+                            <li key={i} className="flex items-center justify-between text-sm text-zinc-200">
+                              <span>Warm-up set {i + 1}</span>
+                              <span className="font-medium tabular-nums">{lb} lb</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
+
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-zinc-200">Working sets</p>
+                      {lastSet != null ? (
+                        <p className="text-xs text-zinc-400">
+                          Suggestion updated from your last set ({lastSet.weight} lb × {lastSet.reps} reps).
+                          Adjust weight if needed.
+                        </p>
+                      ) : (
+                        <p className="text-xs text-zinc-400">Log each set when complete. Adjust weight if needed.</p>
+                      )}
+                      <p className="text-sm text-zinc-200">
+                        {recommendation
+                          ? doThisSetLine
+                          : feedback
+                            ? doThisSetLine
+                            : `Do ${exercise.rep_range[0]}-${exercise.rep_range[1]} reps @ ${derivedWorkingLb} lb this set`}
+                      </p>
+                      <ExerciseControlModule
+                        exerciseId={exercise.id}
+                        note={exercise.notes}
+                        totalSets={exercise.sets}
+                        defaultRestSeconds={90}
+                        recommendedWorkingWeight={derivedWorkingLb}
+                        repRange={exercise.rep_range}
+                        initialCompletedSets={completed}
+                        onSetComplete={handleSetComplete}
+                      />
+                    </div>
+                  </>
                 );
               })()}
-
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-zinc-200">Working sets</p>
-                <p className="text-xs text-zinc-400">Log each set when complete. Adjust weight if needed.</p>
-                <p className="text-sm text-zinc-200">{doThisSetLine}</p>
-                <ExerciseControlModule
-                  exerciseId={exercise.id}
-                  note={exercise.notes}
-                  totalSets={exercise.sets}
-                  defaultRestSeconds={90}
-                  recommendedWorkingWeight={kgToLbs(exercise.recommended_working_weight)}
-                  repRange={exercise.rep_range}
-                  initialCompletedSets={completed}
-                  onSetComplete={handleSetComplete}
-                />
-              </div>
 
               <div className="space-y-2">
                 <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Options</p>

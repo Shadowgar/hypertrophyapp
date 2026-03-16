@@ -142,9 +142,13 @@ export default function ExerciseControlModule({
 
       <div className="flex items-center justify-between gap-3">
         <div className="flex flex-col gap-2">
+          <p className="text-[10px] uppercase tracking-wide text-zinc-500">Rest timer</p>
+          <p className="text-xs text-zinc-400">
+            Tap <strong>Start</strong> after a set to count rest (e.g. 90s). The circle shows time left. Tap <strong>Stop</strong> to pause.
+          </p>
           <div className="flex items-baseline gap-2">
             <span className="font-mono text-sm">{formatTime(secondsLeft)}</span>
-            <span className="text-xs text-zinc-400">REST</span>
+            <span className="text-xs text-zinc-400">remaining</span>
           </div>
           <div className="text-xs text-zinc-400">
             Set {completedSets}/{totalSets}
@@ -179,7 +183,7 @@ export default function ExerciseControlModule({
 
         <div
           className="relative z-0 flex-shrink-0 h-10 w-10 rounded-full border border-white/15 overflow-hidden"
-          aria-label="Rest countdown ring"
+          aria-label="Rest countdown: red segment shows time left"
           style={{
             background: `conic-gradient(rgba(220,38,38,0.9) ${(secondsLeft / restCycle) * 360}deg, rgba(255,255,255,0.08) 0deg)`,
           }}
