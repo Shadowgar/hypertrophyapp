@@ -1,6 +1,8 @@
-# Architecture - Adaptive Coaching Target State
+# Architecture - Adaptive Coaching Runtime
 
-Last updated: 2026-03-12
+Last updated: 2026-03-16
+
+This document describes the current runtime architecture. For governance rules, see `docs/architecture/GOVERNANCE_CONSTITUTION.md`. For module-level authority, see `docs/architecture/RUNTIME_AUTHORITY_MAP.md`.
 
 ## Runtime Boundary
 
@@ -34,9 +36,24 @@ Runtime does not depend on `docs/guides/generated/*.md` text artifacts.
 - Stores weekly-checkin-backed readiness inputs and canonical `readiness_state`
 - Stores fatigue/adherence/stall markers
 
-5. Decision Engine
+5. Decision Engine (`packages/core-engine/core_engine/`)
 - Inputs: template + rules + user state
 - Outputs: today's plan, post-session evaluation, next-session adaptation
+- Implemented as individual decision-family modules:
+  - `decision_generated_week.py` -- week plan generation and template selection
+  - `decision_progression.py` -- progression actions, phase transitions, stimulus-fatigue-response, readiness
+  - `decision_weekly_review.py` -- review summarization, adjustment interpretation, plan overlay
+  - `decision_workout_session.py` -- today routing, log-set, progress, summary
+  - `decision_coach_preview.py` -- coach intelligence preview, apply, finalize
+  - `decision_frequency_adaptation.py` -- frequency change preview/apply
+  - `decision_program_recommendation.py` -- program switching
+  - `decision_live_workout_guidance.py` -- real-time set feedback
+- Supporting modules:
+  - `rules_runtime.py` -- doctrine substrate (deload, substitution, mesocycle, muscle coverage, session selection)
+  - `scheduler.py` -- execution engine (builds week plan from rules + template; does not define doctrine)
+  - `user_state.py` -- canonical user training state assembly
+  - `generation.py` -- generation runtime preparation and orchestration
+  - `intelligence.py` -- orchestration-only compatibility façade (no new decision families allowed)
 
 ## Decision Runtime Sovereignty
 
@@ -70,13 +87,14 @@ Use that file as the operational source of truth for:
 - what routers may still do
 - whether `intelligence.py` is acting as a thin façade or still owns live logic
 
-Current dominant risks have shifted:
-- router glue is no longer the dominant architectural risk
-- authority ambiguity and wrapper drift in `packages/core-engine/core_engine/intelligence.py` is now a primary risk
-- shallow first-class coaching state is now a primary modeling risk
-- the deterministic stimulus-fatigue-response layer is now live but still early-stage and not yet broadly consumed for bounded adjustment decisions
-- canonical `readiness_state` is now present and influences both coach-preview and weekly-review scoring
-- the first deterministic `stimulus_fatigue_response` layer now exists in the progression family, now feeds generated-week deload/substitution pressure through `rules_runtime.py` and weekly-review bounded adjustments, and now sits alongside canonical repeat-failure generation-time substitution powered by persisted `ExerciseState`; broader exercise-level generation use is still pending
+Current state and remaining risks:
+- decision-family extraction is complete; all meaningful coaching decisions live in named `decision_*.py` owners
+- `intelligence.py` is designated orchestration-only; no new decision families are permitted there
+- canonical `readiness_state` is present and influences coach-preview and weekly-review scoring
+- the deterministic stimulus-fatigue-response layer is live in the progression family, feeds generated-week deload/substitution pressure through `rules_runtime.py`, and powers weekly-review bounded adjustments
+- canonical repeat-failure generation-time substitution is powered by persisted `ExerciseState`
+- broader exercise-level SFR-driven generation use is still pending
+- the primary active program is `pure_bodybuilding_phase_1_full_body`; multi-program scaling has not yet begun
 
 6. API/UI Layer
 - Program selection

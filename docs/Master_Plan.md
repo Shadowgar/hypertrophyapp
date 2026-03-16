@@ -101,8 +101,9 @@ Use this repeatable local loop for one-program-first verification:
 - [ ] Add strict schema validation tests and ambiguity/error reporting.
 
 ### Phase C - Importer and Rule Distillation
-- [ ] Implement Excel-first canonical importer v2 (phase/week/day/slot fidelity).
-- [ ] Implement PDF-to-rules distillation workflow (typed rules, explainable rationale).
+Design documents are complete; implementation has not started.
+- [ ] Implement Excel-first canonical importer v2 (phase/week/day/slot fidelity). Design: `docs/plans/2026-03-16-importer-v2-design.md`.
+- [ ] Implement PDF-to-rules distillation workflow (typed rules, explainable rationale). Design: `docs/plans/2026-03-16-pdf-to-rules-design.md`.
 - [ ] Add provenance links from rules to source sections.
 
 ### Phase D - Deterministic Decision Engine
@@ -145,7 +146,7 @@ Reference:
 - [ ] Expand to closed beta only after deterministic traces and support/debugging workflows are good enough to explain coaching behavior.
 
 Reference:
-- `docs/plans/2026-03-11-user-testing-rollout-plan.md`
+- `docs/archive/plans/2026-03-11-user-testing-rollout-plan.md`
 
 ## Non-Negotiables
 
@@ -159,8 +160,11 @@ Reference:
 - `docs/redesign/Adaptive_Coaching_Redesign.md`
 - `docs/redesign/Architecture_Audit_Matrix.md`
 - `docs/redesign/Program_Onboarding_Architecture_Phase1.md`
-- `programs/gold/adaptive_full_body_gold_v0_1.json`
-- `docs/rules/gold/adaptive_full_body_gold_v0_1.rules.json`
+- `programs/gold/pure_bodybuilding_phase_1_full_body.json` (active administered program template)
+- `programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json` (active onboarding package)
+- `docs/rules/canonical/pure_bodybuilding_phase_1_full_body.rules.json` (active canonical rules)
+- `programs/gold/adaptive_full_body_gold_v0_1.json` (compatibility baseline)
+- `docs/rules/gold/adaptive_full_body_gold_v0_1.rules.json` (compatibility baseline rules)
 
 ## Current Delivery Delta
 
@@ -238,7 +242,7 @@ Reference:
 	- `./scripts/mini_validate.sh` runs API tests (docker or, when docker is unavailable, local `pytest` or `python3 -m pytest` if `pytest` is not on PATH), then web tests and web build.
 - User-testing rollout now has an explicit plan:
 	- internal dogfooding should begin on the responsive web app first, using desktop and mobile browsers rather than waiting for native mobile apps.
-	- beta readiness and rollout sequencing now live in `docs/plans/2026-03-11-user-testing-rollout-plan.md`.
+	- beta readiness and rollout sequencing now live in `docs/archive/plans/2026-03-11-user-testing-rollout-plan.md`.
 - Today page redesign (mobile-first, iOS-ready) implemented:
 	- design: whole-day list at a glance, tap exercise to open detail screen; Session Intent and Between-Set Coach removed from main view; single “Do this set” line from API guidance only (`resolveGuidanceText`).
 	- design doc: `docs/plans/2026-03-15-today-page-redesign-design.md`. Implementation complete; see `docs/implementation/ACTIVE_REMEDIATION_RAIL.md` § Done: Today Page Redesign.

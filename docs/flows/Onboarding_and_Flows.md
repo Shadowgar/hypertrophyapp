@@ -48,15 +48,11 @@
 
 
 
-## Progress Sync (2026-03-07)
-- Validation baseline is green via `./scripts/mini_validate.sh`:
-  - API: `85 passed`
-  - Web tests: `28 passed`
-  - Web build: success
-- Additional progress:
-  - containerized API test image now includes schema/rules + web-client contract files required by runtime-boundary tests (`apps/api/Dockerfile`).
-  - canonical onboarding schema contracts tightened with cross-field + uniqueness validators (`apps/api/app/adaptive_schema.py`).
-  - onboarding schema contract tests expanded with negative-path coverage (`apps/api/tests/test_program_onboarding_contract.py`).
-  - history view now includes same-weekday progression comparison cards in selected-day detail (`apps/web/app/history/page.tsx`, `apps/web/tests/history.calendar.test.tsx`).
-- Drift prevention protocol for next sessions: run `./scripts/mini_preflight.sh` and `./scripts/mini_next_task.sh` before implementation, and `./scripts/mini_validate.sh` before commit/push.
+## Progress Sync (2026-03-16)
+- Repository state at commit `c4aab67` on `main`.
+- Validation baseline:
+  - Core engine: `324 passed`
+  - API: `197 passed`
+  - Web tests: `18 test files passed`, `41 tests passed`
+- Drift prevention protocol: run `./scripts/mini_preflight.sh` and `./scripts/mini_next_task.sh` before implementation, and `./scripts/mini_validate.sh` before commit/push.
 

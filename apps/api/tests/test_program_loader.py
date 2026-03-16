@@ -84,7 +84,7 @@ def test_load_program_template_supports_adaptive_gold_runtime_template() -> None
     assert day_1[0]["name"] == "Cross-Body Lat Pull-Around"
     assert day_1[0]["rep_range"] == [10, 12]
     assert day_1[0]["movement_pattern"] == "vertical_pull"
-    assert day_1[0]["substitution_candidates"] == ["Half Kneeling 1 Arm Lat Pulldown", "Neutral Grip Pullup"]
+    assert day_1[0]["substitution_candidates"] == ["Half Kneeling 1 Arm Lat Pulldown", "Neutral-Grip Pullup"]
     assert day_1[1]["name"] == "Low Incline Smith Machine Press"
     assert day_1[1]["rep_range"] == [8, 10]
     assert day_1[1]["movement_pattern"] == "horizontal_press"

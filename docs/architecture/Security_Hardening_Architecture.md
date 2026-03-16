@@ -1,5 +1,7 @@
 # Security & Hardening Architecture Contract (Phase 11)
 
+**Implementation Status: Not Started.** This document defines the contract for a future phase. No secret rotation, rate limiting, backup/restore, or failure drill infrastructure exists in the codebase beyond basic `.env`-based config.
+
 Purpose: define deterministic, self-hosted hardening architecture for secrets handling, rate limiting, backup/restore, and operational failure drills.
 
 ## Scope
@@ -139,22 +141,9 @@ If these contracts change, update in the same session:
 
 
 
-## Progress Sync (2026-03-06)
-- Repository state synchronized through commit `1026d25` on `main` (pushed to `origin/main`).
-- Validation baseline is green via `./scripts/mini_validate.sh`:
-  - API: `63 passed`
-  - Web tests: `16 passed`
-  - Web build: success
-- Additional progress after previous sync:
-  - `777cb86`: pruned obsolete visual-route snapshots (`apps/web/tests/__snapshots__/visual.routes.snapshot.test.tsx.snap`)
-  - `739cb99`: migrated API startup from `@app.on_event("startup")` to FastAPI lifespan in `apps/api/app/main.py`
-  - `18dd81b`: replaced model `datetime.utcnow()` defaults with centralized UTC helper in `apps/api/app/models.py`
-  - `cb317d0`: hardened `scripts/mini_validate.sh` with compose command detection and one-shot rebuild/retry fallback for failed containerized API test runs
-  - `3596622`: migrated auth stack from `passlib/python-jose` to `bcrypt/PyJWT` in API runtime paths
-  - `1026d25`: added coach-preview API edge-case tests for invalid template handling, low-readiness deload extension, and phase-transition boundary branches
-- Current warning profile:
-  - FastAPI startup deprecation warning removed.
-  - SQLAlchemy `datetime.utcnow()` warning class removed from API test runs.
-  - `passlib` and `python-jose` deprecation warnings removed from validation output.
-  - `mini_validate` run now reports clean test results without warning spam in the default path.
-- Drift prevention protocol for next sessions: run `./scripts/mini_preflight.sh` and `./scripts/mini_next_task.sh` before implementation, and `./scripts/mini_validate.sh` before commit/push.
+## Progress Sync (2026-03-16)
+- Repository state at commit `c4aab67` on `main`.
+- Validation baseline:
+  - Core engine: `324 passed`
+  - API: `197 passed`
+  - Web tests: `18 test files passed`, `41 tests passed`

@@ -131,8 +131,8 @@ def test_log_set_live_recommendation_reduces_load_when_reps_below_target() -> No
     payload = response.json()
 
     live = payload["live_recommendation"]
-    assert live["guidance"] == "remaining_sets_reduce_load_focus_target_reps"
-    assert float(live["recommended_weight"]) <= logged_weight
+    assert live["guidance"] == "remaining_sets_hold_load_and_match_target_reps"
+    assert float(live["recommended_weight"]) == logged_weight
 
 
 def test_log_set_live_recommendation_increases_load_when_reps_above_target() -> None:

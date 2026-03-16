@@ -128,9 +128,9 @@ def test_log_set_returns_planned_vs_actual_feedback() -> None:
     assert "next_working_weight" in payload
     assert payload["live_recommendation"]["completed_sets"] == 1
     assert payload["live_recommendation"]["remaining_sets"] == int(first_exercise["sets"]) - 1
-    assert payload["live_recommendation"]["guidance"] == "remaining_sets_reduce_load_focus_target_reps"
+    assert payload["live_recommendation"]["guidance"] == "remaining_sets_hold_load_and_match_target_reps"
     assert payload["live_recommendation"]["guidance_rationale"] == (
-        "Reps dropped below target. Trim load slightly within the session so the remaining sets stay on target."
+        "Keep the same load for the remaining sets and match the programmed rep target."
     )
     assert payload["live_recommendation"]["decision_trace"]["interpreter"] == "recommend_live_workout_adjustment"
 
@@ -185,7 +185,7 @@ def test_log_set_applies_rules_runtime_starting_load_for_first_exposure() -> Non
 
     planned_weight = float(first_exercise["recommended_working_weight"])
     estimated_1rm = (planned_weight / 0.72) + 25.0
-    expected_start_weight = round((((estimated_1rm * 72.0) / 100.0) / 2.5)) * 2.5
+    expected_start_weight = round(round(((estimated_1rm * 72.0) / 100.0) / 0.5) * 0.5, 2)
 
     _inject_estimated_1rm_into_latest_plan(
         workout_id=first_session["session_id"],

@@ -1,6 +1,6 @@
 # Adaptive Coaching Redesign (Authoritative)
 
-Last updated: 2026-03-06
+Last updated: 2026-03-16
 Status: Active redesign directive
 
 ## 1. Revised Architecture
@@ -118,15 +118,19 @@ Rule quality gates:
 - Every rule has deterministic trigger + action + rationale
 - Every rule links to source section metadata
 
-## 5. Target File/Folder Structure
+## 5. File/Folder Structure (Current)
 
-- `programs/canonical/` (runtime-ready templates)
+- `programs/gold/` (runtime-ready templates; `pure_bodybuilding_phase_1_full_body` is the active administered program)
 - `docs/rules/canonical/` (runtime coaching rules)
-- `packages/core-engine/core_engine/decision_engine.py`
-- `packages/core-engine/core_engine/adaptive_state.py`
-- `packages/core-engine/core_engine/rules_runtime.py`
-- `apps/api/app/services/program_runtime.py`
-- `apps/api/app/services/coaching_runtime.py`
+- `docs/rules/gold/` (gold-path coaching rules)
+- `packages/core-engine/core_engine/decision_*.py` (decision-family owners: generated_week, progression, weekly_review, workout_session, coach_preview, frequency_adaptation, program_recommendation, live_workout_guidance)
+- `packages/core-engine/core_engine/rules_runtime.py` (doctrine substrate)
+- `packages/core-engine/core_engine/scheduler.py` (execution engine)
+- `packages/core-engine/core_engine/user_state.py` (canonical user training state assembly)
+- `packages/core-engine/core_engine/generation.py` (generation runtime orchestration)
+- `packages/core-engine/core_engine/intelligence.py` (orchestration-only compatibility façade)
+- `apps/api/app/program_loader.py` (program template loading and resolution)
+- `apps/api/app/routers/` (API route orchestration)
 - `docs/redesign/` (architecture and migration artifacts)
 
 ## 6. Migration Plan From Current Approach
@@ -147,13 +151,18 @@ Stage 4: Expand catalog incrementally
 Stage 5: Deprecate legacy adapters
 - Remove or freeze ingestion paths that output non-runtime blobs.
 
-## 7. Gold-Standard Sample
+## 7. Gold-Standard Samples
 
-The first gold sample is stored at:
+The active administered program is Pure Bodybuilding Phase 1 Full Body:
+- `programs/gold/pure_bodybuilding_phase_1_full_body.json` (canonical program template)
+- `programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json` (onboarding package with authored slot fields)
+- `docs/rules/canonical/pure_bodybuilding_phase_1_full_body.rules.json` (canonical coaching rules)
+
+The adaptive gold sample remains as a compatibility baseline:
 - `programs/gold/adaptive_full_body_gold_v0_1.json`
 - `docs/rules/gold/adaptive_full_body_gold_v0_1.rules.json`
 
-This sample is the only baseline for first end-to-end adaptive runtime implementation.
+The administered program is the baseline for end-to-end runtime implementation and dogfooding.
 
 ## 8. First-Pass Deterministic Progression Logic
 

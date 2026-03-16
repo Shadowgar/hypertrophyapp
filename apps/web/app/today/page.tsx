@@ -54,20 +54,6 @@ function formatRoleLabel(value: string | null | undefined): string | null {
     .join(" ");
 }
 
-function formatAuthoredBlockLabel(workout: WorkoutSession | null | undefined): string | null {
-  const authoredWeekIndex =
-    typeof workout?.mesocycle?.authored_week_index === "number" ? workout.mesocycle.authored_week_index : null;
-  const authoredWeekRole = formatRoleLabel(workout?.mesocycle?.authored_week_role);
-  if (authoredWeekIndex === null && !authoredWeekRole) {
-    return null;
-  }
-  return `Authored block: ${authoredWeekIndex !== null ? `Week ${authoredWeekIndex}` : "Current"} · ${authoredWeekRole ?? "Unspecified"}`;
-}
-
-function countSlotRole(exercises: WorkoutExercise[], slotRole: string): number {
-  return exercises.filter((exercise) => exercise.slot_role === slotRole).length;
-}
-
 function buildTodayContextNote(workout: WorkoutSession | null): string | null {
   if (!workout) {
     return null;
@@ -153,106 +139,6 @@ function resolveHealthStatus(health: string): "green" | "yellow" | "red" {
     return "yellow";
   }
   return "red";
-}
-
-function SessionIntentCard({
-  workout,
-  workoutProgress,
-}: Readonly<{
-  workout: WorkoutSession;
-  workoutProgress: { completed: number; planned: number; percent: number } | null;
-}>) {
-  const leadExercise = workout.exercises[0];
-  const authoredDayLabel = formatRoleLabel(workout.day_role);
-  const authoredBlockLabel = formatAuthoredBlockLabel(workout);
-  const weakPointSlotCount = countSlotRole(workout.exercises, "weak_point");
-  const remainingSets = workoutProgress ? Math.max(0, workoutProgress.planned - workoutProgress.completed) : null;
-  let intentLabel = "Primary hypertrophy exposure";
-  if (authoredDayLabel) {
-    intentLabel = authoredDayLabel;
-  } else if (workout.deload?.active) {
-    intentLabel = "Deload execution";
-  } else if (workout.resume) {
-    intentLabel = "Resume and finish";
-  }
-  const pacingLine = workoutProgress
-    ? `Progress is ${workoutProgress.percent}%. Finish the remaining ${remainingSets ?? 0} planned sets without drifting off target.`
-    : `Open with ${leadExercise?.sets ?? 0} sets on the lead slot, then roll through ${workout.exercises.length} total exercises.`;
-  let cautionLine = "Stay in the planned rep range before adding load or extra fatigue.";
-  if (workout.deload?.active) {
-    cautionLine = `Keep effort controlled and respect the ${workout.deload.load_reduction_pct}% load trim.`;
-  } else if (workout.resume) {
-    cautionLine = "Resume from the saved state instead of repeating completed work.";
-  }
-
-  return (
-    <div className="main-card main-card--module main-card--accent spacing-grid spacing-grid--tight">
-      <div className="telemetry-header">
-        <p className="telemetry-kicker">Session Intent</p>
-        <p className="telemetry-status">
-          <span className="status-dot status-dot--green" /> {intentLabel}
-        </p>
-      </div>
-      {leadExercise ? (
-        <p className="text-sm text-zinc-100">
-          Lead exercise: {leadExercise.name} for {leadExercise.sets} sets of {leadExercise.rep_range[0]}-{leadExercise.rep_range[1]} reps @ {kgToLbs(leadExercise.recommended_working_weight)} lbs.
-        </p>
-      ) : null}
-      {authoredDayLabel ? <p className="telemetry-meta">Authored day: {authoredDayLabel}</p> : null}
-      {authoredBlockLabel ? <p className="telemetry-meta">{authoredBlockLabel}</p> : null}
-      {weakPointSlotCount > 0 ? <p className="telemetry-meta">Weak-point slots planned: {weakPointSlotCount}</p> : null}
-      <p className="telemetry-meta">{pacingLine}</p>
-      <p className="text-xs text-zinc-200">{cautionLine}</p>
-    </div>
-  );
-}
-
-function BetweenSetCoachCard({
-  workout,
-  completedSetsByExercise,
-  liveRecommendationByExercise,
-  setFeedbackByExercise,
-  swapIndexByExercise,
-}: Readonly<{
-  workout: WorkoutSession;
-  completedSetsByExercise: Record<string, number>;
-  liveRecommendationByExercise: Record<string, WorkoutLiveRecommendation>;
-  setFeedbackByExercise: Record<string, WorkoutSetFeedback>;
-  swapIndexByExercise: SwapState;
-}>) {
-  const activeExercise = workout.exercises.find((exercise) => (completedSetsByExercise[exercise.id] ?? 0) < exercise.sets) ?? workout.exercises[0];
-  if (!activeExercise) {
-    return null;
-  }
-
-  const selectedName = resolveExerciseName(activeExercise, swapIndexByExercise);
-  const completed = completedSetsByExercise[activeExercise.id] ?? 0;
-  const recommendation = liveRecommendationByExercise[activeExercise.id] ?? null;
-  const feedback = setFeedbackByExercise[activeExercise.id] ?? null;
-  const swapActive = selectedName !== activeExercise.name;
-  let coachGuidance = `Do ${activeExercise.rep_range[0]}-${activeExercise.rep_range[1]} reps @ ${kgToLbs(activeExercise.recommended_working_weight)} lbs this set.`;
-  if (recommendation) {
-    coachGuidance = resolveGuidanceText(recommendation.guidance_rationale, recommendation.guidance);
-  } else if (feedback) {
-    coachGuidance = resolveGuidanceText(feedback.guidance_rationale, feedback.guidance);
-  }
-
-  return (
-    <div className="main-card main-card--shell spacing-grid spacing-grid--tight">
-      <div className="telemetry-header">
-        <p className="telemetry-kicker">Between-Set Coach</p>
-        <p className="telemetry-meta">Live lane: {selectedName}</p>
-      </div>
-      <p className="text-sm text-zinc-100">{selectedName}: {completed}/{activeExercise.sets} sets complete.</p>
-      <p className="text-xs text-zinc-200">
-        {recommendation
-          ? `Next set target: ${recommendation.recommended_reps_min}-${recommendation.recommended_reps_max} reps @ ${kgToLbs(recommendation.recommended_weight)} lbs.`
-          : `Start with ${activeExercise.rep_range[0]}-${activeExercise.rep_range[1]} reps @ ${kgToLbs(activeExercise.recommended_working_weight)} lbs.`}
-      </p>
-      <p className="telemetry-meta">{coachGuidance}</p>
-      {swapActive ? <p className="telemetry-meta">Equipment swap active for this slot.</p> : null}
-    </div>
-  );
 }
 
 function WorkoutSummaryCard({ summary }: Readonly<{ summary: WorkoutSummary | null }>) {

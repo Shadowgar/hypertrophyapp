@@ -1,6 +1,6 @@
 # Master Development Roadmap
 
-Last updated: 2026-03-12
+Last updated: 2026-03-16
 
 ## Purpose
 
@@ -37,7 +37,7 @@ Minimum quality bar:
 
 ---
 
-## Phase 0 - Current State Review
+## Phase 0 - Current State Review (Complete)
 
 ### What Already Exists
 
@@ -94,7 +94,9 @@ Current limitation:
 
 ---
 
-## Phase 1 - Stabilize the Coaching Engine
+## Phase 1 - Stabilize the Coaching Engine (Complete)
+
+All Phase 1 tasks have been addressed per `docs/architecture/REMEDIATION_CHECKLIST.md` (retired). Decision-family extraction, doctrine contracts, and trace completeness are in place for the generated-week spine.
 
 ### Goal
 
@@ -140,7 +142,9 @@ Make the generated-week coaching path stable, traceable, and honest enough that 
 
 ---
 
-## Phase 2 - Gold Path End-to-End Functionality
+## Phase 2 - Gold Path End-to-End Functionality (Complete)
+
+The gold path (onboarding, generate week, today, log set, weekly review, history, frequency adaptation) works end-to-end through the real API and web UI. Canonical smoke test exists at `apps/api/tests/test_phase1_canonical_path_smoke.py`.
 
 ### Goal
 
@@ -195,7 +199,9 @@ Turn the current architecture into a clearly working application for the main us
 
 ---
 
-## Phase 3 - Internal Dogfooding
+## Phase 3 - Internal Dogfooding (Active)
+
+This is the current active phase. See `docs/implementation/DOGFOOD_PHASE1_CHECKLIST.md` for the step-by-step verification checklist.
 
 ### Goal
 
@@ -237,7 +243,7 @@ Get the app into the creator's real training loop and use real cycles to find ba
 
 ---
 
-## Phase 4 - Coaching Intelligence Expansion
+## Phase 4 - Coaching Intelligence Expansion (Not Started)
 
 ### Goal
 
@@ -280,7 +286,7 @@ Do not expand intelligence just because a heuristic seems useful. Expand only wh
 
 ---
 
-## Phase 5 - Product Readiness
+## Phase 5 - Product Readiness (Not Started)
 
 ### Goal
 
@@ -331,11 +337,11 @@ Prepare the app to be used confidently as a real product rather than an internal
 
 ## Recommended Work Sequence
 
-If the team wants the shortest path to a usable application, work in this order:
+Steps 1-2 are complete. The current focus is step 3.
 
-1. close the remaining generated-week doctrine and fallback gaps that still affect output quality
-2. prove the full gold path with a small number of end-to-end tests
-3. run real internal dogfooding cycles
+1. ~~close the remaining generated-week doctrine and fallback gaps that still affect output quality~~ (done)
+2. ~~prove the full gold path with a small number of end-to-end tests~~ (done)
+3. run real internal dogfooding cycles **(active)**
 4. improve coaching quality based on observed failures
 5. polish the product only after the loop is reliable
 
