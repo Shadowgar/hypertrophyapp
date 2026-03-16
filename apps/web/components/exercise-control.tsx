@@ -127,6 +127,7 @@ export default function ExerciseControlModule({
     >
       {typeof recommendedWorkingWeight === "number" ? (
         <div className="mb-2 rounded-lg border border-white/10 bg-black/25 px-3 py-2">
+          <p className="text-[10px] uppercase tracking-wide text-zinc-500 mb-1">Suggested weight (editable below)</p>
           <div className="flex items-baseline gap-2">
             <span className="text-3xl font-semibold tracking-tight text-accent">{recommendedWorkingWeight}</span>
             <span className="text-sm text-zinc-300">lbs</span>

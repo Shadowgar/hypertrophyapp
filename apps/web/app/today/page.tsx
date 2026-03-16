@@ -405,7 +405,7 @@ export default function TodayPage() {
     beginWorkoutLoad();
   }, [health, workout]);
 
-  async function loadToday() {
+  async function loadToday(): Promise<WorkoutSession | null> {
     try {
       const data = await api.getTodayWorkout();
       setWorkout(data);
@@ -470,9 +470,11 @@ export default function TodayPage() {
         setCompletedSetsByExercise(localCompleted);
         setWorkoutProgress(null);
       }
+      return data;
     } catch {
       setWorkout(null);
       setMessage("No workout available. Generate week plan first.");
+      return null;
     }
   }
 
@@ -508,9 +510,20 @@ export default function TodayPage() {
         return;
       }
 
-      const entries = await api.listSoreness(today, today);
-      if (entries.length > 0) {
-        await loadToday();
+      const loadedWorkout = await loadToday();
+      if (!loadedWorkout) {
+        return;
+      }
+
+      const entriesToday = await api.listSoreness(today, today);
+      if (entriesToday.length > 0) {
+        return;
+      }
+      const past = new Date();
+      past.setDate(past.getDate() - 30);
+      const pastStr = past.toISOString().slice(0, 10);
+      const entriesPast = await api.listSoreness(pastStr, today);
+      if (entriesPast.length === 0) {
         return;
       }
       resetSorenessForm();
@@ -625,7 +638,7 @@ export default function TodayPage() {
     }
   }
 
-  const swapTarget = workout?.exercises.find((exercise) => exercise.id === swapTargetExerciseId) ?? null;
+  const swapTarget = (workout?.exercises ?? []).find((exercise) => exercise.id === swapTargetExerciseId) ?? null;
   const swapTargetCurrentIndex = swapTarget ? (swapIndexByExercise[swapTarget.id] ?? 0) : 0;
   const activeProgramId = workout ? extractProgramId(workout.session_id) : null;
 
@@ -676,7 +689,7 @@ export default function TodayPage() {
           </p>
 
           <ul className="space-y-1" aria-label="Exercise list">
-            {workout.exercises.map((exercise) => {
+            {(workout.exercises ?? []).map((exercise) => {
               const selectedName = resolveExerciseName(exercise, swapIndexByExercise);
               const completed = completedSetsByExercise[exercise.id] ?? 0;
               return (
@@ -688,7 +701,7 @@ export default function TodayPage() {
                   >
                     <span className="font-medium">{selectedName}</span>
                     <span className="text-zinc-400">
-                      {completed}/{exercise.sets} · {exercise.rep_range[0]}-{exercise.rep_range[1]} reps @ {kgToLbs(exercise.recommended_working_weight)} lbs
+                      {completed}/{exercise.sets} · {exercise.rep_range[0]}-{exercise.rep_range[1]} reps @ ~{kgToLbs(exercise.recommended_working_weight)} lb (adjust when logging)
                     </span>
                   </button>
                 </li>
@@ -702,7 +715,7 @@ export default function TodayPage() {
       ) : null}
 
       {workout && selectedExerciseId ? (() => {
-        const exercise = workout.exercises.find((e) => e.id === selectedExerciseId);
+        const exercise = (workout.exercises ?? []).find((e) => e.id === selectedExerciseId);
         if (!exercise) {
           return null;
         }
@@ -728,8 +741,8 @@ export default function TodayPage() {
           doThisSetLine = `Do ${exercise.rep_range[0]}-${exercise.rep_range[1]} reps @ ${kgToLbs(exercise.recommended_working_weight)} lbs this set`;
         }
         return (
-          <div className="fixed inset-0 z-50 flex flex-col bg-zinc-950" aria-modal="true" role="dialog">
-            <div className="flex min-h-[44px] items-center gap-2 border-b border-zinc-800 px-3 py-2">
+          <div className="fixed inset-0 z-50 flex flex-col bg-zinc-950 min-h-[100dvh] max-h-[100dvh]" aria-modal="true" role="dialog">
+            <div className="flex min-h-[44px] shrink-0 items-center gap-2 border-b border-zinc-800 px-3 py-2">
               <Button
                 type="button"
                 variant="ghost"
@@ -739,9 +752,9 @@ export default function TodayPage() {
               >
                 <UiIcon name="close" className="ui-icon--action" />
               </Button>
-              <span className="text-sm font-medium text-zinc-100">Exercise</span>
+              <span className="text-sm font-medium text-zinc-100 truncate">Exercise</span>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 space-y-5 overscroll-contain">
               <div>
                 <h2 className="text-lg font-semibold text-zinc-100">
                   {guideHref ? (
@@ -753,21 +766,67 @@ export default function TodayPage() {
                   )}
                 </h2>
                 <p className="ui-meta mt-1">
-                  {exercise.sets} sets · {exercise.rep_range[0]}-{exercise.rep_range[1]} reps @ {kgToLbs(exercise.recommended_working_weight)} lbs
+                  {(() => {
+                    const warmUpCount = Math.max(0, parseInt(String(exercise.warm_up_sets ?? "0"), 10) || 0);
+                    const workingLabel = exercise.working_sets ?? String(exercise.sets);
+                    const repsLabel = exercise.reps ?? `${exercise.rep_range[0]}-${exercise.rep_range[1]}`;
+                    if (warmUpCount > 0) {
+                      return (
+                        <>
+                          {warmUpCount} warm-up set{warmUpCount !== 1 ? "s" : ""}, then {workingLabel} working set{Number(workingLabel) !== 1 ? "s" : ""} · {repsLabel} reps @ ~{kgToLbs(exercise.recommended_working_weight)} lb (adjust below)
+                        </>
+                      );
+                    }
+                    return (
+                      <>
+                        {exercise.sets} sets · {exercise.rep_range[0]}-{exercise.rep_range[1]} reps @ ~{kgToLbs(exercise.recommended_working_weight)} lb (starting estimate — adjust below)
+                      </>
+                    );
+                  })()}
                 </p>
               </div>
+
               <ExerciseExecutionDetails exercise={exercise} />
-              <p className="text-sm text-zinc-200">{doThisSetLine}</p>
-              <ExerciseControlModule
-                exerciseId={exercise.id}
-                note={exercise.notes}
-                totalSets={exercise.sets}
-                defaultRestSeconds={90}
-                recommendedWorkingWeight={kgToLbs(exercise.recommended_working_weight)}
-                repRange={exercise.rep_range}
-                initialCompletedSets={completed}
-                onSetComplete={handleSetComplete}
-              />
+
+              {(() => {
+                const warmUpCount = Math.max(0, parseInt(String(exercise.warm_up_sets ?? "0"), 10) || 0);
+                const warmupWeightsKg = (exercise.warmups ?? []).slice(0, warmUpCount);
+                const hasWarmup = warmUpCount > 0 && warmupWeightsKg.length > 0;
+                if (!hasWarmup) return null;
+                return (
+                  <div className="rounded-lg border border-zinc-700 bg-zinc-900/60 p-3 space-y-2">
+                    <p className="text-sm font-medium text-zinc-200">Warm-up sets</p>
+                    <p className="text-xs text-zinc-400">
+                      Based on your working weight below. Do these before your working sets.
+                    </p>
+                    <ul className="space-y-1.5" aria-label="Warm-up set weights">
+                      {warmupWeightsKg.map((kg, i) => (
+                        <li key={i} className="flex items-center justify-between text-sm text-zinc-200">
+                          <span>Warm-up set {i + 1}</span>
+                          <span className="font-medium tabular-nums">{kgToLbs(kg)} lb</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })()}
+
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-zinc-200">Working sets</p>
+                <p className="text-xs text-zinc-400">Log each set when complete. Adjust weight if needed.</p>
+                <p className="text-sm text-zinc-200">{doThisSetLine}</p>
+                <ExerciseControlModule
+                  exerciseId={exercise.id}
+                  note={exercise.notes}
+                  totalSets={exercise.sets}
+                  defaultRestSeconds={90}
+                  recommendedWorkingWeight={kgToLbs(exercise.recommended_working_weight)}
+                  repRange={exercise.rep_range}
+                  initialCompletedSets={completed}
+                  onSetComplete={handleSetComplete}
+                />
+              </div>
+
               <div className="space-y-2">
                 <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Options</p>
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">

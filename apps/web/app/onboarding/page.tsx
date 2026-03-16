@@ -121,6 +121,7 @@ type OnboardingDraft = {
   questionIndex: number;
   gender: (typeof GENDER_OPTIONS)[number] | "";
   primaryGoal: (typeof GOAL_OPTIONS)[number] | "";
+  primaryGoals: (typeof GOAL_OPTIONS)[number][];
   heightUnit: "in" | "cm";
   heightFeet: string;
   heightInches: string;
@@ -166,6 +167,7 @@ function isMeaningfulDraft(draft: OnboardingDraft): boolean {
   return Boolean(
     draft.gender
     || draft.primaryGoal
+    || (Array.isArray(draft.primaryGoals) && draft.primaryGoals.length > 0)
     || draft.birthday
     || draft.trainingAgeBucket
     || draft.strengthFrequency
@@ -332,6 +334,7 @@ export default function OnboardingPage() {
 
   const [gender, setGender] = useState<(typeof GENDER_OPTIONS)[number] | "">("");
   const [primaryGoal, setPrimaryGoal] = useState<(typeof GOAL_OPTIONS)[number] | "">("");
+  const [primaryGoals, setPrimaryGoals] = useState<(typeof GOAL_OPTIONS)[number][]>([]);
   const [heightUnit, setHeightUnit] = useState<"in" | "cm">("in");
   const [heightFeet, setHeightFeet] = useState("5");
   const [heightInches, setHeightInches] = useState("9");
@@ -463,6 +466,11 @@ export default function OnboardingPage() {
       ? Math.min(Math.max(0, Number(draft.questionIndex)), questionSteps.length - 1)
       : 0;
 
+    if (Array.isArray(draft.primaryGoals) && draft.primaryGoals.length > 0) {
+      setPrimaryGoals(draft.primaryGoals.filter((g): g is (typeof GOAL_OPTIONS)[number] => GOAL_OPTIONS.includes(g)));
+    } else if (draft.primaryGoal && GOAL_OPTIONS.includes(draft.primaryGoal as (typeof GOAL_OPTIONS)[number])) {
+      setPrimaryGoals([draft.primaryGoal as (typeof GOAL_OPTIONS)[number]]);
+    }
     const optionDraftBindings: Array<{ value: unknown; options: readonly string[]; setter: (next: string) => void }> = [
       { value: draft.gender, options: GENDER_OPTIONS, setter: setGender as (next: string) => void },
       { value: draft.primaryGoal, options: GOAL_OPTIONS, setter: setPrimaryGoal as (next: string) => void },
@@ -531,6 +539,7 @@ export default function OnboardingPage() {
       questionIndex,
       gender,
       primaryGoal,
+      primaryGoals,
       heightUnit,
       heightFeet,
       heightInches,
@@ -582,6 +591,7 @@ export default function OnboardingPage() {
     obstacle,
     phase,
     primaryGoal,
+    primaryGoals,
     questionIndex,
     selectedProgramId,
     strengthFrequency,
@@ -601,7 +611,7 @@ export default function OnboardingPage() {
       case "gender":
         return gender.length > 0;
       case "goal":
-        return primaryGoal.length > 0;
+        return primaryGoals.length > 0;
       case "height":
         if (heightUnit === "in") {
           const feet = Number(heightFeet);
@@ -676,7 +686,8 @@ export default function OnboardingPage() {
   function buildOnboardingAnswers() {
     return {
       gender,
-      primary_goal: primaryGoal,
+      primary_goal: primaryGoals[0] ?? primaryGoal ?? "",
+      primary_goals: primaryGoals.length > 0 ? primaryGoals : [primaryGoal].filter(Boolean),
       height: {
         unit: heightUnit,
         feet: heightUnit === "in" ? Number(heightFeet) : null,
@@ -769,7 +780,7 @@ export default function OnboardingPage() {
     const resolvedEquipment = deriveEquipmentProfile(resolvedLocation, gymSetup);
     const weakAreas = parseWeakAreas(weakAreasRaw);
     const resolvedWeakAreas = weakAreas.length > 0 ? weakAreas : [];
-    const nutritionPhase = primaryGoal === "lose_fat" ? "cut" : "maintenance";
+    const nutritionPhase = primaryGoals.includes("lose_fat") || primaryGoal === "lose_fat" ? "cut" : "maintenance";
     const calories = nutritionPhase === "cut" ? 2200 : 2600;
 
     const profileRes = await fetch(`${API_BASE_URL}/profile`, {
@@ -839,7 +850,7 @@ export default function OnboardingPage() {
       try {
         const reviewStatus = await api.getWeeklyReviewStatus();
         const reviewWeightKg = convertWeightToKg(Number(weightValue), weightUnit);
-        const reviewCalories = primaryGoal === "lose_fat" ? 2200 : 2600;
+        const reviewCalories = primaryGoals.includes("lose_fat") || primaryGoal === "lose_fat" ? 2200 : 2600;
         await api.submitWeeklyReview({
           body_weight: reviewWeightKg,
           calories: reviewCalories,
@@ -979,21 +990,30 @@ export default function OnboardingPage() {
       case "goal":
         return (
           <div className="grid grid-cols-1 gap-2">
-            {GOAL_OPTIONS.map((option) => (
-              <button
-                key={option}
-                type="button"
-                aria-pressed={primaryGoal === option}
-                onClick={() => setPrimaryGoal(option)}
-                className={`rounded-md border p-4 text-left text-base capitalize transition-colors ${
-                  primaryGoal === option
-                    ? "border-[var(--ui-edge-active)] bg-[var(--ui-accent-active)] text-white"
-                    : "border-[var(--ui-edge-idle)] bg-[var(--ui-surface-1)] text-zinc-100"
-                }`}
-              >
-                {option.replaceAll("_", " ")}
-              </button>
-            ))}
+            <p className="ui-meta mb-1">Select all that apply.</p>
+            {GOAL_OPTIONS.map((option) => {
+              const isSelected = primaryGoals.includes(option);
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  aria-pressed={isSelected}
+                  onClick={() => {
+                    setPrimaryGoals((prev) =>
+                      isSelected ? prev.filter((g) => g !== option) : [...prev, option],
+                    );
+                    if (!primaryGoal) setPrimaryGoal(option);
+                  }}
+                  className={`rounded-md border p-4 text-left text-base capitalize transition-colors ${
+                    isSelected
+                      ? "border-[var(--ui-edge-active)] bg-[var(--ui-accent-active)] text-white"
+                      : "border-[var(--ui-edge-idle)] bg-[var(--ui-surface-1)] text-zinc-100"
+                  }`}
+                >
+                  {option.replaceAll("_", " ")}
+                </button>
+              );
+            })}
           </div>
         );
       case "height":

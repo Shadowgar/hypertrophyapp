@@ -84,7 +84,7 @@ test("Today page loads workout and shows exercises", async () => {
   expect(screen.getByText(/Arms & Weak Points · 0\/0 sets/i)).toBeInTheDocument();
   // Compact list: exercise name and prescription in tappable row
   expect(screen.getByRole("button", { name: /Bayesian Curl/i })).toBeInTheDocument();
-  expect(screen.getByText(/0\/3 · 8-12 reps @ 38\.6 lbs/)).toBeInTheDocument();
+  expect(screen.getByText(/0\/3 · 8-12 reps @ ~38\.6 lb \(adjust when logging\)/)).toBeInTheDocument();
 
   // No detail overlay when no exercise is selected
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();

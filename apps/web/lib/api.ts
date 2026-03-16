@@ -36,6 +36,8 @@ export type WorkoutExercise = AuthoredExecutionFields & {
   sets: number;
   rep_range: [number, number];
   recommended_working_weight: number;
+  /** Warmup weights in kg (from API); used to show warm-up set prescriptions. */
+  warmups?: number[];
   slot_role?: string | null;
   substitution_candidates?: string[];
   notes?: string | null;

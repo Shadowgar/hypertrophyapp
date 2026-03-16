@@ -453,43 +453,6 @@ export default function HomePage() {
         <p className="telemetry-meta">{dashboardStatus}</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="main-card main-card--shell">
-          <p className="telemetry-kicker">Today&apos;s Workout</p>
-          <p className="telemetry-value">{dashboard.workout?.title ?? "No session queued"}</p>
-          <p className="telemetry-meta">{presentation.workoutMeta}</p>
-        </div>
-        <div className="main-card main-card--shell">
-          <p className="telemetry-kicker">Current Week</p>
-          <p className="telemetry-value">{presentation.weekLabel}</p>
-          <p className="telemetry-meta">{presentation.weekMeta}</p>
-        </div>
-        <div className="main-card main-card--shell">
-          <p className="telemetry-kicker">Bodyweight</p>
-          <p className="telemetry-value">{bodyweightLabel}</p>
-          <p className="telemetry-meta">
-            {dashboard.analytics?.bodyweight_trend.length
-              ? `Latest check-in inside ${dashboard.analytics.window.limit_weeks}-week window`
-              : "Track weekly review check-ins to build the trend"}
-          </p>
-        </div>
-        <div className="main-card main-card--shell">
-          <p className="telemetry-kicker">Training Stats</p>
-          <p className="telemetry-value">{presentation.statsLabel}</p>
-          <p className="telemetry-meta">{formatTrendMeta(dashboard.analytics)}</p>
-        </div>
-      </div>
-
-      <div className="grid gap-3 lg:grid-cols-2">
-        <CoachBriefCard hasToken={hasToken} dashboard={dashboard} />
-        <SessionBlueprintCard workout={dashboard.workout} />
-      </div>
-
-      <div className="grid gap-3 lg:grid-cols-2">
-        <BlockRadarCard profile={dashboard.profile} workout={dashboard.workout} />
-        <MomentumRadarCard analytics={dashboard.analytics} />
-      </div>
-
       <div className="main-card main-card--module spacing-grid">
         <div className="grid grid-cols-2 gap-3">
           <Link href="/login" className="block">
@@ -541,6 +504,43 @@ export default function HomePage() {
             </Button>
           </Link>
         </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="main-card main-card--shell">
+          <p className="telemetry-kicker">Today&apos;s Workout</p>
+          <p className="telemetry-value">{dashboard.workout?.title ?? "No session queued"}</p>
+          <p className="telemetry-meta">{presentation.workoutMeta}</p>
+        </div>
+        <div className="main-card main-card--shell">
+          <p className="telemetry-kicker">Current Week</p>
+          <p className="telemetry-value">{presentation.weekLabel}</p>
+          <p className="telemetry-meta">{presentation.weekMeta}</p>
+        </div>
+        <div className="main-card main-card--shell">
+          <p className="telemetry-kicker">Bodyweight</p>
+          <p className="telemetry-value">{bodyweightLabel}</p>
+          <p className="telemetry-meta">
+            {dashboard.analytics?.bodyweight_trend.length
+              ? `Latest check-in inside ${dashboard.analytics.window.limit_weeks}-week window`
+              : "Track weekly review check-ins to build the trend"}
+          </p>
+        </div>
+        <div className="main-card main-card--shell">
+          <p className="telemetry-kicker">Training Stats</p>
+          <p className="telemetry-value">{presentation.statsLabel}</p>
+          <p className="telemetry-meta">{formatTrendMeta(dashboard.analytics)}</p>
+        </div>
+      </div>
+
+      <div className="grid gap-3 lg:grid-cols-2">
+        <CoachBriefCard hasToken={hasToken} dashboard={dashboard} />
+        <SessionBlueprintCard workout={dashboard.workout} />
+      </div>
+
+      <div className="grid gap-3 lg:grid-cols-2">
+        <BlockRadarCard profile={dashboard.profile} workout={dashboard.workout} />
+        <MomentumRadarCard analytics={dashboard.analytics} />
       </div>
     </div>
   );
