@@ -1162,7 +1162,7 @@ def resolve_starting_load(
     fallback_weight: float,
     rule_set: dict[str, Any] | None,
     minimum_weight: float = 5.0,
-    weight_increment: float = 2.5,
+    weight_increment: float = 0.5,
 ) -> dict[str, Any]:
     exercise = _coerce_dict(planned_exercise)
     starting_load_rules = _coerce_dict(_coerce_dict(rule_set).get("starting_load_rules"))

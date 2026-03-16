@@ -217,10 +217,10 @@ def test_resolve_starting_load_uses_estimated_1rm_fallback_when_available() -> N
         },
     )
 
-    assert runtime["working_weight"] == pytest.approx(112.5)
+    assert runtime["working_weight"] == pytest.approx(111.5)
     assert runtime["decision_trace"]["interpreter"] == "resolve_starting_load"
     assert runtime["decision_trace"]["outcome"] == {
-        "working_weight": 112.5,
+        "working_weight": 111.5,
         "source": "estimated_1rm_fallback_percent",
     }
 

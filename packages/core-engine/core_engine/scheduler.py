@@ -19,8 +19,8 @@ from .rules_runtime import (
 
 def _apply_deload_modifiers(sets: int, weight: float, *, set_reduction_pct: int, load_reduction_pct: int) -> tuple[int, float]:
     adjusted_sets = max(1, int(round(sets * (100 - set_reduction_pct) / 100)))
-    adjusted_weight = max(5.0, weight * (100 - load_reduction_pct) / 100)
-    rounded_weight = round(adjusted_weight / 2.5) * 2.5
+    adjusted_weight = max(2.0, weight * (100 - load_reduction_pct) / 100)
+    rounded_weight = round(adjusted_weight / 0.5) * 0.5
     return adjusted_sets, rounded_weight
 
 
@@ -112,8 +112,8 @@ def _build_planned_exercise(
         rule_set=rule_set,
     )
     planned_sets = max(1, planned_sets + int(exercise_adjustment_runtime["set_delta"]))
-    recommended = max(5.0, recommended * float(exercise_adjustment_runtime["load_scale"]))
-    recommended = round(recommended / 2.5) * 2.5
+    recommended = max(2.0, recommended * float(exercise_adjustment_runtime["load_scale"]))
+    recommended = round(recommended / 0.5) * 0.5
     substitutions = exercise.get("substitution_candidates") or exercise.get("substitutions") or []
     failed_exposure_count = int((progression_state or {}).get("consecutive_under_target_exposures") or 0)
     repeat_failure_runtime = resolve_repeat_failure_substitution(

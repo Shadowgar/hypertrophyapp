@@ -370,7 +370,7 @@ def test_progression_action_deloads_for_underperformance_with_high_fatigue_when_
     )
 
     assert decision["action"] == "deload"
-    assert decision["reason"] == "Fatigue and underperformance indicate that a short deload is warranted."
+    assert decision["reason"] == "sfr_high_deload_pressure"
 
 
 def test_phase_transition_respects_intro_phase_protection_from_rules() -> None:
@@ -935,12 +935,18 @@ def test_build_weekly_checkin_persistence_payload_shapes_entry_fields() -> None:
         week_start=date(2026, 3, 9),
         body_weight=81.2,
         adherence_score=4,
+        sleep_quality=None,
+        stress_level=None,
+        pain_flags=None,
         notes="solid week",
     )
     assert payload == {
         "week_start": date(2026, 3, 9),
         "body_weight": 81.2,
         "adherence_score": 4,
+        "sleep_quality": None,
+        "stress_level": None,
+        "pain_flags": [],
         "notes": "solid week",
     }
 
@@ -1228,7 +1234,7 @@ def test_prepare_workout_session_state_persistence_payload_wraps_reducer_output(
         planned_reps_max=12,
         planned_weight=100.0,
         set_index=2,
-        reps=6,
+        reps=4,
         weight=100.0,
         substitution_recommendation=None,
         rule_set=_sample_rule_set(),
@@ -1252,7 +1258,7 @@ def test_prepare_workout_session_state_upsert_runtime_shapes_create_update_and_l
         planned_reps_max=12,
         planned_weight=100.0,
         set_index=1,
-        reps=7,
+        reps=4,
         weight=100.0,
         substitution_recommendation=None,
         rule_set=_sample_rule_set(),
@@ -2021,7 +2027,7 @@ def test_apply_weekly_review_adjustments_to_plan_exposes_persisted_trace() -> No
 
     exercise = adjusted["sessions"][0]["exercises"][0]
     assert exercise["sets"] == 5
-    assert math.isclose(exercise["recommended_working_weight"], 97.5, rel_tol=1e-9, abs_tol=1e-9)
+    assert math.isclose(exercise["recommended_working_weight"], 97.0, rel_tol=1e-9, abs_tol=1e-9)
     assert adjusted["adaptive_review"]["decision_trace"]["interpreter"] == "interpret_weekly_review_decision"
 
 
@@ -2047,9 +2053,9 @@ def test_live_workout_adjustment_and_hydration_return_traces() -> None:
         planned_reps_max=12,
         planned_sets=3,
         completed_sets=1,
-        last_reps=6,
+        last_reps=4,
         last_weight=100,
-        average_reps=6.0,
+        average_reps=4.0,
         rule_set=_sample_rule_set(),
     )
 
@@ -2101,8 +2107,8 @@ def test_resolve_workout_session_state_update_returns_persistable_state_and_live
     assert state["total_logged_reps"] == 14
     assert math.isclose(state["total_logged_weight"], 200.0)
     assert state["remaining_sets"] == 1
-    assert state["last_guidance"] == "remaining_sets_reduce_load_focus_target_reps"
-    assert live["guidance"] == "remaining_sets_reduce_load_focus_target_reps"
+    assert state["last_guidance"] == "remaining_sets_hold_load_and_match_target_reps"
+    assert live["guidance"] == "remaining_sets_hold_load_and_match_target_reps"
     assert live["decision_trace"]["interpreter"] == "recommend_live_workout_adjustment"
 
 

@@ -63,8 +63,8 @@ def _resolve_progression_outcome(
         progression_action = "hold"
         under_target = False
 
-    next_weight = max(5.0, current + delta)
-    rounded_weight = round(next_weight / 2.5) * 2.5
+    next_weight = max(2.0, current + delta)
+    rounded_weight = round(next_weight / 0.5) * 0.5
     return rounded_weight, progression_action, under_target
 
 

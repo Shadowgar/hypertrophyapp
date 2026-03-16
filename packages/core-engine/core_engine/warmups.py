@@ -15,9 +15,9 @@ def compute_warmups(
     if warmup_count <= 0 or working_weight <= 0:
         return []
 
-    rounding_rules = rounding_rules or {"increment": 2.5, "minimum": 5.0}
-    increment = rounding_rules.get("increment", 2.5)
-    minimum = rounding_rules.get("minimum", 5.0)
+    rounding_rules = rounding_rules or {"increment": 0.5, "minimum": 2.0}
+    increment = rounding_rules.get("increment", 0.5)
+    minimum = rounding_rules.get("minimum", 2.0)
 
     base_steps = [0.45, 0.65, 0.82, 0.9]
     selected = base_steps[:warmup_count]

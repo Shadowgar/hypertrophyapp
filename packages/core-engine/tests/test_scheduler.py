@@ -1564,7 +1564,7 @@ def test_generate_week_plan_applies_early_deload_trigger_from_soreness_or_adhere
     assert plan["mesocycle"]["deload_reason"] == "early_soreness+early_adherence"
     assert plan["deload"]["active"] is True
     assert ex["sets"] == 3
-    assert ex["recommended_working_weight"] == pytest.approx(72.5)
+    assert ex["recommended_working_weight"] == pytest.approx(72.0)
 
 
 def test_generate_week_plan_does_not_invent_cut_specific_mesocycle_cadence() -> None:

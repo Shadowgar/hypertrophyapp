@@ -92,8 +92,8 @@ def _clamp_scale(value: float, minimum: float, maximum: float) -> float:
     return max(minimum, min(maximum, value))
 
 
-def _round_to_increment(weight: float, increment: float = 2.5) -> float:
-    return round(max(5.0, weight) / increment) * increment
+def _round_to_increment(weight: float, increment: float = 0.5) -> float:
+    return round(max(2.0, weight) / increment) * increment
 
 
 def _resolve_rep_range(rep_range: Any) -> tuple[int, int]:

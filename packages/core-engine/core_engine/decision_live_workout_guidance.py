@@ -36,10 +36,10 @@ _WORKOUT_GUIDANCE_TEMPLATE_MESSAGES = {
 }
 
 _IN_SESSION_WEIGHT_SCALE_UP = 1.025
-_IN_SESSION_WEIGHT_SCALE_DOWN_MILD = 0.975
-_IN_SESSION_WEIGHT_SCALE_DOWN_AGGRESSIVE = 0.95
+_IN_SESSION_WEIGHT_SCALE_DOWN_MILD = 0.95
 _IN_SESSION_WEIGHT_SCALE_MIN = 0.9
 _IN_SESSION_WEIGHT_SCALE_MAX = 1.05
+_MICROLOAD_INCREMENT_KG = 0.5
 
 
 def _coerce_dict(value: Any) -> dict[str, Any]:
@@ -116,8 +116,17 @@ def _resolve_workout_set_guidance(reps: int, min_reps: int, max_reps: int) -> st
     return "within_target_reps_hold_or_microload"
 
 
-def _round_to_microload(weight: float) -> float:
-    return round(max(5.0, weight) / 2.5) * 2.5
+def _round_to_microload(weight: float, increment: float = _MICROLOAD_INCREMENT_KG) -> float:
+    """Round to nearest increment (default 0.5 kg ≈ 1.1 lb).
+
+    The backend stores weights in kg while users may train in lbs.
+    Using a fine increment preserves precision across the kg↔lb round-trip
+    (2.5 kg increments silently drop ~2.5 lbs on every recommendation).
+    """
+    clamped = max(2.0, weight)
+    if increment <= 0:
+        return round(clamped, 2)
+    return round(clamped / increment) * increment
 
 
 def _bounded_in_session_weight_scale(scale: float) -> float:
@@ -201,20 +210,43 @@ def recommend_live_workout_adjustment(
     if remaining_sets <= 0:
         guidance = "session_complete_hold_load_for_next_exposure"
         matched_rule = "session_complete"
-    # Only treat a set as truly \"under target\" when it clearly undershoots the plan.
-    # A single rep below the minimum is treated as a hold, not an automatic downshift.
-    elif last_reps < max(planned_reps_min - 1, 0) or average_reps < max(planned_reps_min - 1, 0):
+    elif last_reps >= planned_reps_min and last_reps <= planned_reps_max:
+        # In target range: hold the exact weight. Core invariant — never
+        # recommend less after a set that hit the programmed band.
+        guidance = "remaining_sets_hold_load_and_match_target_reps"
+        scale = 1.0
+        matched_rule = "in_target_hold"
+    elif last_reps > planned_reps_max:
+        # Above target: bump load slightly so the next set stays controlled.
+        if last_reps > planned_reps_max + 1:
+            guidance = "remaining_sets_increase_load_keep_reps_controlled"
+            scale = _IN_SESSION_WEIGHT_SCALE_UP
+            recommended_reps_min = max(planned_reps_min, planned_reps_max - 2)
+            matched_rule = "above_target_reps"
+        else:
+            # Only 1 rep above ceiling — hold, don't over-correct.
+            guidance = "remaining_sets_hold_load_and_match_target_reps"
+            scale = 1.0
+            matched_rule = "slightly_above_hold"
+    elif last_reps >= planned_reps_min - 2:
+        # Minor undershoot (1-2 reps below minimum): hold weight.
+        # The lifter is close; reducing load would be premature.
+        guidance = "remaining_sets_hold_load_and_match_target_reps"
+        scale = 1.0
+        matched_rule = "minor_undershoot_hold"
+    else:
+        # Significant undershoot (3+ reps below minimum): mild reduction.
         guidance = "remaining_sets_reduce_load_focus_target_reps"
-        scale = _IN_SESSION_WEIGHT_SCALE_DOWN_AGGRESSIVE if completed_sets >= 2 else _IN_SESSION_WEIGHT_SCALE_DOWN_MILD
+        scale = _IN_SESSION_WEIGHT_SCALE_DOWN_MILD
         recommended_reps_max = min(planned_reps_max, planned_reps_min + 2)
         matched_rule = "under_target_reps"
-    elif last_reps > planned_reps_max + 1 and average_reps >= planned_reps_max:
-        guidance = "remaining_sets_increase_load_keep_reps_controlled"
-        scale = _IN_SESSION_WEIGHT_SCALE_UP
-        recommended_reps_min = max(planned_reps_min, planned_reps_max - 2)
-        matched_rule = "above_target_reps"
 
-    recommended_weight = _round_to_microload(last_weight * _bounded_in_session_weight_scale(scale))
+    if scale == 1.0:
+        # Preserve the exact weight to avoid rounding drift across the
+        # kg ↔ lb conversion boundary.
+        recommended_weight = round(max(2.0, last_weight), 2)
+    else:
+        recommended_weight = _round_to_microload(last_weight * _bounded_in_session_weight_scale(scale))
     guidance_rationale = _workout_guidance_rationale(guidance, rule_set=rule_set)
     decision_trace = {
         "interpreter": "recommend_live_workout_adjustment",
@@ -352,7 +384,15 @@ def resolve_workout_session_state_update(
     completed_sets = min(planned_sets, len(history))
     total_reps = sum(int(item.get("reps", 0) or 0) for item in history)
     total_weight = sum(float(item.get("weight", 0) or 0) for item in history)
-    average_reps = (total_reps / len(history)) if history else float(reps)
+
+    # Use a recency-weighted average: the most recent set matters most.
+    # This prevents an early bad set from perpetually dragging down
+    # recommendations when later sets show the lifter has adapted.
+    if len(history) <= 1:
+        average_reps = float(reps)
+    else:
+        recent_half = history[len(history) // 2:]
+        average_reps = sum(int(item.get("reps", 0) or 0) for item in recent_half) / len(recent_half)
 
     live_recommendation = recommend_live_workout_adjustment(
         planned_reps_min=planned_reps_min,
