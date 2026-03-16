@@ -146,10 +146,6 @@ export default function ExerciseControlModule({
           <p className="text-xs text-zinc-400">
             Tap <strong>Start</strong> after a set to count rest (e.g. 90s). The circle shows time left. Tap <strong>Stop</strong> to pause.
           </p>
-          <div className="flex items-baseline gap-2">
-            <span className="font-mono text-sm">{formatTime(secondsLeft)}</span>
-            <span className="text-xs text-zinc-400">remaining</span>
-          </div>
           <div className="text-xs text-zinc-400">
             Set {completedSets}/{totalSets}
           </div>
@@ -182,13 +178,16 @@ export default function ExerciseControlModule({
         </div>
 
         <div
-          className="relative z-0 flex-shrink-0 h-10 w-10 rounded-full border border-white/15 overflow-hidden"
+          className="relative z-0 flex flex-shrink-0 h-12 w-12 items-center justify-center rounded-full border border-white/15 overflow-hidden"
           aria-label="Rest countdown: red segment shows time left"
           style={{
             background: `conic-gradient(rgba(220,38,38,0.9) ${(secondsLeft / restCycle) * 360}deg, rgba(255,255,255,0.08) 0deg)`,
           }}
         >
           <div className="absolute inset-[4px] rounded-full bg-black/65" />
+          <span className="relative z-10 font-mono text-[10px] font-medium tabular-nums text-zinc-100">
+            {formatTime(secondsLeft)}
+          </span>
         </div>
 
         <div className="relative z-10 flex flex-wrap gap-2 min-w-0">

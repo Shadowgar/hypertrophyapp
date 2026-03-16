@@ -73,7 +73,7 @@ test("substitution modal applies choice, keeps notes visible, and persists selec
   fireEvent.click(screen.getByRole("button", { name: /have this equipment/i }));
   await waitFor(() => expect(screen.getByText(/Choose a substitute/i)).toBeInTheDocument());
 
-  fireEvent.click(screen.getByRole("button", { name: /Push-Up/i }));
+  fireEvent.click(screen.getByRole("button", { name: "Push-Up" }));
 
   await waitFor(() => expect(screen.getAllByText(/^Push-Up$/i).length).toBeGreaterThan(0));
 

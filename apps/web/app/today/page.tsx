@@ -290,30 +290,50 @@ function WorkoutSummaryCard({ summary }: Readonly<{ summary: WorkoutSummary | nu
   );
 }
 
-function ExerciseExecutionDetails({ exercise }: Readonly<{ exercise: WorkoutExercise }>) {
-  const substitutions = resolveAuthoredSubstitutions(exercise);
-  const trackingLoads = resolveTrackingLoads(exercise);
+function ExerciseExecutionDetails({
+  exercise,
+  onSelectSubstitution,
+}: Readonly<{
+  exercise: WorkoutExercise;
+  onSelectSubstitution: (exerciseId: string, candidateIndex: number) => void;
+}>) {
   const mediaUrl = resolveExerciseMediaUrl(exercise);
-  const hasPrescription = Boolean(exercise.warm_up_sets || exercise.working_sets || exercise.reps);
+  const candidates = exercise.substitution_candidates ?? [];
+  const hasTechniqueRestRpe =
+    Boolean(exercise.last_set_intensity_technique) || Boolean(exercise.rest) ||
+    Boolean(exercise.early_set_rpe) || Boolean(exercise.last_set_rpe);
 
   return (
     <div className="rounded-md border border-zinc-800 bg-zinc-900/40 p-2 text-xs text-zinc-300">
-      {hasPrescription ? (
-        <p>
-          Authored prescription: {exercise.warm_up_sets ?? "0"} warm-up sets · {exercise.working_sets ?? String(exercise.sets)} working sets · {exercise.reps ?? `${exercise.rep_range[0]}-${exercise.rep_range[1]}`}
-        </p>
+      {hasTechniqueRestRpe ? (
+        <div className="flex flex-wrap gap-x-3 gap-y-1">
+          {exercise.last_set_intensity_technique ? (
+            <span>Technique: {exercise.last_set_intensity_technique}</span>
+          ) : null}
+          {exercise.rest ? <span>Rest: {exercise.rest}</span> : null}
+          {exercise.early_set_rpe ? <span>Early-set RPE: {exercise.early_set_rpe}</span> : null}
+          {exercise.last_set_rpe ? <span>Last-set RPE: {exercise.last_set_rpe}</span> : null}
+        </div>
       ) : null}
-      <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
-        {exercise.early_set_rpe ? <span>Early-set RPE: {exercise.early_set_rpe}</span> : null}
-        {exercise.last_set_rpe ? <span>Last-set RPE: {exercise.last_set_rpe}</span> : null}
-        {exercise.last_set_intensity_technique ? <span>Technique: {exercise.last_set_intensity_technique}</span> : null}
-        {exercise.rest ? <span>Rest: {exercise.rest}</span> : null}
-      </div>
-      {trackingLoads.length > 0 ? <p className="mt-1">Tracking loads: {trackingLoads.join(" / ")}</p> : null}
-      {substitutions.length > 0 ? <p className="mt-1">Authored substitutions: {substitutions.join(" / ")}</p> : null}
+      {candidates.length > 0 ? (
+        <div className="mt-2 space-y-1">
+          <span className="text-zinc-500">Alternatives: </span>
+          {candidates.map((name, index) => (
+            <Button
+              key={`${exercise.id}-alt-${index}`}
+              type="button"
+              variant="secondary"
+              className="ml-1 mt-1 inline-flex min-h-[32px] text-xs"
+              onClick={() => onSelectSubstitution(exercise.id, index + 1)}
+            >
+              Use {name}
+            </Button>
+          ))}
+        </div>
+      ) : null}
       {mediaUrl ? (
         <a
-          className="mt-1 inline-flex text-zinc-100 underline decoration-zinc-500 underline-offset-2"
+          className="mt-2 inline-flex text-zinc-100 underline decoration-zinc-500 underline-offset-2"
           href={mediaUrl}
           rel="noreferrer"
           target="_blank"
@@ -363,24 +383,26 @@ function BaselineBlock({
         <label className="flex flex-col gap-1">
           <span className="text-xs uppercase tracking-wide text-zinc-500">Weight (lb)</span>
           <input
-            className="ui-input h-9 w-20 px-2 text-sm"
+            className="ui-input h-9 w-20 px-2 text-base"
             type="number"
             min={1}
             step={2.5}
             value={weightLb}
             onChange={(e) => setWeightLb(e.target.value)}
             aria-label="Baseline weight in pounds"
+            style={{ fontSize: "16px" }}
           />
         </label>
         <label className="flex flex-col gap-1">
           <span className="text-xs uppercase tracking-wide text-zinc-500">Reps</span>
           <input
-            className="ui-input h-9 w-16 px-2 text-sm"
+            className="ui-input h-9 w-16 px-2 text-base"
             type="number"
             min={1}
             value={reps}
             onChange={(e) => setReps(e.target.value)}
             aria-label="Baseline reps"
+            style={{ fontSize: "16px" }}
           />
         </label>
         <Button type="button" className="h-9" onClick={handleCalculate}>
@@ -838,7 +860,7 @@ export default function TodayPage() {
               </Button>
               <span className="text-sm font-medium text-zinc-100 truncate">Exercise</span>
             </div>
-            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 space-y-5 overscroll-contain">
+            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 pb-[max(6rem,env(safe-area-inset-bottom))] space-y-5 overscroll-contain">
               <div>
                 <h2 className="text-lg font-semibold text-zinc-100">
                   {guideHref ? (
@@ -870,7 +892,13 @@ export default function TodayPage() {
                 </p>
               </div>
 
-              <ExerciseExecutionDetails exercise={exercise} />
+              <ExerciseExecutionDetails
+                exercise={exercise}
+                onSelectSubstitution={(exerciseId, candidateIndex) => {
+                  selectSwap(exerciseId, candidateIndex);
+                  setSwapTargetExerciseId(null);
+                }}
+              />
 
               {(() => {
                 const warmUpCount = Math.max(0, parseInt(String(exercise.warm_up_sets ?? "0"), 10) || 0);
