@@ -15269,6 +15269,33 @@
       "slot_usage_rationale": "Used in Full Body #1 to preserve session intent and progression continuity."
     },
     {
+      "exercise_id": "neutral_grip_pullup",
+      "canonical_name": "Neutral-Grip Pullup",
+      "aliases": [
+        "Neutral-Grip Pullup"
+      ],
+      "execution": "Use a neutral grip and pull your chest toward the bar, keeping ribs down and lats engaged.",
+      "coaching_cues": [
+        "Think about driving your elbows down toward your ribs",
+        "Avoid kicking or using momentum; control the eccentric"
+      ],
+      "primary_muscles": [
+        "lats"
+      ],
+      "secondary_muscles": [
+        "biceps",
+        "upper_back"
+      ],
+      "equipment_tags": [
+        "bodyweight",
+        "bar"
+      ],
+      "movement_pattern": "vertical_pull",
+      "valid_substitutions": [],
+      "default_video_url": "",
+      "slot_usage_rationale": "Used as a workbook substitution option for Cross-Body Lat Pull-Around."
+    },
+    {
       "exercise_id": "low_incline_smith_machine_press",
       "canonical_name": "Low Incline Smith Machine Press",
       "aliases": [
