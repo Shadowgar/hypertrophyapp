@@ -1,7 +1,7 @@
 # Today Page Redesign — Design
 
 **Date:** 2026-03-15  
-**Status:** Design approved; implementation pending  
+**Status:** Design approved; implementation complete (see `docs/implementation/ACTIVE_REMEDIATION_RAIL.md` § Done: Today Page Redesign)  
 **Goal:** Mobile-first, iOS-ready Today page: whole-day-at-a-glance list, drill into one exercise at a time. Reduce information overload and clarify copy.
 
 ## Doc alignment (no drift)

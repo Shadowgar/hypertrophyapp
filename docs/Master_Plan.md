@@ -1,6 +1,6 @@
 # Master Plan - Adaptive Coaching Rebuild
 
-Last updated: 2026-03-15
+Last updated: 2026-03-16
 
 ## Product Vision
 
@@ -96,8 +96,8 @@ Use this repeatable local loop for one-program-first verification:
 - [x] Publish explicit deprecation/isolation list.
 
 ### Phase B - Canonical Schema and Gold Baseline
-- [ ] Finalize canonical schema for program templates, exercise catalog, coaching rules, user logs/state.
-- [ ] Create one manually validated gold sample (workbook + matching PDF doctrine).
+- [x] Finalize canonical schema for program templates, exercise catalog, coaching rules, user logs/state (in use for Phase 1 path).
+- [x] Create one manually validated gold sample (workbook + matching PDF doctrine) — Pure Bodybuilding Phase 1 Full Body package and gold runtime.
 - [ ] Add strict schema validation tests and ambiguity/error reporting.
 
 ### Phase C - Importer and Rule Distillation
@@ -106,22 +106,22 @@ Use this repeatable local loop for one-program-first verification:
 - [ ] Add provenance links from rules to source sections.
 
 ### Phase D - Deterministic Decision Engine
-- [ ] Establish one sovereign decision runtime in `packages/core-engine` for all meaningful coaching decisions.
-- [ ] Emit structured decision traces for each decision family.
-- [ ] Refactor router-owned coaching heuristics behind interpreter paths.
-- [ ] Collapse `intelligence.py` from mixed owner/compatibility hub into a thin façade over explicit decision families.
-- [ ] Implement first-pass deterministic progression and adaptation logic for gold sample.
-- [ ] Expand coaching state beyond adherence/soreness/stalls to include higher-signal readiness and constraint inputs.
-- [ ] Add deterministic stimulus-fatigue-response scoring on top of canonical state and rules runtime.
-- [ ] Model fatigue, underperformance, stalls, deload triggers, and substitutions.
-- [ ] Persist explainable decision rationale on each adjustment.
+- [x] Establish one sovereign decision runtime in `packages/core-engine` for all meaningful coaching decisions.
+- [x] Emit structured decision traces for each decision family.
+- [x] Refactor router-owned coaching heuristics behind interpreter paths.
+- [x] Collapse `intelligence.py` from mixed owner/compatibility hub into a thin façade over explicit decision families.
+- [x] Implement first-pass deterministic progression and adaptation logic for gold sample.
+- [x] Expand coaching state beyond adherence/soreness/stalls to include higher-signal readiness and constraint inputs.
+- [x] Add deterministic stimulus-fatigue-response scoring on top of canonical state and rules runtime.
+- [x] Model fatigue, underperformance, stalls, deload triggers, and substitutions.
+- [x] Persist explainable decision rationale on each adjustment (traces on generated-week, coach-preview, review, etc.).
 
 ### Phase E - Gold End-To-End Runtime Flow
-- [ ] Program selection
-- [ ] Workout generation
-- [ ] Performance logging
-- [ ] Workout evaluation
-- [ ] Next-workout adaptation
+- [x] Program selection
+- [x] Workout generation
+- [x] Performance logging
+- [x] Workout evaluation
+- [x] Next-workout adaptation
 
 ### Phase F - Scale and Harden
 - [ ] Expand canonical imports/rules beyond gold sample.
@@ -139,8 +139,8 @@ Reference:
 - `docs/redesign/Onboarding_Reference_Analysis_Batch1.md`
 
 ### Phase H - User Testing Readiness
-- [ ] Finish one stable, user-testable deterministic gold runtime path on the web product.
-- [ ] Validate onboarding, generate-week, today, log-set, weekly-review, and history on desktop and mobile browser viewports.
+- [x] Finish one stable, user-testable deterministic gold runtime path on the web product.
+- [ ] Validate onboarding, generate-week, today, log-set, weekly-review, and history on desktop and mobile browser viewports (use `docs/implementation/DOGFOOD_PHASE1_CHECKLIST.md`).
 - [ ] Run internal dogfooding before any broader beta.
 - [ ] Expand to closed beta only after deterministic traces and support/debugging workflows are good enough to explain coaching behavior.
 
@@ -239,6 +239,6 @@ Reference:
 - User-testing rollout now has an explicit plan:
 	- internal dogfooding should begin on the responsive web app first, using desktop and mobile browsers rather than waiting for native mobile apps.
 	- beta readiness and rollout sequencing now live in `docs/plans/2026-03-11-user-testing-rollout-plan.md`.
-- Today page redesign (mobile-first, iOS-ready) is planned:
-	- design: whole-day list at a glance, tap exercise to open detail screen; remove Session Intent card and standalone Between-Set Coach; single “Do this set” line from API guidance only.
-	- design doc and implementation checklist: `docs/plans/2026-03-15-today-page-redesign-design.md`. Implementation pending; no API or decision-engine changes.
+- Today page redesign (mobile-first, iOS-ready) implemented:
+	- design: whole-day list at a glance, tap exercise to open detail screen; Session Intent and Between-Set Coach removed from main view; single “Do this set” line from API guidance only (`resolveGuidanceText`).
+	- design doc: `docs/plans/2026-03-15-today-page-redesign-design.md`. Implementation complete; see `docs/implementation/ACTIVE_REMEDIATION_RAIL.md` § Done: Today Page Redesign.

@@ -1,6 +1,6 @@
 # Active Remediation Rail
 
-Last updated: 2026-03-15
+Last updated: 2026-03-16
 
 ## Current Confirmed State
 
@@ -39,6 +39,28 @@ Current product order for active implementation is:
 
 - Execute repeated browser dogfooding on the canonical Phase 1 loop using `/profile/dev/reset-phase1`, and fix only blockers found in onboarding -> generate-week -> today/log-set -> check-in/review -> history -> adaptation/regenerate continuity.
 - Keep compatibility aliases explicit at boundaries, and keep broader architecture/generalization work downstream unless directly blocking canonical-path reliability.
+
+## Next Tasks (task rail)
+
+Use this ordered list as the single source of "what to do next." Complete one task before moving to the next; update this section when priorities change.
+
+1. **Dogfood Phase 1 path (desktop + mobile)**  
+   Goal: Run the full loop (reset-phase1 → generate-week → today → log sets → check-in → review → history → adaptation apply → regenerate-week) in the browser; note blockers.  
+   Files: `docs/implementation/DOGFOOD_PHASE1_CHECKLIST.md`.  
+   Validation: Manual; complete checklist at least once on desktop and once on mobile/viewport resize.  
+   Done when: Loop completed; blockers (if any) listed with steps-to-reproduce for follow-up.
+
+2. **Fix dogfood blockers (if any)**  
+   Goal: Address only issues that block completing the canonical path.  
+   Files: Determined by Step 1 (e.g. `apps/web/app/today/page.tsx`, `apps/api/app/routers/workout.py`).  
+   Validation: `./scripts/mini_validate.sh`; re-run dogfood checklist.  
+   Done when: No blocking bugs; mini_validate green.
+
+3. **Optional: Targeted E2E or visual test**  
+   Goal: Only if dogfooding showed flakiness; add one high-signal test covering reset → generate-week → today load → one log-set.  
+   Files: `apps/web/tests/` or new E2E dir; reference `apps/api/tests/test_phase1_canonical_path_smoke.py`.  
+   Validation: New test green in CI or `./scripts/mini_validate.sh`.  
+   Done when: Test passes and covers critical path.
 
 ## Done: Today Page Redesign
 

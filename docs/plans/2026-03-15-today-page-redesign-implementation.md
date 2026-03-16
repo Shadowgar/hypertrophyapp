@@ -1,8 +1,8 @@
 # Today Page Redesign — Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+**Status:** Implemented (2026-03-16). The Today page now uses a compact list, full-screen exercise detail overlay, and API-only guidance. Do not re-implement without evidence of regression.
 
-**Goal:** Implement the Today page redesign from `docs/plans/2026-03-15-today-page-redesign-design.md`: mobile-first list at a glance, tap row to open exercise detail (full-screen overlay), simplified top section, no Session Intent or Between-Set Coach cards on main view, single “Do this set” line on detail using only API-sourced guidance.
+**Goal (completed):** Implement the Today page redesign from `docs/plans/2026-03-15-today-page-redesign-design.md`: mobile-first list at a glance, tap row to open exercise detail (full-screen overlay), simplified top section, no Session Intent or Between-Set Coach cards on main view, single “Do this set” line on detail using only API-sourced guidance.
 
 **Architecture:** Single Today page (`apps/web/app/today/page.tsx`) keeps all state; a full-screen overlay (or slide-up panel) shows exercise detail when `selectedExerciseId` is set. List is a compact row list; tapping a row sets `selectedExerciseId`; back clears it. No new routes initially so we avoid URL/refresh complexity; structure is iOS-push-friendly for a later route split.
 

@@ -95,11 +95,15 @@ Notes: many engine responses include a `decision_trace` field for auditability; 
 
     `cd apps/web && npm install && npm run dev`
 
-4. Run focused API tests (SQLite override):
+4. Run full validation (API + web tests + build): from repo root, `./scripts/mini_validate.sh`.
+
+5. Verify the Phase 1 path (dogfood): follow `docs/implementation/DOGFOOD_PHASE1_CHECKLIST.md` — reset to clean Phase 1 (Onboarding → Developer Tools → "Reset Current User to Clean Phase 1" or `POST /profile/dev/reset-phase1`), then generate week → Today → log set → check-in → review → history → adaptation → regenerate week.
+
+6. Run focused API tests (SQLite override):
 
     `cd apps/api && TEST_DATABASE_URL=sqlite:///./test_local.db .venv/bin/python -m pytest tests/test_workout_*.py -q`
 
-5. Clean temp DB files after runs:
+7. Clean temp DB files after runs:
 
     `rm -f apps/api/test_local*.sqlite3`
 
