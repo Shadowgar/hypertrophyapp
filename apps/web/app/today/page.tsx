@@ -290,61 +290,6 @@ function WorkoutSummaryCard({ summary }: Readonly<{ summary: WorkoutSummary | nu
   );
 }
 
-function ExerciseExecutionDetails({
-  exercise,
-  onSelectSubstitution,
-}: Readonly<{
-  exercise: WorkoutExercise;
-  onSelectSubstitution: (exerciseId: string, candidateIndex: number) => void;
-}>) {
-  const mediaUrl = resolveExerciseMediaUrl(exercise);
-  const candidates = exercise.substitution_candidates ?? [];
-  const hasTechniqueRestRpe =
-    Boolean(exercise.last_set_intensity_technique) || Boolean(exercise.rest) ||
-    Boolean(exercise.early_set_rpe) || Boolean(exercise.last_set_rpe);
-
-  return (
-    <div className="rounded-md border border-zinc-800 bg-zinc-900/40 p-2 text-xs text-zinc-300">
-      {hasTechniqueRestRpe ? (
-        <div className="flex flex-wrap gap-x-3 gap-y-1">
-          {exercise.last_set_intensity_technique ? (
-            <span>Technique: {exercise.last_set_intensity_technique}</span>
-          ) : null}
-          {exercise.rest ? <span>Rest: {exercise.rest}</span> : null}
-          {exercise.early_set_rpe ? <span>Early-set RPE: {exercise.early_set_rpe}</span> : null}
-          {exercise.last_set_rpe ? <span>Last-set RPE: {exercise.last_set_rpe}</span> : null}
-        </div>
-      ) : null}
-      {candidates.length > 0 ? (
-        <div className="mt-2 space-y-1">
-          <span className="text-zinc-500">Alternatives: </span>
-          {candidates.map((name, index) => (
-            <Button
-              key={`${exercise.id}-alt-${index}`}
-              type="button"
-              variant="secondary"
-              className="ml-1 mt-1 inline-flex min-h-[32px] text-xs"
-              onClick={() => onSelectSubstitution(exercise.id, index + 1)}
-            >
-              Use {name}
-            </Button>
-          ))}
-        </div>
-      ) : null}
-      {mediaUrl ? (
-        <a
-          className="mt-2 inline-flex text-zinc-100 underline decoration-zinc-500 underline-offset-2"
-          href={mediaUrl}
-          rel="noreferrer"
-          target="_blank"
-        >
-          Demo link
-        </a>
-      ) : null}
-    </div>
-  );
-}
-
 function BaselineBlock({
   exerciseId,
   repRange,
@@ -892,18 +837,12 @@ export default function TodayPage() {
                 </p>
               </div>
 
-              <ExerciseExecutionDetails
-                exercise={exercise}
-                onSelectSubstitution={(exerciseId, candidateIndex) => {
-                  selectSwap(exerciseId, candidateIndex);
-                  setSwapTargetExerciseId(null);
-                }}
-              />
-
               {(() => {
                 const warmUpCount = Math.max(0, parseInt(String(exercise.warm_up_sets ?? "0"), 10) || 0);
                 const baseline = baselineByExercise[exercise.id];
                 const lastSet = lastSetByExercise[exercise.id];
+                const currentSwapIndex = swapIndexByExercise[exercise.id] ?? 0;
+                const altCandidates = exercise.substitution_candidates ?? [];
                 const derivedWorkingLb =
                   lastSet != null
                     ? workingWeightFrom1RMLb(epleyEstimate1RMLbs(lastSet.weight, lastSet.reps))
@@ -960,6 +899,48 @@ export default function TodayPage() {
 
                     <div className="space-y-2">
                       <p className="text-sm font-medium text-zinc-200">Working sets</p>
+                      {(exercise.last_set_intensity_technique ||
+                        exercise.rest ||
+                        exercise.early_set_rpe ||
+                        exercise.last_set_rpe) && (
+                        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-zinc-300">
+                          {exercise.last_set_intensity_technique ? (
+                            <span>Technique: {exercise.last_set_intensity_technique}</span>
+                          ) : null}
+                          {exercise.rest ? <span>Rest: {exercise.rest}</span> : null}
+                          {exercise.early_set_rpe ? <span>Early-set RPE: {exercise.early_set_rpe}</span> : null}
+                          {exercise.last_set_rpe ? <span>Last-set RPE: {exercise.last_set_rpe}</span> : null}
+                        </div>
+                      )}
+                      {(currentSwapIndex > 0 || altCandidates.length > 0) && (
+                        <div className="flex flex-wrap gap-2 pt-1">
+                          {currentSwapIndex > 0 ? (
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              className="min-h-[32px] px-2 text-xs"
+                              onClick={() => {
+                                selectSwap(exercise.id, 0);
+                              }}
+                            >
+                              Use original exercise
+                            </Button>
+                          ) : null}
+                          {altCandidates.map((name, index) => (
+                            <Button
+                              key={`${exercise.id}-alt-${index}`}
+                              type="button"
+                              variant="secondary"
+                              className="min-h-[32px] px-2 text-xs"
+                              onClick={() => {
+                                selectSwap(exercise.id, index + 1);
+                              }}
+                            >
+                              Use {name}
+                            </Button>
+                          ))}
+                        </div>
+                      )}
                       {lastSet != null ? (
                         <p className="text-xs text-zinc-400">
                           Suggestion updated from your last set ({lastSet.weight} lb × {lastSet.reps} reps).
