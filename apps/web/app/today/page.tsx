@@ -321,13 +321,9 @@ function ExerciseDetailOverlay({
   });
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex flex-col bg-zinc-950 min-h-[100dvh] max-h-[100dvh] pt-[max(0.75rem,env(safe-area-inset-top))]"
-      aria-modal="true"
-      role="dialog"
-    >
+    <div className="fixed inset-0 z-50 flex flex-col bg-zinc-950 min-h-[100dvh] max-h-[100dvh]" aria-modal="true" role="dialog">
       {/* ---- Header: name + set counter ---- */}
-      <div className="flex min-h-[48px] shrink-0 items-center gap-3 border-b border-zinc-800 px-4 py-2">
+      <div className="sticky top-0 z-10 flex min-h-[48px] shrink-0 items-center gap-3 border-b border-zinc-800 bg-zinc-950/95 px-4 py-2 backdrop-blur">
         <Button
           type="button"
           variant="ghost"
@@ -355,7 +351,7 @@ function ExerciseDetailOverlay({
       </div>
 
       {/* ---- Scrollable body ---- */}
-      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 pb-[max(6rem,env(safe-area-inset-bottom))] space-y-4 overscroll-contain">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 pb-[max(7rem,env(safe-area-inset-bottom))] space-y-4 overscroll-contain">
 
         {/* == ZONE 1: Baseline calculator (expanded when no baseline) == */}
         <Disclosure title="Baseline Calculator" badge={baseline ? `1RM: ${Math.round(baseline.estimated1RM)} lb` : null} defaultOpen={!baseline}>
@@ -596,6 +592,25 @@ export default function TodayPage() {
       setWorkoutSummary(null);
     }
   }
+
+  // When an exercise is opened, pin the page to the top and lock background
+  // scrolling so the overlay is stable regardless of where the row sits in
+  // the list. Restore scroll behavior when the overlay is closed.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const body = window.document.body;
+    if (selectedExerciseId) {
+      window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+      const previousOverflow = body.style.overflow;
+      body.dataset.hypertrophyPrevOverflow = previousOverflow;
+      body.style.overflow = "hidden";
+      return () => {
+        body.style.overflow = body.dataset.hypertrophyPrevOverflow || "";
+        delete body.dataset.hypertrophyPrevOverflow;
+      };
+    }
+    return undefined;
+  }, [selectedExerciseId]);
 
   useEffect(() => {
     api.health()
@@ -909,15 +924,24 @@ export default function TodayPage() {
               const plannedWorkingLb = kgToLbs(exercise.recommended_working_weight);
               const baselineWorkingLb =
                 baseline != null ? baseline.workingWeightLb : plannedWorkingLb;
+              const hasLive = live && typeof live.recommended_weight === "number";
               // Authoritative row working weight:
-              // 1) backend live recommendation
-              // 2) planned working weight
-              // 3) baseline estimate only before first working set
+              // Before first working set:
+              //   1) baseline estimate (if present)
+              //   2) backend live recommendation (if any)
+              //   3) planned working weight
+              // After working sets have started:
+              //   1) backend live recommendation
+              //   2) planned working weight
               const rowWorkingLb =
-                live && typeof live.recommended_weight === "number"
-                  ? kgToLbs(live.recommended_weight)
-                  : completed === 0
-                    ? baselineWorkingLb
+                completed === 0
+                  ? (baseline != null
+                      ? baselineWorkingLb
+                      : hasLive
+                        ? kgToLbs(live!.recommended_weight)
+                        : plannedWorkingLb)
+                  : hasLive
+                    ? kgToLbs(live!.recommended_weight)
                     : plannedWorkingLb;
               return (
                 <li key={exercise.id}>
@@ -978,15 +1002,25 @@ export default function TodayPage() {
         const plannedWorkingLb = kgToLbs(exercise.recommended_working_weight);
         const baselineWorkingLb =
           baseline != null ? baseline.workingWeightLb : plannedWorkingLb;
+        const hasRecommendation =
+          recommendation && typeof recommendation.recommended_weight === "number";
         // Authoritative working weight for this set:
-        // 1) backend live recommendation
-        // 2) planned working weight
-        // 3) baseline estimate only before first working set
+        // Before first working set:
+        //   1) baseline estimate (if present)
+        //   2) backend live recommendation (if any)
+        //   3) planned working weight
+        // After working sets have started:
+        //   1) backend live recommendation
+        //   2) planned working weight
         const derivedWorkingLb =
-          recommendation && typeof recommendation.recommended_weight === "number"
-            ? kgToLbs(recommendation.recommended_weight)
-            : completed === 0
-              ? baselineWorkingLb
+          completed === 0
+            ? (baseline != null
+                ? baselineWorkingLb
+                : hasRecommendation
+                  ? kgToLbs(recommendation!.recommended_weight)
+                  : plannedWorkingLb)
+            : hasRecommendation
+              ? kgToLbs(recommendation!.recommended_weight)
               : plannedWorkingLb;
         let doThisSetLine: string;
         if (recommendation) {
