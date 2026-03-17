@@ -797,7 +797,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  health: () => request<{ status: string; date: string }>("/health"),
+  health: () => request<{ status: string; date: string; version?: string }>("/health"),
   getTodayWorkout: () => request<WorkoutSession>("/workout/today"),
   getWorkoutProgress: (workoutId: string) => request<WorkoutProgress>(`/workout/${encodeURIComponent(workoutId)}/progress`),
   getWorkoutSummary: (workoutId: string) => request<WorkoutSummary>(`/workout/${encodeURIComponent(workoutId)}/summary`),

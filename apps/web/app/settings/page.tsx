@@ -440,6 +440,10 @@ export default function SettingsPage() {
           </Button>
           <p className="telemetry-meta mt-2">{status ?? ""}</p>
         </div>
+
+        <p className="mt-4 text-center text-[10px] text-zinc-600">
+          v{process.env.NEXT_PUBLIC_APP_VERSION ?? "dev"}
+        </p>
       </div>
     </div>
   );

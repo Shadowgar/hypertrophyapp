@@ -19,6 +19,8 @@ services:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
+      args:
+        APP_VERSION: ${APP_VERSION:-dev}
     container_name: hypertrophy-api
     restart: unless-stopped
     environment:
@@ -45,6 +47,7 @@ services:
       args:
         NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-/api}
         SERVER_API_BASE_URL: ${SERVER_API_BASE_URL:-http://api:8000}
+        NEXT_PUBLIC_APP_VERSION: ${APP_VERSION:-dev}
     container_name: hypertrophy-web
     restart: unless-stopped
     environment:
