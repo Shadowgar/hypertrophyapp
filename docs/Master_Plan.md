@@ -98,13 +98,13 @@ Use this repeatable local loop for one-program-first verification:
 ### Phase B - Canonical Schema and Gold Baseline
 - [x] Finalize canonical schema for program templates, exercise catalog, coaching rules, user logs/state (in use for Phase 1 path).
 - [x] Create one manually validated gold sample (workbook + matching PDF doctrine) — Pure Bodybuilding Phase 1 Full Body package and gold runtime.
-- [ ] Add strict schema validation tests and ambiguity/error reporting.
+- [x] Add strict schema validation tests and ambiguity/error reporting. Implemented: `apps/api/tests/test_schema_validation.py`.
 
 ### Phase C - Importer and Rule Distillation
-Design documents are complete; implementation has not started.
-- [ ] Implement Excel-first canonical importer v2 (phase/week/day/slot fidelity). Design: `docs/plans/2026-03-16-importer-v2-design.md`.
-- [ ] Implement PDF-to-rules distillation workflow (typed rules, explainable rationale). Design: `docs/plans/2026-03-16-pdf-to-rules-design.md`.
-- [ ] Add provenance links from rules to source sections.
+Design documents exist; core v2 pipelines implemented; provenance links require manual curation pass.
+- [x] Implement Excel-first canonical importer v2 (phase/week/day/slot fidelity). Implemented: `importers/xlsx_to_canonical_v2.py`. Design: `docs/plans/2026-03-16-importer-v2-design.md`.
+- [x] Implement PDF-to-rules distillation workflow (typed rules, explainable rationale). Implemented: `importers/pdf_doctrine_rules_v2.py`. Design: `docs/plans/2026-03-16-pdf-to-rules-design.md`.
+- [ ] Add provenance links from rules to source sections (requires manual curation pass over extracted rules).
 
 ### Phase D - Deterministic Decision Engine
 - [x] Establish one sovereign decision runtime in `packages/core-engine` for all meaningful coaching decisions.

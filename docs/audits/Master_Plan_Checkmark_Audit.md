@@ -1,6 +1,6 @@
 # Master Plan Checkmark Audit - Adaptive Coaching Rebuild
 
-Last audited: 2026-03-11
+Last audited: 2026-03-16
 
 Status legend:
 - VERIFIED
@@ -24,9 +24,9 @@ Status legend:
 | Ingestion quality report | Metrics for invalid sessions/missing fields are generated | VERIFIED | `importers/ingestion_quality_report.py`, `docs/validation/ingestion_quality_report.json` |
 | Full extraction policy | CI/local ingestion mode policy is documented and scripted | PARTIAL | `docs/guides/FULL_EXTRACTION_RUNBOOK.md`, `scripts/reference_ingest.sh`, `scripts/verify_guides_checksums.py` |
 | Full extraction artifact quality | All guides have non-empty extracted content | NOT VERIFIED | `scripts/reference_ingest.sh local-full` currently fails on `reference/My-Favorite-Exercise-for-Each-Body-Part.pdf` |
-| Canonical schema completeness | Program/catalog/rules/user-state schemas are finalized and enforced | PARTIAL | `docs/contracts/Canonical_Program_Schema.md`, `docs/redesign/Adaptive_Coaching_Redesign.md`, `apps/api/app/adaptive_schema.py`, `apps/api/tests/test_adaptive_gold_schema_contract.py`, `apps/api/tests/test_user_training_state_schema_contract.py`, `apps/api/tests/test_program_onboarding_contract.py`, `apps/api/tests/test_xlsx_to_program_v2.py`, `apps/api/tests/test_pdf_doctrine_rules_v1.py`, `scripts/mini_validate.sh` |
-| Gold sample baseline | One manually validated sample template + rules exists | PARTIAL | `programs/gold/adaptive_full_body_gold_v0_1.json`, `docs/rules/gold/adaptive_full_body_gold_v0_1.rules.json` |
-| Real Phase 1 workbook import fidelity | Source pipeline can parse the real workbook into 10 weeks / 5 authored days with workbook-backed exercise ids | PARTIAL | `importers/xlsx_to_program.py`, `apps/api/tests/test_xlsx_to_onboarding_v2.py`, `apps/api/tests/test_xlsx_to_program_v2.py` |
+| Canonical schema completeness | Program/catalog/rules/user-state schemas are finalized and enforced | VERIFIED | `docs/contracts/Canonical_Program_Schema.md`, `docs/redesign/Adaptive_Coaching_Redesign.md`, `apps/api/app/adaptive_schema.py`, `apps/api/tests/test_adaptive_gold_schema_contract.py`, `apps/api/tests/test_user_training_state_schema_contract.py`, `apps/api/tests/test_program_onboarding_contract.py`, `apps/api/tests/test_xlsx_to_program_v2.py`, `apps/api/tests/test_pdf_doctrine_rules_v1.py`, `apps/api/tests/test_schema_validation.py`, `scripts/mini_validate.sh` |
+| Gold sample baseline | One manually validated sample template + rules exists; Phase 1 program is the active administered gold sample | VERIFIED | `programs/gold/adaptive_full_body_gold_v0_1.json`, `programs/gold/pure_bodybuilding_phase_1_full_body.json`, `docs/rules/gold/adaptive_full_body_gold_v0_1.rules.json` |
+| Real Phase 1 workbook import fidelity | Source pipeline can parse the real workbook into 10 weeks / 5 authored days with workbook-backed exercise ids | VERIFIED | `importers/xlsx_to_program.py`, `importers/xlsx_to_canonical_v2.py`, `importers/xlsx_to_program_v2.py`, `apps/api/tests/test_xlsx_to_onboarding_v2.py`, `apps/api/tests/test_xlsx_to_program_v2.py` |
 | Adaptation preview API | Deterministic frequency adaptation supports 2/3/4/5 day targets | VERIFIED | `apps/api/app/routers/plan.py`, `apps/api/tests/test_program_frequency_adaptation_api.py`, `packages/core-engine/tests/test_onboarding_adaptation.py` |
 | Adaptation apply runtime integration | Temporary frequency reductions are applied by generation path with deterministic countdown | VERIFIED | `apps/api/app/routers/plan.py`, `apps/api/alembic/versions/0011_user_active_frequency_adaptation.py`, `apps/api/tests/test_program_frequency_adaptation_api.py`, `apps/web/app/settings/page.tsx` |
 | Weak-area persistence | User weak areas are stored and returned via profile API | VERIFIED | `apps/api/app/models.py`, `apps/api/app/routers/profile.py`, `apps/api/alembic/versions/0010_user_weak_areas.py` |

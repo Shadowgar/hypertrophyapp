@@ -317,6 +317,7 @@ export default function TodayPage() {
   const [lastSetByExercise, setLastSetByExercise] = useState<Record<string, { reps: number; weight: number }>>({});
   const hasAutoLoadStarted = useRef(false);
   const isBeginWorkoutLoadInProgress = useRef(false);
+  const sorenessDismissedThisSession = useRef(false);
 
   async function loadWorkoutSummary(workoutId: string) {
     try {
@@ -451,6 +452,9 @@ export default function TodayPage() {
         return;
       }
 
+      if (sorenessDismissedThisSession.current) {
+        return;
+      }
       const entriesToday = await api.listSoreness(today, today);
       if (entriesToday.length > 0) {
         return;
@@ -1012,6 +1016,7 @@ export default function TodayPage() {
               <Button
                 className="w-full"
                 onClick={async () => {
+                  sorenessDismissedThisSession.current = true;
                   setShowSorenessModal(false);
                   await loadToday();
                 }}

@@ -21,7 +21,14 @@ Current product order for active implementation is:
 
 ## Latest Completed Slice
 
-- Completed canonical-path hardening and branch-truth cleanup for the administered Phase 1 flow:
+- Completed first browser dogfood run (2026-03-16):
+  - Full loop verified via Docker Compose at localhost:18080: register → onboarding (Phase 1 program) → auto-generate week → load today → log set → weekly review → generate next week → history
+  - Coaching engine produced real adaptive output: readiness 65, `progressive_overload_ready`, volume shift -1, load scale 0.931
+  - Four non-blocking UX issues logged in `DOGFOOD_PHASE1_CHECKLIST.md`: uniform starting loads, soreness form re-trigger, bottom nav z-index, check-in nav from overlay
+  - Phase C build tools (schema validation, importer v2, PDF-to-rules v2) implemented and verified
+  - Master_Plan Phase B/C checkboxes updated; audit items promoted to VERIFIED
+
+- Prior slice — completed canonical-path hardening and branch-truth cleanup for the administered Phase 1 flow:
   - active API/web runtime path remains canonical on `pure_bodybuilding_phase_1_full_body` across onboarding, generated week, today/log-set, check-in/review, and history surfaces
   - path-facing API/web tests, fixtures, and snapshots now use `pure_bodybuilding_phase_1_full_body` as the default administered path
   - loader runtime-source resolution now prefers the canonical Phase 1 template source directly and keeps legacy source IDs as compatibility fallbacks only
@@ -37,30 +44,36 @@ Current product order for active implementation is:
 
 ## Next Recommended Action
 
-- Execute repeated browser dogfooding on the canonical Phase 1 loop using `/profile/dev/reset-phase1`, and fix only blockers found in onboarding -> generate-week -> today/log-set -> check-in/review -> history -> adaptation/regenerate continuity.
+- Run real training weeks through the app (Phase 3 Internal Dogfooding). The canonical Phase 1 path has been verified via API smoke tests and one simulated loop; the next step is repeated real use to surface coaching-decision quality issues.
 - Keep compatibility aliases explicit at boundaries, and keep broader architecture/generalization work downstream unless directly blocking canonical-path reliability.
 
 ## Next Tasks (task rail)
 
 Use this ordered list as the single source of "what to do next." Complete one task before moving to the next; update this section when priorities change.
 
-1. **Dogfood Phase 1 path (desktop + mobile)**  
-   Goal: Run the full loop (reset-phase1 → generate-week → today → log sets → check-in → review → history → adaptation apply → regenerate-week) in the browser; note blockers.  
-   Files: `docs/implementation/DOGFOOD_PHASE1_CHECKLIST.md`.  
-   Validation: Manual; complete checklist at least once on desktop and once on mobile/viewport resize.  
-   Done when: Loop completed; blockers (if any) listed with steps-to-reproduce for follow-up.
+1. ~~**Dogfood Phase 1 path (desktop + mobile)**~~ DONE — Simulated loop completed 2026-03-16; API smoke test green; 4 failing tests corrected. See `docs/implementation/DOGFOOD_PHASE1_CHECKLIST.md`.
 
-2. **Fix dogfood blockers (if any)**  
-   Goal: Address only issues that block completing the canonical path.  
-   Files: Determined by Step 1 (e.g. `apps/web/app/today/page.tsx`, `apps/api/app/routers/workout.py`).  
-   Validation: `./scripts/mini_validate.sh`; re-run dogfood checklist.  
-   Done when: No blocking bugs; mini_validate green.
+2. ~~**Fix dogfood blockers**~~ DONE — Test assertion mismatches fixed (progression guidance hold-load, starting-load rounding, exercise name hyphen). All API tests green.
 
-3. **Optional: Targeted E2E or visual test**  
-   Goal: Only if dogfooding showed flakiness; add one high-signal test covering reset → generate-week → today load → one log-set.  
-   Files: `apps/web/tests/` or new E2E dir; reference `apps/api/tests/test_phase1_canonical_path_smoke.py`.  
-   Validation: New test green in CI or `./scripts/mini_validate.sh`.  
-   Done when: Test passes and covers critical path.
+3. ~~**Phase C build tools**~~ DONE — Schema validation (`apps/api/tests/test_schema_validation.py`), importer v2 (`importers/xlsx_to_canonical_v2.py`), PDF-to-rules v2 (`importers/pdf_doctrine_rules_v2.py`) implemented and verified.
+
+4. **Real-use dogfooding (Phase 3 exit criteria)**
+   Goal: Run actual training weeks (not simulated) through the gold path; identify coaching-decision quality issues with trace-backed reproduction data.
+   Files: `docs/implementation/DOGFOOD_PHASE1_CHECKLIST.md`, `docs/ROADMAP_MASTER_DEVELOPMENT_PLAN.md` § Phase 3.
+   Validation: Manual; repeated real training cycles without engineering intervention.
+   Done when: Creator can complete multiple training weeks; observed issues captured with decision-trace evidence.
+
+5. **Activate Phase 2 program path (Wave 5)**
+   Goal: Add a second program template through the full gold-path flow.
+   Files: `programs/gold/`, `apps/api/app/program_loader.py`, `packages/core-engine/core_engine/generation.py`.
+   Validation: API smoke test for Phase 2 program; generate-week → today → log-set continuity.
+   Done when: Two programs can be administered through the canonical path.
+
+6. **Progression continuity across frequency windows (Wave 5)**
+   Goal: Verify load/set progression state carries correctly across 5→3→5 frequency changes.
+   Files: `packages/core-engine/core_engine/decision_progression.py`, `apps/api/tests/test_program_frequency_adaptation_api.py`.
+   Validation: Focused test proving state continuity.
+   Done when: Frequency compress/rejoin preserves exercise progression history.
 
 ## Done: Today Page Redesign
 

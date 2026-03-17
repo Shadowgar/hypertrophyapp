@@ -1,5 +1,7 @@
 # Gold Path Tier 4A with Path-Scoped Sovereignty
 
+Last assessed: 2026-03-16
+
 ## Purpose
 
 This document defines the next concrete milestone for the repo:
@@ -16,7 +18,7 @@ The gold path reaches Tier 4A with path-scoped sovereignty only when all require
 
 ## Required Conditions
 
-### 1. No Gold-Path Authority in `intelligence.py`
+### 1. No Gold-Path Authority in `intelligence.py` — SUBSTANTIALLY MET
 
 For gold-path flows:
 
@@ -24,7 +26,9 @@ For gold-path flows:
 - it may normalize, adapt, and forward
 - it may not change coaching meaning
 
-### 2. Preview / Apply Unification
+Status: `intelligence.py` retains only compatibility wrappers for workout, weekly-review, coach-preview, frequency-adaptation, and program-recommendation families. All real authority lives in dedicated `decision_*.py` modules. Remaining risk: compatibility-hub drift if wrappers accumulate unchecked.
+
+### 2. Preview / Apply Unification — SUBSTANTIALLY MET
 
 For the gold path:
 
@@ -32,7 +36,9 @@ For the gold path:
 - they must share the same decision-family authority model
 - they must share compatible trace semantics
 
-### 3. Structural Fidelity Gap List Is Current
+Status: Coach-preview and coach-apply share `decision_coach_preview.py` authority. Frequency-adaptation preview/apply share `decision_frequency_adaptation.py`. Trace semantics are compatible.
+
+### 3. Structural Fidelity Gap List Is Current — MET
 
 The gold path must have a current, branch-accurate structural fidelity gap list that tracks:
 
@@ -42,7 +48,9 @@ The gold path must have a current, branch-accurate structural fidelity gap list 
 - sequence state
 - post-sequence behavior
 
-### 4. Doctrinal Fidelity Gap List Is Current
+Status: Gold sample covers 5-day authored source (Full Body #1-#4 + Arms & Weak Points), 10-week mesocycle, day roles, post-sequence `phase_transition_pending` behavior. Tracked in `Master_Plan_Checkmark_Audit.md`.
+
+### 4. Doctrinal Fidelity Gap List Is Current — PARTIAL
 
 The gold path must have a current, branch-accurate doctrinal fidelity gap list that tracks:
 
@@ -53,7 +61,9 @@ The gold path must have a current, branch-accurate doctrinal fidelity gap list t
 - progression meaning
 - compression philosophy
 
-### 5. Explanation Classification Is Implemented
+Status: Weak-point doctrine, progression meaning, and compression philosophy are verified. Effort model (RPE/RIR), Early/Last Set semantics, and intensity-technique semantics have rule-set foundations but lack focused behavioral verification tests. See `docs/audits/2026-03-12-tier4a-doctrinal-fidelity-gaps.md`.
+
+### 5. Explanation Classification Is Implemented — NOT MET
 
 Gold-path surfaces must classify user-visible explanation-like text as:
 
@@ -63,7 +73,9 @@ Gold-path surfaces must classify user-visible explanation-like text as:
 
 No ambiguous explanation text is allowed on first-class gold-path surfaces.
 
-### 6. Valid Decision Traces
+Status: Decision traces carry structured rationale, but UI surfaces do not yet systematically classify explanation text into these three tiers.
+
+### 6. Valid Decision Traces — SUBSTANTIALLY MET
 
 Gold-path authoritative coaching decisions must emit valid and sufficiently complete traces.
 
@@ -74,13 +86,17 @@ Trace completeness must be strong enough to audit:
 - which execution steps transformed the outcome
 - why the outcome happened
 
-### 7. No Semantically Insufficient Artifacts
+Status: All gold-path decision families emit structured `decision_trace` with version, steps, and reason codes. Coverage is strong for generation, progression, weekly-review, and coach-preview. Workout log-set traces exist but depth varies.
+
+### 7. No Semantically Insufficient Artifacts — PARTIAL
 
 No semantically insufficient artifact may drive a first-class gold-path claim.
 
 If an artifact is structurally valid but doctrinally insufficient for the visible behavior it drives, the gold path cannot reach Tier 4A.
 
-### 8. Felt Behavior Audit
+Status: Gold program template and rule set are doctrinally grounded. Schema validation tests enforce structural correctness. Remaining gap: some rule-set entries lack provenance links to specific source sections.
+
+### 8. Felt Behavior Audit — NOT YET VERIFIED
 
 The gold path must pass a felt-behavior audit confirming that:
 
@@ -90,7 +106,9 @@ The gold path must pass a felt-behavior audit confirming that:
 - progression and deload behavior feel justified
 - compression preserves intent rather than merely compressing volume
 
-### 9. Correct Bounded-Trust Labeling
+Status: API-level behavior is verified through focused tests. Real-use felt-behavior audit requires actual training cycles (Phase 3 dogfooding). Initial audit at `docs/audits/2026-03-12-tier4a-felt-behavior-audit.md`.
+
+### 9. Correct Bounded-Trust Labeling — PARTIAL
 
 The gold path must be described with bounded-trust language appropriate to Tier 4A.
 
@@ -101,7 +119,9 @@ That labeling must be reflected in:
 - test names where relevant
 - product or feature descriptions
 
-### 10. No Shadow Authority
+Status: Docs and roadmap use bounded-trust language. Test names use `gold` prefix convention. UI surfaces do not yet carry explicit trust-tier labels.
+
+### 10. No Shadow Authority — SUBSTANTIALLY MET
 
 The gold path may not contain any shadow-authority seam that changes outcomes or user understanding.
 
@@ -111,6 +131,8 @@ That includes:
 - scheduler-local doctrine invention
 - UI humanization that sounds causal without trace support
 - summary text that implies rationale without rationale
+
+Status: Decision-family decomposition has removed coaching authority from `intelligence.py`. Scheduler consumes canonical rules. UI humanization risk remains in descriptive text on workout/review surfaces but is bounded by trace-backed data.
 
 ## What This Milestone Allows
 
