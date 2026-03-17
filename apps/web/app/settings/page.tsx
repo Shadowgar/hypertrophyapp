@@ -78,9 +78,30 @@ export default function SettingsPage() {
   async function saveProfileTraining() {
     setStatus("Saving training settings...");
     try {
+      if (!profile) {
+        setStatus("Profile not loaded yet.");
+        return;
+      }
       const updated = await api.updateProfile({
+        name: profile.name,
+        age: profile.age,
+        weight: profile.weight,
+        gender: profile.gender,
+        split_preference: profile.split_preference,
+        selected_program_id: profile.selected_program_id,
         training_location: editTrainingLocation,
         equipment_profile: editEquipment,
+        weak_areas: profile.weak_areas ?? [],
+        onboarding_answers: profile.onboarding_answers ?? {},
+        days_available: profile.days_available,
+        session_time_budget_minutes: profile.session_time_budget_minutes ?? null,
+        movement_restrictions: profile.movement_restrictions ?? [],
+        near_failure_tolerance: profile.near_failure_tolerance ?? null,
+        nutrition_phase: profile.nutrition_phase,
+        calories: profile.calories,
+        protein: profile.protein,
+        fat: profile.fat,
+        carbs: profile.carbs,
       });
       setProfile(updated);
       setStatus("Training settings saved.");
