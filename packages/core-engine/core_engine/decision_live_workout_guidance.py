@@ -247,6 +247,12 @@ def recommend_live_workout_adjustment(
         recommended_weight = round(max(2.0, last_weight), 2)
     else:
         recommended_weight = _round_to_microload(last_weight * _bounded_in_session_weight_scale(scale))
+
+    # Guardrail: for standard rep-range lifts, once the lifter has
+    # reached or exceeded the top of the programmed rep range, do not
+    # recommend a lower load for the remaining working sets.
+    if last_reps >= planned_reps_max and recommended_weight < last_weight:
+        recommended_weight = round(max(2.0, last_weight), 2)
     guidance_rationale = _workout_guidance_rationale(guidance, rule_set=rule_set)
     decision_trace = {
         "interpreter": "recommend_live_workout_adjustment",

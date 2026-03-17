@@ -12,6 +12,14 @@ def compute_warmups(
     warmup_count: int = 3,
     rounding_rules: dict[str, float] | None = None,
 ) -> list[float]:
+    """
+    Compute warm-up weights from planned working weight only.
+
+    Ladders (percent of working weight):
+    - 1 set: [0.60]
+    - 2 sets: [0.50, 0.70]
+    - 3 sets: [0.45, 0.65, 0.85]
+    """
     if warmup_count <= 0 or working_weight <= 0:
         return []
 
@@ -19,15 +27,18 @@ def compute_warmups(
     increment = rounding_rules.get("increment", 0.5)
     minimum = rounding_rules.get("minimum", 2.0)
 
-    base_steps = [0.45, 0.65, 0.82, 0.9]
-    selected = base_steps[:warmup_count]
-    if len(selected) < warmup_count:
-        extra = [0.92 + (i * 0.02) for i in range(warmup_count - len(selected))]
-        selected.extend(extra)
+    if warmup_count == 1:
+        steps = [0.60]
+    elif warmup_count == 2:
+        steps = [0.50, 0.70]
+    else:
+        # Phase 1 doctrine uses at most 3 warm-ups; for higher counts,
+        # repeat the 3-set ladder.
+        steps = [0.45, 0.65, 0.85][: warmup_count]
 
     warmups: list[float] = []
-    for pct in selected:
+    for pct in steps:
         raw = max(minimum, floor(working_weight * pct))
         warmups.append(max(minimum, _round_to_increment(raw, increment)))
 
-    return sorted(dict.fromkeys(warmups))
+    return warmups

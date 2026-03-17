@@ -903,13 +903,20 @@ export default function TodayPage() {
               const done = completed >= exercise.sets;
               const baseline = baselineByExercise[exercise.id];
               const lastSet = lastSetByExercise[exercise.id];
-              const fallbackLb = kgToLbs(exercise.recommended_working_weight);
+              const live = liveRecommendationByExercise[exercise.id];
+              const plannedWorkingLb = kgToLbs(exercise.recommended_working_weight);
+              const baselineWorkingLb =
+                baseline != null ? baseline.workingWeightLb : plannedWorkingLb;
+              // Authoritative row working weight:
+              // 1) backend live recommendation
+              // 2) planned working weight
+              // 3) baseline estimate only before first working set
               const rowWorkingLb =
-                lastSet != null
-                  ? workingWeightFrom1RMLb(epleyEstimate1RMLbs(lastSet.weight, lastSet.reps))
-                  : baseline != null
-                    ? baseline.workingWeightLb
-                    : fallbackLb;
+                live && typeof live.recommended_weight === "number"
+                  ? kgToLbs(live.recommended_weight)
+                  : completed === 0
+                    ? baselineWorkingLb
+                    : plannedWorkingLb;
               return (
                 <li key={exercise.id}>
                   <button
@@ -966,12 +973,19 @@ export default function TodayPage() {
         const warmUpCount = Math.max(0, parseInt(String(exercise.warm_up_sets ?? "0"), 10) || 0);
         const baseline = baselineByExercise[exercise.id];
         const lastSet = lastSetByExercise[exercise.id];
+        const plannedWorkingLb = kgToLbs(exercise.recommended_working_weight);
+        const baselineWorkingLb =
+          baseline != null ? baseline.workingWeightLb : plannedWorkingLb;
+        // Authoritative working weight for this set:
+        // 1) backend live recommendation
+        // 2) planned working weight
+        // 3) baseline estimate only before first working set
         const derivedWorkingLb =
-          lastSet != null
-            ? workingWeightFrom1RMLb(epleyEstimate1RMLbs(lastSet.weight, lastSet.reps))
-            : baseline != null
-              ? baseline.workingWeightLb
-              : kgToLbs(exercise.recommended_working_weight);
+          recommendation && typeof recommendation.recommended_weight === "number"
+            ? kgToLbs(recommendation.recommended_weight)
+            : completed === 0
+              ? baselineWorkingLb
+              : plannedWorkingLb;
         let doThisSetLine: string;
         if (recommendation) {
           const guidance = resolveGuidanceText(recommendation.guidance_rationale, recommendation.guidance);
