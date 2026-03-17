@@ -83,6 +83,7 @@ test("Today page loads workout and shows exercises", async () => {
   expect(screen.getByText(/Arms & Weak Points/i)).toBeInTheDocument();
   expect(screen.getByRole("button", { name: /Bayesian Curl/i })).toBeInTheDocument();
   expect(screen.getByText(/8-12 reps/)).toBeInTheDocument();
+  // Row shows derived working weight; without baseline or prior sets this falls back to recommended weight.
   expect(screen.getByText(/~38\.6 lb/)).toBeInTheDocument();
 
   // No detail overlay when no exercise is selected

@@ -47,20 +47,47 @@ export default function SettingsPage() {
   const [previewLaggingMuscles, setPreviewLaggingMuscles] = useState<string>("biceps, shoulders");
   const [applyRecommendationId, setApplyRecommendationId] = useState<string>("");
   const [applyStatus, setApplyStatus] = useState<string | null>(null);
+  const [editTrainingLocation, setEditTrainingLocation] = useState<string>("gym");
+  const [editEquipment, setEditEquipment] = useState<string[]>([]);
 
   useEffect(() => {
     let mounted = true;
-    api.getProfile()
+    api
+      .getProfile()
       .then((data) => {
         if (!mounted) return;
         setProfile(data);
         setPreviewFromDays(Math.max(2, Math.min(7, data.days_available || 5)));
         setPreviewToDays(Math.max(2, Math.min(7, Math.min(data.days_available || 5, 3))));
+        setEditTrainingLocation(data.training_location ?? "gym");
+        setEditEquipment(Array.isArray(data.equipment_profile) ? data.equipment_profile : []);
       })
       .catch(() => setProfile(null));
 
-    return () => { mounted = false };
+    return () => {
+      mounted = false;
+    };
   }, []);
+
+  function toggleEquipmentTag(tag: string) {
+    setEditEquipment((prev) =>
+      prev.includes(tag) ? prev.filter((item) => item !== tag) : [...prev, tag],
+    );
+  }
+
+  async function saveProfileTraining() {
+    setStatus("Saving training settings...");
+    try {
+      const updated = await api.updateProfile({
+        training_location: editTrainingLocation,
+        equipment_profile: editEquipment,
+      });
+      setProfile(updated);
+      setStatus("Training settings saved.");
+    } catch {
+      setStatus("Failed to save training settings.");
+    }
+  }
 
   async function generateCoachPreview() {
     setCoachStatus("Generating preview...");
@@ -207,16 +234,59 @@ export default function SettingsPage() {
       </div>
 
       <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-2">
-        <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Profile</p>
-        <div className="grid grid-cols-2 gap-2 text-sm text-zinc-200">
+        <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Training setup</p>
+        <p className="text-xs text-zinc-400">
+          Tell the coach where you train and what equipment you have. This shapes substitutions and exercise choices.
+        </p>
+        <div className="mt-2 space-y-3 text-sm text-zinc-200">
           <div>
-            <p className="text-xs text-zinc-500">Training Location</p>
-            <p>{profile?.training_location ?? "not set"}</p>
+            <label htmlFor="training-location" className="text-xs text-zinc-500">
+              Training location
+            </label>
+            <select
+              id="training-location"
+              className="ui-select mt-1"
+              value={editTrainingLocation}
+              onChange={(e) => setEditTrainingLocation(e.target.value)}
+            >
+              <option value="gym">Commercial gym</option>
+              <option value="home">Home gym</option>
+              <option value="limited">Limited equipment</option>
+            </select>
           </div>
           <div>
-            <p className="text-xs text-zinc-500">Equipment</p>
-            <p>{(profile?.equipment_profile ?? []).join(", ") || "not set"}</p>
+            <p className="text-xs text-zinc-500 mb-1">Equipment you have</p>
+            <div className="flex flex-wrap gap-1.5">
+              {["barbell", "bench", "dumbbell", "cable", "machine", "bands"].map((tag) => {
+                const active = editEquipment.includes(tag);
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    className={`rounded-full border px-2 py-0.5 text-[11px] ${
+                      active
+                        ? "border-red-400 bg-red-500/20 text-red-100"
+                        : "border-zinc-700 bg-zinc-900 text-zinc-300"
+                    }`}
+                    onClick={() => toggleEquipmentTag(tag)}
+                  >
+                    {tag}
+                  </button>
+                );
+              })}
+            </div>
           </div>
+          <div className="flex items-center justify-between text-xs text-zinc-500">
+            <span>
+              Current:{" "}
+              {profile
+                ? `${profile.training_location ?? "not set"} · ${(profile.equipment_profile ?? []).join(", ") || "no equipment set"}`
+                : "loading..."}
+            </span>
+          </div>
+          <Button type="button" variant="secondary" className="w-full" onClick={saveProfileTraining}>
+            Save training settings
+          </Button>
         </div>
       </div>
 
@@ -227,12 +297,22 @@ export default function SettingsPage() {
 
       <Disclosure title="Coaching Preview" badge="power user" defaultOpen={false}>
         <div className="space-y-3 text-xs text-zinc-300">
+          <p className="text-xs text-zinc-400">
+            This sandbox lets you ask, &quot;What would the coach do if I changed my schedule or phase?&quot; It does not
+            change your plan until you apply a decision.
+          </p>
           <div className="grid grid-cols-2 gap-2">
-            <label htmlFor="preview-from-days" className="ui-meta">From Days</label>
+            <label htmlFor="preview-from-days" className="ui-meta">
+              From days (your current schedule)
+            </label>
             <input id="preview-from-days" className="ui-input" type="number" min={2} max={7} value={previewFromDays} onChange={(e) => setPreviewFromDays(Math.max(2, Math.min(7, Number(e.target.value) || 2)))} />
-            <label htmlFor="preview-to-days" className="ui-meta">To Days</label>
+            <label htmlFor="preview-to-days" className="ui-meta">
+              To days (the schedule you&apos;re testing)
+            </label>
             <input id="preview-to-days" className="ui-input" type="number" min={2} max={7} value={previewToDays} onChange={(e) => setPreviewToDays(Math.max(2, Math.min(7, Number(e.target.value) || 2)))} />
-            <label htmlFor="preview-phase" className="ui-meta">Current Phase</label>
+            <label htmlFor="preview-phase" className="ui-meta">
+              Current phase (how hard you&apos;re pushing)
+            </label>
             <select id="preview-phase" className="ui-select" value={previewPhase} onChange={(e) => setPreviewPhase(e.target.value as "accumulation" | "intensification" | "deload")}>
               <option value="accumulation">Accumulation</option>
               <option value="intensification">Intensification</option>
@@ -250,7 +330,14 @@ export default function SettingsPage() {
           <input id="preview-lagging" className="ui-input" value={previewLaggingMuscles} onChange={(e) => setPreviewLaggingMuscles(e.target.value)} />
           <label htmlFor="preview-duration" className="ui-meta">Temporary Duration (weeks)</label>
           <input id="preview-duration" className="ui-input" type="number" min={1} max={12} value={previewDurationWeeks} onChange={(e) => setPreviewDurationWeeks(Math.max(1, Math.min(12, Number(e.target.value) || 1)))} />
-          <Button aria-label="Generate coaching preview" variant="secondary" className="w-full" onClick={generateCoachPreview}>Generate Coaching Preview</Button>
+          <Button
+            aria-label="Generate coaching preview"
+            variant="secondary"
+            className="w-full"
+            onClick={generateCoachPreview}
+          >
+            Generate coaching preview (what would the coach suggest?)
+          </Button>
           {coachStatus ? <p className="text-xs text-zinc-400">{coachStatus}</p> : null}
           {coachPreview ? (
             <div className="rounded-md border border-zinc-800 p-2 space-y-1">

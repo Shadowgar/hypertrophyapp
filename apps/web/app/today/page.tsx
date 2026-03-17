@@ -901,6 +901,15 @@ export default function TodayPage() {
               const selectedName = resolveExerciseName(exercise, swapIndexByExercise);
               const completed = completedSetsByExercise[exercise.id] ?? 0;
               const done = completed >= exercise.sets;
+              const baseline = baselineByExercise[exercise.id];
+              const lastSet = lastSetByExercise[exercise.id];
+              const fallbackLb = kgToLbs(exercise.recommended_working_weight);
+              const rowWorkingLb =
+                lastSet != null
+                  ? workingWeightFrom1RMLb(epleyEstimate1RMLbs(lastSet.weight, lastSet.reps))
+                  : baseline != null
+                    ? baseline.workingWeightLb
+                    : fallbackLb;
               return (
                 <li key={exercise.id}>
                   <button
@@ -927,7 +936,7 @@ export default function TodayPage() {
                     <div className="mt-1 flex items-center gap-2 text-xs text-zinc-500">
                       <span>{exercise.rep_range[0]}-{exercise.rep_range[1]} reps</span>
                       <span className="text-zinc-700">·</span>
-                      <span>~{kgToLbs(exercise.recommended_working_weight)} lb</span>
+                      <span>~{rowWorkingLb} lb</span>
                     </div>
                   </button>
                 </li>
