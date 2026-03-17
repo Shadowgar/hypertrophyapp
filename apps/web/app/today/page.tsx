@@ -276,6 +276,7 @@ function ExerciseDetailOverlay({
   substitutions,
   notesOpen,
   isDeloadWeek,
+  onUndoLastSet,
   onClose,
   onSwap,
   onToggleNotes,
@@ -300,6 +301,7 @@ function ExerciseDetailOverlay({
   mediaUrl: string | null;
   substitutions: string[];
   notesOpen: boolean;
+  onUndoLastSet?: () => void;
   onClose: () => void;
   onSwap: (exerciseId: string, index: number) => void;
   onToggleNotes: () => void;
@@ -390,7 +392,7 @@ function ExerciseDetailOverlay({
         <SetInputCard exerciseId={exercise.id} guidanceLine={doThisSetLine} ctrl={ctrl} />
 
         {/* == ZONE 4: Set log (per-set logged values) == */}
-        <SetLogDisplay ctrl={ctrl} />
+        <SetLogDisplay ctrl={ctrl} onUndoLastSet={onUndoLastSet} />
 
         {/* == ZONE 5: Set progress == */}
         <SetProgressTimeline exerciseId={exercise.id} ctrl={ctrl} />
@@ -1008,6 +1010,39 @@ export default function TodayPage() {
         const hasWarmup = warmUpCount > 0 && warmupLbs.length > 0;
         const hasCoachingDetails = !!(exercise.last_set_intensity_technique || exercise.rest || exercise.early_set_rpe || exercise.last_set_rpe);
 
+        const handleUndoLastSet =
+          completed > 0
+            ? async () => {
+                try {
+                  await api.undoLastSet(workout.session_id, exercise.id);
+                  // Clear local last-set hint so UI falls back to authoritative weight.
+                  setLastSetByExercise((prev) => {
+                    const next = { ...prev };
+                    delete next[exercise.id];
+                    return next;
+                  });
+                  // Refresh progress to resync completed-set counts.
+                  const progress = await api.getWorkoutProgress(workout.session_id);
+                  const serverCompleted = Object.fromEntries(
+                    (progress.exercises ?? []).map((item) => [item.exercise_id, Number(item.completed_sets) || 0]),
+                  ) as Record<string, number>;
+                  if (Object.keys(serverCompleted).length > 0) {
+                    setCompletedSetsByExercise(serverCompleted);
+                    const percent = Number(progress.percent_complete) || 0;
+                    setWorkoutProgress({
+                      completed: Number(progress.completed_total) || 0,
+                      planned: Number(progress.planned_total) || 0,
+                      percent,
+                    });
+                    const completedKey = `hypertrophy_completed_sets:${workout.session_id}`;
+                    localStorage.setItem(completedKey, JSON.stringify(serverCompleted));
+                  }
+                } catch {
+                  // best-effort: keep existing UI state on failure
+                }
+              }
+            : undefined;
+
         return (
           <ExerciseDetailOverlay
             exercise={exercise}
@@ -1028,6 +1063,7 @@ export default function TodayPage() {
             substitutions={substitutions}
             notesOpen={notesOpenByExercise[exercise.id] ?? false}
             isDeloadWeek={workout.deload?.active === true}
+            onUndoLastSet={handleUndoLastSet}
             onClose={() => setSelectedExerciseId(null)}
             onSwap={selectSwap}
             onToggleNotes={() => toggleNotes(exercise.id)}

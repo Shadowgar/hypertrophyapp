@@ -31,6 +31,7 @@ from ..schemas import (
     WorkoutSetLogRequest,
     WorkoutSetLogResponse,
     WorkoutSummaryResponse,
+    WorkoutUndoLastSetRequest,
 )
 from ..stoic_quotes import daily_stoic_quote
 
@@ -263,6 +264,105 @@ def log_set(
         live_recommendation=cast(dict, live_recommendation.model_dump()),
     )
     return WorkoutSetLogResponse(**cast(dict, response_runtime["response_payload"]))
+
+
+@router.post("/workout/{workout_id}/undo-last-set")
+def undo_last_set(
+    workout_id: str,
+    payload: WorkoutUndoLastSetRequest,
+    db: DbSession,
+    current_user: CurrentUser,
+) -> dict:
+    """
+    Remove the last logged set for a given exercise in this workout and
+    recompute the in-session state for that exercise.
+    """
+    logs = (
+        db.query(WorkoutSetLog)
+        .filter(
+            WorkoutSetLog.user_id == current_user.id,
+            WorkoutSetLog.workout_id == workout_id,
+            WorkoutSetLog.exercise_id == payload.exercise_id,
+        )
+        .order_by(WorkoutSetLog.set_index.asc(), WorkoutSetLog.created_at.asc())
+        .all()
+    )
+    if not logs:
+        # Nothing to undo; treat as successful no-op.
+        return {"status": "no_sets"}
+
+    # Delete the last-set log entry.
+    last_log = logs[-1]
+    db.delete(last_log)
+    db.flush()
+
+    # Rebuild session state for this exercise from remaining logs using the
+    # existing planned_* fields as the authoritative prescription.
+    state = (
+        db.query(WorkoutSessionState)
+        .filter(
+            WorkoutSessionState.user_id == current_user.id,
+            WorkoutSessionState.workout_id == workout_id,
+            WorkoutSessionState.exercise_id == payload.exercise_id,
+        )
+        .first()
+    )
+    if not state:
+        db.commit()
+        return {"status": "ok"}
+
+    from core_engine import resolve_workout_session_state_update  # local import to avoid cycle at module load
+
+    history: list[dict] = []
+    latest_reduction: dict | None = None
+
+    remaining_logs = [
+        log
+        for log in logs
+        if log.id != last_log.id
+    ]
+    for entry in remaining_logs:
+        latest_reduction = resolve_workout_session_state_update(
+            existing_set_history=history,
+            primary_exercise_id=state.primary_exercise_id,
+            planned_sets=state.planned_sets,
+            planned_reps_min=state.planned_reps_min,
+            planned_reps_max=state.planned_reps_max,
+            planned_weight=state.planned_weight,
+            set_index=entry.set_index,
+            reps=entry.reps,
+            weight=entry.weight,
+            substitution_recommendation=None,
+            rule_set=None,
+        )
+        history = list(latest_reduction["state"]["set_history"])
+
+    if latest_reduction is None:
+        # All sets were removed; reset state to defaults.
+        state.completed_sets = 0
+        state.total_logged_reps = 0
+        state.total_logged_weight = 0.0
+        state.set_history = []
+        state.remaining_sets = state.planned_sets
+        state.recommended_reps_min = state.planned_reps_min
+        state.recommended_reps_max = state.planned_reps_max
+        state.recommended_weight = state.planned_weight
+        state.last_guidance = "remaining_sets_hold_load_and_match_target_reps"
+    else:
+        reduced_state = latest_reduction["state"]
+        state.completed_sets = int(reduced_state["completed_sets"])
+        state.total_logged_reps = int(reduced_state["total_logged_reps"])
+        state.total_logged_weight = float(reduced_state["total_logged_weight"])
+        state.set_history = list(reduced_state["set_history"])
+        state.remaining_sets = int(reduced_state["remaining_sets"])
+        state.recommended_reps_min = int(reduced_state["recommended_reps_min"])
+        state.recommended_reps_max = int(reduced_state["recommended_reps_max"])
+        state.recommended_weight = float(reduced_state["recommended_weight"])
+        state.last_guidance = str(reduced_state["last_guidance"])
+
+    db.add(state)
+    db.commit()
+    return {"status": "ok"}
 
 
 @router.get("/workout/{workout_id}/progress")

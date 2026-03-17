@@ -113,6 +113,15 @@ export function useExerciseControl({
     startTimer();
   }, [actualWeightInput, actualReps, repRange, recommendedWorkingWeight, totalSets, onSetComplete, exerciseId, resetTimer, startTimer]);
 
+  const undoLastLoggedSet = useCallback(() => {
+    setLoggedSets((logs) => {
+      if (logs.length === 0) return logs;
+      const nextLogs = logs.slice(0, -1);
+      return nextLogs;
+    });
+    setCompletedSets((prev) => (prev > 0 ? prev - 1 : 0));
+  }, []);
+
   return {
     secondsLeft,
     restCycle,
@@ -124,6 +133,7 @@ export function useExerciseControl({
     actualWeightInput,
     setActualWeightInput,
     loggedSets,
+    undoLastLoggedSet,
     startTimer,
     stopTimer,
     resetTimer,
@@ -293,16 +303,32 @@ export function SetProgressTimeline({ exerciseId, ctrl }: SetProgressTimelinePro
 
 type SetLogDisplayProps = Readonly<{
   ctrl: ExerciseControlState;
+  onUndoLastSet?: () => void;
 }>;
 
-export function SetLogDisplay({ ctrl }: SetLogDisplayProps) {
+export function SetLogDisplay({ ctrl, onUndoLastSet }: SetLogDisplayProps) {
   if (ctrl.loggedSets.length === 0 && ctrl.completedSets === 0) {
     return null;
   }
 
   return (
     <div className="space-y-1.5">
-      <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Set Log</p>
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Set Log</p>
+        {onUndoLastSet && ctrl.completedSets > 0 ? (
+          <Button
+            type="button"
+            variant="ghost"
+            className="px-2 py-0.5 text-[11px] text-zinc-400 hover:text-red-300"
+            onClick={() => {
+              ctrl.undoLastLoggedSet();
+              onUndoLastSet();
+            }}
+          >
+            Undo Last Set
+          </Button>
+        ) : null}
+      </div>
       {ctrl.loggedSets.map((entry) => (
         <div
           key={`log-${entry.setIndex}`}

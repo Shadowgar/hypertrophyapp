@@ -919,4 +919,9 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  undoLastSet: (workoutId: string, exerciseId: string) =>
+    request<{ status: string }>(`/workout/${encodeURIComponent(workoutId)}/undo-last-set`, {
+      method: "POST",
+      body: JSON.stringify({ exercise_id: exerciseId }),
+    }),
 };

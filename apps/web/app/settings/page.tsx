@@ -94,9 +94,9 @@ export default function SettingsPage() {
         weak_areas: profile.weak_areas ?? [],
         onboarding_answers: profile.onboarding_answers ?? {},
         days_available: profile.days_available,
-        session_time_budget_minutes: profile.session_time_budget_minutes ?? null,
-        movement_restrictions: profile.movement_restrictions ?? [],
-        near_failure_tolerance: profile.near_failure_tolerance ?? null,
+        // The web Profile type does not currently surface session_time_budget_minutes
+        // or movement_restrictions/near_failure_tolerance; those are managed via
+        // onboarding and check-in flows, not this training-setup editor.
         nutrition_phase: profile.nutrition_phase,
         calories: profile.calories,
         protein: profile.protein,

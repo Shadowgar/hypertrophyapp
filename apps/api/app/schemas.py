@@ -66,6 +66,10 @@ class StatusResponse(BaseModel):
     status: str
 
 
+class WorkoutUndoLastSetRequest(BaseModel):
+    exercise_id: str
+
+
 class ProfileUpsert(BaseModel):
     name: str
     age: int
