@@ -693,3 +693,29 @@ def plan_generate_week(
     db.commit()
 
     return plan
+
+
+@router.get("/plan/latest-week")
+def plan_latest_week(
+    db: DbSession,
+    current_user: CurrentUser,
+) -> dict:
+    """
+    Return the most recent generated week plan for the current user.
+
+    This mirrors the shape of the /plan/generate-week response but does not
+    trigger a new generation.
+    """
+    latest_plan = (
+        db.query(WorkoutPlan)
+        .filter(WorkoutPlan.user_id == current_user.id)
+        .order_by(WorkoutPlan.created_at.desc())
+        .first()
+    )
+    if latest_plan is None:
+        raise HTTPException(status_code=404, detail="No plan generated")
+
+    payload = latest_plan.payload or {}
+    if not isinstance(payload, dict):
+        raise HTTPException(status_code=500, detail="Latest plan payload is invalid")
+    return payload

@@ -801,7 +801,12 @@ export const api = {
   getTodayWorkout: () => request<WorkoutSession>("/workout/today"),
   getWorkoutProgress: (workoutId: string) => request<WorkoutProgress>(`/workout/${encodeURIComponent(workoutId)}/progress`),
   getWorkoutSummary: (workoutId: string) => request<WorkoutSummary>(`/workout/${encodeURIComponent(workoutId)}/summary`),
-  generateWeek: (templateId?: string | null) => request<GeneratedWeekPlan>("/plan/generate-week", { method: "POST", body: JSON.stringify(templateId ? { template_id: templateId } : {}) }),
+  generateWeek: (templateId?: string | null) =>
+    request<GeneratedWeekPlan>("/plan/generate-week", {
+      method: "POST",
+      body: JSON.stringify(templateId ? { template_id: templateId } : {}),
+    }),
+  getLatestWeekPlan: () => request<GeneratedWeekPlan>("/plan/latest-week"),
   getProfile: () => request<Profile>("/profile"),
   listPrograms: () => request<ProgramTemplateOption[]>("/plan/programs"),
   listGuidePrograms: () => request<GuideProgram[]>("/plan/guides/programs"),

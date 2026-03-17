@@ -111,7 +111,14 @@ def _build_planned_exercise(
         stimulus_substitution_pressure=substitution_pressure,
         rule_set=rule_set,
     )
-    planned_sets = max(1, planned_sets + int(exercise_adjustment_runtime["set_delta"]))
+    authored_working = exercise.get("working_sets")
+    min_sets = 1
+    if authored_working is not None:
+        try:
+            min_sets = max(1, int(float(str(authored_working))))
+        except (TypeError, ValueError):
+            pass
+    planned_sets = max(min_sets, planned_sets + int(exercise_adjustment_runtime["set_delta"]))
     recommended = max(2.0, recommended * float(exercise_adjustment_runtime["load_scale"]))
     recommended = round(recommended / 0.5) * 0.5
     substitutions = exercise.get("substitution_candidates") or exercise.get("substitutions") or []

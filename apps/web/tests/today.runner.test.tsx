@@ -80,11 +80,10 @@ test("Today page loads workout and shows exercises", async () => {
 
   await waitFor(() => expect(screen.getAllByText(/Bayesian Curl/i).length).toBeGreaterThan(0));
 
-  // Simplified top: one line session title + progress
-  expect(screen.getByText(/Arms & Weak Points · 0\/0 sets/i)).toBeInTheDocument();
-  // Compact list: exercise name and prescription in tappable row
+  expect(screen.getByText(/Arms & Weak Points/i)).toBeInTheDocument();
   expect(screen.getByRole("button", { name: /Bayesian Curl/i })).toBeInTheDocument();
-  expect(screen.getByText(/0\/3 · 8-12 reps @ ~38\.6 lb \(adjust when logging\)/)).toBeInTheDocument();
+  expect(screen.getByText(/8-12 reps/)).toBeInTheDocument();
+  expect(screen.getByText(/~38\.6 lb/)).toBeInTheDocument();
 
   // No detail overlay when no exercise is selected
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();

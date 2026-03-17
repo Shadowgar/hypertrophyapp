@@ -156,43 +156,54 @@ test("Week page sends template_id when override selected", async () => {
 
   render(<WeekPage />);
 
-  await waitFor(() => expect(screen.getByLabelText(/Program override/i)).toBeInTheDocument());
-  expect(screen.getByRole("button", { name: /Generate First Week Now/i })).toBeInTheDocument();
+  await waitFor(() => expect(screen.getByRole("button", { name: /Generate week plan/i })).toBeInTheDocument());
 
-  const select = screen.getByLabelText(/Program override/i);
+  fireEvent.click(screen.getByRole("button", { name: /Program Override/i }));
+
+  await waitFor(() => expect(screen.getByLabelText(/Week program override selector/i)).toBeInTheDocument());
+
+  const select = screen.getByLabelText(/Week program override selector/i);
   fireEvent.change(select, { target: { value: "upper_lower" } });
 
   const btn = screen.getByRole("button", { name: /Generate Week/i });
   fireEvent.click(btn);
 
-  await waitFor(() => expect(screen.getByText(/Week Command Deck/i)).toBeInTheDocument());
+  await waitFor(() => expect(screen.getByText(/Week Overview/i)).toBeInTheDocument());
 
   expect(screen.getAllByText(/Upper Lower/i).length).toBeGreaterThan(0);
   expect(screen.getByText(/Coverage Radar/i)).toBeInTheDocument();
-  expect(
-    screen.getAllByText(
-      /Selected Upper\/Lower as the explicit template override and generated a four-day training week from canonical state\./i,
-    ).length,
-  ).toBeGreaterThan(0);
-  expect(screen.queryByText(/No rationale available\./i)).not.toBeInTheDocument();
   expect(screen.getByText(/Authored block: Week 1 · Adaptation/i)).toBeInTheDocument();
   expect(screen.getByText(/Arms & Weak Points emphasis is scheduled this week\./i)).toBeInTheDocument();
-  expect(screen.getByText(/Lead slot: Bench Press · 4 sets · 6-8 reps @ 181\.9 lbs/i)).toBeInTheDocument();
+  expect(screen.getByText(/Adaptive Review/i)).toBeInTheDocument();
+  expect(screen.getByText(/Frequency Adaptation/i)).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole("button", { name: /Generation Details/i }));
+  await waitFor(() => {
+    expect(
+      screen.getByText(
+        /Selected Upper\/Lower as the explicit template override and generated a four-day training week from canonical state\./i,
+      ),
+    ).toBeInTheDocument();
+  });
+  expect(screen.queryByText(/No rationale available\./i)).not.toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole("button", { name: /Day 1: Upper 1/i }));
+  await waitFor(() => {
+    expect(screen.getByText(/Lead: Bench Press/i)).toBeInTheDocument();
+  });
   expect(screen.getByText(/Early-set RPE: ~7-8/i)).toBeInTheDocument();
   expect(screen.getByText(/Last-set RPE: ~9/i)).toBeInTheDocument();
   expect(screen.getByText(/Technique: Long-length Partials/i)).toBeInTheDocument();
   expect(screen.getByText(/Rest: ~2-3 min/i)).toBeInTheDocument();
   expect(screen.getByText(/Authored substitutions: Machine Press \/ DB Bench Press/i)).toBeInTheDocument();
   expect(screen.getByRole("link", { name: /Demo link/i })).toHaveAttribute("href", "https://example.com/bench-video");
-  expect(screen.getByText(/Session intent: Arms & Weak Points/i)).toBeInTheDocument();
+  expect(screen.getByText(/Intent: Full Body 1/i)).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole("button", { name: /Day 2: Arms & Weak Points/i }));
+  await waitFor(() => {
+    expect(screen.getByText(/Intent: Arms & Weak Points/i)).toBeInTheDocument();
+  });
   expect(screen.queryByText(/Week 1 adaptation block/i)).not.toBeInTheDocument();
-  expect(
-    screen.getAllByText(
-      /Selected Upper\/Lower as the explicit template override and generated a four-day training week from canonical state\./i,
-    ).length,
-  ).toBeGreaterThan(1);
-  expect(screen.getByText(/Adaptive Review Carryover/i)).toBeInTheDocument();
-  expect(screen.getByText(/Frequency Adaptation Runtime/i)).toBeInTheDocument();
 
   await waitFor(() => {
     // @ts-ignore
@@ -302,7 +313,7 @@ test("Week page offers retry action after generation failure", async () => {
   await waitFor(() => {
     expect(screen.getByText(/Failed to generate week plan:/i)).toBeInTheDocument();
   });
-  fireEvent.click(screen.getByRole("button", { name: /Retry Generate Week/i }));
+  fireEvent.click(screen.getByRole("button", { name: /Generate week plan/i }));
 
   await waitFor(() => {
     expect(screen.getByText(/Week generated for Pure Bodybuilding - Phase 1 Full Body\./i)).toBeInTheDocument();

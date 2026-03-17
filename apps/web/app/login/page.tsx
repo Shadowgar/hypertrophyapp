@@ -96,6 +96,9 @@ export default function LoginPage() {
           </Link>
         </p>
       )}
+      <p className="mt-6 text-center text-[9px] text-zinc-600">
+        {process.env.NEXT_PUBLIC_APP_VERSION ?? "dev"}
+      </p>
     </div>
   );
 }

@@ -355,14 +355,14 @@ test("history page summarizes progression signals and coach queue", async () => 
   render(<HistoryPage />);
 
   await waitFor(() => {
-    expect(screen.getByText(/Progression Brief/i)).toBeInTheDocument();
+    expect(screen.getByText(/Progress Overview/i)).toBeInTheDocument();
   });
 
   expect(screen.getByText(/Latest rationale: Momentum is high\./i)).toBeInTheDocument();
   expect(screen.getAllByText(/bench_press/i).length).toBeGreaterThan(0);
   expect(screen.getAllByText(/PR 231\.5 lbs \(\+11 lbs\)/i).length).toBeGreaterThan(0);
   expect(screen.getAllByText(/\+3\.3 lbs/i).length).toBeGreaterThan(0);
-  expect(screen.getByText(/Coach Queue/i)).toBeInTheDocument();
+  expect(screen.getByText(/Upcoming Changes/i)).toBeInTheDocument();
   expect(screen.getAllByText(/1 pending/i).length).toBeGreaterThan(0);
   expect(screen.getByText(/Latest type: coach_preview/i)).toBeInTheDocument();
   expect(screen.getByText(/No calendar history yet\./i)).toBeInTheDocument();

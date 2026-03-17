@@ -43,9 +43,7 @@ test("Settings page shows active program and config in one-program-first mode", 
   render(<SettingsPage />);
 
   await waitFor(() => {
-    expect(screen.getByText(/Program Settings/i)).toBeInTheDocument();
+    expect(screen.getByText(/Pure Bodybuilding - Phase 1 Full Body/i)).toBeInTheDocument();
   });
-  expect(screen.getByText(/Active administered program/i)).toBeInTheDocument();
-  expect(screen.getByText(/Pure Bodybuilding - Phase 1 Full Body/i)).toBeInTheDocument();
   expect(screen.getByRole("button", { name: /Wipe Current User Data/i })).toBeInTheDocument();
 });

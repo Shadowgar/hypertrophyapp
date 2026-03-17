@@ -4,8 +4,15 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Disclosure } from "@/components/ui/disclosure";
 import { UiIcon } from "@/components/ui/icons";
-import ExerciseControlModule from "@/components/exercise-control";
+import {
+  useExerciseControl,
+  SetInputCard,
+  RestTimerCard,
+  SetProgressTimeline,
+  SetLogDisplay,
+} from "@/components/exercise-control";
 import {
   api,
   type SorenessSeverity,
@@ -246,6 +253,266 @@ function BaselineBlock({
           <p>Suggested working weight: {currentBaseline.workingWeightLb} lb (for {repRange[0]}-{repRange[1]} reps)</p>
         </div>
       ) : null}
+    </div>
+  );
+}
+
+function ExerciseDetailOverlay({
+  exercise,
+  selectedName,
+  guideHref,
+  completed,
+  doThisSetLine,
+  derivedWorkingLb,
+  warmUpCount,
+  baseline,
+  warmupLbs,
+  hasWarmup,
+  hasCoachingDetails,
+  currentSwapIndex,
+  altCandidates,
+  lastSet,
+  mediaUrl,
+  substitutions,
+  notesOpen,
+  isDeloadWeek,
+  onClose,
+  onSwap,
+  onToggleNotes,
+  onSwapTarget,
+  onSetComplete,
+  onCalculateBaseline,
+}: Readonly<{
+  exercise: WorkoutExercise;
+  selectedName: string;
+  guideHref: string | null;
+  completed: number;
+  doThisSetLine: string;
+  derivedWorkingLb: number;
+  warmUpCount: number;
+  baseline: { weightLb: number; reps: number; estimated1RM: number; workingWeightLb: number; warmupLbs: number[] } | undefined;
+  warmupLbs: number[];
+  hasWarmup: boolean;
+  hasCoachingDetails: boolean;
+  currentSwapIndex: number;
+  altCandidates: string[];
+  lastSet: { reps: number; weight: number } | null;
+  mediaUrl: string | null;
+  substitutions: string[];
+  notesOpen: boolean;
+  onClose: () => void;
+  onSwap: (exerciseId: string, index: number) => void;
+  onToggleNotes: () => void;
+  onSwapTarget: () => void;
+  isDeloadWeek: boolean;
+  onSetComplete: (exerciseId: string, count: number, performed: { reps: number; weight: number }) => void;
+  onCalculateBaseline: (weightLb: number, reps: number) => void;
+}>) {
+  const ctrl = useExerciseControl({
+    exerciseId: exercise.id,
+    totalSets: exercise.sets,
+    defaultRestSeconds: 90,
+    recommendedWorkingWeight: derivedWorkingLb,
+    repRange: exercise.rep_range,
+    initialCompletedSets: completed,
+    onSetComplete: onSetComplete,
+  });
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex flex-col bg-zinc-950 min-h-[100dvh] max-h-[100dvh] pt-[max(0.75rem,env(safe-area-inset-top))]"
+      aria-modal="true"
+      role="dialog"
+    >
+      {/* ---- Header: name + set counter ---- */}
+      <div className="flex min-h-[48px] shrink-0 items-center gap-3 border-b border-zinc-800 px-4 py-2">
+        <Button
+          type="button"
+          variant="ghost"
+          className="min-h-[44px] min-w-[44px]"
+          onClick={onClose}
+          aria-label="Back to list"
+        >
+          <UiIcon name="close" className="ui-icon--action" />
+        </Button>
+        <span className="flex-1 truncate text-sm font-semibold text-zinc-100">
+          {guideHref ? (
+            <Link href={guideHref} className="underline decoration-zinc-600 underline-offset-2">
+              {selectedName}
+            </Link>
+          ) : (
+            selectedName
+          )}
+        </span>
+        {isDeloadWeek ? (
+          <span className="rounded-full bg-yellow-500/15 px-2 py-0.5 text-[10px] font-medium text-yellow-300">Deload</span>
+        ) : null}
+        <span className="text-xs tabular-nums text-zinc-400">
+          Set {Math.min(ctrl.completedSets + 1, exercise.sets)}/{exercise.sets}
+        </span>
+      </div>
+
+      {/* ---- Scrollable body ---- */}
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 pb-[max(6rem,env(safe-area-inset-bottom))] space-y-4 overscroll-contain">
+
+        {/* == ZONE 1: Baseline calculator (expanded when no baseline) == */}
+        <Disclosure title="Baseline Calculator" badge={baseline ? `1RM: ${Math.round(baseline.estimated1RM)} lb` : null} defaultOpen={!baseline}>
+          <BaselineBlock
+            exerciseId={exercise.id}
+            repRange={exercise.rep_range}
+            currentBaseline={baseline}
+            onCalculate={onCalculateBaseline}
+          />
+        </Disclosure>
+
+        {/* == ZONE 2: Warm-up sets (expanded when warm-ups exist) == */}
+        {hasWarmup && (
+          <Disclosure title="Warm-up Sets" badge={`${warmupLbs.length} sets`} defaultOpen>
+            <div className="space-y-2">
+              <p className="text-xs text-zinc-400">
+                {baseline != null
+                  ? "From your baseline. Do these before working sets."
+                  : "Based on your working weight. Do these before working sets."}
+              </p>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {warmupLbs.map((lb, i) => (
+                  <div key={i} className="flex items-center justify-between rounded-md border border-zinc-700 bg-zinc-800/40 px-3 py-2">
+                    <span className="text-xs text-zinc-400">Set {i + 1}</span>
+                    <span className="text-sm font-medium tabular-nums text-zinc-200">{lb} lb</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Disclosure>
+        )}
+
+        {/* == ZONE 3: Primary action (log set) == */}
+        <SetInputCard exerciseId={exercise.id} guidanceLine={doThisSetLine} ctrl={ctrl} />
+
+        {/* == ZONE 4: Set log (per-set logged values) == */}
+        <SetLogDisplay ctrl={ctrl} />
+
+        {/* == ZONE 5: Set progress == */}
+        <SetProgressTimeline exerciseId={exercise.id} ctrl={ctrl} />
+
+        {/* == ZONE 5: Rest timer == */}
+        <RestTimerCard ctrl={ctrl} />
+
+        {/* == ZONE 6: Quick actions toolbar == */}
+        <div className="grid grid-cols-3 gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            className="min-h-[44px] flex-col gap-1 px-2 py-2 text-center"
+            disabled={!mediaUrl}
+            onClick={() => mediaUrl && window.open(mediaUrl, "_blank", "noopener,noreferrer")}
+          >
+            <UiIcon name="video" className="ui-icon--action" />
+            <span className="text-[10px]">Video</span>
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            className="min-h-[44px] flex-col gap-1 px-2 py-2 text-center"
+            disabled={substitutions.length === 0}
+            onClick={onSwapTarget}
+          >
+            <UiIcon name="swap" className="ui-icon--action" />
+            <span className="text-[10px]">Swap</span>
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            className="min-h-[44px] flex-col gap-1 px-2 py-2 text-center"
+            onClick={onToggleNotes}
+          >
+            <UiIcon name="notes" className="ui-icon--action" />
+            <span className="text-[10px]">Notes</span>
+          </Button>
+        </div>
+
+        {notesOpen && (
+          <div className="rounded-md border border-zinc-800 bg-zinc-900/40 p-3 text-xs text-zinc-300">
+            {exercise.notes ?? "No notes for this slot."}
+          </div>
+        )}
+
+        {/* == ZONE 7: Coaching details (collapsible) == */}
+        {hasCoachingDetails && (
+          <Disclosure title="Coaching" defaultOpen={false}>
+            <div className="space-y-2">
+              <div className="flex flex-wrap gap-2">
+                {exercise.last_set_intensity_technique ? (
+                  <span className="rounded-full border border-zinc-700 bg-zinc-800/60 px-2.5 py-1 text-[11px] text-zinc-300">
+                    Technique: {exercise.last_set_intensity_technique}
+                  </span>
+                ) : null}
+                {exercise.rest ? (
+                  <span className="rounded-full border border-zinc-700 bg-zinc-800/60 px-2.5 py-1 text-[11px] text-zinc-300">
+                    Rest: {exercise.rest}
+                  </span>
+                ) : null}
+                {exercise.early_set_rpe ? (
+                  <span className="rounded-full border border-zinc-700 bg-zinc-800/60 px-2.5 py-1 text-[11px] text-zinc-300">
+                    Early RPE: {exercise.early_set_rpe}
+                  </span>
+                ) : null}
+                {exercise.last_set_rpe ? (
+                  <span className="rounded-full border border-zinc-700 bg-zinc-800/60 px-2.5 py-1 text-[11px] text-zinc-300">
+                    Last RPE: {exercise.last_set_rpe}
+                  </span>
+                ) : null}
+              </div>
+              {lastSet != null ? (
+                <p className="text-xs text-zinc-400">
+                  Suggestion updated from your last set ({lastSet.weight} lb x {lastSet.reps} reps).
+                </p>
+              ) : null}
+              {/* Substitution buttons */}
+              {(currentSwapIndex > 0 || altCandidates.length > 0) && (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {currentSwapIndex > 0 ? (
+                    <Button type="button" variant="secondary" className="min-h-[32px] px-2 text-xs" onClick={() => onSwap(exercise.id, 0)}>
+                      Use original exercise
+                    </Button>
+                  ) : null}
+                  {altCandidates.map((name, index) => (
+                    <Button
+                      key={`${exercise.id}-alt-${index}`}
+                      type="button"
+                      variant="secondary"
+                      className="min-h-[32px] px-2 text-xs"
+                      onClick={() => onSwap(exercise.id, index + 1)}
+                    >
+                      Use {name}
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </Disclosure>
+        )}
+
+        {/* == ZONE 9: Prescription summary (collapsible) == */}
+        <Disclosure title="Prescription" defaultOpen={false}>
+          <div className="space-y-1 text-xs text-zinc-400">
+            <p>
+              {(() => {
+                const workingLabel = exercise.working_sets ?? String(exercise.sets);
+                const repsLabel = exercise.reps ?? `${exercise.rep_range[0]}-${exercise.rep_range[1]}`;
+                const weightLb = Math.round(derivedWorkingLb);
+                if (warmUpCount > 0) {
+                  return `${warmUpCount} warm-up set${warmUpCount !== 1 ? "s" : ""}, then ${workingLabel} working set${Number(workingLabel) !== 1 ? "s" : ""} · ${repsLabel} reps @ ~${weightLb} lb`;
+                }
+                return `${exercise.sets} sets · ${exercise.rep_range[0]}-${exercise.rep_range[1]} reps @ ~${weightLb} lb`;
+              })()}
+            </p>
+            {isDeloadWeek ? (
+              <p className="text-yellow-400/80">Deload week — sets and load may be reduced.</p>
+            ) : null}
+          </div>
+        </Disclosure>
+      </div>
     </div>
   );
 }
@@ -629,21 +896,39 @@ export default function TodayPage() {
             {workout.title} · {workoutProgress?.completed ?? 0}/{workoutProgress?.planned ?? 0} sets
           </p>
 
-          <ul className="space-y-1" aria-label="Exercise list">
+          <ul className="space-y-1.5" aria-label="Exercise list">
             {(workout.exercises ?? []).map((exercise) => {
               const selectedName = resolveExerciseName(exercise, swapIndexByExercise);
               const completed = completedSetsByExercise[exercise.id] ?? 0;
+              const done = completed >= exercise.sets;
               return (
                 <li key={exercise.id}>
                   <button
                     type="button"
-                    className="flex min-h-[44px] w-full items-center justify-between gap-2 rounded-md border border-zinc-800 bg-zinc-900/50 px-3 py-2.5 text-left text-sm text-zinc-100 transition-colors hover:border-zinc-700 hover:bg-zinc-800/80"
+                    className={`w-full rounded-lg border px-3 py-3 text-left transition-colors hover:border-zinc-700 hover:bg-zinc-800/80 ${
+                      done
+                        ? "border-red-500/30 bg-red-500/5"
+                        : "border-zinc-800 bg-zinc-900/50"
+                    }`}
                     onClick={() => setSelectedExerciseId(exercise.id)}
                   >
-                    <span className="font-medium">{selectedName}</span>
-                    <span className="text-zinc-400">
-                      {completed}/{exercise.sets} · {exercise.rep_range[0]}-{exercise.rep_range[1]} reps @ ~{kgToLbs(exercise.recommended_working_weight)} lb (adjust when logging)
-                    </span>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-semibold leading-tight text-zinc-100">{selectedName}</span>
+                      <span className={`flex-shrink-0 rounded-full px-2 py-0.5 text-xs font-medium tabular-nums ${
+                        done
+                          ? "bg-red-500/15 text-red-300"
+                          : completed > 0
+                            ? "bg-zinc-800 text-zinc-300"
+                            : "text-zinc-500"
+                      }`}>
+                        {completed}/{exercise.sets}
+                      </span>
+                    </div>
+                    <div className="mt-1 flex items-center gap-2 text-xs text-zinc-500">
+                      <span>{exercise.rep_range[0]}-{exercise.rep_range[1]} reps</span>
+                      <span className="text-zinc-700">·</span>
+                      <span>~{kgToLbs(exercise.recommended_working_weight)} lb</span>
+                    </div>
                   </button>
                 </li>
               );
@@ -669,6 +954,15 @@ export default function TodayPage() {
         const feedback = setFeedbackByExercise[exercise.id];
         const mediaUrl = resolveExerciseMediaUrl(exercise);
         const substitutions = exercise.substitution_candidates ?? [];
+        const warmUpCount = Math.max(0, parseInt(String(exercise.warm_up_sets ?? "0"), 10) || 0);
+        const baseline = baselineByExercise[exercise.id];
+        const lastSet = lastSetByExercise[exercise.id];
+        const derivedWorkingLb =
+          lastSet != null
+            ? workingWeightFrom1RMLb(epleyEstimate1RMLbs(lastSet.weight, lastSet.reps))
+            : baseline != null
+              ? baseline.workingWeightLb
+              : kgToLbs(exercise.recommended_working_weight);
         let doThisSetLine: string;
         if (recommendation) {
           const guidance = resolveGuidanceText(recommendation.guidance_rationale, recommendation.guidance);
@@ -677,242 +971,55 @@ export default function TodayPage() {
         } else if (feedback) {
           const guidance = resolveGuidanceText(feedback.guidance_rationale, feedback.guidance);
           doThisSetLine = guidance.trim()
-            || `${exercise.rep_range[0]}-${exercise.rep_range[1]} reps @ ${kgToLbs(exercise.recommended_working_weight)} lbs this set`;
+            || `${exercise.rep_range[0]}-${exercise.rep_range[1]} reps @ ${Math.round(derivedWorkingLb)} lbs this set`;
         } else {
-          doThisSetLine = `Do ${exercise.rep_range[0]}-${exercise.rep_range[1]} reps @ ${kgToLbs(exercise.recommended_working_weight)} lbs this set`;
+          doThisSetLine = `Do ${exercise.rep_range[0]}-${exercise.rep_range[1]} reps @ ${Math.round(derivedWorkingLb)} lbs this set`;
         }
+
+        const currentSwapIndex = swapIndexByExercise[exercise.id] ?? 0;
+        const altCandidates = exercise.substitution_candidates ?? [];
+        const warmupLbs =
+          baseline != null && baseline.warmupLbs.length > 0
+            ? baseline.warmupLbs.slice(0, warmUpCount)
+            : (exercise.warmups ?? []).slice(0, warmUpCount).map((kg) => kgToLbs(kg));
+        const hasWarmup = warmUpCount > 0 && warmupLbs.length > 0;
+        const hasCoachingDetails = !!(exercise.last_set_intensity_technique || exercise.rest || exercise.early_set_rpe || exercise.last_set_rpe);
+
         return (
-          <div
-            className="fixed inset-0 z-50 flex flex-col bg-zinc-950 min-h-[100dvh] max-h-[100dvh] pt-[max(0.75rem,env(safe-area-inset-top))]"
-            aria-modal="true"
-            role="dialog"
-          >
-            <div className="flex min-h-[44px] shrink-0 items-center gap-2 border-b border-zinc-800 px-3 py-2">
-              <Button
-                type="button"
-                variant="ghost"
-                className="min-h-[44px] min-w-[44px]"
-                onClick={() => setSelectedExerciseId(null)}
-                aria-label="Back to list"
-              >
-                <UiIcon name="close" className="ui-icon--action" />
-              </Button>
-              <span className="text-sm font-medium text-zinc-100 truncate">Exercise</span>
-            </div>
-            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 pb-[max(6rem,env(safe-area-inset-bottom))] space-y-5 overscroll-contain">
-              <div>
-                <h2 className="text-lg font-semibold text-zinc-100">
-                  {guideHref ? (
-                    <Link href={guideHref} className="underline decoration-zinc-500 underline-offset-2">
-                      {selectedName}
-                    </Link>
-                  ) : (
-                    selectedName
-                  )}
-                </h2>
-                <p className="ui-meta mt-1">
-                  {(() => {
-                    const warmUpCount = Math.max(0, parseInt(String(exercise.warm_up_sets ?? "0"), 10) || 0);
-                    const workingLabel = exercise.working_sets ?? String(exercise.sets);
-                    const repsLabel = exercise.reps ?? `${exercise.rep_range[0]}-${exercise.rep_range[1]}`;
-                    if (warmUpCount > 0) {
-                      return (
-                        <>
-                          {warmUpCount} warm-up set{warmUpCount !== 1 ? "s" : ""}, then {workingLabel} working set{Number(workingLabel) !== 1 ? "s" : ""} · {repsLabel} reps @ ~{kgToLbs(exercise.recommended_working_weight)} lb (adjust below)
-                        </>
-                      );
-                    }
-                    return (
-                      <>
-                        {exercise.sets} sets · {exercise.rep_range[0]}-{exercise.rep_range[1]} reps @ ~{kgToLbs(exercise.recommended_working_weight)} lb (starting estimate — adjust below)
-                      </>
-                    );
-                  })()}
-                </p>
-              </div>
-
-              {(() => {
-                const warmUpCount = Math.max(0, parseInt(String(exercise.warm_up_sets ?? "0"), 10) || 0);
-                const baseline = baselineByExercise[exercise.id];
-                const lastSet = lastSetByExercise[exercise.id];
-                const currentSwapIndex = swapIndexByExercise[exercise.id] ?? 0;
-                const altCandidates = exercise.substitution_candidates ?? [];
-                const derivedWorkingLb =
-                  lastSet != null
-                    ? workingWeightFrom1RMLb(epleyEstimate1RMLbs(lastSet.weight, lastSet.reps))
-                    : baseline != null
-                      ? baseline.workingWeightLb
-                      : kgToLbs(exercise.recommended_working_weight);
-                const warmupLbs =
-                  baseline != null && baseline.warmupLbs.length > 0
-                    ? baseline.warmupLbs.slice(0, warmUpCount)
-                    : (exercise.warmups ?? []).slice(0, warmUpCount).map((kg) => kgToLbs(kg));
-                const hasWarmup = warmUpCount > 0 && warmupLbs.length > 0;
-
-                return (
-                  <>
-                    <BaselineBlock
-                      exerciseId={exercise.id}
-                      repRange={exercise.rep_range}
-                      currentBaseline={baseline}
-                      onCalculate={(weightLb, reps) => {
-                        const estimated1RM = epleyEstimate1RMLbs(weightLb, reps);
-                        const workingWeightLb = workingWeightFrom1RMLb(estimated1RM);
-                        const warmupLbsCalc = warmupsFromWorkingWeightLb(workingWeightLb, warmUpCount || 3);
-                        setBaselineByExercise((prev) => ({
-                          ...prev,
-                          [exercise.id]: {
-                            weightLb,
-                            reps,
-                            estimated1RM,
-                            workingWeightLb,
-                            warmupLbs: warmupLbsCalc,
-                          },
-                        }));
-                      }}
-                    />
-
-                    {hasWarmup ? (
-                      <div className="rounded-lg border border-zinc-700 bg-zinc-900/60 p-3 space-y-2">
-                        <p className="text-sm font-medium text-zinc-200">Warm-up sets</p>
-                        <p className="text-xs text-zinc-400">
-                          {baseline != null
-                            ? "From your baseline above. Do these before your working sets."
-                            : "Based on your working weight below. Do these before your working sets."}
-                        </p>
-                        <ul className="space-y-1.5" aria-label="Warm-up set weights">
-                          {warmupLbs.map((lb, i) => (
-                            <li key={i} className="flex items-center justify-between text-sm text-zinc-200">
-                              <span>Warm-up set {i + 1}</span>
-                              <span className="font-medium tabular-nums">{lb} lb</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ) : null}
-
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium text-zinc-200">Working sets</p>
-                      {(exercise.last_set_intensity_technique ||
-                        exercise.rest ||
-                        exercise.early_set_rpe ||
-                        exercise.last_set_rpe) && (
-                        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-zinc-300">
-                          {exercise.last_set_intensity_technique ? (
-                            <span>Technique: {exercise.last_set_intensity_technique}</span>
-                          ) : null}
-                          {exercise.rest ? <span>Rest: {exercise.rest}</span> : null}
-                          {exercise.early_set_rpe ? <span>Early-set RPE: {exercise.early_set_rpe}</span> : null}
-                          {exercise.last_set_rpe ? <span>Last-set RPE: {exercise.last_set_rpe}</span> : null}
-                        </div>
-                      )}
-                      {(currentSwapIndex > 0 || altCandidates.length > 0) && (
-                        <div className="flex flex-wrap gap-2 pt-1">
-                          {currentSwapIndex > 0 ? (
-                            <Button
-                              type="button"
-                              variant="secondary"
-                              className="min-h-[32px] px-2 text-xs"
-                              onClick={() => {
-                                selectSwap(exercise.id, 0);
-                              }}
-                            >
-                              Use original exercise
-                            </Button>
-                          ) : null}
-                          {altCandidates.map((name, index) => (
-                            <Button
-                              key={`${exercise.id}-alt-${index}`}
-                              type="button"
-                              variant="secondary"
-                              className="min-h-[32px] px-2 text-xs"
-                              onClick={() => {
-                                selectSwap(exercise.id, index + 1);
-                              }}
-                            >
-                              Use {name}
-                            </Button>
-                          ))}
-                        </div>
-                      )}
-                      {lastSet != null ? (
-                        <p className="text-xs text-zinc-400">
-                          Suggestion updated from your last set ({lastSet.weight} lb × {lastSet.reps} reps).
-                          Adjust weight if needed.
-                        </p>
-                      ) : (
-                        <p className="text-xs text-zinc-400">Log each set when complete. Adjust weight if needed.</p>
-                      )}
-                      <p className="text-sm text-zinc-200">
-                        {recommendation
-                          ? doThisSetLine
-                          : feedback
-                            ? doThisSetLine
-                            : `Do ${exercise.rep_range[0]}-${exercise.rep_range[1]} reps @ ${derivedWorkingLb} lb this set`}
-                      </p>
-                      <ExerciseControlModule
-                        key={`${exercise.id}:${derivedWorkingLb}`}
-                        exerciseId={exercise.id}
-                        note={exercise.notes}
-                        totalSets={exercise.sets}
-                        defaultRestSeconds={90}
-                        recommendedWorkingWeight={derivedWorkingLb}
-                        repRange={exercise.rep_range}
-                        initialCompletedSets={completed}
-                        onSetComplete={handleSetComplete}
-                      />
-                    </div>
-                  </>
-                );
-              })()}
-
-              <div className="space-y-2">
-                <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Options</p>
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="min-h-[44px] w-full justify-start sm:justify-center"
-                    disabled={!mediaUrl}
-                    onClick={() => mediaUrl && window.open(mediaUrl, "_blank", "noopener,noreferrer")}
-                  >
-                    <span className="inline-flex items-center gap-2">
-                      <UiIcon name="video" className="ui-icon--action" />
-                      Video
-                    </span>
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="min-h-[44px] w-full justify-start sm:justify-center"
-                    disabled={substitutions.length === 0}
-                    onClick={() => setSwapTargetExerciseId(exercise.id)}
-                  >
-                    <span className="inline-flex items-center gap-2">
-                      <UiIcon name="swap" className="ui-icon--action" />
-                      I don&apos;t have this equipment
-                    </span>
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="min-h-[44px] w-full justify-start sm:justify-center"
-                    onClick={() => toggleNotes(exercise.id)}
-                  >
-                    <span className="inline-flex items-center gap-2">
-                      <UiIcon name="notes" className="ui-icon--action" />
-                      Notes
-                    </span>
-                  </Button>
-                </div>
-              </div>
-              {(notesOpenByExercise[exercise.id] ?? false) && (
-                <div className="rounded-md border border-zinc-800 bg-zinc-900/40 p-2 text-xs text-zinc-300">
-                  {exercise.notes ?? "No notes for this slot."}
-                </div>
-              )}
-            </div>
-          </div>
+          <ExerciseDetailOverlay
+            exercise={exercise}
+            selectedName={selectedName}
+            guideHref={guideHref}
+            completed={completed}
+            doThisSetLine={doThisSetLine}
+            derivedWorkingLb={derivedWorkingLb}
+            warmUpCount={warmUpCount}
+            baseline={baseline}
+            warmupLbs={warmupLbs}
+            hasWarmup={hasWarmup}
+            hasCoachingDetails={hasCoachingDetails}
+            currentSwapIndex={currentSwapIndex}
+            altCandidates={altCandidates}
+            lastSet={lastSet ?? null}
+            mediaUrl={mediaUrl}
+            substitutions={substitutions}
+            notesOpen={notesOpenByExercise[exercise.id] ?? false}
+            isDeloadWeek={workout.deload?.active === true}
+            onClose={() => setSelectedExerciseId(null)}
+            onSwap={selectSwap}
+            onToggleNotes={() => toggleNotes(exercise.id)}
+            onSwapTarget={() => setSwapTargetExerciseId(exercise.id)}
+            onSetComplete={handleSetComplete}
+            onCalculateBaseline={(weightLb, reps) => {
+              const estimated1RM = epleyEstimate1RMLbs(weightLb, reps);
+              const workingWeightLb = workingWeightFrom1RMLb(estimated1RM);
+              const warmupLbsCalc = warmupsFromWorkingWeightLb(workingWeightLb, warmUpCount || 3);
+              setBaselineByExercise((prev) => ({
+                ...prev,
+                [exercise.id]: { weightLb, reps, estimated1RM, workingWeightLb, warmupLbs: warmupLbsCalc },
+              }));
+            }}
+          />
         );
       })() : null}
 

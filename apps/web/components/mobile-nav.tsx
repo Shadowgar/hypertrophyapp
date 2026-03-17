@@ -50,6 +50,9 @@ export function MobileNav() {
           </li>
         ))}
       </ul>
+      <p className="mx-auto mt-1.5 max-w-md text-center text-[10px] leading-none tracking-wider text-zinc-500">
+        {process.env.NEXT_PUBLIC_APP_VERSION ?? "dev"}
+      </p>
     </nav>
   );
 }

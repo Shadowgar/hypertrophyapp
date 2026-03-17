@@ -65,8 +65,8 @@ test("visual snapshot: week route", async () => {
     return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
   });
 
-  const { container, getByLabelText } = render(<WeekPage />);
-  await waitFor(() => expect(getByLabelText(/Week program override selector/i)).toBeInTheDocument());
+  const { container, getByText } = render(<WeekPage />);
+  await waitFor(() => expect(getByText(/Week Plan/i)).toBeInTheDocument());
   expect(container.firstChild).toMatchSnapshot();
 });
 
@@ -127,7 +127,7 @@ test("visual snapshot: settings route", async () => {
   });
 
   const { getByText, getByRole } = render(<SettingsPage />);
-  await waitFor(() => expect(getByText(/Program Settings/i)).toBeInTheDocument());
+  await waitFor(() => expect(getByText(/Pure Bodybuilding - Phase 1 Full Body/i)).toBeInTheDocument());
   expect(getByRole("button", { name: /Wipe Current User Data/i })).toBeInTheDocument();
 });
 

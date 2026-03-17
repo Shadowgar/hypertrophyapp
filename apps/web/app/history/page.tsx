@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Disclosure } from "@/components/ui/disclosure";
 import { UiIcon } from "@/components/ui/icons";
 import {
   api,
@@ -407,6 +408,9 @@ function HistoryCalendarPanel() {
               Active days {calendar.active_days} · Current streak {calendar.current_streak_days} · Longest streak {calendar.longest_streak_days}
             </p>
             <div className="grid grid-cols-7 gap-1">
+              {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((wd) => (
+                <div key={`header-${wd}`} className="py-1 text-center text-[10px] font-medium uppercase tracking-wide text-zinc-500">{wd}</div>
+              ))}
               {filteredDays.map((day) => {
                 const dateLabel = day.date.slice(8, 10);
                 const isSelected = selectedDay === day.date;
@@ -425,6 +429,11 @@ function HistoryCalendarPanel() {
                   </button>
                 );
               })}
+            </div>
+            <div className="flex items-center gap-4 text-[10px] text-zinc-500">
+              <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded border border-red-500/40 bg-red-500/10" /> Completed</span>
+              <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded border border-white/10 bg-zinc-900/70" /> Missed</span>
+              <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded border border-[var(--ui-edge-active)] bg-[var(--ui-accent-active)]" /> Selected</span>
             </div>
             {filteredDays.length === 0 ? <p className="text-xs text-zinc-500">No days match current filters.</p> : null}
           </>
@@ -549,7 +558,6 @@ function HistoryCalendarPanel() {
 }
 
 export default function HistoryPage() {
-  const [history, setHistory] = useState("No analytics snapshot loaded.");
   const [dashboard, setDashboard] = useState<HistoryAnalyticsResponse | null>(null);
   const [trendStatus, setTrendStatus] = useState("Loading trend data...");
   const [timelineEntries, setTimelineEntries] = useState<CoachingRecommendationTimelineEntry[]>([]);
@@ -667,14 +675,6 @@ export default function HistoryPage() {
   const heatmap = dashboard?.volume_heatmap;
   const heatmapMax = Math.max(heatmap?.max_volume ?? 0, 1);
 
-  async function loadHistory() {
-    if (!dashboard) {
-      setHistory("History dashboard data is unavailable.");
-      return;
-    }
-    setHistory(JSON.stringify(dashboard, null, 2));
-  }
-
   return (
     <div className="space-y-4">
       <h1 className="ui-title-page">History</h1>
@@ -697,23 +697,11 @@ export default function HistoryPage() {
           <p className="telemetry-meta">Adherence trend {adherenceTrendDelta >= 0 ? "+" : ""}{adherenceTrendDelta}</p>
         </div>
       </div>
-      <div className="main-card main-card--module">
-        <p className="telemetry-kicker mb-2">History Controls</p>
-        <Button className="w-full" onClick={loadHistory}>
-          <span className="inline-flex items-center gap-2">
-            <UiIcon name="analytics" className="ui-icon--action" />
-            Load Analytics Snapshot
-          </span>
-        </Button>
-      </div>
-      <div className="main-card main-card--module spacing-grid spacing-grid--tight">
-        <p className="telemetry-kicker">History Output</p>
-        <pre className="overflow-x-auto text-xs text-zinc-200">{history}</pre>
-      </div>
+      {/* History JSON output removed for cleaner UX */}
 
       <div className="grid grid-cols-1 gap-3 xl:grid-cols-[1.3fr_1fr_1fr_1fr]">
         <div className="main-card main-card--module main-card--accent spacing-grid spacing-grid--tight">
-          <p className="telemetry-kicker">Progression Brief</p>
+          <p className="telemetry-kicker">Progress Overview</p>
           <p className="telemetry-value">{prHighlights.length} PR highlights</p>
           <p className="telemetry-meta">
             {adherencePct}% adherence · {prHighlights.length} PR highlights · {coachQueue.pending} pending coach decisions
@@ -734,7 +722,7 @@ export default function HistoryPage() {
         </div>
 
         <div className="main-card main-card--shell spacing-grid spacing-grid--tight">
-          <p className="telemetry-kicker">Coach Queue</p>
+          <p className="telemetry-kicker">Upcoming Changes</p>
           <p className="telemetry-value">{coachQueue.pending} pending</p>
           <p className="telemetry-meta">Latest type: {coachQueue.latestType ?? "none"}</p>
         </div>
@@ -742,8 +730,7 @@ export default function HistoryPage() {
 
       <HistoryCalendarPanel />
 
-      <div className="main-card main-card--module spacing-grid spacing-grid--tight">
-        <p className="telemetry-kicker">Coaching Decision Timeline</p>
+      <Disclosure title="Coaching Decision Timeline" badge={timelineEntries.length > 0 ? `${timelineEntries.length} decisions` : null} defaultOpen={false}>
         {timelineEntries.length > 0 ? (
           <div className="space-y-2">
             {timelineEntries.map((entry) => (
@@ -753,25 +740,22 @@ export default function HistoryPage() {
                   <span className="telemetry-meta uppercase">{entry.status}</span>
                 </p>
                 <p className="telemetry-meta">
-                  {getProgramDisplayName({ id: entry.template_id })} · {entry.current_phase} to {entry.recommended_phase}
+                  {getProgramDisplayName({ id: entry.template_id })} · {entry.current_phase} → {entry.recommended_phase}
                 </p>
-                <p className="telemetry-meta">Progression action: {entry.progression_action}</p>
-                <p>Rationale: {entry.rationale}</p>
-                <p>Focus muscles: {entry.focus_muscles.length > 0 ? entry.focus_muscles.join(", ") : "none"}</p>
-                <p className="telemetry-meta">Created: {formatTimestamp(entry.created_at)}</p>
-                {entry.applied_at ? <p className="telemetry-meta">Applied: {formatTimestamp(entry.applied_at)}</p> : null}
-                <p className="telemetry-meta">Recommendation ID: {entry.recommendation_id}</p>
+                <p className="telemetry-meta">Progression: {entry.progression_action}</p>
+                <p>{entry.rationale}</p>
+                {entry.focus_muscles.length > 0 ? <p>Focus: {entry.focus_muscles.join(", ")}</p> : null}
+                <p className="telemetry-meta">{formatTimestamp(entry.created_at)}{entry.applied_at ? ` · Applied ${formatTimestamp(entry.applied_at)}` : ""}</p>
               </div>
             ))}
           </div>
         ) : (
           <p className="text-xs text-zinc-500">{timelineStatus}</p>
         )}
-      </div>
+      </Disclosure>
 
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">
-        <div className="main-card main-card--shell spacing-grid spacing-grid--tight">
-          <p className="telemetry-kicker">Bodyweight Trend</p>
+      <Disclosure title="Bodyweight Trend" badge={bodyweightSignal.label} defaultOpen={false}>
+        <div className="space-y-2">
           <div className="flex items-end gap-1 h-16">
             {bodyWeightTrend.length > 0 ? (
               bodyWeightTrend.map((value, index) => {
@@ -790,102 +774,108 @@ export default function HistoryPage() {
               <div className="text-xs text-zinc-500">No trend data</div>
             )}
           </div>
-          <p className="telemetry-meta">Last {Math.max(weeklyCheckins.length, 0)} check-ins</p>
+          <div className="flex items-center justify-between text-xs text-zinc-500">
+            <span>lbs</span>
+            <span>Last {Math.max(weeklyCheckins.length, 0)} check-ins</span>
+          </div>
+          <p className="text-xs text-zinc-400">{bodyweightSignal.detail}</p>
         </div>
+      </Disclosure>
 
-        <div className="main-card main-card--module spacing-grid spacing-grid--tight">
-          <p className="telemetry-kicker">Strength Trend</p>
-          {primaryStrengthTrend ? (
-            <>
-              <p className="telemetry-meta">{primaryStrengthTrend.exercise_id}</p>
-              <div className="flex items-end gap-1 h-16">
-                {primaryStrengthTrend.points.map((point) => {
-                  const normalized = 25 + ((point.max_weight - strengthBounds.min) / strengthBounds.spread) * 75;
-                  return (
-                    <div
-                      key={`${primaryStrengthTrend.exercise_id}-${point.week_start}`}
-                      className="flex-1 rounded-sm bg-zinc-700/70"
-                      style={{ height: `${Math.round(normalized)}%` }}
-                      title={`${point.week_start}: ${kgToLbs(point.max_weight)} lbs`}
-                    />
-                  );
-                })}
-              </div>
-              <p className="telemetry-meta">PR {kgToLbs(primaryStrengthTrend.pr_weight)} lbs ({primaryStrengthTrend.pr_delta >= 0 ? "+" : "-"}{kgToLbs(Math.abs(primaryStrengthTrend.pr_delta))} lbs)</p>
-            </>
-          ) : (
-            <p className="text-xs text-zinc-500">No strength trend data</p>
-          )}
-        </div>
-
-        <div className="main-card main-card--module main-card--accent spacing-grid spacing-grid--tight">
-          <p className="telemetry-kicker">PR Highlights</p>
-          {prHighlights.length > 0 ? (
-            <div className="space-y-1 text-xs text-zinc-200">
-              {prHighlights.map((item) => (
-                <p key={`pr-${item.exercise_id}`} className="flex items-center justify-between rounded-md border border-red-500/30 bg-red-500/10 px-2 py-1">
-                  <span>{item.exercise_id}</span>
-                  <span className="inline-flex items-center gap-2">
-                    <span className="status-dot status-dot--green" />
-                    {item.pr_delta >= 0 ? "+" : "-"}{kgToLbs(Math.abs(item.pr_delta))} lbs
-                  </span>
-                </p>
-              ))}
+      <Disclosure title="Strength Trend" badge={strengthLead.label} defaultOpen={false}>
+        {primaryStrengthTrend ? (
+          <div className="space-y-2">
+            <div className="flex items-end gap-1 h-16">
+              {primaryStrengthTrend.points.map((point) => {
+                const normalized = 25 + ((point.max_weight - strengthBounds.min) / strengthBounds.spread) * 75;
+                return (
+                  <div
+                    key={`${primaryStrengthTrend.exercise_id}-${point.week_start}`}
+                    className="flex-1 rounded-sm bg-zinc-700/70"
+                    style={{ height: `${Math.round(normalized)}%` }}
+                    title={`${point.week_start}: ${kgToLbs(point.max_weight)} lbs`}
+                  />
+                );
+              })}
             </div>
-          ) : (
-            <p className="text-xs text-zinc-500">No PR highlights yet</p>
-          )}
-          <p className="telemetry-meta">Window: {dashboard?.window.limit_weeks ?? 0} weeks</p>
-        </div>
+            <div className="flex items-center justify-between text-xs text-zinc-500">
+              <span>lbs</span>
+              <span>{strengthLead.detail}</span>
+            </div>
+          </div>
+        ) : (
+          <p className="text-xs text-zinc-500">No strength trend data</p>
+        )}
+      </Disclosure>
 
-        <div className="main-card main-card--shell spacing-grid spacing-grid--tight">
-          <p className="telemetry-kicker">Readiness Mix</p>
+      <Disclosure title="PR Highlights" badge={prHighlights.length > 0 ? `${prHighlights.length} PRs` : null} defaultOpen={false}>
+        {prHighlights.length > 0 ? (
+          <div className="space-y-1 text-xs text-zinc-200">
+            {prHighlights.map((item) => (
+              <p key={`pr-${item.exercise_id}`} className="flex items-center justify-between rounded-md border border-red-500/30 bg-red-500/10 px-2 py-1">
+                <span>{item.exercise_id}</span>
+                <span className="inline-flex items-center gap-2">
+                  <span className="status-dot status-dot--green" />
+                  {item.pr_delta >= 0 ? "+" : "-"}{kgToLbs(Math.abs(item.pr_delta))} lbs
+                </span>
+              </p>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-zinc-500">No PR highlights yet</p>
+        )}
+      </Disclosure>
+
+      <Disclosure title="Readiness Mix" badge={`${mixHigh}% high`} defaultOpen={false}>
+        <div className="space-y-2">
           <div className="h-3 w-full overflow-hidden rounded-full border border-white/10 bg-zinc-900/80 flex">
             <div className="bg-zinc-300/85" style={{ width: `${mixHigh}%` }} />
             <div className="bg-zinc-500/85" style={{ width: `${mixMedium}%` }} />
             <div className="bg-zinc-700/85" style={{ width: `${mixLow}%` }} />
           </div>
-          <p className="telemetry-meta">High {mixHigh}% · Medium {mixMedium}% · Low {mixLow}%</p>
+          <p className="text-xs text-zinc-400">High {mixHigh}% · Medium {mixMedium}% · Low {mixLow}%</p>
         </div>
-      </div>
+      </Disclosure>
 
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-        {measurementTrends.length > 0 ? (
-          measurementTrends.map((trend) => (
-            <div key={`measurement-${trend.name}-${trend.unit}`} className="main-card main-card--module spacing-grid spacing-grid--tight">
-              <p className="telemetry-kicker">Measurement Trend</p>
-              <p className="telemetry-value">{trend.name}</p>
-              <div className="flex items-end gap-1 h-16">
-                {trend.points.map((point) => {
-                  const values = trend.points.map((item) => item.value);
-                  const min = Math.min(...values);
-                  const max = Math.max(...values);
-                  const spread = Math.max(0.1, max - min);
-                  const normalized = 25 + ((point.value - min) / spread) * 75;
-                  return (
-                    <div
-                      key={`${trend.name}-${point.measured_on}`}
-                      className="flex-1 rounded-sm bg-zinc-700/70"
-                      style={{ height: `${Math.round(normalized)}%` }}
-                      title={`${point.measured_on}: ${point.value} ${trend.unit}`}
-                    />
-                  );
-                })}
+      {measurementTrends.length > 0 ? (
+        <Disclosure title="Body Measurements" badge={`${measurementTrends.length} tracked`} defaultOpen={false}>
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+            {measurementTrends.map((trend) => (
+              <div key={`measurement-${trend.name}-${trend.unit}`} className="space-y-2">
+                <p className="text-sm font-medium text-zinc-200">{trend.name}</p>
+                <div className="flex items-end gap-1 h-16">
+                  {trend.points.map((point) => {
+                    const values = trend.points.map((item) => item.value);
+                    const min = Math.min(...values);
+                    const max = Math.max(...values);
+                    const spread = Math.max(0.1, max - min);
+                    const normalized = 25 + ((point.value - min) / spread) * 75;
+                    return (
+                      <div
+                        key={`${trend.name}-${point.measured_on}`}
+                        className="flex-1 rounded-sm bg-zinc-700/70"
+                        style={{ height: `${Math.round(normalized)}%` }}
+                        title={`${point.measured_on}: ${point.value} ${trend.unit}`}
+                      />
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-zinc-400">Latest {trend.latest_value} {trend.unit} ({trend.delta >= 0 ? "+" : ""}{trend.delta})</p>
               </div>
-              <p className="telemetry-meta">Latest {trend.latest_value} {trend.unit} ({trend.delta >= 0 ? "+" : ""}{trend.delta})</p>
-            </div>
-          ))
-        ) : (
-          <div className="main-card main-card--module lg:col-span-3">
-            <p className="text-xs text-zinc-500">No body measurement trend data</p>
+            ))}
           </div>
-        )}
-      </div>
+        </Disclosure>
+      ) : null}
 
-      <div className="main-card main-card--shell spacing-grid spacing-grid--tight">
-        <p className="telemetry-kicker">Volume Heat Map</p>
+      <Disclosure title="Volume Heat Map" defaultOpen={false}>
         {heatmap && heatmap.weeks.length > 0 ? (
           <div className="space-y-2">
+            <div className="grid grid-cols-[90px_repeat(7,minmax(0,1fr))] gap-1 text-[10px]">
+              <p className="text-zinc-500" />
+              {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((wd) => (
+                <p key={`heat-header-${wd}`} className="text-center text-zinc-500">{wd}</p>
+              ))}
+            </div>
             {heatmap.weeks.map((week) => (
               <div key={`heat-${week.week_start}`} className="grid grid-cols-[90px_repeat(7,minmax(0,1fr))] gap-1 text-[10px]">
                 <p className="text-zinc-500">{week.week_start}</p>
@@ -909,7 +899,7 @@ export default function HistoryPage() {
         ) : (
           <p className="text-xs text-zinc-500">No volume heat map data</p>
         )}
-      </div>
+      </Disclosure>
 
       {trendStatus ? <p className="text-xs text-zinc-500">{trendStatus}</p> : null}
     </div>

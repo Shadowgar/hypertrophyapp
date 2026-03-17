@@ -202,37 +202,35 @@ test("Settings coaching panel previews and applies intelligence decisions", asyn
   render(<SettingsPage />);
 
   await waitFor(() => {
+    expect(screen.getByText(/Pure Bodybuilding - Phase 1 Full Body/i)).toBeInTheDocument();
+  });
+
+  fireEvent.click(screen.getByRole("button", { name: /Coaching Preview/i }));
+
+  await waitFor(() => {
     expect(screen.getByRole("button", { name: /Generate coaching preview/i })).toBeInTheDocument();
   });
-  expect(screen.getByText(/Active administered program: Pure Bodybuilding - Phase 1 Full Body/i)).toBeInTheDocument();
-  expect(screen.getByText(/Canonical ID: pure_bodybuilding_phase_1_full_body/i)).toBeInTheDocument();
-  expect(screen.queryByText(/Recommended Program:/i)).not.toBeInTheDocument();
-  expect(screen.queryByLabelText(/Settings program selector/i)).not.toBeInTheDocument();
-  expect(screen.queryByRole("button", { name: /Save selected program/i })).not.toBeInTheDocument();
 
   fireEvent.click(screen.getByRole("button", { name: /Generate coaching preview/i }));
 
   await waitFor(() => {
     expect(screen.getByText(/Progression: hold/i)).toBeInTheDocument();
-    expect(screen.getByText(/Adaptation Risk: medium/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/Recommendation ID: rec_123/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Risk: medium/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/rec_123/i).length).toBeGreaterThan(0);
   });
   expect(
     screen.getByText(/Performance is stable but not yet strong enough to progress\. Hold the current load and accumulate cleaner work\./i),
   ).toBeInTheDocument();
   expect(screen.getByText(/Program Transition/i)).toBeInTheDocument();
   expect(screen.queryByText(/Current block complete/i)).not.toBeInTheDocument();
-  expect(screen.getByText(/Recommended action: rotate_program/i)).toBeInTheDocument();
+  expect(screen.getByText(/Action: rotate_program/i)).toBeInTheDocument();
   expect(screen.queryByText(/Rotate program/i)).not.toBeInTheDocument();
-  expect(screen.getByText(/Post-authored behavior: hold_last_authored_week/i)).toBeInTheDocument();
-  expect(screen.getByText(/hold_last_authored_week/i)).toBeInTheDocument();
   expect(screen.getByText(/The authored mesocycle is complete\. Rotate to a fresh next step\./i)).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole("button", { name: /Generate frequency adaptation preview/i }));
 
   await waitFor(() => {
-    expect(screen.getByText(/Adaptation: 5d -> 3d/i)).toBeInTheDocument();
-    expect(screen.getByText(/First Week Decisions: 1/i)).toBeInTheDocument();
+    expect(screen.getByText(/Adaptation: 5d → 3d/i)).toBeInTheDocument();
   });
 
   fireEvent.click(screen.getByRole("button", { name: /Apply frequency adaptation/i }));
@@ -241,12 +239,15 @@ test("Settings coaching panel previews and applies intelligence decisions", asyn
     expect(screen.getByText(/Applied \(3d for 4 weeks, 4 remaining\)/i)).toBeInTheDocument();
   });
   expect(screen.getByRole("button", { name: /Generate Week Now/i })).toBeInTheDocument();
-  expect(screen.getByRole("link", { name: /Open Week Plan/i })).toHaveAttribute("href", "/week");
-  expect(screen.getByRole("link", { name: /Open Today Workout/i })).toHaveAttribute("href", "/today");
 
   fireEvent.click(screen.getByRole("button", { name: /Generate Week Now/i }));
   await waitFor(() => {
     expect(screen.getByText(/Generated week for Pure Bodybuilding - Phase 1 Full Body\./i)).toBeInTheDocument();
+  });
+
+  fireEvent.click(screen.getByRole("button", { name: /Apply Coaching Decision/i }));
+  await waitFor(() => {
+    expect(screen.getByRole("button", { name: /Apply phase decision/i })).toBeInTheDocument();
   });
 
   fireEvent.click(screen.getByRole("button", { name: /Apply phase decision/i }));
@@ -394,14 +395,18 @@ test("Settings adaptation apply failure exposes retry recovery actions", async (
   render(<SettingsPage />);
 
   await waitFor(() => {
+    expect(screen.getByText(/Pure Bodybuilding - Phase 1 Full Body/i)).toBeInTheDocument();
+  });
+
+  fireEvent.click(screen.getByRole("button", { name: /Coaching Preview/i }));
+
+  await waitFor(() => {
     expect(screen.getByRole("button", { name: /Apply frequency adaptation/i })).toBeInTheDocument();
   });
-  expect(screen.getByText(/Active administered program: Pure Bodybuilding - Phase 1 Full Body/i)).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole("button", { name: /Apply frequency adaptation/i }));
   await waitFor(() => {
     expect(screen.getByText(/Apply frequency adaptation failed/i)).toBeInTheDocument();
   });
-  expect(screen.getByRole("button", { name: /Retry Apply Frequency Adaptation/i })).toBeInTheDocument();
-  expect(screen.getByRole("link", { name: /Open Week Plan/i })).toHaveAttribute("href", "/week");
+  expect(screen.getByRole("button", { name: /Apply frequency adaptation/i })).toBeInTheDocument();
 });

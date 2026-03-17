@@ -64,157 +64,78 @@ exports[`visual snapshot: week route 1`] = `
   >
     Week Plan
   </h1>
-  <div
-    class="grid grid-cols-1 gap-3 md:grid-cols-2"
+  <button
+    aria-label="Generate week plan"
+    class="inline-flex items-center justify-center rounded-md transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 border border-[var(--ui-edge-active)] bg-[var(--ui-accent-active)] text-white shadow-[var(--ui-depth-shadow-2)] hover:bg-[rgba(220,38,38,0.25)] hover:shadow-[var(--ui-glow-active),var(--ui-depth-shadow-3)] h-10 px-4 py-2 w-full min-h-[48px] text-sm font-semibold"
   >
-    <div
-      class="main-card main-card--shell"
+    <span
+      class="inline-flex items-center gap-2"
     >
-      <p
-        class="telemetry-kicker"
+      <svg
+        aria-hidden="true"
+        class="ui-icon ui-icon--action"
+        fill="none"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.9"
+        viewBox="0 0 24 24"
       >
-        Generator
-      </p>
-      <p
-        class="telemetry-status"
-      >
-        <span
-          class="status-dot status-dot--green"
+        <rect
+          height="15"
+          rx="2"
+          width="16"
+          x="4"
+          y="5"
         />
-         Ready
-      </p>
-    </div>
-    <div
-      class="main-card main-card--module main-card--accent"
-    >
-      <p
-        class="telemetry-kicker"
-      >
-        Program Source
-      </p>
-      <p
-        class="telemetry-value"
-      >
-        Auto-select
-      </p>
-    </div>
-  </div>
+        <path
+          d="M8 3v4M16 3v4M7 11h10M7 15h6"
+        />
+      </svg>
+      Generate Week
+    </span>
+  </button>
   <div
-    class="main-card main-card--module"
+    class="rounded-lg border border-zinc-800 bg-zinc-900/40 overflow-hidden"
   >
-    <div
-      class="spacing-grid spacing-grid--tight"
+    <button
+      aria-expanded="false"
+      class="flex min-h-[44px] w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-sm font-medium text-zinc-200 transition-colors hover:bg-zinc-800/50"
+      type="button"
     >
-      <p
-        class="telemetry-kicker"
+      <span
+        class="flex items-center gap-2"
       >
-        Generation Controls
-      </p>
-      <label
-        class="ui-meta"
-        for="week-program"
-      >
-        Program override (optional)
-      </label>
-      <select
-        aria-describedby="week-program-desc"
-        aria-label="Week program override selector"
-        class="ui-select"
-        id="week-program"
-      >
-        <option
-          value=""
-        >
-          Server-selected — trainer's recommended program
-        </option>
-        <option
-          value="pure_bodybuilding_phase_1_full_body"
-        >
-          Pure Bodybuilding - Phase 1 Full Body
-        </option>
-      </select>
-      <p
-        class="text-xs text-zinc-500"
-        id="week-program-desc"
-      >
-        Select a program to override the server selection for this generated week.
-      </p>
-      <button
-        aria-label="Generate week plan"
-        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 border border-[var(--ui-edge-active)] bg-[var(--ui-accent-active)] text-white shadow-[var(--ui-depth-shadow-2)] hover:bg-[rgba(220,38,38,0.25)] hover:shadow-[var(--ui-glow-active),var(--ui-depth-shadow-3)] h-10 px-4 py-2 w-full"
-      >
+        Program Override
         <span
-          class="inline-flex items-center gap-2"
+          class="rounded-full bg-zinc-800 px-2 py-0.5 text-[10px] font-normal text-zinc-400"
         >
-          <svg
-            aria-hidden="true"
-            class="ui-icon ui-icon--action"
-            fill="none"
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="1.9"
-            viewBox="0 0 24 24"
-          >
-            <rect
-              height="15"
-              rx="2"
-              width="16"
-              x="4"
-              y="5"
-            />
-            <path
-              d="M8 3v4M16 3v4M7 11h10M7 15h6"
-            />
-          </svg>
-          Generate Week
+          auto
         </span>
-      </button>
-    </div>
+      </span>
+      <svg
+        class="h-4 w-4 flex-shrink-0 text-zinc-500 transition-transform duration-150 "
+        fill="none"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+      >
+        <path
+          d="m6 9 6 6 6-6"
+        />
+      </svg>
+    </button>
   </div>
   <div
-    class="main-card main-card--shell spacing-grid spacing-grid--tight"
+    class="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3"
   >
-    <p
-      class="telemetry-kicker"
-    >
-      Planner Status
-    </p>
     <p
       class="text-sm text-zinc-200"
     >
       Generate a weekly plan.
     </p>
-    <button
-      class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 border border-[var(--ui-edge-active)] bg-[var(--ui-accent-active)] text-white shadow-[var(--ui-depth-shadow-2)] hover:bg-[rgba(220,38,38,0.25)] hover:shadow-[var(--ui-glow-active),var(--ui-depth-shadow-3)] h-10 px-4 py-2 w-full"
-    >
-      <span
-        class="inline-flex items-center gap-2"
-      >
-        <svg
-          aria-hidden="true"
-          class="ui-icon ui-icon--action"
-          fill="none"
-          stroke="currentColor"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="1.9"
-          viewBox="0 0 24 24"
-        >
-          <rect
-            height="15"
-            rx="2"
-            width="16"
-            x="4"
-            y="5"
-          />
-          <path
-            d="M8 3v4M16 3v4M7 11h10M7 15h6"
-          />
-        </svg>
-        Generate First Week Now
-      </span>
-    </button>
   </div>
 </div>
 `;

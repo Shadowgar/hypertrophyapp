@@ -104,7 +104,13 @@ test("Check-in page renders coaching panel and preview result", async () => {
   render(<CheckinPage />);
 
   await waitFor(() => {
-    expect(screen.getByText(/Coaching Intelligence/i)).toBeInTheDocument();
+    expect(screen.getByText(/Coaching Preview/i)).toBeInTheDocument();
+  });
+
+  fireEvent.click(screen.getByRole("button", { name: /Coaching Preview/i }));
+
+  await waitFor(() => {
+    expect(screen.getByRole("button", { name: /Generate coaching preview/i })).toBeInTheDocument();
   });
 
   fireEvent.click(screen.getByRole("button", { name: /Generate coaching preview/i }));

@@ -442,6 +442,14 @@ def build_workout_progress_payload(
         if not exercise_id:
             continue
         planned_sets = int(exercise.get("sets", 3) or 3)
+        authored_working = exercise.get("working_sets")
+        if authored_working is not None:
+            try:
+                min_sets = max(1, int(float(str(authored_working))))
+                if planned_sets < min_sets:
+                    planned_sets = min_sets
+            except (TypeError, ValueError):
+                pass
         planned_total += planned_sets
         exercises.append(
             {

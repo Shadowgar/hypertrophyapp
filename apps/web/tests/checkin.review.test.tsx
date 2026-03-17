@@ -158,19 +158,22 @@ test("check-in page surfaces review command center and adaptive output", async (
   render(<CheckinPage />);
 
   await waitFor(() => {
-    expect(screen.getByText(/Review Command Center/i)).toBeInTheDocument();
+    expect(screen.getByText(/Sunday review required/i)).toBeInTheDocument();
   });
 
-  expect(screen.getByText(/Sunday review required/i)).toBeInTheDocument();
   expect(screen.getByText(/Previous Week Lift Audit/i)).toBeInTheDocument();
-  expect(screen.getByText(/Bench Press/i)).toBeInTheDocument();
-  expect(screen.getByText(/High fault/i)).toBeInTheDocument();
-  expect(screen.getByText(/Nutrition Snapshot/i)).toBeInTheDocument();
+  expect(screen.getAllByText(/Nutrition/i).length).toBeGreaterThan(0);
+
+  fireEvent.click(screen.getByRole("button", { name: /Previous Week Lift Audit/i }));
+  await waitFor(() => {
+    expect(screen.getByText(/Bench Press/i)).toBeInTheDocument();
+  });
+  expect(screen.getByText(/high fault/i)).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole("button", { name: /Save Weekly Review/i }));
 
   await waitFor(() => {
-    expect(screen.getAllByText(/^78$/).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Readiness: 78/i)).toBeInTheDocument();
   });
 
   expect(screen.queryByText(/Primed to push/i)).not.toBeInTheDocument();
@@ -181,14 +184,14 @@ test("check-in page surfaces review command center and adaptive output", async (
   expect(screen.getAllByText(/^progressive_overload_ready$/i).length).toBeGreaterThan(0);
   expect(screen.queryByText(/^Guidance:/i)).not.toBeInTheDocument();
   expect(screen.getAllByText(/^bench$/).length).toBeGreaterThan(0);
-  expect(screen.queryByText(/^Weak points: bench$/i)).not.toBeInTheDocument();
+  expect(screen.getByText(/Weak points: bench/i)).toBeInTheDocument();
   expect(screen.queryByText(/^\+1 set delta$/i)).not.toBeInTheDocument();
   expect(screen.queryByText(/^1\.02x target$/i)).not.toBeInTheDocument();
   expect(screen.getAllByText(/^1$/).length).toBeGreaterThan(0);
   expect(screen.getAllByText(/^1\.02$/).length).toBeGreaterThan(0);
   expect(screen.getByText(/^below_target_reps_reduce_or_hold$/i)).toBeInTheDocument();
   expect(screen.getByText(/^weak_point_bounded_extra_practice$/i)).toBeInTheDocument();
-  expect(screen.getByText(/Adaptive Output/i)).toBeInTheDocument();
+  expect(screen.getByText(/Adaptation Results/i)).toBeInTheDocument();
   expect(screen.getByText(/Load Scale/i)).toBeInTheDocument();
 
   const generateNextWeekButton = screen.getByRole("button", { name: /Generate Next Week Now/i });

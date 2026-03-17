@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Disclosure } from "@/components/ui/disclosure";
 import { UiIcon } from "@/components/ui/icons";
 import { api, getProgramDisplayName, type GeneratedWeekExercise, type GeneratedWeekPlan, type ProgramTemplateOption } from "@/lib/api";
 import { kgToLbs } from "@/lib/weight";
@@ -149,52 +150,42 @@ function WeekOverviewCards({ plan, selectedProgramId }: Readonly<{ plan: Generat
   const weakPointScheduled = hasWeakPointEmphasis(plan);
 
   return (
-    <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+    <div className="space-y-3">
       <div className="main-card main-card--shell spacing-grid spacing-grid--tight">
-        <p className="telemetry-kicker">Week Command Deck</p>
+        <p className="telemetry-kicker">Week Overview</p>
         <p className="telemetry-value">{getProgramDisplayName({ id: plan.program_template_id })}</p>
-        <p className="telemetry-meta">
+        <p className="text-sm text-zinc-300">
           Week {plan.mesocycle.week_index} · {plan.sessions.length} sessions · {formatLabel(plan.split)} split
         </p>
-        <p className="telemetry-meta">
-          Source: {selectedProgramId ? "Manual override" : "Server-selected recommendation"}
-        </p>
-        <p className="telemetry-meta">Missed day policy: {formatLabel(plan.missed_day_policy)}</p>
-        {authoredBlockLabel ? <p className="telemetry-meta">{authoredBlockLabel}</p> : null}
-        {weakPointScheduled ? <p className="text-xs text-zinc-200">Arms & Weak Points emphasis is scheduled this week.</p> : null}
+        {authoredBlockLabel ? <p className="text-sm text-zinc-400">{authoredBlockLabel}</p> : null}
+        {weakPointScheduled ? <p className="text-sm text-zinc-200">Arms & Weak Points emphasis is scheduled this week.</p> : null}
       </div>
 
-      <div className="main-card main-card--module main-card--accent spacing-grid spacing-grid--tight">
-        <p className="telemetry-kicker">Mesocycle Posture</p>
-        <p className="telemetry-value">{plan.deload.active ? "deload" : "standard"}</p>
-        <p className="telemetry-meta">
-          Week {plan.mesocycle.week_index}/{plan.mesocycle.trigger_weeks_effective}
-        </p>
-        <p className="text-xs text-zinc-200">Deload reason: {plan.deload.reason}</p>
-        {plan.deload.active ? (
-          <p className="text-xs text-zinc-200">
-            Set reduction: {plan.deload.set_reduction_pct}% · Load reduction: {plan.deload.load_reduction_pct}%
-          </p>
-        ) : null}
-      </div>
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <Disclosure title="Mesocycle Posture" badge={plan.deload.active ? "deload" : "standard"} defaultOpen={false}>
+          <div className="space-y-1 text-sm text-zinc-200">
+            <p>Week {plan.mesocycle.week_index}/{plan.mesocycle.trigger_weeks_effective}</p>
+            <p>Deload reason: {plan.deload.reason}</p>
+            {plan.deload.active ? (
+              <p>Set reduction: {plan.deload.set_reduction_pct}% · Load reduction: {plan.deload.load_reduction_pct}%</p>
+            ) : null}
+          </div>
+        </Disclosure>
 
-      <div className="main-card main-card--module spacing-grid spacing-grid--tight">
-        <p className="telemetry-kicker">Coverage Radar</p>
-        <p className="telemetry-value">
-          {coveredMuscles.length} covered · {underTarget.length} under target
-        </p>
-        <p className="telemetry-meta">
-          Minimum {plan.muscle_coverage.minimum_sets_per_muscle ?? 0} sets per muscle
-        </p>
-        <p className="text-xs text-zinc-200">Under target muscles: {underTarget.length > 0 ? underTarget.join(", ") : "none"}</p>
-        <div className="space-y-1 text-xs text-zinc-300">
-          {weeklyVolumeEntries.map(([muscle, sets]) => (
-            <div key={`volume-${muscle}`} className="flex items-center justify-between rounded-md border border-white/10 bg-zinc-900/70 px-2 py-1">
-              <span>{formatLabel(muscle)}</span>
-              <span>{sets} sets</span>
+        <Disclosure title="Coverage Radar" badge={`${coveredMuscles.length} covered · ${underTarget.length} gaps`} defaultOpen={false}>
+          <div className="space-y-2 text-sm text-zinc-200">
+            <p>Minimum {plan.muscle_coverage.minimum_sets_per_muscle ?? 0} sets per muscle</p>
+            {underTarget.length > 0 ? <p className="text-yellow-400/80">Under target: {underTarget.join(", ")}</p> : <p className="text-zinc-400">All muscles on target.</p>}
+            <div className="space-y-1 text-xs text-zinc-300">
+              {weeklyVolumeEntries.map(([muscle, sets]) => (
+                <div key={`volume-${muscle}`} className="flex items-center justify-between rounded-md border border-white/10 bg-zinc-900/70 px-2 py-1">
+                  <span>{formatLabel(muscle)}</span>
+                  <span>{sets} sets</span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
+        </Disclosure>
       </div>
     </div>
   );
@@ -216,76 +207,68 @@ function WeekExecutionCards({ plan }: Readonly<{ plan: GeneratedWeekPlan }>) {
 
   return (
     <div className="grid grid-cols-1 gap-3 xl:grid-cols-[1.3fr_1fr]">
-      <div className="main-card main-card--module spacing-grid spacing-grid--tight">
-        <p className="telemetry-kicker">Session Blueprint</p>
-        <div className="space-y-2">
-          {plan.sessions.map((session, index) => {
-            const totalSets = session.exercises.reduce((sum, exercise) => sum + exercise.sets, 0);
-            const dayRoleLabel = formatRoleLabel(session.day_role);
-            const weakPointSlotCount = countSlotRole(session.exercises, "weak_point");
-            return (
-              <div key={session.session_id} className="rounded-md border border-white/10 bg-zinc-900/70 p-3 text-xs text-zinc-200">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold text-zinc-100">Day {index + 1}: {session.title}</p>
-                    <p className="telemetry-meta">{formatSessionDate(session.date)} · {session.exercises.length} exercises · {totalSets} total sets</p>
-                  </div>
-                  <span className="rounded-full border border-white/10 bg-black/25 px-2 py-1 text-[10px] uppercase tracking-wide text-zinc-300">
-                    {session.session_id}
-                  </span>
-                </div>
-                <p className="mt-2">Lead slot: {formatLeadExercise(session.exercises[0])}</p>
-                {dayRoleLabel ? <p className="telemetry-meta mt-1">Session intent: {dayRoleLabel}</p> : null}
-                <p className="telemetry-meta mt-1">
+      <div className="space-y-3">
+        <p className="telemetry-kicker">Sessions</p>
+        {plan.sessions.map((session, index) => {
+          const totalSets = session.exercises.reduce((sum, exercise) => sum + exercise.sets, 0);
+          const dayRoleLabel = formatRoleLabel(session.day_role);
+          const weakPointSlotCount = countSlotRole(session.exercises, "weak_point");
+          return (
+            <Disclosure
+              key={session.session_id}
+              title={`Day ${index + 1}: ${session.title}`}
+              badge={`${session.exercises.length} exercises · ${totalSets} sets`}
+              defaultOpen={false}
+            >
+              <div className="space-y-2 text-xs text-zinc-200">
+                <p className="telemetry-meta">{formatSessionDate(session.date)}</p>
+                <p>Lead: {formatLeadExercise(session.exercises[0])}</p>
+                {dayRoleLabel ? <p className="telemetry-meta">Intent: {dayRoleLabel}</p> : null}
+                <p className="telemetry-meta">
                   Coverage: {uniqueMuscles(session.exercises).join(", ") || "Untracked"}
                 </p>
-                {weakPointSlotCount > 0 ? <p className="telemetry-meta mt-1">Weak-point slots: {weakPointSlotCount}</p> : null}
-                <div className="mt-3 space-y-2">
+                {weakPointSlotCount > 0 ? <p className="telemetry-meta">Weak-point slots: {weakPointSlotCount}</p> : null}
+                <div className="mt-2 space-y-2">
                   {session.exercises.map((exercise) => (
                     <ExerciseExecutionDetails key={`${session.session_id}-${exercise.id}`} exercise={exercise} />
                   ))}
                 </div>
               </div>
-            );
-          })}
-        </div>
+            </Disclosure>
+          );
+        })}
       </div>
 
       <div className="space-y-3">
-        <div className="main-card main-card--shell spacing-grid spacing-grid--tight">
-          <p className="telemetry-kicker">Generation Read</p>
-          {reasonSummary ? <p className="text-xs text-zinc-200">{reasonSummary}</p> : null}
-          <div className="grid grid-cols-2 gap-2 text-xs text-zinc-300">
-            <div className="rounded-md border border-white/10 bg-zinc-900/70 p-2">Effective days: {effectiveDays ?? plan.user.days_available}</div>
-            <div className="rounded-md border border-white/10 bg-zinc-900/70 p-2">Prior generated weeks: {priorWeeks ?? 0}</div>
-            <div className="rounded-md border border-white/10 bg-zinc-900/70 p-2">Latest adherence: {latestAdherence ?? "n/a"}</div>
-            <div className="rounded-md border border-white/10 bg-zinc-900/70 p-2">Severe soreness flags: {severeSorenessCount ?? 0}</div>
+        <Disclosure title="Generation Details" badge={reasonSummary ? "has summary" : null} defaultOpen={false}>
+          <div className="space-y-2">
+            {reasonSummary ? <p className="text-sm text-zinc-200">{reasonSummary}</p> : null}
+            <div className="grid grid-cols-2 gap-2 text-xs text-zinc-300">
+              <div className="rounded-md border border-white/10 bg-zinc-900/70 p-2">Effective days: {effectiveDays ?? plan.user.days_available}</div>
+              <div className="rounded-md border border-white/10 bg-zinc-900/70 p-2">Prior generated weeks: {priorWeeks ?? 0}</div>
+              <div className="rounded-md border border-white/10 bg-zinc-900/70 p-2">Latest adherence: {latestAdherence ?? "n/a"}</div>
+              <div className="rounded-md border border-white/10 bg-zinc-900/70 p-2">Severe soreness flags: {severeSorenessCount ?? 0}</div>
+            </div>
+            {candidateIds.length > 0 ? <p className="telemetry-meta">Candidate stack: {candidateIds.join(" -> ")}</p> : null}
           </div>
-          {candidateIds.length > 0 ? <p className="telemetry-meta">Candidate stack: {candidateIds.join(" -> ")}</p> : null}
-        </div>
+        </Disclosure>
 
         {adaptiveReview ? (
-          <div className="main-card main-card--module spacing-grid spacing-grid--tight">
-            <p className="telemetry-kicker">Adaptive Review Carryover</p>
-            <p className="telemetry-value">{adaptiveReview.global_set_delta >= 0 ? "+" : ""}{adaptiveReview.global_set_delta} set bias</p>
-            <p className="telemetry-meta">Load scale {formatSignedPercent(adaptiveReview.global_weight_scale)}</p>
-            <p className="text-xs text-zinc-200">
-              Weak-point slots: {adaptiveReview.weak_point_exercises.length > 0 ? adaptiveReview.weak_point_exercises.join(", ") : "none"}
-            </p>
-          </div>
+          <Disclosure title="Adaptive Review" badge={`${adaptiveReview.global_set_delta >= 0 ? "+" : ""}${adaptiveReview.global_set_delta} sets`} defaultOpen={false}>
+            <div className="space-y-1 text-sm text-zinc-200">
+              <p>Load scale: {formatSignedPercent(adaptiveReview.global_weight_scale)}</p>
+              <p>Weak-point slots: {adaptiveReview.weak_point_exercises.length > 0 ? adaptiveReview.weak_point_exercises.join(", ") : "none"}</p>
+            </div>
+          </Disclosure>
         ) : null}
 
         {frequencyAdaptation ? (
-          <div className="main-card main-card--module main-card--accent spacing-grid spacing-grid--tight">
-            <p className="telemetry-kicker">Frequency Adaptation Runtime</p>
-            <p className="telemetry-value">{frequencyAdaptation.target_days} day landing</p>
-            <p className="telemetry-meta">
-              {frequencyAdaptation.weeks_remaining_before_apply}{" -> "}{frequencyAdaptation.weeks_remaining_after_apply} weeks remaining
-            </p>
-            <p className="text-xs text-zinc-200">
-              Weak areas preserved: {frequencyAdaptation.weak_areas.length > 0 ? frequencyAdaptation.weak_areas.join(", ") : "none"}
-            </p>
-          </div>
+          <Disclosure title="Frequency Adaptation" badge={`${frequencyAdaptation.target_days} days`} defaultOpen={false}>
+            <div className="space-y-1 text-sm text-zinc-200">
+              <p>{frequencyAdaptation.weeks_remaining_before_apply} → {frequencyAdaptation.weeks_remaining_after_apply} weeks remaining</p>
+              <p>Weak areas preserved: {frequencyAdaptation.weak_areas.length > 0 ? frequencyAdaptation.weak_areas.join(", ") : "none"}</p>
+            </div>
+          </Disclosure>
         ) : null}
       </div>
     </div>
@@ -315,10 +298,18 @@ export default function WeekPage() {
     if (!plan) {
       return null;
     }
-    const weeklyVolume = Object.values(plan.weekly_volume_by_muscle ?? {}).reduce((sum, value) => sum + value, 0);
+    const totalPlannedSets = (plan.sessions ?? []).reduce(
+      (sum, session) => sum + (session.exercises ?? []).reduce((s, ex) => s + (ex.sets ?? 0), 0),
+      0,
+    );
+    const volumeByMuscle = Object.values(plan.weekly_volume_by_muscle ?? {}).reduce(
+      (sum, value) => sum + value,
+      0,
+    );
     return {
-      weeklyVolume,
-      underTarget: plan.muscle_coverage.under_target_muscles ?? [],
+      totalPlannedSets,
+      volumeByMuscle,
+      underTarget: plan.muscle_coverage?.under_target_muscles ?? [],
       leadSession: plan.sessions[0] ?? null,
     };
   }, [plan]);
@@ -349,94 +340,87 @@ export default function WeekPage() {
 
   useEffect(() => {
     let mounted = true;
-    api.listPrograms()
-      .then((list) => { if (mounted) setPrograms(list); })
+    api
+      .listPrograms()
+      .then((list) => {
+        if (mounted) setPrograms(list);
+      })
       .catch(() => {});
-    return () => { mounted = false };
+
+    // Attempt to load the latest generated week plan on mount so the user
+    // does not need to regenerate after navigation.
+    api
+      .getLatestWeekPlan()
+      .then((data) => {
+        if (!mounted) return;
+        setPlan(data);
+        setPlanStatus(`Week generated for ${getProgramDisplayName({ id: data.program_template_id })}.`);
+      })
+      .catch(() => {
+        // No existing plan is fine; keep default status.
+      });
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return (
     <div className="space-y-4">
       <h1 className="ui-title-page">Week Plan</h1>
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <div className="main-card main-card--shell">
-          <p className="telemetry-kicker">Generator</p>
-          <p className="telemetry-status">
-            <span className="status-dot status-dot--green" /> Ready
-          </p>
-        </div>
-        <div className="main-card main-card--module main-card--accent">
-          <p className="telemetry-kicker">Program Source</p>
-          <p className="telemetry-value">{selectedProgramId ? "Manual override" : "Auto-select"}</p>
-        </div>
-      </div>
-      <div className="main-card main-card--module">
-        <div className="spacing-grid spacing-grid--tight">
-          <p className="telemetry-kicker">Generation Controls</p>
-          <label htmlFor="week-program" className="ui-meta">Program override (optional)</label>
-          <select id="week-program" aria-label="Week program override selector" aria-describedby="week-program-desc" className="ui-select" value={selectedProgramId ?? ""} onChange={(e) => setSelectedProgramId(e.target.value || null)}>
-            <option value="">Server-selected — trainer&apos;s recommended program</option>
+
+      <Button aria-label="Generate week plan" className="w-full min-h-[48px] text-sm font-semibold" onClick={generate} disabled={isGenerating}>
+        <span className="inline-flex items-center gap-2">
+          <UiIcon name="plan" className="ui-icon--action" />
+          {isGenerating ? "Generating Week..." : plan ? "Regenerate Week" : "Generate Week"}
+        </span>
+      </Button>
+
+      <Disclosure title="Program Override" badge={selectedProgramId ? "custom" : "auto"} defaultOpen={false}>
+        <div className="space-y-2">
+          <select id="week-program" aria-label="Week program override selector" className="ui-select" value={selectedProgramId ?? ""} onChange={(e) => setSelectedProgramId(e.target.value || null)}>
+            <option value="">Auto — trainer&apos;s recommended program</option>
             {programs.map((p) => <option key={p.id} value={p.id}>{getProgramDisplayName(p)}</option>)}
           </select>
-          <p id="week-program-desc" className="text-xs text-zinc-500">Select a program to override the server selection for this generated week.</p>
-          <Button aria-label="Generate week plan" className="w-full" onClick={generate}>
-            <span className="inline-flex items-center gap-2">
-              <UiIcon name="plan" className="ui-icon--action" />
-              {isGenerating ? "Generating Week..." : "Generate Week"}
-            </span>
-          </Button>
+          <p className="text-xs text-zinc-500">Override the server selection for this generated week.</p>
         </div>
-      </div>
-      <div className="main-card main-card--shell spacing-grid spacing-grid--tight">
-        <p className="telemetry-kicker">Planner Status</p>
-        <p className="text-sm text-zinc-200">{planStatus}</p>
-        {awaitingInitialGeneration ? (
-          <Button className="w-full" onClick={generate}>
-            <span className="inline-flex items-center gap-2">
-              <UiIcon name="plan" className="ui-icon--action" />
-              Generate First Week Now
-            </span>
-          </Button>
-        ) : null}
-        {requiresSundayReview ? (
-          <a
-            className="inline-flex items-center justify-center rounded-md border border-white/10 bg-zinc-900/70 px-3 py-2 text-xs text-zinc-100 hover:bg-zinc-900"
-            href="/checkin"
-          >
-            Open Check-In
-          </a>
-        ) : null}
-        {generationFailed ? (
-          <Button className="w-full" onClick={generate}>
-            <span className="inline-flex items-center gap-2">
-              <UiIcon name="plan" className="ui-icon--action" />
-              Retry Generate Week
-            </span>
-          </Button>
-        ) : null}
-        {commandDeck ? (
-          <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
-            <div className="rounded-md border border-white/10 bg-zinc-900/70 p-2 text-xs text-zinc-200">
-              Weekly volume footprint: {commandDeck.weeklyVolume} sets
-            </div>
-            <div className="rounded-md border border-white/10 bg-zinc-900/70 p-2 text-xs text-zinc-200">
-              Lead session: {commandDeck.leadSession?.title ?? "Not generated"}
-            </div>
-            <div className="rounded-md border border-white/10 bg-zinc-900/70 p-2 text-xs text-zinc-200">
-              Focus gaps: {commandDeck.underTarget.length > 0 ? commandDeck.underTarget.map((muscle) => formatLabel(muscle)).join(", ") : "none"}
-            </div>
+      </Disclosure>
+
+      {planStatus ? (
+        <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3">
+          <p className="text-sm text-zinc-200">{planStatus}</p>
+          {requiresSundayReview ? (
+            <a className="mt-2 inline-flex items-center justify-center rounded-md border border-white/10 bg-zinc-900/70 px-3 py-2 text-xs text-zinc-100 hover:bg-zinc-900" href="/checkin">
+              Open Check-In
+            </a>
+          ) : null}
+        </div>
+      ) : null}
+
+      {commandDeck ? (
+        <div className="grid grid-cols-3 gap-2">
+          <div className="rounded-md border border-white/10 bg-zinc-900/70 p-2 text-center">
+            <p className="text-[10px] uppercase tracking-wide text-zinc-500">Planned sets</p>
+            <p className="text-sm font-semibold text-zinc-100">{commandDeck.totalPlannedSets}</p>
+            {commandDeck.volumeByMuscle !== commandDeck.totalPlannedSets ? (
+              <p className="text-[10px] text-zinc-500">Volume by muscle: {commandDeck.volumeByMuscle}</p>
+            ) : null}
           </div>
-        ) : null}
-      </div>
+          <div className="rounded-md border border-white/10 bg-zinc-900/70 p-2 text-center">
+            <p className="text-[10px] uppercase tracking-wide text-zinc-500">Lead</p>
+            <p className="text-sm font-semibold text-zinc-100 truncate">{commandDeck.leadSession?.title ?? "—"}</p>
+          </div>
+          <div className="rounded-md border border-white/10 bg-zinc-900/70 p-2 text-center">
+            <p className="text-[10px] uppercase tracking-wide text-zinc-500">Gaps</p>
+            <p className="text-sm font-semibold text-zinc-100">{commandDeck.underTarget.length > 0 ? commandDeck.underTarget.map((muscle) => formatLabel(muscle)).join(", ") : "none"}</p>
+          </div>
+        </div>
+      ) : null}
 
       {plan ? (
         <>
           <WeekOverviewCards plan={plan} selectedProgramId={selectedProgramId} />
           <WeekExecutionCards plan={plan} />
-          <div className="main-card main-card--module spacing-grid spacing-grid--tight">
-            <p className="telemetry-kicker">Plan Output</p>
-            <pre className="overflow-x-auto text-xs text-zinc-200">{JSON.stringify(plan, null, 2)}</pre>
-          </div>
         </>
       ) : null}
     </div>

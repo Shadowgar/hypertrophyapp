@@ -70,7 +70,7 @@ test("substitution modal applies choice, keeps notes visible, and persists selec
   fireEvent.click(screen.getByRole("button", { name: /Bench Press/ }));
   await waitFor(() => expect(screen.getByRole("dialog")).toBeInTheDocument());
 
-  fireEvent.click(screen.getByRole("button", { name: /have this equipment/i }));
+  fireEvent.click(screen.getByRole("button", { name: /Swap/i }));
   await waitFor(() => expect(screen.getByText(/Choose a substitute/i)).toBeInTheDocument());
 
   fireEvent.click(screen.getByRole("button", { name: "Push-Up" }));
@@ -79,7 +79,7 @@ test("substitution modal applies choice, keeps notes visible, and persists selec
 
   fireEvent.click(screen.getByRole("button", { name: /Notes/i }));
   await waitFor(() => {
-    expect(screen.getAllByText(/Keep elbows tucked/i).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText(/Keep elbows tucked/i).length).toBeGreaterThanOrEqual(1);
   });
 
   const key = `hypertrophy_swap_selection:${workout.session_id}`;

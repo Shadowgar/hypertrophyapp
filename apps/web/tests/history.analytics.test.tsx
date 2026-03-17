@@ -118,10 +118,10 @@ test("history page renders analytics dashboard payload", async () => {
   expect(screen.getByText(/Coaching Decision Timeline/i)).toBeInTheDocument();
   expect(screen.queryByText(/Progression is compounding\./i)).not.toBeInTheDocument();
   expect(screen.getByText(/Latest rationale: maintain_until_stable/i)).toBeInTheDocument();
-  expect(screen.getAllByText(/maintain_until_stable/i).length).toBeGreaterThanOrEqual(2);
-  expect(screen.getByText(/Focus muscles: biceps, shoulders/i)).toBeInTheDocument();
 
-  const button = screen.getByRole("button", { name: /Load Analytics Snapshot/i });
-  fireEvent.click(button);
-  await waitFor(() => expect(screen.getByText(/"pr_highlights"/i)).toBeInTheDocument());
+  fireEvent.click(screen.getByRole("button", { name: /Coaching Decision Timeline/i }));
+  await waitFor(() => {
+    expect(screen.getByText(/Focus: biceps, shoulders/i)).toBeInTheDocument();
+  });
+  expect(screen.getAllByText(/maintain_until_stable/i).length).toBeGreaterThanOrEqual(2);
 });

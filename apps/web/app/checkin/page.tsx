@@ -4,9 +4,18 @@ import { FormEvent, useEffect, useState } from "react";
 
 import CoachingIntelligencePanel from "@/components/coaching-intelligence-panel";
 import { Button } from "@/components/ui/button";
+import { Disclosure } from "@/components/ui/disclosure";
 import { UiIcon } from "@/components/ui/icons";
 import { api, type WeeklyReviewResponse, type WeeklyReviewStatus } from "@/lib/api";
 import { kgToLbs } from "@/lib/weight";
+
+const ADHERENCE_LABELS: Record<string, string> = {
+  "1": "Missed most sessions",
+  "2": "Hit about a quarter",
+  "3": "Hit about half",
+  "4": "Hit most sessions",
+  "5": "Hit every session",
+};
 
 function resolveStatusTone(status: string): "green" | "yellow" | "red" {
   const lowered = status.toLowerCase();
@@ -124,219 +133,70 @@ export default function CheckinPage() {
   return (
     <div className="space-y-4">
       <h1 className="ui-title-page">Sunday Review</h1>
-      <div className="main-card main-card--module main-card--accent spacing-grid spacing-grid--tight">
-        <div className="telemetry-header">
-          <p className="telemetry-kicker">Review State</p>
-          <p className="telemetry-status">
-            <span className={`status-dot status-dot--${statusTone}`} /> {status}
-          </p>
-        </div>
-        <p className="telemetry-meta">
+      <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3">
+        <p className="flex items-center gap-2 text-sm text-zinc-200">
+          <span className={`status-dot status-dot--${statusTone}`} /> {status}
+        </p>
+        <p className="mt-1 text-xs text-zinc-400">
           {reviewStatus?.today_is_sunday
             ? "Sunday flow active: review prior-week lifts and set nutrition for the upcoming week."
             : "You can still run the weekly review now to update the next planning cycle."}
         </p>
         {reviewStatus ? (
-          <p className="telemetry-meta text-zinc-300">
-            Target week: {reviewStatus.week_start} · Previous week: {reviewStatus.previous_week_start} → {reviewStatus.previous_week_end}
+          <p className="mt-1 text-xs text-zinc-500">
+            Target week: {reviewStatus.week_start} · Previous: {reviewStatus.previous_week_start} → {reviewStatus.previous_week_end}
           </p>
         ) : null}
       </div>
 
-      <CoachingIntelligencePanel contextLabel="Check-In" />
-
-      <div className="grid gap-3 lg:grid-cols-2">
-        <div className="main-card main-card--module spacing-grid spacing-grid--tight">
-          <div className="telemetry-header">
-            <div>
-              <p className="telemetry-kicker">Review Command Center</p>
-              <p className="telemetry-value">{readinessScore === null ? "Awaiting review result" : readinessScore}</p>
-            </div>
-            <span className="telemetry-status">
-              <span className={`status-dot status-dot--${readinessTone}`} />
-              {readinessScore === null ? "Pending" : readinessScore}
-            </span>
-          </div>
-          {reviewGuidance ? (
-            <p className="telemetry-meta text-zinc-300">{reviewGuidance}</p>
-          ) : (
-            <p className="telemetry-meta text-zinc-300">No review result recorded.</p>
-          )}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
-              <p className="telemetry-kicker">Volume Shift</p>
-              <p className="text-sm text-zinc-100">
-                {reviewResult ? reviewResult.adjustments.global_set_delta : "Awaiting output"}
-              </p>
-            </div>
-            <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
-              <p className="telemetry-kicker">Load Scale</p>
-              <p className="text-sm text-zinc-100">
-                {reviewResult ? reviewResult.adjustments.global_weight_scale : "Awaiting output"}
-              </p>
-            </div>
-            <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
-              <p className="telemetry-kicker">Weak Point Targets</p>
-              {weakPointExercises.length ? (
-                <div className="space-y-1 text-sm text-zinc-100">
-                  {weakPointExercises.map((exerciseId) => (
-                    <p key={exerciseId}>{exerciseId}</p>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-zinc-100">None</p>
-              )}
-            </div>
-            <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
-              <p className="telemetry-kicker">Fault Count</p>
-              <p className="text-sm text-zinc-100">{previousSummary ? previousSummary.faulty_exercise_count : 0} flagged lifts</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="main-card main-card--module spacing-grid spacing-grid--tight">
-          <div className="telemetry-header">
-            <div>
-              <p className="telemetry-kicker">Nutrition Snapshot</p>
-              <p className="telemetry-value">Next week fuel plan</p>
-            </div>
-            <p className="telemetry-meta">Adjust before saving if recovery or scale trend is off.</p>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
-              <p className="telemetry-kicker">Calories</p>
-              <p className="text-sm text-zinc-100">{calorieValue} kcal</p>
-            </div>
-            <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
-              <p className="telemetry-kicker">Protein</p>
-              <p className="text-sm text-zinc-100">{proteinValue} g</p>
-            </div>
-            <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
-              <p className="telemetry-kicker">Fat</p>
-              <p className="text-sm text-zinc-100">{fatValue} g</p>
-            </div>
-            <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
-              <p className="telemetry-kicker">Carbs</p>
-              <p className="text-sm text-zinc-100">{carbsValue} g</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {previousSummary ? (
-        <div className="main-card main-card--module spacing-grid spacing-grid--tight">
-          <p className="telemetry-kicker">Previous Week Lift Audit</p>
-          <p className="telemetry-meta text-zinc-300">
-            Completion: {previousSummary.completed_sets_total}/{previousSummary.planned_sets_total} sets ({previousSummary.completion_pct}%)
-          </p>
-          <p className="telemetry-meta text-zinc-300">Faulty exercises: {previousSummary.faulty_exercise_count}</p>
-          <div className="space-y-2">
-            {previousSummary.exercise_faults.slice(0, 5).map((fault) => (
-              <div key={fault.primary_exercise_id} className="rounded-md border border-zinc-800 bg-zinc-900/40 p-2 text-xs text-zinc-300">
-                <p className="font-semibold text-zinc-100">{fault.name}</p>
-                <p className="text-[11px] uppercase tracking-wide text-zinc-500">{fault.fault_level} fault</p>
-                <p>
-                  {fault.completed_sets}/{fault.planned_sets} sets · avg {fault.average_performed_reps} reps @ {kgToLbs(fault.average_performed_weight)} lbs
-                </p>
-                <p>
-                  Target {fault.target_reps_min}-{fault.target_reps_max} reps @ {kgToLbs(fault.target_weight)} lbs
-                </p>
-                {fault.guidance ? <p>{fault.guidance}</p> : null}
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : null}
-
-      <form className="main-card main-card--module spacing-grid" onSubmit={handleSubmit}>
-        <p className="telemetry-kicker">Upcoming Week Targets</p>
-
-        <label className="space-y-1 text-xs text-zinc-300">
-          <span>Current Bodyweight</span>
-          <input
-            className="ui-input"
-            min="0.1"
-            onChange={(event) => setBodyWeight(event.target.value)}
-            step="0.1"
-            type="number"
-            value={bodyWeight}
-          />
-        </label>
-
-        <label className="space-y-1 text-xs text-zinc-300">
-          <span>Daily Calories</span>
-          <input
-            className="ui-input"
-            min="1"
-            onChange={(event) => setCalories(event.target.value)}
-            step="1"
-            type="number"
-            value={calories}
-          />
-        </label>
-
-        <div className="grid grid-cols-3 gap-2">
-          <label className="space-y-1 text-xs text-zinc-300">
-            <span>Protein (g)</span>
-            <input
-              className="ui-input"
-              min="1"
-              onChange={(event) => setProtein(event.target.value)}
-              step="1"
-              type="number"
-              value={protein}
-            />
-          </label>
-          <label className="space-y-1 text-xs text-zinc-300">
-            <span>Fat (g)</span>
-            <input
-              className="ui-input"
-              min="1"
-              onChange={(event) => setFat(event.target.value)}
-              step="1"
-              type="number"
-              value={fat}
-            />
-          </label>
-          <label className="space-y-1 text-xs text-zinc-300">
-            <span>Carbs (g)</span>
-            <input
-              className="ui-input"
-              min="1"
-              onChange={(event) => setCarbs(event.target.value)}
-              step="1"
-              type="number"
-              value={carbs}
-            />
+      <form className="space-y-4" onSubmit={handleSubmit}>
+        <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-3">
+          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Body Metrics</p>
+          <label className="flex flex-col gap-1 text-sm text-zinc-300">
+            <span>Current Bodyweight</span>
+            <input className="ui-input" min="0.1" onChange={(event) => setBodyWeight(event.target.value)} step="0.1" type="number" value={bodyWeight} />
           </label>
         </div>
 
-        <label className="space-y-1 text-xs text-zinc-300">
-          <span>Adherence Score (1-5)</span>
-          <select
-            className="ui-select"
-            onChange={(event) => setAdherenceScore(event.target.value)}
-            value={adherenceScore}
-          >
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-          </select>
-        </label>
+        <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-3">
+          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Nutrition</p>
+          <label className="flex flex-col gap-1 text-sm text-zinc-300">
+            <span>Daily Calories</span>
+            <input className="ui-input" min="1" onChange={(event) => setCalories(event.target.value)} step="1" type="number" value={calories} />
+          </label>
+          <div className="grid grid-cols-3 gap-2">
+            <label className="flex flex-col gap-1 text-sm text-zinc-300">
+              <span>Protein (g)</span>
+              <input className="ui-input" min="1" onChange={(event) => setProtein(event.target.value)} step="1" type="number" value={protein} />
+            </label>
+            <label className="flex flex-col gap-1 text-sm text-zinc-300">
+              <span>Fat (g)</span>
+              <input className="ui-input" min="1" onChange={(event) => setFat(event.target.value)} step="1" type="number" value={fat} />
+            </label>
+            <label className="flex flex-col gap-1 text-sm text-zinc-300">
+              <span>Carbs (g)</span>
+              <input className="ui-input" min="1" onChange={(event) => setCarbs(event.target.value)} step="1" type="number" value={carbs} />
+            </label>
+          </div>
+        </div>
 
-        <label className="space-y-1 text-xs text-zinc-300">
-          <span>Notes (optional)</span>
-          <textarea
-            className="ui-textarea"
-            onChange={(event) => setNotes(event.target.value)}
-            rows={3}
-            value={notes}
-          />
-        </label>
+        <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-3">
+          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Recovery</p>
+          <label className="flex flex-col gap-1 text-sm text-zinc-300">
+            <span>Adherence Score (1-5)</span>
+            <select className="ui-select" onChange={(event) => setAdherenceScore(event.target.value)} value={adherenceScore}>
+              {["1", "2", "3", "4", "5"].map((val) => (
+                <option key={val} value={val}>{val} — {ADHERENCE_LABELS[val]}</option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1 text-sm text-zinc-300">
+            <span>Notes (optional)</span>
+            <textarea className="ui-textarea" onChange={(event) => setNotes(event.target.value)} rows={3} value={notes} />
+          </label>
+        </div>
 
-        <Button className="w-full" type="submit">
+        <Button className="w-full min-h-[48px] text-sm font-semibold" type="submit">
           <span className="inline-flex items-center gap-2">
             <UiIcon name="review" className="ui-icon--action" />
             Save Weekly Review
@@ -344,45 +204,64 @@ export default function CheckinPage() {
         </Button>
       </form>
 
-      {reviewResult ? (
-        <div className="main-card main-card--module spacing-grid spacing-grid--tight">
-          <p className="telemetry-kicker">Adaptive Output</p>
-          <div className="space-y-1">
-            <p className="telemetry-meta text-zinc-300">Readiness score</p>
-            <p className="text-sm text-zinc-100">{reviewResult.readiness_score}</p>
-          </div>
-          {reviewGuidance ? <p className="telemetry-meta text-zinc-300">{reviewGuidance}</p> : null}
-          <div className="space-y-1">
-            <p className="telemetry-meta text-zinc-300">Weak points</p>
-            {weakPointExercises.length ? (
-              <div className="space-y-1 text-sm text-zinc-100">
-                {weakPointExercises.map((exerciseId) => (
-                  <p key={exerciseId}>{exerciseId}</p>
-                ))}
-              </div>
-            ) : (
-              <p className="telemetry-meta text-zinc-300">None</p>
-            )}
-          </div>
+      {previousSummary ? (
+        <Disclosure title="Previous Week Lift Audit" badge={`${previousSummary.completion_pct}% complete`} defaultOpen={false}>
           <div className="space-y-2">
-            {reviewResult.adjustments.exercise_overrides.slice(0, 5).map((item) => (
-              <div key={item.primary_exercise_id} className="rounded-md border border-zinc-800 bg-zinc-900/40 p-2 text-xs text-zinc-300">
-                <p className="font-semibold text-zinc-100">{item.primary_exercise_id}</p>
-                <p>set_delta {item.set_delta}, weight_scale {item.weight_scale}</p>
-                {item.rationale ? <p>{item.rationale}</p> : null}
+            <p className="text-xs text-zinc-400">
+              {previousSummary.completed_sets_total}/{previousSummary.planned_sets_total} sets · {previousSummary.faulty_exercise_count} flagged
+            </p>
+            {previousSummary.exercise_faults.slice(0, 5).map((fault) => (
+              <div key={fault.primary_exercise_id} className="rounded-md border border-zinc-800 bg-zinc-900/40 p-2 text-xs text-zinc-300">
+                <p className="font-semibold text-zinc-100">{fault.name}</p>
+                <p className="text-[11px] uppercase tracking-wide text-zinc-500">{fault.fault_level} fault</p>
+                <p>{fault.completed_sets}/{fault.planned_sets} sets · avg {fault.average_performed_reps} reps @ {kgToLbs(fault.average_performed_weight)} lbs</p>
+                <p>Target {fault.target_reps_min}-{fault.target_reps_max} reps @ {kgToLbs(fault.target_weight)} lbs</p>
+                {fault.guidance ? <p>{fault.guidance}</p> : null}
               </div>
             ))}
           </div>
-          <div className="space-y-2">
+        </Disclosure>
+      ) : null}
+
+      <Disclosure title="Coaching Preview" defaultOpen={false}>
+        <CoachingIntelligencePanel contextLabel="Check-In" />
+      </Disclosure>
+
+      {reviewResult ? (
+        <Disclosure title="Adaptation Results" badge={`Readiness: ${reviewResult.readiness_score}`} defaultOpen>
+          <div className="space-y-3">
+            {reviewGuidance ? <p className="text-sm text-zinc-200">{reviewGuidance}</p> : null}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
+                <p className="text-[10px] uppercase tracking-wide text-zinc-500">Volume Shift</p>
+                <p className="text-sm font-semibold text-zinc-100">{reviewResult.adjustments.global_set_delta}</p>
+              </div>
+              <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
+                <p className="text-[10px] uppercase tracking-wide text-zinc-500">Load Scale</p>
+                <p className="text-sm font-semibold text-zinc-100">{reviewResult.adjustments.global_weight_scale}</p>
+              </div>
+            </div>
+            {weakPointExercises.length > 0 ? (
+              <div>
+                <p className="text-xs text-zinc-400">Weak points: {weakPointExercises.join(", ")}</p>
+              </div>
+            ) : null}
+            {reviewResult.adjustments.exercise_overrides.slice(0, 5).map((item) => (
+              <div key={item.primary_exercise_id} className="rounded-md border border-zinc-800 bg-zinc-900/40 p-2 text-xs text-zinc-300">
+                <p className="font-semibold text-zinc-100">{item.primary_exercise_id}</p>
+                <p>Set delta: {item.set_delta} · Weight scale: {item.weight_scale}</p>
+                {item.rationale ? <p>{item.rationale}</p> : null}
+              </div>
+            ))}
             <Button className="w-full" disabled={isGeneratingNextWeek} onClick={handleGenerateNextWeek} type="button">
               <span className="inline-flex items-center gap-2">
                 <UiIcon name="plan" className="ui-icon--action" />
                 {isGeneratingNextWeek ? "Generating Next Week..." : "Generate Next Week Now"}
               </span>
             </Button>
-            {nextWeekGenerationStatus ? <p className="telemetry-meta text-zinc-300">{nextWeekGenerationStatus}</p> : null}
+            {nextWeekGenerationStatus ? <p className="text-xs text-zinc-400">{nextWeekGenerationStatus}</p> : null}
           </div>
-        </div>
+        </Disclosure>
       ) : null}
     </div>
   );

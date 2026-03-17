@@ -251,6 +251,37 @@ def test_prepare_workout_today_response_runtime_builds_final_today_payload() -> 
     assert runtime["decision_trace"]["interpreter"] == "prepare_workout_today_response_runtime"
 
 
+def test_build_workout_today_payload_normalizes_sets_to_working_sets_minimum() -> None:
+    """When stored plan has sets < working_sets, payload returns sets aligned to working_sets."""
+    from core_engine.decision_workout_session import build_workout_today_payload
+
+    payload = build_workout_today_payload(
+        selected_session={
+            "session_id": "day-1",
+            "name": "Day 1",
+            "exercises": [
+                {
+                    "id": "hip_add",
+                    "primary_exercise_id": "hip_add",
+                    "name": "Hip Adduction",
+                    "sets": 2,
+                    "working_sets": "3.0",
+                    "rep_range": [10, 12],
+                    "recommended_working_weight": 19,
+                }
+            ],
+        },
+        mesocycle={"week_index": 1},
+        deload={"active": False},
+        completed_sets_by_exercise={},
+        live_recommendations_by_exercise={},
+        resume_selected=False,
+        daily_quote={"text": "", "author": "", "source": ""},
+    )
+    assert payload["exercises"][0]["sets"] == 3
+    assert payload["exercises"][0]["working_sets"] == "3.0"
+
+
 def test_prepare_workout_today_progression_route_runtime_builds_primary_ids_and_rule_set() -> None:
     runtime = prepare_workout_today_progression_route_runtime(
         session_states=[

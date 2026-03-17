@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import { Disclosure } from "@/components/ui/disclosure";
 import { UiIcon } from "@/components/ui/icons";
 import {
   api,
@@ -28,7 +29,6 @@ function parseLaggingMuscles(raw: string): string[] {
 
 export default function SettingsPage() {
   const router = useRouter();
-  const [theme] = useState("dark");
   const [profile, setProfile] = useState<Profile | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [coachPreview, setCoachPreview] = useState<IntelligenceCoachPreviewResponse | null>(null);
@@ -196,71 +196,50 @@ export default function SettingsPage() {
   return (
     <div className="space-y-4">
       <h1 className="ui-title-page">Settings</h1>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="main-card main-card--shell">
-          <p className="telemetry-kicker">Profile Link</p>
-          <p className="telemetry-status">
-            <span className="status-dot status-dot--green" /> Connected
-          </p>
-        </div>
-        <div className="main-card main-card--module main-card--accent">
-          <p className="telemetry-kicker">Config Scope</p>
-          <p className="telemetry-value">Program + recovery</p>
+
+      <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-2">
+        <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Program</p>
+        <p className="text-sm font-semibold text-zinc-100">{CANONICAL_PROGRAM_NAME}</p>
+        <p className="text-xs text-zinc-400">ID: {CANONICAL_PROGRAM_ID}</p>
+        {profile?.selected_program_id && profile.selected_program_id !== CANONICAL_PROGRAM_ID ? (
+          <p className="text-xs text-yellow-400/80">Alias: {profile.selected_program_id} → {CANONICAL_PROGRAM_ID}</p>
+        ) : null}
+      </div>
+
+      <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-2">
+        <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Profile</p>
+        <div className="grid grid-cols-2 gap-2 text-sm text-zinc-200">
+          <div>
+            <p className="text-xs text-zinc-500">Training Location</p>
+            <p>{profile?.training_location ?? "not set"}</p>
+          </div>
+          <div>
+            <p className="text-xs text-zinc-500">Equipment</p>
+            <p>{(profile?.equipment_profile ?? []).join(", ") || "not set"}</p>
+          </div>
         </div>
       </div>
-      <div className="main-card main-card--module spacing-grid">
-        <p className="telemetry-kicker">Program Settings</p>
-        <div className="rounded-md border border-zinc-800 p-3 text-xs text-zinc-300">
-          <p>Active administered program: {CANONICAL_PROGRAM_NAME}</p>
-          <p>Canonical ID: {CANONICAL_PROGRAM_ID}</p>
-          {profile?.selected_program_id && profile.selected_program_id !== CANONICAL_PROGRAM_ID ? (
-            <p>
-              Compatibility alias detected: {profile.selected_program_id} -&gt; {CANONICAL_PROGRAM_ID}
-            </p>
-          ) : null}
-        </div>
 
-        <div className="rounded-md border border-zinc-800 p-3 text-xs text-zinc-300 space-y-2">
-          <p className="telemetry-kicker">Coaching Preview</p>
+      <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-2">
+        <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Display</p>
+        <p className="text-sm text-zinc-400">Theme is locked to dark for MVP.</p>
+      </div>
+
+      <Disclosure title="Coaching Preview" badge="power user" defaultOpen={false}>
+        <div className="space-y-3 text-xs text-zinc-300">
           <div className="grid grid-cols-2 gap-2">
             <label htmlFor="preview-from-days" className="ui-meta">From Days</label>
-            <input
-              id="preview-from-days"
-              className="ui-input"
-              type="number"
-              min={2}
-              max={7}
-              value={previewFromDays}
-              onChange={(e) => setPreviewFromDays(Math.max(2, Math.min(7, Number(e.target.value) || 2)))}
-            />
+            <input id="preview-from-days" className="ui-input" type="number" min={2} max={7} value={previewFromDays} onChange={(e) => setPreviewFromDays(Math.max(2, Math.min(7, Number(e.target.value) || 2)))} />
             <label htmlFor="preview-to-days" className="ui-meta">To Days</label>
-            <input
-              id="preview-to-days"
-              className="ui-input"
-              type="number"
-              min={2}
-              max={7}
-              value={previewToDays}
-              onChange={(e) => setPreviewToDays(Math.max(2, Math.min(7, Number(e.target.value) || 2)))}
-            />
+            <input id="preview-to-days" className="ui-input" type="number" min={2} max={7} value={previewToDays} onChange={(e) => setPreviewToDays(Math.max(2, Math.min(7, Number(e.target.value) || 2)))} />
             <label htmlFor="preview-phase" className="ui-meta">Current Phase</label>
-            <select
-              id="preview-phase"
-              className="ui-select"
-              value={previewPhase}
-              onChange={(e) => setPreviewPhase(e.target.value as "accumulation" | "intensification" | "deload")}
-            >
+            <select id="preview-phase" className="ui-select" value={previewPhase} onChange={(e) => setPreviewPhase(e.target.value as "accumulation" | "intensification" | "deload")}>
               <option value="accumulation">Accumulation</option>
               <option value="intensification">Intensification</option>
               <option value="deload">Deload</option>
             </select>
             <label htmlFor="preview-soreness" className="ui-meta">Soreness</label>
-            <select
-              id="preview-soreness"
-              className="ui-select"
-              value={previewSoreness}
-              onChange={(e) => setPreviewSoreness(e.target.value as SorenessSeverity)}
-            >
+            <select id="preview-soreness" className="ui-select" value={previewSoreness} onChange={(e) => setPreviewSoreness(e.target.value as SorenessSeverity)}>
               <option value="none">None</option>
               <option value="mild">Mild</option>
               <option value="moderate">Moderate</option>
@@ -268,183 +247,90 @@ export default function SettingsPage() {
             </select>
           </div>
           <label htmlFor="preview-lagging" className="ui-meta">Lagging Muscles (comma-separated)</label>
-          <input
-            id="preview-lagging"
-            className="ui-input"
-            value={previewLaggingMuscles}
-            onChange={(e) => setPreviewLaggingMuscles(e.target.value)}
-          />
+          <input id="preview-lagging" className="ui-input" value={previewLaggingMuscles} onChange={(e) => setPreviewLaggingMuscles(e.target.value)} />
           <label htmlFor="preview-duration" className="ui-meta">Temporary Duration (weeks)</label>
-          <input
-            id="preview-duration"
-            className="ui-input"
-            type="number"
-            min={1}
-            max={12}
-            value={previewDurationWeeks}
-            onChange={(e) => setPreviewDurationWeeks(Math.max(1, Math.min(12, Number(e.target.value) || 1)))}
-          />
-          <Button aria-label="Generate coaching preview" variant="secondary" className="w-full" onClick={generateCoachPreview}>
-            Generate Coaching Preview
-          </Button>
-          <p className="telemetry-meta">{coachStatus ?? ""}</p>
+          <input id="preview-duration" className="ui-input" type="number" min={1} max={12} value={previewDurationWeeks} onChange={(e) => setPreviewDurationWeeks(Math.max(1, Math.min(12, Number(e.target.value) || 1)))} />
+          <Button aria-label="Generate coaching preview" variant="secondary" className="w-full" onClick={generateCoachPreview}>Generate Coaching Preview</Button>
+          {coachStatus ? <p className="text-xs text-zinc-400">{coachStatus}</p> : null}
           {coachPreview ? (
-            <div className="rounded-md border border-zinc-800 p-2">
+            <div className="rounded-md border border-zinc-800 p-2 space-y-1">
               <p>Program: {coachPreview.program_name}</p>
-              <p>Recommendation ID: {coachPreview.recommendation_id}</p>
+              <p className="flex items-center gap-2">Recommendation ID: <code className="rounded bg-zinc-800 px-1.5 py-0.5 text-[11px] text-zinc-300 select-all">{coachPreview.recommendation_id}</code></p>
               <p>Progression: {coachPreview.progression.action}</p>
               {resolveReasonText(coachPreview.progression.rationale, coachPreview.progression.reason) ? (
                 <p>{resolveReasonText(coachPreview.progression.rationale, coachPreview.progression.reason)}</p>
               ) : null}
-              <p>Phase Recommendation: {coachPreview.phase_transition.next_phase}</p>
-              {!coachPreview.phase_transition.transition_pending && resolveReasonText(coachPreview.phase_transition.rationale, coachPreview.phase_transition.reason) ? (
-                <p>{resolveReasonText(coachPreview.phase_transition.rationale, coachPreview.phase_transition.reason)}</p>
-              ) : null}
+              <p>Phase: {coachPreview.phase_transition.next_phase}</p>
               {coachPreview.phase_transition.transition_pending ? (
-                <div className="mt-2 rounded-md border border-zinc-700/80 bg-zinc-950/50 p-2">
+                <div className="mt-1 rounded-md border border-zinc-700/80 bg-zinc-950/50 p-2">
                   <p className="font-medium text-zinc-100">Program Transition</p>
-                  {coachPreview.phase_transition.recommended_action ? (
-                    <p>Recommended action: {coachPreview.phase_transition.recommended_action}</p>
-                  ) : null}
-                  {coachPreview.phase_transition.post_authored_behavior ? (
-                    <p>Post-authored behavior: {coachPreview.phase_transition.post_authored_behavior}</p>
-                  ) : null}
+                  {coachPreview.phase_transition.recommended_action ? <p>Action: {coachPreview.phase_transition.recommended_action}</p> : null}
                   {resolveReasonText(coachPreview.phase_transition.rationale, coachPreview.phase_transition.reason) ? (
                     <p>{resolveReasonText(coachPreview.phase_transition.rationale, coachPreview.phase_transition.reason)}</p>
                   ) : null}
                 </div>
               ) : null}
-              <p>Adaptation Risk: {coachPreview.schedule.risk_level}</p>
-              <p>Focus Muscles: {coachPreview.specialization.focus_muscles.join(", ") || "none"}</p>
+              <p>Risk: {coachPreview.schedule.risk_level} · Focus: {coachPreview.specialization.focus_muscles.join(", ") || "none"}</p>
             </div>
           ) : null}
-
-          <Button aria-label="Generate frequency adaptation preview" variant="secondary" className="w-full" onClick={generateAdaptationPreview}>
-            Generate Frequency Adaptation Preview
-          </Button>
-          <p className="telemetry-meta">{adaptationStatus ?? ""}</p>
-          <Button aria-label="Apply frequency adaptation" variant="secondary" className="w-full" onClick={applyAdaptation}>
-            Apply Frequency Adaptation
-          </Button>
-          <p className="telemetry-meta">{adaptationApplyStatus ?? ""}</p>
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+            <Button aria-label="Generate frequency adaptation preview" variant="secondary" className="w-full" onClick={generateAdaptationPreview}>Adaptation Preview</Button>
+            <Button aria-label="Apply frequency adaptation" variant="secondary" className="w-full" onClick={applyAdaptation}>Apply Adaptation</Button>
+          </div>
+          {adaptationStatus ? <p className="text-xs text-zinc-400">{adaptationStatus}</p> : null}
+          {adaptationApplyStatus ? <p className="text-xs text-zinc-400">{adaptationApplyStatus}</p> : null}
           {adaptationApplyOutcome === "success" ? (
             <div className="rounded-md border border-zinc-800 p-2 space-y-2">
-              <p className="telemetry-kicker">Adaptation Next Step</p>
-              <Button
-                aria-label="Generate Week Now"
-                variant="secondary"
-                className="w-full"
-                onClick={generateWeekAfterAdaptation}
-                disabled={isGeneratingPostApplyWeek}
-              >
+              <Button aria-label="Generate Week Now" variant="secondary" className="w-full" onClick={generateWeekAfterAdaptation} disabled={isGeneratingPostApplyWeek}>
                 {isGeneratingPostApplyWeek ? "Generating Week..." : "Generate Week Now"}
               </Button>
-              {postApplyGenerateStatus ? <p className="telemetry-meta">{postApplyGenerateStatus}</p> : null}
-              <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                <a
-                  className="inline-flex items-center justify-center rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-100 hover:bg-zinc-800"
-                  href="/week"
-                >
-                  Open Week Plan
-                </a>
-                <a
-                  className="inline-flex items-center justify-center rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-100 hover:bg-zinc-800"
-                  href="/today"
-                >
-                  Open Today Workout
-                </a>
-              </div>
-            </div>
-          ) : null}
-          {adaptationApplyOutcome === "failed" ? (
-            <div className="rounded-md border border-zinc-800 p-2 space-y-2">
-              <p className="telemetry-kicker">Adaptation Recovery</p>
-              <Button aria-label="Retry Apply Frequency Adaptation" variant="secondary" className="w-full" onClick={applyAdaptation}>
-                Retry Apply Frequency Adaptation
-              </Button>
-              <a
-                className="inline-flex items-center justify-center rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-100 hover:bg-zinc-800"
-                href="/week"
-              >
-                Open Week Plan
-              </a>
+              {postApplyGenerateStatus ? <p className="text-xs text-zinc-400">{postApplyGenerateStatus}</p> : null}
             </div>
           ) : null}
           {adaptationPreview ? (
-            <div className="rounded-md border border-zinc-800 p-2">
-              <p>Adaptation: {adaptationPreview.from_days}d -&gt; {adaptationPreview.to_days}d</p>
-              <p>Duration: {adaptationPreview.duration_weeks} week(s)</p>
+            <div className="rounded-md border border-zinc-800 p-2 space-y-1">
+              <p>Adaptation: {adaptationPreview.from_days}d → {adaptationPreview.to_days}d · {adaptationPreview.duration_weeks} week(s)</p>
               <p>Weak Areas: {adaptationPreview.weak_areas.join(", ") || "none"}</p>
-              <p>Week Plans: {adaptationPreview.weeks.length}</p>
-              <p>
-                First Week Decisions: {adaptationPreview.weeks[0]?.decisions.length ?? 0}
-              </p>
             </div>
           ) : null}
         </div>
+      </Disclosure>
 
-        <div className="rounded-md border border-zinc-800 p-3 text-xs text-zinc-300 space-y-2">
-          <p className="telemetry-kicker">Apply Coaching Decision</p>
-          <p className="telemetry-meta">Recommendation ID: {applyRecommendationId || "Generate preview first"}</p>
-          <p className="text-zinc-400">Check Phase = preview only. Apply Phase = save recommendation; then submit weekly review at Check-In to apply to your plan.</p>
+      <Disclosure title="Apply Coaching Decision" defaultOpen={false}>
+        <div className="space-y-2 text-xs text-zinc-300">
+          <p className="flex items-center gap-2">Recommendation ID: <code className="rounded bg-zinc-800 px-1.5 py-0.5 text-[11px] text-zinc-300 select-all">{applyRecommendationId || "Generate preview first"}</code></p>
+          <p className="text-zinc-400">Check = preview only. Apply = save recommendation and submit via Check-In.</p>
           <div className="grid grid-cols-2 gap-2">
-            <Button aria-label="Check phase decision" variant="secondary" onClick={() => runApplyPhase(false)} disabled={!applyRecommendationId.trim()}>
-              Check Phase
-            </Button>
-            <Button aria-label="Apply phase decision" variant="secondary" onClick={() => runApplyPhase(true)} disabled={!applyRecommendationId.trim()}>
-              Apply Phase
-            </Button>
-            <Button aria-label="Check specialization decision" variant="secondary" onClick={() => runApplySpecialization(false)} disabled={!applyRecommendationId.trim()}>
-              Check Specialization
-            </Button>
-            <Button aria-label="Apply specialization decision" variant="secondary" onClick={() => runApplySpecialization(true)} disabled={!applyRecommendationId.trim()}>
-              Apply Specialization
-            </Button>
+            <Button aria-label="Check phase decision" variant="secondary" onClick={() => runApplyPhase(false)} disabled={!applyRecommendationId.trim()}>Check Phase</Button>
+            <Button aria-label="Apply phase decision" variant="secondary" onClick={() => runApplyPhase(true)} disabled={!applyRecommendationId.trim()}>Apply Phase</Button>
+            <Button aria-label="Check specialization decision" variant="secondary" onClick={() => runApplySpecialization(false)} disabled={!applyRecommendationId.trim()}>Check Specialization</Button>
+            <Button aria-label="Apply specialization decision" variant="secondary" onClick={() => runApplySpecialization(true)} disabled={!applyRecommendationId.trim()}>Apply Specialization</Button>
           </div>
-          <p className="telemetry-meta">{applyStatus ?? ""}</p>
+          {applyStatus ? <p className="text-xs text-zinc-400">{applyStatus}</p> : null}
           {applyStatus?.toLowerCase().includes("phase: applied") ? (
-            <Link
-              href="/checkin"
-              className="mt-2 inline-flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 hover:bg-zinc-800"
-            >
+            <Link href="/checkin" className="mt-1 inline-flex items-center gap-2 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 hover:bg-zinc-800">
               <UiIcon name="body" className="ui-icon--action" />
               Go to Check-In
             </Link>
           ) : null}
         </div>
+      </Disclosure>
 
-        <p className="telemetry-kicker">Display</p>
-        <p className="ui-body-sm">Theme is locked to dark for MVP.</p>
-        <Button variant="secondary" className="w-full" disabled>
+      <div className="rounded-lg border border-red-700/40 bg-red-950/20 p-4 space-y-3">
+        <p className="text-xs font-medium uppercase tracking-wide text-red-400/80">Developer Tools</p>
+        <p className="text-xs text-zinc-400">Wipe your current user and retest onboarding from scratch.</p>
+        <Button className="w-full" variant="secondary" onClick={wipeUserData}>
           <span className="inline-flex items-center gap-2">
-            <UiIcon name="settings" className="ui-icon--action" />
-            Theme: {theme}
+            <UiIcon name="reset" className="ui-icon--action" />
+            Wipe Current User Data
           </span>
         </Button>
-
-        <p className="telemetry-kicker">Profile Context</p>
-        <div className="rounded-md border border-zinc-800 p-3 text-xs text-zinc-300">
-          <p>Training Location: {profile?.training_location ?? "not set"}</p>
-          <p>Equipment: {(profile?.equipment_profile ?? []).join(", ") || "not set"}</p>
-        </div>
-
-        <div className="rounded-md border border-red-700/40 bg-red-950/20 p-3">
-          <p className="telemetry-kicker">Developer Tools</p>
-          <p className="telemetry-meta">Use this to wipe your current user and retest onboarding from scratch.</p>
-          <p className="telemetry-meta">Multi-program switching is intentionally hidden in one-program-first mode.</p>
-          <Button className="mt-2 w-full" variant="secondary" onClick={wipeUserData}>
-            <span className="inline-flex items-center gap-2">
-              <UiIcon name="reset" className="ui-icon--action" />
-              Wipe Current User Data
-            </span>
-          </Button>
-          <p className="telemetry-meta mt-2">{status ?? ""}</p>
-        </div>
-
-        <p className="mt-4 text-center text-[10px] text-zinc-600">
-          v{process.env.NEXT_PUBLIC_APP_VERSION ?? "dev"}
-        </p>
+        {status ? <p className="text-xs text-zinc-400">{status}</p> : null}
       </div>
+
+      <p className="text-center text-[10px] text-zinc-600">
+        {process.env.NEXT_PUBLIC_APP_VERSION ?? "dev"}
+      </p>
     </div>
   );
 }
