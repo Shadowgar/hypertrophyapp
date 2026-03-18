@@ -491,6 +491,9 @@ class WorkoutSetLogRequest(BaseModel):
     reps: int = Field(ge=1)
     weight: float = Field(gt=0)
     rpe: float | None = None
+    set_kind: str | None = None
+    parent_set_index: int | None = Field(default=None, ge=1)
+    technique: dict[str, Any] | None = None
 
 
 class WorkoutSubstitutionRecommendationResponse(BaseModel):
@@ -521,6 +524,9 @@ class WorkoutSetLogResponse(BaseModel):
     set_index: int
     reps: int
     weight: float
+    set_kind: str | None = None
+    parent_set_index: int | None = None
+    technique: dict[str, Any] | None = None
     planned_reps_min: int
     planned_reps_max: int
     planned_weight: float

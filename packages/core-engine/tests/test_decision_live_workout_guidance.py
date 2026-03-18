@@ -160,6 +160,26 @@ def test_recommend_live_above_target_increases_weight() -> None:
     assert live["guidance"] == "remaining_sets_increase_load_keep_reps_controlled"
 
 
+def test_recommend_live_above_target_decreases_assistance_for_assisted_movements() -> None:
+    """For assisted movements, 'increase load' means lower assistance stack weight."""
+    module = _load_module()
+
+    live = module.recommend_live_workout_adjustment(
+        planned_reps_min=8,
+        planned_reps_max=12,
+        planned_sets=3,
+        completed_sets=1,
+        last_reps=14,
+        last_weight=80.0,
+        average_reps=14.0,
+        load_semantics="assistance",
+        rule_set=_sample_rule_set(),
+    )
+
+    assert live["guidance"] == "remaining_sets_increase_load_keep_reps_controlled"
+    assert live["recommended_weight"] < 80.0
+
+
 def test_recommend_live_slightly_above_target_holds() -> None:
     """13 reps in an 8-12 slot (1 above max) → hold, don't over-correct."""
     module = _load_module()

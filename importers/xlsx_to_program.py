@@ -1324,6 +1324,12 @@ def normalize_slot_exercise(raw_exercise: dict) -> dict:
     explicit_tags = raw_exercise.get("equipment_tags") or []
     substitutions = raw_exercise.get("substitution_candidates") or raw_exercise.get("substitutions") or []
 
+    exercise_id = str(raw_exercise.get("primary_exercise_id") or raw_exercise.get("id") or "").lower()
+    normalized_name = name.lower()
+    load_semantics = raw_exercise.get("load_semantics")
+    if load_semantics is None and ("assisted_" in exercise_id or normalized_name.startswith("assisted ")):
+        load_semantics = "assistance"
+
     return {
         "id": raw_exercise.get("id"),
         "primary_exercise_id": raw_exercise.get("primary_exercise_id") or raw_exercise.get("id"),
@@ -1347,6 +1353,8 @@ def normalize_slot_exercise(raw_exercise: dict) -> dict:
         "load_target": raw_exercise.get("load_target"),
         "warmup_sets": raw_exercise.get("warmup_sets", 0),
         "rest_seconds": raw_exercise.get("rest_seconds"),
+        "load_semantics": load_semantics,
+        "execution_modifiers": raw_exercise.get("execution_modifiers"),
         "last_set_intensity_technique": raw_exercise.get("last_set_intensity_technique"),
         "warm_up_sets": raw_exercise.get("warm_up_sets"),
         "working_sets": raw_exercise.get("working_sets"),

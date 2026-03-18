@@ -138,6 +138,159 @@ function resolveTrackingLoads(exercise: WorkoutExercise): string[] {
   );
 }
 
+type TechniqueModalState =
+  | {
+      exerciseId: string;
+      exerciseName: string;
+      workoutId: string;
+      parentSetIndex: number;
+      kind: "dropset" | "mechanical_drop" | "rest_pause_cluster";
+      baseWeightLb: number;
+      baseReps: number;
+    }
+  | null;
+
+type TechniqueKind = NonNullable<TechniqueModalState>["kind"];
+
+function resolveTechniqueKind(exercise: WorkoutExercise): TechniqueKind | null {
+  const technique = String(exercise.last_set_intensity_technique ?? "").toLowerCase();
+  const notes = String(exercise.notes ?? "").toLowerCase();
+  if (technique.includes("mechanical")) return "mechanical_drop";
+  if (technique.includes("dropset") || technique.includes("drop set")) return "dropset";
+  if (technique.includes("rest-pause") || technique.includes("rest pause") || technique.includes("myo")) return "rest_pause_cluster";
+  if (notes.includes("myo") || notes.includes("rest-pause") || notes.includes("rest pause")) return "rest_pause_cluster";
+  return null;
+}
+
+function requiresLastSetChecklist(exercise: WorkoutExercise): string[] {
+  const notes = String(exercise.notes ?? "").toLowerCase();
+  const technique = String(exercise.last_set_intensity_technique ?? "").toLowerCase();
+  const text = `${technique}\n${notes}`;
+  const items: string[] = [];
+
+  // Long-length / stretch partials (common authored variants).
+  const hasPartials = text.includes("partial");
+  const hasLengthenedCue =
+    text.includes("long-length")
+    || text.includes("long length")
+    || text.includes("lengthened")
+    || text.includes("stretch")
+    || text.includes("stretched")
+    || text.includes("bottom");
+  if (
+    text.includes("long-length partial")
+    || text.includes("long length partial")
+    || text.includes("long-length partials")
+    || (hasPartials && hasLengthenedCue)
+  ) {
+    items.push("Long-length partials (lengthened range) on the last set");
+  }
+
+  // Pauses.
+  if (text.includes("pause") || text.includes("paused")) {
+    items.push("Pause prescription (per coaching notes)");
+  }
+
+  // Tempo / eccentrics.
+  if (text.includes("tempo") || text.includes("eccentric") || text.includes("negative") || text.includes("controlled")) {
+    items.push("Tempo / controlled eccentric (per coaching notes)");
+  }
+
+  return items;
+}
+
+function InlineTechniquePanel({
+  state,
+  onClose,
+  onLog,
+}: Readonly<{
+  state: NonNullable<TechniqueModalState>;
+  onClose: () => void;
+  onLog: (performed: { reps: number; weight: number }, ordinal: number) => Promise<void>;
+}>) {
+  const [ordinal, setOrdinal] = useState(1);
+  const [reps, setReps] = useState(String(Math.max(1, Math.round(state.baseReps / 2))));
+  const [weight, setWeight] = useState(
+    String(state.kind === "dropset" ? Math.max(2.5, Math.round(state.baseWeightLb * 0.85 * 10) / 10) : state.baseWeightLb),
+  );
+  const [status, setStatus] = useState<string | null>(null);
+
+  const title =
+    state.kind === "rest_pause_cluster"
+      ? "Rest-pause / myo-reps"
+      : state.kind === "mechanical_drop"
+        ? "Mechanical drop set"
+        : "Drop set";
+
+  async function handleLog() {
+    setStatus("Logging technique set...");
+    try {
+      await onLog({ reps: Number(reps) || 1, weight: Number(weight) || state.baseWeightLb }, ordinal);
+      setOrdinal((prev) => prev + 1);
+      setStatus("Logged. Add another or close.");
+    } catch {
+      setStatus("Failed to log. Try again.");
+    }
+  }
+
+  return (
+    <div className="rounded-xl border border-zinc-700 bg-zinc-900/60 p-3 space-y-3">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold text-zinc-100">{title}</p>
+          <p className="ui-meta">
+            {state.exerciseName} · after your last working set
+          </p>
+        </div>
+        <Button type="button" variant="ghost" className="min-h-[32px] px-2 text-xs" onClick={onClose}>
+          Close
+        </Button>
+      </div>
+
+      <div className="rounded-md border border-zinc-800 bg-zinc-900/40 p-3 text-xs text-zinc-300 space-y-1">
+        {state.kind === "mechanical_drop" ? (
+          <p>Keep the same load, change the leverage/position to make it easier, then continue.</p>
+        ) : state.kind === "dropset" ? (
+          <p>Reduce load and continue with strict form (this logs as a technique sub-set).</p>
+        ) : (
+          <p>Take a short rest (10–20s), then continue with the same load (technique sub-set).</p>
+        )}
+        <p className="text-zinc-400">These technique sub-sets do not count as extra working sets.</p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <label className="flex flex-col gap-1.5">
+          <span className="text-[11px] uppercase tracking-wide text-zinc-500">Reps</span>
+          <input
+            className="ui-input h-12 w-full rounded-lg px-3 text-center text-lg font-semibold tabular-nums"
+            type="number"
+            min={1}
+            value={reps}
+            onChange={(e) => setReps(e.target.value)}
+          />
+        </label>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-[11px] uppercase tracking-wide text-zinc-500">Weight (lb)</span>
+          <input
+            className="ui-input h-12 w-full rounded-lg px-3 text-center text-lg font-semibold tabular-nums"
+            type="number"
+            min={0}
+            step={0.5}
+            value={weight}
+            onChange={(e) => setWeight(e.target.value)}
+          />
+        </label>
+      </div>
+
+      {status ? <p className="text-xs text-zinc-400">{status}</p> : null}
+
+      <Button type="button" variant="secondary" className="min-h-[44px] w-full" onClick={handleLog}>
+        Log technique set #{ordinal}
+      </Button>
+    </div>
+  );
+}
+
 function resolveHealthStatus(health: string): "green" | "yellow" | "red" {
   if (health === "ok") {
     return "green";
@@ -152,6 +305,10 @@ function WorkoutSummaryCard({ summary }: Readonly<{ summary: WorkoutSummary | nu
   if (!summary) {
     return null;
   }
+  const exercises = Array.isArray(summary.exercises) ? summary.exercises : [];
+  if (exercises.length === 0) {
+    return null;
+  }
 
   return (
     <div className="main-card main-card--module spacing-grid">
@@ -163,7 +320,7 @@ function WorkoutSummaryCard({ summary }: Readonly<{ summary: WorkoutSummary | nu
       </div>
       <p className="telemetry-meta">Overall guidance: {resolveGuidanceText(summary.overall_rationale, summary.overall_guidance)}</p>
       <div className="space-y-2">
-        {summary.exercises.map((item) => (
+        {exercises.map((item) => (
           <div key={item.exercise_id} className="rounded-md border border-zinc-800 bg-zinc-900/40 p-2 text-xs text-zinc-300">
             <p className="font-semibold text-zinc-100">{item.name}</p>
             <p>
@@ -269,6 +426,9 @@ function ExerciseDetailOverlay({
   warmupLbs,
   hasWarmup,
   hasCoachingDetails,
+  techniquePanelState,
+  onCloseTechniquePanel,
+  onLogTechniquePanel,
   currentSwapIndex,
   altCandidates,
   lastSet,
@@ -295,6 +455,9 @@ function ExerciseDetailOverlay({
   warmupLbs: number[];
   hasWarmup: boolean;
   hasCoachingDetails: boolean;
+  techniquePanelState: NonNullable<TechniqueModalState> | null;
+  onCloseTechniquePanel: () => void;
+  onLogTechniquePanel: (performed: { reps: number; weight: number }, ordinal: number) => Promise<void>;
   currentSwapIndex: number;
   altCandidates: string[];
   lastSet: { reps: number; weight: number } | null;
@@ -319,6 +482,19 @@ function ExerciseDetailOverlay({
     initialCompletedSets: completed,
     onSetComplete: onSetComplete,
   });
+
+  const isAssistance = String(exercise.load_semantics ?? "").toLowerCase() === "assistance";
+  const checklistItems = requiresLastSetChecklist(exercise);
+  const techniqueKind = resolveTechniqueKind(exercise);
+  const [checklistAccepted, setChecklistAccepted] = useState(false);
+  useEffect(() => {
+    // Reset checklist gate when changing exercise or moving off last set.
+    setChecklistAccepted(false);
+  }, [exercise.id, ctrl.completedSets]);
+
+  const isLastSetNext = ctrl.completedSets === ctrl.totalSets - 1;
+  const gateLastSet = checklistItems.length > 0 && isLastSetNext && !checklistAccepted;
+  const hasTechnique = checklistItems.length > 0 || techniqueKind != null || techniquePanelState != null;
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-zinc-950 min-h-[100dvh] max-h-[100dvh]" aria-modal="true" role="dialog">
@@ -384,61 +560,36 @@ function ExerciseDetailOverlay({
           </Disclosure>
         )}
 
-        {/* == ZONE 3: Primary action (log set) == */}
-        <SetInputCard exerciseId={exercise.id} guidanceLine={doThisSetLine} ctrl={ctrl} />
-
-        {/* == ZONE 4: Set log (per-set logged values) == */}
-        <SetLogDisplay ctrl={ctrl} onUndoLastSet={onUndoLastSet} />
-
-        {/* == ZONE 5: Set progress == */}
-        <SetProgressTimeline exerciseId={exercise.id} ctrl={ctrl} />
-
-        {/* == ZONE 5: Rest timer == */}
-        <RestTimerCard ctrl={ctrl} />
-
-        {/* == ZONE 6: Quick actions toolbar == */}
-        <div className="grid grid-cols-3 gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            className="min-h-[44px] flex-col gap-1 px-2 py-2 text-center"
-            disabled={!mediaUrl}
-            onClick={() => mediaUrl && window.open(mediaUrl, "_blank", "noopener,noreferrer")}
-          >
-            <UiIcon name="video" className="ui-icon--action" />
-            <span className="text-[10px]">Video</span>
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            className="min-h-[44px] flex-col gap-1 px-2 py-2 text-center"
-            disabled={substitutions.length === 0}
-            onClick={onSwapTarget}
-          >
-            <UiIcon name="swap" className="ui-icon--action" />
-            <span className="text-[10px]">Swap</span>
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            className="min-h-[44px] flex-col gap-1 px-2 py-2 text-center"
-            onClick={onToggleNotes}
-          >
-            <UiIcon name="notes" className="ui-icon--action" />
-            <span className="text-[10px]">Notes</span>
-          </Button>
-        </div>
-
-        {notesOpen && (
-          <div className="rounded-md border border-zinc-800 bg-zinc-900/40 p-3 text-xs text-zinc-300">
-            {exercise.notes ?? "No notes for this slot."}
-          </div>
-        )}
-
-        {/* == ZONE 7: Coaching details (collapsible) == */}
+        {/* == ZONE 3: Coaching details (collapsible) == */}
         {hasCoachingDetails && (
-          <Disclosure title="Coaching" defaultOpen={false}>
-            <div className="space-y-2">
+          <Disclosure title="Coaching" defaultOpen={hasTechnique}>
+            <div className="space-y-3">
+              {techniquePanelState ? (
+                <InlineTechniquePanel
+                  state={techniquePanelState}
+                  onClose={onCloseTechniquePanel}
+                  onLog={onLogTechniquePanel}
+                />
+              ) : null}
+              {checklistItems.length > 0 && isLastSetNext ? (
+                <div className="rounded-xl border border-zinc-700 bg-zinc-900/60 p-3 space-y-2">
+                  <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Technique (last set)</p>
+                  <ul className="list-disc pl-5 text-xs text-zinc-200 space-y-1">
+                    {checklistItems.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                  <label className="flex items-center gap-2 text-xs text-zinc-200">
+                    <input
+                      type="checkbox"
+                      checked={checklistAccepted}
+                      onChange={(e) => setChecklistAccepted(e.target.checked)}
+                    />
+                    I will execute these technique cues on this set.
+                  </label>
+                </div>
+              ) : null}
+
               <div className="flex flex-wrap gap-2">
                 {exercise.last_set_intensity_technique ? (
                   <span className="rounded-full border border-zinc-700 bg-zinc-800/60 px-2.5 py-1 text-[11px] text-zinc-300">
@@ -491,25 +642,62 @@ function ExerciseDetailOverlay({
           </Disclosure>
         )}
 
-        {/* == ZONE 9: Prescription summary (collapsible) == */}
-        <Disclosure title="Prescription" defaultOpen={false}>
-          <div className="space-y-1 text-xs text-zinc-400">
-            <p>
-              {(() => {
-                const workingLabel = exercise.working_sets ?? String(exercise.sets);
-                const repsLabel = exercise.reps ?? `${exercise.rep_range[0]}-${exercise.rep_range[1]}`;
-                const weightLb = Math.round(derivedWorkingLb);
-                if (warmUpCount > 0) {
-                  return `${warmUpCount} warm-up set${warmUpCount !== 1 ? "s" : ""}, then ${workingLabel} working set${Number(workingLabel) !== 1 ? "s" : ""} · ${repsLabel} reps @ ~${weightLb} lb`;
-                }
-                return `${exercise.sets} sets · ${exercise.rep_range[0]}-${exercise.rep_range[1]} reps @ ~${weightLb} lb`;
-              })()}
-            </p>
-            {isDeloadWeek ? (
-              <p className="text-yellow-400/80">Deload week — sets and load may be reduced.</p>
-            ) : null}
+        {/* == ZONE 4: Primary action (log set) == */}
+        <SetInputCard
+          exerciseId={exercise.id}
+          guidanceLine={doThisSetLine}
+          ctrl={ctrl}
+          weightLabel={isAssistance ? "Assistance (lb) — lower is harder" : "Weight (lb)"}
+          disableComplete={gateLastSet}
+        />
+
+        {/* == ZONE 5: Set log (per-set logged values) == */}
+        <SetLogDisplay ctrl={ctrl} onUndoLastSet={onUndoLastSet} />
+
+        {/* == ZONE 6: Set progress == */}
+        <SetProgressTimeline exerciseId={exercise.id} ctrl={ctrl} />
+
+        {/* == ZONE 7: Rest timer == */}
+        <RestTimerCard ctrl={ctrl} />
+
+        {/* == ZONE 8: Quick actions toolbar == */}
+        <div className="grid grid-cols-3 gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            className="min-h-[44px] flex-col gap-1 px-2 py-2 text-center"
+            disabled={!mediaUrl}
+            onClick={() => mediaUrl && window.open(mediaUrl, "_blank", "noopener,noreferrer")}
+          >
+            <UiIcon name="video" className="ui-icon--action" />
+            <span className="text-[10px]">Video</span>
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            className="min-h-[44px] flex-col gap-1 px-2 py-2 text-center"
+            disabled={substitutions.length === 0}
+            onClick={onSwapTarget}
+          >
+            <UiIcon name="swap" className="ui-icon--action" />
+            <span className="text-[10px]">Swap</span>
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            className="min-h-[44px] flex-col gap-1 px-2 py-2 text-center"
+            onClick={onToggleNotes}
+          >
+            <UiIcon name="notes" className="ui-icon--action" />
+            <span className="text-[10px]">Notes</span>
+          </Button>
+        </div>
+
+        {notesOpen && (
+          <div className="rounded-md border border-zinc-800 bg-zinc-900/40 p-3 text-xs text-zinc-300">
+            {exercise.notes ?? "No notes for this slot."}
           </div>
-        </Disclosure>
+        )}
       </div>
     </div>
   );
@@ -580,6 +768,7 @@ export default function TodayPage() {
   >({});
   /** Last logged set per exercise (reps, weight) to suggest next set. Keyed by exercise id. */
   const [lastSetByExercise, setLastSetByExercise] = useState<Record<string, { reps: number; weight: number }>>({});
+  const [techniqueModal, setTechniqueModal] = useState<TechniqueModalState>(null);
   const hasAutoLoadStarted = useRef(false);
   const isBeginWorkoutLoadInProgress = useRef(false);
   const sorenessDismissedThisSession = useRef(false);
@@ -600,7 +789,10 @@ export default function TodayPage() {
     if (typeof window === "undefined") return;
     const body = window.document.body;
     if (selectedExerciseId) {
-      window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+      const userAgent = window.navigator?.userAgent ?? "";
+      if (!userAgent.toLowerCase().includes("jsdom")) {
+        window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+      }
       const previousOverflow = body.style.overflow;
       body.dataset.hypertrophyPrevOverflow = previousOverflow;
       body.style.overflow = "hidden";
@@ -833,6 +1025,19 @@ export default function TodayPage() {
         [exerciseId]: feedback.live_recommendation,
       }));
 
+      const techniqueKind = resolveTechniqueKind(exercise);
+      if (techniqueKind && completedCount >= exercise.sets) {
+        setTechniqueModal({
+          exerciseId,
+          exerciseName: resolveExerciseName(exercise, swapIndexByExercise),
+          workoutId: workout.session_id,
+          parentSetIndex: completedCount,
+          kind: techniqueKind,
+          baseWeightLb: performed.weight,
+          baseReps: performed.reps,
+        });
+      }
+
       // refresh from server-side progress to keep client in sync
       try {
         const progress = await api.getWorkoutProgress(workout.session_id);
@@ -861,6 +1066,23 @@ export default function TodayPage() {
       // eslint-disable-next-line no-console
       console.warn("logSet failed", e);
     }
+  }
+
+  async function handleLogTechniqueSubSet(
+    state: NonNullable<TechniqueModalState>,
+    performed: { reps: number; weight: number },
+    ordinal: number,
+  ) {
+    await api.logSet(state.workoutId, {
+      exercise_id: state.exerciseId,
+      set_index: state.parentSetIndex,
+      reps: performed.reps,
+      weight: lbsToKg(performed.weight),
+      rpe: null,
+      set_kind: state.kind,
+      parent_set_index: state.parentSetIndex,
+      technique: { type: state.kind, ordinal },
+    });
   }
 
   const swapTarget = (workout?.exercises ?? []).find((exercise) => exercise.id === swapTargetExerciseId) ?? null;
@@ -1042,7 +1264,13 @@ export default function TodayPage() {
             ? baseline.warmupLbs.slice(0, warmUpCount)
             : (exercise.warmups ?? []).slice(0, warmUpCount).map((kg) => kgToLbs(kg));
         const hasWarmup = warmUpCount > 0 && warmupLbs.length > 0;
-        const hasCoachingDetails = !!(exercise.last_set_intensity_technique || exercise.rest || exercise.early_set_rpe || exercise.last_set_rpe);
+        const hasCoachingDetails = !!(
+          exercise.last_set_intensity_technique
+          || exercise.rest
+          || exercise.early_set_rpe
+          || exercise.last_set_rpe
+          || (typeof exercise.notes === "string" && exercise.notes.trim().length > 0)
+        );
 
         const handleUndoLastSet =
           completed > 0
@@ -1090,6 +1318,14 @@ export default function TodayPage() {
             warmupLbs={warmupLbs}
             hasWarmup={hasWarmup}
             hasCoachingDetails={hasCoachingDetails}
+            techniquePanelState={techniqueModal && techniqueModal.exerciseId === exercise.id ? techniqueModal : null}
+            onCloseTechniquePanel={() => setTechniqueModal(null)}
+            onLogTechniquePanel={async (performed, ordinal) => {
+              if (!techniqueModal || techniqueModal.exerciseId !== exercise.id) {
+                return;
+              }
+              await handleLogTechniqueSubSet(techniqueModal, performed, ordinal);
+            }}
             currentSwapIndex={currentSwapIndex}
             altCandidates={altCandidates}
             lastSet={lastSet ?? null}
@@ -1117,8 +1353,8 @@ export default function TodayPage() {
       })() : null}
 
       {swapTarget ? (
-        <div className="fixed inset-0 z-[70] flex items-end bg-black/60 p-4 md:items-center md:justify-center">
-          <div className="main-card main-card--elevated w-full max-w-md spacing-grid">
+        <div className="fixed inset-0 z-[70] flex items-start justify-center bg-black/60 px-4 pb-6 pt-[max(1rem,env(safe-area-inset-top))] overflow-y-auto">
+          <div className="main-card main-card--elevated w-full max-w-md spacing-grid max-h-[90dvh] overflow-y-auto">
             <div>
               <p className="text-sm font-semibold text-zinc-100">Choose a substitute</p>
               <p className="ui-meta">Slot: {swapTarget.name}</p>
@@ -1168,8 +1404,8 @@ export default function TodayPage() {
       ) : null}
 
       {showSorenessModal ? (
-        <div className="fixed inset-0 z-[70] flex items-end bg-black/60 p-4 md:items-center md:justify-center">
-          <div className="main-card main-card--elevated w-full max-w-md spacing-grid">
+        <div className="fixed inset-0 z-[70] flex items-start justify-center bg-black/60 px-4 pb-6 pt-[max(1rem,env(safe-area-inset-top))] overflow-y-auto">
+          <div className="main-card main-card--elevated w-full max-w-md spacing-grid max-h-[90dvh] overflow-y-auto">
             <div>
               <p className="text-sm font-semibold text-zinc-100">What&rsquo;s sore today?</p>
               <p className="ui-meta">Log soreness before starting this workout.</p>

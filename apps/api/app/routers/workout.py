@@ -213,6 +213,9 @@ def log_set(
         reps=payload.reps,
         weight=payload.weight,
         rpe=payload.rpe,
+        set_kind=payload.set_kind,
+        parent_set_index=payload.parent_set_index,
+        technique=payload.technique,
         resolve_linked_program_id=resolve_rule_program_id,
         load_rule_set=load_program_rule_set,
     )

@@ -29,6 +29,7 @@ def _resolve_progression_outcome(
     last_performance: "LastPerformance",
     rep_range: tuple[int, int],
     phase_modifier: str,
+    load_semantics: str | None = None,
     rule_set: dict[str, Any] | None,
 ) -> tuple[float, str, bool]:
     current = exercise_state.current_working_weight
@@ -63,6 +64,14 @@ def _resolve_progression_outcome(
         progression_action = "hold"
         under_target = False
 
+    # Assisted-machine semantics: higher stack weight = more assistance (easier).
+    # So making it "harder" means decreasing the recorded weight.
+    if (load_semantics or "").strip().lower() == "assistance":
+        if progression_action == "increase_load":
+            delta = -abs(delta)
+        elif progression_action == "reduce_load":
+            delta = abs(delta)
+
     next_weight = max(2.0, current + delta)
     rounded_weight = round(next_weight / 0.5) * 0.5
     return rounded_weight, progression_action, under_target
@@ -92,6 +101,7 @@ def recommend_working_weight(
     last_performance: LastPerformance,
     rep_range: tuple[int, int],
     phase_modifier: str,
+    load_semantics: str | None = None,
     rule_set: dict[str, Any] | None = None,
 ) -> float:
     next_weight, _progression_action, _under_target = _resolve_progression_outcome(
@@ -99,6 +109,7 @@ def recommend_working_weight(
         last_performance=last_performance,
         rep_range=rep_range,
         phase_modifier=phase_modifier,
+        load_semantics=load_semantics,
         rule_set=rule_set,
     )
     return next_weight
@@ -111,6 +122,7 @@ def update_exercise_state_after_workout(
     completed_sets: int,
     planned_sets: int,
     phase_modifier: str,
+    load_semantics: str | None = None,
     rule_set: dict[str, Any] | None = None,
 ) -> ExerciseState:
     perf = LastPerformance(
@@ -126,6 +138,7 @@ def update_exercise_state_after_workout(
         last_performance=perf,
         rep_range=target_rep_range,
         phase_modifier=phase_modifier,
+        load_semantics=load_semantics,
         rule_set=rule_set,
     )
 

@@ -19,6 +19,8 @@ class CanonicalExercise(BaseModel):
     equipment_tags: list[str] = []
     substitution_candidates: list[str] = []
     substitution_metadata: dict[str, dict[str, object]] = {}
+    load_semantics: str | None = None
+    execution_modifiers: dict | None = None
     last_set_intensity_technique: str | None = None
     warm_up_sets: str | None = None
     working_sets: str | None = None

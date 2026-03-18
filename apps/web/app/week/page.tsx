@@ -43,8 +43,8 @@ function countSlotRole(exercises: GeneratedWeekExercise[], slotRole: string): nu
 }
 
 function hasWeakPointEmphasis(plan: GeneratedWeekPlan): boolean {
-  return plan.sessions.some(
-    (session) => session.day_role === "weak_point_arms" || countSlotRole(session.exercises, "weak_point") > 0,
+  return (plan.sessions ?? []).some(
+    (session) => session.day_role === "weak_point_arms" || countSlotRole(session.exercises ?? [], "weak_point") > 0,
   );
 }
 
@@ -141,40 +141,52 @@ function stringListFromUnknown(value: unknown): string[] {
 }
 
 function WeekOverviewCards({ plan, selectedProgramId }: Readonly<{ plan: GeneratedWeekPlan; selectedProgramId: string | null }>) {
+  const muscleCoverage = plan.muscle_coverage ?? {};
+  const programName = typeof plan.program_template_id === "string" && plan.program_template_id.trim().length > 0
+    ? getProgramDisplayName({ id: plan.program_template_id })
+    : "Generated Week";
+  const weekIndex = plan.mesocycle?.week_index ?? 0;
+  const triggerWeeks = plan.mesocycle?.trigger_weeks_effective ?? 0;
+  const splitLabel = typeof plan.split === "string" && plan.split.trim().length > 0 ? formatLabel(plan.split) : "Unspecified";
+  const deloadActive = plan.deload?.active === true;
+  const deloadReason = typeof plan.deload?.reason === "string" && plan.deload.reason.trim().length > 0 ? plan.deload.reason : "n/a";
+  const deloadSetPct = typeof plan.deload?.set_reduction_pct === "number" ? plan.deload.set_reduction_pct : 0;
+  const deloadLoadPct = typeof plan.deload?.load_reduction_pct === "number" ? plan.deload.load_reduction_pct : 0;
   const weeklyVolumeEntries = Object.entries(plan.weekly_volume_by_muscle ?? {})
     .sort((left, right) => right[1] - left[1])
     .slice(0, 4);
-  const coveredMuscles = plan.muscle_coverage.covered_muscles ?? [];
-  const underTarget = plan.muscle_coverage.under_target_muscles ?? [];
+  const coveredMuscles = muscleCoverage.covered_muscles ?? [];
+  const underTarget = muscleCoverage.under_target_muscles ?? [];
   const authoredBlockLabel = formatAuthoredBlockLabel(plan);
   const weakPointScheduled = hasWeakPointEmphasis(plan);
+  const sessionCount = (plan.sessions ?? []).length;
 
   return (
     <div className="space-y-3">
       <div className="main-card main-card--shell spacing-grid spacing-grid--tight">
         <p className="telemetry-kicker">Week Overview</p>
-        <p className="telemetry-value">{getProgramDisplayName({ id: plan.program_template_id })}</p>
+        <p className="telemetry-value">{programName}</p>
         <p className="text-sm text-zinc-300">
-          Week {plan.mesocycle.week_index} · {plan.sessions.length} sessions · {formatLabel(plan.split)} split
+          Week {weekIndex} · {sessionCount} sessions · {splitLabel} split
         </p>
         {authoredBlockLabel ? <p className="text-sm text-zinc-400">{authoredBlockLabel}</p> : null}
         {weakPointScheduled ? <p className="text-sm text-zinc-200">Arms & Weak Points emphasis is scheduled this week.</p> : null}
       </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <Disclosure title="Mesocycle Posture" badge={plan.deload.active ? "deload" : "standard"} defaultOpen={false}>
+        <Disclosure title="Mesocycle Posture" badge={deloadActive ? "deload" : "standard"} defaultOpen={false}>
           <div className="space-y-1 text-sm text-zinc-200">
-            <p>Week {plan.mesocycle.week_index}/{plan.mesocycle.trigger_weeks_effective}</p>
-            <p>Deload reason: {plan.deload.reason}</p>
-            {plan.deload.active ? (
-              <p>Set reduction: {plan.deload.set_reduction_pct}% · Load reduction: {plan.deload.load_reduction_pct}%</p>
+            <p>Week {weekIndex}/{triggerWeeks}</p>
+            <p>Deload reason: {deloadReason}</p>
+            {deloadActive ? (
+              <p>Set reduction: {deloadSetPct}% · Load reduction: {deloadLoadPct}%</p>
             ) : null}
           </div>
         </Disclosure>
 
         <Disclosure title="Coverage Radar" badge={`${coveredMuscles.length} covered · ${underTarget.length} gaps`} defaultOpen={false}>
           <div className="space-y-2 text-sm text-zinc-200">
-            <p>Minimum {plan.muscle_coverage.minimum_sets_per_muscle ?? 0} sets per muscle</p>
+            <p>Minimum {muscleCoverage.minimum_sets_per_muscle ?? 0} sets per muscle</p>
             {underTarget.length > 0 ? <p className="text-yellow-400/80">Under target: {underTarget.join(", ")}</p> : <p className="text-zinc-400">All muscles on target.</p>}
             <div className="space-y-1 text-xs text-zinc-300">
               {weeklyVolumeEntries.map(([muscle, sets]) => (
@@ -209,27 +221,28 @@ function WeekExecutionCards({ plan }: Readonly<{ plan: GeneratedWeekPlan }>) {
     <div className="grid grid-cols-1 gap-3 xl:grid-cols-[1.3fr_1fr]">
       <div className="space-y-3">
         <p className="telemetry-kicker">Sessions</p>
-        {plan.sessions.map((session, index) => {
-          const totalSets = session.exercises.reduce((sum, exercise) => sum + exercise.sets, 0);
+        {(plan.sessions ?? []).map((session, index) => {
+          const exercises = session.exercises ?? [];
+          const totalSets = exercises.reduce((sum, exercise) => sum + exercise.sets, 0);
           const dayRoleLabel = formatRoleLabel(session.day_role);
-          const weakPointSlotCount = countSlotRole(session.exercises, "weak_point");
+          const weakPointSlotCount = countSlotRole(exercises, "weak_point");
           return (
             <Disclosure
               key={session.session_id}
               title={`Day ${index + 1}: ${session.title}`}
-              badge={`${session.exercises.length} exercises · ${totalSets} sets`}
+              badge={`${exercises.length} exercises · ${totalSets} sets`}
               defaultOpen={false}
             >
               <div className="space-y-2 text-xs text-zinc-200">
                 <p className="telemetry-meta">{formatSessionDate(session.date)}</p>
-                <p>Lead: {formatLeadExercise(session.exercises[0])}</p>
+                <p>Lead: {formatLeadExercise(exercises[0])}</p>
                 {dayRoleLabel ? <p className="telemetry-meta">Intent: {dayRoleLabel}</p> : null}
                 <p className="telemetry-meta">
-                  Coverage: {uniqueMuscles(session.exercises).join(", ") || "Untracked"}
+                  Coverage: {uniqueMuscles(exercises).join(", ") || "Untracked"}
                 </p>
                 {weakPointSlotCount > 0 ? <p className="telemetry-meta">Weak-point slots: {weakPointSlotCount}</p> : null}
                 <div className="mt-2 space-y-2">
-                  {session.exercises.map((exercise) => (
+                  {exercises.map((exercise) => (
                     <ExerciseExecutionDetails key={`${session.session_id}-${exercise.id}`} exercise={exercise} />
                   ))}
                 </div>
@@ -244,7 +257,9 @@ function WeekExecutionCards({ plan }: Readonly<{ plan: GeneratedWeekPlan }>) {
           <div className="space-y-2">
             {reasonSummary ? <p className="text-sm text-zinc-200">{reasonSummary}</p> : null}
             <div className="grid grid-cols-2 gap-2 text-xs text-zinc-300">
-              <div className="rounded-md border border-white/10 bg-zinc-900/70 p-2">Effective days: {effectiveDays ?? plan.user.days_available}</div>
+              <div className="rounded-md border border-white/10 bg-zinc-900/70 p-2">
+                Effective days: {effectiveDays ?? plan.user?.days_available ?? "n/a"}
+              </div>
               <div className="rounded-md border border-white/10 bg-zinc-900/70 p-2">Prior generated weeks: {priorWeeks ?? 0}</div>
               <div className="rounded-md border border-white/10 bg-zinc-900/70 p-2">Latest adherence: {latestAdherence ?? "n/a"}</div>
               <div className="rounded-md border border-white/10 bg-zinc-900/70 p-2">Severe soreness flags: {severeSorenessCount ?? 0}</div>
@@ -310,7 +325,7 @@ export default function WeekPage() {
       totalPlannedSets,
       volumeByMuscle,
       underTarget: plan.muscle_coverage?.under_target_muscles ?? [],
-      leadSession: plan.sessions[0] ?? null,
+      leadSession: (plan.sessions ?? [])[0] ?? null,
     };
   }, [plan]);
   const requiresSundayReview = planStatus.startsWith("Sunday review required.");

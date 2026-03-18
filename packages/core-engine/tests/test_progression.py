@@ -29,6 +29,21 @@ def test_recommend_working_weight_increases_on_top_range_completion() -> None:
     assert next_weight > state.current_working_weight
 
 
+def test_recommend_working_weight_decreases_assistance_on_top_range_completion() -> None:
+    """For assisted movements, lower stack weight is harder → progress reduces assistance."""
+    state = ExerciseState(exercise_id="assisted_pull_up", current_working_weight=100, exposure_count=3)
+    perf = LastPerformance(
+        completed_reps=10,
+        target_reps_min=8,
+        target_reps_max=10,
+        completed_sets=4,
+        planned_sets=4,
+    )
+
+    next_weight = recommend_working_weight(state, perf, (8, 10), "maintenance", load_semantics="assistance")
+    assert next_weight < state.current_working_weight
+
+
 def test_recommend_working_weight_decreases_on_underperformance() -> None:
     state = ExerciseState(exercise_id="squat", current_working_weight=100, exposure_count=3)
     perf = LastPerformance(

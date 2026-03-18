@@ -222,6 +222,8 @@ def _build_blueprint_slot(
         "slot_role": slot_role(exercise_name, session_name),
         "primary_muscles": _exercise_primary_muscles(exercise),
         "exercise": str(exercise.get("exercise") or exercise_name),
+        "load_semantics": exercise.get("load_semantics"),
+        "execution_modifiers": exercise.get("execution_modifiers"),
         "last_set_intensity_technique": exercise.get("last_set_intensity_technique"),
         "warm_up_sets": exercise.get("warm_up_sets"),
         "working_sets": exercise.get("working_sets"),

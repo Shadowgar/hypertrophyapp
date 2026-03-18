@@ -143,6 +143,7 @@ def prepare_workout_exercise_state_runtime(
         completed_sets=int(completed_set_index),
         planned_sets=max(1, int(planned_sets)),
         phase_modifier=nutrition_phase or "maintenance",
+        load_semantics=str(_coerce_dict(planned_exercise).get("load_semantics") or "") or None,
         rule_set=rule_set,
     )
     state_values = {
@@ -464,7 +465,14 @@ def resolve_latest_logged_workout_resume_state(
         if latest_logged_session is not None:
             planned_sets = sum(int(exercise.get("sets", 3) or 3) for exercise in latest_logged_session.get("exercises", []))
             logged_sets = sum(
-                1 for row in performed_logs if str(row.get("workout_id") or "") == latest_logged_workout_id
+                1
+                for row in performed_logs
+                if str(row.get("workout_id") or "") == latest_logged_workout_id
+                and row.get("parent_set_index") is None
+                and (
+                    not str(row.get("set_kind") or "").strip()
+                    or str(row.get("set_kind") or "").strip().lower() == "work"
+                )
             )
             latest_logged_session_incomplete = logged_sets < planned_sets
 
@@ -517,6 +525,11 @@ def resolve_workout_today_session_selection(
         for row in log_rows:
             workout_id = str(row.get("workout_id") or "")
             if not workout_id:
+                continue
+            if row.get("parent_set_index") is not None:
+                continue
+            set_kind = str(row.get("set_kind") or "").strip().lower()
+            if set_kind and set_kind != "work":
                 continue
             log_counts[workout_id] = log_counts.get(workout_id, 0) + 1
 
@@ -581,6 +594,9 @@ def prepare_workout_log_set_request_runtime(
     reps: int,
     weight: float,
     rpe: float | None,
+    set_kind: str | None = None,
+    parent_set_index: int | None = None,
+    technique: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     resolved_primary_exercise_id = primary_exercise_id or exercise_id
     return {
@@ -590,6 +606,9 @@ def prepare_workout_log_set_request_runtime(
         "reps": reps,
         "weight": weight,
         "rpe": rpe,
+        "set_kind": set_kind,
+        "parent_set_index": parent_set_index,
+        "technique": deepcopy(_coerce_dict(technique)) if technique is not None else None,
     }
 
 def resolve_workout_log_set_plan_context(
@@ -644,6 +663,7 @@ def prepare_workout_session_state_persistence_payload(
     set_index: int,
     reps: int,
     weight: float,
+    load_semantics: str | None = None,
     substitution_recommendation: dict[str, Any] | None,
     rule_set: dict[str, Any] | None,
 ) -> dict[str, Any]:
@@ -657,6 +677,7 @@ def prepare_workout_session_state_persistence_payload(
         set_index=set_index,
         reps=reps,
         weight=weight,
+        load_semantics=load_semantics,
         substitution_recommendation=substitution_recommendation,
         rule_set=rule_set,
     )
@@ -676,6 +697,7 @@ def prepare_workout_session_state_upsert_runtime(
     set_index: int,
     reps: int,
     weight: float,
+    load_semantics: str | None = None,
     substitution_recommendation: dict[str, Any] | None,
     rule_set: dict[str, Any] | None,
 ) -> dict[str, Any]:
@@ -699,6 +721,7 @@ def prepare_workout_session_state_upsert_runtime(
         set_index=set_index,
         reps=reps,
         weight=weight,
+        load_semantics=load_semantics,
         substitution_recommendation=substitution_recommendation,
         rule_set=rule_set,
     )
@@ -790,6 +813,11 @@ def prepare_workout_log_set_decision_runtime(
             "reps": reps,
             "weight": weight,
             "rpe": request_runtime.get("rpe"),
+            "set_kind": request_runtime.get("set_kind"),
+            "parent_set_index": request_runtime.get("parent_set_index"),
+            "technique": deepcopy(_coerce_dict(request_runtime.get("technique")))
+            if request_runtime.get("technique") is not None
+            else None,
         },
         "planned_reps_min": planned_reps_min,
         "planned_reps_max": planned_reps_max,
@@ -849,7 +877,11 @@ def build_workout_today_log_runtime(
     selected_session_logs: list[Any],
 ) -> dict[str, Any]:
     resume_logs = [
-        {"workout_id": str(_read_attr(row, "workout_id") or "")}
+        {
+            "workout_id": str(_read_attr(row, "workout_id") or ""),
+            "set_kind": str(_read_attr(row, "set_kind") or "") or None,
+            "parent_set_index": _read_attr(row, "parent_set_index"),
+        }
         for row in recent_logs
         if str(_read_attr(row, "workout_id") or "")
     ]
@@ -857,6 +889,8 @@ def build_workout_today_log_runtime(
         {
             "exercise_id": str(_read_attr(row, "exercise_id") or ""),
             "set_index": int(_read_attr(row, "set_index") or 0),
+            "set_kind": str(_read_attr(row, "set_kind") or "") or None,
+            "parent_set_index": _read_attr(row, "parent_set_index"),
         }
         for row in selected_session_logs
         if str(_read_attr(row, "exercise_id") or "")
@@ -1196,6 +1230,9 @@ def prepare_workout_log_set_context_route_runtime(
     reps: int,
     weight: float,
     rpe: float | None,
+    set_kind: str | None = None,
+    parent_set_index: int | None = None,
+    technique: dict[str, Any] | None = None,
     resolve_linked_program_id: Callable[[str], str | None],
     load_rule_set: Callable[[str], dict[str, Any]],
 ) -> dict[str, Any]:
@@ -1206,6 +1243,9 @@ def prepare_workout_log_set_context_route_runtime(
         reps=reps,
         weight=weight,
         rpe=rpe,
+        set_kind=set_kind,
+        parent_set_index=parent_set_index,
+        technique=technique,
     )
     plan_context = resolve_workout_plan_context(
         plan_rows=plan_rows,
@@ -1305,6 +1345,7 @@ def prepare_workout_session_state_route_runtime(
     set_index: int,
     reps: int,
     weight: float,
+    load_semantics: str | None = None,
     substitution_recommendation: dict[str, Any] | None,
     rule_set: dict[str, Any] | None,
 ) -> dict[str, Any]:
@@ -1319,6 +1360,7 @@ def prepare_workout_session_state_route_runtime(
         set_index=set_index,
         reps=reps,
         weight=weight,
+        load_semantics=load_semantics,
         substitution_recommendation=substitution_recommendation,
         rule_set=rule_set,
     )
@@ -1367,6 +1409,13 @@ def prepare_workout_log_set_response_runtime(
         set_index=int(_read_attr(record, "set_index") or 0),
         reps=int(_read_attr(record, "reps") or 0),
         weight=float(_read_attr(record, "weight") or 0),
+        set_kind=str(_read_attr(record, "set_kind") or "") or None,
+        parent_set_index=(
+            int(_read_attr(record, "parent_set_index"))
+            if _read_attr(record, "parent_set_index") is not None
+            else None
+        ),
+        technique=_coerce_dict(_read_attr(record, "technique")) or None,
         planned_reps_min=int(decision_runtime.get("planned_reps_min") or 0),
         planned_reps_max=int(decision_runtime.get("planned_reps_max") or 0),
         planned_weight=float(decision_runtime.get("planned_weight") or 0),

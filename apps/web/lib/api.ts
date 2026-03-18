@@ -11,6 +11,8 @@ type ExerciseVideo = {
 } | null;
 
 type AuthoredExecutionFields = {
+  load_semantics?: string | null;
+  execution_modifiers?: Record<string, unknown> | null;
   last_set_intensity_technique?: string | null;
   warm_up_sets?: string | null;
   working_sets?: string | null;
@@ -468,6 +470,9 @@ export type WorkoutSetFeedback = {
   set_index: number;
   reps: number;
   weight: number;
+  set_kind?: string | null;
+  parent_set_index?: number | null;
+  technique?: Record<string, unknown> | null;
   planned_reps_min: number;
   planned_reps_max: number;
   planned_weight: number;
@@ -915,7 +920,20 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  logSet: (workoutId: string, payload: { primary_exercise_id?: string | null; exercise_id: string; set_index: number; reps: number; weight: number; rpe?: number | null }) =>
+  logSet: (
+    workoutId: string,
+    payload: {
+      primary_exercise_id?: string | null;
+      exercise_id: string;
+      set_index: number;
+      reps: number;
+      weight: number;
+      rpe?: number | null;
+      set_kind?: string | null;
+      parent_set_index?: number | null;
+      technique?: Record<string, unknown> | null;
+    },
+  ) =>
     request<WorkoutSetFeedback>(`/workout/${encodeURIComponent(workoutId)}/log-set`, {
       method: "POST",
       body: JSON.stringify(payload),

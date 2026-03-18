@@ -197,6 +197,7 @@ def recommend_live_workout_adjustment(
     last_reps: int,
     last_weight: float,
     average_reps: float,
+    load_semantics: str | None = None,
     substitution_recommendation: dict[str, Any] | None = None,
     rule_set: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
@@ -246,12 +247,20 @@ def recommend_live_workout_adjustment(
         # kg ↔ lb conversion boundary.
         recommended_weight = round(max(2.0, last_weight), 2)
     else:
-        recommended_weight = _round_to_microload(last_weight * _bounded_in_session_weight_scale(scale))
+        normalized_scale = _bounded_in_session_weight_scale(scale)
+        if (load_semantics or "").strip().lower() == "assistance":
+            # Assisted-machine semantics: lower stack weight is harder. Invert
+            # the direction of in-session load changes.
+            normalized_scale = 1.0 / normalized_scale if normalized_scale else 1.0
+        recommended_weight = _round_to_microload(last_weight * _bounded_in_session_weight_scale(normalized_scale))
 
-    # Guardrail: for standard rep-range lifts, once the lifter has
-    # reached or exceeded the top of the programmed rep range, do not
-    # recommend a lower load for the remaining working sets.
-    if last_reps >= planned_reps_max and recommended_weight < last_weight:
+    # Guardrail: for standard resistance lifts, once the lifter has reached or
+    # exceeded the top of the programmed rep range, do not recommend a lower
+    # load for the remaining working sets.
+    #
+    # For assisted movements, lower stack weight is harder (less assistance),
+    # so a "lower" number is actually progression and must not be clamped.
+    if (load_semantics or "").strip().lower() != "assistance" and last_reps >= planned_reps_max and recommended_weight < last_weight:
         recommended_weight = round(max(2.0, last_weight), 2)
     guidance_rationale = _workout_guidance_rationale(guidance, rule_set=rule_set)
     decision_trace = {
@@ -366,6 +375,7 @@ def resolve_workout_session_state_update(
     set_index: int,
     reps: int,
     weight: float,
+    load_semantics: str | None = None,
     substitution_recommendation: dict[str, Any] | None = None,
     rule_set: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
@@ -408,6 +418,7 @@ def resolve_workout_session_state_update(
         last_reps=reps,
         last_weight=weight,
         average_reps=average_reps,
+        load_semantics=load_semantics,
         substitution_recommendation=substitution_recommendation,
         rule_set=rule_set,
     )

@@ -1003,6 +1003,18 @@ def test_resolve_workout_completion_per_exercise_keeps_highest_logged_set() -> N
     assert completed == {"bench_press": 3, "row": 1}
 
 
+def test_resolve_workout_completion_per_exercise_ignores_technique_sub_sets() -> None:
+    completed = resolve_workout_completion_per_exercise(
+        performed_logs=[
+            {"exercise_id": "bench_press", "set_index": 1, "set_kind": "work", "parent_set_index": None},
+            {"exercise_id": "bench_press", "set_index": 2, "set_kind": "work", "parent_set_index": None},
+            {"exercise_id": "bench_press", "set_index": 2, "set_kind": "dropset", "parent_set_index": 2},
+        ]
+    )
+
+    assert completed == {"bench_press": 2}
+
+
 def test_group_workout_logs_by_exercise_sorts_each_bucket() -> None:
     grouped = group_workout_logs_by_exercise(
         performed_logs=[
@@ -2249,13 +2261,13 @@ def test_build_workout_today_log_runtime_projects_resume_and_completion_rows() -
     )
 
     assert runtime["resume_logs"] == [
-        {"workout_id": "day-1"},
-        {"workout_id": "day-1"},
-        {"workout_id": "day-2"},
+        {"workout_id": "day-1", "set_kind": None, "parent_set_index": None},
+        {"workout_id": "day-1", "set_kind": None, "parent_set_index": None},
+        {"workout_id": "day-2", "set_kind": None, "parent_set_index": None},
     ]
     assert runtime["completion_logs"] == [
-        {"exercise_id": "bench", "set_index": 1},
-        {"exercise_id": "bench", "set_index": 2},
+        {"exercise_id": "bench", "set_index": 1, "set_kind": None, "parent_set_index": None},
+        {"exercise_id": "bench", "set_index": 2, "set_kind": None, "parent_set_index": None},
     ]
     assert runtime["decision_trace"]["interpreter"] == "build_workout_today_log_runtime"
 
@@ -2311,17 +2323,18 @@ def test_resolve_workout_today_session_selection_prefers_latest_incomplete_sessi
 def test_resolve_workout_today_session_selection_falls_back_to_today_match_then_first() -> None:
     today_selection = resolve_workout_today_session_selection(
         sessions=[
-            {"session_id": "a", "date": "2026-03-05"},
-            {"session_id": "b", "date": "2026-03-07"},
+            {"session_id": "a", "date": "2026-03-05", "exercises": [{"sets": 1}]},
+            {"session_id": "b", "date": "2026-03-07", "exercises": [{"sets": 1}]},
         ],
         latest_logged_workout_id="a",
         latest_logged_session_incomplete=False,
         today_iso="2026-03-07",
+        performed_logs=[{"workout_id": "a"}],
     )
     fallback_selection = resolve_workout_today_session_selection(
         sessions=[
-            {"session_id": "a", "date": "2026-03-05"},
-            {"session_id": "b", "date": "2026-03-06"},
+            {"session_id": "a", "date": "2026-03-05", "exercises": [{"sets": 1}]},
+            {"session_id": "b", "date": "2026-03-06", "exercises": [{"sets": 1}]},
         ],
         latest_logged_workout_id=None,
         latest_logged_session_incomplete=False,
@@ -2330,9 +2343,9 @@ def test_resolve_workout_today_session_selection_falls_back_to_today_match_then_
 
     assert today_selection["selected_session"]["session_id"] == "b"
     assert today_selection["resume_selected"] is False
-    assert today_selection["selection_reason"] == "today_match"
+    assert today_selection["selection_reason"] == "queue_next_incomplete_session"
     assert fallback_selection["selected_session"]["session_id"] == "a"
-    assert fallback_selection["selection_reason"] == "first_session_fallback"
+    assert fallback_selection["selection_reason"] == "queue_next_incomplete_session"
 
 
 def test_resolve_latest_logged_workout_resume_state_returns_latest_session_and_incomplete_flag() -> None:

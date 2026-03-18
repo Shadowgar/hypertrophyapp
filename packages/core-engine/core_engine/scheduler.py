@@ -59,6 +59,8 @@ def _slugify(value: str) -> str:
 
 def _authored_execution_fields(exercise: dict[str, Any]) -> dict[str, Any]:
     return {
+        "load_semantics": exercise.get("load_semantics"),
+        "execution_modifiers": exercise.get("execution_modifiers"),
         "last_set_intensity_technique": exercise.get("last_set_intensity_technique"),
         "warm_up_sets": exercise.get("warm_up_sets"),
         "working_sets": exercise.get("working_sets"),

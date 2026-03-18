@@ -45,6 +45,10 @@ test("visual snapshot: week route", async () => {
   globalThis.fetch.mockImplementation((input: RequestInfo | URL) => {
     const url = resolveUrl(input);
 
+    if (url.endsWith("/plan/latest-week")) {
+      return Promise.resolve(new Response(JSON.stringify({ detail: "not found" }), { status: 404 }));
+    }
+
     if (url.endsWith("/plan/programs")) {
       return Promise.resolve(
         new Response(
@@ -132,6 +136,7 @@ test("visual snapshot: settings route", async () => {
 });
 
 test("visual snapshot: today route initial state", async () => {
+  const dateSpy = vi.spyOn(Date.prototype, "toLocaleDateString").mockReturnValue("Tue, Mar 17");
   // @ts-ignore
   globalThis.fetch.mockImplementation((input: RequestInfo | URL) => {
     const url = resolveUrl(input);
@@ -144,4 +149,5 @@ test("visual snapshot: today route initial state", async () => {
   const { container, getByText } = render(<TodayPage />);
   await waitFor(() => expect(getByText(/Load today's workout/i)).toBeInTheDocument());
   expect(container.firstChild).toMatchSnapshot();
+  dateSpy.mockRestore();
 });

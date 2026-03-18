@@ -154,6 +154,9 @@ class WorkoutSetLog(Base):
     reps: Mapped[int] = mapped_column(Integer)
     weight: Mapped[float] = mapped_column(Float)
     rpe: Mapped[float | None] = mapped_column(Float, nullable=True)
+    set_kind: Mapped[str | None] = mapped_column(String, nullable=True)
+    parent_set_index: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    technique: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive)
 
 

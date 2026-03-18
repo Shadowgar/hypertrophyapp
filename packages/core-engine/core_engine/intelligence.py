@@ -363,6 +363,7 @@ def resolve_workout_session_state_update(
     set_index: int,
     reps: int,
     weight: float,
+    load_semantics: str | None = None,
     substitution_recommendation: dict[str, Any] | None = None,
     rule_set: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
@@ -376,6 +377,7 @@ def resolve_workout_session_state_update(
         set_index=set_index,
         reps=reps,
         weight=weight,
+        load_semantics=load_semantics,
         substitution_recommendation=substitution_recommendation,
         rule_set=rule_set,
     )
@@ -486,6 +488,9 @@ def build_workout_log_set_payload(
     starting_load_decision_trace: dict[str, Any] | None,
     live_recommendation: dict[str, Any],
     created_at: Any,
+    set_kind: str | None = None,
+    parent_set_index: int | None = None,
+    technique: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     return {
         "id": record_id,
@@ -494,6 +499,9 @@ def build_workout_log_set_payload(
         "set_index": int(set_index),
         "reps": int(reps),
         "weight": float(weight),
+        "set_kind": set_kind,
+        "parent_set_index": parent_set_index,
+        "technique": deepcopy(technique) if technique is not None else None,
         "planned_reps_min": int(planned_reps_min),
         "planned_reps_max": int(planned_reps_max),
         "planned_weight": float(planned_weight),
@@ -806,6 +814,7 @@ def resolve_workout_today_session_selection(
     latest_logged_workout_id: str | None,
     latest_logged_session_incomplete: bool,
     today_iso: str,
+    performed_logs: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     from .decision_workout_session import resolve_workout_today_session_selection as _impl
 
@@ -814,6 +823,7 @@ def resolve_workout_today_session_selection(
         latest_logged_workout_id=latest_logged_workout_id,
         latest_logged_session_incomplete=latest_logged_session_incomplete,
         today_iso=today_iso,
+        performed_logs=performed_logs,
     )
 
 
@@ -1214,6 +1224,14 @@ def resolve_workout_completion_per_exercise(
         exercise_id = str(row.get("exercise_id") or "")
         if not exercise_id:
             continue
+        # Technique sub-sets (dropsets, rest-pause clusters, etc.) must not
+        # advance the planned working-set counter. They are linked to a parent
+        # working set via parent_set_index.
+        if row.get("parent_set_index") is not None:
+            continue
+        set_kind = str(row.get("set_kind") or "").strip().lower()
+        if set_kind and set_kind != "work":
+            continue
         set_index = int(row.get("set_index") or 0)
         previous_completed_sets = completed_by_exercise.get(exercise_id, 0)
         if set_index > previous_completed_sets:
@@ -1230,6 +1248,11 @@ def group_workout_logs_by_exercise(
         exercise_id = str(row.get("exercise_id") or "")
         if not exercise_id:
             continue
+        if row.get("parent_set_index") is not None:
+            continue
+        set_kind = str(row.get("set_kind") or "").strip().lower()
+        if set_kind and set_kind != "work":
+            continue
         grouped.setdefault(exercise_id, []).append(dict(row))
     for exercise_logs in grouped.values():
         exercise_logs.sort(key=lambda row: int(row.get("set_index") or 0))
@@ -1242,6 +1265,8 @@ def _serialize_workout_summary_log_row(row: Any) -> dict[str, Any]:
         "set_index": _read_attr(row, "set_index"),
         "reps": _read_attr(row, "reps"),
         "weight": _read_attr(row, "weight"),
+        "set_kind": _read_attr(row, "set_kind"),
+        "parent_set_index": _read_attr(row, "parent_set_index"),
     }
 
 

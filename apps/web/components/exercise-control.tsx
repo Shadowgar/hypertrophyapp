@@ -161,10 +161,13 @@ type SetInputCardProps = Readonly<{
   exerciseId: string;
   guidanceLine: string;
   ctrl: ExerciseControlState;
+  weightLabel?: string;
+  disableComplete?: boolean;
 }>;
 
-export function SetInputCard({ exerciseId, guidanceLine, ctrl }: SetInputCardProps) {
+export function SetInputCard({ exerciseId, guidanceLine, ctrl, weightLabel, disableComplete }: SetInputCardProps) {
   const allDone = ctrl.completedSets >= ctrl.totalSets;
+  const isDisabled = allDone || Boolean(disableComplete);
 
   return (
     <div className="glass-layer glass-layer--elevated rounded-xl p-4 space-y-3">
@@ -185,7 +188,7 @@ export function SetInputCard({ exerciseId, guidanceLine, ctrl }: SetInputCardPro
           />
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className="text-[11px] uppercase tracking-wide text-zinc-500">Weight (lb)</span>
+          <span className="text-[11px] uppercase tracking-wide text-zinc-500">{weightLabel ?? "Weight (lb)"}</span>
           <input
             id={`${exerciseId}-weight`}
             className="ui-input h-12 w-full rounded-lg px-3 text-center text-lg font-semibold tabular-nums"
@@ -203,9 +206,9 @@ export function SetInputCard({ exerciseId, guidanceLine, ctrl }: SetInputCardPro
         className="min-h-[48px] w-full text-sm font-semibold"
         onClick={ctrl.completeSet}
         type="button"
-        disabled={allDone}
+        disabled={isDisabled}
       >
-        {allDone ? "All Sets Complete" : "Complete Set"}
+        {allDone ? "All Sets Complete" : disableComplete ? "Complete technique steps first" : "Complete Set"}
       </Button>
     </div>
   );
