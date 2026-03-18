@@ -1117,7 +1117,7 @@ export default function TodayPage() {
       })() : null}
 
       {swapTarget ? (
-        <div className="fixed inset-0 z-50 flex items-end bg-black/60 p-4 md:items-center md:justify-center">
+        <div className="fixed inset-0 z-[70] flex items-end bg-black/60 p-4 md:items-center md:justify-center">
           <div className="main-card main-card--elevated w-full max-w-md spacing-grid">
             <div>
               <p className="text-sm font-semibold text-zinc-100">Choose a substitute</p>
@@ -1168,7 +1168,7 @@ export default function TodayPage() {
       ) : null}
 
       {showSorenessModal ? (
-        <div className="fixed inset-0 z-50 flex items-end bg-black/60 p-4 md:items-center md:justify-center">
+        <div className="fixed inset-0 z-[70] flex items-end bg-black/60 p-4 md:items-center md:justify-center">
           <div className="main-card main-card--elevated w-full max-w-md spacing-grid">
             <div>
               <p className="text-sm font-semibold text-zinc-100">What&rsquo;s sore today?</p>
