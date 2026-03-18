@@ -729,6 +729,7 @@ export type WeeklyReviewPayload = {
   fat: number;
   carbs: number;
   adherence_score: number;
+  sessions_next_week?: number;
   notes?: string;
   nutrition_phase?: string;
   week_start?: string;

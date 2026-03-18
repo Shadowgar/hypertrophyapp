@@ -176,6 +176,20 @@ test("check-in page surfaces review command center and adaptive output", async (
     expect(screen.getByText(/Readiness: 78/i)).toBeInTheDocument();
   });
 
+  await waitFor(() => {
+    // @ts-ignore
+    const reviewCalls = globalThis.fetch.mock.calls.filter((entry) => {
+      const url = resolveUrl(entry[0]);
+      const init = entry[1] as RequestInit | undefined;
+      return url.endsWith("/weekly-review") && init?.method === "POST";
+    });
+    expect(reviewCalls.length).toBeGreaterThan(0);
+    const last = reviewCalls[reviewCalls.length - 1];
+    const init = last[1] as RequestInit | undefined;
+    const payload = JSON.parse(String(init?.body || "{}"));
+    expect(payload.sessions_next_week).toBe(4);
+  });
+
   expect(screen.queryByText(/Primed to push/i)).not.toBeInTheDocument();
   expect(screen.queryByText(/Manage fatigue carefully/i)).not.toBeInTheDocument();
   expect(screen.queryByText(/Recovery-first week/i)).not.toBeInTheDocument();

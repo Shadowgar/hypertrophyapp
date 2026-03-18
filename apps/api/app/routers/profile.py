@@ -487,6 +487,8 @@ def submit_weekly_review(
     user_update_payload = cast(dict[str, Any], route_runtime["user_update_payload"])
     for key, value in user_update_payload.items():
         setattr(current_user, key, value)
+    if payload.sessions_next_week is not None:
+        current_user.days_available = int(payload.sessions_next_week)
     db.add(current_user)
 
     submit_persistence_values = cast(dict[str, Any], route_runtime["submit_persistence_values"])

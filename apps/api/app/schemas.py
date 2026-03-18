@@ -179,6 +179,7 @@ class WeeklyReviewSubmitRequest(BaseModel):
     fat: int = Field(gt=0)
     carbs: int = Field(gt=0)
     adherence_score: int = Field(ge=1, le=5)
+    sessions_next_week: int | None = Field(default=None, ge=2, le=5)
     notes: str | None = None
     nutrition_phase: str | None = None
     week_start: date | None = None

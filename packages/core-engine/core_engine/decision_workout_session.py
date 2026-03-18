@@ -492,6 +492,7 @@ def resolve_workout_today_session_selection(
     latest_logged_workout_id: str | None,
     latest_logged_session_incomplete: bool,
     today_iso: str,
+    performed_logs: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     session_by_id = {
         str(session.get("session_id") or ""): session
@@ -511,10 +512,31 @@ def resolve_workout_today_session_selection(
             selection_reason = "resume_incomplete_session"
 
     if selected_session is None:
-        today_match = next((session for session in sessions if str(session.get("date") or "") == today_iso), None)
-        if today_match is not None:
-            selected_session = today_match
-            selection_reason = "today_match"
+        log_rows = list(performed_logs or [])
+        log_counts: dict[str, int] = {}
+        for row in log_rows:
+            workout_id = str(row.get("workout_id") or "")
+            if not workout_id:
+                continue
+            log_counts[workout_id] = log_counts.get(workout_id, 0) + 1
+
+        def _planned_set_count(session: dict[str, Any]) -> int:
+            return sum(int(exercise.get("sets", 3) or 3) for exercise in session.get("exercises", []))
+
+        queue_candidate = None
+        for session in sessions:
+            session_id = str(session.get("session_id") or "")
+            if not session_id:
+                continue
+            planned_sets = _planned_set_count(session)
+            logged_sets = log_counts.get(session_id, 0)
+            if logged_sets < planned_sets:
+                queue_candidate = session
+                break
+
+        if queue_candidate is not None:
+            selected_session = queue_candidate
+            selection_reason = "queue_next_incomplete_session"
 
     if selected_session is None and sessions:
         selected_session = sessions[0]
@@ -532,6 +554,7 @@ def resolve_workout_today_session_selection(
                 "latest_logged_workout_id": latest_logged_workout_id,
                 "latest_logged_session_incomplete": latest_logged_session_incomplete,
                 "today_iso": today_iso,
+                "performed_log_count": len(performed_logs or []),
             },
             "outcome": {
                 "selected_session_id": str(_coerce_dict(selected_session).get("session_id") or "") or None,
@@ -1117,6 +1140,7 @@ def prepare_workout_today_selection_route_runtime(
         latest_logged_workout_id=resume_runtime.get("latest_logged_workout_id"),
         latest_logged_session_incomplete=bool(resume_runtime.get("latest_logged_session_incomplete")),
         today_iso=today_iso,
+        performed_logs=list(log_runtime.get("resume_logs") or []),
     )
     selected_session = _coerce_dict(selection.get("selected_session"))
     selected_session_id = str(selected_session.get("session_id") or "").strip() or None

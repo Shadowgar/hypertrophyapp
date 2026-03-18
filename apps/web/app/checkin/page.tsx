@@ -50,6 +50,7 @@ export default function CheckinPage() {
   const [carbs, setCarbs] = useState("0");
   const [adherenceScore, setAdherenceScore] = useState("4");
   const [notes, setNotes] = useState("");
+  const [sessionsNextWeek, setSessionsNextWeek] = useState("3");
   const [status, setStatus] = useState("Loading weekly review...");
   const [reviewResult, setReviewResult] = useState<WeeklyReviewResponse | null>(null);
   const [isGeneratingNextWeek, setIsGeneratingNextWeek] = useState(false);
@@ -69,6 +70,7 @@ export default function CheckinPage() {
         setProtein(String(profile.protein || 0));
         setFat(String(profile.fat || 0));
         setCarbs(String(profile.carbs || 0));
+        setSessionsNextWeek(String(Math.max(2, Math.min(5, profile.days_available || 3))));
         setStatus(weeklyStatus.review_required ? "Sunday review required" : "Weekly review ready");
       })
       .catch(() => {
@@ -95,12 +97,14 @@ export default function CheckinPage() {
         fat: Number(fat),
         carbs: Number(carbs),
         adherence_score: Number(adherenceScore),
+        sessions_next_week: Number(sessionsNextWeek),
         notes: notes || undefined,
       });
       setReviewResult(response);
       setStatus("Weekly review saved");
       const refreshedStatus = await api.getWeeklyReviewStatus();
       setReviewStatus(refreshedStatus);
+      await handleGenerateNextWeek();
     } catch {
       setStatus("Weekly review failed. Verify your inputs and retry.");
     }
@@ -182,6 +186,14 @@ export default function CheckinPage() {
 
         <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-3">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Recovery</p>
+          <label className="flex flex-col gap-1 text-sm text-zinc-300">
+            <span>Sessions next week (2-5)</span>
+            <select className="ui-select" onChange={(event) => setSessionsNextWeek(event.target.value)} value={sessionsNextWeek}>
+              {["2", "3", "4", "5"].map((val) => (
+                <option key={val} value={val}>{val}</option>
+              ))}
+            </select>
+          </label>
           <label className="flex flex-col gap-1 text-sm text-zinc-300">
             <span>Adherence Score (1-5)</span>
             <select className="ui-select" onChange={(event) => setAdherenceScore(event.target.value)} value={adherenceScore}>

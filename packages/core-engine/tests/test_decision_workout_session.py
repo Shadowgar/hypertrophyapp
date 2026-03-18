@@ -188,12 +188,13 @@ def test_resolve_latest_logged_workout_resume_state_emits_decision_trace() -> No
 def test_resolve_workout_today_session_selection_emits_decision_trace() -> None:
     selection = resolve_workout_today_session_selection(
         sessions=[
-            {"session_id": "day-1", "date": "2026-03-05"},
-            {"session_id": "day-2", "date": "2026-03-07"},
+            {"session_id": "day-1", "date": "2026-03-05", "exercises": [{"sets": 3}]},
+            {"session_id": "day-2", "date": "2026-03-07", "exercises": [{"sets": 3}]},
         ],
         latest_logged_workout_id="day-1",
         latest_logged_session_incomplete=True,
         today_iso="2026-03-07",
+        performed_logs=[{"workout_id": "day-1"}],
     )
 
     assert selection["selected_session"]["session_id"] == "day-1"
@@ -201,6 +202,26 @@ def test_resolve_workout_today_session_selection_emits_decision_trace() -> None:
     assert selection["selection_reason"] == "resume_incomplete_session"
     assert selection["decision_trace"]["interpreter"] == "resolve_workout_today_session_selection"
     assert selection["decision_trace"]["outcome"]["selection_reason"] == "resume_incomplete_session"
+
+
+def test_resolve_workout_today_session_selection_queues_next_incomplete_session() -> None:
+    selection = resolve_workout_today_session_selection(
+        sessions=[
+            {"session_id": "day-1", "date": "2026-03-05", "exercises": [{"sets": 2}]},
+            {"session_id": "day-2", "date": "2026-03-07", "exercises": [{"sets": 2}]},
+        ],
+        latest_logged_workout_id="day-2",
+        latest_logged_session_incomplete=False,
+        today_iso="2026-03-07",
+        performed_logs=[
+            {"workout_id": "day-1"},
+            {"workout_id": "day-1"},
+        ],
+    )
+
+    assert selection["selected_session"]["session_id"] == "day-2"
+    assert selection["resume_selected"] is False
+    assert selection["selection_reason"] == "queue_next_incomplete_session"
 
 
 def test_prepare_workout_today_response_runtime_builds_final_today_payload() -> None:
