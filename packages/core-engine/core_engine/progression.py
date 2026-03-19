@@ -42,11 +42,10 @@ def _resolve_progression_outcome(
     min_rep, max_rep = rep_range
     at_top = last_performance.completed_reps >= max_rep
     below_min = last_performance.completed_reps < min_rep
-    sets_completed_ratio = (
-        last_performance.completed_sets / max(last_performance.planned_sets, 1)
-    )
 
-    if below_min or sets_completed_ratio < 0.75:
+    # Do not penalize early sets in a multi-set workout for incomplete volume.
+    # Underperformance should be based on rep quality, not set position.
+    if below_min:
         delta = _underperformance_delta(
             current=current,
             exposure_count=exercise_state.exposure_count,
@@ -55,7 +54,7 @@ def _resolve_progression_outcome(
         )
         progression_action = "reduce_load" if delta < 0 else "hold"
         under_target = True
-    elif at_top and sets_completed_ratio >= 1.0:
+    elif at_top and last_performance.completed_sets >= last_performance.planned_sets:
         delta = (increase_percent / 100.0) * current * phase_factor
         progression_action = "increase_load"
         under_target = False

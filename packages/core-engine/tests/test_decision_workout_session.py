@@ -391,6 +391,43 @@ def test_prepare_workout_log_set_decision_route_runtime_wraps_log_set_runtime() 
     assert runtime["decision_trace"]["interpreter"] == "prepare_workout_log_set_decision_route_runtime"
 
 
+def test_prepare_workout_log_set_decision_route_runtime_non_work_set_does_not_advance_progression_state() -> None:
+    runtime = prepare_workout_log_set_decision_route_runtime(
+        user_id="user_123",
+        workout_id="day-1",
+        existing_exercise_state=SimpleNamespace(
+            current_working_weight=100.0,
+            exposure_count=5,
+            consecutive_under_target_exposures=1,
+            last_progression_action="hold",
+            fatigue_score=0,
+        ),
+        request_runtime={
+            "primary_exercise_id": "bench",
+            "exercise_id": "bench",
+            "set_index": 1,
+            "reps": 10,
+            "weight": 100.0,
+            "rpe": None,
+            "set_kind": "warmup",
+            "parent_set_index": None,
+            "technique": None,
+        },
+        planned_exercise={
+            "id": "bench",
+            "sets": 3,
+            "rep_range": [8, 10],
+            "recommended_working_weight": 100.0,
+        },
+        nutrition_phase="maintenance",
+        equipment_profile=["dumbbell"],
+        rule_set=None,
+    )
+
+    assert runtime["exercise_state_update_values"]["exposure_count"] == 5
+    assert runtime["exercise_state_update_values"]["current_working_weight"] == 100.0
+
+
 def test_prepare_workout_session_state_route_runtime_shapes_state_create_and_live_payload() -> None:
     runtime = prepare_workout_session_state_route_runtime(
         existing_state=None,

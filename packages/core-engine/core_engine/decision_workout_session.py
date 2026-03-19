@@ -11,6 +11,7 @@ from .decision_live_workout_guidance import (
     summarize_workout_session_guidance,
 )
 from .generation import resolve_optional_rule_set
+from .equipment_profile import canonicalize_equipment_profile
 from .progression import ExerciseState as _ProgressionExerciseState
 from .progression import update_exercise_state_after_workout as _update_exercise_state_after_workout
 from .intelligence import (
@@ -46,11 +47,7 @@ def _read_attr(value: Any, key: str, default: Any = None) -> Any:
 
 
 def _normalized_equipment_profile(equipment_profile: list[str] | None) -> set[str]:
-    return {
-        str(item).strip().lower()
-        for item in (equipment_profile or [])
-        if str(item).strip()
-    }
+    return set(canonicalize_equipment_profile(equipment_profile))
 
 def build_repeat_failure_substitution_payload(
     *,
@@ -105,6 +102,8 @@ def prepare_workout_exercise_state_runtime(
     nutrition_phase: str | None,
     equipment_profile: list[str] | None,
     rule_set: dict[str, Any] | None,
+    set_kind: str | None = None,
+    parent_set_index: int | None = None,
 ) -> dict[str, Any]:
     starting_load_runtime: dict[str, Any] | None = None
     if existing_state is not None:
@@ -129,23 +128,37 @@ def prepare_workout_exercise_state_runtime(
             "fatigue_score": 0,
         }
 
-    updated_state = _update_exercise_state_after_workout(
-        exercise_state=_ProgressionExerciseState(
+    normalized_set_kind = str(set_kind or "").strip().lower()
+    participates_in_progression = parent_set_index is None and (
+        not normalized_set_kind or normalized_set_kind == "work"
+    )
+    if participates_in_progression:
+        updated_state = _update_exercise_state_after_workout(
+            exercise_state=_ProgressionExerciseState(
+                exercise_id=primary_exercise_id,
+                current_working_weight=float(initial_state_values["current_working_weight"]),
+                exposure_count=int(initial_state_values["exposure_count"]),
+                consecutive_under_target_exposures=int(initial_state_values["consecutive_under_target_exposures"]),
+                last_progression_action=str(initial_state_values["last_progression_action"]),
+                fatigue_score=int(initial_state_values["fatigue_score"]),
+            ),
+            completed_reps=int(completed_reps),
+            target_rep_range=(int(planned_reps_min), int(planned_reps_max)),
+            completed_sets=int(completed_set_index),
+            planned_sets=max(1, int(planned_sets)),
+            phase_modifier=nutrition_phase or "maintenance",
+            load_semantics=str(_coerce_dict(planned_exercise).get("load_semantics") or "") or None,
+            rule_set=rule_set,
+        )
+    else:
+        updated_state = _ProgressionExerciseState(
             exercise_id=primary_exercise_id,
             current_working_weight=float(initial_state_values["current_working_weight"]),
             exposure_count=int(initial_state_values["exposure_count"]),
             consecutive_under_target_exposures=int(initial_state_values["consecutive_under_target_exposures"]),
             last_progression_action=str(initial_state_values["last_progression_action"]),
             fatigue_score=int(initial_state_values["fatigue_score"]),
-        ),
-        completed_reps=int(completed_reps),
-        target_rep_range=(int(planned_reps_min), int(planned_reps_max)),
-        completed_sets=int(completed_set_index),
-        planned_sets=max(1, int(planned_sets)),
-        phase_modifier=nutrition_phase or "maintenance",
-        load_semantics=str(_coerce_dict(planned_exercise).get("load_semantics") or "") or None,
-        rule_set=rule_set,
-    )
+        )
     state_values = {
         "current_working_weight": float(updated_state.current_working_weight),
         "exposure_count": int(updated_state.exposure_count),
@@ -174,6 +187,8 @@ def prepare_workout_exercise_state_runtime(
                 "planned_sets": int(planned_sets),
                 "completed_set_index": int(completed_set_index),
                 "completed_reps": int(completed_reps),
+                "set_kind": set_kind,
+                "parent_set_index": parent_set_index,
                 "has_existing_state": existing_state is not None,
                 "has_rule_set": isinstance(rule_set, dict),
             },
@@ -184,6 +199,7 @@ def prepare_workout_exercise_state_runtime(
                 "last_progression_action": str(updated_state.last_progression_action),
                 "has_starting_load_runtime": starting_load_runtime is not None,
                 "has_substitution_recommendation": substitution_recommendation is not None,
+                "participates_in_progression": participates_in_progression,
             },
         },
     }
@@ -788,6 +804,8 @@ def prepare_workout_log_set_decision_runtime(
         nutrition_phase=nutrition_phase,
         equipment_profile=equipment_profile,
         rule_set=rule_set,
+        set_kind=cast(str | None, request_runtime.get("set_kind")),
+        parent_set_index=cast(int | None, request_runtime.get("parent_set_index")),
     )
     next_working_weight = float(_coerce_dict(exercise_state_runtime["state_values"])["current_working_weight"])
     feedback = interpret_workout_set_feedback(

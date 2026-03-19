@@ -476,6 +476,7 @@ def test_prepare_generate_week_plan_runtime_inputs_normalizes_plan_inputs() -> N
             "severe_soreness_count": 1,
             "session_time_budget_minutes": 45,
             "movement_restrictions": ["overhead_pressing"],
+            "weak_areas": ["chest"],
             "near_failure_tolerance": "low",
         },
     )
@@ -484,6 +485,7 @@ def test_prepare_generate_week_plan_runtime_inputs_normalizes_plan_inputs() -> N
         "name": "Coach User",
         "session_time_budget_minutes": 45,
         "movement_restrictions": ["overhead_pressing"],
+        "weak_areas": ["chest"],
         "near_failure_tolerance": "low",
     }
     assert runtime["days_available"] == 4
@@ -507,6 +509,7 @@ def test_prepare_generate_week_plan_runtime_inputs_applies_defaults() -> None:
         "name": None,
         "session_time_budget_minutes": None,
         "movement_restrictions": [],
+        "weak_areas": [],
         "near_failure_tolerance": None,
     }
     assert runtime["phase"] == "maintenance"
@@ -531,6 +534,7 @@ def test_prepare_generate_week_scheduler_runtime_shapes_generate_week_call_args(
             "severe_soreness_count": 1,
             "session_time_budget_minutes": 45,
             "movement_restrictions": ["overhead_pressing"],
+            "weak_areas": ["chest"],
         },
         program_template={"id": "full_body_v1", "sessions": []},
         rule_set={"progression_rules": {"on_success": {"percent": 2.5}}},
@@ -541,6 +545,7 @@ def test_prepare_generate_week_scheduler_runtime_shapes_generate_week_call_args(
         "name": "Coach User",
         "session_time_budget_minutes": 45,
         "movement_restrictions": ["overhead_pressing"],
+        "weak_areas": ["chest"],
         "near_failure_tolerance": None,
     }
     assert scheduler_kwargs["days_available"] == 4

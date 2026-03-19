@@ -38,6 +38,28 @@ def _normalize_exercise_key(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", value.strip().lower()).strip("_")
 
 
+def _normalize_movement_label(value: Any) -> str:
+    return re.sub(r"[^a-z]+", "_", str(value or "").strip().lower()).strip("_")
+
+
+def _movement_pattern_blocked(
+    movement_pattern: str | None,
+    movement_restrictions: set[str] | None,
+) -> bool:
+    restrictions = movement_restrictions or set()
+    if not restrictions:
+        return False
+    normalized_pattern = _normalize_movement_label(movement_pattern)
+    if not normalized_pattern:
+        return False
+    restriction_map = {
+        "vertical_press": "overhead_pressing",
+        "squat": "deep_knee_flexion",
+        "lunge": "deep_knee_flexion",
+    }
+    return restriction_map.get(normalized_pattern) in restrictions
+
+
 def _normalize_scheduler_label(value: Any) -> str:
     return re.sub(r"[^a-z0-9]+", "_", str(value or "").strip().lower()).strip("_")
 
@@ -605,6 +627,7 @@ def _select_sessions_with_continuity(
     *,
     required_indices: list[int],
     day_role_priority: dict[str, int],
+    weak_areas: set[str] | None = None,
 ) -> tuple[list[int], str]:
     priority_weights = {
         exercise_id: len(priority_targets) - index
@@ -617,6 +640,11 @@ def _select_sessions_with_continuity(
             "primary_exercise_ids": {
                 str(item).strip()
                 for item in session.get("primary_exercise_ids") or []
+                if str(item).strip()
+            },
+            "muscles": {
+                str(item).strip().lower()
+                for item in session.get("muscles") or []
                 if str(item).strip()
             },
         }
@@ -648,8 +676,16 @@ def _select_sessions_with_continuity(
                 continue
 
             new_priority_ids = profile["primary_exercise_ids"] - covered_priority
+            weak_area_overlap = len(
+                {
+                    muscle
+                    for muscle in profile.get("muscles") or []
+                    if str(muscle).strip().lower() in (weak_areas or set())
+                }
+            )
             score = (
                 _priority_weight(new_priority_ids, priority_weights),
+                weak_area_overlap,
                 day_role_priority.get(profile["day_role"], 0),
                 _session_distance_score(index, selected_indices, len(session_profiles)),
                 _priority_weight(profile["primary_exercise_ids"], priority_weights),
@@ -677,6 +713,7 @@ def resolve_scheduler_session_selection(
     session_profiles: list[dict[str, Any]],
     history: list[dict[str, Any]],
     days_available: int,
+    weak_areas: list[str] | None = None,
     rule_set: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     normalized_days_available = max(1, int(days_available))
@@ -702,6 +739,11 @@ def resolve_scheduler_session_selection(
         required_day_roles=required_day_roles,
         anchor_first_session_when_day_roles_present=anchor_first_session,
     )
+    normalized_weak_areas = {
+        str(item).strip().lower()
+        for item in (weak_areas or [])
+        if str(item).strip()
+    }
 
     if normalized_days_available >= len(session_profiles):
         selected_indices = [int(session.get("index") or 0) for session in session_profiles]
@@ -736,6 +778,7 @@ def resolve_scheduler_session_selection(
                 priority_targets,
                 required_indices=required_indices,
                 day_role_priority=day_role_priority,
+                weak_areas=normalized_weak_areas,
             )
 
     missed_day_policy = (
@@ -761,6 +804,7 @@ def resolve_scheduler_session_selection(
                         "priority_target_source": priority_target_source,
                         "priority_targets": list(priority_targets),
                         "required_session_indices": required_indices,
+                        "weak_areas": sorted(normalized_weak_areas),
                     },
                 },
                 {
@@ -791,12 +835,17 @@ def resolve_scheduler_session_exercise_cap(
     normalized_day_role = str(day_role or "").strip().lower()
     exercise_cap_rules = _scheduler_rule_dict(rule_set, "session_exercise_cap")
     limit = None
+    selected_threshold: dict[str, int] | None = None
     if session_time_budget_minutes is not None:
         for threshold in exercise_cap_rules.get("time_budget_thresholds") or []:
             threshold_dict = _coerce_dict(threshold)
             maximum_minutes = int(threshold_dict.get("maximum_minutes") or 0)
             if maximum_minutes > 0 and int(session_time_budget_minutes) <= maximum_minutes:
                 limit = int(threshold_dict.get("exercise_limit") or 0) or None
+                selected_threshold = {
+                    "maximum_minutes": maximum_minutes,
+                    "exercise_limit": int(threshold_dict.get("exercise_limit") or 0),
+                }
                 break
 
     role_priority = {
@@ -829,6 +878,8 @@ def resolve_scheduler_session_exercise_cap(
     return {
         "exercise_limit": limit,
         "kept_indices": kept_indices,
+        "slot_role_priority": dict(role_priority),
+        "selected_threshold": dict(selected_threshold) if selected_threshold else None,
         "decision_trace": {
             "interpreter": "resolve_scheduler_session_exercise_cap",
             "version": "v1",
@@ -841,9 +892,25 @@ def resolve_scheduler_session_exercise_cap(
                 "day_role": normalized_day_role,
                 "slot_roles": list(normalized_slot_roles),
             },
+            "steps": [
+                {
+                    "decision": "resolve_time_budget_threshold",
+                    "result": {
+                        "selected_threshold": dict(selected_threshold) if selected_threshold else None,
+                        "has_scheduler_cap_rules": bool(exercise_cap_rules),
+                    },
+                },
+                {
+                    "decision": "rank_slot_roles_for_retention",
+                    "result": {
+                        "slot_role_priority": dict(role_priority),
+                    },
+                },
+            ],
             "outcome": {
                 "exercise_limit": limit,
                 "kept_indices": list(kept_indices),
+                "selected_threshold": dict(selected_threshold) if selected_threshold else None,
             },
         },
     }
@@ -999,6 +1066,8 @@ def _compatible_substitution_candidates(
     *,
     substitution_candidates: list[str],
     equipment_set: set[str],
+    movement_restrictions: set[str] | None = None,
+    candidate_movement_patterns: dict[str, str] | None = None,
 ) -> list[str]:
     def is_compatible(tags: list[str]) -> bool:
         if not equipment_set:
@@ -1011,6 +1080,11 @@ def _compatible_substitution_candidates(
     for candidate in substitution_candidates:
         candidate_tags = resolve_equipment_tags(exercise_name=candidate, explicit_tags=None)
         if is_compatible(candidate_tags):
+            if _movement_pattern_blocked(
+                _coerce_dict(candidate_movement_patterns).get(candidate),
+                movement_restrictions,
+            ):
+                continue
             compatible_candidates.append(candidate)
     return compatible_candidates
 
@@ -1023,6 +1097,8 @@ def resolve_equipment_substitution(
     substitution_candidates: list[str],
     equipment_set: set[str],
     rule_set: dict[str, Any] | None,
+    movement_restrictions: set[str] | None = None,
+    candidate_movement_patterns: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     substitution_runtime = resolve_substitution_rule_runtime(rule_set)
 
@@ -1036,7 +1112,17 @@ def resolve_equipment_substitution(
     compatible_candidates = _compatible_substitution_candidates(
         substitution_candidates=substitution_candidates,
         equipment_set=equipment_set,
+        movement_restrictions=movement_restrictions,
+        candidate_movement_patterns=candidate_movement_patterns,
     )
+    restricted_candidates = [
+        candidate
+        for candidate in substitution_candidates
+        if _movement_pattern_blocked(
+            _coerce_dict(candidate_movement_patterns).get(candidate),
+            movement_restrictions,
+        )
+    ]
 
     original_compatible = is_compatible(exercise_equipment_tags)
     selected_exercise_id = exercise_id
@@ -1067,6 +1153,7 @@ def resolve_equipment_substitution(
                 "substitution_candidates": list(substitution_candidates),
                 "equipment_set": sorted(equipment_set),
                 "equipment_mismatch_strategy": strategy,
+                "movement_restrictions": sorted(movement_restrictions or set()),
             },
             "steps": [
                 {
@@ -1074,6 +1161,7 @@ def resolve_equipment_substitution(
                     "result": {
                         "original_compatible": original_compatible,
                         "compatible_substitutions": list(compatible_candidates),
+                        "restricted_substitutions": restricted_candidates,
                     },
                 },
                 {
@@ -1087,6 +1175,7 @@ def resolve_equipment_substitution(
             "outcome": {
                 "original_compatible": original_compatible,
                 "compatible_substitutions": list(compatible_candidates),
+                "restricted_substitutions": restricted_candidates,
                 "selected_name": selected_name,
                 "auto_substituted": auto_substituted,
             },
@@ -1102,13 +1191,25 @@ def resolve_repeat_failure_substitution(
     consecutive_under_target_exposures: int,
     equipment_set: set[str],
     rule_set: dict[str, Any] | None,
+    movement_restrictions: set[str] | None = None,
+    candidate_movement_patterns: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     substitution_runtime = resolve_substitution_rule_runtime(rule_set)
     threshold = substitution_runtime["repeat_failure_threshold"]
     compatible_candidates = _compatible_substitution_candidates(
         substitution_candidates=substitution_candidates,
         equipment_set=equipment_set,
+        movement_restrictions=movement_restrictions,
+        candidate_movement_patterns=candidate_movement_patterns,
     )
+    restricted_candidates = [
+        candidate
+        for candidate in substitution_candidates
+        if _movement_pattern_blocked(
+            _coerce_dict(candidate_movement_patterns).get(candidate),
+            movement_restrictions,
+        )
+    ]
     current_keys = {
         _normalize_exercise_key(exercise_id),
         _normalize_exercise_key(exercise_name),
@@ -1137,6 +1238,7 @@ def resolve_repeat_failure_substitution(
                 "consecutive_under_target_exposures": int(consecutive_under_target_exposures),
                 "repeat_failure_threshold": threshold,
                 "equipment_set": sorted(equipment_set),
+                "movement_restrictions": sorted(movement_restrictions or set()),
             },
             "steps": [
                 {
@@ -1144,6 +1246,7 @@ def resolve_repeat_failure_substitution(
                     "result": {
                         "threshold_met": threshold_met,
                         "recommended_name": recommended_name,
+                        "restricted_substitutions": restricted_candidates,
                     },
                 }
             ],
@@ -1151,6 +1254,7 @@ def resolve_repeat_failure_substitution(
                 "recommend_substitution": recommended_name is not None,
                 "recommended_name": recommended_name,
                 "compatible_substitutions": list(compatible_alternatives),
+                "restricted_substitutions": restricted_candidates,
             },
         },
     }

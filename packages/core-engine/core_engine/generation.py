@@ -898,6 +898,7 @@ def resolve_week_generation_runtime_inputs(
         ),
         "readiness_state": readiness_state,
         "movement_restrictions": list(constraint_state.get("movement_restrictions") or []),
+        "weak_areas": list(constraint_state.get("weak_areas") or []),
         "session_time_budget_minutes": (
             int(constraint_state.get("session_time_budget_minutes"))
             if constraint_state.get("session_time_budget_minutes") is not None
@@ -939,6 +940,7 @@ def resolve_week_generation_runtime_inputs(
                         "latest_adherence_score_source": adherence_source,
                         "readiness_source": readiness_source,
                         "movement_restriction_count": len(list(constraint_state.get("movement_restrictions") or [])),
+                        "weak_area_count": len(list(constraint_state.get("weak_areas") or [])),
                         "session_time_budget_minutes": (
                             int(constraint_state.get("session_time_budget_minutes"))
                             if constraint_state.get("session_time_budget_minutes") is not None
@@ -1094,6 +1096,7 @@ def prepare_generate_week_plan_runtime_inputs(
     latest_adherence_score = int(latest_adherence_score_raw) if latest_adherence_score_raw is not None else None
     progression_state_per_exercise = list(runtime.get("progression_state_per_exercise") or [])
     movement_restrictions = [str(item) for item in (runtime.get("movement_restrictions") or []) if str(item).strip()]
+    weak_areas = [str(item) for item in (runtime.get("weak_areas") or []) if str(item).strip()]
     session_time_budget_minutes_raw = runtime.get("session_time_budget_minutes")
     session_time_budget_minutes = (
         int(session_time_budget_minutes_raw) if session_time_budget_minutes_raw is not None else None
@@ -1111,6 +1114,7 @@ def prepare_generate_week_plan_runtime_inputs(
             "name": user_name,
             "session_time_budget_minutes": session_time_budget_minutes,
             "movement_restrictions": movement_restrictions,
+            "weak_areas": weak_areas,
             "near_failure_tolerance": (
                 str(runtime.get("near_failure_tolerance")).strip().lower()
                 if str(runtime.get("near_failure_tolerance") or "").strip()
@@ -1146,6 +1150,7 @@ def prepare_generate_week_plan_runtime_inputs(
                 "progression_state_count": len(progression_state_per_exercise),
                 "prior_generated_weeks": int(runtime.get("prior_generated_weeks") or 0),
                 "movement_restriction_count": len(movement_restrictions),
+                "weak_area_count": len(weak_areas),
                 "session_time_budget_minutes": session_time_budget_minutes,
                 "stimulus_fatigue_response_source": stimulus_fatigue_response_source,
                 "stimulus_fatigue_response": _coerce_dict(runtime.get("stimulus_fatigue_response")),
@@ -1190,6 +1195,7 @@ def prepare_generate_week_scheduler_runtime(
         "movement_restrictions": list(
             _coerce_dict(plan_runtime_inputs.get("user_profile")).get("movement_restrictions") or []
         ),
+        "weak_areas": list(_coerce_dict(plan_runtime_inputs.get("user_profile")).get("weak_areas") or []),
         "progression_state_per_exercise": list(plan_runtime_inputs.get("progression_state_per_exercise") or []),
         "stimulus_fatigue_response": _coerce_dict(plan_runtime_inputs.get("stimulus_fatigue_response")) or None,
         "stimulus_fatigue_response_source": str(plan_runtime_inputs.get("stimulus_fatigue_response_source") or ""),

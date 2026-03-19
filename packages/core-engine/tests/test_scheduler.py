@@ -323,6 +323,39 @@ def test_generate_week_plan_filters_by_available_equipment() -> None:
     assert exercises[1]["substitution_candidates"] == ["DB Arnold Press"]
 
 
+def test_generate_week_plan_applies_canonical_equipment_profile_synonyms() -> None:
+    template = {
+        "id": "equipment_synonym_runtime_test",
+        "sessions": [
+            {
+                "name": "A",
+                "exercises": [
+                    {
+                        "id": "barbell_row",
+                        "name": "Barbell Row",
+                        "equipment_tags": ["barbell"],
+                        "substitution_candidates": ["DB Row"],
+                    },
+                ],
+            }
+        ],
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=2,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+        available_equipment=["db"],
+    )
+
+    exercise = plan["sessions"][0]["exercises"][0]
+    assert exercise["id"] == "db_row"
+    assert exercise["name"] == "DB Row"
+
+
 def test_generate_week_plan_threads_substitution_rules_into_equipment_swap_policy() -> None:
     template = {
         "id": "equipment_rule_runtime_test",
@@ -484,6 +517,147 @@ def test_generate_week_plan_limits_session_exercises_for_low_time_budget() -> No
 
     exercises = plan["sessions"][0]["exercises"]
     assert [exercise["id"] for exercise in exercises] == ["lift_1", "lift_2", "lift_3"]
+    assert plan["sessions"][0]["time_budget_trace"]["exercise_cap"]["exercise_limit"] == 3
+
+
+def test_generate_week_plan_trims_accessory_sets_before_capping_for_low_time_budget() -> None:
+    template = {
+        "id": "time_budget_volume_trim",
+        "sessions": [
+            {
+                "name": "A",
+                "exercises": [
+                    {"id": "bench", "name": "Bench", "sets": 3, "slot_role": "primary_compound"},
+                    {"id": "row", "name": "Row", "sets": 3, "slot_role": "secondary_compound"},
+                    {"id": "fly", "name": "Fly", "sets": 4, "slot_role": "accessory"},
+                    {"id": "curl", "name": "Curl", "sets": 4, "slot_role": "isolation"},
+                    {"id": "triceps", "name": "Triceps", "sets": 4, "slot_role": "isolation"},
+                ],
+            }
+        ],
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=2,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+        session_time_budget_minutes=30,
+        rule_set=_scheduler_rule_set(),
+    )
+
+    trace = plan["sessions"][0]["time_budget_trace"]["volume_trimming"]
+    assert trace["applied"] is True
+    assert any(item["exercise_id"] == "curl" and item["trimmed_sets"] == 2 for item in trace["trimmed_exercises"])
+
+
+def test_generate_week_plan_weak_areas_bias_accessory_retention_under_cap() -> None:
+    template = {
+        "id": "weak_area_cap_bias",
+        "sessions": [
+            {
+                "name": "A",
+                "exercises": [
+                    {"id": "bench", "name": "Bench", "sets": 3, "slot_role": "primary_compound", "primary_muscles": ["chest"]},
+                    {"id": "row", "name": "Row", "sets": 3, "slot_role": "secondary_compound", "primary_muscles": ["back"]},
+                    {"id": "lateral_raise", "name": "Lateral Raise", "sets": 3, "slot_role": "isolation", "primary_muscles": ["shoulders"]},
+                    {"id": "rear_delt_fly", "name": "Rear Delt Fly", "sets": 3, "slot_role": "isolation", "primary_muscles": ["shoulders"]},
+                ],
+            }
+        ],
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=2,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+        session_time_budget_minutes=30,
+        weak_areas=["shoulders"],
+        rule_set=_scheduler_rule_set(),
+    )
+
+    ids = [exercise["id"] for exercise in plan["sessions"][0]["exercises"]]
+    assert "rear_delt_fly" in ids or "lateral_raise" in ids
+    assert plan["sessions"][0]["time_budget_trace"]["weak_areas"] == ["shoulders"]
+
+
+def test_generate_week_plan_weak_areas_break_session_compression_tie() -> None:
+    template = {
+        "id": "weak_area_compression_tie",
+        "sessions": [
+            {
+                "name": "Chest Focus",
+                "exercises": [
+                    {"id": "bench", "name": "Bench", "slot_role": "primary_compound", "primary_muscles": ["chest"]},
+                ],
+            },
+            {
+                "name": "Shoulder Focus",
+                "exercises": [
+                    {"id": "press", "name": "Press", "slot_role": "primary_compound", "primary_muscles": ["shoulders"]},
+                ],
+            },
+            {
+                "name": "Leg Focus",
+                "exercises": [
+                    {"id": "squat", "name": "Squat", "slot_role": "primary_compound", "primary_muscles": ["quads"]},
+                ],
+            },
+        ],
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=2,
+        split_preference="full_body",
+        program_template=template,
+        history=[{"primary_exercise_id": "bench", "exercise_id": "bench", "next_working_weight": 100}],
+        phase="maintenance",
+        weak_areas=["shoulders"],
+        rule_set=_scheduler_rule_set(),
+    )
+
+    titles = [session["title"] for session in plan["sessions"]]
+    assert "Shoulder Focus" in titles
+
+
+def test_generate_week_plan_weak_area_optional_set_bonus_is_bounded() -> None:
+    template = {
+        "id": "weak_area_set_cap",
+        "sessions": [
+            {
+                "name": "A",
+                "exercises": [
+                    {
+                        "id": "lateral_raise",
+                        "name": "Lateral Raise",
+                        "sets": 3,
+                        "slot_role": "isolation",
+                        "primary_muscles": ["shoulders"],
+                    }
+                ],
+            }
+        ],
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=2,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+        weak_areas=["shoulders"],
+        rule_set=_scheduler_rule_set(),
+    )
+
+    exercise = plan["sessions"][0]["exercises"][0]
+    assert exercise["sets"] == 4
 
 
 def test_generate_week_plan_preserves_weak_point_slots_when_time_budget_caps_session() -> None:
@@ -595,6 +769,51 @@ def test_generate_week_plan_filters_restricted_movement_patterns() -> None:
 
     exercises = plan["sessions"][0]["exercises"]
     assert [exercise["id"] for exercise in exercises] == ["row"]
+
+
+def test_generate_week_plan_restriction_aware_substitution_skips_restricted_first_choice() -> None:
+    template = {
+        "id": "movement_restriction_substitution_test",
+        "sessions": [
+            {
+                "name": "A",
+                "exercises": [
+                    {
+                        "id": "barbell_press",
+                        "name": "Barbell Press",
+                        "sets": 3,
+                        "movement_pattern": "horizontal_press",
+                        "equipment_tags": ["barbell"],
+                        "substitution_candidates": ["Landmine Press", "Machine Chest Press"],
+                        "substitution_metadata": {
+                            "Landmine Press": {"id": "landmine_press", "movement_pattern": "vertical_press"},
+                            "Machine Chest Press": {
+                                "id": "machine_chest_press",
+                                "movement_pattern": "horizontal_press",
+                                "equipment_tags": ["machine"],
+                            },
+                        },
+                    }
+                ],
+            }
+        ],
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=2,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+        available_equipment=["machine"],
+        movement_restrictions=["overhead_pressing"],
+        rule_set=_scheduler_rule_set(),
+    )
+
+    exercise = plan["sessions"][0]["exercises"][0]
+    assert exercise["id"] == "machine_chest_press"
+    assert "Landmine Press" in exercise["substitution_decision_trace"]["outcome"]["restricted_substitutions"]
 
 
 def test_generate_week_plan_compresses_sessions_evenly_for_two_days() -> None:

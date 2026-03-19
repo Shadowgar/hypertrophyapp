@@ -93,3 +93,18 @@ def test_update_exercise_state_tracks_under_target_streak_and_progression_action
     assert updated.exposure_count == 2
     assert updated.consecutive_under_target_exposures == 2
     assert updated.last_progression_action == "hold"
+
+
+def test_recommend_working_weight_does_not_reduce_when_reps_in_range_on_early_set() -> None:
+    """Early sets in a multi-set workout should not trigger load reduction by completion ratio alone."""
+    state = ExerciseState(exercise_id="bench", current_working_weight=100, exposure_count=3)
+    perf = LastPerformance(
+        completed_reps=9,
+        target_reps_min=8,
+        target_reps_max=12,
+        completed_sets=1,
+        planned_sets=4,
+    )
+
+    next_weight = recommend_working_weight(state, perf, (8, 12), "maintenance")
+    assert next_weight == state.current_working_weight

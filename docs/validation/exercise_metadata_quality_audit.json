@@ -1,0 +1,1147 @@
+{
+  "totals": {
+    "exercise_count": 2302,
+    "template_count": 16
+  },
+  "coverage_summary": {
+    "movement_pattern": {
+      "present_count": 1173,
+      "present_pct": 50.96,
+      "null_count": 1104,
+      "null_pct": 47.96,
+      "missing_key_count": 25,
+      "missing_key_pct": 1.09
+    },
+    "substitution_metadata": {
+      "exercise_with_candidates_count": 2302,
+      "exercise_with_candidates_pct": 100.0,
+      "authored_substitution_metadata_present_count": 0,
+      "authored_substitution_metadata_present_pct": 0.0,
+      "authored_substitution_metadata_missing_count": 2302
+    },
+    "runtime_dependent_fields": {
+      "primary_muscles_present_count": 1173,
+      "primary_muscles_missing_count": 1129,
+      "equipment_tags_present_count": 479,
+      "equipment_tags_missing_count": 1823,
+      "slot_role_present_count": 0,
+      "slot_role_missing_count": 2302
+    },
+    "equipment_tags": {
+      "distinct_tokens": [
+        "barbell",
+        "bench",
+        "cable",
+        "dumbbell",
+        "machine",
+        "rack"
+      ],
+      "non_canonical_or_synonym_tokens": {},
+      "global_distinct_tokens": [
+        "bar",
+        "barbell",
+        "bench",
+        "bodyweight",
+        "cable",
+        "dumbbell",
+        "machine",
+        "rack"
+      ],
+      "global_non_canonical_or_synonym_tokens": {
+        "bar": 1
+      },
+      "ui_onboarding_tokens": [
+        "bands",
+        "barbell",
+        "bench",
+        "bodyweight",
+        "cable",
+        "dumbbell",
+        "machine"
+      ],
+      "ui_settings_tokens": [
+        "bands",
+        "barbell",
+        "bench",
+        "bodyweight",
+        "cable",
+        "dumbbell",
+        "machine"
+      ]
+    }
+  },
+  "gaps": {
+    "movement_pattern_missing_examples": [
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "template_id": "edited_ppl_5x",
+        "session": "Push #1",
+        "exercise_id": "chest_flys",
+        "exercise_name": "Chest Flys"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "template_id": "edited_ppl_5x",
+        "session": "Push #1",
+        "exercise_id": "exercise",
+        "exercise_name": "Exercise"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "template_id": "edited_ppl_5x",
+        "session": "Pull #1",
+        "exercise_id": "wide_grip_chin_up",
+        "exercise_name": "Wide Grip Chin Up"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "template_id": "edited_ppl_5x",
+        "session": "Pull #1",
+        "exercise_id": "lat_pullover",
+        "exercise_name": "Lat Pullover"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "template_id": "edited_ppl_5x",
+        "session": "Pull #1",
+        "exercise_id": "face_pull",
+        "exercise_name": "Face Pull"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "template_id": "edited_ppl_5x",
+        "session": "Pull #1",
+        "exercise_id": "exercise",
+        "exercise_name": "Exercise"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "template_id": "edited_ppl_5x",
+        "session": "Legs #1",
+        "exercise_id": "exercise",
+        "exercise_name": "Exercise"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "template_id": "edited_ppl_5x",
+        "session": "Upper #1",
+        "exercise_id": "shrugs",
+        "exercise_name": "Shrugs"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "template_id": "edited_ppl_5x",
+        "session": "Upper #1",
+        "exercise_id": "cable_flys",
+        "exercise_name": "Cable Flys"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "template_id": "edited_ppl_5x",
+        "session": "Upper #1",
+        "exercise_id": "exercise",
+        "exercise_name": "Exercise"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "template_id": "edited_ppl_5x",
+        "session": "Lower #1",
+        "exercise_id": "leg_raise",
+        "exercise_name": "Leg Raise"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "template_id": "my_new_program",
+        "session": "WARM UP PROTOCOL",
+        "exercise_id": "warm_up_protocol",
+        "exercise_name": "WARM UP PROTOCOL"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "template_id": "my_new_program",
+        "session": "WEAK POINTS TABLE",
+        "exercise_id": "weak_points_table",
+        "exercise_name": "WEAK POINTS TABLE"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "template_id": "my_new_program",
+        "session": "BLOCK 1: 5-WEEK BUILD PHASE",
+        "exercise_id": "block_1_5_week_build_phase",
+        "exercise_name": "BLOCK 1: 5-WEEK BUILD PHASE"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "template_id": "my_new_program",
+        "session": "BLOCK 1: 5-WEEK BUILD PHASE",
+        "exercise_id": "week_1",
+        "exercise_name": "Week 1"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "template_id": "my_new_program",
+        "session": "Full Body #1",
+        "exercise_id": "full_body_1",
+        "exercise_name": "Full Body #1"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "template_id": "my_new_program",
+        "session": "Full Body #2",
+        "exercise_id": "full_body_2",
+        "exercise_name": "Full Body #2"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "template_id": "my_new_program",
+        "session": "Mandatory Rest Day",
+        "exercise_id": "mandatory_rest_day",
+        "exercise_name": "Mandatory Rest Day"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "template_id": "my_new_program",
+        "session": "Full Body #3",
+        "exercise_id": "full_body_3",
+        "exercise_name": "Full Body #3"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "template_id": "my_new_program",
+        "session": "Full Body #4",
+        "exercise_id": "full_body_4",
+        "exercise_name": "Full Body #4"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "template_id": "my_new_program",
+        "session": "Arms & Weak Points",
+        "exercise_id": "arms_weak_points",
+        "exercise_name": "Arms & Weak Points"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "template_id": "my_new_program",
+        "session": "Mandatory Rest Day",
+        "exercise_id": "mandatory_rest_day",
+        "exercise_name": "Mandatory Rest Day"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "template_id": "my_new_program",
+        "session": "Mandatory Rest Day",
+        "exercise_id": "week_2",
+        "exercise_name": "Week 2"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "template_id": "my_new_program",
+        "session": "Full Body #1",
+        "exercise_id": "full_body_1",
+        "exercise_name": "Full Body #1"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "template_id": "my_new_program",
+        "session": "Full Body #2",
+        "exercise_id": "full_body_2",
+        "exercise_name": "Full Body #2"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "template_id": "my_new_program",
+        "session": "Mandatory Rest Day",
+        "exercise_id": "mandatory_rest_day",
+        "exercise_name": "Mandatory Rest Day"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "template_id": "my_new_program",
+        "session": "Full Body #3",
+        "exercise_id": "full_body_3",
+        "exercise_name": "Full Body #3"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "template_id": "my_new_program",
+        "session": "Full Body #4",
+        "exercise_id": "full_body_4",
+        "exercise_name": "Full Body #4"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "template_id": "my_new_program",
+        "session": "Arms & Weak Points",
+        "exercise_id": "arms_weak_points",
+        "exercise_name": "Arms & Weak Points"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "template_id": "my_new_program",
+        "session": "Mandatory Rest Day",
+        "exercise_id": "mandatory_rest_day",
+        "exercise_name": "Mandatory Rest Day"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "template_id": "my_new_program",
+        "session": "Mandatory Rest Day",
+        "exercise_id": "week_3",
+        "exercise_name": "Week 3"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "template_id": "my_new_program",
+        "session": "Full Body #1",
+        "exercise_id": "full_body_1",
+        "exercise_name": "Full Body #1"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "template_id": "my_new_program",
+        "session": "Full Body #2",
+        "exercise_id": "full_body_2",
+        "exercise_name": "Full Body #2"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "template_id": "my_new_program",
+        "session": "Mandatory Rest Day",
+        "exercise_id": "mandatory_rest_day",
+        "exercise_name": "Mandatory Rest Day"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "template_id": "my_new_program",
+        "session": "Full Body #3",
+        "exercise_id": "full_body_3",
+        "exercise_name": "Full Body #3"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "template_id": "my_new_program",
+        "session": "Full Body #4",
+        "exercise_id": "full_body_4",
+        "exercise_name": "Full Body #4"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "template_id": "my_new_program",
+        "session": "Arms & Weak Points",
+        "exercise_id": "arms_weak_points",
+        "exercise_name": "Arms & Weak Points"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "template_id": "my_new_program",
+        "session": "Mandatory Rest Day",
+        "exercise_id": "mandatory_rest_day",
+        "exercise_name": "Mandatory Rest Day"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "template_id": "my_new_program",
+        "session": "Mandatory Rest Day",
+        "exercise_id": "week_4",
+        "exercise_name": "Week 4"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "template_id": "my_new_program",
+        "session": "Full Body #1",
+        "exercise_id": "full_body_1",
+        "exercise_name": "Full Body #1"
+      }
+    ],
+    "movement_pattern_coverage_by_file": {
+      "programs/archive_imports/edited_ppl_5x_imported.json": {
+        "present": 27,
+        "null_or_missing": 11
+      },
+      "programs/archive_imports/my_new_program_imported.json": {
+        "null_or_missing": 85
+      },
+      "programs/archive_imports/powerbuilding_3.0_imported.json": {
+        "present": 186,
+        "null_or_missing": 56
+      },
+      "programs/archive_imports/pure_bodybuilding___full_body_imported.json": {
+        "null_or_missing": 85
+      },
+      "programs/archive_imports/pure_bodybuilding_phase_2___full_body_sheet_(1)_imported.json": {
+        "null_or_missing": 86
+      },
+      "programs/archive_imports/pure_bodybuilding_phase_2___full_body_sheet_imported.json": {
+        "null_or_missing": 86
+      },
+      "programs/archive_imports/pure_bodybuilding_phase_2___ppl_sheet_imported.json": {
+        "null_or_missing": 116
+      },
+      "programs/archive_imports/pure_bodybuilding_phase_2___upper_lower_sheet_imported.json": {
+        "null_or_missing": 86
+      },
+      "programs/archive_imports/the_bodybuilding_transformation_system___beginner_imported.json": {
+        "null_or_missing": 76
+      },
+      "programs/archive_imports/the_bodybuilding_transformation_system___intermediate_advanced_imported.json": {
+        "null_or_missing": 75
+      },
+      "programs/archive_imports/the_ultimate_push_pull_legs_system___4x_imported.json": {
+        "present": 269,
+        "null_or_missing": 88
+      },
+      "programs/archive_imports/the_ultimate_push_pull_legs_system___5x_imported.json": {
+        "present": 328,
+        "null_or_missing": 107
+      },
+      "programs/archive_imports/the_ultimate_push_pull_legs_system___6x_imported.json": {
+        "present": 356,
+        "null_or_missing": 147
+      },
+      "programs/full_body_v1.json": {
+        "null_or_missing": 25
+      },
+      "programs/ppl_v1.json": {
+        "present": 3
+      },
+      "programs/upper_lower_v1.json": {
+        "present": 4
+      }
+    },
+    "empty_equipment_examples": [
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "bench_press",
+        "exercise_name": "Bench Press"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "seated_shoulder_press",
+        "exercise_name": "Seated Shoulder Press"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "chest_flys",
+        "exercise_name": "Chest Flys"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "lateral_raise",
+        "exercise_name": "Lateral Raise"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "bottom_half_tricep_pushdown_bottom_half_overhead_tricep_extension",
+        "exercise_name": "Bottom Half Tricep Pushdown + Bottom Half Overhead Tricep Extension"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "bar_tricep_pushdown",
+        "exercise_name": "Bar Tricep Pushdown"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "exercise",
+        "exercise_name": "Exercise"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "wide_grip_chin_up",
+        "exercise_name": "Wide Grip Chin Up"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "low_row",
+        "exercise_name": "Low Row"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "lat_pulldown_drop_set_last",
+        "exercise_name": "Lat Pulldown (drop set last)"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "bent_over_row",
+        "exercise_name": "Bent Over Row"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "lat_pullover",
+        "exercise_name": "Lat Pullover"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "face_pull",
+        "exercise_name": "Face Pull"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "ez_bar_curls_last_set_to_failure",
+        "exercise_name": "EZ Bar Curls (last set to failure)"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "hammer_curls",
+        "exercise_name": "Hammer Curls"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "exercise",
+        "exercise_name": "Exercise"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "squat_top_set",
+        "exercise_name": "Squat (top set)"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "pause_squat_lower_weight",
+        "exercise_name": "Pause Squat (Lower Weight)"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "seated_leg_curl",
+        "exercise_name": "Seated Leg Curl"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "leg_press",
+        "exercise_name": "Leg Press"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "calf_raises",
+        "exercise_name": "Calf Raises"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "exercise",
+        "exercise_name": "Exercise"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "wide_grip_lat_pulldown",
+        "exercise_name": "Wide Grip Lat Pulldown"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "wide_grip_seated_row",
+        "exercise_name": "Wide Grip Seated Row"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "shrugs",
+        "exercise_name": "Shrugs"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "tricep_pushdown_bicep_curl",
+        "exercise_name": "Tricep Pushdown + Bicep Curl"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "exercise",
+        "exercise_name": "Exercise"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "deadlift",
+        "exercise_name": "Deadlift"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "romanian_deadlift",
+        "exercise_name": "Romanian Deadlift"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "leg_press",
+        "exercise_name": "Leg Press"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "standing_leg_curl",
+        "exercise_name": "Standing Leg Curl"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "single_leg_leg_extension",
+        "exercise_name": "Single Leg...Leg Extension"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "seated_calf_raise",
+        "exercise_name": "Seated Calf Raise"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "leg_raise",
+        "exercise_name": "Leg Raise"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "exercise_id": "warm_up_protocol",
+        "exercise_name": "WARM UP PROTOCOL"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "exercise_id": "weak_points_table",
+        "exercise_name": "WEAK POINTS TABLE"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "exercise_id": "block_1_5_week_build_phase",
+        "exercise_name": "BLOCK 1: 5-WEEK BUILD PHASE"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "exercise_id": "week_1",
+        "exercise_name": "Week 1"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "exercise_id": "full_body_1",
+        "exercise_name": "Full Body #1"
+      },
+      {
+        "source_file": "programs/archive_imports/my_new_program_imported.json",
+        "exercise_id": "full_body_2",
+        "exercise_name": "Full Body #2"
+      }
+    ],
+    "equipment_drift_examples": [],
+    "global_equipment_drift_examples": [
+      {
+        "source_file": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json",
+        "path": "exercise_library[1].equipment_tags",
+        "token": "bar",
+        "canonical": "barbell"
+      }
+    ],
+    "high_risk_empty_substitution_candidates": [
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "back_squat_top_single",
+        "exercise_name": "Back Squat (Top Single)",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "back_squat",
+        "exercise_name": "Back Squat",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "wide_stance_back_squat",
+        "exercise_name": "Wide Stance Back Squat",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "back_squat",
+        "exercise_name": "Back Squat",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "back_squat_top_single",
+        "exercise_name": "Back Squat (Top Single)",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "back_squat",
+        "exercise_name": "Back Squat",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "sissy_squat",
+        "exercise_name": "Sissy Squat",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "overhead_tricep_extension",
+        "exercise_name": "Overhead Tricep Extension",
+        "movement_pattern": "vertical_press"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "back_squat",
+        "exercise_name": "Back Squat",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "back_squat_top_single",
+        "exercise_name": "Back Squat (Top Single)",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "back_squat",
+        "exercise_name": "Back Squat",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "wide_stance_back_squat",
+        "exercise_name": "Wide Stance Back Squat",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "back_squat",
+        "exercise_name": "Back Squat",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "back_squat_top_single",
+        "exercise_name": "Back Squat (Top Single)",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "back_squat",
+        "exercise_name": "Back Squat",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "sissy_squat",
+        "exercise_name": "Sissy Squat",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "back_squat",
+        "exercise_name": "Back Squat",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "back_squat",
+        "exercise_name": "Back Squat",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "wide_stance_back_squat",
+        "exercise_name": "Wide Stance Back Squat",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "overhead_tricep_extension",
+        "exercise_name": "Overhead Tricep Extension",
+        "movement_pattern": "vertical_press"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "back_squat",
+        "exercise_name": "Back Squat",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "back_squat_top_single",
+        "exercise_name": "Back Squat (Top Single)",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "back_squat",
+        "exercise_name": "Back Squat",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "wide_stance_back_squat",
+        "exercise_name": "Wide Stance Back Squat",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "back_squat",
+        "exercise_name": "Back Squat",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "back_squat_top_single",
+        "exercise_name": "Back Squat (Top Single)",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "back_squat",
+        "exercise_name": "Back Squat",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "back_squat",
+        "exercise_name": "Back Squat",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "back_squat_top_single",
+        "exercise_name": "Back Squat (Top Single)",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "back_squat",
+        "exercise_name": "Back Squat",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "hack_squat",
+        "exercise_name": "Hack Squat",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "back_squat",
+        "exercise_name": "Back Squat",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "back_squat",
+        "exercise_name": "Back Squat",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "anderson_squat",
+        "exercise_name": "Anderson Squat",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "back_squat",
+        "exercise_name": "Back Squat",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "back_squat",
+        "exercise_name": "Back Squat",
+        "movement_pattern": "squat"
+      },
+      {
+        "source_file": "programs/archive_imports/powerbuilding_3.0_imported.json",
+        "exercise_id": "back_squat",
+        "exercise_name": "Back Squat",
+        "movement_pattern": "squat"
+      }
+    ],
+    "placeholder_substitution_candidates": [],
+    "global_placeholder_valid_substitutions": [
+      {
+        "source_file": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json",
+        "path": "exercise_library[25].valid_substitutions",
+        "candidate": "see_the_weak_point_table_for_sub_options",
+        "template_id": ""
+      },
+      {
+        "source_file": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json",
+        "path": "exercise_library[26].valid_substitutions",
+        "candidate": "see_the_weak_point_table_for_sub_options",
+        "template_id": ""
+      },
+      {
+        "source_file": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json",
+        "path": "exercise_catalog[24].valid_substitutions",
+        "candidate": "see_the_weak_point_table_for_sub_options",
+        "template_id": ""
+      },
+      {
+        "source_file": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json",
+        "path": "exercise_catalog[25].valid_substitutions",
+        "candidate": "see_the_weak_point_table_for_sub_options",
+        "template_id": ""
+      }
+    ],
+    "sparse_candidate_metadata_examples": [
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "bench_press",
+        "candidate": "DB Bench Press",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "bench_press",
+        "candidate": "Machine Chest Press",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "seated_shoulder_press",
+        "candidate": "Smith Machine Shoulder Press",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "seated_shoulder_press",
+        "candidate": "Machine Shoulder Press",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "chest_flys",
+        "candidate": "DB Flye",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "lateral_raise",
+        "candidate": "Cable Lateral Raise",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "lateral_raise",
+        "candidate": "Machine Lateral Raise",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "bottom_half_tricep_pushdown_bottom_half_overhead_tricep_extension",
+        "candidate": "Tricep Pushdown",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "bottom_half_tricep_pushdown_bottom_half_overhead_tricep_extension",
+        "candidate": "Skull crusher",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "bar_tricep_pushdown",
+        "candidate": "Single-Arm Tricep Pressdown",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "bar_tricep_pushdown",
+        "candidate": "Single-Arm Cable Tricep Kickback",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "exercise",
+        "candidate": "Substitution Option 1",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "exercise",
+        "candidate": "Substitution Option 2",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "wide_grip_chin_up",
+        "candidate": "Machine Pulldown",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "wide_grip_chin_up",
+        "candidate": "Pull-Up",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "low_row",
+        "candidate": "Seated Row",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "low_row",
+        "candidate": "Pull-Up",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "face_pull",
+        "candidate": "Reverse Cable Flye",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "face_pull",
+        "candidate": "Bent-Over Reverse DB Flye",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "ez_bar_curls_last_set_to_failure",
+        "candidate": "DB Curl",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "ez_bar_curls_last_set_to_failure",
+        "candidate": "Cable Curl",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "hammer_curls",
+        "candidate": "Spider Curl",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "hammer_curls",
+        "candidate": "Bayesian Curl",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "exercise",
+        "candidate": "Substitution Option 1",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "exercise",
+        "candidate": "Substitution Option 2",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "squat_top_set",
+        "candidate": "Hack Squat",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "squat_top_set",
+        "candidate": "DB Bulgarian Split Squat",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "pause_squat_lower_weight",
+        "candidate": "Pause Hack Squat",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "pause_squat_lower_weight",
+        "candidate": "Pause DB Bulgarian Split Squat",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "barbell_rdl",
+        "candidate": "DB RDL",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "barbell_rdl",
+        "candidate": "45\u00b0 Hyperextension",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "seated_leg_curl",
+        "candidate": "Lying Leg Curl",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "seated_leg_curl",
+        "candidate": "Nordic Ham Curl",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "calf_raises",
+        "candidate": "Standing Calf Raises",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "exercise",
+        "candidate": "Substitution Option 1",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "exercise",
+        "candidate": "Substitution Option 2",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "wide_grip_lat_pulldown",
+        "candidate": "Lat Pulldown",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "wide_grip_lat_pulldown",
+        "candidate": "Machine Pulldown",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "smith_machine_military_press",
+        "candidate": "Seated Shoulder DB Press",
+        "issue": "candidate_metadata_missing"
+      },
+      {
+        "source_file": "programs/archive_imports/edited_ppl_5x_imported.json",
+        "exercise_id": "smith_machine_military_press",
+        "candidate": "Machine Shoulder Press",
+        "issue": "candidate_metadata_missing"
+      }
+    ],
+    "substitution_metadata_field_missing_counts": {
+      "candidate_metadata_missing": 2660
+    }
+  },
+  "severity": {
+    "blocks_safe_runtime_decisions": [
+      "Missing candidate movement_pattern metadata can bypass restriction filtering.",
+      "High-risk movement patterns with empty substitution_candidates can cause unsafe drops/no fallback.",
+      "Placeholder/stale substitution identifiers degrade to low-confidence fallback behavior."
+    ],
+    "weakens_decision_quality": [
+      "Equipment synonym drift and sparse equipment tags increase inference dependence.",
+      "Missing candidate primary_muscles weakens weak-area routing and tie-break confidence."
+    ],
+    "mostly_cosmetic": [
+      "Missing candidate video metadata lowers coaching payload quality but not safety in most paths."
+    ]
+  },
+  "phase_recommendation": {
+    "keep_metadata_hardening_phase": true,
+    "reason": "Current runtime safety and quality now directly depend on metadata coverage and consistency.",
+    "recommended_next_phase": "exercise metadata hardening for safe program expansion",
+    "ordered_tasks": [
+      "Define canonical movement_pattern and equipment tag vocabularies.",
+      "Create metadata validator and fail-on-regression CI checks for active templates.",
+      "Backfill substitution metadata for active templates (id, movement_pattern, equipment_tags, primary_muscles).",
+      "Add sparse-metadata restriction policy (allow/deny/warn) with trace confidence flags.",
+      "Normalize template-side equipment tokens and remove synonym drift at source.",
+      "Remediate high-risk imported templates with empty substitution candidates for restricted patterns.",
+      "Add regression tests for restriction leaks, substitution quality, and weak-area classification confidence."
+    ]
+  }
+}

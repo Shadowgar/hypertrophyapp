@@ -511,6 +511,12 @@ def test_resolve_scheduler_session_exercise_cap_uses_canonical_time_budget_rules
 
     assert runtime["exercise_limit"] == 3
     assert runtime["kept_indices"] == [1, 2, 3]
+    assert runtime["selected_threshold"] == {"maximum_minutes": 30, "exercise_limit": 3}
+    assert runtime["decision_trace"]["steps"][0]["decision"] == "resolve_time_budget_threshold"
+    assert runtime["decision_trace"]["outcome"]["selected_threshold"] == {
+        "maximum_minutes": 30,
+        "exercise_limit": 3,
+    }
 
 
 def test_resolve_scheduler_muscle_coverage_runtime_uses_canonical_contract() -> None:
@@ -635,3 +641,57 @@ def test_resolve_repeat_failure_substitution_recommends_compatible_alternative_a
     assert result["recommend_substitution"] is True
     assert result["recommended_name"] == "Chest Supported Row"
     assert result["decision_trace"]["interpreter"] == "resolve_repeat_failure_substitution"
+
+
+def test_resolve_equipment_substitution_filters_restricted_candidates() -> None:
+    result = resolve_equipment_substitution(
+        exercise_id="press",
+        exercise_name="Overhead Press",
+        exercise_equipment_tags=["dumbbell"],
+        substitution_candidates=["Landmine Press", "Lateral Raise"],
+        equipment_set={"dumbbell"},
+        rule_set={"substitution_rules": {"equipment_mismatch": "use_first_compatible_substitution"}},
+        movement_restrictions={"overhead_pressing"},
+        candidate_movement_patterns={
+            "Landmine Press": "vertical_press",
+            "Lateral Raise": "lateral_raise",
+        },
+    )
+
+    assert result["compatible_substitutions"] == ["Lateral Raise"]
+    assert "Landmine Press" in result["decision_trace"]["outcome"]["restricted_substitutions"]
+
+
+def test_resolve_repeat_failure_substitution_skips_restricted_candidates() -> None:
+    result = resolve_repeat_failure_substitution(
+        exercise_id="press",
+        exercise_name="Overhead Press",
+        substitution_candidates=["Landmine Press", "Lateral Raise"],
+        consecutive_under_target_exposures=3,
+        equipment_set={"dumbbell"},
+        rule_set={"substitution_rules": {"repeat_failure_trigger": "switch_after_three_failed_exposures"}},
+        movement_restrictions={"overhead_pressing"},
+        candidate_movement_patterns={
+            "Landmine Press": "vertical_press",
+            "Lateral Raise": "lateral_raise",
+        },
+    )
+
+    assert result["recommended_name"] == "Lateral Raise"
+    assert "Landmine Press" in result["decision_trace"]["outcome"]["restricted_substitutions"]
+
+
+def test_resolve_repeat_failure_substitution_allows_sparse_metadata_candidates() -> None:
+    result = resolve_repeat_failure_substitution(
+        exercise_id="press",
+        exercise_name="Press",
+        substitution_candidates=["Unknown Press"],
+        consecutive_under_target_exposures=3,
+        equipment_set={"machine"},
+        rule_set={"substitution_rules": {"repeat_failure_trigger": "switch_after_three_failed_exposures"}},
+        movement_restrictions={"overhead_pressing"},
+        candidate_movement_patterns={},
+    )
+
+    assert result["recommended_name"] == "Unknown Press"
+    assert result["decision_trace"]["outcome"]["restricted_substitutions"] == []

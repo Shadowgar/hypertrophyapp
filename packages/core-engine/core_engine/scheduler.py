@@ -4,6 +4,7 @@ import re
 from copy import deepcopy
 
 from .equipment import resolve_equipment_tags
+from .equipment_profile import canonicalize_equipment_profile
 from .rules_runtime import (
     resolve_equipment_substitution,
     resolve_repeat_failure_substitution,
@@ -25,7 +26,7 @@ def _apply_deload_modifiers(sets: int, weight: float, *, set_reduction_pct: int,
 
 
 def _build_equipment_set(available_equipment: list[str] | None) -> set[str]:
-    return {item.lower() for item in (available_equipment or []) if item}
+    return set(canonicalize_equipment_profile(available_equipment))
 
 
 def _normalize_movement_restrictions(movement_restrictions: list[str] | None) -> set[str]:
@@ -124,7 +125,13 @@ def _build_planned_exercise(
     recommended = max(2.0, recommended * float(exercise_adjustment_runtime["load_scale"]))
     recommended = round(recommended / 0.5) * 0.5
     substitutions = exercise.get("substitution_candidates") or exercise.get("substitutions") or []
+    substitution_metadata = exercise.get("substitution_metadata") or {}
     failed_exposure_count = int((progression_state or {}).get("consecutive_under_target_exposures") or 0)
+    candidate_movement_patterns = {
+        key: str(meta.get("movement_pattern") or "")
+        for key, meta in substitution_metadata.items()
+        if isinstance(meta, dict)
+    }
     repeat_failure_runtime = resolve_repeat_failure_substitution(
         exercise_id=str(exercise.get("id") or ""),
         exercise_name=str(exercise.get("name") or ""),
@@ -132,6 +139,8 @@ def _build_planned_exercise(
         consecutive_under_target_exposures=failed_exposure_count,
         equipment_set=equipment_set,
         rule_set=rule_set,
+        movement_restrictions=movement_restrictions,
+        candidate_movement_patterns=candidate_movement_patterns,
     )
     substitution_runtime = resolve_equipment_substitution(
         exercise_id=str(exercise.get("id") or ""),
@@ -140,6 +149,8 @@ def _build_planned_exercise(
         substitution_candidates=list(substitutions),
         equipment_set=equipment_set,
         rule_set=rule_set,
+        movement_restrictions=movement_restrictions,
+        candidate_movement_patterns=candidate_movement_patterns,
     )
     compatible_substitutions = list(substitution_runtime["compatible_substitutions"])
 
@@ -149,7 +160,6 @@ def _build_planned_exercise(
     planned_primary_muscles = exercise.get("primary_muscles", [])
     planned_equipment_tags = resolved_equipment_tags
     planned_video = exercise.get("video")
-    substitution_metadata = exercise.get("substitution_metadata") or {}
     repeat_failure_substitution = None
     if bool(repeat_failure_runtime.get("recommend_substitution")):
         planned_name = str(repeat_failure_runtime.get("recommended_name"))
@@ -174,6 +184,12 @@ def _build_planned_exercise(
         planned_primary_muscles = selected_metadata.get("primary_muscles") or planned_primary_muscles
         planned_equipment_tags = selected_metadata.get("equipment_tags") or planned_equipment_tags
         planned_video = selected_metadata.get("video") or planned_video
+
+    if _is_restricted_movement_pattern(
+        {"movement_pattern": planned_movement_pattern},
+        movement_restrictions or set(),
+    ):
+        return None
 
     normalized_substitution_pressure = str(exercise_adjustment_runtime["substitution_pressure"])
     substitution_guidance = (
@@ -265,6 +281,91 @@ def _build_session_selection_profiles(
 
 def _session_day_role(session: dict[str, Any]) -> str:
     return str(session.get("day_role") or "").strip().lower()
+
+
+def _resolve_budget_reduction_steps(session_time_budget_minutes: int | None) -> int:
+    if session_time_budget_minutes is None:
+        return 0
+    if session_time_budget_minutes <= 30:
+        return 2
+    if session_time_budget_minutes <= 45:
+        return 1
+    return 0
+
+
+def _normalize_weak_areas(values: list[str] | None) -> set[str]:
+    return {re.sub(r"[^a-z]+", "_", str(item).strip().lower()).strip("_") for item in (values or []) if str(item).strip()}
+
+
+def _exercise_matches_weak_area(exercise: dict[str, Any], weak_areas: set[str]) -> bool:
+    if not weak_areas:
+        return False
+    for muscle in exercise.get("primary_muscles") or []:
+        normalized = re.sub(r"[^a-z]+", "_", str(muscle).strip().lower()).strip("_")
+        if normalized in weak_areas:
+            return True
+    return False
+
+
+def _minimum_sets_for_exercise(exercise: dict[str, Any]) -> int:
+    authored_working = exercise.get("working_sets")
+    if authored_working is not None:
+        try:
+            return max(1, int(float(str(authored_working))))
+        except (TypeError, ValueError):
+            return 1
+    return 1
+
+
+def _trim_session_volume_for_time_budget(
+    exercises: list[dict[str, Any]],
+    *,
+    session_time_budget_minutes: int | None,
+    weak_areas: set[str],
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    reduction_steps = _resolve_budget_reduction_steps(session_time_budget_minutes)
+    if reduction_steps <= 0:
+        return exercises, {
+            "applied": False,
+            "reduction_steps": 0,
+            "trimmed_exercises": [],
+        }
+
+    normalized_exercises = [deepcopy(exercise) for exercise in exercises]
+    trimmed_exercises: list[dict[str, Any]] = []
+    trim_priority = {"isolation": 0, "accessory": 1, "weak_point": 2}
+    ranked_indices = sorted(
+        range(len(normalized_exercises)),
+        key=lambda index: (trim_priority.get(_exercise_slot_role(normalized_exercises[index]), 99), index),
+    )
+    for index in ranked_indices:
+        exercise = normalized_exercises[index]
+        slot_role = _exercise_slot_role(exercise)
+        if slot_role not in trim_priority:
+            continue
+        if _exercise_matches_weak_area(exercise, weak_areas):
+            continue
+        original_sets = int(exercise.get("sets", 0) or 0)
+        minimum_sets = _minimum_sets_for_exercise(exercise)
+        if original_sets <= minimum_sets:
+            continue
+        trimmed_sets = max(minimum_sets, original_sets - reduction_steps)
+        if trimmed_sets == original_sets:
+            continue
+        exercise["sets"] = trimmed_sets
+        trimmed_exercises.append(
+            {
+                "exercise_id": str(exercise.get("id") or ""),
+                "slot_role": slot_role,
+                "original_sets": original_sets,
+                "trimmed_sets": trimmed_sets,
+            }
+        )
+    return normalized_exercises, {
+        "applied": bool(trimmed_exercises),
+        "reduction_steps": reduction_steps,
+        "trimmed_exercises": trimmed_exercises,
+    }
 
 
 def _nearest_selected_session_index(index: int, selected_indices: list[int]) -> int:
@@ -401,6 +502,7 @@ def generate_week_plan(
     progression_state_per_exercise: list[dict[str, Any]] | None = None,
     stimulus_fatigue_response: dict[str, Any] | None = None,
     stimulus_fatigue_response_source: str | None = None,
+    weak_areas: list[str] | None = None,
     rule_set: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     days_available = max(2, min(7, days_available))
@@ -410,6 +512,7 @@ def generate_week_plan(
     authored_week_runtime = _resolve_authored_week_runtime(program_template, prior_generated_weeks)
     base_sessions = list(authored_week_runtime.get("sessions") or [])
     muscle_coverage_runtime = resolve_scheduler_muscle_coverage_runtime(rule_set=rule_set)
+    normalized_weak_areas = _normalize_weak_areas(weak_areas)
     session_selection_runtime = resolve_scheduler_session_selection(
         session_profiles=_build_session_selection_profiles(
             base_sessions,
@@ -417,6 +520,7 @@ def generate_week_plan(
         ),
         history=history,
         days_available=days_available,
+        weak_areas=list(normalized_weak_areas),
         rule_set=rule_set,
     )
     selected_base_sessions = [
@@ -505,15 +609,33 @@ def generate_week_plan(
 
         if not exercises:
             continue
+        for exercise in exercises:
+            if _exercise_matches_weak_area(exercise, normalized_weak_areas) and _exercise_slot_role(exercise) in {
+                "accessory",
+                "isolation",
+                "weak_point",
+            }:
+                exercise["sets"] = int(exercise.get("sets", 0) or 0) + 1
+        trimmed_exercises, budget_trim_runtime = _trim_session_volume_for_time_budget(
+            exercises,
+            session_time_budget_minutes=session_time_budget_minutes,
+            weak_areas=normalized_weak_areas,
+        )
         cap_runtime = resolve_scheduler_session_exercise_cap(
             session_time_budget_minutes=session_time_budget_minutes,
             day_role=str(session.get("day_role") or "").strip() or None,
-            slot_roles=[_exercise_slot_role(exercise) for exercise in exercises],
+            slot_roles=[
+                "weak_point"
+                if _exercise_matches_weak_area(exercise, normalized_weak_areas)
+                and _exercise_slot_role(exercise) in {"accessory", "isolation"}
+                else _exercise_slot_role(exercise)
+                for exercise in trimmed_exercises
+            ],
             rule_set=rule_set,
         )
         exercises = [
             exercise
-            for index, exercise in enumerate(exercises)
+            for index, exercise in enumerate(trimmed_exercises)
             if index in set(cap_runtime["kept_indices"])
         ]
 
@@ -525,6 +647,16 @@ def generate_week_plan(
                 "date": session_date.isoformat(),
                 "exercises": exercises,
                 "exercise_cap_trace": dict(cap_runtime["decision_trace"]),
+                "time_budget_trace": {
+                    "budget_minutes": session_time_budget_minutes,
+                    "weak_areas": sorted(normalized_weak_areas),
+                    "volume_trimming": budget_trim_runtime,
+                    "exercise_cap": {
+                        "exercise_limit": cap_runtime.get("exercise_limit"),
+                        "kept_indices": list(cap_runtime.get("kept_indices") or []),
+                        "selected_threshold": cap_runtime.get("selected_threshold"),
+                    },
+                },
             }
         )
 

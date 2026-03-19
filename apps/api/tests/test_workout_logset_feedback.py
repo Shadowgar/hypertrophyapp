@@ -9,7 +9,7 @@ configure_test_database("test_workout_logset_feedback")
 from app.database import Base, engine
 from app.database import SessionLocal
 from app.main import app
-from app.models import ExerciseState, WorkoutPlan
+from app.models import ExerciseState, User, WorkoutPlan
 
 
 def _reset_db() -> None:
@@ -224,6 +224,113 @@ def test_log_set_applies_rules_runtime_starting_load_for_first_exposure() -> Non
     assert state is not None
     assert state.current_working_weight == expected_start_weight
     assert state.exposure_count == 1
+
+
+def test_log_set_non_work_set_does_not_advance_progression_state() -> None:
+    _reset_db()
+    client = TestClient(app)
+    token = _register_token(client)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    _onboard_profile(client, token)
+    generated = client.post("/plan/generate-week", headers=headers, json={})
+    assert generated.status_code == 200
+    first_session = generated.json()["sessions"][0]
+    first_exercise = first_session["exercises"][0]
+    primary_id = first_exercise.get("primary_exercise_id") or first_exercise["id"]
+
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == "setfeedback@example.com").first()
+        assert user is not None
+        state = ExerciseState(
+            user_id=user.id,
+            exercise_id=primary_id,
+            current_working_weight=float(first_exercise["recommended_working_weight"]),
+            exposure_count=4,
+            consecutive_under_target_exposures=1,
+            last_progression_action="hold",
+            fatigue_score=0,
+        )
+        db.add(state)
+        db.commit()
+
+    response = client.post(
+        f"/workout/{first_session['session_id']}/log-set",
+        headers=headers,
+        json={
+            "primary_exercise_id": first_exercise.get("primary_exercise_id"),
+            "exercise_id": first_exercise["id"],
+            "set_index": 1,
+            "reps": int(first_exercise["rep_range"][1]),
+            "weight": float(first_exercise["recommended_working_weight"]),
+            "set_kind": "warmup",
+        },
+    )
+    assert response.status_code == 200
+
+    with SessionLocal() as db:
+        state = (
+            db.query(ExerciseState)
+            .filter(ExerciseState.exercise_id == primary_id)
+            .first()
+        )
+
+    assert state is not None
+    assert state.exposure_count == 4
+
+
+def test_log_set_child_set_does_not_advance_progression_state() -> None:
+    _reset_db()
+    client = TestClient(app)
+    token = _register_token(client)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    _onboard_profile(client, token)
+    generated = client.post("/plan/generate-week", headers=headers, json={})
+    assert generated.status_code == 200
+    first_session = generated.json()["sessions"][0]
+    first_exercise = first_session["exercises"][0]
+    primary_id = first_exercise.get("primary_exercise_id") or first_exercise["id"]
+
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == "setfeedback@example.com").first()
+        assert user is not None
+        state = ExerciseState(
+            user_id=user.id,
+            exercise_id=primary_id,
+            current_working_weight=float(first_exercise["recommended_working_weight"]),
+            exposure_count=4,
+            consecutive_under_target_exposures=1,
+            last_progression_action="hold",
+            fatigue_score=0,
+        )
+        db.add(state)
+        db.commit()
+
+    response = client.post(
+        f"/workout/{first_session['session_id']}/log-set",
+        headers=headers,
+        json={
+            "primary_exercise_id": first_exercise.get("primary_exercise_id"),
+            "exercise_id": first_exercise["id"],
+            "set_index": 2,
+            "reps": int(first_exercise["rep_range"][1]),
+            "weight": float(first_exercise["recommended_working_weight"]),
+            "set_kind": "work",
+            "parent_set_index": 1,
+        },
+    )
+    assert response.status_code == 200
+
+    with SessionLocal() as db:
+        state = (
+            db.query(ExerciseState)
+            .filter(ExerciseState.exercise_id == primary_id)
+            .first()
+        )
+
+    assert state is not None
+    assert state.exposure_count == 4
 
 
 @pytest.mark.parametrize(

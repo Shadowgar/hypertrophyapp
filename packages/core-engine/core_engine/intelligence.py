@@ -92,6 +92,7 @@ from .decision_live_workout_guidance import (
 from .progression import ExerciseState as _ProgressionExerciseState
 from .progression import update_exercise_state_after_workout as _update_exercise_state_after_workout
 from .scheduler import generate_week_plan
+from .equipment_profile import canonicalize_equipment_profile
 from .rules_runtime import (
     evaluate_deload_signal,
     resolve_adaptive_rule_runtime,
@@ -518,11 +519,7 @@ def build_workout_log_set_payload(
 
 
 def _normalized_equipment_profile(equipment_profile: list[str] | None) -> set[str]:
-    return {
-        str(item).strip().lower()
-        for item in (equipment_profile or [])
-        if str(item).strip()
-    }
+    return set(canonicalize_equipment_profile(equipment_profile))
 
 
 def build_repeat_failure_substitution_payload(
