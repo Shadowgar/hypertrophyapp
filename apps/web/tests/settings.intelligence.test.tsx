@@ -204,6 +204,11 @@ test("Settings coaching panel previews and applies intelligence decisions", asyn
   await waitFor(() => {
     expect(screen.getByText(/Pure Bodybuilding - Phase 1 Full Body/i)).toBeInTheDocument();
   });
+  expect(screen.getByRole("button", { name: /Get Recommendation/i })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: /Get Recommendation/i }));
+  await waitFor(() => {
+    expect(screen.getByText(/Recommended: upper_lower/i)).toBeInTheDocument();
+  });
 
   fireEvent.click(screen.getByRole("button", { name: /Coaching Preview/i }));
 

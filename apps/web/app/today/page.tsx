@@ -27,8 +27,9 @@ import {
   warmupsFromWorkingWeightLb,
   workingWeightFrom1RMLb,
 } from "@/lib/oneRepMax";
+import { parseRestToSeconds } from "@/lib/rest";
 import { resolveGuidanceText } from "@/lib/today-guidance";
-import { kgToLbs, lbsToKg } from "@/lib/weight";
+import { kgToLbs, lbsToKg, snapToHalfLb } from "@/lib/weight";
 
 type SwapState = Record<string, number>;
 type NotesState = Record<string, boolean>;
@@ -443,6 +444,8 @@ function ExerciseDetailOverlay({
   onSwapTarget,
   onSetComplete,
   onCalculateBaseline,
+  globalRestTimer,
+  onClearGlobalRestTimer,
 }: Readonly<{
   exercise: WorkoutExercise;
   selectedName: string;
@@ -472,16 +475,28 @@ function ExerciseDetailOverlay({
   isDeloadWeek: boolean;
   onSetComplete: (exerciseId: string, count: number, performed: { reps: number; weight: number }) => void;
   onCalculateBaseline: (weightLb: number, reps: number) => void;
+  globalRestTimer: { exerciseId: string; exerciseName: string; secondsLeft: number; restCycle: number } | null;
+  onClearGlobalRestTimer: () => void;
 }>) {
+  const defaultRestSeconds = parseRestToSeconds(exercise.rest) ?? 90;
   const ctrl = useExerciseControl({
     exerciseId: exercise.id,
     totalSets: exercise.sets,
-    defaultRestSeconds: 90,
-    recommendedWorkingWeight: derivedWorkingLb,
+    defaultRestSeconds,
+    recommendedWorkingWeight: snapToHalfLb(derivedWorkingLb),
     repRange: exercise.rep_range,
     initialCompletedSets: completed,
+    skipTimerOnComplete: true,
     onSetComplete: onSetComplete,
   });
+  const externalRest =
+    globalRestTimer?.exerciseId === exercise.id
+      ? {
+          secondsLeft: globalRestTimer.secondsLeft,
+          restCycle: globalRestTimer.restCycle,
+          onStop: onClearGlobalRestTimer,
+        }
+      : undefined;
 
   const isAssistance = String(exercise.load_semantics ?? "").toLowerCase() === "assistance";
   const checklistItems = requiresLastSetChecklist(exercise);
@@ -571,24 +586,6 @@ function ExerciseDetailOverlay({
                   onLog={onLogTechniquePanel}
                 />
               ) : null}
-              {checklistItems.length > 0 && isLastSetNext ? (
-                <div className="rounded-xl border border-zinc-700 bg-zinc-900/60 p-3 space-y-2">
-                  <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Technique (last set)</p>
-                  <ul className="list-disc pl-5 text-xs text-zinc-200 space-y-1">
-                    {checklistItems.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                  <label className="flex items-center gap-2 text-xs text-zinc-200">
-                    <input
-                      type="checkbox"
-                      checked={checklistAccepted}
-                      onChange={(e) => setChecklistAccepted(e.target.checked)}
-                    />
-                    I will execute these technique cues on this set.
-                  </label>
-                </div>
-              ) : null}
 
               <div className="flex flex-wrap gap-2">
                 {exercise.last_set_intensity_technique ? (
@@ -638,6 +635,26 @@ function ExerciseDetailOverlay({
                   ))}
                 </div>
               )}
+
+              {/* Technique (last set) checklist at bottom so user can confirm before Complete Set */}
+              {checklistItems.length > 0 && isLastSetNext ? (
+                <div className="rounded-xl border border-amber-500/50 bg-amber-950/30 p-3 space-y-2">
+                  <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Technique (last set)</p>
+                  <ul className="list-disc pl-5 text-xs text-zinc-200 space-y-1">
+                    {checklistItems.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                  <label className="flex items-center gap-2 text-xs text-zinc-200">
+                    <input
+                      type="checkbox"
+                      checked={checklistAccepted}
+                      onChange={(e) => setChecklistAccepted(e.target.checked)}
+                    />
+                    I will execute these technique cues on this set.
+                  </label>
+                </div>
+              ) : null}
             </div>
           </Disclosure>
         )}
@@ -658,7 +675,7 @@ function ExerciseDetailOverlay({
         <SetProgressTimeline exerciseId={exercise.id} ctrl={ctrl} />
 
         {/* == ZONE 7: Rest timer == */}
-        <RestTimerCard ctrl={ctrl} />
+        <RestTimerCard ctrl={ctrl} externalRest={externalRest} />
 
         {/* == ZONE 8: Quick actions toolbar == */}
         <div className="grid grid-cols-3 gap-2">
@@ -769,6 +786,13 @@ export default function TodayPage() {
   /** Last logged set per exercise (reps, weight) to suggest next set. Keyed by exercise id. */
   const [lastSetByExercise, setLastSetByExercise] = useState<Record<string, { reps: number; weight: number }>>({});
   const [techniqueModal, setTechniqueModal] = useState<TechniqueModalState>(null);
+  /** Persistent rest timer when overlay is closed; single source of truth. */
+  const [globalRestTimer, setGlobalRestTimer] = useState<{
+    exerciseId: string;
+    exerciseName: string;
+    secondsLeft: number;
+    restCycle: number;
+  } | null>(null);
   const hasAutoLoadStarted = useRef(false);
   const isBeginWorkoutLoadInProgress = useRef(false);
   const sorenessDismissedThisSession = useRef(false);
@@ -803,6 +827,18 @@ export default function TodayPage() {
     }
     return undefined;
   }, [selectedExerciseId]);
+
+  // Global rest timer countdown
+  useEffect(() => {
+    if (!globalRestTimer) return;
+    const id = setInterval(() => {
+      setGlobalRestTimer((prev) => {
+        if (!prev || prev.secondsLeft <= 1) return null;
+        return { ...prev, secondsLeft: prev.secondsLeft - 1 };
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [globalRestTimer]);
 
   useEffect(() => {
     api.health()
@@ -1024,6 +1060,14 @@ export default function TodayPage() {
         ...prev,
         [exerciseId]: feedback.live_recommendation,
       }));
+
+      const restCycle = parseRestToSeconds(exercise.rest) ?? 90;
+      setGlobalRestTimer({
+        exerciseId,
+        exerciseName: resolveExerciseName(exercise, swapIndexByExercise),
+        secondsLeft: restCycle,
+        restCycle,
+      });
 
       const techniqueKind = resolveTechniqueKind(exercise);
       if (techniqueKind && completedCount >= exercise.sets) {
@@ -1348,9 +1392,38 @@ export default function TodayPage() {
                 [exercise.id]: { weightLb, reps, estimated1RM, workingWeightLb, warmupLbs: warmupLbsCalc },
               }));
             }}
+            globalRestTimer={globalRestTimer}
+            onClearGlobalRestTimer={() => setGlobalRestTimer(null)}
           />
         );
       })() : null}
+
+      {/* Global rest bar when overlay is closed (timer persists) */}
+      {globalRestTimer != null && selectedExerciseId !== globalRestTimer.exerciseId ? (
+        <div className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-between gap-3 border-t border-zinc-800 bg-zinc-900/95 px-4 py-3 backdrop-blur safe-area-pb">
+          <span className="text-sm font-medium tabular-nums text-zinc-200">
+            Rest: {Math.floor(globalRestTimer.secondsLeft / 60)}:{(globalRestTimer.secondsLeft % 60).toString().padStart(2, "0")} — {globalRestTimer.exerciseName}
+          </span>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              className="min-h-[36px] px-3 text-xs"
+              onClick={() => setSelectedExerciseId(globalRestTimer.exerciseId)}
+            >
+              Open
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              className="min-h-[36px] px-3 text-xs"
+              onClick={() => setGlobalRestTimer(null)}
+            >
+              Stop
+            </Button>
+          </div>
+        </div>
+      ) : null}
 
       {swapTarget ? (
         <div className="fixed inset-0 z-[70] flex items-start justify-center bg-black/60 px-4 pb-6 pt-[max(1rem,env(safe-area-inset-top))] overflow-y-auto">

@@ -39,8 +39,14 @@ async function completeQuestionnaireToAccountStep() {
   fireEvent.click(screen.getByRole("button", { name: /getting started/i }));
   fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
 
-  for (let index = 0; index < 8; index += 1) {
-    fireEvent.click(screen.getByRole("button", { name: /skip/i }));
+  // Skip all remaining skippable questionnaire questions until we reach the account step.
+  // (The questionnaire sequence changes as we add/remove steps, so we avoid hardcoding a count.)
+  let safety = 0;
+  while (!screen.queryByLabelText(/first name/i) && safety < 25) {
+    const skipButton = screen.queryByRole("button", { name: /skip/i });
+    if (!skipButton) break;
+    fireEvent.click(skipButton);
+    safety += 1;
   }
 
   await waitFor(() => {
@@ -87,6 +93,140 @@ test("Onboarding wizard reaches account step with program catalog and password t
   expect(password).toHaveAttribute("type", "password");
   fireEvent.click(screen.getByRole("button", { name: /show password/i }));
   expect(password).toHaveAttribute("type", "text");
+});
+
+test("Onboarding saves constraint fields to /profile (equipment/time/movement)", async () => {
+  const programs = [
+    {
+      id: "pure_bodybuilding_phase_1_full_body",
+      name: "Pure Bodybuilding - Phase 1 Full Body",
+      description: "A 5-day full body",
+    },
+  ];
+
+  // @ts-ignore
+  const profileBodies: any[] = [];
+  // @ts-ignore
+  globalThis.fetch.mockImplementation((input, _init) => {
+    const url = typeof input === "string" ? input : input.toString();
+    if (url.endsWith("/plan/programs")) {
+      return Promise.resolve(new Response(JSON.stringify(programs), { status: 200 }));
+    }
+    if (url.endsWith("/auth/register")) {
+      return Promise.resolve(new Response(JSON.stringify({ access_token: "tok" }), { status: 200 }));
+    }
+    if (url.endsWith("/profile")) {
+      const init = _init ?? {};
+      const body = typeof init.body === "string" ? JSON.parse(init.body) : {};
+      profileBodies.push(body);
+      return Promise.resolve(new Response(JSON.stringify({ status: "ok" }), { status: 200 }));
+    }
+    if (url.endsWith("/profile/program-recommendation")) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            current_program_id: "pure_bodybuilding_phase_1_full_body",
+            recommended_program_id: "upper_lower_v1",
+            reason: "days_available_match",
+            compatible_program_ids: ["pure_bodybuilding_phase_1_full_body", "upper_lower_v1"],
+            generated_at: new Date().toISOString(),
+          }),
+          { status: 200 },
+        ),
+      );
+    }
+    if (url.endsWith("/profile/program-switch")) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            status: "switched",
+            current_program_id: "pure_bodybuilding_phase_1_full_body",
+            target_program_id: "upper_lower_v1",
+            recommended_program_id: "upper_lower_v1",
+            reason: "days_available_match",
+            requires_confirmation: false,
+            applied: true,
+          }),
+          { status: 200 },
+        ),
+      );
+    }
+    if (url.endsWith("/plan/generate-week")) {
+      return Promise.resolve(new Response(JSON.stringify({ status: "ok" }), { status: 200 }));
+    }
+    if (url.endsWith("/weekly-review/status")) {
+      return Promise.resolve(
+        new Response(JSON.stringify({ week_start: new Date().toISOString().slice(0, 10) }), { status: 200 }),
+      );
+    }
+    if (url.endsWith("/weekly-review")) {
+      return Promise.resolve(new Response(JSON.stringify({ status: "ok" }), { status: 200 }));
+    }
+    return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
+  });
+
+  render(<OnboardingPage />);
+  await waitFor(() => {
+    expect(screen.getByRole("button", { name: /next slide/i })).toBeInTheDocument();
+  });
+
+  // Navigate to questionnaire and stop just before account.
+  fireEvent.click(screen.getByRole("button", { name: /next slide/i }));
+  fireEvent.click(screen.getByRole("button", { name: /next slide/i }));
+  fireEvent.click(screen.getByRole("button", { name: /get started/i }));
+
+  fireEvent.click(screen.getByRole("button", { name: /^male$/i }));
+  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
+
+  fireEvent.click(screen.getByRole("button", { name: /build muscle/i }));
+  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
+
+  fireEvent.click(screen.getByRole("button", { name: /^next$/i })); // height
+  fireEvent.click(screen.getByRole("button", { name: /^next$/i })); // weight
+
+  fireEvent.change(screen.getByLabelText(/birthday/i), { target: { value: "1990-01-01" } });
+  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
+
+  fireEvent.click(screen.getByRole("button", { name: /getting started/i }));
+  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
+
+  // Skip all remaining skippable questionnaire questions until we reach the account step.
+  // While doing so, select an example movement restriction at the movement step.
+  let safety = 0;
+  while (!screen.queryByLabelText(/first name/i) && safety < 30) {
+    const movementStepHeading = screen.queryByText(/Do you have any movement limitations right now\?/i);
+    if (movementStepHeading) {
+      const overheadBtn = screen.queryByRole("button", { name: /Overhead pressing limitations/i });
+      if (overheadBtn) {
+        fireEvent.click(overheadBtn);
+      }
+    }
+
+    const skipButton = screen.queryByRole("button", { name: /skip/i });
+    if (!skipButton) break;
+    fireEvent.click(skipButton);
+    safety += 1;
+  }
+
+  await waitFor(() => {
+    expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
+  });
+  fireEvent.change(screen.getByLabelText(/first name/i), { target: { value: "Rocco" } });
+  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
+
+  // Submit account form -> triggers submitOnboarding -> POST /profile
+  fireEvent.click(screen.getByRole("button", { name: /continue/i }));
+
+  await waitFor(() => {
+    expect(profileBodies.length).toBeGreaterThan(0);
+  });
+
+  const payload = profileBodies[0];
+  expect(payload.session_time_budget_minutes).toBe(45);
+  expect(payload.movement_restrictions).toEqual(["overhead_pressing"]);
+
+  // Because location defaults to home when skipped, equipment defaults should include bodyweight.
+  expect(payload.equipment_profile).toEqual(expect.arrayContaining(["dumbbell", "bodyweight"]));
 });
 
 test("Onboarding restores saved draft progress from local storage", async () => {

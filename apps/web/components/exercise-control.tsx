@@ -14,6 +14,8 @@ type UseExerciseControlProps = {
   initialCompletedSets?: number;
   recommendedWorkingWeight?: number;
   repRange?: [number, number];
+  /** When true, completeSet does not start the rest timer (e.g. parent owns global timer). */
+  skipTimerOnComplete?: boolean;
   onSetComplete?: (
     exerciseId: string,
     setIndex: number,
@@ -28,6 +30,7 @@ export function useExerciseControl({
   initialCompletedSets = 0,
   recommendedWorkingWeight,
   repRange,
+  skipTimerOnComplete = false,
   onSetComplete,
 }: UseExerciseControlProps) {
   const restCycle = defaultRestSeconds > 0 ? defaultRestSeconds : 1;
@@ -39,9 +42,14 @@ export function useExerciseControl({
     recommendedWorkingWeight !== undefined ? String(recommendedWorkingWeight) : "",
   );
   const intervalRef = useRef<ReturnType<typeof globalThis.setInterval> | null>(null);
+  const userHasEditedWeightRef = useRef(false);
 
   useEffect(() => {
-    if (recommendedWorkingWeight !== undefined) {
+    userHasEditedWeightRef.current = false;
+  }, [exerciseId]);
+
+  useEffect(() => {
+    if (recommendedWorkingWeight !== undefined && !userHasEditedWeightRef.current) {
       setActualWeightInput(String(recommendedWorkingWeight));
     }
   }, [recommendedWorkingWeight]);
@@ -91,6 +99,10 @@ export function useExerciseControl({
     setSecondsLeft(defaultRestSeconds);
   }, [stopTimer, defaultRestSeconds]);
 
+  const markWeightEdited = useCallback(() => {
+    userHasEditedWeightRef.current = true;
+  }, []);
+
   const [loggedSets, setLoggedSets] = useState<{ setIndex: number; reps: number; weight: number }[]>([]);
 
   const completeSet = useCallback(() => {
@@ -109,9 +121,11 @@ export function useExerciseControl({
       }
       return next;
     });
-    resetTimer();
-    startTimer();
-  }, [actualWeightInput, actualReps, repRange, recommendedWorkingWeight, totalSets, onSetComplete, exerciseId, resetTimer, startTimer]);
+    if (!skipTimerOnComplete) {
+      resetTimer();
+      startTimer();
+    }
+  }, [actualWeightInput, actualReps, repRange, recommendedWorkingWeight, totalSets, skipTimerOnComplete, onSetComplete, exerciseId, resetTimer, startTimer]);
 
   const undoLastLoggedSet = useCallback(() => {
     setLoggedSets((logs) => {
@@ -132,6 +146,7 @@ export function useExerciseControl({
     setActualReps,
     actualWeightInput,
     setActualWeightInput,
+    markWeightEdited,
     loggedSets,
     undoLastLoggedSet,
     startTimer,
@@ -196,7 +211,11 @@ export function SetInputCard({ exerciseId, guidanceLine, ctrl, weightLabel, disa
             min={0}
             step={0.5}
             value={ctrl.actualWeightInput}
-            onChange={(e) => ctrl.setActualWeightInput(e.target.value)}
+            onChange={(e) => {
+              ctrl.setActualWeightInput(e.target.value);
+              ctrl.markWeightEdited?.();
+            }}
+            onBlur={() => ctrl.markWeightEdited?.()}
             style={{ fontSize: "18px" }}
           />
         </label>
@@ -220,13 +239,20 @@ export function SetInputCard({ exerciseId, guidanceLine, ctrl, weightLabel, disa
 
 type RestTimerCardProps = Readonly<{
   ctrl: ExerciseControlState;
+  /** When provided, display this rest state instead of ctrl (e.g. global timer from parent). */
+  externalRest?: { secondsLeft: number; restCycle: number; onStop?: () => void };
 }>;
 
-export function RestTimerCard({ ctrl }: RestTimerCardProps) {
+export function RestTimerCard({ ctrl, externalRest }: RestTimerCardProps) {
+  const useExternal = externalRest != null;
+  const secondsLeft = useExternal ? externalRest.secondsLeft : ctrl.secondsLeft;
+  const restCycle = useExternal ? externalRest.restCycle : ctrl.restCycle;
+  const running = useExternal ? externalRest.secondsLeft > 0 : ctrl.running;
+
   return (
     <div
       className={`glass-layer rounded-xl p-3 transition-all ${
-        ctrl.running ? "ring-2 ring-red-500/30" : ""
+        running ? "ring-2 ring-red-500/30" : ""
       }`}
     >
       <div className="flex items-center gap-3">
@@ -234,22 +260,28 @@ export function RestTimerCard({ ctrl }: RestTimerCardProps) {
           className="relative flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full border border-white/15 overflow-hidden"
           aria-label="Rest countdown"
           style={{
-            background: `conic-gradient(rgba(220,38,38,0.9) ${(ctrl.secondsLeft / ctrl.restCycle) * 360}deg, rgba(255,255,255,0.08) 0deg)`,
+            background: `conic-gradient(rgba(220,38,38,0.9) ${(restCycle > 0 ? secondsLeft / restCycle : 0) * 360}deg, rgba(255,255,255,0.08) 0deg)`,
           }}
         >
           <div className="absolute inset-[4px] rounded-full bg-black/65" />
           <span className="relative z-10 font-mono text-xs font-medium tabular-nums text-zinc-100">
-            {formatTime(ctrl.secondsLeft)}
+            {formatTime(secondsLeft)}
           </span>
         </div>
 
         <div className="flex-1">
           <p className="text-[10px] uppercase tracking-wide text-zinc-500">Rest Timer</p>
-          <p className="text-lg font-semibold tabular-nums text-zinc-100">{formatTime(ctrl.secondsLeft)}</p>
+          <p className="text-lg font-semibold tabular-nums text-zinc-100">{formatTime(secondsLeft)}</p>
         </div>
 
         <div className="flex gap-1.5">
-          {ctrl.running ? (
+          {useExternal ? (
+            running && externalRest.onStop ? (
+              <Button className="min-h-[40px] px-3 text-xs" onClick={externalRest.onStop} type="button" variant="secondary">
+                Stop
+              </Button>
+            ) : null
+          ) : ctrl.running ? (
             <Button className="min-h-[40px] px-3 text-xs" onClick={ctrl.stopTimer} type="button" variant="secondary">
               Stop
             </Button>
@@ -258,9 +290,11 @@ export function RestTimerCard({ ctrl }: RestTimerCardProps) {
               Start
             </Button>
           )}
-          <Button className="min-h-[40px] px-3 text-xs" onClick={ctrl.resetTimer} type="button" variant="ghost">
-            Reset
-          </Button>
+          {!useExternal && (
+            <Button className="min-h-[40px] px-3 text-xs" onClick={ctrl.resetTimer} type="button" variant="ghost">
+              Reset
+            </Button>
+          )}
         </div>
       </div>
     </div>

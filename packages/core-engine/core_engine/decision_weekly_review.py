@@ -388,6 +388,64 @@ def _resolve_stimulus_fatigue_adjustments(
     )
 
 
+def _resolve_near_failure_tolerance_adjustments(
+    *,
+    near_failure_tolerance: str | None,
+    base_weight_scale: float,
+    base_readiness: int,
+    allow_positive_progression: bool,
+    allow_weak_point_boost: bool,
+) -> tuple[float, int, bool, bool, list[dict[str, Any]], str]:
+    normalized = str(near_failure_tolerance or "").strip().lower()
+    if not normalized:
+        return (
+            base_weight_scale,
+            base_readiness,
+            allow_positive_progression,
+            allow_weak_point_boost,
+            [],
+            "none",
+        )
+
+    adjusted_weight_scale = base_weight_scale
+    adjusted_readiness = base_readiness
+    adjusted_allow_positive_progression = allow_positive_progression
+    adjusted_allow_weak_point_boost = allow_weak_point_boost
+    applied_rules: list[dict[str, Any]] = []
+
+    if normalized == "low":
+        adjusted_weight_scale *= 0.98
+        adjusted_readiness -= 5
+        adjusted_allow_positive_progression = False
+        adjusted_allow_weak_point_boost = False
+        applied_rules.append(
+            {
+                "rule": "near_failure_low_bias_conservative",
+                "matched": True,
+                "details": {"near_failure_tolerance": normalized},
+            }
+        )
+    elif normalized == "high":
+        adjusted_weight_scale *= 1.005
+        adjusted_readiness += 2
+        applied_rules.append(
+            {
+                "rule": "near_failure_high_bias_progressive",
+                "matched": True,
+                "details": {"near_failure_tolerance": normalized},
+            }
+        )
+
+    return (
+        adjusted_weight_scale,
+        adjusted_readiness,
+        adjusted_allow_positive_progression,
+        adjusted_allow_weak_point_boost,
+        applied_rules,
+        normalized,
+    )
+
+
 def _resolve_weekly_review_global_guidance(
     readiness_score: int,
     faulty_exercise_count: int,
@@ -785,6 +843,7 @@ def interpret_weekly_review_decision(
     adherence_score: int,
     readiness_state: dict[str, Any] | None = None,
     coaching_state: dict[str, Any] | None = None,
+    near_failure_tolerance: str | None = None,
 ) -> dict[str, Any]:
     calories_per_kg = float(calories) / max(1.0, body_weight)
     protein_per_kg = float(protein) / max(1.0, body_weight)
@@ -816,6 +875,20 @@ def interpret_weekly_review_decision(
             base_set_delta=global_set_delta,
             base_weight_scale=global_weight_scale,
         )
+    )
+    (
+        global_weight_scale,
+        readiness_score,
+        allow_positive_progression,
+        allow_weak_point_boosts,
+        near_failure_adjustment_rules,
+        normalized_near_failure_tolerance,
+    ) = _resolve_near_failure_tolerance_adjustments(
+        near_failure_tolerance=near_failure_tolerance,
+        base_weight_scale=global_weight_scale,
+        base_readiness=readiness_score,
+        allow_positive_progression=allow_positive_progression,
+        allow_weak_point_boost=allow_weak_point_boosts,
     )
 
     exercise_faults = [item for item in summary.get("exercise_faults") or [] if isinstance(item, dict)]
@@ -886,6 +959,7 @@ def interpret_weekly_review_decision(
                     _coerce_dict(coaching_state).get("stimulus_fatigue_response")
                 )
             ),
+            "near_failure_tolerance": normalized_near_failure_tolerance if normalized_near_failure_tolerance != "none" else None,
         },
         "steps": [
             {
@@ -923,6 +997,17 @@ def interpret_weekly_review_decision(
                 },
             },
             {
+                "decision": "near_failure_tolerance_adjustments",
+                "result": {
+                    "near_failure_tolerance": normalized_near_failure_tolerance if normalized_near_failure_tolerance != "none" else None,
+                    "global_weight_scale": round(global_weight_scale, 3),
+                    "readiness_score": readiness_score,
+                    "allow_positive_progression": allow_positive_progression,
+                    "allow_weak_point_boost": allow_weak_point_boosts,
+                    "matched_rules": near_failure_adjustment_rules,
+                },
+            },
+            {
                 "decision": "weak_point_candidates",
                 "result": {
                     "weak_point_exercises": weak_point_exercises,
@@ -942,6 +1027,7 @@ def interpret_weekly_review_decision(
             "boosted_exercise_ids": boosted_exercise_ids,
             "stimulus_fatigue_response_source": stimulus_fatigue_response_source,
             "stimulus_fatigue_response": deepcopy(stimulus_fatigue_response),
+            "near_failure_tolerance": normalized_near_failure_tolerance if normalized_near_failure_tolerance != "none" else None,
         },
     }
     storage_adjustments = {
@@ -986,6 +1072,7 @@ def build_weekly_review_decision_payload(
     adherence_score: int,
     readiness_state: dict[str, Any] | None = None,
     coaching_state: dict[str, Any] | None = None,
+    near_failure_tolerance: str | None = None,
 ) -> dict[str, Any]:
     decision = interpret_weekly_review_decision(
         summary=summary,
@@ -995,6 +1082,7 @@ def build_weekly_review_decision_payload(
         adherence_score=adherence_score,
         readiness_state=readiness_state,
         coaching_state=coaching_state,
+        near_failure_tolerance=near_failure_tolerance,
     )
     return {
         "readiness_score": int(decision.get("readiness_score") or 0),
@@ -1236,6 +1324,7 @@ def prepare_weekly_review_submit_route_runtime(
     summary_payload: dict[str, Any],
     readiness_state: dict[str, Any] | None = None,
     coaching_state: dict[str, Any] | None = None,
+    near_failure_tolerance: str | None = None,
 ) -> dict[str, Any]:
     decision_payload = build_weekly_review_decision_payload(
         summary=summary_payload,
@@ -1245,6 +1334,7 @@ def prepare_weekly_review_submit_route_runtime(
         adherence_score=adherence_score,
         readiness_state=readiness_state,
         coaching_state=coaching_state,
+        near_failure_tolerance=near_failure_tolerance,
     )
     review_persistence_payload = build_weekly_review_cycle_persistence_payload(
         summary=summary_payload,

@@ -49,6 +49,13 @@ export default function SettingsPage() {
   const [applyStatus, setApplyStatus] = useState<string | null>(null);
   const [editTrainingLocation, setEditTrainingLocation] = useState<string>("gym");
   const [editEquipment, setEditEquipment] = useState<string[]>([]);
+  const [programRecommendationStatus, setProgramRecommendationStatus] = useState<string | null>(null);
+  const [programRecommendation, setProgramRecommendation] = useState<{
+    current_program_id: string;
+    recommended_program_id: string;
+    reason: string;
+    rationale?: string;
+  } | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -241,6 +248,64 @@ export default function SettingsPage() {
     }
   }
 
+  async function loadProgramRecommendation() {
+    setProgramRecommendationStatus("Getting recommendation...");
+    try {
+      const recommendation = await api.getProgramRecommendation();
+      setProgramRecommendation(recommendation);
+      if (recommendation.current_program_id === recommendation.recommended_program_id) {
+        setProgramRecommendationStatus("You are already on the recommended program.");
+        return;
+      }
+      setProgramRecommendationStatus("Recommendation ready.");
+    } catch {
+      setProgramRecommendationStatus("Failed to fetch recommendation.");
+    }
+  }
+
+  async function applyRecommendedProgram() {
+    if (!programRecommendation?.recommended_program_id) {
+      setProgramRecommendationStatus("Get a recommendation first.");
+      return;
+    }
+    setProgramRecommendationStatus("Validating program switch...");
+    try {
+      const preflight = await api.switchProgram({
+        target_program_id: programRecommendation.recommended_program_id,
+        confirm: false,
+      });
+
+      if (preflight.requires_confirmation) {
+        const approved = globalThis.confirm(
+          `Switch from ${preflight.current_program_id} to ${preflight.target_program_id}?`,
+        );
+        if (!approved) {
+          setProgramRecommendationStatus("Program switch cancelled.");
+          return;
+        }
+      }
+
+      const applied = await api.switchProgram({
+        target_program_id: programRecommendation.recommended_program_id,
+        confirm: true,
+      });
+
+      const refreshedProfile = await api.getProfile();
+      setProfile(refreshedProfile);
+      setProgramRecommendation((prev) =>
+        prev
+          ? {
+              ...prev,
+              current_program_id: applied.target_program_id,
+            }
+          : prev,
+      );
+      setProgramRecommendationStatus(`Program switched to ${applied.target_program_id}.`);
+    } catch {
+      setProgramRecommendationStatus("Program switch failed.");
+    }
+  }
+
   return (
     <div className="space-y-4">
       <h1 className="ui-title-page">Settings</h1>
@@ -252,6 +317,34 @@ export default function SettingsPage() {
         {profile?.selected_program_id && profile.selected_program_id !== CANONICAL_PROGRAM_ID ? (
           <p className="text-xs text-yellow-400/80">Alias: {profile.selected_program_id} → {CANONICAL_PROGRAM_ID}</p>
         ) : null}
+      </div>
+
+      <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-2">
+        <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Choose for me</p>
+        <p className="text-xs text-zinc-400">
+          Ask the engine for the best-fit program based on your profile and current constraints.
+        </p>
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+          <Button type="button" variant="secondary" onClick={loadProgramRecommendation}>
+            Get Recommendation
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={applyRecommendedProgram}
+            disabled={!programRecommendation || programRecommendation.current_program_id === programRecommendation.recommended_program_id}
+          >
+            Apply Recommendation
+          </Button>
+        </div>
+        {programRecommendation ? (
+          <div className="rounded-md border border-zinc-800 p-2 text-xs text-zinc-300">
+            <p>Current: {programRecommendation.current_program_id}</p>
+            <p>Recommended: {programRecommendation.recommended_program_id}</p>
+            <p>Reason: {resolveReasonText(programRecommendation.rationale, programRecommendation.reason) ?? "No rationale provided."}</p>
+          </div>
+        ) : null}
+        {programRecommendationStatus ? <p className="text-xs text-zinc-400">{programRecommendationStatus}</p> : null}
       </div>
 
       <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-2">
@@ -278,7 +371,7 @@ export default function SettingsPage() {
           <div>
             <p className="text-xs text-zinc-500 mb-1">Equipment you have</p>
             <div className="flex flex-wrap gap-1.5">
-              {["barbell", "bench", "dumbbell", "cable", "machine", "bands"].map((tag) => {
+              {["barbell", "bench", "dumbbell", "cable", "machine", "bands", "bodyweight"].map((tag) => {
                 const active = editEquipment.includes(tag);
                 return (
                   <button

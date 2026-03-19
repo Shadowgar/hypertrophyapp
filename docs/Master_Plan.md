@@ -135,6 +135,7 @@ Design documents exist; core v2 pipelines implemented; provenance links require 
 - [x] Add actionable auth failure handling with explicit recovery paths.
 - [x] Review external onboarding references (batch 1) and translate into concrete parity tasks.
 - [x] Implement onboarding funnel refinements (step sequencing, progress indicator, and reduced cognitive load).
+- [docs] [Onboarding Engine Roadmap](docs/implementation/ONBOARDING_ENGINE_ROADMAP.md): Phase 1 (constraints_only) exit criteria = onboarding persists `equipment_profile`, `session_time_budget_minutes`, and `movement_restrictions` and generate-week honors both the time-budget cap and restricted movement filtering.
 
 Reference:
 - `docs/redesign/Onboarding_Reference_Analysis_Batch1.md`

@@ -37,8 +37,14 @@ async function completeQuestionnaireToAccountStep() {
   fireEvent.click(screen.getByRole("button", { name: /getting started/i }));
   fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
 
-  for (let index = 0; index < 8; index += 1) {
-    fireEvent.click(screen.getByRole("button", { name: /skip/i }));
+  // Skip all remaining skippable questionnaire questions until we reach the account step.
+  // (The questionnaire sequence changes as we add/remove steps, so we avoid hardcoding a count.)
+  let safety = 0;
+  while (!screen.queryByLabelText(/first name/i) && safety < 25) {
+    const skipButton = screen.queryByRole("button", { name: /skip/i });
+    if (!skipButton) break;
+    fireEvent.click(skipButton);
+    safety += 1;
   }
 
   await waitFor(() => {

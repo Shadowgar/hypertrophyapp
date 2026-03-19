@@ -903,6 +903,11 @@ def resolve_week_generation_runtime_inputs(
             if constraint_state.get("session_time_budget_minutes") is not None
             else None
         ),
+        "near_failure_tolerance": (
+            str(constraint_state.get("near_failure_tolerance")).strip().lower()
+            if str(constraint_state.get("near_failure_tolerance") or "").strip()
+            else None
+        ),
         "progression_state_per_exercise": list(normalized_training_state.get("progression_state_per_exercise") or []),
         "stimulus_fatigue_response": stimulus_fatigue_response,
         "decision_trace": {
@@ -939,6 +944,11 @@ def resolve_week_generation_runtime_inputs(
                             if constraint_state.get("session_time_budget_minutes") is not None
                             else None
                         ),
+                        "near_failure_tolerance": (
+                            str(constraint_state.get("near_failure_tolerance")).strip().lower()
+                            if str(constraint_state.get("near_failure_tolerance") or "").strip()
+                            else None
+                        ),
                     },
                 },
                 {
@@ -970,6 +980,11 @@ def resolve_week_generation_runtime_inputs(
                 "latest_adherence_score": int(latest_adherence_score) if latest_adherence_score is not None else None,
                 "prior_generated_weeks": int(prior_generated_weeks),
                 "readiness_source": readiness_source,
+                "near_failure_tolerance": (
+                    str(constraint_state.get("near_failure_tolerance")).strip().lower()
+                    if str(constraint_state.get("near_failure_tolerance") or "").strip()
+                    else None
+                ),
                 "stimulus_fatigue_response_source": str(sfr_trace.get("source") or ""),
                 "stimulus_fatigue_response": stimulus_fatigue_response,
             },
@@ -1096,6 +1111,11 @@ def prepare_generate_week_plan_runtime_inputs(
             "name": user_name,
             "session_time_budget_minutes": session_time_budget_minutes,
             "movement_restrictions": movement_restrictions,
+            "near_failure_tolerance": (
+                str(runtime.get("near_failure_tolerance")).strip().lower()
+                if str(runtime.get("near_failure_tolerance") or "").strip()
+                else None
+            ),
         },
         "days_available": int(runtime.get("effective_days_available") or 0),
         "split_preference": split_preference,

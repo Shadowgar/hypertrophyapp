@@ -10,7 +10,10 @@ from .adaptive_schema import AdaptiveGoldProgramTemplate, AdaptiveGoldRuleSet, P
 from .template_schema import CanonicalProgramTemplate
 
 PHASE1_CANONICAL_PROGRAM_ID = "pure_bodybuilding_phase_1_full_body"
-ACTIVE_ADMINISTERED_PROGRAM_IDS: set[str] = {PHASE1_CANONICAL_PROGRAM_ID}
+ACTIVE_ADMINISTERED_PROGRAM_IDS: set[str] = {
+    PHASE1_CANONICAL_PROGRAM_ID,
+    "upper_lower_v1",
+}
 PHASE1_CANONICAL_RUNTIME_TEMPLATE_ID = PHASE1_CANONICAL_PROGRAM_ID
 PHASE1_LEGACY_RUNTIME_TEMPLATE_ID = "adaptive_full_body_gold_v0_1"
 PHASE1_LEGACY_RULE_OVERLAY_SOURCE_ID = PHASE1_LEGACY_RUNTIME_TEMPLATE_ID

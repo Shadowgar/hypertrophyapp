@@ -71,22 +71,19 @@ const OBSTACLE_OPTIONS = [
   "none_right_now",
 ] as const;
 const LOCATION_OPTIONS = ["gym", "home"] as const;
-const GYM_SETUP_OPTIONS = [
-  "rack_dumbbells_machines_cables",
-  "smith_dumbbells_machines_cables",
-  "dumbbells_machines_cables",
-  "machines_cables",
-] as const;
-const GYM_SETUP_LABELS: Record<(typeof GYM_SETUP_OPTIONS)[number], string> = {
-  rack_dumbbells_machines_cables: "Rack, dumbbells, machines & cables",
-  smith_dumbbells_machines_cables: "Smith machine, dumbbells, machines & cables",
-  dumbbells_machines_cables: "Dumbbells, machines & cables",
-  machines_cables: "Machines & cables only",
-};
 const EXPERIENCE_LEVEL_OPTIONS = ["beginner", "intermediate", "advanced"] as const;
 const DURATION_OPTIONS = [30, 45, 60] as const;
 const DAYS_OPTIONS = [2, 3, 4, 5] as const;
-const GYM_SETUP_WITH_EMPTY_OPTIONS = ["", ...GYM_SETUP_OPTIONS] as const;
+const EQUIPMENT_TAGS = ["barbell", "bench", "dumbbell", "cable", "machine", "bands", "bodyweight"] as const;
+type EquipmentTag = (typeof EQUIPMENT_TAGS)[number];
+const DEFAULT_EQUIPMENT_HOME: EquipmentTag[] = ["dumbbell", "bodyweight"];
+const DEFAULT_EQUIPMENT_GYM: EquipmentTag[] = ["dumbbell", "machine", "cable"];
+const MOVEMENT_RESTRICTION_OPTIONS = ["overhead_pressing", "deep_knee_flexion"] as const;
+type MovementRestriction = (typeof MOVEMENT_RESTRICTION_OPTIONS)[number];
+const MOVEMENT_RESTRICTION_LABELS: Record<MovementRestriction, string> = {
+  overhead_pressing: "Overhead pressing limitations",
+  deep_knee_flexion: "Squat/lunge knee-flexion limitations",
+};
 const ONBOARDING_DRAFT_KEY = "hypertrophy_onboarding_draft_v1";
 
 type Phase = "intro" | "questions" | "account" | "saving";
@@ -103,6 +100,7 @@ type QuestionStepId =
   | "obstacle"
   | "location"
   | "gym_setup"
+  | "movement_restrictions"
   | "experience"
   | "duration"
   | "days"
@@ -134,7 +132,8 @@ type OnboardingDraft = {
   motivationDriver: (typeof MOTIVATION_OPTIONS)[number] | "";
   obstacle: (typeof OBSTACLE_OPTIONS)[number] | "";
   trainingLocation: (typeof LOCATION_OPTIONS)[number] | "";
-  gymSetup: "" | (typeof GYM_SETUP_OPTIONS)[number];
+  equipmentTags: EquipmentTag[];
+  movementRestrictions: string[];
   experienceLevel: (typeof EXPERIENCE_LEVEL_OPTIONS)[number] | "";
   workoutDurationMinutes: number | null;
   daysAvailable: number | null;
@@ -174,7 +173,8 @@ function isMeaningfulDraft(draft: OnboardingDraft): boolean {
     || draft.motivationDriver
     || draft.obstacle
     || draft.trainingLocation
-    || draft.gymSetup
+    || (Array.isArray(draft.equipmentTags) && draft.equipmentTags.length > 0)
+    || (Array.isArray(draft.movementRestrictions) && draft.movementRestrictions.length > 0)
     || draft.experienceLevel
     || draft.firstName.trim()
     || draft.lastName.trim()
@@ -303,25 +303,8 @@ function deriveSplitPreference(daysAvailable: number): "full_body" | "upper_lowe
   return "ppl";
 }
 
-function deriveEquipmentProfile(
-  location: "gym" | "home",
-  gymSetup: "" | (typeof GYM_SETUP_OPTIONS)[number],
-): string[] {
-  if (location === "home") {
-    return ["dumbbell", "bodyweight"];
-  }
-  switch (gymSetup) {
-    case "rack_dumbbells_machines_cables":
-      return ["barbell", "dumbbell", "machine", "cable"];
-    case "smith_dumbbells_machines_cables":
-      return ["dumbbell", "machine", "cable"];
-    case "dumbbells_machines_cables":
-      return ["dumbbell", "machine", "cable"];
-    case "machines_cables":
-      return ["machine", "cable"];
-    default:
-      return ["dumbbell", "machine", "cable"];
-  }
+function defaultEquipmentTagsForLocation(location: "gym" | "home"): EquipmentTag[] {
+  return location === "home" ? DEFAULT_EQUIPMENT_HOME : DEFAULT_EQUIPMENT_GYM;
 }
 
 export default function OnboardingPage() {
@@ -347,7 +330,8 @@ export default function OnboardingPage() {
   const [motivationDriver, setMotivationDriver] = useState<(typeof MOTIVATION_OPTIONS)[number] | "">("");
   const [obstacle, setObstacle] = useState<(typeof OBSTACLE_OPTIONS)[number] | "">("");
   const [trainingLocation, setTrainingLocation] = useState<(typeof LOCATION_OPTIONS)[number] | "">("");
-  const [gymSetup, setGymSetup] = useState<"" | (typeof GYM_SETUP_OPTIONS)[number]>("");
+  const [equipmentTags, setEquipmentTags] = useState<EquipmentTag[]>([]);
+  const [movementRestrictions, setMovementRestrictions] = useState<string[]>([]);
   const [experienceLevel, setExperienceLevel] = useState<(typeof EXPERIENCE_LEVEL_OPTIONS)[number] | "">("");
   const [workoutDurationMinutes, setWorkoutDurationMinutes] = useState<number | null>(null);
   const [daysAvailable, setDaysAvailable] = useState<number | null>(null);
@@ -422,6 +406,13 @@ export default function OnboardingPage() {
     }
   }, [selectedProgramId, visiblePrograms]);
 
+  // Prefill equipment defaults based on location, but do not override explicit user selections.
+  useEffect(() => {
+    if (!trainingLocation) return;
+    if (equipmentTags.length > 0) return;
+    setEquipmentTags(defaultEquipmentTagsForLocation(trainingLocation));
+  }, [trainingLocation, equipmentTags.length]);
+
   const questionSteps: QuestionStep[] = useMemo(
     () => [
       { id: "gender", title: "What is your gender?", skipAllowed: false },
@@ -435,6 +426,7 @@ export default function OnboardingPage() {
       { id: "obstacle", title: "What obstacle is biggest right now?", skipAllowed: true },
       { id: "location", title: "Where will you be primarily working out?", skipAllowed: true },
       { id: "gym_setup", title: "Which best describes your gym setup?", skipAllowed: true },
+      { id: "movement_restrictions", title: "Do you have any movement limitations right now?", skipAllowed: true },
       { id: "experience", title: "How much lifting experience do you have?", skipAllowed: true },
       { id: "duration", title: "How long would you like workouts to be?", skipAllowed: true },
       { id: "days", title: "How many days per week can you train?", skipAllowed: true },
@@ -481,11 +473,21 @@ export default function OnboardingPage() {
       { value: draft.motivationDriver, options: MOTIVATION_OPTIONS, setter: setMotivationDriver as (next: string) => void },
       { value: draft.obstacle, options: OBSTACLE_OPTIONS, setter: setObstacle as (next: string) => void },
       { value: draft.trainingLocation, options: LOCATION_OPTIONS, setter: setTrainingLocation as (next: string) => void },
-      { value: draft.gymSetup, options: GYM_SETUP_WITH_EMPTY_OPTIONS, setter: setGymSetup as (next: string) => void },
       { value: draft.experienceLevel, options: EXPERIENCE_LEVEL_OPTIONS, setter: setExperienceLevel as (next: string) => void },
     ];
     for (const binding of optionDraftBindings) {
       applyStringOptionDraftValue(binding.value, binding.options, binding.setter);
+    }
+
+    if (Array.isArray(draft.equipmentTags)) {
+      const filtered = draft.equipmentTags.filter((t): t is EquipmentTag => EQUIPMENT_TAGS.includes(t as EquipmentTag));
+      setEquipmentTags(Array.from(new Set(filtered)));
+    }
+    if (Array.isArray(draft.movementRestrictions)) {
+      const cleaned = draft.movementRestrictions
+        .map((t) => (typeof t === "string" ? t.trim() : ""))
+        .filter((t): t is string => t.length > 0);
+      setMovementRestrictions(Array.from(new Set(cleaned)));
     }
 
     const numberBindings: Array<{ value: unknown; options: readonly number[]; setter: (next: number) => void }> = [
@@ -552,7 +554,8 @@ export default function OnboardingPage() {
       motivationDriver,
       obstacle,
       trainingLocation,
-      gymSetup,
+      equipmentTags,
+      movementRestrictions,
       experienceLevel,
       workoutDurationMinutes,
       daysAvailable,
@@ -580,7 +583,7 @@ export default function OnboardingPage() {
     experienceLevel,
     firstName,
     gender,
-    gymSetup,
+    equipmentTags,
     heightCm,
     heightFeet,
     heightInches,
@@ -593,6 +596,7 @@ export default function OnboardingPage() {
     primaryGoal,
     primaryGoals,
     questionIndex,
+    movementRestrictions,
     selectedProgramId,
     strengthFrequency,
     trainingAgeBucket,
@@ -634,7 +638,10 @@ export default function OnboardingPage() {
       case "location":
         return trainingLocation.length > 0;
       case "gym_setup":
-        return trainingLocation !== "gym" || gymSetup.length > 0;
+        return equipmentTags.length > 0;
+      case "movement_restrictions":
+        // empty means "no restrictions" which is a valid choice
+        return true;
       case "experience":
         return experienceLevel.length > 0;
       case "duration":
@@ -660,6 +667,10 @@ export default function OnboardingPage() {
     }
     if (currentQuestion.id === "days" && daysAvailable === null) {
       setDaysAvailable(3);
+    }
+    if (currentQuestion.id === "gym_setup" && equipmentTags.length === 0) {
+      const resolvedLocation = trainingLocation || "home";
+      setEquipmentTags(defaultEquipmentTagsForLocation(resolvedLocation));
     }
     if (currentQuestion.id === "experience" && !experienceLevel) {
       setExperienceLevel("intermediate");
@@ -704,7 +715,8 @@ export default function OnboardingPage() {
       motivation_driver: motivationDriver,
       primary_obstacle: obstacle,
       training_location: trainingLocation,
-      gym_setup_tier: gymSetup || null,
+      equipment_tags: equipmentTags,
+      movement_restrictions: movementRestrictions,
       strength_experience_level: experienceLevel,
       preferred_workout_duration_minutes: workoutDurationMinutes,
       days_available: daysAvailable,
@@ -777,7 +789,8 @@ export default function OnboardingPage() {
     const resolvedDays = daysAvailable ?? 3;
     const resolvedSplit = deriveSplitPreference(resolvedDays);
     const resolvedLocation = trainingLocation || "home";
-    const resolvedEquipment = deriveEquipmentProfile(resolvedLocation, gymSetup);
+    const resolvedEquipment =
+      equipmentTags.length > 0 ? equipmentTags : defaultEquipmentTagsForLocation(resolvedLocation);
     const weakAreas = parseWeakAreas(weakAreasRaw);
     const resolvedWeakAreas = weakAreas.length > 0 ? weakAreas : [];
     const nutritionPhase = primaryGoals.includes("lose_fat") || primaryGoal === "lose_fat" ? "cut" : "maintenance";
@@ -797,6 +810,8 @@ export default function OnboardingPage() {
         split_preference: resolvedSplit,
         training_location: resolvedLocation,
         equipment_profile: resolvedEquipment,
+        session_time_budget_minutes: workoutDurationMinutes ?? null,
+        movement_restrictions: movementRestrictions,
         weak_areas: resolvedWeakAreas,
         onboarding_answers: buildOnboardingAnswers(),
         days_available: resolvedDays,
@@ -839,9 +854,32 @@ export default function OnboardingPage() {
         return;
       }
 
+      let initialProgramId = selectedProgramId;
+      // If the user did not explicitly choose a program, ask the engine and apply its recommendation.
+      // This keeps onboarding deterministic while preserving explicit user choice.
+      if (!selectedProgramId) {
+        try {
+          const recommendation = await api.getProgramRecommendation();
+          if (
+            typeof recommendation.recommended_program_id === "string"
+            && recommendation.recommended_program_id
+            && recommendation.recommended_program_id !== recommendation.current_program_id
+          ) {
+            const switchResponse = await api.switchProgram({
+              target_program_id: recommendation.recommended_program_id,
+              confirm: true,
+            });
+            initialProgramId = switchResponse.target_program_id;
+            setStatus(`Applied recommendation: ${switchResponse.target_program_id}`);
+          }
+        } catch {
+          // non-blocking: fall back to profile/default selection
+        }
+      }
+
       setStatus("Creating your workouts...");
       try {
-        await api.generateWeek(selectedProgramId);
+        await api.generateWeek(initialProgramId);
       } catch {
         // keep onboarding successful even if initial pre-generation fails
       }
@@ -1148,27 +1186,67 @@ export default function OnboardingPage() {
           </div>
         );
       case "gym_setup":
-        if (trainingLocation !== "gym") {
-          return <p className="telemetry-meta">Skipping gym setup details because primary location is home.</p>;
-        }
         return (
-          <div className="grid grid-cols-1 gap-2">
-            <p className="text-xs text-zinc-400">We use this to suggest exercises that match your equipment. Pick the option that best describes your main setup.</p>
-            {GYM_SETUP_OPTIONS.map((option) => (
-              <button
-                key={option}
-                type="button"
-                aria-pressed={gymSetup === option}
-                onClick={() => setGymSetup(option)}
-                className={`rounded-md border p-4 text-left text-base transition-colors ${
-                  gymSetup === option
-                    ? "border-[var(--ui-edge-active)] bg-[var(--ui-accent-active)] text-white"
-                    : "border-[var(--ui-edge-idle)] bg-[var(--ui-surface-1)] text-zinc-100"
-                }`}
-              >
-                {GYM_SETUP_LABELS[option]}
-              </button>
-            ))}
+          <div className="space-y-3">
+            <p className="text-xs text-zinc-400">
+              We use this to suggest exercises that match your equipment. Select all that apply.
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {EQUIPMENT_TAGS.map((tag) => {
+                const active = equipmentTags.includes(tag);
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() =>
+                      setEquipmentTags((prev) =>
+                        active ? prev.filter((t) => t !== tag) : [...prev, tag],
+                      )
+                    }
+                    className={`rounded-full border px-3 py-1 text-[11px] transition-colors ${
+                      active
+                        ? "border-[var(--ui-edge-active)] bg-[var(--ui-accent-active)] text-white"
+                        : "border-[var(--ui-edge-idle)] bg-[var(--ui-surface-1)] text-zinc-100"
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      case "movement_restrictions":
+        return (
+          <div className="space-y-3">
+            <p className="text-xs text-zinc-400">
+              Choose any movements you need to limit right now. Leave everything unselected for “no restrictions”.
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {MOVEMENT_RESTRICTION_OPTIONS.map((r) => {
+                const active = movementRestrictions.includes(r);
+                return (
+                  <button
+                    key={r}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() =>
+                      setMovementRestrictions((prev) =>
+                        active ? prev.filter((x) => x !== r) : [...prev, r],
+                      )
+                    }
+                    className={`rounded-full border px-3 py-1 text-[11px] transition-colors ${
+                      active
+                        ? "border-[var(--ui-edge-active)] bg-[var(--ui-accent-active)] text-white"
+                        : "border-[var(--ui-edge-idle)] bg-[var(--ui-surface-1)] text-zinc-100"
+                    }`}
+                  >
+                    {MOVEMENT_RESTRICTION_LABELS[r]}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         );
       case "experience":

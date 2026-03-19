@@ -268,6 +268,9 @@ def test_resolve_week_generation_runtime_inputs_prefers_canonical_training_state
         "generation_state": {
             "prior_generated_weeks_by_program": {"full_body_v1": 2},
         },
+        "constraint_state": {
+            "near_failure_tolerance": "moderate",
+        },
     }
 
     runtime = resolve_week_generation_runtime_inputs(
@@ -288,6 +291,7 @@ def test_resolve_week_generation_runtime_inputs_prefers_canonical_training_state
     assert runtime["severe_soreness_count"] == 2
     assert runtime["latest_adherence_score"] == 2
     assert runtime["prior_generated_weeks"] == 2
+    assert runtime["near_failure_tolerance"] == "moderate"
     assert runtime["decision_trace"]["interpreter"] == "resolve_week_generation_runtime_inputs"
     assert runtime["decision_trace"]["outcome"]["effective_days_available"] == 3
     assert runtime["decision_trace"]["outcome"]["prior_generated_weeks"] == 2
@@ -472,6 +476,7 @@ def test_prepare_generate_week_plan_runtime_inputs_normalizes_plan_inputs() -> N
             "severe_soreness_count": 1,
             "session_time_budget_minutes": 45,
             "movement_restrictions": ["overhead_pressing"],
+            "near_failure_tolerance": "low",
         },
     )
 
@@ -479,6 +484,7 @@ def test_prepare_generate_week_plan_runtime_inputs_normalizes_plan_inputs() -> N
         "name": "Coach User",
         "session_time_budget_minutes": 45,
         "movement_restrictions": ["overhead_pressing"],
+        "near_failure_tolerance": "low",
     }
     assert runtime["days_available"] == 4
     assert runtime["split_preference"] == "full_body"
@@ -501,6 +507,7 @@ def test_prepare_generate_week_plan_runtime_inputs_applies_defaults() -> None:
         "name": None,
         "session_time_budget_minutes": None,
         "movement_restrictions": [],
+        "near_failure_tolerance": None,
     }
     assert runtime["phase"] == "maintenance"
     assert runtime["available_equipment"] == []
@@ -534,6 +541,7 @@ def test_prepare_generate_week_scheduler_runtime_shapes_generate_week_call_args(
         "name": "Coach User",
         "session_time_budget_minutes": 45,
         "movement_restrictions": ["overhead_pressing"],
+        "near_failure_tolerance": None,
     }
     assert scheduler_kwargs["days_available"] == 4
     assert scheduler_kwargs["split_preference"] == "full_body"

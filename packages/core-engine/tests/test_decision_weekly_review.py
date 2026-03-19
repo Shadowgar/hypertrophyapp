@@ -207,6 +207,40 @@ def test_interpret_weekly_review_decision_uses_sfr_to_bound_adjustments_and_supp
     assert sfr_adjustment_step["result"]["allow_weak_point_boost"] is False
 
 
+def test_interpret_weekly_review_decision_applies_low_near_failure_tolerance_bias() -> None:
+    decision = interpret_weekly_review_decision(
+        summary={
+            "completion_pct": 96,
+            "faulty_exercise_count": 1,
+            "exercise_faults": [
+                {
+                    "primary_exercise_id": "bench_press",
+                    "fault_score": 1,
+                    "fault_reasons": ["above_target_reps"],
+                    "completion_pct": 100,
+                }
+            ],
+        },
+        body_weight=80.0,
+        calories=2800,
+        protein=170,
+        adherence_score=5,
+        near_failure_tolerance="low",
+    )
+
+    near_failure_step = next(
+        step for step in decision["decision_trace"]["steps"] if step["decision"] == "near_failure_tolerance_adjustments"
+    )
+    override = decision["adjustments"]["exercise_overrides"][0]
+
+    assert decision["adjustments"]["global_weight_scale"] == 0.98
+    assert override["rationale"] == "recovery_limited_hold_progression"
+    assert near_failure_step["result"]["near_failure_tolerance"] == "low"
+    assert near_failure_step["result"]["allow_positive_progression"] is False
+    assert near_failure_step["result"]["allow_weak_point_boost"] is False
+    assert decision["decision_trace"]["outcome"]["near_failure_tolerance"] == "low"
+
+
 def test_apply_weekly_review_adjustments_to_plan_sets_adaptive_review() -> None:
     adjusted = apply_weekly_review_adjustments_to_plan(
         plan_payload={
@@ -363,6 +397,35 @@ def test_prepare_weekly_review_submit_route_runtime_shapes_submit_flow_payloads(
     assert runtime["response_payload"]["status"] == "review_logged"
     assert runtime["response_payload"]["fault_count"] == 1
     assert runtime["decision_trace"]["interpreter"] == "prepare_weekly_review_submit_route_runtime"
+
+
+def test_prepare_weekly_review_submit_route_runtime_threads_near_failure_tolerance() -> None:
+    runtime = prepare_weekly_review_submit_route_runtime(
+        user_id="user_123",
+        reviewed_on=date(2026, 3, 16),
+        week_start=date(2026, 3, 9),
+        previous_week_start=date(2026, 3, 2),
+        body_weight=81.2,
+        calories=2800,
+        protein=180,
+        fat=70,
+        carbs=320,
+        adherence_score=4,
+        notes="solid week",
+        nutrition_phase="maintenance",
+        summary_payload={
+            "faulty_exercise_count": 0,
+            "exercise_faults": [],
+        },
+        near_failure_tolerance="high",
+    )
+
+    near_failure_step = next(
+        step
+        for step in runtime["decision_payload"]["decision_trace"]["steps"]
+        if step["decision"] == "near_failure_tolerance_adjustments"
+    )
+    assert near_failure_step["result"]["near_failure_tolerance"] == "high"
 
 
 def test_prepare_weekly_review_summary_route_runtime_shapes_summary_payload_and_trace() -> None:
