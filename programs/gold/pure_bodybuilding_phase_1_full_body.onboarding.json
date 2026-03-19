@@ -15287,8 +15287,7 @@
         "upper_back"
       ],
       "equipment_tags": [
-        "bodyweight",
-        "bar"
+        "bodyweight"
       ],
       "movement_pattern": "vertical_pull",
       "valid_substitutions": [],
@@ -15456,7 +15455,9 @@
         "Round your lower back as you crunch",
         "Maintain a mind-muscle connection with your 6-pack"
       ],
-      "primary_muscles": [],
+      "primary_muscles": [
+        "chest"
+      ],
       "secondary_muscles": [],
       "equipment_tags": [
         "cable"
@@ -15983,7 +15984,13 @@
         "glutes"
       ],
       "secondary_muscles": [],
-      "equipment_tags": [],
+      "equipment_tags": [
+        "cable",
+        "machine",
+        "dumbbell",
+        "barbell",
+        "bodyweight"
+      ],
       "movement_pattern": "squat",
       "valid_substitutions": [
         {
@@ -16160,13 +16167,7 @@
       "secondary_muscles": [],
       "equipment_tags": [],
       "movement_pattern": "accessory",
-      "valid_substitutions": [
-        {
-          "exercise_id": "see_the_weak_point_table_for_sub_options",
-          "rationale": "Workbook substitution option",
-          "equipment_tags": []
-        }
-      ],
+      "valid_substitutions": [],
       "default_video_url": null,
       "slot_usage_rationale": "Used in Arms & Weak Points to preserve session intent and progression continuity."
     },
@@ -16181,17 +16182,19 @@
         "If your weak point is feeling recovered (not sore or fatigued) then feel free to hit Exercise 2",
         "If your weak point is feeling tired or sore, do not perform the second weak point exercise this week"
       ],
-      "primary_muscles": [],
-      "secondary_muscles": [],
-      "equipment_tags": [],
-      "movement_pattern": "accessory",
-      "valid_substitutions": [
-        {
-          "exercise_id": "see_the_weak_point_table_for_sub_options",
-          "rationale": "Workbook substitution option",
-          "equipment_tags": []
-        }
+      "primary_muscles": [
+        "chest"
       ],
+      "secondary_muscles": [],
+      "equipment_tags": [
+        "cable",
+        "machine",
+        "dumbbell",
+        "barbell",
+        "bodyweight"
+      ],
+      "movement_pattern": "accessory",
+      "valid_substitutions": [],
       "default_video_url": null,
       "slot_usage_rationale": "Used in Arms & Weak Points to preserve session intent and progression continuity."
     },

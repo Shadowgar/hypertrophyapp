@@ -1068,7 +1068,7 @@ def _compatible_substitution_candidates(
     equipment_set: set[str],
     movement_restrictions: set[str] | None = None,
     candidate_movement_patterns: dict[str, str] | None = None,
-) -> list[str]:
+) -> dict[str, list[str]]:
     def is_compatible(tags: list[str]) -> bool:
         if not equipment_set:
             return True
@@ -1077,16 +1077,63 @@ def _compatible_substitution_candidates(
         return bool(equipment_set.intersection({tag.lower() for tag in tags}))
 
     compatible_candidates: list[str] = []
+    restricted_candidates: list[str] = []
+    denied_due_to_missing_restriction_metadata: list[str] = []
+    normalized_patterns = {
+        str(key): _normalize_movement_label(value)
+        for key, value in _coerce_dict(candidate_movement_patterns).items()
+    }
     for candidate in substitution_candidates:
         candidate_tags = resolve_equipment_tags(exercise_name=candidate, explicit_tags=None)
-        if is_compatible(candidate_tags):
-            if _movement_pattern_blocked(
-                _coerce_dict(candidate_movement_patterns).get(candidate),
-                movement_restrictions,
-            ):
+        if not is_compatible(candidate_tags):
+            continue
+        normalized_pattern = normalized_patterns.get(candidate)
+        if movement_restrictions:
+            if not normalized_pattern:
+                denied_due_to_missing_restriction_metadata.append(candidate)
                 continue
-            compatible_candidates.append(candidate)
-    return compatible_candidates
+            if _movement_pattern_blocked(normalized_pattern, movement_restrictions):
+                restricted_candidates.append(candidate)
+                continue
+        elif _movement_pattern_blocked(normalized_pattern, movement_restrictions):
+            restricted_candidates.append(candidate)
+            continue
+        compatible_candidates.append(candidate)
+    return {
+        "compatible_substitutions": compatible_candidates,
+        "restricted_substitutions": restricted_candidates,
+        "denied_due_to_missing_restriction_metadata": denied_due_to_missing_restriction_metadata,
+    }
+
+
+def _substitution_metadata_confidence(
+    *,
+    substitution_candidates: list[str],
+    candidate_movement_patterns: dict[str, str] | None,
+) -> dict[str, Any]:
+    normalized_patterns = {
+        str(key): _normalize_movement_label(value)
+        for key, value in _coerce_dict(candidate_movement_patterns).items()
+    }
+    missing_movement_pattern = [
+        candidate
+        for candidate in substitution_candidates
+        if not normalized_patterns.get(candidate)
+    ]
+    present_count = len(substitution_candidates) - len(missing_movement_pattern)
+    if not substitution_candidates:
+        confidence = "high"
+    elif not missing_movement_pattern:
+        confidence = "high"
+    elif present_count > 0:
+        confidence = "partial"
+    else:
+        confidence = "low"
+    return {
+        "confidence": confidence,
+        "policy": "allow_with_warning",
+        "missing_movement_pattern_candidates": missing_movement_pattern,
+    }
 
 
 def resolve_equipment_substitution(
@@ -1109,20 +1156,21 @@ def resolve_equipment_substitution(
             return True
         return bool(equipment_set.intersection({tag.lower() for tag in tags}))
 
-    compatible_candidates = _compatible_substitution_candidates(
+    compatibility_filter = _compatible_substitution_candidates(
         substitution_candidates=substitution_candidates,
         equipment_set=equipment_set,
         movement_restrictions=movement_restrictions,
         candidate_movement_patterns=candidate_movement_patterns,
     )
-    restricted_candidates = [
-        candidate
-        for candidate in substitution_candidates
-        if _movement_pattern_blocked(
-            _coerce_dict(candidate_movement_patterns).get(candidate),
-            movement_restrictions,
-        )
-    ]
+    compatible_candidates = list(compatibility_filter["compatible_substitutions"])
+    restricted_candidates = list(compatibility_filter["restricted_substitutions"])
+    denied_due_to_missing_restriction_metadata = list(
+        compatibility_filter["denied_due_to_missing_restriction_metadata"]
+    )
+    metadata_confidence = _substitution_metadata_confidence(
+        substitution_candidates=list(substitution_candidates),
+        candidate_movement_patterns=candidate_movement_patterns,
+    )
 
     original_compatible = is_compatible(exercise_equipment_tags)
     selected_exercise_id = exercise_id
@@ -1137,6 +1185,12 @@ def resolve_equipment_substitution(
         }:
             selected_name = compatible_candidates[0]
             auto_substituted = True
+    safe_drop_due_to_no_restriction_safe_candidate = (
+        bool(movement_restrictions)
+        and not original_compatible
+        and not compatible_candidates
+        and bool(restricted_candidates or denied_due_to_missing_restriction_metadata)
+    )
 
     return {
         "selected_exercise_id": selected_exercise_id if not auto_substituted else None,
@@ -1162,6 +1216,13 @@ def resolve_equipment_substitution(
                         "original_compatible": original_compatible,
                         "compatible_substitutions": list(compatible_candidates),
                         "restricted_substitutions": restricted_candidates,
+                        "denied_due_to_missing_restriction_metadata": (
+                            denied_due_to_missing_restriction_metadata
+                        ),
+                        "safe_drop_due_to_no_restriction_safe_candidate": (
+                            safe_drop_due_to_no_restriction_safe_candidate
+                        ),
+                        "metadata_confidence": dict(metadata_confidence),
                     },
                 },
                 {
@@ -1176,6 +1237,13 @@ def resolve_equipment_substitution(
                 "original_compatible": original_compatible,
                 "compatible_substitutions": list(compatible_candidates),
                 "restricted_substitutions": restricted_candidates,
+                "denied_due_to_missing_restriction_metadata": (
+                    denied_due_to_missing_restriction_metadata
+                ),
+                "safe_drop_due_to_no_restriction_safe_candidate": (
+                    safe_drop_due_to_no_restriction_safe_candidate
+                ),
+                "metadata_confidence": dict(metadata_confidence),
                 "selected_name": selected_name,
                 "auto_substituted": auto_substituted,
             },
@@ -1196,20 +1264,21 @@ def resolve_repeat_failure_substitution(
 ) -> dict[str, Any]:
     substitution_runtime = resolve_substitution_rule_runtime(rule_set)
     threshold = substitution_runtime["repeat_failure_threshold"]
-    compatible_candidates = _compatible_substitution_candidates(
+    compatibility_filter = _compatible_substitution_candidates(
         substitution_candidates=substitution_candidates,
         equipment_set=equipment_set,
         movement_restrictions=movement_restrictions,
         candidate_movement_patterns=candidate_movement_patterns,
     )
-    restricted_candidates = [
-        candidate
-        for candidate in substitution_candidates
-        if _movement_pattern_blocked(
-            _coerce_dict(candidate_movement_patterns).get(candidate),
-            movement_restrictions,
-        )
-    ]
+    compatible_candidates = list(compatibility_filter["compatible_substitutions"])
+    restricted_candidates = list(compatibility_filter["restricted_substitutions"])
+    denied_due_to_missing_restriction_metadata = list(
+        compatibility_filter["denied_due_to_missing_restriction_metadata"]
+    )
+    metadata_confidence = _substitution_metadata_confidence(
+        substitution_candidates=list(substitution_candidates),
+        candidate_movement_patterns=candidate_movement_patterns,
+    )
     current_keys = {
         _normalize_exercise_key(exercise_id),
         _normalize_exercise_key(exercise_name),
@@ -1221,6 +1290,12 @@ def resolve_repeat_failure_substitution(
     ]
     threshold_met = threshold is not None and consecutive_under_target_exposures >= int(threshold)
     recommended_name = compatible_alternatives[0] if threshold_met and compatible_alternatives else None
+    safe_drop_due_to_no_restriction_safe_candidate = (
+        bool(movement_restrictions)
+        and threshold_met
+        and not compatible_alternatives
+        and bool(restricted_candidates or denied_due_to_missing_restriction_metadata)
+    )
 
     return {
         "repeat_failure_threshold": threshold,
@@ -1247,6 +1322,13 @@ def resolve_repeat_failure_substitution(
                         "threshold_met": threshold_met,
                         "recommended_name": recommended_name,
                         "restricted_substitutions": restricted_candidates,
+                        "denied_due_to_missing_restriction_metadata": (
+                            denied_due_to_missing_restriction_metadata
+                        ),
+                        "safe_drop_due_to_no_restriction_safe_candidate": (
+                            safe_drop_due_to_no_restriction_safe_candidate
+                        ),
+                        "metadata_confidence": dict(metadata_confidence),
                     },
                 }
             ],
@@ -1255,6 +1337,13 @@ def resolve_repeat_failure_substitution(
                 "recommended_name": recommended_name,
                 "compatible_substitutions": list(compatible_alternatives),
                 "restricted_substitutions": restricted_candidates,
+                "denied_due_to_missing_restriction_metadata": (
+                    denied_due_to_missing_restriction_metadata
+                ),
+                "safe_drop_due_to_no_restriction_safe_candidate": (
+                    safe_drop_due_to_no_restriction_safe_candidate
+                ),
+                "metadata_confidence": dict(metadata_confidence),
             },
         },
     }

@@ -117,6 +117,36 @@ ADAPTIVE_GOLD_EXERCISE_ID_ALIASES: dict[str, str] = {
     "row_chest_supported": "chest_supported_row",
 }
 
+_ACTIVE_ALLOWED_MOVEMENT_PATTERNS: set[str] = {
+    "horizontal_press",
+    "vertical_press",
+    "horizontal_pull",
+    "vertical_pull",
+    "hinge",
+    "squat",
+    "lunge",
+    "hip_thrust",
+    "hip_adduction",
+    "hip_abduction",
+    "curl",
+    "triceps_extension",
+    "pressdown",
+    "lateral_raise",
+    "rear_delt_flye",
+    "chest_fly",
+    "leg_curl",
+    "knee_extension",
+    "calf_raise",
+    "plantar_flexion",
+    "shrug",
+    "core",
+    "accessory",
+}
+_PLACEHOLDER_SUBSTITUTION_PATTERN = re.compile(
+    r"see\s+the\s+weak\s+point\s+table|placeholder|tbd|todo",
+    re.IGNORECASE,
+)
+
 _ADAPTIVE_DAY_ROLE_ALIASES: dict[str, str] = {
     "fb1": "full_body_1",
     "fb2": "full_body_2",
@@ -291,7 +321,118 @@ def _infer_equipment_tags(exercise_id: str) -> list[str]:
         tags.append("bench")
     if "row" in lowered:
         tags.append("machine" if "supported" in lowered else "cable")
-    return sorted(set(tags))
+    if "pullup" in lowered or "pull_up" in lowered:
+        tags.append("bodyweight")
+    normalized = sorted(set(tags))
+    if normalized:
+        return normalized
+    return ["bodyweight"]
+
+
+def _infer_primary_muscles(
+    *,
+    movement_pattern: str | None,
+    secondary_muscles: list[str] | None,
+) -> list[str]:
+    fallback_map = {
+        "horizontal_press": ["chest", "triceps", "front_delts"],
+        "vertical_press": ["front_delts", "triceps"],
+        "horizontal_pull": ["lats", "mid_back", "biceps"],
+        "vertical_pull": ["lats", "biceps"],
+        "hinge": ["hamstrings", "glutes", "erectors"],
+        "squat": ["quads", "glutes", "adductors"],
+        "lunge": ["quads", "glutes"],
+        "hip_adduction": ["adductors"],
+        "hip_abduction": ["glutes"],
+        "curl": ["biceps", "brachialis"],
+        "triceps_extension": ["triceps"],
+        "lateral_raise": ["side_delts"],
+        "rear_delt_flye": ["rear_delts"],
+        "calf_raise": ["calves"],
+        "plantar_flexion": ["calves"],
+        "shrug": ["traps"],
+        "core": ["abs"],
+        "accessory": ["abs"],
+    }
+    normalized_pattern = re.sub(r"[^a-z]+", "_", str(movement_pattern or "").strip().lower()).strip("_")
+    from_secondaries = [str(item).strip() for item in (secondary_muscles or []) if str(item).strip()]
+    if from_secondaries:
+        return from_secondaries
+    return fallback_map.get(normalized_pattern, ["full_body"])
+
+
+def _validate_active_template_metadata_contract(payload: dict[str, Any], *, template_id: str) -> None:
+    violations: list[str] = []
+
+    def _validate_exercise(exercise: dict[str, Any], context: str) -> None:
+        movement_pattern = re.sub(
+            r"[^a-z]+",
+            "_",
+            str(exercise.get("movement_pattern") or "").strip().lower(),
+        ).strip("_")
+        if not movement_pattern:
+            violations.append(f"{context}: movement_pattern is required")
+        elif movement_pattern not in _ACTIVE_ALLOWED_MOVEMENT_PATTERNS:
+            violations.append(f"{context}: movement_pattern '{movement_pattern}' is not allowed")
+
+        equipment_tags = [str(tag).strip() for tag in (exercise.get("equipment_tags") or []) if str(tag).strip()]
+        if not equipment_tags:
+            violations.append(f"{context}: equipment_tags must be non-empty")
+
+        primary_muscles = [str(m).strip() for m in (exercise.get("primary_muscles") or []) if str(m).strip()]
+        if not primary_muscles:
+            violations.append(f"{context}: primary_muscles must be non-empty")
+
+        is_optional = bool(exercise.get("priority") == "optional") or "optional" in str(exercise.get("id") or "").lower()
+        if is_optional and not str(exercise.get("slot_role") or "").strip():
+            violations.append(f"{context}: slot_role is required for optional/compression-dependent slots")
+
+        substitution_candidates = list(exercise.get("substitution_candidates") or [])
+        substitution_metadata = exercise.get("substitution_metadata") or {}
+        if substitution_candidates:
+            for candidate_name in substitution_candidates:
+                candidate_key = str(candidate_name or "").strip()
+                if not candidate_key:
+                    violations.append(f"{context}: substitution candidate name is empty")
+                    continue
+                if _PLACEHOLDER_SUBSTITUTION_PATTERN.search(candidate_key):
+                    violations.append(f"{context}: substitution candidate '{candidate_key}' uses placeholder text")
+                    continue
+                candidate_meta = substitution_metadata.get(candidate_key) or {}
+                if not isinstance(candidate_meta, dict):
+                    violations.append(f"{context}: substitution metadata missing for '{candidate_key}'")
+                    continue
+                candidate_id = str(candidate_meta.get("id") or "").strip()
+                if not candidate_id:
+                    violations.append(f"{context}: substitution metadata id missing for '{candidate_key}'")
+                elif _PLACEHOLDER_SUBSTITUTION_PATTERN.search(candidate_id):
+                    violations.append(f"{context}: substitution id '{candidate_id}' uses placeholder text")
+                candidate_pattern = str(candidate_meta.get("movement_pattern") or "").strip()
+                candidate_tags = [str(tag).strip() for tag in (candidate_meta.get("equipment_tags") or []) if str(tag).strip()]
+                candidate_muscles = [str(m).strip() for m in (candidate_meta.get("primary_muscles") or []) if str(m).strip()]
+
+    sessions = payload.get("sessions") or []
+    for session_index, session in enumerate(sessions):
+        for exercise_index, exercise in enumerate(session.get("exercises") or []):
+            _validate_exercise(
+                exercise,
+                f"sessions[{session_index}].exercises[{exercise_index}]",
+            )
+
+    for week in payload.get("authored_weeks") or []:
+        week_index = week.get("week_index")
+        for session_index, session in enumerate(week.get("sessions") or []):
+            for exercise_index, exercise in enumerate(session.get("exercises") or []):
+                _validate_exercise(
+                    exercise,
+                    f"authored_weeks[{week_index}].sessions[{session_index}].exercises[{exercise_index}]",
+                )
+
+    if violations:
+        preview = "; ".join(violations[:8])
+        raise ValueError(
+            f"Active template metadata contract violation for '{template_id}' ({len(violations)} issues): {preview}"
+        )
 
 
 def _load_adaptive_gold_exercise_library(program_id: str) -> dict[str, dict[str, Any]]:
@@ -345,14 +486,26 @@ def _adaptive_slot_to_runtime_exercise(
         candidate_id = str(candidate.get("exercise_id") or "").strip()
         if not candidate_id:
             continue
+        if _PLACEHOLDER_SUBSTITUTION_PATTERN.search(candidate_id):
+            continue
         candidate_knowledge = exercise_library.get(candidate_id) or {}
         candidate_name = str(candidate_knowledge.get("canonical_name") or _fallback_exercise_name(candidate_id))
+        if _PLACEHOLDER_SUBSTITUTION_PATTERN.search(candidate_name):
+            continue
+        candidate_movement_pattern = candidate_knowledge.get("movement_pattern")
+        candidate_secondary_muscles = candidate_knowledge.get("secondary_muscles") or []
         substitution_candidates.append(candidate_name)
         substitution_metadata[candidate_name] = {
             "id": candidate_id,
             "name": candidate_name,
-            "movement_pattern": candidate_knowledge.get("movement_pattern"),
-            "primary_muscles": list(candidate_knowledge.get("primary_muscles") or []),
+            "movement_pattern": candidate_movement_pattern,
+            "primary_muscles": list(
+                candidate_knowledge.get("primary_muscles")
+                or _infer_primary_muscles(
+                    movement_pattern=str(candidate_movement_pattern or ""),
+                    secondary_muscles=list(candidate_secondary_muscles),
+                )
+            ),
             "equipment_tags": list(candidate_knowledge.get("equipment_tags") or _infer_equipment_tags(candidate_id)),
             "video": {
                 "youtube_url": candidate_knowledge.get("default_video_url"),
@@ -363,6 +516,8 @@ def _adaptive_slot_to_runtime_exercise(
         or slot_source.get("demo_url")
         or exercise_knowledge.get("default_video_url")
     )
+    movement_pattern = exercise_knowledge.get("movement_pattern")
+    secondary_muscles = exercise_knowledge.get("secondary_muscles") or []
     return {
         "id": exercise_id,
         "primary_exercise_id": exercise_id,
@@ -375,8 +530,14 @@ def _adaptive_slot_to_runtime_exercise(
         "start_weight": 20.0,
         "priority": "standard",
         "slot_role": slot.get("slot_role"),
-        "movement_pattern": exercise_knowledge.get("movement_pattern"),
-        "primary_muscles": list(exercise_knowledge.get("primary_muscles") or []),
+        "movement_pattern": movement_pattern,
+        "primary_muscles": list(
+            exercise_knowledge.get("primary_muscles")
+            or _infer_primary_muscles(
+                movement_pattern=str(movement_pattern or ""),
+                secondary_muscles=list(secondary_muscles),
+            )
+        ),
         "equipment_tags": list(exercise_knowledge.get("equipment_tags") or _infer_equipment_tags(exercise_id)),
         "substitution_candidates": substitution_candidates,
         "substitution_metadata": substitution_metadata,
@@ -590,6 +751,11 @@ def load_program_template(template_id: str) -> dict:
             if canonical_template_id and canonical_template_id != payload.get("id"):
                 payload = dict(payload)
                 payload["id"] = canonical_template_id
+            if str(payload.get("id") or "") in ACTIVE_ADMINISTERED_PROGRAM_IDS:
+                _validate_active_template_metadata_contract(
+                    payload,
+                    template_id=str(payload.get("id") or template_id),
+                )
             return payload
 
     raise FileNotFoundError(f"Program template not found: {template_id}")

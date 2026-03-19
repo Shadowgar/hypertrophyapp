@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 import sys
+import shutil
 
 import pytest
 from pydantic import ValidationError
@@ -233,6 +234,70 @@ def test_load_program_template_raises_on_invalid_schema(tmp_path: Path) -> None:
             load_program_template("broken_template")
     finally:
         settings.programs_dir = previous_programs_dir
+
+
+def test_load_program_template_rejects_active_template_with_missing_substitution_metadata(tmp_path: Path) -> None:
+    broken = {
+        "id": "upper_lower_v1",
+        "version": "1.0.0",
+        "split": "upper_lower",
+        "days_supported": [2, 4],
+        "deload": {"trigger_weeks": 6, "set_reduction_pct": 35, "load_reduction_pct": 10},
+        "progression": {"mode": "double_progression", "increment_kg": 2.5},
+        "sessions": [
+            {
+                "name": "Upper A",
+                "exercises": [
+                    {
+                        "id": "bench",
+                        "name": "Bench Press",
+                        "sets": 3,
+                        "rep_range": [6, 10],
+                        "start_weight": 50.0,
+                        "slot_role": "primary_compound",
+                        "movement_pattern": "horizontal_press",
+                        "primary_muscles": ["chest"],
+                        "equipment_tags": ["barbell", "bench"],
+                        "substitution_candidates": ["db_bench"],
+                        "substitution_metadata": {},
+                    }
+                ],
+            }
+        ],
+    }
+    (tmp_path / "upper_lower_v1.json").write_text(json.dumps(broken), encoding="utf-8")
+
+    previous_programs_dir = settings.programs_dir
+    settings.programs_dir = str(tmp_path)
+    try:
+        with pytest.raises(ValueError, match="metadata contract violation"):
+            load_program_template("upper_lower_v1")
+    finally:
+        settings.programs_dir = previous_programs_dir
+
+
+def test_load_program_template_strips_placeholder_substitution_reference_for_active_onboarding(
+    tmp_path: Path,
+) -> None:
+    gold_dir = tmp_path / "gold"
+    gold_dir.mkdir(parents=True, exist_ok=True)
+    repo_gold = REPO_ROOT / "programs" / "gold"
+    shutil.copy2(repo_gold / "adaptive_full_body_gold_v0_1.json", gold_dir / "adaptive_full_body_gold_v0_1.json")
+    payload = json.loads((repo_gold / "pure_bodybuilding_phase_1_full_body.onboarding.json").read_text(encoding="utf-8"))
+    payload["exercise_library"][0]["valid_substitutions"][0]["exercise_id"] = "See The Weak Point Table for sub options"
+    (gold_dir / "pure_bodybuilding_phase_1_full_body.onboarding.json").write_text(
+        json.dumps(payload),
+        encoding="utf-8",
+    )
+
+    previous_programs_dir = settings.programs_dir
+    settings.programs_dir = str(tmp_path)
+    try:
+        template = load_program_template("adaptive_full_body_gold_v0_1")
+    finally:
+        settings.programs_dir = previous_programs_dir
+    first_exercise = template["sessions"][0]["exercises"][0]
+    assert "See The Weak Point Table For Sub Options" not in first_exercise["substitution_candidates"]
 
 
 def test_load_program_rule_set_validates_existing_rules() -> None:

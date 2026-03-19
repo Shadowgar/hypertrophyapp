@@ -660,6 +660,7 @@ def test_resolve_equipment_substitution_filters_restricted_candidates() -> None:
 
     assert result["compatible_substitutions"] == ["Lateral Raise"]
     assert "Landmine Press" in result["decision_trace"]["outcome"]["restricted_substitutions"]
+    assert result["decision_trace"]["outcome"]["metadata_confidence"]["confidence"] == "high"
 
 
 def test_resolve_repeat_failure_substitution_skips_restricted_candidates() -> None:
@@ -689,9 +690,86 @@ def test_resolve_repeat_failure_substitution_allows_sparse_metadata_candidates()
         consecutive_under_target_exposures=3,
         equipment_set={"machine"},
         rule_set={"substitution_rules": {"repeat_failure_trigger": "switch_after_three_failed_exposures"}},
-        movement_restrictions={"overhead_pressing"},
+        movement_restrictions=set(),
         candidate_movement_patterns={},
     )
 
     assert result["recommended_name"] == "Unknown Press"
     assert result["decision_trace"]["outcome"]["restricted_substitutions"] == []
+    assert result["decision_trace"]["outcome"]["metadata_confidence"]["confidence"] == "low"
+    assert result["decision_trace"]["outcome"]["metadata_confidence"]["policy"] == "allow_with_warning"
+
+
+def test_resolve_equipment_substitution_marks_partial_metadata_confidence() -> None:
+    result = resolve_equipment_substitution(
+        exercise_id="row",
+        exercise_name="Row",
+        exercise_equipment_tags=["machine"],
+        substitution_candidates=["Machine Row", "Unknown Option"],
+        equipment_set={"machine"},
+        rule_set={"substitution_rules": {"equipment_mismatch": "use_first_compatible_substitution"}},
+        movement_restrictions={"deep_knee_flexion"},
+        candidate_movement_patterns={
+            "Machine Row": "horizontal_pull",
+        },
+    )
+
+    confidence = result["decision_trace"]["outcome"]["metadata_confidence"]
+    assert confidence["confidence"] == "partial"
+    assert confidence["missing_movement_pattern_candidates"] == ["Unknown Option"]
+
+
+def test_resolve_equipment_substitution_denies_missing_restriction_metadata_when_restrictions_active() -> None:
+    result = resolve_equipment_substitution(
+        exercise_id="press",
+        exercise_name="Overhead Press",
+        exercise_equipment_tags=["barbell"],
+        substitution_candidates=["Unknown Press"],
+        equipment_set={"machine"},
+        rule_set={"substitution_rules": {"equipment_mismatch": "use_first_compatible_substitution"}},
+        movement_restrictions={"overhead_pressing"},
+        candidate_movement_patterns={},
+    )
+
+    assert result["compatible_substitutions"] == []
+    outcome = result["decision_trace"]["outcome"]
+    assert outcome["denied_due_to_missing_restriction_metadata"] == ["Unknown Press"]
+    assert outcome["safe_drop_due_to_no_restriction_safe_candidate"] is True
+
+
+def test_resolve_repeat_failure_substitution_safe_drop_when_all_candidates_not_restriction_safe() -> None:
+    result = resolve_repeat_failure_substitution(
+        exercise_id="press",
+        exercise_name="Overhead Press",
+        substitution_candidates=["Landmine Press", "Unknown Press"],
+        consecutive_under_target_exposures=3,
+        equipment_set={"dumbbell", "machine"},
+        rule_set={"substitution_rules": {"repeat_failure_trigger": "switch_after_three_failed_exposures"}},
+        movement_restrictions={"overhead_pressing"},
+        candidate_movement_patterns={"Landmine Press": "vertical_press"},
+    )
+
+    outcome = result["decision_trace"]["outcome"]
+    assert result["recommended_name"] is None
+    assert "Landmine Press" in outcome["restricted_substitutions"]
+    assert "Unknown Press" in outcome["denied_due_to_missing_restriction_metadata"]
+    assert outcome["safe_drop_due_to_no_restriction_safe_candidate"] is True
+
+
+def test_resolve_equipment_substitution_keeps_sparse_permissive_behavior_without_restrictions() -> None:
+    result = resolve_equipment_substitution(
+        exercise_id="press",
+        exercise_name="Barbell Press",
+        exercise_equipment_tags=["barbell"],
+        substitution_candidates=["Unknown Press"],
+        equipment_set={"machine"},
+        rule_set={"substitution_rules": {"equipment_mismatch": "use_first_compatible_substitution"}},
+        movement_restrictions=set(),
+        candidate_movement_patterns={},
+    )
+
+    assert result["selected_name"] == "Unknown Press"
+    assert result["auto_substituted"] is True
+    outcome = result["decision_trace"]["outcome"]
+    assert outcome["denied_due_to_missing_restriction_metadata"] == []
+    assert outcome["safe_drop_due_to_no_restriction_safe_candidate"] is False

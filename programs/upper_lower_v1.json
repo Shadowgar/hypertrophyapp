@@ -21,6 +21,22 @@
           "primary_muscles": ["chest", "triceps", "front_delts"],
           "equipment_tags": ["barbell", "bench"],
           "substitution_candidates": ["db_bench", "machine_chest_press"],
+          "substitution_metadata": {
+            "db_bench": {
+              "id": "db_bench",
+              "name": "DB Bench Press",
+              "movement_pattern": "horizontal_press",
+              "primary_muscles": ["chest", "triceps", "front_delts"],
+              "equipment_tags": ["dumbbell", "bench"]
+            },
+            "machine_chest_press": {
+              "id": "machine_chest_press",
+              "name": "Machine Chest Press",
+              "movement_pattern": "horizontal_press",
+              "primary_muscles": ["chest", "triceps", "front_delts"],
+              "equipment_tags": ["machine"]
+            }
+          },
           "notes": "Pause lightly on chest and maintain scapular retraction.",
           "video": { "youtube_url": "https://www.youtube.com/watch?v=rT7DgCr-3pg" }
         }
@@ -41,6 +57,22 @@
           "primary_muscles": ["quads", "glutes", "adductors"],
           "equipment_tags": ["barbell", "rack"],
           "substitution_candidates": ["hack_squat", "leg_press"],
+          "substitution_metadata": {
+            "hack_squat": {
+              "id": "hack_squat",
+              "name": "Hack Squat",
+              "movement_pattern": "squat",
+              "primary_muscles": ["quads", "glutes"],
+              "equipment_tags": ["machine"]
+            },
+            "leg_press": {
+              "id": "leg_press",
+              "name": "Leg Press",
+              "movement_pattern": "squat",
+              "primary_muscles": ["quads", "glutes"],
+              "equipment_tags": ["machine"]
+            }
+          },
           "notes": "Keep torso stacked over midfoot and drive up explosively."
         }
       ]
@@ -60,6 +92,22 @@
           "primary_muscles": ["front_delts", "triceps"],
           "equipment_tags": ["barbell"],
           "substitution_candidates": ["db_shoulder_press", "machine_shoulder_press"],
+          "substitution_metadata": {
+            "db_shoulder_press": {
+              "id": "db_shoulder_press",
+              "name": "DB Shoulder Press",
+              "movement_pattern": "vertical_press",
+              "primary_muscles": ["front_delts", "triceps"],
+              "equipment_tags": ["dumbbell"]
+            },
+            "machine_shoulder_press": {
+              "id": "machine_shoulder_press",
+              "name": "Machine Shoulder Press",
+              "movement_pattern": "vertical_press",
+              "primary_muscles": ["front_delts", "triceps"],
+              "equipment_tags": ["machine"]
+            }
+          },
           "notes": "Brace glutes and abs; press in a straight line overhead."
         }
       ]
@@ -79,6 +127,22 @@
           "primary_muscles": ["hamstrings", "glutes", "erectors"],
           "equipment_tags": ["barbell"],
           "substitution_candidates": ["db_rdl", "hyperextension"],
+          "substitution_metadata": {
+            "db_rdl": {
+              "id": "db_rdl",
+              "name": "DB Romanian Deadlift",
+              "movement_pattern": "hinge",
+              "primary_muscles": ["hamstrings", "glutes", "erectors"],
+              "equipment_tags": ["dumbbell"]
+            },
+            "hyperextension": {
+              "id": "hyperextension",
+              "name": "Hyperextension",
+              "movement_pattern": "hinge",
+              "primary_muscles": ["hamstrings", "glutes", "erectors"],
+              "equipment_tags": ["bodyweight", "bench"]
+            }
+          },
           "notes": "Push hips back and keep a neutral spine through full ROM."
         }
       ]
