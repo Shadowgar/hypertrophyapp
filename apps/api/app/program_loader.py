@@ -13,6 +13,10 @@ PHASE1_CANONICAL_PROGRAM_ID = "pure_bodybuilding_phase_1_full_body"
 ACTIVE_ADMINISTERED_PROGRAM_IDS: set[str] = {
     PHASE1_CANONICAL_PROGRAM_ID,
 }
+CONTRACT_ENFORCED_TEMPLATE_IDS: set[str] = {
+    PHASE1_CANONICAL_PROGRAM_ID,
+    "upper_lower_v1",
+}
 PHASE1_CANONICAL_RUNTIME_TEMPLATE_ID = PHASE1_CANONICAL_PROGRAM_ID
 PHASE1_LEGACY_RUNTIME_TEMPLATE_ID = "adaptive_full_body_gold_v0_1"
 PHASE1_LEGACY_RULE_OVERLAY_SOURCE_ID = PHASE1_LEGACY_RUNTIME_TEMPLATE_ID
@@ -743,7 +747,7 @@ def load_program_template(template_id: str) -> dict:
             if canonical_template_id and canonical_template_id != payload.get("id"):
                 payload = dict(payload)
                 payload["id"] = canonical_template_id
-            if str(payload.get("id") or "") in ACTIVE_ADMINISTERED_PROGRAM_IDS:
+            if str(payload.get("id") or "") in CONTRACT_ENFORCED_TEMPLATE_IDS:
                 _validate_active_template_metadata_contract(
                     payload,
                     template_id=str(payload.get("id") or template_id),
