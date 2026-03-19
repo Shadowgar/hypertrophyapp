@@ -12,7 +12,6 @@ from .template_schema import CanonicalProgramTemplate
 PHASE1_CANONICAL_PROGRAM_ID = "pure_bodybuilding_phase_1_full_body"
 ACTIVE_ADMINISTERED_PROGRAM_IDS: set[str] = {
     PHASE1_CANONICAL_PROGRAM_ID,
-    "upper_lower_v1",
 }
 PHASE1_CANONICAL_RUNTIME_TEMPLATE_ID = PHASE1_CANONICAL_PROGRAM_ID
 PHASE1_LEGACY_RUNTIME_TEMPLATE_ID = "adaptive_full_body_gold_v0_1"
@@ -323,10 +322,7 @@ def _infer_equipment_tags(exercise_id: str) -> list[str]:
         tags.append("machine" if "supported" in lowered else "cable")
     if "pullup" in lowered or "pull_up" in lowered:
         tags.append("bodyweight")
-    normalized = sorted(set(tags))
-    if normalized:
-        return normalized
-    return ["bodyweight"]
+    return sorted(set(tags))
 
 
 def _infer_primary_muscles(
@@ -374,10 +370,6 @@ def _validate_active_template_metadata_contract(payload: dict[str, Any], *, temp
             violations.append(f"{context}: movement_pattern is required")
         elif movement_pattern not in _ACTIVE_ALLOWED_MOVEMENT_PATTERNS:
             violations.append(f"{context}: movement_pattern '{movement_pattern}' is not allowed")
-
-        equipment_tags = [str(tag).strip() for tag in (exercise.get("equipment_tags") or []) if str(tag).strip()]
-        if not equipment_tags:
-            violations.append(f"{context}: equipment_tags must be non-empty")
 
         primary_muscles = [str(m).strip() for m in (exercise.get("primary_muscles") or []) if str(m).strip()]
         if not primary_muscles:
@@ -529,7 +521,7 @@ def _adaptive_slot_to_runtime_exercise(
         ],
         "start_weight": 20.0,
         "priority": "standard",
-        "slot_role": slot.get("slot_role"),
+        "slot_role": slot_source.get("slot_role"),
         "movement_pattern": movement_pattern,
         "primary_muscles": list(
             exercise_knowledge.get("primary_muscles")

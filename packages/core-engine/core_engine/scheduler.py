@@ -116,7 +116,7 @@ def _build_planned_exercise(
     )
     authored_working = exercise.get("working_sets")
     min_sets = 1
-    if authored_working is not None:
+    if authored_working is not None and not is_deload_week:
         try:
             min_sets = max(1, int(float(str(authored_working))))
         except (TypeError, ValueError):

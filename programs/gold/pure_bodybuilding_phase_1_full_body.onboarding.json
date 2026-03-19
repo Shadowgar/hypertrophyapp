@@ -15455,9 +15455,7 @@
         "Round your lower back as you crunch",
         "Maintain a mind-muscle connection with your 6-pack"
       ],
-      "primary_muscles": [
-        "chest"
-      ],
+      "primary_muscles": [],
       "secondary_muscles": [],
       "equipment_tags": [
         "cable"
@@ -15984,13 +15982,7 @@
         "glutes"
       ],
       "secondary_muscles": [],
-      "equipment_tags": [
-        "cable",
-        "machine",
-        "dumbbell",
-        "barbell",
-        "bodyweight"
-      ],
+      "equipment_tags": [],
       "movement_pattern": "squat",
       "valid_substitutions": [
         {
@@ -16021,9 +16013,7 @@
         "Stretch and squeeze the pecs",
         "Stay locked in"
       ],
-      "primary_muscles": [
-        "chest"
-      ],
+      "primary_muscles": [],
       "secondary_muscles": [],
       "equipment_tags": [
         "cable"
@@ -16186,13 +16176,7 @@
         "chest"
       ],
       "secondary_muscles": [],
-      "equipment_tags": [
-        "cable",
-        "machine",
-        "dumbbell",
-        "barbell",
-        "bodyweight"
-      ],
+      "equipment_tags": [],
       "movement_pattern": "accessory",
       "valid_substitutions": [],
       "default_video_url": null,
