@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Disclosure } from "@/components/ui/disclosure";
@@ -797,14 +797,14 @@ export default function TodayPage() {
   const isBeginWorkoutLoadInProgress = useRef(false);
   const sorenessDismissedThisSession = useRef(false);
 
-  async function loadWorkoutSummary(workoutId: string) {
+  const loadWorkoutSummary = useCallback(async (workoutId: string) => {
     try {
       const summary = await api.getWorkoutSummary(workoutId);
       setWorkoutSummary(summary);
     } catch {
       setWorkoutSummary(null);
     }
-  }
+  }, []);
 
   // When an exercise is opened, pin the page to the top and lock background
   // scrolling so the overlay is stable regardless of where the row sits in
@@ -852,9 +852,9 @@ export default function TodayPage() {
     }
     hasAutoLoadStarted.current = true;
     beginWorkoutLoad();
-  }, [health, workout]);
+  }, [health, workout, beginWorkoutLoad]);
 
-  async function loadToday(): Promise<WorkoutSession | null> {
+  const loadToday = useCallback(async (): Promise<WorkoutSession | null> => {
     try {
       const data = await api.getTodayWorkout();
       setWorkout(data);
@@ -925,7 +925,7 @@ export default function TodayPage() {
       setMessage("No workout available. Generate week plan first.");
       return null;
     }
-  }
+  }, [loadWorkoutSummary]);
 
   async function recoverMissingWorkout() {
     setRecoveringMissingWorkout(true);
@@ -940,13 +940,13 @@ export default function TodayPage() {
     }
   }
 
-  function resetSorenessForm() {
+  const resetSorenessForm = useCallback(() => {
     setSorenessByMuscle(createInitialSorenessState());
     setSorenessNotes("");
     setSorenessStatus("Idle");
-  }
+  }, []);
 
-  async function beginWorkoutLoad() {
+  const beginWorkoutLoad = useCallback(async () => {
     if (isBeginWorkoutLoadInProgress.current) {
       return;
     }
@@ -985,7 +985,7 @@ export default function TodayPage() {
     } finally {
       isBeginWorkoutLoadInProgress.current = false;
     }
-  }
+  }, [loadToday, resetSorenessForm]);
 
   async function submitSorenessAndLoad() {
     const today = new Date().toISOString().slice(0, 10);
@@ -1107,7 +1107,6 @@ export default function TodayPage() {
       }
     } catch (e) {
       // log but don't interrupt user flow
-      // eslint-disable-next-line no-console
       console.warn("logSet failed", e);
     }
   }
