@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-03-15
+Last updated: 2026-03-20
 
 Purpose: this is the canonical documentation index for implementation work. Use it to determine reading order, authority hierarchy, and where a document belongs before adding or moving anything.
 
@@ -60,6 +60,7 @@ These are the execution rails for current coding passes:
 - `docs/implementation/WORKING_SET.md`
 - `docs/implementation/ACTIVE_REMEDIATION_RAIL.md`
 - `docs/implementation/FORBIDDEN_PATTERNS.md`
+- `docs/implementation/phase2_fullbody_intent_contract.md`
 
 ## Supporting / Reference
 
@@ -70,7 +71,7 @@ These help implementation but do not grant authority on their own:
 - `docs/flows/`
 - `docs/process/`
 - `docs/guides/`
-- `docs/plans/` — includes **Today page redesign**: `docs/plans/2026-03-15-today-page-redesign-design.md` (mobile-first list + detail; implementation pending)
+- `docs/plans/` — includes **Today page redesign** design and implementation records (`docs/plans/2026-03-15-today-page-redesign-design.md`, `docs/plans/2026-03-15-today-page-redesign-implementation.md`)
 - `docs/redesign/`
 - `docs/ui-parity/`
 - `docs/rules/`
@@ -81,6 +82,9 @@ These record what was observed or validated on a pass:
 
 - `docs/audits/`
 - `docs/validation/`
+- Phase 2 validation artifacts:
+  - `docs/validation/phase2_fullbody_parity_matrix.md`
+  - `docs/validation/phase2_fullbody_handoff.md`
 
 Use them as evidence, not as execution instructions.
 

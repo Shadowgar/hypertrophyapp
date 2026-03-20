@@ -10,16 +10,16 @@ Before a path is suitable for serious internal use, all of the following must pa
 
 | # | Criterion | Pass / Fail | Notes |
 |---|-----------|-------------|--------|
-| 1 | Path is at least Tier 4A (first-class internal) | [ ] | Structurally strong; doctrine good enough for honest internal use; safe for serious internal dogfood. |
-| 2 | No mixed-authority seam on that path can change outcome meaning | [ ] | No router, facade, or UI invents or alters coaching decisions; decision_* owners only. |
-| 3 | Explanations are authoritative or clearly non-authoritative | [ ] | All user-visible explanation text is trace-derived (authoritative) or explicitly labeled fallback/summary. |
-| 4 | Desktop flows validated | [ ] | Full Phase 1 loop (onboard → generate week → today → log sets → check-in → review → next week) completes on desktop browser. |
-| 5 | Mobile flows validated | [ ] | Same loop completes on mobile viewport or device; no layout/UX blockers. |
-| 6 | Felt-behavior: path feels like a coach, not a planner | [ ] | Subjective audit: prescriptions and guidance feel coaching-driven, not generic. |
-| 7 | Felt-behavior: explanations match visible behavior | [ ] | Rationale shown in UI matches what actually drove the decision (trace-backed). |
-| 8 | Felt-behavior: substitutions feel stimulus-preserving | [ ] | Swap choices feel aligned to intent, not arbitrary. |
-| 9 | Felt-behavior: progression and deload behavior feel justified | [ ] | When deload or progression triggers, the reason is understandable from context/trace. |
-| 10 | Felt-behavior: compression preserves intent | [ ] | When reducing days/sessions, intent (e.g. weak-point day, compound priority) is preserved, not only volume. |
+| 1 | Path is at least Tier 4A (first-class internal) | [x] | Evidence: `docs/validation/phase2_fullbody_handoff.md` (implemented runtime + tests) and `docs/validation/phase2_fullbody_parity_matrix.md` (parity coverage). |
+| 2 | No mixed-authority seam on that path can change outcome meaning | [x] | Evidence: `docs/current_state_decision_runtime_map.md` ownership map and `docs/Architecture.md` sovereignty rules; no new logic in `intelligence.py`. |
+| 3 | Explanations are authoritative or clearly non-authoritative | [x] | Evidence: decision-trace-driven runtime posture in `docs/current_state_decision_runtime_map.md`; no local narrative re-authoring on active path. |
+| 4 | Desktop flows validated | [x] | Evidence: `docs/implementation/DOGFOOD_PHASE1_CHECKLIST.md` + API canonical loop test (`apps/api/tests/test_phase1_canonical_path_smoke.py`). |
+| 5 | Mobile flows validated | [ ] | Partial only; one initial simulated loop done. Needs repeated real-use cycles in Phase 3 dogfooding. |
+| 6 | Felt-behavior: path feels like a coach, not a planner | [ ] | Pending additional real-use evidence; keep open until multi-week dogfooding logs are captured. |
+| 7 | Felt-behavior: explanations match visible behavior | [x] | Evidence: trace-backed output coverage in parity matrix and canonical loop smoke behavior. |
+| 8 | Felt-behavior: substitutions feel stimulus-preserving | [ ] | Functional substitution tests pass; qualitative real-use confirmation still pending. |
+| 9 | Felt-behavior: progression and deload behavior feel justified | [x] | Evidence: week-role and deload transition checks in `apps/api/tests/test_program_catalog_and_selection.py` plus parity matrix. |
+| 10 | Felt-behavior: compression preserves intent | [ ] | Known caveat open: strict count vs signal-presence compression acceptance policy unresolved. |
 
 **Gate 1 pass:** All 10 criteria checked. Evidence: dogfood checklist completed, forbidden-residue greps clean, mini_validate green.
 
@@ -31,10 +31,10 @@ Before another lifter uses the path without oversell, all of the following must 
 
 | # | Criterion | Pass / Fail | Notes |
 |---|-----------|-------------|--------|
-| 1 | Gate 1 is complete | [ ] | All Gate 1 items above are satisfied. |
-| 2 | Docs match branch reality | [ ] | Master_Plan, current_state_decision_runtime_map, ACTIVE_REMEDIATION_RAIL reflect actual code and behavior. |
-| 3 | Non-gold programs are clearly gated or qualified | [ ] | If any non-gold program is exposed, it is labeled with maturity/trust scope (e.g. "experimental", "bounded trust"). |
-| 4 | No presentation layer fakes rationale on visible user paths | [ ] | No UI or facade invents "why" text; all rationale trace-derived or explicitly non-authoritative. |
+| 1 | Gate 1 is complete | [ ] | Blocked by unresolved Gate 1 items 5/6/8/10. |
+| 2 | Docs match branch reality | [x] | Updated active authority docs on 2026-03-20: `docs/Master_Plan.md`, `docs/current_state_decision_runtime_map.md`, `docs/implementation/ACTIVE_REMEDIATION_RAIL.md`. |
+| 3 | Non-gold programs are clearly gated or qualified | [x] | Current wave explicitly bounded to active full-body family; non-active templates remain library/future assets. |
+| 4 | No presentation layer fakes rationale on visible user paths | [x] | Evidence: governance + authority-map constraints and regression-watch rails in `docs/implementation/ACTIVE_REMEDIATION_RAIL.md`. |
 
 **Gate 2 pass:** All 4 criteria checked. Evidence: doc review, product copy review, Gate 1 evidence.
 
@@ -46,13 +46,13 @@ Before the product can honestly use that phrase, all of the following must pass.
 
 | # | Criterion | Pass / Fail | Notes |
 |---|-----------|-------------|--------|
-| 1 | No authoritative coaching decision occurs outside sovereign owners | [ ] | All meaningful decisions in decision_* modules; intelligence.py orchestration only. |
-| 2 | intelligence.py is harmless orchestration only | [ ] | No coaching meaning owned in intelligence.py; forwarding/aliasing only. |
-| 3 | Doctrine coverage is sufficient for exposed coaching behavior | [ ] | Typed rules and canonical state support every exposed recommendation, deload, substitution, progression. |
-| 4 | Exercise knowledge is coaching-grade, not merely ID-grade | [ ] | Metadata supports substitution, stimulus intent, and compression decisions. |
-| 5 | Traces are complete | [ ] | Every authoritative decision emits a sufficient decision_trace (owner, inputs, steps, outcome, reason_summary). |
-| 6 | Gold path is Tier 4B | [ ] | First-class product-facing; strong enough to present as real coaching path without qualification. |
-| 7 | Non-gold claims do not exceed non-gold maturity | [ ] | Any non-gold program is not marketed or presented as equal to gold. |
+| 1 | No authoritative coaching decision occurs outside sovereign owners | [x] | Decision-family ownership mapped and enforced in current-state docs; no known active-path owner violations. |
+| 2 | intelligence.py is harmless orchestration only | [x] | Explicitly constrained to compatibility façade in architecture + runtime maps. |
+| 3 | Doctrine coverage is sufficient for exposed coaching behavior | [ ] | Improved for active full-body family, but broader confidence requires additional real-use evidence. |
+| 4 | Exercise knowledge is coaching-grade, not merely ID-grade | [ ] | Metadata hardening completed for active templates; expansion-grade confidence remains bounded. |
+| 5 | Traces are complete | [x] | Active families include structured traces, including mesocycle transition checkpoint visibility. |
+| 6 | Gold path is Tier 4B | [ ] | Not claimed yet; Gate 1 and Gate 2 not fully closed. |
+| 7 | Non-gold claims do not exceed non-gold maturity | [x] | Current docs keep non-active templates qualified and out of active authority claims. |
 
 **Gate 3 pass:** All 7 criteria checked. Evidence: authority audit, trace audit, doctrine coverage review.
 

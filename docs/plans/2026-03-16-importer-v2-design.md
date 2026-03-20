@@ -1,7 +1,7 @@
 # Excel-First Canonical Importer v2 — Design
 
 **Date:** 2026-03-16  
-**Status:** Design; implementation pending (Phase C). Do not start coding until this design is approved.  
+**Status:** Historical design record. Importer v2 baseline has been implemented; this document is retained for provenance and intent only.  
 **Goal:** Define scope, inputs, outputs, and relationship to existing importers so a single canonical importer can produce program templates and onboarding packages with full phase/week/day/slot fidelity per [Canonical_Program_Schema](docs/contracts/Canonical_Program_Schema.md).
 
 ## Context

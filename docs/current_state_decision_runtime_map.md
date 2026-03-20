@@ -1,6 +1,6 @@
 # Current-State Decision Runtime Map
 
-Last updated: 2026-03-15
+Last updated: 2026-03-20
 
 ## Purpose
 
@@ -24,12 +24,15 @@ Current product-critical path is no longer generic architecture cleanup.
 
 Current branch reality is:
 - the [Pure Bodybuilding Phase 1 onboarding package](/home/rocco/hypertrophyapp/programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json) is now workbook-faithful and structurally rich
+- the [Pure Bodybuilding Phase 2 onboarding package](/home/rocco/hypertrophyapp/programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json) and runtime template are now canonicalized and active
 - generated-week and today runtime exercises now carry the authored Phase 1 slot fields through the loader/API boundary
+- generated-week now preserves Phase 2 authored week identity with block-transition checkpoint visibility (`mesocycle.transition_checkpoint`)
 - week/today surfaces now render those authored execution details directly
 - the live administered full-body identity is now unified to `pure_bodybuilding_phase_1_full_body` with compatibility aliases resolving safely
+- Phase 2 canonical identity `pure_bodybuilding_phase_2_full_body` is now also active on administered catalog and runtime paths
 - API and web path-facing fixtures/snapshots now default to `pure_bodybuilding_phase_1_full_body` instead of legacy IDs
 - API now has an explicit canonical end-to-end smoke test for onboarding -> generate-week -> today/log-set -> check-in/review -> history -> adaptation/regenerate continuity on the canonical ID
-- active user-facing catalog/selection surfaces now operate in one-program-first mode (`pure_bodybuilding_phase_1_full_body` only); other templates remain library/compatibility assets, not equal active choices
+- active user-facing catalog/selection surfaces now expose two canonical full-body choices (`pure_bodybuilding_phase_1_full_body`, `pure_bodybuilding_phase_2_full_body`)
 - local dogfooding now has a dev-only authenticated reset hook (`POST /profile/dev/reset-phase1`) that clears training state and restores canonical Phase 1 selection without deleting the account
 - focused API verification is now more deterministic in local runs because test startup config sets `DATABASE_URL` early via `configure_test_database("pytest_session_default")`, preventing accidental fallback to default Postgres when unavailable
 - the next bounded product seam is end-to-end dogfooding of this real Phase 1 administered path before wider cleanup
@@ -37,9 +40,9 @@ Current branch reality is:
 - Today page redesign implemented: list + detail overlay, simplified top, API-only guidance; see `docs/plans/2026-03-15-today-page-redesign-design.md`
 
 Current product order for active implementation is:
-1. keep `pure_bodybuilding_phase_1_full_body` as the single administered Phase 1 identity (aliases compatibility-only)
-2. dogfood the canonical Phase 1 path end-to-end (onboarding -> generate-week -> today -> log-set -> checkin/review -> history)
-3. only then broaden cleanup/generalization work beyond the active program path
+1. keep `pure_bodybuilding_phase_1_full_body` and `pure_bodybuilding_phase_2_full_body` as the active administered full-body identities
+2. dogfood canonical full-body paths end-to-end (generate-week -> today -> log-set -> checkin/review -> history)
+3. only then broaden cleanup/generalization work beyond the active full-body family
 
 Secondary architectural risks still matter, but they are no longer the primary product bottleneck:
 - authority ambiguity and historical wrapper drift in [intelligence.py](/home/rocco/hypertrophyapp/packages/core-engine/core_engine/intelligence.py)
@@ -90,8 +93,9 @@ The current cleanup contract is:
 
 ## Next Phases After That
 
-After the current seams-0-to-3 one-program-first wave:
+After the current seams-0-to-3 full-body-family wave:
 
-1. dogfood the Phase 1 administered path end to end on desktop/mobile browser with authored workout details and decision traces visible
-2. fix any branch-truth drift found during dogfooding on the canonical `pure_bodybuilding_phase_1_full_body` path
-3. only then keep shrinking remaining mixed-owner seams in `intelligence.py` and broaden SFR/coaching-state consumption where those changes directly support active product behavior
+1. dogfood administered full-body paths end to end on desktop/mobile browser with authored workout details and decision traces visible
+2. fix any branch-truth drift found during dogfooding on canonical Phase 1/Phase 2 paths
+3. resolve the explicit compression-policy caveat and lock acceptance policy in active docs
+4. only then keep shrinking remaining mixed-owner seams in `intelligence.py` and broaden SFR/coaching-state consumption where those changes directly support active product behavior

@@ -1,23 +1,26 @@
 # Active Remediation Rail
 
-Last updated: 2026-03-16
+Last updated: 2026-03-20
 
 ## Current Confirmed State
 
 - `programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json` is now the real workbook-faithful Phase 1 package on this branch: authored slot fields, notes, warm-up protocol, weak-points table, week/block labels, banners, and workbook-backed video links are explicit.
+- `programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json` and `programs/gold/pure_bodybuilding_phase_2_full_body.json` are now canonical Phase 2 full-body assets with authored week/block identity.
 - Generated-week and today runtime exercises now carry the authored Phase 1 slot fields through the loader/API boundary instead of flattening them away.
 - Week and today surfaces now show authored execution detail directly: early-set RPE, last-set RPE, last-set intensity technique, rest, authored substitutions, demo link, and tracking loads when present.
-- Live administered identity for the first real program is now unified on `pure_bodybuilding_phase_1_full_body`; `full_body_v1` and `adaptive_full_body_gold_v0_1` now resolve as compatibility aliases on active API/web paths.
+- Live administered identities now include canonical Phase 1 and Phase 2 full-body programs; `full_body_v1` and `adaptive_full_body_gold_v0_1` remain compatibility aliases.
 - Runtime template source selection for the active Phase 1 path is now canonicalized to `pure_bodybuilding_phase_1_full_body`; legacy runtime IDs resolve only through compatibility normalization/fallback.
+- Phase 2 full-body sheet aliases now resolve deterministically to `pure_bodybuilding_phase_2_full_body`.
 - Canonical end-to-end API smoke coverage now exists for the administered path (onboarding -> generate-week -> today -> authored detail -> log-set -> check-in/review -> history -> adaptation apply -> regenerate-week -> training-state continuity).
+- Phase 2 runtime now emits `mesocycle.transition_checkpoint` for block-boundary deload transitions (week 5 -> week 6 checkpoint visibility).
 - `intelligence.py` remains compatibility forwarding only. It is not a valid place to add new coaching meaning.
 
 Current product order for active implementation is:
-1. workbook-faithful Pure Bodybuilding Phase 1 package
+1. workbook-faithful Phase 1 + Phase 2 full-body canonical artifacts
 2. runtime/API carry-through of authored fields
 3. visible week/today authored execution detail
-4. unified administered identity on `pure_bodybuilding_phase_1_full_body`
-5. end-to-end dogfooding on the real Phase 1 administered path before broader cleanup/generalization
+4. deterministic week/block transition behavior and trace visibility
+5. end-to-end dogfooding on canonical full-body administered paths before broader cleanup/generalization
 
 ## Latest Completed Slice
 
@@ -44,7 +47,7 @@ Current product order for active implementation is:
 
 ## Next Recommended Action
 
-- Run real training weeks through the app (Phase 3 Internal Dogfooding). The canonical Phase 1 path has been verified via API smoke tests and one simulated loop; the next step is repeated real use to surface coaching-decision quality issues.
+- Run real training weeks through the app (Phase 3 Internal Dogfooding) across the active full-body family. Canonical Phase 1 and Phase 2 paths are validated in tests; the next step is repeated real use to surface coaching-decision quality issues.
 - Keep compatibility aliases explicit at boundaries, and keep broader architecture/generalization work downstream unless directly blocking canonical-path reliability.
 
 ## Next Tasks (task rail)
@@ -63,17 +66,41 @@ Use this ordered list as the single source of "what to do next." Complete one ta
    Validation: Manual; repeated real training cycles without engineering intervention.
    Done when: Creator can complete multiple training weeks; observed issues captured with decision-trace evidence.
 
-5. **Activate Phase 2 program path (Wave 5)**
-   Goal: Add a second program template through the full gold-path flow.
-   Files: `programs/gold/`, `apps/api/app/program_loader.py`, `packages/core-engine/core_engine/generation.py`.
-   Validation: API smoke test for Phase 2 program; generate-week → today → log-set continuity.
-   Done when: Two programs can be administered through the canonical path.
+5. ~~**Activate Phase 2 program path (Wave 5)**~~ DONE — Canonical Phase 2 assets, loader/rule linkage, and transition/constraint tests now pass on active branch.
 
 6. **Progression continuity across frequency windows (Wave 5)**
    Goal: Verify load/set progression state carries correctly across 5→3→5 frequency changes.
    Files: `packages/core-engine/core_engine/decision_progression.py`, `apps/api/tests/test_program_frequency_adaptation_api.py`.
    Validation: Focused test proving state continuity.
    Done when: Frequency compress/rejoin preserves exercise progression history.
+
+## Next Full-Body Variant Go/No-Go Gate
+
+Any next in-family full-body onboarding candidate must satisfy all checks before activation:
+
+1. **Canonical artifacts present**
+   - Runtime template JSON and onboarding package JSON exist under `programs/gold/`.
+   - Canonical rules exist under `docs/rules/canonical/` and load with no schema errors.
+
+2. **Authored identity contract**
+   - `authored_weeks` preserve week index, week role, and block label semantics from source intent.
+   - Transition checkpoints are trace-visible where deload/block boundaries are program-critical.
+
+3. **Metadata safety baseline**
+   - Active-path exercises and substitutions include required restriction/equipment metadata.
+   - Placeholder substitution references are rejected by loader validation on active paths.
+
+4. **Constraint behavior parity**
+   - Time-budget and movement-restriction tests pass on early, mid, and transition-week samples.
+   - Restriction-sensitive sparse metadata is deny-safe (no allow-with-warning for missing movement pattern when restrictions are active).
+
+5. **Minimum parity matrix**
+   - Test evidence exists for week 1, transition week, and final authored week generation.
+   - Interruption/resume behavior and substitution consistency are covered.
+
+6. **Release evidence linked**
+   - `docs/validation/*` handoff + parity docs added for the candidate program.
+   - `docs/implementation/RELEASE_CHECKLIST.md` gate rows updated with explicit pass/fail.
 
 ## Done: Today Page Redesign
 
@@ -95,12 +122,12 @@ If a patch does not show a regression in current code, do not spend time re-audi
 
 ## Current Target Wave
 
-Keep one-program-first mode explicit while hardening the real administered Phase 1 user path.
+Keep full-body family mode explicit while hardening real administered user paths.
 
 This wave is about:
 
-- keeping Pure Bodybuilding Phase 1 Full Body authoritative from onboarding artifact through runtime and week/today delivery
-- enforcing `pure_bodybuilding_phase_1_full_body` as the only active administered program identity on user-facing catalog/selection paths
+- keeping Pure Bodybuilding Phase 1 + Phase 2 Full Body authoritative from onboarding artifacts through runtime and week/today delivery
+- enforcing canonical administered identities (`pure_bodybuilding_phase_1_full_body`, `pure_bodybuilding_phase_2_full_body`) on user-facing catalog/selection paths
 - keeping legacy IDs (`full_body_v1`, `adaptive_full_body_gold_v0_1`) as compatibility aliases only at boundaries
 - keeping `decision_*` modules as the only owners of coaching meaning
 - keeping `intelligence.py` as compatibility forwarding only

@@ -25,5 +25,8 @@
 - Restriction safety on rotated weeks (`vertical_press` absent under overhead restriction): **PASS**.
 - Time-budget signal preserved in runtime trace across block transition: **PASS**.
 
-## Residual Caveat
-- Phase 2 compression assertions currently validate runtime budget signal presence, not exact per-session exercise count targets, because scheduler cap behavior is rule-policy dependent.
+## Compression Policy Decision
+- **Policy selected:** flexible, trace-first acceptance.
+- **Meaning:** compression validation on active full-body paths must assert authoritative runtime signals (time-budget inputs, compression decisions, retention priorities), not a fixed per-session exercise count.
+- **Rationale:** scheduler count outcomes may vary by authored week composition while still preserving intent; decision quality should be judged by deterministic policy traces and safety constraints.
+- **Test standard:** keep assertions focused on trace-backed policy signals (for example `recovery_inputs.session_time_budget_minutes`) and intent-preservation checks, not hard-coded slot counts.

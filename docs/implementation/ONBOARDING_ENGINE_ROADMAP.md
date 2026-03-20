@@ -13,7 +13,9 @@ Then evolve the product from *template-first authored delivery* into a "Choose f
   - user training state constraints (equipment, session structure budget, restrictions),
   - program templates (authored weeks),
   - rule runtime decisions (substitutions, filtering, progression/adaptation).
-- The Phase 1 canonical path (`pure_bodybuilding_phase_1_full_body`) is the first end-to-end administered loop.
+- Active canonical administered full-body paths are:
+  - `pure_bodybuilding_phase_1_full_body`
+  - `pure_bodybuilding_phase_2_full_body`
 - The onboarding flow collects constraint inputs and persists them to the profile.
 
 ## Constraint Mapping (Onboarding -> Profile -> Engine)
@@ -116,7 +118,7 @@ Exit criteria:
 - Program switching results in week generation using the selected program identity.
 - Onboarding/settings are integrated so constraint changes can re-trigger recommendations.
 
-### Phase 4 (feed more authored programs)
+### Phase 4 (feed more authored programs) — Historical / superseded for current wave
 Goal: activate a wider authored program catalog without flattening authored execution fidelity.
 
 **Implementation plan:**
@@ -127,7 +129,7 @@ Goal: activate a wider authored program catalog without flattening authored exec
    - **Rules:** `RULE_SOURCE_IDS` and rule-set loading must point to a valid rule set for the template.
    - **Linked/alias ids:** Update `LINKED_PROGRAM_IDS`, `ADMINISTERED_PROGRAM_ID_ALIASES`, and `RUNTIME_TEMPLATE_SOURCE_IDS` as needed so legacy or alias ids resolve to the correct template and onboarding package.
 3. **Catalog and recommendation:** `PROGRAM_NAMES` and `PROGRAM_DESCRIPTIONS` already include many ids; ensure any new active id has a name and description. The decision engine’s program recommendation will then include the new program in candidates when constraints (e.g. days_available, split_preference) match.
-4. **Adding the next program:** The repo has `programs/upper_lower_v1.json` and `programs/ppl_v1.json`; their `LINKED_PROGRAM_IDS` point to phase-2 sheet ids. To activate one as a second administered program, add the id to `ACTIVE_ADMINISTERED_PROGRAM_IDS`. Runtime template and rules resolve via existing `LINKED_PROGRAM_IDS` and `docs/rules/canonical` (e.g. `pure_bodybuilding_phase_2_upper_lower_sheet.rules.json`). **Done:** `upper_lower_v1` is now active. Week generation works without an onboarding package. Frequency adaptation (preview/apply) requires an onboarding package for the program; until `programs/gold/<onboarding_id>.onboarding.json` exists for that id, those endpoints return 404 for users on that program.
+4. **Adding the next program:** Keep bounded to full-body family first. Do not activate non-full-body templates as active administered choices until the explicit onboarding gate is satisfied in active governance docs.
 
 Exit criteria:
 - Program loader supports more active templates and linked onboarding packages.

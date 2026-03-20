@@ -1,6 +1,6 @@
 # Architecture - Adaptive Coaching Runtime
 
-Last updated: 2026-03-16
+Last updated: 2026-03-20
 
 This document describes the current runtime architecture. For governance rules, see `docs/architecture/GOVERNANCE_CONSTITUTION.md`. For module-level authority, see `docs/architecture/RUNTIME_AUTHORITY_MAP.md`.
 
@@ -94,7 +94,8 @@ Current state and remaining risks:
 - the deterministic stimulus-fatigue-response layer is live in the progression family, feeds generated-week deload/substitution pressure through `rules_runtime.py`, and powers weekly-review bounded adjustments
 - canonical repeat-failure generation-time substitution is powered by persisted `ExerciseState`
 - broader exercise-level SFR-driven generation use is still pending
-- the primary active program is `pure_bodybuilding_phase_1_full_body`; multi-program scaling has not yet begun
+- active administered full-body programs are `pure_bodybuilding_phase_1_full_body` and `pure_bodybuilding_phase_2_full_body`
+- Phase 2 block transition checkpoints are now trace-visible via mesocycle runtime output
 
 6. API/UI Layer
 - Program selection

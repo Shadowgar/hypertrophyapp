@@ -1,8 +1,8 @@
-# Phase 1 Canonical Path — Dogfood Checklist
+# Full-Body Canonical Paths — Dogfood Checklist
 
-Last updated: 2026-03-16
+Last updated: 2026-03-20
 
-Use this checklist to verify the administered Pure Bodybuilding Phase 1 path end-to-end on desktop and mobile (or viewport resize). Fix only blockers that prevent completing the loop; log issues with steps-to-reproduce for follow-up.
+Use this checklist to verify the administered full-body canonical paths end-to-end on desktop and mobile (or viewport resize). Fix only blockers that prevent completing the loop; log issues with steps-to-reproduce for follow-up.
 
 ## Prerequisites
 
@@ -51,6 +51,21 @@ Use this checklist to verify the administered Pure Bodybuilding Phase 1 path end
 | 8. History | PASS | History page loaded with all sections (calendar, progression brief, strength trend, bodyweight trend, PR highlights, readiness mix, volume heat map). Data sparse (expected for fresh account). |
 | 9. Generate next week | PASS | "Generate Next Week Now" button on Check-In page worked. "Next week generated." message confirmed. |
 | 10. Frequency adaptation / training state | NOT TESTED | Deferred to next run. |
+
+### Run 2 — 2026-03-20 (API multi-week runtime evidence, local pytest)
+
+| Scenario | Result | Evidence |
+| --- | --- | --- |
+| Phase 2 week-5 generation | PASS | `tests/test_program_catalog_and_selection.py::test_phase2_generate_week_uses_week_five_before_transition` |
+| Phase 2 week-5 -> week-6 transition checkpoint | PASS | `tests/test_program_catalog_and_selection.py::test_phase2_generate_week_week_five_to_six_transition_is_checkpoint` |
+| Phase 2 interruption + resume + week-10 continuity | PASS | `tests/test_program_catalog_and_selection.py::test_phase2_generate_week_supports_interruption_and_resume_and_week_ten` |
+| Time-budget behavior across Phase 2 block transition | PASS | `tests/test_program_catalog_and_selection.py::test_phase2_time_budget_compression_applies_across_block_transition` |
+| Movement restrictions on rotated weeks | PASS | `tests/test_program_catalog_and_selection.py::test_phase2_movement_restrictions_remain_enforced_on_rotated_weeks` |
+
+Command:
+`PYTHONPATH=/home/rocco/hypertrophyapp/packages/core-engine python3 -m pytest tests/test_program_catalog_and_selection.py::test_phase2_generate_week_uses_week_five_before_transition tests/test_program_catalog_and_selection.py::test_phase2_generate_week_week_five_to_six_transition_is_checkpoint tests/test_program_catalog_and_selection.py::test_phase2_generate_week_supports_interruption_and_resume_and_week_ten tests/test_program_catalog_and_selection.py::test_phase2_time_budget_compression_applies_across_block_transition tests/test_program_catalog_and_selection.py::test_phase2_movement_restrictions_remain_enforced_on_rotated_weeks`
+
+Result: `5 passed in 10.02s`.
 
 ### Observed Issues (non-blocking)
 

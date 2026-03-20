@@ -1,7 +1,7 @@
 # PDF-to-Rules Distillation Workflow — Design
 
 **Date:** 2026-03-16  
-**Status:** Design; implementation pending (Phase C). Prioritize when Phase C is active.  
+**Status:** Historical design record. Initial implementation completed in Phase C; keep for provenance, not active execution authority.  
 **Goal:** Define the workflow, tooling, and output format for distilling PDF coaching doctrine into typed rules with explainable rationale and provenance links to source sections.
 
 ## Context

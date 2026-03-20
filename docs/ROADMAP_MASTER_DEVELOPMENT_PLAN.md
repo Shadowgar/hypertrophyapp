@@ -203,6 +203,10 @@ Turn the current architecture into a clearly working application for the main us
 
 This is the current active phase. See `docs/implementation/DOGFOOD_PHASE1_CHECKLIST.md` for the step-by-step verification checklist.
 
+Current evidence snapshot:
+- One desktop end-to-end run is documented (2026-03-16).
+- One focused multi-week Phase 2 runtime evidence run is documented (2026-03-20) with transition, interruption/resume, time-budget, and restriction tests passing.
+
 ### Goal
 
 Get the app into the creator's real training loop and use real cycles to find bad decisions quickly.

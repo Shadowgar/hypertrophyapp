@@ -1,7 +1,7 @@
 # Schema Validation — Design
 
 **Date:** 2026-03-16  
-**Status:** Design; implementation pending  
+**Status:** Historical design record. Core schema-validation slice has been implemented; this document remains as design provenance.  
 **Goal:** Scope "strict schema validation tests" and "ambiguity/error reporting" so implementation does not drift or over-build.
 
 ## Context

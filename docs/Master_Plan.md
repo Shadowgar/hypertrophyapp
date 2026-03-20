@@ -1,6 +1,6 @@
 # Master Plan - Adaptive Coaching Rebuild
 
-Last updated: 2026-03-16
+Last updated: 2026-03-20
 
 ## Product Vision
 
@@ -36,32 +36,36 @@ Build-time pipelines may parse source files; runtime may not.
 
 The main product bottleneck is no longer generic architecture cleanup.
 
-The current bottleneck is finishing one real administered program path around Pure Bodybuilding Phase 1 Full Body.
+The current bottleneck is consolidating and hardening the active administered full-body family after Phase 2 onboarding.
 
 Current branch reality:
 - the workbook-faithful Phase 1 onboarding package now exists as a rich authoritative artifact
 - runtime/API week-generation and today-session paths now carry the authored slot fields through
 - week/today UI now shows those authored execution details directly
-- the live administered full-body identity is now unified on `pure_bodybuilding_phase_1_full_body` with legacy aliases handled for compatibility
+- active administered full-body identities now include:
+  - `pure_bodybuilding_phase_1_full_body`
+  - `pure_bodybuilding_phase_2_full_body`
 - a canonical end-to-end API smoke path now verifies identity/continuity through generate-week, today/log-set, check-in/review, history, adaptation apply, and regenerate-week
-- the next product seam after identity unification is end-to-end dogfooding of this administered Phase 1 path
+- Phase 2 week identity and week-5 -> week-6 transition checkpoint behavior are now validated and trace-visible
+- the next product seam is evidence-backed release-gate closure plus real-use dogfooding across the active full-body family
 
 Current product order for active implementation is:
-1. workbook-faithful Pure Bodybuilding Phase 1 package
+1. workbook-faithful Pure Bodybuilding Phase 1 and Phase 2 full-body packages
 2. runtime/API carry-through of authored fields
 3. visible week/today authored execution detail
-4. only then program-specific temporary frequency adaptation
+4. release-governance closure and real-use dogfooding
+5. only then broader expansion work
 
 Immediate direction:
-- keep one-program-first as the primary delivery track
+- keep full-body-family-first as the primary delivery track
 - preserve explicit schemas, deterministic rules, and structured traces on the Phase 1 path
 - keep broader architecture cleanup subordinate unless it directly blocks the administered Phase 1 runtime
 
-## Active Operating Mode (One Program First)
+## Active Operating Mode (Full-Body Family First)
 
-Current active product mode is one-program-first.
+Current active product mode is full-body-family-first.
 
-- `pure_bodybuilding_phase_1_full_body` is the only active administered program exposed on normal user catalog/selection flows.
+- `pure_bodybuilding_phase_1_full_body` and `pure_bodybuilding_phase_2_full_body` are the active administered full-body programs exposed on normal user catalog/selection flows.
 - `full_body_v1` and `adaptive_full_body_gold_v0_1` remain compatibility aliases for stored state, legacy links, and explicit compatibility tests.
 - Other templates (for example `ppl_v1`, `upper_lower_v1`) remain in-repo library/future assets, but are not equal active product choices during this phase.
 
@@ -69,8 +73,8 @@ Current execution order:
 1. maintain the workbook-faithful Pure Bodybuilding Phase 1 package
 2. keep authored slot fields carried through runtime/API without flattening
 3. keep week/today rendering authored execution detail directly
-4. keep `pure_bodybuilding_phase_1_full_body` as the single administered identity, with `full_body_v1` and `adaptive_full_body_gold_v0_1` as compatibility aliases only
-5. dogfood the full administered Phase 1 path end-to-end on desktop/mobile browser
+4. keep canonical administered identities (`pure_bodybuilding_phase_1_full_body`, `pure_bodybuilding_phase_2_full_body`) as active choices, with legacy aliases compatibility-only
+5. dogfood administered full-body paths end-to-end on desktop/mobile browser
 6. only then resume broader `intelligence.py`, coaching-state, and SFR cleanup where it directly helps the active product path
 
 ## Local Dogfood Loop (Canonical Path)
