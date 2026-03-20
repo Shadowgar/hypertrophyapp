@@ -846,14 +846,6 @@ export default function TodayPage() {
       .catch(() => setHealth("offline"));
   }, []);
 
-  useEffect(() => {
-    if (health !== "ok" || workout !== null || hasAutoLoadStarted.current) {
-      return;
-    }
-    hasAutoLoadStarted.current = true;
-    beginWorkoutLoad();
-  }, [health, workout, beginWorkoutLoad]);
-
   const loadToday = useCallback(async (): Promise<WorkoutSession | null> => {
     try {
       const data = await api.getTodayWorkout();
@@ -986,6 +978,14 @@ export default function TodayPage() {
       isBeginWorkoutLoadInProgress.current = false;
     }
   }, [loadToday, resetSorenessForm]);
+
+  useEffect(() => {
+    if (health !== "ok" || workout !== null || hasAutoLoadStarted.current) {
+      return;
+    }
+    hasAutoLoadStarted.current = true;
+    beginWorkoutLoad();
+  }, [health, workout, beginWorkoutLoad]);
 
   async function submitSorenessAndLoad() {
     const today = new Date().toISOString().slice(0, 10);
