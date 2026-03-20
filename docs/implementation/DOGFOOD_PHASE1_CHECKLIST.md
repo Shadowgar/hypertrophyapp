@@ -124,6 +124,23 @@ Auth/session note:
 Mobile blocker after auth fix:
 1. Fixed-nav overlap still blocks `Complete Set` interaction from the exercise detail view in narrow viewport.
 
+### Run 7 — 2026-03-20 (Targeted post-fix validation: mobile interaction + Phase 1/2 runtime cycles)
+
+| Scenario | Result | Evidence |
+| --- | --- | --- |
+| Today overlay opens/closes with mobile-dock suppression signal | PASS | `apps/web/tests/today.runner.test.tsx::Today page opens detail overlay on row tap and closes on back` |
+| Today flow regressions (load, overlay, soreness skip, recovery) | PASS | `apps/web/tests/today.runner.test.tsx` |
+| Canonical Phase 1 end-to-end API smoke loop | PASS | `apps/api/tests/test_phase1_canonical_path_smoke.py` |
+| Phase 2 multi-week transition/restriction evidence set | PASS | `apps/api/tests/test_program_catalog_and_selection.py::{test_phase2_generate_week_uses_week_five_before_transition,test_phase2_generate_week_week_five_to_six_transition_is_checkpoint,test_phase2_generate_week_supports_interruption_and_resume_and_week_ten,test_phase2_time_budget_compression_applies_across_block_transition,test_phase2_movement_restrictions_remain_enforced_on_rotated_weeks}` |
+
+Commands:
+- `npm run test -- --run tests/today.runner.test.tsx`
+- `PYTHONPATH=/home/rocco/hypertrophyapp/packages/core-engine python3 -m pytest apps/api/tests/test_phase1_canonical_path_smoke.py apps/api/tests/test_program_catalog_and_selection.py::test_phase2_generate_week_uses_week_five_before_transition apps/api/tests/test_program_catalog_and_selection.py::test_phase2_generate_week_week_five_to_six_transition_is_checkpoint apps/api/tests/test_program_catalog_and_selection.py::test_phase2_generate_week_supports_interruption_and_resume_and_week_ten apps/api/tests/test_program_catalog_and_selection.py::test_phase2_time_budget_compression_applies_across_block_transition apps/api/tests/test_program_catalog_and_selection.py::test_phase2_movement_restrictions_remain_enforced_on_rotated_weeks`
+
+Result summary:
+- Web: `4 passed`
+- API: `8 passed`
+
 ### Observed Issues (non-blocking)
 
 1. **Uniform starting loads**: All 12 exercises show identical 44.1 lbs starting load regardless of exercise type (lat pulldown vs belt squat vs skull crusher). Expected: per-exercise default loads based on movement pattern. **Severity**: Coaching quality — not a blocker but reduces first-week realism. **Status**: Open (deferred to progression/load-modeling pass).

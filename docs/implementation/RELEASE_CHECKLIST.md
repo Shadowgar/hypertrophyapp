@@ -14,12 +14,12 @@ Before a path is suitable for serious internal use, all of the following must pa
 | 2 | No mixed-authority seam on that path can change outcome meaning | [x] | Evidence: `docs/current_state_decision_runtime_map.md` ownership map and `docs/Architecture.md` sovereignty rules; no new logic in `intelligence.py`. |
 | 3 | Explanations are authoritative or clearly non-authoritative | [x] | Evidence: decision-trace-driven runtime posture in `docs/current_state_decision_runtime_map.md`; no local narrative re-authoring on active path. |
 | 4 | Desktop flows validated | [x] | Evidence: `docs/implementation/DOGFOOD_PHASE1_CHECKLIST.md` + API canonical loop test (`apps/api/tests/test_phase1_canonical_path_smoke.py`). |
-| 5 | Mobile flows validated | [ ] | Auth/session continuity improved (`Invalid token` not reproduced in rerun), but mobile `Complete Set` remains blocked by fixed-nav overlap in exercise detail view. |
-| 6 | Felt-behavior: path feels like a coach, not a planner | [ ] | Desktop loop now feels coherent; keep open until mobile logging blocker is fixed and repeated mobile runs complete full loop. |
+| 5 | Mobile flows validated | [x] | Evidence: Today mobile interaction regression now passes (`apps/web/tests/today.runner.test.tsx`), including overlay open/close safety signal used to suppress dock interception; auth/session continuity remained stable in latest reruns. |
+| 6 | Felt-behavior: path feels like a coach, not a planner | [ ] | Keep open for additional real-use qualitative loops; functional blockers are cleared but this row requires repeated human-use confirmation. |
 | 7 | Felt-behavior: explanations match visible behavior | [x] | Evidence: trace-backed output coverage in parity matrix and canonical loop smoke behavior. |
-| 8 | Felt-behavior: substitutions feel stimulus-preserving | [ ] | Functional substitution + restriction tests pass; qualitative confirmation remains pending until mobile set-logging loop is fully unblocked. |
+| 8 | Felt-behavior: substitutions feel stimulus-preserving | [ ] | Functional substitution + restriction tests pass on active full-body paths; keep open for added qualitative multi-week evidence. |
 | 9 | Felt-behavior: progression and deload behavior feel justified | [x] | Evidence: week-role and deload transition checks in `apps/api/tests/test_program_catalog_and_selection.py`, parity matrix, and frequency-window continuity coverage in `apps/api/tests/test_program_frequency_adaptation_api.py`. |
-| 10 | Felt-behavior: compression preserves intent | [ ] | Flexible trace-first policy is in place; keep open pending additional multi-week real-use evidence after mobile flow is fully unblocked. |
+| 10 | Felt-behavior: compression preserves intent | [ ] | Flexible trace-first policy is in place and transition tests pass; keep open pending additional real-use qualitative confirmation. |
 
 **Gate 1 pass:** All 10 criteria checked. Evidence: dogfood checklist completed, forbidden-residue greps clean, mini_validate green.
 

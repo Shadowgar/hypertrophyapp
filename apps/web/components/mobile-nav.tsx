@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { UiIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
@@ -26,13 +26,33 @@ function resolveMode(pathname: string): "workout" | "plan" | "analytics" | "body
 export function MobileNav() {
   const pathname = usePathname();
   const mode = resolveMode(pathname);
+  const [todayOverlayOpen, setTodayOverlayOpen] = useState(false);
 
   useEffect(() => {
     document.body.dataset.uiMode = mode;
   }, [mode]);
 
+  useEffect(() => {
+    const syncOverlayState = () => {
+      setTodayOverlayOpen(document.body.dataset.todayOverlayOpen === "true");
+    };
+    syncOverlayState();
+    globalThis.addEventListener("hypertrophy:today-overlay-changed", syncOverlayState);
+    return () => {
+      globalThis.removeEventListener("hypertrophy:today-overlay-changed", syncOverlayState);
+    };
+  }, []);
+
+  const suppressDock = pathname.startsWith("/today") && todayOverlayOpen;
+
   return (
-    <nav className="command-dock-wrap fixed bottom-0 left-0 right-0 p-3">
+    <nav
+      className={cn(
+        "command-dock-wrap fixed bottom-0 left-0 right-0 p-3",
+        suppressDock ? "pointer-events-none opacity-0" : "",
+      )}
+      aria-hidden={suppressDock}
+    >
       <ul className="command-dock mx-auto grid max-w-md grid-cols-5 gap-1">
         {items.map((item) => (
           <li key={item.href}>

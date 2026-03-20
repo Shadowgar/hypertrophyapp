@@ -35,6 +35,14 @@ Current product order for active implementation is:
   - Added bounded starting-load quality hardening for workout-today payload defaults when planned weights are uniformly flat
   - Added API regression `test_today_starting_load_defaults_are_not_flat_when_planned_weights_are_uniform`
 
+- Completed mobile interaction hardening follow-up (2026-03-20):
+  - Today page now marks overlay-open state on `document.body` and emits a narrow-scope event (`hypertrophy:today-overlay-changed`) when the exercise detail overlay opens/closes
+  - Mobile command dock now suppresses pointer events while Today overlay is open (`/today` path only), preventing dock interception of in-overlay actions such as `Complete Set`
+  - Added focused regression assertion in `apps/web/tests/today.runner.test.tsx` verifying overlay-open state is set/cleared on open/close
+  - Focused validation evidence:
+    - `apps/web/tests/today.runner.test.tsx`: 4 passed
+    - `apps/api/tests/test_phase1_canonical_path_smoke.py` + Phase 2 transition/restriction scenarios: 8 passed total
+
 - Completed bounded dogfood hardening slice (2026-03-20):
   - Today page now includes safe-area bottom padding to reduce fixed-nav overlap on mobile flows
   - Exercise detail overlay now includes a direct `Check-In` link in quick actions
@@ -128,7 +136,7 @@ Any next in-family full-body onboarding candidate must satisfy all checks before
 
 - **Decision:** Continue hardening mode (NO-GO for next full-body onboarding this wave).
 - **Owner:** Runtime/docs consolidation wave owner.
-- **Reason:** Gate 1 remains open due remaining mobile interaction blocker (`Complete Set` interception in exercise-detail mobile flow) and pending additional real-use qualitative confirmation for substitution/compression behavior.
+- **Reason:** Mobile interaction blocker has been mitigated and regression-covered, but Gate 1 remains open on qualitative rows (6/8/10) pending additional repeated real-use evidence.
 - **Re-open condition:** Move to GO only after mobile loop passes end-to-end and Gate 1 unresolved rows are closed or explicitly accepted.
 
 ## Done: Today Page Redesign

@@ -827,11 +827,17 @@ export default function TodayPage() {
       const previousOverflow = body.style.overflow;
       body.dataset.hypertrophyPrevOverflow = previousOverflow;
       body.style.overflow = "hidden";
+      body.dataset.todayOverlayOpen = "true";
+      window.dispatchEvent(new Event("hypertrophy:today-overlay-changed"));
       return () => {
         body.style.overflow = body.dataset.hypertrophyPrevOverflow || "";
         delete body.dataset.hypertrophyPrevOverflow;
+        delete body.dataset.todayOverlayOpen;
+        window.dispatchEvent(new Event("hypertrophy:today-overlay-changed"));
       };
     }
+    delete body.dataset.todayOverlayOpen;
+    window.dispatchEvent(new Event("hypertrophy:today-overlay-changed"));
     return undefined;
   }, [selectedExerciseId]);
 

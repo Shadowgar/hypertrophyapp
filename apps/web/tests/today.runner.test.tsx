@@ -132,11 +132,13 @@ test("Today page opens detail overlay on row tap and closes on back", async () =
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: /Bayesian Curl/ }));
   await waitFor(() => expect(screen.getByRole("dialog")).toBeInTheDocument());
+  expect(document.body.dataset.todayOverlayOpen).toBe("true");
   expect(screen.getByRole("button", { name: /Back to list/i })).toBeInTheDocument();
   expect(screen.getByRole("link", { name: /Check-In/i })).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole("button", { name: /Back to list/i }));
   await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  expect(document.body.dataset.todayOverlayOpen).toBeUndefined();
 });
 
 test("Skipping soreness modal keeps it dismissed while opening exercise detail", async () => {
