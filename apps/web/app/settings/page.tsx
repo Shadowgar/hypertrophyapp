@@ -9,6 +9,7 @@ import { Disclosure } from "@/components/ui/disclosure";
 import { UiIcon } from "@/components/ui/icons";
 import {
   api,
+  clearAuthToken,
   type FrequencyAdaptationResult,
   getProgramDisplayName,
   resolveReasonText,
@@ -240,7 +241,7 @@ export default function SettingsPage() {
     setStatus("Wiping account data...");
     try {
       await api.wipeProfileData();
-      localStorage.removeItem("hypertrophy_token");
+      clearAuthToken();
       setStatus("Data wiped. Redirecting to onboarding...");
       setTimeout(() => router.push("/onboarding"), 400);
     } catch {

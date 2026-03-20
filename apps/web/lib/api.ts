@@ -1,4 +1,6 @@
 import { API_BASE_URL } from "@/lib/env";
+const AUTH_TOKEN_KEY = "hypertrophy_token";
+const AUTH_TOKEN_EVENT = "hypertrophy:auth-token-changed";
 
 const PROGRAM_NAME_OVERRIDES: Record<string, string> = {
   pure_bodybuilding_phase_1_full_body: "Pure Bodybuilding - Phase 1 Full Body",
@@ -777,7 +779,30 @@ export function getToken(): string | null {
   if (globalThis.window === undefined) {
     return null;
   }
-  return localStorage.getItem("hypertrophy_token");
+  return localStorage.getItem(AUTH_TOKEN_KEY);
+}
+
+function emitAuthTokenChanged(): void {
+  if (typeof globalThis.window === "undefined") {
+    return;
+  }
+  globalThis.dispatchEvent(new Event(AUTH_TOKEN_EVENT));
+}
+
+export function setAuthToken(token: string): void {
+  if (typeof globalThis.window === "undefined") {
+    return;
+  }
+  localStorage.setItem(AUTH_TOKEN_KEY, token);
+  emitAuthTokenChanged();
+}
+
+export function clearAuthToken(): void {
+  if (typeof globalThis.window === "undefined") {
+    return;
+  }
+  localStorage.removeItem(AUTH_TOKEN_KEY);
+  emitAuthTokenChanged();
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -795,6 +820,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (!res.ok) {
+    if (res.status === 401 && token) {
+      clearAuthToken();
+    }
     const text = await res.text();
     throw new Error(text || `HTTP ${res.status}`);
   }

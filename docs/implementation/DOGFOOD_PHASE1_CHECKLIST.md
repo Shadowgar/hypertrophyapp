@@ -97,6 +97,33 @@ Mobile blockers captured for remediation:
 2. Check-in validation friction with default values in mobile flow.
 3. Registration/discoverability/session continuity inconsistency from mobile entry path.
 
+### Run 5 — 2026-03-20 (Desktop browser rerun after auth/session hardening, localhost:18080)
+
+| Step | Result | Notes |
+| --- | --- | --- |
+| 1. Auth entry | PASS | Existing flow reached onboarding/account controls; no token errors. |
+| 2. Register/login | PASS | Initial credential mismatch surfaced expected `Invalid credentials`; switched to register and continued. |
+| 3. Generate/load workout | PASS | `Today` loaded with active workout and exercise list. |
+| 4. Today interactions | PASS | Logged one set successfully; exercise and session counters updated. |
+| 5. Weekly check-in/review | PASS | `Save Weekly Review` completed successfully. |
+| 6. History | PASS | History loaded with populated analytics modules. |
+
+Auth/session note:
+- `Invalid token` was **not reproduced** in UI, console, or observed API responses during this run.
+
+### Run 6 — 2026-03-20 (Mobile viewport rerun after auth/session hardening, 390x844, localhost:18080)
+
+| Step | Result | Notes |
+| --- | --- | --- |
+| 1. Auth/session continuity | PASS | Protected pages loaded in same session; `Invalid token` not observed. |
+| 2. Generate/load workout | PASS | Today workout loaded with populated exercise list. |
+| 3. Log set from exercise overlay | FAIL | `Complete Set` interaction blocked/intercepted by fixed bottom command dock on mobile viewport. |
+| 4. Check-in/review | PASS | Check-in screen and weekly review controls loaded and remained authenticated. |
+| 5. History | PASS | History page loaded with populated sections and no auth failures. |
+
+Mobile blocker after auth fix:
+1. Fixed-nav overlap still blocks `Complete Set` interaction from the exercise detail view in narrow viewport.
+
 ### Observed Issues (non-blocking)
 
 1. **Uniform starting loads**: All 12 exercises show identical 44.1 lbs starting load regardless of exercise type (lat pulldown vs belt squat vs skull crusher). Expected: per-exercise default loads based on movement pattern. **Severity**: Coaching quality — not a blocker but reduces first-week realism. **Status**: Open (deferred to progression/load-modeling pass).

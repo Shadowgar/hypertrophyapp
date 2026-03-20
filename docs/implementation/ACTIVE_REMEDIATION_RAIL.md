@@ -24,6 +24,17 @@ Current product order for active implementation is:
 
 ## Latest Completed Slice
 
+- Completed mobile auth/session hardening slice (2026-03-20):
+  - Centralized auth token lifecycle handling in web API client (`setAuthToken`, `clearAuthToken`) and added same-tab auth-token change event propagation
+  - Wired onboarding/login/settings token writes/removals to centralized token helpers
+  - Added stale-token auto-clear behavior on 401 API responses
+  - Added regression coverage in `apps/web/tests/api.auth-token.test.ts` (401 clears stale token)
+  - Re-ran desktop and mobile dogfood loops:
+    - `Invalid token` no longer reproduced
+    - mobile still has a functional blocker: fixed command dock can intercept `Complete Set` in exercise detail
+  - Added bounded starting-load quality hardening for workout-today payload defaults when planned weights are uniformly flat
+  - Added API regression `test_today_starting_load_defaults_are_not_flat_when_planned_weights_are_uniform`
+
 - Completed bounded dogfood hardening slice (2026-03-20):
   - Today page now includes safe-area bottom padding to reduce fixed-nav overlap on mobile flows
   - Exercise detail overlay now includes a direct `Check-In` link in quick actions
@@ -117,7 +128,7 @@ Any next in-family full-body onboarding candidate must satisfy all checks before
 
 - **Decision:** Continue hardening mode (NO-GO for next full-body onboarding this wave).
 - **Owner:** Runtime/docs consolidation wave owner.
-- **Reason:** Gate 1 remains open due mobile-flow blocker (`Invalid token` session continuity) and pending additional real-use qualitative confirmation for substitution/compression behavior.
+- **Reason:** Gate 1 remains open due remaining mobile interaction blocker (`Complete Set` interception in exercise-detail mobile flow) and pending additional real-use qualitative confirmation for substitution/compression behavior.
 - **Re-open condition:** Move to GO only after mobile loop passes end-to-end and Gate 1 unresolved rows are closed or explicitly accepted.
 
 ## Done: Today Page Redesign

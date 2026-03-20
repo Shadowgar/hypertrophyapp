@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { UiIcon } from "@/components/ui/icons";
-import { api, getProgramDisplayName, type ProgramTemplateOption } from "@/lib/api";
+import { api, clearAuthToken, getProgramDisplayName, setAuthToken, type ProgramTemplateOption } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/env";
 
 const FALLBACK_PROGRAMS: ProgramTemplateOption[] = [
@@ -847,7 +847,7 @@ export default function OnboardingPage() {
         return;
       }
 
-      localStorage.setItem("hypertrophy_token", accessToken);
+      setAuthToken(accessToken);
 
       const profileSaved = await saveOnboardingProfile(accessToken, resolvedName);
       if (!profileSaved) {
@@ -935,7 +935,7 @@ export default function OnboardingPage() {
     setStatus("Wiping test user...");
     try {
       const response = await api.devWipeUser({ email: normalizedEmail, confirmation: "WIPE" });
-      localStorage.removeItem("hypertrophy_token");
+      clearAuthToken();
       setStatus(response.status === "already_absent" ? "Test user already absent" : "Test user wiped");
     } catch {
       setStatus("Test user wipe failed");
@@ -973,7 +973,7 @@ export default function OnboardingPage() {
     setStatus("Wiping current logged-in user data...");
     try {
       await api.wipeProfileData();
-      localStorage.removeItem("hypertrophy_token");
+      clearAuthToken();
       setStatus("Current user data wiped");
     } catch {
       setStatus("Current user wipe failed (log in first or use wipe-by-email)");

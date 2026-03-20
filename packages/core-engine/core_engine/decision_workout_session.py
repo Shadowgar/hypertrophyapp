@@ -1089,7 +1089,9 @@ def build_workout_today_payload(
                     exercise["sets"] = min_sets
             except (TypeError, ValueError):
                 pass
-        recommended_weight = float(exercise.get("recommended_working_weight", 20) or 20)
+        recommended_weight, starting_load_quality_source = _resolve_today_recommended_weight(exercise)
+        exercise["recommended_working_weight"] = recommended_weight
+        exercise["starting_load_quality_source"] = starting_load_quality_source
         exercise["warmups"] = compute_warmups(recommended_weight, 3)
         exercise["completed_sets"] = int(completed_sets_by_exercise.get(exercise_id, 0) or 0)
 
@@ -1105,6 +1107,34 @@ def build_workout_today_payload(
     payload["resume"] = resume_selected
     payload["daily_quote"] = dict(_coerce_dict(daily_quote))
     return payload
+
+
+def _resolve_today_recommended_weight(exercise: dict[str, Any]) -> tuple[float, str]:
+    planned = float(exercise.get("recommended_working_weight", 20) or 20)
+    if planned > 0 and abs(planned - 20.0) > 1e-6:
+        return planned, "planned_weight"
+
+    movement_pattern = str(exercise.get("movement_pattern") or "").strip().lower()
+    load_semantics = str(exercise.get("load_semantics") or "").strip().lower()
+    primary_muscles = [str(item).strip().lower() for item in (exercise.get("primary_muscles") or []) if str(item).strip()]
+
+    lower_body_patterns = {"squat", "hinge", "lunge"}
+    upper_compound_patterns = {"horizontal_press", "vertical_press", "horizontal_pull", "vertical_pull"}
+    lower_body_muscles = {"quads", "hamstrings", "glutes"}
+    upper_push_muscles = {"chest", "shoulders", "triceps"}
+    upper_pull_muscles = {"back", "lats", "biceps"}
+
+    if movement_pattern in lower_body_patterns or any(muscle in lower_body_muscles for muscle in primary_muscles):
+        return 40.0, "movement_pattern_lower_body_default"
+    if movement_pattern in upper_compound_patterns or any(
+        muscle in (upper_push_muscles | upper_pull_muscles) for muscle in primary_muscles
+    ):
+        return 25.0, "movement_pattern_upper_compound_default"
+    if movement_pattern in {"calf", "core"}:
+        return 10.0, "movement_pattern_core_or_calf_default"
+    if load_semantics == "assistance":
+        return 12.5, "load_semantics_assistance_default"
+    return max(10.0, planned), "fallback_minimum_default"
 
 def prepare_workout_today_plan_route_runtime(
     *,

@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { UiIcon } from "@/components/ui/icons";
+import { setAuthToken } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/env";
 
 export default function LoginPage() {
@@ -33,7 +34,7 @@ export default function LoginPage() {
       }
 
       const payload = (await response.json()) as { access_token: string };
-      localStorage.setItem("hypertrophy_token", payload.access_token);
+      setAuthToken(payload.access_token);
       const nextPath = searchParams.get("next") || "/today";
       setStatus("Logged in");
       router.push(nextPath);

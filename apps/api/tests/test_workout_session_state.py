@@ -8,7 +8,7 @@ configure_test_database("test_workout_session_state")
 
 from app.database import Base, SessionLocal, engine
 from app.main import app
-from app.models import ExerciseState, User, WorkoutSessionState
+from app.models import ExerciseState, User, WorkoutPlan, WorkoutSessionState
 
 
 def _reset_db() -> None:
@@ -133,6 +133,69 @@ def test_log_set_live_recommendation_reduces_load_when_reps_below_target() -> No
     live = payload["live_recommendation"]
     assert live["guidance"] == "remaining_sets_hold_load_and_match_target_reps"
     assert float(live["recommended_weight"]) == logged_weight
+
+
+def test_today_starting_load_defaults_are_not_flat_when_planned_weights_are_uniform() -> None:
+    _reset_db()
+    client = TestClient(app)
+    token = _register_token(client, "sessionstate-startingload@example.com")
+    headers = {"Authorization": f"Bearer {token}"}
+    _onboard_profile(client, token)
+
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == "sessionstate-startingload@example.com").first()
+        assert user is not None
+        db.add(
+            WorkoutPlan(
+                user_id=user.id,
+                week_start=date.today(),
+                split="full_body",
+                phase="accumulation",
+                payload={
+                    "sessions": [
+                        {
+                            "session_id": "manual-day1",
+                            "title": "Manual Day",
+                            "date": date.today().isoformat(),
+                            "exercises": [
+                                {
+                                    "id": "belt_squat",
+                                    "name": "Belt Squat",
+                                    "sets": 3,
+                                    "rep_range": [8, 12],
+                                    "recommended_working_weight": 20.0,
+                                    "movement_pattern": "squat",
+                                    "primary_muscles": ["quads", "glutes"],
+                                },
+                                {
+                                    "id": "bayesian_curl",
+                                    "name": "Bayesian Curl",
+                                    "sets": 3,
+                                    "rep_range": [8, 12],
+                                    "recommended_working_weight": 20.0,
+                                    "load_semantics": "assistance",
+                                    "primary_muscles": ["biceps"],
+                                },
+                            ],
+                        }
+                    ]
+                },
+            )
+        )
+        db.commit()
+
+    today = client.get("/workout/today", headers=headers)
+    assert today.status_code == 200
+    payload = today.json()
+    exercises = {item["id"]: item for item in payload["exercises"]}
+    assert float(exercises["belt_squat"]["recommended_working_weight"]) > float(
+        exercises["bayesian_curl"]["recommended_working_weight"]
+    )
+    assert exercises["belt_squat"]["starting_load_quality_source"] == "movement_pattern_lower_body_default"
+    assert exercises["bayesian_curl"]["starting_load_quality_source"] in {
+        "movement_pattern_upper_compound_default",
+        "load_semantics_assistance_default",
+    }
 
 
 def test_log_set_live_recommendation_increases_load_when_reps_above_target() -> None:

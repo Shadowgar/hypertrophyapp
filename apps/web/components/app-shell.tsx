@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { MobileNav } from "@/components/mobile-nav";
 
 const PUBLIC_ROUTES = new Set(["/", "/login", "/onboarding", "/reset-password"]);
+const AUTH_TOKEN_EVENT = "hypertrophy:auth-token-changed";
 
 function isPublicRoute(pathname: string): boolean {
   if (PUBLIC_ROUTES.has(pathname)) {
@@ -36,6 +37,7 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
 
     globalThis.addEventListener("storage", onStorage);
     globalThis.addEventListener("focus", onFocus);
+    globalThis.addEventListener(AUTH_TOKEN_EVENT, onStorage);
 
     // Remove stale PWA workers to avoid serving outdated client bundles.
     if ("serviceWorker" in navigator) {
@@ -56,6 +58,7 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
     return () => {
       globalThis.removeEventListener("storage", onStorage);
       globalThis.removeEventListener("focus", onFocus);
+      globalThis.removeEventListener(AUTH_TOKEN_EVENT, onStorage);
     };
   }, []);
 
