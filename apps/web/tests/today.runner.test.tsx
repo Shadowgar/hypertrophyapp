@@ -133,9 +133,81 @@ test("Today page opens detail overlay on row tap and closes on back", async () =
   fireEvent.click(screen.getByRole("button", { name: /Bayesian Curl/ }));
   await waitFor(() => expect(screen.getByRole("dialog")).toBeInTheDocument());
   expect(screen.getByRole("button", { name: /Back to list/i })).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: /Check-In/i })).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole("button", { name: /Back to list/i }));
   await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+});
+
+test("Skipping soreness modal keeps it dismissed while opening exercise detail", async () => {
+  const workout = {
+    session_id: "pure_bodybuilding_phase_1_full_body-day1",
+    title: "Arms & Weak Points",
+    date: new Date().toISOString().slice(0, 10),
+    resume: false,
+    exercises: [
+      {
+        id: "ex-1",
+        name: "Bayesian Curl",
+        sets: 3,
+        rep_range: [8, 12],
+        recommended_working_weight: 17.5,
+        substitution_candidates: [],
+        notes: null,
+        video: null,
+        primary_exercise_id: "bayesian-1",
+      },
+    ],
+  };
+
+  // @ts-ignore
+  globalThis.fetch.mockImplementation((input) => {
+    const url = typeof input === "string" ? input : input.url;
+    if (url.endsWith("/health")) {
+      return Promise.resolve(new Response(JSON.stringify({ status: "ok" }), { status: 200 }));
+    }
+    if (url.endsWith("/weekly-review/status")) {
+      return Promise.resolve(new Response(JSON.stringify({ today_is_sunday: false, review_required: false }), { status: 200 }));
+    }
+    if (url.endsWith("/workout/today")) {
+      return Promise.resolve(new Response(JSON.stringify(workout), { status: 200 }));
+    }
+    if (url.includes("/soreness?")) {
+      // First check (today->today): no entry, second check (past->today): prior entry exists.
+      if (url.includes("from=") && url.includes("to=")) {
+        const [, query = ""] = url.split("?");
+        const params = new URLSearchParams(query);
+        const from = params.get("from");
+        const to = params.get("to");
+        if (from && to && from === to) {
+          return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }));
+        }
+      }
+      if (url.includes("start_date=") && url.includes("end_date=")) {
+        const [, query = ""] = url.split("?");
+        const params = new URLSearchParams(query);
+        const startDate = params.get("start_date");
+        const endDate = params.get("end_date");
+        if (startDate && endDate && startDate === endDate) {
+          return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }));
+        }
+      }
+      return Promise.resolve(new Response(JSON.stringify([{ id: "s1", entry_date: "2026-03-03" }]), { status: 200 }));
+    }
+    return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
+  });
+
+  render(<TodayPage />);
+
+  fireEvent.click(screen.getByRole("button", { name: /Load today's workout/i }));
+  await waitFor(() => expect(screen.getByText(/sore today\?/i)).toBeInTheDocument());
+
+  fireEvent.click(screen.getByRole("button", { name: /Skip/i }));
+  await waitFor(() => expect(screen.queryByText(/sore today\?/i)).not.toBeInTheDocument());
+
+  fireEvent.click(screen.getByRole("button", { name: /Bayesian Curl/i }));
+  await waitFor(() => expect(screen.getByRole("dialog")).toBeInTheDocument());
+  expect(screen.queryByText(/sore today\?/i)).not.toBeInTheDocument();
 });
 
 test("Today page can recover by generating week when no workout exists yet", async () => {

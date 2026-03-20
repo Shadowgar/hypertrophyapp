@@ -9,7 +9,7 @@ configure_test_database("test_program_frequency_adaptation_api")
 
 from app.database import Base, SessionLocal, engine
 from app.main import app
-from app.models import SorenessEntry, User, WorkoutPlan
+from app.models import ExerciseState, SorenessEntry, User, WorkoutPlan
 
 TEST_CREDENTIAL = f"T{uuid.uuid4().hex[:15]}"
 
@@ -268,3 +268,71 @@ def test_phase1_frequency_adaptation_preview_and_runtime_expose_program_specific
     assert adaptation["decision_trace"]["source_trace"]["preview_trace"]["outcome"]["policy_id"] == (
         "pure_bodybuilding_phase_1_full_body_5_to_3"
     )
+
+
+def test_frequency_adaptation_preserves_progression_state_across_5_to_3_to_5_windows() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_and_profile(client)
+
+    apply_response = client.post(
+        "/plan/adaptation/apply",
+        headers=headers,
+        json={
+            "program_id": "pure_bodybuilding_phase_1_full_body",
+            "target_days": 3,
+            "duration_weeks": 1,
+            "weak_areas": ["chest"],
+        },
+    )
+    assert apply_response.status_code == 200
+
+    week_one = client.post("/plan/generate-week", headers=headers, json={})
+    assert week_one.status_code == 200
+    week_one_payload = week_one.json()
+    assert week_one_payload["user"]["days_available"] == 3
+
+    today = client.get("/workout/today", headers=headers)
+    assert today.status_code == 200
+    today_payload = today.json()
+    first_exercise = today_payload["exercises"][0]
+    primary_id = first_exercise.get("primary_exercise_id") or first_exercise["id"]
+
+    log_set = client.post(
+        f"/workout/{today_payload['session_id']}/log-set",
+        headers=headers,
+        json={
+            "primary_exercise_id": first_exercise.get("primary_exercise_id"),
+            "exercise_id": first_exercise["id"],
+            "set_index": 1,
+            "reps": int(first_exercise["rep_range"][0]),
+            "weight": float(first_exercise["recommended_working_weight"]),
+        },
+    )
+    assert log_set.status_code == 200
+
+    with SessionLocal() as session:
+        user = session.query(User).filter(User.email == "adaptation-api@example.com").first()
+        assert user is not None
+        state = (
+            session.query(ExerciseState)
+            .filter(ExerciseState.user_id == user.id, ExerciseState.exercise_id == str(primary_id))
+            .first()
+        )
+        assert state is not None
+        assert float(state.current_working_weight) > 0
+
+    week_two = client.post("/plan/generate-week", headers=headers, json={})
+    assert week_two.status_code == 200
+    week_two_payload = week_two.json()
+    assert week_two_payload["user"]["days_available"] == 5
+    assert "applied_frequency_adaptation" not in week_two_payload
+
+    training_state = client.get("/profile/training-state", headers=headers)
+    assert training_state.status_code == 200
+    progression_ids = {
+        str(item.get("exercise_id"))
+        for item in training_state.json().get("progression_state_per_exercise", [])
+        if item.get("exercise_id")
+    }
+    assert str(primary_id) in progression_ids

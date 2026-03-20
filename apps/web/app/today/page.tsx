@@ -678,7 +678,7 @@ function ExerciseDetailOverlay({
         <RestTimerCard ctrl={ctrl} externalRest={externalRest} />
 
         {/* == ZONE 8: Quick actions toolbar == */}
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-4 gap-2">
           <Button
             type="button"
             variant="secondary"
@@ -708,6 +708,13 @@ function ExerciseDetailOverlay({
             <UiIcon name="notes" className="ui-icon--action" />
             <span className="text-[10px]">Notes</span>
           </Button>
+          <Link
+            href="/checkin"
+            className="inline-flex min-h-[44px] flex-col items-center justify-center gap-1 rounded-md border border-[var(--ui-edge-idle)] bg-[var(--ui-surface-1)] px-2 py-2 text-center text-[10px] text-zinc-100 hover:border-[var(--ui-edge-active)]"
+          >
+            <UiIcon name="body" className="ui-icon--action" />
+            <span>Check-In</span>
+          </Link>
         </div>
 
         {notesOpen && (
@@ -939,6 +946,9 @@ export default function TodayPage() {
   }, []);
 
   const beginWorkoutLoad = useCallback(async () => {
+    if (showSorenessModal) {
+      return;
+    }
     if (isBeginWorkoutLoadInProgress.current) {
       return;
     }
@@ -977,7 +987,7 @@ export default function TodayPage() {
     } finally {
       isBeginWorkoutLoadInProgress.current = false;
     }
-  }, [loadToday, resetSorenessForm]);
+  }, [loadToday, resetSorenessForm, showSorenessModal]);
 
   useEffect(() => {
     if (health !== "ok" || workout !== null || hasAutoLoadStarted.current) {
@@ -1135,7 +1145,7 @@ export default function TodayPage() {
   const todayDate = new Date().toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-[max(7rem,env(safe-area-inset-bottom))]">
       <div className="flex items-baseline justify-between gap-2">
         <h1 className="ui-title-page">Today</h1>
         <p className="ui-meta text-zinc-400">{todayDate}</p>

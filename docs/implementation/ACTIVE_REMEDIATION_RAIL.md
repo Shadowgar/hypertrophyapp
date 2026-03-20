@@ -24,6 +24,17 @@ Current product order for active implementation is:
 
 ## Latest Completed Slice
 
+- Completed bounded dogfood hardening slice (2026-03-20):
+  - Today page now includes safe-area bottom padding to reduce fixed-nav overlap on mobile flows
+  - Exercise detail overlay now includes a direct `Check-In` link in quick actions
+  - Workout auto-load flow now avoids re-entry while soreness modal is open
+  - Added focused web regression coverage in `apps/web/tests/today.runner.test.tsx` for overlay check-in affordance and soreness-dismiss behavior
+  - Added progression continuity coverage for frequency windows in `apps/api/tests/test_program_frequency_adaptation_api.py::test_frequency_adaptation_preserves_progression_state_across_5_to_3_to_5_windows`
+  - Validation evidence refreshed:
+    - `apps/web`: `today.runner.test.tsx` and `npm run build` pass
+    - `apps/api`: frequency-adaptation and focused phase2 transition/restriction tests pass
+    - `packages/core-engine`: `tests/test_rules_runtime.py` and `tests/test_scheduler.py` pass
+
 - Completed first browser dogfood run (2026-03-16):
   - Full loop verified via Docker Compose at localhost:18080: register → onboarding (Phase 1 program) → auto-generate week → load today → log set → weekly review → generate next week → history
   - Coaching engine produced real adaptive output: readiness 65, `progressive_overload_ready`, volume shift -1, load scale 0.931
@@ -64,7 +75,7 @@ Use this ordered list as the single source of "what to do next." Complete one ta
    Goal: Run actual training weeks (not simulated) through the gold path; identify coaching-decision quality issues with trace-backed reproduction data.
    Files: `docs/implementation/DOGFOOD_PHASE1_CHECKLIST.md`, `docs/ROADMAP_MASTER_DEVELOPMENT_PLAN.md` § Phase 3.
    Validation: Manual; repeated real training cycles without engineering intervention.
-   Done when: Creator can complete multiple training weeks; observed issues captured with decision-trace evidence.
+   Done when: Creator can complete multiple training weeks; observed issues captured with decision-trace evidence; mobile auth/session continuity blocker is resolved.
 
 5. ~~**Activate Phase 2 program path (Wave 5)**~~ DONE — Canonical Phase 2 assets, loader/rule linkage, and transition/constraint tests now pass on active branch.
 
@@ -101,6 +112,13 @@ Any next in-family full-body onboarding candidate must satisfy all checks before
 6. **Release evidence linked**
    - `docs/validation/*` handoff + parity docs added for the candidate program.
    - `docs/implementation/RELEASE_CHECKLIST.md` gate rows updated with explicit pass/fail.
+
+## Expansion Gate Decision (2026-03-20)
+
+- **Decision:** Continue hardening mode (NO-GO for next full-body onboarding this wave).
+- **Owner:** Runtime/docs consolidation wave owner.
+- **Reason:** Gate 1 remains open due mobile-flow blocker (`Invalid token` session continuity) and pending additional real-use qualitative confirmation for substitution/compression behavior.
+- **Re-open condition:** Move to GO only after mobile loop passes end-to-end and Gate 1 unresolved rows are closed or explicitly accepted.
 
 ## Done: Today Page Redesign
 

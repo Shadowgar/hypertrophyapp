@@ -67,19 +67,49 @@ Command:
 
 Result: `5 passed in 10.02s`.
 
+### Run 3 — 2026-03-20 (Desktop browser real-use loop, localhost:18080)
+
+| Step | Result | Notes |
+| --- | --- | --- |
+| 1. Register | PASS | Completed onboarding account creation with new local user and reached authenticated app session. |
+| 2. Onboarding | PASS | Completed step flow and finalized into active app path. |
+| 3. Generate/load workout | PASS | Today loaded with generated workout session and exercise list. |
+| 4. Today interactions | PASS | Opened exercise detail and logged one set; set counter updated. |
+| 5. Weekly check-in/review | PASS | Weekly review submission succeeded (`Weekly review saved`). |
+| 6. History | PASS | History page loaded with calendar/trend modules. |
+
+Observed notes:
+- No hard blockers on desktop loop.
+- Minor data freshness lag: history check-in aggregate did not immediately reflect the just-saved review in the same session.
+
+### Run 4 — 2026-03-20 (Mobile viewport 390x844, localhost:18080)
+
+| Step | Result | Notes |
+| --- | --- | --- |
+| 1. Entry + onboarding | PARTIAL | Onboarding entry and progression worked, but registration path/session continuity was inconsistent in this pass. |
+| 2. Generate/load workout | FAIL | Generate/load path returned auth/session failure (`Invalid token`). |
+| 3. Today interactions | FAIL | Load action did not complete; surfaced `Unable to verify soreness status. Try again.` |
+| 4. Check-in/review | PARTIAL | Screen and controls loaded, but submit path blocked by required bodyweight validation plus upstream auth/session issue. |
+| 5. History | PARTIAL | Page loaded but evidence remained sparse because upstream workout/check-in flow failed. |
+
+Mobile blockers captured for remediation:
+1. Intermittent auth/session invalidation on mobile flow (`Invalid token`) blocks core loop.
+2. Check-in validation friction with default values in mobile flow.
+3. Registration/discoverability/session continuity inconsistency from mobile entry path.
+
 ### Observed Issues (non-blocking)
 
-1. **Uniform starting loads**: All 12 exercises show identical 44.1 lbs starting load regardless of exercise type (lat pulldown vs belt squat vs skull crusher). Expected: per-exercise default loads based on movement pattern. **Severity**: Coaching quality — not a blocker but reduces first-week realism.
-2. **Soreness form re-appears on exercise click**: After skipping the soreness form, clicking an exercise button sometimes resurfaces it. The form intercepts clicks on the exercise list. **Severity**: UX friction — requires two "Skip" taps before accessing exercises.
-3. **Bottom nav intercepts scroll-area clicks**: The fixed bottom navigation bar overlaps the lower portion of the page content, intercepting click targets (Skip button, last exercises). **Severity**: UX friction — scrollIntoView needed to reach targets.
-4. **Check-In nav link doesn't navigate from Today page**: Clicking "Check-In" in the bottom nav while the exercise detail overlay is open doesn't navigate away. Direct URL navigation works. **Severity**: Minor UX friction.
+1. **Uniform starting loads**: All 12 exercises show identical 44.1 lbs starting load regardless of exercise type (lat pulldown vs belt squat vs skull crusher). Expected: per-exercise default loads based on movement pattern. **Severity**: Coaching quality — not a blocker but reduces first-week realism. **Status**: Open (deferred to progression/load-modeling pass).
+2. **Soreness form re-appears on exercise click**: After skipping the soreness form, clicking an exercise button sometimes resurfaces it. The form intercepts clicks on the exercise list. **Severity**: UX friction. **Status**: Mitigated (guard added; regression test added in `apps/web/tests/today.runner.test.tsx`).
+3. **Bottom nav intercepts scroll-area clicks**: The fixed bottom navigation bar overlaps the lower portion of the page content, intercepting click targets (Skip button, last exercises). **Severity**: UX friction. **Status**: Mitigated (extra safe-area bottom padding on Today root container).
+4. **Check-In nav link doesn't navigate from Today page**: Clicking "Check-In" in the bottom nav while the exercise detail overlay is open doesn't navigate away. Direct URL navigation works. **Severity**: Minor UX friction. **Status**: Mitigated (explicit `Check-In` link added inside exercise overlay quick actions).
 
 ## Known follow-ups / technical debt
 
 - **Post-onboarding login propagation is slow**: after completing onboarding and seeing the success state, the user may hit the login screen and need to wait a minute or two before credentials are accepted. Root cause appears to be a delay between registration/onboarding completion and the auth path being ready; tighten this so that login works immediately after onboarding.
 - **Uniform starting loads** (from Run 1): Per-exercise default starting loads should be movement-pattern-aware instead of a flat default.
-- **Soreness form re-trigger** (from Run 1): Once dismissed, the soreness form should not resurface during the same session.
-- **Bottom nav z-index / safe area** (from Run 1): Page content should have bottom padding equal to nav height to prevent click interception.
+- **Soreness form re-trigger** (from Run 1): mitigated by dismissal guard + test coverage; monitor in next real-use run.
+- **Bottom nav z-index / safe area** (from Run 1): mitigated by additional safe-area bottom padding; monitor in next mobile run.
 
 ## Reference
 
