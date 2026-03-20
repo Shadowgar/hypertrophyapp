@@ -4,7 +4,7 @@
   "program_scope": [
     "pure_bodybuilding_phase_2_full_body_sheet"
   ],
-  "source_pdf": "reference/Pure Bodybuilding Phase 2 - Full Body.pdf",
+  "source_pdf": "reference/Hypertrophy Phase 2.pdf",
   "starting_load_rules": {
     "method": "rep_range_rir_start",
     "default_rir_target": 2,

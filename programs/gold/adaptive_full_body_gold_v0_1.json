@@ -1,7 +1,7 @@
 {
   "program_id": "adaptive_full_body_gold_v0_1",
   "program_name": "Adaptive Full Body Gold v0.1",
-  "source_workbook": "/home/rocco/hypertrophyapp/reference/Pure Bodybuilding Phase 1 - Full Body Sheet.xlsx",
+  "source_workbook": "/home/rocco/hypertrophyapp/reference/Hypertrophy Phase 1 Sheet.xlsx",
   "version": "0.2.0",
   "split": "full_body",
   "phases": [

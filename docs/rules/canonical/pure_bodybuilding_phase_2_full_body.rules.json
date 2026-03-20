@@ -4,7 +4,7 @@
   "program_scope": [
     "pure_bodybuilding_phase_2_full_body"
   ],
-  "source_pdf": "reference/Pure Bodybuilding Phase 2 - Full Body.pdf",
+  "source_pdf": "reference/Hypertrophy Phase 2.pdf",
   "starting_load_rules": {
     "method": "rep_range_rir_start",
     "default_rir_target": 2,
@@ -65,14 +65,14 @@
     {
       "field": "fatigue_rules.high_fatigue_trigger.conditions[0]",
       "source_doc": "docs/guides/generated/pure-bodybuilding-phase-2-full-body-142844ed.md",
-      "source_pdf": "reference/Pure Bodybuilding Phase 2 - Full Body.pdf",
+      "source_pdf": "reference/Hypertrophy Phase 2.pdf",
       "heading": "Important Program Notes",
       "excerpt": "For the first week of all programs, most sets are taken to an RPE of ~7-9 ... This only lasts for the first week (to serve as a deload/intro week)."
     },
     {
       "field": "deload_rules.scheduled_every_n_weeks",
       "source_doc": "docs/guides/generated/pure-bodybuilding-phase-2-full-body-sheet-3068701d.md",
-      "source_pdf": "reference/Pure Bodybuilding Phase 2 - Full Body.pdf",
+      "source_pdf": "reference/Hypertrophy Phase 2.pdf",
       "heading": "Block Notes",
       "excerpt": "Block 1 starts with an intro/deload week ... Block 2 starts with an intro/deload week at week 6."
     }

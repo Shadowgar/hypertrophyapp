@@ -226,7 +226,7 @@ def _apply_workbook_structure_to_blueprint(
 
 def _is_pure_bodybuilding_phase1_full_body_workbook(*, input_file: Path, rows: list[list[str]]) -> bool:
     workbook_title = _normalize_label(_first_non_empty_cell(rows[0])) if rows else ""
-    return input_file.name == "Pure Bodybuilding Phase 1 - Full Body Sheet.xlsx" or (
+    return input_file.name == "Hypertrophy Phase 1 Sheet.xlsx" or (
         "the pure bodybuilding program full body" in workbook_title
     )
 

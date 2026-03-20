@@ -153,7 +153,7 @@ Stage 5: Deprecate legacy adapters
 
 ## 7. Gold-Standard Samples
 
-The active administered program is Pure Bodybuilding Phase 1 Full Body:
+The active administered program is Hypertrophy Phase 1:
 - `programs/gold/pure_bodybuilding_phase_1_full_body.json` (canonical program template)
 - `programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json` (onboarding package with authored slot fields)
 - `docs/rules/canonical/pure_bodybuilding_phase_1_full_body.rules.json` (canonical coaching rules)

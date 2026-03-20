@@ -19,7 +19,7 @@ import {
 } from "@/lib/api";
 
 const CANONICAL_PROGRAM_ID = "pure_bodybuilding_phase_1_full_body";
-const CANONICAL_PROGRAM_NAME = "Pure Bodybuilding - Phase 1 Full Body";
+const CANONICAL_PROGRAM_NAME = "Hypertrophy Phase 1";
 
 function parseLaggingMuscles(raw: string): string[] {
   return raw

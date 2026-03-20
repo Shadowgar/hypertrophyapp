@@ -5,7 +5,7 @@ Status: Approved design for next major implementation wave
 
 ## Goal
 
-Make the current full-body adaptive gold path materially closer to the real `Pure Bodybuilding Phase 1 - Full Body` authored workbook while preserving the deterministic adaptive runtime architecture.
+Make the current full-body adaptive gold path materially closer to the real `Hypertrophy Phase 1` authored workbook while preserving the deterministic adaptive runtime architecture.
 
 This phase is intended to move the product from "strong engine foundation" toward "real hypertrophy operating system I could actually trust in the gym." The primary success condition is not broader feature count. It is a more faithful, more coach-like full-body path that still adapts deterministically to real-world constraints.
 
@@ -71,7 +71,7 @@ Instead, strengthen the existing architecture so that:
 ### 1. Source Doctrine Boundary
 
 Primary fidelity targets for this phase:
-- `reference/Pure Bodybuilding Phase 1 - Full Body Sheet.xlsx`
+- `reference/Hypertrophy Phase 1 Sheet.xlsx`
 - `reference/The_Pure_Bodybuilding_Program - Phase 1 - Full_Body.pdf`
 
 Intermediate authored source:

@@ -171,7 +171,7 @@ def test_load_program_template_supports_adaptive_gold_runtime_template() -> None
     assert week_two_day_a[1]["sets"] == 3
 
 
-REFERENCE_PHASE1_WORKBOOK = REPO_ROOT / "reference" / "Pure Bodybuilding Phase 1 - Full Body Sheet.xlsx"
+REFERENCE_PHASE1_WORKBOOK = REPO_ROOT / "reference" / "Hypertrophy Phase 1 Sheet.xlsx"
 
 
 @pytest.mark.skipif(not REFERENCE_PHASE1_WORKBOOK.exists(), reason="reference workbook not available")

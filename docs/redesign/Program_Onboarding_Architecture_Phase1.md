@@ -5,7 +5,7 @@ Last updated: 2026-03-06
 ## Scope
 
 This phase onboards one program end-to-end before scaling:
-- `Pure Bodybuilding - Phase 1 Full Body`
+- `Hypertrophy Phase 1`
 - Default schedule: 5 training days/week
 - Runtime adaptation targets: 2, 3, 4, or 5 days/week
 

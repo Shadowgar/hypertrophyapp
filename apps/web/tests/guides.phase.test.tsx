@@ -41,7 +41,7 @@ test("guides index links programs to /guides/{programId}", async () => {
           JSON.stringify([
             {
               id: "pure_bodybuilding_phase_1_full_body",
-              name: "Pure Bodybuilding - Phase 1 Full Body",
+              name: "Hypertrophy Phase 1",
               split: "full_body",
               description: "Deterministic full-body program",
             },
@@ -56,7 +56,7 @@ test("guides index links programs to /guides/{programId}", async () => {
 
   render(<GuidesIndex />);
 
-  const link = await screen.findByRole("link", { name: /Open guide for Pure Bodybuilding - Phase 1 Full Body/i });
+  const link = await screen.findByRole("link", { name: /Open guide for Hypertrophy Phase 1/i });
   expect(link).toHaveAttribute("href", "/guides/pure_bodybuilding_phase_1_full_body");
 });
 
@@ -71,7 +71,7 @@ test("program guide resolves params and links to phase route", async () => {
         new Response(
           JSON.stringify({
             id: "pure_bodybuilding_phase_1_full_body",
-            name: "Pure Bodybuilding - Phase 1 Full Body",
+            name: "Hypertrophy Phase 1",
             split: "full_body",
             description: "Deterministic full-body program",
             days: [
@@ -109,7 +109,7 @@ test("phase and day guides preserve phase-aware routing to day and exercise page
         new Response(
           JSON.stringify({
             id: "pure_bodybuilding_phase_1_full_body",
-            name: "Pure Bodybuilding - Phase 1 Full Body",
+            name: "Hypertrophy Phase 1",
             split: "full_body",
             description: "Deterministic full-body program",
             days: [

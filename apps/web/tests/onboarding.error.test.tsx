@@ -62,7 +62,7 @@ test("Onboarding surfaces register validation errors", async () => {
     if (url.endsWith("/plan/programs")) {
       return Promise.resolve(
         new Response(
-          JSON.stringify([{ id: "pure_bodybuilding_phase_1_full_body", name: "Pure Bodybuilding - Phase 1 Full Body" }]),
+          JSON.stringify([{ id: "pure_bodybuilding_phase_1_full_body", name: "Hypertrophy Phase 1" }]),
           { status: 200 },
         ),
       );
@@ -114,7 +114,7 @@ test("Onboarding developer wipe button calls dev wipe endpoint", async () => {
     if (url.endsWith("/plan/programs")) {
       return Promise.resolve(
         new Response(
-          JSON.stringify([{ id: "pure_bodybuilding_phase_1_full_body", name: "Pure Bodybuilding - Phase 1 Full Body" }]),
+          JSON.stringify([{ id: "pure_bodybuilding_phase_1_full_body", name: "Hypertrophy Phase 1" }]),
           { status: 200 },
         ),
       );
@@ -165,7 +165,7 @@ test("Onboarding register request normalizes email casing and whitespace", async
     if (url.endsWith("/plan/programs")) {
       return Promise.resolve(
         new Response(
-          JSON.stringify([{ id: "pure_bodybuilding_phase_1_full_body", name: "Pure Bodybuilding - Phase 1 Full Body" }]),
+          JSON.stringify([{ id: "pure_bodybuilding_phase_1_full_body", name: "Hypertrophy Phase 1" }]),
           { status: 200 },
         ),
       );
@@ -226,7 +226,7 @@ test("Onboarding password reset request button calls reset endpoint", async () =
     if (url.endsWith("/plan/programs")) {
       return Promise.resolve(
         new Response(
-          JSON.stringify([{ id: "pure_bodybuilding_phase_1_full_body", name: "Pure Bodybuilding - Phase 1 Full Body" }]),
+          JSON.stringify([{ id: "pure_bodybuilding_phase_1_full_body", name: "Hypertrophy Phase 1" }]),
           { status: 200 },
         ),
       );

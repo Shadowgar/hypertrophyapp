@@ -32,7 +32,7 @@ test("Settings page shows active program and config in one-program-first mode", 
     if (url.endsWith("/plan/programs")) {
       return Promise.resolve(
         new Response(
-          JSON.stringify([{ id: "pure_bodybuilding_phase_1_full_body", name: "Pure Bodybuilding - Phase 1 Full Body" }]),
+          JSON.stringify([{ id: "pure_bodybuilding_phase_1_full_body", name: "Hypertrophy Phase 1" }]),
           { status: 200 },
         ),
       );
@@ -43,7 +43,7 @@ test("Settings page shows active program and config in one-program-first mode", 
   render(<SettingsPage />);
 
   await waitFor(() => {
-    expect(screen.getByText(/Pure Bodybuilding - Phase 1 Full Body/i)).toBeInTheDocument();
+    expect(screen.getByText(/Hypertrophy Phase 1/i)).toBeInTheDocument();
   });
   expect(screen.getByRole("button", { name: /Get Recommendation/i })).toBeInTheDocument();
   expect(screen.getByRole("button", { name: /Wipe Current User Data/i })).toBeInTheDocument();

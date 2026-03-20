@@ -56,7 +56,7 @@ def _write_xlsx_with_rows(path: Path, rows: list[list[str]]) -> None:
 
 
 def test_import_workbook_sanitizes_structural_rows(tmp_path: Path) -> None:
-    workbook = tmp_path / "Pure Bodybuilding Phase 1 - Full Body Sheet.xlsx"
+    workbook = tmp_path / "Hypertrophy Phase 1 Sheet.xlsx"
     output = tmp_path / "imported.json"
     rows = [
         ["Session", "Exercise", "Working Sets", "Reps", "Video Link"],

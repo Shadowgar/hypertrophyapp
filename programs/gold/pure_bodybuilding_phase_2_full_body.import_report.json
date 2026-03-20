@@ -1,6 +1,6 @@
 {
   "export_type": "adaptive_gold_program_template",
-  "source_workbook": "/home/rocco/hypertrophyapp/reference/Pure Bodybuilding Phase 2 - Full Body Sheet.xlsx",
+  "source_workbook": "/home/rocco/hypertrophyapp/reference/Hypertrophy Phase 2 Sheet.xlsx",
   "output_path": "/home/rocco/hypertrophyapp/programs/gold/pure_bodybuilding_phase_2_full_body.json",
   "sheet_count": 1,
   "sheet_names": [

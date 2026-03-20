@@ -59,7 +59,7 @@ def _write_xlsx_with_rows(path: Path, rows: list[list[str]]) -> None:
 
 
 def test_build_program_template_emits_valid_adaptive_gold_template_and_report(tmp_path: Path) -> None:
-    workbook = tmp_path / "Pure Bodybuilding Phase 1 - Full Body Sheet.xlsx"
+    workbook = tmp_path / "Hypertrophy Phase 1 Sheet.xlsx"
     output = tmp_path / "adaptive_full_body_test.json"
     report = tmp_path / "adaptive_full_body_test.import_report.json"
     rows = [
@@ -148,7 +148,7 @@ def test_build_program_template_preserves_authored_phases_weeks_and_set_semantic
     assert backoff_slot.work_sets[0].rpe_target == pytest.approx(8.0)
 
 
-REFERENCE_PHASE1_WORKBOOK = REPO_ROOT / "reference" / "Pure Bodybuilding Phase 1 - Full Body Sheet.xlsx"
+REFERENCE_PHASE1_WORKBOOK = REPO_ROOT / "reference" / "Hypertrophy Phase 1 Sheet.xlsx"
 
 
 @pytest.mark.skipif(not REFERENCE_PHASE1_WORKBOOK.exists(), reason="reference workbook not available")

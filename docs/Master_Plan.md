@@ -101,7 +101,7 @@ Use this repeatable local loop for one-program-first verification:
 
 ### Phase B - Canonical Schema and Gold Baseline
 - [x] Finalize canonical schema for program templates, exercise catalog, coaching rules, user logs/state (in use for Phase 1 path).
-- [x] Create one manually validated gold sample (workbook + matching PDF doctrine) — Pure Bodybuilding Phase 1 Full Body package and gold runtime.
+- [x] Create one manually validated gold sample (workbook + matching PDF doctrine) — Hypertrophy Phase 1 package and gold runtime.
 - [x] Add strict schema validation tests and ambiguity/error reporting. Implemented: `apps/api/tests/test_schema_validation.py`.
 
 ### Phase C - Importer and Rule Distillation
@@ -210,7 +210,7 @@ Reference:
 	- `apps/api/app/program_loader.py` resolves `pure_bodybuilding_phase_1_full_body` as the primary runtime template source.
 	- compatibility aliases (`full_body_v1`, `adaptive_full_body_gold_v0_1`) normalize to that canonical source at loader boundaries.
 	- canonical rules load first, with legacy gold-rule scheduler overlay used only as compatibility fallback when canonical scheduler blocks are absent.
-- Pure Bodybuilding Phase 1 Full Body is now the first source-backed rich onboarding package on the branch:
+- Hypertrophy Phase 1 is now the first source-backed rich onboarding package on the branch:
 	- `programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json` explicitly preserves authored slot fields, top-level notes/warm-up/weak-point sections, week labels, block labels, special banners, and workbook-backed video links.
 	- the runtime loader/API path now carries those authored execution fields into generated-week and today workout exercises.
 	- week/today surfaces now show early-set RPE, last-set RPE, last-set intensity technique, rest, authored substitutions, and demo links directly from the authoritative package/runtime data.

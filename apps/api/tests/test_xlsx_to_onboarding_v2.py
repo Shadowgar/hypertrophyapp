@@ -59,7 +59,7 @@ def _write_xlsx_with_rows(path: Path, rows: list[list[str]]) -> None:
 
 
 def test_build_onboarding_package_uses_current_parser_result_shape(tmp_path: Path) -> None:
-    workbook = tmp_path / "Pure Bodybuilding Phase 1 - Full Body Sheet.xlsx"
+    workbook = tmp_path / "Hypertrophy Phase 1 Sheet.xlsx"
     output = tmp_path / "pure_bodybuilding_full_body.onboarding.json"
     rows = [
         ["Session", "Exercise", "Working Sets", "Reps", "Video Link", "Notes"],
@@ -71,7 +71,7 @@ def test_build_onboarding_package_uses_current_parser_result_shape(tmp_path: Pat
 
     destination = build_onboarding_package(
         input_file=workbook,
-        source_pdf="reference/Pure Bodybuilding Phase 1 Full Body.pdf",
+        source_pdf="reference/Hypertrophy Phase 1.pdf",
         program_id="pure_bodybuilding_full_body",
         total_weeks=8,
         output_file=output,
@@ -88,7 +88,7 @@ def test_build_onboarding_package_uses_current_parser_result_shape(tmp_path: Pat
 
 
 def test_build_onboarding_package_preserves_tracking_sets_when_present(tmp_path: Path) -> None:
-    workbook = tmp_path / "Pure Bodybuilding Phase 1 - Full Body Sheet.xlsx"
+    workbook = tmp_path / "Hypertrophy Phase 1 Sheet.xlsx"
     output = tmp_path / "pure_bodybuilding_full_body.onboarding.json"
     rows = [
         [
@@ -168,7 +168,7 @@ def test_build_onboarding_package_preserves_tracking_sets_when_present(tmp_path:
 
     destination = build_onboarding_package(
         input_file=workbook,
-        source_pdf="reference/Pure Bodybuilding Phase 1 Full Body.pdf",
+        source_pdf="reference/Hypertrophy Phase 1.pdf",
         program_id="pure_bodybuilding_full_body",
         total_weeks=8,
         output_file=output,
@@ -185,7 +185,7 @@ def test_build_onboarding_package_preserves_tracking_sets_when_present(tmp_path:
     assert slot.tracking_set_4 == "115x7"
 
 
-REFERENCE_PHASE1_WORKBOOK = REPO_ROOT / "reference" / "Pure Bodybuilding Phase 1 - Full Body Sheet.xlsx"
+REFERENCE_PHASE1_WORKBOOK = REPO_ROOT / "reference" / "Hypertrophy Phase 1 Sheet.xlsx"
 
 
 @pytest.mark.skipif(not REFERENCE_PHASE1_WORKBOOK.exists(), reason="reference workbook not available")

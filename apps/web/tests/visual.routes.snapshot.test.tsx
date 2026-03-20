@@ -55,7 +55,7 @@ test("visual snapshot: week route", async () => {
           JSON.stringify([
             {
               id: "pure_bodybuilding_phase_1_full_body",
-              name: "Pure Bodybuilding - Phase 1 Full Body",
+              name: "Hypertrophy Phase 1",
               version: "1.0.0",
               split: "full_body",
               days_supported: [3, 4, 5],
@@ -100,7 +100,7 @@ test("visual snapshot: settings route", async () => {
           JSON.stringify([
             {
               id: "pure_bodybuilding_phase_1_full_body",
-              name: "Pure Bodybuilding - Phase 1 Full Body",
+              name: "Hypertrophy Phase 1",
               version: "1.0.0",
               split: "full_body",
               days_supported: [3, 4, 5],
@@ -131,7 +131,7 @@ test("visual snapshot: settings route", async () => {
   });
 
   const { getByText, getByRole } = render(<SettingsPage />);
-  await waitFor(() => expect(getByText(/Pure Bodybuilding - Phase 1 Full Body/i)).toBeInTheDocument());
+  await waitFor(() => expect(getByText(/Hypertrophy Phase 1/i)).toBeInTheDocument());
   expect(getByRole("button", { name: /Wipe Current User Data/i })).toBeInTheDocument();
 });
 

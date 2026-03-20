@@ -1,11 +1,11 @@
 {
   "program_id": "pure_bodybuilding_phase_2_full_body",
   "version": "0.2.0",
-  "source_pdf": "reference/Pure Bodybuilding Phase 2 - Full Body.pdf",
+  "source_pdf": "reference/Hypertrophy Phase 2.pdf",
   "blueprint": {
     "program_id": "pure_bodybuilding_phase_2_full_body",
-    "program_name": "Pure Bodybuilding Phase 2 Full Body",
-    "source_workbook": "/home/rocco/hypertrophyapp/reference/Pure Bodybuilding Phase 2 - Full Body Sheet.xlsx",
+    "program_name": "Hypertrophy Phase 2",
+    "source_workbook": "/home/rocco/hypertrophyapp/reference/Hypertrophy Phase 2 Sheet.xlsx",
     "split": "full_body",
     "default_training_days": 5,
     "total_weeks": 10,

@@ -77,8 +77,8 @@ RULE_SOURCE_IDS: dict[str, str] = {
 
 
 PROGRAM_DESCRIPTIONS: dict[str, str] = {
-    PHASE1_CANONICAL_PROGRAM_ID: "Pure Bodybuilding Phase 1 Full Body administered baseline with authored workbook execution detail.",
-    PHASE2_CANONICAL_PROGRAM_ID: "Pure Bodybuilding Phase 2 Full Body canonical runtime program with authored two-block transitions.",
+    PHASE1_CANONICAL_PROGRAM_ID: "Hypertrophy Phase 1 administered baseline with authored workbook execution detail.",
+    PHASE2_CANONICAL_PROGRAM_ID: "Hypertrophy Phase 2 canonical runtime program with authored two-block transitions.",
     "full_body_v1": "Pure Bodybuilding-inspired full body structure with deterministic day templates.",
     "ppl_v1": "Push/Pull/Legs baseline template for balanced hypertrophy progression.",
     "upper_lower_v1": "Upper/Lower split with clear weekly distribution and recovery spacing.",
@@ -98,8 +98,8 @@ PROGRAM_DESCRIPTIONS: dict[str, str] = {
 }
 
 PROGRAM_NAMES: dict[str, str] = {
-    PHASE1_CANONICAL_PROGRAM_ID: "Pure Bodybuilding - Phase 1 Full Body",
-    PHASE2_CANONICAL_PROGRAM_ID: "Pure Bodybuilding - Phase 2 Full Body",
+    PHASE1_CANONICAL_PROGRAM_ID: "Hypertrophy Phase 1",
+    PHASE2_CANONICAL_PROGRAM_ID: "Hypertrophy Phase 2",
     "adaptive_full_body_gold_v0_1": "Adaptive Full Body Gold v0.1",
     "full_body_v1": "Full Body v1",
     "ppl_v1": "Push Pull Legs v1",
@@ -107,9 +107,9 @@ PROGRAM_NAMES: dict[str, str] = {
     "edited_ppl_5x": "Edited PPL 5x",
     "my_new_program": "Full Body Phase 1 — Extended",
     "powerbuilding_3_0": "Powerbuilding 3.0",
-    "pure_bodybuilding_full_body": "Pure Bodybuilding Phase 1 — Full Body",
-    "pure_bodybuilding_phase_2_full_body_sheet": "Pure Bodybuilding Phase 2 — Full Body",
-    "pure_bodybuilding_phase_2_full_body_sheet_1": "Pure Bodybuilding Phase 2 — Full Body (Alt)",
+    "pure_bodybuilding_full_body": "Hypertrophy Phase 1",
+    "pure_bodybuilding_phase_2_full_body_sheet": "Hypertrophy Phase 2",
+    "pure_bodybuilding_phase_2_full_body_sheet_1": "Hypertrophy Phase 2 (Alt)",
     "pure_bodybuilding_phase_2_ppl_sheet": "Pure Bodybuilding Phase 2 — PPL",
     "pure_bodybuilding_phase_2_upper_lower_sheet": "Pure Bodybuilding Phase 2 — Upper Lower",
     "the_ultimate_push_pull_legs_system_4x": "Ultimate Push Pull Legs System — 4x",

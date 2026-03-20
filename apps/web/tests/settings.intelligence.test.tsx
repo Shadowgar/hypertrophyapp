@@ -31,13 +31,13 @@ test("Settings coaching panel previews and applies intelligence decisions", asyn
     generated_at: new Date().toISOString(),
   };
   const programs = [
-    { id: "pure_bodybuilding_phase_1_full_body", name: "Pure Bodybuilding - Phase 1 Full Body" },
+    { id: "pure_bodybuilding_phase_1_full_body", name: "Hypertrophy Phase 1" },
     { id: "upper_lower", name: "Upper/Lower" },
   ];
   const preview = {
     recommendation_id: "rec_123",
     template_id: "pure_bodybuilding_phase_1_full_body",
-    program_name: "Pure Bodybuilding - Phase 1 Full Body",
+    program_name: "Hypertrophy Phase 1",
     schedule: {
       from_days: 5,
       to_days: 3,
@@ -202,7 +202,7 @@ test("Settings coaching panel previews and applies intelligence decisions", asyn
   render(<SettingsPage />);
 
   await waitFor(() => {
-    expect(screen.getByText(/Pure Bodybuilding - Phase 1 Full Body/i)).toBeInTheDocument();
+    expect(screen.getByText(/Hypertrophy Phase 1/i)).toBeInTheDocument();
   });
   expect(screen.getByRole("button", { name: /Get Recommendation/i })).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: /Get Recommendation/i }));
@@ -247,7 +247,7 @@ test("Settings coaching panel previews and applies intelligence decisions", asyn
 
   fireEvent.click(screen.getByRole("button", { name: /Generate Week Now/i }));
   await waitFor(() => {
-    expect(screen.getByText(/Generated week for Pure Bodybuilding - Phase 1 Full Body\./i)).toBeInTheDocument();
+    expect(screen.getByText(/Generated week for Hypertrophy Phase 1\./i)).toBeInTheDocument();
   });
 
   fireEvent.click(screen.getByRole("button", { name: /Apply Coaching Decision/i }));
@@ -400,7 +400,7 @@ test("Settings adaptation apply failure exposes retry recovery actions", async (
   render(<SettingsPage />);
 
   await waitFor(() => {
-    expect(screen.getByText(/Pure Bodybuilding - Phase 1 Full Body/i)).toBeInTheDocument();
+    expect(screen.getByText(/Hypertrophy Phase 1/i)).toBeInTheDocument();
   });
 
   fireEvent.click(screen.getByRole("button", { name: /Coaching Preview/i }));

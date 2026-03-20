@@ -9,7 +9,7 @@ beforeEach(() => {
 
 test("Week page sends template_id when override selected", async () => {
   const programs = [
-    { id: "pure_bodybuilding_phase_1_full_body", name: "Pure Bodybuilding - Phase 1 Full Body" },
+    { id: "pure_bodybuilding_phase_1_full_body", name: "Hypertrophy Phase 1" },
     { id: "upper_lower", name: "Upper/Lower" },
   ];
   const generatedPlan = {
@@ -316,6 +316,6 @@ test("Week page offers retry action after generation failure", async () => {
   fireEvent.click(screen.getByRole("button", { name: /Generate week plan/i }));
 
   await waitFor(() => {
-    expect(screen.getByText(/Week generated for Pure Bodybuilding - Phase 1 Full Body\./i)).toBeInTheDocument();
+    expect(screen.getByText(/Week generated for Hypertrophy Phase 1\./i)).toBeInTheDocument();
   });
 });
