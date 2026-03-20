@@ -7,60 +7,54 @@ Purpose: this is the canonical documentation index for implementation work. Use 
 ## Read Order For Future AI Work
 
 1. `docs/DOCUMENTATION_STATUS.md`
-2. `docs/implementation/WORKING_SET.md`
-3. `docs/architecture/GOVERNANCE_CONSTITUTION.md`
-4. `docs/architecture/RUNTIME_AUTHORITY_MAP.md`
-5. `docs/current_state_decision_runtime_map.md`
-6. `docs/implementation/ACTIVE_REMEDIATION_RAIL.md`
-7. `docs/implementation/FORBIDDEN_PATTERNS.md`
-8. Only then read the exact supporting docs needed for the task
+2. `docs/DECISIONS.md`
+3. `docs/IMPLEMENTATION_PLAN_CURRENT_MILESTONE.md`
+4. `docs/NEXT_ACTIONS.md`
+5. `docs/CURRENT_STATE.md`
+6. `docs/VISION.md`
+7. `docs/ARCHITECTURE_ROADMAP.md`
+8. `docs/current_state_decision_runtime_map.md`
+9. Only then read older top-level roadmap material as supporting context
 
 ## Authority Hierarchy
 
-1. `docs/architecture/GOVERNANCE_CONSTITUTION.md`
-   This is the top governing document. If another doc conflicts with it, the constitution wins.
-2. `docs/architecture/RUNTIME_AUTHORITY_MAP.md`
-   This defines the permanent runtime-role model under the constitution.
-3. `docs/current_state_decision_runtime_map.md`
-   This is the current branch-reality map. It does not override the constitution, but it does override stale plans or handoffs.
-4. `docs/implementation/`
-   These are active execution rails. They guide current work but do not create new architectural law.
-5. All supporting, audit, and archive material
-   Useful context only. Never treat it as governing authority.
+1. `docs/DECISIONS.md`
+   This is the locked product and architecture decision log for active work.
+2. `docs/IMPLEMENTATION_PLAN_CURRENT_MILESTONE.md`
+   This is the implementation authority for the currently active milestone, or the completion record for the most recently finished milestone when no new milestone has been approved yet.
+3. `docs/NEXT_ACTIONS.md`
+   This is the short execution rail for the active repo state.
+4. `docs/CURRENT_STATE.md`
+   This is the branch-reality summary.
+5. `docs/VISION.md` and `docs/ARCHITECTURE_ROADMAP.md`
+   These define the long-term destination.
+6. Older top-level docs and all supporting, audit, and archive material
+   Useful context only. They do not override the current milestone docs.
 
-Relationship note:
+## Active Authority
 
-- `docs/archive/ai-handoffs/AI_CONTINUATION_GOVERNANCE.md` is archived historical AI guidance only.
-- It is not a peer to `docs/architecture/GOVERNANCE_CONSTITUTION.md`.
-- If a future AI-operational doc is added, it must either live under `docs/implementation/` as a non-governing execution guide or under `docs/archive/ai-handoffs/` as historical context.
+These are the first docs to consult for current work:
 
-## Authoritative
+- `docs/DECISIONS.md`
+- `docs/IMPLEMENTATION_PLAN_CURRENT_MILESTONE.md`
+- `docs/NEXT_ACTIONS.md`
+- `docs/CURRENT_STATE.md`
+- `docs/VISION.md`
+- `docs/ARCHITECTURE_ROADMAP.md`
 
-These settle architectural disputes:
+Current status:
 
-- `docs/architecture/GOVERNANCE_CONSTITUTION.md`
-- `docs/architecture/RUNTIME_AUTHORITY_MAP.md`
+- `Compiled Knowledge Foundation` is complete.
+- No new implementation milestone is active until explicitly approved.
 
-## Operational Current-State
+## Supporting Current-State
 
-These describe the live branch and current product/runtime direction:
+These remain useful branch-reality and runtime references:
 
 - `docs/current_state_decision_runtime_map.md`
 - `docs/Architecture.md`
 - `docs/Master_Plan.md`
-- `docs/architecture/ARCHITECTURE_INDEX.md`
-- `docs/architecture/REMEDIATION_CHECKLIST.md`
-- `docs/architecture/TRUST_AND_MATURITY_MODEL.md`
-- `docs/architecture/GOLD_PATH_MILESTONE.md`
-
-## Active Implementation
-
-These are the execution rails for current coding passes:
-
-- `docs/implementation/WORKING_SET.md`
-- `docs/implementation/ACTIVE_REMEDIATION_RAIL.md`
-- `docs/implementation/FORBIDDEN_PATTERNS.md`
-- `docs/implementation/phase2_fullbody_intent_contract.md`
+- `docs/ROADMAP_MASTER_DEVELOPMENT_PLAN.md`
 
 ## Supporting / Reference
 
@@ -101,20 +95,26 @@ Do not read archive first during active implementation unless a current-state or
 
 ## Top-Level `docs/` Rule
 
-Top-level `docs/` should stay small and high-signal:
+Top-level `docs/` is allowed to hold the stable product and milestone operating guide:
 
 - `docs/DOCUMENTATION_STATUS.md`
+- `docs/DECISIONS.md`
+- `docs/IMPLEMENTATION_PLAN_CURRENT_MILESTONE.md`
+- `docs/NEXT_ACTIONS.md`
+- `docs/CURRENT_STATE.md`
+- `docs/VISION.md`
+- `docs/ARCHITECTURE_ROADMAP.md`
 - `docs/Architecture.md`
 - `docs/Master_Plan.md`
 - `docs/current_state_decision_runtime_map.md`
 
-Active execution rails belong under `docs/implementation/`.
-Historical AI handoffs and temporary review artifacts belong under `docs/archive/`.
+Older docs remain useful, but they no longer govern the active milestone unless the new operating-guide docs explicitly defer to them.
 
 ## Placement Rules
 
-- New governing law belongs in an existing authoritative doc unless a genuinely new constitutional document is required.
-- New current-wave implementation guidance belongs in `docs/implementation/`.
+- New locked product or architecture decisions belong in `docs/DECISIONS.md`.
+- New current-wave implementation guidance belongs in `docs/IMPLEMENTATION_PLAN_CURRENT_MILESTONE.md` or `docs/NEXT_ACTIONS.md`.
+- New branch-reality updates belong in `docs/CURRENT_STATE.md`.
 - Dated evidence belongs in `docs/audits/` or `docs/validation/`.
 - AI prompts, passoff notes, and temporary runbooks belong in `docs/archive/ai-handoffs/` unless they are actively maintained execution rails.
 - If a document is no longer active but still useful, archive it rather than deleting it.

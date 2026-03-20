@@ -6,8 +6,13 @@ PYTHON_BIN="${PYTHON_BIN:-$ROOT/apps/api/.venv/bin/python}"
 MODE="${1:-local-full}"
 
 if [[ ! -x "$PYTHON_BIN" ]]; then
-  echo "[FAIL] Python executable not found: $PYTHON_BIN"
-  exit 1
+  if command -v python3 >/dev/null 2>&1; then
+    PYTHON_BIN="$(command -v python3)"
+    echo "[WARN] Falling back to system python: $PYTHON_BIN"
+  else
+    echo "[FAIL] Python executable not found: $PYTHON_BIN"
+    exit 1
+  fi
 fi
 
 cd "$ROOT"
@@ -17,6 +22,8 @@ run_ingest() {
   local metadata_flag="$2"
   echo "[RUN] reference ingestion mode=$mode_label"
   "$PYTHON_BIN" importers/reference_corpus_ingest.py $metadata_flag
+  echo "[RUN] compiled knowledge pipeline"
+  "$PYTHON_BIN" importers/source_to_knowledge_pipeline.py
   echo "[RUN] ingestion quality report"
   "$PYTHON_BIN" scripts/generate_ingestion_quality_report.py
 }

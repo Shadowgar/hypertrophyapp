@@ -1,5 +1,11 @@
-# Normalized Reference Guide - Asset: reference/Full+Body+High+Frequency+Program+-+Jeff+Nippard.pdf
+# Normalized Reference Guide
+
+- Asset: reference/Full Body - High Frequency Program.pdf
 - SHA256: 7d12f51f04627203d1feb6d60e1e651f06622078a467a8d71c0949209748ee13
 - Type: pdf
-- Extraction Method: pdf_pypdf
-- Extracted Characters: 139760 ## Excerpt - HIGH FREQUENCY FULL BODY PROGRAM 1 INTERMEDIATE-ADVANCED HIGH FREQUENCY FULL BODY PROGRAM - HIGH FREQUENCY FULL BODY PROGRAM 2 DISCLAIMER All documents included or exchanged between and the Client are the intellectual property of STRCNG Incorporated and are not to be copied, sold, published, posted, or redistributed either in part or in full without my written consent. All violations will be prosecuted to the fullest extent of the law. is not a doctor or registered dietitian. The contents of this document should not be taken as medical advice. It is not intended to diagnose, treat, cure, or prevent any health problem - nor is it intended to replace the advice of a physician. Always consult your physician or qualified health professional on any matters regarding your health. Use of the information in this program is strictly at your own risk. and/or STRCNG Incorporated will not assume any liability for any direct or indirect losses or damages that may result, including, but not limited to, economic loss, injury, illness or death. - HIGH FREQUENCY FULL BODY PROGRAM 3 TABLE OF CONTENTS DISCLAIMER 2 ABOUT ME 5 KEY TERMS 7 ABOUT THIS PROGRAM 10 FUNCTIONAL ANATOMY 14 FAQ 25 WARM UP 33 - HIGH FREQUENCY FULL BODY PROGRAM 4 HIGH FREQUENCY FULL BODY PROGRAM 40 PROGRAM EXPLAINED 70 TRAINING VARIABLES 87 EXERCISE VIDEO DEMONSTRATIONS 93 EXERCISE SUBSTITUTIONS 97 REFERENCES 100 - HIGH FREQUENCY FULL BODY PROGRAM 5 ABOUT JEFF Jeff is a professional drug-free bodybuilder and powerlifter. Through his informative and entertaining Youtube channel, which has gathered a fan-base of over one million subscribers, Jeff aims to share the knowledge he has gathered through university education and field experience with others who are passionate about the science behind building muscle, losing fat and getting healthier. He earned the title of Mr. Junior Canada for natural bod
+- Extraction Method: pdf_metadata_only
+- Extracted Characters: 0
+
+## Excerpt
+
+(No text extracted)

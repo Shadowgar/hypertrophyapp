@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 1440
     programs_dir: str = "/app/programs"
+    compiled_knowledge_dir: str = "/app/knowledge/compiled"
     allow_dev_wipe_endpoints: bool = True
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")

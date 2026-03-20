@@ -1,0 +1,3910 @@
+{
+  "aggregate_signature": "b92c09b41c030363848408b2c5a4f8ef5970075d5e2889a425b5d00ca05a34df",
+  "bundle_id": "exercise_library_foundation",
+  "bundle_version": "0.1.0",
+  "input_signature": "a10e4128f810b3472374a023882ac19363361b33d33c4fc7e921fb6b8dae3f64",
+  "output_signature": "6eb823893c7c4b731b478a2d48bbfeeb77e6ce9130bb17451e14df544a8b9d14",
+  "records": [
+    {
+      "aliases": [
+        "1-Arm Lat Pulldown"
+      ],
+      "canonical_name": "1-Arm Lat Pulldown",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [],
+      "exercise_id": "1_arm_lat_pulldown",
+      "family_id": "1-arm-lat-pulldown",
+      "fatigue_cost": null,
+      "movement_pattern": "vertical_pull",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "biceps",
+        "lats"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:1_arm_lat_pulldown",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "1-arm-lat-pulldown",
+      "technique_guidance": [
+        "Focus on squeezing your lat to move the weight",
+        "Keep elbow tucked in close to your torso",
+        "Keep elbow tucked in close to your torso. Focus on squeezing your lat to move the weight. On all sets, alternate full-ROM reps and half-ROM reps (i.e. do 1 rep with full-ROM, then 1 rep half-ROM (in the stretched/top half), then 1 rep full-ROM, then 1 rep half-ROM). Repeat until you've reached the target reps (partial reps count towards the rep count).",
+        "On all sets, alternate full-ROM reps and half-ROM reps (i"
+      ]
+    },
+    {
+      "aliases": [
+        "Ab Wheel Rollout"
+      ],
+      "canonical_name": "Ab Wheel Rollout",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [],
+      "exercise_id": "ab_wheel_rollout",
+      "family_id": "ab-wheel-rollout",
+      "fatigue_cost": null,
+      "movement_pattern": "accessory",
+      "overlap_relations": [],
+      "primary_muscles": [],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:ab_wheel_rollout",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "ab-wheel-rollout",
+      "technique_guidance": [
+        "Don't just bend at your hips, use your abs to lower yourself down under control and pull yourself back up",
+        "Don't just bend at your hips, use your abs to lower yourself down under control and pull yourself back up. If you don't have the core strength to get all the way extended at the bottom, try to progressively increase the ROM week to week.",
+        "If you don't have the core strength to get all the way extended at the bottom, try to progressively increase the ROM week to week"
+      ]
+    },
+    {
+      "aliases": [
+        "Assisted Pull-Up"
+      ],
+      "canonical_name": "Assisted Pull-Up",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "bodyweight",
+        "machine"
+      ],
+      "exercise_id": "assisted_pull_up",
+      "family_id": "assisted-pull-up",
+      "fatigue_cost": null,
+      "movement_pattern": "vertical_pull",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "biceps",
+        "lats"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:assisted_pull_up",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "assisted-pull-up",
+      "technique_guidance": [
+        "Feel your lats pulling apart on the way down",
+        "Slight 0",
+        "Slow 2-3 second negative",
+        "Slow 2-3 second negative. Feel your lats pulling apart on the way down. Slight 0.5-1 second pause at the bottom, then lift your chest up and drive your elbows down as you lift yourself up. Don't be afraid to use assistance. Keep the form tight and controlled!"
+      ]
+    },
+    {
+      "aliases": [
+        "Barbell RDL"
+      ],
+      "canonical_name": "Barbell RDL",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "barbell"
+      ],
+      "exercise_id": "barbell_rdl",
+      "family_id": "barbell-rdl",
+      "fatigue_cost": null,
+      "movement_pattern": "hinge",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "erectors",
+        "glutes",
+        "hamstrings"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:barbell_rdl",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "barbell-rdl",
+      "technique_guidance": [
+        "Don't be tempted to go too heavy",
+        "The RPE is intentionally low here because these will cause a lot of muscle damage",
+        "The RPE is intentionally low here because these will cause a lot of muscle damage. Don't be tempted to go too heavy. To keep tension on the hamstrings, stop about 75% of the way to full lockout on each rep (i.e. stay in the bottom 3/4 of the range of motion).",
+        "To keep tension on the hamstrings, stop about 75% of the way to full lockout on each rep (i"
+      ]
+    },
+    {
+      "aliases": [
+        "Bayesian Cable Curl"
+      ],
+      "canonical_name": "Bayesian Cable Curl",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "cable"
+      ],
+      "exercise_id": "bayesian_cable_curl",
+      "family_id": "bayesian-cable-curl",
+      "fatigue_cost": null,
+      "movement_pattern": "curl",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "biceps"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:bayesian_cable_curl",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "bayesian-cable-curl",
+      "technique_guidance": [
+        "If you have a left-right bicep size imbalance, do these 1 arm at a time, starting with the weaker arm",
+        "If you have a left-right bicep size imbalance, do these 1 arm at a time, starting with the weaker arm. Take the weaker arm to an RPE of 9-10. Then match the reps with the other arm (stop once you've matched the reps, even if the RPE is lower). If you don't have a size imbalance, do these both arms at the same time.",
+        "Take the weaker arm to an RPE of 9-10",
+        "Then match the reps with the other arm (stop once you've matched the reps, even if the RPE is lower)"
+      ]
+    },
+    {
+      "aliases": [
+        "Belt Squat"
+      ],
+      "canonical_name": "Belt Squat",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [],
+      "exercise_id": "belt_squat",
+      "family_id": "belt-squat",
+      "fatigue_cost": null,
+      "movement_pattern": "squat",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "glutes",
+        "quads"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:belt_squat",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "belt-squat",
+      "technique_guidance": [
+        "Control the negative and do a slight pause at the bottom of each rep",
+        "Get as deep as you can without excessive back rounding",
+        "Get as deep as you can without excessive back rounding. Control the negative and do a slight pause at the bottom of each rep."
+      ]
+    },
+    {
+      "aliases": [
+        "Bent-Over Cable Pec Flye"
+      ],
+      "canonical_name": "Bent-Over Cable Pec Flye",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "cable"
+      ],
+      "exercise_id": "bent_over_cable_pec_flye",
+      "family_id": "bent-over-cable-pec-flye",
+      "fatigue_cost": null,
+      "movement_pattern": "chest_fly",
+      "overlap_relations": [],
+      "primary_muscles": [],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:bent_over_cable_pec_flye",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "bent-over-cable-pec-flye",
+      "technique_guidance": [
+        "Lean forward until your torso is parallel with the floor, flye straight out and down toward the floor",
+        "Lean forward until your torso is parallel with the floor, flye straight out and down toward the floor. Stretch and squeeze the pecs! Stay locked in.",
+        "Stay locked in",
+        "Stretch and squeeze the pecs"
+      ]
+    },
+    {
+      "aliases": [
+        "Bottom-2/3 Constant Tension Preacher Curl"
+      ],
+      "canonical_name": "Bottom-2/3 Constant Tension Preacher Curl",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [],
+      "exercise_id": "bottom_2_3_constant_tension_preacher_curl",
+      "family_id": "bottom-2-3-constant-tension-preacher-curl",
+      "fatigue_cost": null,
+      "movement_pattern": "curl",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "biceps"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:bottom_2_3_constant_tension_preacher_curl",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "bottom-2-3-constant-tension-preacher-curl",
+      "technique_guidance": [
+        "Don't squeeze all the way up to the top",
+        "Keep your triceps firmly pinned against the pad as you curl",
+        "Stay in the bottom 2/3 of the curl",
+        "Stay in the bottom 2/3 of the curl. Don't squeeze all the way up to the top. Keep your triceps firmly pinned against the pad as you curl. No pausing at the top or bottom: constant tension on the biceps!"
+      ]
+    },
+    {
+      "aliases": [
+        "Bottom-Half EZ-Bar Preacher Curl"
+      ],
+      "canonical_name": "Bottom-Half EZ-Bar Preacher Curl",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [],
+      "exercise_id": "bottom_half_ez_bar_preacher_curl",
+      "family_id": "bottom-half-ez-bar-preacher-curl",
+      "fatigue_cost": null,
+      "movement_pattern": "curl",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "biceps"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:bottom_half_ez_bar_preacher_curl",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "bottom-half-ez-bar-preacher-curl",
+      "technique_guidance": [
+        "All reps and sets are to be performed in the bottom half of the ROM",
+        "All reps and sets are to be performed in the bottom half of the ROM. Keep your triceps firmly pinned against the pad as you curl. No pausing at the top or bottom: constant tension on the biceps!",
+        "Keep your triceps firmly pinned against the pad as you curl",
+        "No pausing at the top or bottom: constant tension on the biceps"
+      ]
+    },
+    {
+      "aliases": [
+        "Bottom-Half Hack Squat"
+      ],
+      "canonical_name": "Bottom-Half Hack Squat",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [],
+      "exercise_id": "bottom_half_hack_squat",
+      "family_id": "bottom-half-hack-squat",
+      "fatigue_cost": null,
+      "movement_pattern": "squat",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "glutes",
+        "quads"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:bottom_half_hack_squat",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "bottom-half-hack-squat",
+      "technique_guidance": [
+        "All reps and sets are to be performed in the bottom half of the ROM",
+        "All reps and sets are to be performed in the bottom half of the ROM. Allow your knees to come forward (past your toes). Focus the tension on your quads.",
+        "Allow your knees to come forward (past your toes)",
+        "Focus the tension on your quads"
+      ]
+    },
+    {
+      "aliases": [
+        "Bottom-Half Incline DB Curl"
+      ],
+      "canonical_name": "Bottom-Half Incline DB Curl",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "exercise_id": "bottom_half_incline_db_curl",
+      "family_id": "bottom-half-incline-db-curl",
+      "fatigue_cost": null,
+      "movement_pattern": "curl",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "biceps"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:bottom_half_incline_db_curl",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "bottom-half-incline-db-curl",
+      "technique_guidance": [
+        "All reps and sets are to be performed in the bottom half of the ROM",
+        "All reps and sets are to be performed in the bottom half of the ROM. Keep your upper back planted against the bench. Go light on these and focus on feeling your biceps pull and squeeze.",
+        "Go light on these and focus on feeling your biceps pull and squeeze",
+        "Keep your upper back planted against the bench"
+      ]
+    },
+    {
+      "aliases": [
+        "Bottom-Half Low Incline DB Press"
+      ],
+      "canonical_name": "Bottom-Half Low Incline DB Press",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "exercise_id": "bottom_half_low_incline_db_press",
+      "family_id": "bottom-half-low-incline-db-press",
+      "fatigue_cost": null,
+      "movement_pattern": "horizontal_press",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "chest",
+        "front_delts",
+        "triceps"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:bottom_half_low_incline_db_press",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "bottom-half-low-incline-db-press",
+      "technique_guidance": [
+        "1 second pause on the chest on each rep while maintaining tension on the pecs",
+        "All reps and sets are to be performed in the bottom half of the ROM",
+        "All reps and sets are to be performed in the bottom half of the ROM. Set the bench at a ~15\u00b0 incline. 1 second pause on the chest on each rep while maintaining tension on the pecs.",
+        "Set the bench at a ~15\u00b0 incline"
+      ]
+    },
+    {
+      "aliases": [
+        "Bottom-Half Machine Preacher Curl"
+      ],
+      "canonical_name": "Bottom-Half Machine Preacher Curl",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "machine"
+      ],
+      "exercise_id": "bottom_half_machine_preacher_curl",
+      "family_id": "bottom-half-machine-preacher-curl",
+      "fatigue_cost": null,
+      "movement_pattern": "curl",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "biceps"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:bottom_half_machine_preacher_curl",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "bottom-half-machine-preacher-curl",
+      "technique_guidance": [
+        "All reps and sets are to be performed in the bottom half of the ROM",
+        "All reps and sets are to be performed in the bottom half of the ROM. Smooth, controlled reps. Mind-muscle connection with the biceps.",
+        "Mind-muscle connection with the biceps",
+        "Smooth, controlled reps"
+      ]
+    },
+    {
+      "aliases": [
+        "Bottom-Half Pec Deck"
+      ],
+      "canonical_name": "Bottom-Half Pec Deck",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [],
+      "exercise_id": "bottom_half_pec_deck",
+      "family_id": "bottom-half-pec-deck",
+      "fatigue_cost": null,
+      "movement_pattern": "accessory",
+      "overlap_relations": [],
+      "primary_muscles": [],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:bottom_half_pec_deck",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "bottom-half-pec-deck",
+      "technique_guidance": [
+        "All reps and sets are to be performed in the bottom half of the ROM",
+        "All reps and sets are to be performed in the bottom half of the ROM. Focus on feeling a deep stretch in your pecs at the bottom of each rep.",
+        "Focus on feeling a deep stretch in your pecs at the bottom of each rep"
+      ]
+    },
+    {
+      "aliases": [
+        "Bottom-Half Seated Cable Flye"
+      ],
+      "canonical_name": "Bottom-Half Seated Cable Flye",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "cable"
+      ],
+      "exercise_id": "bottom_half_seated_cable_flye",
+      "family_id": "bottom-half-seated-cable-flye",
+      "fatigue_cost": null,
+      "movement_pattern": "accessory",
+      "overlap_relations": [],
+      "primary_muscles": [],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:bottom_half_seated_cable_flye",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "bottom-half-seated-cable-flye",
+      "technique_guidance": [
+        "All reps and sets are to be performed in the bottom half of the ROM",
+        "All reps and sets are to be performed in the bottom half of the ROM. Focus on feeling a deep stretch in your pecs at the bottom of each rep.",
+        "Focus on feeling a deep stretch in your pecs at the bottom of each rep"
+      ]
+    },
+    {
+      "aliases": [
+        "Bottom-Half Smith Machine Squat"
+      ],
+      "canonical_name": "Bottom-Half Smith Machine Squat",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "machine"
+      ],
+      "exercise_id": "bottom_half_smith_machine_squat",
+      "family_id": "bottom-half-smith-machine-squat",
+      "fatigue_cost": null,
+      "movement_pattern": "squat",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "glutes",
+        "quads"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:bottom_half_smith_machine_squat",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "bottom-half-smith-machine-squat",
+      "technique_guidance": [
+        "All reps and sets are to be performed in the bottom half of the ROM",
+        "All reps and sets are to be performed in the bottom half of the ROM. Once you are under the bar, set up your feet as you would a normal squat and then bring them forward ~3-6 inches. This will cause you to lean back into the bar slightly, allowing for a more upright squat, while also placing more tension on the quads. If your heels are raising at the bottom, you may need to bring your feet more forward. If your feet feel like they are slipping or your lower back is rounding at the bottom, try bringing your feet back a bit.",
+        "Once you are under the bar, set up your feet as you would a normal squat and then bring them forward ~3-6 inches",
+        "This will cause you to lean back into the bar slightly, allowing for a more upright squat, while also placing more tension on the quads"
+      ]
+    },
+    {
+      "aliases": [
+        "Bottom-Half Standing Calf Raise"
+      ],
+      "canonical_name": "Bottom-Half Standing Calf Raise",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [],
+      "exercise_id": "bottom_half_standing_calf_raise",
+      "family_id": "bottom-half-standing-calf-raise",
+      "fatigue_cost": null,
+      "movement_pattern": "plantar_flexion",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "calves"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:bottom_half_standing_calf_raise",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "bottom-half-standing-calf-raise",
+      "technique_guidance": [
+        "1-2 second pause at the bottom of each rep",
+        "All reps and sets are to be performed in the bottom half of the ROM",
+        "All reps and sets are to be performed in the bottom half of the ROM. 1-2 second pause at the bottom of each rep. Instead of just going up onto your toes, think about rolling your ankle back and forth on the balls of your feet.",
+        "Instead of just going up onto your toes, think about rolling your ankle back and forth on the balls of your feet"
+      ]
+    },
+    {
+      "aliases": [
+        "Cable Crunch"
+      ],
+      "canonical_name": "Cable Crunch",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "cable"
+      ],
+      "exercise_id": "cable_crunch",
+      "family_id": "cable-crunch",
+      "fatigue_cost": null,
+      "movement_pattern": "accessory",
+      "overlap_relations": [],
+      "primary_muscles": [],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:cable_crunch",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "cable-crunch",
+      "technique_guidance": [
+        "Maintain a mind-muscle connection with your 6-pack",
+        "Round your lower back as you crunch",
+        "Round your lower back as you crunch. Maintain a mind-muscle connection with your 6-pack."
+      ]
+    },
+    {
+      "aliases": [
+        "Cable Paused Shrug-In"
+      ],
+      "canonical_name": "Cable Paused Shrug-In",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "cable"
+      ],
+      "exercise_id": "cable_paused_shrug_in",
+      "family_id": "cable-paused-shrug-in",
+      "fatigue_cost": null,
+      "movement_pattern": "shrug",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "traps"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:cable_paused_shrug_in",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "cable-paused-shrug-in",
+      "technique_guidance": [
+        "1-2 second pause in the squeeze (at the top) of each rep, then another 1-2 second pause in the stretch (at the bottom) of each rep",
+        "Shrug up and in",
+        "Shrug up and in. Think about shrugging \"up to your ears\". 1-2 second pause in the squeeze (at the top) of each rep, then another 1-2 second pause in the stretch (at the bottom) of each rep.",
+        "Think about shrugging \"up to your ears\""
+      ]
+    },
+    {
+      "aliases": [
+        "Cable Reverse Flye (Mechanical Dropset)"
+      ],
+      "canonical_name": "Cable Reverse Flye (Mechanical Dropset)",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "cable"
+      ],
+      "exercise_id": "cable_reverse_flye_mechanical_dropset",
+      "family_id": "cable-reverse-flye-mechanical-dropset",
+      "fatigue_cost": null,
+      "movement_pattern": "accessory",
+      "overlap_relations": [],
+      "primary_muscles": [],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:cable_reverse_flye_mechanical_dropset",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "cable-reverse-flye-mechanical-dropset",
+      "technique_guidance": [
+        "After those first 5 reps, immediately (without resting) take 1 step forward and do another 4 reps",
+        "Take ~3 big steps back from the cable machine and do your first 5 reps",
+        "You'll probably want to watch the video for this one",
+        "You'll probably want to watch the video for this one. Take ~3 big steps back from the cable machine and do your first 5 reps. After those first 5 reps, immediately (without resting) take 1 step forward and do another 4 reps. Then (without resting) take another step forward and do at least another 3 reps (or until you hit RPE 9-10)."
+      ]
+    },
+    {
+      "aliases": [
+        "Cable Rope Hammer Curl"
+      ],
+      "canonical_name": "Cable Rope Hammer Curl",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "cable"
+      ],
+      "exercise_id": "cable_rope_hammer_curl",
+      "family_id": "cable-rope-hammer-curl",
+      "fatigue_cost": null,
+      "movement_pattern": "curl",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "biceps"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:cable_rope_hammer_curl",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "cable-rope-hammer-curl",
+      "technique_guidance": [
+        "Smooth, controlled reps",
+        "Squeeze the rope hard as you curl the weight up",
+        "Squeeze the rope hard as you curl the weight up. Smooth, controlled reps."
+      ]
+    },
+    {
+      "aliases": [
+        "Cable Triceps Kickback"
+      ],
+      "canonical_name": "Cable Triceps Kickback",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "cable"
+      ],
+      "exercise_id": "cable_triceps_kickback",
+      "family_id": "cable-triceps-kickback",
+      "fatigue_cost": null,
+      "movement_pattern": "triceps_extension",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "triceps"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:cable_triceps_kickback",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "cable-triceps-kickback",
+      "technique_guidance": [
+        "Choose the one that feels more comfortable for you",
+        "The main thing is that when you're in the full squeeze, your shoulder should be positioned back behind your torso",
+        "There are two ways you can do this: upright or bent over",
+        "There are two ways you can do this: upright or bent over. Choose the one that feels more comfortable for you. The main thing is that when you're in the full squeeze, your shoulder should be positioned back behind your torso."
+      ]
+    },
+    {
+      "aliases": [
+        "Chest-Supported Machine Row"
+      ],
+      "canonical_name": "Chest-Supported Machine Row",
+      "confidence": 0.85,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "machine"
+      ],
+      "exercise_id": "chest_supported_machine_row",
+      "family_id": "chest-supported-machine-row",
+      "fatigue_cost": null,
+      "movement_pattern": "horizontal_pull",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "biceps",
+        "lats",
+        "mid_back"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:chest_supported_machine_row",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        },
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:chest_supported_machine_row",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body",
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "chest-supported-machine-row",
+      "technique_guidance": [
+        "Flare elbows out at roughly 45\u00b0 and squeeze your shoulder blades together hard at the top of each rep",
+        "Flare elbows out at roughly 45\u00b0 and squeeze your shoulder blades together hard at the top of each rep.",
+        "Set the chest pad up so you get a deep stretch on each rep",
+        "Set the chest pad up so you get a deep stretch on each rep."
+      ]
+    },
+    {
+      "aliases": [
+        "Chest-Supported T-Bar Row + Kelso Shrug"
+      ],
+      "canonical_name": "Chest-Supported T-Bar Row + Kelso Shrug",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [],
+      "exercise_id": "chest_supported_t_bar_row_kelso_shrug",
+      "family_id": "chest-supported-t-bar-row-kelso-shrug",
+      "fatigue_cost": null,
+      "movement_pattern": "horizontal_pull",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "biceps",
+        "lats",
+        "mid_back"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:chest_supported_t_bar_row_kelso_shrug",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "chest-supported-t-bar-row-kelso-shrug",
+      "technique_guidance": [
+        "Do 8-10 reps as a normal T-Bar row, driving your elbows back at roughly 45\u00b0 and squeezing your shoulder blades together",
+        "Do 8-10 reps as a normal T-Bar row, driving your elbows back at roughly 45\u00b0 and squeezing your shoulder blades together. Without resting, do another 4-6 reps as Kelso Shrugs (just squeeze your shoulder blades together without rowing all the way back with your arms).",
+        "Without resting, do another 4-6 reps as Kelso Shrugs (just squeeze your shoulder blades together without rowing all the way back with your arms)"
+      ]
+    },
+    {
+      "aliases": [
+        "Concentration Cable Curl"
+      ],
+      "canonical_name": "Concentration Cable Curl",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "cable"
+      ],
+      "exercise_id": "concentration_cable_curl",
+      "family_id": "concentration-cable-curl",
+      "fatigue_cost": null,
+      "movement_pattern": "curl",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "biceps"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:concentration_cable_curl",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "concentration-cable-curl",
+      "technique_guidance": [
+        "5-1 min, do concentration curls on the other arm, rest ~0",
+        "5-1 min, do triceps extensions for the same arm, rest ~0",
+        "Do concentration curls on one arm, rest ~0",
+        "Do concentration curls on one arm, rest ~0.5-1 min, do triceps extensions for the same arm, rest ~0.5-1 min, do concentration curls on the other arm, rest ~0.5-1 min, do triceps extensions on the other arm, rest ~0.5-1 min, repeat."
+      ]
+    },
+    {
+      "aliases": [
+        "Cross-Body Lat Pull-Around"
+      ],
+      "canonical_name": "Cross-Body Lat Pull-Around",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "cable"
+      ],
+      "exercise_id": "cross_body_lat_pull_around",
+      "family_id": "cross-body-lat-pull-around",
+      "fatigue_cost": null,
+      "movement_pattern": "vertical_pull",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "lats"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:cross_body_lat_pull_around",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "cross-body-lat-pull-around",
+      "technique_guidance": [
+        "Feel a nice, deep lat stretch at the top",
+        "Try to keep the cable and your wrist aligned in a straight line throughout the pull",
+        "Try to keep the cable and your wrist aligned in a straight line throughout the pull. Feel a nice, deep lat stretch at the top."
+      ]
+    },
+    {
+      "aliases": [
+        "Cuffed Behind-The-Back Lateral Raise"
+      ],
+      "canonical_name": "Cuffed Behind-The-Back Lateral Raise",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "cable"
+      ],
+      "exercise_id": "cuffed_behind_the_back_lateral_raise",
+      "family_id": "cuffed-behind-the-back-lateral-raise",
+      "fatigue_cost": null,
+      "movement_pattern": "lateral_raise",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "side_delts"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:cuffed_behind_the_back_lateral_raise",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "cuffed-behind-the-back-lateral-raise",
+      "technique_guidance": [
+        "Raise the cables up and out in a \"Y\" motion",
+        "Raise the cables up and out in a \"Y\" motion. Really try to connect with the middle delt fibers as you sweep the weight up and out.",
+        "Really try to connect with the middle delt fibers as you sweep the weight up and out"
+      ]
+    },
+    {
+      "aliases": [
+        "DB Bulgarian Split Squat"
+      ],
+      "canonical_name": "DB Bulgarian Split Squat",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "exercise_id": "db_bulgarian_split_squat",
+      "family_id": "db-bulgarian-split-squat",
+      "fatigue_cost": null,
+      "movement_pattern": "squat",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "glutes",
+        "quads"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:db_bulgarian_split_squat",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "db-bulgarian-split-squat",
+      "technique_guidance": [
+        "Reps are per leg",
+        "Reps are per leg. Start with your weaker leg. Squat deep.",
+        "Squat deep",
+        "Start with your weaker leg"
+      ]
+    },
+    {
+      "aliases": [
+        "DB Calf Jumps"
+      ],
+      "canonical_name": "DB Calf Jumps",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "exercise_id": "db_calf_jumps",
+      "family_id": "db-calf-jumps",
+      "fatigue_cost": null,
+      "movement_pattern": "plantar_flexion",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "calves"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:db_calf_jumps",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "db-calf-jumps",
+      "technique_guidance": [
+        "Hold a dumbbell and perform a jumping motion without actually leaving the floor, using a slight knee bend, but mostly relying on your calves/ankles to drive the \"jump\"",
+        "Hold a dumbbell and perform a jumping motion without actually leaving the floor, using a slight knee bend, but mostly relying on your calves/ankles to drive the \"jump\". I believe I built a lot of calf mass by doing jump rope; these are meant to provide a similar stimulus, but with more tension.",
+        "I believe I built a lot of calf mass by doing jump rope; these are meant to provide a similar stimulus, but with more tension"
+      ]
+    },
+    {
+      "aliases": [
+        "DB RDL"
+      ],
+      "canonical_name": "DB RDL",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "exercise_id": "db_rdl",
+      "family_id": "db-rdl",
+      "fatigue_cost": null,
+      "movement_pattern": "hinge",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "erectors",
+        "glutes",
+        "hamstrings"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:db_rdl",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "db-rdl",
+      "technique_guidance": [
+        "Don't be tempted to go too heavy",
+        "The RPE is intentionally low here because these will cause a lot of muscle damage",
+        "The RPE is intentionally low here because these will cause a lot of muscle damage. Don't be tempted to go too heavy. To keep tension on the hamstrings, stop about 75% of the way to full lockout on each rep (i.e. stay in the bottom 3/4 of the range of motion).",
+        "To keep tension on the hamstrings, stop about 75% of the way to full lockout on each rep (i"
+      ]
+    },
+    {
+      "aliases": [
+        "Decline Machine Chest Press"
+      ],
+      "canonical_name": "Decline Machine Chest Press",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "machine"
+      ],
+      "exercise_id": "decline_machine_chest_press",
+      "family_id": "decline-machine-chest-press",
+      "fatigue_cost": null,
+      "movement_pattern": "horizontal_press",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "chest",
+        "front_delts",
+        "triceps"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:decline_machine_chest_press",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "decline-machine-chest-press",
+      "technique_guidance": [
+        "Feel your pecs stretching apart on the negative",
+        "Feel your pecs stretching apart on the negative. Mind-muscle connection with lower pecs.",
+        "Mind-muscle connection with lower pecs"
+      ]
+    },
+    {
+      "aliases": [
+        "Deficit Pendlay Row"
+      ],
+      "canonical_name": "Deficit Pendlay Row",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [],
+      "exercise_id": "deficit_pendlay_row",
+      "family_id": "deficit-pendlay-row",
+      "fatigue_cost": null,
+      "movement_pattern": "horizontal_pull",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "biceps",
+        "lats",
+        "mid_back"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:deficit_pendlay_row",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "deficit-pendlay-row",
+      "technique_guidance": [
+        "Focus on getting a big stretch and touch your stomach/chest on each rep",
+        "Stand on a bumper plate",
+        "Stand on a bumper plate. Focus on getting a big stretch and touch your stomach/chest on each rep!"
+      ]
+    },
+    {
+      "aliases": [
+        "Dual-Handle Elbows-Out Cable Row"
+      ],
+      "canonical_name": "Dual-Handle Elbows-Out Cable Row",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "cable"
+      ],
+      "exercise_id": "dual_handle_elbows_out_cable_row",
+      "family_id": "dual-handle-elbows-out-cable-row",
+      "fatigue_cost": null,
+      "movement_pattern": "horizontal_pull",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "biceps",
+        "lats",
+        "mid_back"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:dual_handle_elbows_out_cable_row",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "dual-handle-elbows-out-cable-row",
+      "technique_guidance": [
+        "Flare your elbows out ~45\u00b0",
+        "Flare your elbows out ~45\u00b0. Smooth, controlled reps.",
+        "Smooth, controlled reps"
+      ]
+    },
+    {
+      "aliases": [
+        "Dual-Handle Lat Pulldown (Mid-back + Lats)"
+      ],
+      "canonical_name": "Dual-Handle Lat Pulldown (Mid-back + Lats)",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [],
+      "exercise_id": "dual_handle_lat_pulldown_mid_back_lats",
+      "family_id": "dual-handle-lat-pulldown-mid-back-lats",
+      "fatigue_cost": null,
+      "movement_pattern": "vertical_pull",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "biceps",
+        "lats"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:dual_handle_lat_pulldown_mid_back_lats",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "dual-handle-lat-pulldown-mid-back-lats",
+      "technique_guidance": [
+        "Lean back by ~15\u00b0 and drive your elbows down as you squeeze your shoulder blades together",
+        "Lean back by ~15\u00b0 and drive your elbows down as you squeeze your shoulder blades together. This should feel like a mix of lats and mid-traps.",
+        "This should feel like a mix of lats and mid-traps"
+      ]
+    },
+    {
+      "aliases": [
+        "EZ-Bar Cable Curl"
+      ],
+      "canonical_name": "EZ-Bar Cable Curl",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "cable"
+      ],
+      "exercise_id": "ez_bar_cable_curl",
+      "family_id": "ez-bar-cable-curl",
+      "fatigue_cost": null,
+      "movement_pattern": "curl",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "biceps"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:ez_bar_cable_curl",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "ez-bar-cable-curl",
+      "technique_guidance": [
+        "Maintain constant tension on the biceps",
+        "Set up the cable at the lowest position",
+        "Set up the cable at the lowest position. Maintain constant tension on the biceps. Slow, controlled reps!",
+        "Slow, controlled reps"
+      ]
+    },
+    {
+      "aliases": [
+        "EZ-Bar Skull Crusher"
+      ],
+      "canonical_name": "EZ-Bar Skull Crusher",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [],
+      "exercise_id": "ez_bar_skull_crusher",
+      "family_id": "ez-bar-skull-crusher",
+      "fatigue_cost": null,
+      "movement_pattern": "accessory",
+      "overlap_relations": [],
+      "primary_muscles": [],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:ez_bar_skull_crusher",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "ez-bar-skull-crusher",
+      "technique_guidance": [
+        "Feel a nasty stretch on the triceps throughout the entire negative",
+        "Feel a nasty stretch on the triceps throughout the entire negative. Pause for 1 second in the stretch part of each rep.",
+        "Pause for 1 second in the stretch part of each rep"
+      ]
+    },
+    {
+      "aliases": [
+        "Flat Machine Chest Press"
+      ],
+      "canonical_name": "Flat Machine Chest Press",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "machine"
+      ],
+      "exercise_id": "flat_machine_chest_press",
+      "family_id": "flat-machine-chest-press",
+      "fatigue_cost": null,
+      "movement_pattern": "horizontal_press",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "chest",
+        "front_delts",
+        "triceps"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:flat_machine_chest_press",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "flat-machine-chest-press",
+      "technique_guidance": [
+        "1 second pause on the chest while maintaining tension on the chest",
+        "1 second pause on the chest while maintaining tension on the chest."
+      ]
+    },
+    {
+      "aliases": [
+        "Flat Smith Machine Bench Press"
+      ],
+      "canonical_name": "Flat Smith Machine Bench Press",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "machine"
+      ],
+      "exercise_id": "flat_smith_machine_bench_press",
+      "family_id": "flat-smith-machine-bench-press",
+      "fatigue_cost": null,
+      "movement_pattern": "horizontal_press",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "chest",
+        "front_delts",
+        "triceps"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:flat_smith_machine_bench_press",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "flat-smith-machine-bench-press",
+      "technique_guidance": [
+        "1 second pause on the chest on each rep while maintaining tension on the pecs",
+        "1 second pause on the chest on each rep while maintaining tension on the pecs."
+      ]
+    },
+    {
+      "aliases": [
+        "Glute-Ham Raise"
+      ],
+      "canonical_name": "Glute-Ham Raise",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [],
+      "exercise_id": "glute_ham_raise",
+      "family_id": "glute-ham-raise",
+      "fatigue_cost": null,
+      "movement_pattern": "accessory",
+      "overlap_relations": [],
+      "primary_muscles": [],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:glute_ham_raise",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "glute-ham-raise",
+      "technique_guidance": [
+        "Cut out the top ~25% of the ROM, where there will be minimal tension on the hamstrings",
+        "Cut out the top ~25% of the ROM, where there will be minimal tension on the hamstrings. Squeeze your hamstrings to pull yourself up!",
+        "Squeeze your hamstrings to pull yourself up"
+      ]
+    },
+    {
+      "aliases": [
+        "Hack Squat"
+      ],
+      "canonical_name": "Hack Squat",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [],
+      "exercise_id": "hack_squat",
+      "family_id": "hack-squat",
+      "fatigue_cost": null,
+      "movement_pattern": "squat",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "glutes",
+        "quads"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:hack_squat",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "hack-squat",
+      "technique_guidance": [
+        "This first set will be your heaviest set",
+        "Warm-up as usual to your first working set for 4 reps",
+        "We're using a reverse pyramid on this exercise",
+        "We're using a reverse pyramid on this exercise. Warm-up as usual to your first working set for 4 reps. This first set will be your heaviest set. Then for set 2, drop the weight back ~10-15% and do 6 reps. Then for set 3, drop the weight back another 10-15% and do 8 reps."
+      ]
+    },
+    {
+      "aliases": [
+        "Hammer Curl"
+      ],
+      "canonical_name": "Hammer Curl",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [],
+      "exercise_id": "hammer_curl",
+      "family_id": "hammer-curl",
+      "fatigue_cost": null,
+      "movement_pattern": "curl",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "biceps"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:hammer_curl",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "hammer-curl",
+      "technique_guidance": [
+        "Squeeze the dumbbell hard in the middle of the handle as you curl",
+        "Squeeze the dumbbell hard in the middle of the handle as you curl. Using liquid chalk on these will prevent your grip from slipping, keeping your hand in the middle of the handle throughout the set (as opposed to resting against the head of the dumbbell).",
+        "Using liquid chalk on these will prevent your grip from slipping, keeping your hand in the middle of the handle throughout the set (as opposed to resting against the head of the dumbbell)"
+      ]
+    },
+    {
+      "aliases": [
+        "Hammer Preacher Curl"
+      ],
+      "canonical_name": "Hammer Preacher Curl",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "exercise_id": "hammer_preacher_curl",
+      "family_id": "hammer-preacher-curl",
+      "fatigue_cost": null,
+      "movement_pattern": "curl",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "biceps",
+        "brachialis"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:hammer_preacher_curl",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "hammer-preacher-curl",
+      "technique_guidance": [
+        "Squeeze the dumbbell hard in the middle of the handle and curl about 3/4 of the way up (i",
+        "These will target the brachialis and forearms hard",
+        "These will target the brachialis and forearms hard. Squeeze the dumbbell hard in the middle of the handle and curl about 3/4 of the way up (i.e. stay in the bottom 3/4 of the curl).",
+        "e"
+      ]
+    },
+    {
+      "aliases": [
+        "High-Cable Cuffed Lateral Raise"
+      ],
+      "canonical_name": "High-Cable Cuffed Lateral Raise",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "cable"
+      ],
+      "exercise_id": "high_cable_cuffed_lateral_raise",
+      "family_id": "high-cable-cuffed-lateral-raise",
+      "fatigue_cost": null,
+      "movement_pattern": "lateral_raise",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "side_delts"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:high_cable_cuffed_lateral_raise",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "high-cable-cuffed-lateral-raise",
+      "technique_guidance": [
+        "Focus on squeezing your lateral delt to move the weight",
+        "Focus on squeezing your lateral delt to move the weight."
+      ]
+    },
+    {
+      "aliases": [
+        "Inverse DB Zottman Curl"
+      ],
+      "canonical_name": "Inverse DB Zottman Curl",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "exercise_id": "inverse_db_zottman_curl",
+      "family_id": "inverse-db-zottman-curl",
+      "fatigue_cost": null,
+      "movement_pattern": "curl",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "biceps"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:inverse_db_zottman_curl",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "inverse-db-zottman-curl",
+      "technique_guidance": [
+        "Do a hammer curl on the positive, then turn your palms facing up at the top and use a palms-up grip on the negative",
+        "Do a hammer curl on the positive, then turn your palms facing up at the top and use a palms-up grip on the negative."
+      ]
+    },
+    {
+      "aliases": [
+        "Lat-Focused Cable Row"
+      ],
+      "canonical_name": "Lat-Focused Cable Row",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "cable"
+      ],
+      "exercise_id": "lat_focused_cable_row",
+      "family_id": "lat-focused-cable-row",
+      "fatigue_cost": null,
+      "movement_pattern": "horizontal_pull",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "biceps",
+        "lats",
+        "mid_back"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:lat_focused_cable_row",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "lat-focused-cable-row",
+      "technique_guidance": [
+        "Drive your elbows down and back to engage the lats",
+        "Keep your elbows tucked in to your sides",
+        "Keep your torso locked in a fixed position (don't lean forward on the negative)",
+        "Keep your torso locked in a fixed position (don't lean forward on the negative). Drive your elbows down and back to engage the lats. Keep your elbows tucked in to your sides."
+      ]
+    },
+    {
+      "aliases": [
+        "Leg Extension"
+      ],
+      "canonical_name": "Leg Extension",
+      "confidence": 0.85,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "machine"
+      ],
+      "exercise_id": "leg_extension",
+      "family_id": "leg-extension",
+      "fatigue_cost": null,
+      "movement_pattern": "knee_extension",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "quads"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:leg_extension",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        },
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:leg_extension",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body",
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "leg-extension",
+      "technique_guidance": [
+        "Grab the handles as hard as you can to pull your butt down into the seat",
+        "Set the seat back as far as it will go while still feeling comfortable",
+        "Set the seat back as far as it will go while still feeling comfortable. Grab the handles as hard as you can to pull your butt down into the seat. Use a 2-3 second negative. Feel your quads pulling apart on the negative.",
+        "Use a 2-3 second negative"
+      ]
+    },
+    {
+      "aliases": [
+        "Leg Press"
+      ],
+      "canonical_name": "Leg Press",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "machine"
+      ],
+      "exercise_id": "leg_press",
+      "family_id": "leg-press",
+      "fatigue_cost": null,
+      "movement_pattern": "squat",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "glutes",
+        "quads"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:leg_press",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "leg-press",
+      "technique_guidance": [
+        "Control the negative and do a slight pause at the bottom of each rep",
+        "Feet lower on the platform for more quad focus",
+        "Feet lower on the platform for more quad focus. Get as deep as you can without excessive back rounding. Control the negative and do a slight pause at the bottom of each rep. Try to add a little weight each week at the same rep count.",
+        "Get as deep as you can without excessive back rounding"
+      ]
+    },
+    {
+      "aliases": [
+        "Leg Press Calf Press"
+      ],
+      "canonical_name": "Leg Press Calf Press",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "machine"
+      ],
+      "exercise_id": "leg_press_calf_press",
+      "family_id": "leg-press-calf-press",
+      "fatigue_cost": null,
+      "movement_pattern": "plantar_flexion",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "calves"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:leg_press_calf_press",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "leg-press-calf-press",
+      "technique_guidance": [
+        "1-2 second pause at the bottom of each rep",
+        "1-2 second pause at the bottom of each rep. Instead of just going up onto your toes, think about rolling your ankle back and forth on the balls of your feet.",
+        "Instead of just going up onto your toes, think about rolling your ankle back and forth on the balls of your feet"
+      ]
+    },
+    {
+      "aliases": [
+        "Low Incline DB Press"
+      ],
+      "canonical_name": "Low Incline DB Press",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "exercise_id": "low_incline_db_press",
+      "family_id": "low-incline-db-press",
+      "fatigue_cost": null,
+      "movement_pattern": "horizontal_press",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "chest",
+        "front_delts",
+        "triceps"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:low_incline_db_press",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "low-incline-db-press",
+      "technique_guidance": [
+        "Do a slight elbow tuck on the negative and then flare as you push (assuming this doesn't bother your shoulders)",
+        "Nice, smooth reps here",
+        "Set the bench at a ~15\u00b0 incline",
+        "Set the bench at a ~15\u00b0 incline. Do a slight elbow tuck on the negative and then flare as you push (assuming this doesn't bother your shoulders). Nice, smooth reps here. No pausing at the top or bottom: constant tension on the pecs!"
+      ]
+    },
+    {
+      "aliases": [
+        "Low Incline Smith Machine Press"
+      ],
+      "canonical_name": "Low Incline Smith Machine Press",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "machine"
+      ],
+      "exercise_id": "low_incline_smith_machine_press",
+      "family_id": "low-incline-smith-machine-press",
+      "fatigue_cost": null,
+      "movement_pattern": "horizontal_press",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "chest",
+        "front_delts",
+        "triceps"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:low_incline_smith_machine_press",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "low-incline-smith-machine-press",
+      "technique_guidance": [
+        "1 second pause on the chest on each rep while maintaining tension on the pecs",
+        "Set the bench at a ~15\u00b0 incline",
+        "Set the bench at a ~15\u00b0 incline. 1 second pause on the chest on each rep while maintaining tension on the pecs."
+      ]
+    },
+    {
+      "aliases": [
+        "Lying Leg Curl"
+      ],
+      "canonical_name": "Lying Leg Curl",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "machine"
+      ],
+      "exercise_id": "lying_leg_curl",
+      "family_id": "lying-leg-curl",
+      "fatigue_cost": null,
+      "movement_pattern": "leg_curl",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "hamstrings"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:lying_leg_curl",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "lying-leg-curl",
+      "technique_guidance": [
+        "Because we did seated hamstring work yesterday, these are mainly meant to get the knees nice and warmed up before hack squats",
+        "Because we did seated hamstring work yesterday, these are mainly meant to get the knees nice and warmed up before hack squats. Don't push these too hard today, just feel the hamstrings moving the weight under control.",
+        "Don't push these too hard today, just feel the hamstrings moving the weight under control"
+      ]
+    },
+    {
+      "aliases": [
+        "Lying Paused Rope Face Pull"
+      ],
+      "canonical_name": "Lying Paused Rope Face Pull",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "cable"
+      ],
+      "exercise_id": "lying_paused_rope_face_pull",
+      "family_id": "lying-paused-rope-face-pull",
+      "fatigue_cost": null,
+      "movement_pattern": "horizontal_pull",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "rear_delts",
+        "upper_back"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:lying_paused_rope_face_pull",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "lying-paused-rope-face-pull",
+      "technique_guidance": [
+        "Contract the rear delts hard",
+        "Pause for 1-2 seconds in the squeeze of each rep",
+        "Pause for 1-2 seconds in the squeeze of each rep. Contract the rear delts hard!"
+      ]
+    },
+    {
+      "aliases": [
+        "Machine Hip Abduction"
+      ],
+      "canonical_name": "Machine Hip Abduction",
+      "confidence": 0.85,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "machine"
+      ],
+      "exercise_id": "machine_hip_abduction",
+      "family_id": "machine-hip-abduction",
+      "fatigue_cost": null,
+      "movement_pattern": "accessory",
+      "overlap_relations": [],
+      "primary_muscles": [],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:machine_hip_abduction",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        },
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:machine_hip_abduction",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body",
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "machine-hip-abduction",
+      "technique_guidance": [
+        "If possible, use pads to increase the range of motion on the machine",
+        "If possible, use pads to increase the range of motion on the machine. Lean forward and grab onto the machine rails to stretch the glutes further.",
+        "Lean forward and grab onto the machine rails to stretch the glutes further"
+      ]
+    },
+    {
+      "aliases": [
+        "Machine Hip Adduction"
+      ],
+      "canonical_name": "Machine Hip Adduction",
+      "confidence": 0.85,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "machine"
+      ],
+      "exercise_id": "machine_hip_adduction",
+      "family_id": "machine-hip-adduction",
+      "fatigue_cost": null,
+      "movement_pattern": "hip_adduction",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "adductors"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:machine_hip_adduction",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        },
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:machine_hip_adduction",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body",
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "machine-hip-adduction",
+      "technique_guidance": [
+        "Mind-muscle connection with your inner thighs",
+        "Mind-muscle connection with your inner thighs. These are great for adding thigh mass from the front! Push them hard!",
+        "Push them hard",
+        "These are great for adding thigh mass from the front"
+      ]
+    },
+    {
+      "aliases": [
+        "Machine Shoulder Press"
+      ],
+      "canonical_name": "Machine Shoulder Press",
+      "confidence": 0.85,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "machine"
+      ],
+      "exercise_id": "machine_shoulder_press",
+      "family_id": "machine-shoulder-press",
+      "fatigue_cost": null,
+      "movement_pattern": "vertical_press",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "front_delts",
+        "triceps"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:machine_shoulder_press",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        },
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:machine_shoulder_press",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body",
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "machine-shoulder-press",
+      "technique_guidance": [
+        "Ensure that your elbows break at least 90\u00b0",
+        "Ensure that your elbows break at least 90\u00b0. Mind-muscle connection with your delts. Smooth, controlled reps.",
+        "Keep tension on the shoulders at the bottom",
+        "Keep tension on the shoulders at the bottom.",
+        "Mind-muscle connection with your delts",
+        "Smooth, controlled reps"
+      ]
+    },
+    {
+      "aliases": [
+        "Meadows Incline DB Lateral Raise"
+      ],
+      "canonical_name": "Meadows Incline DB Lateral Raise",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "exercise_id": "meadows_incline_db_lateral_raise",
+      "family_id": "meadows-incline-db-lateral-raise",
+      "fatigue_cost": null,
+      "movement_pattern": "lateral_raise",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "side_delts"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:meadows_incline_db_lateral_raise",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "meadows-incline-db-lateral-raise",
+      "technique_guidance": [
+        "Lie down on your side on a ~30\u00b0 bench",
+        "Lie down on your side on a ~30\u00b0 bench. Start with the DB in front of you, raise the DB to parallel to the floor and lower the DB behind you, feeling a deep stretch in your delts, then reverse this motion (2 reps have now been completed). No pausing between reps.",
+        "No pausing between reps",
+        "Start with the DB in front of you, raise the DB to parallel to the floor and lower the DB behind you, feeling a deep stretch in your delts, then reverse this motion (2 reps have now been completed)"
+      ]
+    },
+    {
+      "aliases": [
+        "Medicine Ball Russian Twists"
+      ],
+      "canonical_name": "Medicine Ball Russian Twists",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [],
+      "exercise_id": "medicine_ball_russian_twists",
+      "family_id": "medicine-ball-russian-twists",
+      "fatigue_cost": null,
+      "movement_pattern": "accessory",
+      "overlap_relations": [],
+      "primary_muscles": [],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:medicine_ball_russian_twists",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "medicine-ball-russian-twists",
+      "technique_guidance": [
+        "Keep the ball held out far from your body on the sides and control the reps, don't just rush through them to get the set done",
+        "Keep the ball held out far from your body on the sides and control the reps, don't just rush through them to get the set done."
+      ]
+    },
+    {
+      "aliases": [
+        "Neutral-Grip Lat Pulldown"
+      ],
+      "canonical_name": "Neutral-Grip Lat Pulldown",
+      "confidence": 0.85,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "cable"
+      ],
+      "exercise_id": "neutral_grip_lat_pulldown",
+      "family_id": "neutral-grip-lat-pulldown",
+      "fatigue_cost": null,
+      "movement_pattern": "vertical_pull",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "biceps",
+        "lats"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:neutral_grip_lat_pulldown",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        },
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:neutral_grip_lat_pulldown",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body",
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "neutral-grip-lat-pulldown",
+      "technique_guidance": [
+        "Do these pulldowns with the handle more out in front of you, more like a cross between pullover and a pulldown",
+        "Do these pulldowns with the handle more out in front of you, more like a cross between pullover and a pulldown. Focus on feeling your lats working more than the weight you're using.",
+        "Do these pulldowns with the handle more out in front of you, more like a cross between pullover and a pulldown. Focus on feeling your lats working more than the weight you're using. On all sets, alternate full-ROM reps and half-ROM reps (i.e. do 1 rep with full-ROM, then 1 rep half-ROM (in the stretched/top half), then 1 rep full-ROM, then 1 rep half-ROM). Repeat until you've reached the target reps (partial reps count towards the rep count).",
+        "Focus on feeling your lats working more than the weight you're using",
+        "On all sets, alternate full-ROM reps and half-ROM reps (i"
+      ]
+    },
+    {
+      "aliases": [
+        "Neutral-Grip Pullup"
+      ],
+      "canonical_name": "Neutral-Grip Pullup",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "bodyweight"
+      ],
+      "exercise_id": "neutral_grip_pullup",
+      "family_id": "neutral-grip-pullup",
+      "fatigue_cost": null,
+      "movement_pattern": "vertical_pull",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "lats"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:neutral_grip_pullup",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [
+        "biceps",
+        "upper_back"
+      ],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "neutral-grip-pullup",
+      "technique_guidance": [
+        "Avoid kicking or using momentum; control the eccentric",
+        "Think about driving your elbows down toward your ribs",
+        "Use a neutral grip and pull your chest toward the bar, keeping ribs down and lats engaged."
+      ]
+    },
+    {
+      "aliases": [
+        "Overhead Cable Triceps Extension (Bar)"
+      ],
+      "canonical_name": "Overhead Cable Triceps Extension (Bar)",
+      "confidence": 0.85,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "cable"
+      ],
+      "exercise_id": "overhead_cable_triceps_extension_bar",
+      "family_id": "overhead-cable-triceps-extension-bar",
+      "fatigue_cost": null,
+      "movement_pattern": "vertical_press",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "front_delts",
+        "triceps"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:overhead_cable_triceps_extension_bar",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        },
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:overhead_cable_triceps_extension_bar",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body",
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "overhead-cable-triceps-extension-bar",
+      "technique_guidance": [
+        "Feel a nasty stretch on the triceps throughout the entire negative",
+        "Feel a nasty stretch on the triceps throughout the entire negative. Pause for 1 second in the stretch part of each rep.",
+        "Pause for 1 second in the stretch part of each rep"
+      ]
+    },
+    {
+      "aliases": [
+        "Paused Assisted Dip"
+      ],
+      "canonical_name": "Paused Assisted Dip",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "bodyweight",
+        "machine"
+      ],
+      "exercise_id": "paused_assisted_dip",
+      "family_id": "paused-assisted-dip",
+      "fatigue_cost": null,
+      "movement_pattern": "horizontal_press",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "chest",
+        "front_delts",
+        "triceps"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:paused_assisted_dip",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "paused-assisted-dip",
+      "technique_guidance": [
+        "1-2 second pause at the bottom",
+        "Explode with control on the way up",
+        "Slow 2-3 second negative",
+        "Slow 2-3 second negative. 1-2 second pause at the bottom. Explode with control on the way up. Go as deep as your shoulders comfortably allow, trying to at least break a 90\u00b0 elbow angle."
+      ]
+    },
+    {
+      "aliases": [
+        "Paused Barbell RDL"
+      ],
+      "canonical_name": "Paused Barbell RDL",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "barbell"
+      ],
+      "exercise_id": "paused_barbell_rdl",
+      "family_id": "paused-barbell-rdl",
+      "fatigue_cost": null,
+      "movement_pattern": "hinge",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "erectors",
+        "glutes",
+        "hamstrings"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:paused_barbell_rdl",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "paused-barbell-rdl",
+      "technique_guidance": [
+        "1 second pause at the bottom of each rep",
+        "Don't be tempted to go too heavy",
+        "The RPE is intentionally low here because these will cause a lot of muscle damage",
+        "The RPE is intentionally low here because these will cause a lot of muscle damage. Don't be tempted to go too heavy. 1 second pause at the bottom of each rep. To keep tension on the hamstrings, stop about 75% of the way to full lockout on each rep (i.e. stay in the bottom 3/4 of the range of motion)."
+      ]
+    },
+    {
+      "aliases": [
+        "Pec Deck (w/ Integrated Partials)"
+      ],
+      "canonical_name": "Pec Deck (w/ Integrated Partials)",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [],
+      "exercise_id": "pec_deck_w_integrated_partials",
+      "family_id": "pec-deck-w-integrated-partials",
+      "fatigue_cost": null,
+      "movement_pattern": "accessory",
+      "overlap_relations": [],
+      "primary_muscles": [],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:pec_deck_w_integrated_partials",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "pec-deck-w-integrated-partials",
+      "technique_guidance": [
+        "On all sets, alternate full-ROM reps and half-ROM reps (i",
+        "Set up the pec deck to allow for maximum stretch",
+        "Set up the pec deck to allow for maximum stretch. On all sets, alternate full-ROM reps and half-ROM reps (i.e. do 1 rep with full-ROM, then 1 rep half-ROM (in the stretched/bottom half), then 1 rep full-ROM, then 1 rep half-ROM). Repeat until you've reached the target reps and an RPE of 9-10.",
+        "e"
+      ]
+    },
+    {
+      "aliases": [
+        "Rear Delt 45\u00b0 Cable Flye"
+      ],
+      "canonical_name": "Rear Delt 45\u00b0 Cable Flye",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "cable"
+      ],
+      "exercise_id": "rear_delt_45_cable_flye",
+      "family_id": "rear-delt-45-cable-flye",
+      "fatigue_cost": null,
+      "movement_pattern": "accessory",
+      "overlap_relations": [],
+      "primary_muscles": [],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:rear_delt_45_cable_flye",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "rear-delt-45-cable-flye",
+      "technique_guidance": [
+        "Pull with one arm at a time, bracing with your non-working hand against the machine",
+        "Pull with one arm at a time, bracing with your non-working hand against the machine. Try to align your arm and the cable in a straight line at the bottom of the flye.",
+        "Try to align your arm and the cable in a straight line at the bottom of the flye"
+      ]
+    },
+    {
+      "aliases": [
+        "Reverse Pec Deck (w/ Integrated Partials)"
+      ],
+      "canonical_name": "Reverse Pec Deck (w/ Integrated Partials)",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [],
+      "exercise_id": "reverse_pec_deck_w_integrated_partials",
+      "family_id": "reverse-pec-deck-w-integrated-partials",
+      "fatigue_cost": null,
+      "movement_pattern": "accessory",
+      "overlap_relations": [],
+      "primary_muscles": [],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:reverse_pec_deck_w_integrated_partials",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "reverse-pec-deck-w-integrated-partials",
+      "technique_guidance": [
+        "Mind-muscle connection with rear delts",
+        "On all sets, alternate full-ROM reps and half-ROM reps (i",
+        "Sweep the weight out instead of pulling the weight back",
+        "Sweep the weight out instead of pulling the weight back. Mind-muscle connection with rear delts. On all sets, alternate full-ROM reps and half-ROM reps (i.e. do 1 rep with full-ROM, then 1 rep half-ROM (in the stretched/bottom half), then 1 rep full-ROM, then 1 rep half-ROM). Repeat until you've reached the target reps and an RPE of 9-10."
+      ]
+    },
+    {
+      "aliases": [
+        "Roman Chair Leg Raise"
+      ],
+      "canonical_name": "Roman Chair Leg Raise",
+      "confidence": 0.85,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "bodyweight"
+      ],
+      "exercise_id": "roman_chair_leg_raise",
+      "family_id": "roman-chair-leg-raise",
+      "fatigue_cost": null,
+      "movement_pattern": "core",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "abs"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:roman_chair_leg_raise",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        },
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:roman_chair_leg_raise",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body",
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "roman-chair-leg-raise",
+      "technique_guidance": [
+        "10-20 reps is a broad range on purpose: just go until you hit RPE 9-10 (0-1 reps shy of failure) with controlled form",
+        "Allow your lower back to round as you curl your legs up",
+        "Allow your lower back to round as you curl your legs up. 10-20 reps is a broad range on purpose: just go until you hit RPE 9-10 (0-1 reps shy of failure) with controlled form."
+      ]
+    },
+    {
+      "aliases": [
+        "Seated DB Shoulder Press"
+      ],
+      "canonical_name": "Seated DB Shoulder Press",
+      "confidence": 0.85,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "exercise_id": "seated_db_shoulder_press",
+      "family_id": "seated-db-shoulder-press",
+      "fatigue_cost": null,
+      "movement_pattern": "vertical_press",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "front_delts",
+        "triceps"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:seated_db_shoulder_press",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        },
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:seated_db_shoulder_press",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body",
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "seated-db-shoulder-press",
+      "technique_guidance": [
+        "Slightly rotate the dumbbells in on the negative and flare your elbows out as you push",
+        "Slightly rotate the dumbbells in on the negative and flare your elbows out as you push."
+      ]
+    },
+    {
+      "aliases": [
+        "Seated Leg Curl"
+      ],
+      "canonical_name": "Seated Leg Curl",
+      "confidence": 0.85,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "machine"
+      ],
+      "exercise_id": "seated_leg_curl",
+      "family_id": "seated-leg-curl",
+      "fatigue_cost": null,
+      "movement_pattern": "leg_curl",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "hamstrings"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:seated_leg_curl",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        },
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:seated_leg_curl",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body",
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "seated-leg-curl",
+      "technique_guidance": [
+        "Lean forward over the machine to get a maximum stretch in your hamstrings",
+        "Lean forward over the machine to get a maximum stretch in your hamstrings."
+      ]
+    },
+    {
+      "aliases": [
+        "Single-arm Overhead Cable Triceps Extension"
+      ],
+      "canonical_name": "Single-arm Overhead Cable Triceps Extension",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "cable"
+      ],
+      "exercise_id": "single_arm_overhead_cable_triceps_extension",
+      "family_id": "single-arm-overhead-cable-triceps-extension",
+      "fatigue_cost": null,
+      "movement_pattern": "vertical_press",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "front_delts",
+        "triceps"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:single_arm_overhead_cable_triceps_extension",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "single-arm-overhead-cable-triceps-extension",
+      "technique_guidance": [
+        "Execute with controlled tempo and full range of motion."
+      ]
+    },
+    {
+      "aliases": [
+        "Single-Leg DB Hip Thrust"
+      ],
+      "canonical_name": "Single-Leg DB Hip Thrust",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "exercise_id": "single_leg_db_hip_thrust",
+      "family_id": "single-leg-db-hip-thrust",
+      "fatigue_cost": null,
+      "movement_pattern": "accessory",
+      "overlap_relations": [],
+      "primary_muscles": [],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:single_leg_db_hip_thrust",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "single-leg-db-hip-thrust",
+      "technique_guidance": [
+        "Explode with control on the way up",
+        "Slow 2-3 second negative",
+        "Slow 2-3 second negative. Explode with control on the way up. Squeeze your glutes hard at the top of the movement.",
+        "Squeeze your glutes hard at the top of the movement"
+      ]
+    },
+    {
+      "aliases": [
+        "Slow-Eccentric Bayesian Curl"
+      ],
+      "canonical_name": "Slow-Eccentric Bayesian Curl",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [],
+      "exercise_id": "slow_eccentric_bayesian_curl",
+      "family_id": "slow-eccentric-bayesian-curl",
+      "fatigue_cost": null,
+      "movement_pattern": "curl",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "biceps"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:slow_eccentric_bayesian_curl",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "slow-eccentric-bayesian-curl",
+      "technique_guidance": [
+        "Use a 3-4 second negative and a slight pause at the bottom of each rep to emphasize stretching your biceps",
+        "Use a 3-4 second negative and a slight pause at the bottom of each rep to emphasize stretching your biceps."
+      ]
+    },
+    {
+      "aliases": [
+        "Slow-Eccentric DB RDL"
+      ],
+      "canonical_name": "Slow-Eccentric DB RDL",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "exercise_id": "slow_eccentric_db_rdl",
+      "family_id": "slow-eccentric-db-rdl",
+      "fatigue_cost": null,
+      "movement_pattern": "hinge",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "erectors",
+        "glutes",
+        "hamstrings"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:slow_eccentric_db_rdl",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "slow-eccentric-db-rdl",
+      "technique_guidance": [
+        "Don't be tempted to go too heavy",
+        "Lower the dumbbells with a 3-4 second negative",
+        "The RPE is intentionally low here because these will cause a lot of muscle damage",
+        "The RPE is intentionally low here because these will cause a lot of muscle damage. Don't be tempted to go too heavy. Lower the dumbbells with a 3-4 second negative. If you want to target more glutes, squeeze them hard at the top as you get to full lockout. If you want to target more hamstrings, only go to 3/4 of full lockout and maintain constant tension on your hamstrings."
+      ]
+    },
+    {
+      "aliases": [
+        "Slow-Eccentric EZ-Bar Skull Crusher"
+      ],
+      "canonical_name": "Slow-Eccentric EZ-Bar Skull Crusher",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [],
+      "exercise_id": "slow_eccentric_ez_bar_skull_crusher",
+      "family_id": "slow-eccentric-ez-bar-skull-crusher",
+      "fatigue_cost": null,
+      "movement_pattern": "accessory",
+      "overlap_relations": [],
+      "primary_muscles": [],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:slow_eccentric_ez_bar_skull_crusher",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "slow-eccentric-ez-bar-skull-crusher",
+      "technique_guidance": [
+        "Arc the EZ-bar slightly back behind your head",
+        "Use a 3-4 second negative",
+        "Use a 3-4 second negative. Arc the EZ-bar slightly back behind your head. When you extend, keep the bar back behind your eye line. Use the inside (closer) grip option and allow the elbows to flare to a degree that feels comfortable.",
+        "When you extend, keep the bar back behind your eye line"
+      ]
+    },
+    {
+      "aliases": [
+        "Smith Machine Deficit Row"
+      ],
+      "canonical_name": "Smith Machine Deficit Row",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "machine"
+      ],
+      "exercise_id": "smith_machine_deficit_row",
+      "family_id": "smith-machine-deficit-row",
+      "fatigue_cost": null,
+      "movement_pattern": "horizontal_pull",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "biceps",
+        "lats",
+        "mid_back"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:smith_machine_deficit_row",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "smith-machine-deficit-row",
+      "technique_guidance": [
+        "Focus on getting a big stretch and touch your stomach/chest on each rep",
+        "Focus on getting a big stretch and touch your stomach/chest on each rep!"
+      ]
+    },
+    {
+      "aliases": [
+        "Smith Machine Reverse Lunge"
+      ],
+      "canonical_name": "Smith Machine Reverse Lunge",
+      "confidence": 0.85,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "machine"
+      ],
+      "exercise_id": "smith_machine_reverse_lunge",
+      "family_id": "smith-machine-reverse-lunge",
+      "fatigue_cost": null,
+      "movement_pattern": "lunge",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "glutes",
+        "quads"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:smith_machine_reverse_lunge",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        },
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:smith_machine_reverse_lunge",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body",
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "smith-machine-reverse-lunge",
+      "technique_guidance": [
+        "Mind-muscle connection with your glutes here",
+        "Minimize contribution from the back leg",
+        "Minimize contribution from the back leg. Mind-muscle connection with your glutes here!",
+        "Set one leg back on the negative and then drive the weight up using your front leg",
+        "Set one leg back on the negative and then drive the weight up using your front leg. Try to minimize assistance from your back leg.",
+        "Try to minimize assistance from your back leg"
+      ]
+    },
+    {
+      "aliases": [
+        "Smith Machine Squat"
+      ],
+      "canonical_name": "Smith Machine Squat",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "machine"
+      ],
+      "exercise_id": "smith_machine_squat",
+      "family_id": "smith-machine-squat",
+      "fatigue_cost": null,
+      "movement_pattern": "squat",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "glutes",
+        "quads"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:smith_machine_squat",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "smith-machine-squat",
+      "technique_guidance": [
+        "This first set will be your heaviest set",
+        "Warm-up as usual to your first working set for 4 reps",
+        "We're using a reverse pyramid on this exercise",
+        "We're using a reverse pyramid on this exercise. Warm-up as usual to your first working set for 4 reps. This first set will be your heaviest set. Then for set 2, drop the weight back ~10-15% and do 6 reps. Then for set 3, drop the weight back another 10-15% and do 8 reps."
+      ]
+    },
+    {
+      "aliases": [
+        "Standing Calf Raise"
+      ],
+      "canonical_name": "Standing Calf Raise",
+      "confidence": 0.85,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "machine"
+      ],
+      "exercise_id": "standing_calf_raise",
+      "family_id": "standing-calf-raise",
+      "fatigue_cost": null,
+      "movement_pattern": "plantar_flexion",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "calves"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:standing_calf_raise",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        },
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:standing_calf_raise",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body",
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "standing-calf-raise",
+      "technique_guidance": [
+        "1-2 second pause at the bottom of each rep",
+        "1-2 second pause at the bottom of each rep. Instead of just going up onto your toes, think about rolling your ankle back and forth on the balls of your feet.",
+        "Instead of just going up onto your toes, think about rolling your ankle back and forth on the balls of your feet"
+      ]
+    },
+    {
+      "aliases": [
+        "Super-ROM DB Lateral Raise"
+      ],
+      "canonical_name": "Super-ROM DB Lateral Raise",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "dumbbell"
+      ],
+      "exercise_id": "super_rom_db_lateral_raise",
+      "family_id": "super-rom-db-lateral-raise",
+      "fatigue_cost": null,
+      "movement_pattern": "lateral_raise",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "side_delts"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:super_rom_db_lateral_raise",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "super-rom-db-lateral-raise",
+      "technique_guidance": [
+        "As you break parallel, you will use more upper traps to move the weight",
+        "Feel free to squeeze your upper traps at the top",
+        "Perform lateral raises as normal, except going until your hands are up overhead",
+        "Perform lateral raises as normal, except going until your hands are up overhead. As you break parallel, you will use more upper traps to move the weight. Feel free to squeeze your upper traps at the top. If you feel shoulder pain when going all the way up, try pointing your thumb up or simply stop at parallel and do normal lateral raises."
+      ]
+    },
+    {
+      "aliases": [
+        "Super-ROM Leg Press"
+      ],
+      "canonical_name": "Super-ROM Leg Press",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [],
+      "exercise_id": "super_rom_leg_press",
+      "family_id": "super-rom-leg-press",
+      "fatigue_cost": null,
+      "movement_pattern": "squat",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "glutes",
+        "quads"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:super_rom_leg_press",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "super-rom-leg-press",
+      "technique_guidance": [
+        "Control the negative and do a slight pause at the bottom of each rep",
+        "Feet lower on the platform for more quad focus",
+        "Feet lower on the platform for more quad focus. Get as deep as you can without excessive back rounding. Control the negative and do a slight pause at the bottom of each rep.",
+        "Get as deep as you can without excessive back rounding"
+      ]
+    },
+    {
+      "aliases": [
+        "Super-ROM Overhand Cable Row"
+      ],
+      "canonical_name": "Super-ROM Overhand Cable Row",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "cable"
+      ],
+      "exercise_id": "super_rom_overhand_cable_row",
+      "family_id": "super-rom-overhand-cable-row",
+      "fatigue_cost": null,
+      "movement_pattern": "horizontal_pull",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "biceps",
+        "lats",
+        "mid_back"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:super_rom_overhand_cable_row",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "super-rom-overhand-cable-row",
+      "technique_guidance": [
+        "Set up a wide grip pulldown bar on a seated cable row",
+        "Set up a wide grip pulldown bar on a seated cable row. Using a double overhand grip, perform rows while leaning forward on the negative and then extend your torso to be upright as you finish the row.",
+        "Using a double overhand grip, perform rows while leaning forward on the negative and then extend your torso to be upright as you finish the row"
+      ]
+    },
+    {
+      "aliases": [
+        "Super-Stretch Reverse Pec Deck"
+      ],
+      "canonical_name": "Super-Stretch Reverse Pec Deck",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [],
+      "exercise_id": "super_stretch_reverse_pec_deck",
+      "family_id": "super-stretch-reverse-pec-deck",
+      "fatigue_cost": null,
+      "movement_pattern": "accessory",
+      "overlap_relations": [],
+      "primary_muscles": [],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:super_stretch_reverse_pec_deck",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "super-stretch-reverse-pec-deck",
+      "technique_guidance": [
+        "Do reverse flyes 1 arm at a time",
+        "Face side on to the machine and pull your arm across your body to pre-stretch your rear delt",
+        "Face side on to the machine and pull your arm across your body to pre-stretch your rear delt. Do reverse flyes 1 arm at a time. Start with your weaker arm.",
+        "Start with your weaker arm"
+      ]
+    },
+    {
+      "aliases": [
+        "Triceps Diverging Pressdown (Long Rope or 2 Ropes)"
+      ],
+      "canonical_name": "Triceps Diverging Pressdown (Long Rope or 2 Ropes)",
+      "confidence": 0.85,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [],
+      "exercise_id": "triceps_diverging_pressdown_long_rope_or_2_ropes",
+      "family_id": "triceps-diverging-pressdown-long-rope-or-2-ropes",
+      "fatigue_cost": null,
+      "movement_pattern": "triceps_extension",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "triceps"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:triceps_diverging_pressdown_long_rope_or_2_ropes",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        },
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:triceps_diverging_pressdown_long_rope_or_2_ropes",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body",
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "triceps-diverging-pressdown-long-rope-or-2-ropes",
+      "technique_guidance": [
+        "Lean slightly forward, flare your elbows slightly out and keep your arms back in line with your torso",
+        "Then do triceps pressdowns, getting a full, big squeeze at the bottom",
+        "Use two long ropes or one long rope",
+        "Use two long ropes or one long rope. Lean slightly forward, flare your elbows slightly out and keep your arms back in line with your torso. Then do triceps pressdowns, getting a full, big squeeze at the bottom."
+      ]
+    },
+    {
+      "aliases": [
+        "Triceps Pressdown (Bar)"
+      ],
+      "canonical_name": "Triceps Pressdown (Bar)",
+      "confidence": 0.85,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [
+        "cable"
+      ],
+      "exercise_id": "triceps_pressdown_bar",
+      "family_id": "triceps-pressdown-bar",
+      "fatigue_cost": null,
+      "movement_pattern": "triceps_extension",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "triceps"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:triceps_pressdown_bar",
+          "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        },
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:triceps_pressdown_bar",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_1_full_body",
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "triceps-pressdown-bar",
+      "technique_guidance": [
+        "Aim to add some weight week to week at the set rep target",
+        "Always keep the form tight as you overload the triceps",
+        "Focus on squeezing your triceps to move the weight",
+        "These are meant to be fairly heavy, which is why we're using a bar instead of a rope",
+        "These are meant to be fairly heavy, which is why we're using a bar instead of a rope. Aim to add some weight week to week at the set rep target. Always keep the form tight as you overload the triceps."
+      ]
+    },
+    {
+      "aliases": [
+        "Wide-Grip Lat Pulldown"
+      ],
+      "canonical_name": "Wide-Grip Lat Pulldown",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [],
+      "exercise_id": "wide_grip_lat_pulldown",
+      "family_id": "wide-grip-lat-pulldown",
+      "fatigue_cost": null,
+      "movement_pattern": "vertical_pull",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "biceps",
+        "lats"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:wide_grip_lat_pulldown",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "wide-grip-lat-pulldown",
+      "technique_guidance": [
+        "Think about pulling your elbows \"down\" and \"in\"",
+        "Think about pulling your elbows \"down\" and \"in\"."
+      ]
+    },
+    {
+      "aliases": [
+        "Wide-Grip Pull-Up"
+      ],
+      "canonical_name": "Wide-Grip Pull-Up",
+      "confidence": 0.7,
+      "contraindications": [],
+      "curation_status": "seeded",
+      "equipment_tags": [],
+      "exercise_id": "wide_grip_pull_up",
+      "family_id": "wide-grip-pull-up",
+      "fatigue_cost": null,
+      "movement_pattern": "vertical_pull",
+      "overlap_relations": [],
+      "primary_muscles": [
+        "biceps",
+        "lats"
+      ],
+      "progression_compatibility": [],
+      "provenance": [
+        {
+          "confidence": 0.7,
+          "curation_status": "seeded",
+          "excerpt_hash": null,
+          "note": "Foundation-stage exercise record derived from onboarding package; final /reference-sourced exercise provenance is deferred.",
+          "section_ref": "exercise_library:wide_grip_pull_up",
+          "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
+          "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        }
+      ],
+      "secondary_muscles": [],
+      "skill_demand": null,
+      "source_program_ids": [
+        "pure_bodybuilding_phase_2_full_body"
+      ],
+      "stability_demand": null,
+      "substitution_class": "wide-grip-pull-up",
+      "technique_guidance": [
+        "1",
+        "1.5x shoulder width overhand grip. Slow 2-3 second negative. Feel your lats pulling apart on the way down. Slight 0.5-1 second pause at the bottom, then lift your chest up and drive your elbows down as you lift yourself up. Don't be afraid to use assistance. Add weight if needed. Keep the form tight and controlled!",
+        "5x shoulder width overhand grip",
+        "Slow 2-3 second negative"
+      ]
+    }
+  ],
+  "schema_version": "knowledge-1"
+}

@@ -17,6 +17,7 @@ COPY apps/api /app/apps/api
 COPY apps/web/lib /app/apps/web/lib
 COPY docs/rules /app/docs/rules
 COPY importers /app/importers
+COPY knowledge /app/knowledge
 COPY programs /app/programs
 
 WORKDIR /app/apps/api

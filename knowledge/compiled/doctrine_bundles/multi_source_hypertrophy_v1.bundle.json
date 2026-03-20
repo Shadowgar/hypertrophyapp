@@ -1,0 +1,58 @@
+{
+  "aggregate_signature": "3cd05fb2c73a8b5df82f3eb04da480fc6b6992e5fff405b976511e8d1008a5e5",
+  "bundle_id": "multi_source_hypertrophy_v1",
+  "bundle_version": "0.1.0",
+  "input_signature": "856ac97581c6ea8ec4166d24300a1814b92f1f86db714b81f4c6ca78100c0a7a",
+  "module_ids": [
+    "adaptation",
+    "assessment",
+    "exercise_selection",
+    "mesocycle",
+    "progression",
+    "safety",
+    "specialization",
+    "split",
+    "technique",
+    "volume"
+  ],
+  "output_signature": "01a917a5fdd8dc3b0067f5b6514af4fe5e35c2b262f869e29321597e539d2ac7",
+  "rules_by_module": {
+    "adaptation": [],
+    "assessment": [
+      {
+        "description": "Placeholder assessment doctrine slot for compiled bundle validation.",
+        "module_id": "assessment",
+        "provenance": [],
+        "rule_id": "assessment_seed_placeholder",
+        "status": "placeholder",
+        "tags": [
+          "placeholder",
+          "seed"
+        ]
+      }
+    ],
+    "exercise_selection": [],
+    "mesocycle": [],
+    "progression": [],
+    "safety": [],
+    "specialization": [],
+    "split": [
+      {
+        "description": "Placeholder split doctrine slot for compiled bundle validation.",
+        "module_id": "split",
+        "provenance": [],
+        "rule_id": "split_seed_placeholder",
+        "status": "placeholder",
+        "tags": [
+          "placeholder",
+          "seed"
+        ]
+      }
+    ],
+    "technique": [],
+    "volume": []
+  },
+  "schema_version": "knowledge-1",
+  "source_ids": [],
+  "status": "seed"
+}

@@ -275,3 +275,85 @@ def test_program_recommendation_rotates_when_adaptive_gold_authored_sequence_is_
     assert payload["current_program_id"] == "pure_bodybuilding_phase_1_full_body"
     assert payload["recommended_program_id"] == "pure_bodybuilding_phase_2_full_body"
     assert payload["reason"] == "mesocycle_complete_rotate"
+
+
+def test_plan_generate_week_auto_selection_updates_program_before_template_choice() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "switch-gold-auto@example.com", "password": TEST_CREDENTIAL, "name": "Switch Gold Auto User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Switch Gold Auto User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "adaptive_full_body_gold_v0_1",
+            "program_selection_mode": "auto",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "dumbbell", "bench", "machine", "cable"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    monday = date.today() - timedelta(days=date.today().weekday())
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == "switch-gold-auto@example.com").first()
+        assert user is not None
+        db.add(
+            WorkoutPlan(
+                user_id=user.id,
+                week_start=monday - timedelta(days=7),
+                split="full_body",
+                phase="intensification",
+                payload={
+                    "program_template_id": "adaptive_full_body_gold_v0_1",
+                    "phase": "intensification",
+                    "mesocycle": {
+                        "week_index": 10,
+                        "trigger_weeks_effective": 10,
+                        "authored_week_index": 10,
+                        "authored_week_role": "intensification",
+                        "authored_sequence_length": 10,
+                        "authored_sequence_complete": True,
+                        "phase_transition_pending": True,
+                        "phase_transition_reason": "authored_sequence_complete",
+                        "post_authored_behavior": "hold_last_authored_week",
+                    },
+                    "sessions": [],
+                },
+            )
+        )
+        db.commit()
+
+    recommendation = client.get("/profile/program-recommendation", headers=headers)
+    assert recommendation.status_code == 200
+    recommendation_payload = recommendation.json()
+    recommended_program_id = recommendation_payload["recommended_program_id"]
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+
+    assert plan["program_template_id"] == recommended_program_id
+    assert plan["template_selection_trace"]["program_recommendation_trace"]["outcome"]["recommended_program_id"] == recommended_program_id
+
+    updated_profile = client.get("/profile", headers=headers)
+    assert updated_profile.status_code == 200
+    assert updated_profile.json()["selected_program_id"] == recommended_program_id

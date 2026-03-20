@@ -212,6 +212,65 @@ test("Skipping soreness modal keeps it dismissed while opening exercise detail",
   expect(screen.queryByText(/sore today\?/i)).not.toBeInTheDocument();
 });
 
+test("Skipping soreness modal suppresses it for the same day across re-mount", async () => {
+  const workout = {
+    session_id: "pure_bodybuilding_phase_1_full_body-day1",
+    title: "Arms & Weak Points",
+    date: new Date().toISOString().slice(0, 10),
+    resume: false,
+    exercises: [
+      {
+        id: "ex-1",
+        name: "Bayesian Curl",
+        sets: 3,
+        rep_range: [8, 12],
+        recommended_working_weight: 17.5,
+        substitution_candidates: [],
+        video: null,
+      },
+    ],
+  };
+
+  const setupFetch = () => {
+    // @ts-ignore
+    globalThis.fetch.mockImplementation((input) => {
+      const url = typeof input === "string" ? input : input.url;
+      if (url.endsWith("/health")) {
+        return Promise.resolve(new Response(JSON.stringify({ status: "ok" }), { status: 200 }));
+      }
+      if (url.endsWith("/weekly-review/status")) {
+        return Promise.resolve(new Response(JSON.stringify({ today_is_sunday: false, review_required: false }), { status: 200 }));
+      }
+      if (url.endsWith("/workout/today")) {
+        return Promise.resolve(new Response(JSON.stringify(workout), { status: 200 }));
+      }
+      if (url.includes("/soreness?")) {
+        // No soreness entry for today => modal would normally open.
+        return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }));
+      }
+      return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
+    });
+  };
+
+  setupFetch();
+  const { unmount } = render(<TodayPage />);
+
+  fireEvent.click(screen.getByRole("button", { name: /Load today's workout/i }));
+  await waitFor(() => expect(screen.getByText(/sore today\?/i)).toBeInTheDocument());
+
+  fireEvent.click(screen.getByRole("button", { name: /Skip/i }));
+  await waitFor(() => expect(screen.queryByText(/sore today\?/i)).not.toBeInTheDocument());
+
+  unmount();
+
+  setupFetch();
+  render(<TodayPage />);
+  fireEvent.click(screen.getByRole("button", { name: /Load today's workout/i }));
+
+  await waitFor(() => expect(screen.getByText(/Bayesian Curl/i)).toBeInTheDocument());
+  expect(screen.queryByText(/sore today\?/i)).not.toBeInTheDocument();
+});
+
 test("Today page can recover by generating week when no workout exists yet", async () => {
   const workout = {
     session_id: "pure_bodybuilding_phase_1_full_body-day1",

@@ -1,2 +1,742 @@
-{ "aggregate_signature": "7d547398698706aeedebad57e92d40d89340a92104bd7effc91ff3a6978b3c03", "asset_count": 46, "provenance": [ { "asset": "reference/10-Tips-for-Chest-Gains- 2.pdf", "asset_sha256": "e47430dd118633d5bf20ff915e2e0658dac1d515f02763818e08c062be689844", "derived_entities": [ { "path": "docs/guides/generated/10-tips-for-chest-gains-2-e47430dd.md", "text_sha256": "5bdd4fead74f8395aa7c0672866981bc7a18be5d8e75cea3c0c6ac51fcfb91bb", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/10-Tips-for-Chest-Gains- 2.pdf" ] }, { "asset": "reference/Arm Hypertrophy Program.pdf", "asset_sha256": "55636d119e69f3ee6834d068cf0411d2d0c8632417a4f6ed454d406a2549d5ce", "derived_entities": [ { "path": "docs/guides/generated/arm-hypertrophy-program-55636d11.md", "text_sha256": "815a356d7da7eaafc006e0de1dd53f3dd277de228d8321a053feb8735b44c194", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/Arm Hypertrophy Program.pdf" ] }, { "asset": "reference/Bench Press.pdf", "asset_sha256": "631f5e0904d6fa8d27bedcadeb030a9ed7d2af5e4c2a88142ffc07916a38d0ee", "derived_entities": [ { "path": "docs/guides/generated/bench-press-631f5e09.md", "text_sha256": "f69a6c6dbb81699f07602b23b247366324857fdc5929f812395e907f53e1c5eb", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/Bench Press.pdf" ] }, { "asset": "reference/C.A.R.D. Workout (Z-Library).pdf", "asset_sha256": "6c062ef604b1cd1761f70f35674b169c458936dc26e5e7f0fcdfafda0349081c", "derived_entities": [ { "path": "docs/guides/generated/c-a-r-d-workout-z-library-6c062ef6.md", "text_sha256": "bf85ffcd2afef318d82e1e193f15f0d12d20620d8d27d9b3006ec0f0b8395da7", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/C.A.R.D. Workout (Z-Library).pdf" ] }, { "asset": "reference/Comeback Program (Z-Library).pdf", "asset_sha256": "1db98a3808bbd86baf124a96aa08649ab83fbc9c080c22619e8ff572d0a320e2", "derived_entities": [ { "path": "docs/guides/generated/comeback-program-z-library-1db98a38.md", "text_sha256": "c3a9e99b5e0e68723bfeda085117d6cb851828d3a42d30755e11adfe7342e1c5", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/Comeback Program (Z-Library).pdf" ] }, { "asset": "reference/Edited PPL 5x.xlsx", "asset_sha256": "4639eaf914bdecf75c3afcd647f8d1d1003ce50b3131575fb55da19f7a715b29", "derived_entities": [ { "path": "docs/guides/generated/edited-ppl-5x-4639eaf9.md", "text_sha256": "960bf530d0240a8a70089c790bc35d00b4fe00838f470195c2564efbd44518ce", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/Edited PPL 5x.xlsx" ] }, { "asset": "reference/Full Body - High Frequency Program.pdf", "asset_sha256": "7d12f51f04627203d1feb6d60e1e651f06622078a467a8d71c0949209748ee13", "derived_entities": [ { "path": "docs/guides/generated/full-body-high-frequency-program-7d12f51f.md", "text_sha256": "d733ffe92366ffc91d0e6ba16f8e34a0597de70c79ff8d5f9a653eba39c9f7e9", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/Full Body - High Frequency Program.pdf" ] }, { "asset": "reference/Fundamentals Hypertrophy Program.pdf", "asset_sha256": "e434144e3be718d9bd3b865631b8d311edeefd3cee749c0bf123dd0c5a35e485", "derived_entities": [ { "path": "docs/guides/generated/fundamentals-hypertrophy-program-e434144e.md", "text_sha256": "7c0e587e46f21458f561f066ffc49eca7b321c80892911f99bd177bce2ce9905", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/Fundamentals Hypertrophy Program.pdf" ] }, { "asset": "reference/Get-Ready-Manual.pdf", "asset_sha256": "f0a104c671edea9a5b59987d71da1f9af2fe1832545dd085482d335f4146d119", "derived_entities": [ { "path": "docs/guides/generated/get-ready-manual-f0a104c6.md", "text_sha256": "5bdc698aa065a920aa126d27d43631479ce68d0350c479432b304bb7d2476985", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/Get-Ready-Manual.pdf" ] }, { "asset": "reference/Glute Hypertophy.pdf", "asset_sha256": "a2c6623263f0219116148ea180d62bcfe5257363619485d5d8c7897f66a9ed36", "derived_entities": [ { "path": "docs/guides/generated/glute-hypertophy-a2c66232.md", "text_sha256": "de00dcad8c3374e8fbe5fcbffae202ca49368d8788668504a5c0b06bfd8289a6", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/Glute Hypertophy.pdf" ] }, { "asset": "reference/Hypertrophy Handbook (z-library.sk, 1lib.sk, z-lib.sk).pdf", "asset_sha256": "44b1f91176e38b5caf1d4d0cc45ef2a74d1296cffcebb10054b0633d2fdebba7", "derived_entities": [ { "path": "docs/guides/generated/hypertrophy-handbook-z-library-sk-1lib-sk-z-lib-sk-44b1f911.md", "text_sha256": "2773f19439a0ed2122cf1da115228e283159a043f7052a5dc12f62436897608c", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/Hypertrophy Handbook (z-library.sk, 1lib.sk, z-lib.sk).pdf" ] }, { "asset": "reference/ - The Muscle Ladde.pdf", "asset_sha256": "4bf75a91186d928d50587b7d8f874e1a4d942270258abf8d6f1fd0a05efcb05d", "derived_entities": [ { "path": "docs/guides/generated/the-muscle-ladde-4bf75a91.md", "text_sha256": "23c129cd2ba1a82be31bc3728f831a2799bf01485b96c545d0aeb56f3f5d7543", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/ - The Muscle Ladde.pdf" ] }, { "asset": "reference/My-Favorite-Exercise-for-Each-Body-Part.pdf", "asset_sha256": "d77f3c9bf15377bf0b78a535b0bdca63fd4b85979bfbab802de3f8c39c8b1766", "derived_entities": [ { "path": "docs/guides/generated/my-favorite-exercise-for-each-body-part-d77f3c9b.md", "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/My-Favorite-Exercise-for-Each-Body-Part.pdf" ] }, { "asset": "reference/Nutrition_Booklet.pdf", "asset_sha256": "13fce45ff8995446b6e61940a0acc51e98c168f97273e07de17fe33c54c8eee9", "derived_entities": [ { "path": "docs/guides/generated/nutrition-booklet-13fce45f.md", "text_sha256": "374e44c532c8e4c1cea90074ac98c7f1443c9a4834faac6b34f0723fad131eeb", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/Copy of Nutrition_Booklet.pdf", "reference/Nutrition_Booklet.pdf", "reference/The Pure Bodybuilding Nutrition Booklet (Z-Library).pdf" ] }, { "asset": "reference/PowerBuilding 3.0.xlsx", "asset_sha256": "f4de3f2c311a2c0664e3c7136d0064114a6e778000f6f0e5ff6ec99e2b5431b1", "derived_entities": [ { "path": "docs/guides/generated/powerbuilding-3-0-f4de3f2c.md", "text_sha256": "249a4a2f3a59584afb5abbe0e088941174f735541b091471e4af61f2e01829d4", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/PowerBuilding 3.0.xlsx" ] }, { "asset": "reference/Powerbuilding 3.0 5 days a week.pdf", "asset_sha256": "ec6335524c9bdd03ba2455b6e912843c0953a756d9e2f33fc1bac033f1d1a316", "derived_entities": [ { "path": "docs/guides/generated/powerbuilding-3-0-5-days-a-week-ec633552.md", "text_sha256": "8cde074215a9fc471abebfc4d79e884e42a522178d009fe03c0ff84b06ff3f02", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/Powerbuilding 3.0 5 days a week.pdf" ] }, { "asset": "reference/Hypertrophy Phase 1 Sheet.xlsx", "asset_sha256": "46f50999771cbb454b325729b2d2a77515dbcf2cdd86891e4543eab65019bb71", "derived_entities": [ { "path": "docs/guides/generated/pure-bodybuilding-phase-1-full-body-sheet-46f50999.md", "text_sha256": "55b60a2e4d021945394ac0be7be1a9db8b939d17df7988858d73d9c4e78e3178", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/Hypertrophy Phase 1 Sheet.xlsx" ] }, { "asset": "reference/Hypertrophy Phase 2 Sheet.xlsx", "asset_sha256": "3068701dc79bfa5dd7dff0daa55c670213125fce0cc1bb56abff22083b93bb23", "derived_entities": [ { "path": "docs/guides/generated/pure-bodybuilding-phase-2-full-body-sheet-3068701d.md", "text_sha256": "9a35418aaf8114cf85b3478ac32c680ede13ac0f87814c994215926c53b2f654", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/Hypertrophy Phase 2 Sheet.xlsx" ] }, { "asset": "reference/Hypertrophy Phase 2.pdf", "asset_sha256": "142844edd159903f2c06e875dd11cb3baa296635f50aba09d7a9bd9a458ae111", "derived_entities": [ { "path": "docs/guides/generated/pure-bodybuilding-phase-2-full-body-142844ed.md", "text_sha256": "fb1d4411cb2224079a2300344f3eeb7170befcb25458a3bb41eec59a5647d3af", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/Hypertrophy Phase 2.pdf", "reference/The Pure Bodybulding Program Phase 2 (Z-Library).pdf" ] }, { "asset": "reference/Pure Bodybuilding Phase 2 - Hypertrophy Handbook.pdf", "asset_sha256": "04cd79ff0812c2ab273fb681127fc4f43c1c6dda6e3e185572956b29f99b92ee", "derived_entities": [ { "path": "docs/guides/generated/pure-bodybuilding-phase-2-hypertrophy-handbook-04cd79ff.md", "text_sha256": "544ab3751c00f42dd43f8a91a53c579354b34aef2f42cd8feb3bc4469c3c210e", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/Pure Bodybuilding Phase 2 - Hypertrophy Handbook.pdf" ] }, { "asset": "reference/Pure Bodybuilding Phase 2 - Nutrition Booklet.pdf", "asset_sha256": "f6788e2c94bb7daecd3a00e8b621cd811d95db500381de23fcff0140d77bb141", "derived_entities": [ { "path": "docs/guides/generated/pure-bodybuilding-phase-2-nutrition-booklet-f6788e2c.md", "text_sha256": "bd5c182a63dac64179b6fb378c81fb2cc673ebc23cb317c3488f911b7979279b", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/Pure Bodybuilding Phase 2 - Nutrition Booklet.pdf" ] }, { "asset": "reference/Pure Bodybuilding Phase 2 - PPL Sheet.xlsx", "asset_sha256": "6deac4a96934c4e684947fdc628a3f49279042cba57c0aa1ce5f83276b1d5ea1", "derived_entities": [ { "path": "docs/guides/generated/pure-bodybuilding-phase-2-ppl-sheet-6deac4a9.md", "text_sha256": "10632a043502eebb16dc13b8f8a994f9e38a2b11e36e8716d415f6e03e65151a", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/Pure Bodybuilding Phase 2 - PPL Sheet.xlsx" ] }, { "asset": "reference/Pure Bodybuilding Phase 2 - Upper Lower Sheet.xlsx", "asset_sha256": "2b36c90a6dab0f8fa3d1249317f9d36eb93ca97165ced3a6a8130fc3425a3479", "derived_entities": [ { "path": "docs/guides/generated/pure-bodybuilding-phase-2-upper-lower-sheet-2b36c90a.md", "text_sha256": "9fda1e3081271d1b01834588965549e2e1c520729acd61d0cf36f4d65deec700", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/Pure Bodybuilding Phase 2 - Upper Lower Sheet.xlsx" ] }, { "asset": "reference/Pure Bodybuilding Phase 2 - Upper Lower.pdf", "asset_sha256": "f455f6dc541515ba30c117315c74704cee6839b2682994febc09ff13059ed29c", "derived_entities": [ { "path": "docs/guides/generated/pure-bodybuilding-phase-2-upper-lower-f455f6dc.md", "text_sha256": "7df54ace971ad35b871193540a6c68c68abecf44a035ba0bd09763972bcf518f", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/Pure Bodybuilding Phase 2 - Upper Lower.pdf" ] }, { "asset": "reference/Pure_Bodybuilding_-_Full_Body.xlsx", "asset_sha256": "9a4021f55659aca4b034f473b1708e361feecb7fd9aaaa55f02716ee6319e16f", "derived_entities": [ { "path": "docs/guides/generated/pure-bodybuilding-full-body-9a4021f5.md", "text_sha256": "4b93a61f500bf9948d2bdfe81e17cfb13fee54b1c3094105e8b99b9de155ba03", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/Pure_Bodybuilding_-_Full_Body.xlsx" ] }, { "asset": "reference/Purebodybuilding Phase 2 - PPL.pdf", "asset_sha256": "dc34ca33eb720d7db076661178d9fd0a7e1c3776598920955eebd1af17fa773e", "derived_entities": [ { "path": "docs/guides/generated/purebodybuilding-phase-2-ppl-dc34ca33.md", "text_sha256": "1bfa6548421572c316cfc1d601bab2cb7053e8263e81b7be090753960cd38425", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/Purebodybuilding Phase 2 - PPL.pdf" ] }, { "asset": "reference/Squat-Specialization-Program-pdf.pdf", "asset_sha256": "0f8ce2268a76532bf147b17b7c4e5d9cb0348bf219942743d10f89ce7ef3037b", "derived_entities": [ { "path": "docs/guides/generated/squat-specialization-program-pdf-0f8ce226.md", "text_sha256": "99c2a7f3e60e812cc58ff3734c22bf549f29fdfcfc57bb0ab8bf54415783eeba", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/Squat-Specialization-Program-pdf.pdf" ] }, { "asset": "reference/Technique-Handbook.pdf", "asset_sha256": "26ef47c51e99508a0cba23cda17b48f1105b6949f4413a34a0fe7e35717c7de6", "derived_entities": [ { "path": "docs/guides/generated/technique-handbook-26ef47c5.md", "text_sha256": "80cfc786b6c5314dff7f675dfae557f6b4b7a8ea50b4070a206beb815e17331c", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/Technique-Handbook.pdf" ] }, { "asset": "reference/The Essentials Program - 3xweek (Z-Library).pdf", "asset_sha256": "2aafd83030055fa37f04282a108ab694b824624ad260a1a534028c081ba09284", "derived_entities": [ { "path": "docs/guides/generated/the-essentials-program-3xweek-z-library-2aafd830.md", "text_sha256": "7e73db4d0479efd47060cc3143688add0b05e5177dc9f808e120d9f14ef7694b", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/The Essentials Program - 3xweek (Z-Library).pdf" ] }, { "asset": "reference/The Essentials Program - 4xweek (z-lib.org).pdf", "asset_sha256": "b23e5efc67625af77e92ef06bc74d1fa790016b8edaccb9854a6bfbd747341cf", "derived_entities": [ { "path": "docs/guides/generated/the-essentials-program-4xweek-z-lib-org-b23e5efc.md", "text_sha256": "003b1390e60447677f4d2b6c6b14f5bc3ea63a2768a00fc1d62460ee34f0fe40", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/The Essentials Program - 4xweek (z-lib.org).pdf" ] }, { "asset": "reference/The Essentials Program - 5xweek (z-lib.org).pdf", "asset_sha256": "b2f6e99f64843e389fba5bd1f0a1fd3e2d641b1885b82c905ecec1017ebd331f", "derived_entities": [ { "path": "docs/guides/generated/the-essentials-program-5xweek-z-lib-org-b2f6e99f.md", "text_sha256": "211085cc7a56634d3ac9786114a1bbab943e784f1b13380815a9fb3f7d23adc3", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/The Essentials Program - 5xweek (z-lib.org).pdf" ] }, { "asset": "reference/The Muscle Ladder Get Jacked Using Science .pdf", "asset_sha256": "2b43ccfd392b1407d93a7603824a4fc95426547b467e1ec2bce00289efa88759", "derived_entities": [ { "path": "docs/guides/generated/the-muscle-ladder-get-jacked-using-science-2b43ccfd.md", "text_sha256": "578d7c85c268c196ba076d61f76648211391cc56dbb302675e47a9bc794079f7", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/The Muscle Ladder Get Jacked Using Science (Z-Library).pdf", "reference/The Muscle Ladder Get Jacked Using Science .pdf" ] }, { "asset": "reference/The_Bodybuilding_Transformation_System_-_Beginner.pdf", "asset_sha256": "7957aeabbc5db3fa2f58c42ee12bab7d84a03a6d4136b40545ce779a4256fcba", "derived_entities": [ { "path": "docs/guides/generated/the-bodybuilding-transformation-system-beginner-7957aeab.md", "text_sha256": "c149f0e19148638d7e67046daf58656a8da5a5919f089f998b80a0927dc248f0", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/The_Bodybuilding_Transformation_System_-_Beginner.pdf" ] }, { "asset": "reference/The_Bodybuilding_Transformation_System_-_Beginner.xlsx", "asset_sha256": "8a7f08ae9b778abf3cc2541f31ce2ccbf1ee998084d5be109bd083666c60b971", "derived_entities": [ { "path": "docs/guides/generated/the-bodybuilding-transformation-system-beginner-8a7f08ae.md", "text_sha256": "d845c9c1b051fd3a3392e86a76207fb06c9c940eddc394adc3c29e41ae8586b8", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/The_Bodybuilding_Transformation_System_-_Beginner.xlsx" ] }, { "asset": "reference/The_Bodybuilding_Transformation_System_-_Intermediate-Advanced.xlsx", "asset_sha256": "f9f60de040fa9ec156cffbe51d5a660bc2f77dcc8067a5fdab861c2da0cb06d2", "derived_entities": [ { "path": "docs/guides/generated/the-bodybuilding-transformation-system-intermediate-advanced-f9f60de0.md", "text_sha256": "618b3f05d01a2d86cbd5015c0db97a980f4155818b481ad85fd471e6df4f4fda", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/The_Bodybuilding_Transformation_System_-_Intermediate-Advanced.xlsx" ] }, { "asset": "reference/The_Bodybuilding_Transformation_System_-_Intermediate_Advanced.pdf", "asset_sha256": "4bb8934483d723ce8dc71d57c38f67e3b5cf7b93da0129350722e245c07c98ca", "derived_entities": [ { "path": "docs/guides/generated/the-bodybuilding-transformation-system-intermediate-advanced-4bb89344.md", "text_sha256": "44f06bd081ae09e73dec7043204e06b5c3f698e4def9429ef4e6022f1a3a008b", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/The Bodybuilding Transformation System - Intermediate to Advanced.pdf", "reference/The_Bodybuilding_Transformation_System_-_Intermediate_Advanced.pdf" ] }, { "asset": "reference/The_Bodybuilding_Transformation_System_Guidebook_-_Beginner.pdf", "asset_sha256": "1fd152800a667c3f9b5daefbd2e59323a2471b02f74800aaa5dec803ce29ab47", "derived_entities": [ { "path": "docs/guides/generated/the-bodybuilding-transformation-system-guidebook-beginner-1fd15280.md", "text_sha256": "acdfdb450ebd54cab8d45580a94d7cdaa14c343fd2b8e02cb8ae3ff7f61b9a46", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/The_Bodybuilding_Transformation_System_Guidebook_-_Beginner.pdf" ] }, { "asset": "reference/The_Bodybuilding_Transformation_System_Guidebook_-_Intermediate_Advanced.pdf", "asset_sha256": "dfa35f4924dc68ec67a62597546a1e024d5bdc014dfb14c1cca0ce4eaa0ba459", "derived_entities": [ { "path": "docs/guides/generated/the-bodybuilding-transformation-system-guidebook-intermediate-advanced-dfa35f49.md", "text_sha256": "cc63eae299ec35fad8b97d5854344c194d29444e55775fce7d1f05d06632efd1", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/The_Bodybuilding_Transformation_System_Guidebook_-_Intermediate_Advanced.pdf" ] }, { "asset": "reference/The_Pure_Bodybuilding_Program - Phase 1 - Full_Body.pdf", "asset_sha256": "82123b0b04d1eeede12404275627e17d2ae9f3fc8eb3470a971629aeebef27c8", "derived_entities": [ { "path": "docs/guides/generated/the-pure-bodybuilding-program-phase-1-full-body-82123b0b.md", "text_sha256": "838fbada5a2d99e26afc94362663cc3dba58f13d06cf82554ca087ce136d137f", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/The_Pure_Bodybuilding_Program - Phase 1 - Full_Body.pdf" ] }, { "asset": "reference/The_Ultimate_Push_Pull_Legs_System_-_4x.xlsx", "asset_sha256": "a0e202d5443603a03844a3eaea65969eddec06ea3cbb3dd49e0c6e876b88a589", "derived_entities": [ { "path": "docs/guides/generated/the-ultimate-push-pull-legs-system-4x-a0e202d5.md", "text_sha256": "e412cedf6d262a756ed2a8b2e3be637f2f95d8d296b12c3f6ae3fddca1e05495", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/The_Ultimate_Push_Pull_Legs_System_-_4x.xlsx" ] }, { "asset": "reference/The_Ultimate_Push_Pull_Legs_System_-_5x.xlsx", "asset_sha256": "bac4d506550ca01cc70fe692d29f77ee966b4a39de1c8993a2a4458955ca7ecf", "derived_entities": [ { "path": "docs/guides/generated/the-ultimate-push-pull-legs-system-5x-bac4d506.md", "text_sha256": "31305ccf8b5f9b993667e220a62512fb42b8a1e8d6ac58e54b1dbefb8a001e66", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/The_Ultimate_Push_Pull_Legs_System_-_5x.xlsx" ] }, { "asset": "reference/The_Ultimate_Push_Pull_Legs_System_-_6x.xlsx", "asset_sha256": "d746c17ef9982e787417b0d58738a7842c4eb202bd1afaf1f44ba0b6c5729b8d", "derived_entities": [ { "path": "docs/guides/generated/the-ultimate-push-pull-legs-system-6x-d746c17e.md", "text_sha256": "5c2a5ec12d13ab9c6350f736ef6863a42e24ca34a3ae166634d2d3862ccfa3ea", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/The_Ultimate_Push_Pull_Legs_System_-_6x.xlsx" ] }, { "asset": "reference/The_Ultimate_Push_Pull_Legs_System_4X.pdf", "asset_sha256": "960e40a762c4f3bbc9c4ca17f9403464b19bf027c61d0a546ef031c5704faaef", "derived_entities": [ { "path": "docs/guides/generated/the-ultimate-push-pull-legs-system-4x-960e40a7.md", "text_sha256": "0edf06a99e1bdecebf33fa7ed576ea450fce396e6253f82143d2c169cf7d9383", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/The_Ultimate_Push_Pull_Legs_System_4X.pdf" ] }, { "asset": "reference/The_Ultimate_Push_Pull_Legs_System_5X.pdf", "asset_sha256": "dc721e43200bbd9c95595f15537140bd5aad972a5602c9e193606f5678374842", "derived_entities": [ { "path": "docs/guides/generated/the-ultimate-push-pull-legs-system-5x-dc721e43.md", "text_sha256": "91b46ee984b7016db708e3fc60011e755889fb99668546b27d6ce63a1062591a", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/The_Ultimate_Push_Pull_Legs_System_5X.pdf" ] }, { "asset": "reference/The_Ultimate_Push_Pull_Legs_System_6X.pdf", "asset_sha256": "dea4e8285a42c5b911f15ff0eba4a6f5ce993c13d55247382ce0897b67f03ed3", "derived_entities": [ { "path": "docs/guides/generated/the-ultimate-push-pull-legs-system-6x-dea4e828.md", "text_sha256": "4d0d5a51c4dd93215e64d2e981734e582f4a16b3c7075241e93258ab8c4ee5dc", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/The_Ultimate_Push_Pull_Legs_System_6X.pdf" ] }, { "asset": "reference/a-stoic-a-day.pdf", "asset_sha256": "70784a7297f383961b1f0314dd0f8f5c122fd1a0b1eeb8f77744ef6398555e7a", "derived_entities": [ { "path": "docs/guides/generated/a-stoic-a-day-70784a72.md", "text_sha256": "8eb7f3a489bdb75128299dd1bf7ae415458fbde43d57633d9a83459845fba7e9", "type": "normalized_guide_doc" } ], "source_assets": [ "reference/a-stoic-a-day.pdf" ] } ], "source_asset_count": 51, "version": 2, "workbook_pdf_pairs": [ { "guide_asset_path": "reference/Purebodybuilding Phase 2 - PPL.pdf", "guide_asset_sha256": "dc34ca33eb720d7db076661178d9fd0a7e1c3776598920955eebd1af17fa773e", "match_score": 4, "workbook_asset_path": "reference/Edited PPL 5x.xlsx", "workbook_asset_sha256": "4639eaf914bdecf75c3afcd647f8d1d1003ce50b3131575fb55da19f7a715b29" }, { "guide_asset_path": "reference/Powerbuilding 3.0 5 days a week.pdf", "guide_asset_sha256": "ec6335524c9bdd03ba2455b6e912843c0953a756d9e2f33fc1bac033f1d1a316", "match_score": 5, "workbook_asset_path": "reference/PowerBuilding 3.0.xlsx", "workbook_asset_sha256": "f4de3f2c311a2c0664e3c7136d0064114a6e778000f6f0e5ff6ec99e2b5431b1" }, { "guide_asset_path": "reference/The_Pure_Bodybuilding_Program - Phase 1 - Full_Body.pdf", "guide_asset_sha256": "82123b0b04d1eeede12404275627e17d2ae9f3fc8eb3470a971629aeebef27c8", "match_score": 6, "workbook_asset_path": "reference/Hypertrophy Phase 1 Sheet.xlsx", "workbook_asset_sha256": "46f50999771cbb454b325729b2d2a77515dbcf2cdd86891e4543eab65019bb71" }, { "guide_asset_path": "reference/Hypertrophy Phase 2.pdf", "guide_asset_sha256": "142844edd159903f2c06e875dd11cb3baa296635f50aba09d7a9bd9a458ae111", "match_score": 8, "workbook_asset_path": "reference/Hypertrophy Phase 2 Sheet.xlsx", "workbook_asset_sha256": "3068701dc79bfa5dd7dff0daa55c670213125fce0cc1bb56abff22083b93bb23" }, { "guide_asset_path": "reference/Purebodybuilding Phase 2 - PPL.pdf", "guide_asset_sha256": "dc34ca33eb720d7db076661178d9fd0a7e1c3776598920955eebd1af17fa773e", "match_score": 8, "workbook_asset_path": "reference/Pure Bodybuilding Phase 2 - PPL Sheet.xlsx", "workbook_asset_sha256": "6deac4a96934c4e684947fdc628a3f49279042cba57c0aa1ce5f83276b1d5ea1" }, { "guide_asset_path": "reference/Pure Bodybuilding Phase 2 - Upper Lower.pdf", "guide_asset_sha256": "f455f6dc541515ba30c117315c74704cee6839b2682994febc09ff13059ed29c", "match_score": 8, "workbook_asset_path": "reference/Pure Bodybuilding Phase 2 - Upper Lower Sheet.xlsx", "workbook_asset_sha256": "2b36c90a6dab0f8fa3d1249317f9d36eb93ca97165ced3a6a8130fc3425a3479" }, { "guide_asset_path": "reference/Hypertrophy Phase 2.pdf", "guide_asset_sha256": "142844edd159903f2c06e875dd11cb3baa296635f50aba09d7a9bd9a458ae111", "match_score": 4, "workbook_asset_path": "reference/Pure_Bodybuilding_-_Full_Body.xlsx", "workbook_asset_sha256": "9a4021f55659aca4b034f473b1708e361feecb7fd9aaaa55f02716ee6319e16f" }, { "guide_asset_path": "reference/The_Bodybuilding_Transformation_System_-_Beginner.pdf", "guide_asset_sha256": "7957aeabbc5db3fa2f58c42ee12bab7d84a03a6d4136b40545ce779a4256fcba", "match_score": 8, "workbook_asset_path": "reference/The_Bodybuilding_Transformation_System_-_Beginner.xlsx", "workbook_asset_sha256": "8a7f08ae9b778abf3cc2541f31ce2ccbf1ee998084d5be109bd083666c60b971" }, { "guide_asset_path": "reference/The_Bodybuilding_Transformation_System_-_Intermediate_Advanced.pdf", "guide_asset_sha256": "4bb8934483d723ce8dc71d57c38f67e3b5cf7b93da0129350722e245c07c98ca", "match_score": 9, "workbook_asset_path": "reference/The_Bodybuilding_Transformation_System_-_Intermediate-Advanced.xlsx", "workbook_asset_sha256": "f9f60de040fa9ec156cffbe51d5a660bc2f77dcc8067a5fdab861c2da0cb06d2" }, { "guide_asset_path": "reference/The_Ultimate_Push_Pull_Legs_System_4X.pdf", "guide_asset_sha256": "960e40a762c4f3bbc9c4ca17f9403464b19bf027c61d0a546ef031c5704faaef", "match_score": 10, "workbook_asset_path": "reference/The_Ultimate_Push_Pull_Legs_System_-_4x.xlsx", "workbook_asset_sha256": "a0e202d5443603a03844a3eaea65969eddec06ea3cbb3dd49e0c6e876b88a589" }, { "guide_asset_path": "reference/The_Ultimate_Push_Pull_Legs_System_5X.pdf", "guide_asset_sha256": "dc721e43200bbd9c95595f15537140bd5aad972a5602c9e193606f5678374842", "match_score": 10, "workbook_asset_path": "reference/The_Ultimate_Push_Pull_Legs_System_-_5x.xlsx", "workbook_asset_sha256": "bac4d506550ca01cc70fe692d29f77ee966b4a39de1c8993a2a4458955ca7ecf" }, { "guide_asset_path": "reference/The_Ultimate_Push_Pull_Legs_System_6X.pdf", "guide_asset_sha256": "dea4e8285a42c5b911f15ff0eba4a6f5ce993c13d55247382ce0897b67f03ed3", "match_score": 10, "workbook_asset_path": "reference/The_Ultimate_Push_Pull_Legs_System_-_6x.xlsx", "workbook_asset_sha256": "d746c17ef9982e787417b0d58738a7842c4eb202bd1afaf1f44ba0b6c5729b8d" } ]
+{
+  "aggregate_signature": "7d547398698706aeedebad57e92d40d89340a92104bd7effc91ff3a6978b3c03",
+  "asset_count": 46,
+  "provenance": [
+    {
+      "asset": "reference/10-Tips-for-Chest-Gains-Jeff-Nippard 2.pdf",
+      "asset_sha256": "e47430dd118633d5bf20ff915e2e0658dac1d515f02763818e08c062be689844",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/10-tips-for-chest-gains-jeff-nippard-2-e47430dd.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/10-Tips-for-Chest-Gains-Jeff-Nippard 2.pdf"
+      ]
+    },
+    {
+      "asset": "reference/Arm Hypertrophy Program.pdf",
+      "asset_sha256": "55636d119e69f3ee6834d068cf0411d2d0c8632417a4f6ed454d406a2549d5ce",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/arm-hypertrophy-program-55636d11.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/Arm Hypertrophy Program.pdf"
+      ]
+    },
+    {
+      "asset": "reference/Bench Press.pdf",
+      "asset_sha256": "631f5e0904d6fa8d27bedcadeb030a9ed7d2af5e4c2a88142ffc07916a38d0ee",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/bench-press-631f5e09.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/Bench Press.pdf"
+      ]
+    },
+    {
+      "asset": "reference/C.A.R.D. Workout (Jeff Nippard) (Z-Library).pdf",
+      "asset_sha256": "6c062ef604b1cd1761f70f35674b169c458936dc26e5e7f0fcdfafda0349081c",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/c-a-r-d-workout-jeff-nippard-z-library-6c062ef6.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/C.A.R.D. Workout (Jeff Nippard) (Z-Library).pdf"
+      ]
+    },
+    {
+      "asset": "reference/Comeback Program (Jeff Nippard) (Z-Library).pdf",
+      "asset_sha256": "1db98a3808bbd86baf124a96aa08649ab83fbc9c080c22619e8ff572d0a320e2",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/comeback-program-jeff-nippard-z-library-1db98a38.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/Comeback Program (Jeff Nippard) (Z-Library).pdf"
+      ]
+    },
+    {
+      "asset": "reference/Edited PPL 5x.xlsx",
+      "asset_sha256": "4639eaf914bdecf75c3afcd647f8d1d1003ce50b3131575fb55da19f7a715b29",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/edited-ppl-5x-4639eaf9.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/Edited PPL 5x.xlsx"
+      ]
+    },
+    {
+      "asset": "reference/Full Body - High Frequency Program.pdf",
+      "asset_sha256": "7d12f51f04627203d1feb6d60e1e651f06622078a467a8d71c0949209748ee13",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/full-body-high-frequency-program-7d12f51f.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/Full Body - High Frequency Program.pdf"
+      ]
+    },
+    {
+      "asset": "reference/Fundamentals Hypertrophy Program.pdf",
+      "asset_sha256": "e434144e3be718d9bd3b865631b8d311edeefd3cee749c0bf123dd0c5a35e485",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/fundamentals-hypertrophy-program-e434144e.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/Fundamentals Hypertrophy Program.pdf"
+      ]
+    },
+    {
+      "asset": "reference/Get-Ready-Manual.pdf",
+      "asset_sha256": "f0a104c671edea9a5b59987d71da1f9af2fe1832545dd085482d335f4146d119",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/get-ready-manual-f0a104c6.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/Get-Ready-Manual.pdf"
+      ]
+    },
+    {
+      "asset": "reference/Glute Hypertophy.pdf",
+      "asset_sha256": "a2c6623263f0219116148ea180d62bcfe5257363619485d5d8c7897f66a9ed36",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/glute-hypertophy-a2c66232.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/Glute Hypertophy.pdf"
+      ]
+    },
+    {
+      "asset": "reference/Hypertrophy Handbook.pdf",
+      "asset_sha256": "44b1f91176e38b5caf1d4d0cc45ef2a74d1296cffcebb10054b0633d2fdebba7",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/hypertrophy-handbook-44b1f911.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/Hypertrophy Handbook.pdf"
+      ]
+    },
+    {
+      "asset": "reference/Jeff Nippard - The Muscle Ladde.pdf",
+      "asset_sha256": "4bf75a91186d928d50587b7d8f874e1a4d942270258abf8d6f1fd0a05efcb05d",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/jeff-nippard-the-muscle-ladde-4bf75a91.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/Jeff Nippard - The Muscle Ladde.pdf"
+      ]
+    },
+    {
+      "asset": "reference/My-Favorite-Exercise-for-Each-Body-Part.pdf",
+      "asset_sha256": "d77f3c9bf15377bf0b78a535b0bdca63fd4b85979bfbab802de3f8c39c8b1766",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/my-favorite-exercise-for-each-body-part-d77f3c9b.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/My-Favorite-Exercise-for-Each-Body-Part.pdf"
+      ]
+    },
+    {
+      "asset": "reference/Nutrition_Booklet.pdf",
+      "asset_sha256": "13fce45ff8995446b6e61940a0acc51e98c168f97273e07de17fe33c54c8eee9",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/nutrition-booklet-13fce45f.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/Nutrition_Booklet.pdf",
+        "reference/The Pure Bodybuilding Nutrition Booklet (Jeff Nippard) (Z-Library).pdf"
+      ]
+    },
+    {
+      "asset": "reference/PowerBuilding 3.0.xlsx",
+      "asset_sha256": "f4de3f2c311a2c0664e3c7136d0064114a6e778000f6f0e5ff6ec99e2b5431b1",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/powerbuilding-3-0-f4de3f2c.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/PowerBuilding 3.0.xlsx"
+      ]
+    },
+    {
+      "asset": "reference/Powerbuilding 3.0 5 days a week.pdf",
+      "asset_sha256": "ec6335524c9bdd03ba2455b6e912843c0953a756d9e2f33fc1bac033f1d1a316",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/powerbuilding-3-0-5-days-a-week-ec633552.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/Powerbuilding 3.0 5 days a week.pdf"
+      ]
+    },
+    {
+      "asset": "reference/Pure Bodybuilding Phase 1 - Full Body Sheet.xlsx",
+      "asset_sha256": "46f50999771cbb454b325729b2d2a77515dbcf2cdd86891e4543eab65019bb71",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/pure-bodybuilding-phase-1-full-body-sheet-46f50999.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/Pure Bodybuilding Phase 1 - Full Body Sheet.xlsx"
+      ]
+    },
+    {
+      "asset": "reference/Pure Bodybuilding Phase 2 - Full Body Sheet.xlsx",
+      "asset_sha256": "3068701dc79bfa5dd7dff0daa55c670213125fce0cc1bb56abff22083b93bb23",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/pure-bodybuilding-phase-2-full-body-sheet-3068701d.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/Pure Bodybuilding Phase 2 - Full Body Sheet.xlsx"
+      ]
+    },
+    {
+      "asset": "reference/Pure Bodybuilding Phase 2 - Full Body.pdf",
+      "asset_sha256": "142844edd159903f2c06e875dd11cb3baa296635f50aba09d7a9bd9a458ae111",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/pure-bodybuilding-phase-2-full-body-142844ed.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/Pure Bodybuilding Phase 2 - Full Body.pdf",
+        "reference/The Pure Bodybulding Program Phase 2 (Jeff Nippard) (Z-Library).pdf"
+      ]
+    },
+    {
+      "asset": "reference/Pure Bodybuilding Phase 2 - Hypertrophy Handbook.pdf",
+      "asset_sha256": "04cd79ff0812c2ab273fb681127fc4f43c1c6dda6e3e185572956b29f99b92ee",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/pure-bodybuilding-phase-2-hypertrophy-handbook-04cd79ff.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/Pure Bodybuilding Phase 2 - Hypertrophy Handbook.pdf"
+      ]
+    },
+    {
+      "asset": "reference/Pure Bodybuilding Phase 2 - Nutrition Booklet.pdf",
+      "asset_sha256": "f6788e2c94bb7daecd3a00e8b621cd811d95db500381de23fcff0140d77bb141",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/pure-bodybuilding-phase-2-nutrition-booklet-f6788e2c.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/Pure Bodybuilding Phase 2 - Nutrition Booklet.pdf"
+      ]
+    },
+    {
+      "asset": "reference/Pure Bodybuilding Phase 2 - PPL Sheet.xlsx",
+      "asset_sha256": "6deac4a96934c4e684947fdc628a3f49279042cba57c0aa1ce5f83276b1d5ea1",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/pure-bodybuilding-phase-2-ppl-sheet-6deac4a9.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/Pure Bodybuilding Phase 2 - PPL Sheet.xlsx"
+      ]
+    },
+    {
+      "asset": "reference/Pure Bodybuilding Phase 2 - Upper Lower Sheet.xlsx",
+      "asset_sha256": "2b36c90a6dab0f8fa3d1249317f9d36eb93ca97165ced3a6a8130fc3425a3479",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/pure-bodybuilding-phase-2-upper-lower-sheet-2b36c90a.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/Pure Bodybuilding Phase 2 - Upper Lower Sheet.xlsx"
+      ]
+    },
+    {
+      "asset": "reference/Pure Bodybuilding Phase 2 - Upper Lower.pdf",
+      "asset_sha256": "f455f6dc541515ba30c117315c74704cee6839b2682994febc09ff13059ed29c",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/pure-bodybuilding-phase-2-upper-lower-f455f6dc.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/Pure Bodybuilding Phase 2 - Upper Lower.pdf"
+      ]
+    },
+    {
+      "asset": "reference/Pure_Bodybuilding_-_Full_Body.xlsx",
+      "asset_sha256": "9a4021f55659aca4b034f473b1708e361feecb7fd9aaaa55f02716ee6319e16f",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/pure-bodybuilding-full-body-9a4021f5.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/Pure_Bodybuilding_-_Full_Body.xlsx"
+      ]
+    },
+    {
+      "asset": "reference/Purebodybuilding Phase 2 - PPL.pdf",
+      "asset_sha256": "dc34ca33eb720d7db076661178d9fd0a7e1c3776598920955eebd1af17fa773e",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/purebodybuilding-phase-2-ppl-dc34ca33.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/Purebodybuilding Phase 2 - PPL.pdf"
+      ]
+    },
+    {
+      "asset": "reference/Squat-Specialization-Program-pdf.pdf",
+      "asset_sha256": "0f8ce2268a76532bf147b17b7c4e5d9cb0348bf219942743d10f89ce7ef3037b",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/squat-specialization-program-pdf-0f8ce226.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/Squat-Specialization-Program-pdf.pdf"
+      ]
+    },
+    {
+      "asset": "reference/Technique-Handbook.pdf",
+      "asset_sha256": "26ef47c51e99508a0cba23cda17b48f1105b6949f4413a34a0fe7e35717c7de6",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/technique-handbook-26ef47c5.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/Technique-Handbook.pdf"
+      ]
+    },
+    {
+      "asset": "reference/The Essentials Program - 3xweek (Jeff Nippard) (Z-Library).pdf",
+      "asset_sha256": "2aafd83030055fa37f04282a108ab694b824624ad260a1a534028c081ba09284",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/the-essentials-program-3xweek-jeff-nippard-z-library-2aafd830.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/The Essentials Program - 3xweek (Jeff Nippard) (Z-Library).pdf"
+      ]
+    },
+    {
+      "asset": "reference/The Essentials Program - 4xweek (Jeff Nippard) (z-lib.org).pdf",
+      "asset_sha256": "b23e5efc67625af77e92ef06bc74d1fa790016b8edaccb9854a6bfbd747341cf",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/the-essentials-program-4xweek-jeff-nippard-z-lib-org-b23e5efc.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/The Essentials Program - 4xweek (Jeff Nippard) (z-lib.org).pdf"
+      ]
+    },
+    {
+      "asset": "reference/The Essentials Program - 5xweek (Jeff Nippard) (z-lib.org).pdf",
+      "asset_sha256": "b2f6e99f64843e389fba5bd1f0a1fd3e2d641b1885b82c905ecec1017ebd331f",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/the-essentials-program-5xweek-jeff-nippard-z-lib-org-b2f6e99f.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/The Essentials Program - 5xweek (Jeff Nippard) (z-lib.org).pdf"
+      ]
+    },
+    {
+      "asset": "reference/The Muscle Ladder Get Jacked Using Science (Jeff Nippard).pdf",
+      "asset_sha256": "2b43ccfd392b1407d93a7603824a4fc95426547b467e1ec2bce00289efa88759",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/the-muscle-ladder-get-jacked-using-science-jeff-nippard-2b43ccfd.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/The Muscle Ladder Get Jacked Using Science (Jeff Nippard) (Z-Library).pdf",
+        "reference/The Muscle Ladder Get Jacked Using Science (Jeff Nippard).pdf"
+      ]
+    },
+    {
+      "asset": "reference/The_Bodybuilding_Transformation_System_-_Beginner.pdf",
+      "asset_sha256": "7957aeabbc5db3fa2f58c42ee12bab7d84a03a6d4136b40545ce779a4256fcba",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/the-bodybuilding-transformation-system-beginner-7957aeab.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/The_Bodybuilding_Transformation_System_-_Beginner.pdf"
+      ]
+    },
+    {
+      "asset": "reference/The_Bodybuilding_Transformation_System_-_Beginner.xlsx",
+      "asset_sha256": "8a7f08ae9b778abf3cc2541f31ce2ccbf1ee998084d5be109bd083666c60b971",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/the-bodybuilding-transformation-system-beginner-8a7f08ae.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/The_Bodybuilding_Transformation_System_-_Beginner.xlsx"
+      ]
+    },
+    {
+      "asset": "reference/The_Bodybuilding_Transformation_System_-_Intermediate-Advanced.xlsx",
+      "asset_sha256": "f9f60de040fa9ec156cffbe51d5a660bc2f77dcc8067a5fdab861c2da0cb06d2",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/the-bodybuilding-transformation-system-intermediate-advanced-f9f60de0.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/The_Bodybuilding_Transformation_System_-_Intermediate-Advanced.xlsx"
+      ]
+    },
+    {
+      "asset": "reference/The_Bodybuilding_Transformation_System_-_Intermediate_Advanced.pdf",
+      "asset_sha256": "4bb8934483d723ce8dc71d57c38f67e3b5cf7b93da0129350722e245c07c98ca",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/the-bodybuilding-transformation-system-intermediate-advanced-4bb89344.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/The Bodybuilding Transformation System - Intermediate to Advanced.pdf",
+        "reference/The_Bodybuilding_Transformation_System_-_Intermediate_Advanced.pdf"
+      ]
+    },
+    {
+      "asset": "reference/The_Bodybuilding_Transformation_System_Guidebook_-_Beginner.pdf",
+      "asset_sha256": "1fd152800a667c3f9b5daefbd2e59323a2471b02f74800aaa5dec803ce29ab47",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/the-bodybuilding-transformation-system-guidebook-beginner-1fd15280.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/The_Bodybuilding_Transformation_System_Guidebook_-_Beginner.pdf"
+      ]
+    },
+    {
+      "asset": "reference/The_Bodybuilding_Transformation_System_Guidebook_-_Intermediate_Advanced.pdf",
+      "asset_sha256": "dfa35f4924dc68ec67a62597546a1e024d5bdc014dfb14c1cca0ce4eaa0ba459",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/the-bodybuilding-transformation-system-guidebook-intermediate-advanced-dfa35f49.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/The_Bodybuilding_Transformation_System_Guidebook_-_Intermediate_Advanced.pdf"
+      ]
+    },
+    {
+      "asset": "reference/The_Pure_Bodybuilding_Program - Phase 1 - Full_Body.pdf",
+      "asset_sha256": "82123b0b04d1eeede12404275627e17d2ae9f3fc8eb3470a971629aeebef27c8",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/the-pure-bodybuilding-program-phase-1-full-body-82123b0b.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/The_Pure_Bodybuilding_Program - Phase 1 - Full_Body.pdf"
+      ]
+    },
+    {
+      "asset": "reference/The_Ultimate_Push_Pull_Legs_System_-_4x.xlsx",
+      "asset_sha256": "a0e202d5443603a03844a3eaea65969eddec06ea3cbb3dd49e0c6e876b88a589",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/the-ultimate-push-pull-legs-system-4x-a0e202d5.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/The_Ultimate_Push_Pull_Legs_System_-_4x.xlsx"
+      ]
+    },
+    {
+      "asset": "reference/The_Ultimate_Push_Pull_Legs_System_-_5x.xlsx",
+      "asset_sha256": "bac4d506550ca01cc70fe692d29f77ee966b4a39de1c8993a2a4458955ca7ecf",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/the-ultimate-push-pull-legs-system-5x-bac4d506.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/The_Ultimate_Push_Pull_Legs_System_-_5x.xlsx"
+      ]
+    },
+    {
+      "asset": "reference/The_Ultimate_Push_Pull_Legs_System_-_6x.xlsx",
+      "asset_sha256": "d746c17ef9982e787417b0d58738a7842c4eb202bd1afaf1f44ba0b6c5729b8d",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/the-ultimate-push-pull-legs-system-6x-d746c17e.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/The_Ultimate_Push_Pull_Legs_System_-_6x.xlsx"
+      ]
+    },
+    {
+      "asset": "reference/The_Ultimate_Push_Pull_Legs_System_4X.pdf",
+      "asset_sha256": "960e40a762c4f3bbc9c4ca17f9403464b19bf027c61d0a546ef031c5704faaef",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/the-ultimate-push-pull-legs-system-4x-960e40a7.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/The_Ultimate_Push_Pull_Legs_System_4X.pdf"
+      ]
+    },
+    {
+      "asset": "reference/The_Ultimate_Push_Pull_Legs_System_5X.pdf",
+      "asset_sha256": "dc721e43200bbd9c95595f15537140bd5aad972a5602c9e193606f5678374842",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/the-ultimate-push-pull-legs-system-5x-dc721e43.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/The_Ultimate_Push_Pull_Legs_System_5X.pdf"
+      ]
+    },
+    {
+      "asset": "reference/The_Ultimate_Push_Pull_Legs_System_6X.pdf",
+      "asset_sha256": "dea4e8285a42c5b911f15ff0eba4a6f5ce993c13d55247382ce0897b67f03ed3",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/the-ultimate-push-pull-legs-system-6x-dea4e828.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/The_Ultimate_Push_Pull_Legs_System_6X.pdf"
+      ]
+    },
+    {
+      "asset": "reference/a-stoic-a-day.pdf",
+      "asset_sha256": "70784a7297f383961b1f0314dd0f8f5c122fd1a0b1eeb8f77744ef6398555e7a",
+      "derived_entities": [
+        {
+          "path": "docs/guides/generated/a-stoic-a-day-70784a72.md",
+          "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "type": "normalized_guide_doc"
+        }
+      ],
+      "source_assets": [
+        "reference/a-stoic-a-day.pdf"
+      ]
+    }
+  ],
+  "source_asset_count": 50,
+  "version": 2,
+  "workbook_pdf_pairs": [
+    {
+      "guide_asset_path": "reference/Purebodybuilding Phase 2 - PPL.pdf",
+      "guide_asset_sha256": "dc34ca33eb720d7db076661178d9fd0a7e1c3776598920955eebd1af17fa773e",
+      "match_score": 4,
+      "workbook_asset_path": "reference/Edited PPL 5x.xlsx",
+      "workbook_asset_sha256": "4639eaf914bdecf75c3afcd647f8d1d1003ce50b3131575fb55da19f7a715b29"
+    },
+    {
+      "guide_asset_path": "reference/Powerbuilding 3.0 5 days a week.pdf",
+      "guide_asset_sha256": "ec6335524c9bdd03ba2455b6e912843c0953a756d9e2f33fc1bac033f1d1a316",
+      "match_score": 5,
+      "workbook_asset_path": "reference/PowerBuilding 3.0.xlsx",
+      "workbook_asset_sha256": "f4de3f2c311a2c0664e3c7136d0064114a6e778000f6f0e5ff6ec99e2b5431b1"
+    },
+    {
+      "guide_asset_path": "reference/The_Pure_Bodybuilding_Program - Phase 1 - Full_Body.pdf",
+      "guide_asset_sha256": "82123b0b04d1eeede12404275627e17d2ae9f3fc8eb3470a971629aeebef27c8",
+      "match_score": 6,
+      "workbook_asset_path": "reference/Pure Bodybuilding Phase 1 - Full Body Sheet.xlsx",
+      "workbook_asset_sha256": "46f50999771cbb454b325729b2d2a77515dbcf2cdd86891e4543eab65019bb71"
+    },
+    {
+      "guide_asset_path": "reference/Pure Bodybuilding Phase 2 - Full Body.pdf",
+      "guide_asset_sha256": "142844edd159903f2c06e875dd11cb3baa296635f50aba09d7a9bd9a458ae111",
+      "match_score": 8,
+      "workbook_asset_path": "reference/Pure Bodybuilding Phase 2 - Full Body Sheet.xlsx",
+      "workbook_asset_sha256": "3068701dc79bfa5dd7dff0daa55c670213125fce0cc1bb56abff22083b93bb23"
+    },
+    {
+      "guide_asset_path": "reference/Purebodybuilding Phase 2 - PPL.pdf",
+      "guide_asset_sha256": "dc34ca33eb720d7db076661178d9fd0a7e1c3776598920955eebd1af17fa773e",
+      "match_score": 8,
+      "workbook_asset_path": "reference/Pure Bodybuilding Phase 2 - PPL Sheet.xlsx",
+      "workbook_asset_sha256": "6deac4a96934c4e684947fdc628a3f49279042cba57c0aa1ce5f83276b1d5ea1"
+    },
+    {
+      "guide_asset_path": "reference/Pure Bodybuilding Phase 2 - Upper Lower.pdf",
+      "guide_asset_sha256": "f455f6dc541515ba30c117315c74704cee6839b2682994febc09ff13059ed29c",
+      "match_score": 8,
+      "workbook_asset_path": "reference/Pure Bodybuilding Phase 2 - Upper Lower Sheet.xlsx",
+      "workbook_asset_sha256": "2b36c90a6dab0f8fa3d1249317f9d36eb93ca97165ced3a6a8130fc3425a3479"
+    },
+    {
+      "guide_asset_path": "reference/Pure Bodybuilding Phase 2 - Full Body.pdf",
+      "guide_asset_sha256": "142844edd159903f2c06e875dd11cb3baa296635f50aba09d7a9bd9a458ae111",
+      "match_score": 4,
+      "workbook_asset_path": "reference/Pure_Bodybuilding_-_Full_Body.xlsx",
+      "workbook_asset_sha256": "9a4021f55659aca4b034f473b1708e361feecb7fd9aaaa55f02716ee6319e16f"
+    },
+    {
+      "guide_asset_path": "reference/The_Bodybuilding_Transformation_System_-_Beginner.pdf",
+      "guide_asset_sha256": "7957aeabbc5db3fa2f58c42ee12bab7d84a03a6d4136b40545ce779a4256fcba",
+      "match_score": 8,
+      "workbook_asset_path": "reference/The_Bodybuilding_Transformation_System_-_Beginner.xlsx",
+      "workbook_asset_sha256": "8a7f08ae9b778abf3cc2541f31ce2ccbf1ee998084d5be109bd083666c60b971"
+    },
+    {
+      "guide_asset_path": "reference/The_Bodybuilding_Transformation_System_-_Intermediate_Advanced.pdf",
+      "guide_asset_sha256": "4bb8934483d723ce8dc71d57c38f67e3b5cf7b93da0129350722e245c07c98ca",
+      "match_score": 9,
+      "workbook_asset_path": "reference/The_Bodybuilding_Transformation_System_-_Intermediate-Advanced.xlsx",
+      "workbook_asset_sha256": "f9f60de040fa9ec156cffbe51d5a660bc2f77dcc8067a5fdab861c2da0cb06d2"
+    },
+    {
+      "guide_asset_path": "reference/The_Ultimate_Push_Pull_Legs_System_4X.pdf",
+      "guide_asset_sha256": "960e40a762c4f3bbc9c4ca17f9403464b19bf027c61d0a546ef031c5704faaef",
+      "match_score": 10,
+      "workbook_asset_path": "reference/The_Ultimate_Push_Pull_Legs_System_-_4x.xlsx",
+      "workbook_asset_sha256": "a0e202d5443603a03844a3eaea65969eddec06ea3cbb3dd49e0c6e876b88a589"
+    },
+    {
+      "guide_asset_path": "reference/The_Ultimate_Push_Pull_Legs_System_5X.pdf",
+      "guide_asset_sha256": "dc721e43200bbd9c95595f15537140bd5aad972a5602c9e193606f5678374842",
+      "match_score": 10,
+      "workbook_asset_path": "reference/The_Ultimate_Push_Pull_Legs_System_-_5x.xlsx",
+      "workbook_asset_sha256": "bac4d506550ca01cc70fe692d29f77ee966b4a39de1c8993a2a4458955ca7ecf"
+    },
+    {
+      "guide_asset_path": "reference/The_Ultimate_Push_Pull_Legs_System_6X.pdf",
+      "guide_asset_sha256": "dea4e8285a42c5b911f15ff0eba4a6f5ce993c13d55247382ce0897b67f03ed3",
+      "match_score": 10,
+      "workbook_asset_path": "reference/The_Ultimate_Push_Pull_Legs_System_-_6x.xlsx",
+      "workbook_asset_sha256": "d746c17ef9982e787417b0d58738a7842c4eb202bd1afaf1f44ba0b6c5729b8d"
+    }
+  ]
 }

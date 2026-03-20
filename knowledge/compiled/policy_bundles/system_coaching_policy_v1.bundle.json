@@ -1,0 +1,80 @@
+{
+  "aggregate_signature": "58e763529ab7087a603f08e587cc040714368cb8590b22d418d9035e74caa72a",
+  "anti_overadaptation_policy": {
+    "major_change_cooldown_days": 7,
+    "max_major_changes_per_mesocycle": 2,
+    "observation_window_days": 14,
+    "policy_id": "anti_overadaptation_v1",
+    "rationale": "The system should not churn the plan faster than the user can produce interpretable evidence.",
+    "status": "seed"
+  },
+  "bundle_id": "system_coaching_policy_v1",
+  "bundle_version": "0.1.0",
+  "constraint_resolution_policy": {
+    "policy_id": "constraint_resolution_v1",
+    "rationale": "Conflicts must resolve deterministically and conservatively.",
+    "resolution_order": [
+      "safety",
+      "recoverability",
+      "day_and_time_feasibility",
+      "adherence_and_skill_feasibility",
+      "locked_user_constraints_when_feasible",
+      "active_specialization_priority",
+      "hypertrophy_ideality",
+      "variety_and_preference_refinement"
+    ],
+    "same_tier_tiebreaker": "prefer_lower_fatigue_and_lower_complexity_for novice, comeback, low_recovery, technique_limited, and inconsistent_schedule users",
+    "status": "seed"
+  },
+  "data_sufficiency_policy": {
+    "minimum_checkins_for_split_change": 2,
+    "minimum_exposures_for_major_exercise_rotation": 3,
+    "minimum_logged_sessions_for_major_change": 4,
+    "policy_id": "data_sufficiency_v1",
+    "rationale": "Major changes require enough data unless safety requires faster intervention.",
+    "safety_override_allowed": true,
+    "status": "seed"
+  },
+  "hard_constraints": [
+    {
+      "constraint_id": "respect_movement_restrictions",
+      "description": "Never prescribe an exercise or movement family that violates an explicit movement restriction.",
+      "rationale": "Safety rules outrank optimization."
+    },
+    {
+      "constraint_id": "respect_available_equipment",
+      "description": "Never prescribe an exercise variant that requires unavailable equipment when no approved fallback exists.",
+      "rationale": "The plan must remain executable."
+    }
+  ],
+  "input_signature": "4f42e4d62cab790a5d5b34f8f4f2e0bd7e317de56da38c8ad101f582a14cd0d5",
+  "minimum_viable_program_policy": {
+    "fallback_order": [
+      "reduce_exercise_variety",
+      "reduce_optional_work",
+      "reduce_frequency_before_violating_hard_constraints"
+    ],
+    "minimum_exercises_per_session": 3,
+    "minimum_sessions_per_week": 2,
+    "policy_id": "minimum_viable_program_v1",
+    "rationale": "If ideal programming is not possible, the system must degrade to a safe and executable minimum viable program.",
+    "status": "seed"
+  },
+  "output_signature": "cd64f93d969741b23d3eb4c7ab15a96dd353f37879bf7c7cc4d10e76c4d48c5a",
+  "schema_version": "knowledge-1",
+  "soft_preferences": [
+    {
+      "default_weight": 0.75,
+      "description": "Honor the user's requested split when it remains feasible after hard-constraint and feasibility checks.",
+      "preference_id": "honor_split_preference_when_feasible",
+      "rationale": "Preference matching improves adherence."
+    },
+    {
+      "default_weight": 0.5,
+      "description": "Prefer lower-complexity exercise options when multiple valid options are otherwise tied.",
+      "preference_id": "prefer_lower_complexity_under_tie",
+      "rationale": "Lower complexity generally improves adherence and execution quality."
+    }
+  ],
+  "status": "seed"
+}

@@ -1,0 +1,936 @@
+{
+  "aggregate_signature": "503769916a0859a807ac741b57766f7572117d768fe64cea4f71b27340d2e445",
+  "bundle_id": "source_registry",
+  "bundle_version": "0.1.0",
+  "entries": [
+    {
+      "authority_weight": 0.75,
+      "bodypart_scope": [
+        "chest"
+      ],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/10-tips-for-chest-gains-jeff-nippard-2-e47430dd.md"
+      ],
+      "paired_source_ids": [],
+      "program_family": null,
+      "source_id": "10-tips-for-chest-gains-jeff-nippard-2-e47430dd",
+      "source_kind": "general_hypertrophy_guide",
+      "source_path": "reference/10-Tips-for-Chest-Gains-Jeff-Nippard 2.pdf",
+      "source_sha256": "e47430dd118633d5bf20ff915e2e0658dac1d515f02763818e08c062be689844",
+      "source_type": "pdf",
+      "split_scope": [],
+      "title": "10 Tips for Chest Gains Jeff Nippard 2"
+    },
+    {
+      "authority_weight": 0.9,
+      "bodypart_scope": [
+        "arms",
+        "biceps",
+        "triceps"
+      ],
+      "classification_confidence": 1.0,
+      "curation_status": "curated",
+      "derived_doc_paths": [
+        "docs/guides/generated/arm-hypertrophy-program-55636d11.md"
+      ],
+      "paired_source_ids": [],
+      "program_family": null,
+      "source_id": "arm-hypertrophy-program-55636d11",
+      "source_kind": "specialization_manual",
+      "source_path": "reference/Arm Hypertrophy Program.pdf",
+      "source_sha256": "55636d119e69f3ee6834d068cf0411d2d0c8632417a4f6ed454d406a2549d5ce",
+      "source_type": "pdf",
+      "split_scope": [],
+      "title": "Arm Hypertrophy Program"
+    },
+    {
+      "authority_weight": 0.8,
+      "bodypart_scope": [
+        "chest",
+        "front_delts",
+        "triceps"
+      ],
+      "classification_confidence": 1.0,
+      "curation_status": "curated",
+      "derived_doc_paths": [
+        "docs/guides/generated/bench-press-631f5e09.md"
+      ],
+      "paired_source_ids": [],
+      "program_family": null,
+      "source_id": "bench-press-631f5e09",
+      "source_kind": "technique_guide",
+      "source_path": "reference/Bench Press.pdf",
+      "source_sha256": "631f5e0904d6fa8d27bedcadeb030a9ed7d2af5e4c2a88142ffc07916a38d0ee",
+      "source_type": "pdf",
+      "split_scope": [],
+      "title": "Bench Press"
+    },
+    {
+      "authority_weight": 0.75,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/c-a-r-d-workout-jeff-nippard-z-library-6c062ef6.md"
+      ],
+      "paired_source_ids": [],
+      "program_family": null,
+      "source_id": "c-a-r-d-workout-jeff-nippard-z-library-6c062ef6",
+      "source_kind": "general_hypertrophy_guide",
+      "source_path": "reference/C.A.R.D. Workout (Jeff Nippard) (Z-Library).pdf",
+      "source_sha256": "6c062ef604b1cd1761f70f35674b169c458936dc26e5e7f0fcdfafda0349081c",
+      "source_type": "pdf",
+      "split_scope": [],
+      "title": "C.A.R.D. Workout (Jeff Nippard) (Z Library)"
+    },
+    {
+      "authority_weight": 0.75,
+      "bodypart_scope": [
+        "back"
+      ],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/comeback-program-jeff-nippard-z-library-1db98a38.md"
+      ],
+      "paired_source_ids": [],
+      "program_family": null,
+      "source_id": "comeback-program-jeff-nippard-z-library-1db98a38",
+      "source_kind": "general_hypertrophy_guide",
+      "source_path": "reference/Comeback Program (Jeff Nippard) (Z-Library).pdf",
+      "source_sha256": "1db98a3808bbd86baf124a96aa08649ab83fbc9c080c22619e8ff572d0a320e2",
+      "source_type": "pdf",
+      "split_scope": [],
+      "title": "Comeback Program (Jeff Nippard) (Z Library)"
+    },
+    {
+      "authority_weight": 1.0,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/edited-ppl-5x-4639eaf9.md"
+      ],
+      "paired_source_ids": [
+        "purebodybuilding-phase-2-ppl-dc34ca33"
+      ],
+      "program_family": null,
+      "source_id": "edited-ppl-5x-4639eaf9",
+      "source_kind": "authored_program_workbook",
+      "source_path": "reference/Edited PPL 5x.xlsx",
+      "source_sha256": "4639eaf914bdecf75c3afcd647f8d1d1003ce50b3131575fb55da19f7a715b29",
+      "source_type": "xlsx",
+      "split_scope": [
+        "ppl"
+      ],
+      "title": "Edited PPL 5x"
+    },
+    {
+      "authority_weight": 0.75,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/full-body-high-frequency-program-7d12f51f.md"
+      ],
+      "paired_source_ids": [],
+      "program_family": null,
+      "source_id": "full-body-high-frequency-program-7d12f51f",
+      "source_kind": "general_hypertrophy_guide",
+      "source_path": "reference/Full Body - High Frequency Program.pdf",
+      "source_sha256": "7d12f51f04627203d1feb6d60e1e651f06622078a467a8d71c0949209748ee13",
+      "source_type": "pdf",
+      "split_scope": [
+        "full_body"
+      ],
+      "title": "Full Body   High Frequency Program"
+    },
+    {
+      "authority_weight": 0.75,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/fundamentals-hypertrophy-program-e434144e.md"
+      ],
+      "paired_source_ids": [],
+      "program_family": null,
+      "source_id": "fundamentals-hypertrophy-program-e434144e",
+      "source_kind": "general_hypertrophy_guide",
+      "source_path": "reference/Fundamentals Hypertrophy Program.pdf",
+      "source_sha256": "e434144e3be718d9bd3b865631b8d311edeefd3cee749c0bf123dd0c5a35e485",
+      "source_type": "pdf",
+      "split_scope": [],
+      "title": "Fundamentals Hypertrophy Program"
+    },
+    {
+      "authority_weight": 0.75,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/get-ready-manual-f0a104c6.md"
+      ],
+      "paired_source_ids": [],
+      "program_family": null,
+      "source_id": "get-ready-manual-f0a104c6",
+      "source_kind": "general_hypertrophy_guide",
+      "source_path": "reference/Get-Ready-Manual.pdf",
+      "source_sha256": "f0a104c671edea9a5b59987d71da1f9af2fe1832545dd085482d335f4146d119",
+      "source_type": "pdf",
+      "split_scope": [],
+      "title": "Get Ready Manual"
+    },
+    {
+      "authority_weight": 0.9,
+      "bodypart_scope": [
+        "glutes"
+      ],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/glute-hypertophy-a2c66232.md"
+      ],
+      "paired_source_ids": [],
+      "program_family": null,
+      "source_id": "glute-hypertophy-a2c66232",
+      "source_kind": "specialization_manual",
+      "source_path": "reference/Glute Hypertophy.pdf",
+      "source_sha256": "a2c6623263f0219116148ea180d62bcfe5257363619485d5d8c7897f66a9ed36",
+      "source_type": "pdf",
+      "split_scope": [],
+      "title": "Glute Hypertophy"
+    },
+    {
+      "authority_weight": 0.75,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/hypertrophy-handbook-44b1f911.md"
+      ],
+      "paired_source_ids": [],
+      "program_family": null,
+      "source_id": "hypertrophy-handbook-44b1f911",
+      "source_kind": "general_hypertrophy_guide",
+      "source_path": "reference/Hypertrophy Handbook.pdf",
+      "source_sha256": "44b1f91176e38b5caf1d4d0cc45ef2a74d1296cffcebb10054b0633d2fdebba7",
+      "source_type": "pdf",
+      "split_scope": [],
+      "title": "Hypertrophy Handbook"
+    },
+    {
+      "authority_weight": 0.75,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/jeff-nippard-the-muscle-ladde-4bf75a91.md"
+      ],
+      "paired_source_ids": [],
+      "program_family": null,
+      "source_id": "jeff-nippard-the-muscle-ladde-4bf75a91",
+      "source_kind": "general_hypertrophy_guide",
+      "source_path": "reference/Jeff Nippard - The Muscle Ladde.pdf",
+      "source_sha256": "4bf75a91186d928d50587b7d8f874e1a4d942270258abf8d6f1fd0a05efcb05d",
+      "source_type": "pdf",
+      "split_scope": [],
+      "title": "Jeff Nippard   The Muscle Ladde"
+    },
+    {
+      "authority_weight": 0.75,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/my-favorite-exercise-for-each-body-part-d77f3c9b.md"
+      ],
+      "paired_source_ids": [],
+      "program_family": null,
+      "source_id": "my-favorite-exercise-for-each-body-part-d77f3c9b",
+      "source_kind": "general_hypertrophy_guide",
+      "source_path": "reference/My-Favorite-Exercise-for-Each-Body-Part.pdf",
+      "source_sha256": "d77f3c9bf15377bf0b78a535b0bdca63fd4b85979bfbab802de3f8c39c8b1766",
+      "source_type": "pdf",
+      "split_scope": [],
+      "title": "My Favorite Exercise for Each Body Part"
+    },
+    {
+      "authority_weight": 0.75,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/nutrition-booklet-13fce45f.md"
+      ],
+      "paired_source_ids": [],
+      "program_family": null,
+      "source_id": "nutrition-booklet-13fce45f",
+      "source_kind": "general_hypertrophy_guide",
+      "source_path": "reference/Nutrition_Booklet.pdf",
+      "source_sha256": "13fce45ff8995446b6e61940a0acc51e98c168f97273e07de17fe33c54c8eee9",
+      "source_type": "pdf",
+      "split_scope": [],
+      "title": "Nutrition Booklet"
+    },
+    {
+      "authority_weight": 1.0,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/powerbuilding-3-0-f4de3f2c.md"
+      ],
+      "paired_source_ids": [
+        "powerbuilding-3-0-5-days-a-week-ec633552"
+      ],
+      "program_family": null,
+      "source_id": "powerbuilding-3-0-f4de3f2c",
+      "source_kind": "authored_program_workbook",
+      "source_path": "reference/PowerBuilding 3.0.xlsx",
+      "source_sha256": "f4de3f2c311a2c0664e3c7136d0064114a6e778000f6f0e5ff6ec99e2b5431b1",
+      "source_type": "xlsx",
+      "split_scope": [],
+      "title": "PowerBuilding 3.0"
+    },
+    {
+      "authority_weight": 1.0,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/powerbuilding-3-0-5-days-a-week-ec633552.md"
+      ],
+      "paired_source_ids": [
+        "powerbuilding-3-0-f4de3f2c"
+      ],
+      "program_family": null,
+      "source_id": "powerbuilding-3-0-5-days-a-week-ec633552",
+      "source_kind": "program_manual",
+      "source_path": "reference/Powerbuilding 3.0 5 days a week.pdf",
+      "source_sha256": "ec6335524c9bdd03ba2455b6e912843c0953a756d9e2f33fc1bac033f1d1a316",
+      "source_type": "pdf",
+      "split_scope": [],
+      "title": "Powerbuilding 3.0 5 days a week"
+    },
+    {
+      "authority_weight": 1.0,
+      "bodypart_scope": [],
+      "classification_confidence": 1.0,
+      "curation_status": "curated",
+      "derived_doc_paths": [
+        "docs/guides/generated/pure-bodybuilding-phase-1-full-body-sheet-46f50999.md"
+      ],
+      "paired_source_ids": [
+        "the-pure-bodybuilding-program-phase-1-full-body-82123b0b"
+      ],
+      "program_family": "pure_bodybuilding_phase_1",
+      "source_id": "pure-bodybuilding-phase-1-full-body-sheet-46f50999",
+      "source_kind": "authored_program_workbook",
+      "source_path": "reference/Pure Bodybuilding Phase 1 - Full Body Sheet.xlsx",
+      "source_sha256": "46f50999771cbb454b325729b2d2a77515dbcf2cdd86891e4543eab65019bb71",
+      "source_type": "xlsx",
+      "split_scope": [
+        "full_body"
+      ],
+      "title": "Pure Bodybuilding Phase 1   Full Body Sheet"
+    },
+    {
+      "authority_weight": 1.0,
+      "bodypart_scope": [],
+      "classification_confidence": 1.0,
+      "curation_status": "curated",
+      "derived_doc_paths": [
+        "docs/guides/generated/pure-bodybuilding-phase-2-full-body-sheet-3068701d.md"
+      ],
+      "paired_source_ids": [
+        "pure-bodybuilding-phase-2-full-body-142844ed"
+      ],
+      "program_family": "pure_bodybuilding_phase_2",
+      "source_id": "pure-bodybuilding-phase-2-full-body-sheet-3068701d",
+      "source_kind": "authored_program_workbook",
+      "source_path": "reference/Pure Bodybuilding Phase 2 - Full Body Sheet.xlsx",
+      "source_sha256": "3068701dc79bfa5dd7dff0daa55c670213125fce0cc1bb56abff22083b93bb23",
+      "source_type": "xlsx",
+      "split_scope": [
+        "full_body"
+      ],
+      "title": "Pure Bodybuilding Phase 2   Full Body Sheet"
+    },
+    {
+      "authority_weight": 1.0,
+      "bodypart_scope": [],
+      "classification_confidence": 1.0,
+      "curation_status": "curated",
+      "derived_doc_paths": [
+        "docs/guides/generated/pure-bodybuilding-phase-2-full-body-142844ed.md"
+      ],
+      "paired_source_ids": [
+        "pure-bodybuilding-full-body-9a4021f5",
+        "pure-bodybuilding-phase-2-full-body-sheet-3068701d"
+      ],
+      "program_family": "pure_bodybuilding_phase_2",
+      "source_id": "pure-bodybuilding-phase-2-full-body-142844ed",
+      "source_kind": "program_manual",
+      "source_path": "reference/Pure Bodybuilding Phase 2 - Full Body.pdf",
+      "source_sha256": "142844edd159903f2c06e875dd11cb3baa296635f50aba09d7a9bd9a458ae111",
+      "source_type": "pdf",
+      "split_scope": [
+        "full_body"
+      ],
+      "title": "Pure Bodybuilding Phase 2   Full Body"
+    },
+    {
+      "authority_weight": 0.75,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/pure-bodybuilding-phase-2-hypertrophy-handbook-04cd79ff.md"
+      ],
+      "paired_source_ids": [],
+      "program_family": null,
+      "source_id": "pure-bodybuilding-phase-2-hypertrophy-handbook-04cd79ff",
+      "source_kind": "general_hypertrophy_guide",
+      "source_path": "reference/Pure Bodybuilding Phase 2 - Hypertrophy Handbook.pdf",
+      "source_sha256": "04cd79ff0812c2ab273fb681127fc4f43c1c6dda6e3e185572956b29f99b92ee",
+      "source_type": "pdf",
+      "split_scope": [],
+      "title": "Pure Bodybuilding Phase 2   Hypertrophy Handbook"
+    },
+    {
+      "authority_weight": 0.75,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/pure-bodybuilding-phase-2-nutrition-booklet-f6788e2c.md"
+      ],
+      "paired_source_ids": [],
+      "program_family": null,
+      "source_id": "pure-bodybuilding-phase-2-nutrition-booklet-f6788e2c",
+      "source_kind": "general_hypertrophy_guide",
+      "source_path": "reference/Pure Bodybuilding Phase 2 - Nutrition Booklet.pdf",
+      "source_sha256": "f6788e2c94bb7daecd3a00e8b621cd811d95db500381de23fcff0140d77bb141",
+      "source_type": "pdf",
+      "split_scope": [],
+      "title": "Pure Bodybuilding Phase 2   Nutrition Booklet"
+    },
+    {
+      "authority_weight": 1.0,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/pure-bodybuilding-phase-2-ppl-sheet-6deac4a9.md"
+      ],
+      "paired_source_ids": [
+        "purebodybuilding-phase-2-ppl-dc34ca33"
+      ],
+      "program_family": null,
+      "source_id": "pure-bodybuilding-phase-2-ppl-sheet-6deac4a9",
+      "source_kind": "authored_program_workbook",
+      "source_path": "reference/Pure Bodybuilding Phase 2 - PPL Sheet.xlsx",
+      "source_sha256": "6deac4a96934c4e684947fdc628a3f49279042cba57c0aa1ce5f83276b1d5ea1",
+      "source_type": "xlsx",
+      "split_scope": [
+        "ppl"
+      ],
+      "title": "Pure Bodybuilding Phase 2   PPL Sheet"
+    },
+    {
+      "authority_weight": 1.0,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/pure-bodybuilding-phase-2-upper-lower-sheet-2b36c90a.md"
+      ],
+      "paired_source_ids": [
+        "pure-bodybuilding-phase-2-upper-lower-f455f6dc"
+      ],
+      "program_family": null,
+      "source_id": "pure-bodybuilding-phase-2-upper-lower-sheet-2b36c90a",
+      "source_kind": "authored_program_workbook",
+      "source_path": "reference/Pure Bodybuilding Phase 2 - Upper Lower Sheet.xlsx",
+      "source_sha256": "2b36c90a6dab0f8fa3d1249317f9d36eb93ca97165ced3a6a8130fc3425a3479",
+      "source_type": "xlsx",
+      "split_scope": [
+        "upper_lower"
+      ],
+      "title": "Pure Bodybuilding Phase 2   Upper Lower Sheet"
+    },
+    {
+      "authority_weight": 1.0,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/pure-bodybuilding-phase-2-upper-lower-f455f6dc.md"
+      ],
+      "paired_source_ids": [
+        "pure-bodybuilding-phase-2-upper-lower-sheet-2b36c90a"
+      ],
+      "program_family": null,
+      "source_id": "pure-bodybuilding-phase-2-upper-lower-f455f6dc",
+      "source_kind": "program_manual",
+      "source_path": "reference/Pure Bodybuilding Phase 2 - Upper Lower.pdf",
+      "source_sha256": "f455f6dc541515ba30c117315c74704cee6839b2682994febc09ff13059ed29c",
+      "source_type": "pdf",
+      "split_scope": [
+        "upper_lower"
+      ],
+      "title": "Pure Bodybuilding Phase 2   Upper Lower"
+    },
+    {
+      "authority_weight": 1.0,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/pure-bodybuilding-full-body-9a4021f5.md"
+      ],
+      "paired_source_ids": [
+        "pure-bodybuilding-phase-2-full-body-142844ed"
+      ],
+      "program_family": null,
+      "source_id": "pure-bodybuilding-full-body-9a4021f5",
+      "source_kind": "authored_program_workbook",
+      "source_path": "reference/Pure_Bodybuilding_-_Full_Body.xlsx",
+      "source_sha256": "9a4021f55659aca4b034f473b1708e361feecb7fd9aaaa55f02716ee6319e16f",
+      "source_type": "xlsx",
+      "split_scope": [
+        "full_body"
+      ],
+      "title": "Pure Bodybuilding Full Body"
+    },
+    {
+      "authority_weight": 1.0,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/purebodybuilding-phase-2-ppl-dc34ca33.md"
+      ],
+      "paired_source_ids": [
+        "edited-ppl-5x-4639eaf9",
+        "pure-bodybuilding-phase-2-ppl-sheet-6deac4a9"
+      ],
+      "program_family": null,
+      "source_id": "purebodybuilding-phase-2-ppl-dc34ca33",
+      "source_kind": "program_manual",
+      "source_path": "reference/Purebodybuilding Phase 2 - PPL.pdf",
+      "source_sha256": "dc34ca33eb720d7db076661178d9fd0a7e1c3776598920955eebd1af17fa773e",
+      "source_type": "pdf",
+      "split_scope": [
+        "ppl"
+      ],
+      "title": "Purebodybuilding Phase 2   PPL"
+    },
+    {
+      "authority_weight": 0.9,
+      "bodypart_scope": [
+        "adductors",
+        "glutes",
+        "quads"
+      ],
+      "classification_confidence": 1.0,
+      "curation_status": "curated",
+      "derived_doc_paths": [
+        "docs/guides/generated/squat-specialization-program-pdf-0f8ce226.md"
+      ],
+      "paired_source_ids": [],
+      "program_family": null,
+      "source_id": "squat-specialization-program-pdf-0f8ce226",
+      "source_kind": "specialization_manual",
+      "source_path": "reference/Squat-Specialization-Program-pdf.pdf",
+      "source_sha256": "0f8ce2268a76532bf147b17b7c4e5d9cb0348bf219942743d10f89ce7ef3037b",
+      "source_type": "pdf",
+      "split_scope": [],
+      "title": "Squat Specialization Program pdf"
+    },
+    {
+      "authority_weight": 0.95,
+      "bodypart_scope": [],
+      "classification_confidence": 1.0,
+      "curation_status": "curated",
+      "derived_doc_paths": [
+        "docs/guides/generated/technique-handbook-26ef47c5.md"
+      ],
+      "paired_source_ids": [],
+      "program_family": null,
+      "source_id": "technique-handbook-26ef47c5",
+      "source_kind": "technique_guide",
+      "source_path": "reference/Technique-Handbook.pdf",
+      "source_sha256": "26ef47c51e99508a0cba23cda17b48f1105b6949f4413a34a0fe7e35717c7de6",
+      "source_type": "pdf",
+      "split_scope": [],
+      "title": "Technique Handbook"
+    },
+    {
+      "authority_weight": 0.75,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/the-essentials-program-3xweek-jeff-nippard-z-library-2aafd830.md"
+      ],
+      "paired_source_ids": [],
+      "program_family": null,
+      "source_id": "the-essentials-program-3xweek-jeff-nippard-z-library-2aafd830",
+      "source_kind": "general_hypertrophy_guide",
+      "source_path": "reference/The Essentials Program - 3xweek (Jeff Nippard) (Z-Library).pdf",
+      "source_sha256": "2aafd83030055fa37f04282a108ab694b824624ad260a1a534028c081ba09284",
+      "source_type": "pdf",
+      "split_scope": [],
+      "title": "The Essentials Program   3xweek (Jeff Nippard) (Z Library)"
+    },
+    {
+      "authority_weight": 0.75,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/the-essentials-program-4xweek-jeff-nippard-z-lib-org-b23e5efc.md"
+      ],
+      "paired_source_ids": [],
+      "program_family": null,
+      "source_id": "the-essentials-program-4xweek-jeff-nippard-z-lib-org-b23e5efc",
+      "source_kind": "general_hypertrophy_guide",
+      "source_path": "reference/The Essentials Program - 4xweek (Jeff Nippard) (z-lib.org).pdf",
+      "source_sha256": "b23e5efc67625af77e92ef06bc74d1fa790016b8edaccb9854a6bfbd747341cf",
+      "source_type": "pdf",
+      "split_scope": [],
+      "title": "The Essentials Program   4xweek (Jeff Nippard) (z lib.org)"
+    },
+    {
+      "authority_weight": 0.75,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/the-essentials-program-5xweek-jeff-nippard-z-lib-org-b2f6e99f.md"
+      ],
+      "paired_source_ids": [],
+      "program_family": null,
+      "source_id": "the-essentials-program-5xweek-jeff-nippard-z-lib-org-b2f6e99f",
+      "source_kind": "general_hypertrophy_guide",
+      "source_path": "reference/The Essentials Program - 5xweek (Jeff Nippard) (z-lib.org).pdf",
+      "source_sha256": "b2f6e99f64843e389fba5bd1f0a1fd3e2d641b1885b82c905ecec1017ebd331f",
+      "source_type": "pdf",
+      "split_scope": [],
+      "title": "The Essentials Program   5xweek (Jeff Nippard) (z lib.org)"
+    },
+    {
+      "authority_weight": 0.75,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/the-muscle-ladder-get-jacked-using-science-jeff-nippard-2b43ccfd.md"
+      ],
+      "paired_source_ids": [],
+      "program_family": null,
+      "source_id": "the-muscle-ladder-get-jacked-using-science-jeff-nippard-2b43ccfd",
+      "source_kind": "general_hypertrophy_guide",
+      "source_path": "reference/The Muscle Ladder Get Jacked Using Science (Jeff Nippard).pdf",
+      "source_sha256": "2b43ccfd392b1407d93a7603824a4fc95426547b467e1ec2bce00289efa88759",
+      "source_type": "pdf",
+      "split_scope": [],
+      "title": "The Muscle Ladder Get Jacked Using Science (Jeff Nippard)"
+    },
+    {
+      "authority_weight": 1.0,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/the-bodybuilding-transformation-system-beginner-7957aeab.md"
+      ],
+      "paired_source_ids": [
+        "the-bodybuilding-transformation-system-beginner-8a7f08ae"
+      ],
+      "program_family": null,
+      "source_id": "the-bodybuilding-transformation-system-beginner-7957aeab",
+      "source_kind": "program_manual",
+      "source_path": "reference/The_Bodybuilding_Transformation_System_-_Beginner.pdf",
+      "source_sha256": "7957aeabbc5db3fa2f58c42ee12bab7d84a03a6d4136b40545ce779a4256fcba",
+      "source_type": "pdf",
+      "split_scope": [],
+      "title": "The Bodybuilding Transformation System Beginner"
+    },
+    {
+      "authority_weight": 1.0,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/the-bodybuilding-transformation-system-beginner-8a7f08ae.md"
+      ],
+      "paired_source_ids": [
+        "the-bodybuilding-transformation-system-beginner-7957aeab"
+      ],
+      "program_family": null,
+      "source_id": "the-bodybuilding-transformation-system-beginner-8a7f08ae",
+      "source_kind": "authored_program_workbook",
+      "source_path": "reference/The_Bodybuilding_Transformation_System_-_Beginner.xlsx",
+      "source_sha256": "8a7f08ae9b778abf3cc2541f31ce2ccbf1ee998084d5be109bd083666c60b971",
+      "source_type": "xlsx",
+      "split_scope": [],
+      "title": "The Bodybuilding Transformation System Beginner"
+    },
+    {
+      "authority_weight": 1.0,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/the-bodybuilding-transformation-system-intermediate-advanced-f9f60de0.md"
+      ],
+      "paired_source_ids": [
+        "the-bodybuilding-transformation-system-intermediate-advanced-4bb89344"
+      ],
+      "program_family": null,
+      "source_id": "the-bodybuilding-transformation-system-intermediate-advanced-f9f60de0",
+      "source_kind": "authored_program_workbook",
+      "source_path": "reference/The_Bodybuilding_Transformation_System_-_Intermediate-Advanced.xlsx",
+      "source_sha256": "f9f60de040fa9ec156cffbe51d5a660bc2f77dcc8067a5fdab861c2da0cb06d2",
+      "source_type": "xlsx",
+      "split_scope": [],
+      "title": "The Bodybuilding Transformation System Intermediate Advanced"
+    },
+    {
+      "authority_weight": 1.0,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/the-bodybuilding-transformation-system-intermediate-advanced-4bb89344.md"
+      ],
+      "paired_source_ids": [
+        "the-bodybuilding-transformation-system-intermediate-advanced-f9f60de0"
+      ],
+      "program_family": null,
+      "source_id": "the-bodybuilding-transformation-system-intermediate-advanced-4bb89344",
+      "source_kind": "program_manual",
+      "source_path": "reference/The_Bodybuilding_Transformation_System_-_Intermediate_Advanced.pdf",
+      "source_sha256": "4bb8934483d723ce8dc71d57c38f67e3b5cf7b93da0129350722e245c07c98ca",
+      "source_type": "pdf",
+      "split_scope": [],
+      "title": "The Bodybuilding Transformation System Intermediate Advanced"
+    },
+    {
+      "authority_weight": 0.75,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/the-bodybuilding-transformation-system-guidebook-beginner-1fd15280.md"
+      ],
+      "paired_source_ids": [],
+      "program_family": null,
+      "source_id": "the-bodybuilding-transformation-system-guidebook-beginner-1fd15280",
+      "source_kind": "general_hypertrophy_guide",
+      "source_path": "reference/The_Bodybuilding_Transformation_System_Guidebook_-_Beginner.pdf",
+      "source_sha256": "1fd152800a667c3f9b5daefbd2e59323a2471b02f74800aaa5dec803ce29ab47",
+      "source_type": "pdf",
+      "split_scope": [],
+      "title": "The Bodybuilding Transformation System Guidebook Beginner"
+    },
+    {
+      "authority_weight": 0.75,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/the-bodybuilding-transformation-system-guidebook-intermediate-advanced-dfa35f49.md"
+      ],
+      "paired_source_ids": [],
+      "program_family": null,
+      "source_id": "the-bodybuilding-transformation-system-guidebook-intermediate-advanced-dfa35f49",
+      "source_kind": "general_hypertrophy_guide",
+      "source_path": "reference/The_Bodybuilding_Transformation_System_Guidebook_-_Intermediate_Advanced.pdf",
+      "source_sha256": "dfa35f4924dc68ec67a62597546a1e024d5bdc014dfb14c1cca0ce4eaa0ba459",
+      "source_type": "pdf",
+      "split_scope": [],
+      "title": "The Bodybuilding Transformation System Guidebook Intermediate Advanced"
+    },
+    {
+      "authority_weight": 1.0,
+      "bodypart_scope": [],
+      "classification_confidence": 1.0,
+      "curation_status": "curated",
+      "derived_doc_paths": [
+        "docs/guides/generated/the-pure-bodybuilding-program-phase-1-full-body-82123b0b.md"
+      ],
+      "paired_source_ids": [
+        "pure-bodybuilding-phase-1-full-body-sheet-46f50999"
+      ],
+      "program_family": "pure_bodybuilding_phase_1",
+      "source_id": "the-pure-bodybuilding-program-phase-1-full-body-82123b0b",
+      "source_kind": "program_manual",
+      "source_path": "reference/The_Pure_Bodybuilding_Program - Phase 1 - Full_Body.pdf",
+      "source_sha256": "82123b0b04d1eeede12404275627e17d2ae9f3fc8eb3470a971629aeebef27c8",
+      "source_type": "pdf",
+      "split_scope": [
+        "full_body"
+      ],
+      "title": "The Pure Bodybuilding Program   Phase 1   Full Body"
+    },
+    {
+      "authority_weight": 1.0,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/the-ultimate-push-pull-legs-system-4x-a0e202d5.md"
+      ],
+      "paired_source_ids": [
+        "the-ultimate-push-pull-legs-system-4x-960e40a7"
+      ],
+      "program_family": null,
+      "source_id": "the-ultimate-push-pull-legs-system-4x-a0e202d5",
+      "source_kind": "authored_program_workbook",
+      "source_path": "reference/The_Ultimate_Push_Pull_Legs_System_-_4x.xlsx",
+      "source_sha256": "a0e202d5443603a03844a3eaea65969eddec06ea3cbb3dd49e0c6e876b88a589",
+      "source_type": "xlsx",
+      "split_scope": [
+        "ppl"
+      ],
+      "title": "The Ultimate Push Pull Legs System 4x"
+    },
+    {
+      "authority_weight": 1.0,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/the-ultimate-push-pull-legs-system-5x-bac4d506.md"
+      ],
+      "paired_source_ids": [
+        "the-ultimate-push-pull-legs-system-5x-dc721e43"
+      ],
+      "program_family": null,
+      "source_id": "the-ultimate-push-pull-legs-system-5x-bac4d506",
+      "source_kind": "authored_program_workbook",
+      "source_path": "reference/The_Ultimate_Push_Pull_Legs_System_-_5x.xlsx",
+      "source_sha256": "bac4d506550ca01cc70fe692d29f77ee966b4a39de1c8993a2a4458955ca7ecf",
+      "source_type": "xlsx",
+      "split_scope": [
+        "ppl"
+      ],
+      "title": "The Ultimate Push Pull Legs System 5x"
+    },
+    {
+      "authority_weight": 1.0,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/the-ultimate-push-pull-legs-system-6x-d746c17e.md"
+      ],
+      "paired_source_ids": [
+        "the-ultimate-push-pull-legs-system-6x-dea4e828"
+      ],
+      "program_family": null,
+      "source_id": "the-ultimate-push-pull-legs-system-6x-d746c17e",
+      "source_kind": "authored_program_workbook",
+      "source_path": "reference/The_Ultimate_Push_Pull_Legs_System_-_6x.xlsx",
+      "source_sha256": "d746c17ef9982e787417b0d58738a7842c4eb202bd1afaf1f44ba0b6c5729b8d",
+      "source_type": "xlsx",
+      "split_scope": [
+        "ppl"
+      ],
+      "title": "The Ultimate Push Pull Legs System 6x"
+    },
+    {
+      "authority_weight": 1.0,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/the-ultimate-push-pull-legs-system-4x-960e40a7.md"
+      ],
+      "paired_source_ids": [
+        "the-ultimate-push-pull-legs-system-4x-a0e202d5"
+      ],
+      "program_family": null,
+      "source_id": "the-ultimate-push-pull-legs-system-4x-960e40a7",
+      "source_kind": "program_manual",
+      "source_path": "reference/The_Ultimate_Push_Pull_Legs_System_4X.pdf",
+      "source_sha256": "960e40a762c4f3bbc9c4ca17f9403464b19bf027c61d0a546ef031c5704faaef",
+      "source_type": "pdf",
+      "split_scope": [
+        "ppl"
+      ],
+      "title": "The Ultimate Push Pull Legs System 4X"
+    },
+    {
+      "authority_weight": 1.0,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/the-ultimate-push-pull-legs-system-5x-dc721e43.md"
+      ],
+      "paired_source_ids": [
+        "the-ultimate-push-pull-legs-system-5x-bac4d506"
+      ],
+      "program_family": null,
+      "source_id": "the-ultimate-push-pull-legs-system-5x-dc721e43",
+      "source_kind": "program_manual",
+      "source_path": "reference/The_Ultimate_Push_Pull_Legs_System_5X.pdf",
+      "source_sha256": "dc721e43200bbd9c95595f15537140bd5aad972a5602c9e193606f5678374842",
+      "source_type": "pdf",
+      "split_scope": [
+        "ppl"
+      ],
+      "title": "The Ultimate Push Pull Legs System 5X"
+    },
+    {
+      "authority_weight": 1.0,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/the-ultimate-push-pull-legs-system-6x-dea4e828.md"
+      ],
+      "paired_source_ids": [
+        "the-ultimate-push-pull-legs-system-6x-d746c17e"
+      ],
+      "program_family": null,
+      "source_id": "the-ultimate-push-pull-legs-system-6x-dea4e828",
+      "source_kind": "program_manual",
+      "source_path": "reference/The_Ultimate_Push_Pull_Legs_System_6X.pdf",
+      "source_sha256": "dea4e8285a42c5b911f15ff0eba4a6f5ce993c13d55247382ce0897b67f03ed3",
+      "source_type": "pdf",
+      "split_scope": [
+        "ppl"
+      ],
+      "title": "The Ultimate Push Pull Legs System 6X"
+    },
+    {
+      "authority_weight": 0.75,
+      "bodypart_scope": [],
+      "classification_confidence": 0.6,
+      "curation_status": "seeded",
+      "derived_doc_paths": [
+        "docs/guides/generated/a-stoic-a-day-70784a72.md"
+      ],
+      "paired_source_ids": [],
+      "program_family": null,
+      "source_id": "a-stoic-a-day-70784a72",
+      "source_kind": "general_hypertrophy_guide",
+      "source_path": "reference/a-stoic-a-day.pdf",
+      "source_sha256": "70784a7297f383961b1f0314dd0f8f5c122fd1a0b1eeb8f77744ef6398555e7a",
+      "source_type": "pdf",
+      "split_scope": [],
+      "title": "a stoic a day"
+    }
+  ],
+  "input_signature": "8aecdd397bfa9a90f6956395723d504f08f10c45a74ae3d5278673c0ba344480",
+  "output_signature": "69311a2a27ce6693ba4e3886cee364ec9f35fdfe1e0a393b1352ebe4fa1467c7",
+  "schema_version": "knowledge-1"
+}

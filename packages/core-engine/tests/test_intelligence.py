@@ -860,6 +860,7 @@ def test_build_profile_upsert_persistence_payload_defaults_selected_program() ->
         gender="male",
         split_preference="full_body",
         selected_program_id=None,
+        program_selection_mode=None,
         training_location="home",
         equipment_profile=["dumbbell"],
         weak_areas=["chest"],
@@ -875,6 +876,7 @@ def test_build_profile_upsert_persistence_payload_defaults_selected_program() ->
         near_failure_tolerance="moderate",
     )
     assert payload["selected_program_id"] == "pure_bodybuilding_phase_1_full_body"
+    assert payload["program_selection_mode"] == "manual"
     assert payload["onboarding_answers"] == {"primary_goal": "build_muscle"}
     assert payload["session_time_budget_minutes"] == 75
     assert payload["movement_restrictions"] == ["deep_knee_flexion"]
@@ -890,6 +892,7 @@ def test_build_profile_response_payload_applies_profile_defaults() -> None:
         gender=None,
         split_preference=None,
         selected_program_id=None,
+        program_selection_mode=None,
         training_location="home",
         equipment_profile=None,
         weak_areas=None,
@@ -906,6 +909,7 @@ def test_build_profile_response_payload_applies_profile_defaults() -> None:
     )
     assert payload["email"] == "coach@example.com"
     assert payload["selected_program_id"] == "pure_bodybuilding_phase_1_full_body"
+    assert payload["program_selection_mode"] == "manual"
     assert payload["days_available"] == 2
     assert payload["nutrition_phase"] == "maintenance"
     assert payload["equipment_profile"] == []

@@ -26,6 +26,7 @@ class User(Base):
     gender: Mapped[str | None] = mapped_column(String, nullable=True)
     split_preference: Mapped[str | None] = mapped_column(String, nullable=True)
     selected_program_id: Mapped[str | None] = mapped_column(String, nullable=True)
+    program_selection_mode: Mapped[str | None] = mapped_column(String, nullable=True, default="manual")
     training_location: Mapped[str | None] = mapped_column(String, nullable=True)
     equipment_profile: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     weak_areas: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)

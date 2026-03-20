@@ -29,6 +29,7 @@ from core_engine import (
     prepare_generate_week_scheduler_runtime,
     prepare_generation_template_runtime,
     prepare_plan_generation_decision_runtime,
+    prepare_profile_program_recommendation_route_runtime,
     resolve_program_display_name,
     resolve_optional_rule_set,
     resolve_onboarding_program_id,
@@ -610,6 +611,72 @@ def plan_generate_week(
         raise HTTPException(status_code=400, detail=PROFILE_INCOMPLETE_DETAIL)
     explicit_template_id = resolve_administered_program_id(payload.template_id) if payload.template_id else None
     profile_template_id = resolve_active_administered_program_id(current_user.selected_program_id)
+    program_recommendation_trace: dict[str, Any] | None = None
+
+    auto_mode = (current_user.program_selection_mode or "manual") == "auto"
+    if auto_mode and explicit_template_id is None:
+        latest_plan = (
+            db.query(WorkoutPlan)
+            .filter(WorkoutPlan.user_id == current_user.id)
+            .order_by(WorkoutPlan.created_at.desc())
+            .first()
+        )
+        recent_checkins = (
+            db.query(WeeklyCheckin)
+            .filter(WeeklyCheckin.user_id == current_user.id)
+            .order_by(WeeklyCheckin.week_start.desc(), WeeklyCheckin.created_at.desc())
+            .limit(4)
+            .all()
+        )
+        recent_reviews = (
+            db.query(WeeklyReviewCycle)
+            .filter(WeeklyReviewCycle.user_id == current_user.id)
+            .order_by(WeeklyReviewCycle.week_start.desc(), WeeklyReviewCycle.created_at.desc())
+            .limit(4)
+            .all()
+        )
+
+        training_state = build_plan_decision_training_state(
+            selected_program_id=current_user.selected_program_id,
+            days_available=current_user.days_available,
+            split_preference=current_user.split_preference,
+            training_location=current_user.training_location,
+            equipment_profile=current_user.equipment_profile or [],
+            weak_areas=current_user.weak_areas or [],
+            nutrition_phase=current_user.nutrition_phase,
+            session_time_budget_minutes=current_user.session_time_budget_minutes,
+            movement_restrictions=list(current_user.movement_restrictions or []),
+            near_failure_tolerance=current_user.near_failure_tolerance,
+            latest_plan=latest_plan,
+            latest_soreness_entry=None,
+            recent_workout_logs=[],
+            recent_checkins=recent_checkins,
+            recent_review_cycles=recent_reviews,
+            prior_plans=[],
+        )
+
+        route_runtime = prepare_profile_program_recommendation_route_runtime(
+            selected_program_id=resolve_active_administered_program_id(current_user.selected_program_id),
+            days_available=current_user.days_available,
+            split_preference=current_user.split_preference,
+            latest_plan=latest_plan,
+            available_program_summaries=list_program_templates(),
+            latest_adherence_score=None,
+            user_training_state=training_state,
+            generated_at=datetime.now(UTC),
+        )
+
+        recommendation_runtime = cast(dict[str, Any], route_runtime.get("recommendation_runtime") or {})
+        response_payload = cast(dict[str, Any], recommendation_runtime.get("response_payload") or {})
+        recommended_program_id = cast(str, response_payload.get("recommended_program_id") or "")
+        program_recommendation_trace = cast(dict[str, Any], route_runtime.get("decision_trace") or {})
+
+        if recommended_program_id:
+            # Persist the recommendation so the current program matches reality.
+            current_user.selected_program_id = recommended_program_id
+            db.add(current_user)
+            profile_template_id = resolve_active_administered_program_id(current_user.selected_program_id)
+            explicit_template_id = recommended_program_id
 
     try:
         template_runtime = prepare_generation_template_runtime(
@@ -631,6 +698,8 @@ def plan_generate_week(
     selected_template_id = cast(str, template_runtime["selected_template_id"])
     template = cast(dict[str, Any], template_runtime["selected_template"])
     template_selection_trace = cast(dict[str, Any], template_runtime["decision_trace"])
+    if program_recommendation_trace is not None:
+        template_selection_trace["program_recommendation_trace"] = program_recommendation_trace
     rule_set = resolve_optional_rule_set(
         template_id=selected_template_id,
         resolve_linked_program_id=resolve_rule_program_id,

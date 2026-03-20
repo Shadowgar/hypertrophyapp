@@ -1,5 +1,11 @@
-# Normalized Reference Guide - Asset: reference/Get-Ready-Manual.pdf
+# Normalized Reference Guide
+
+- Asset: reference/Get-Ready-Manual.pdf
 - SHA256: f0a104c671edea9a5b59987d71da1f9af2fe1832545dd085482d335f4146d119
 - Type: pdf
-- Extraction Method: pdf_pypdf
-- Extracted Characters: 28161 ## Excerpt GET READY MANUAL & CHECKLIST GET READY MANUAL & CHECKLIST 2 DISCLAIMER Copyright 2020 by . All rights reserved. No part of this e-book may be used or reproduced by any means: graphic, electronic, or mechanical, including photocopying, recording, taping or by any information storage retrieval system without the written permission of the author, except in the case of brief quotations embodied in critical articles or reviews. Readers should be aware that Internet Web sites offered as citations and/or sources for further information may have changed or disappeared between the time this book was written and when it is read. Limit of Liability/Disclaimer of Warranty: While the author has used his best efforts and knowledge in researching and preparing this book, he makes no representations or warranties with respect to the accuracy or completeness of the contents of this book and GET READY MANUAL & CHECKLIST 3 specifically disclaims any implied warranties of merchantability or fitness for a particular purpose. No warranty may be created or extended by sales representatives or written sales materials. The advice and strategies contained herein may not be suitable for your particular situation. You should consult with a medical professional where appropriate. Neither the publisher nor the author shall be liable for any loss of profit or any other commercial damages, including but not limited to special, incidental, consequential, or other damages. The contents of this e-book are not intended for the treatment or prevention of disease, nor as a substitute for medical treatment, nor as an alternative to medical advice. Utilizing the information within this e-book is at the sole choice and risk of the reader. TABLE OF CONTENTS ABOUT ME 5 WHY I WANTED TO WRITE A POWERBUILDING PROGRAM 7 THE THEORY OF POWERBUILDING 8 THE ADVANTAGES OF POWERBUILDING 10 HOW TO GET READY: THE CHECKLISTS 13 REFERENCES 21 GET READY MANUAL & CHECKLIST 5 ABOUT ME Jeff is a profe
+- Extraction Method: pdf_metadata_only
+- Extracted Characters: 0
+
+## Excerpt
+
+(No text extracted)

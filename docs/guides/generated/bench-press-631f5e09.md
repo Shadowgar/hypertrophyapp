@@ -1,5 +1,11 @@
-# Normalized Reference Guide - Asset: reference/Bench Press.pdf
+# Normalized Reference Guide
+
+- Asset: reference/Bench Press.pdf
 - SHA256: 631f5e0904d6fa8d27bedcadeb030a9ed7d2af5e4c2a88142ffc07916a38d0ee
 - Type: pdf
-- Extraction Method: pdf_pypdf
-- Extracted Characters: 87885 ## Excerpt BENCH PRESS ’S SPECIALIZATION PROGRAM BENCH PRESS ’S SPECIALIZATION PROGRAM ABOUT ME 4 KEY TERMS 6 F.A.Q 8 BENCH PRESS ANATOMY 13 BENCH PRESS TECHNIQUE 18 COMMON MISTAKES 25 WARM UP 31 PROGRAM 33 PROGRAM EXPLAINED 60 TRAINING VARIABLES 62 EXERCISE VIDEO LINKS 68 DISCLAIMER 77 TABLE OF CONTENTS / BENCH PRESS PROGRAM 4 ABOUT ME Jeff is a professional drug-free bodybuilder and powerlifter. Through his informative and entertaining Youtube channel which has gathered a fan-base of over 800,000 subscribers, Jeff aims to share the knowledge he has gathered through university education and field experience with others who are passionate about the science behind building muscle, losing fat and getting healthier. He earned the title of Mr. Junior Canada for natural bodybuilding in 2012 and as a powerlifter, Jeff held the Canadian national record for the bench press in 2014. As a powerlifter, Jeff has claimed a 502 lb squat, 336 lb bench press and a 518 lb deadlift with an all time best Wilks score of 446. With a Bachelor of Science degree in biochemistry, Jeff has gathered the requisite scientific knowledge to compliment his practical experience acquired through training and coaching. Jeff has coached women’s bikini and men’s bodybuilding national and provincial / BENCH PRESS PROGRAM 5 champions, professional natural bodybuilders and nationally and IPF Worlds qualified raw powerlifters. He has presented seminars on Block Periodization, concurrent training and nutrition and training for natural bodybuilding in academic settings including the 2014 Online Fitness Summit and at the University of Iowa. He has aspirations of completing a PhD in exercise science or a related field. Jeff currently lives in Kelowna, Canada where he is producing informative YouTube videos and podcasts while preparing for his next competition season in natural bodybuilding in 2019. / BENCH PRESS PROGRAM 6 KEY TERMS DB: Dumbbell LSRPE: Last se
+- Extraction Method: pdf_metadata_only
+- Extracted Characters: 0
+
+## Excerpt
+
+(No text extracted)

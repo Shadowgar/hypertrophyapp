@@ -1,0 +1,58 @@
+{
+  "schema_version": "knowledge-1",
+  "bundle_id": "multi_source_hypertrophy_v1",
+  "bundle_version": "0.1.0",
+  "status": "seed",
+  "input_signature": "seed",
+  "output_signature": "seed",
+  "aggregate_signature": "seed",
+  "source_ids": [],
+  "module_ids": [
+    "assessment",
+    "split",
+    "volume",
+    "exercise_selection",
+    "progression",
+    "mesocycle",
+    "adaptation",
+    "specialization",
+    "technique",
+    "safety"
+  ],
+  "rules_by_module": {
+    "assessment": [
+      {
+        "rule_id": "assessment_seed_placeholder",
+        "module_id": "assessment",
+        "status": "placeholder",
+        "description": "Placeholder assessment doctrine slot for compiled bundle validation.",
+        "provenance": [],
+        "tags": [
+          "seed",
+          "placeholder"
+        ]
+      }
+    ],
+    "split": [
+      {
+        "rule_id": "split_seed_placeholder",
+        "module_id": "split",
+        "status": "placeholder",
+        "description": "Placeholder split doctrine slot for compiled bundle validation.",
+        "provenance": [],
+        "tags": [
+          "seed",
+          "placeholder"
+        ]
+      }
+    ],
+    "volume": [],
+    "exercise_selection": [],
+    "progression": [],
+    "mesocycle": [],
+    "adaptation": [],
+    "specialization": [],
+    "technique": [],
+    "safety": []
+  }
+}

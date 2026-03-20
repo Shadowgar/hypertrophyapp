@@ -1,0 +1,44 @@
+{
+  "aggregate_signature": "0e633fd7e1e3af11d2790394b041375e0b1c1160213c28747e3af7632698957f",
+  "artifacts": [
+    {
+      "artifact_id": "exercise_library_foundation",
+      "artifact_type": "exercise_library_bundle",
+      "input_signature": "a10e4128f810b3472374a023882ac19363361b33d33c4fc7e921fb6b8dae3f64",
+      "output_signature": "6eb823893c7c4b731b478a2d48bbfeeb77e6ce9130bb17451e14df544a8b9d14",
+      "path": "knowledge/compiled/exercise_library.foundation.v1.json"
+    },
+    {
+      "artifact_id": "multi_source_hypertrophy_v1",
+      "artifact_type": "doctrine_bundle",
+      "input_signature": "856ac97581c6ea8ec4166d24300a1814b92f1f86db714b81f4c6ca78100c0a7a",
+      "output_signature": "01a917a5fdd8dc3b0067f5b6514af4fe5e35c2b262f869e29321597e539d2ac7",
+      "path": "knowledge/compiled/doctrine_bundles/multi_source_hypertrophy_v1.bundle.json"
+    },
+    {
+      "artifact_id": "source_registry",
+      "artifact_type": "source_registry_bundle",
+      "input_signature": "8aecdd397bfa9a90f6956395723d504f08f10c45a74ae3d5278673c0ba344480",
+      "output_signature": "69311a2a27ce6693ba4e3886cee364ec9f35fdfe1e0a393b1352ebe4fa1467c7",
+      "path": "knowledge/compiled/source_registry.v1.json"
+    },
+    {
+      "artifact_id": "system_coaching_policy_v1",
+      "artifact_type": "policy_bundle",
+      "input_signature": "4f42e4d62cab790a5d5b34f8f4f2e0bd7e317de56da38c8ad101f582a14cd0d5",
+      "output_signature": "cd64f93d969741b23d3eb4c7ab15a96dd353f37879bf7c7cc4d10e76c4d48c5a",
+      "path": "knowledge/compiled/policy_bundles/system_coaching_policy_v1.bundle.json"
+    }
+  ],
+  "bundle_id": "build_manifest",
+  "bundle_version": "0.1.0",
+  "input_signature": "5192cff5840618ef9b59de1d12b29915c4da4e5c2652306f80c8daf07a326b11",
+  "output_signature": "093ef00126f7919c100fb560f4046824563f8090dd4d1f295ba4d680491e19f1",
+  "schema_version": "knowledge-1",
+  "warnings": [
+    "Skipped placeholder exercise from pure_bodybuilding_phase_1_full_body: weak_point_exercise_1",
+    "Skipped placeholder exercise from pure_bodybuilding_phase_1_full_body: weak_point_exercise_2_optional",
+    "Skipped placeholder exercise from pure_bodybuilding_phase_2_full_body: weak_point_exercise_1_optional",
+    "Skipped placeholder exercise from pure_bodybuilding_phase_2_full_body: weak_point_exercise_2_optional"
+  ]
+}

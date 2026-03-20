@@ -123,6 +123,7 @@ export type Profile = {
   fat: number;
   carbs: number;
   selected_program_id?: string | null;
+  program_selection_mode: "manual" | "auto";
 };
 
 export type ProgramRecommendation = {

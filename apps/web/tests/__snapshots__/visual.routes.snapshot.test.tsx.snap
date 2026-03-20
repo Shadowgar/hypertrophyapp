@@ -2,7 +2,7 @@
 
 exports[`visual snapshot: today route initial state 1`] = `
 <div
-  class="space-y-4"
+  class="space-y-4 pb-[max(7rem,env(safe-area-inset-bottom))]"
 >
   <div
     class="flex items-baseline justify-between gap-2"

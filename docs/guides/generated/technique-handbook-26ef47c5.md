@@ -1,5 +1,11 @@
-# Normalized Reference Guide - Asset: reference/Technique-Handbook.pdf
+# Normalized Reference Guide
+
+- Asset: reference/Technique-Handbook.pdf
 - SHA256: 26ef47c51e99508a0cba23cda17b48f1105b6949f4413a34a0fe7e35717c7de6
 - Type: pdf
-- Extraction Method: pdf_pypdf
-- Extracted Characters: 94136 ## Excerpt POWERBUILDING TECHNIQUE HANDBOOK POWERBUILDING TECHNIQUE HANDBOOK 2 DISCLAIMER Copyright 2020 by . All rights reserved. No part of this e-book may be used or reproduced by any means: graphic, electronic, or mechanical, including photocopying, recording, taping or by any information storage retrieval system without the written permission of the author, except in the case of brief quotations embodied in critical articles or reviews. Readers should be aware that Internet Web sites offered as citations and/or sources for further information may have changed or disappeared between the time this book was written and when it is read. Limit of Liability/Disclaimer of Warranty: While the author has used his best efforts and knowledge in researching and preparing this book, he makes no representations or warranties with respect to the accuracy or completeness POWERBUILDING TECHNIQUE HANDBOOK 3 of the contents of this book and specifically disclaims any implied warranties of merchantability or fitness for a particular purpose. No warranty may be created or extended by sales representatives or written sales materials. The advice and strategies contained herein may not be suitable for your particular situation. You should consult with a medical professional where appropriate. Neither the publisher nor the author shall be liable for any loss of profit or any other commercial damages, including but not limited to special, incidental, consequential, or other damages. The contents of this e-book are not intended for the treatment or prevention of disease, nor as a substitute for medical treatment, nor as an alternative to medical advice. Utilizing the information within this e-book is at the sole choice and risk of the reader. DISCLAIMER 2 ABOUT ME 6 TECHNIQUE OVERVIEW 8 SQUAT 18 SQUAT MECHANICS 19 SQUAT TECHNIQUE (HOW TO) 23 SQUAT STICKING POINTS 30 COMMON SQUAT TECHNIQUE ERRORS 32 TABLE OF CONTENTS BENCH PRESS 38 BENCH PRESS MECHANICS 39 BENCH PRESS TECHNI
+- Extraction Method: pdf_metadata_only
+- Extracted Characters: 0
+
+## Excerpt
+
+(No text extracted)

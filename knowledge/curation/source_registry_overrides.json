@@ -1,0 +1,92 @@
+{
+  "schema_version": "knowledge-1",
+  "entries": [
+    {
+      "match_path": "reference/Technique-Handbook.pdf",
+      "source_kind": "technique_guide",
+      "authority_weight": 0.95,
+      "classification_confidence": 1.0,
+      "curation_status": "curated"
+    },
+    {
+      "match_path": "reference/Bench Press.pdf",
+      "source_kind": "technique_guide",
+      "bodypart_scope": [
+        "chest",
+        "triceps",
+        "front_delts"
+      ],
+      "authority_weight": 0.8,
+      "classification_confidence": 1.0,
+      "curation_status": "curated"
+    },
+    {
+      "match_path": "reference/Arm Hypertrophy Program.pdf",
+      "source_kind": "specialization_manual",
+      "bodypart_scope": [
+        "arms",
+        "biceps",
+        "triceps"
+      ],
+      "authority_weight": 0.9,
+      "classification_confidence": 1.0,
+      "curation_status": "curated"
+    },
+    {
+      "match_path": "reference/Squat-Specialization-Program-pdf.pdf",
+      "source_kind": "specialization_manual",
+      "bodypart_scope": [
+        "quads",
+        "glutes",
+        "adductors"
+      ],
+      "authority_weight": 0.9,
+      "classification_confidence": 1.0,
+      "curation_status": "curated"
+    },
+    {
+      "match_path": "reference/Pure Bodybuilding Phase 1 - Full Body Sheet.xlsx",
+      "source_kind": "authored_program_workbook",
+      "program_family": "pure_bodybuilding_phase_1",
+      "split_scope": [
+        "full_body"
+      ],
+      "authority_weight": 1.0,
+      "classification_confidence": 1.0,
+      "curation_status": "curated"
+    },
+    {
+      "match_path": "reference/The_Pure_Bodybuilding_Program - Phase 1 - Full_Body.pdf",
+      "source_kind": "program_manual",
+      "program_family": "pure_bodybuilding_phase_1",
+      "split_scope": [
+        "full_body"
+      ],
+      "authority_weight": 1.0,
+      "classification_confidence": 1.0,
+      "curation_status": "curated"
+    },
+    {
+      "match_path": "reference/Pure Bodybuilding Phase 2 - Full Body Sheet.xlsx",
+      "source_kind": "authored_program_workbook",
+      "program_family": "pure_bodybuilding_phase_2",
+      "split_scope": [
+        "full_body"
+      ],
+      "authority_weight": 1.0,
+      "classification_confidence": 1.0,
+      "curation_status": "curated"
+    },
+    {
+      "match_path": "reference/Pure Bodybuilding Phase 2 - Full Body.pdf",
+      "source_kind": "program_manual",
+      "program_family": "pure_bodybuilding_phase_2",
+      "split_scope": [
+        "full_body"
+      ],
+      "authority_weight": 1.0,
+      "classification_confidence": 1.0,
+      "curation_status": "curated"
+    }
+  ]
+}

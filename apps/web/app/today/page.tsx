@@ -960,6 +960,7 @@ export default function TodayPage() {
     }
     isBeginWorkoutLoadInProgress.current = true;
     const today = new Date().toISOString().slice(0, 10);
+    const sorenessSkipKey = `hypertrophy_soreness_skip:${today}`;
     try {
       const reviewStatus = await api.getWeeklyReviewStatus();
       if (reviewStatus.today_is_sunday && reviewStatus.review_required) {
@@ -975,15 +976,20 @@ export default function TodayPage() {
       if (sorenessDismissedThisSession.current) {
         return;
       }
+
+      // Daily prompt policy:
+      // - show the soreness modal once per calendar day
+      // - Skip suppresses the modal for that same date
+      try {
+        if (localStorage.getItem(sorenessSkipKey)) {
+          return;
+        }
+      } catch {
+        // Ignore localStorage errors; fall back to normal behavior.
+      }
+
       const entriesToday = await api.listSoreness(today, today);
       if (entriesToday.length > 0) {
-        return;
-      }
-      const past = new Date();
-      past.setDate(past.getDate() - 30);
-      const pastStr = past.toISOString().slice(0, 10);
-      const entriesPast = await api.listSoreness(pastStr, today);
-      if (entriesPast.length === 0) {
         return;
       }
       resetSorenessForm();
@@ -1005,6 +1011,7 @@ export default function TodayPage() {
 
   async function submitSorenessAndLoad() {
     const today = new Date().toISOString().slice(0, 10);
+    const sorenessSkipKey = `hypertrophy_soreness_skip:${today}`;
     setSorenessStatus("Saving soreness...");
     try {
       await api.createSoreness({
@@ -1012,6 +1019,12 @@ export default function TodayPage() {
         severity_by_muscle: sorenessByMuscle,
         notes: sorenessNotes || undefined,
       });
+      // Once soreness is saved for today, suppress future modal prompts for this date.
+      try {
+        localStorage.removeItem(sorenessSkipKey);
+      } catch {
+        // ignore localStorage errors
+      }
       setShowSorenessModal(false);
       await loadToday();
     } catch {
@@ -1540,6 +1553,13 @@ export default function TodayPage() {
               <Button
                 className="w-full"
                 onClick={async () => {
+                  const today = new Date().toISOString().slice(0, 10);
+                  const sorenessSkipKey = `hypertrophy_soreness_skip:${today}`;
+                  try {
+                    localStorage.setItem(sorenessSkipKey, "1");
+                  } catch {
+                    // ignore localStorage errors
+                  }
                   sorenessDismissedThisSession.current = true;
                   setShowSorenessModal(false);
                   await loadToday();

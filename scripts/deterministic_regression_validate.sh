@@ -8,6 +8,11 @@ API_TESTS=(
   tests/test_program_recommendation_and_switch.py
   tests/test_weekly_review.py
   tests/test_reference_corpus_ingestion.py
+  tests/test_runtime_source_boundaries.py
+  tests/test_source_registry_contract.py
+  tests/test_source_to_knowledge_pipeline.py
+  tests/test_exercise_library_contract.py
+  tests/test_knowledge_loader.py
 )
 
 WEB_TESTS=(
@@ -27,6 +32,7 @@ if command -v docker >/dev/null 2>&1 && (docker compose version >/dev/null 2>&1 
 else
   echo "- docker compose not available; running focused API tests locally"
   API_PYTHON="$ROOT/apps/api/.venv/bin/python"
+  FALLBACK_PYTHON="$(command -v python3 || true)"
   SQLITE_TEST_DB="$ROOT/apps/api/.tmp_deterministic_regression.sqlite3"
   CREATED_SQLITE_FALLBACK=0
   (
@@ -46,8 +52,10 @@ else
       PYTHONPATH=. pytest "${API_TESTS[@]}" -q
     elif [ -x "$API_PYTHON" ]; then
       PYTHONPATH=. "$API_PYTHON" -m pytest "${API_TESTS[@]}" -q
+    elif [ -n "$FALLBACK_PYTHON" ]; then
+      PYTHONPATH=. "$FALLBACK_PYTHON" -m pytest "${API_TESTS[@]}" -q
     else
-      echo "pytest is unavailable and apps/api/.venv/bin/python was not found" >&2
+      echo "pytest is unavailable and no Python fallback was found" >&2
       exit 1
     fi
 

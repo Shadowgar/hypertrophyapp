@@ -821,6 +821,7 @@ export default function OnboardingPage() {
         fat: 70,
         carbs: 280,
         selected_program_id: selectedProgramId,
+        program_selection_mode: selectedProgramId ? "manual" : "auto",
       }),
     });
 

@@ -77,6 +77,7 @@ class ProfileUpsert(BaseModel):
     gender: str
     split_preference: str
     selected_program_id: str | None = None
+    program_selection_mode: Literal["manual", "auto"] = "manual"
     training_location: str | None = None
     equipment_profile: list[str] = Field(default_factory=list)
     weak_areas: list[str] = Field(default_factory=list)

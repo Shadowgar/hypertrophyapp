@@ -11,15 +11,53 @@ from .template_schema import CanonicalProgramTemplate
 
 PHASE1_CANONICAL_PROGRAM_ID = "pure_bodybuilding_phase_1_full_body"
 PHASE2_CANONICAL_PROGRAM_ID = "pure_bodybuilding_phase_2_full_body"
-ACTIVE_ADMINISTERED_PROGRAM_IDS: set[str] = {
+
+_DEFAULT_ACTIVE_ADMINISTERED_PROGRAM_IDS: set[str] = {
     PHASE1_CANONICAL_PROGRAM_ID,
     PHASE2_CANONICAL_PROGRAM_ID,
 }
-CONTRACT_ENFORCED_TEMPLATE_IDS: set[str] = {
+
+_DEFAULT_CONTRACT_ENFORCED_TEMPLATE_IDS: set[str] = {
     PHASE1_CANONICAL_PROGRAM_ID,
     PHASE2_CANONICAL_PROGRAM_ID,
     "upper_lower_v1",
 }
+
+
+def _load_program_loader_id_set(filename: str, *, default: set[str]) -> set[str]:
+    """
+    Optional activation overrides for experiments / new program onboarding.
+
+    If the JSON file exists, it must be a list of strings (program ids).
+    Loaded ids are UNION'ed with `default`.
+    """
+    repo_root = Path(__file__).resolve().parents[3]
+    override_path = repo_root / "programs" / filename
+    if not override_path.exists():
+        return set(default)
+
+    try:
+        raw = json.loads(override_path.read_text(encoding="utf-8"))
+    except OSError:
+        return set(default)
+    except json.JSONDecodeError:
+        return set(default)
+
+    if not isinstance(raw, list):
+        return set(default)
+
+    override_ids = {str(item).strip() for item in raw if str(item).strip()}
+    return set(default).union(override_ids)
+
+
+ACTIVE_ADMINISTERED_PROGRAM_IDS: set[str] = _load_program_loader_id_set(
+    "active_administered_program_ids.json",
+    default=_DEFAULT_ACTIVE_ADMINISTERED_PROGRAM_IDS,
+)
+CONTRACT_ENFORCED_TEMPLATE_IDS: set[str] = _load_program_loader_id_set(
+    "contract_enforced_template_ids.json",
+    default=_DEFAULT_CONTRACT_ENFORCED_TEMPLATE_IDS,
+)
 PHASE1_CANONICAL_RUNTIME_TEMPLATE_ID = PHASE1_CANONICAL_PROGRAM_ID
 PHASE1_LEGACY_RUNTIME_TEMPLATE_ID = "adaptive_full_body_gold_v0_1"
 PHASE1_LEGACY_RULE_OVERLAY_SOURCE_ID = PHASE1_LEGACY_RUNTIME_TEMPLATE_ID

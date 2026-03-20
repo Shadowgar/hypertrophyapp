@@ -97,6 +97,7 @@ export default function SettingsPage() {
         gender: profile.gender,
         split_preference: profile.split_preference,
         selected_program_id: profile.selected_program_id,
+        program_selection_mode: profile.program_selection_mode,
         training_location: editTrainingLocation,
         equipment_profile: editEquipment,
         weak_areas: profile.weak_areas ?? [],
