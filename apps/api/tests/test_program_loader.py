@@ -379,6 +379,8 @@ def test_phase1_runtime_template_source_resolution_prefers_canonical_source_id()
     assert resolve_runtime_template_id("pure_bodybuilding_phase_1_full_body") == "pure_bodybuilding_phase_1_full_body"
     assert resolve_runtime_template_id("full_body_v1") == "pure_bodybuilding_phase_1_full_body"
     assert resolve_runtime_template_id("adaptive_full_body_gold_v0_1") == "pure_bodybuilding_phase_1_full_body"
+    assert resolve_runtime_template_id("pure_bodybuilding_phase_2_full_body_sheet") == "pure_bodybuilding_phase_2_full_body"
+    assert resolve_runtime_template_id("pure_bodybuilding_phase_2_full_body_sheet_1") == "pure_bodybuilding_phase_2_full_body"
 
 
 def test_phase1_canonical_runtime_template_artifact_exists() -> None:
@@ -397,7 +399,8 @@ def test_phase1_canonical_runtime_template_artifact_exists() -> None:
         ("ppl_v1", "pure_bodybuilding_phase_2_ppl_sheet"),
         ("upper_lower_v1", "pure_bodybuilding_phase_2_upper_lower_sheet"),
         ("pure_bodybuilding_full_body", "pure_bodybuilding_phase_1_full_body"),
-        ("pure_bodybuilding_phase_2_full_body_sheet_1", "pure_bodybuilding_phase_2_full_body_sheet"),
+        ("pure_bodybuilding_phase_2_full_body_sheet_1", "pure_bodybuilding_phase_2_full_body"),
+        ("pure_bodybuilding_phase_2_full_body", "pure_bodybuilding_phase_2_full_body"),
         ("powerbuilding_3_0", "powerbuilding_3_0"),
         ("the_bodybuilding_transformation_system_beginner", "the_bodybuilding_transformation_system_beginner"),
         ("the_bodybuilding_transformation_system_intermediate_advanced", "the_bodybuilding_transformation_system_intermediate_advanced"),

@@ -297,6 +297,12 @@ def resolve_scheduler_mesocycle_runtime(
             or None
         )
 
+    transition_checkpoint = bool(
+        authored_week_index is not None
+        and str(authored_week_role or "").strip().lower() == "deload"
+        and int(authored_week_index) > 1
+    )
+
     return {
         "weeks_completed_prior": weeks_completed_prior,
         "week_index": week_index,
@@ -311,6 +317,7 @@ def resolve_scheduler_mesocycle_runtime(
         "phase_transition_pending": bool(authored_sequence_complete),
         "phase_transition_reason": phase_transition_reason,
         "post_authored_behavior": post_authored_behavior,
+        "transition_checkpoint": transition_checkpoint,
         "trigger_weeks_base": trigger_weeks_base,
         "trigger_weeks_effective": trigger_weeks_effective,
         "is_deload_week": bool(reasons),
@@ -364,6 +371,7 @@ def resolve_scheduler_mesocycle_runtime(
                 "week_index": week_index,
                 "is_deload_week": bool(reasons),
                 "deload_reason": "+".join(reasons) if reasons else "none",
+                "transition_checkpoint": transition_checkpoint,
                 "trigger_weeks_source": trigger_weeks_source,
                 "stimulus_fatigue_response_source": normalized_sfr_source,
             },

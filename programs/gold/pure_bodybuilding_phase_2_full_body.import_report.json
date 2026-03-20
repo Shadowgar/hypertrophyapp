@@ -1,0 +1,221 @@
+{
+  "export_type": "adaptive_gold_program_template",
+  "source_workbook": "/home/rocco/hypertrophyapp/reference/Pure Bodybuilding Phase 2 - Full Body Sheet.xlsx",
+  "output_path": "/home/rocco/hypertrophyapp/programs/gold/pure_bodybuilding_phase_2_full_body.json",
+  "sheet_count": 1,
+  "sheet_names": [
+    "Full Body"
+  ],
+  "session_count": 50,
+  "phase_count": 2,
+  "week_count": 10,
+  "day_count": 5,
+  "diagnostic_status": "warnings",
+  "diagnostic_count": 34,
+  "items": [
+    {
+      "sheet_name": "Full Body",
+      "row_index": 116,
+      "code": "structural_session_label_skipped",
+      "message": "Structural session label 'Week 2' was ignored."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 116,
+      "code": "missing_working_sets",
+      "message": "Exercise 'Exercise' was skipped because Working Sets is missing or non-numeric."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 154,
+      "code": "structural_session_label_skipped",
+      "message": "Structural session label 'Week 3' was ignored."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 154,
+      "code": "missing_working_sets",
+      "message": "Exercise 'Exercise' was skipped because Working Sets is missing or non-numeric."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 192,
+      "code": "structural_session_label_skipped",
+      "message": "Structural session label 'Week 4' was ignored."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 192,
+      "code": "missing_working_sets",
+      "message": "Exercise 'Exercise' was skipped because Working Sets is missing or non-numeric."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 230,
+      "code": "structural_session_label_skipped",
+      "message": "Structural session label 'Week 5' was ignored."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 230,
+      "code": "missing_working_sets",
+      "message": "Exercise 'Exercise' was skipped because Working Sets is missing or non-numeric."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 268,
+      "code": "structural_session_label_skipped",
+      "message": "Structural session label 'BLOCK 2: 5-WEEK GRIND PHASE' was ignored."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 270,
+      "code": "structural_session_label_skipped",
+      "message": "Structural session label 'Week 6' was ignored."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 270,
+      "code": "missing_working_sets",
+      "message": "Exercise 'Exercise' was skipped because Working Sets is missing or non-numeric."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 305,
+      "code": "missing_reps",
+      "message": "Exercise 'Close-Grip Pushup (AMRAP)' was skipped because Reps is missing or non-numeric."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 308,
+      "code": "structural_session_label_skipped",
+      "message": "Structural session label 'Week 7' was ignored."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 308,
+      "code": "missing_working_sets",
+      "message": "Exercise 'Exercise' was skipped because Working Sets is missing or non-numeric."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 343,
+      "code": "missing_reps",
+      "message": "Exercise 'Close-Grip Pushup (AMRAP)' was skipped because Reps is missing or non-numeric."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 346,
+      "code": "structural_session_label_skipped",
+      "message": "Structural session label 'Week 8' was ignored."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 346,
+      "code": "missing_working_sets",
+      "message": "Exercise 'Exercise' was skipped because Working Sets is missing or non-numeric."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 381,
+      "code": "missing_reps",
+      "message": "Exercise 'Close-Grip Pushup (AMRAP)' was skipped because Reps is missing or non-numeric."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 384,
+      "code": "structural_session_label_skipped",
+      "message": "Structural session label 'Week 9' was ignored."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 384,
+      "code": "missing_working_sets",
+      "message": "Exercise 'Exercise' was skipped because Working Sets is missing or non-numeric."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 419,
+      "code": "missing_reps",
+      "message": "Exercise 'Close-Grip Pushup (AMRAP)' was skipped because Reps is missing or non-numeric."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 422,
+      "code": "structural_session_label_skipped",
+      "message": "Structural session label 'Week 10' was ignored."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 422,
+      "code": "missing_working_sets",
+      "message": "Exercise 'Exercise' was skipped because Working Sets is missing or non-numeric."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 457,
+      "code": "missing_reps",
+      "message": "Exercise 'Close-Grip Pushup (AMRAP)' was skipped because Reps is missing or non-numeric."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 116,
+      "code": "structural_session_label_skipped",
+      "message": "Structural session label 'Week 2' was ignored."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 154,
+      "code": "structural_session_label_skipped",
+      "message": "Structural session label 'Week 3' was ignored."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 192,
+      "code": "structural_session_label_skipped",
+      "message": "Structural session label 'Week 4' was ignored."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 230,
+      "code": "structural_session_label_skipped",
+      "message": "Structural session label 'Week 5' was ignored."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 268,
+      "code": "structural_session_label_skipped",
+      "message": "Structural session label 'BLOCK 2: 5-WEEK GRIND PHASE' was ignored."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 270,
+      "code": "structural_session_label_skipped",
+      "message": "Structural session label 'Week 6' was ignored."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 308,
+      "code": "structural_session_label_skipped",
+      "message": "Structural session label 'Week 7' was ignored."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 346,
+      "code": "structural_session_label_skipped",
+      "message": "Structural session label 'Week 8' was ignored."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 384,
+      "code": "structural_session_label_skipped",
+      "message": "Structural session label 'Week 9' was ignored."
+    },
+    {
+      "sheet_name": "Full Body",
+      "row_index": 422,
+      "code": "structural_session_label_skipped",
+      "message": "Structural session label 'Week 10' was ignored."
+    }
+  ]
+}

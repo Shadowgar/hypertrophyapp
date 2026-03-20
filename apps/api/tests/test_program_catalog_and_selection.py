@@ -20,6 +20,25 @@ def _reset_db() -> None:
     Base.metadata.create_all(bind=engine)
 
 
+def _seed_prior_generated_weeks(*, user_id: str, weeks: int, program_template_id: str, gap_week_offsets: set[int] | None = None) -> None:
+    monday = date.today() - timedelta(days=date.today().weekday())
+    skipped_offsets = set(gap_week_offsets or set())
+    with SessionLocal() as db:
+        for offset in range(weeks):
+            if offset in skipped_offsets:
+                continue
+            db.add(
+                WorkoutPlan(
+                    user_id=user_id,
+                    week_start=monday - timedelta(days=7 * (weeks - offset)),
+                    split="full_body",
+                    phase="accumulation",
+                    payload={"program_template_id": program_template_id, "sessions": []},
+                )
+            )
+        db.commit()
+
+
 def test_program_catalog_lists_templates() -> None:
     _reset_db()
     client = TestClient(app)
@@ -29,9 +48,10 @@ def test_program_catalog_lists_templates() -> None:
     payload = response.json()
     assert isinstance(payload, list)
     assert any(item["id"] == "pure_bodybuilding_phase_1_full_body" for item in payload)
+    assert any(item["id"] == "pure_bodybuilding_phase_2_full_body" for item in payload)
 
     ids = {str(item.get("id")) for item in payload}
-    assert ids == {"pure_bodybuilding_phase_1_full_body"}
+    assert ids == {"pure_bodybuilding_phase_1_full_body", "pure_bodybuilding_phase_2_full_body"}
     assert "full_body_v1" not in ids
     assert "adaptive_full_body_gold_v0_1" not in ids
     assert "ppl_v1" not in ids
@@ -2264,3 +2284,312 @@ def test_generate_week_explicit_template_override_is_respected(monkeypatch) -> N
     assert plan["program_template_id"] == "explicit_template"
     assert plan["template_selection_trace"]["reason"] == "explicit_template_override"
     assert plan["sessions"][0]["session_id"].startswith("explicit_template-")
+
+
+def test_phase2_generate_week_uses_canonical_template_and_week1_deload() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "phase2-week1@example.com", "password": TEST_CREDENTIAL, "name": "Phase2 Week1 User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Phase2 Week1 User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "pure_bodybuilding_phase_2_full_body",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "bench", "cable", "machine", "dumbbell"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+    assert plan["program_template_id"] == "pure_bodybuilding_phase_2_full_body"
+    assert plan["mesocycle"]["authored_week_index"] == 1
+    assert plan["mesocycle"]["authored_week_role"] == "deload"
+    assert plan["mesocycle"]["is_deload_week"] is True
+    assert plan["mesocycle"]["transition_checkpoint"] is False
+
+
+def test_phase2_generate_week_uses_week_five_before_transition() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "phase2-week5@example.com", "password": TEST_CREDENTIAL, "name": "Phase2 Week5 User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Phase2 Week5 User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "pure_bodybuilding_phase_2_full_body",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "bench", "cable", "machine", "dumbbell"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == "phase2-week5@example.com").first()
+        assert user is not None
+        _seed_prior_generated_weeks(
+            user_id=user.id,
+            weeks=4,
+            program_template_id="pure_bodybuilding_phase_2_full_body",
+        )
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+    assert plan["generation_runtime_trace"]["outcome"]["prior_generated_weeks"] == 4
+    assert plan["mesocycle"]["authored_week_index"] == 5
+    assert plan["mesocycle"]["authored_week_role"] == "intensification"
+    assert plan["mesocycle"]["is_deload_week"] is False
+
+
+def test_phase2_generate_week_week_five_to_six_transition_is_checkpoint() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "phase2-week6@example.com", "password": TEST_CREDENTIAL, "name": "Phase2 Week6 User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Phase2 Week6 User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "pure_bodybuilding_phase_2_full_body",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "bench", "cable", "machine", "dumbbell"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == "phase2-week6@example.com").first()
+        assert user is not None
+        _seed_prior_generated_weeks(
+            user_id=user.id,
+            weeks=5,
+            program_template_id="pure_bodybuilding_phase_2_full_body",
+        )
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+    assert plan["generation_runtime_trace"]["outcome"]["prior_generated_weeks"] == 5
+    assert plan["mesocycle"]["authored_week_index"] == 6
+    assert plan["mesocycle"]["authored_week_role"] == "deload"
+    assert plan["mesocycle"]["is_deload_week"] is True
+    assert plan["mesocycle"]["transition_checkpoint"] is True
+    assert plan["mesocycle"]["deload_reason"] in {"authored_deload", "scheduled+authored_deload"}
+
+
+def test_phase2_generate_week_supports_interruption_and_resume_and_week_ten() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "phase2-week10@example.com", "password": TEST_CREDENTIAL, "name": "Phase2 Week10 User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Phase2 Week10 User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "pure_bodybuilding_phase_2_full_body",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "bench", "cable", "machine", "dumbbell"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == "phase2-week10@example.com").first()
+        assert user is not None
+        # Leave one historical week gap to emulate interruption and ensure resumed counting still works.
+        _seed_prior_generated_weeks(
+            user_id=user.id,
+            weeks=10,
+            program_template_id="pure_bodybuilding_phase_2_full_body",
+            gap_week_offsets={1},
+        )
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+    assert plan["generation_runtime_trace"]["outcome"]["prior_generated_weeks"] == 9
+    assert plan["mesocycle"]["authored_week_index"] == 10
+    assert plan["mesocycle"]["authored_week_role"] == "intensification"
+
+
+def test_phase2_time_budget_compression_applies_across_block_transition() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "phase2-budget@example.com", "password": TEST_CREDENTIAL, "name": "Phase2 Budget User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Phase2 Budget User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "pure_bodybuilding_phase_2_full_body",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "bench", "cable", "machine", "dumbbell"],
+            "days_available": 3,
+            "session_time_budget_minutes": 30,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == "phase2-budget@example.com").first()
+        assert user is not None
+        _seed_prior_generated_weeks(
+            user_id=user.id,
+            weeks=5,
+            program_template_id="pure_bodybuilding_phase_2_full_body",
+        )
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+    assert plan["mesocycle"]["authored_week_index"] == 6
+    recovery_step = next(
+        step
+        for step in plan["generation_runtime_trace"]["steps"]
+        if step["decision"] == "recovery_inputs"
+    )
+    assert recovery_step["result"]["session_time_budget_minutes"] == 30
+
+
+def test_phase2_movement_restrictions_remain_enforced_on_rotated_weeks() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "phase2-restrict@example.com", "password": TEST_CREDENTIAL, "name": "Phase2 Restriction User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Phase2 Restriction User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "pure_bodybuilding_phase_2_full_body",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "bench", "cable", "machine", "dumbbell"],
+            "days_available": 3,
+            "movement_restrictions": ["overhead_pressing"],
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == "phase2-restrict@example.com").first()
+        assert user is not None
+        _seed_prior_generated_weeks(
+            user_id=user.id,
+            weeks=7,
+            program_template_id="pure_bodybuilding_phase_2_full_body",
+        )
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+    patterns = {
+        str(exercise.get("movement_pattern") or "")
+        for session in plan["sessions"]
+        for exercise in session["exercises"]
+    }
+    assert "vertical_press" not in patterns

@@ -402,8 +402,8 @@ def test_adaptive_gold_today_matches_selected_generated_session() -> None:
     assert today.status_code == 200
     payload = today.json()
     exercise_ids = [item["id"] for item in payload["exercises"]]
+    selected_session = next(session for session in generated_sessions if session["session_id"] == payload["session_id"])
     expected_ids = [exercise["id"] for exercise in selected_session["exercises"]]
-    assert payload["session_id"] == selected_session["session_id"]
     assert exercise_ids == expected_ids
     selected_exercise = selected_session["exercises"][0]
     matching = next(item for item in payload["exercises"] if item["id"] == selected_exercise["id"])

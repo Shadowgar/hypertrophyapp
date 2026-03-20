@@ -10,11 +10,14 @@ from .adaptive_schema import AdaptiveGoldProgramTemplate, AdaptiveGoldRuleSet, P
 from .template_schema import CanonicalProgramTemplate
 
 PHASE1_CANONICAL_PROGRAM_ID = "pure_bodybuilding_phase_1_full_body"
+PHASE2_CANONICAL_PROGRAM_ID = "pure_bodybuilding_phase_2_full_body"
 ACTIVE_ADMINISTERED_PROGRAM_IDS: set[str] = {
     PHASE1_CANONICAL_PROGRAM_ID,
+    PHASE2_CANONICAL_PROGRAM_ID,
 }
 CONTRACT_ENFORCED_TEMPLATE_IDS: set[str] = {
     PHASE1_CANONICAL_PROGRAM_ID,
+    PHASE2_CANONICAL_PROGRAM_ID,
     "upper_lower_v1",
 }
 PHASE1_CANONICAL_RUNTIME_TEMPLATE_ID = PHASE1_CANONICAL_PROGRAM_ID
@@ -26,15 +29,26 @@ PHASE1_COMPATIBILITY_ALIASES: set[str] = {
     "pure_bodybuilding_full_body",
     PHASE1_CANONICAL_PROGRAM_ID,
 }
+PHASE2_COMPATIBILITY_ALIASES: set[str] = {
+    PHASE2_CANONICAL_PROGRAM_ID,
+    "pure_bodybuilding_phase_2_full_body_sheet",
+    "pure_bodybuilding_phase_2_full_body_sheet_1",
+}
 
 ADMINISTERED_PROGRAM_ID_ALIASES: dict[str, str] = {
     alias: PHASE1_CANONICAL_PROGRAM_ID for alias in PHASE1_COMPATIBILITY_ALIASES
 }
+ADMINISTERED_PROGRAM_ID_ALIASES.update(
+    {alias: PHASE2_CANONICAL_PROGRAM_ID for alias in PHASE2_COMPATIBILITY_ALIASES}
+)
 
 RUNTIME_TEMPLATE_SOURCE_IDS: dict[str, str] = {
     "full_body_v1": PHASE1_CANONICAL_RUNTIME_TEMPLATE_ID,
     "adaptive_full_body_gold_v0_1": PHASE1_CANONICAL_RUNTIME_TEMPLATE_ID,
     PHASE1_CANONICAL_PROGRAM_ID: PHASE1_CANONICAL_RUNTIME_TEMPLATE_ID,
+    "pure_bodybuilding_phase_2_full_body_sheet": PHASE2_CANONICAL_PROGRAM_ID,
+    "pure_bodybuilding_phase_2_full_body_sheet_1": PHASE2_CANONICAL_PROGRAM_ID,
+    PHASE2_CANONICAL_PROGRAM_ID: PHASE2_CANONICAL_PROGRAM_ID,
 }
 
 RUNTIME_TEMPLATE_SOURCE_FALLBACK_IDS: dict[str, str] = {
@@ -46,6 +60,9 @@ ONBOARDING_SOURCE_IDS: dict[str, str] = {
     "adaptive_full_body_gold_v0_1": PHASE1_CANONICAL_PROGRAM_ID,
     "pure_bodybuilding_full_body": PHASE1_CANONICAL_PROGRAM_ID,
     PHASE1_CANONICAL_PROGRAM_ID: PHASE1_CANONICAL_PROGRAM_ID,
+    "pure_bodybuilding_phase_2_full_body_sheet": PHASE2_CANONICAL_PROGRAM_ID,
+    "pure_bodybuilding_phase_2_full_body_sheet_1": PHASE2_CANONICAL_PROGRAM_ID,
+    PHASE2_CANONICAL_PROGRAM_ID: PHASE2_CANONICAL_PROGRAM_ID,
 }
 
 RULE_SOURCE_IDS: dict[str, str] = {
@@ -53,11 +70,15 @@ RULE_SOURCE_IDS: dict[str, str] = {
     "adaptive_full_body_gold_v0_1": PHASE1_CANONICAL_PROGRAM_ID,
     "pure_bodybuilding_full_body": PHASE1_CANONICAL_PROGRAM_ID,
     PHASE1_CANONICAL_PROGRAM_ID: PHASE1_CANONICAL_PROGRAM_ID,
+    "pure_bodybuilding_phase_2_full_body_sheet": PHASE2_CANONICAL_PROGRAM_ID,
+    "pure_bodybuilding_phase_2_full_body_sheet_1": PHASE2_CANONICAL_PROGRAM_ID,
+    PHASE2_CANONICAL_PROGRAM_ID: PHASE2_CANONICAL_PROGRAM_ID,
 }
 
 
 PROGRAM_DESCRIPTIONS: dict[str, str] = {
     PHASE1_CANONICAL_PROGRAM_ID: "Pure Bodybuilding Phase 1 Full Body administered baseline with authored workbook execution detail.",
+    PHASE2_CANONICAL_PROGRAM_ID: "Pure Bodybuilding Phase 2 Full Body canonical runtime program with authored two-block transitions.",
     "full_body_v1": "Pure Bodybuilding-inspired full body structure with deterministic day templates.",
     "ppl_v1": "Push/Pull/Legs baseline template for balanced hypertrophy progression.",
     "upper_lower_v1": "Upper/Lower split with clear weekly distribution and recovery spacing.",
@@ -78,6 +99,7 @@ PROGRAM_DESCRIPTIONS: dict[str, str] = {
 
 PROGRAM_NAMES: dict[str, str] = {
     PHASE1_CANONICAL_PROGRAM_ID: "Pure Bodybuilding - Phase 1 Full Body",
+    PHASE2_CANONICAL_PROGRAM_ID: "Pure Bodybuilding - Phase 2 Full Body",
     "adaptive_full_body_gold_v0_1": "Adaptive Full Body Gold v0.1",
     "full_body_v1": "Full Body v1",
     "ppl_v1": "Push Pull Legs v1",
@@ -104,16 +126,20 @@ LINKED_PROGRAM_IDS: dict[str, str] = {
     "upper_lower_v1": "pure_bodybuilding_phase_2_upper_lower_sheet",
     "pure_bodybuilding_full_body": "pure_bodybuilding_phase_1_full_body",
     "pure_bodybuilding_phase_1_full_body": "pure_bodybuilding_phase_1_full_body",
-    "pure_bodybuilding_phase_2_full_body_sheet": "pure_bodybuilding_phase_2_full_body_sheet",
-    "pure_bodybuilding_phase_2_full_body_sheet_1": "pure_bodybuilding_phase_2_full_body_sheet",
+    "pure_bodybuilding_phase_2_full_body_sheet": PHASE2_CANONICAL_PROGRAM_ID,
+    "pure_bodybuilding_phase_2_full_body_sheet_1": PHASE2_CANONICAL_PROGRAM_ID,
+    PHASE2_CANONICAL_PROGRAM_ID: PHASE2_CANONICAL_PROGRAM_ID,
     "pure_bodybuilding_phase_2_ppl_sheet": "pure_bodybuilding_phase_2_ppl_sheet",
     "pure_bodybuilding_phase_2_upper_lower_sheet": "pure_bodybuilding_phase_2_upper_lower_sheet",
 }
 
 ADAPTIVE_GOLD_ONBOARDING_PROGRAM_IDS: dict[str, str] = {
     PHASE1_CANONICAL_PROGRAM_ID: PHASE1_CANONICAL_PROGRAM_ID,
+    PHASE2_CANONICAL_PROGRAM_ID: PHASE2_CANONICAL_PROGRAM_ID,
     "full_body_v1": PHASE1_CANONICAL_PROGRAM_ID,
     "adaptive_full_body_gold_v0_1": "pure_bodybuilding_phase_1_full_body",
+    "pure_bodybuilding_phase_2_full_body_sheet": PHASE2_CANONICAL_PROGRAM_ID,
+    "pure_bodybuilding_phase_2_full_body_sheet_1": PHASE2_CANONICAL_PROGRAM_ID,
 }
 
 ADAPTIVE_GOLD_EXERCISE_ID_ALIASES: dict[str, str] = {
@@ -246,6 +272,7 @@ def _program_signature(program: dict[str, Any]) -> str:
 def _catalog_id_rank(program_id: str) -> tuple[int, int, int, int, str]:
     curated_priority = {
         PHASE1_CANONICAL_PROGRAM_ID: 0,
+        PHASE2_CANONICAL_PROGRAM_ID: 0,
         "full_body_v1": 0,
         "ppl_v1": 0,
         "upper_lower_v1": 0,
@@ -572,6 +599,38 @@ def _infer_adaptive_day_role(day: Any, fallback_index: int) -> str:
     return f"full_body_{fallback_index + 1}"
 
 
+def _infer_authored_week_role(
+    *,
+    explicit_week_role: str | None,
+    week_sequence_index: int,
+    onboarding_week: Any | None,
+    program_id: str,
+) -> str | None:
+    normalized_explicit = str(explicit_week_role or "").strip().lower()
+    if normalized_explicit:
+        return normalized_explicit
+
+    week_label = str(getattr(onboarding_week, "week_label", "") or "").strip().lower()
+    block_label = str(getattr(onboarding_week, "block_label", "") or "").strip().lower()
+    if "intro/deload" in week_label or "deload" in week_label:
+        return "deload"
+
+    if program_id == PHASE2_CANONICAL_PROGRAM_ID:
+        # Phase 2 intent: both 5-week blocks begin with intro/deload weeks.
+        if week_sequence_index in {1, 6}:
+            return "deload"
+        return "intensification"
+
+    if program_id == PHASE1_CANONICAL_PROGRAM_ID:
+        if week_sequence_index in {1, 2}:
+            return "adaptation"
+        if "novelty" in block_label:
+            return "intensification"
+        return "accumulation"
+
+    return None
+
+
 def _adaptive_gold_to_runtime_template(payload: dict[str, Any]) -> dict[str, Any]:
     validated = AdaptiveGoldProgramTemplate.model_validate(payload)
     exercise_library = _load_adaptive_gold_exercise_library(validated.program_id)
@@ -644,7 +703,12 @@ def _adaptive_gold_to_runtime_template(payload: dict[str, Any]) -> dict[str, Any
     runtime_authored_weeks = [
         {
             "week_index": sequence_index,
-            "week_role": str(week.week_role).strip() if week.week_role else None,
+            "week_role": _infer_authored_week_role(
+                explicit_week_role=str(week.week_role).strip() if week.week_role else None,
+                week_sequence_index=sequence_index,
+                onboarding_week=_resolve_onboarding_week(sequence_index),
+                program_id=validated.program_id,
+            ),
             "sessions": _week_sessions(week, sequence_index),
         }
         for sequence_index, week in enumerate(authored_phase_weeks, start=1)

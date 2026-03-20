@@ -77,11 +77,11 @@ def test_list_program_templates_deduplicates_identical_payloads(monkeypatch, tmp
 
     monkeypatch.setattr(program_loader, "_resolve_programs_path", lambda: tmp_path)
 
-    templates = program_loader.list_program_templates()
+    templates = program_loader.list_program_templates(active_only=False)
     ids = {item["id"] for item in templates}
 
     assert "upper_lower_v1" in ids
-    assert "pure_bodybuilding_phase_2_full_body_sheet" in ids
+    assert "pure_bodybuilding_phase_2_full_body" in ids
     assert "pure_bodybuilding_phase_2_full_body_sheet_1" not in ids
     assert "legacy_imported_template" not in ids
     assert len(ids) == 2
