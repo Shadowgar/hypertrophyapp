@@ -6,6 +6,8 @@ from pydantic import BaseModel, Field
 
 
 ConstructibilityStatus = Literal["ready", "insufficient"]
+SelectionMode = Literal["required_slot", "weak_point_slot", "optional_fill"]
+OptionalFillStopReason = Literal["target_reached", "candidate_pool_exhausted", "score_floor_not_met"]
 
 
 class ConstructorTraceRef(BaseModel):
@@ -24,6 +26,31 @@ class ConstructibilityIssue(BaseModel):
     trace: ConstructorTraceRef
 
 
+class ScoredCandidateTrace(BaseModel):
+    exercise_id: str = Field(min_length=1)
+    total_score: int
+    dimension_scores: dict[str, int] = Field(default_factory=dict)
+
+
+class ExerciseSelectionTrace(BaseModel):
+    selection_mode: SelectionMode
+    scoring_rule_id: str = Field(min_length=1)
+    candidate_pool_ids: list[str] = Field(default_factory=list)
+    candidate_count: int = Field(ge=0)
+    dimension_scores: dict[str, int] = Field(default_factory=dict)
+    dimension_weights: dict[str, int] = Field(default_factory=dict)
+    total_score: int
+    top_candidates: list[ScoredCandidateTrace] = Field(default_factory=list)
+    metadata_defaults_used: list[str] = Field(default_factory=list)
+
+
+class OptionalFillTrace(BaseModel):
+    score_floor: int | None = Field(default=None, ge=0)
+    best_candidate_id: str | None = None
+    best_total_score: int | None = None
+    stop_reason: OptionalFillStopReason
+
+
 class GeneratedExerciseDraft(BaseModel):
     id: str = Field(min_length=1)
     name: str = Field(min_length=1)
@@ -35,6 +62,7 @@ class GeneratedExerciseDraft(BaseModel):
     rep_range: list[int] = Field(default_factory=list)
     start_weight: float = Field(ge=0)
     substitution_candidates: list[str] = Field(default_factory=list)
+    selection_trace: ExerciseSelectionTrace
     field_trace: dict[str, ConstructorTraceRef] = Field(default_factory=dict)
 
 
@@ -44,6 +72,7 @@ class GeneratedSessionDraft(BaseModel):
     day_role: str = Field(min_length=1)
     movement_pattern_targets: list[str] = Field(default_factory=list)
     exercises: list[GeneratedExerciseDraft] = Field(default_factory=list)
+    optional_fill_trace: OptionalFillTrace | None = None
     field_trace: dict[str, ConstructorTraceRef] = Field(default_factory=dict)
 
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date, timedelta
 import uuid
 
 import pytest
@@ -10,9 +11,11 @@ from test_db import configure_test_database
 configure_test_database("test_generated_full_body_runtime_integration")
 
 from app.database import Base, engine
+from app.database import SessionLocal
 from app.generated_assessment_schema import ProfileAssessmentInput
 from app import generated_full_body_runtime_adapter as runtime_adapter
 from app.main import app
+from app.models import User, WeeklyCheckin, WeeklyReviewCycle, WorkoutPlan
 from app.program_loader import load_program_template
 from app.routers import plan as plan_router
 from tests.fixtures.generated_full_body_archetypes import get_generated_full_body_archetypes
@@ -34,6 +37,11 @@ def _register_user(client: TestClient, *, email: str, name: str) -> dict[str, st
     )
     assert register.status_code == 200
     return {"Authorization": f"Bearer {register.json()['access_token']}"}
+
+
+def _current_monday() -> date:
+    today = date.today()
+    return today - timedelta(days=today.weekday())
 
 
 def _post_profile(
@@ -71,6 +79,80 @@ def _post_profile(
         },
     )
     assert response.status_code == 200
+
+
+def _seed_prior_generated_plan_and_checkin(
+    *,
+    user_email: str,
+    adherence_score: int,
+    sleep_quality: int | None,
+    stress_level: int | None,
+    pain_flags: list[str] | None = None,
+) -> date:
+    current_monday = _current_monday()
+    previous_monday = current_monday - timedelta(days=7)
+    with SessionLocal() as session:
+        user = session.query(User).filter(User.email == user_email).first()
+        assert user is not None
+        session.add(
+            WorkoutPlan(
+                user_id=user.id,
+                week_start=previous_monday,
+                split="full_body",
+                phase="maintenance",
+                payload={
+                    "program_template_id": CANONICAL_PROGRAM_ID,
+                    "sessions": [],
+                },
+            )
+        )
+        session.add(
+            WeeklyCheckin(
+                user_id=user.id,
+                week_start=current_monday,
+                body_weight=82.0,
+                adherence_score=adherence_score,
+                sleep_quality=sleep_quality,
+                stress_level=stress_level,
+                pain_flags=pain_flags or [],
+                notes="seeded for generated adaptive loop",
+            )
+        )
+        session.commit()
+    return current_monday
+
+
+def _seed_same_week_review(
+    *,
+    user_email: str,
+    week_start: date,
+) -> None:
+    with SessionLocal() as session:
+        user = session.query(User).filter(User.email == user_email).first()
+        assert user is not None
+        session.add(
+            WeeklyReviewCycle(
+                user_id=user.id,
+                reviewed_on=week_start,
+                week_start=week_start,
+                previous_week_start=week_start - timedelta(days=7),
+                body_weight=82.0,
+                calories=2500,
+                protein=170,
+                fat=70,
+                carbs=260,
+                adherence_score=4,
+                notes="manual review wins",
+                faults={},
+                adjustments={
+                    "global": {"set_delta": 1, "weight_scale": 0.95},
+                    "exercise_overrides": {},
+                    "decision_trace": {"interpreter": "interpret_weekly_review_decision"},
+                },
+                summary={},
+            )
+        )
+        session.commit()
 
 
 def test_generate_week_uses_generated_constructor_on_canonical_full_body_compatibility_seam() -> None:
@@ -278,3 +360,102 @@ def test_runtime_adapter_not_applicable_for_non_compatibility_template() -> None
     assert result["status"] == "not_applicable"
     assert trace["activation_guard_matched"] is False
     assert trace["generated_constructor_applied"] is False
+
+
+def test_generate_week_applies_generated_adaptive_loop_when_no_explicit_review_exists() -> None:
+    _reset_db()
+    client = TestClient(app)
+    email = "generated-adaptive-loop@example.com"
+    headers = _register_user(
+        client,
+        email=email,
+        name="Generated Adaptive Loop User",
+    )
+    _post_profile(
+        client,
+        headers=headers,
+        selected_program_id="adaptive_full_body_gold_v0_1",
+        split_preference="full_body",
+        training_location="gym",
+        equipment_profile=["barbell", "bench", "cable", "machine", "dumbbell"],
+        days_available=3,
+        weak_areas=["hamstrings"],
+    )
+    _seed_prior_generated_plan_and_checkin(
+        user_email=email,
+        adherence_score=2,
+        sleep_quality=1,
+        stress_level=5,
+        pain_flags=["shoulder"],
+    )
+
+    response = client.post("/plan/generate-week", headers=headers, json={})
+    assert response.status_code == 200
+    payload = response.json()
+
+    assert payload["adaptive_review"]["source"] == "generated_full_body_adaptive_loop_v1"
+    assert payload["adaptive_review"]["primary_axis"] == "volume"
+    assert payload["adaptive_review"]["axis_direction"] == "decrease"
+    assert payload["adaptive_review"]["decision_trace"]["interpreter"] == "recommend_generated_full_body_adaptation"
+    assert payload["adaptive_review"]["decision_trace"]["cause"]["stimulus_fatigue_response"]["deload_pressure"] == "high"
+    assert payload["adaptive_review"]["decision_trace"]["axis_choice"]["primary_axis"] == "volume"
+    assert payload["adaptive_review"]["decision_trace"]["eligible_targets"]
+    assert payload["adaptive_review"]["decision_trace"]["selected_targets"]
+    assert payload["adaptive_review"]["decision_trace"]["held_targets"]
+    assert payload["adaptive_review"]["decision_trace"]["hold_reasons"]
+    assert payload["adaptive_review"]["decision_trace"]["effect"]["selected_target_ids"]
+    assert payload["decision_trace"]["outcome"]["generated_adaptation_applied"] is True
+    assert payload["template_selection_trace"]["generated_full_body_runtime_trace"]["generated_constructor_applied"] is True
+    exercise_ids = {
+        exercise["primary_exercise_id"]
+        for session in payload["sessions"]
+        for exercise in session["exercises"]
+    }
+    traced_ids = {
+        item["exercise_id"] for item in payload["adaptive_review"]["decision_trace"]["eligible_targets"]
+    } | {
+        item["exercise_id"] for item in payload["adaptive_review"]["decision_trace"]["selected_targets"]
+    } | {
+        item["exercise_id"] for item in payload["adaptive_review"]["decision_trace"]["held_targets"]
+    }
+    assert traced_ids <= exercise_ids
+
+
+def test_generate_week_explicit_weekly_review_suppresses_generated_adaptive_loop() -> None:
+    _reset_db()
+    client = TestClient(app)
+    email = "generated-adaptive-review-precedence@example.com"
+    headers = _register_user(
+        client,
+        email=email,
+        name="Generated Adaptive Review Precedence",
+    )
+    _post_profile(
+        client,
+        headers=headers,
+        selected_program_id="adaptive_full_body_gold_v0_1",
+        split_preference="full_body",
+        training_location="gym",
+        equipment_profile=["barbell", "bench", "cable", "machine", "dumbbell"],
+        days_available=3,
+        weak_areas=["hamstrings"],
+    )
+    week_start = _seed_prior_generated_plan_and_checkin(
+        user_email=email,
+        adherence_score=2,
+        sleep_quality=1,
+        stress_level=5,
+        pain_flags=["shoulder"],
+    )
+    _seed_same_week_review(user_email=email, week_start=week_start)
+
+    response = client.post("/plan/generate-week", headers=headers, json={})
+    assert response.status_code == 200
+    payload = response.json()
+
+    assert payload["adaptive_review"]["source"] == "weekly_review"
+    assert payload["adaptive_review"]["decision_trace"]["interpreter"] == "interpret_weekly_review_decision"
+    generated_step = next(
+        step for step in payload["decision_trace"]["execution_steps"] if step["step"] == "generated_adaptation"
+    )
+    assert generated_step["result"]["outcome"]["reason"] == "explicit_review_precedence"

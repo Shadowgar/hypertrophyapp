@@ -102,6 +102,7 @@ def test_generated_full_body_template_drafts_are_scheduler_compatible_for_constr
         assert plan["program_template_id"] == draft.template_draft_id, archetype_name
         assert plan["split"] == "full_body", archetype_name
         minimum_exercises_per_session = policy_bundle.minimum_viable_program_policy.minimum_exercises_per_session
+        assert all(session.optional_fill_trace is not None for session in draft.sessions), archetype_name
         for session in plan["sessions"]:
             assert session["exercises"], archetype_name
             assert len(session["exercises"]) >= minimum_exercises_per_session, archetype_name

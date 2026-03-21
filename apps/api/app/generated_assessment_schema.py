@@ -73,6 +73,7 @@ class UserAssessment(BaseModel):
     movement_restrictions: list[str] = Field(default_factory=list)
     weak_point_priorities: list[WeakPointPriority] = Field(default_factory=list)
     comeback_flag: bool = False
+    prior_working_weight_by_exercise_id: dict[str, float] = Field(default_factory=dict)
     baseline_signal_summary: BaselineSignalSummary
     field_trace: dict[str, AssessmentFieldTrace] = Field(default_factory=dict)
     system_default_ids_used: list[str] = Field(default_factory=list)

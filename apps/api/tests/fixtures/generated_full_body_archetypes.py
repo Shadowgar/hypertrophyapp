@@ -24,6 +24,24 @@ def _build_progression_entries(entry_count: int, total_exposure_count: int) -> l
     return entries
 
 
+def _build_progression_entries_from_specs(specs: list[dict]) -> list[dict]:
+    updated_at = datetime(2026, 3, 1, 10, 0, 0)
+    entries = []
+    for index, spec in enumerate(specs):
+        entries.append(
+            {
+                "exercise_id": spec["exercise_id"],
+                "current_working_weight": spec["current_working_weight"],
+                "exposure_count": spec["exposure_count"],
+                "consecutive_under_target_exposures": spec.get("consecutive_under_target_exposures", 0),
+                "last_progression_action": spec.get("last_progression_action", "hold"),
+                "fatigue_score": spec.get("fatigue_score", 0.25),
+                "last_updated_at": (updated_at + timedelta(days=index)).isoformat(),
+            }
+        )
+    return entries
+
+
 def _build_performance_history(entry_count: int) -> list[dict]:
     performed_at = datetime(2026, 3, 1, 7, 0, 0)
     return [
@@ -45,6 +63,7 @@ def _build_training_state(
     total_exposure_count: int,
     progression_entry_count: int,
     performance_history_count: int,
+    progression_state_per_exercise: list[dict] | None = None,
     recoverability: str = "moderate",
     recovery_state: str = "normal",
     adherence_score: int = 4,
@@ -87,7 +106,8 @@ def _build_training_state(
             "last_generated_week_start": "2026-03-01",
         },
         "exercise_performance_history": _build_performance_history(performance_history_count),
-        "progression_state_per_exercise": _build_progression_entries(progression_entry_count, total_exposure_count),
+        "progression_state_per_exercise": progression_state_per_exercise
+        or _build_progression_entries(progression_entry_count, total_exposure_count),
         "fatigue_state": fatigue_state,
         "adherence_state": adherence_state,
         "readiness_state": {
@@ -185,6 +205,25 @@ ARCHETYPE_FIXTURES = {
             total_exposure_count=18,
             progression_entry_count=3,
             performance_history_count=8,
+            progression_state_per_exercise=_build_progression_entries_from_specs(
+                [
+                    {
+                        "exercise_id": "hack_squat",
+                        "current_working_weight": 245.0,
+                        "exposure_count": 6,
+                    },
+                    {
+                        "exercise_id": "neutral_grip_lat_pulldown",
+                        "current_working_weight": 150.0,
+                        "exposure_count": 6,
+                    },
+                    {
+                        "exercise_id": "machine_shoulder_press",
+                        "current_working_weight": 110.0,
+                        "exposure_count": 6,
+                    },
+                ]
+            ),
             under_target_muscles=["rear_delts"],
         ),
         "expected_assessment": {
@@ -207,6 +246,16 @@ ARCHETYPE_FIXTURES = {
             "session_count": 3,
             "expects_insufficiency": False,
             "expected_session_exercise_counts": [4, 4, 4],
+            "expected_selected_exercise_ids": [
+                "hack_squat",
+                "neutral_grip_lat_pulldown",
+                "machine_shoulder_press",
+            ],
+            "expected_start_weight_matches": {
+                "hack_squat": 245.0,
+                "machine_shoulder_press": 110.0,
+                "neutral_grip_lat_pulldown": 150.0
+            }
         },
     },
     "low_time_full_body": {
@@ -256,6 +305,10 @@ ARCHETYPE_FIXTURES = {
             "session_count": 3,
             "expects_insufficiency": False,
             "expected_session_exercise_counts": [4, 4, 4],
+            "expected_selected_exercise_ids": [
+                "low_incline_db_press",
+                "standing_calf_raise",
+            ],
         },
     },
     "restricted_equipment_full_body": {
@@ -354,6 +407,10 @@ ARCHETYPE_FIXTURES = {
             "session_count": 3,
             "expects_insufficiency": False,
             "expected_session_exercise_counts": [3, 3, 3],
+            "expected_selected_exercise_ids": [
+                "decline_machine_chest_press",
+                "machine_shoulder_press",
+            ],
         },
     },
     "inconsistent_schedule_full_body": {

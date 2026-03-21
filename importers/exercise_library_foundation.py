@@ -18,12 +18,20 @@ if str(API_ROOT) not in sys.path:
     sys.path.insert(0, str(API_ROOT))
 
 from app.adaptive_schema import ProgramOnboardingPackage
-from app.knowledge_schema import CanonicalExerciseLibraryBundle, CanonicalExerciseRecord, ProvenanceRef
+from app.knowledge_schema import (
+    CanonicalExerciseLibraryBundle,
+    CanonicalExerciseRecord,
+    ExerciseLibraryOverrideBundle,
+    ExerciseLibraryOverrideRecord,
+    ProvenanceRef,
+)
 
 
 DEFAULT_SCHEMA_VERSION = "knowledge-1"
 DEFAULT_BUNDLE_ID = "exercise_library_foundation"
 DEFAULT_BUNDLE_VERSION = "0.1.0"
+DEFAULT_OVERRIDE_PATH = REPO_ROOT / "knowledge" / "curation" / "exercise_library_overrides.json"
+CURATED_OVERRIDE_SOURCE_ID = "curated-exercise-library-override-v1"
 _WEAK_POINT_PLACEHOLDER_RE = re.compile(r"^weak_point_exercise", re.IGNORECASE)
 
 
@@ -132,6 +140,47 @@ def _merge_record(group_key: str, members: list[dict[str, Any]]) -> CanonicalExe
     )
 
 
+def _load_overrides(override_path: Path | None) -> tuple[dict[str, ExerciseLibraryOverrideRecord], str | None]:
+    if override_path is None:
+        return {}, None
+    if not override_path.exists():
+        raise ValueError(f"exercise library override file not found: {override_path}")
+    override_text = override_path.read_text(encoding="utf-8")
+    override_bundle = ExerciseLibraryOverrideBundle.model_validate(json.loads(override_text))
+    return {record.exercise_id: record for record in override_bundle.records}, _sha256_text(override_text)
+
+
+def _apply_override(
+    record: CanonicalExerciseRecord,
+    override: ExerciseLibraryOverrideRecord,
+    *,
+    override_path: Path,
+) -> CanonicalExerciseRecord:
+    provenance = list(record.provenance)
+    provenance.append(
+        ProvenanceRef(
+            source_id=CURATED_OVERRIDE_SOURCE_ID,
+            source_path=_safe_relative(override_path, REPO_ROOT),
+            section_ref=f"exercise_library_override:{record.exercise_id}",
+            confidence=1.0,
+            curation_status="curated",
+            note="Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+        )
+    )
+    payload = record.model_dump(mode="json")
+    payload.update(
+        {
+            "fatigue_cost": override.fatigue_cost,
+            "skill_demand": override.skill_demand,
+            "stability_demand": override.stability_demand,
+            "progression_compatibility": list(override.progression_compatibility),
+            "provenance": [item.model_dump(mode="json") for item in provenance],
+            "curation_status": "curated",
+        }
+    )
+    return CanonicalExerciseRecord.model_validate(payload)
+
+
 def _finalize_bundle_payload(payload: dict[str, Any]) -> dict[str, Any]:
     base_payload = dict(payload)
     base_payload.pop("output_signature", None)
@@ -146,6 +195,7 @@ def _finalize_bundle_payload(payload: dict[str, Any]) -> dict[str, Any]:
 def build_exercise_library_foundation(
     *,
     onboarding_dir: Path,
+    override_path: Path | None = DEFAULT_OVERRIDE_PATH,
     schema_version: str = DEFAULT_SCHEMA_VERSION,
     bundle_version: str = DEFAULT_BUNDLE_VERSION,
 ) -> tuple[CanonicalExerciseLibraryBundle, list[str]]:
@@ -153,6 +203,7 @@ def build_exercise_library_foundation(
     grouped_members: dict[str, list[dict[str, Any]]] = {}
     warnings: list[str] = []
     input_signature_parts: list[str] = []
+    overrides_by_exercise_id, override_signature = _load_overrides(override_path)
 
     for onboarding_path in onboarding_paths:
         input_signature_parts.append(_sha256_text(onboarding_path.read_text(encoding="utf-8")))
@@ -177,6 +228,20 @@ def build_exercise_library_foundation(
         _merge_record(group_key, members)
         for group_key, members in sorted(grouped_members.items(), key=lambda item: item[0])
     ]
+    records_by_id = {record.exercise_id: record for record in records}
+    unknown_override_ids = sorted(set(overrides_by_exercise_id).difference(records_by_id))
+    if unknown_override_ids:
+        joined = ", ".join(unknown_override_ids)
+        raise ValueError(f"exercise library overrides reference unknown exercise ids: {joined}")
+    if override_signature is not None:
+        input_signature_parts.append(override_signature)
+    if override_path is not None:
+        records = [
+            _apply_override(record, overrides_by_exercise_id[record.exercise_id], override_path=override_path)
+            if record.exercise_id in overrides_by_exercise_id
+            else record
+            for record in records
+        ]
     input_signature = _sha256_text("\n".join(input_signature_parts))
     payload = {
         "schema_version": schema_version,
@@ -207,9 +272,17 @@ def main() -> None:
         type=Path,
         default=REPO_ROOT / "knowledge" / "compiled" / "exercise_library.foundation.v1.json",
     )
+    parser.add_argument(
+        "--overrides",
+        type=Path,
+        default=DEFAULT_OVERRIDE_PATH,
+    )
     args = parser.parse_args()
 
-    bundle, warnings = build_exercise_library_foundation(onboarding_dir=args.onboarding_dir)
+    bundle, warnings = build_exercise_library_foundation(
+        onboarding_dir=args.onboarding_dir,
+        override_path=args.overrides,
+    )
     write_exercise_library(bundle, args.output)
     print(_safe_relative(args.output, REPO_ROOT))
     for warning in warnings:

@@ -1,0 +1,224 @@
+{
+  "schema_version": "knowledge-1",
+  "bundle_id": "exercise_library_overrides",
+  "bundle_version": "0.1.0",
+  "records": [
+    {
+      "exercise_id": "assisted_pull_up",
+      "fatigue_cost": "moderate",
+      "skill_demand": "moderate",
+      "stability_demand": "moderate",
+      "progression_compatibility": ["moderate"]
+    },
+    {
+      "exercise_id": "barbell_rdl",
+      "fatigue_cost": "high",
+      "skill_demand": "moderate",
+      "stability_demand": "moderate",
+      "progression_compatibility": ["high"]
+    },
+    {
+      "exercise_id": "bayesian_cable_curl",
+      "fatigue_cost": "low",
+      "skill_demand": "low",
+      "stability_demand": "low",
+      "progression_compatibility": ["moderate"]
+    },
+    {
+      "exercise_id": "cable_rope_hammer_curl",
+      "fatigue_cost": "low",
+      "skill_demand": "low",
+      "stability_demand": "low",
+      "progression_compatibility": ["moderate"]
+    },
+    {
+      "exercise_id": "cable_triceps_kickback",
+      "fatigue_cost": "low",
+      "skill_demand": "moderate",
+      "stability_demand": "moderate",
+      "progression_compatibility": ["low"]
+    },
+    {
+      "exercise_id": "chest_supported_machine_row",
+      "fatigue_cost": "moderate",
+      "skill_demand": "low",
+      "stability_demand": "low",
+      "progression_compatibility": ["high"]
+    },
+    {
+      "exercise_id": "cuffed_behind_the_back_lateral_raise",
+      "fatigue_cost": "low",
+      "skill_demand": "low",
+      "stability_demand": "low",
+      "progression_compatibility": ["moderate"]
+    },
+    {
+      "exercise_id": "db_bulgarian_split_squat",
+      "fatigue_cost": "high",
+      "skill_demand": "moderate",
+      "stability_demand": "high",
+      "progression_compatibility": ["moderate"]
+    },
+    {
+      "exercise_id": "db_rdl",
+      "fatigue_cost": "moderate",
+      "skill_demand": "moderate",
+      "stability_demand": "moderate",
+      "progression_compatibility": ["moderate"]
+    },
+    {
+      "exercise_id": "decline_machine_chest_press",
+      "fatigue_cost": "moderate",
+      "skill_demand": "low",
+      "stability_demand": "low",
+      "progression_compatibility": ["high"]
+    },
+    {
+      "exercise_id": "flat_machine_chest_press",
+      "fatigue_cost": "moderate",
+      "skill_demand": "low",
+      "stability_demand": "low",
+      "progression_compatibility": ["high"]
+    },
+    {
+      "exercise_id": "hack_squat",
+      "fatigue_cost": "high",
+      "skill_demand": "low",
+      "stability_demand": "low",
+      "progression_compatibility": ["high"]
+    },
+    {
+      "exercise_id": "high_cable_cuffed_lateral_raise",
+      "fatigue_cost": "low",
+      "skill_demand": "low",
+      "stability_demand": "low",
+      "progression_compatibility": ["moderate"]
+    },
+    {
+      "exercise_id": "lat_focused_cable_row",
+      "fatigue_cost": "moderate",
+      "skill_demand": "low",
+      "stability_demand": "low",
+      "progression_compatibility": ["high"]
+    },
+    {
+      "exercise_id": "leg_extension",
+      "fatigue_cost": "low",
+      "skill_demand": "low",
+      "stability_demand": "low",
+      "progression_compatibility": ["high"]
+    },
+    {
+      "exercise_id": "leg_press",
+      "fatigue_cost": "high",
+      "skill_demand": "low",
+      "stability_demand": "low",
+      "progression_compatibility": ["high"]
+    },
+    {
+      "exercise_id": "low_incline_db_press",
+      "fatigue_cost": "moderate",
+      "skill_demand": "moderate",
+      "stability_demand": "moderate",
+      "progression_compatibility": ["moderate"]
+    },
+    {
+      "exercise_id": "low_incline_smith_machine_press",
+      "fatigue_cost": "moderate",
+      "skill_demand": "low",
+      "stability_demand": "low",
+      "progression_compatibility": ["high"]
+    },
+    {
+      "exercise_id": "lying_leg_curl",
+      "fatigue_cost": "low",
+      "skill_demand": "low",
+      "stability_demand": "low",
+      "progression_compatibility": ["high"]
+    },
+    {
+      "exercise_id": "machine_shoulder_press",
+      "fatigue_cost": "moderate",
+      "skill_demand": "low",
+      "stability_demand": "low",
+      "progression_compatibility": ["high"]
+    },
+    {
+      "exercise_id": "neutral_grip_lat_pulldown",
+      "fatigue_cost": "moderate",
+      "skill_demand": "low",
+      "stability_demand": "low",
+      "progression_compatibility": ["high"]
+    },
+    {
+      "exercise_id": "paused_barbell_rdl",
+      "fatigue_cost": "high",
+      "skill_demand": "high",
+      "stability_demand": "moderate",
+      "progression_compatibility": ["moderate"]
+    },
+    {
+      "exercise_id": "roman_chair_leg_raise",
+      "fatigue_cost": "low",
+      "skill_demand": "moderate",
+      "stability_demand": "moderate",
+      "progression_compatibility": ["moderate"]
+    },
+    {
+      "exercise_id": "seated_db_shoulder_press",
+      "fatigue_cost": "moderate",
+      "skill_demand": "moderate",
+      "stability_demand": "moderate",
+      "progression_compatibility": ["moderate"]
+    },
+    {
+      "exercise_id": "seated_leg_curl",
+      "fatigue_cost": "low",
+      "skill_demand": "low",
+      "stability_demand": "low",
+      "progression_compatibility": ["high"]
+    },
+    {
+      "exercise_id": "slow_eccentric_db_rdl",
+      "fatigue_cost": "moderate",
+      "skill_demand": "high",
+      "stability_demand": "moderate",
+      "progression_compatibility": ["low"]
+    },
+    {
+      "exercise_id": "smith_machine_deficit_row",
+      "fatigue_cost": "high",
+      "skill_demand": "moderate",
+      "stability_demand": "moderate",
+      "progression_compatibility": ["moderate"]
+    },
+    {
+      "exercise_id": "smith_machine_squat",
+      "fatigue_cost": "high",
+      "skill_demand": "low",
+      "stability_demand": "low",
+      "progression_compatibility": ["high"]
+    },
+    {
+      "exercise_id": "standing_calf_raise",
+      "fatigue_cost": "low",
+      "skill_demand": "low",
+      "stability_demand": "low",
+      "progression_compatibility": ["high"]
+    },
+    {
+      "exercise_id": "triceps_pressdown_bar",
+      "fatigue_cost": "low",
+      "skill_demand": "low",
+      "stability_demand": "low",
+      "progression_compatibility": ["high"]
+    },
+    {
+      "exercise_id": "wide_grip_pull_up",
+      "fatigue_cost": "high",
+      "skill_demand": "high",
+      "stability_demand": "high",
+      "progression_compatibility": ["low"]
+    }
+  ]
+}

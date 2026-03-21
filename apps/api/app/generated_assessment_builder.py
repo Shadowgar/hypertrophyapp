@@ -320,6 +320,10 @@ def build_user_assessment(
     performance_history_entries = len(state.exercise_performance_history)
     prior_generated_week_total = sum(state.generation_state.prior_generated_weeks_by_program.values())
     under_target_muscles = list(state.generation_state.under_target_muscles)
+    prior_working_weight_by_exercise_id = {
+        entry.exercise_id: float(entry.current_working_weight)
+        for entry in state.progression_state_per_exercise
+    }
 
     novice_thresholds = experience_rule.payload["novice"]
     advanced_thresholds = experience_rule.payload["advanced"]
@@ -490,6 +494,14 @@ def build_user_assessment(
             ],
             rule_sources=comeback_rule.rule_sources,
         ),
+        "prior_working_weight_by_exercise_id": _field_trace(
+            input_refs=[
+                _training_state_trace(
+                    "training_state.progression_state_per_exercise.current_working_weight",
+                    "progression_state_per_exercise",
+                )
+            ],
+        ),
         "baseline_signal_summary": _field_trace(
             input_refs=[
                 _training_state_trace("training_state.progression_state_per_exercise", "progression_state_per_exercise"),
@@ -519,6 +531,7 @@ def build_user_assessment(
         "movement_restrictions": movement_restrictions,
         "weak_point_priorities": [item.model_dump(mode="json") for item in weak_point_priorities],
         "comeback_flag": comeback_flag,
+        "prior_working_weight_by_exercise_id": prior_working_weight_by_exercise_id,
         "baseline_signal_summary": baseline_signal_summary.model_dump(mode="json"),
     }
     assessment_id = _hash_id("assessment", assessment_payload)
@@ -537,6 +550,7 @@ def build_user_assessment(
         movement_restrictions=movement_restrictions,
         weak_point_priorities=weak_point_priorities,
         comeback_flag=comeback_flag,
+        prior_working_weight_by_exercise_id=prior_working_weight_by_exercise_id,
         baseline_signal_summary=baseline_signal_summary,
         field_trace=field_trace,
         system_default_ids_used=_unique_preserve_order(defaults_used),

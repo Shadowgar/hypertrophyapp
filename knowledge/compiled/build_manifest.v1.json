@@ -1,18 +1,18 @@
 {
-  "aggregate_signature": "705b868bb03e694a12f63feceb9e12c234dddafd78843ff219a18b8eeefca218",
+  "aggregate_signature": "651704fd49bc51f0bccbe04558067d035fc7ae7f4c24119a04b3f8c892beb2fb",
   "artifacts": [
     {
       "artifact_id": "exercise_library_foundation",
       "artifact_type": "exercise_library_bundle",
-      "input_signature": "a10e4128f810b3472374a023882ac19363361b33d33c4fc7e921fb6b8dae3f64",
-      "output_signature": "6eb823893c7c4b731b478a2d48bbfeeb77e6ce9130bb17451e14df544a8b9d14",
+      "input_signature": "de1e4faf2758aaff542b8dd0e9ca67b8ca11f1c6f762dc1e00d54f5dc1960725",
+      "output_signature": "d4e16c79c142b8b915d47145f5a359626e3ad92729a62b38b7adc07d77c665e4",
       "path": "knowledge/compiled/exercise_library.foundation.v1.json"
     },
     {
       "artifact_id": "multi_source_hypertrophy_v1",
       "artifact_type": "doctrine_bundle",
-      "input_signature": "e7c82e406e8b37a7c72ac1b9f1d0d973463b8f7089258032e0118cdbd0f140b7",
-      "output_signature": "a5f4caa9579173d19497a0db05e89593d66339589c76c46bf0fc0ac792409bf0",
+      "input_signature": "933bac5a07b7fc2cbc0243d03827182be336c5606bbe5a5f8579ba14f6f22d36",
+      "output_signature": "362e6a0e78578ff6c36049b61e9c58b55e33c042bacaa7a3e08d362615db80f7",
       "path": "knowledge/compiled/doctrine_bundles/multi_source_hypertrophy_v1.bundle.json"
     },
     {
@@ -25,15 +25,15 @@
     {
       "artifact_id": "system_coaching_policy_v1",
       "artifact_type": "policy_bundle",
-      "input_signature": "8a8b4b1966b20a9626d2819cea0bdf938c66bb8e5d5a2728ddd521dfbe5da125",
-      "output_signature": "ebb17fc5ac548eda2b5153daffd34856e0e5f558ba076d3ffa6e7f89d59f098f",
+      "input_signature": "dadda72411334e278e1ce131a5bdcd9ddcbf5e1d88fdade06abd175d6e0b92ae",
+      "output_signature": "3929c496131d990066edf2f83a0ff9cc80710eca57b75e694b3336898fd58166",
       "path": "knowledge/compiled/policy_bundles/system_coaching_policy_v1.bundle.json"
     }
   ],
   "bundle_id": "build_manifest",
   "bundle_version": "0.1.0",
-  "input_signature": "eefed02aea4b3f40de0de94da358d8931fe3106d220dbdff215bd8819cb06f96",
-  "output_signature": "aac113abead04bf90da581af078eba6c98a0963bc61a6d49eb467f0c35067866",
+  "input_signature": "7de6813ee44736eabb1423cda795c9d2f440581c1ea8246a2da6d7559530b010",
+  "output_signature": "90d58c7592015e8d4da12f05f9ccbea2fa7f79093e677f1653da66f1b3dc946f",
   "schema_version": "knowledge-1",
   "warnings": [
     "Skipped placeholder exercise from pure_bodybuilding_phase_1_full_body: weak_point_exercise_1",

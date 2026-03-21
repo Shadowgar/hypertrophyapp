@@ -1144,6 +1144,7 @@ def _build_weekly_review_adaptive_review(
     decision_trace: dict[str, Any] | None,
 ) -> dict[str, Any]:
     adaptive_review = {
+        "source": "weekly_review",
         "global_set_delta": global_set_delta,
         "global_weight_scale": global_weight_scale,
         "weak_point_exercises": weak_points,

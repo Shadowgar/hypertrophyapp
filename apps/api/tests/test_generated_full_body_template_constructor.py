@@ -29,10 +29,17 @@ REQUIRED_CONSTRUCTOR_RULE_IDS = {
     "full_body_day_role_sequence_by_session_count_v1",
     "full_body_movement_pattern_distribution_v1",
     "full_body_session_fill_target_by_volume_tier_v1",
+    "full_body_initial_sets_by_slot_role_and_volume_tier_v1",
+    "full_body_set_adjustments_by_user_state_v1",
+    "full_body_day_role_prescription_emphasis_v1",
+    "full_body_candidate_scoring_v1",
     "full_body_optional_fill_pattern_priority_by_complexity_ceiling_v1",
     "full_body_slot_role_sequence_v1",
     "full_body_exercise_reuse_limits_v1",
     "full_body_weak_point_slot_insertion_v1",
+    "full_body_initial_rep_ranges_by_slot_role_and_pattern_v1",
+    "full_body_rep_adjustments_by_exercise_demand_v1",
+    "full_body_start_weight_initialization_v1",
 }
 
 
@@ -160,6 +167,9 @@ def test_generated_full_body_template_constructor_is_deterministic_traceable_and
         assert first.constructibility_status == fixture["expected_template"]["constructibility_status"], archetype_name
         assert len(first.sessions) == fixture["expected_template"]["session_count"], archetype_name
         assert [len(session.exercises) for session in first.sessions] == fixture["expected_template"]["expected_session_exercise_counts"], archetype_name
+        if "expected_selected_exercise_ids" in fixture["expected_template"]:
+            selected_ids = {exercise.id for session in first.sessions for exercise in session.exercises}
+            assert set(fixture["expected_template"]["expected_selected_exercise_ids"]) <= selected_ids, archetype_name
 
         _assert_trace_map(first.field_trace, set(GeneratedFullBodyTemplateDraft.model_fields), archetype_name)
 
@@ -179,13 +189,46 @@ def test_generated_full_body_template_constructor_is_deterministic_traceable_and
             assert session.title == f"Generated Full Body {index}", archetype_name
             assert session.day_role == f"generated_full_body_{index}", archetype_name
             _assert_trace_map(session.field_trace, set(GeneratedSessionDraft.model_fields), f"{archetype_name}:session:{index}")
+            assert session.optional_fill_trace is not None, archetype_name
+            assert session.optional_fill_trace.stop_reason in {
+                "target_reached",
+                "candidate_pool_exhausted",
+                "score_floor_not_met",
+            }, archetype_name
             assert len({exercise.id for exercise in session.exercises}) == len(session.exercises), archetype_name
             for exercise in session.exercises:
                 assert exercise.id in valid_exercise_ids, archetype_name
-                assert exercise.sets == 3, archetype_name
-                assert exercise.rep_range == [8, 12], archetype_name
-                assert exercise.start_weight == 20.0, archetype_name
+                assert exercise.sets >= 1, archetype_name
+                assert len(exercise.rep_range) == 2, archetype_name
+                assert exercise.rep_range[0] <= exercise.rep_range[1], archetype_name
+                assert exercise.field_trace["sets"].doctrine_rule_ids == [
+                    "full_body_initial_sets_by_slot_role_and_volume_tier_v1",
+                    "full_body_set_adjustments_by_user_state_v1",
+                    "full_body_day_role_prescription_emphasis_v1",
+                ], archetype_name
+                assert exercise.field_trace["rep_range"].doctrine_rule_ids == [
+                    "full_body_initial_rep_ranges_by_slot_role_and_pattern_v1",
+                    "full_body_day_role_prescription_emphasis_v1",
+                    "full_body_rep_adjustments_by_exercise_demand_v1",
+                ], archetype_name
+                if exercise.id in fixture["expected_template"].get("expected_start_weight_matches", {}):
+                    assert exercise.start_weight == fixture["expected_template"]["expected_start_weight_matches"][exercise.id], archetype_name
+                    assert exercise.field_trace["start_weight"].system_default_ids == [], archetype_name
+                else:
+                    assert exercise.field_trace["start_weight"].doctrine_rule_ids == [
+                        "full_body_start_weight_initialization_v1"
+                    ], archetype_name
+                    assert exercise.field_trace["start_weight"].system_default_ids == [
+                        "default_generated_start_weight_v1"
+                    ], archetype_name
                 assert exercise.substitution_candidates == [], archetype_name
+                assert exercise.selection_trace.scoring_rule_id == "full_body_candidate_scoring_v1", archetype_name
+                assert exercise.selection_trace.selection_mode in {
+                    "required_slot",
+                    "weak_point_slot",
+                    "optional_fill",
+                }, archetype_name
+                assert exercise.selection_trace.top_candidates, archetype_name
                 _assert_trace_map(
                     exercise.field_trace,
                     set(GeneratedExerciseDraft.model_fields),
@@ -217,6 +260,29 @@ def test_generated_full_body_template_constructor_is_deterministic_traceable_and
         else:
             assert not first.insufficiencies, archetype_name
             assert all(session.exercises for session in first.sessions), archetype_name
+
+        if archetype_name in {
+            "novice_gym_full_body",
+            "low_time_full_body",
+            "low_recovery_full_body",
+            "comeback_full_body",
+        }:
+            primary_set_signature = [
+                max((exercise.sets for exercise in session.exercises if exercise.slot_role == "primary_compound"), default=0)
+                for session in first.sessions
+            ]
+            compound_rep_signature = [
+                min(
+                    (
+                        exercise.rep_range[0]
+                        for exercise in session.exercises
+                        if exercise.slot_role in {"primary_compound", "secondary_compound"}
+                    ),
+                    default=99,
+                )
+                for session in first.sessions
+            ]
+            assert len(set(primary_set_signature + compound_rep_signature)) > 1, archetype_name
 
         if archetype_name == "restricted_equipment_full_body":
             expected_patterns = {item.movement_pattern for item in blueprint.pattern_insufficiencies}

@@ -627,6 +627,96 @@ def _count_prior_generated_weeks(selected_template_id: str, prior_plans: list[An
     return len(prior_weeks_for_template)
 
 
+def _plan_matches_selected_template(
+    *,
+    selected_template_id: str,
+    payload_data: dict[str, Any],
+    week_start: Any,
+) -> str | None:
+    equivalent_ids = _equivalent_program_ids(selected_template_id)
+    week_key = _iso_date(week_start)
+    program_id = str(payload_data.get("program_template_id") or "").strip()
+    if program_id in equivalent_ids:
+        return week_key
+
+    sessions = payload_data.get("sessions") or []
+    if any(
+        any(
+            str(session.get("session_id", "")).startswith(f"{program_id}-")
+            for program_id in equivalent_ids
+        )
+        for session in sessions
+    ):
+        return week_key
+    return None
+
+
+def _resolve_generated_adaptation_history(
+    *,
+    selected_template_id: str,
+    prior_plans: list[Any],
+) -> dict[str, Any]:
+    entries: list[dict[str, Any]] = []
+    for existing_plan in prior_plans:
+        payload_data = _read_attr(existing_plan, "payload")
+        payload_data = payload_data if isinstance(payload_data, dict) else {}
+        week_start = _read_attr(existing_plan, "week_start")
+        week_key = _plan_matches_selected_template(
+            selected_template_id=selected_template_id,
+            payload_data=payload_data,
+            week_start=week_start,
+        )
+        if not week_key:
+            continue
+
+        adaptive_review = _coerce_dict(payload_data.get("adaptive_review"))
+        if str(adaptive_review.get("source") or "").strip() != "generated_full_body_adaptive_loop_v1":
+            continue
+
+        primary_axis = str(adaptive_review.get("primary_axis") or "").strip()
+        axis_direction = str(adaptive_review.get("axis_direction") or "").strip()
+        if not primary_axis or not axis_direction:
+            continue
+        adaptive_decision_trace = _coerce_dict(adaptive_review.get("decision_trace"))
+        adaptive_effect = _coerce_dict(adaptive_decision_trace.get("effect"))
+        selected_target_ids = _coerce_string_list(adaptive_effect.get("selected_target_ids"))
+        if not selected_target_ids:
+            selected_target_ids = _coerce_string_list(adaptive_effect.get("exercise_override_ids"))
+        if not selected_target_ids:
+            selected_target_ids = _coerce_string_list(adaptive_effect.get("weak_point_exercises"))
+
+        entries.append(
+            {
+                "week_start": week_key,
+                "primary_axis": primary_axis,
+                "axis_direction": axis_direction,
+                "selected_target_ids": selected_target_ids,
+            }
+        )
+
+    entries.sort(key=lambda item: str(item["week_start"]), reverse=True)
+    last_primary_axis = None
+    last_axis_direction = None
+    last_streak_weeks = 0
+    if entries:
+        last_primary_axis = str(entries[0]["primary_axis"])
+        last_axis_direction = str(entries[0]["axis_direction"])
+        for entry in entries:
+            if str(entry["primary_axis"]) == last_primary_axis and str(entry["axis_direction"]) == last_axis_direction:
+                last_streak_weeks += 1
+                continue
+            break
+
+    return {
+        "recent_entries": entries[:3],
+        "last_primary_axis": last_primary_axis,
+        "last_axis_direction": last_axis_direction,
+        "last_streak_weeks": last_streak_weeks,
+        "last_week_start": entries[0]["week_start"] if entries else None,
+        "last_selected_target_ids": list(entries[0].get("selected_target_ids") or []) if entries else [],
+    }
+
+
 def _resolve_generation_history(
     *,
     normalized_training_state: dict[str, Any],
@@ -884,6 +974,10 @@ def resolve_week_generation_runtime_inputs(
         latest_adherence_score=latest_adherence_score,
         severe_soreness_count=severe_soreness_count,
     )
+    generated_adaptation_history = _resolve_generated_adaptation_history(
+        selected_template_id=selected_template_id,
+        prior_plans=prior_plans,
+    )
 
     return {
         "effective_days_available": int(effective_days_available),
@@ -911,6 +1005,7 @@ def resolve_week_generation_runtime_inputs(
         ),
         "progression_state_per_exercise": list(normalized_training_state.get("progression_state_per_exercise") or []),
         "stimulus_fatigue_response": stimulus_fatigue_response,
+        "generated_adaptation_history": generated_adaptation_history,
         "decision_trace": {
             "interpreter": "resolve_week_generation_runtime_inputs",
             "version": "v1",
@@ -974,6 +1069,10 @@ def resolve_week_generation_runtime_inputs(
                         **stimulus_fatigue_response,
                     },
                 },
+                {
+                    "decision": "generated_adaptation_history",
+                    "result": generated_adaptation_history,
+                },
             ],
             "outcome": {
                 "effective_days_available": int(effective_days_available),
@@ -989,6 +1088,7 @@ def resolve_week_generation_runtime_inputs(
                 ),
                 "stimulus_fatigue_response_source": str(sfr_trace.get("source") or ""),
                 "stimulus_fatigue_response": stimulus_fatigue_response,
+                "generated_adaptation_history": generated_adaptation_history,
             },
         },
     }
@@ -1249,6 +1349,7 @@ def prepare_generate_week_finalize_runtime(
     base_plan: dict[str, Any],
     template_selection_trace: dict[str, Any],
     generation_runtime_trace: dict[str, Any],
+    generated_adaptive_runtime: dict[str, Any] | None,
     selected_template_id: str,
     active_frequency_adaptation: dict[str, Any] | None,
     review_cycle: Any | None,
@@ -1258,6 +1359,7 @@ def prepare_generate_week_finalize_runtime(
         base_plan=base_plan,
         template_selection_trace=template_selection_trace,
         generation_runtime_trace=generation_runtime_trace,
+        generated_adaptive_runtime=generated_adaptive_runtime,
         selected_template_id=selected_template_id,
         active_frequency_adaptation=active_frequency_adaptation,
         review_adjustments=_coerce_dict(review_overlay.get("review_adjustments")) or None,
@@ -1288,6 +1390,7 @@ def prepare_generate_week_finalize_runtime(
                 "selected_template_id": selected_template_id,
                 "has_active_frequency_adaptation": bool(active_frequency_adaptation),
                 "has_review_cycle": review_cycle is not None,
+                "has_generated_adaptive_runtime": bool(generated_adaptive_runtime),
             },
             "review_overlay_trace": _coerce_dict(review_overlay.get("decision_trace")),
             "outcome": {

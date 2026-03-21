@@ -70,6 +70,7 @@ def test_source_to_knowledge_pipeline_writes_expected_artifacts(tmp_path: Path) 
         provenance_index_path=provenance_index_path,
         overrides_path=REPO_ROOT / "knowledge" / "curation" / "source_registry_overrides.json",
         onboarding_dir=REPO_ROOT / "programs" / "gold",
+        exercise_library_overrides_path=REPO_ROOT / "knowledge" / "curation" / "exercise_library_overrides.json",
         doctrine_seed_path=REPO_ROOT / "knowledge" / "curation" / "doctrine_bundles" / "multi_source_hypertrophy_v1.seed.json",
         policy_seed_path=REPO_ROOT / "knowledge" / "curation" / "policy_bundles" / "system_coaching_policy_v1.seed.json",
         output_dir=output_dir,
@@ -116,14 +117,21 @@ def test_source_to_knowledge_pipeline_writes_expected_artifacts(tmp_path: Path) 
         "full_body_session_cap_by_time_budget_v1",
         "full_body_volume_tier_by_user_class_v1",
         "full_body_session_fill_target_by_volume_tier_v1",
+        "full_body_initial_sets_by_slot_role_and_volume_tier_v1",
+        "full_body_set_adjustments_by_user_state_v1",
+        "full_body_day_role_prescription_emphasis_v1",
         "full_body_required_movement_patterns_v1",
         "full_body_movement_pattern_distribution_v1",
         "full_body_candidate_sorting_v1",
+        "full_body_candidate_scoring_v1",
         "full_body_optional_fill_pattern_priority_by_complexity_ceiling_v1",
         "full_body_equipment_and_restriction_filtering_v1",
         "full_body_slot_role_sequence_v1",
         "full_body_exercise_reuse_limits_v1",
         "full_body_weak_point_slot_insertion_v1",
+        "full_body_initial_rep_ranges_by_slot_role_and_pattern_v1",
+        "full_body_rep_adjustments_by_exercise_demand_v1",
+        "full_body_start_weight_initialization_v1",
     } <= {
         rule["rule_id"]
         for module_rules in doctrine_payload["rules_by_module"].values()
@@ -133,6 +141,11 @@ def test_source_to_knowledge_pipeline_writes_expected_artifacts(tmp_path: Path) 
         "respect_session_time_budget",
         "do_not_replay_single_authored_layout",
     } <= {item["constraint_id"] for item in policy_payload["hard_constraints"]}
+    assert policy_payload["generated_full_body_adaptive_loop_policy"]["policy_id"] == "generated_full_body_adaptive_loop_v1"
+    assert policy_payload["generated_full_body_adaptive_loop_policy"]["minimum_axis_persistence_weeks"] == 2
+    assert policy_payload["generated_full_body_adaptive_loop_policy"]["max_primary_axes_per_week"] == 1
+    assert policy_payload["generated_full_body_adaptive_loop_policy"]["max_volume_targets_per_week"] == 2
+    assert policy_payload["generated_full_body_adaptive_loop_policy"]["max_load_targets_per_week"] == 2
     assert {
         "prefer_full_body_when_generated_split_unspecified",
         "prefer_simple_options_for_novice_and_comeback",
@@ -184,6 +197,7 @@ def test_source_to_knowledge_pipeline_writes_expected_artifacts(tmp_path: Path) 
         provenance_index_path=provenance_index_path,
         overrides_path=REPO_ROOT / "knowledge" / "curation" / "source_registry_overrides.json",
         onboarding_dir=REPO_ROOT / "programs" / "gold",
+        exercise_library_overrides_path=REPO_ROOT / "knowledge" / "curation" / "exercise_library_overrides.json",
         doctrine_seed_path=REPO_ROOT / "knowledge" / "curation" / "doctrine_bundles" / "multi_source_hypertrophy_v1.seed.json",
         policy_seed_path=REPO_ROOT / "knowledge" / "curation" / "policy_bundles" / "system_coaching_policy_v1.seed.json",
         output_dir=output_dir,

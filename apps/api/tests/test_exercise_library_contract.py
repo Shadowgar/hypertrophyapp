@@ -1,18 +1,29 @@
 from pathlib import Path
 import sys
 
+import pytest
+from pydantic import ValidationError
+
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from app.knowledge_schema import ExerciseLibraryOverrideBundle
 from importers.exercise_library_foundation import build_exercise_library_foundation
 
 
-def test_exercise_library_foundation_builds_from_onboarding_packages_and_skips_placeholders() -> None:
+def test_exercise_library_foundation_builds_from_onboarding_packages_skips_placeholders_and_applies_bounded_overrides() -> None:
     onboarding_dir = REPO_ROOT / "programs" / "gold"
+    override_path = REPO_ROOT / "knowledge" / "curation" / "exercise_library_overrides.json"
 
-    bundle, warnings = build_exercise_library_foundation(onboarding_dir=onboarding_dir)
+    bundle, warnings = build_exercise_library_foundation(
+        onboarding_dir=onboarding_dir,
+        override_path=override_path,
+    )
+    override_bundle = ExerciseLibraryOverrideBundle.model_validate_json(override_path.read_text(encoding="utf-8"))
+    overridden_ids = {record.exercise_id for record in override_bundle.records}
+    records_by_id = {record.exercise_id: record for record in bundle.records}
 
     assert bundle.bundle_id == "exercise_library_foundation"
     assert bundle.schema_version == "knowledge-1"
@@ -21,4 +32,43 @@ def test_exercise_library_foundation_builds_from_onboarding_packages_and_skips_p
     assert any("weak_point_exercise" in warning for warning in warnings)
     assert all(not record.exercise_id.startswith("weak_point_exercise") for record in bundle.records)
     assert any(len(record.source_program_ids) > 1 for record in bundle.records)
-    assert all(record.curation_status == "seeded" for record in bundle.records)
+    assert overridden_ids
+    assert all(set(item.model_dump(mode="json")) <= {"exercise_id", "fatigue_cost", "skill_demand", "stability_demand", "progression_compatibility"} for item in override_bundle.records)
+    assert all(len(item.progression_compatibility) <= 1 for item in override_bundle.records)
+    for exercise_id in overridden_ids:
+        record = records_by_id[exercise_id]
+        assert record.curation_status == "curated"
+        assert any(ref.source_id == "curated-exercise-library-override-v1" for ref in record.provenance)
+        assert any(ref.curation_status == "curated" for ref in record.provenance if ref.source_id == "curated-exercise-library-override-v1")
+    for exercise_id, record in records_by_id.items():
+        if exercise_id not in overridden_ids:
+            assert all(ref.source_id != "curated-exercise-library-override-v1" for ref in record.provenance)
+
+
+def test_exercise_library_override_validation_rejects_unknown_fields_and_multiple_progression_tags(tmp_path: Path) -> None:
+    onboarding_dir = REPO_ROOT / "programs" / "gold"
+    invalid_override_path = tmp_path / "exercise_library_overrides.json"
+    invalid_override_path.write_text(
+        """
+        {
+          "schema_version": "knowledge-1",
+          "bundle_id": "exercise_library_overrides",
+          "bundle_version": "0.1.0",
+          "records": [
+            {
+              "exercise_id": "flat_machine_chest_press",
+              "fatigue_cost": "low",
+              "progression_compatibility": ["high", "moderate"],
+              "note": "not allowed"
+            }
+          ]
+        }
+        """.strip(),
+        encoding="utf-8",
+    )
+
+    with pytest.raises((ValidationError, ValueError)):
+        build_exercise_library_foundation(
+            onboarding_dir=onboarding_dir,
+            override_path=invalid_override_path,
+        )

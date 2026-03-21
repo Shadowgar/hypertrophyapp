@@ -99,6 +99,7 @@ def build_compiled_knowledge(
     provenance_index_path: Path,
     overrides_path: Path,
     onboarding_dir: Path,
+    exercise_library_overrides_path: Path,
     doctrine_seed_path: Path,
     policy_seed_path: Path,
     output_dir: Path,
@@ -115,7 +116,10 @@ def build_compiled_knowledge(
     source_registry_path = output_dir / "source_registry.v1.json"
     write_source_registry(source_registry, source_registry_path)
 
-    exercise_library, warnings = build_exercise_library_foundation(onboarding_dir=onboarding_dir)
+    exercise_library, warnings = build_exercise_library_foundation(
+        onboarding_dir=onboarding_dir,
+        override_path=exercise_library_overrides_path,
+    )
     exercise_library_path = output_dir / "exercise_library.foundation.v1.json"
     write_exercise_library(exercise_library, exercise_library_path)
 
@@ -208,6 +212,11 @@ def main() -> None:
         default=REPO_ROOT / "programs" / "gold",
     )
     parser.add_argument(
+        "--exercise-library-overrides",
+        type=Path,
+        default=REPO_ROOT / "knowledge" / "curation" / "exercise_library_overrides.json",
+    )
+    parser.add_argument(
         "--doctrine-seed",
         type=Path,
         default=REPO_ROOT / "knowledge" / "curation" / "doctrine_bundles" / "multi_source_hypertrophy_v1.seed.json",
@@ -229,6 +238,7 @@ def main() -> None:
         provenance_index_path=args.provenance_index,
         overrides_path=args.overrides,
         onboarding_dir=args.onboarding_dir,
+        exercise_library_overrides_path=args.exercise_library_overrides,
         doctrine_seed_path=args.doctrine_seed,
         policy_seed_path=args.policy_seed,
         output_dir=args.output_dir,

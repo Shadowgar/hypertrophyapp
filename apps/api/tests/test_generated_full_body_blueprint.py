@@ -102,6 +102,7 @@ def test_generated_full_body_blueprint_is_deterministic_and_traceable() -> None:
 
         for exercise_ids in blueprint_first.candidate_exercise_ids_by_pattern.values():
             assert set(exercise_ids) <= valid_exercise_ids, archetype_name
+            assert exercise_ids == sorted(exercise_ids), archetype_name
         assert set(blueprint_first.excluded_exercise_ids) <= valid_exercise_ids, archetype_name
 
         assert _collect_doctrine_ids(blueprint_first) <= valid_doctrine_rule_ids, archetype_name

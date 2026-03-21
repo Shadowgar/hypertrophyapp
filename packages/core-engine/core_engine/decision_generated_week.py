@@ -3,6 +3,10 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any, Callable, cast
 
+from .decision_generated_full_body_adaptation import (
+    apply_generated_full_body_adaptation_to_plan,
+    recommend_generated_full_body_adaptation,
+)
 from .decision_frequency_adaptation import apply_active_frequency_adaptation_runtime
 from .decision_weekly_review import apply_weekly_review_adjustments_to_plan
 from .scheduler import generate_week_plan
@@ -448,7 +452,11 @@ def _generation_reason_summary(
         details.append(f"Built {session_count} sessions for the current training week.")
     if bool(_coerce_dict(final_plan.get("deload")).get("active")):
         details.append("The resulting week is in deload posture.")
-    if final_plan.get("adaptive_review"):
+    adaptive_review = _coerce_dict(final_plan.get("adaptive_review"))
+    adaptive_review_source = str(adaptive_review.get("source") or "").strip()
+    if adaptive_review_source == "generated_full_body_adaptive_loop_v1":
+        details.append("Generated adaptive-loop adjustments were applied.")
+    elif adaptive_review:
         details.append("Weekly-review adjustments were applied.")
     if final_plan.get("applied_frequency_adaptation"):
         details.append("Active frequency adaptation was applied.")
@@ -502,12 +510,15 @@ def _generated_week_decision_trace(
     template_selection_trace: dict[str, Any],
     generation_runtime_trace: dict[str, Any],
     review_overlay_trace: dict[str, Any] | None,
+    generated_adaptation_trace: dict[str, Any] | None,
     adaptation_runtime: dict[str, Any],
 ) -> dict[str, Any]:
     runtime_outcome = _coerce_dict(generation_runtime_trace.get("outcome"))
     adaptation_trace = _coerce_dict(_coerce_dict(final_plan.get("applied_frequency_adaptation")).get("decision_trace"))
     review_trace = _coerce_dict(review_overlay_trace)
     review_outcome = _coerce_dict(review_trace.get("outcome"))
+    generated_adaptation_trace = _coerce_dict(generated_adaptation_trace)
+    generated_adaptation_outcome = _coerce_dict(generated_adaptation_trace.get("outcome"))
     generated_runtime_trace = _coerce_dict(template_selection_trace.get("generated_full_body_runtime_trace"))
     compatibility_selected_template_id = str(
         generated_runtime_trace.get("compatibility_selected_template_id") or selected_template_id
@@ -559,6 +570,11 @@ def _generated_week_decision_trace(
                 "reason": str(review_trace.get("interpreter") or ""),
                 "review_available": bool(review_outcome.get("review_available")),
             },
+            "generated_adaptation": {
+                "reason": str(generated_adaptation_trace.get("interpreter") or ""),
+                "active": str(generated_adaptation_outcome.get("status") or "") == "apply",
+                "primary_axis": generated_adaptation_outcome.get("primary_axis"),
+            },
             "frequency_adaptation": {
                 "reason": str(adaptation_trace.get("interpreter") or ""),
                 "active": bool(final_plan.get("applied_frequency_adaptation")),
@@ -583,6 +599,10 @@ def _generated_week_decision_trace(
                 "result": deepcopy(review_trace),
             },
             {
+                "step": "generated_adaptation",
+                "result": deepcopy(generated_adaptation_trace),
+            },
+            {
                 "step": "frequency_adaptation",
                 "result": deepcopy(adaptation_trace),
             },
@@ -594,6 +614,8 @@ def _generated_week_decision_trace(
             "session_count": len(final_plan.get("sessions") or []),
             "deload_active": bool(_coerce_dict(final_plan.get("deload")).get("active")),
             "review_applied": bool(final_plan.get("adaptive_review")),
+            "generated_adaptation_applied": str(_coerce_dict(final_plan.get("adaptive_review")).get("source") or "").strip()
+            == "generated_full_body_adaptive_loop_v1",
             "frequency_adaptation_applied": bool(final_plan.get("applied_frequency_adaptation")),
             "state_updated": bool(adaptation_runtime.get("state_updated")),
             "content_origin": content_origin,
@@ -616,6 +638,7 @@ def build_generated_week_plan_payload(
     base_plan: dict[str, Any],
     template_selection_trace: dict[str, Any],
     generation_runtime_trace: dict[str, Any],
+    generated_adaptive_runtime: dict[str, Any] | None,
     selected_template_id: str,
     active_frequency_adaptation: dict[str, Any] | None,
     review_adjustments: dict[str, Any] | None = None,
@@ -625,13 +648,42 @@ def build_generated_week_plan_payload(
     plan = deepcopy(base_plan)
     plan["template_selection_trace"] = deepcopy(template_selection_trace)
     plan["generation_runtime_trace"] = deepcopy(generation_runtime_trace)
+    generated_adaptation_trace: dict[str, Any] | None = None
 
     if review_adjustments is not None:
+        adaptive_runtime = _coerce_dict(generated_adaptive_runtime)
+        generated_adaptation_decision = recommend_generated_full_body_adaptation(
+            plan_payload=plan,
+            selected_template_id=selected_template_id,
+            template_selection_trace=template_selection_trace,
+            training_state=_coerce_dict(adaptive_runtime.get("training_state")) or None,
+            generation_runtime=_coerce_dict(adaptive_runtime.get("generation_runtime")) or None,
+            adaptive_policy=_coerce_dict(adaptive_runtime.get("adaptive_policy")) or None,
+            review_adjustments_present=True,
+        )
+        generated_adaptation_trace = _coerce_dict(generated_adaptation_decision.get("decision_trace")) or None
         plan = apply_weekly_review_adjustments_to_plan(
             plan_payload=plan,
             review_adjustments=review_adjustments,
             review_context=review_context,
         )
+    else:
+        adaptive_runtime = _coerce_dict(generated_adaptive_runtime)
+        generated_adaptation_decision = recommend_generated_full_body_adaptation(
+            plan_payload=plan,
+            selected_template_id=selected_template_id,
+            template_selection_trace=template_selection_trace,
+            training_state=_coerce_dict(adaptive_runtime.get("training_state")) or None,
+            generation_runtime=_coerce_dict(adaptive_runtime.get("generation_runtime")) or None,
+            adaptive_policy=_coerce_dict(adaptive_runtime.get("adaptive_policy")) or None,
+            review_adjustments_present=False,
+        )
+        generated_adaptation_trace = _coerce_dict(generated_adaptation_decision.get("decision_trace")) or None
+        if str(generated_adaptation_decision.get("status") or "") == "apply":
+            plan = apply_generated_full_body_adaptation_to_plan(
+                plan_payload=plan,
+                decision_payload=generated_adaptation_decision,
+            )
 
     adaptation_runtime = apply_active_frequency_adaptation_runtime(
         plan=plan,
@@ -645,6 +697,7 @@ def build_generated_week_plan_payload(
         template_selection_trace=template_selection_trace,
         generation_runtime_trace=generation_runtime_trace,
         review_overlay_trace=review_overlay_trace,
+        generated_adaptation_trace=generated_adaptation_trace,
         adaptation_runtime=adaptation_runtime,
     )
     return {

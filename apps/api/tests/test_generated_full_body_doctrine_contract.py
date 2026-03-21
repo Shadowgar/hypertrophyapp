@@ -24,14 +24,21 @@ REQUIRED_DOCTRINE_RULE_IDS = {
     "full_body_session_cap_by_time_budget_v1",
     "full_body_volume_tier_by_user_class_v1",
     "full_body_session_fill_target_by_volume_tier_v1",
+    "full_body_initial_sets_by_slot_role_and_volume_tier_v1",
+    "full_body_set_adjustments_by_user_state_v1",
+    "full_body_day_role_prescription_emphasis_v1",
     "full_body_required_movement_patterns_v1",
     "full_body_movement_pattern_distribution_v1",
     "full_body_candidate_sorting_v1",
+    "full_body_candidate_scoring_v1",
     "full_body_optional_fill_pattern_priority_by_complexity_ceiling_v1",
     "full_body_slot_role_sequence_v1",
     "full_body_equipment_and_restriction_filtering_v1",
     "full_body_exercise_reuse_limits_v1",
     "full_body_weak_point_slot_insertion_v1",
+    "full_body_initial_rep_ranges_by_slot_role_and_pattern_v1",
+    "full_body_rep_adjustments_by_exercise_demand_v1",
+    "full_body_start_weight_initialization_v1",
 }
 
 REQUIRED_POLICY_HARD_IDS = {
@@ -69,9 +76,32 @@ def test_generated_full_body_doctrine_contract_is_present_and_library_compatible
     assert "tiers" in rules["full_body_session_cap_by_time_budget_v1"].payload
     assert "user_class_to_volume_tier" in rules["full_body_volume_tier_by_user_class_v1"].payload
     assert "volume_tier_to_target_exercises_per_session" in rules["full_body_session_fill_target_by_volume_tier_v1"].payload
+    assert "base_sets_by_selection_mode" in rules["full_body_initial_sets_by_slot_role_and_volume_tier_v1"].payload
+    assert {"user_flag_set_deltas", "schedule_profile_set_deltas", "minimum_sets_by_slot_role", "maximum_sets_by_slot_role"} <= set(
+        rules["full_body_set_adjustments_by_user_state_v1"].payload
+    )
+    assert "emphasis_by_day_role" in rules["full_body_day_role_prescription_emphasis_v1"].payload
     assert "requirements" in rules["full_body_required_movement_patterns_v1"].payload
     assert "distribution_by_session_count" in rules["full_body_movement_pattern_distribution_v1"].payload
     assert "sort_order" in rules["full_body_candidate_sorting_v1"].payload
+    assert {"dimension_bands", "dimension_weights", "minimum_total_score_floor", "tie_break_order"} <= set(
+        rules["full_body_candidate_scoring_v1"].payload
+    )
+    assert set(rules["full_body_candidate_scoring_v1"].payload["dimension_weights"]) == {
+        "required_slot",
+        "weak_point_slot",
+        "optional_fill",
+    }
+    assert rules["full_body_candidate_scoring_v1"].payload["minimum_total_score_floor"]["optional_fill"] == 6
+    assert rules["full_body_candidate_scoring_v1"].payload["tie_break_order"] == [
+        "total_score_desc",
+        "stimulus_fit_desc",
+        "weak_point_alignment_desc",
+        "recoverability_fit_desc",
+        "progression_fit_desc",
+        "weekly_assignment_count_asc",
+        "exercise_id_asc",
+    ]
     assert "optional_patterns_by_complexity_ceiling" in rules["full_body_optional_fill_pattern_priority_by_complexity_ceiling_v1"].payload
     assert {"slot_roles_by_position", "slot_role_by_movement_pattern"} <= set(rules["full_body_slot_role_sequence_v1"].payload)
     assert {"equipment_filter_mode", "restriction_filter_mode", "ignore_missing_contraindications"} <= set(
@@ -89,6 +119,35 @@ def test_generated_full_body_doctrine_contract_is_present_and_library_compatible
     } <= set(
         rules["full_body_weak_point_slot_insertion_v1"].payload
     )
+    assert {
+        "base_rep_ranges_by_selection_mode",
+        "volume_tier_rep_shift",
+        "schedule_profile_rep_shift",
+        "user_flag_rep_shift",
+        "minimum_rep",
+        "maximum_rep",
+    } <= set(
+        rules["full_body_initial_rep_ranges_by_slot_role_and_pattern_v1"].payload
+    )
+    assert {
+        "fatigue_cost_rep_shift",
+        "skill_demand_rep_shift",
+        "stability_demand_rep_shift",
+        "progression_compatibility_rep_shift",
+        "maximum_total_positive_shift",
+    } <= set(
+        rules["full_body_rep_adjustments_by_exercise_demand_v1"].payload
+    )
+    assert {
+        "history_source",
+        "exact_match_field",
+        "prohibit_cross_exercise_inference",
+        "fallback_method",
+    } <= set(
+        rules["full_body_start_weight_initialization_v1"].payload
+    )
+    assert rules["full_body_start_weight_initialization_v1"].payload["history_source"] == "exact_exercise_id_match"
+    assert rules["full_body_start_weight_initialization_v1"].payload["prohibit_cross_exercise_inference"] is True
 
     available_patterns = {record.movement_pattern for record in exercise_library.records if record.movement_pattern}
     required_patterns = {

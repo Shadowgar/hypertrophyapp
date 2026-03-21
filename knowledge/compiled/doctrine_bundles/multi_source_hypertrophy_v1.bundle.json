@@ -1,8 +1,8 @@
 {
-  "aggregate_signature": "5e08f75b8ff5c3b54b80d6778c4992907114037911dcfb3b467bcd8a1a9868a6",
+  "aggregate_signature": "8cb860b606fa2c4fc1e3e8e6c58bb5885d698f5a7c0bf42f4600dc9f285de2ad",
   "bundle_id": "multi_source_hypertrophy_v1",
-  "bundle_version": "0.3.0",
-  "input_signature": "e7c82e406e8b37a7c72ac1b9f1d0d973463b8f7089258032e0118cdbd0f140b7",
+  "bundle_version": "0.4.0",
+  "input_signature": "933bac5a07b7fc2cbc0243d03827182be336c5606bbe5a5f8579ba14f6f22d36",
   "module_ids": [
     "adaptation",
     "assessment",
@@ -15,7 +15,7 @@
     "technique",
     "volume"
   ],
-  "output_signature": "a5f4caa9579173d19497a0db05e89593d66339589c76c46bf0fc0ac792409bf0",
+  "output_signature": "362e6a0e78578ff6c36049b61e9c58b55e33c042bacaa7a3e08d362615db80f7",
   "rules_by_module": {
     "adaptation": [],
     "assessment": [
@@ -323,7 +323,7 @@
         ]
       },
       {
-        "description": "Deterministic candidate sorting for minimum generated Full Body planning inputs.",
+        "description": "Legacy deterministic candidate sorting retained for compatibility with earlier blueprint snapshots.",
         "module_id": "exercise_selection",
         "payload": {
           "sort_order": [
@@ -338,6 +338,71 @@
         "tags": [
           "exercise_selection",
           "full_body",
+          "seed"
+        ]
+      },
+      {
+        "description": "Doctrine-owned deterministic scoring contract for generated Full Body candidate selection.",
+        "module_id": "exercise_selection",
+        "payload": {
+          "dimension_bands": {
+            "negative": -1,
+            "neutral": 0,
+            "positive": 1,
+            "strong_negative": -2,
+            "strong_positive": 2
+          },
+          "dimension_weights": {
+            "optional_fill": {
+              "complexity_fit": 2,
+              "family_redundancy_penalty": 3,
+              "practicality_fit": 3,
+              "progression_fit": 2,
+              "recoverability_fit": 4,
+              "stimulus_fit": 1,
+              "weak_point_alignment": 3
+            },
+            "required_slot": {
+              "complexity_fit": 3,
+              "family_redundancy_penalty": 2,
+              "practicality_fit": 1,
+              "progression_fit": 2,
+              "recoverability_fit": 4,
+              "stimulus_fit": 5,
+              "weak_point_alignment": 1
+            },
+            "weak_point_slot": {
+              "complexity_fit": 3,
+              "family_redundancy_penalty": 2,
+              "practicality_fit": 1,
+              "progression_fit": 2,
+              "recoverability_fit": 4,
+              "stimulus_fit": 1,
+              "weak_point_alignment": 5
+            }
+          },
+          "minimum_total_score_floor": {
+            "optional_fill": 6,
+            "required_slot": null,
+            "weak_point_slot": null
+          },
+          "tie_break_order": [
+            "total_score_desc",
+            "stimulus_fit_desc",
+            "weak_point_alignment_desc",
+            "recoverability_fit_desc",
+            "progression_fit_desc",
+            "weekly_assignment_count_asc",
+            "exercise_id_asc"
+          ]
+        },
+        "provenance": [],
+        "rule_id": "full_body_candidate_scoring_v1",
+        "status": "seed",
+        "tags": [
+          "exercise_selection",
+          "full_body",
+          "scoring",
           "seed"
         ]
       },
@@ -491,7 +556,213 @@
       }
     ],
     "mesocycle": [],
-    "progression": [],
+    "progression": [
+      {
+        "description": "Doctrine-backed initial rep ranges for generated Full Body by selection mode, slot role, movement pattern, and user state.",
+        "module_id": "progression",
+        "payload": {
+          "base_rep_ranges_by_selection_mode": {
+            "optional_fill": {
+              "accessory": {
+                "default": [
+                  12,
+                  15
+                ],
+                "pattern_overrides": {}
+              },
+              "primary_compound": {
+                "default": [
+                  8,
+                  10
+                ],
+                "pattern_overrides": {}
+              },
+              "secondary_compound": {
+                "default": [
+                  10,
+                  12
+                ],
+                "pattern_overrides": {}
+              },
+              "weak_point": {
+                "default": [
+                  12,
+                  15
+                ],
+                "pattern_overrides": {}
+              }
+            },
+            "required_slot": {
+              "accessory": {
+                "default": [
+                  10,
+                  15
+                ],
+                "pattern_overrides": {}
+              },
+              "primary_compound": {
+                "default": [
+                  6,
+                  10
+                ],
+                "pattern_overrides": {
+                  "hinge": [
+                    6,
+                    8
+                  ],
+                  "squat": [
+                    6,
+                    10
+                  ]
+                }
+              },
+              "secondary_compound": {
+                "default": [
+                  8,
+                  12
+                ],
+                "pattern_overrides": {
+                  "horizontal_pull": [
+                    8,
+                    12
+                  ],
+                  "vertical_press": [
+                    8,
+                    12
+                  ],
+                  "vertical_pull": [
+                    8,
+                    12
+                  ]
+                }
+              },
+              "weak_point": {
+                "default": [
+                  10,
+                  15
+                ],
+                "pattern_overrides": {}
+              }
+            },
+            "weak_point_slot": {
+              "accessory": {
+                "default": [
+                  10,
+                  15
+                ],
+                "pattern_overrides": {}
+              },
+              "primary_compound": {
+                "default": [
+                  8,
+                  10
+                ],
+                "pattern_overrides": {}
+              },
+              "secondary_compound": {
+                "default": [
+                  8,
+                  12
+                ],
+                "pattern_overrides": {}
+              },
+              "weak_point": {
+                "default": [
+                  10,
+                  15
+                ],
+                "pattern_overrides": {}
+              }
+            }
+          },
+          "maximum_rep": 20,
+          "minimum_rep": 5,
+          "schedule_profile_rep_shift": {
+            "inconsistent_schedule": 0,
+            "low_time": 1,
+            "normal": 0
+          },
+          "user_flag_rep_shift": {
+            "comeback": 1,
+            "low_recovery": 1
+          },
+          "volume_tier_rep_shift": {
+            "conservative": 1,
+            "moderate": 0
+          }
+        },
+        "provenance": [],
+        "rule_id": "full_body_initial_rep_ranges_by_slot_role_and_pattern_v1",
+        "status": "seed",
+        "tags": [
+          "full_body",
+          "initial_prescription",
+          "progression",
+          "seed"
+        ]
+      },
+      {
+        "description": "Bounded second-pass rep-range adjustments from exercise demand metadata after base generated Full Body prescription is chosen.",
+        "module_id": "progression",
+        "payload": {
+          "fatigue_cost_rep_shift": {
+            "high": 1,
+            "low": 0,
+            "moderate": 0
+          },
+          "maximum_total_positive_shift": 2,
+          "progression_compatibility_rep_shift": {
+            "high": 0,
+            "low": 1,
+            "moderate": 0
+          },
+          "skill_demand_rep_shift": {
+            "high": 1,
+            "low": 0,
+            "moderate": 0
+          },
+          "stability_demand_rep_shift": {
+            "high": 1,
+            "low": 0,
+            "moderate": 0
+          }
+        },
+        "provenance": [],
+        "rule_id": "full_body_rep_adjustments_by_exercise_demand_v1",
+        "status": "seed",
+        "tags": [
+          "exercise_demand",
+          "full_body",
+          "initial_prescription",
+          "progression",
+          "seed"
+        ]
+      },
+      {
+        "description": "Exact-match-only starting-weight initialization for generated Full Body exercises with doctrine fallback for non-matching cases.",
+        "module_id": "progression",
+        "payload": {
+          "exact_match_field": "prior_working_weight_by_exercise_id",
+          "fallback_method": {
+            "system_default_id": "default_generated_start_weight_v1",
+            "type": "system_default",
+            "value": 20.0
+          },
+          "history_source": "exact_exercise_id_match",
+          "prohibit_cross_exercise_inference": true
+        },
+        "provenance": [],
+        "rule_id": "full_body_start_weight_initialization_v1",
+        "status": "seed",
+        "tags": [
+          "full_body",
+          "initial_prescription",
+          "progression",
+          "seed",
+          "start_weight"
+        ]
+      }
+    ],
     "safety": [],
     "specialization": [],
     "split": [
@@ -639,6 +910,209 @@
         "status": "seed",
         "tags": [
           "full_body",
+          "seed",
+          "volume"
+        ]
+      },
+      {
+        "description": "Doctrine-backed initial set counts for generated Full Body by selection mode, volume tier, and slot role.",
+        "module_id": "volume",
+        "payload": {
+          "base_sets_by_selection_mode": {
+            "optional_fill": {
+              "conservative": {
+                "accessory": 1,
+                "primary_compound": 1,
+                "secondary_compound": 1,
+                "weak_point": 1
+              },
+              "moderate": {
+                "accessory": 1,
+                "primary_compound": 1,
+                "secondary_compound": 1,
+                "weak_point": 1
+              }
+            },
+            "required_slot": {
+              "conservative": {
+                "accessory": 1,
+                "primary_compound": 2,
+                "secondary_compound": 2,
+                "weak_point": 1
+              },
+              "moderate": {
+                "accessory": 2,
+                "primary_compound": 3,
+                "secondary_compound": 2,
+                "weak_point": 2
+              }
+            },
+            "weak_point_slot": {
+              "conservative": {
+                "accessory": 1,
+                "primary_compound": 1,
+                "secondary_compound": 1,
+                "weak_point": 1
+              },
+              "moderate": {
+                "accessory": 2,
+                "primary_compound": 2,
+                "secondary_compound": 2,
+                "weak_point": 2
+              }
+            }
+          }
+        },
+        "provenance": [],
+        "rule_id": "full_body_initial_sets_by_slot_role_and_volume_tier_v1",
+        "status": "seed",
+        "tags": [
+          "full_body",
+          "initial_prescription",
+          "seed",
+          "volume"
+        ]
+      },
+      {
+        "description": "Bounded set-count adjustments for generated Full Body based on user state after base slot-role prescription is chosen.",
+        "module_id": "volume",
+        "payload": {
+          "maximum_sets_by_slot_role": {
+            "accessory": 3,
+            "primary_compound": 4,
+            "secondary_compound": 3,
+            "weak_point": 3
+          },
+          "minimum_sets_by_slot_role": {
+            "accessory": 1,
+            "primary_compound": 2,
+            "secondary_compound": 1,
+            "weak_point": 1
+          },
+          "schedule_profile_set_deltas": {
+            "inconsistent_schedule": {
+              "accessory": -1,
+              "primary_compound": 0,
+              "secondary_compound": 0,
+              "weak_point": -1
+            },
+            "low_time": {
+              "accessory": -1,
+              "primary_compound": 0,
+              "secondary_compound": -1,
+              "weak_point": -1
+            },
+            "normal": {}
+          },
+          "user_flag_set_deltas": {
+            "comeback": {
+              "accessory": 0,
+              "primary_compound": -1,
+              "secondary_compound": -1,
+              "weak_point": -1
+            },
+            "low_recovery": {
+              "accessory": 0,
+              "primary_compound": -1,
+              "secondary_compound": 0,
+              "weak_point": -1
+            }
+          }
+        },
+        "provenance": [],
+        "rule_id": "full_body_set_adjustments_by_user_state_v1",
+        "status": "seed",
+        "tags": [
+          "full_body",
+          "initial_prescription",
+          "seed",
+          "volume"
+        ]
+      },
+      {
+        "description": "Doctrine-defined day-role emphasis that changes prescription character only for generated Full Body sessions.",
+        "module_id": "volume",
+        "payload": {
+          "emphasis_by_day_role": {
+            "generated_full_body_1": {
+              "rep_range_shift_by_slot_role": {
+                "accessory": 0,
+                "primary_compound": -1,
+                "secondary_compound": -1,
+                "weak_point": 0
+              },
+              "set_deltas_by_slot_role": {
+                "accessory": 0,
+                "primary_compound": 1,
+                "secondary_compound": 0,
+                "weak_point": 0
+              }
+            },
+            "generated_full_body_2": {
+              "rep_range_shift_by_slot_role": {
+                "accessory": 1,
+                "primary_compound": 0,
+                "secondary_compound": 0,
+                "weak_point": 1
+              },
+              "set_deltas_by_slot_role": {
+                "accessory": 0,
+                "primary_compound": 0,
+                "secondary_compound": 0,
+                "weak_point": 0
+              }
+            },
+            "generated_full_body_3": {
+              "rep_range_shift_by_slot_role": {
+                "accessory": 1,
+                "primary_compound": 0,
+                "secondary_compound": 1,
+                "weak_point": 1
+              },
+              "set_deltas_by_slot_role": {
+                "accessory": 0,
+                "primary_compound": 0,
+                "secondary_compound": 0,
+                "weak_point": 1
+              }
+            },
+            "generated_full_body_4": {
+              "rep_range_shift_by_slot_role": {
+                "accessory": 0,
+                "primary_compound": 0,
+                "secondary_compound": -1,
+                "weak_point": 0
+              },
+              "set_deltas_by_slot_role": {
+                "accessory": 0,
+                "primary_compound": 1,
+                "secondary_compound": 0,
+                "weak_point": 0
+              }
+            },
+            "generated_full_body_5": {
+              "rep_range_shift_by_slot_role": {
+                "accessory": 2,
+                "primary_compound": 0,
+                "secondary_compound": 1,
+                "weak_point": 1
+              },
+              "set_deltas_by_slot_role": {
+                "accessory": 0,
+                "primary_compound": 0,
+                "secondary_compound": 0,
+                "weak_point": 0
+              }
+            }
+          }
+        },
+        "provenance": [],
+        "rule_id": "full_body_day_role_prescription_emphasis_v1",
+        "status": "seed",
+        "tags": [
+          "day_roles",
+          "full_body",
+          "initial_prescription",
           "seed",
           "volume"
         ]

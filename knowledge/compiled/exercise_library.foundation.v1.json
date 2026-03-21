@@ -1,9 +1,9 @@
 {
-  "aggregate_signature": "b92c09b41c030363848408b2c5a4f8ef5970075d5e2889a425b5d00ca05a34df",
+  "aggregate_signature": "184270f40953e370362e807feb657cba7a784f4917f2c59961b35c5dd4729795",
   "bundle_id": "exercise_library_foundation",
   "bundle_version": "0.1.0",
-  "input_signature": "a10e4128f810b3472374a023882ac19363361b33d33c4fc7e921fb6b8dae3f64",
-  "output_signature": "6eb823893c7c4b731b478a2d48bbfeeb77e6ce9130bb17451e14df544a8b9d14",
+  "input_signature": "de1e4faf2758aaff542b8dd0e9ca67b8ca11f1c6f762dc1e00d54f5dc1960725",
+  "output_signature": "d4e16c79c142b8b915d47145f5a359626e3ad92729a62b38b7adc07d77c665e4",
   "records": [
     {
       "aliases": [
@@ -96,21 +96,23 @@
       "canonical_name": "Assisted Pull-Up",
       "confidence": 0.7,
       "contraindications": [],
-      "curation_status": "seeded",
+      "curation_status": "curated",
       "equipment_tags": [
         "bodyweight",
         "machine"
       ],
       "exercise_id": "assisted_pull_up",
       "family_id": "assisted-pull-up",
-      "fatigue_cost": null,
+      "fatigue_cost": "moderate",
       "movement_pattern": "vertical_pull",
       "overlap_relations": [],
       "primary_muscles": [
         "biceps",
         "lats"
       ],
-      "progression_compatibility": [],
+      "progression_compatibility": [
+        "moderate"
+      ],
       "provenance": [
         {
           "confidence": 0.7,
@@ -120,14 +122,23 @@
           "section_ref": "exercise_library:assisted_pull_up",
           "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
           "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        },
+        {
+          "confidence": 1.0,
+          "curation_status": "curated",
+          "excerpt_hash": null,
+          "note": "Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+          "section_ref": "exercise_library_override:assisted_pull_up",
+          "source_id": "curated-exercise-library-override-v1",
+          "source_path": "knowledge/curation/exercise_library_overrides.json"
         }
       ],
       "secondary_muscles": [],
-      "skill_demand": null,
+      "skill_demand": "moderate",
       "source_program_ids": [
         "pure_bodybuilding_phase_1_full_body"
       ],
-      "stability_demand": null,
+      "stability_demand": "moderate",
       "substitution_class": "assisted-pull-up",
       "technique_guidance": [
         "Feel your lats pulling apart on the way down",
@@ -143,13 +154,13 @@
       "canonical_name": "Barbell RDL",
       "confidence": 0.7,
       "contraindications": [],
-      "curation_status": "seeded",
+      "curation_status": "curated",
       "equipment_tags": [
         "barbell"
       ],
       "exercise_id": "barbell_rdl",
       "family_id": "barbell-rdl",
-      "fatigue_cost": null,
+      "fatigue_cost": "high",
       "movement_pattern": "hinge",
       "overlap_relations": [],
       "primary_muscles": [
@@ -157,7 +168,9 @@
         "glutes",
         "hamstrings"
       ],
-      "progression_compatibility": [],
+      "progression_compatibility": [
+        "high"
+      ],
       "provenance": [
         {
           "confidence": 0.7,
@@ -167,14 +180,23 @@
           "section_ref": "exercise_library:barbell_rdl",
           "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
           "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        },
+        {
+          "confidence": 1.0,
+          "curation_status": "curated",
+          "excerpt_hash": null,
+          "note": "Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+          "section_ref": "exercise_library_override:barbell_rdl",
+          "source_id": "curated-exercise-library-override-v1",
+          "source_path": "knowledge/curation/exercise_library_overrides.json"
         }
       ],
       "secondary_muscles": [],
-      "skill_demand": null,
+      "skill_demand": "moderate",
       "source_program_ids": [
         "pure_bodybuilding_phase_2_full_body"
       ],
-      "stability_demand": null,
+      "stability_demand": "moderate",
       "substitution_class": "barbell-rdl",
       "technique_guidance": [
         "Don't be tempted to go too heavy",
@@ -190,19 +212,21 @@
       "canonical_name": "Bayesian Cable Curl",
       "confidence": 0.7,
       "contraindications": [],
-      "curation_status": "seeded",
+      "curation_status": "curated",
       "equipment_tags": [
         "cable"
       ],
       "exercise_id": "bayesian_cable_curl",
       "family_id": "bayesian-cable-curl",
-      "fatigue_cost": null,
+      "fatigue_cost": "low",
       "movement_pattern": "curl",
       "overlap_relations": [],
       "primary_muscles": [
         "biceps"
       ],
-      "progression_compatibility": [],
+      "progression_compatibility": [
+        "moderate"
+      ],
       "provenance": [
         {
           "confidence": 0.7,
@@ -212,14 +236,23 @@
           "section_ref": "exercise_library:bayesian_cable_curl",
           "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
           "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        },
+        {
+          "confidence": 1.0,
+          "curation_status": "curated",
+          "excerpt_hash": null,
+          "note": "Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+          "section_ref": "exercise_library_override:bayesian_cable_curl",
+          "source_id": "curated-exercise-library-override-v1",
+          "source_path": "knowledge/curation/exercise_library_overrides.json"
         }
       ],
       "secondary_muscles": [],
-      "skill_demand": null,
+      "skill_demand": "low",
       "source_program_ids": [
         "pure_bodybuilding_phase_1_full_body"
       ],
-      "stability_demand": null,
+      "stability_demand": "low",
       "substitution_class": "bayesian-cable-curl",
       "technique_guidance": [
         "If you have a left-right bicep size imbalance, do these 1 arm at a time, starting with the weaker arm",
@@ -889,19 +922,21 @@
       "canonical_name": "Cable Rope Hammer Curl",
       "confidence": 0.7,
       "contraindications": [],
-      "curation_status": "seeded",
+      "curation_status": "curated",
       "equipment_tags": [
         "cable"
       ],
       "exercise_id": "cable_rope_hammer_curl",
       "family_id": "cable-rope-hammer-curl",
-      "fatigue_cost": null,
+      "fatigue_cost": "low",
       "movement_pattern": "curl",
       "overlap_relations": [],
       "primary_muscles": [
         "biceps"
       ],
-      "progression_compatibility": [],
+      "progression_compatibility": [
+        "moderate"
+      ],
       "provenance": [
         {
           "confidence": 0.7,
@@ -911,14 +946,23 @@
           "section_ref": "exercise_library:cable_rope_hammer_curl",
           "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
           "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        },
+        {
+          "confidence": 1.0,
+          "curation_status": "curated",
+          "excerpt_hash": null,
+          "note": "Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+          "section_ref": "exercise_library_override:cable_rope_hammer_curl",
+          "source_id": "curated-exercise-library-override-v1",
+          "source_path": "knowledge/curation/exercise_library_overrides.json"
         }
       ],
       "secondary_muscles": [],
-      "skill_demand": null,
+      "skill_demand": "low",
       "source_program_ids": [
         "pure_bodybuilding_phase_2_full_body"
       ],
-      "stability_demand": null,
+      "stability_demand": "low",
       "substitution_class": "cable-rope-hammer-curl",
       "technique_guidance": [
         "Smooth, controlled reps",
@@ -933,19 +977,21 @@
       "canonical_name": "Cable Triceps Kickback",
       "confidence": 0.7,
       "contraindications": [],
-      "curation_status": "seeded",
+      "curation_status": "curated",
       "equipment_tags": [
         "cable"
       ],
       "exercise_id": "cable_triceps_kickback",
       "family_id": "cable-triceps-kickback",
-      "fatigue_cost": null,
+      "fatigue_cost": "low",
       "movement_pattern": "triceps_extension",
       "overlap_relations": [],
       "primary_muscles": [
         "triceps"
       ],
-      "progression_compatibility": [],
+      "progression_compatibility": [
+        "low"
+      ],
       "provenance": [
         {
           "confidence": 0.7,
@@ -955,14 +1001,23 @@
           "section_ref": "exercise_library:cable_triceps_kickback",
           "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
           "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        },
+        {
+          "confidence": 1.0,
+          "curation_status": "curated",
+          "excerpt_hash": null,
+          "note": "Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+          "section_ref": "exercise_library_override:cable_triceps_kickback",
+          "source_id": "curated-exercise-library-override-v1",
+          "source_path": "knowledge/curation/exercise_library_overrides.json"
         }
       ],
       "secondary_muscles": [],
-      "skill_demand": null,
+      "skill_demand": "moderate",
       "source_program_ids": [
         "pure_bodybuilding_phase_1_full_body"
       ],
-      "stability_demand": null,
+      "stability_demand": "moderate",
       "substitution_class": "cable-triceps-kickback",
       "technique_guidance": [
         "Choose the one that feels more comfortable for you",
@@ -978,13 +1033,13 @@
       "canonical_name": "Chest-Supported Machine Row",
       "confidence": 0.85,
       "contraindications": [],
-      "curation_status": "seeded",
+      "curation_status": "curated",
       "equipment_tags": [
         "machine"
       ],
       "exercise_id": "chest_supported_machine_row",
       "family_id": "chest-supported-machine-row",
-      "fatigue_cost": null,
+      "fatigue_cost": "moderate",
       "movement_pattern": "horizontal_pull",
       "overlap_relations": [],
       "primary_muscles": [
@@ -992,7 +1047,9 @@
         "lats",
         "mid_back"
       ],
-      "progression_compatibility": [],
+      "progression_compatibility": [
+        "high"
+      ],
       "provenance": [
         {
           "confidence": 0.7,
@@ -1011,15 +1068,24 @@
           "section_ref": "exercise_library:chest_supported_machine_row",
           "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
           "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        },
+        {
+          "confidence": 1.0,
+          "curation_status": "curated",
+          "excerpt_hash": null,
+          "note": "Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+          "section_ref": "exercise_library_override:chest_supported_machine_row",
+          "source_id": "curated-exercise-library-override-v1",
+          "source_path": "knowledge/curation/exercise_library_overrides.json"
         }
       ],
       "secondary_muscles": [],
-      "skill_demand": null,
+      "skill_demand": "low",
       "source_program_ids": [
         "pure_bodybuilding_phase_1_full_body",
         "pure_bodybuilding_phase_2_full_body"
       ],
-      "stability_demand": null,
+      "stability_demand": "low",
       "substitution_class": "chest-supported-machine-row",
       "technique_guidance": [
         "Flare elbows out at roughly 45\u00b0 and squeeze your shoulder blades together hard at the top of each rep",
@@ -1168,19 +1234,21 @@
       "canonical_name": "Cuffed Behind-The-Back Lateral Raise",
       "confidence": 0.7,
       "contraindications": [],
-      "curation_status": "seeded",
+      "curation_status": "curated",
       "equipment_tags": [
         "cable"
       ],
       "exercise_id": "cuffed_behind_the_back_lateral_raise",
       "family_id": "cuffed-behind-the-back-lateral-raise",
-      "fatigue_cost": null,
+      "fatigue_cost": "low",
       "movement_pattern": "lateral_raise",
       "overlap_relations": [],
       "primary_muscles": [
         "side_delts"
       ],
-      "progression_compatibility": [],
+      "progression_compatibility": [
+        "moderate"
+      ],
       "provenance": [
         {
           "confidence": 0.7,
@@ -1190,14 +1258,23 @@
           "section_ref": "exercise_library:cuffed_behind_the_back_lateral_raise",
           "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
           "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        },
+        {
+          "confidence": 1.0,
+          "curation_status": "curated",
+          "excerpt_hash": null,
+          "note": "Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+          "section_ref": "exercise_library_override:cuffed_behind_the_back_lateral_raise",
+          "source_id": "curated-exercise-library-override-v1",
+          "source_path": "knowledge/curation/exercise_library_overrides.json"
         }
       ],
       "secondary_muscles": [],
-      "skill_demand": null,
+      "skill_demand": "low",
       "source_program_ids": [
         "pure_bodybuilding_phase_1_full_body"
       ],
-      "stability_demand": null,
+      "stability_demand": "low",
       "substitution_class": "cuffed-behind-the-back-lateral-raise",
       "technique_guidance": [
         "Raise the cables up and out in a \"Y\" motion",
@@ -1212,20 +1289,22 @@
       "canonical_name": "DB Bulgarian Split Squat",
       "confidence": 0.7,
       "contraindications": [],
-      "curation_status": "seeded",
+      "curation_status": "curated",
       "equipment_tags": [
         "dumbbell"
       ],
       "exercise_id": "db_bulgarian_split_squat",
       "family_id": "db-bulgarian-split-squat",
-      "fatigue_cost": null,
+      "fatigue_cost": "high",
       "movement_pattern": "squat",
       "overlap_relations": [],
       "primary_muscles": [
         "glutes",
         "quads"
       ],
-      "progression_compatibility": [],
+      "progression_compatibility": [
+        "moderate"
+      ],
       "provenance": [
         {
           "confidence": 0.7,
@@ -1235,14 +1314,23 @@
           "section_ref": "exercise_library:db_bulgarian_split_squat",
           "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
           "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        },
+        {
+          "confidence": 1.0,
+          "curation_status": "curated",
+          "excerpt_hash": null,
+          "note": "Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+          "section_ref": "exercise_library_override:db_bulgarian_split_squat",
+          "source_id": "curated-exercise-library-override-v1",
+          "source_path": "knowledge/curation/exercise_library_overrides.json"
         }
       ],
       "secondary_muscles": [],
-      "skill_demand": null,
+      "skill_demand": "moderate",
       "source_program_ids": [
         "pure_bodybuilding_phase_2_full_body"
       ],
-      "stability_demand": null,
+      "stability_demand": "high",
       "substitution_class": "db-bulgarian-split-squat",
       "technique_guidance": [
         "Reps are per leg",
@@ -1302,13 +1390,13 @@
       "canonical_name": "DB RDL",
       "confidence": 0.7,
       "contraindications": [],
-      "curation_status": "seeded",
+      "curation_status": "curated",
       "equipment_tags": [
         "dumbbell"
       ],
       "exercise_id": "db_rdl",
       "family_id": "db-rdl",
-      "fatigue_cost": null,
+      "fatigue_cost": "moderate",
       "movement_pattern": "hinge",
       "overlap_relations": [],
       "primary_muscles": [
@@ -1316,7 +1404,9 @@
         "glutes",
         "hamstrings"
       ],
-      "progression_compatibility": [],
+      "progression_compatibility": [
+        "moderate"
+      ],
       "provenance": [
         {
           "confidence": 0.7,
@@ -1326,14 +1416,23 @@
           "section_ref": "exercise_library:db_rdl",
           "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
           "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        },
+        {
+          "confidence": 1.0,
+          "curation_status": "curated",
+          "excerpt_hash": null,
+          "note": "Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+          "section_ref": "exercise_library_override:db_rdl",
+          "source_id": "curated-exercise-library-override-v1",
+          "source_path": "knowledge/curation/exercise_library_overrides.json"
         }
       ],
       "secondary_muscles": [],
-      "skill_demand": null,
+      "skill_demand": "moderate",
       "source_program_ids": [
         "pure_bodybuilding_phase_2_full_body"
       ],
-      "stability_demand": null,
+      "stability_demand": "moderate",
       "substitution_class": "db-rdl",
       "technique_guidance": [
         "Don't be tempted to go too heavy",
@@ -1349,13 +1448,13 @@
       "canonical_name": "Decline Machine Chest Press",
       "confidence": 0.7,
       "contraindications": [],
-      "curation_status": "seeded",
+      "curation_status": "curated",
       "equipment_tags": [
         "machine"
       ],
       "exercise_id": "decline_machine_chest_press",
       "family_id": "decline-machine-chest-press",
-      "fatigue_cost": null,
+      "fatigue_cost": "moderate",
       "movement_pattern": "horizontal_press",
       "overlap_relations": [],
       "primary_muscles": [
@@ -1363,7 +1462,9 @@
         "front_delts",
         "triceps"
       ],
-      "progression_compatibility": [],
+      "progression_compatibility": [
+        "high"
+      ],
       "provenance": [
         {
           "confidence": 0.7,
@@ -1373,14 +1474,23 @@
           "section_ref": "exercise_library:decline_machine_chest_press",
           "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
           "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        },
+        {
+          "confidence": 1.0,
+          "curation_status": "curated",
+          "excerpt_hash": null,
+          "note": "Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+          "section_ref": "exercise_library_override:decline_machine_chest_press",
+          "source_id": "curated-exercise-library-override-v1",
+          "source_path": "knowledge/curation/exercise_library_overrides.json"
         }
       ],
       "secondary_muscles": [],
-      "skill_demand": null,
+      "skill_demand": "low",
       "source_program_ids": [
         "pure_bodybuilding_phase_1_full_body"
       ],
-      "stability_demand": null,
+      "stability_demand": "low",
       "substitution_class": "decline-machine-chest-press",
       "technique_guidance": [
         "Feel your pecs stretching apart on the negative",
@@ -1613,13 +1723,13 @@
       "canonical_name": "Flat Machine Chest Press",
       "confidence": 0.7,
       "contraindications": [],
-      "curation_status": "seeded",
+      "curation_status": "curated",
       "equipment_tags": [
         "machine"
       ],
       "exercise_id": "flat_machine_chest_press",
       "family_id": "flat-machine-chest-press",
-      "fatigue_cost": null,
+      "fatigue_cost": "moderate",
       "movement_pattern": "horizontal_press",
       "overlap_relations": [],
       "primary_muscles": [
@@ -1627,7 +1737,9 @@
         "front_delts",
         "triceps"
       ],
-      "progression_compatibility": [],
+      "progression_compatibility": [
+        "high"
+      ],
       "provenance": [
         {
           "confidence": 0.7,
@@ -1637,14 +1749,23 @@
           "section_ref": "exercise_library:flat_machine_chest_press",
           "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
           "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        },
+        {
+          "confidence": 1.0,
+          "curation_status": "curated",
+          "excerpt_hash": null,
+          "note": "Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+          "section_ref": "exercise_library_override:flat_machine_chest_press",
+          "source_id": "curated-exercise-library-override-v1",
+          "source_path": "knowledge/curation/exercise_library_overrides.json"
         }
       ],
       "secondary_muscles": [],
-      "skill_demand": null,
+      "skill_demand": "low",
       "source_program_ids": [
         "pure_bodybuilding_phase_2_full_body"
       ],
-      "stability_demand": null,
+      "stability_demand": "low",
       "substitution_class": "flat-machine-chest-press",
       "technique_guidance": [
         "1 second pause on the chest while maintaining tension on the chest",
@@ -1743,18 +1864,20 @@
       "canonical_name": "Hack Squat",
       "confidence": 0.7,
       "contraindications": [],
-      "curation_status": "seeded",
+      "curation_status": "curated",
       "equipment_tags": [],
       "exercise_id": "hack_squat",
       "family_id": "hack-squat",
-      "fatigue_cost": null,
+      "fatigue_cost": "high",
       "movement_pattern": "squat",
       "overlap_relations": [],
       "primary_muscles": [
         "glutes",
         "quads"
       ],
-      "progression_compatibility": [],
+      "progression_compatibility": [
+        "high"
+      ],
       "provenance": [
         {
           "confidence": 0.7,
@@ -1764,14 +1887,23 @@
           "section_ref": "exercise_library:hack_squat",
           "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
           "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        },
+        {
+          "confidence": 1.0,
+          "curation_status": "curated",
+          "excerpt_hash": null,
+          "note": "Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+          "section_ref": "exercise_library_override:hack_squat",
+          "source_id": "curated-exercise-library-override-v1",
+          "source_path": "knowledge/curation/exercise_library_overrides.json"
         }
       ],
       "secondary_muscles": [],
-      "skill_demand": null,
+      "skill_demand": "low",
       "source_program_ids": [
         "pure_bodybuilding_phase_1_full_body"
       ],
-      "stability_demand": null,
+      "stability_demand": "low",
       "substitution_class": "hack-squat",
       "technique_guidance": [
         "This first set will be your heaviest set",
@@ -1875,19 +2007,21 @@
       "canonical_name": "High-Cable Cuffed Lateral Raise",
       "confidence": 0.7,
       "contraindications": [],
-      "curation_status": "seeded",
+      "curation_status": "curated",
       "equipment_tags": [
         "cable"
       ],
       "exercise_id": "high_cable_cuffed_lateral_raise",
       "family_id": "high-cable-cuffed-lateral-raise",
-      "fatigue_cost": null,
+      "fatigue_cost": "low",
       "movement_pattern": "lateral_raise",
       "overlap_relations": [],
       "primary_muscles": [
         "side_delts"
       ],
-      "progression_compatibility": [],
+      "progression_compatibility": [
+        "moderate"
+      ],
       "provenance": [
         {
           "confidence": 0.7,
@@ -1897,14 +2031,23 @@
           "section_ref": "exercise_library:high_cable_cuffed_lateral_raise",
           "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
           "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        },
+        {
+          "confidence": 1.0,
+          "curation_status": "curated",
+          "excerpt_hash": null,
+          "note": "Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+          "section_ref": "exercise_library_override:high_cable_cuffed_lateral_raise",
+          "source_id": "curated-exercise-library-override-v1",
+          "source_path": "knowledge/curation/exercise_library_overrides.json"
         }
       ],
       "secondary_muscles": [],
-      "skill_demand": null,
+      "skill_demand": "low",
       "source_program_ids": [
         "pure_bodybuilding_phase_2_full_body"
       ],
-      "stability_demand": null,
+      "stability_demand": "low",
       "substitution_class": "high-cable-cuffed-lateral-raise",
       "technique_guidance": [
         "Focus on squeezing your lateral delt to move the weight",
@@ -1961,13 +2104,13 @@
       "canonical_name": "Lat-Focused Cable Row",
       "confidence": 0.7,
       "contraindications": [],
-      "curation_status": "seeded",
+      "curation_status": "curated",
       "equipment_tags": [
         "cable"
       ],
       "exercise_id": "lat_focused_cable_row",
       "family_id": "lat-focused-cable-row",
-      "fatigue_cost": null,
+      "fatigue_cost": "moderate",
       "movement_pattern": "horizontal_pull",
       "overlap_relations": [],
       "primary_muscles": [
@@ -1975,7 +2118,9 @@
         "lats",
         "mid_back"
       ],
-      "progression_compatibility": [],
+      "progression_compatibility": [
+        "high"
+      ],
       "provenance": [
         {
           "confidence": 0.7,
@@ -1985,14 +2130,23 @@
           "section_ref": "exercise_library:lat_focused_cable_row",
           "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
           "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        },
+        {
+          "confidence": 1.0,
+          "curation_status": "curated",
+          "excerpt_hash": null,
+          "note": "Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+          "section_ref": "exercise_library_override:lat_focused_cable_row",
+          "source_id": "curated-exercise-library-override-v1",
+          "source_path": "knowledge/curation/exercise_library_overrides.json"
         }
       ],
       "secondary_muscles": [],
-      "skill_demand": null,
+      "skill_demand": "low",
       "source_program_ids": [
         "pure_bodybuilding_phase_1_full_body"
       ],
-      "stability_demand": null,
+      "stability_demand": "low",
       "substitution_class": "lat-focused-cable-row",
       "technique_guidance": [
         "Drive your elbows down and back to engage the lats",
@@ -2008,19 +2162,21 @@
       "canonical_name": "Leg Extension",
       "confidence": 0.85,
       "contraindications": [],
-      "curation_status": "seeded",
+      "curation_status": "curated",
       "equipment_tags": [
         "machine"
       ],
       "exercise_id": "leg_extension",
       "family_id": "leg-extension",
-      "fatigue_cost": null,
+      "fatigue_cost": "low",
       "movement_pattern": "knee_extension",
       "overlap_relations": [],
       "primary_muscles": [
         "quads"
       ],
-      "progression_compatibility": [],
+      "progression_compatibility": [
+        "high"
+      ],
       "provenance": [
         {
           "confidence": 0.7,
@@ -2039,15 +2195,24 @@
           "section_ref": "exercise_library:leg_extension",
           "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
           "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        },
+        {
+          "confidence": 1.0,
+          "curation_status": "curated",
+          "excerpt_hash": null,
+          "note": "Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+          "section_ref": "exercise_library_override:leg_extension",
+          "source_id": "curated-exercise-library-override-v1",
+          "source_path": "knowledge/curation/exercise_library_overrides.json"
         }
       ],
       "secondary_muscles": [],
-      "skill_demand": null,
+      "skill_demand": "low",
       "source_program_ids": [
         "pure_bodybuilding_phase_1_full_body",
         "pure_bodybuilding_phase_2_full_body"
       ],
-      "stability_demand": null,
+      "stability_demand": "low",
       "substitution_class": "leg-extension",
       "technique_guidance": [
         "Grab the handles as hard as you can to pull your butt down into the seat",
@@ -2063,20 +2228,22 @@
       "canonical_name": "Leg Press",
       "confidence": 0.7,
       "contraindications": [],
-      "curation_status": "seeded",
+      "curation_status": "curated",
       "equipment_tags": [
         "machine"
       ],
       "exercise_id": "leg_press",
       "family_id": "leg-press",
-      "fatigue_cost": null,
+      "fatigue_cost": "high",
       "movement_pattern": "squat",
       "overlap_relations": [],
       "primary_muscles": [
         "glutes",
         "quads"
       ],
-      "progression_compatibility": [],
+      "progression_compatibility": [
+        "high"
+      ],
       "provenance": [
         {
           "confidence": 0.7,
@@ -2086,14 +2253,23 @@
           "section_ref": "exercise_library:leg_press",
           "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
           "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        },
+        {
+          "confidence": 1.0,
+          "curation_status": "curated",
+          "excerpt_hash": null,
+          "note": "Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+          "section_ref": "exercise_library_override:leg_press",
+          "source_id": "curated-exercise-library-override-v1",
+          "source_path": "knowledge/curation/exercise_library_overrides.json"
         }
       ],
       "secondary_muscles": [],
-      "skill_demand": null,
+      "skill_demand": "low",
       "source_program_ids": [
         "pure_bodybuilding_phase_1_full_body"
       ],
-      "stability_demand": null,
+      "stability_demand": "low",
       "substitution_class": "leg-press",
       "technique_guidance": [
         "Control the negative and do a slight pause at the bottom of each rep",
@@ -2153,13 +2329,13 @@
       "canonical_name": "Low Incline DB Press",
       "confidence": 0.7,
       "contraindications": [],
-      "curation_status": "seeded",
+      "curation_status": "curated",
       "equipment_tags": [
         "dumbbell"
       ],
       "exercise_id": "low_incline_db_press",
       "family_id": "low-incline-db-press",
-      "fatigue_cost": null,
+      "fatigue_cost": "moderate",
       "movement_pattern": "horizontal_press",
       "overlap_relations": [],
       "primary_muscles": [
@@ -2167,7 +2343,9 @@
         "front_delts",
         "triceps"
       ],
-      "progression_compatibility": [],
+      "progression_compatibility": [
+        "moderate"
+      ],
       "provenance": [
         {
           "confidence": 0.7,
@@ -2177,14 +2355,23 @@
           "section_ref": "exercise_library:low_incline_db_press",
           "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
           "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        },
+        {
+          "confidence": 1.0,
+          "curation_status": "curated",
+          "excerpt_hash": null,
+          "note": "Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+          "section_ref": "exercise_library_override:low_incline_db_press",
+          "source_id": "curated-exercise-library-override-v1",
+          "source_path": "knowledge/curation/exercise_library_overrides.json"
         }
       ],
       "secondary_muscles": [],
-      "skill_demand": null,
+      "skill_demand": "moderate",
       "source_program_ids": [
         "pure_bodybuilding_phase_1_full_body"
       ],
-      "stability_demand": null,
+      "stability_demand": "moderate",
       "substitution_class": "low-incline-db-press",
       "technique_guidance": [
         "Do a slight elbow tuck on the negative and then flare as you push (assuming this doesn't bother your shoulders)",
@@ -2200,13 +2387,13 @@
       "canonical_name": "Low Incline Smith Machine Press",
       "confidence": 0.7,
       "contraindications": [],
-      "curation_status": "seeded",
+      "curation_status": "curated",
       "equipment_tags": [
         "machine"
       ],
       "exercise_id": "low_incline_smith_machine_press",
       "family_id": "low-incline-smith-machine-press",
-      "fatigue_cost": null,
+      "fatigue_cost": "moderate",
       "movement_pattern": "horizontal_press",
       "overlap_relations": [],
       "primary_muscles": [
@@ -2214,7 +2401,9 @@
         "front_delts",
         "triceps"
       ],
-      "progression_compatibility": [],
+      "progression_compatibility": [
+        "high"
+      ],
       "provenance": [
         {
           "confidence": 0.7,
@@ -2224,14 +2413,23 @@
           "section_ref": "exercise_library:low_incline_smith_machine_press",
           "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
           "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        },
+        {
+          "confidence": 1.0,
+          "curation_status": "curated",
+          "excerpt_hash": null,
+          "note": "Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+          "section_ref": "exercise_library_override:low_incline_smith_machine_press",
+          "source_id": "curated-exercise-library-override-v1",
+          "source_path": "knowledge/curation/exercise_library_overrides.json"
         }
       ],
       "secondary_muscles": [],
-      "skill_demand": null,
+      "skill_demand": "low",
       "source_program_ids": [
         "pure_bodybuilding_phase_1_full_body"
       ],
-      "stability_demand": null,
+      "stability_demand": "low",
       "substitution_class": "low-incline-smith-machine-press",
       "technique_guidance": [
         "1 second pause on the chest on each rep while maintaining tension on the pecs",
@@ -2246,19 +2444,21 @@
       "canonical_name": "Lying Leg Curl",
       "confidence": 0.7,
       "contraindications": [],
-      "curation_status": "seeded",
+      "curation_status": "curated",
       "equipment_tags": [
         "machine"
       ],
       "exercise_id": "lying_leg_curl",
       "family_id": "lying-leg-curl",
-      "fatigue_cost": null,
+      "fatigue_cost": "low",
       "movement_pattern": "leg_curl",
       "overlap_relations": [],
       "primary_muscles": [
         "hamstrings"
       ],
-      "progression_compatibility": [],
+      "progression_compatibility": [
+        "high"
+      ],
       "provenance": [
         {
           "confidence": 0.7,
@@ -2268,14 +2468,23 @@
           "section_ref": "exercise_library:lying_leg_curl",
           "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
           "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        },
+        {
+          "confidence": 1.0,
+          "curation_status": "curated",
+          "excerpt_hash": null,
+          "note": "Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+          "section_ref": "exercise_library_override:lying_leg_curl",
+          "source_id": "curated-exercise-library-override-v1",
+          "source_path": "knowledge/curation/exercise_library_overrides.json"
         }
       ],
       "secondary_muscles": [],
-      "skill_demand": null,
+      "skill_demand": "low",
       "source_program_ids": [
         "pure_bodybuilding_phase_1_full_body"
       ],
-      "stability_demand": null,
+      "stability_demand": "low",
       "substitution_class": "lying-leg-curl",
       "technique_guidance": [
         "Because we did seated hamstring work yesterday, these are mainly meant to get the knees nice and warmed up before hack squats",
@@ -2442,20 +2651,22 @@
       "canonical_name": "Machine Shoulder Press",
       "confidence": 0.85,
       "contraindications": [],
-      "curation_status": "seeded",
+      "curation_status": "curated",
       "equipment_tags": [
         "machine"
       ],
       "exercise_id": "machine_shoulder_press",
       "family_id": "machine-shoulder-press",
-      "fatigue_cost": null,
+      "fatigue_cost": "moderate",
       "movement_pattern": "vertical_press",
       "overlap_relations": [],
       "primary_muscles": [
         "front_delts",
         "triceps"
       ],
-      "progression_compatibility": [],
+      "progression_compatibility": [
+        "high"
+      ],
       "provenance": [
         {
           "confidence": 0.7,
@@ -2474,15 +2685,24 @@
           "section_ref": "exercise_library:machine_shoulder_press",
           "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
           "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        },
+        {
+          "confidence": 1.0,
+          "curation_status": "curated",
+          "excerpt_hash": null,
+          "note": "Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+          "section_ref": "exercise_library_override:machine_shoulder_press",
+          "source_id": "curated-exercise-library-override-v1",
+          "source_path": "knowledge/curation/exercise_library_overrides.json"
         }
       ],
       "secondary_muscles": [],
-      "skill_demand": null,
+      "skill_demand": "low",
       "source_program_ids": [
         "pure_bodybuilding_phase_1_full_body",
         "pure_bodybuilding_phase_2_full_body"
       ],
-      "stability_demand": null,
+      "stability_demand": "low",
       "substitution_class": "machine-shoulder-press",
       "technique_guidance": [
         "Ensure that your elbows break at least 90\u00b0",
@@ -2584,20 +2804,22 @@
       "canonical_name": "Neutral-Grip Lat Pulldown",
       "confidence": 0.85,
       "contraindications": [],
-      "curation_status": "seeded",
+      "curation_status": "curated",
       "equipment_tags": [
         "cable"
       ],
       "exercise_id": "neutral_grip_lat_pulldown",
       "family_id": "neutral-grip-lat-pulldown",
-      "fatigue_cost": null,
+      "fatigue_cost": "moderate",
       "movement_pattern": "vertical_pull",
       "overlap_relations": [],
       "primary_muscles": [
         "biceps",
         "lats"
       ],
-      "progression_compatibility": [],
+      "progression_compatibility": [
+        "high"
+      ],
       "provenance": [
         {
           "confidence": 0.7,
@@ -2616,15 +2838,24 @@
           "section_ref": "exercise_library:neutral_grip_lat_pulldown",
           "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
           "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        },
+        {
+          "confidence": 1.0,
+          "curation_status": "curated",
+          "excerpt_hash": null,
+          "note": "Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+          "section_ref": "exercise_library_override:neutral_grip_lat_pulldown",
+          "source_id": "curated-exercise-library-override-v1",
+          "source_path": "knowledge/curation/exercise_library_overrides.json"
         }
       ],
       "secondary_muscles": [],
-      "skill_demand": null,
+      "skill_demand": "low",
       "source_program_ids": [
         "pure_bodybuilding_phase_1_full_body",
         "pure_bodybuilding_phase_2_full_body"
       ],
-      "stability_demand": null,
+      "stability_demand": "low",
       "substitution_class": "neutral-grip-lat-pulldown",
       "technique_guidance": [
         "Do these pulldowns with the handle more out in front of you, more like a cross between pullover and a pulldown",
@@ -2791,13 +3022,13 @@
       "canonical_name": "Paused Barbell RDL",
       "confidence": 0.7,
       "contraindications": [],
-      "curation_status": "seeded",
+      "curation_status": "curated",
       "equipment_tags": [
         "barbell"
       ],
       "exercise_id": "paused_barbell_rdl",
       "family_id": "paused-barbell-rdl",
-      "fatigue_cost": null,
+      "fatigue_cost": "high",
       "movement_pattern": "hinge",
       "overlap_relations": [],
       "primary_muscles": [
@@ -2805,7 +3036,9 @@
         "glutes",
         "hamstrings"
       ],
-      "progression_compatibility": [],
+      "progression_compatibility": [
+        "moderate"
+      ],
       "provenance": [
         {
           "confidence": 0.7,
@@ -2815,14 +3048,23 @@
           "section_ref": "exercise_library:paused_barbell_rdl",
           "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
           "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        },
+        {
+          "confidence": 1.0,
+          "curation_status": "curated",
+          "excerpt_hash": null,
+          "note": "Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+          "section_ref": "exercise_library_override:paused_barbell_rdl",
+          "source_id": "curated-exercise-library-override-v1",
+          "source_path": "knowledge/curation/exercise_library_overrides.json"
         }
       ],
       "secondary_muscles": [],
-      "skill_demand": null,
+      "skill_demand": "high",
       "source_program_ids": [
         "pure_bodybuilding_phase_1_full_body"
       ],
-      "stability_demand": null,
+      "stability_demand": "moderate",
       "substitution_class": "paused-barbell-rdl",
       "technique_guidance": [
         "1 second pause at the bottom of each rep",
@@ -2962,19 +3204,21 @@
       "canonical_name": "Roman Chair Leg Raise",
       "confidence": 0.85,
       "contraindications": [],
-      "curation_status": "seeded",
+      "curation_status": "curated",
       "equipment_tags": [
         "bodyweight"
       ],
       "exercise_id": "roman_chair_leg_raise",
       "family_id": "roman-chair-leg-raise",
-      "fatigue_cost": null,
+      "fatigue_cost": "low",
       "movement_pattern": "core",
       "overlap_relations": [],
       "primary_muscles": [
         "abs"
       ],
-      "progression_compatibility": [],
+      "progression_compatibility": [
+        "moderate"
+      ],
       "provenance": [
         {
           "confidence": 0.7,
@@ -2993,15 +3237,24 @@
           "section_ref": "exercise_library:roman_chair_leg_raise",
           "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
           "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        },
+        {
+          "confidence": 1.0,
+          "curation_status": "curated",
+          "excerpt_hash": null,
+          "note": "Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+          "section_ref": "exercise_library_override:roman_chair_leg_raise",
+          "source_id": "curated-exercise-library-override-v1",
+          "source_path": "knowledge/curation/exercise_library_overrides.json"
         }
       ],
       "secondary_muscles": [],
-      "skill_demand": null,
+      "skill_demand": "moderate",
       "source_program_ids": [
         "pure_bodybuilding_phase_1_full_body",
         "pure_bodybuilding_phase_2_full_body"
       ],
-      "stability_demand": null,
+      "stability_demand": "moderate",
       "substitution_class": "roman-chair-leg-raise",
       "technique_guidance": [
         "10-20 reps is a broad range on purpose: just go until you hit RPE 9-10 (0-1 reps shy of failure) with controlled form",
@@ -3016,20 +3269,22 @@
       "canonical_name": "Seated DB Shoulder Press",
       "confidence": 0.85,
       "contraindications": [],
-      "curation_status": "seeded",
+      "curation_status": "curated",
       "equipment_tags": [
         "dumbbell"
       ],
       "exercise_id": "seated_db_shoulder_press",
       "family_id": "seated-db-shoulder-press",
-      "fatigue_cost": null,
+      "fatigue_cost": "moderate",
       "movement_pattern": "vertical_press",
       "overlap_relations": [],
       "primary_muscles": [
         "front_delts",
         "triceps"
       ],
-      "progression_compatibility": [],
+      "progression_compatibility": [
+        "moderate"
+      ],
       "provenance": [
         {
           "confidence": 0.7,
@@ -3048,15 +3303,24 @@
           "section_ref": "exercise_library:seated_db_shoulder_press",
           "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
           "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        },
+        {
+          "confidence": 1.0,
+          "curation_status": "curated",
+          "excerpt_hash": null,
+          "note": "Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+          "section_ref": "exercise_library_override:seated_db_shoulder_press",
+          "source_id": "curated-exercise-library-override-v1",
+          "source_path": "knowledge/curation/exercise_library_overrides.json"
         }
       ],
       "secondary_muscles": [],
-      "skill_demand": null,
+      "skill_demand": "moderate",
       "source_program_ids": [
         "pure_bodybuilding_phase_1_full_body",
         "pure_bodybuilding_phase_2_full_body"
       ],
-      "stability_demand": null,
+      "stability_demand": "moderate",
       "substitution_class": "seated-db-shoulder-press",
       "technique_guidance": [
         "Slightly rotate the dumbbells in on the negative and flare your elbows out as you push",
@@ -3070,19 +3334,21 @@
       "canonical_name": "Seated Leg Curl",
       "confidence": 0.85,
       "contraindications": [],
-      "curation_status": "seeded",
+      "curation_status": "curated",
       "equipment_tags": [
         "machine"
       ],
       "exercise_id": "seated_leg_curl",
       "family_id": "seated-leg-curl",
-      "fatigue_cost": null,
+      "fatigue_cost": "low",
       "movement_pattern": "leg_curl",
       "overlap_relations": [],
       "primary_muscles": [
         "hamstrings"
       ],
-      "progression_compatibility": [],
+      "progression_compatibility": [
+        "high"
+      ],
       "provenance": [
         {
           "confidence": 0.7,
@@ -3101,15 +3367,24 @@
           "section_ref": "exercise_library:seated_leg_curl",
           "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
           "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        },
+        {
+          "confidence": 1.0,
+          "curation_status": "curated",
+          "excerpt_hash": null,
+          "note": "Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+          "section_ref": "exercise_library_override:seated_leg_curl",
+          "source_id": "curated-exercise-library-override-v1",
+          "source_path": "knowledge/curation/exercise_library_overrides.json"
         }
       ],
       "secondary_muscles": [],
-      "skill_demand": null,
+      "skill_demand": "low",
       "source_program_ids": [
         "pure_bodybuilding_phase_1_full_body",
         "pure_bodybuilding_phase_2_full_body"
       ],
-      "stability_demand": null,
+      "stability_demand": "low",
       "substitution_class": "seated-leg-curl",
       "technique_guidance": [
         "Lean forward over the machine to get a maximum stretch in your hamstrings",
@@ -3250,13 +3525,13 @@
       "canonical_name": "Slow-Eccentric DB RDL",
       "confidence": 0.7,
       "contraindications": [],
-      "curation_status": "seeded",
+      "curation_status": "curated",
       "equipment_tags": [
         "dumbbell"
       ],
       "exercise_id": "slow_eccentric_db_rdl",
       "family_id": "slow-eccentric-db-rdl",
-      "fatigue_cost": null,
+      "fatigue_cost": "moderate",
       "movement_pattern": "hinge",
       "overlap_relations": [],
       "primary_muscles": [
@@ -3264,7 +3539,9 @@
         "glutes",
         "hamstrings"
       ],
-      "progression_compatibility": [],
+      "progression_compatibility": [
+        "low"
+      ],
       "provenance": [
         {
           "confidence": 0.7,
@@ -3274,14 +3551,23 @@
           "section_ref": "exercise_library:slow_eccentric_db_rdl",
           "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
           "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        },
+        {
+          "confidence": 1.0,
+          "curation_status": "curated",
+          "excerpt_hash": null,
+          "note": "Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+          "section_ref": "exercise_library_override:slow_eccentric_db_rdl",
+          "source_id": "curated-exercise-library-override-v1",
+          "source_path": "knowledge/curation/exercise_library_overrides.json"
         }
       ],
       "secondary_muscles": [],
-      "skill_demand": null,
+      "skill_demand": "high",
       "source_program_ids": [
         "pure_bodybuilding_phase_1_full_body"
       ],
-      "stability_demand": null,
+      "stability_demand": "moderate",
       "substitution_class": "slow-eccentric-db-rdl",
       "technique_guidance": [
         "Don't be tempted to go too heavy",
@@ -3338,13 +3624,13 @@
       "canonical_name": "Smith Machine Deficit Row",
       "confidence": 0.7,
       "contraindications": [],
-      "curation_status": "seeded",
+      "curation_status": "curated",
       "equipment_tags": [
         "machine"
       ],
       "exercise_id": "smith_machine_deficit_row",
       "family_id": "smith-machine-deficit-row",
-      "fatigue_cost": null,
+      "fatigue_cost": "high",
       "movement_pattern": "horizontal_pull",
       "overlap_relations": [],
       "primary_muscles": [
@@ -3352,7 +3638,9 @@
         "lats",
         "mid_back"
       ],
-      "progression_compatibility": [],
+      "progression_compatibility": [
+        "moderate"
+      ],
       "provenance": [
         {
           "confidence": 0.7,
@@ -3362,14 +3650,23 @@
           "section_ref": "exercise_library:smith_machine_deficit_row",
           "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
           "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        },
+        {
+          "confidence": 1.0,
+          "curation_status": "curated",
+          "excerpt_hash": null,
+          "note": "Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+          "section_ref": "exercise_library_override:smith_machine_deficit_row",
+          "source_id": "curated-exercise-library-override-v1",
+          "source_path": "knowledge/curation/exercise_library_overrides.json"
         }
       ],
       "secondary_muscles": [],
-      "skill_demand": null,
+      "skill_demand": "moderate",
       "source_program_ids": [
         "pure_bodybuilding_phase_2_full_body"
       ],
-      "stability_demand": null,
+      "stability_demand": "moderate",
       "substitution_class": "smith-machine-deficit-row",
       "technique_guidance": [
         "Focus on getting a big stretch and touch your stomach/chest on each rep",
@@ -3441,20 +3738,22 @@
       "canonical_name": "Smith Machine Squat",
       "confidence": 0.7,
       "contraindications": [],
-      "curation_status": "seeded",
+      "curation_status": "curated",
       "equipment_tags": [
         "machine"
       ],
       "exercise_id": "smith_machine_squat",
       "family_id": "smith-machine-squat",
-      "fatigue_cost": null,
+      "fatigue_cost": "high",
       "movement_pattern": "squat",
       "overlap_relations": [],
       "primary_muscles": [
         "glutes",
         "quads"
       ],
-      "progression_compatibility": [],
+      "progression_compatibility": [
+        "high"
+      ],
       "provenance": [
         {
           "confidence": 0.7,
@@ -3464,14 +3763,23 @@
           "section_ref": "exercise_library:smith_machine_squat",
           "source_id": "onboarding-pure_bodybuilding_phase_1_full_body",
           "source_path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json"
+        },
+        {
+          "confidence": 1.0,
+          "curation_status": "curated",
+          "excerpt_hash": null,
+          "note": "Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+          "section_ref": "exercise_library_override:smith_machine_squat",
+          "source_id": "curated-exercise-library-override-v1",
+          "source_path": "knowledge/curation/exercise_library_overrides.json"
         }
       ],
       "secondary_muscles": [],
-      "skill_demand": null,
+      "skill_demand": "low",
       "source_program_ids": [
         "pure_bodybuilding_phase_1_full_body"
       ],
-      "stability_demand": null,
+      "stability_demand": "low",
       "substitution_class": "smith-machine-squat",
       "technique_guidance": [
         "This first set will be your heaviest set",
@@ -3487,19 +3795,21 @@
       "canonical_name": "Standing Calf Raise",
       "confidence": 0.85,
       "contraindications": [],
-      "curation_status": "seeded",
+      "curation_status": "curated",
       "equipment_tags": [
         "machine"
       ],
       "exercise_id": "standing_calf_raise",
       "family_id": "standing-calf-raise",
-      "fatigue_cost": null,
+      "fatigue_cost": "low",
       "movement_pattern": "plantar_flexion",
       "overlap_relations": [],
       "primary_muscles": [
         "calves"
       ],
-      "progression_compatibility": [],
+      "progression_compatibility": [
+        "high"
+      ],
       "provenance": [
         {
           "confidence": 0.7,
@@ -3518,15 +3828,24 @@
           "section_ref": "exercise_library:standing_calf_raise",
           "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
           "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        },
+        {
+          "confidence": 1.0,
+          "curation_status": "curated",
+          "excerpt_hash": null,
+          "note": "Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+          "section_ref": "exercise_library_override:standing_calf_raise",
+          "source_id": "curated-exercise-library-override-v1",
+          "source_path": "knowledge/curation/exercise_library_overrides.json"
         }
       ],
       "secondary_muscles": [],
-      "skill_demand": null,
+      "skill_demand": "low",
       "source_program_ids": [
         "pure_bodybuilding_phase_1_full_body",
         "pure_bodybuilding_phase_2_full_body"
       ],
-      "stability_demand": null,
+      "stability_demand": "low",
       "substitution_class": "standing-calf-raise",
       "technique_guidance": [
         "1-2 second pause at the bottom of each rep",
@@ -3770,19 +4089,21 @@
       "canonical_name": "Triceps Pressdown (Bar)",
       "confidence": 0.85,
       "contraindications": [],
-      "curation_status": "seeded",
+      "curation_status": "curated",
       "equipment_tags": [
         "cable"
       ],
       "exercise_id": "triceps_pressdown_bar",
       "family_id": "triceps-pressdown-bar",
-      "fatigue_cost": null,
+      "fatigue_cost": "low",
       "movement_pattern": "triceps_extension",
       "overlap_relations": [],
       "primary_muscles": [
         "triceps"
       ],
-      "progression_compatibility": [],
+      "progression_compatibility": [
+        "high"
+      ],
       "provenance": [
         {
           "confidence": 0.7,
@@ -3801,15 +4122,24 @@
           "section_ref": "exercise_library:triceps_pressdown_bar",
           "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
           "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        },
+        {
+          "confidence": 1.0,
+          "curation_status": "curated",
+          "excerpt_hash": null,
+          "note": "Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+          "section_ref": "exercise_library_override:triceps_pressdown_bar",
+          "source_id": "curated-exercise-library-override-v1",
+          "source_path": "knowledge/curation/exercise_library_overrides.json"
         }
       ],
       "secondary_muscles": [],
-      "skill_demand": null,
+      "skill_demand": "low",
       "source_program_ids": [
         "pure_bodybuilding_phase_1_full_body",
         "pure_bodybuilding_phase_2_full_body"
       ],
-      "stability_demand": null,
+      "stability_demand": "low",
       "substitution_class": "triceps-pressdown-bar",
       "technique_guidance": [
         "Aim to add some weight week to week at the set rep target",
@@ -3868,18 +4198,20 @@
       "canonical_name": "Wide-Grip Pull-Up",
       "confidence": 0.7,
       "contraindications": [],
-      "curation_status": "seeded",
+      "curation_status": "curated",
       "equipment_tags": [],
       "exercise_id": "wide_grip_pull_up",
       "family_id": "wide-grip-pull-up",
-      "fatigue_cost": null,
+      "fatigue_cost": "high",
       "movement_pattern": "vertical_pull",
       "overlap_relations": [],
       "primary_muscles": [
         "biceps",
         "lats"
       ],
-      "progression_compatibility": [],
+      "progression_compatibility": [
+        "low"
+      ],
       "provenance": [
         {
           "confidence": 0.7,
@@ -3889,14 +4221,23 @@
           "section_ref": "exercise_library:wide_grip_pull_up",
           "source_id": "onboarding-pure_bodybuilding_phase_2_full_body",
           "source_path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json"
+        },
+        {
+          "confidence": 1.0,
+          "curation_status": "curated",
+          "excerpt_hash": null,
+          "note": "Curated augmentation for deterministic scored-selection metadata; not a source-derived exercise fact.",
+          "section_ref": "exercise_library_override:wide_grip_pull_up",
+          "source_id": "curated-exercise-library-override-v1",
+          "source_path": "knowledge/curation/exercise_library_overrides.json"
         }
       ],
       "secondary_muscles": [],
-      "skill_demand": null,
+      "skill_demand": "high",
       "source_program_ids": [
         "pure_bodybuilding_phase_2_full_body"
       ],
-      "stability_demand": null,
+      "stability_demand": "high",
       "substitution_class": "wide-grip-pull-up",
       "technique_guidance": [
         "1",

@@ -7,12 +7,15 @@ from typing import Any
 
 from .generated_assessment_schema import UserAssessment
 from .generated_full_body_blueprint_schema import GeneratedFullBodyBlueprintInput, PatternInsufficiencyRecord
+from .generated_full_body_candidate_scoring import select_scored_candidate
+from .generated_full_body_prescription import resolve_generated_full_body_initial_prescription
 from .generated_full_body_template_draft_schema import (
     ConstructibilityIssue,
     ConstructorTraceRef,
     GeneratedExerciseDraft,
     GeneratedFullBodyTemplateDraft,
     GeneratedSessionDraft,
+    OptionalFillTrace,
 )
 from .knowledge_schema import CanonicalExerciseLibraryBundle, DoctrineBundle, DoctrineRuleStub, PolicyBundle
 
@@ -21,9 +24,9 @@ CONSTRUCTOR_SYSTEM_DEFAULTS: dict[str, str] = {
     "template_draft_id_hash_v1": "Deterministic generated Full Body template-draft hashing scheme.",
     "generated_session_id_v1": "Generic deterministic generated session-id scheme.",
     "generated_session_title_v1": "Generic deterministic generated session-title scheme.",
-    "default_generated_sets_v1": "Temporary scheduler-compatibility default sets value for generated constructor outputs.",
-    "default_generated_rep_range_v1": "Temporary scheduler-compatibility default rep-range value for generated constructor outputs.",
-    "default_generated_start_weight_v1": "Temporary scheduler-compatibility default starting weight for generated constructor outputs.",
+    "default_generated_sets_v1": "Legacy compatibility default sets value retained only for unexpected fallback use.",
+    "default_generated_rep_range_v1": "Legacy compatibility default rep-range retained only for unexpected fallback use.",
+    "default_generated_start_weight_v1": "Compatibility default starting weight used only through doctrine-backed fallback.",
     "default_generated_substitution_candidates_empty_v1": "Temporary scheduler-compatibility default empty substitution-candidate list.",
     "constructor_assessment_reference_passthrough_v1": "Assessment id passthrough trace marker for constructor outputs.",
     "constructor_blueprint_reference_passthrough_v1": "Blueprint id passthrough trace marker for constructor outputs.",
@@ -34,12 +37,7 @@ CONSTRUCTOR_SYSTEM_DEFAULTS: dict[str, str] = {
 }
 
 
-DEFAULT_GENERATED_PRESCRIPTIONS = {
-    "sets": 3,
-    "rep_range": [8, 12],
-    "start_weight": 20.0,
-    "substitution_candidates": [],
-}
+DEFAULT_GENERATED_SUBSTITUTION_CANDIDATES: list[str] = []
 
 
 @dataclass(frozen=True)
@@ -103,15 +101,6 @@ def _require_hard_constraint(policy_bundle: PolicyBundle, constraint_id: str) ->
     if constraint_id not in available:
         raise ValueError(f"policy bundle missing required hard constraint: {constraint_id}")
     return constraint_id
-
-
-def _resolve_minimal_prescription_defaults() -> dict[str, Any]:
-    return {
-        "sets": DEFAULT_GENERATED_PRESCRIPTIONS["sets"],
-        "rep_range": list(DEFAULT_GENERATED_PRESCRIPTIONS["rep_range"]),
-        "start_weight": DEFAULT_GENERATED_PRESCRIPTIONS["start_weight"],
-        "substitution_candidates": list(DEFAULT_GENERATED_PRESCRIPTIONS["substitution_candidates"]),
-    }
 
 
 def _merge_trace(
@@ -195,7 +184,7 @@ def _selected_exercise_trace(
     doctrine_rule_ids: list[str],
     policy_ids: list[str],
     exercise_id: str,
-    slot_role: str,
+    prescription_field_trace: dict[str, ConstructorTraceRef],
 ) -> dict[str, ConstructorTraceRef]:
     base = _trace(
         doctrine_rule_ids=doctrine_rule_ids,
@@ -214,27 +203,42 @@ def _selected_exercise_trace(
         "slot_role": _merge_trace(slot_trace, _trace()),
         "primary_muscles": base,
         "equipment_tags": base,
-        "sets": _trace(system_default_ids=["default_generated_sets_v1"]),
-        "rep_range": _trace(system_default_ids=["default_generated_rep_range_v1"]),
-        "start_weight": _trace(system_default_ids=["default_generated_start_weight_v1"]),
+        "sets": prescription_field_trace["sets"],
+        "rep_range": prescription_field_trace["rep_range"],
+        "start_weight": prescription_field_trace["start_weight"],
         "substitution_candidates": _trace(system_default_ids=["default_generated_substitution_candidates_empty_v1"]),
+        "selection_trace": base,
         "field_trace": _trace(system_default_ids=["constructor_field_trace_v1"]),
     }
 
 
 def _build_exercise_draft(
     *,
+    assessment: UserAssessment,
+    blueprint_input: GeneratedFullBodyBlueprintInput,
+    doctrine_bundle: DoctrineBundle,
     record: dict[str, Any],
     slot_role: str,
+    selection_mode: str,
+    day_role: str,
+    selection_trace,
     doctrine_rule_ids: list[str],
     policy_ids: list[str],
 ) -> GeneratedExerciseDraft:
-    prescription_defaults = _resolve_minimal_prescription_defaults()
+    prescription = resolve_generated_full_body_initial_prescription(
+        assessment=assessment,
+        doctrine_bundle=doctrine_bundle,
+        record=record,
+        slot_role=slot_role,
+        selection_mode=selection_mode,
+        day_role=day_role,
+        volume_tier=blueprint_input.volume_tier,
+    )
     field_trace = _selected_exercise_trace(
         doctrine_rule_ids=doctrine_rule_ids,
         policy_ids=policy_ids,
         exercise_id=record["exercise_id"],
-        slot_role=slot_role,
+        prescription_field_trace=prescription.field_trace,
     )
     return GeneratedExerciseDraft(
         id=record["exercise_id"],
@@ -243,39 +247,52 @@ def _build_exercise_draft(
         slot_role=slot_role,
         primary_muscles=list(record.get("primary_muscles") or []),
         equipment_tags=list(record.get("equipment_tags") or []),
-        sets=int(prescription_defaults["sets"]),
-        rep_range=list(prescription_defaults["rep_range"]),
-        start_weight=float(prescription_defaults["start_weight"]),
-        substitution_candidates=list(prescription_defaults["substitution_candidates"]),
+        sets=prescription.sets,
+        rep_range=list(prescription.rep_range),
+        start_weight=prescription.start_weight,
+        substitution_candidates=list(DEFAULT_GENERATED_SUBSTITUTION_CANDIDATES),
+        selection_trace=selection_trace,
         field_trace=field_trace,
     )
 
 
-def _select_candidate_exercise_id(
+def _feasible_candidate_ids(
     *,
     candidate_ids: list[str],
     assigned_counts: dict[str, int],
     max_assignments_per_week: int,
     allow_reuse_after_unique_candidates_exhausted: bool,
     session_exercise_ids: set[str],
-) -> tuple[str | None, bool]:
-    for exercise_id in candidate_ids:
-        if exercise_id in session_exercise_ids:
-            continue
-        if assigned_counts.get(exercise_id, 0) < max_assignments_per_week:
-            return exercise_id, False
-
+) -> list[str]:
+    bounded_candidates = [
+        exercise_id
+        for exercise_id in candidate_ids
+        if exercise_id not in session_exercise_ids and assigned_counts.get(exercise_id, 0) < max_assignments_per_week
+    ]
+    if bounded_candidates:
+        return bounded_candidates
     if not allow_reuse_after_unique_candidates_exhausted:
-        return None, False
-
-    for exercise_id in candidate_ids:
-        if exercise_id not in session_exercise_ids:
-            return exercise_id, True
-    return None, False
+        return []
+    return [exercise_id for exercise_id in candidate_ids if exercise_id not in session_exercise_ids]
 
 
 def _collect_selected_exercise_ids(sessions: list[GeneratedSessionDraft]) -> list[str]:
     return _unique_preserve_order([exercise.id for session in sessions for exercise in session.exercises])
+
+
+def _optional_fill_trace(
+    *,
+    score_floor: int | None,
+    stop_reason: str,
+    best_candidate_id: str | None = None,
+    best_total_score: int | None = None,
+) -> OptionalFillTrace:
+    return OptionalFillTrace(
+        score_floor=score_floor,
+        best_candidate_id=best_candidate_id,
+        best_total_score=best_total_score,
+        stop_reason=stop_reason,
+    )
 
 
 def _collect_default_ids(
@@ -285,10 +302,6 @@ def _collect_default_ids(
     ids: list[str] = [
         "generated_session_id_v1",
         "generated_session_title_v1",
-        "default_generated_sets_v1",
-        "default_generated_rep_range_v1",
-        "default_generated_start_weight_v1",
-        "default_generated_substitution_candidates_empty_v1",
         "constructor_assessment_reference_passthrough_v1",
         "constructor_blueprint_reference_passthrough_v1",
         "constructor_bundle_reference_passthrough_v1",
@@ -382,6 +395,7 @@ def build_generated_full_body_template_draft(
         "day_roles": "full_body_day_role_sequence_by_session_count_v1",
         "pattern_distribution": "full_body_movement_pattern_distribution_v1",
         "fill_target": "full_body_session_fill_target_by_volume_tier_v1",
+        "scoring": "full_body_candidate_scoring_v1",
         "optional_fill": "full_body_optional_fill_pattern_priority_by_complexity_ceiling_v1",
         "slot_roles": "full_body_slot_role_sequence_v1",
         "reuse": "full_body_exercise_reuse_limits_v1",
@@ -391,6 +405,7 @@ def build_generated_full_body_template_draft(
     day_role_rule = _require_rule_payload(doctrine_bundle, rule_ids["day_roles"])
     pattern_distribution_rule = _require_rule_payload(doctrine_bundle, rule_ids["pattern_distribution"])
     fill_target_rule = _require_rule_payload(doctrine_bundle, rule_ids["fill_target"])
+    scoring_rule = _require_rule_payload(doctrine_bundle, rule_ids["scoring"])
     optional_fill_rule = _require_rule_payload(doctrine_bundle, rule_ids["optional_fill"])
     slot_role_rule = _require_rule_payload(doctrine_bundle, rule_ids["slot_roles"])
     reuse_rule = _require_rule_payload(doctrine_bundle, rule_ids["reuse"])
@@ -416,6 +431,9 @@ def build_generated_full_body_template_draft(
         minimum_exercises_per_session,
         min(blueprint_input.session_exercise_cap, doctrine_session_target),
     )
+    optional_fill_score_floor = scoring_rule.payload["minimum_total_score_floor"].get("optional_fill")
+    if optional_fill_score_floor is not None:
+        optional_fill_score_floor = int(optional_fill_score_floor)
     optional_fill_patterns = [
         str(item)
         for item in optional_fill_rule.payload["optional_patterns_by_complexity_ceiling"].get(
@@ -465,8 +483,19 @@ def build_generated_full_body_template_draft(
                 doctrine_rule_ids=[
                     pattern_distribution_rule.rule_id,
                     fill_target_rule.rule_id,
+                    scoring_rule.rule_id,
                     optional_fill_rule.rule_id,
                     slot_role_rule.rule_id,
+                    reuse_rule.rule_id,
+                    weak_point_rule.rule_id,
+                ],
+                policy_ids=density_policy_ids,
+            ),
+            "optional_fill_trace": _trace(
+                doctrine_rule_ids=[
+                    fill_target_rule.rule_id,
+                    scoring_rule.rule_id,
+                    optional_fill_rule.rule_id,
                     reuse_rule.rule_id,
                     weak_point_rule.rule_id,
                 ],
@@ -480,6 +509,7 @@ def build_generated_full_body_template_draft(
             day_role=day_roles[position - 1],
             movement_pattern_targets=movement_pattern_targets,
             exercises=[],
+            optional_fill_trace=None,
             field_trace=session_field_trace,
         )
         sessions.append(session)
@@ -554,14 +584,14 @@ def build_generated_full_body_template_draft(
                     )
                 continue
 
-            selected_id, _ = _select_candidate_exercise_id(
+            feasible_candidate_ids = _feasible_candidate_ids(
                 candidate_ids=candidate_ids,
                 assigned_counts=assigned_counts,
                 max_assignments_per_week=max_assignments_per_week,
                 allow_reuse_after_unique_candidates_exhausted=allow_reuse_after_exhaustion,
                 session_exercise_ids=session_exercise_ids,
             )
-            if selected_id is None:
+            if not feasible_candidate_ids:
                 _append_issue(
                     insufficiencies,
                     issue_keys,
@@ -582,24 +612,47 @@ def build_generated_full_body_template_draft(
                     )
                 )
                 continue
+            selection = select_scored_candidate(
+                doctrine_bundle=doctrine_bundle,
+                selection_mode="required_slot",
+                candidate_ids=feasible_candidate_ids,
+                record_by_id=record_by_id,
+                assessment=assessment,
+                blueprint_input=blueprint_input,
+                assigned_counts=assigned_counts,
+                weekly_selected_exercise_ids=_collect_selected_exercise_ids(sessions),
+                session_exercise_count=len(session.exercises),
+                target_exercises_per_session=target_exercises_per_session,
+                target_movement_pattern=movement_pattern,
+                target_weak_point_muscles=[item.muscle_group for item in assessment.weak_point_priorities],
+            )
+            if selection is None:
+                continue
 
-            record = record_by_id.get(selected_id)
+            record = record_by_id.get(selection.selected_id)
             if record is None:
-                raise ValueError(f"exercise library missing selected exercise id: {selected_id}")
+                raise ValueError(f"exercise library missing selected exercise id: {selection.selected_id}")
 
             exercise = _build_exercise_draft(
+                assessment=assessment,
+                blueprint_input=blueprint_input,
+                doctrine_bundle=doctrine_bundle,
                 record=record,
                 slot_role=slot_role,
+                selection_mode="required_slot",
+                day_role=session.day_role,
+                selection_trace=selection.selection_trace,
                 doctrine_rule_ids=[
                     pattern_distribution_rule.rule_id,
+                    scoring_rule.rule_id,
                     slot_role_rule.rule_id,
                     reuse_rule.rule_id,
                 ],
                 policy_ids=anti_copy_policy_ids,
             )
             session.exercises.append(exercise)
-            session_exercise_ids.add(selected_id)
-            assigned_counts[selected_id] = assigned_counts.get(selected_id, 0) + 1
+            session_exercise_ids.add(selection.selected_id)
+            assigned_counts[selection.selected_id] = assigned_counts.get(selection.selected_id, 0) + 1
 
     weak_point_slot_role = str(weak_point_rule.payload.get("slot_role") or "weak_point")
     if weak_point_slots_used < weak_point_slot_limit:
@@ -618,23 +671,45 @@ def build_generated_full_body_template_draft(
                 candidate_ids = list(
                     blueprint_input.weak_point_candidate_exercise_ids_by_muscle.get(weak_point.muscle_group, [])
                 )
-                selected_id, _ = _select_candidate_exercise_id(
+                feasible_candidate_ids = _feasible_candidate_ids(
                     candidate_ids=candidate_ids,
                     assigned_counts=assigned_counts,
                     max_assignments_per_week=max_assignments_per_week,
                     allow_reuse_after_unique_candidates_exhausted=allow_reuse_after_exhaustion,
                     session_exercise_ids=session_exercise_ids,
                 )
-                if selected_id is None:
+                if not feasible_candidate_ids:
                     continue
-                record = record_by_id.get(selected_id)
+                selection = select_scored_candidate(
+                    doctrine_bundle=doctrine_bundle,
+                    selection_mode="weak_point_slot",
+                    candidate_ids=feasible_candidate_ids,
+                    record_by_id=record_by_id,
+                    assessment=assessment,
+                    blueprint_input=blueprint_input,
+                    assigned_counts=assigned_counts,
+                    weekly_selected_exercise_ids=_collect_selected_exercise_ids(sessions),
+                    session_exercise_count=len(session.exercises),
+                    target_exercises_per_session=target_exercises_per_session,
+                    target_weak_point_muscles=[weak_point.muscle_group],
+                )
+                if selection is None:
+                    continue
+                record = record_by_id.get(selection.selected_id)
                 if record is None:
                     continue
                 exercise = _build_exercise_draft(
+                    assessment=assessment,
+                    blueprint_input=blueprint_input,
+                    doctrine_bundle=doctrine_bundle,
                     record=record,
                     slot_role=weak_point_slot_role,
+                    selection_mode="weak_point_slot",
+                    day_role=session.day_role,
+                    selection_trace=selection.selection_trace,
                     doctrine_rule_ids=[
                         fill_target_rule.rule_id,
+                        scoring_rule.rule_id,
                         weak_point_rule.rule_id,
                         slot_role_rule.rule_id,
                         reuse_rule.rule_id,
@@ -642,8 +717,8 @@ def build_generated_full_body_template_draft(
                     policy_ids=density_policy_ids,
                 )
                 session.exercises.append(exercise)
-                session_exercise_ids.add(selected_id)
-                assigned_counts[selected_id] = assigned_counts.get(selected_id, 0) + 1
+                session_exercise_ids.add(selection.selected_id)
+                assigned_counts[selection.selected_id] = assigned_counts.get(selection.selected_id, 0) + 1
                 weak_point_slots_used += 1
                 inserted = True
                 break
@@ -655,8 +730,32 @@ def build_generated_full_body_template_draft(
         fill_progress = False
         for session in sessions:
             if len(session.exercises) >= target_exercises_per_session:
+                if session.optional_fill_trace is None:
+                    session.optional_fill_trace = _optional_fill_trace(
+                        score_floor=optional_fill_score_floor,
+                        stop_reason="target_reached",
+                    )
+                elif session.optional_fill_trace.stop_reason != "target_reached":
+                    session.optional_fill_trace = _optional_fill_trace(
+                        score_floor=session.optional_fill_trace.score_floor,
+                        best_candidate_id=session.optional_fill_trace.best_candidate_id,
+                        best_total_score=session.optional_fill_trace.best_total_score,
+                        stop_reason="target_reached",
+                    )
                 continue
             if len(session.exercises) >= blueprint_input.session_exercise_cap:
+                if session.optional_fill_trace is None:
+                    session.optional_fill_trace = _optional_fill_trace(
+                        score_floor=optional_fill_score_floor,
+                        stop_reason="target_reached",
+                    )
+                elif session.optional_fill_trace.stop_reason != "target_reached":
+                    session.optional_fill_trace = _optional_fill_trace(
+                        score_floor=session.optional_fill_trace.score_floor,
+                        best_candidate_id=session.optional_fill_trace.best_candidate_id,
+                        best_total_score=session.optional_fill_trace.best_total_score,
+                        stop_reason="target_reached",
+                    )
                 continue
             session_exercise_ids = {exercise.id for exercise in session.exercises}
             next_slot_role = _next_slot_role(
@@ -664,51 +763,112 @@ def build_generated_full_body_template_draft(
                 slot_roles_by_position=slot_roles_by_position,
                 fallback_slot_role="accessory",
             )
-            for movement_pattern in optional_fill_patterns:
-                candidate_ids = list(blueprint_input.candidate_exercise_ids_by_pattern.get(movement_pattern, []))
-                if not candidate_ids:
-                    continue
-                selected_id, _ = _select_candidate_exercise_id(
-                    candidate_ids=candidate_ids,
-                    assigned_counts=assigned_counts,
-                    max_assignments_per_week=max_assignments_per_week,
-                    allow_reuse_after_unique_candidates_exhausted=allow_reuse_after_exhaustion,
-                    session_exercise_ids=session_exercise_ids,
+            optional_fill_candidate_ids = _unique_preserve_order(
+                [
+                    exercise_id
+                    for movement_pattern in optional_fill_patterns
+                    for exercise_id in blueprint_input.candidate_exercise_ids_by_pattern.get(movement_pattern, [])
+                ]
+            )
+            feasible_candidate_ids = _feasible_candidate_ids(
+                candidate_ids=optional_fill_candidate_ids,
+                assigned_counts=assigned_counts,
+                max_assignments_per_week=max_assignments_per_week,
+                allow_reuse_after_unique_candidates_exhausted=allow_reuse_after_exhaustion,
+                session_exercise_ids=session_exercise_ids,
+            )
+            if not feasible_candidate_ids:
+                session.optional_fill_trace = _optional_fill_trace(
+                    score_floor=optional_fill_score_floor,
+                    stop_reason="candidate_pool_exhausted",
                 )
-                if selected_id is None:
-                    continue
-                record = record_by_id.get(selected_id)
-                if record is None:
-                    continue
-                exercise = _build_exercise_draft(
-                    record=record,
-                    slot_role=next_slot_role,
-                    doctrine_rule_ids=[
-                        fill_target_rule.rule_id,
-                        optional_fill_rule.rule_id,
-                        slot_role_rule.rule_id,
-                        reuse_rule.rule_id,
-                    ],
-                    policy_ids=density_policy_ids,
+                continue
+            selection = select_scored_candidate(
+                doctrine_bundle=doctrine_bundle,
+                selection_mode="optional_fill",
+                candidate_ids=feasible_candidate_ids,
+                record_by_id=record_by_id,
+                assessment=assessment,
+                blueprint_input=blueprint_input,
+                assigned_counts=assigned_counts,
+                weekly_selected_exercise_ids=_collect_selected_exercise_ids(sessions),
+                session_exercise_count=len(session.exercises),
+                target_exercises_per_session=target_exercises_per_session,
+                target_weak_point_muscles=[item.muscle_group for item in assessment.weak_point_priorities],
+            )
+            if selection is None:
+                session.optional_fill_trace = _optional_fill_trace(
+                    score_floor=optional_fill_score_floor,
+                    stop_reason="candidate_pool_exhausted",
                 )
-                session.exercises.append(exercise)
-                session_exercise_ids.add(selected_id)
-                assigned_counts[selected_id] = assigned_counts.get(selected_id, 0) + 1
-                fill_progress = True
-                break
+                continue
+            if not selection.cleared_score_floor:
+                session.optional_fill_trace = _optional_fill_trace(
+                    score_floor=selection.score_floor,
+                    best_candidate_id=selection.selected_id,
+                    best_total_score=selection.total_score,
+                    stop_reason="score_floor_not_met",
+                )
+                continue
+            record = record_by_id.get(selection.selected_id)
+            if record is None:
+                continue
+            exercise = _build_exercise_draft(
+                assessment=assessment,
+                blueprint_input=blueprint_input,
+                doctrine_bundle=doctrine_bundle,
+                record=record,
+                slot_role=next_slot_role,
+                selection_mode="optional_fill",
+                day_role=session.day_role,
+                selection_trace=selection.selection_trace,
+                doctrine_rule_ids=[
+                    fill_target_rule.rule_id,
+                    scoring_rule.rule_id,
+                    optional_fill_rule.rule_id,
+                    slot_role_rule.rule_id,
+                    reuse_rule.rule_id,
+                ],
+                policy_ids=density_policy_ids,
+            )
+            session.exercises.append(exercise)
+            session_exercise_ids.add(selection.selected_id)
+            assigned_counts[selection.selected_id] = assigned_counts.get(selection.selected_id, 0) + 1
+            fill_progress = True
+            session.optional_fill_trace = _optional_fill_trace(
+                score_floor=selection.score_floor,
+                best_candidate_id=selection.selected_id,
+                best_total_score=selection.total_score,
+                stop_reason="target_reached" if len(session.exercises) >= target_exercises_per_session else "candidate_pool_exhausted",
+            )
 
-    if any(len(session.exercises) < target_exercises_per_session for session in sessions):
+    for session in sessions:
+        if session.optional_fill_trace is None:
+            session.optional_fill_trace = _optional_fill_trace(
+                score_floor=optional_fill_score_floor,
+                stop_reason="target_reached" if len(session.exercises) >= minimum_exercises_per_session else "candidate_pool_exhausted",
+            )
+        elif len(session.exercises) >= target_exercises_per_session and session.optional_fill_trace.stop_reason != "target_reached":
+            session.optional_fill_trace = _optional_fill_trace(
+                score_floor=session.optional_fill_trace.score_floor,
+                best_candidate_id=session.optional_fill_trace.best_candidate_id,
+                best_total_score=session.optional_fill_trace.best_total_score,
+                stop_reason="target_reached",
+            )
+
+    if any(len(session.exercises) < minimum_exercises_per_session for session in sessions):
         _append_issue(
             insufficiencies,
             issue_keys,
             _pattern_issue(
-                issue_type="session_fill_target_unmet",
-                reason="one_or_more_sessions_below_target_after_optional_fill_exhausted",
+                issue_type="minimum_viable_session_floor_unmet",
+                reason="one_or_more_sessions_below_minimum_viable_floor_after_optional_fill",
                 movement_pattern=None,
                 slot_role=None,
                 base_trace=_trace(
                     doctrine_rule_ids=[
                         fill_target_rule.rule_id,
+                        scoring_rule.rule_id,
                         optional_fill_rule.rule_id,
                         reuse_rule.rule_id,
                         weak_point_rule.rule_id,
@@ -752,6 +912,7 @@ def build_generated_full_body_template_draft(
                 day_role_rule.rule_id,
                 pattern_distribution_rule.rule_id,
                 fill_target_rule.rule_id,
+                scoring_rule.rule_id,
                 optional_fill_rule.rule_id,
                 slot_role_rule.rule_id,
                 reuse_rule.rule_id,
@@ -766,6 +927,7 @@ def build_generated_full_body_template_draft(
                 day_role_rule.rule_id,
                 pattern_distribution_rule.rule_id,
                 fill_target_rule.rule_id,
+                scoring_rule.rule_id,
                 optional_fill_rule.rule_id,
                 slot_role_rule.rule_id,
                 reuse_rule.rule_id,
@@ -778,6 +940,7 @@ def build_generated_full_body_template_draft(
             doctrine_rule_ids=[
                 pattern_distribution_rule.rule_id,
                 fill_target_rule.rule_id,
+                scoring_rule.rule_id,
                 optional_fill_rule.rule_id,
                 slot_role_rule.rule_id,
                 reuse_rule.rule_id,

@@ -729,6 +729,7 @@ def plan_generate_week(
     )
     generation_runtime = cast(dict[str, Any], generation_context["generation_runtime"])
     runtime_template = template
+    generated_full_body_adaptive_loop_policy = None
     if selected_template_id == GENERATED_FULL_BODY_COMPATIBILITY_TEMPLATE_ID:
         generated_runtime = prepare_generated_full_body_runtime_template(
             selected_template_id=selected_template_id,
@@ -746,6 +747,7 @@ def plan_generate_week(
             training_state=cast(dict[str, Any], generation_context["training_state"]),
         )
         runtime_template = cast(dict[str, Any], generated_runtime["program_template"])
+        generated_full_body_adaptive_loop_policy = generated_runtime.get("generated_full_body_adaptive_loop_policy")
         template_selection_trace["generated_full_body_runtime_trace"] = cast(
             dict[str, Any], generated_runtime["generated_full_body_runtime_trace"]
         )
@@ -773,6 +775,13 @@ def plan_generate_week(
         base_plan=base_plan,
         template_selection_trace=template_selection_trace,
         generation_runtime_trace=cast(dict[str, Any], generation_runtime["decision_trace"]),
+        generated_adaptive_runtime={
+            "training_state": cast(dict[str, Any], generation_context["training_state"]),
+            "generation_runtime": generation_runtime,
+            "adaptive_policy": cast(dict[str, Any] | None, generated_full_body_adaptive_loop_policy),
+        }
+        if generated_full_body_adaptive_loop_policy is not None
+        else None,
         selected_template_id=selected_template_id,
         active_frequency_adaptation=active_frequency_adaptation,
         review_cycle=review_cycle,

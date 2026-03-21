@@ -85,8 +85,8 @@ def _trace(
     )
 
 
-def _exercise_sort_key(record: dict) -> tuple[int, int, str, str]:
-    return (-len(record.get("source_program_ids", [])), len(record.get("equipment_tags", [])), record["canonical_name"], record["exercise_id"])
+def _stable_candidate_order_key(record: dict) -> tuple[str]:
+    return (record["exercise_id"],)
 
 
 def _candidate_pool_for_pattern(
@@ -111,7 +111,7 @@ def _candidate_pool_for_pattern(
             continue
         candidates.append(record)
 
-    sorted_candidates = sorted(candidates, key=_exercise_sort_key)
+    sorted_candidates = sorted(candidates, key=_stable_candidate_order_key)
     candidate_ids = [record["exercise_id"] for record in sorted_candidates]
     return candidate_ids, excluded_ids, sorted_candidates
 
@@ -130,7 +130,6 @@ def build_generated_full_body_blueprint_input(
         "volume": "full_body_volume_tier_by_user_class_v1",
         "patterns": "full_body_required_movement_patterns_v1",
         "optional_fill": "full_body_optional_fill_pattern_priority_by_complexity_ceiling_v1",
-        "sorting": "full_body_candidate_sorting_v1",
         "filtering": "full_body_equipment_and_restriction_filtering_v1",
     }
     split_rule = _require_rule_payload(doctrine_bundle, doctrine_rule_ids["split"])
@@ -138,7 +137,6 @@ def build_generated_full_body_blueprint_input(
     volume_rule = _require_rule_payload(doctrine_bundle, doctrine_rule_ids["volume"])
     pattern_rule = _require_rule_payload(doctrine_bundle, doctrine_rule_ids["patterns"])
     optional_fill_rule = _require_rule_payload(doctrine_bundle, doctrine_rule_ids["optional_fill"])
-    _ = _require_rule_payload(doctrine_bundle, doctrine_rule_ids["sorting"])
     _ = _require_rule_payload(doctrine_bundle, doctrine_rule_ids["filtering"])
 
     hard_constraint_ids = _hard_constraint_ids(policy_bundle)
@@ -253,7 +251,6 @@ def build_generated_full_body_blueprint_input(
         coverage_trace = _trace(
             doctrine_rule_ids=[
                 doctrine_rule_ids["patterns"],
-                doctrine_rule_ids["sorting"],
                 doctrine_rule_ids["filtering"],
             ],
             policy_ids=hard_constraint_ids,
@@ -301,7 +298,7 @@ def build_generated_full_body_blueprint_input(
                 seen_filtered_ids.add(record["exercise_id"])
         candidate_exercise_ids_by_pattern[movement_pattern] = candidate_ids
 
-    global_sorted_candidates = sorted(filtered_records, key=_exercise_sort_key)
+    global_sorted_candidates = sorted(filtered_records, key=_stable_candidate_order_key)
     weak_point_candidate_exercise_ids_by_muscle: dict[str, list[str]] = {}
     for item in assessment.weak_point_priorities:
         primary = [record["exercise_id"] for record in global_sorted_candidates if item.muscle_group in record.get("primary_muscles", [])]
@@ -347,7 +344,6 @@ def build_generated_full_body_blueprint_input(
             doctrine_rule_ids=[
                 doctrine_rule_ids["patterns"],
                 doctrine_rule_ids["optional_fill"],
-                doctrine_rule_ids["sorting"],
                 doctrine_rule_ids["filtering"],
             ],
             policy_ids=hard_constraint_ids,
@@ -358,7 +354,6 @@ def build_generated_full_body_blueprint_input(
         "weak_point_candidate_exercise_ids_by_muscle": _trace(
             doctrine_rule_ids=[
                 doctrine_rule_ids["optional_fill"],
-                doctrine_rule_ids["sorting"],
                 doctrine_rule_ids["filtering"],
             ],
             exercise_ids=_unique_preserve_order(
@@ -373,7 +368,6 @@ def build_generated_full_body_blueprint_input(
         "pattern_coverage": _trace(
             doctrine_rule_ids=[
                 doctrine_rule_ids["patterns"],
-                doctrine_rule_ids["sorting"],
                 doctrine_rule_ids["filtering"],
             ],
             policy_ids=hard_constraint_ids,
@@ -385,7 +379,6 @@ def build_generated_full_body_blueprint_input(
         "pattern_insufficiencies": _trace(
             doctrine_rule_ids=[
                 doctrine_rule_ids["patterns"],
-                doctrine_rule_ids["sorting"],
                 doctrine_rule_ids["filtering"],
             ],
             policy_ids=hard_constraint_ids,

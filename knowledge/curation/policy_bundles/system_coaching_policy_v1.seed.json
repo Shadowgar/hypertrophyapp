@@ -110,5 +110,30 @@
     "minimum_exposures_for_major_exercise_rotation": 3,
     "safety_override_allowed": true,
     "rationale": "Major changes require enough data unless safety requires faster intervention."
+  },
+  "generated_full_body_adaptive_loop_policy": {
+    "policy_id": "generated_full_body_adaptive_loop_v1",
+    "status": "seed",
+    "program_scope": [
+      "pure_bodybuilding_phase_1_full_body"
+    ],
+    "explicit_review_precedence": true,
+    "require_generated_constructor_output": true,
+    "max_primary_axes_per_week": 1,
+    "minimum_axis_persistence_weeks": 2,
+    "minimum_prior_generated_weeks": 1,
+    "minimum_logged_sessions_for_auto_adjustment": 4,
+    "safety_override_allowed": true,
+    "load_adjustment_requires_exact_exercise_match": true,
+    "minimum_exact_match_exposures_for_load_adjustment": 2,
+    "max_volume_targets_per_week": 2,
+    "max_load_targets_per_week": 2,
+    "volume_increase_set_delta": 1,
+    "volume_decrease_set_delta": -1,
+    "load_increase_scale": 1.025,
+    "load_decrease_scale": 0.95,
+    "weak_point_set_delta": 1,
+    "weak_point_max_boosted_exercises": 2,
+    "rationale": "Generated Full Body adaptive changes must stay single-axis, deterministic, and stable across at least two consecutive generated weeks unless strong opposing signals justify reversal."
   }
 }

@@ -65,6 +65,7 @@ from .decision_progression import (
     recommend_phase_transition as _recommend_phase_transition,
     recommend_progression_action as _recommend_progression_action,
 )
+from .decision_generated_week import build_generated_week_plan_payload as _build_generated_week_plan_payload
 from .decision_weekly_review import (
     apply_weekly_review_adjustments_to_plan as _apply_weekly_review_adjustments_to_plan,
     build_weekly_review_performance_summary as _build_weekly_review_performance_summary,
@@ -1568,31 +1569,22 @@ def build_generated_week_plan_payload(
     base_plan: dict[str, Any],
     template_selection_trace: dict[str, Any],
     generation_runtime_trace: dict[str, Any],
+    generated_adaptive_runtime: dict[str, Any] | None = None,
     selected_template_id: str,
     active_frequency_adaptation: dict[str, Any] | None,
     review_adjustments: dict[str, Any] | None = None,
     review_context: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    plan = deepcopy(base_plan)
-    plan["template_selection_trace"] = deepcopy(template_selection_trace)
-    plan["generation_runtime_trace"] = deepcopy(generation_runtime_trace)
-
-    if review_adjustments is not None:
-        plan = apply_weekly_review_adjustments_to_plan(
-            plan=plan,
-            review_adjustments=review_adjustments,
-            review_context=review_context,
-        )
-
-    adaptation_runtime = apply_active_frequency_adaptation_runtime(
-        plan=plan,
+    return _build_generated_week_plan_payload(
+        base_plan=base_plan,
+        template_selection_trace=template_selection_trace,
+        generation_runtime_trace=generation_runtime_trace,
+        generated_adaptive_runtime=generated_adaptive_runtime,
         selected_template_id=selected_template_id,
         active_frequency_adaptation=active_frequency_adaptation,
+        review_adjustments=review_adjustments,
+        review_context=review_context,
     )
-    return {
-        "plan": cast(dict[str, Any], adaptation_runtime["plan"]),
-        "adaptation_runtime": adaptation_runtime,
-    }
 
 
 def prepare_generated_week_review_overlay(review_cycle: Any | None) -> dict[str, Any]:

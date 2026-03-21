@@ -80,6 +80,7 @@ def _build_fixture_compiled_dir(tmp_path: Path) -> Path:
         provenance_index_path=provenance_index_path,
         overrides_path=REPO_ROOT / "knowledge" / "curation" / "source_registry_overrides.json",
         onboarding_dir=REPO_ROOT / "programs" / "gold",
+        exercise_library_overrides_path=REPO_ROOT / "knowledge" / "curation" / "exercise_library_overrides.json",
         doctrine_seed_path=REPO_ROOT / "knowledge" / "curation" / "doctrine_bundles" / "multi_source_hypertrophy_v1.seed.json",
         policy_seed_path=REPO_ROOT / "knowledge" / "curation" / "policy_bundles" / "system_coaching_policy_v1.seed.json",
         output_dir=compiled_dir,
@@ -101,6 +102,8 @@ def test_knowledge_loader_reads_compiled_bundles_from_knowledge_compiled(tmp_pat
     assert exercise_library.bundle_id == "exercise_library_foundation"
     assert doctrine_bundle.bundle_id == "multi_source_hypertrophy_v1"
     assert policy_bundle.bundle_id == "system_coaching_policy_v1"
+    assert policy_bundle.generated_full_body_adaptive_loop_policy is not None
+    assert policy_bundle.generated_full_body_adaptive_loop_policy.policy_id == "generated_full_body_adaptive_loop_v1"
 
 
 def test_knowledge_loader_rejects_non_knowledge_compiled_paths(tmp_path: Path) -> None:

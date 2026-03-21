@@ -2,12 +2,13 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 BundleStatus = Literal["seed", "placeholder", "curated", "active", "deprecated"]
 CurationStatus = Literal["seeded", "placeholder", "curated", "deprecated"]
 ExerciseDemandLevel = Literal["low", "moderate", "high"] | None
+ProgressionCompatibilityLevel = Literal["low", "moderate", "high"]
 
 
 def _sorted_unique(values: list[str]) -> list[str]:
@@ -92,7 +93,7 @@ class CanonicalExerciseRecord(BaseModel):
     equipment_tags: list[str] = Field(default_factory=list)
     contraindications: list[str] = Field(default_factory=list)
     technique_guidance: list[str] = Field(default_factory=list)
-    progression_compatibility: list[str] = Field(default_factory=list)
+    progression_compatibility: list[ProgressionCompatibilityLevel] = Field(default_factory=list)
     substitution_class: str | None = None
     fatigue_cost: ExerciseDemandLevel = None
     skill_demand: ExerciseDemandLevel = None
@@ -116,6 +117,44 @@ class CanonicalExerciseRecord(BaseModel):
     @classmethod
     def validate_sorted_unique_lists(cls, value: list[str]) -> list[str]:
         return _sorted_unique(value)
+
+
+class ExerciseLibraryOverrideRecord(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    exercise_id: str = Field(min_length=1)
+    fatigue_cost: ExerciseDemandLevel = None
+    skill_demand: ExerciseDemandLevel = None
+    stability_demand: ExerciseDemandLevel = None
+    progression_compatibility: list[ProgressionCompatibilityLevel] = Field(default_factory=list)
+
+    @field_validator("progression_compatibility")
+    @classmethod
+    def validate_progression_compatibility(cls, value: list[ProgressionCompatibilityLevel]) -> list[ProgressionCompatibilityLevel]:
+        normalized = _sorted_unique(value)
+        if len(normalized) > 1:
+            raise ValueError("progression_compatibility overrides may contain at most one value")
+        return normalized
+
+
+class ExerciseLibraryOverrideBundle(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    schema_version: str = Field(min_length=1)
+    bundle_id: str = Field(min_length=1)
+    bundle_version: str = Field(min_length=1)
+    records: list[ExerciseLibraryOverrideRecord] = Field(default_factory=list)
+
+    @field_validator("records")
+    @classmethod
+    def validate_unique_override_exercise_ids(
+        cls,
+        value: list[ExerciseLibraryOverrideRecord],
+    ) -> list[ExerciseLibraryOverrideRecord]:
+        exercise_ids = [record.exercise_id for record in value]
+        if len(exercise_ids) != len(set(exercise_ids)):
+            raise ValueError("exercise library override records must have unique exercise_id values")
+        return value
 
 
 class CanonicalExerciseLibraryBundle(BaseModel):
@@ -240,6 +279,35 @@ class DataSufficiencyPolicy(BaseModel):
     rationale: str = Field(min_length=1)
 
 
+class GeneratedFullBodyAdaptiveLoopPolicy(BaseModel):
+    policy_id: str = Field(min_length=1)
+    status: BundleStatus = "seed"
+    program_scope: list[str] = Field(default_factory=list)
+    explicit_review_precedence: bool = True
+    require_generated_constructor_output: bool = True
+    max_primary_axes_per_week: int = Field(ge=1)
+    minimum_axis_persistence_weeks: int = Field(ge=1)
+    minimum_prior_generated_weeks: int = Field(ge=0)
+    minimum_logged_sessions_for_auto_adjustment: int = Field(ge=0)
+    safety_override_allowed: bool = True
+    load_adjustment_requires_exact_exercise_match: bool = True
+    minimum_exact_match_exposures_for_load_adjustment: int = Field(ge=1)
+    max_volume_targets_per_week: int = Field(ge=1)
+    max_load_targets_per_week: int = Field(ge=1)
+    volume_increase_set_delta: int = Field(ge=0)
+    volume_decrease_set_delta: int = Field(le=0)
+    load_increase_scale: float = Field(gt=0)
+    load_decrease_scale: float = Field(gt=0)
+    weak_point_set_delta: int = Field(ge=0)
+    weak_point_max_boosted_exercises: int = Field(ge=1)
+    rationale: str = Field(min_length=1)
+
+    @field_validator("program_scope")
+    @classmethod
+    def validate_program_scope(cls, value: list[str]) -> list[str]:
+        return _unique_preserve_order(value)
+
+
 class PolicyBundle(BaseModel):
     schema_version: str = Field(min_length=1)
     bundle_id: str = Field(min_length=1)
@@ -254,6 +322,7 @@ class PolicyBundle(BaseModel):
     minimum_viable_program_policy: MinimumViableProgramPolicy
     anti_overadaptation_policy: AntiOveradaptationPolicy
     data_sufficiency_policy: DataSufficiencyPolicy
+    generated_full_body_adaptive_loop_policy: GeneratedFullBodyAdaptiveLoopPolicy | None = None
 
     @field_validator("hard_constraints")
     @classmethod

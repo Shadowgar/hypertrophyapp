@@ -60,6 +60,11 @@ def test_generated_assessment_builder_is_deterministic_and_traceable() -> None:
         assert assessment_first.fatigue_tolerance_profile == expected["fatigue_tolerance_profile"], archetype_name
         assert assessment_first.comeback_flag == expected["comeback_flag"], archetype_name
         assert [item.muscle_group for item in assessment_first.weak_point_priorities] == expected["weak_point_order"], archetype_name
+        expected_prior_weights = {
+            entry["exercise_id"]: float(entry["current_working_weight"])
+            for entry in fixture["training_state"]["progression_state_per_exercise"]
+        }
+        assert assessment_first.prior_working_weight_by_exercise_id == expected_prior_weights, archetype_name
 
         assert set(assessment_first.field_trace) == set(UserAssessment.model_fields), archetype_name
         for field_name, trace in assessment_first.field_trace.items():
