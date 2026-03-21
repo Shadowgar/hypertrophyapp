@@ -43,6 +43,11 @@ from core_engine import (
 
 from ..database import get_db
 from ..deps import get_current_user
+from ..generated_assessment_schema import ProfileAssessmentInput
+from ..generated_full_body_runtime_adapter import (
+    GENERATED_FULL_BODY_COMPATIBILITY_TEMPLATE_ID,
+    prepare_generated_full_body_runtime_template,
+)
 from ..models import CoachingRecommendation, ExerciseState, SorenessEntry, User, WeeklyCheckin, WeeklyReviewCycle, WorkoutPlan, WorkoutSetLog
 from ..program_loader import (
     list_program_templates,
@@ -723,13 +728,34 @@ def plan_generate_week(
         active_frequency_adaptation=active_frequency_adaptation,
     )
     generation_runtime = cast(dict[str, Any], generation_context["generation_runtime"])
+    runtime_template = template
+    if selected_template_id == GENERATED_FULL_BODY_COMPATIBILITY_TEMPLATE_ID:
+        generated_runtime = prepare_generated_full_body_runtime_template(
+            selected_template_id=selected_template_id,
+            selected_template=template,
+            profile_input=ProfileAssessmentInput(
+                days_available=int(current_user.days_available or 0),
+                split_preference=current_user.split_preference,
+                training_location=current_user.training_location,
+                equipment_profile=list(current_user.equipment_profile or []),
+                weak_areas=list(current_user.weak_areas or []),
+                session_time_budget_minutes=current_user.session_time_budget_minutes,
+                movement_restrictions=list(current_user.movement_restrictions or []),
+                near_failure_tolerance=current_user.near_failure_tolerance,
+            ),
+            training_state=cast(dict[str, Any], generation_context["training_state"]),
+        )
+        runtime_template = cast(dict[str, Any], generated_runtime["program_template"])
+        template_selection_trace["generated_full_body_runtime_trace"] = cast(
+            dict[str, Any], generated_runtime["generated_full_body_runtime_trace"]
+        )
     scheduler_runtime = prepare_generate_week_scheduler_runtime(
         user_name=current_user.name,
         split_preference=current_user.split_preference,
         nutrition_phase=current_user.nutrition_phase,
         available_equipment=current_user.equipment_profile,
         generation_runtime=generation_runtime,
-        program_template=template,
+        program_template=runtime_template,
         rule_set=rule_set,
     )
 

@@ -412,13 +412,27 @@ def _generation_reason_summary(
     generation_runtime_trace: dict[str, Any],
 ) -> str:
     selection_reason = str(template_selection_trace.get("reason") or "").strip()
+    generated_runtime_trace = _coerce_dict(template_selection_trace.get("generated_full_body_runtime_trace"))
+    content_origin = str(generated_runtime_trace.get("content_origin") or "").strip()
+    generated_constructor_applied = bool(generated_runtime_trace.get("generated_constructor_applied"))
+    fallback_reason = str(generated_runtime_trace.get("fallback_reason") or "").strip()
     runtime_outcome = _coerce_dict(generation_runtime_trace.get("outcome"))
     effective_days = runtime_outcome.get("effective_days_available") or _coerce_dict(final_plan.get("user")).get(
         "days_available"
     )
     session_count = len(final_plan.get("sessions") or [])
 
-    if selection_reason == "explicit_template_override":
+    if generated_constructor_applied:
+        prefix = (
+            f"Preserved compatibility template id {selected_template_id} while building the live week from the "
+            "deterministic generated Full Body constructor."
+        )
+    elif content_origin == "fallback_to_selected_template" and fallback_reason:
+        prefix = (
+            f"Preserved compatibility template id {selected_template_id} and fell back to the selected template-backed "
+            f"runtime because {fallback_reason}."
+        )
+    elif selection_reason == "explicit_template_override":
         prefix = f"Selected {selected_template_id} because the request explicitly overrode template selection."
     elif selection_reason == "first_viable_candidate":
         prefix = f"Selected {selected_template_id} as the first viable template for the current generation inputs."
@@ -494,6 +508,16 @@ def _generated_week_decision_trace(
     adaptation_trace = _coerce_dict(_coerce_dict(final_plan.get("applied_frequency_adaptation")).get("decision_trace"))
     review_trace = _coerce_dict(review_overlay_trace)
     review_outcome = _coerce_dict(review_trace.get("outcome"))
+    generated_runtime_trace = _coerce_dict(template_selection_trace.get("generated_full_body_runtime_trace"))
+    compatibility_selected_template_id = str(
+        generated_runtime_trace.get("compatibility_selected_template_id") or selected_template_id
+    )
+    compatibility_program_template_id = str(
+        generated_runtime_trace.get("compatibility_program_template_id") or final_plan.get("program_template_id") or ""
+    )
+    content_origin = str(generated_runtime_trace.get("content_origin") or "selected_template_runtime")
+    generated_constructor_applied = bool(generated_runtime_trace.get("generated_constructor_applied"))
+    fallback_reason = str(generated_runtime_trace.get("fallback_reason") or "").strip() or None
     stimulus_fatigue_response_source = _resolve_generated_week_sfr_source(
         final_plan=final_plan,
         generation_runtime_trace=generation_runtime_trace,
@@ -505,12 +529,14 @@ def _generated_week_decision_trace(
         "trust_scope": "bounded_generation",
         "canonical_inputs": {
             "selected_template_id": selected_template_id,
+            "compatibility_selected_template_id": compatibility_selected_template_id,
             "split_preference": str(final_plan.get("split") or ""),
             "nutrition_phase": str(final_plan.get("phase") or ""),
             "effective_days_available": runtime_outcome.get("effective_days_available"),
             "prior_generated_weeks": runtime_outcome.get("prior_generated_weeks"),
             "latest_adherence_score": runtime_outcome.get("latest_adherence_score"),
             "severe_soreness_count": runtime_outcome.get("severe_soreness_count"),
+            "content_origin": content_origin,
             "stimulus_fatigue_response_source": stimulus_fatigue_response_source,
             "stimulus_fatigue_response": deepcopy(runtime_outcome.get("stimulus_fatigue_response")),
         },
@@ -518,6 +544,11 @@ def _generated_week_decision_trace(
             "template_selection": {
                 "reason": str(template_selection_trace.get("interpreter") or ""),
                 "selection_outcome": str(template_selection_trace.get("reason") or ""),
+            },
+            "runtime_content_origin": {
+                "reason": content_origin,
+                "generated_constructor_applied": generated_constructor_applied,
+                "fallback_reason": fallback_reason,
             },
             "week_generation": {
                 "reason": "scheduler.generate_week_plan",
@@ -558,12 +589,16 @@ def _generated_week_decision_trace(
         ],
         "outcome": {
             "program_template_id": str(final_plan.get("program_template_id") or ""),
+            "compatibility_program_template_id": compatibility_program_template_id,
             "week_start": str(final_plan.get("week_start") or ""),
             "session_count": len(final_plan.get("sessions") or []),
             "deload_active": bool(_coerce_dict(final_plan.get("deload")).get("active")),
             "review_applied": bool(final_plan.get("adaptive_review")),
             "frequency_adaptation_applied": bool(final_plan.get("applied_frequency_adaptation")),
             "state_updated": bool(adaptation_runtime.get("state_updated")),
+            "content_origin": content_origin,
+            "generated_constructor_applied": generated_constructor_applied,
+            "fallback_reason": fallback_reason,
             "stimulus_fatigue_response_source": stimulus_fatigue_response_source,
         },
         "reason_summary": _generation_reason_summary(

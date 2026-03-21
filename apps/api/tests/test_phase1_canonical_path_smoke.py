@@ -68,6 +68,11 @@ def test_phase1_canonical_smoke_path_preserves_identity_and_session_continuity()
 
     assert week_payload["program_template_id"] == CANONICAL_PROGRAM_ID
     assert week_payload["template_selection_trace"]["selected_template_id"] == CANONICAL_PROGRAM_ID
+    runtime_trace = week_payload["template_selection_trace"]["generated_full_body_runtime_trace"]
+    assert runtime_trace["compatibility_selected_template_id"] == CANONICAL_PROGRAM_ID
+    assert runtime_trace["compatibility_program_template_id"] == CANONICAL_PROGRAM_ID
+    assert runtime_trace["content_origin"] == "generated_constructor_applied"
+    assert runtime_trace["generated_constructor_applied"] is True
     assert len(week_payload["sessions"]) == 5
     assert all(session["session_id"].startswith(f"{CANONICAL_PROGRAM_ID}-") for session in week_payload["sessions"])
 
@@ -77,24 +82,18 @@ def test_phase1_canonical_smoke_path_preserves_identity_and_session_continuity()
     assert today_payload["session_id"].startswith(f"{CANONICAL_PROGRAM_ID}-")
 
     first_exercise = today_payload["exercises"][0]
-    for authored_field in (
-        "last_set_intensity_technique",
-        "warm_up_sets",
-        "working_sets",
-        "reps",
-        "early_set_rpe",
-        "last_set_rpe",
-        "rest",
-        "substitution_option_1",
-        "substitution_option_2",
-        "demo_url",
-        "video_url",
-        "notes",
+    for required_field in (
+        "id",
+        "name",
+        "sets",
+        "rep_range",
+        "recommended_working_weight",
+        "movement_pattern",
+        "primary_muscles",
+        "primary_exercise_id",
+        "substitution_candidates",
     ):
-        assert authored_field in first_exercise
-    assert first_exercise["early_set_rpe"]
-    assert first_exercise["last_set_rpe"]
-    assert first_exercise["rest"]
+        assert required_field in first_exercise
 
     log_set = client.post(
         f"/workout/{today_payload['session_id']}/log-set",
@@ -193,3 +192,6 @@ def test_phase1_legacy_aliases_still_resolve_safely(legacy_program_id: str) -> N
     payload = generated_week.json()
     assert payload["program_template_id"] == CANONICAL_PROGRAM_ID
     assert payload["template_selection_trace"]["selected_template_id"] == CANONICAL_PROGRAM_ID
+    runtime_trace = payload["template_selection_trace"]["generated_full_body_runtime_trace"]
+    assert runtime_trace["generated_constructor_applied"] is True
+    assert runtime_trace["content_origin"] == "generated_constructor_applied"

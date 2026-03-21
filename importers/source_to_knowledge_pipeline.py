@@ -17,6 +17,7 @@ if str(API_ROOT) not in sys.path:
     sys.path.insert(0, str(API_ROOT))
 
 from app.knowledge_schema import (
+    CanonicalExerciseLibraryBundle,
     CompiledArtifactManifestEntry,
     CompiledKnowledgeManifest,
     DoctrineBundle,
@@ -71,6 +72,27 @@ def _compile_seed_bundle(seed_path: Path, model_type: type[DoctrineBundle] | typ
     return compiled_bundle, _sha256_text(seed_text)
 
 
+def _validate_doctrine_bundle_against_exercise_library(
+    doctrine_bundle: DoctrineBundle,
+    exercise_library: CanonicalExerciseLibraryBundle,
+) -> None:
+    available_patterns = {record.movement_pattern for record in exercise_library.records if record.movement_pattern}
+    for rule in doctrine_bundle.rules_by_module.get("exercise_selection", []):
+        if rule.rule_id != "full_body_required_movement_patterns_v1":
+            continue
+        requirements = rule.payload.get("requirements", [])
+        missing_patterns = sorted(
+            {
+                requirement.get("movement_pattern")
+                for requirement in requirements
+                if requirement.get("movement_pattern") not in available_patterns
+            }
+        )
+        if missing_patterns:
+            joined = ", ".join(missing_patterns)
+            raise ValueError(f"full_body_required_movement_patterns_v1 references unavailable movement patterns: {joined}")
+
+
 def build_compiled_knowledge(
     *,
     asset_catalog_path: Path,
@@ -98,6 +120,7 @@ def build_compiled_knowledge(
     write_exercise_library(exercise_library, exercise_library_path)
 
     doctrine_bundle, doctrine_seed_signature = _compile_seed_bundle(doctrine_seed_path, DoctrineBundle)
+    _validate_doctrine_bundle_against_exercise_library(doctrine_bundle, exercise_library)
     doctrine_bundle_path = output_dir / "doctrine_bundles" / f"{doctrine_bundle.bundle_id}.bundle.json"
     _write_json(doctrine_bundle_path, doctrine_bundle.model_dump(mode="json"))
 

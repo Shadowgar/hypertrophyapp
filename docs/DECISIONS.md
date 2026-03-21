@@ -35,8 +35,16 @@ These decisions are locked unless explicitly replaced by a new decision entry.
 - `D-015`
   Generated `Upper/Lower`, generated `PPL`, and "best split for me" are future targets, not current-scope features.
 - `D-016`
-  The current milestone does not change routers, DB models, authored-program behavior, or generated-program logic.
+  The current milestone does not change routers, DB models, authored-program behavior, or live generated runtime behavior.
 - `D-017`
   For this milestone only, the canonical exercise library may be seeded from onboarding packages as a deterministic foundation stage.
 - `D-018`
   Long term, core generation, adaptation, and explanation should be able to run locally or offline from compiled artifacts.
+- `D-019`
+  The generated `Full Body` constructor must produce original output from doctrine, policy, assessment, blueprint, and exercise-library candidates rather than replaying any single authored source layout.
+- `D-020`
+  Constructor prescription-like fields are limited to the minimum temporary scheduler-compatibility defaults, and each such default must be named, traceable, and clearly non-authoritative.
+- `D-021`
+  Anti-copy safeguards apply to topology logic as well as labels: session topology, day-role sequence, movement-pattern distribution, and slot assignment must come from doctrine rules plus blueprint logic, not from any authored weekly layout.
+- `D-022`
+  `source_program_ids` may be used only as exercise-level provenance or ranking signals, never as a week-layout target.

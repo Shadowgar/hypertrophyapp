@@ -1,7 +1,7 @@
 {
   "schema_version": "knowledge-1",
   "bundle_id": "system_coaching_policy_v1",
-  "bundle_version": "0.1.0",
+  "bundle_version": "0.3.0",
   "status": "seed",
   "input_signature": "seed",
   "output_signature": "seed",
@@ -16,6 +16,16 @@
       "constraint_id": "respect_available_equipment",
       "description": "Never prescribe an exercise variant that requires unavailable equipment when no approved fallback exists.",
       "rationale": "The plan must remain executable."
+    },
+    {
+      "constraint_id": "respect_session_time_budget",
+      "description": "Do not plan beyond the user's declared session-time ceiling when deriving minimum generated Full Body planning inputs.",
+      "rationale": "Time feasibility is a hard boundary for executable planning."
+    },
+    {
+      "constraint_id": "do_not_replay_single_authored_layout",
+      "description": "Do not use any single authored weekly layout as the default target for generated session topology, day-role sequence, movement-pattern distribution, or slot ordering.",
+      "rationale": "Generated output must remain original and doctrine-driven."
     }
   ],
   "soft_preferences": [
@@ -30,6 +40,30 @@
       "description": "Prefer lower-complexity exercise options when multiple valid options are otherwise tied.",
       "default_weight": 0.5,
       "rationale": "Lower complexity generally improves adherence and execution quality."
+    },
+    {
+      "preference_id": "prefer_full_body_when_generated_split_unspecified",
+      "description": "Prefer generated Full Body when the user does not specify a split for the current generated scope.",
+      "default_weight": 0.8,
+      "rationale": "Generated Full Body is the only active generated split in scope."
+    },
+    {
+      "preference_id": "prefer_simple_options_for_novice_and_comeback",
+      "description": "Bias toward simpler options for novice and comeback users when valid choices exist.",
+      "default_weight": 0.7,
+      "rationale": "Simplicity improves recoverability and execution quality early on."
+    },
+    {
+      "preference_id": "prefer_recoverable_options_for_low_recovery",
+      "description": "Bias toward more recoverable options for low-recovery users when valid choices exist.",
+      "default_weight": 0.8,
+      "rationale": "Recoverability takes priority over theoretical best stimulus under low-recovery conditions."
+    },
+    {
+      "preference_id": "prefer_adherence_first_for_inconsistent_schedule",
+      "description": "Bias toward adherence-preserving choices for inconsistent-schedule users when valid choices exist.",
+      "default_weight": 0.85,
+      "rationale": "Sustained adherence matters more than ideality when schedule consistency is unstable."
     }
   ],
   "constraint_resolution_policy": {

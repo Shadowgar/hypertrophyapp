@@ -1,37 +1,49 @@
 # Next Actions
 
-Last updated: 2026-03-20
+Last updated: 2026-03-21
 
-This is the short execution rail for the current repo state.
+This is the short execution rail for the active milestone only: `Generated Full Body Runtime Integration`.
 
-The `Compiled Knowledge Foundation` milestone is complete. There is no new active implementation milestone in this file yet.
+## Ordered Steps
 
-## Immediate Actions
-
-1. Read `docs/DECISIONS.md`, `docs/IMPLEMENTATION_PLAN_CURRENT_MILESTONE.md`, and `docs/CURRENT_STATE.md`.
-2. Treat the current milestone as closed.
-3. Do not begin the next milestone until it is explicitly approved.
-4. If additional work is needed before approval, keep it limited to milestone-closeout audits, deterministic hardening, or documentation corrections.
+1. Update the active milestone docs first.
+2. Create `apps/api/app/generated_full_body_runtime_adapter.py`.
+3. Update `apps/api/app/routers/plan.py` to call the adapter only at the canonical full-body compatibility seam.
+4. Preserve outward compatibility by forcing the scheduler-facing `program_template["id"]` to the selected compatibility template id when generated content is used.
+5. Add additive runtime trace fields that separate compatibility identity from content origin and include:
+   - `generated_constructor_applied`
+   - stable `fallback_reason`
+6. Update `packages/core-engine/core_engine/decision_generated_week.py` reason-summary and trace wording to reflect constructor-vs-fallback origin.
+7. Add `apps/api/tests/test_generated_full_body_runtime_integration.py`.
+8. Rewrite canonical generated-path assertions in:
+   - `apps/api/tests/test_program_catalog_and_selection.py`
+   - `apps/api/tests/test_phase1_canonical_path_smoke.py`
+   - `apps/api/tests/test_workout_session_state.py`
+9. Update `packages/core-engine/tests/test_generation.py`.
+10. Run focused route and core-engine tests first, then the regression suite.
 
 ## Verification Commands
 
+- `cd apps/api && PYTHONPATH=. python3 -m pytest tests/test_generated_full_body_runtime_integration.py tests/test_program_catalog_and_selection.py tests/test_phase1_canonical_path_smoke.py tests/test_workout_session_state.py -q`
+- `cd packages/core-engine && python3 -m pytest tests/test_generation.py -q`
 - `scripts/reference_ingest.sh ci`
-- `cd apps/api && PYTHONPATH=. python3 -m pytest tests/test_reference_corpus_ingestion.py tests/test_runtime_source_boundaries.py tests/test_source_registry_contract.py tests/test_source_to_knowledge_pipeline.py tests/test_exercise_library_contract.py tests/test_knowledge_loader.py -q`
 - `./scripts/deterministic_regression_validate.sh`
 
 ## Stop Conditions
 
-- stop if the next task is a new milestone that has not been explicitly approved
-- stop if a change requires router behavior changes
-- stop if a change requires DB model or migration work
-- stop if a change requires modifying core-engine behavior
-- stop if a change expands into generated-program logic
+- stop if the work expands beyond generated `Full Body`
+- stop if the work requires router additions or DB changes
+- stop if the work changes scheduler semantics instead of runtime wiring
+- stop if compatibility identity and content origin become ambiguous in trace
+- stop if fallback reasons become vague or non-deterministic
+- stop if anti-copy safeguards weaken during runtime activation
 
 ## Out Of Scope
 
-- any unapproved post-foundation milestone work
-- generated-program construction
-- policy execution in runtime
-- diagnostics runtime
-- user-facing transparency UI
-- specialization logic
+- `Upper/Lower`
+- `PPL`
+- mesocycle review
+- specialization overlays
+- adaptation ledger
+- authored-detail parity restoration for generated `Full Body`
+- permanent generated-runtime identity redesign

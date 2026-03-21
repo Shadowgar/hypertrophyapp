@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -143,6 +143,7 @@ class DoctrineRuleStub(BaseModel):
     description: str = Field(min_length=1)
     provenance: list[ProvenanceRef] = Field(default_factory=list)
     tags: list[str] = Field(default_factory=list)
+    payload: dict[str, Any] = Field(default_factory=dict)
 
     @field_validator("tags")
     @classmethod

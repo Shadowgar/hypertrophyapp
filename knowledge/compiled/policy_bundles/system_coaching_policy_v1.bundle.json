@@ -1,5 +1,5 @@
 {
-  "aggregate_signature": "58e763529ab7087a603f08e587cc040714368cb8590b22d418d9035e74caa72a",
+  "aggregate_signature": "08ca84d0ec74945ea08c090484927ced6602bf0fa06fd6cd402f910c344c8883",
   "anti_overadaptation_policy": {
     "major_change_cooldown_days": 7,
     "max_major_changes_per_mesocycle": 2,
@@ -9,7 +9,7 @@
     "status": "seed"
   },
   "bundle_id": "system_coaching_policy_v1",
-  "bundle_version": "0.1.0",
+  "bundle_version": "0.3.0",
   "constraint_resolution_policy": {
     "policy_id": "constraint_resolution_v1",
     "rationale": "Conflicts must resolve deterministically and conservatively.",
@@ -45,9 +45,19 @@
       "constraint_id": "respect_available_equipment",
       "description": "Never prescribe an exercise variant that requires unavailable equipment when no approved fallback exists.",
       "rationale": "The plan must remain executable."
+    },
+    {
+      "constraint_id": "respect_session_time_budget",
+      "description": "Do not plan beyond the user's declared session-time ceiling when deriving minimum generated Full Body planning inputs.",
+      "rationale": "Time feasibility is a hard boundary for executable planning."
+    },
+    {
+      "constraint_id": "do_not_replay_single_authored_layout",
+      "description": "Do not use any single authored weekly layout as the default target for generated session topology, day-role sequence, movement-pattern distribution, or slot ordering.",
+      "rationale": "Generated output must remain original and doctrine-driven."
     }
   ],
-  "input_signature": "4f42e4d62cab790a5d5b34f8f4f2e0bd7e317de56da38c8ad101f582a14cd0d5",
+  "input_signature": "8a8b4b1966b20a9626d2819cea0bdf938c66bb8e5d5a2728ddd521dfbe5da125",
   "minimum_viable_program_policy": {
     "fallback_order": [
       "reduce_exercise_variety",
@@ -60,7 +70,7 @@
     "rationale": "If ideal programming is not possible, the system must degrade to a safe and executable minimum viable program.",
     "status": "seed"
   },
-  "output_signature": "cd64f93d969741b23d3eb4c7ab15a96dd353f37879bf7c7cc4d10e76c4d48c5a",
+  "output_signature": "ebb17fc5ac548eda2b5153daffd34856e0e5f558ba076d3ffa6e7f89d59f098f",
   "schema_version": "knowledge-1",
   "soft_preferences": [
     {
@@ -74,6 +84,30 @@
       "description": "Prefer lower-complexity exercise options when multiple valid options are otherwise tied.",
       "preference_id": "prefer_lower_complexity_under_tie",
       "rationale": "Lower complexity generally improves adherence and execution quality."
+    },
+    {
+      "default_weight": 0.8,
+      "description": "Prefer generated Full Body when the user does not specify a split for the current generated scope.",
+      "preference_id": "prefer_full_body_when_generated_split_unspecified",
+      "rationale": "Generated Full Body is the only active generated split in scope."
+    },
+    {
+      "default_weight": 0.7,
+      "description": "Bias toward simpler options for novice and comeback users when valid choices exist.",
+      "preference_id": "prefer_simple_options_for_novice_and_comeback",
+      "rationale": "Simplicity improves recoverability and execution quality early on."
+    },
+    {
+      "default_weight": 0.8,
+      "description": "Bias toward more recoverable options for low-recovery users when valid choices exist.",
+      "preference_id": "prefer_recoverable_options_for_low_recovery",
+      "rationale": "Recoverability takes priority over theoretical best stimulus under low-recovery conditions."
+    },
+    {
+      "default_weight": 0.85,
+      "description": "Bias toward adherence-preserving choices for inconsistent-schedule users when valid choices exist.",
+      "preference_id": "prefer_adherence_first_for_inconsistent_schedule",
+      "rationale": "Sustained adherence matters more than ideality when schedule consistency is unstable."
     }
   ],
   "status": "seed"

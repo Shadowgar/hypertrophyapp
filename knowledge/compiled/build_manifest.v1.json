@@ -1,5 +1,5 @@
 {
-  "aggregate_signature": "0e633fd7e1e3af11d2790394b041375e0b1c1160213c28747e3af7632698957f",
+  "aggregate_signature": "705b868bb03e694a12f63feceb9e12c234dddafd78843ff219a18b8eeefca218",
   "artifacts": [
     {
       "artifact_id": "exercise_library_foundation",
@@ -11,8 +11,8 @@
     {
       "artifact_id": "multi_source_hypertrophy_v1",
       "artifact_type": "doctrine_bundle",
-      "input_signature": "856ac97581c6ea8ec4166d24300a1814b92f1f86db714b81f4c6ca78100c0a7a",
-      "output_signature": "01a917a5fdd8dc3b0067f5b6514af4fe5e35c2b262f869e29321597e539d2ac7",
+      "input_signature": "e7c82e406e8b37a7c72ac1b9f1d0d973463b8f7089258032e0118cdbd0f140b7",
+      "output_signature": "a5f4caa9579173d19497a0db05e89593d66339589c76c46bf0fc0ac792409bf0",
       "path": "knowledge/compiled/doctrine_bundles/multi_source_hypertrophy_v1.bundle.json"
     },
     {
@@ -25,15 +25,15 @@
     {
       "artifact_id": "system_coaching_policy_v1",
       "artifact_type": "policy_bundle",
-      "input_signature": "4f42e4d62cab790a5d5b34f8f4f2e0bd7e317de56da38c8ad101f582a14cd0d5",
-      "output_signature": "cd64f93d969741b23d3eb4c7ab15a96dd353f37879bf7c7cc4d10e76c4d48c5a",
+      "input_signature": "8a8b4b1966b20a9626d2819cea0bdf938c66bb8e5d5a2728ddd521dfbe5da125",
+      "output_signature": "ebb17fc5ac548eda2b5153daffd34856e0e5f558ba076d3ffa6e7f89d59f098f",
       "path": "knowledge/compiled/policy_bundles/system_coaching_policy_v1.bundle.json"
     }
   ],
   "bundle_id": "build_manifest",
   "bundle_version": "0.1.0",
-  "input_signature": "5192cff5840618ef9b59de1d12b29915c4da4e5c2652306f80c8daf07a326b11",
-  "output_signature": "093ef00126f7919c100fb560f4046824563f8090dd4d1f295ba4d680491e19f1",
+  "input_signature": "eefed02aea4b3f40de0de94da358d8931fe3106d220dbdff215bd8819cb06f96",
+  "output_signature": "aac113abead04bf90da581af078eba6c98a0963bc61a6d49eb467f0c35067866",
   "schema_version": "knowledge-1",
   "warnings": [
     "Skipped placeholder exercise from pure_bodybuilding_phase_1_full_body: weak_point_exercise_1",

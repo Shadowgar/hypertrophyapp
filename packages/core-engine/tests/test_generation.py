@@ -667,6 +667,80 @@ def test_prepare_generate_week_finalize_runtime_shapes_response_and_record_value
     assert runtime["decision_trace"]["review_overlay_trace"]["interpreter"] == "prepare_generated_week_review_overlay"
 
 
+def test_prepare_generate_week_finalize_runtime_separates_compatibility_identity_from_generated_content_origin() -> None:
+    runtime = prepare_generate_week_finalize_runtime(
+        user_id="user_123",
+        base_plan={
+            "week_start": "2026-03-09",
+            "split": "full_body",
+            "phase": "maintenance",
+            "program_template_id": "pure_bodybuilding_phase_1_full_body",
+            "sessions": [],
+        },
+        template_selection_trace={
+            "interpreter": "recommend_generation_template_selection",
+            "selected_template_id": "pure_bodybuilding_phase_1_full_body",
+            "generated_full_body_runtime_trace": {
+                "compatibility_selected_template_id": "pure_bodybuilding_phase_1_full_body",
+                "compatibility_program_template_id": "pure_bodybuilding_phase_1_full_body",
+                "content_origin": "generated_constructor_applied",
+                "generated_constructor_applied": True,
+            },
+        },
+        generation_runtime_trace={"interpreter": "resolve_week_generation_runtime_inputs", "outcome": {"effective_days_available": 3}},
+        selected_template_id="pure_bodybuilding_phase_1_full_body",
+        active_frequency_adaptation=None,
+        review_cycle=None,
+    )
+
+    trace = runtime["response_payload"]["decision_trace"]
+
+    assert trace["canonical_inputs"]["selected_template_id"] == "pure_bodybuilding_phase_1_full_body"
+    assert trace["canonical_inputs"]["compatibility_selected_template_id"] == "pure_bodybuilding_phase_1_full_body"
+    assert trace["canonical_inputs"]["content_origin"] == "generated_constructor_applied"
+    assert trace["policy_basis"]["runtime_content_origin"]["reason"] == "generated_constructor_applied"
+    assert trace["policy_basis"]["runtime_content_origin"]["generated_constructor_applied"] is True
+    assert trace["outcome"]["compatibility_program_template_id"] == "pure_bodybuilding_phase_1_full_body"
+    assert trace["outcome"]["content_origin"] == "generated_constructor_applied"
+    assert trace["outcome"]["generated_constructor_applied"] is True
+    assert "deterministic generated Full Body constructor" in trace["reason_summary"]
+
+
+def test_prepare_generate_week_finalize_runtime_surfaces_stable_generated_runtime_fallback_reason() -> None:
+    runtime = prepare_generate_week_finalize_runtime(
+        user_id="user_123",
+        base_plan={
+            "week_start": "2026-03-09",
+            "split": "full_body",
+            "phase": "maintenance",
+            "program_template_id": "pure_bodybuilding_phase_1_full_body",
+            "sessions": [],
+        },
+        template_selection_trace={
+            "interpreter": "recommend_generation_template_selection",
+            "selected_template_id": "pure_bodybuilding_phase_1_full_body",
+            "generated_full_body_runtime_trace": {
+                "compatibility_selected_template_id": "pure_bodybuilding_phase_1_full_body",
+                "compatibility_program_template_id": "pure_bodybuilding_phase_1_full_body",
+                "content_origin": "fallback_to_selected_template",
+                "generated_constructor_applied": False,
+                "fallback_reason": "constructor_insufficient",
+            },
+        },
+        generation_runtime_trace={"interpreter": "resolve_week_generation_runtime_inputs", "outcome": {"effective_days_available": 3}},
+        selected_template_id="pure_bodybuilding_phase_1_full_body",
+        active_frequency_adaptation=None,
+        review_cycle=None,
+    )
+
+    trace = runtime["response_payload"]["decision_trace"]
+
+    assert trace["outcome"]["content_origin"] == "fallback_to_selected_template"
+    assert trace["outcome"]["generated_constructor_applied"] is False
+    assert trace["outcome"]["fallback_reason"] == "constructor_insufficient"
+    assert "constructor_insufficient" in trace["reason_summary"]
+
+
 def test_prepare_generate_week_finalize_runtime_surfaces_mesocycle_sfr_source_on_top_level_trace() -> None:
     runtime = prepare_generate_week_finalize_runtime(
         user_id="user_123",

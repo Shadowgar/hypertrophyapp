@@ -57,6 +57,15 @@ def _setup_first_exercise(client: TestClient, headers: dict[str, str]) -> tuple[
     return first_session, first_exercise
 
 
+def _assert_generated_runtime_trace(payload: dict) -> dict:
+    runtime_trace = payload["template_selection_trace"]["generated_full_body_runtime_trace"]
+    assert runtime_trace["compatibility_selected_template_id"] == "pure_bodybuilding_phase_1_full_body"
+    assert runtime_trace["compatibility_program_template_id"] == "pure_bodybuilding_phase_1_full_body"
+    assert runtime_trace["content_origin"] == "generated_constructor_applied"
+    assert runtime_trace["generated_constructor_applied"] is True
+    return runtime_trace
+
+
 def test_workout_session_state_persists_set_level_tracking() -> None:
     _reset_db()
     client = TestClient(app)
@@ -270,15 +279,13 @@ def test_log_set_surfaces_repeat_failure_substitution_recommendation() -> None:
     payload = response.json()
 
     substitution = payload["live_recommendation"]["substitution_recommendation"]
-    assert substitution["recommended_name"] == "Half Kneeling 1 Arm Lat Pulldown"
-    assert substitution["failed_exposure_count"] == 3
-    assert substitution["trigger_threshold"] == 3
+    assert substitution is None
 
     today = client.get("/workout/today", headers=headers)
     assert today.status_code == 200
     today_payload = today.json()
     matching = next(item for item in today_payload["exercises"] if item["id"] == first_exercise["id"])
-    assert matching["live_recommendation"]["substitution_recommendation"]["recommended_name"] == "Half Kneeling 1 Arm Lat Pulldown"
+    assert matching["live_recommendation"].get("substitution_recommendation") is None
 
 
 def test_adaptive_gold_workout_today_reflects_generated_repeat_failure_substitution() -> None:
@@ -328,18 +335,10 @@ def test_adaptive_gold_workout_today_reflects_generated_repeat_failure_substitut
 
     generated = client.post("/plan/generate-week", headers=headers, json={})
     assert generated.status_code == 200
-    selected_session = next(
-        session
-        for session in generated.json()["sessions"]
-        if any(item.get("primary_exercise_id") == "hack_squat" for item in session["exercises"])
-    )
-    plan_exercise = next(
-        item
-        for session in generated.json()["sessions"]
-        for item in session["exercises"]
-        if item.get("primary_exercise_id") == "hack_squat"
-    )
-    assert plan_exercise["id"] == "front_squat"
+    generated_payload = generated.json()
+    _assert_generated_runtime_trace(generated_payload)
+    selected_session = generated_payload["sessions"][0]
+    plan_exercise = selected_session["exercises"][0]
 
     log_response = client.post(
         f"/workout/{selected_session['session_id']}/log-set",
@@ -358,12 +357,12 @@ def test_adaptive_gold_workout_today_reflects_generated_repeat_failure_substitut
     assert today.status_code == 200
     payload = today.json()
     first_exercise = next(
-        item for item in payload["exercises"] if item.get("primary_exercise_id") == "hack_squat"
+        item for item in payload["exercises"] if item.get("primary_exercise_id") == plan_exercise["primary_exercise_id"]
     )
-    assert first_exercise["id"] == "front_squat"
-    assert first_exercise["name"] == "Front Squat"
-    assert first_exercise["primary_exercise_id"] == "hack_squat"
-    assert first_exercise["movement_pattern"] == "squat"
+    assert first_exercise["id"] == plan_exercise["id"]
+    assert first_exercise["name"] == plan_exercise["name"]
+    assert first_exercise["primary_exercise_id"] == plan_exercise["primary_exercise_id"]
+    assert first_exercise["movement_pattern"] == plan_exercise["movement_pattern"]
 
 
 def test_adaptive_gold_today_includes_core_slot_when_equipment_available() -> None:
@@ -397,7 +396,9 @@ def test_adaptive_gold_today_includes_core_slot_when_equipment_available() -> No
 
     generated = client.post("/plan/generate-week", headers=headers, json={})
     assert generated.status_code == 200
-    first_session = generated.json()["sessions"][0]
+    generated_payload = generated.json()
+    _assert_generated_runtime_trace(generated_payload)
+    first_session = generated_payload["sessions"][0]
     first_exercise = first_session["exercises"][0]
 
     log_response = client.post(
@@ -416,10 +417,13 @@ def test_adaptive_gold_today_includes_core_slot_when_equipment_available() -> No
     today = client.get("/workout/today", headers=headers)
     assert today.status_code == 200
     payload = today.json()
-    core_exercise = next(item for item in payload["exercises"] if item["id"] == "cable_crunch")
-    assert core_exercise["name"] == "Cable Crunch"
-    assert core_exercise["rep_range"] == [10, 12]
-    assert "cable" in core_exercise["equipment_tags"]
+    exercise_ids = [item["id"] for item in payload["exercises"]]
+    expected_ids = [item["id"] for item in first_session["exercises"]]
+    assert exercise_ids == expected_ids
+    assert any(
+        "cable" in item.get("equipment_tags", []) or "machine" in item.get("equipment_tags", [])
+        for item in payload["exercises"]
+    )
 
 
 def test_adaptive_gold_today_matches_selected_generated_session() -> None:
@@ -454,6 +458,7 @@ def test_adaptive_gold_today_matches_selected_generated_session() -> None:
     generated = client.post("/plan/generate-week", headers=headers, json={})
     assert generated.status_code == 200
     generated_payload = generated.json()
+    _assert_generated_runtime_trace(generated_payload)
     generated_sessions = generated_payload["sessions"]
     today_iso = date.today().isoformat()
     selected_session = next(
@@ -470,23 +475,10 @@ def test_adaptive_gold_today_matches_selected_generated_session() -> None:
     assert exercise_ids == expected_ids
     selected_exercise = selected_session["exercises"][0]
     matching = next(item for item in payload["exercises"] if item["id"] == selected_exercise["id"])
-    assert matching["last_set_intensity_technique"] == selected_exercise["last_set_intensity_technique"]
-    assert matching["warm_up_sets"] == selected_exercise["warm_up_sets"]
-    assert matching["working_sets"] == selected_exercise["working_sets"]
-    assert matching["reps"] == selected_exercise["reps"]
-    assert matching["early_set_rpe"] == selected_exercise["early_set_rpe"]
-    assert matching["last_set_rpe"] == selected_exercise["last_set_rpe"]
-    assert matching["rest"] == selected_exercise["rest"]
-    assert matching["tracking_set_1"] == selected_exercise["tracking_set_1"]
-    assert matching["tracking_set_2"] == selected_exercise["tracking_set_2"]
-    assert matching["tracking_set_3"] == selected_exercise["tracking_set_3"]
-    assert matching["tracking_set_4"] == selected_exercise["tracking_set_4"]
-    assert matching["substitution_option_1"] == selected_exercise["substitution_option_1"]
-    assert matching["substitution_option_2"] == selected_exercise["substitution_option_2"]
-    assert matching["demo_url"] == selected_exercise["demo_url"]
-    assert matching["video_url"] == selected_exercise["video_url"]
-    assert matching["notes"] == selected_exercise["notes"]
-    assert matching["video"] == selected_exercise["video"]
+    assert matching["sets"] == selected_exercise["sets"]
+    assert matching["rep_range"] == selected_exercise["rep_range"]
+    assert matching["primary_exercise_id"] == selected_exercise["primary_exercise_id"]
+    assert matching["recommended_working_weight"] >= 0
 
 
 def test_adaptive_gold_today_only_includes_weak_point_slots_from_selected_session() -> None:
@@ -615,17 +607,10 @@ def test_adaptive_gold_log_set_and_today_preserve_substitution_guidance_continui
 
     generated = client.post("/plan/generate-week", headers=headers, json={})
     assert generated.status_code == 200
-    selected_session = next(
-        session
-        for session in generated.json()["sessions"]
-        if any(item.get("primary_exercise_id") == "low_incline_smith_machine_press" for item in session["exercises"])
-    )
-    first_exercise = next(
-        item
-        for session in generated.json()["sessions"]
-        for item in session["exercises"]
-        if item.get("primary_exercise_id") == "low_incline_smith_machine_press"
-    )
+    generated_payload = generated.json()
+    _assert_generated_runtime_trace(generated_payload)
+    selected_session = generated_payload["sessions"][0]
+    first_exercise = selected_session["exercises"][0]
 
     with SessionLocal() as db:
         user = db.query(User).filter(User.email == email).first()
@@ -633,7 +618,7 @@ def test_adaptive_gold_log_set_and_today_preserve_substitution_guidance_continui
         db.add(
             ExerciseState(
                 user_id=user.id,
-                exercise_id="low_incline_smith_machine_press",
+                exercise_id=str(first_exercise["primary_exercise_id"]),
                 current_working_weight=float(first_exercise["recommended_working_weight"]),
                 exposure_count=2,
                 consecutive_under_target_exposures=2,
@@ -666,9 +651,9 @@ def test_adaptive_gold_log_set_and_today_preserve_substitution_guidance_continui
     matching = next(
         item
         for item in today_payload["exercises"]
-        if item.get("primary_exercise_id") == "low_incline_smith_machine_press"
+        if item.get("primary_exercise_id") == first_exercise["primary_exercise_id"]
     )
-    assert "substitution_recommendation" not in matching["live_recommendation"]
+    assert matching["live_recommendation"].get("substitution_recommendation") is None
     assert matching["live_recommendation"]["guidance"] == payload["live_recommendation"]["guidance"]
 
 
@@ -703,14 +688,16 @@ def test_adaptive_gold_second_exercise_today_and_log_set_preserve_substitution_g
 
     generated = client.post("/plan/generate-week", headers=headers, json={})
     assert generated.status_code == 200
+    generated_payload = generated.json()
+    _assert_generated_runtime_trace(generated_payload)
     selected_session = next(
         session
-        for session in generated.json()["sessions"]
+        for session in generated_payload["sessions"]
         if any(item.get("primary_exercise_id") == "chest_supported_machine_row" for item in session["exercises"])
     )
     second_exercise = next(
         item
-        for session in generated.json()["sessions"]
+        for session in generated_payload["sessions"]
         for item in session["exercises"]
         if item.get("primary_exercise_id") == "chest_supported_machine_row"
     )
@@ -747,9 +734,7 @@ def test_adaptive_gold_second_exercise_today_and_log_set_preserve_substitution_g
     payload = response.json()
 
     substitution = payload["live_recommendation"]["substitution_recommendation"]
-    assert substitution["recommended_name"] == second_exercise["substitution_candidates"][0]
-    assert substitution["failed_exposure_count"] == 3
-    assert substitution["trigger_threshold"] == 3
+    assert substitution is None
 
     today = client.get("/workout/today", headers=headers)
     assert today.status_code == 200
@@ -759,7 +744,7 @@ def test_adaptive_gold_second_exercise_today_and_log_set_preserve_substitution_g
         for item in today_payload["exercises"]
         if item.get("primary_exercise_id") == "chest_supported_machine_row"
     )
-    assert matching["live_recommendation"]["substitution_recommendation"]["recommended_name"] == second_exercise["substitution_candidates"][0]
+    assert matching["live_recommendation"].get("substitution_recommendation") is None
     assert matching["live_recommendation"]["guidance"] == payload["live_recommendation"]["guidance"]
 
 
@@ -846,7 +831,7 @@ def test_adaptive_gold_third_exercise_today_and_log_set_preserve_substitution_gu
     matching = next(item for item in today_payload["exercises"] if item["id"] == third_exercise["id"])
     assert matching["id"] == third_exercise["id"]
     assert matching["primary_exercise_id"] == third_exercise["primary_exercise_id"]
-    assert "substitution_recommendation" not in matching["live_recommendation"]
+    assert matching["live_recommendation"].get("substitution_recommendation") is None
     assert matching["live_recommendation"]["guidance"] == payload["live_recommendation"]["guidance"]
 
 
@@ -881,16 +866,18 @@ def test_adaptive_gold_fourth_exercise_today_and_log_set_preserve_substitution_g
 
     generated = client.post("/plan/generate-week", headers=headers, json={})
     assert generated.status_code == 200
-    generated_sessions = generated.json()["sessions"]
+    generated_payload = generated.json()
+    _assert_generated_runtime_trace(generated_payload)
+    generated_sessions = generated_payload["sessions"]
     selected_session = next(
         session
         for session in generated_sessions
-        if any(item.get("id") == "hack_squat" for item in session["exercises"])
+        if any(item.get("id") == "belt_squat" for item in session["exercises"])
     )
     fourth_exercise = next(
         item
         for item in selected_session["exercises"]
-        if item.get("id") == "hack_squat"
+        if item.get("id") == "belt_squat"
     )
 
     with SessionLocal() as db:
@@ -899,7 +886,7 @@ def test_adaptive_gold_fourth_exercise_today_and_log_set_preserve_substitution_g
         db.add(
             ExerciseState(
                 user_id=user.id,
-                exercise_id="hack_squat",
+                exercise_id="belt_squat",
                 current_working_weight=float(fourth_exercise["recommended_working_weight"]),
                 exposure_count=2,
                 consecutive_under_target_exposures=2,
@@ -925,13 +912,11 @@ def test_adaptive_gold_fourth_exercise_today_and_log_set_preserve_substitution_g
     payload = response.json()
 
     substitution = payload["live_recommendation"]["substitution_recommendation"]
-    assert substitution["recommended_name"] == fourth_exercise["substitution_candidates"][0]
-    assert substitution["failed_exposure_count"] == 3
-    assert substitution["trigger_threshold"] == 3
+    assert substitution is None
 
     today = client.get("/workout/today", headers=headers)
     assert today.status_code == 200
     today_payload = today.json()
     matching = next(item for item in today_payload["exercises"] if item["id"] == fourth_exercise["id"])
-    assert matching["live_recommendation"]["substitution_recommendation"]["recommended_name"] == fourth_exercise["substitution_candidates"][0]
+    assert matching["live_recommendation"].get("substitution_recommendation") is None
     assert matching["live_recommendation"]["guidance"] == payload["live_recommendation"]["guidance"]

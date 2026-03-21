@@ -1,8 +1,8 @@
 {
-  "aggregate_signature": "3cd05fb2c73a8b5df82f3eb04da480fc6b6992e5fff405b976511e8d1008a5e5",
+  "aggregate_signature": "5e08f75b8ff5c3b54b80d6778c4992907114037911dcfb3b467bcd8a1a9868a6",
   "bundle_id": "multi_source_hypertrophy_v1",
-  "bundle_version": "0.1.0",
-  "input_signature": "856ac97581c6ea8ec4166d24300a1814b92f1f86db714b81f4c6ca78100c0a7a",
+  "bundle_version": "0.3.0",
+  "input_signature": "e7c82e406e8b37a7c72ac1b9f1d0d973463b8f7089258032e0118cdbd0f140b7",
   "module_ids": [
     "adaptation",
     "assessment",
@@ -15,42 +15,635 @@
     "technique",
     "volume"
   ],
-  "output_signature": "01a917a5fdd8dc3b0067f5b6514af4fe5e35c2b262f869e29321597e539d2ac7",
+  "output_signature": "a5f4caa9579173d19497a0db05e89593d66339589c76c46bf0fc0ac792409bf0",
   "rules_by_module": {
     "adaptation": [],
     "assessment": [
       {
-        "description": "Placeholder assessment doctrine slot for compiled bundle validation.",
+        "description": "Deterministic experience-level thresholds for initial generated Full Body planning inputs.",
         "module_id": "assessment",
+        "payload": {
+          "advanced": {
+            "min_performance_history_entries_inclusive": 24,
+            "min_total_exposures_inclusive": 90,
+            "min_tracked_progression_entries_inclusive": 8
+          },
+          "fallback": "early_intermediate",
+          "novice": {
+            "max_total_exposures_exclusive": 30,
+            "max_tracked_progression_entries_exclusive": 5
+          }
+        },
         "provenance": [],
-        "rule_id": "assessment_seed_placeholder",
-        "status": "placeholder",
+        "rule_id": "assessment_experience_thresholds_v1",
+        "status": "seed",
         "tags": [
-          "placeholder",
+          "assessment",
+          "full_body",
           "seed"
+        ]
+      },
+      {
+        "description": "Deterministic recovery-profile mapping for initial generated Full Body planning inputs.",
+        "module_id": "assessment",
+        "payload": {
+          "fallback": "normal",
+          "low_recovery_when": {
+            "recoverability_values": [
+              "low"
+            ],
+            "recovery_state_values": [
+              "high_fatigue"
+            ]
+          }
+        },
+        "provenance": [],
+        "rule_id": "assessment_recovery_profile_mapping_v1",
+        "status": "seed",
+        "tags": [
+          "assessment",
+          "recovery",
+          "seed"
+        ]
+      },
+      {
+        "description": "Deterministic schedule-profile mapping for initial generated Full Body planning inputs.",
+        "module_id": "assessment",
+        "payload": {
+          "fallback": "normal",
+          "inconsistent_schedule": {
+            "max_latest_adherence_score_inclusive": 2,
+            "min_missed_session_count_inclusive": 2
+          },
+          "low_time": {
+            "max_minutes_inclusive": 45
+          }
+        },
+        "provenance": [],
+        "rule_id": "assessment_schedule_profile_mapping_v1",
+        "status": "seed",
+        "tags": [
+          "assessment",
+          "schedule",
+          "seed"
+        ]
+      },
+      {
+        "description": "Deterministic comeback detection for generated planning inputs.",
+        "module_id": "assessment",
+        "payload": {
+          "minimum_performance_history_entries_for_non_comeback": 3,
+          "requires_prior_generated_weeks": true
+        },
+        "provenance": [],
+        "rule_id": "assessment_comeback_detection_v1",
+        "status": "seed",
+        "tags": [
+          "assessment",
+          "comeback",
+          "seed"
+        ]
+      },
+      {
+        "description": "Merge explicit and inferred weak points into a bounded deterministic priority list.",
+        "module_id": "assessment",
+        "payload": {
+          "maximum_priorities": 3,
+          "source_priority": [
+            "explicit",
+            "inferred"
+          ]
+        },
+        "provenance": [],
+        "rule_id": "assessment_weak_point_merge_v1",
+        "status": "seed",
+        "tags": [
+          "assessment",
+          "seed",
+          "weak_points"
         ]
       }
     ],
-    "exercise_selection": [],
+    "exercise_selection": [
+      {
+        "description": "Exercise-cap tiers for minimum generated Full Body planning inputs.",
+        "module_id": "exercise_selection",
+        "payload": {
+          "tiers": [
+            {
+              "exercise_cap": 4,
+              "max_minutes_inclusive": 45
+            },
+            {
+              "exercise_cap": 5,
+              "max_minutes_inclusive": 60
+            },
+            {
+              "exercise_cap": 6,
+              "max_minutes_inclusive": 90
+            },
+            {
+              "exercise_cap": 7,
+              "max_minutes_inclusive": 999
+            }
+          ]
+        },
+        "provenance": [],
+        "rule_id": "full_body_session_cap_by_time_budget_v1",
+        "status": "seed",
+        "tags": [
+          "full_body",
+          "seed",
+          "time_budget"
+        ]
+      },
+      {
+        "description": "Required movement-pattern coverage targets for minimum generated Full Body planning inputs.",
+        "module_id": "exercise_selection",
+        "payload": {
+          "requirements": [
+            {
+              "minimum_weekly_exposures": 1,
+              "movement_pattern": "squat",
+              "priority_rank": 1
+            },
+            {
+              "minimum_weekly_exposures": 1,
+              "movement_pattern": "hinge",
+              "priority_rank": 2
+            },
+            {
+              "minimum_weekly_exposures": 1,
+              "movement_pattern": "horizontal_press",
+              "priority_rank": 3
+            },
+            {
+              "minimum_weekly_exposures": 1,
+              "movement_pattern": "horizontal_pull",
+              "priority_rank": 4
+            },
+            {
+              "minimum_weekly_exposures": 1,
+              "movement_pattern": "vertical_pull",
+              "priority_rank": 5
+            },
+            {
+              "minimum_weekly_exposures": 1,
+              "movement_pattern": "vertical_press",
+              "priority_rank": 6
+            }
+          ]
+        },
+        "provenance": [],
+        "rule_id": "full_body_required_movement_patterns_v1",
+        "status": "seed",
+        "tags": [
+          "exercise_selection",
+          "full_body",
+          "seed"
+        ]
+      },
+      {
+        "description": "Generated Full Body movement-pattern distribution across sessions by session count.",
+        "module_id": "exercise_selection",
+        "payload": {
+          "distribution_by_session_count": {
+            "2": [
+              {
+                "movement_patterns": [
+                  "squat",
+                  "horizontal_press",
+                  "horizontal_pull"
+                ],
+                "session_index": 1
+              },
+              {
+                "movement_patterns": [
+                  "hinge",
+                  "vertical_pull",
+                  "vertical_press"
+                ],
+                "session_index": 2
+              }
+            ],
+            "3": [
+              {
+                "movement_patterns": [
+                  "squat",
+                  "horizontal_press"
+                ],
+                "session_index": 1
+              },
+              {
+                "movement_patterns": [
+                  "hinge",
+                  "horizontal_pull"
+                ],
+                "session_index": 2
+              },
+              {
+                "movement_patterns": [
+                  "vertical_pull",
+                  "vertical_press"
+                ],
+                "session_index": 3
+              }
+            ],
+            "4": [
+              {
+                "movement_patterns": [
+                  "squat",
+                  "horizontal_press"
+                ],
+                "session_index": 1
+              },
+              {
+                "movement_patterns": [
+                  "hinge",
+                  "horizontal_pull"
+                ],
+                "session_index": 2
+              },
+              {
+                "movement_patterns": [
+                  "vertical_pull"
+                ],
+                "session_index": 3
+              },
+              {
+                "movement_patterns": [
+                  "vertical_press"
+                ],
+                "session_index": 4
+              }
+            ],
+            "5": [
+              {
+                "movement_patterns": [
+                  "squat"
+                ],
+                "session_index": 1
+              },
+              {
+                "movement_patterns": [
+                  "hinge"
+                ],
+                "session_index": 2
+              },
+              {
+                "movement_patterns": [
+                  "horizontal_press"
+                ],
+                "session_index": 3
+              },
+              {
+                "movement_patterns": [
+                  "horizontal_pull"
+                ],
+                "session_index": 4
+              },
+              {
+                "movement_patterns": [
+                  "vertical_pull",
+                  "vertical_press"
+                ],
+                "session_index": 5
+              }
+            ]
+          }
+        },
+        "provenance": [],
+        "rule_id": "full_body_movement_pattern_distribution_v1",
+        "status": "seed",
+        "tags": [
+          "exercise_selection",
+          "full_body",
+          "seed",
+          "topology"
+        ]
+      },
+      {
+        "description": "Deterministic candidate sorting for minimum generated Full Body planning inputs.",
+        "module_id": "exercise_selection",
+        "payload": {
+          "sort_order": [
+            "source_program_count_desc",
+            "equipment_tag_count_asc",
+            "canonical_name_asc"
+          ]
+        },
+        "provenance": [],
+        "rule_id": "full_body_candidate_sorting_v1",
+        "status": "seed",
+        "tags": [
+          "exercise_selection",
+          "full_body",
+          "seed"
+        ]
+      },
+      {
+        "description": "Doctrine-approved optional fill patterns for bounded Full Body session-density improvement by complexity ceiling.",
+        "module_id": "exercise_selection",
+        "payload": {
+          "optional_patterns_by_complexity_ceiling": {
+            "simple": [
+              "lateral_raise",
+              "curl",
+              "triceps_extension",
+              "leg_curl",
+              "chest_fly",
+              "knee_extension"
+            ],
+            "standard": [
+              "lateral_raise",
+              "curl",
+              "triceps_extension",
+              "leg_curl",
+              "chest_fly",
+              "knee_extension",
+              "plantar_flexion",
+              "core",
+              "accessory"
+            ]
+          }
+        },
+        "provenance": [],
+        "rule_id": "full_body_optional_fill_pattern_priority_by_complexity_ceiling_v1",
+        "status": "seed",
+        "tags": [
+          "exercise_selection",
+          "full_body",
+          "optional_fill",
+          "seed"
+        ]
+      },
+      {
+        "description": "Generated Full Body slot-role ordering and movement-pattern slot-role mapping.",
+        "module_id": "exercise_selection",
+        "payload": {
+          "slot_role_by_movement_pattern": {
+            "hinge": "primary_compound",
+            "horizontal_press": "secondary_compound",
+            "horizontal_pull": "secondary_compound",
+            "squat": "primary_compound",
+            "vertical_press": "secondary_compound",
+            "vertical_pull": "secondary_compound"
+          },
+          "slot_roles_by_position": [
+            "primary_compound",
+            "primary_compound",
+            "secondary_compound",
+            "secondary_compound",
+            "secondary_compound",
+            "accessory",
+            "weak_point"
+          ]
+        },
+        "provenance": [],
+        "rule_id": "full_body_slot_role_sequence_v1",
+        "status": "seed",
+        "tags": [
+          "exercise_selection",
+          "full_body",
+          "seed",
+          "slot_roles"
+        ]
+      },
+      {
+        "description": "Deterministic filtering for unavailable equipment and explicit movement restrictions.",
+        "module_id": "exercise_selection",
+        "payload": {
+          "equipment_filter_mode": "subset_match",
+          "ignore_missing_contraindications": true,
+          "restriction_filter_mode": "contraindication_intersection"
+        },
+        "provenance": [],
+        "rule_id": "full_body_equipment_and_restriction_filtering_v1",
+        "status": "seed",
+        "tags": [
+          "exercise_selection",
+          "full_body",
+          "seed"
+        ]
+      },
+      {
+        "description": "Generated Full Body exercise reuse limits for first-pass constructor outputs.",
+        "module_id": "exercise_selection",
+        "payload": {
+          "allow_reuse_after_unique_candidates_exhausted": true,
+          "max_assignments_per_exercise_per_week": 1
+        },
+        "provenance": [],
+        "rule_id": "full_body_exercise_reuse_limits_v1",
+        "status": "seed",
+        "tags": [
+          "exercise_selection",
+          "full_body",
+          "reuse",
+          "seed"
+        ]
+      },
+      {
+        "description": "Bounded weak-point slot insertion rules for generated Full Body draft construction.",
+        "module_id": "exercise_selection",
+        "payload": {
+          "max_weekly_weak_point_slots": 1,
+          "minimum_remaining_capacity_inclusive": 1,
+          "preferred_session_indices_by_session_count": {
+            "2": [
+              2,
+              1
+            ],
+            "3": [
+              3,
+              2,
+              1
+            ],
+            "4": [
+              4,
+              3,
+              2,
+              1
+            ],
+            "5": [
+              5,
+              4,
+              3,
+              2,
+              1
+            ]
+          },
+          "slot_role": "weak_point",
+          "volume_tier_to_max_weekly_weak_point_slots": {
+            "conservative": 1,
+            "moderate": 2
+          }
+        },
+        "provenance": [],
+        "rule_id": "full_body_weak_point_slot_insertion_v1",
+        "status": "seed",
+        "tags": [
+          "exercise_selection",
+          "full_body",
+          "seed",
+          "weak_points"
+        ]
+      }
+    ],
     "mesocycle": [],
     "progression": [],
     "safety": [],
     "specialization": [],
     "split": [
       {
-        "description": "Placeholder split doctrine slot for compiled bundle validation.",
+        "description": "Generated Full Body is supported for users with two to five training days.",
         "module_id": "split",
+        "payload": {
+          "default_when_split_unspecified": true,
+          "supported_days": [
+            2,
+            3,
+            4,
+            5
+          ]
+        },
         "provenance": [],
-        "rule_id": "split_seed_placeholder",
-        "status": "placeholder",
+        "rule_id": "split_full_body_supported_days_v1",
+        "status": "seed",
         "tags": [
-          "placeholder",
+          "full_body",
+          "seed",
+          "split"
+        ]
+      },
+      {
+        "description": "Generic generated Full Body session-topology indices by session count.",
+        "module_id": "split",
+        "payload": {
+          "topology_by_session_count": {
+            "2": {
+              "session_indices": [
+                1,
+                2
+              ]
+            },
+            "3": {
+              "session_indices": [
+                1,
+                2,
+                3
+              ]
+            },
+            "4": {
+              "session_indices": [
+                1,
+                2,
+                3,
+                4
+              ]
+            },
+            "5": {
+              "session_indices": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ]
+            }
+          }
+        },
+        "provenance": [],
+        "rule_id": "full_body_session_topology_by_session_count_v1",
+        "status": "seed",
+        "tags": [
+          "full_body",
+          "seed",
+          "topology"
+        ]
+      },
+      {
+        "description": "Generic generated Full Body day-role sequence by session count.",
+        "module_id": "split",
+        "payload": {
+          "day_roles_by_session_count": {
+            "2": [
+              "generated_full_body_1",
+              "generated_full_body_2"
+            ],
+            "3": [
+              "generated_full_body_1",
+              "generated_full_body_2",
+              "generated_full_body_3"
+            ],
+            "4": [
+              "generated_full_body_1",
+              "generated_full_body_2",
+              "generated_full_body_3",
+              "generated_full_body_4"
+            ],
+            "5": [
+              "generated_full_body_1",
+              "generated_full_body_2",
+              "generated_full_body_3",
+              "generated_full_body_4",
+              "generated_full_body_5"
+            ]
+          }
+        },
+        "provenance": [],
+        "rule_id": "full_body_day_role_sequence_by_session_count_v1",
+        "status": "seed",
+        "tags": [
+          "day_roles",
+          "full_body",
           "seed"
         ]
       }
     ],
     "technique": [],
-    "volume": []
+    "volume": [
+      {
+        "description": "Minimum generated Full Body volume tier mapping by user class.",
+        "module_id": "volume",
+        "payload": {
+          "user_class_to_volume_tier": {
+            "advanced": "moderate",
+            "comeback": "conservative",
+            "early_intermediate": "moderate",
+            "inconsistent_schedule": "conservative",
+            "low_recovery": "conservative",
+            "novice": "moderate"
+          }
+        },
+        "provenance": [],
+        "rule_id": "full_body_volume_tier_by_user_class_v1",
+        "status": "seed",
+        "tags": [
+          "full_body",
+          "seed",
+          "volume"
+        ]
+      },
+      {
+        "description": "Doctrine-driven target exercise counts per Full Body session by volume tier for bounded constructor fill behavior.",
+        "module_id": "volume",
+        "payload": {
+          "volume_tier_to_target_exercises_per_session": {
+            "conservative": 3,
+            "moderate": 4
+          }
+        },
+        "provenance": [],
+        "rule_id": "full_body_session_fill_target_by_volume_tier_v1",
+        "status": "seed",
+        "tags": [
+          "full_body",
+          "seed",
+          "volume"
+        ]
+      }
+    ]
   },
   "schema_version": "knowledge-1",
   "source_ids": [],

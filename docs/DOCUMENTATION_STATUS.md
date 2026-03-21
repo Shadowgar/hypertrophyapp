@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-03-20
+Last updated: 2026-03-21
 
 Purpose: this is the canonical documentation index for implementation work. Use it to determine reading order, authority hierarchy, and where a document belongs before adding or moving anything.
 
@@ -45,7 +45,10 @@ These are the first docs to consult for current work:
 Current status:
 
 - `Compiled Knowledge Foundation` is complete.
-- No new implementation milestone is active until explicitly approved.
+- `Diagnostics And Full Body Blueprint Inputs` is complete.
+- `Generated Full Body Template Constructor` is complete.
+- `Generated Full Body Constructor Hardening + Doctrine Coverage Expansion` is complete.
+- `Generated Full Body Runtime Integration` is the active implementation milestone.
 
 ## Supporting Current-State
 
@@ -65,7 +68,7 @@ These help implementation but do not grant authority on their own:
 - `docs/flows/`
 - `docs/process/`
 - `docs/guides/`
-- `docs/plans/` — includes **Today page redesign** design and implementation records (`docs/plans/2026-03-15-today-page-redesign-design.md`, `docs/plans/2026-03-15-today-page-redesign-implementation.md`)
+- `docs/plans/`
 - `docs/redesign/`
 - `docs/ui-parity/`
 - `docs/rules/`
@@ -104,9 +107,20 @@ Top-level `docs/` is allowed to hold the stable product and milestone operating 
 - `docs/CURRENT_STATE.md`
 - `docs/VISION.md`
 - `docs/ARCHITECTURE_ROADMAP.md`
-- `docs/Architecture.md`
-- `docs/Master_Plan.md`
-- `docs/current_state_decision_runtime_map.md`
+
+Current milestone note:
+
+- The active milestone integrates the generated `Full Body` constructor into live runtime behind the current canonical compatibility seam only.
+- `pure_bodybuilding_phase_1_full_body` is a temporary compatibility anchor, not the conceptual long-term generated identity.
+- Runtime trace must clearly separate compatibility identity from actual content origin and include `generated_constructor_applied`.
+- Stable fallback reasons are required:
+  - `bundle_load_failed`
+  - `assessment_validation_failed`
+  - `blueprint_validation_failed`
+  - `constructor_insufficient`
+  - `draft_adaptation_failed`
+  - `unexpected_exception`
+- The milestone must preserve deterministic fallback behavior, anti-copy safeguards, and non-full-body runtime behavior.
 
 Older docs remain useful, but they no longer govern the active milestone unless the new operating-guide docs explicitly defer to them.
 
