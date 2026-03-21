@@ -24,6 +24,7 @@ from app.knowledge_schema import (
     PolicyBundle,
 )
 from importers.exercise_library_foundation import build_exercise_library_foundation, write_exercise_library
+from importers.full_body_structural_doctrine import apply_full_body_required_movement_patterns_rule
 from importers.source_registry_builder import build_source_registry, write_source_registry
 
 
@@ -72,6 +73,32 @@ def _compile_seed_bundle(seed_path: Path, model_type: type[DoctrineBundle] | typ
     return compiled_bundle, _sha256_text(seed_text)
 
 
+def _compile_doctrine_bundle_with_precompile_hooks(
+    *,
+    doctrine_seed_path: Path,
+    source_registry_bundle: Any,
+    exercise_library_bundle: CanonicalExerciseLibraryBundle,
+    program_dir: Path,
+    doctrine_resolutions_path: Path | None,
+    doctrine_unresolved_output_path: Path,
+) -> tuple[DoctrineBundle, str]:
+    seed_text = doctrine_seed_path.read_text(encoding="utf-8")
+    seed_payload = json.loads(seed_text)
+    hydrated_seed_payload, _ = apply_full_body_required_movement_patterns_rule(
+        doctrine_seed_payload=seed_payload,
+        program_dir=program_dir,
+        source_registry_bundle=source_registry_bundle,
+        exercise_library_bundle=exercise_library_bundle,
+        resolutions_path=doctrine_resolutions_path,
+        unresolved_path=doctrine_unresolved_output_path,
+    )
+    seed_model = DoctrineBundle.model_validate(hydrated_seed_payload)
+    compiled_payload = seed_model.model_dump(mode="json")
+    compiled_payload["input_signature"] = _sha256_text(seed_text)
+    compiled_bundle = DoctrineBundle.model_validate(_finalize_payload(compiled_payload))
+    return compiled_bundle, _sha256_text(seed_text)
+
+
 def _validate_doctrine_bundle_against_exercise_library(
     doctrine_bundle: DoctrineBundle,
     exercise_library: CanonicalExerciseLibraryBundle,
@@ -103,6 +130,8 @@ def build_compiled_knowledge(
     doctrine_seed_path: Path,
     policy_seed_path: Path,
     output_dir: Path,
+    doctrine_resolutions_path: Path | None = None,
+    doctrine_unresolved_output_path: Path | None = None,
 ) -> CompiledKnowledgeManifest:
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / "doctrine_bundles").mkdir(parents=True, exist_ok=True)
@@ -123,7 +152,17 @@ def build_compiled_knowledge(
     exercise_library_path = output_dir / "exercise_library.foundation.v1.json"
     write_exercise_library(exercise_library, exercise_library_path)
 
-    doctrine_bundle, doctrine_seed_signature = _compile_seed_bundle(doctrine_seed_path, DoctrineBundle)
+    unresolved_output_path = doctrine_unresolved_output_path or doctrine_seed_path.with_name(
+        doctrine_seed_path.name.replace(".seed.json", ".unresolved.json")
+    )
+    doctrine_bundle, doctrine_seed_signature = _compile_doctrine_bundle_with_precompile_hooks(
+        doctrine_seed_path=doctrine_seed_path,
+        source_registry_bundle=source_registry,
+        exercise_library_bundle=exercise_library,
+        program_dir=onboarding_dir,
+        doctrine_resolutions_path=doctrine_resolutions_path,
+        doctrine_unresolved_output_path=unresolved_output_path,
+    )
     _validate_doctrine_bundle_against_exercise_library(doctrine_bundle, exercise_library)
     doctrine_bundle_path = output_dir / "doctrine_bundles" / f"{doctrine_bundle.bundle_id}.bundle.json"
     _write_json(doctrine_bundle_path, doctrine_bundle.model_dump(mode="json"))
@@ -231,6 +270,16 @@ def main() -> None:
         type=Path,
         default=REPO_ROOT / "knowledge" / "compiled",
     )
+    parser.add_argument(
+        "--doctrine-resolutions",
+        type=Path,
+        default=REPO_ROOT / "knowledge" / "curation" / "doctrine_bundles" / "multi_source_hypertrophy_v1.resolutions.json",
+    )
+    parser.add_argument(
+        "--doctrine-unresolved-output",
+        type=Path,
+        default=REPO_ROOT / "knowledge" / "curation" / "doctrine_bundles" / "multi_source_hypertrophy_v1.unresolved.json",
+    )
     args = parser.parse_args()
 
     manifest = build_compiled_knowledge(
@@ -242,6 +291,8 @@ def main() -> None:
         doctrine_seed_path=args.doctrine_seed,
         policy_seed_path=args.policy_seed,
         output_dir=args.output_dir,
+        doctrine_resolutions_path=args.doctrine_resolutions,
+        doctrine_unresolved_output_path=args.doctrine_unresolved_output,
     )
     print(_safe_relative(args.output_dir / "build_manifest.v1.json", REPO_ROOT))
     for warning in manifest.warnings:

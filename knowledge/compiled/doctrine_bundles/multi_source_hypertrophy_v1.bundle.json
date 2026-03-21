@@ -1,5 +1,5 @@
 {
-  "aggregate_signature": "8cb860b606fa2c4fc1e3e8e6c58bb5885d698f5a7c0bf42f4600dc9f285de2ad",
+  "aggregate_signature": "9b9b86cf35bffac42c6a84b1805a442259ee192dc1a6ec5b42650b28e1de131c",
   "bundle_id": "multi_source_hypertrophy_v1",
   "bundle_version": "0.4.0",
   "input_signature": "933bac5a07b7fc2cbc0243d03827182be336c5606bbe5a5f8579ba14f6f22d36",
@@ -15,7 +15,7 @@
     "technique",
     "volume"
   ],
-  "output_signature": "362e6a0e78578ff6c36049b61e9c58b55e33c042bacaa7a3e08d362615db80f7",
+  "output_signature": "a457bfe176187b9c76d7192cf55d90b8a41aeacf6a254ccf2387842fb9a44f5a",
   "rules_by_module": {
     "adaptation": [],
     "assessment": [
@@ -194,13 +194,123 @@
             }
           ]
         },
-        "provenance": [],
+        "provenance": [
+          {
+            "confidence": 0.99,
+            "curation_status": "curated",
+            "excerpt_hash": null,
+            "note": "payload_path=requirements[squat]; resolution_basis=auto",
+            "section_ref": "requirements[squat]",
+            "source_id": "adaptive_full_body_gold_v0_1",
+            "source_path": "adaptive_full_body_gold_v0_1"
+          },
+          {
+            "confidence": 0.99,
+            "curation_status": "curated",
+            "excerpt_hash": null,
+            "note": "payload_path=requirements[squat]; resolution_basis=auto",
+            "section_ref": "requirements[squat]",
+            "source_id": "pure-bodybuilding-phase-1-full-body-sheet-46f50999",
+            "source_path": "pure-bodybuilding-phase-1-full-body-sheet-46f50999"
+          },
+          {
+            "confidence": 0.99,
+            "curation_status": "curated",
+            "excerpt_hash": null,
+            "note": "payload_path=requirements[hinge]; resolution_basis=auto",
+            "section_ref": "requirements[hinge]",
+            "source_id": "adaptive_full_body_gold_v0_1",
+            "source_path": "adaptive_full_body_gold_v0_1"
+          },
+          {
+            "confidence": 0.99,
+            "curation_status": "curated",
+            "excerpt_hash": null,
+            "note": "payload_path=requirements[hinge]; resolution_basis=auto",
+            "section_ref": "requirements[hinge]",
+            "source_id": "pure-bodybuilding-phase-1-full-body-sheet-46f50999",
+            "source_path": "pure-bodybuilding-phase-1-full-body-sheet-46f50999"
+          },
+          {
+            "confidence": 0.99,
+            "curation_status": "curated",
+            "excerpt_hash": null,
+            "note": "payload_path=requirements[horizontal_press]; resolution_basis=auto",
+            "section_ref": "requirements[horizontal_press]",
+            "source_id": "adaptive_full_body_gold_v0_1",
+            "source_path": "adaptive_full_body_gold_v0_1"
+          },
+          {
+            "confidence": 0.99,
+            "curation_status": "curated",
+            "excerpt_hash": null,
+            "note": "payload_path=requirements[horizontal_press]; resolution_basis=auto",
+            "section_ref": "requirements[horizontal_press]",
+            "source_id": "pure-bodybuilding-phase-1-full-body-sheet-46f50999",
+            "source_path": "pure-bodybuilding-phase-1-full-body-sheet-46f50999"
+          },
+          {
+            "confidence": 0.99,
+            "curation_status": "curated",
+            "excerpt_hash": null,
+            "note": "payload_path=requirements[horizontal_pull]; resolution_basis=auto",
+            "section_ref": "requirements[horizontal_pull]",
+            "source_id": "adaptive_full_body_gold_v0_1",
+            "source_path": "adaptive_full_body_gold_v0_1"
+          },
+          {
+            "confidence": 0.99,
+            "curation_status": "curated",
+            "excerpt_hash": null,
+            "note": "payload_path=requirements[horizontal_pull]; resolution_basis=auto",
+            "section_ref": "requirements[horizontal_pull]",
+            "source_id": "pure-bodybuilding-phase-1-full-body-sheet-46f50999",
+            "source_path": "pure-bodybuilding-phase-1-full-body-sheet-46f50999"
+          },
+          {
+            "confidence": 0.99,
+            "curation_status": "curated",
+            "excerpt_hash": null,
+            "note": "payload_path=requirements[vertical_pull]; resolution_basis=auto",
+            "section_ref": "requirements[vertical_pull]",
+            "source_id": "adaptive_full_body_gold_v0_1",
+            "source_path": "adaptive_full_body_gold_v0_1"
+          },
+          {
+            "confidence": 0.99,
+            "curation_status": "curated",
+            "excerpt_hash": null,
+            "note": "payload_path=requirements[vertical_pull]; resolution_basis=auto",
+            "section_ref": "requirements[vertical_pull]",
+            "source_id": "pure-bodybuilding-phase-1-full-body-sheet-46f50999",
+            "source_path": "pure-bodybuilding-phase-1-full-body-sheet-46f50999"
+          },
+          {
+            "confidence": 0.99,
+            "curation_status": "curated",
+            "excerpt_hash": null,
+            "note": "payload_path=requirements[vertical_press]; resolution_basis=auto",
+            "section_ref": "requirements[vertical_press]",
+            "source_id": "adaptive_full_body_gold_v0_1",
+            "source_path": "adaptive_full_body_gold_v0_1"
+          },
+          {
+            "confidence": 0.99,
+            "curation_status": "curated",
+            "excerpt_hash": null,
+            "note": "payload_path=requirements[vertical_press]; resolution_basis=auto",
+            "section_ref": "requirements[vertical_press]",
+            "source_id": "pure-bodybuilding-phase-1-full-body-sheet-46f50999",
+            "source_path": "pure-bodybuilding-phase-1-full-body-sheet-46f50999"
+          }
+        ],
         "rule_id": "full_body_required_movement_patterns_v1",
-        "status": "seed",
+        "status": "curated",
         "tags": [
+          "coverage",
+          "curated",
           "exercise_selection",
-          "full_body",
-          "seed"
+          "full_body"
         ]
       },
       {

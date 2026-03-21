@@ -65,6 +65,13 @@ def test_source_to_knowledge_pipeline_writes_expected_artifacts(tmp_path: Path) 
     )
 
     output_dir = tmp_path / "knowledge" / "compiled"
+    doctrine_resolutions_path = tmp_path / "knowledge" / "curation" / "doctrine_bundles" / "multi_source_hypertrophy_v1.resolutions.json"
+    doctrine_resolutions_path.parent.mkdir(parents=True, exist_ok=True)
+    doctrine_resolutions_path.write_text(
+        json.dumps({"bundle_id": "multi_source_hypertrophy_v1", "version": "0.1.0", "resolutions": []}, indent=2),
+        encoding="utf-8",
+    )
+    doctrine_unresolved_path = tmp_path / "knowledge" / "curation" / "doctrine_bundles" / "multi_source_hypertrophy_v1.unresolved.json"
     manifest = build_compiled_knowledge(
         asset_catalog_path=asset_catalog_path,
         provenance_index_path=provenance_index_path,
@@ -74,6 +81,8 @@ def test_source_to_knowledge_pipeline_writes_expected_artifacts(tmp_path: Path) 
         doctrine_seed_path=REPO_ROOT / "knowledge" / "curation" / "doctrine_bundles" / "multi_source_hypertrophy_v1.seed.json",
         policy_seed_path=REPO_ROOT / "knowledge" / "curation" / "policy_bundles" / "system_coaching_policy_v1.seed.json",
         output_dir=output_dir,
+        doctrine_resolutions_path=doctrine_resolutions_path,
+        doctrine_unresolved_output_path=doctrine_unresolved_path,
     )
 
     assert manifest.bundle_id == "build_manifest"
@@ -83,6 +92,7 @@ def test_source_to_knowledge_pipeline_writes_expected_artifacts(tmp_path: Path) 
     assert (output_dir / "doctrine_bundles" / "multi_source_hypertrophy_v1.bundle.json").exists()
     assert (output_dir / "policy_bundles" / "system_coaching_policy_v1.bundle.json").exists()
     assert (output_dir / "build_manifest.v1.json").exists()
+    assert doctrine_unresolved_path.exists()
 
     policy_payload = json.loads(
         (output_dir / "policy_bundles" / "system_coaching_policy_v1.bundle.json").read_text(encoding="utf-8")
@@ -137,6 +147,14 @@ def test_source_to_knowledge_pipeline_writes_expected_artifacts(tmp_path: Path) 
         for module_rules in doctrine_payload["rules_by_module"].values()
         for rule in module_rules
     }
+    required_rule = next(
+        rule
+        for module_rules in doctrine_payload["rules_by_module"].values()
+        for rule in module_rules
+        if rule["rule_id"] == "full_body_required_movement_patterns_v1"
+    )
+    assert required_rule["status"] == "curated"
+    assert required_rule["provenance"]
     assert {
         "respect_session_time_budget",
         "do_not_replay_single_authored_layout",
@@ -205,5 +223,7 @@ def test_source_to_knowledge_pipeline_writes_expected_artifacts(tmp_path: Path) 
         doctrine_seed_path=REPO_ROOT / "knowledge" / "curation" / "doctrine_bundles" / "multi_source_hypertrophy_v1.seed.json",
         policy_seed_path=REPO_ROOT / "knowledge" / "curation" / "policy_bundles" / "system_coaching_policy_v1.seed.json",
         output_dir=output_dir,
+        doctrine_resolutions_path=doctrine_resolutions_path,
+        doctrine_unresolved_output_path=doctrine_unresolved_path,
     )
     assert manifest.model_dump(mode="json") == second.model_dump(mode="json")

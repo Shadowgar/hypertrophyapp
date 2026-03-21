@@ -1,5 +1,5 @@
 {
-  "aggregate_signature": "30cba805b372bff209d25ba971a21959d0953ba03b4d63d6a4a510e00a338e47",
+  "aggregate_signature": "860139c575fd5ec33964dd869020b2272a6fd4550cc1c0900bade416d0457918",
   "artifacts": [
     {
       "artifact_id": "exercise_library_foundation",
@@ -12,7 +12,7 @@
       "artifact_id": "multi_source_hypertrophy_v1",
       "artifact_type": "doctrine_bundle",
       "input_signature": "933bac5a07b7fc2cbc0243d03827182be336c5606bbe5a5f8579ba14f6f22d36",
-      "output_signature": "362e6a0e78578ff6c36049b61e9c58b55e33c042bacaa7a3e08d362615db80f7",
+      "output_signature": "a457bfe176187b9c76d7192cf55d90b8a41aeacf6a254ccf2387842fb9a44f5a",
       "path": "knowledge/compiled/doctrine_bundles/multi_source_hypertrophy_v1.bundle.json"
     },
     {
@@ -33,7 +33,7 @@
   "bundle_id": "build_manifest",
   "bundle_version": "0.1.0",
   "input_signature": "850175e487b381b6d056ff7ca92866c8e78c76a93f2953aa859e4a908bb8b5aa",
-  "output_signature": "e2a15942113f98d72d428891ffbd45c27e09e1d28bd4ade3fad4e65d16fdd8f5",
+  "output_signature": "33b6758b6c7cd5ff3d4bfd412eaa4fca2f3cfc4e6e2b3bdb2f04b08b1ae50c04",
   "schema_version": "knowledge-1",
   "warnings": [
     "Skipped placeholder exercise from pure_bodybuilding_phase_1_full_body: weak_point_exercise_1",
