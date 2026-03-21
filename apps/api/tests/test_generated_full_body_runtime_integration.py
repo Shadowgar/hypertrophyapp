@@ -88,24 +88,25 @@ def _seed_prior_generated_plan_and_checkin(
     sleep_quality: int | None,
     stress_level: int | None,
     pain_flags: list[str] | None = None,
+    prior_generated_weeks: int = 1,
 ) -> date:
     current_monday = _current_monday()
-    previous_monday = current_monday - timedelta(days=7)
     with SessionLocal() as session:
         user = session.query(User).filter(User.email == user_email).first()
         assert user is not None
-        session.add(
-            WorkoutPlan(
-                user_id=user.id,
-                week_start=previous_monday,
-                split="full_body",
-                phase="maintenance",
-                payload={
-                    "program_template_id": CANONICAL_PROGRAM_ID,
-                    "sessions": [],
-                },
+        for week_offset in range(1, max(1, prior_generated_weeks) + 1):
+            session.add(
+                WorkoutPlan(
+                    user_id=user.id,
+                    week_start=current_monday - timedelta(days=7 * week_offset),
+                    split="full_body",
+                    phase="maintenance",
+                    payload={
+                        "program_template_id": CANONICAL_PROGRAM_ID,
+                        "sessions": [],
+                    },
+                )
             )
-        )
         session.add(
             WeeklyCheckin(
                 user_id=user.id,
@@ -387,6 +388,7 @@ def test_generate_week_applies_generated_adaptive_loop_when_no_explicit_review_e
         sleep_quality=1,
         stress_level=5,
         pain_flags=["shoulder"],
+        prior_generated_weeks=3,
     )
 
     response = client.post("/plan/generate-week", headers=headers, json={})
@@ -406,6 +408,12 @@ def test_generate_week_applies_generated_adaptive_loop_when_no_explicit_review_e
     assert payload["adaptive_review"]["decision_trace"]["effect"]["selected_target_ids"]
     assert payload["decision_trace"]["outcome"]["generated_adaptation_applied"] is True
     assert payload["template_selection_trace"]["generated_full_body_runtime_trace"]["generated_constructor_applied"] is True
+    block_review_step = next(step for step in payload["decision_trace"]["execution_steps"] if step["step"] == "block_review")
+    assert block_review_step["result"]["trend_summary"]
+    assert block_review_step["result"]["outcome"]["block_classification"] == "fatigued"
+    assert block_review_step["result"]["outcome"]["block_decision"] == "recovery_pivot_next_week"
+    assert block_review_step["result"]["interaction_with_weekly_loop"]["weekly_adaptive_primary_axis"] == "volume"
+    assert block_review_step["result"]["interaction_with_weekly_loop"]["weekly_adaptive_axis_direction"] == "decrease"
     exercise_ids = {
         exercise["primary_exercise_id"]
         for session in payload["sessions"]
@@ -419,6 +427,11 @@ def test_generate_week_applies_generated_adaptive_loop_when_no_explicit_review_e
         item["exercise_id"] for item in payload["adaptive_review"]["decision_trace"]["held_targets"]
     }
     assert traced_ids <= exercise_ids
+    assert exercise_ids == {
+        exercise["primary_exercise_id"]
+        for session in payload["sessions"]
+        for exercise in session["exercises"]
+    }
 
 
 def test_generate_week_explicit_weekly_review_suppresses_generated_adaptive_loop() -> None:
@@ -446,6 +459,7 @@ def test_generate_week_explicit_weekly_review_suppresses_generated_adaptive_loop
         sleep_quality=1,
         stress_level=5,
         pain_flags=["shoulder"],
+        prior_generated_weeks=3,
     )
     _seed_same_week_review(user_email=email, week_start=week_start)
 
@@ -455,6 +469,8 @@ def test_generate_week_explicit_weekly_review_suppresses_generated_adaptive_loop
 
     assert payload["adaptive_review"]["source"] == "weekly_review"
     assert payload["adaptive_review"]["decision_trace"]["interpreter"] == "interpret_weekly_review_decision"
+    block_review_step = next(step for step in payload["decision_trace"]["execution_steps"] if step["step"] == "block_review")
+    assert block_review_step["result"]["outcome"]["reason"] == "explicit_review_precedence"
     generated_step = next(
         step for step in payload["decision_trace"]["execution_steps"] if step["step"] == "generated_adaptation"
     )

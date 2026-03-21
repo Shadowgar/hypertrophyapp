@@ -422,3 +422,96 @@ def test_generated_full_body_adaptation_preserves_exercise_identity_and_trace_sh
     assert trace["selected_targets"]
     assert trace["held_targets"]
     assert trace["hold_reasons"]
+
+
+def test_generated_full_body_adaptation_respects_block_review_gate_without_creating_hidden_axis_mix() -> None:
+    decision = recommend_generated_full_body_adaptation(
+        plan_payload=_plan(),
+        selected_template_id="pure_bodybuilding_phase_1_full_body",
+        template_selection_trace=_template_trace(),
+        training_state=_training_state(
+            adherence_score=5,
+            stimulus_quality="high",
+            fatigue_cost="low",
+            recoverability="high",
+            progression_eligibility=True,
+            deload_pressure="low",
+            pain_flags=[],
+            progression_entries=[
+                {
+                    "exercise_id": "bench",
+                    "exposure_count": 3,
+                    "consecutive_under_target_exposures": 0,
+                    "fatigue_score": 0.2,
+                }
+            ],
+        ),
+        generation_runtime=_generation_runtime(),
+        adaptive_policy=_POLICY,
+        block_review_gate={
+            "restricted_axis_tokens": ["volume_increase", "load_increase", "weak_point_increase"],
+            "allowed_axis_tokens": [],
+            "reset_adaptive_persistence_context": False,
+        },
+        review_adjustments_present=False,
+    )
+
+    assert decision["status"] == "hold"
+    assert decision["decision_trace"]["outcome"]["reason"] == "block_review_restricted_all_candidate_axes"
+    candidate_step = next(step for step in decision["decision_trace"]["steps"] if step["decision"] == "candidate_axis_selection")
+    assert candidate_step["result"]["blocked_candidates"] == [
+        {
+            "axis_token": "load_increase",
+            "primary_axis": "load",
+            "axis_direction": "increase",
+            "reasons": ["exact_match_progression_ready"],
+            "blocked_reason": "blocked_by_block_review",
+        }
+    ]
+
+
+def test_generated_full_body_adaptation_resets_persistence_when_block_review_requests_block_reset() -> None:
+    decision = recommend_generated_full_body_adaptation(
+        plan_payload=_plan(),
+        selected_template_id="pure_bodybuilding_phase_1_full_body",
+        template_selection_trace=_template_trace(),
+        training_state=_training_state(
+            adherence_score=5,
+            stimulus_quality="high",
+            fatigue_cost="low",
+            recoverability="high",
+            progression_eligibility=True,
+            deload_pressure="low",
+            pain_flags=[],
+            progression_entries=[
+                {
+                    "exercise_id": "bench",
+                    "exposure_count": 3,
+                    "consecutive_under_target_exposures": 0,
+                    "fatigue_score": 0.2,
+                }
+            ],
+        ),
+        generation_runtime=_generation_runtime(
+            adaptation_history={
+                "last_primary_axis": "volume",
+                "last_axis_direction": "decrease",
+                "last_streak_weeks": 1,
+                "last_week_start": "2026-03-16",
+                "last_selected_target_ids": ["row"],
+            }
+        ),
+        adaptive_policy=_POLICY,
+        block_review_gate={
+            "restricted_axis_tokens": [],
+            "allowed_axis_tokens": [],
+            "reset_adaptive_persistence_context": True,
+        },
+        review_adjustments_present=False,
+    )
+
+    assert decision["status"] == "apply"
+    assert decision["decision_trace"]["outcome"]["primary_axis"] == "load"
+    assert decision["decision_trace"]["outcome"]["axis_direction"] == "increase"
+    assert decision["decision_trace"]["outcome"]["reset_adaptive_persistence_context"] is True
+    assert decision["decision_trace"]["outcome"]["persisted_from_prior_week"] is False

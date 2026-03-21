@@ -42,6 +42,10 @@ def _coerce_dict(value: Any) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
 
 
+def _coerce_list(value: Any) -> list[Any]:
+    return value if isinstance(value, list) else []
+
+
 def _coerce_string_map(value: Any) -> dict[str, str]:
     if not isinstance(value, dict):
         return {}
@@ -717,6 +721,99 @@ def _resolve_generated_adaptation_history(
     }
 
 
+def _extract_generation_execution_step(payload_data: dict[str, Any], step_name: str) -> dict[str, Any]:
+    decision_trace = _coerce_dict(payload_data.get("decision_trace"))
+    for step in _coerce_list(decision_trace.get("execution_steps")):
+        step_payload = _coerce_dict(step)
+        if str(step_payload.get("step") or "").strip() != step_name:
+            continue
+        return _coerce_dict(step_payload.get("result"))
+    return {}
+
+
+def _resolve_generated_block_review_history(
+    *,
+    selected_template_id: str,
+    prior_plans: list[Any],
+) -> dict[str, Any]:
+    entries: list[dict[str, Any]] = []
+    for existing_plan in prior_plans:
+        payload_data = _read_attr(existing_plan, "payload")
+        payload_data = payload_data if isinstance(payload_data, dict) else {}
+        week_start = _read_attr(existing_plan, "week_start")
+        week_key = _plan_matches_selected_template(
+            selected_template_id=selected_template_id,
+            payload_data=payload_data,
+            week_start=week_start,
+        )
+        if not week_key:
+            continue
+
+        adaptive_review = _coerce_dict(payload_data.get("adaptive_review"))
+        generated_adaptation_step = _extract_generation_execution_step(payload_data, "generated_adaptation")
+        generated_adaptation_outcome = _coerce_dict(generated_adaptation_step.get("outcome"))
+        block_review_step = _extract_generation_execution_step(payload_data, "block_review")
+        block_review_outcome = _coerce_dict(block_review_step.get("outcome"))
+        mesocycle = _coerce_dict(payload_data.get("mesocycle"))
+
+        adaptive_status = str(generated_adaptation_outcome.get("status") or "").strip()
+        if not adaptive_status and str(adaptive_review.get("source") or "").strip() == "generated_full_body_adaptive_loop_v1":
+            adaptive_status = "apply"
+
+        entries.append(
+            {
+                "week_start": week_key,
+                "adaptive_status": adaptive_status or None,
+                "primary_axis": (
+                    str(generated_adaptation_outcome.get("primary_axis") or adaptive_review.get("primary_axis") or "").strip()
+                    or None
+                ),
+                "axis_direction": (
+                    str(
+                        generated_adaptation_outcome.get("axis_direction") or adaptive_review.get("axis_direction") or ""
+                    ).strip()
+                    or None
+                ),
+                "block_classification": (
+                    str(block_review_outcome.get("block_classification") or "").strip() or None
+                ),
+                "block_decision": (str(block_review_outcome.get("block_decision") or "").strip() or None),
+                "deload_active": bool(mesocycle.get("is_deload_week")),
+                "mesocycle_week_index": (
+                    int(mesocycle.get("week_index"))
+                    if isinstance(mesocycle.get("week_index"), int | float) or str(mesocycle.get("week_index") or "").isdigit()
+                    else None
+                ),
+            }
+        )
+
+    entries.sort(key=lambda item: str(item["week_start"]), reverse=True)
+    recent_entries = entries[:4]
+    return {
+        "recent_entries": recent_entries,
+        "recent_entry_count": len(recent_entries),
+        "recent_hold_count": sum(1 for entry in recent_entries if entry.get("adaptive_status") == "hold"),
+        "recent_down_axis_count": sum(
+            1 for entry in recent_entries if entry.get("adaptive_status") == "apply" and entry.get("axis_direction") == "decrease"
+        ),
+        "recent_up_axis_count": sum(
+            1 for entry in recent_entries if entry.get("adaptive_status") == "apply" and entry.get("axis_direction") == "increase"
+        ),
+        "recent_conservative_decision_count": sum(
+            1 for entry in recent_entries if entry.get("block_decision") == "continue_block_conservative"
+        ),
+        "recent_recovery_pivot_count": sum(
+            1 for entry in recent_entries if entry.get("block_decision") == "recovery_pivot_next_week"
+        ),
+        "recent_reset_count": sum(
+            1 for entry in recent_entries if entry.get("block_decision") == "block_reset_next_week"
+        ),
+        "last_block_classification": recent_entries[0].get("block_classification") if recent_entries else None,
+        "last_block_decision": recent_entries[0].get("block_decision") if recent_entries else None,
+        "last_week_start": recent_entries[0].get("week_start") if recent_entries else None,
+    }
+
+
 def _resolve_generation_history(
     *,
     normalized_training_state: dict[str, Any],
@@ -978,6 +1075,10 @@ def resolve_week_generation_runtime_inputs(
         selected_template_id=selected_template_id,
         prior_plans=prior_plans,
     )
+    generated_block_review_history = _resolve_generated_block_review_history(
+        selected_template_id=selected_template_id,
+        prior_plans=prior_plans,
+    )
 
     return {
         "effective_days_available": int(effective_days_available),
@@ -1006,6 +1107,7 @@ def resolve_week_generation_runtime_inputs(
         "progression_state_per_exercise": list(normalized_training_state.get("progression_state_per_exercise") or []),
         "stimulus_fatigue_response": stimulus_fatigue_response,
         "generated_adaptation_history": generated_adaptation_history,
+        "generated_block_review_history": generated_block_review_history,
         "decision_trace": {
             "interpreter": "resolve_week_generation_runtime_inputs",
             "version": "v1",
@@ -1073,6 +1175,10 @@ def resolve_week_generation_runtime_inputs(
                     "decision": "generated_adaptation_history",
                     "result": generated_adaptation_history,
                 },
+                {
+                    "decision": "generated_block_review_history",
+                    "result": generated_block_review_history,
+                },
             ],
             "outcome": {
                 "effective_days_available": int(effective_days_available),
@@ -1089,6 +1195,7 @@ def resolve_week_generation_runtime_inputs(
                 "stimulus_fatigue_response_source": str(sfr_trace.get("source") or ""),
                 "stimulus_fatigue_response": stimulus_fatigue_response,
                 "generated_adaptation_history": generated_adaptation_history,
+                "generated_block_review_history": generated_block_review_history,
             },
         },
     }

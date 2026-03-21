@@ -308,6 +308,32 @@ class GeneratedFullBodyAdaptiveLoopPolicy(BaseModel):
         return _unique_preserve_order(value)
 
 
+class GeneratedFullBodyBlockReviewPolicy(BaseModel):
+    policy_id: str = Field(min_length=1)
+    status: BundleStatus = "seed"
+    program_scope: list[str] = Field(default_factory=list)
+    explicit_review_precedence: bool = True
+    require_generated_constructor_output: bool = True
+    minimum_generated_weeks_for_block_review: int = Field(ge=0)
+    minimum_review_window_weeks: int = Field(ge=1)
+    stalled_block_underperformance_threshold: int = Field(ge=1)
+    fatigued_block_recovery_threshold: int = Field(ge=1)
+    continue_block_conservative_restrict_up_axes: list[str] = Field(default_factory=list)
+    recovery_pivot_restricted_axes: list[str] = Field(default_factory=list)
+    block_reset_resets_adaptive_persistence: bool = True
+    rationale: str = Field(min_length=1)
+
+    @field_validator("program_scope")
+    @classmethod
+    def validate_program_scope(cls, value: list[str]) -> list[str]:
+        return _unique_preserve_order(value)
+
+    @field_validator("continue_block_conservative_restrict_up_axes", "recovery_pivot_restricted_axes")
+    @classmethod
+    def validate_axis_tokens(cls, value: list[str]) -> list[str]:
+        return _unique_preserve_order(value)
+
+
 class PolicyBundle(BaseModel):
     schema_version: str = Field(min_length=1)
     bundle_id: str = Field(min_length=1)
@@ -323,6 +349,7 @@ class PolicyBundle(BaseModel):
     anti_overadaptation_policy: AntiOveradaptationPolicy
     data_sufficiency_policy: DataSufficiencyPolicy
     generated_full_body_adaptive_loop_policy: GeneratedFullBodyAdaptiveLoopPolicy | None = None
+    generated_full_body_block_review_policy: GeneratedFullBodyBlockReviewPolicy | None = None
 
     @field_validator("hard_constraints")
     @classmethod

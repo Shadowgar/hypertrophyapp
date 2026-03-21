@@ -1,5 +1,5 @@
 {
-  "aggregate_signature": "651704fd49bc51f0bccbe04558067d035fc7ae7f4c24119a04b3f8c892beb2fb",
+  "aggregate_signature": "30cba805b372bff209d25ba971a21959d0953ba03b4d63d6a4a510e00a338e47",
   "artifacts": [
     {
       "artifact_id": "exercise_library_foundation",
@@ -25,15 +25,15 @@
     {
       "artifact_id": "system_coaching_policy_v1",
       "artifact_type": "policy_bundle",
-      "input_signature": "dadda72411334e278e1ce131a5bdcd9ddcbf5e1d88fdade06abd175d6e0b92ae",
-      "output_signature": "3929c496131d990066edf2f83a0ff9cc80710eca57b75e694b3336898fd58166",
+      "input_signature": "158fb6253f1f47570b6b55220ac43f4da05c1e9462a0f7f1546431ce3aa825e8",
+      "output_signature": "16b7ecdfc640430849d973a2eee82f795d6d4109f1ac3a981ddb1b67f2ff8488",
       "path": "knowledge/compiled/policy_bundles/system_coaching_policy_v1.bundle.json"
     }
   ],
   "bundle_id": "build_manifest",
   "bundle_version": "0.1.0",
-  "input_signature": "7de6813ee44736eabb1423cda795c9d2f440581c1ea8246a2da6d7559530b010",
-  "output_signature": "90d58c7592015e8d4da12f05f9ccbea2fa7f79093e677f1653da66f1b3dc946f",
+  "input_signature": "850175e487b381b6d056ff7ca92866c8e78c76a93f2953aa859e4a908bb8b5aa",
+  "output_signature": "e2a15942113f98d72d428891ffbd45c27e09e1d28bd4ade3fad4e65d16fdd8f5",
   "schema_version": "knowledge-1",
   "warnings": [
     "Skipped placeholder exercise from pure_bodybuilding_phase_1_full_body: weak_point_exercise_1",

@@ -135,5 +135,30 @@
     "weak_point_set_delta": 1,
     "weak_point_max_boosted_exercises": 2,
     "rationale": "Generated Full Body adaptive changes must stay single-axis, deterministic, and stable across at least two consecutive generated weeks unless strong opposing signals justify reversal."
+  },
+  "generated_full_body_block_review_policy": {
+    "policy_id": "generated_full_body_block_review_v1",
+    "status": "seed",
+    "program_scope": [
+      "pure_bodybuilding_phase_1_full_body"
+    ],
+    "explicit_review_precedence": true,
+    "require_generated_constructor_output": true,
+    "minimum_generated_weeks_for_block_review": 3,
+    "minimum_review_window_weeks": 3,
+    "stalled_block_underperformance_threshold": 2,
+    "fatigued_block_recovery_threshold": 2,
+    "continue_block_conservative_restrict_up_axes": [
+      "volume_increase",
+      "load_increase",
+      "weak_point_increase"
+    ],
+    "recovery_pivot_restricted_axes": [
+      "volume_increase",
+      "load_increase",
+      "weak_point_increase"
+    ],
+    "block_reset_resets_adaptive_persistence": true,
+    "rationale": "Generated Full Body block review must classify recent multi-week trend state and gate the weekly adaptive loop without directly assigning axes or modifying exercises."
   }
 }

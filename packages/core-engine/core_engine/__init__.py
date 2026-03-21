@@ -78,6 +78,7 @@ from .decision_generated_full_body_adaptation import (
     apply_generated_full_body_adaptation_to_plan,
     recommend_generated_full_body_adaptation,
 )
+from .decision_generated_full_body_block_review import recommend_generated_full_body_block_review
 from .decision_program_recommendation import (
     build_program_recommendation_payload,
     build_program_switch_payload,
@@ -243,6 +244,7 @@ __all__ = [
     "resolve_program_guide_summary",
     "resolve_week_generation_runtime_inputs",
     "serialize_recent_training_history",
+    "recommend_generated_full_body_block_review",
     "recommend_generated_full_body_adaptation",
     "apply_generated_full_body_adaptation_to_plan",
     "summarize_generation_template_viability",

@@ -1,5 +1,5 @@
 {
-  "aggregate_signature": "06a4ed54df8c39cf4dae0765ec2ec7048f49d5b1645f79a568bb09a59fe60c9e",
+  "aggregate_signature": "0b0d0555c339c483de19ff25aa4efc387b169e9d59959158813b3a1060e8e9a5",
   "anti_overadaptation_policy": {
     "major_change_cooldown_days": 7,
     "max_major_changes_per_mesocycle": 2,
@@ -60,6 +60,31 @@
     "weak_point_max_boosted_exercises": 2,
     "weak_point_set_delta": 1
   },
+  "generated_full_body_block_review_policy": {
+    "block_reset_resets_adaptive_persistence": true,
+    "continue_block_conservative_restrict_up_axes": [
+      "volume_increase",
+      "load_increase",
+      "weak_point_increase"
+    ],
+    "explicit_review_precedence": true,
+    "fatigued_block_recovery_threshold": 2,
+    "minimum_generated_weeks_for_block_review": 3,
+    "minimum_review_window_weeks": 3,
+    "policy_id": "generated_full_body_block_review_v1",
+    "program_scope": [
+      "pure_bodybuilding_phase_1_full_body"
+    ],
+    "rationale": "Generated Full Body block review must classify recent multi-week trend state and gate the weekly adaptive loop without directly assigning axes or modifying exercises.",
+    "recovery_pivot_restricted_axes": [
+      "volume_increase",
+      "load_increase",
+      "weak_point_increase"
+    ],
+    "require_generated_constructor_output": true,
+    "stalled_block_underperformance_threshold": 2,
+    "status": "seed"
+  },
   "hard_constraints": [
     {
       "constraint_id": "respect_movement_restrictions",
@@ -82,7 +107,7 @@
       "rationale": "Generated output must remain original and doctrine-driven."
     }
   ],
-  "input_signature": "dadda72411334e278e1ce131a5bdcd9ddcbf5e1d88fdade06abd175d6e0b92ae",
+  "input_signature": "158fb6253f1f47570b6b55220ac43f4da05c1e9462a0f7f1546431ce3aa825e8",
   "minimum_viable_program_policy": {
     "fallback_order": [
       "reduce_exercise_variety",
@@ -95,7 +120,7 @@
     "rationale": "If ideal programming is not possible, the system must degrade to a safe and executable minimum viable program.",
     "status": "seed"
   },
-  "output_signature": "3929c496131d990066edf2f83a0ff9cc80710eca57b75e694b3336898fd58166",
+  "output_signature": "16b7ecdfc640430849d973a2eee82f795d6d4109f1ac3a981ddb1b67f2ff8488",
   "schema_version": "knowledge-1",
   "soft_preferences": [
     {

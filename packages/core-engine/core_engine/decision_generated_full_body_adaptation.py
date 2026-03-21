@@ -24,6 +24,10 @@ def _coerce_string_list(value: Any) -> list[str]:
     return [str(item).strip() for item in value if str(item).strip()]
 
 
+def _axis_token(axis: str, direction: str) -> str:
+    return f"{str(axis).strip()}_{str(direction).strip()}"
+
+
 def _resolve_adaptive_axis_from_plan(payload: dict[str, Any]) -> tuple[str | None, str | None]:
     adaptive_review = _coerce_dict(payload.get("adaptive_review"))
     if str(adaptive_review.get("source") or "").strip() != GENERATED_FULL_BODY_ADAPTIVE_REVIEW_SOURCE:
@@ -572,6 +576,7 @@ def recommend_generated_full_body_adaptation(
     training_state: dict[str, Any] | None,
     generation_runtime: dict[str, Any] | None,
     adaptive_policy: dict[str, Any] | None,
+    block_review_gate: dict[str, Any] | None = None,
     review_adjustments_present: bool,
 ) -> dict[str, Any]:
     normalized_policy = _coerce_dict(adaptive_policy)
@@ -590,10 +595,11 @@ def recommend_generated_full_body_adaptation(
     stimulus_fatigue_response = _coerce_dict(normalized_training_state.get("stimulus_fatigue_response"))
     history = _coerce_list(normalized_generation_runtime.get("history"))
     adaptation_history = _coerce_dict(normalized_generation_runtime.get("generated_adaptation_history"))
+    normalized_block_review_gate = _coerce_dict(block_review_gate)
 
     decision_trace: dict[str, Any] = {
         "interpreter": "recommend_generated_full_body_adaptation",
-        "version": "v1.5",
+        "version": "v1.6",
         "inputs": {
             "selected_template_id": selected_template_id,
             "review_adjustments_present": bool(review_adjustments_present),
@@ -604,6 +610,7 @@ def recommend_generated_full_body_adaptation(
             "latest_adherence_score": adherence_state.get("latest_adherence_score"),
             "stimulus_fatigue_response": deepcopy(stimulus_fatigue_response),
             "adaptation_history": deepcopy(adaptation_history),
+            "block_review_gate": deepcopy(normalized_block_review_gate),
         },
         "steps": [],
         "outcome": {},
@@ -696,30 +703,77 @@ def recommend_generated_full_body_adaptation(
         if progression_eligibility and fatigue_score < 0.7:
             load_up_ids.append(str(match["exercise_id"]))
 
-    candidate_axis: str | None = None
-    axis_direction: str | None = None
-
+    candidate_options: list[dict[str, Any]] = []
     if has_safety_pressure:
-        candidate_axis = "volume"
-        axis_direction = "decrease"
-    elif load_down_ids:
-        candidate_axis = "load"
-        axis_direction = "decrease"
-    elif load_up_ids:
-        candidate_axis = "load"
-        axis_direction = "increase"
-    elif weak_point_exercise_ids and recoverability in {"high", "moderate"} and deload_pressure == "low":
-        candidate_axis = "weak_point"
-        axis_direction = "increase"
-    elif (
+        candidate_options.append(
+            {"axis": "volume", "direction": "decrease", "reasons": ["recovery_pressure"], "candidate_ids": []}
+        )
+    if load_down_ids:
+        candidate_options.append(
+            {
+                "axis": "load",
+                "direction": "decrease",
+                "reasons": ["exact_match_underperformance"],
+                "candidate_ids": list(load_down_ids),
+            }
+        )
+    if load_up_ids:
+        candidate_options.append(
+            {
+                "axis": "load",
+                "direction": "increase",
+                "reasons": ["exact_match_progression_ready"],
+                "candidate_ids": list(load_up_ids),
+            }
+        )
+    if weak_point_exercise_ids and recoverability in {"high", "moderate"} and deload_pressure == "low":
+        candidate_options.append(
+            {
+                "axis": "weak_point",
+                "direction": "increase",
+                "reasons": ["existing_weak_point_focus_match"],
+                "candidate_ids": list(weak_point_exercise_ids),
+            }
+        )
+    if (
         stimulus_quality == "low"
         and fatigue_cost == "low"
         and recoverability == "high"
         and (latest_adherence_score is not None and latest_adherence_score >= 4)
         and not pain_flags
     ):
-        candidate_axis = "volume"
-        axis_direction = "increase"
+        candidate_options.append(
+            {"axis": "volume", "direction": "increase", "reasons": ["low_stimulus_high_recoverability"], "candidate_ids": []}
+        )
+
+    allowed_axis_tokens = set(_coerce_string_list(normalized_block_review_gate.get("allowed_axis_tokens")))
+    restricted_axis_tokens = set(_coerce_string_list(normalized_block_review_gate.get("restricted_axis_tokens")))
+    blocked_candidates: list[dict[str, Any]] = []
+    candidate_axis: str | None = None
+    axis_direction: str | None = None
+    for option in candidate_options:
+        option_axis = str(option["axis"])
+        option_direction = str(option["direction"])
+        axis_token = _axis_token(option_axis, option_direction)
+        blocked_reason: str | None = None
+        if allowed_axis_tokens and axis_token not in allowed_axis_tokens:
+            blocked_reason = "not_in_allowed_axis_space"
+        elif axis_token in restricted_axis_tokens:
+            blocked_reason = "blocked_by_block_review"
+        if blocked_reason:
+            blocked_candidates.append(
+                {
+                    "axis_token": axis_token,
+                    "primary_axis": option_axis,
+                    "axis_direction": option_direction,
+                    "reasons": list(option.get("reasons") or []),
+                    "blocked_reason": blocked_reason,
+                }
+            )
+            continue
+        candidate_axis = option_axis
+        axis_direction = option_direction
+        break
 
     decision_trace["steps"].append(
         {
@@ -727,6 +781,24 @@ def recommend_generated_full_body_adaptation(
             "result": {
                 "candidate_axis": candidate_axis,
                 "axis_direction": axis_direction,
+                "candidate_options": [
+                    {
+                        "axis_token": _axis_token(str(option["axis"]), str(option["direction"])),
+                        "primary_axis": str(option["axis"]),
+                        "axis_direction": str(option["direction"]),
+                        "reasons": list(option.get("reasons") or []),
+                        "candidate_ids": list(option.get("candidate_ids") or []),
+                    }
+                    for option in candidate_options
+                ],
+                "blocked_candidates": deepcopy(blocked_candidates),
+                "block_review_gate": {
+                    "allowed_axis_tokens": sorted(allowed_axis_tokens),
+                    "restricted_axis_tokens": sorted(restricted_axis_tokens),
+                    "reset_adaptive_persistence_context": bool(
+                        normalized_block_review_gate.get("reset_adaptive_persistence_context")
+                    ),
+                },
                 "load_up_ids": load_up_ids,
                 "load_down_ids": load_down_ids,
                 "weak_point_exercises": weak_point_exercise_ids,
@@ -735,8 +807,15 @@ def recommend_generated_full_body_adaptation(
     )
 
     if candidate_axis is None or axis_direction is None:
-        decision_trace["outcome"] = {"status": "hold", "reason": "no_adaptive_axis_triggered"}
+        decision_trace["outcome"] = {
+            "status": "hold",
+            "reason": "block_review_restricted_all_candidate_axes" if blocked_candidates else "no_adaptive_axis_triggered",
+            "blocked_candidates": deepcopy(blocked_candidates),
+        }
         return {"status": "hold", "adjustments": None, "decision_trace": decision_trace}
+
+    if bool(normalized_block_review_gate.get("reset_adaptive_persistence_context")):
+        adaptation_history = {}
 
     stability = _build_history_stability(adaptation_history)
     previous_axis = stability["last_primary_axis"]
@@ -780,6 +859,7 @@ def recommend_generated_full_body_adaptation(
         "previous_direction": previous_direction,
         "previous_streak_weeks": previous_streak,
         "minimum_axis_persistence_weeks": minimum_persist_weeks,
+        "reset_adaptive_persistence_context": bool(normalized_block_review_gate.get("reset_adaptive_persistence_context")),
         "persisted_from_prior_week": persisted_from_prior_week,
         "reversal_applied": reversal_applied,
         "reversal_reason": reversal_reason,
@@ -851,7 +931,7 @@ def recommend_generated_full_body_adaptation(
         "exercise_overrides": exercise_overrides,
         "decision_trace": {
             "interpreter": "recommend_generated_full_body_adaptation",
-            "version": "v1.5",
+            "version": "v1.6",
             "primary_axis": candidate_axis,
             "axis_direction": axis_direction,
             "persisted_from_prior_week": persisted_from_prior_week,
@@ -877,12 +957,20 @@ def recommend_generated_full_body_adaptation(
                 "stalled_exercise_ids": sorted(stalled_exercise_ids),
                 "substitution_pressure": substitution_pressure,
                 "adaptation_history": deepcopy(adaptation_history),
+                "block_review_gate": deepcopy(normalized_block_review_gate),
             },
             "effect": {
                 "global_set_delta": global_set_delta,
                 "selected_target_ids": list(target_selection["selected_target_ids"]),
                 "exercise_override_ids": sorted(exercise_overrides.keys()),
                 "weak_point_exercises": list(weak_point_exercises),
+            },
+            "block_review": {
+                "restricted_axis_tokens": sorted(restricted_axis_tokens),
+                "blocked_candidates": deepcopy(blocked_candidates),
+                "reset_adaptive_persistence_context": bool(
+                    normalized_block_review_gate.get("reset_adaptive_persistence_context")
+                ),
             },
         },
     }
@@ -892,6 +980,7 @@ def recommend_generated_full_body_adaptation(
         "axis_direction": axis_direction,
         "streak_weeks": current_streak_weeks,
         "minimum_axis_persistence_weeks": minimum_persist_weeks,
+        "reset_adaptive_persistence_context": bool(normalized_block_review_gate.get("reset_adaptive_persistence_context")),
         "persisted_from_prior_week": persisted_from_prior_week,
         "reversal_applied": reversal_applied,
         "reversal_reason": reversal_reason,

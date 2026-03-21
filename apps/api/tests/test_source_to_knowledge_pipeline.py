@@ -146,6 +146,10 @@ def test_source_to_knowledge_pipeline_writes_expected_artifacts(tmp_path: Path) 
     assert policy_payload["generated_full_body_adaptive_loop_policy"]["max_primary_axes_per_week"] == 1
     assert policy_payload["generated_full_body_adaptive_loop_policy"]["max_volume_targets_per_week"] == 2
     assert policy_payload["generated_full_body_adaptive_loop_policy"]["max_load_targets_per_week"] == 2
+    assert policy_payload["generated_full_body_block_review_policy"]["policy_id"] == "generated_full_body_block_review_v1"
+    assert policy_payload["generated_full_body_block_review_policy"]["minimum_generated_weeks_for_block_review"] == 3
+    assert policy_payload["generated_full_body_block_review_policy"]["minimum_review_window_weeks"] == 3
+    assert policy_payload["generated_full_body_block_review_policy"]["block_reset_resets_adaptive_persistence"] is True
     assert {
         "prefer_full_body_when_generated_split_unspecified",
         "prefer_simple_options_for_novice_and_comeback",

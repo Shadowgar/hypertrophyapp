@@ -7,6 +7,7 @@ from .decision_generated_full_body_adaptation import (
     apply_generated_full_body_adaptation_to_plan,
     recommend_generated_full_body_adaptation,
 )
+from .decision_generated_full_body_block_review import recommend_generated_full_body_block_review
 from .decision_frequency_adaptation import apply_active_frequency_adaptation_runtime
 from .decision_weekly_review import apply_weekly_review_adjustments_to_plan
 from .scheduler import generate_week_plan
@@ -18,10 +19,23 @@ def _coerce_dict(value: Any) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
 
 
+def _coerce_list(value: Any) -> list[Any]:
+    return value if isinstance(value, list) else []
+
+
 def _coerce_string_list(value: Any) -> list[str]:
     if not isinstance(value, list):
         return []
     return [str(item).strip() for item in value if str(item).strip()]
+
+
+def _extract_step_result(trace: dict[str, Any], step_name: str, *, key: str = "decision") -> dict[str, Any]:
+    for step in list(trace.get("steps") or []):
+        step_payload = _coerce_dict(step)
+        if str(step_payload.get(key) or "").strip() != step_name:
+            continue
+        return _coerce_dict(step_payload.get("result"))
+    return {}
 
 
 def summarize_generation_template_viability(
@@ -510,6 +524,7 @@ def _generated_week_decision_trace(
     template_selection_trace: dict[str, Any],
     generation_runtime_trace: dict[str, Any],
     review_overlay_trace: dict[str, Any] | None,
+    generated_block_review_trace: dict[str, Any] | None,
     generated_adaptation_trace: dict[str, Any] | None,
     adaptation_runtime: dict[str, Any],
 ) -> dict[str, Any]:
@@ -517,6 +532,8 @@ def _generated_week_decision_trace(
     adaptation_trace = _coerce_dict(_coerce_dict(final_plan.get("applied_frequency_adaptation")).get("decision_trace"))
     review_trace = _coerce_dict(review_overlay_trace)
     review_outcome = _coerce_dict(review_trace.get("outcome"))
+    generated_block_review_trace = _coerce_dict(generated_block_review_trace)
+    generated_block_review_outcome = _coerce_dict(generated_block_review_trace.get("outcome"))
     generated_adaptation_trace = _coerce_dict(generated_adaptation_trace)
     generated_adaptation_outcome = _coerce_dict(generated_adaptation_trace.get("outcome"))
     generated_runtime_trace = _coerce_dict(template_selection_trace.get("generated_full_body_runtime_trace"))
@@ -570,6 +587,11 @@ def _generated_week_decision_trace(
                 "reason": str(review_trace.get("interpreter") or ""),
                 "review_available": bool(review_outcome.get("review_available")),
             },
+            "block_review": {
+                "reason": str(generated_block_review_trace.get("interpreter") or ""),
+                "active": str(generated_block_review_outcome.get("status") or "") == "apply",
+                "block_decision": generated_block_review_outcome.get("block_decision"),
+            },
             "generated_adaptation": {
                 "reason": str(generated_adaptation_trace.get("interpreter") or ""),
                 "active": str(generated_adaptation_outcome.get("status") or "") == "apply",
@@ -597,6 +619,10 @@ def _generated_week_decision_trace(
             {
                 "step": "review_overlay",
                 "result": deepcopy(review_trace),
+            },
+            {
+                "step": "block_review",
+                "result": deepcopy(generated_block_review_trace),
             },
             {
                 "step": "generated_adaptation",
@@ -648,10 +674,23 @@ def build_generated_week_plan_payload(
     plan = deepcopy(base_plan)
     plan["template_selection_trace"] = deepcopy(template_selection_trace)
     plan["generation_runtime_trace"] = deepcopy(generation_runtime_trace)
+    adaptive_runtime = _coerce_dict(generated_adaptive_runtime)
+    generated_block_review_decision = recommend_generated_full_body_block_review(
+        plan_payload=plan,
+        selected_template_id=selected_template_id,
+        template_selection_trace=template_selection_trace,
+        training_state=_coerce_dict(adaptive_runtime.get("training_state")) or None,
+        generation_runtime=_coerce_dict(adaptive_runtime.get("generation_runtime")) or None,
+        block_review_policy=_coerce_dict(adaptive_runtime.get("block_review_policy")) or None,
+        review_adjustments_present=review_adjustments is not None,
+    )
+    generated_block_review_trace: dict[str, Any] | None = (
+        _coerce_dict(generated_block_review_decision.get("decision_trace")) or None
+    )
+    block_review_gate = _coerce_dict(generated_block_review_decision.get("adaptive_gate")) or None
     generated_adaptation_trace: dict[str, Any] | None = None
 
     if review_adjustments is not None:
-        adaptive_runtime = _coerce_dict(generated_adaptive_runtime)
         generated_adaptation_decision = recommend_generated_full_body_adaptation(
             plan_payload=plan,
             selected_template_id=selected_template_id,
@@ -659,6 +698,7 @@ def build_generated_week_plan_payload(
             training_state=_coerce_dict(adaptive_runtime.get("training_state")) or None,
             generation_runtime=_coerce_dict(adaptive_runtime.get("generation_runtime")) or None,
             adaptive_policy=_coerce_dict(adaptive_runtime.get("adaptive_policy")) or None,
+            block_review_gate=block_review_gate,
             review_adjustments_present=True,
         )
         generated_adaptation_trace = _coerce_dict(generated_adaptation_decision.get("decision_trace")) or None
@@ -668,7 +708,6 @@ def build_generated_week_plan_payload(
             review_context=review_context,
         )
     else:
-        adaptive_runtime = _coerce_dict(generated_adaptive_runtime)
         generated_adaptation_decision = recommend_generated_full_body_adaptation(
             plan_payload=plan,
             selected_template_id=selected_template_id,
@@ -676,6 +715,7 @@ def build_generated_week_plan_payload(
             training_state=_coerce_dict(adaptive_runtime.get("training_state")) or None,
             generation_runtime=_coerce_dict(adaptive_runtime.get("generation_runtime")) or None,
             adaptive_policy=_coerce_dict(adaptive_runtime.get("adaptive_policy")) or None,
+            block_review_gate=block_review_gate,
             review_adjustments_present=False,
         )
         generated_adaptation_trace = _coerce_dict(generated_adaptation_decision.get("decision_trace")) or None
@@ -684,6 +724,19 @@ def build_generated_week_plan_payload(
                 plan_payload=plan,
                 decision_payload=generated_adaptation_decision,
             )
+
+    if generated_block_review_trace is not None:
+        generated_adaptation_outcome = _coerce_dict(_coerce_dict(generated_adaptation_trace).get("outcome"))
+        blocked_candidates = _coerce_list(_extract_step_result(_coerce_dict(generated_adaptation_trace), "candidate_axis_selection").get("blocked_candidates"))
+        generated_block_review_trace["interaction_with_weekly_loop"] = {
+            "weekly_adaptive_status": str(generated_adaptation_decision.get("status") or ""),
+            "weekly_adaptive_primary_axis": generated_adaptation_outcome.get("primary_axis"),
+            "weekly_adaptive_axis_direction": generated_adaptation_outcome.get("axis_direction"),
+            "weekly_adaptive_reason": generated_adaptation_outcome.get("reason"),
+            "restricted_candidate_axes": [str(item.get("axis_token") or "") for item in blocked_candidates if str(item.get("axis_token") or "").strip()],
+            "adaptive_persistence_reset_applied": bool(_coerce_dict(block_review_gate).get("reset_adaptive_persistence_context")),
+            "explicit_review_suppressed": review_adjustments is not None,
+        }
 
     adaptation_runtime = apply_active_frequency_adaptation_runtime(
         plan=plan,
@@ -697,6 +750,7 @@ def build_generated_week_plan_payload(
         template_selection_trace=template_selection_trace,
         generation_runtime_trace=generation_runtime_trace,
         review_overlay_trace=review_overlay_trace,
+        generated_block_review_trace=generated_block_review_trace,
         generated_adaptation_trace=generated_adaptation_trace,
         adaptation_runtime=adaptation_runtime,
     )

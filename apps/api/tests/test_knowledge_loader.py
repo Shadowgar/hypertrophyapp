@@ -104,6 +104,8 @@ def test_knowledge_loader_reads_compiled_bundles_from_knowledge_compiled(tmp_pat
     assert policy_bundle.bundle_id == "system_coaching_policy_v1"
     assert policy_bundle.generated_full_body_adaptive_loop_policy is not None
     assert policy_bundle.generated_full_body_adaptive_loop_policy.policy_id == "generated_full_body_adaptive_loop_v1"
+    assert policy_bundle.generated_full_body_block_review_policy is not None
+    assert policy_bundle.generated_full_body_block_review_policy.policy_id == "generated_full_body_block_review_v1"
 
 
 def test_knowledge_loader_rejects_non_knowledge_compiled_paths(tmp_path: Path) -> None:

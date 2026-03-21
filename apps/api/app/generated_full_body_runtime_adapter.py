@@ -58,6 +58,7 @@ def _not_applicable_result(*, selected_template_id: str, selected_template: dict
         "program_template": dict(selected_template),
         "generated_full_body_runtime_trace": trace,
         "generated_full_body_adaptive_loop_policy": None,
+        "generated_full_body_block_review_policy": None,
     }
 
 
@@ -93,6 +94,7 @@ def _fallback_result(
         "program_template": dict(selected_template),
         "generated_full_body_runtime_trace": trace,
         "generated_full_body_adaptive_loop_policy": None,
+        "generated_full_body_block_review_policy": None,
     }
 
 
@@ -296,6 +298,11 @@ def prepare_generated_full_body_runtime_template(
         "generated_full_body_adaptive_loop_policy": (
             policy_bundle.generated_full_body_adaptive_loop_policy.model_dump(mode="json")
             if policy_bundle.generated_full_body_adaptive_loop_policy is not None
+            else None
+        ),
+        "generated_full_body_block_review_policy": (
+            policy_bundle.generated_full_body_block_review_policy.model_dump(mode="json")
+            if policy_bundle.generated_full_body_block_review_policy is not None
             else None
         ),
     }
