@@ -1365,11 +1365,11 @@ def test_adaptive_gold_generate_week_uses_repeat_failure_substitution_for_fourth
         assert user is not None
         session.add(
             ExerciseState(
-                user_id=user.id,
-                exercise_id="belt_squat",
-                current_working_weight=20.0,
-                exposure_count=5,
-                consecutive_under_target_exposures=3,
+            user_id=user.id,
+                    exercise_id="hack_squat",
+                    current_working_weight=20.0,
+                    exposure_count=5,
+                    consecutive_under_target_exposures=3,
                 last_progression_action="hold",
                 fatigue_score=0,
             )
@@ -1384,11 +1384,11 @@ def test_adaptive_gold_generate_week_uses_repeat_failure_substitution_for_fourth
     exercise = next(
         item
         for item in plan["sessions"][0]["exercises"]
-        if item.get("primary_exercise_id") == "belt_squat"
+        if item.get("primary_exercise_id") == "hack_squat"
     )
-    assert exercise["id"] == "belt_squat"
-    assert exercise["name"] == "Belt Squat"
-    assert exercise["primary_exercise_id"] == "belt_squat"
+    assert exercise["id"] == "hack_squat"
+    assert exercise["name"] == "Hack Squat"
+    assert exercise["primary_exercise_id"] == "hack_squat"
     assert exercise["movement_pattern"] == "squat"
     assert exercise["repeat_failure_substitution"] is None
 

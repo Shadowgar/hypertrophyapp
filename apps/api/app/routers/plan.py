@@ -59,6 +59,7 @@ from ..program_loader import (
     load_program_onboarding_package,
     load_program_rule_set,
     load_program_template,
+    resolve_linked_program_id,
     resolve_selected_program_binding_id,
     resolve_onboarding_program_id as resolve_loader_onboarding_program_id,
     resolve_rule_program_id,
@@ -407,11 +408,11 @@ def list_guide_programs() -> list[GuideProgramSummary]:
 
 @router.get("/plan/guides/programs/{program_id}", responses=GUIDE_RESPONSES)
 def get_program_guide(program_id: str) -> ProgramGuideResponse:
-    resolved_program_id = resolve_selected_program_binding_id(program_id) or program_id
+    resolved_program_id = resolve_linked_program_id(program_id)
     try:
         summary = resolve_program_guide_summary(
             program_id=resolved_program_id,
-            available_program_summaries=list_program_templates(active_only=False),
+            available_program_summaries=_list_active_program_templates(),
         )
         template = load_program_template(resolved_program_id)
     except FileNotFoundError as exc:
@@ -424,7 +425,7 @@ def get_program_guide(program_id: str) -> ProgramGuideResponse:
 
 @router.get("/plan/guides/programs/{program_id}/days/{day_index}", responses=GUIDE_RESPONSES)
 def get_program_day_guide(program_id: str, day_index: int) -> ProgramDayGuideResponse:
-    resolved_program_id = resolve_selected_program_binding_id(program_id) or program_id
+    resolved_program_id = resolve_linked_program_id(program_id)
     try:
         template = load_program_template(resolved_program_id)
     except FileNotFoundError as exc:
@@ -441,7 +442,7 @@ def get_program_day_guide(program_id: str, day_index: int) -> ProgramDayGuideRes
 
 @router.get("/plan/guides/programs/{program_id}/exercise/{exercise_id}", responses=GUIDE_RESPONSES)
 def get_program_exercise_guide(program_id: str, exercise_id: str) -> ProgramExerciseGuideResponse:
-    resolved_program_id = resolve_selected_program_binding_id(program_id) or program_id
+    resolved_program_id = resolve_linked_program_id(program_id)
     try:
         template = load_program_template(resolved_program_id)
     except FileNotFoundError as exc:

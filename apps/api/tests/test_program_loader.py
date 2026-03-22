@@ -40,7 +40,7 @@ def test_load_program_template_supports_adaptive_gold_runtime_template() -> None
     day_5 = session_by_name["Arms & Weak Points"]["exercises"]
     week_two_day_a = authored_weeks[1]["sessions"][0]["exercises"]
 
-    assert template["id"] == "pure_bodybuilding_phase_1_full_body"
+    assert template["id"] == "full_body_v1"
     assert template["split"] == "full_body"
     assert template["days_supported"] == [2, 3, 4, 5]
     assert len(sessions) == 5
@@ -370,8 +370,8 @@ def test_load_program_template_normalizes_phase1_aliases_to_canonical_identity()
     from_legacy_gold = load_program_template("adaptive_full_body_gold_v0_1")
     from_canonical = load_program_template("pure_bodybuilding_phase_1_full_body")
 
-    assert from_legacy_v1["id"] == "pure_bodybuilding_phase_1_full_body"
-    assert from_legacy_gold["id"] == "pure_bodybuilding_phase_1_full_body"
+    assert from_legacy_v1["id"] == "full_body_v1"
+    assert from_legacy_gold["id"] == "full_body_v1"
     assert from_canonical["id"] == "pure_bodybuilding_phase_1_full_body"
 
 

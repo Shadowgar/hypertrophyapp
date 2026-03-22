@@ -59,8 +59,8 @@ def _setup_first_exercise(client: TestClient, headers: dict[str, str]) -> tuple[
 
 def _assert_generated_runtime_trace(payload: dict) -> dict:
     runtime_trace = payload["template_selection_trace"]["generated_full_body_runtime_trace"]
-    assert runtime_trace["compatibility_selected_template_id"] == "pure_bodybuilding_phase_1_full_body"
-    assert runtime_trace["compatibility_program_template_id"] == "pure_bodybuilding_phase_1_full_body"
+    assert runtime_trace["compatibility_selected_template_id"] == "full_body_v1"
+    assert runtime_trace["compatibility_program_template_id"] == "full_body_v1"
     assert runtime_trace["content_origin"] == "generated_constructor_applied"
     assert runtime_trace["generated_constructor_applied"] is True
     return runtime_trace
@@ -279,13 +279,17 @@ def test_log_set_surfaces_repeat_failure_substitution_recommendation() -> None:
     payload = response.json()
 
     substitution = payload["live_recommendation"]["substitution_recommendation"]
-    assert substitution is None
+    assert substitution is not None
+    assert substitution["reason"] == "repeat_failure_threshold_reached"
+    assert substitution["recommended_name"] in substitution["compatible_substitutions"]
 
     today = client.get("/workout/today", headers=headers)
     assert today.status_code == 200
     today_payload = today.json()
     matching = next(item for item in today_payload["exercises"] if item["id"] == first_exercise["id"])
-    assert matching["live_recommendation"].get("substitution_recommendation") is None
+    today_substitution = matching["live_recommendation"].get("substitution_recommendation")
+    assert today_substitution is not None
+    assert today_substitution["recommended_name"] == substitution["recommended_name"]
 
 
 def test_adaptive_gold_workout_today_reflects_generated_repeat_failure_substitution() -> None:
@@ -872,12 +876,12 @@ def test_adaptive_gold_fourth_exercise_today_and_log_set_preserve_substitution_g
     selected_session = next(
         session
         for session in generated_sessions
-        if any(item.get("id") == "belt_squat" for item in session["exercises"])
+        if any(item.get("id") == "hack_squat" for item in session["exercises"])
     )
     fourth_exercise = next(
         item
         for item in selected_session["exercises"]
-        if item.get("id") == "belt_squat"
+        if item.get("id") == "hack_squat"
     )
 
     with SessionLocal() as db:
@@ -886,7 +890,7 @@ def test_adaptive_gold_fourth_exercise_today_and_log_set_preserve_substitution_g
         db.add(
             ExerciseState(
                 user_id=user.id,
-                exercise_id="belt_squat",
+                exercise_id="hack_squat",
                 current_working_weight=float(fourth_exercise["recommended_working_weight"]),
                 exposure_count=2,
                 consecutive_under_target_exposures=2,

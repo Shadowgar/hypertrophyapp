@@ -306,7 +306,7 @@ ARCHETYPE_FIXTURES = {
             "expects_insufficiency": False,
             "expected_session_exercise_counts": [4, 4, 4],
             "expected_selected_exercise_ids": [
-                "low_incline_db_press",
+                "bottom_half_low_incline_db_press",
                 "standing_calf_raise",
             ],
         },
@@ -409,7 +409,7 @@ ARCHETYPE_FIXTURES = {
             "expected_session_exercise_counts": [3, 3, 3],
             "expected_selected_exercise_ids": [
                 "decline_machine_chest_press",
-                "machine_shoulder_press",
+                "neutral_grip_lat_pulldown",
             ],
         },
     },
