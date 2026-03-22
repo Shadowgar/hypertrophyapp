@@ -17,6 +17,8 @@ from .rules_runtime import (
     resolve_scheduler_session_selection,
 )
 
+AUTHORITATIVE_AUTHORED_PASSTHROUGH_KEY = "__authoritative_authored_passthrough__"
+
 
 def _apply_deload_modifiers(sets: int, weight: float, *, set_reduction_pct: int, load_reduction_pct: int) -> tuple[int, float]:
     adjusted_sets = max(1, int(round(sets * (100 - set_reduction_pct) / 100)))
@@ -217,6 +219,47 @@ def _build_planned_exercise(
         "notes": exercise.get("notes"),
         "video": planned_video,
         "equipment_tags": planned_equipment_tags,
+        "slot_role": exercise.get("slot_role"),
+        **_authored_execution_fields(exercise),
+    }
+
+
+def _build_authored_passthrough_exercise(
+    exercise: dict[str, Any],
+    history_index: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    primary_exercise_id = exercise.get("primary_exercise_id") or exercise.get("id")
+    history_key = str(primary_exercise_id or exercise.get("id") or "")
+    previous = history_index.get(history_key, {})
+    recommended = float(previous.get("next_working_weight") or exercise.get("start_weight", 20) or 20)
+    recommended = round(max(2.0, recommended) / 0.5) * 0.5
+    return {
+        "id": exercise.get("id"),
+        "primary_exercise_id": primary_exercise_id,
+        "name": exercise.get("name"),
+        "sets": int(exercise.get("sets", 3) or 3),
+        "rep_range": list(exercise.get("rep_range", [8, 12]) or [8, 12]),
+        "recommended_working_weight": recommended,
+        "priority": exercise.get("priority", "standard"),
+        "movement_pattern": exercise.get("movement_pattern"),
+        "primary_muscles": list(exercise.get("primary_muscles") or []),
+        "substitution_candidates": list(exercise.get("substitution_candidates") or []),
+        "substitution_pressure": "none",
+        "substitution_guidance": None,
+        "recovery_adjustment_trace": {
+            "interpreter": "authoritative_authored_passthrough",
+            "version": "v1",
+            "outcome": {"applied": False},
+        },
+        "substitution_decision_trace": {
+            "interpreter": "authoritative_authored_passthrough",
+            "version": "v1",
+            "outcome": {"applied": False},
+        },
+        "repeat_failure_substitution": None,
+        "notes": exercise.get("notes"),
+        "video": exercise.get("video"),
+        "equipment_tags": list(exercise.get("equipment_tags") or []),
         "slot_role": exercise.get("slot_role"),
         **_authored_execution_fields(exercise),
     }
@@ -508,27 +551,68 @@ def generate_week_plan(
     days_available = max(2, min(7, days_available))
     today = date.today()
     week_start = today - timedelta(days=today.weekday())
+    authoritative_authored_passthrough = bool(program_template.get(AUTHORITATIVE_AUTHORED_PASSTHROUGH_KEY))
 
     authored_week_runtime = _resolve_authored_week_runtime(program_template, prior_generated_weeks)
     base_sessions = list(authored_week_runtime.get("sessions") or [])
     muscle_coverage_runtime = resolve_scheduler_muscle_coverage_runtime(rule_set=rule_set)
     normalized_weak_areas = _normalize_weak_areas(weak_areas)
-    session_selection_runtime = resolve_scheduler_session_selection(
-        session_profiles=_build_session_selection_profiles(
-            base_sessions,
-            muscle_coverage_runtime=muscle_coverage_runtime,
-        ),
-        history=history,
-        days_available=days_available,
-        weak_areas=list(normalized_weak_areas),
-        rule_set=rule_set,
-    )
-    selected_base_sessions = [
-        (index, base_sessions[index])
-        for index in session_selection_runtime["selected_indices"]
-        if 0 <= index < len(base_sessions)
-    ]
-    selected_sessions = _merge_dropped_sessions_into_selected(base_sessions, selected_base_sessions)
+    if authoritative_authored_passthrough:
+        selected_sessions = [(index, deepcopy(session)) for index, session in enumerate(base_sessions)]
+        session_selection_runtime = {
+            "selected_indices": [index for index, _ in selected_sessions],
+            "missed_day_policy": None,
+            "decision_trace": {
+                "interpreter": "resolve_scheduler_session_selection",
+                "version": "v1",
+                "inputs": {
+                    "session_count": len(base_sessions),
+                    "days_available": days_available,
+                    "history_count": len(history),
+                },
+                "steps": [
+                    {
+                        "decision": "resolve_priority_targets",
+                        "result": {
+                            "priority_target_source": "authoritative_passthrough",
+                            "priority_targets": [],
+                            "required_session_indices": [index for index, _ in selected_sessions],
+                            "weak_areas": sorted(normalized_weak_areas),
+                        },
+                    },
+                    {
+                        "decision": "select_session_indices",
+                        "result": {
+                            "selection_strategy": "authoritative_passthrough",
+                            "selected_indices": [index for index, _ in selected_sessions],
+                        },
+                    },
+                ],
+                "outcome": {
+                    "selected_indices": [index for index, _ in selected_sessions],
+                    "required_session_indices": [index for index, _ in selected_sessions],
+                    "selection_strategy": "authoritative_passthrough",
+                    "missed_day_policy": None,
+                },
+            },
+        }
+    else:
+        session_selection_runtime = resolve_scheduler_session_selection(
+            session_profiles=_build_session_selection_profiles(
+                base_sessions,
+                muscle_coverage_runtime=muscle_coverage_runtime,
+            ),
+            history=history,
+            days_available=days_available,
+            weak_areas=list(normalized_weak_areas),
+            rule_set=rule_set,
+        )
+        selected_base_sessions = [
+            (index, base_sessions[index])
+            for index in session_selection_runtime["selected_indices"]
+            if 0 <= index < len(base_sessions)
+        ]
+        selected_sessions = _merge_dropped_sessions_into_selected(base_sessions, selected_base_sessions)
 
     history_index = {
         item.get("exercise_id"): item for item in history if item.get("exercise_id")
@@ -588,56 +672,91 @@ def generate_week_plan(
             session_date = week_start + timedelta(days=order_idx * (7 // days_available))
         exercises: list[dict[str, Any]] = []
         for exercise in session.get("exercises", []):
-            planned_exercise = _build_planned_exercise(
-                exercise,
-                history_index,
-                equipment_set,
-                is_deload_week=bool(deload["active"]),
-                set_reduction_pct=set_reduction_pct,
-                load_reduction_pct=load_reduction_pct,
-                rule_set=rule_set,
-                progression_state=progression_state_index.get(str(exercise.get("id") or "")),
-                substitution_pressure=(
-                    str(stimulus_fatigue_response.get("substitution_pressure"))
-                    if isinstance(stimulus_fatigue_response, dict)
-                    else None
-                ),
-                movement_restrictions=normalized_movement_restrictions,
-            )
+            if authoritative_authored_passthrough:
+                planned_exercise = _build_authored_passthrough_exercise(
+                    exercise,
+                    history_index,
+                )
+            else:
+                planned_exercise = _build_planned_exercise(
+                    exercise,
+                    history_index,
+                    equipment_set,
+                    is_deload_week=bool(deload["active"]),
+                    set_reduction_pct=set_reduction_pct,
+                    load_reduction_pct=load_reduction_pct,
+                    rule_set=rule_set,
+                    progression_state=progression_state_index.get(str(exercise.get("id") or "")),
+                    substitution_pressure=(
+                        str(stimulus_fatigue_response.get("substitution_pressure"))
+                        if isinstance(stimulus_fatigue_response, dict)
+                        else None
+                    ),
+                    movement_restrictions=normalized_movement_restrictions,
+                )
             if planned_exercise is not None:
                 exercises.append(planned_exercise)
 
         if not exercises:
             continue
-        for exercise in exercises:
-            if _exercise_matches_weak_area(exercise, normalized_weak_areas) and _exercise_slot_role(exercise) in {
-                "accessory",
-                "isolation",
-                "weak_point",
-            }:
-                exercise["sets"] = int(exercise.get("sets", 0) or 0) + 1
-        trimmed_exercises, budget_trim_runtime = _trim_session_volume_for_time_budget(
-            exercises,
-            session_time_budget_minutes=session_time_budget_minutes,
-            weak_areas=normalized_weak_areas,
-        )
-        cap_runtime = resolve_scheduler_session_exercise_cap(
-            session_time_budget_minutes=session_time_budget_minutes,
-            day_role=str(session.get("day_role") or "").strip() or None,
-            slot_roles=[
-                "weak_point"
-                if _exercise_matches_weak_area(exercise, normalized_weak_areas)
-                and _exercise_slot_role(exercise) in {"accessory", "isolation"}
-                else _exercise_slot_role(exercise)
-                for exercise in trimmed_exercises
-            ],
-            rule_set=rule_set,
-        )
-        exercises = [
-            exercise
-            for index, exercise in enumerate(trimmed_exercises)
-            if index in set(cap_runtime["kept_indices"])
-        ]
+        if authoritative_authored_passthrough:
+            trimmed_exercises = exercises
+            budget_trim_runtime = {
+                "applied": False,
+                "reduction_steps": 0,
+                "trimmed_exercises": [],
+            }
+            cap_runtime = {
+                "exercise_limit": len(trimmed_exercises),
+                "kept_indices": list(range(len(trimmed_exercises))),
+                "selected_threshold": None,
+                "decision_trace": {
+                    "interpreter": "resolve_scheduler_session_exercise_cap",
+                    "version": "v1",
+                    "inputs": {
+                        "session_time_budget_minutes": session_time_budget_minutes,
+                        "day_role": str(session.get("day_role") or "").strip() or None,
+                        "slot_role_count": len(trimmed_exercises),
+                    },
+                    "outcome": {
+                        "exercise_limit": len(trimmed_exercises),
+                        "kept_indices": list(range(len(trimmed_exercises))),
+                        "selected_threshold": None,
+                        "reason_code": "authoritative_passthrough",
+                    },
+                },
+            }
+            exercises = trimmed_exercises
+        else:
+            for exercise in exercises:
+                if _exercise_matches_weak_area(exercise, normalized_weak_areas) and _exercise_slot_role(exercise) in {
+                    "accessory",
+                    "isolation",
+                    "weak_point",
+                }:
+                    exercise["sets"] = int(exercise.get("sets", 0) or 0) + 1
+            trimmed_exercises, budget_trim_runtime = _trim_session_volume_for_time_budget(
+                exercises,
+                session_time_budget_minutes=session_time_budget_minutes,
+                weak_areas=normalized_weak_areas,
+            )
+            cap_runtime = resolve_scheduler_session_exercise_cap(
+                session_time_budget_minutes=session_time_budget_minutes,
+                day_role=str(session.get("day_role") or "").strip() or None,
+                slot_roles=[
+                    "weak_point"
+                    if _exercise_matches_weak_area(exercise, normalized_weak_areas)
+                    and _exercise_slot_role(exercise) in {"accessory", "isolation"}
+                    else _exercise_slot_role(exercise)
+                    for exercise in trimmed_exercises
+                ],
+                rule_set=rule_set,
+            )
+            exercises = [
+                exercise
+                for index, exercise in enumerate(trimmed_exercises)
+                if index in set(cap_runtime["kept_indices"])
+            ]
 
         planned_sessions.append(
             {

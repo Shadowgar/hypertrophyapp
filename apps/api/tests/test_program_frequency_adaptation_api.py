@@ -12,6 +12,34 @@ from app.main import app
 from app.models import ExerciseState, SorenessEntry, User, WorkoutPlan
 
 TEST_CREDENTIAL = f"T{uuid.uuid4().hex[:15]}"
+PHASE1_MERGED_DAY1_IDS = [
+    "cross_body_lat_pull_around",
+    "low_incline_smith_machine_press",
+    "machine_hip_adduction",
+    "leg_press",
+    "lying_paused_rope_face_pull",
+    "cable_crunch",
+    "seated_db_shoulder_press",
+    "paused_barbell_rdl",
+    "chest_supported_machine_row",
+    "hammer_preacher_curl",
+    "cuffed_behind_the_back_lateral_raise",
+    "overhead_cable_triceps_extension_bar",
+]
+PHASE2_MERGED_DAY1_IDS = [
+    "wide_grip_pull_up",
+    "flat_machine_chest_press",
+    "glute_ham_raise",
+    "leg_extension",
+    "meadows_incline_db_lateral_raise",
+    "standing_calf_raise",
+    "seated_leg_curl",
+    "bottom_half_smith_machine_squat",
+    "chest_supported_machine_row",
+    "bottom_half_seated_cable_flye",
+    "machine_hip_abduction",
+    "overhead_cable_triceps_extension_bar",
+]
 
 
 def _reset_db() -> None:
@@ -19,7 +47,11 @@ def _reset_db() -> None:
     Base.metadata.create_all(bind=engine)
 
 
-def _register_and_profile(client: TestClient) -> dict[str, str]:
+def _register_and_profile(
+    client: TestClient,
+    *,
+    selected_program_id: str = "pure_bodybuilding_phase_1_full_body",
+) -> dict[str, str]:
     register = client.post(
         "/auth/register",
         json={"email": "adaptation-api@example.com", "password": TEST_CREDENTIAL, "name": "Adapt User"},
@@ -37,7 +69,7 @@ def _register_and_profile(client: TestClient) -> dict[str, str]:
             "weight": 82,
             "gender": "male",
             "split_preference": "full_body",
-            "selected_program_id": "pure_bodybuilding_phase_1_full_body",
+            "selected_program_id": selected_program_id,
             "training_location": "home",
             "equipment_profile": ["dumbbell", "bench", "barbell"],
             "weak_areas": ["chest", "hamstrings"],
@@ -238,6 +270,7 @@ def test_phase1_frequency_adaptation_preview_and_runtime_expose_program_specific
     assert preview_week["adapted_days"][0]["day_name"] == "Full Body #1 + Full Body #2"
     assert preview_week["adapted_days"][1]["day_name"] == "Full Body #3 + Full Body #4"
     assert preview_week["adapted_days"][2]["day_name"] == "Arms & Weak Points"
+    assert preview_week["adapted_days"][0]["exercise_ids"] == PHASE1_MERGED_DAY1_IDS
     assert preview_payload["decision_trace"]["outcome"]["policy_mode"] == "program_specific"
     assert preview_payload["decision_trace"]["outcome"]["policy_id"] == "pure_bodybuilding_phase_1_full_body_5_to_3"
 
@@ -267,6 +300,59 @@ def test_phase1_frequency_adaptation_preview_and_runtime_expose_program_specific
     ]
     assert adaptation["decision_trace"]["source_trace"]["preview_trace"]["outcome"]["policy_id"] == (
         "pure_bodybuilding_phase_1_full_body_5_to_3"
+    )
+
+
+def test_phase2_frequency_adaptation_preview_and_runtime_expose_program_specific_policy() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_and_profile(client, selected_program_id="pure_bodybuilding_phase_2_full_body")
+
+    preview_response = client.post(
+        "/plan/adaptation/preview",
+        headers=headers,
+        json={
+            "program_id": "pure_bodybuilding_phase_2_full_body",
+            "target_days": 3,
+            "duration_weeks": 2,
+            "weak_areas": ["chest", "hamstrings"],
+        },
+    )
+    assert preview_response.status_code == 200
+    preview_payload = preview_response.json()
+
+    preview_week = preview_payload["weeks"][0]
+    assert preview_payload["program_id"] == "pure_bodybuilding_phase_2_full_body"
+    assert preview_week["program_policy"] == "pure_bodybuilding_phase_2_full_body_5_to_3"
+    assert preview_week["week_label"] == "Week 1"
+    assert preview_week["adapted_days"][0]["day_name"] == "Full Body #1 + Full Body #2"
+    assert preview_week["adapted_days"][1]["day_name"] == "Full Body #3 + Full Body #4"
+    assert preview_week["adapted_days"][2]["day_name"] == "Arms & Weak Points"
+    assert preview_week["adapted_days"][0]["exercise_ids"] == PHASE2_MERGED_DAY1_IDS
+    assert preview_payload["decision_trace"]["outcome"]["policy_mode"] == "program_specific"
+    assert preview_payload["decision_trace"]["outcome"]["policy_id"] == "pure_bodybuilding_phase_2_full_body_5_to_3"
+
+    apply_response = client.post(
+        "/plan/adaptation/apply",
+        headers=headers,
+        json={
+            "program_id": "pure_bodybuilding_phase_2_full_body",
+            "target_days": 3,
+            "duration_weeks": 2,
+            "weak_areas": ["chest", "hamstrings"],
+        },
+    )
+    assert apply_response.status_code == 200
+
+    generate_response = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate_response.status_code == 200
+    generate_payload = generate_response.json()
+
+    adaptation = generate_payload["applied_frequency_adaptation"]
+    assert adaptation["policy_mode"] == "program_specific"
+    assert adaptation["policy_id"] == "pure_bodybuilding_phase_2_full_body_5_to_3"
+    assert adaptation["decision_trace"]["source_trace"]["preview_trace"]["outcome"]["policy_id"] == (
+        "pure_bodybuilding_phase_2_full_body_5_to_3"
     )
 
 

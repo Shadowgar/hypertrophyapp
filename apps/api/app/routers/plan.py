@@ -42,6 +42,7 @@ from core_engine import (
     normalize_coaching_recommendation_timeline_limit,
     resolve_active_frequency_adaptation_runtime,
 )
+from core_engine.scheduler import AUTHORITATIVE_AUTHORED_PASSTHROUGH_KEY
 
 from ..database import get_db
 from ..deps import get_current_user
@@ -209,31 +210,15 @@ def _build_authored_adapted_sessions(
         if anchor_source is None:
             continue
 
-        exercise_pools: dict[str, list[dict[str, Any]]] = {}
-        ordered_fallback_exercises: list[dict[str, Any]] = []
-        ordered_fallback_seen: set[str] = set()
-        for source_day_id in source_day_ids or ([anchor_id] if anchor_id in source_day_lookup else []):
-            source_session = cast(dict[str, Any], source_day_lookup[source_day_id]["session"])
-            for exercise in source_session.get("exercises") or []:
-                if not isinstance(exercise, dict):
-                    continue
-                exercise_id = _exercise_identity(exercise)
-                if not exercise_id:
-                    continue
-                exercise_pools.setdefault(exercise_id, []).append(deepcopy(exercise))
-                if exercise_id not in ordered_fallback_seen:
-                    ordered_fallback_seen.add(exercise_id)
-                    ordered_fallback_exercises.append(deepcopy(exercise))
-
         selected_exercises: list[dict[str, Any]] = []
-        for exercise_id in adapted_day.get("exercise_ids") or []:
-            normalized_id = str(exercise_id).strip()
-            queue = exercise_pools.get(normalized_id) or []
-            if queue:
-                selected_exercises.append(queue.pop(0))
-
-        if not selected_exercises:
-            selected_exercises = ordered_fallback_exercises
+        merge_source_day_ids = source_day_ids or ([anchor_id] if anchor_id in source_day_lookup else [])
+        for source_day_id in merge_source_day_ids:
+            source_session = cast(dict[str, Any], source_day_lookup[source_day_id]["session"])
+            selected_exercises.extend(
+                deepcopy(exercise)
+                for exercise in source_session.get("exercises") or []
+                if isinstance(exercise, dict)
+            )
         if not selected_exercises:
             continue
 
@@ -247,7 +232,7 @@ def _build_authored_adapted_sessions(
             {
                 "name": day_name,
                 "day_role": day_role,
-                "day_offset": min(6, adapted_index),
+                "day_offset": min(6, int(cast(dict[str, Any], anchor_source["session"]).get("day_offset") or adapted_index)),
                 "exercises": selected_exercises,
             }
         )
@@ -264,6 +249,8 @@ def _prepare_authored_frequency_adapted_template(
     training_state: dict[str, Any],
     stored_weak_areas: list[str] | None,
     equipment_profile: list[str] | None,
+    session_time_budget_minutes: int | None,
+    movement_restrictions: list[str] | None,
     prior_generated_weeks: int,
 ) -> tuple[dict[str, Any], dict[str, Any] | None]:
     if not (is_authored_phase1_binding_id(selected_template_id) or is_authored_phase2_binding_id(selected_template_id)):
@@ -355,6 +342,9 @@ def _prepare_authored_frequency_adapted_template(
 
     adapted_template = deepcopy(program_template)
     adapted_template["sessions"] = deepcopy(adapted_sessions)
+    passthrough_eligible = session_time_budget_minutes is None and not list(movement_restrictions or [])
+    if passthrough_eligible:
+        adapted_template[AUTHORITATIVE_AUTHORED_PASSTHROUGH_KEY] = True
     adapted_weeks = cast(list[Any], adapted_template.get("authored_weeks") or [])
     if 0 <= authored_week_position < len(adapted_weeks) and isinstance(adapted_weeks[authored_week_position], dict):
         adapted_weeks[authored_week_position] = {
@@ -367,6 +357,7 @@ def _prepare_authored_frequency_adapted_template(
     trace["authored_prior_family_weeks"] = authored_prior_family_weeks
     trace["authored_week_index"] = authored_week_index
     trace["session_count"] = len(adapted_sessions)
+    trace["authoritative_passthrough_eligible"] = passthrough_eligible
     trace["preview_trace"] = cast(dict[str, Any], preview_payload.get("decision_trace") or {})
     return adapted_template, trace
 
@@ -1032,6 +1023,8 @@ def plan_generate_week(
             training_state=cast(dict[str, Any], generation_context["training_state"]),
             stored_weak_areas=list(current_user.weak_areas or []),
             equipment_profile=list(current_user.equipment_profile or []),
+            session_time_budget_minutes=current_user.session_time_budget_minutes,
+            movement_restrictions=list(current_user.movement_restrictions or []),
             prior_generated_weeks=int(generation_runtime.get("prior_generated_weeks") or 0),
         )
         if authored_adaptation_trace is not None:

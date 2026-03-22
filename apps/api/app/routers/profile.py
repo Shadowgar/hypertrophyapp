@@ -75,6 +75,18 @@ def _clear_user_training_state(db: Session, *, user_id: str) -> None:
     db.query(CoachingRecommendation).filter(CoachingRecommendation.user_id == user_id).delete(synchronize_session=False)
 
 
+def _has_user_progress_activity(db: Session, *, user_id: str) -> bool:
+    return any(
+        (
+            db.query(WorkoutSessionState).filter(WorkoutSessionState.user_id == user_id).first(),
+            db.query(WorkoutSetLog).filter(WorkoutSetLog.user_id == user_id).first(),
+            db.query(ExerciseState).filter(ExerciseState.user_id == user_id).first(),
+            db.query(WeeklyReviewCycle).filter(WeeklyReviewCycle.user_id == user_id).first(),
+            db.query(WeeklyCheckin).filter(WeeklyCheckin.user_id == user_id).first(),
+        )
+    )
+
+
 def _latest_plan(db: Session, user_id: str) -> WorkoutPlan | None:
     return (
         db.query(WorkoutPlan)
@@ -326,7 +338,19 @@ def upsert_profile(
         fat=payload.fat,
         carbs=payload.carbs,
     )
-    should_reset_training_state = (not was_complete and will_be_complete) or previous_binding_id != next_binding_id
+    onboarding_answers_changed = bool(payload.onboarding_answers) and payload.onboarding_answers != (current_user.onboarding_answers or {})
+    same_binding_onboarding_reset = (
+        was_complete
+        and will_be_complete
+        and previous_binding_id == next_binding_id
+        and onboarding_answers_changed
+        and not _has_user_progress_activity(db, user_id=current_user.id)
+    )
+    should_reset_training_state = (
+        (not was_complete and will_be_complete)
+        or previous_binding_id != next_binding_id
+        or same_binding_onboarding_reset
+    )
     if should_reset_training_state:
         _clear_user_training_state(db, user_id=current_user.id)
         current_user.active_frequency_adaptation = None

@@ -2,18 +2,30 @@ from __future__ import annotations
 
 from collections import Counter
 from copy import deepcopy
-from typing import Any
+from typing import Any, cast
 
 from .onboarding_adaptation import adapt_onboarding_frequency
 
 
 _PHASE1_PROGRAM_ID = "pure_bodybuilding_phase_1_full_body"
+_PHASE2_PROGRAM_ID = "pure_bodybuilding_phase_2_full_body"
 _PHASE1_5_TO_3_POLICY_ID = "pure_bodybuilding_phase_1_full_body_5_to_3"
+_PHASE2_5_TO_3_POLICY_ID = "pure_bodybuilding_phase_2_full_body_5_to_3"
 _PHASE1_5_TO_3_PRESERVATION_FOCUS = [
     "full_body_intent",
     "weak_point_intent",
     "progression_continuity",
 ]
+_PHASE2_5_TO_3_PRESERVATION_FOCUS = [
+    "full_body_intent",
+    "weak_point_intent",
+    "progression_continuity",
+]
+_WORKBOOK_5_TO_3_DAY_GROUPS: tuple[tuple[int, ...], ...] = (
+    (0, 1),
+    (2, 3),
+    (4,),
+)
 
 
 def _coerce_dict(value: Any) -> dict[str, Any]:
@@ -53,77 +65,116 @@ def _resolve_week_template(
     return candidate if isinstance(candidate, dict) else None
 
 
-def _should_apply_phase1_5_to_3_policy(
+def _resolve_workbook_5_to_3_policy(
     *,
     onboarding_package: dict[str, Any],
     current_days: int,
     target_days: int,
-) -> bool:
+) -> dict[str, Any] | None:
     blueprint = _coerce_dict(onboarding_package.get("blueprint"))
     default_training_days = int(
         blueprint.get("default_training_days")
         or _coerce_dict(onboarding_package.get("frequency_adaptation_rules")).get("default_training_days")
         or 0
     )
-    return (
-        str(onboarding_package.get("program_id") or "").strip() == _PHASE1_PROGRAM_ID
-        and int(current_days) == 5
-        and int(target_days) == 3
-        and default_training_days == 5
-    )
+    program_id = str(onboarding_package.get("program_id") or "").strip()
+    if int(current_days) != 5 or int(target_days) != 3 or default_training_days != 5:
+        return None
+    if program_id == _PHASE1_PROGRAM_ID:
+        return {
+            "policy_id": _PHASE1_5_TO_3_POLICY_ID,
+            "preservation_focus": list(_PHASE1_5_TO_3_PRESERVATION_FOCUS),
+        }
+    if program_id == _PHASE2_PROGRAM_ID:
+        return {
+            "policy_id": _PHASE2_5_TO_3_POLICY_ID,
+            "preservation_focus": list(_PHASE2_5_TO_3_PRESERVATION_FOCUS),
+        }
+    return None
 
 
-def _decorate_phase1_5_to_3_week(
+def _build_workbook_5_to_3_week(
     *,
-    week_result: dict[str, Any],
+    week_index: int,
     week_template: dict[str, Any] | None,
+    policy: dict[str, Any],
 ) -> dict[str, Any]:
-    decorated = dict(week_result)
     template = week_template or {}
-    days_by_id = {
-        str(day.get("day_id") or "").strip(): day
+    ordered_days = [
+        day
         for day in template.get("days") or []
-        if isinstance(day, dict) and str(day.get("day_id") or "").strip()
-    }
-
-    decorated["week_label"] = str(template.get("week_label") or "").strip() or None
-    decorated["block_label"] = str(template.get("block_label") or "").strip() or None
-    decorated["special_banners"] = _stripped_string_list(template.get("special_banners"))
-    decorated["program_policy"] = _PHASE1_5_TO_3_POLICY_ID
-    decorated["preservation_focus"] = list(_PHASE1_5_TO_3_PRESERVATION_FOCUS)
+        if isinstance(day, dict)
+    ]
+    adapted_days: list[dict[str, Any]] = []
+    decisions: list[dict[str, Any]] = []
+    for group in _WORKBOOK_5_TO_3_DAY_GROUPS:
+        source_days = [ordered_days[index] for index in group if 0 <= index < len(ordered_days)]
+        if not source_days:
+            continue
+        source_day_ids = _normalized_string_list([day.get("day_id") for day in source_days])
+        source_day_names = _normalized_string_list(
+            [day.get("day_name") or day.get("label") or day.get("day_id") for day in source_days]
+        )
+        source_day_roles = _normalized_string_list([day.get("day_role") for day in source_days])
+        anchor_day = source_days[0]
+        exercise_ids: list[str] = []
+        for source_day_position, source_day in enumerate(source_days):
+            source_day_id = str(source_day.get("day_id") or "").strip()
+            for slot in source_day.get("slots") or []:
+                exercise_id = str(slot.get("exercise_id") or "").strip()
+                if not exercise_id:
+                    continue
+                exercise_ids.append(exercise_id)
+                decisions.append(
+                    {
+                        "action": "preserve" if source_day_position == 0 else "combine",
+                        "exercise_id": exercise_id,
+                        "source_day_id": source_day_id,
+                        "target_day_id": str(anchor_day.get("day_id") or source_day_id).strip(),
+                        "reason": (
+                            "Retained in workbook-derived anchor day."
+                            if source_day_position == 0
+                            else "Merged from authored workbook source day without pruning."
+                        ),
+                    }
+                )
+        adapted_day = {
+            "day_id": str(anchor_day.get("day_id") or "").strip() or f"day_{len(adapted_days) + 1}",
+            "source_day_ids": source_day_ids,
+            "source_day_names": source_day_names,
+            "source_day_roles": source_day_roles,
+            "day_role": str(anchor_day.get("day_role") or "").strip() or None,
+            "day_name": " + ".join(source_day_names)
+            if len(source_day_names) > 1
+            else (source_day_names[0] if source_day_names else None),
+            "exercise_ids": exercise_ids,
+        }
+        adapted_days.append(adapted_day)
     action_summary = Counter(
         str(decision.get("action") or "").strip().lower()
-        for decision in decorated.get("decisions") or []
+        for decision in decisions
         if str(decision.get("action") or "").strip()
     )
-    decorated["action_summary"] = {action: count for action, count in sorted(action_summary.items()) if count > 0}
-
-    adapted_days: list[dict[str, Any]] = []
-    for day in decorated.get("adapted_days") or []:
-        adapted_day = dict(day)
-        source_day_ids = _normalized_string_list(adapted_day.get("source_day_ids"))
-        source_days = [days_by_id[source_day_id] for source_day_id in source_day_ids if source_day_id in days_by_id]
-        source_day_names = _normalized_string_list(
-            [
-                source_day.get("day_name") or source_day.get("label") or source_day.get("day_id")
-                for source_day in source_days
-            ]
-        )
-        source_day_roles = _normalized_string_list([source_day.get("day_role") for source_day in source_days])
-        anchor_day = days_by_id.get(str(adapted_day.get("day_id") or "").strip(), {})
-        anchor_day_name = str(anchor_day.get("day_name") or anchor_day.get("label") or adapted_day.get("day_id") or "").strip()
-
-        adapted_day["source_day_names"] = source_day_names
-        adapted_day["source_day_roles"] = source_day_roles
-        adapted_day["day_role"] = str(anchor_day.get("day_role") or "").strip() or None
-        adapted_day["day_name"] = " + ".join(source_day_names) if len(source_day_names) > 1 else (source_day_names[0] if source_day_names else anchor_day_name or None)
-        adapted_days.append(adapted_day)
-
-    decorated["adapted_days"] = adapted_days
-    return decorated
+    return {
+        "week_index": int(week_index),
+        "adapted_training_days": len(adapted_days),
+        "adapted_days": adapted_days,
+        "decisions": decisions,
+        "week_label": str(template.get("week_label") or "").strip() or None,
+        "block_label": str(template.get("block_label") or "").strip() or None,
+        "special_banners": _stripped_string_list(template.get("special_banners")),
+        "program_policy": str(policy.get("policy_id") or "").strip() or None,
+        "preservation_focus": list(policy.get("preservation_focus") or []),
+        "action_summary": {action: count for action, count in sorted(action_summary.items()) if count > 0},
+        "rationale": "Workbook-derived authored 5-to-3 merge preserves full source-day exercise order and set prescriptions.",
+    }
 
 
-def _build_phase1_5_to_3_policy_trace(weeks: list[dict[str, Any]]) -> dict[str, Any]:
+def _build_workbook_5_to_3_policy_trace(
+    *,
+    weeks: list[dict[str, Any]],
+    policy: dict[str, Any],
+) -> dict[str, Any]:
     first_week = weeks[0] if weeks else {}
     adapted_days = first_week.get("adapted_days") or []
     preserved_day_roles = [
@@ -146,8 +197,8 @@ def _build_phase1_5_to_3_policy_trace(weeks: list[dict[str, Any]]) -> dict[str, 
                 )
     return {
         "policy_mode": "program_specific",
-        "policy_id": _PHASE1_5_TO_3_POLICY_ID,
-        "preservation_focus": list(_PHASE1_5_TO_3_PRESERVATION_FOCUS),
+        "policy_id": str(policy.get("policy_id") or "").strip() or None,
+        "preservation_focus": list(policy.get("preservation_focus") or []),
         "preserved_day_roles": preserved_day_roles,
         "merged_day_roles": merged_day_roles,
     }
@@ -216,7 +267,39 @@ def recommend_frequency_adaptation_preview(
         "recovery_state": str(resolved_context["recovery_state"]),
         "current_week_index": int(resolved_context["current_week_index"]),
     }
-    result = dict(adapt_onboarding_frequency(onboarding_package=onboarding_package, overlay=overlay))
+    workbook_policy = _resolve_workbook_5_to_3_policy(
+        onboarding_package=onboarding_package,
+        current_days=current_days,
+        target_days=target_days,
+    )
+    if workbook_policy is not None:
+        weekly_results: list[dict[str, Any]] = []
+        for week_offset in range(int(duration_weeks)):
+            week_index = int(resolved_context["current_week_index"]) + week_offset
+            weekly_results.append(
+                _build_workbook_5_to_3_week(
+                    week_index=week_index,
+                    week_template=_resolve_week_template(
+                        onboarding_package=onboarding_package,
+                        week_index=week_index,
+                    ),
+                    policy=workbook_policy,
+                )
+            )
+        result = {
+            "program_id": onboarding_package.get("program_id") or "unknown_program",
+            "from_days": int(current_days),
+            "to_days": int(target_days),
+            "duration_weeks": int(duration_weeks),
+            "weak_areas": resolved_weak_areas,
+            "weeks": weekly_results,
+            "rejoin_policy": str(
+                adaptation_rules.get("reintegration_policy")
+                or "Rejoin authored cadence at next week boundary."
+            ),
+        }
+    else:
+        result = dict(adapt_onboarding_frequency(onboarding_package=onboarding_package, overlay=overlay))
     policy_trace: dict[str, Any] = {
         "policy_mode": "generic",
         "policy_id": None,
@@ -224,26 +307,11 @@ def recommend_frequency_adaptation_preview(
         "preserved_day_roles": [],
         "merged_day_roles": [],
     }
-    if _should_apply_phase1_5_to_3_policy(
-        onboarding_package=onboarding_package,
-        current_days=current_days,
-        target_days=target_days,
-    ):
-        decorated_weeks: list[dict[str, Any]] = []
-        for week in result.get("weeks") or []:
-            week_dict = dict(week)
-            week_template = _resolve_week_template(
-                onboarding_package=onboarding_package,
-                week_index=int(week_dict.get("week_index") or current_week_index),
-            )
-            decorated_weeks.append(
-                _decorate_phase1_5_to_3_week(
-                    week_result=week_dict,
-                    week_template=week_template,
-                )
-            )
-        result["weeks"] = decorated_weeks
-        policy_trace = _build_phase1_5_to_3_policy_trace(decorated_weeks)
+    if workbook_policy is not None:
+        policy_trace = _build_workbook_5_to_3_policy_trace(
+            weeks=cast(list[dict[str, Any]], result.get("weeks") or []),
+            policy=workbook_policy,
+        )
     result["decision_trace"] = {
         "interpreter": "recommend_frequency_adaptation_preview",
         "version": "v1",
