@@ -17,22 +17,40 @@ beforeEach(() => {
 
 test("Settings page shows active program and config in one-program-first mode", async () => {
   const profile = {
-    selected_program_id: "pure_bodybuilding_phase_1_full_body",
+    email: "generated@example.com",
+    name: "Generated User",
+    age: 31,
+    weight: 82,
+    gender: "male",
+    split_preference: "full_body",
+    selected_program_id: "full_body_v1",
+    program_selection_mode: "manual",
     training_location: "gym",
-    equipment_profile: ["dumbbell"],
+    equipment_profile: ["dumbbell", "cable"],
+    weak_areas: ["chest"],
+    onboarding_answers: {},
     days_available: 5,
+    nutrition_phase: "maintenance",
+    calories: 2600,
+    protein: 180,
+    fat: 70,
+    carbs: 280,
   };
 
   // @ts-ignore
   globalThis.fetch.mockImplementation((input, init) => {
     const url = typeof input === "string" ? input : input.url;
-    if (url.endsWith("/profile") && (!init || init.method === "GET")) {
+    if (url.endsWith("/profile") && (!init || !init.method || init.method === "GET")) {
       return Promise.resolve(new Response(JSON.stringify(profile), { status: 200 }));
     }
     if (url.endsWith("/plan/programs")) {
       return Promise.resolve(
         new Response(
-          JSON.stringify([{ id: "pure_bodybuilding_phase_1_full_body", name: "Hypertrophy Phase 1" }]),
+          JSON.stringify([
+            { id: "pure_bodybuilding_phase_1_full_body", name: "Full Body Phase 1" },
+            { id: "pure_bodybuilding_phase_2_full_body", name: "Full Body Phase 2" },
+            { id: "full_body_v1", name: "Make me a plan" },
+          ]),
           { status: 200 },
         ),
       );
@@ -43,7 +61,7 @@ test("Settings page shows active program and config in one-program-first mode", 
   render(<SettingsPage />);
 
   await waitFor(() => {
-    expect(screen.getByText(/Hypertrophy Phase 1/i)).toBeInTheDocument();
+    expect(screen.getByText(/Make me a plan/i)).toBeInTheDocument();
   });
   expect(screen.getByRole("button", { name: /Get Recommendation/i })).toBeInTheDocument();
   expect(screen.getByRole("button", { name: /Wipe Current User Data/i })).toBeInTheDocument();

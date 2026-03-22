@@ -7,6 +7,8 @@ from typing import Any
 _PRODUCTIVE = "productive"
 _FATIGUED = "fatigued"
 _STALLED = "stalled"
+_GENERATED_FULL_BODY_SCOPE_IDS = {"full_body_v1", "adaptive_full_body_gold_v0_1"}
+_GENERATED_FULL_BODY_POLICY_CANONICAL_ID = "pure_bodybuilding_phase_1_full_body"
 
 
 def _coerce_dict(value: Any) -> dict[str, Any]:
@@ -26,6 +28,13 @@ def _coerce_string_list(value: Any) -> list[str]:
 def _supports_generated_constructor(template_selection_trace: dict[str, Any]) -> bool:
     generated_runtime_trace = _coerce_dict(template_selection_trace.get("generated_full_body_runtime_trace"))
     return bool(generated_runtime_trace.get("generated_constructor_applied"))
+
+
+def _selected_template_in_generated_scope(*, selected_template_id: str, program_scope: list[str]) -> bool:
+    normalized_scope = {str(item).strip() for item in program_scope if str(item).strip()}
+    if selected_template_id in normalized_scope:
+        return True
+    return selected_template_id in _GENERATED_FULL_BODY_SCOPE_IDS and _GENERATED_FULL_BODY_POLICY_CANONICAL_ID in normalized_scope
 
 
 def _build_adaptive_gate(
@@ -111,7 +120,10 @@ def recommend_generated_full_body_block_review(
         decision_trace["outcome"] = {"status": "suppressed", "reason": "generated_constructor_not_applied"}
         return {"status": "suppressed", "adaptive_gate": None, "decision_trace": decision_trace}
 
-    if selected_template_id not in _coerce_string_list(normalized_policy.get("program_scope")):
+    if not _selected_template_in_generated_scope(
+        selected_template_id=selected_template_id,
+        program_scope=_coerce_string_list(normalized_policy.get("program_scope")),
+    ):
         decision_trace["outcome"] = {"status": "suppressed", "reason": "selected_template_out_of_scope"}
         return {"status": "suppressed", "adaptive_gate": None, "decision_trace": decision_trace}
 

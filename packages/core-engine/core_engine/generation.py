@@ -12,11 +12,20 @@ from .intelligence import prepare_generated_week_review_overlay
 from .scheduler import generate_week_plan
 
 PHASE1_CANONICAL_PROGRAM_ID = "pure_bodybuilding_phase_1_full_body"
+PHASE2_CANONICAL_PROGRAM_ID = "pure_bodybuilding_phase_2_full_body"
+GENERATED_FULL_BODY_CANONICAL_PROGRAM_ID = "full_body_v1"
 PHASE1_PROGRAM_ALIASES: set[str] = {
     PHASE1_CANONICAL_PROGRAM_ID,
-    "full_body_v1",
-    "adaptive_full_body_gold_v0_1",
     "pure_bodybuilding_full_body",
+}
+PHASE2_PROGRAM_ALIASES: set[str] = {
+    PHASE2_CANONICAL_PROGRAM_ID,
+    "pure_bodybuilding_phase_2_full_body_sheet",
+    "pure_bodybuilding_phase_2_full_body_sheet_1",
+}
+GENERATED_FULL_BODY_PROGRAM_ALIASES: set[str] = {
+    GENERATED_FULL_BODY_CANONICAL_PROGRAM_ID,
+    "adaptive_full_body_gold_v0_1",
 }
 
 
@@ -97,6 +106,10 @@ def _equivalent_program_ids(program_id: str) -> set[str]:
     normalized = str(program_id).strip()
     if normalized in PHASE1_PROGRAM_ALIASES:
         return set(PHASE1_PROGRAM_ALIASES)
+    if normalized in PHASE2_PROGRAM_ALIASES:
+        return set(PHASE2_PROGRAM_ALIASES)
+    if normalized in GENERATED_FULL_BODY_PROGRAM_ALIASES:
+        return set(GENERATED_FULL_BODY_PROGRAM_ALIASES)
     return {normalized}
 
 

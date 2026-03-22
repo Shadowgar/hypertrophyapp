@@ -72,6 +72,13 @@ def test_source_to_knowledge_pipeline_writes_expected_artifacts(tmp_path: Path) 
         encoding="utf-8",
     )
     doctrine_unresolved_path = tmp_path / "knowledge" / "curation" / "doctrine_bundles" / "multi_source_hypertrophy_v1.unresolved.json"
+    exercise_resolutions_path = tmp_path / "knowledge" / "curation" / "exercise_library_extraction.resolutions.json"
+    exercise_resolutions_path.parent.mkdir(parents=True, exist_ok=True)
+    exercise_resolutions_path.write_text(
+        json.dumps({"bundle_id": "exercise_library_extraction", "version": "0.1.0", "resolutions": []}, indent=2),
+        encoding="utf-8",
+    )
+    exercise_unresolved_path = tmp_path / "knowledge" / "curation" / "exercise_library_extraction.unresolved.json"
     manifest = build_compiled_knowledge(
         asset_catalog_path=asset_catalog_path,
         provenance_index_path=provenance_index_path,
@@ -81,6 +88,8 @@ def test_source_to_knowledge_pipeline_writes_expected_artifacts(tmp_path: Path) 
         doctrine_seed_path=REPO_ROOT / "knowledge" / "curation" / "doctrine_bundles" / "multi_source_hypertrophy_v1.seed.json",
         policy_seed_path=REPO_ROOT / "knowledge" / "curation" / "policy_bundles" / "system_coaching_policy_v1.seed.json",
         output_dir=output_dir,
+        exercise_library_extraction_resolutions_path=exercise_resolutions_path,
+        exercise_library_extraction_unresolved_output_path=exercise_unresolved_path,
         doctrine_resolutions_path=doctrine_resolutions_path,
         doctrine_unresolved_output_path=doctrine_unresolved_path,
     )
@@ -93,6 +102,7 @@ def test_source_to_knowledge_pipeline_writes_expected_artifacts(tmp_path: Path) 
     assert (output_dir / "policy_bundles" / "system_coaching_policy_v1.bundle.json").exists()
     assert (output_dir / "build_manifest.v1.json").exists()
     assert doctrine_unresolved_path.exists()
+    assert exercise_unresolved_path.exists()
 
     policy_payload = json.loads(
         (output_dir / "policy_bundles" / "system_coaching_policy_v1.bundle.json").read_text(encoding="utf-8")
@@ -184,7 +194,21 @@ def test_source_to_knowledge_pipeline_writes_expected_artifacts(tmp_path: Path) 
     ]
     library_payload = json.loads((output_dir / "exercise_library.foundation.v1.json").read_text(encoding="utf-8"))
     available_patterns = {record["movement_pattern"] for record in library_payload["records"] if record.get("movement_pattern")}
+    records_by_id = {record["exercise_id"]: record for record in library_payload["records"]}
     assert set(required_patterns) <= available_patterns
+    barbell_rdl = records_by_id["barbell_rdl"]
+    assert barbell_rdl["fatigue_cost"] == "high"
+    assert any(ref["source_id"] == "curated-exercise-library-override-v1" for ref in barbell_rdl["provenance"])
+    assert any(
+        ref.get("section_ref") == "exercise_intelligence_extraction:barbell_rdl:fatigue_cost"
+        for ref in barbell_rdl["provenance"]
+    )
+    assert records_by_id["belt_squat"]["skill_demand"] == "moderate"
+    assert records_by_id["belt_squat"]["stability_demand"] == "moderate"
+    assert records_by_id["bent_over_cable_pec_flye"]["skill_demand"] == "moderate"
+    assert records_by_id["bent_over_cable_pec_flye"]["stability_demand"] == "moderate"
+    assert records_by_id["bottom_half_ez_bar_preacher_curl"]["skill_demand"] == "low"
+    assert records_by_id["bottom_half_ez_bar_preacher_curl"]["stability_demand"] == "low"
     distributed_patterns = [
         pattern
         for session_rules in next(
@@ -223,6 +247,8 @@ def test_source_to_knowledge_pipeline_writes_expected_artifacts(tmp_path: Path) 
         doctrine_seed_path=REPO_ROOT / "knowledge" / "curation" / "doctrine_bundles" / "multi_source_hypertrophy_v1.seed.json",
         policy_seed_path=REPO_ROOT / "knowledge" / "curation" / "policy_bundles" / "system_coaching_policy_v1.seed.json",
         output_dir=output_dir,
+        exercise_library_extraction_resolutions_path=exercise_resolutions_path,
+        exercise_library_extraction_unresolved_output_path=exercise_unresolved_path,
         doctrine_resolutions_path=doctrine_resolutions_path,
         doctrine_unresolved_output_path=doctrine_unresolved_path,
     )

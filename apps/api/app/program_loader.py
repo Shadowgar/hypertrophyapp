@@ -11,10 +11,12 @@ from .template_schema import CanonicalProgramTemplate
 
 PHASE1_CANONICAL_PROGRAM_ID = "pure_bodybuilding_phase_1_full_body"
 PHASE2_CANONICAL_PROGRAM_ID = "pure_bodybuilding_phase_2_full_body"
+GENERATED_FULL_BODY_CANONICAL_PROGRAM_ID = "full_body_v1"
 
 _DEFAULT_ACTIVE_ADMINISTERED_PROGRAM_IDS: set[str] = {
     PHASE1_CANONICAL_PROGRAM_ID,
     PHASE2_CANONICAL_PROGRAM_ID,
+    GENERATED_FULL_BODY_CANONICAL_PROGRAM_ID,
 }
 
 _DEFAULT_CONTRACT_ENFORCED_TEMPLATE_IDS: set[str] = {
@@ -62,10 +64,12 @@ PHASE1_CANONICAL_RUNTIME_TEMPLATE_ID = PHASE1_CANONICAL_PROGRAM_ID
 PHASE1_LEGACY_RUNTIME_TEMPLATE_ID = "adaptive_full_body_gold_v0_1"
 PHASE1_LEGACY_RULE_OVERLAY_SOURCE_ID = PHASE1_LEGACY_RUNTIME_TEMPLATE_ID
 PHASE1_COMPATIBILITY_ALIASES: set[str] = {
-    "full_body_v1",
-    "adaptive_full_body_gold_v0_1",
     "pure_bodybuilding_full_body",
     PHASE1_CANONICAL_PROGRAM_ID,
+}
+GENERATED_FULL_BODY_COMPATIBILITY_ALIASES: set[str] = {
+    GENERATED_FULL_BODY_CANONICAL_PROGRAM_ID,
+    PHASE1_LEGACY_RUNTIME_TEMPLATE_ID,
 }
 PHASE2_COMPATIBILITY_ALIASES: set[str] = {
     PHASE2_CANONICAL_PROGRAM_ID,
@@ -77,12 +81,15 @@ ADMINISTERED_PROGRAM_ID_ALIASES: dict[str, str] = {
     alias: PHASE1_CANONICAL_PROGRAM_ID for alias in PHASE1_COMPATIBILITY_ALIASES
 }
 ADMINISTERED_PROGRAM_ID_ALIASES.update(
+    {alias: GENERATED_FULL_BODY_CANONICAL_PROGRAM_ID for alias in GENERATED_FULL_BODY_COMPATIBILITY_ALIASES}
+)
+ADMINISTERED_PROGRAM_ID_ALIASES.update(
     {alias: PHASE2_CANONICAL_PROGRAM_ID for alias in PHASE2_COMPATIBILITY_ALIASES}
 )
 
 RUNTIME_TEMPLATE_SOURCE_IDS: dict[str, str] = {
-    "full_body_v1": PHASE1_CANONICAL_RUNTIME_TEMPLATE_ID,
-    "adaptive_full_body_gold_v0_1": PHASE1_CANONICAL_RUNTIME_TEMPLATE_ID,
+    GENERATED_FULL_BODY_CANONICAL_PROGRAM_ID: GENERATED_FULL_BODY_CANONICAL_PROGRAM_ID,
+    PHASE1_LEGACY_RUNTIME_TEMPLATE_ID: GENERATED_FULL_BODY_CANONICAL_PROGRAM_ID,
     PHASE1_CANONICAL_PROGRAM_ID: PHASE1_CANONICAL_RUNTIME_TEMPLATE_ID,
     "pure_bodybuilding_phase_2_full_body_sheet": PHASE2_CANONICAL_PROGRAM_ID,
     "pure_bodybuilding_phase_2_full_body_sheet_1": PHASE2_CANONICAL_PROGRAM_ID,
@@ -94,8 +101,8 @@ RUNTIME_TEMPLATE_SOURCE_FALLBACK_IDS: dict[str, str] = {
 }
 
 ONBOARDING_SOURCE_IDS: dict[str, str] = {
-    "full_body_v1": PHASE1_CANONICAL_PROGRAM_ID,
-    "adaptive_full_body_gold_v0_1": PHASE1_CANONICAL_PROGRAM_ID,
+    GENERATED_FULL_BODY_CANONICAL_PROGRAM_ID: PHASE1_CANONICAL_PROGRAM_ID,
+    PHASE1_LEGACY_RUNTIME_TEMPLATE_ID: PHASE1_CANONICAL_PROGRAM_ID,
     "pure_bodybuilding_full_body": PHASE1_CANONICAL_PROGRAM_ID,
     PHASE1_CANONICAL_PROGRAM_ID: PHASE1_CANONICAL_PROGRAM_ID,
     "pure_bodybuilding_phase_2_full_body_sheet": PHASE2_CANONICAL_PROGRAM_ID,
@@ -104,8 +111,8 @@ ONBOARDING_SOURCE_IDS: dict[str, str] = {
 }
 
 RULE_SOURCE_IDS: dict[str, str] = {
-    "full_body_v1": PHASE1_CANONICAL_PROGRAM_ID,
-    "adaptive_full_body_gold_v0_1": PHASE1_CANONICAL_PROGRAM_ID,
+    GENERATED_FULL_BODY_CANONICAL_PROGRAM_ID: PHASE1_CANONICAL_PROGRAM_ID,
+    PHASE1_LEGACY_RUNTIME_TEMPLATE_ID: PHASE1_CANONICAL_PROGRAM_ID,
     "pure_bodybuilding_full_body": PHASE1_CANONICAL_PROGRAM_ID,
     PHASE1_CANONICAL_PROGRAM_ID: PHASE1_CANONICAL_PROGRAM_ID,
     "pure_bodybuilding_phase_2_full_body_sheet": PHASE2_CANONICAL_PROGRAM_ID,
@@ -117,7 +124,7 @@ RULE_SOURCE_IDS: dict[str, str] = {
 PROGRAM_DESCRIPTIONS: dict[str, str] = {
     PHASE1_CANONICAL_PROGRAM_ID: "Hypertrophy Phase 1 administered baseline with authored workbook execution detail.",
     PHASE2_CANONICAL_PROGRAM_ID: "Hypertrophy Phase 2 canonical runtime program with authored two-block transitions.",
-    "full_body_v1": "Pure Bodybuilding-inspired full body structure with deterministic day templates.",
+    GENERATED_FULL_BODY_CANONICAL_PROGRAM_ID: "Deterministic generated full body planning path driven by doctrine and blueprint construction.",
     "ppl_v1": "Push/Pull/Legs baseline template for balanced hypertrophy progression.",
     "upper_lower_v1": "Upper/Lower split with clear weekly distribution and recovery spacing.",
     "edited_ppl_5x": "Imported higher-frequency PPL variant derived from reference spreadsheet data.",
@@ -138,8 +145,8 @@ PROGRAM_DESCRIPTIONS: dict[str, str] = {
 PROGRAM_NAMES: dict[str, str] = {
     PHASE1_CANONICAL_PROGRAM_ID: "Hypertrophy Phase 1",
     PHASE2_CANONICAL_PROGRAM_ID: "Hypertrophy Phase 2",
-    "adaptive_full_body_gold_v0_1": "Adaptive Full Body Gold v0.1",
-    "full_body_v1": "Full Body v1",
+    PHASE1_LEGACY_RUNTIME_TEMPLATE_ID: "Make me a plan",
+    GENERATED_FULL_BODY_CANONICAL_PROGRAM_ID: "Make me a plan",
     "ppl_v1": "Push Pull Legs v1",
     "upper_lower_v1": "Upper Lower v1",
     "edited_ppl_5x": "Edited PPL 5x",
@@ -158,8 +165,8 @@ PROGRAM_NAMES: dict[str, str] = {
 }
 
 LINKED_PROGRAM_IDS: dict[str, str] = {
-    "adaptive_full_body_gold_v0_1": "pure_bodybuilding_phase_1_full_body",
-    "full_body_v1": "pure_bodybuilding_phase_1_full_body",
+    PHASE1_LEGACY_RUNTIME_TEMPLATE_ID: PHASE1_CANONICAL_PROGRAM_ID,
+    GENERATED_FULL_BODY_CANONICAL_PROGRAM_ID: PHASE1_CANONICAL_PROGRAM_ID,
     "ppl_v1": "pure_bodybuilding_phase_2_ppl_sheet",
     "upper_lower_v1": "pure_bodybuilding_phase_2_upper_lower_sheet",
     "pure_bodybuilding_full_body": "pure_bodybuilding_phase_1_full_body",
@@ -174,8 +181,8 @@ LINKED_PROGRAM_IDS: dict[str, str] = {
 ADAPTIVE_GOLD_ONBOARDING_PROGRAM_IDS: dict[str, str] = {
     PHASE1_CANONICAL_PROGRAM_ID: PHASE1_CANONICAL_PROGRAM_ID,
     PHASE2_CANONICAL_PROGRAM_ID: PHASE2_CANONICAL_PROGRAM_ID,
-    "full_body_v1": PHASE1_CANONICAL_PROGRAM_ID,
-    "adaptive_full_body_gold_v0_1": "pure_bodybuilding_phase_1_full_body",
+    GENERATED_FULL_BODY_CANONICAL_PROGRAM_ID: PHASE1_CANONICAL_PROGRAM_ID,
+    PHASE1_LEGACY_RUNTIME_TEMPLATE_ID: PHASE1_CANONICAL_PROGRAM_ID,
     "pure_bodybuilding_phase_2_full_body_sheet": PHASE2_CANONICAL_PROGRAM_ID,
     "pure_bodybuilding_phase_2_full_body_sheet_1": PHASE2_CANONICAL_PROGRAM_ID,
 }
@@ -247,6 +254,22 @@ def resolve_administered_program_id(program_id: str | None) -> str | None:
     if not normalized:
         return None
     return ADMINISTERED_PROGRAM_ID_ALIASES.get(normalized, normalized)
+
+
+def resolve_selected_program_binding_id(program_id: str | None) -> str | None:
+    return resolve_administered_program_id(program_id)
+
+
+def is_authored_phase1_binding_id(program_id: str | None) -> bool:
+    return resolve_selected_program_binding_id(program_id) == PHASE1_CANONICAL_PROGRAM_ID
+
+
+def is_authored_phase2_binding_id(program_id: str | None) -> bool:
+    return resolve_selected_program_binding_id(program_id) == PHASE2_CANONICAL_PROGRAM_ID
+
+
+def is_generated_full_body_binding_id(program_id: str | None) -> bool:
+    return resolve_selected_program_binding_id(program_id) == GENERATED_FULL_BODY_CANONICAL_PROGRAM_ID
 
 
 def resolve_active_administered_program_id(program_id: str | None) -> str:
@@ -824,7 +847,27 @@ def list_program_templates(*, active_only: bool = True) -> list[dict]:
     if not active_only:
         return summaries
 
-    active_summaries = [summary for summary in summaries if summary.get("id") in ACTIVE_ADMINISTERED_PROGRAM_IDS]
+    selectable_ids = [
+        PHASE1_CANONICAL_PROGRAM_ID,
+        PHASE2_CANONICAL_PROGRAM_ID,
+        GENERATED_FULL_BODY_CANONICAL_PROGRAM_ID,
+    ]
+    active_summaries = [
+        {
+            "id": template_id,
+            "name": PROGRAM_NAMES.get(template_id, _fallback_program_name(template_id)),
+            "version": template["version"],
+            "split": template["split"],
+            "days_supported": template["days_supported"],
+            "session_count": len(template["sessions"]),
+            "description": PROGRAM_DESCRIPTIONS.get(
+                template_id,
+                f"Deterministic {template['split']} program template.",
+            ),
+        }
+        for template_id in selectable_ids
+        for template in [load_program_template(template_id)]
+    ]
     if active_summaries:
         return active_summaries
     return summaries

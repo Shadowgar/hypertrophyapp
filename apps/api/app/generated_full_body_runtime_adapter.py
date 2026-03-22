@@ -14,7 +14,7 @@ from .knowledge_loader import load_doctrine_bundle, load_exercise_library, load_
 from .template_schema import CanonicalProgramTemplate
 
 
-GENERATED_FULL_BODY_COMPATIBILITY_TEMPLATE_ID = "pure_bodybuilding_phase_1_full_body"
+GENERATED_FULL_BODY_COMPATIBILITY_TEMPLATE_ID = "full_body_v1"
 
 FALLBACK_REASON_BUNDLE_LOAD_FAILED = "bundle_load_failed"
 FALLBACK_REASON_ASSESSMENT_VALIDATION_FAILED = "assessment_validation_failed"

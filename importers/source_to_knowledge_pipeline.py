@@ -23,6 +23,7 @@ from app.knowledge_schema import (
     DoctrineBundle,
     PolicyBundle,
 )
+from app.knowledge_loader import load_source_registry as load_current_source_registry
 from importers.exercise_library_foundation import build_exercise_library_foundation, write_exercise_library
 from importers.full_body_structural_doctrine import apply_full_body_required_movement_patterns_rule
 from importers.source_registry_builder import build_source_registry, write_source_registry
@@ -130,6 +131,8 @@ def build_compiled_knowledge(
     doctrine_seed_path: Path,
     policy_seed_path: Path,
     output_dir: Path,
+    exercise_library_extraction_resolutions_path: Path | None = None,
+    exercise_library_extraction_unresolved_output_path: Path | None = None,
     doctrine_resolutions_path: Path | None = None,
     doctrine_unresolved_output_path: Path | None = None,
 ) -> CompiledKnowledgeManifest:
@@ -147,7 +150,10 @@ def build_compiled_knowledge(
 
     exercise_library, warnings = build_exercise_library_foundation(
         onboarding_dir=onboarding_dir,
+        source_registry_bundle=load_current_source_registry(),
         override_path=exercise_library_overrides_path,
+        extraction_resolutions_path=exercise_library_extraction_resolutions_path,
+        extraction_unresolved_output_path=exercise_library_extraction_unresolved_output_path,
     )
     exercise_library_path = output_dir / "exercise_library.foundation.v1.json"
     write_exercise_library(exercise_library, exercise_library_path)
@@ -271,6 +277,16 @@ def main() -> None:
         default=REPO_ROOT / "knowledge" / "compiled",
     )
     parser.add_argument(
+        "--exercise-library-extraction-resolutions",
+        type=Path,
+        default=REPO_ROOT / "knowledge" / "curation" / "exercise_library_extraction.resolutions.json",
+    )
+    parser.add_argument(
+        "--exercise-library-extraction-unresolved-output",
+        type=Path,
+        default=REPO_ROOT / "knowledge" / "curation" / "exercise_library_extraction.unresolved.json",
+    )
+    parser.add_argument(
         "--doctrine-resolutions",
         type=Path,
         default=REPO_ROOT / "knowledge" / "curation" / "doctrine_bundles" / "multi_source_hypertrophy_v1.resolutions.json",
@@ -291,6 +307,8 @@ def main() -> None:
         doctrine_seed_path=args.doctrine_seed,
         policy_seed_path=args.policy_seed,
         output_dir=args.output_dir,
+        exercise_library_extraction_resolutions_path=args.exercise_library_extraction_resolutions,
+        exercise_library_extraction_unresolved_output_path=args.exercise_library_extraction_unresolved_output,
         doctrine_resolutions_path=args.doctrine_resolutions,
         doctrine_unresolved_output_path=args.doctrine_unresolved_output,
     )

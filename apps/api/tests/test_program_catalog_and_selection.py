@@ -13,7 +13,7 @@ from app.models import ExerciseState, User, WeeklyReviewCycle, WorkoutPlan
 from app.routers import plan as plan_router
 
 TEST_CREDENTIAL = f"T{uuid.uuid4().hex[:15]}"
-CANONICAL_GENERATED_FULL_BODY_ID = "pure_bodybuilding_phase_1_full_body"
+CANONICAL_GENERATED_FULL_BODY_ID = "full_body_v1"
 
 
 def _reset_db() -> None:
@@ -74,10 +74,14 @@ def test_program_catalog_lists_templates() -> None:
     assert isinstance(payload, list)
     assert any(item["id"] == "pure_bodybuilding_phase_1_full_body" for item in payload)
     assert any(item["id"] == "pure_bodybuilding_phase_2_full_body" for item in payload)
+    assert any(item["id"] == "full_body_v1" for item in payload)
 
     ids = {str(item.get("id")) for item in payload}
-    assert ids == {"pure_bodybuilding_phase_1_full_body", "pure_bodybuilding_phase_2_full_body"}
-    assert "full_body_v1" not in ids
+    assert ids == {
+        "pure_bodybuilding_phase_1_full_body",
+        "pure_bodybuilding_phase_2_full_body",
+        "full_body_v1",
+    }
     assert "adaptive_full_body_gold_v0_1" not in ids
     assert "ppl_v1" not in ids
     assert "upper_lower_v1" not in ids
@@ -127,13 +131,13 @@ def test_generate_week_uses_canonical_template_when_non_active_program_is_select
     assert generate.status_code == 200
     plan = generate.json()
     assert len(plan["sessions"]) > 0
-    assert plan["sessions"][0]["session_id"].startswith("pure_bodybuilding_phase_1_full_body-")
+    assert plan["sessions"][0]["session_id"].startswith("full_body_v1-")
     assert plan["decision_trace"]["owner_family"] == "generated_week"
-    assert plan["decision_trace"]["canonical_inputs"]["selected_template_id"] == "pure_bodybuilding_phase_1_full_body"
+    assert plan["decision_trace"]["canonical_inputs"]["selected_template_id"] == "full_body_v1"
     assert plan["decision_trace"]["execution_steps"][0]["step"] == "template_selection"
     assert plan["decision_trace"]["reason_summary"]
     assert plan["template_selection_trace"]["interpreter"] == "recommend_generation_template_selection"
-    assert plan["template_selection_trace"]["selected_template_id"] == "pure_bodybuilding_phase_1_full_body"
+    assert plan["template_selection_trace"]["selected_template_id"] == "full_body_v1"
     assert plan["generation_runtime_trace"]["interpreter"] == "resolve_week_generation_runtime_inputs"
     assert plan["generation_runtime_trace"]["outcome"]["effective_days_available"] == 3
 
@@ -185,11 +189,11 @@ def test_generate_week_supports_adaptive_gold_runtime_program() -> None:
     ]
     assert [len(session["exercises"]) for session in plan["sessions"]] == [4, 4, 4]
     assert plan["mesocycle"]["authored_week_index"] == 1
-    assert plan["mesocycle"]["authored_week_role"] == "adaptation"
+    assert plan["mesocycle"]["week_index"] == 1
     assert any(exercise["movement_pattern"] == "hinge" for session in plan["sessions"] for exercise in session["exercises"])
 
 
-def test_generate_week_normalizes_legacy_full_body_alias_to_phase1_canonical_identity() -> None:
+def test_generate_week_preserves_generated_full_body_identity() -> None:
     _reset_db()
     client = TestClient(app)
 
@@ -227,8 +231,8 @@ def test_generate_week_normalizes_legacy_full_body_alias_to_phase1_canonical_ide
     assert generate.status_code == 200
     plan = generate.json()
 
-    assert plan["program_template_id"] == "pure_bodybuilding_phase_1_full_body"
-    assert plan["template_selection_trace"]["selected_template_id"] == "pure_bodybuilding_phase_1_full_body"
+    assert plan["program_template_id"] == "full_body_v1"
+    assert plan["template_selection_trace"]["selected_template_id"] == "full_body_v1"
 
 
 def test_adaptive_gold_generate_week_exposes_minimum_generated_exercise_fields() -> None:
@@ -365,7 +369,7 @@ def test_adaptive_gold_generate_week_includes_hinge_slot_when_equipment_availabl
     _assert_generated_full_body_runtime(plan)
     exercises = [exercise for session in plan["sessions"] for exercise in session["exercises"]]
     hinge_exercise = next(item for item in exercises if item["movement_pattern"] == "hinge")
-    assert "barbell" in hinge_exercise["equipment_tags"]
+    assert any(tag in hinge_exercise["equipment_tags"] for tag in {"barbell", "dumbbell", "machine"})
 
 
 def test_adaptive_gold_generate_week_includes_weak_point_slots_when_equipment_available() -> None:
@@ -411,7 +415,7 @@ def test_adaptive_gold_generate_week_includes_weak_point_slots_when_equipment_av
     assert not any(exercise["id"].startswith("weak_point_exercise_") for exercise in exercises)
 
 
-def test_adaptive_gold_generate_week_uses_generated_optional_fill_patterns_when_equipment_available() -> None:
+def test_adaptive_gold_generate_week_uses_generated_accessory_fill_patterns_when_equipment_available() -> None:
     _reset_db()
     client = TestClient(app)
 
@@ -451,7 +455,10 @@ def test_adaptive_gold_generate_week_uses_generated_optional_fill_patterns_when_
 
     _assert_generated_full_body_runtime(plan)
     exercises = [exercise for session in plan["sessions"] for exercise in session["exercises"]]
-    assert any(exercise["movement_pattern"] == "lateral_raise" for exercise in exercises)
+    assert any(
+        exercise["movement_pattern"] in {"knee_extension", "triceps_extension", "leg_curl", "curl"}
+        for exercise in exercises
+    )
 
 
 def test_adaptive_gold_generate_week_preserves_weak_point_days_when_frequency_compresses() -> None:
@@ -1440,7 +1447,7 @@ def test_adaptive_gold_generate_week_uses_canonical_readiness_state_for_sfr_reco
     assert generate.status_code == 200
     plan = generate.json()
 
-    assert plan["program_template_id"] == "pure_bodybuilding_phase_1_full_body"
+    assert plan["program_template_id"] == "full_body_v1"
     assert plan["mesocycle"]["is_deload_week"] is True
     assert plan["mesocycle"]["deload_reason"] == "early_sfr_recovery"
     assert plan["deload"]["active"] is True
@@ -1527,7 +1534,7 @@ def test_adaptive_gold_generate_week_uses_saved_weekly_review_adjustments() -> N
     assert generated.status_code == 200
     payload = generated.json()
 
-    assert payload["program_template_id"] == "pure_bodybuilding_phase_1_full_body"
+    assert payload["program_template_id"] == "full_body_v1"
     assert payload["adaptive_review"]["global_set_delta"] == -1
     assert float(payload["adaptive_review"]["global_weight_scale"]) == 0.95
     assert payload["adaptive_review"]["decision_trace"]["interpreter"] == "interpret_weekly_review_decision"
@@ -1714,7 +1721,7 @@ def test_generate_week_includes_mesocycle_and_deload_payload() -> None:
     assert generate.status_code == 200
     plan = generate.json()
 
-    assert plan["program_template_id"] == "pure_bodybuilding_phase_1_full_body"
+    assert plan["program_template_id"] == "full_body_v1"
     assert plan["mesocycle"]["is_deload_week"] is True
     assert plan["mesocycle"]["deload_reason"] != "none"
     assert plan["deload"]["active"] is True

@@ -1,4 +1,5 @@
 from datetime import UTC, date, datetime
+from copy import deepcopy
 from typing import Annotated, Any, Literal, cast
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -30,6 +31,7 @@ from core_engine import (
     prepare_generation_template_runtime,
     prepare_plan_generation_decision_runtime,
     prepare_profile_program_recommendation_route_runtime,
+    recommend_frequency_adaptation_preview,
     resolve_program_display_name,
     resolve_optional_rule_set,
     resolve_onboarding_program_id,
@@ -50,12 +52,14 @@ from ..generated_full_body_runtime_adapter import (
 )
 from ..models import CoachingRecommendation, ExerciseState, SorenessEntry, User, WeeklyCheckin, WeeklyReviewCycle, WorkoutPlan, WorkoutSetLog
 from ..program_loader import (
+    is_authored_phase1_binding_id,
+    is_authored_phase2_binding_id,
+    is_generated_full_body_binding_id,
     list_program_templates,
-    resolve_active_administered_program_id,
     load_program_onboarding_package,
     load_program_rule_set,
     load_program_template,
-    resolve_administered_program_id,
+    resolve_selected_program_binding_id,
     resolve_onboarding_program_id as resolve_loader_onboarding_program_id,
     resolve_rule_program_id,
 )
@@ -99,6 +103,234 @@ def _list_active_program_templates() -> list[dict[str, Any]]:
     except TypeError:
         # Test monkeypatches may provide a no-arg lambda replacement.
         return cast(list[dict[str, Any]], list_program_templates())
+
+
+def _resolve_authored_week_index(program_template: dict[str, Any], *, prior_generated_weeks: int) -> int:
+    authored_weeks = program_template.get("authored_weeks") or []
+    if not isinstance(authored_weeks, list) or not authored_weeks:
+        return 1
+    bounded_index = min(max(0, int(prior_generated_weeks)), len(authored_weeks) - 1)
+    selected_week = authored_weeks[bounded_index] if isinstance(authored_weeks[bounded_index], dict) else {}
+    return max(1, int(selected_week.get("week_index", bounded_index + 1) or bounded_index + 1))
+
+
+def _resolve_onboarding_week(
+    onboarding_package: dict[str, Any],
+    *,
+    week_index: int,
+) -> dict[str, Any] | None:
+    blueprint = cast(dict[str, Any], onboarding_package.get("blueprint") or {})
+    week_sequence = [
+        str(item).strip()
+        for item in blueprint.get("week_sequence") or []
+        if str(item).strip()
+    ]
+    if not week_sequence:
+        return None
+    template_key = week_sequence[(max(1, int(week_index)) - 1) % len(week_sequence)]
+    for candidate in blueprint.get("week_templates") or []:
+        if not isinstance(candidate, dict):
+            continue
+        if str(candidate.get("week_template_id") or "").strip() == template_key:
+            return candidate
+    return None
+
+
+def _exercise_identity(exercise: dict[str, Any]) -> str:
+    return str(exercise.get("primary_exercise_id") or exercise.get("id") or "").strip()
+
+
+def _build_authored_adapted_sessions(
+    *,
+    preview_week: dict[str, Any],
+    onboarding_week: dict[str, Any] | None,
+    runtime_week_sessions: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    onboarding_days = [
+        day
+        for day in (onboarding_week or {}).get("days") or []
+        if isinstance(day, dict)
+    ]
+    indexed_sessions = runtime_week_sessions[: len(onboarding_days)] if onboarding_days else runtime_week_sessions
+    source_day_lookup: dict[str, dict[str, Any]] = {}
+    for index, runtime_session in enumerate(indexed_sessions):
+        onboarding_day = onboarding_days[index] if index < len(onboarding_days) else {}
+        day_id = str(onboarding_day.get("day_id") or f"d{index + 1}").strip()
+        source_day_lookup[day_id] = {
+            "day_name": str(
+                onboarding_day.get("day_name")
+                or onboarding_day.get("label")
+                or runtime_session.get("name")
+                or day_id
+            ).strip(),
+            "day_role": str(onboarding_day.get("day_role") or runtime_session.get("day_role") or "").strip() or None,
+            "session": runtime_session,
+        }
+
+    adapted_sessions: list[dict[str, Any]] = []
+    for adapted_index, adapted_day in enumerate(preview_week.get("adapted_days") or []):
+        if not isinstance(adapted_day, dict):
+            continue
+        source_day_ids = [
+            str(item).strip()
+            for item in adapted_day.get("source_day_ids") or []
+            if str(item).strip() and str(item).strip() in source_day_lookup
+        ]
+        anchor_id = str(adapted_day.get("day_id") or "").strip()
+        anchor_source = source_day_lookup.get(anchor_id) or (source_day_lookup.get(source_day_ids[0]) if source_day_ids else None)
+        if anchor_source is None:
+            continue
+
+        exercise_pools: dict[str, list[dict[str, Any]]] = {}
+        ordered_fallback_exercises: list[dict[str, Any]] = []
+        ordered_fallback_seen: set[str] = set()
+        for source_day_id in source_day_ids or ([anchor_id] if anchor_id in source_day_lookup else []):
+            source_session = cast(dict[str, Any], source_day_lookup[source_day_id]["session"])
+            for exercise in source_session.get("exercises") or []:
+                if not isinstance(exercise, dict):
+                    continue
+                exercise_id = _exercise_identity(exercise)
+                if not exercise_id:
+                    continue
+                exercise_pools.setdefault(exercise_id, []).append(deepcopy(exercise))
+                if exercise_id not in ordered_fallback_seen:
+                    ordered_fallback_seen.add(exercise_id)
+                    ordered_fallback_exercises.append(deepcopy(exercise))
+
+        selected_exercises: list[dict[str, Any]] = []
+        for exercise_id in adapted_day.get("exercise_ids") or []:
+            normalized_id = str(exercise_id).strip()
+            queue = exercise_pools.get(normalized_id) or []
+            if queue:
+                selected_exercises.append(queue.pop(0))
+
+        if not selected_exercises:
+            selected_exercises = ordered_fallback_exercises
+        if not selected_exercises:
+            continue
+
+        source_names = [str(source_day_lookup[day_id]["day_name"]).strip() for day_id in source_day_ids if day_id in source_day_lookup]
+        day_name = str(adapted_day.get("day_name") or "").strip()
+        if not day_name:
+            day_name = " + ".join(source_names) if len(source_names) > 1 else (source_names[0] if source_names else str(anchor_source["day_name"]))
+
+        day_role = str(adapted_day.get("day_role") or "").strip() or cast(str | None, anchor_source.get("day_role"))
+        adapted_sessions.append(
+            {
+                "name": day_name,
+                "day_role": day_role,
+                "day_offset": min(6, adapted_index),
+                "exercises": selected_exercises,
+            }
+        )
+
+    return adapted_sessions
+
+
+def _prepare_authored_frequency_adapted_template(
+    *,
+    selected_template_id: str,
+    program_template: dict[str, Any],
+    current_days_available: int,
+    active_frequency_adaptation: dict[str, Any] | None,
+    training_state: dict[str, Any],
+    stored_weak_areas: list[str] | None,
+    equipment_profile: list[str] | None,
+    prior_generated_weeks: int,
+) -> tuple[dict[str, Any], dict[str, Any] | None]:
+    if not (is_authored_phase1_binding_id(selected_template_id) or is_authored_phase2_binding_id(selected_template_id)):
+        return program_template, None
+
+    onboarding_package = load_program_onboarding_package(selected_template_id)
+    blueprint = cast(dict[str, Any], onboarding_package.get("blueprint") or {})
+    default_training_days = int(
+        blueprint.get("default_training_days")
+        or len(cast(list[Any], (_resolve_onboarding_week(onboarding_package, week_index=1) or {}).get("days") or []))
+        or current_days_available
+    )
+    target_days = int(active_frequency_adaptation.get("target_days") or current_days_available) if active_frequency_adaptation else int(current_days_available)
+
+    trace: dict[str, Any] = {
+        "interpreter": "prepare_authored_frequency_adapted_template",
+        "selected_template_id": selected_template_id,
+        "default_training_days": default_training_days,
+        "target_days": target_days,
+        "active_frequency_adaptation_present": bool(active_frequency_adaptation),
+    }
+    if target_days >= default_training_days:
+        trace["status"] = "not_applied"
+        trace["reason"] = "target_days_not_below_authored_default"
+        return program_template, trace
+
+    authored_weeks = program_template.get("authored_weeks") or []
+    if not isinstance(authored_weeks, list) or not authored_weeks:
+        trace["status"] = "not_applied"
+        trace["reason"] = "authored_weeks_missing"
+        return program_template, trace
+
+    authored_week_index = _resolve_authored_week_index(program_template, prior_generated_weeks=prior_generated_weeks)
+    authored_week_position = min(max(0, int(prior_generated_weeks)), len(authored_weeks) - 1)
+    selected_week = authored_weeks[authored_week_position] if isinstance(authored_weeks[authored_week_position], dict) else {}
+    runtime_week_sessions = [
+        session
+        for session in selected_week.get("sessions") or []
+        if isinstance(session, dict)
+    ]
+    onboarding_week = _resolve_onboarding_week(onboarding_package, week_index=authored_week_index)
+
+    fatigue_state = cast(dict[str, Any], training_state.get("fatigue_state") or {})
+    recovery_state = str(fatigue_state.get("recovery_state") or "normal").strip() or "normal"
+    preview_payload = recommend_frequency_adaptation_preview(
+        onboarding_package=onboarding_package,
+        program_id=selected_template_id,
+        template_id=selected_template_id,
+        current_days=default_training_days,
+        target_days=target_days,
+        duration_weeks=1,
+        explicit_weak_areas=list(active_frequency_adaptation.get("weak_areas") or []) if active_frequency_adaptation else None,
+        stored_weak_areas=list(stored_weak_areas or []),
+        equipment_profile=list(equipment_profile or []),
+        recovery_state=recovery_state,
+        current_week_index=authored_week_index,
+        request_runtime_trace={
+            "interpreter": "prepare_authored_frequency_adapted_template",
+            "selected_template_id": selected_template_id,
+            "authored_week_index": authored_week_index,
+        },
+    )
+    preview_week = cast(list[dict[str, Any]], preview_payload.get("weeks") or [])[:1]
+    if not preview_week:
+        trace["status"] = "not_applied"
+        trace["reason"] = "preview_weeks_missing"
+        trace["preview_trace"] = cast(dict[str, Any], preview_payload.get("decision_trace") or {})
+        return program_template, trace
+
+    adapted_sessions = _build_authored_adapted_sessions(
+        preview_week=preview_week[0],
+        onboarding_week=onboarding_week,
+        runtime_week_sessions=runtime_week_sessions,
+    )
+    if not adapted_sessions:
+        trace["status"] = "not_applied"
+        trace["reason"] = "adapted_sessions_missing"
+        trace["preview_trace"] = cast(dict[str, Any], preview_payload.get("decision_trace") or {})
+        return program_template, trace
+
+    adapted_template = deepcopy(program_template)
+    adapted_template["sessions"] = deepcopy(adapted_sessions)
+    adapted_weeks = cast(list[Any], adapted_template.get("authored_weeks") or [])
+    if 0 <= authored_week_position < len(adapted_weeks) and isinstance(adapted_weeks[authored_week_position], dict):
+        adapted_weeks[authored_week_position] = {
+            **adapted_weeks[authored_week_position],
+            "sessions": deepcopy(adapted_sessions),
+        }
+        adapted_template["authored_weeks"] = adapted_weeks
+
+    trace["status"] = "applied"
+    trace["authored_week_index"] = authored_week_index
+    trace["session_count"] = len(adapted_sessions)
+    trace["preview_trace"] = cast(dict[str, Any], preview_payload.get("decision_trace") or {})
+    return adapted_template, trace
 
 
 def _prepare_plan_generation_runtime(
@@ -175,7 +407,7 @@ def list_guide_programs() -> list[GuideProgramSummary]:
 
 @router.get("/plan/guides/programs/{program_id}", responses=GUIDE_RESPONSES)
 def get_program_guide(program_id: str) -> ProgramGuideResponse:
-    resolved_program_id = resolve_administered_program_id(program_id) or program_id
+    resolved_program_id = resolve_selected_program_binding_id(program_id) or program_id
     try:
         summary = resolve_program_guide_summary(
             program_id=resolved_program_id,
@@ -192,7 +424,7 @@ def get_program_guide(program_id: str) -> ProgramGuideResponse:
 
 @router.get("/plan/guides/programs/{program_id}/days/{day_index}", responses=GUIDE_RESPONSES)
 def get_program_day_guide(program_id: str, day_index: int) -> ProgramDayGuideResponse:
-    resolved_program_id = resolve_administered_program_id(program_id) or program_id
+    resolved_program_id = resolve_selected_program_binding_id(program_id) or program_id
     try:
         template = load_program_template(resolved_program_id)
     except FileNotFoundError as exc:
@@ -209,7 +441,7 @@ def get_program_day_guide(program_id: str, day_index: int) -> ProgramDayGuideRes
 
 @router.get("/plan/guides/programs/{program_id}/exercise/{exercise_id}", responses=GUIDE_RESPONSES)
 def get_program_exercise_guide(program_id: str, exercise_id: str) -> ProgramExerciseGuideResponse:
-    resolved_program_id = resolve_administered_program_id(program_id) or program_id
+    resolved_program_id = resolve_selected_program_binding_id(program_id) or program_id
     try:
         template = load_program_template(resolved_program_id)
     except FileNotFoundError as exc:
@@ -377,8 +609,8 @@ def coach_intelligence_preview(
         profile_days_available=current_user.days_available,
     )
     preview_request = cast(dict[str, Any], preview_runtime["preview_request"])
-    explicit_template_id = resolve_active_administered_program_id(payload.template_id) if payload.template_id else None
-    profile_template_id = resolve_active_administered_program_id(current_user.selected_program_id)
+    explicit_template_id = resolve_selected_program_binding_id(payload.template_id) if payload.template_id else None
+    profile_template_id = resolve_selected_program_binding_id(current_user.selected_program_id)
 
     try:
         template_runtime = prepare_generation_template_runtime(
@@ -502,8 +734,8 @@ def preview_frequency_adaptation(
         .first()
     )
     adaptation_decision_runtime = prepare_frequency_adaptation_decision_runtime(
-        requested_program_id=resolve_active_administered_program_id(payload.program_id),
-        selected_program_id=resolve_active_administered_program_id(current_user.selected_program_id),
+        requested_program_id=resolve_selected_program_binding_id(payload.program_id),
+        selected_program_id=resolve_selected_program_binding_id(current_user.selected_program_id),
         latest_plan=latest_plan,
         latest_soreness_entry=latest_soreness,
         current_days_available=current_user.days_available,
@@ -562,8 +794,8 @@ def apply_frequency_adaptation(
         .first()
     )
     adaptation_decision_runtime = prepare_frequency_adaptation_decision_runtime(
-        requested_program_id=resolve_active_administered_program_id(payload.program_id),
-        selected_program_id=resolve_active_administered_program_id(current_user.selected_program_id),
+        requested_program_id=resolve_selected_program_binding_id(payload.program_id),
+        selected_program_id=resolve_selected_program_binding_id(current_user.selected_program_id),
         latest_plan=latest_plan,
         latest_soreness_entry=latest_soreness,
         current_days_available=current_user.days_available,
@@ -614,8 +846,8 @@ def plan_generate_week(
 ) -> dict:
     if not current_user.days_available or not current_user.split_preference:
         raise HTTPException(status_code=400, detail=PROFILE_INCOMPLETE_DETAIL)
-    explicit_template_id = resolve_administered_program_id(payload.template_id) if payload.template_id else None
-    profile_template_id = resolve_active_administered_program_id(current_user.selected_program_id)
+    explicit_template_id = resolve_selected_program_binding_id(payload.template_id) if payload.template_id else None
+    profile_template_id = resolve_selected_program_binding_id(current_user.selected_program_id)
     program_recommendation_trace: dict[str, Any] | None = None
 
     auto_mode = (current_user.program_selection_mode or "manual") == "auto"
@@ -661,7 +893,7 @@ def plan_generate_week(
         )
 
         route_runtime = prepare_profile_program_recommendation_route_runtime(
-            selected_program_id=resolve_active_administered_program_id(current_user.selected_program_id),
+            selected_program_id=resolve_selected_program_binding_id(current_user.selected_program_id),
             days_available=current_user.days_available,
             split_preference=current_user.split_preference,
             latest_plan=latest_plan,
@@ -678,10 +910,10 @@ def plan_generate_week(
 
         if recommended_program_id:
             # Persist the recommendation so the current program matches reality.
-            current_user.selected_program_id = recommended_program_id
+            current_user.selected_program_id = resolve_selected_program_binding_id(recommended_program_id) or recommended_program_id
             db.add(current_user)
-            profile_template_id = resolve_active_administered_program_id(current_user.selected_program_id)
-            explicit_template_id = recommended_program_id
+            profile_template_id = resolve_selected_program_binding_id(current_user.selected_program_id)
+            explicit_template_id = resolve_selected_program_binding_id(recommended_program_id) or recommended_program_id
 
     try:
         template_runtime = prepare_generation_template_runtime(
@@ -714,7 +946,7 @@ def plan_generate_week(
     active_state = dict(current_user.active_frequency_adaptation or {})
     if active_state:
         for key in ("template_id", "program_id"):
-            normalized = resolve_active_administered_program_id(str(active_state.get(key) or "").strip())
+            normalized = resolve_selected_program_binding_id(str(active_state.get(key) or "").strip())
             if normalized:
                 active_state[key] = normalized
     active_frequency_adaptation = resolve_active_frequency_adaptation_runtime(
@@ -731,7 +963,7 @@ def plan_generate_week(
     runtime_template = template
     generated_full_body_adaptive_loop_policy = None
     generated_full_body_block_review_policy = None
-    if selected_template_id == GENERATED_FULL_BODY_COMPATIBILITY_TEMPLATE_ID:
+    if is_generated_full_body_binding_id(selected_template_id):
         generated_runtime = prepare_generated_full_body_runtime_template(
             selected_template_id=selected_template_id,
             selected_template=template,
@@ -753,6 +985,19 @@ def plan_generate_week(
         template_selection_trace["generated_full_body_runtime_trace"] = cast(
             dict[str, Any], generated_runtime["generated_full_body_runtime_trace"]
         )
+    else:
+        runtime_template, authored_adaptation_trace = _prepare_authored_frequency_adapted_template(
+            selected_template_id=selected_template_id,
+            program_template=template,
+            current_days_available=current_user.days_available,
+            active_frequency_adaptation=active_frequency_adaptation,
+            training_state=cast(dict[str, Any], generation_context["training_state"]),
+            stored_weak_areas=list(current_user.weak_areas or []),
+            equipment_profile=list(current_user.equipment_profile or []),
+            prior_generated_weeks=int(generation_runtime.get("prior_generated_weeks") or 0),
+        )
+        if authored_adaptation_trace is not None:
+            template_selection_trace["authored_frequency_adaptation_trace"] = authored_adaptation_trace
     scheduler_runtime = prepare_generate_week_scheduler_runtime(
         user_name=current_user.name,
         split_preference=current_user.split_preference,

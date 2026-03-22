@@ -77,6 +77,12 @@ def _normalize_token(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", value.lower()).strip("_")
 
 
+def normalize_ascii_text(value: str) -> str:
+    normalized = value.encode("ascii", "ignore").decode("ascii").lower()
+    normalized = re.sub(r"[^a-z0-9\s]+", " ", normalized)
+    return re.sub(r"\s+", " ", normalized).strip()
+
+
 @dataclass(frozen=True)
 class SourceEnvelope:
     source_id: str

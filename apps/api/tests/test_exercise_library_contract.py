@@ -10,6 +10,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from app.knowledge_schema import ExerciseLibraryOverrideBundle
+from app.knowledge_loader import load_source_registry
 from importers.exercise_library_foundation import build_exercise_library_foundation
 
 
@@ -19,7 +20,10 @@ def test_exercise_library_foundation_builds_from_onboarding_packages_skips_place
 
     bundle, warnings = build_exercise_library_foundation(
         onboarding_dir=onboarding_dir,
+        source_registry_bundle=load_source_registry(),
         override_path=override_path,
+        extraction_resolutions_path=REPO_ROOT / "knowledge" / "curation" / "exercise_library_extraction.resolutions.json",
+        extraction_unresolved_output_path=REPO_ROOT / "knowledge" / "curation" / "exercise_library_extraction.unresolved.json",
     )
     override_bundle = ExerciseLibraryOverrideBundle.model_validate_json(override_path.read_text(encoding="utf-8"))
     overridden_ids = {record.exercise_id for record in override_bundle.records}
@@ -40,6 +44,48 @@ def test_exercise_library_foundation_builds_from_onboarding_packages_skips_place
         assert record.curation_status == "curated"
         assert any(ref.source_id == "curated-exercise-library-override-v1" for ref in record.provenance)
         assert any(ref.curation_status == "curated" for ref in record.provenance if ref.source_id == "curated-exercise-library-override-v1")
+    barbell_rdl = records_by_id["barbell_rdl"]
+    extracted_notes = [
+        ref.note
+        for ref in barbell_rdl.provenance
+        if ref.section_ref == "exercise_intelligence_extraction:barbell_rdl:fatigue_cost"
+    ]
+    assert extracted_notes
+    assert any("field=fatigue_cost" in note for note in extracted_notes if note is not None)
+    assert any("source_program_id=pure_bodybuilding_phase_2_full_body" in note for note in extracted_notes if note is not None)
+    low_incline_press = records_by_id["bottom_half_low_incline_db_press"]
+    assert low_incline_press.stability_demand == "moderate"
+    assert any(
+        ref.section_ref == "exercise_intelligence_extraction:bottom_half_low_incline_db_press:stability_demand"
+        for ref in low_incline_press.provenance
+    )
+    belt_squat = records_by_id["belt_squat"]
+    assert belt_squat.skill_demand == "moderate"
+    assert belt_squat.stability_demand == "moderate"
+    assert any(
+        ref.section_ref == "exercise_intelligence_extraction:belt_squat:skill_demand"
+        and ref.note is not None
+        and "rule=skill_moderate_compound_role_fallback" in ref.note
+        for ref in belt_squat.provenance
+    )
+    bent_over_cable_pec_flye = records_by_id["bent_over_cable_pec_flye"]
+    assert bent_over_cable_pec_flye.skill_demand == "moderate"
+    assert bent_over_cable_pec_flye.stability_demand == "moderate"
+    assert any(
+        ref.section_ref == "exercise_intelligence_extraction:bent_over_cable_pec_flye:stability_demand"
+        and ref.note is not None
+        and "rule=stability_moderate_unilateral_or_unsupported_accessory_regex" in ref.note
+        for ref in bent_over_cable_pec_flye.provenance
+    )
+    preacher_curl = records_by_id["bottom_half_ez_bar_preacher_curl"]
+    assert preacher_curl.skill_demand == "low"
+    assert preacher_curl.stability_demand == "low"
+    assert any(
+        ref.section_ref == "exercise_intelligence_extraction:bottom_half_ez_bar_preacher_curl:skill_demand"
+        and ref.note is not None
+        and "rule=skill_low_supported_accessory_regex" in ref.note
+        for ref in preacher_curl.provenance
+    )
     for exercise_id, record in records_by_id.items():
         if exercise_id not in overridden_ids:
             assert all(ref.source_id != "curated-exercise-library-override-v1" for ref in record.provenance)
@@ -70,5 +116,8 @@ def test_exercise_library_override_validation_rejects_unknown_fields_and_multipl
     with pytest.raises((ValidationError, ValueError)):
         build_exercise_library_foundation(
             onboarding_dir=onboarding_dir,
+            source_registry_bundle=load_source_registry(),
             override_path=invalid_override_path,
+            extraction_resolutions_path=REPO_ROOT / "knowledge" / "curation" / "exercise_library_extraction.resolutions.json",
+            extraction_unresolved_output_path=REPO_ROOT / "knowledge" / "curation" / "exercise_library_extraction.unresolved.json",
         )

@@ -60,10 +60,15 @@ test("Onboarding wizard reaches account step with program catalog and password t
   const programs = [
     {
       id: "pure_bodybuilding_phase_1_full_body",
-      name: "Hypertrophy Phase 1",
+      name: "Full Body Phase 1",
       description: "A 5-day full body",
     },
-    { id: "upper_lower", name: "Upper/Lower", description: "4 day" },
+    {
+      id: "pure_bodybuilding_phase_2_full_body",
+      name: "Full Body Phase 2",
+      description: "A 5-day full body follow-up",
+    },
+    { id: "full_body_v1", name: "Make me a plan", description: "Deterministic generated full body" },
   ];
 
   // mock /plan/programs
@@ -87,7 +92,9 @@ test("Onboarding wizard reaches account step with program catalog and password t
     expect(screen.getByLabelText(/program/i)).toBeInTheDocument();
   });
 
-  expect(screen.getByText("Hypertrophy Phase 1")).toBeInTheDocument();
+  expect(screen.getByText("Full Body Phase 1")).toBeInTheDocument();
+  expect(screen.getByText("Full Body Phase 2")).toBeInTheDocument();
+  expect(screen.getByText("Make me a plan")).toBeInTheDocument();
 
   const password = screen.getByLabelText(/Password/i);
   expect(password).toHaveAttribute("type", "password");
@@ -99,7 +106,7 @@ test("Onboarding saves constraint fields to /profile (equipment/time/movement)",
   const programs = [
     {
       id: "pure_bodybuilding_phase_1_full_body",
-      name: "Hypertrophy Phase 1",
+      name: "Full Body Phase 1",
       description: "A 5-day full body",
     },
   ];

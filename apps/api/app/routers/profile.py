@@ -32,8 +32,7 @@ from ..models import CoachingRecommendation, ExerciseState, PasswordResetToken, 
 from ..program_loader import (
     PHASE1_CANONICAL_PROGRAM_ID,
     list_program_templates,
-    resolve_active_administered_program_id,
-    resolve_administered_program_id,
+    resolve_selected_program_binding_id,
 )
 from ..schemas import (
     BodyMeasurementEntryCreateRequest,
@@ -82,6 +81,19 @@ def _latest_plan(db: Session, user_id: str) -> WorkoutPlan | None:
         .filter(WorkoutPlan.user_id == user_id)
         .order_by(WorkoutPlan.created_at.desc())
         .first()
+    )
+
+
+def _is_profile_complete(
+    *,
+    selected_program_id: str | None,
+    split_preference: str | None,
+    days_available: int | None,
+) -> bool:
+    return bool(
+        resolve_selected_program_binding_id(selected_program_id)
+        and str(split_preference or "").strip()
+        and days_available is not None
     )
 
 
@@ -164,7 +176,7 @@ def _collect_previous_week_performance_summary(
 
 @router.get("/profile")
 def get_profile(current_user: CurrentUser) -> ProfileResponse:
-    selected_program_id = resolve_active_administered_program_id(current_user.selected_program_id)
+    selected_program_id = resolve_selected_program_binding_id(current_user.selected_program_id)
     return ProfileResponse(
         **build_profile_response_payload(
             email=current_user.email,
@@ -233,7 +245,7 @@ def get_training_state(
         .all()
     )
 
-    selected_program_id = resolve_active_administered_program_id(current_user.selected_program_id)
+    selected_program_id = resolve_selected_program_binding_id(current_user.selected_program_id)
     payload = build_user_training_state(
         selected_program_id=selected_program_id,
         days_available=current_user.days_available,
@@ -254,7 +266,7 @@ def get_training_state(
         prior_plans=prior_plans,
     )
     user_program_state = cast(dict[str, Any], payload.get("user_program_state") or {})
-    normalized_program_id = resolve_active_administered_program_id(user_program_state.get("program_id"))
+    normalized_program_id = resolve_selected_program_binding_id(user_program_state.get("program_id"))
     if normalized_program_id:
         user_program_state["program_id"] = normalized_program_id
         payload["user_program_state"] = user_program_state
@@ -264,7 +276,9 @@ def get_training_state(
     if prior_by_program:
         normalized_counts: dict[str, int] = {}
         for raw_program_id, raw_count in prior_by_program.items():
-            normalized = resolve_active_administered_program_id(str(raw_program_id))
+            normalized = resolve_selected_program_binding_id(str(raw_program_id))
+            if not normalized:
+                continue
             normalized_counts[normalized] = normalized_counts.get(normalized, 0) + int(raw_count or 0)
         generation_state["prior_generated_weeks_by_program"] = normalized_counts
         payload["generation_state"] = generation_state
@@ -278,14 +292,25 @@ def upsert_profile(
     db: DbSession,
     current_user: CurrentUser,
 ) -> ProfileResponse:
-    normalized_selected_program_id = resolve_active_administered_program_id(payload.selected_program_id)
+    previous_binding_id = resolve_selected_program_binding_id(current_user.selected_program_id)
+    next_binding_id = resolve_selected_program_binding_id(payload.selected_program_id)
+    was_complete = _is_profile_complete(
+        selected_program_id=current_user.selected_program_id,
+        split_preference=current_user.split_preference,
+        days_available=current_user.days_available,
+    )
+    will_be_complete = _is_profile_complete(
+        selected_program_id=payload.selected_program_id,
+        split_preference=payload.split_preference,
+        days_available=payload.days_available,
+    )
     persistence_payload = build_profile_upsert_persistence_payload(
         name=payload.name,
         age=payload.age,
         weight=payload.weight,
         gender=payload.gender,
         split_preference=payload.split_preference,
-        selected_program_id=normalized_selected_program_id,
+        selected_program_id=next_binding_id,
         program_selection_mode=payload.program_selection_mode,
         training_location=payload.training_location,
         equipment_profile=payload.equipment_profile,
@@ -301,6 +326,10 @@ def upsert_profile(
         fat=payload.fat,
         carbs=payload.carbs,
     )
+    should_reset_training_state = (not was_complete and will_be_complete) or previous_binding_id != next_binding_id
+    if should_reset_training_state:
+        _clear_user_training_state(db, user_id=current_user.id)
+        current_user.active_frequency_adaptation = None
     for key, value in persistence_payload.items():
         setattr(current_user, key, value)
 
@@ -316,7 +345,7 @@ def program_recommendation(
     db: DbSession,
     current_user: CurrentUser,
 ) -> ProgramRecommendationResponse:
-    selected_program_id = resolve_active_administered_program_id(current_user.selected_program_id)
+    selected_program_id = resolve_selected_program_binding_id(current_user.selected_program_id)
     latest_plan = _latest_plan(db, current_user.id)
     training_state = _build_program_recommendation_training_state(
         db,
@@ -344,8 +373,8 @@ def switch_program(
     db: DbSession,
     current_user: CurrentUser,
 ) -> ProgramSwitchResponse:
-    selected_program_id = resolve_active_administered_program_id(current_user.selected_program_id)
-    target_program_id = resolve_administered_program_id(payload.target_program_id) or payload.target_program_id
+    selected_program_id = resolve_selected_program_binding_id(current_user.selected_program_id)
+    target_program_id = resolve_selected_program_binding_id(payload.target_program_id) or payload.target_program_id
     latest_plan = _latest_plan(db, current_user.id)
     training_state = _build_program_recommendation_training_state(
         db,
@@ -377,6 +406,9 @@ def switch_program(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
     if runtime["should_apply"]:
+        if resolve_selected_program_binding_id(current_user.selected_program_id) != target_program_id:
+            _clear_user_training_state(db, user_id=current_user.id)
+            current_user.active_frequency_adaptation = None
         current_user.selected_program_id = target_program_id
         db.add(current_user)
         db.commit()

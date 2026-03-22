@@ -1,11 +1,11 @@
 {
-  "aggregate_signature": "860139c575fd5ec33964dd869020b2272a6fd4550cc1c0900bade416d0457918",
+  "aggregate_signature": "e1d30f0ec61a0b6be0ad2498a4fd06e3efc3b270040b5ae138fbfd458a9d3ae8",
   "artifacts": [
     {
       "artifact_id": "exercise_library_foundation",
       "artifact_type": "exercise_library_bundle",
-      "input_signature": "de1e4faf2758aaff542b8dd0e9ca67b8ca11f1c6f762dc1e00d54f5dc1960725",
-      "output_signature": "d4e16c79c142b8b915d47145f5a359626e3ad92729a62b38b7adc07d77c665e4",
+      "input_signature": "8643481b8143596c85bc2da2abc79459e9cc2bc4be80d229e80f0650149b6968",
+      "output_signature": "a7e22d4e72fef16ca3a113b5be3027639ed05333f2d4267346abce16ffad9223",
       "path": "knowledge/compiled/exercise_library.foundation.v1.json"
     },
     {
@@ -32,8 +32,8 @@
   ],
   "bundle_id": "build_manifest",
   "bundle_version": "0.1.0",
-  "input_signature": "850175e487b381b6d056ff7ca92866c8e78c76a93f2953aa859e4a908bb8b5aa",
-  "output_signature": "33b6758b6c7cd5ff3d4bfd412eaa4fca2f3cfc4e6e2b3bdb2f04b08b1ae50c04",
+  "input_signature": "51b76e1c92042776c2a961f0b13408939a8c0a10543fe7700794f46e0d356ab8",
+  "output_signature": "f71f1d28cdaa37fcab8f4222f129055fb8d8e25c91bc9a1f713baf431dc338d4",
   "schema_version": "knowledge-1",
   "warnings": [
     "Skipped placeholder exercise from pure_bodybuilding_phase_1_full_body: weak_point_exercise_1",

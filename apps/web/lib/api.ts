@@ -3,10 +3,10 @@ const AUTH_TOKEN_KEY = "hypertrophy_token";
 const AUTH_TOKEN_EVENT = "hypertrophy:auth-token-changed";
 
 const PROGRAM_NAME_OVERRIDES: Record<string, string> = {
-  pure_bodybuilding_phase_1_full_body: "Hypertrophy Phase 1",
-  pure_bodybuilding_phase_2_full_body: "Hypertrophy Phase 2",
-  full_body_v1: "Hypertrophy Phase 1",
-  adaptive_full_body_gold_v0_1: "Hypertrophy Phase 1",
+  pure_bodybuilding_phase_1_full_body: "Full Body Phase 1",
+  pure_bodybuilding_phase_2_full_body: "Full Body Phase 2",
+  full_body_v1: "Make me a plan",
+  adaptive_full_body_gold_v0_1: "Make me a plan",
 };
 
 type ExerciseVideo = {

@@ -18,9 +18,6 @@ import {
   type SorenessSeverity,
 } from "@/lib/api";
 
-const CANONICAL_PROGRAM_ID = "pure_bodybuilding_phase_1_full_body";
-const CANONICAL_PROGRAM_NAME = "Hypertrophy Phase 1";
-
 function parseLaggingMuscles(raw: string): string[] {
   return raw
     .split(",")
@@ -77,6 +74,9 @@ export default function SettingsPage() {
     };
   }, []);
 
+  const selectedProgramId = profile?.selected_program_id ?? "pure_bodybuilding_phase_1_full_body";
+  const selectedProgramName = getProgramDisplayName({ id: selectedProgramId });
+
   function toggleEquipmentTag(tag: string) {
     setEditEquipment((prev) =>
       prev.includes(tag) ? prev.filter((item) => item !== tag) : [...prev, tag],
@@ -125,7 +125,7 @@ export default function SettingsPage() {
     setApplyStatus(null);
     try {
       const payload = {
-        template_id: CANONICAL_PROGRAM_ID,
+        template_id: selectedProgramId,
         from_days: previewFromDays,
         to_days: previewToDays,
         completion_pct: 90,
@@ -154,7 +154,7 @@ export default function SettingsPage() {
     setPostApplyGenerateStatus(null);
     try {
       const preview = await api.previewFrequencyAdaptation({
-        program_id: CANONICAL_PROGRAM_ID,
+        program_id: selectedProgramId,
         target_days: previewToDays,
         duration_weeks: previewDurationWeeks,
         weak_areas: parseLaggingMuscles(previewLaggingMuscles),
@@ -172,7 +172,7 @@ export default function SettingsPage() {
     setPostApplyGenerateStatus(null);
     try {
       const response = await api.applyFrequencyAdaptation({
-        program_id: CANONICAL_PROGRAM_ID,
+        program_id: selectedProgramId,
         target_days: previewToDays,
         duration_weeks: previewDurationWeeks,
         weak_areas: parseLaggingMuscles(previewLaggingMuscles),
@@ -191,7 +191,7 @@ export default function SettingsPage() {
     setIsGeneratingPostApplyWeek(true);
     setPostApplyGenerateStatus("Generating week from adapted state...");
     try {
-      const generatedWeek = await api.generateWeek(CANONICAL_PROGRAM_ID);
+      const generatedWeek = await api.generateWeek(selectedProgramId);
       setPostApplyGenerateStatus(`Generated week for ${getProgramDisplayName({ id: generatedWeek.program_template_id })}.`);
     } catch {
       setPostApplyGenerateStatus("Generate week failed. Open Week Plan and retry.");
@@ -314,11 +314,8 @@ export default function SettingsPage() {
 
       <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-2">
         <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Program</p>
-        <p className="text-sm font-semibold text-zinc-100">{CANONICAL_PROGRAM_NAME}</p>
-        <p className="text-xs text-zinc-400">ID: {CANONICAL_PROGRAM_ID}</p>
-        {profile?.selected_program_id && profile.selected_program_id !== CANONICAL_PROGRAM_ID ? (
-          <p className="text-xs text-yellow-400/80">Alias: {profile.selected_program_id} → {CANONICAL_PROGRAM_ID}</p>
-        ) : null}
+        <p className="text-sm font-semibold text-zinc-100">{selectedProgramName}</p>
+        <p className="text-xs text-zinc-400">ID: {selectedProgramId}</p>
       </div>
 
       <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-2">

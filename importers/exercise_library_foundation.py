@@ -24,6 +24,11 @@ from app.knowledge_schema import (
     ExerciseLibraryOverrideBundle,
     ExerciseLibraryOverrideRecord,
     ProvenanceRef,
+    SourceRegistryBundle,
+)
+from importers.exercise_intelligence_extraction import (
+    apply_exercise_intelligence_metadata,
+    build_exercise_intelligence_extraction_result,
 )
 
 
@@ -31,6 +36,8 @@ DEFAULT_SCHEMA_VERSION = "knowledge-1"
 DEFAULT_BUNDLE_ID = "exercise_library_foundation"
 DEFAULT_BUNDLE_VERSION = "0.1.0"
 DEFAULT_OVERRIDE_PATH = REPO_ROOT / "knowledge" / "curation" / "exercise_library_overrides.json"
+DEFAULT_EXTRACTION_RESOLUTIONS_PATH = REPO_ROOT / "knowledge" / "curation" / "exercise_library_extraction.resolutions.json"
+DEFAULT_EXTRACTION_UNRESOLVED_PATH = REPO_ROOT / "knowledge" / "curation" / "exercise_library_extraction.unresolved.json"
 CURATED_OVERRIDE_SOURCE_ID = "curated-exercise-library-override-v1"
 _WEAK_POINT_PLACEHOLDER_RE = re.compile(r"^weak_point_exercise", re.IGNORECASE)
 
@@ -195,7 +202,11 @@ def _finalize_bundle_payload(payload: dict[str, Any]) -> dict[str, Any]:
 def build_exercise_library_foundation(
     *,
     onboarding_dir: Path,
+    source_registry_bundle: SourceRegistryBundle | None = None,
     override_path: Path | None = DEFAULT_OVERRIDE_PATH,
+    extraction_resolutions_path: Path | None = DEFAULT_EXTRACTION_RESOLUTIONS_PATH,
+    extraction_unresolved_output_path: Path | None = DEFAULT_EXTRACTION_UNRESOLVED_PATH,
+    current_compiled_dir: Path | None = None,
     schema_version: str = DEFAULT_SCHEMA_VERSION,
     bundle_version: str = DEFAULT_BUNDLE_VERSION,
 ) -> tuple[CanonicalExerciseLibraryBundle, list[str]]:
@@ -233,6 +244,20 @@ def build_exercise_library_foundation(
     if unknown_override_ids:
         joined = ", ".join(unknown_override_ids)
         raise ValueError(f"exercise library overrides reference unknown exercise ids: {joined}")
+    if source_registry_bundle is not None and extraction_unresolved_output_path is not None:
+        extraction_result = build_exercise_intelligence_extraction_result(
+            onboarding_dir=onboarding_dir,
+            source_registry_bundle=source_registry_bundle,
+            current_compiled_dir=current_compiled_dir,
+            resolutions_path=extraction_resolutions_path,
+            unresolved_path=extraction_unresolved_output_path,
+        )
+        records = apply_exercise_intelligence_metadata(
+            records=records,
+            resolved_claims=extraction_result.resolved_claims,
+        )
+        input_signature_parts.append(source_registry_bundle.output_signature)
+        input_signature_parts.extend(extraction_result.input_signature_parts)
     if override_signature is not None:
         input_signature_parts.append(override_signature)
     if override_path is not None:

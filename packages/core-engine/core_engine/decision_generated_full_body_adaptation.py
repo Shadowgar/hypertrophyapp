@@ -8,6 +8,8 @@ from .decision_weekly_review import apply_weekly_review_adjustments_to_plan
 
 GENERATED_FULL_BODY_ADAPTIVE_REVIEW_SOURCE = "generated_full_body_adaptive_loop_v1"
 _SUPPORTED_AXES = {"volume", "load", "weak_point"}
+_GENERATED_FULL_BODY_SCOPE_IDS = {"full_body_v1", "adaptive_full_body_gold_v0_1"}
+_GENERATED_FULL_BODY_POLICY_CANONICAL_ID = "pure_bodybuilding_phase_1_full_body"
 
 
 def _coerce_dict(value: Any) -> dict[str, Any]:
@@ -111,6 +113,13 @@ def _existing_weak_point_exercises(
 def _supports_generated_constructor(template_selection_trace: dict[str, Any]) -> bool:
     generated_runtime_trace = _coerce_dict(template_selection_trace.get("generated_full_body_runtime_trace"))
     return bool(generated_runtime_trace.get("generated_constructor_applied"))
+
+
+def _selected_template_in_generated_scope(*, selected_template_id: str, program_scope: list[str]) -> bool:
+    normalized_scope = {str(item).strip() for item in program_scope if str(item).strip()}
+    if selected_template_id in normalized_scope:
+        return True
+    return selected_template_id in _GENERATED_FULL_BODY_SCOPE_IDS and _GENERATED_FULL_BODY_POLICY_CANONICAL_ID in normalized_scope
 
 
 def _strong_positive_reversal(
@@ -630,7 +639,10 @@ def recommend_generated_full_body_adaptation(
         decision_trace["outcome"] = {"status": "suppressed", "reason": "generated_constructor_not_applied"}
         return {"status": "suppressed", "adjustments": None, "decision_trace": decision_trace}
 
-    if selected_template_id not in _coerce_string_list(normalized_policy.get("program_scope")):
+    if not _selected_template_in_generated_scope(
+        selected_template_id=selected_template_id,
+        program_scope=_coerce_string_list(normalized_policy.get("program_scope")),
+    ):
         decision_trace["outcome"] = {"status": "suppressed", "reason": "selected_template_out_of_scope"}
         return {"status": "suppressed", "adjustments": None, "decision_trace": decision_trace}
 

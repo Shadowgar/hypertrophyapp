@@ -53,7 +53,8 @@ def _register_and_onboard(client: TestClient, *, selected_program_id: str = CANO
         },
     )
     assert profile.status_code == 200
-    assert profile.json()["selected_program_id"] == CANONICAL_PROGRAM_ID
+    expected_program_id = "full_body_v1" if selected_program_id in {"full_body_v1", "adaptive_full_body_gold_v0_1"} else selected_program_id
+    assert profile.json()["selected_program_id"] == expected_program_id
     return headers
 
 
@@ -68,11 +69,7 @@ def test_phase1_canonical_smoke_path_preserves_identity_and_session_continuity()
 
     assert week_payload["program_template_id"] == CANONICAL_PROGRAM_ID
     assert week_payload["template_selection_trace"]["selected_template_id"] == CANONICAL_PROGRAM_ID
-    runtime_trace = week_payload["template_selection_trace"]["generated_full_body_runtime_trace"]
-    assert runtime_trace["compatibility_selected_template_id"] == CANONICAL_PROGRAM_ID
-    assert runtime_trace["compatibility_program_template_id"] == CANONICAL_PROGRAM_ID
-    assert runtime_trace["content_origin"] == "generated_constructor_applied"
-    assert runtime_trace["generated_constructor_applied"] is True
+    assert "generated_full_body_runtime_trace" not in week_payload["template_selection_trace"]
     assert len(week_payload["sessions"]) == 5
     assert all(session["session_id"].startswith(f"{CANONICAL_PROGRAM_ID}-") for session in week_payload["sessions"])
 
@@ -167,11 +164,17 @@ def test_phase1_canonical_smoke_path_preserves_identity_and_session_continuity()
 
     assert regenerated_payload["program_template_id"] == CANONICAL_PROGRAM_ID
     assert len(regenerated_payload["sessions"]) == 3
+    assert [session["title"] for session in regenerated_payload["sessions"]] == [
+        "Full Body #1 + Full Body #2",
+        "Full Body #3 + Full Body #4",
+        "Arms & Weak Points",
+    ]
     assert all(
         session["session_id"].startswith(f"{CANONICAL_PROGRAM_ID}-")
         for session in regenerated_payload["sessions"]
     )
     assert regenerated_payload["applied_frequency_adaptation"]["target_days"] == 3
+    assert "generated_full_body_runtime_trace" not in regenerated_payload["template_selection_trace"]
 
     training_state = client.get("/profile/training-state", headers=headers)
     assert training_state.status_code == 200
@@ -190,8 +193,8 @@ def test_phase1_legacy_aliases_still_resolve_safely(legacy_program_id: str) -> N
     assert generated_week.status_code == 200
 
     payload = generated_week.json()
-    assert payload["program_template_id"] == CANONICAL_PROGRAM_ID
-    assert payload["template_selection_trace"]["selected_template_id"] == CANONICAL_PROGRAM_ID
+    assert payload["program_template_id"] == "full_body_v1"
+    assert payload["template_selection_trace"]["selected_template_id"] == "full_body_v1"
     runtime_trace = payload["template_selection_trace"]["generated_full_body_runtime_trace"]
     assert runtime_trace["generated_constructor_applied"] is True
     assert runtime_trace["content_origin"] == "generated_constructor_applied"
