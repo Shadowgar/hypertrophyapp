@@ -2274,7 +2274,7 @@ def test_generate_week_explicit_template_override_is_respected(monkeypatch) -> N
     assert plan["sessions"][0]["session_id"].startswith("explicit_template-")
 
 
-def test_phase2_generate_week_uses_canonical_template_and_week1_deload() -> None:
+def test_phase2_generate_week_uses_canonical_template_and_keeps_week1_non_deload() -> None:
     _reset_db()
     client = TestClient(app)
 
@@ -2313,8 +2313,9 @@ def test_phase2_generate_week_uses_canonical_template_and_week1_deload() -> None
     plan = generate.json()
     assert plan["program_template_id"] == "pure_bodybuilding_phase_2_full_body"
     assert plan["mesocycle"]["authored_week_index"] == 1
-    assert plan["mesocycle"]["authored_week_role"] == "deload"
-    assert plan["mesocycle"]["is_deload_week"] is True
+    assert plan["mesocycle"]["authored_week_role"] == "intensification"
+    assert plan["mesocycle"]["is_deload_week"] is False
+    assert plan["mesocycle"]["deload_reason"] == "none"
     assert plan["mesocycle"]["transition_checkpoint"] is False
 
 
@@ -2416,10 +2417,10 @@ def test_phase2_generate_week_week_five_to_six_transition_is_checkpoint() -> Non
     plan = generate.json()
     assert plan["generation_runtime_trace"]["outcome"]["prior_generated_weeks"] == 5
     assert plan["mesocycle"]["authored_week_index"] == 6
-    assert plan["mesocycle"]["authored_week_role"] == "deload"
+    assert plan["mesocycle"]["authored_week_role"] == "intensification"
     assert plan["mesocycle"]["is_deload_week"] is True
-    assert plan["mesocycle"]["transition_checkpoint"] is True
-    assert plan["mesocycle"]["deload_reason"] in {"authored_deload", "scheduled+authored_deload"}
+    assert plan["mesocycle"]["transition_checkpoint"] is False
+    assert plan["mesocycle"]["deload_reason"] == "scheduled"
 
 
 def test_phase2_generate_week_supports_interruption_and_resume_and_week_ten() -> None:

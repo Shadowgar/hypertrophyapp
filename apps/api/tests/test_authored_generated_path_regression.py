@@ -10,6 +10,7 @@ configure_test_database("test_authored_generated_path_regression")
 
 from app.database import Base, engine
 from app.main import app
+from app.program_loader import load_program_template
 
 
 TEST_CREDENTIAL = f"T{uuid.uuid4().hex[:15]}"
@@ -68,6 +69,80 @@ def _generate_week(client: TestClient, *, headers: dict[str, str]) -> dict:
     return response.json()
 
 
+_PRIMARY_COMPOUND_PATTERNS = {
+    "horizontal_press",
+    "vertical_press",
+    "horizontal_pull",
+    "vertical_pull",
+    "hinge",
+    "squat",
+}
+
+
+def _source_week_metrics(program_id: str) -> dict[str, object]:
+    template = load_program_template(program_id)
+    source_week = template["authored_weeks"][0]
+    exercises = [
+        exercise
+        for session in source_week["sessions"]
+        for exercise in session["exercises"]
+        if isinstance(exercise, dict)
+    ]
+    return {
+        "exercise_count": len(exercises),
+        "set_count": sum(int(exercise.get("sets") or 0) for exercise in exercises),
+        "compound_patterns": {
+            str(exercise.get("movement_pattern") or "").strip()
+            for exercise in exercises
+            if str(exercise.get("movement_pattern") or "").strip() in _PRIMARY_COMPOUND_PATTERNS
+        },
+    }
+
+
+def _payload_metrics(payload: dict) -> dict[str, object]:
+    exercises = [
+        exercise
+        for session in payload["sessions"]
+        for exercise in session["exercises"]
+        if isinstance(exercise, dict)
+    ]
+    return {
+        "exercise_count": len(exercises),
+        "set_count": sum(int(exercise.get("sets") or 0) for exercise in exercises),
+        "compound_patterns": {
+            str(exercise.get("movement_pattern") or "").strip()
+            for exercise in exercises
+            if str(exercise.get("movement_pattern") or "").strip() in _PRIMARY_COMPOUND_PATTERNS
+        },
+        "session_exercise_counts": [len(session["exercises"]) for session in payload["sessions"]],
+    }
+
+
+def _assert_authored_program_floor(payload: dict, *, program_id: str) -> None:
+    source_metrics = _source_week_metrics(program_id)
+    payload_metrics = _payload_metrics(payload)
+
+    assert payload["program_template_id"] == program_id
+    assert payload["mesocycle"]["week_index"] == 1
+    assert payload["mesocycle"]["authored_week_index"] == 1
+    assert len(payload["sessions"]) == 3
+    assert "generated_full_body_runtime_trace" not in payload["template_selection_trace"]
+    assert payload["template_selection_trace"]["authored_frequency_adaptation_trace"]["status"] == "applied"
+    assert all(
+        not str(session["title"]).startswith("Generated Full Body")
+        for session in payload["sessions"]
+    )
+    assert any(
+        "weak" in str(session["title"]).lower() or "arms" in str(session["title"]).lower()
+        for session in payload["sessions"]
+    )
+
+    assert int(payload_metrics["exercise_count"]) >= 23
+    assert int(payload_metrics["set_count"]) >= int(source_metrics["set_count"]) * 0.70
+    assert int(payload_metrics["exercise_count"]) >= int(source_metrics["exercise_count"]) * 0.65
+    assert set(source_metrics["compound_patterns"]) <= set(payload_metrics["compound_patterns"])
+
+
 def test_program_catalog_exposes_three_distinct_selectable_paths() -> None:
     _reset_db()
     client = TestClient(app)
@@ -96,17 +171,9 @@ def test_fresh_onboarding_authored_phase1_starts_week1_and_stays_authored_derive
     assert profile["selected_program_id"] == "pure_bodybuilding_phase_1_full_body"
 
     payload = _generate_week(client, headers=headers)
-
-    assert payload["program_template_id"] == "pure_bodybuilding_phase_1_full_body"
-    assert payload["mesocycle"]["week_index"] == 1
-    assert payload["mesocycle"]["authored_week_index"] == 1
-    assert [session["title"] for session in payload["sessions"]] == [
-        "Full Body #1 + Full Body #2",
-        "Full Body #3 + Full Body #4",
-        "Arms & Weak Points",
-    ]
-    assert "generated_full_body_runtime_trace" not in payload["template_selection_trace"]
-    assert payload["template_selection_trace"]["authored_frequency_adaptation_trace"]["status"] == "applied"
+    _assert_authored_program_floor(payload, program_id="pure_bodybuilding_phase_1_full_body")
+    assert payload["mesocycle"]["authored_week_role"] == "adaptation"
+    assert payload["mesocycle"]["is_deload_week"] is False
 
 
 def test_fresh_onboarding_authored_phase2_starts_week1_and_stays_authored_derived() -> None:
@@ -123,17 +190,9 @@ def test_fresh_onboarding_authored_phase2_starts_week1_and_stays_authored_derive
     assert profile["selected_program_id"] == "pure_bodybuilding_phase_2_full_body"
 
     payload = _generate_week(client, headers=headers)
-
-    assert payload["program_template_id"] == "pure_bodybuilding_phase_2_full_body"
-    assert payload["mesocycle"]["week_index"] == 1
-    assert payload["mesocycle"]["authored_week_index"] == 1
-    assert [session["title"] for session in payload["sessions"]] == [
-        "Full Body #1 + Full Body #2",
-        "Full Body #3 + Full Body #4",
-        "Arms & Weak Points",
-    ]
-    assert "generated_full_body_runtime_trace" not in payload["template_selection_trace"]
-    assert payload["template_selection_trace"]["authored_frequency_adaptation_trace"]["status"] == "applied"
+    _assert_authored_program_floor(payload, program_id="pure_bodybuilding_phase_2_full_body")
+    assert payload["mesocycle"]["authored_week_role"] == "intensification"
+    assert payload["mesocycle"]["is_deload_week"] is False
 
 
 def test_fresh_onboarding_generated_path_resolves_to_generated_family() -> None:

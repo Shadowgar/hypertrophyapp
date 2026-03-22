@@ -106,13 +106,40 @@ def _list_active_program_templates() -> list[dict[str, Any]]:
         return cast(list[dict[str, Any]], list_program_templates())
 
 
-def _resolve_authored_week_index(program_template: dict[str, Any], *, prior_generated_weeks: int) -> int:
+def _resolve_authored_week_index(program_template: dict[str, Any], *, prior_authored_family_weeks: int) -> int:
     authored_weeks = program_template.get("authored_weeks") or []
     if not isinstance(authored_weeks, list) or not authored_weeks:
         return 1
-    bounded_index = min(max(0, int(prior_generated_weeks)), len(authored_weeks) - 1)
+    bounded_index = min(max(0, int(prior_authored_family_weeks)), len(authored_weeks) - 1)
     selected_week = authored_weeks[bounded_index] if isinstance(authored_weeks[bounded_index], dict) else {}
     return max(1, int(selected_week.get("week_index", bounded_index + 1) or bounded_index + 1))
+
+
+def _resolve_authored_prior_family_weeks(
+    *,
+    selected_template_id: str,
+    training_state: dict[str, Any],
+    fallback_prior_family_weeks: int,
+) -> int:
+    generation_state = cast(dict[str, Any], training_state.get("generation_state") or {})
+    prior_weeks_by_program = generation_state.get("prior_generated_weeks_by_program")
+    if not isinstance(prior_weeks_by_program, dict):
+        return max(0, int(fallback_prior_family_weeks))
+
+    matched_weeks = 0
+    matched_any_family = False
+    for program_id, prior_weeks in prior_weeks_by_program.items():
+        if resolve_selected_program_binding_id(str(program_id).strip()) != selected_template_id:
+            continue
+        try:
+            matched_weeks += max(0, int(prior_weeks or 0))
+        except (TypeError, ValueError):
+            continue
+        matched_any_family = True
+
+    if matched_any_family:
+        return matched_weeks
+    return max(0, int(fallback_prior_family_weeks))
 
 
 def _resolve_onboarding_week(
@@ -269,8 +296,16 @@ def _prepare_authored_frequency_adapted_template(
         trace["reason"] = "authored_weeks_missing"
         return program_template, trace
 
-    authored_week_index = _resolve_authored_week_index(program_template, prior_generated_weeks=prior_generated_weeks)
-    authored_week_position = min(max(0, int(prior_generated_weeks)), len(authored_weeks) - 1)
+    authored_prior_family_weeks = _resolve_authored_prior_family_weeks(
+        selected_template_id=selected_template_id,
+        training_state=training_state,
+        fallback_prior_family_weeks=prior_generated_weeks,
+    )
+    authored_week_index = _resolve_authored_week_index(
+        program_template,
+        prior_authored_family_weeks=authored_prior_family_weeks,
+    )
+    authored_week_position = min(max(0, int(authored_prior_family_weeks)), len(authored_weeks) - 1)
     selected_week = authored_weeks[authored_week_position] if isinstance(authored_weeks[authored_week_position], dict) else {}
     runtime_week_sessions = [
         session
@@ -296,6 +331,7 @@ def _prepare_authored_frequency_adapted_template(
         request_runtime_trace={
             "interpreter": "prepare_authored_frequency_adapted_template",
             "selected_template_id": selected_template_id,
+            "authored_prior_family_weeks": authored_prior_family_weeks,
             "authored_week_index": authored_week_index,
         },
     )
@@ -328,6 +364,7 @@ def _prepare_authored_frequency_adapted_template(
         adapted_template["authored_weeks"] = adapted_weeks
 
     trace["status"] = "applied"
+    trace["authored_prior_family_weeks"] = authored_prior_family_weeks
     trace["authored_week_index"] = authored_week_index
     trace["session_count"] = len(adapted_sessions)
     trace["preview_trace"] = cast(dict[str, Any], preview_payload.get("decision_trace") or {})

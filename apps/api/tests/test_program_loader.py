@@ -171,6 +171,15 @@ def test_load_program_template_supports_adaptive_gold_runtime_template() -> None
     assert week_two_day_a[1]["sets"] == 3
 
 
+def test_load_program_template_phase2_keeps_week_one_as_non_deload_source_week() -> None:
+    template = load_program_template("pure_bodybuilding_phase_2_full_body")
+    authored_weeks = template["authored_weeks"]
+
+    assert [week["week_index"] for week in authored_weeks] == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    assert authored_weeks[0]["week_role"] == "intensification"
+    assert authored_weeks[5]["week_role"] == "intensification"
+
+
 REFERENCE_PHASE1_WORKBOOK = REPO_ROOT / "reference" / "Hypertrophy Phase 1 Sheet.xlsx"
 
 

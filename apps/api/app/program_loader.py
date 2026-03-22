@@ -673,13 +673,13 @@ def _infer_authored_week_role(
 
     week_label = str(getattr(onboarding_week, "week_label", "") or "").strip().lower()
     block_label = str(getattr(onboarding_week, "block_label", "") or "").strip().lower()
-    if "intro/deload" in week_label or "deload" in week_label:
+    if "intro/deload" in week_label or "deload" in week_label or "deload" in block_label:
         return "deload"
 
     if program_id == PHASE2_CANONICAL_PROGRAM_ID:
-        # Phase 2 intent: both 5-week blocks begin with intro/deload weeks.
-        if week_sequence_index in {1, 6}:
-            return "deload"
+        # Phase 2 only deloads when the authored source explicitly labels a week as such.
+        # Otherwise keep the non-deload authored weeks on the phase's working role so
+        # scheduled deload logic can fire independently without crushing week-one volume.
         return "intensification"
 
     if program_id == PHASE1_CANONICAL_PROGRAM_ID:
