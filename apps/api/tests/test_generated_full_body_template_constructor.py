@@ -42,6 +42,16 @@ REQUIRED_CONSTRUCTOR_RULE_IDS = {
     "full_body_start_weight_initialization_v1",
 }
 
+WEEKLY_BALANCE_CATEGORY_TO_PATTERNS = {
+    "horizontal_push": {"horizontal_press"},
+    "vertical_push": {"vertical_press"},
+    "horizontal_pull": {"horizontal_pull"},
+    "vertical_pull": {"vertical_pull"},
+    "knee_dominant_lower": {"squat", "knee_extension"},
+    "hip_dominant_lower": {"hinge", "leg_curl"},
+    "core": {"core"},
+}
+
 
 def _collect_doctrine_ids(draft) -> set[str]:
     ids = set()
@@ -137,6 +147,68 @@ def _build_layers(archetype_fixture: dict):
         exercise_library=exercise_library,
     )
     return doctrine_bundle, policy_bundle, exercise_library, assessment, blueprint, draft
+
+
+def _covered_balance_categories(draft: GeneratedFullBodyTemplateDraft) -> set[str]:
+    patterns = {
+        str(exercise.movement_pattern)
+        for session in draft.sessions
+        for exercise in session.exercises
+    }
+    covered: set[str] = set()
+    for category, category_patterns in WEEKLY_BALANCE_CATEGORY_TO_PATTERNS.items():
+        if patterns.intersection(category_patterns):
+            covered.add(category)
+    return covered
+
+
+def _required_balance_categories(blueprint) -> set[str]:
+    required: set[str] = set()
+    for category, category_patterns in WEEKLY_BALANCE_CATEGORY_TO_PATTERNS.items():
+        if any(blueprint.candidate_exercise_ids_by_pattern.get(pattern) for pattern in category_patterns):
+            required.add(category)
+    return required
+
+
+def _record_by_id(exercise_library):
+    return {record.exercise_id: record.model_dump(mode="json") for record in exercise_library.records}
+
+
+def _session_high_fatigue_count(session: GeneratedSessionDraft, record_by_id: dict[str, dict]) -> int:
+    return sum(
+        1
+        for exercise in session.exercises
+        if str((record_by_id.get(exercise.id) or {}).get("fatigue_cost") or "") == "high"
+    )
+
+
+def _session_total_sets(session: GeneratedSessionDraft) -> int:
+    return sum(int(exercise.sets) for exercise in session.exercises)
+
+
+def _major_group_weekly_volume(draft: GeneratedFullBodyTemplateDraft) -> dict[str, int]:
+    alias = {
+        "chest": "chest",
+        "lats": "back",
+        "upper_back": "back",
+        "mid_back": "back",
+        "quads": "quads",
+        "hamstrings": "hamstrings",
+        "front_delts": "delts",
+        "side_delts": "delts",
+        "rear_delts": "delts",
+        "biceps": "arms",
+        "triceps": "arms",
+        "abs": "core",
+    }
+    totals = {"chest": 0, "back": 0, "quads": 0, "hamstrings": 0, "delts": 0, "arms": 0, "core": 0}
+    for session in draft.sessions:
+        for exercise in session.exercises:
+            for muscle in exercise.primary_muscles:
+                group = alias.get(muscle)
+                if group is not None:
+                    totals[group] += int(exercise.sets)
+    return totals
 
 
 def test_generated_full_body_template_constructor_is_deterministic_traceable_and_original() -> None:
@@ -288,3 +360,211 @@ def test_generated_full_body_template_constructor_is_deterministic_traceable_and
             expected_patterns = {item.movement_pattern for item in blueprint.pattern_insufficiencies}
             actual_patterns = {item.movement_pattern for item in first.insufficiencies if item.movement_pattern}
             assert expected_patterns <= actual_patterns, archetype_name
+
+
+def test_generated_week_outputs_preserve_required_movement_balance_categories() -> None:
+    archetypes = get_generated_full_body_archetypes()
+    for archetype_name in (
+        "novice_gym_full_body",
+        "low_time_full_body",
+        "low_recovery_full_body",
+        "inconsistent_schedule_full_body",
+        "comeback_full_body",
+    ):
+        _, _, _, _, blueprint, draft = _build_layers(archetypes[archetype_name])
+        covered = _covered_balance_categories(draft)
+        required = _required_balance_categories(blueprint)
+        missing = sorted(required - covered)
+        assert not missing, f"{archetype_name}: missing categories={missing}"
+
+
+def test_generated_week_outputs_keep_session_set_and_fatigue_distribution_within_band() -> None:
+    archetypes = get_generated_full_body_archetypes()
+    for archetype_name in (
+        "novice_gym_full_body",
+        "low_time_full_body",
+        "low_recovery_full_body",
+        "inconsistent_schedule_full_body",
+        "comeback_full_body",
+    ):
+        _, _, exercise_library, _, _, draft = _build_layers(archetypes[archetype_name])
+        record_by_id = _record_by_id(exercise_library)
+
+        set_totals = [_session_total_sets(session) for session in draft.sessions]
+        fatigue_high_counts = [_session_high_fatigue_count(session, record_by_id) for session in draft.sessions]
+
+        assert max(set_totals) - min(set_totals) <= 4, f"{archetype_name}: set_totals={set_totals}"
+        assert max(fatigue_high_counts) - min(fatigue_high_counts) <= 1, (
+            f"{archetype_name}: high_fatigue_counts={fatigue_high_counts}"
+        )
+
+
+def test_generated_week_weak_point_bias_does_not_break_required_movement_balance() -> None:
+    archetypes = get_generated_full_body_archetypes()
+    _, _, _, assessment, blueprint, draft = _build_layers(archetypes["novice_gym_full_body"])
+    weak_point_slots = [
+        exercise
+        for session in draft.sessions
+        for exercise in session.exercises
+        if exercise.selection_trace.selection_mode == "weak_point_slot"
+    ]
+    assert weak_point_slots
+    weak_point_targets = {item.muscle_group for item in assessment.weak_point_priorities}
+    assert any(set(exercise.primary_muscles).intersection(weak_point_targets) for exercise in weak_point_slots)
+
+    covered = _covered_balance_categories(draft)
+    required = _required_balance_categories(blueprint)
+    missing = sorted(required - covered)
+    assert not missing, f"weak_point_bias_coverage_break: missing={missing}"
+
+
+def test_v23_generated_sessions_are_materially_fuller_under_normal_budgets() -> None:
+    archetypes = get_generated_full_body_archetypes()
+    for archetype_name in (
+        "novice_gym_full_body",
+        "low_time_full_body",
+        "low_recovery_full_body",
+        "inconsistent_schedule_full_body",
+        "comeback_full_body",
+    ):
+        _, _, _, _, _, draft = _build_layers(archetypes[archetype_name])
+        counts = [len(session.exercises) for session in draft.sessions]
+        assert min(counts) >= 5, f"{archetype_name}: counts={counts}"
+
+
+def test_v23_generated_weeks_cover_major_muscle_groups_with_meaningful_presence() -> None:
+    major_groups = {
+        "chest",
+        "lats",
+        "upper_back",
+        "rear_delts",
+        "front_delts",
+        "quads",
+        "glutes",
+        "hamstrings",
+        "biceps",
+        "triceps",
+        "abs",
+    }
+    archetypes = get_generated_full_body_archetypes()
+    for archetype_name in ("novice_gym_full_body", "low_time_full_body", "four_day_full_body"):
+        _, _, _, _, _, draft = _build_layers(archetypes[archetype_name])
+        seen = {
+            muscle
+            for session in draft.sessions
+            for exercise in session.exercises
+            for muscle in exercise.primary_muscles
+            if muscle in major_groups
+        }
+        assert len(seen) >= 7, f"{archetype_name}: seen={sorted(seen)}"
+
+
+def test_v23_accessory_and_isolation_fill_expands_sessions_without_breaking_balance() -> None:
+    archetypes = get_generated_full_body_archetypes()
+    _, _, _, _, blueprint, draft = _build_layers(archetypes["novice_gym_full_body"])
+    accessory_like_patterns = {"curl", "triceps_extension", "lateral_raise", "knee_extension", "leg_curl", "core", "chest_fly"}
+    accessory_count = sum(
+        1
+        for session in draft.sessions
+        for exercise in session.exercises
+        if exercise.slot_role in {"accessory", "weak_point"} or exercise.movement_pattern in accessory_like_patterns
+    )
+    assert accessory_count >= 4
+    covered = _covered_balance_categories(draft)
+    required = _required_balance_categories(blueprint)
+    assert not (required - covered)
+
+
+def test_v23_time_budget_scaling_reduces_density_without_reverting_to_skeletons() -> None:
+    archetypes = get_generated_full_body_archetypes()
+    _, _, _, _, _, low_time = _build_layers(archetypes["low_time_full_body"])
+    _, _, _, _, _, novice = _build_layers(archetypes["novice_gym_full_body"])
+    low_time_avg = sum(len(session.exercises) for session in low_time.sessions) / len(low_time.sessions)
+    novice_avg = sum(len(session.exercises) for session in novice.sessions) / len(novice.sessions)
+    assert low_time_avg < novice_avg
+    assert low_time_avg >= 5
+
+
+def test_v23_weak_point_bias_is_present_but_not_dominant() -> None:
+    archetypes = get_generated_full_body_archetypes()
+    _, _, _, assessment, _, draft = _build_layers(archetypes["novice_gym_full_body"])
+    weak_targets = {item.muscle_group for item in assessment.weak_point_priorities}
+    weak_hits = 0
+    total = 0
+    for session in draft.sessions:
+        for exercise in session.exercises:
+            total += 1
+            if set(exercise.primary_muscles).intersection(weak_targets):
+                weak_hits += 1
+    assert weak_hits >= 1
+    assert weak_hits / max(1, total) <= 0.6
+
+
+def test_v24_role_based_set_assignment_is_not_flat_and_compounds_drive_volume() -> None:
+    archetypes = get_generated_full_body_archetypes()
+    _, _, _, _, _, draft = _build_layers(archetypes["novice_gym_full_body"])
+    role_sets: dict[str, list[int]] = {}
+    for session in draft.sessions:
+        for exercise in session.exercises:
+            role_sets.setdefault(exercise.slot_role, []).append(int(exercise.sets))
+    assert role_sets["primary_compound"]
+    assert role_sets["secondary_compound"]
+    assert sum(role_sets["primary_compound"]) / len(role_sets["primary_compound"]) >= sum(role_sets["accessory"]) / len(
+        role_sets["accessory"]
+    )
+    assert len({item for values in role_sets.values() for item in values}) >= 2
+
+
+def test_v24_major_muscle_groups_receive_meaningful_weekly_volume() -> None:
+    archetypes = get_generated_full_body_archetypes()
+    for name in ("novice_gym_full_body", "low_time_full_body"):
+        _, _, _, _, _, draft = _build_layers(archetypes[name])
+        totals = _major_group_weekly_volume(draft)
+        chest_floor = 6 if name == "novice_gym_full_body" else 3
+        assert totals["chest"] >= chest_floor, f"{name}: {totals}"
+        assert totals["back"] >= 6, f"{name}: {totals}"
+        assert totals["quads"] >= 5, f"{name}: {totals}"
+        assert totals["hamstrings"] >= 4, f"{name}: {totals}"
+        assert totals["delts"] >= 4, f"{name}: {totals}"
+        assert totals["arms"] >= 4, f"{name}: {totals}"
+
+
+def test_v24_compound_vs_isolation_mix_is_balanced() -> None:
+    archetypes = get_generated_full_body_archetypes()
+    _, _, _, _, _, draft = _build_layers(archetypes["novice_gym_full_body"])
+    compound = 0
+    isolation_or_accessory = 0
+    for session in draft.sessions:
+        for exercise in session.exercises:
+            if exercise.slot_role in {"primary_compound", "secondary_compound"}:
+                compound += 1
+            if exercise.slot_role in {"accessory", "weak_point"}:
+                isolation_or_accessory += 1
+    assert compound >= 6
+    assert isolation_or_accessory >= 4
+    assert isolation_or_accessory < compound + isolation_or_accessory
+
+
+def test_v24_session_flow_keeps_high_fatigue_earlier_on_average() -> None:
+    archetypes = get_generated_full_body_archetypes()
+    _, _, exercise_library, _, _, draft = _build_layers(archetypes["novice_gym_full_body"])
+    record_by_id = _record_by_id(exercise_library)
+    rank = {"high": 0, "moderate": 1, "low": 2, "": 1}
+    violations = 0
+    comparisons = 0
+    for session in draft.sessions:
+        sequence = [rank.get(str((record_by_id.get(exercise.id) or {}).get("fatigue_cost") or ""), 1) for exercise in session.exercises]
+        for idx in range(len(sequence) - 1):
+            comparisons += 1
+            if sequence[idx] > sequence[idx + 1]:
+                violations += 1
+    assert violations <= max(3, comparisons // 4)
+
+
+def test_v24_time_budget_scales_total_sets_not_only_exercise_count() -> None:
+    archetypes = get_generated_full_body_archetypes()
+    _, _, _, _, _, low_time = _build_layers(archetypes["low_time_full_body"])
+    _, _, _, _, _, novice = _build_layers(archetypes["novice_gym_full_body"])
+    low_time_sets = sum(_session_total_sets(session) for session in low_time.sessions)
+    novice_sets = sum(_session_total_sets(session) for session in novice.sessions)
+    assert novice_sets > low_time_sets

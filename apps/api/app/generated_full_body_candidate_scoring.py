@@ -170,7 +170,32 @@ def _stimulus_fit(
         if alignment == "secondary":
             return _band_score(bands, "positive")
         return _band_score(bands, "neutral")
-    return _band_score(bands, "positive")
+    alignment = _primary_secondary_alignment(record, target_weak_point_muscles)
+    if alignment == "primary":
+        return _band_score(bands, "strong_positive")
+    if alignment == "secondary":
+        return _band_score(bands, "positive")
+    return _band_score(bands, "neutral")
+
+
+def _fatigue_distribution_adjustment(
+    *,
+    record: dict[str, Any],
+    weekly_selected_records: list[dict[str, Any]],
+    selection_mode: SelectionMode,
+    bands: dict[str, int],
+) -> int:
+    if selection_mode == "required_slot" or not weekly_selected_records:
+        return 0
+    high_count = sum(1 for item in weekly_selected_records if item.get("fatigue_cost") == "high")
+    if high_count * 2 < len(weekly_selected_records):
+        return 0
+    candidate_cost = str(record.get("fatigue_cost") or "")
+    if candidate_cost == "low":
+        return _band_score(bands, "positive")
+    if candidate_cost == "high":
+        return _band_score(bands, "negative")
+    return 0
 
 
 def _preferred_recoverability_band(
@@ -222,6 +247,7 @@ def _recoverability_fit(
     selection_mode: SelectionMode,
     session_exercise_count: int,
     target_exercises_per_session: int,
+    weekly_selected_records: list[dict[str, Any]],
     bands: dict[str, int],
 ) -> int:
     preferred = _preferred_recoverability_band(
@@ -231,7 +257,13 @@ def _recoverability_fit(
         session_exercise_count=session_exercise_count,
         target_exercises_per_session=target_exercises_per_session,
     )
-    return _band_fit_score(record.get("fatigue_cost"), preferred, bands)
+    base = _band_fit_score(record.get("fatigue_cost"), preferred, bands)
+    return base + _fatigue_distribution_adjustment(
+        record=record,
+        weekly_selected_records=weekly_selected_records,
+        selection_mode=selection_mode,
+        bands=bands,
+    )
 
 
 def _preferred_complexity_band(
@@ -249,12 +281,21 @@ def _complexity_fit(
     record: dict[str, Any],
     assessment: UserAssessment,
     blueprint_input: GeneratedFullBodyBlueprintInput,
+    selection_mode: SelectionMode,
+    session_exercise_count: int,
+    target_exercises_per_session: int,
     bands: dict[str, int],
 ) -> int:
     preferred = _preferred_complexity_band(assessment=assessment, blueprint_input=blueprint_input)
     skill_score = _band_fit_score(record.get("skill_demand"), preferred, bands)
     stability_score = _band_fit_score(record.get("stability_demand"), preferred, bands)
-    return min(skill_score, stability_score)
+    score = min(skill_score, stability_score)
+    if selection_mode != "required_slot" and session_exercise_count >= max(1, target_exercises_per_session - 1):
+        if record.get("skill_demand") == "high" or record.get("stability_demand") == "high":
+            score += _band_score(bands, "negative")
+        elif record.get("skill_demand") == "low" and record.get("stability_demand") == "low":
+            score += _band_score(bands, "positive")
+    return score
 
 
 def _progression_fit(*, record: dict[str, Any], bands: dict[str, int]) -> int:
@@ -307,9 +348,27 @@ def _family_redundancy_penalty(
 ) -> int:
     if assigned_counts.get(record["exercise_id"], 0) > 0:
         return _band_score(bands, "strong_negative")
+
+    movement_pattern = str(record.get("movement_pattern") or "")
+    movement_pattern_count = sum(
+        1 for item in weekly_selected_records if str(item.get("movement_pattern") or "") == movement_pattern
+    )
+    if movement_pattern and movement_pattern_count >= 2:
+        return _band_score(bands, "negative")
+
     family_id = str(record.get("family_id") or "")
     if family_id and any(str(item.get("family_id") or "") == family_id for item in weekly_selected_records):
         return _band_score(bands, "negative")
+
+    primary = set(record.get("primary_muscles") or [])
+    if primary:
+        overlap_count = sum(
+            1
+            for item in weekly_selected_records
+            if primary.intersection(set(item.get("primary_muscles") or []))
+        )
+        if overlap_count >= 3:
+            return _band_score(bands, "negative")
     return _band_score(bands, "neutral")
 
 
@@ -356,12 +415,16 @@ def _score_candidate(
             selection_mode=selection_mode,
             session_exercise_count=session_exercise_count,
             target_exercises_per_session=target_exercises_per_session,
+            weekly_selected_records=weekly_selected_records,
             bands=bands,
         ),
         "complexity_fit": _complexity_fit(
             record=record,
             assessment=assessment,
             blueprint_input=blueprint_input,
+            selection_mode=selection_mode,
+            session_exercise_count=session_exercise_count,
+            target_exercises_per_session=target_exercises_per_session,
             bands=bands,
         ),
         "progression_fit": _progression_fit(record=record, bands=bands),
@@ -397,13 +460,21 @@ def _tie_break_key(
     *,
     scored_candidate: _ScoredCandidate,
     assigned_counts: dict[str, int],
+    record_by_id: dict[str, dict[str, Any]],
+    family_counts: dict[str, int],
+    movement_pattern_counts: dict[str, int],
 ) -> tuple[Any, ...]:
+    record = record_by_id.get(scored_candidate.exercise_id, {})
+    family_id = str(record.get("family_id") or "")
+    movement_pattern = str(record.get("movement_pattern") or "")
     return (
         -scored_candidate.total_score,
         -scored_candidate.dimension_scores["stimulus_fit"],
         -scored_candidate.dimension_scores["weak_point_alignment"],
         -scored_candidate.dimension_scores["recoverability_fit"],
         -scored_candidate.dimension_scores["progression_fit"],
+        family_counts.get(family_id, 0),
+        movement_pattern_counts.get(movement_pattern, 0),
         assigned_counts.get(scored_candidate.exercise_id, 0),
         scored_candidate.exercise_id,
     )
@@ -434,6 +505,15 @@ def select_scored_candidate(
         for exercise_id in weekly_selected_exercise_ids
         if exercise_id in record_by_id
     ]
+    family_counts: dict[str, int] = {}
+    movement_pattern_counts: dict[str, int] = {}
+    for item in weekly_selected_records:
+        family_id = str(item.get("family_id") or "")
+        if family_id:
+            family_counts[family_id] = family_counts.get(family_id, 0) + 1
+        movement_pattern = str(item.get("movement_pattern") or "")
+        if movement_pattern:
+            movement_pattern_counts[movement_pattern] = movement_pattern_counts.get(movement_pattern, 0) + 1
     scored_candidates = [
         _score_candidate(
             record=record_by_id[candidate_id],
@@ -456,7 +536,13 @@ def select_scored_candidate(
 
     ranked_candidates = sorted(
         scored_candidates,
-        key=lambda item: _tie_break_key(scored_candidate=item, assigned_counts=assigned_counts),
+        key=lambda item: _tie_break_key(
+            scored_candidate=item,
+            assigned_counts=assigned_counts,
+            record_by_id=record_by_id,
+            family_counts=family_counts,
+            movement_pattern_counts=movement_pattern_counts,
+        ),
     )
     winner = ranked_candidates[0]
     score_floor = contract.minimum_total_score_floor[selection_mode]

@@ -38,6 +38,32 @@ CONSTRUCTOR_SYSTEM_DEFAULTS: dict[str, str] = {
 
 
 DEFAULT_GENERATED_SUBSTITUTION_CANDIDATES: list[str] = []
+WEEKLY_BALANCE_CATEGORY_TO_PATTERNS: dict[str, tuple[str, ...]] = {
+    "horizontal_push": ("horizontal_press",),
+    "vertical_push": ("vertical_press",),
+    "horizontal_pull": ("horizontal_pull",),
+    "vertical_pull": ("vertical_pull",),
+    "knee_dominant_lower": ("squat", "knee_extension"),
+    "hip_dominant_lower": ("hinge", "leg_curl"),
+    "core": ("core",),
+}
+
+SLOT_ROLE_ORDER: dict[str, int] = {
+    "primary_compound": 0,
+    "secondary_compound": 1,
+    "accessory": 2,
+    "weak_point": 3,
+}
+
+MAJOR_MUSCLE_TARGETS: dict[str, tuple[str, ...]] = {
+    "chest": ("chest",),
+    "back": ("lats", "upper_back", "mid_back"),
+    "quads": ("quads",),
+    "hamstrings": ("hamstrings",),
+    "delts": ("front_delts", "side_delts", "rear_delts"),
+    "arms": ("biceps", "triceps"),
+    "core": ("abs",),
+}
 
 
 @dataclass(frozen=True)
@@ -53,6 +79,10 @@ def _stable_json(payload: object) -> str:
 def _hash_id(prefix: str, payload: object) -> str:
     digest = hashlib.sha256(_stable_json(payload).encode("utf-8")).hexdigest()[:12]
     return f"{prefix}_{digest}"
+
+
+def _clamp(value: int, minimum: int, maximum: int) -> int:
+    return max(minimum, min(maximum, value))
 
 
 def _unique_preserve_order(values: list[str]) -> list[str]:
@@ -280,6 +310,290 @@ def _collect_selected_exercise_ids(sessions: list[GeneratedSessionDraft]) -> lis
     return _unique_preserve_order([exercise.id for session in sessions for exercise in session.exercises])
 
 
+def _session_total_sets(session: GeneratedSessionDraft) -> int:
+    return sum(int(exercise.sets) for exercise in session.exercises)
+
+
+def _session_high_fatigue_count(
+    *,
+    session: GeneratedSessionDraft,
+    record_by_id: dict[str, dict[str, Any]],
+) -> int:
+    return sum(
+        1
+        for exercise in session.exercises
+        if str((record_by_id.get(exercise.id) or {}).get("fatigue_cost") or "") == "high"
+    )
+
+
+def _covered_balance_categories(sessions: list[GeneratedSessionDraft]) -> set[str]:
+    patterns = {
+        str(exercise.movement_pattern or "")
+        for session in sessions
+        for exercise in session.exercises
+    }
+    covered: set[str] = set()
+    for category, candidates in WEEKLY_BALANCE_CATEGORY_TO_PATTERNS.items():
+        if any(pattern in patterns for pattern in candidates):
+            covered.add(category)
+    return covered
+
+
+def _balance_priority_patterns_for_missing_categories(
+    missing_categories: list[str],
+    optional_fill_patterns: list[str],
+) -> list[str]:
+    prioritized: list[str] = []
+    for category in missing_categories:
+        for pattern in WEEKLY_BALANCE_CATEGORY_TO_PATTERNS.get(category, ()):
+            if pattern in optional_fill_patterns:
+                prioritized.append(pattern)
+    return _unique_preserve_order(prioritized + optional_fill_patterns)
+
+
+def _required_balance_categories(
+    *,
+    candidate_exercise_ids_by_pattern: dict[str, list[str]],
+) -> set[str]:
+    required: set[str] = set()
+    for category, patterns in WEEKLY_BALANCE_CATEGORY_TO_PATTERNS.items():
+        if any(candidate_exercise_ids_by_pattern.get(pattern) for pattern in patterns):
+            required.add(category)
+    return required
+
+
+def _global_fill_candidate_ids(blueprint_input: GeneratedFullBodyBlueprintInput) -> list[str]:
+    return _unique_preserve_order(
+        [
+            exercise_id
+            for exercise_ids in blueprint_input.candidate_exercise_ids_by_pattern.values()
+            for exercise_id in exercise_ids
+        ]
+    )
+
+
+def _density_targets_for_budget(
+    *,
+    assessment: UserAssessment,
+    volume_tier: str,
+    doctrine_target: int,
+    minimum_exercises_per_session: int,
+) -> tuple[int, int]:
+    budget = int(assessment.session_time_budget_minutes or 75)
+    if budget <= 45:
+        target, cap = 6, 6
+    elif budget <= 60:
+        target, cap = 7, 8
+    elif budget <= 75:
+        target, cap = 9, 10
+    elif budget <= 90:
+        target, cap = 10, 11
+    else:
+        target, cap = 11, 12
+
+    if volume_tier == "conservative":
+        target -= 1
+        cap -= 1
+    if assessment.comeback_flag or assessment.recovery_profile == "low_recovery":
+        target -= 1
+    if assessment.schedule_profile == "inconsistent_schedule":
+        target -= 1
+
+    target = max(minimum_exercises_per_session, max(doctrine_target, target))
+    cap = max(target, cap)
+    return target, cap
+
+
+def _flow_sort_key(exercise: GeneratedExerciseDraft, record_by_id: dict[str, dict[str, Any]]) -> tuple[Any, ...]:
+    record = record_by_id.get(exercise.id) or {}
+    fatigue = str(record.get("fatigue_cost") or "")
+    fatigue_rank = {"high": 0, "moderate": 1, "low": 2}.get(fatigue, 3)
+    return (
+        SLOT_ROLE_ORDER.get(exercise.slot_role, 9),
+        fatigue_rank,
+        exercise.id,
+    )
+
+
+def _apply_session_flow_ordering(
+    *,
+    sessions: list[GeneratedSessionDraft],
+    record_by_id: dict[str, dict[str, Any]],
+) -> None:
+    for session in sessions:
+        session.exercises = sorted(
+            session.exercises,
+            key=lambda item: _flow_sort_key(item, record_by_id),
+        )
+
+
+def _role_set_targets(*, volume_tier: str, time_budget_minutes: int) -> dict[str, int]:
+    if volume_tier == "conservative":
+        base = {"primary_compound": 2, "secondary_compound": 2, "accessory": 1, "weak_point": 1}
+    else:
+        base = {"primary_compound": 3, "secondary_compound": 2, "accessory": 2, "weak_point": 2}
+    if time_budget_minutes >= 75:
+        base["primary_compound"] += 1
+        base["secondary_compound"] += 1
+        base["accessory"] += 1
+    return base
+
+
+def _exercise_max_sets(*, slot_role: str, time_budget_minutes: int) -> int:
+    if slot_role == "primary_compound":
+        return 5 if time_budget_minutes >= 75 else 4
+    if slot_role == "secondary_compound":
+        return 4 if time_budget_minutes >= 75 else 3
+    return 3 if time_budget_minutes >= 75 else 2
+
+
+def _normalize_muscle_set(muscles: list[str]) -> set[str]:
+    return {str(item) for item in muscles if str(item)}
+
+
+def _major_group_weekly_targets(*, time_budget_minutes: int, volume_tier: str) -> dict[str, int]:
+    if time_budget_minutes <= 45:
+        base = {"chest": 6, "back": 6, "quads": 6, "hamstrings": 5, "delts": 5, "arms": 4, "core": 3}
+    elif time_budget_minutes <= 60:
+        base = {"chest": 8, "back": 8, "quads": 8, "hamstrings": 7, "delts": 7, "arms": 6, "core": 4}
+    else:
+        base = {"chest": 10, "back": 10, "quads": 10, "hamstrings": 8, "delts": 8, "arms": 7, "core": 5}
+    if volume_tier == "conservative":
+        for key in base:
+            base[key] = max(3, base[key] - 1)
+    return base
+
+
+def _major_group_matches(muscles: set[str]) -> set[str]:
+    matches: set[str] = set()
+    for group, aliases in MAJOR_MUSCLE_TARGETS.items():
+        if muscles.intersection(set(aliases)):
+            matches.add(group)
+    return matches
+
+
+def _compute_major_group_volume(
+    *,
+    sessions: list[GeneratedSessionDraft],
+    record_by_id: dict[str, dict[str, Any]],
+) -> dict[str, int]:
+    totals = {key: 0 for key in MAJOR_MUSCLE_TARGETS}
+    for session in sessions:
+        for exercise in session.exercises:
+            record = record_by_id.get(exercise.id) or {}
+            primary = _normalize_muscle_set(list(record.get("primary_muscles") or []))
+            secondary = _normalize_muscle_set(list(record.get("secondary_muscles") or []))
+            for group in _major_group_matches(primary):
+                totals[group] += int(exercise.sets)
+            for group in _major_group_matches(secondary):
+                totals[group] += max(1, int(exercise.sets) // 2)
+    return totals
+
+
+def _apply_prescription_quality_refinement(
+    *,
+    sessions: list[GeneratedSessionDraft],
+    record_by_id: dict[str, dict[str, Any]],
+    assessment: UserAssessment,
+    volume_tier: str,
+) -> None:
+    time_budget_minutes = int(assessment.session_time_budget_minutes or 75)
+    role_targets = _role_set_targets(volume_tier=volume_tier, time_budget_minutes=time_budget_minutes)
+
+    for session in sessions:
+        for exercise in session.exercises:
+            role = str(exercise.slot_role)
+            record = record_by_id.get(exercise.id) or {}
+            fatigue = str(record.get("fatigue_cost") or "")
+            desired = int(role_targets.get(role, 2))
+            if fatigue == "high":
+                desired -= 1
+            elif fatigue == "low" and role in {"accessory", "weak_point"}:
+                desired += 1 if time_budget_minutes >= 60 else 0
+            exercise.sets = _clamp(desired, 1, _exercise_max_sets(slot_role=role, time_budget_minutes=time_budget_minutes))
+
+    weekly_targets = _major_group_weekly_targets(
+        time_budget_minutes=time_budget_minutes,
+        volume_tier=volume_tier,
+    )
+    weekly_volume = _compute_major_group_volume(sessions=sessions, record_by_id=record_by_id)
+
+    adjustable = [
+        (session, exercise)
+        for session in sessions
+        for exercise in session.exercises
+        if exercise.slot_role in {"secondary_compound", "accessory", "weak_point"}
+    ]
+    adjustable = sorted(
+        adjustable,
+        key=lambda pair: (
+            0 if (record_by_id.get(pair[1].id) or {}).get("fatigue_cost") == "low" else 1,
+            SLOT_ROLE_ORDER.get(pair[1].slot_role, 9),
+            pair[0].session_id,
+            pair[1].id,
+        ),
+    )
+
+    for group, target in weekly_targets.items():
+        deficit = int(target) - int(weekly_volume.get(group, 0))
+        if deficit <= 0:
+            continue
+        for session, exercise in adjustable:
+            if deficit <= 0:
+                break
+            record = record_by_id.get(exercise.id) or {}
+            muscles = _normalize_muscle_set(list(record.get("primary_muscles") or []))
+            if group not in _major_group_matches(muscles):
+                continue
+            max_sets = _exercise_max_sets(slot_role=exercise.slot_role, time_budget_minutes=time_budget_minutes)
+            if int(exercise.sets) >= max_sets:
+                continue
+            exercise.sets += 1
+            weekly_volume[group] = int(weekly_volume.get(group, 0)) + 1
+            deficit -= 1
+
+    for _ in range(24):
+        session_totals = {session.session_id: _session_total_sets(session) for session in sessions}
+        max_session = max(sessions, key=lambda item: (session_totals[item.session_id], item.session_id))
+        min_session = min(sessions, key=lambda item: (session_totals[item.session_id], item.session_id))
+        if session_totals[max_session.session_id] - session_totals[min_session.session_id] <= 4:
+            break
+        donors = [
+            exercise
+            for exercise in max_session.exercises
+            if exercise.slot_role in {"accessory", "weak_point", "secondary_compound"}
+            and int(exercise.sets) > 1
+        ]
+        if not donors:
+            break
+        donor = sorted(
+            donors,
+            key=lambda item: (
+                SLOT_ROLE_ORDER.get(item.slot_role, 9),
+                item.id,
+            ),
+            reverse=True,
+        )[0]
+        donor.sets -= 1
+        receivers = [
+            exercise
+            for exercise in min_session.exercises
+            if int(exercise.sets)
+            < _exercise_max_sets(slot_role=exercise.slot_role, time_budget_minutes=time_budget_minutes)
+        ]
+        if not receivers:
+            donor.sets += 1
+            break
+        receiver = sorted(
+            receivers,
+            key=lambda item: (
+                SLOT_ROLE_ORDER.get(item.slot_role, 9),
+                item.id,
+            ),
+        )[0]
+        receiver.sets += 1
+
+
 def _optional_fill_trace(
     *,
     score_floor: int | None,
@@ -427,9 +741,11 @@ def build_generated_full_body_template_draft(
         fill_target_rule.payload["volume_tier_to_target_exercises_per_session"][blueprint_input.volume_tier]
     )
     minimum_exercises_per_session = int(policy_bundle.minimum_viable_program_policy.minimum_exercises_per_session)
-    target_exercises_per_session = max(
-        minimum_exercises_per_session,
-        min(blueprint_input.session_exercise_cap, doctrine_session_target),
+    target_exercises_per_session, effective_session_exercise_cap = _density_targets_for_budget(
+        assessment=assessment,
+        volume_tier=blueprint_input.volume_tier,
+        doctrine_target=doctrine_session_target,
+        minimum_exercises_per_session=minimum_exercises_per_session,
     )
     optional_fill_score_floor = scoring_rule.payload["minimum_total_score_floor"].get("optional_fill")
     if optional_fill_score_floor is not None:
@@ -663,7 +979,7 @@ def build_generated_full_body_template_draft(
             if session is None:
                 continue
             remaining_capacity = target_exercises_per_session - len(session.exercises)
-            if remaining_capacity < minimum_remaining_capacity or len(session.exercises) >= blueprint_input.session_exercise_cap:
+            if remaining_capacity < minimum_remaining_capacity or len(session.exercises) >= effective_session_exercise_cap:
                 continue
             session_exercise_ids = {exercise.id for exercise in session.exercises}
             inserted = False
@@ -728,7 +1044,15 @@ def build_generated_full_body_template_draft(
     fill_progress = True
     while fill_progress:
         fill_progress = False
-        for session in sessions:
+        session_order = sorted(
+            sessions,
+            key=lambda item: (
+                _session_total_sets(item),
+                _session_high_fatigue_count(session=item, record_by_id=record_by_id),
+                item.session_id,
+            ),
+        )
+        for session in session_order:
             if len(session.exercises) >= target_exercises_per_session:
                 if session.optional_fill_trace is None:
                     session.optional_fill_trace = _optional_fill_trace(
@@ -743,7 +1067,7 @@ def build_generated_full_body_template_draft(
                         stop_reason="target_reached",
                     )
                 continue
-            if len(session.exercises) >= blueprint_input.session_exercise_cap:
+            if len(session.exercises) >= effective_session_exercise_cap:
                 if session.optional_fill_trace is None:
                     session.optional_fill_trace = _optional_fill_trace(
                         score_floor=optional_fill_score_floor,
@@ -763,13 +1087,30 @@ def build_generated_full_body_template_draft(
                 slot_roles_by_position=slot_roles_by_position,
                 fallback_slot_role="accessory",
             )
+            required_categories = _required_balance_categories(
+                candidate_exercise_ids_by_pattern=blueprint_input.candidate_exercise_ids_by_pattern,
+            )
+            missing_categories = sorted(required_categories - _covered_balance_categories(sessions))
+            missing_patterns = {
+                pattern
+                for category in missing_categories
+                for pattern in WEEKLY_BALANCE_CATEGORY_TO_PATTERNS.get(category, ())
+            }
+            prioritized_optional_patterns = _balance_priority_patterns_for_missing_categories(
+                missing_categories=missing_categories,
+                optional_fill_patterns=optional_fill_patterns,
+            )
             optional_fill_candidate_ids = _unique_preserve_order(
                 [
                     exercise_id
-                    for movement_pattern in optional_fill_patterns
+                    for movement_pattern in prioritized_optional_patterns
                     for exercise_id in blueprint_input.candidate_exercise_ids_by_pattern.get(movement_pattern, [])
                 ]
             )
+            if len(optional_fill_candidate_ids) < target_exercises_per_session:
+                optional_fill_candidate_ids = _unique_preserve_order(
+                    optional_fill_candidate_ids + _global_fill_candidate_ids(blueprint_input)
+                )
             feasible_candidate_ids = _feasible_candidate_ids(
                 candidate_ids=optional_fill_candidate_ids,
                 assigned_counts=assigned_counts,
@@ -777,6 +1118,28 @@ def build_generated_full_body_template_draft(
                 allow_reuse_after_unique_candidates_exhausted=allow_reuse_after_exhaustion,
                 session_exercise_ids=session_exercise_ids,
             )
+            if feasible_candidate_ids and missing_patterns:
+                missing_pattern_ids = [
+                    exercise_id
+                    for exercise_id in feasible_candidate_ids
+                    if str((record_by_id.get(exercise_id) or {}).get("movement_pattern") or "") in missing_patterns
+                ]
+                if missing_pattern_ids:
+                    feasible_candidate_ids = missing_pattern_ids
+            if feasible_candidate_ids:
+                session_high = _session_high_fatigue_count(session=session, record_by_id=record_by_id)
+                min_high = min(
+                    _session_high_fatigue_count(session=item, record_by_id=record_by_id)
+                    for item in sessions
+                )
+                if session_high > min_high + 1:
+                    lower_fatigue_ids = [
+                        exercise_id
+                        for exercise_id in feasible_candidate_ids
+                        if str((record_by_id.get(exercise_id) or {}).get("fatigue_cost") or "") != "high"
+                    ]
+                    if lower_fatigue_ids:
+                        feasible_candidate_ids = lower_fatigue_ids
             if not feasible_candidate_ids:
                 session.optional_fill_trace = _optional_fill_trace(
                     score_floor=optional_fill_score_floor,
@@ -803,13 +1166,18 @@ def build_generated_full_body_template_draft(
                 )
                 continue
             if not selection.cleared_score_floor:
-                session.optional_fill_trace = _optional_fill_trace(
-                    score_floor=selection.score_floor,
-                    best_candidate_id=selection.selected_id,
-                    best_total_score=selection.total_score,
-                    stop_reason="score_floor_not_met",
-                )
-                continue
+                selected_record = record_by_id.get(selection.selected_id) or {}
+                selected_pattern = str(selected_record.get("movement_pattern") or "")
+                if selected_pattern in missing_patterns:
+                    pass
+                else:
+                    session.optional_fill_trace = _optional_fill_trace(
+                        score_floor=selection.score_floor,
+                        best_candidate_id=selection.selected_id,
+                        best_total_score=selection.total_score,
+                        stop_reason="score_floor_not_met",
+                    )
+                    continue
             record = record_by_id.get(selection.selected_id)
             if record is None:
                 continue
@@ -855,6 +1223,14 @@ def build_generated_full_body_template_draft(
                 best_total_score=session.optional_fill_trace.best_total_score,
                 stop_reason="target_reached",
             )
+
+    _apply_prescription_quality_refinement(
+        sessions=sessions,
+        record_by_id=record_by_id,
+        assessment=assessment,
+        volume_tier=blueprint_input.volume_tier,
+    )
+    _apply_session_flow_ordering(sessions=sessions, record_by_id=record_by_id)
 
     if any(len(session.exercises) < minimum_exercises_per_session for session in sessions):
         _append_issue(
