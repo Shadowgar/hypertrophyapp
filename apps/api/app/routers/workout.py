@@ -64,11 +64,18 @@ def _extract_session_observability_metrics(payload: dict[str, Any]) -> dict[str,
             if label:
                 first_five_exercises.append(label)
 
-        if isinstance(exercise.get("sets"), list):
-            total_sets += len(cast(list[Any], exercise.get("sets")))
+        sets_value = exercise.get("sets")
+        if isinstance(sets_value, list):
+            total_sets += len(cast(list[Any], sets_value))
+            continue
+        if sets_value is not None:
+            total_sets += _coerce_int(sets_value)
+            continue
+        planned_sets = exercise.get("planned_sets")
+        if planned_sets is not None:
+            total_sets += _coerce_int(planned_sets)
             continue
         total_sets += _coerce_int(exercise.get("target_sets"))
-        total_sets += _coerce_int(exercise.get("planned_sets"))
 
     if total_sets == 0:
         total_sets = _coerce_int(payload.get("total_sets"))
@@ -239,6 +246,19 @@ def workout_today(
         daily_quote=daily_stoic_quote(),
     )
     response_payload = cast(dict, response_runtime["response_payload"])
+    progress_runtime = prepare_workout_progress_route_runtime(
+        workout_id=str(response_payload.get("session_id") or selected.get("session_id") or ""),
+        plan_rows=plans,
+        selected_session_logs=logs,
+    )
+    progress_payload = cast(dict[str, Any], progress_runtime.get("response_payload") or {})
+    progress_planned_total = _coerce_int(progress_payload.get("planned_total"))
+    response_payload.setdefault("program_template_id", plan_runtime.get("selected_program_id"))
+    response_payload["selected_program_id"] = plan_runtime.get("selected_program_id")
+    if progress_planned_total > 0:
+        response_payload["total_sets"] = progress_planned_total
+        response_payload["planned_total"] = progress_planned_total
+
     constructed_payload = cast(dict[str, Any], deepcopy(response_payload))
     mesocycle = cast(dict, response_payload.get("mesocycle") or {})
     session_metrics = _extract_session_observability_metrics(cast(dict[str, Any], response_payload))

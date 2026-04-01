@@ -6,6 +6,7 @@ import uuid
 from typing import Any
 
 from fastapi.testclient import TestClient
+import pytest
 
 from test_db import configure_test_database
 
@@ -695,6 +696,7 @@ def test_latest_week_today_and_progress_auto_regenerate_stale_authored_phase1_ro
     assert today_payload["mesocycle"]["authored_week_index"] == 1
     assert _session_primary_ids(today_payload) == PHASE1_MERGED_DAY1_IDS
     assert _session_set_total(today_payload) == 34
+    assert int(today_payload.get("total_sets") or 0) == 34
 
     progress = client.get(f"/workout/{today_payload['session_id']}/progress", headers=headers)
     assert progress.status_code == 200
@@ -716,6 +718,110 @@ def test_latest_week_today_and_progress_auto_regenerate_stale_authored_phase1_ro
         persisted_payload = phase1_rows[0].payload
         assert _session_primary_ids(persisted_payload["sessions"][0]) == PHASE1_MERGED_DAY1_IDS
         assert _session_set_total(persisted_payload["sessions"][0]) == 34
+
+
+@pytest.mark.parametrize(
+    ("selected_program_id", "expected_total_sets"),
+    [
+        ("pure_bodybuilding_phase_1_full_body", 34),
+        ("pure_bodybuilding_phase_2_full_body", 26),
+    ],
+)
+def test_today_total_sets_matches_progress_planned_total(
+    selected_program_id: str,
+    expected_total_sets: int,
+) -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register(client, email=f"today-total-sets-{selected_program_id}@example.com")
+    _upsert_profile(
+        client,
+        headers=headers,
+        selected_program_id=selected_program_id,
+        days_available=3,
+    )
+    _generate_week(client, headers=headers)
+
+    today = client.get("/workout/today", headers=headers)
+    assert today.status_code == 200
+    today_payload = today.json()
+
+    progress = client.get(f"/workout/{today_payload['session_id']}/progress", headers=headers)
+    assert progress.status_code == 200
+    progress_payload = progress.json()
+
+    assert int(today_payload.get("total_sets") or 0) == expected_total_sets
+    assert int(progress_payload.get("planned_total") or 0) == expected_total_sets
+    assert int(today_payload.get("total_sets") or 0) == int(progress_payload.get("planned_total") or 0)
+
+
+def test_current_week_regenerate_keeps_displayed_and_authored_week_indices() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register(client, email="regenerate-current-week@example.com")
+    _upsert_profile(
+        client,
+        headers=headers,
+        selected_program_id="pure_bodybuilding_phase_1_full_body",
+        days_available=3,
+    )
+
+    first = _generate_week(client, headers=headers)
+    regenerated = _generate_week(client, headers=headers)
+
+    assert regenerated["mesocycle"]["week_index"] == first["mesocycle"]["week_index"]
+    assert regenerated["mesocycle"]["authored_week_index"] == first["mesocycle"]["authored_week_index"]
+
+
+def test_next_week_advance_increments_week_index() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register(client, email="advance-next-week@example.com")
+    _upsert_profile(
+        client,
+        headers=headers,
+        selected_program_id="pure_bodybuilding_phase_1_full_body",
+        days_available=3,
+    )
+
+    current_week = _generate_week(client, headers=headers)
+    next_week_response = client.post("/plan/next-week", headers=headers, json={})
+    assert next_week_response.status_code == 200
+    next_week_payload = next_week_response.json()
+
+    assert int(next_week_payload["mesocycle"]["week_index"]) == int(current_week["mesocycle"]["week_index"]) + 1
+
+
+@pytest.mark.parametrize(
+    "switch_template_id",
+    ["pure_bodybuilding_phase_2_full_body", "full_body_v1"],
+)
+def test_template_override_switch_persists_selected_program_consistently(switch_template_id: str) -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register(client, email=f"switch-consistency-{switch_template_id}@example.com")
+    _upsert_profile(
+        client,
+        headers=headers,
+        selected_program_id="pure_bodybuilding_phase_1_full_body",
+        days_available=3,
+    )
+    _generate_week(client, headers=headers)
+
+    switched_generation = _generate_week(client, headers=headers, json_body={"template_id": switch_template_id})
+    assert switched_generation["program_template_id"] == switch_template_id
+
+    profile = client.get("/profile", headers=headers)
+    assert profile.status_code == 200
+    assert profile.json()["selected_program_id"] == switch_template_id
+
+    latest_week = client.get("/plan/latest-week", headers=headers)
+    assert latest_week.status_code == 200
+    assert latest_week.json()["program_template_id"] == switch_template_id
+
+    today = client.get("/workout/today", headers=headers)
+    assert today.status_code == 200
+    assert today.json()["program_template_id"] == switch_template_id
 
 
 def test_same_binding_onboarding_refresh_ignores_checkins_and_reviews_without_workout_activity() -> None:

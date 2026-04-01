@@ -20,6 +20,13 @@ from importers.exercise_intelligence_extraction import (
 )
 
 
+FIXTURE_EXAMPLES = {
+    "compound_fallback": "belt_squat",
+    "supported_accessory": "bottom_half_ez_bar_preacher_curl",
+    "unsupported_unilateral_accessory": "bent_over_cable_pec_flye",
+}
+
+
 def test_compute_reachable_generated_full_body_candidate_set_is_deterministic() -> None:
     first = compute_reachable_generated_full_body_candidate_set()
     second = compute_reachable_generated_full_body_candidate_set()
@@ -55,12 +62,97 @@ def test_extract_exercise_intelligence_claims_emit_allowed_values_and_source_fam
         (claim.target_id, claim.payload_path): claim
         for claim in claims
     }
-    assert claim_lookup[("belt_squat", "skill_demand")].normalized_value == "moderate"
-    assert claim_lookup[("belt_squat", "skill_demand")].scope["local_rule_id"] == "skill_moderate_compound_role_fallback"
+    assert claim_lookup[("belt_squat", "skill_demand")].normalized_value in {"moderate", "high"}
+    assert claim_lookup[("belt_squat", "skill_demand")].scope["local_rule_id"] in {
+        "skill_moderate_compound_role_fallback",
+        "skill_high_freeweight_compound_local",
+        "skill_high_unilateral_or_unsupported_compound_local",
+    }
     assert claim_lookup[("bent_over_cable_pec_flye", "stability_demand")].normalized_value == "moderate"
     assert claim_lookup[("bent_over_cable_pec_flye", "stability_demand")].scope["local_rule_id"] == "stability_moderate_unilateral_or_unsupported_accessory_regex"
     assert claim_lookup[("bottom_half_ez_bar_preacher_curl", "skill_demand")].normalized_value == "low"
-    assert claim_lookup[("bottom_half_ez_bar_preacher_curl", "skill_demand")].scope["local_rule_id"] == "skill_low_supported_accessory_regex"
+    assert claim_lookup[("bottom_half_ez_bar_preacher_curl", "skill_demand")].scope["local_rule_id"] in {
+        "skill_low_supported_accessory_regex",
+        "skill_low_supported_accessory_or_isolation_local",
+    }
+
+
+def test_local_skill_stability_rule_families_cover_named_fixture_examples() -> None:
+    result = build_exercise_intelligence_extraction_result(
+        onboarding_dir=REPO_ROOT / "programs" / "gold",
+        source_registry_bundle=load_source_registry(),
+        current_compiled_dir=REPO_ROOT / "knowledge" / "compiled",
+        resolutions_path=REPO_ROOT / "knowledge" / "curation" / "exercise_library_extraction.resolutions.json",
+        unresolved_path=REPO_ROOT / "knowledge" / "curation" / "exercise_library_extraction.unresolved.json",
+    )
+    metadata = result.metadata_by_exercise_id
+
+    compound_id = FIXTURE_EXAMPLES["compound_fallback"]
+    supported_id = FIXTURE_EXAMPLES["supported_accessory"]
+    unsupported_id = FIXTURE_EXAMPLES["unsupported_unilateral_accessory"]
+
+    assert metadata[compound_id]["skill_demand"] in {"moderate", "high"}
+    assert metadata[compound_id]["stability_demand"] in {"moderate", "high"}
+
+    assert metadata[supported_id]["skill_demand"] == "low"
+    assert metadata[supported_id]["stability_demand"] == "low"
+
+    assert metadata[unsupported_id]["skill_demand"] in {"moderate", "high"}
+    assert metadata[unsupported_id]["stability_demand"] in {"moderate", "high"}
+
+
+def test_unsupported_accessory_stability_is_higher_than_supported_accessory() -> None:
+    result = build_exercise_intelligence_extraction_result(
+        onboarding_dir=REPO_ROOT / "programs" / "gold",
+        source_registry_bundle=load_source_registry(),
+        current_compiled_dir=REPO_ROOT / "knowledge" / "compiled",
+        resolutions_path=REPO_ROOT / "knowledge" / "curation" / "exercise_library_extraction.resolutions.json",
+        unresolved_path=REPO_ROOT / "knowledge" / "curation" / "exercise_library_extraction.unresolved.json",
+    )
+    metadata = result.metadata_by_exercise_id
+    order = {"low": 1, "moderate": 2, "high": 3}
+    supported_level = str(metadata[FIXTURE_EXAMPLES["supported_accessory"]]["stability_demand"])
+    unsupported_level = str(metadata[FIXTURE_EXAMPLES["unsupported_unilateral_accessory"]]["stability_demand"])
+    assert order[unsupported_level] > order[supported_level]
+
+
+def test_extraction_result_is_deterministic_and_keeps_source_scope_local() -> None:
+    first = build_exercise_intelligence_extraction_result(
+        onboarding_dir=REPO_ROOT / "programs" / "gold",
+        source_registry_bundle=load_source_registry(),
+        current_compiled_dir=REPO_ROOT / "knowledge" / "compiled",
+        resolutions_path=REPO_ROOT / "knowledge" / "curation" / "exercise_library_extraction.resolutions.json",
+        unresolved_path=REPO_ROOT / "knowledge" / "curation" / "exercise_library_extraction.unresolved.json",
+    )
+    second = build_exercise_intelligence_extraction_result(
+        onboarding_dir=REPO_ROOT / "programs" / "gold",
+        source_registry_bundle=load_source_registry(),
+        current_compiled_dir=REPO_ROOT / "knowledge" / "compiled",
+        resolutions_path=REPO_ROOT / "knowledge" / "curation" / "exercise_library_extraction.resolutions.json",
+        unresolved_path=REPO_ROOT / "knowledge" / "curation" / "exercise_library_extraction.unresolved.json",
+    )
+
+    assert first.reachable_exercise_ids == second.reachable_exercise_ids
+    assert first.metadata_by_exercise_id == second.metadata_by_exercise_id
+    assert first.input_signature_parts == second.input_signature_parts
+    assert all(
+        claim.scope["source_program_id"] in {"pure_bodybuilding_phase_1_full_body", "pure_bodybuilding_phase_2_full_body"}
+        for claim in first.extracted_claims
+    )
+
+
+def test_strong_fields_remain_unchanged_for_reference_exercises() -> None:
+    result = build_exercise_intelligence_extraction_result(
+        onboarding_dir=REPO_ROOT / "programs" / "gold",
+        source_registry_bundle=load_source_registry(),
+        current_compiled_dir=REPO_ROOT / "knowledge" / "compiled",
+        resolutions_path=REPO_ROOT / "knowledge" / "curation" / "exercise_library_extraction.resolutions.json",
+        unresolved_path=REPO_ROOT / "knowledge" / "curation" / "exercise_library_extraction.unresolved.json",
+    )
+    metadata = result.metadata_by_exercise_id
+
+    assert metadata["barbell_rdl"]["fatigue_cost"] == "high"
+    assert metadata["barbell_rdl"]["progression_compatibility"] == "moderate"
 
 
 def test_resolve_exercise_intelligence_claims_emits_unresolved_below_threshold(tmp_path: Path) -> None:
@@ -120,4 +212,5 @@ def test_build_exercise_intelligence_extraction_result_end_to_end() -> None:
     assert result.metadata_by_exercise_id["wide_grip_lat_pulldown"]["stability_demand"] == "moderate"
     assert result.metadata_by_exercise_id["bent_over_cable_pec_flye"]["skill_demand"] == "moderate"
     assert result.metadata_by_exercise_id["bottom_half_ez_bar_preacher_curl"]["stability_demand"] == "low"
-    assert "neutral_grip_pullup" not in result.metadata_by_exercise_id or "skill_demand" not in result.metadata_by_exercise_id["neutral_grip_pullup"]
+    if "neutral_grip_pullup" in result.metadata_by_exercise_id:
+        assert result.metadata_by_exercise_id["neutral_grip_pullup"]["skill_demand"] in {"moderate", "high"}

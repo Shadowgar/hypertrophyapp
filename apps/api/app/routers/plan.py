@@ -415,6 +415,7 @@ def _prepare_authored_frequency_adapted_template(
     session_time_budget_minutes: int | None,
     movement_restrictions: list[str] | None,
     prior_generated_weeks: int,
+    authored_week_index_override: int | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any] | None]:
     if not (is_authored_phase1_binding_id(selected_template_id) or is_authored_phase2_binding_id(selected_template_id)):
         return program_template, None
@@ -451,11 +452,18 @@ def _prepare_authored_frequency_adapted_template(
         training_state=training_state,
         fallback_prior_family_weeks=prior_generated_weeks,
     )
-    authored_week_index = _resolve_authored_week_index(
-        program_template,
-        prior_authored_family_weeks=authored_prior_family_weeks,
+    authored_week_index = (
+        int(authored_week_index_override)
+        if authored_week_index_override is not None
+        else _resolve_authored_week_index(
+            program_template,
+            prior_authored_family_weeks=authored_prior_family_weeks,
+        )
     )
+    authored_week_index = max(1, authored_week_index)
     authored_week_position = min(max(0, int(authored_prior_family_weeks)), len(authored_weeks) - 1)
+    if authored_week_index_override is not None:
+        authored_week_position = min(max(0, authored_week_index - 1), len(authored_weeks) - 1)
     selected_week = authored_weeks[authored_week_position] if isinstance(authored_weeks[authored_week_position], dict) else {}
     runtime_week_sessions = [
         session
@@ -519,6 +527,7 @@ def _prepare_authored_frequency_adapted_template(
     trace["status"] = "applied"
     trace["authored_prior_family_weeks"] = authored_prior_family_weeks
     trace["authored_week_index"] = authored_week_index
+    trace["authored_week_index_override"] = authored_week_index_override
     trace["session_count"] = len(adapted_sessions)
     trace["authoritative_passthrough_eligible"] = passthrough_eligible
     trace["preview_trace"] = cast(dict[str, Any], preview_payload.get("decision_trace") or {})
@@ -1187,6 +1196,32 @@ def _build_week_plan_runtime_for_user(
             selected_template_id=selected_template_id,
         )
     prior_plans = _list_user_workout_plans(db, user_id=current_user.id)
+    authored_week_index_override: int | None = None
+    if generation_mode == "current_week_regenerate":
+        monday = date.today() - timedelta(days=date.today().weekday())
+        current_week_binding_plans = [
+            plan
+            for plan in prior_plans
+            if resolve_selected_program_binding_id(
+                (plan.payload if isinstance(plan.payload, dict) else {}).get("program_template_id")
+            )
+            == selected_template_id
+            and plan.week_start >= monday
+        ]
+        # Only pin authored week when there is a single unambiguous current-week row.
+        if len(current_week_binding_plans) == 1:
+            latest_payload = (
+                current_week_binding_plans[0].payload
+                if isinstance(current_week_binding_plans[0].payload, dict)
+                else {}
+            )
+            latest_mesocycle = cast(dict[str, Any], latest_payload.get("mesocycle") or {})
+            authored_candidate = latest_mesocycle.get("authored_week_index") or latest_mesocycle.get("week_index")
+            try:
+                authored_week_index_override = max(1, int(authored_candidate))
+            except (TypeError, ValueError):
+                authored_week_index_override = None
+
     filtered_prior_plans, week_start_override = _resolve_generation_week_context(
         prior_plans,
         binding_id=selected_template_id,
@@ -1255,6 +1290,7 @@ def _build_week_plan_runtime_for_user(
             session_time_budget_minutes=current_user.session_time_budget_minutes,
             movement_restrictions=list(current_user.movement_restrictions or []),
             prior_generated_weeks=int(generation_runtime.get("prior_generated_weeks") or 0),
+            authored_week_index_override=authored_week_index_override,
         )
         if authored_adaptation_trace is not None:
             template_selection_trace["authored_frequency_adaptation_trace"] = authored_adaptation_trace
@@ -1416,6 +1452,12 @@ def _generate_week_for_user(
 ) -> dict[str, Any]:
     route = "/plan/generate-week" if generation_mode == "current_week_regenerate" else "/plan/next-week"
     user_id = str(current_user.id)
+    normalized_explicit_template_id = resolve_selected_program_binding_id(explicit_template_id) if explicit_template_id else None
+    if normalized_explicit_template_id and resolve_selected_program_binding_id(current_user.selected_program_id) != normalized_explicit_template_id:
+        current_user.selected_program_id = normalized_explicit_template_id
+        db.add(current_user)
+        db.flush()
+
     selected_program_id = resolve_selected_program_binding_id(current_user.selected_program_id)
     days_available = current_user.days_available
     log_event(
@@ -1424,7 +1466,7 @@ def _generate_week_for_user(
         action="plan_generation",
         user_id=user_id,
         selected_program_id=selected_program_id,
-        template_id=explicit_template_id,
+        template_id=normalized_explicit_template_id or explicit_template_id,
         generation_mode=generation_mode,
         days_available=days_available,
         target_days=target_days,
@@ -1433,7 +1475,7 @@ def _generate_week_for_user(
         plan_runtime = _build_week_plan_runtime_for_user(
             db=db,
             current_user=current_user,
-            explicit_template_id=explicit_template_id,
+            explicit_template_id=normalized_explicit_template_id,
             target_days_override=target_days,
             generation_mode=generation_mode,
         )

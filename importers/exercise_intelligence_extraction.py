@@ -64,6 +64,7 @@ COMPOUND_MOVEMENT_PATTERNS = frozenset(
 )
 LOW_DEMAND_SLOT_ROLES = frozenset({"accessory", "isolation", "weak_point"})
 SUPPORT_ASSISTIVE_EQUIPMENT_TAGS = frozenset({"cable", "machine"})
+FREEWEIGHT_EQUIPMENT_TAGS = frozenset({"barbell", "dumbbell", "kettlebell", "bodyweight"})
 FIELD_THRESHOLDS = {
     "fatigue_cost": 0.85,
     "skill_demand": 0.85,
@@ -111,10 +112,18 @@ UNILATERAL_OR_UNSUPPORTED_PATTERNS = tuple(
     for pattern in (
         r"\bsingle arm\b",
         r"\bsingle leg\b",
+        r"\bunilateral\b",
         r"\bone arm at a time\b",
+        r"\bstanding\b",
+        r"\bsplit stance\b",
+        r"\bstaggered stance\b",
+        r"\blunge\b",
+        r"\bsplit squat\b",
         r"\bbalance\b",
         r"\bbrace\b",
         r"\bbracing\b",
+        r"\bcuff\b",
+        r"\blateral raise\b",
         r"\btorso is parallel\b",
         r"\bparallel with the floor\b",
         r"\bbent over\b",
@@ -123,11 +132,40 @@ UNILATERAL_OR_UNSUPPORTED_PATTERNS = tuple(
 SUPPORTED_ACCESSORY_PATTERNS = tuple(
     re.compile(pattern)
     for pattern in (
+        r"\bseated machine\b",
+        r"\bseated\b",
+        r"\bmachine\b",
+        r"\bsmith\b",
         r"\bpinned against the pad\b",
+        r"\bpad\b",
+        r"\bbench\b",
+        r"\bbench support\b",
         r"\btriceps firmly pinned\b",
         r"\bpreacher\b",
         r"\bpec deck\b",
         r"\bchest supported\b",
+        r"\bchest-supported\b",
+        r"\blying machine\b",
+        r"\blying cable\b",
+        r"\bguided path\b",
+        r"\bback support\b",
+    )
+)
+COMPOUND_ROLE_FALLBACK_PATTERNS = tuple(
+    re.compile(pattern)
+    for pattern in (
+        r"\bdeadlift\b",
+        r"\brdl\b",
+        r"\bromanian deadlift\b",
+        r"\bsquat\b",
+        r"\bhinge\b",
+        r"\brow\b",
+        r"\bpull ?up\b",
+        r"\bchin ?up\b",
+        r"\bpress\b",
+        r"\boverhead press\b",
+        r"\blunge\b",
+        r"\bsplit squat\b",
     )
 )
 HIGH_PROGRESSION_PATTERNS = tuple(
@@ -374,6 +412,10 @@ def _has_supported_accessory_context(evidence: LocalExerciseEvidence) -> bool:
     return _matches_any(SUPPORTED_ACCESSORY_PATTERNS, evidence.descriptor_text)
 
 
+def _has_compound_role_fallback_context(evidence: LocalExerciseEvidence) -> bool:
+    return _matches_any(COMPOUND_ROLE_FALLBACK_PATTERNS, evidence.descriptor_text)
+
+
 def _evaluate_field_outcome(
     *,
     field_name: str,
@@ -382,14 +424,27 @@ def _evaluate_field_outcome(
     slot_roles = set(evidence.slot_roles)
     equipment_tags = set(evidence.equipment_tags)
     machine_only = bool(equipment_tags) and equipment_tags.issubset({"machine"})
-    freeweight_or_bodyweight = bool(equipment_tags.intersection({"barbell", "dumbbell", "bodyweight"}))
+    freeweight_or_bodyweight = bool(equipment_tags.intersection(FREEWEIGHT_EQUIPMENT_TAGS))
     compound_pattern = evidence.movement_pattern in COMPOUND_MOVEMENT_PATTERNS
+    compound_role_fallback = _has_compound_role_fallback_context(evidence)
     primary_compound_used = "primary_compound" in slot_roles
     compound_used = bool(slot_roles.intersection({"primary_compound", "secondary_compound"}))
     isolation_only = bool(slot_roles) and slot_roles.issubset({"accessory", "isolation"})
     low_demand_slot_usage = _has_low_demand_slot_usage(evidence)
     unilateral_or_unsupported = _has_unilateral_or_unsupported_context(evidence)
     supported_accessory_context = _has_supported_accessory_context(evidence)
+    supported_accessory = low_demand_slot_usage and (
+        _has_support_assistive_equipment(evidence) or supported_accessory_context
+    )
+    unsupported_accessory = low_demand_slot_usage and (
+        unilateral_or_unsupported
+        or (
+            freeweight_or_bodyweight
+            and not supported_accessory_context
+            and not _has_support_assistive_equipment(evidence)
+        )
+    )
+    compound_like = (compound_used and compound_pattern) or compound_role_fallback
     max_work_sets = int(evidence.max_work_sets)
     text = evidence.normalized_text
 
@@ -407,18 +462,18 @@ def _evaluate_field_outcome(
     if field_name == "skill_demand":
         if _matches_any(HIGH_SKILL_PATTERNS, text):
             return LocalRuleOutcome("high", "regex", "skill_high_regex", 0.90)
-        if low_demand_slot_usage and unilateral_or_unsupported:
+        if low_demand_slot_usage and unsupported_accessory:
             return LocalRuleOutcome(
                 "moderate",
                 "regex",
                 "skill_moderate_unilateral_or_unsupported_accessory_regex",
                 0.90,
             )
-        if low_demand_slot_usage and _has_support_assistive_equipment(evidence):
+        if supported_accessory:
             return LocalRuleOutcome(
                 "low",
                 "structured",
-                "skill_low_supported_accessory_equipment",
+                "skill_low_supported_accessory_or_isolation_local",
                 1.00,
             )
         if low_demand_slot_usage and supported_accessory_context:
@@ -430,9 +485,22 @@ def _evaluate_field_outcome(
             )
         if machine_only and isolation_only:
             return LocalRuleOutcome("low", "structured", "skill_low_machine_isolation", 1.00)
-        if freeweight_or_bodyweight and compound_used:
-            return LocalRuleOutcome("moderate", "structured", "skill_moderate_freeweight_compound", 1.00)
-        if compound_used and compound_pattern:
+        if (
+            freeweight_or_bodyweight
+            and compound_like
+            and not low_demand_slot_usage
+            and unilateral_or_unsupported
+            and not supported_accessory_context
+        ):
+            return LocalRuleOutcome("high", "structured", "skill_high_unilateral_or_unsupported_compound_local", 1.00)
+        if (
+            freeweight_or_bodyweight
+            and compound_like
+            and not low_demand_slot_usage
+            and not supported_accessory_context
+        ):
+            return LocalRuleOutcome("high", "structured", "skill_high_freeweight_compound_local", 1.00)
+        if compound_like:
             return LocalRuleOutcome(
                 "moderate",
                 "structured",
@@ -446,18 +514,33 @@ def _evaluate_field_outcome(
             return LocalRuleOutcome("high", "regex", "stability_high_regex", 0.90)
         if _matches_any(MODERATE_STABILITY_PATTERNS, text):
             return LocalRuleOutcome("moderate", "regex", "stability_moderate_regex", 0.90)
-        if low_demand_slot_usage and unilateral_or_unsupported:
+        if (
+            freeweight_or_bodyweight
+            and compound_like
+            and not low_demand_slot_usage
+            and unilateral_or_unsupported
+            and not supported_accessory_context
+        ):
+            return LocalRuleOutcome("high", "structured", "stability_high_unilateral_or_unsupported_compound_local", 1.00)
+        if (
+            freeweight_or_bodyweight
+            and compound_like
+            and not low_demand_slot_usage
+            and not supported_accessory_context
+        ):
+            return LocalRuleOutcome("high", "structured", "stability_high_freeweight_compound_local", 1.00)
+        if low_demand_slot_usage and unsupported_accessory:
             return LocalRuleOutcome(
                 "moderate",
                 "regex",
                 "stability_moderate_unilateral_or_unsupported_accessory_regex",
                 0.90,
             )
-        if low_demand_slot_usage and _has_support_assistive_equipment(evidence):
+        if supported_accessory:
             return LocalRuleOutcome(
                 "low",
                 "structured",
-                "stability_low_supported_accessory_equipment",
+                "stability_low_supported_accessory_or_isolation_local",
                 1.00,
             )
         if low_demand_slot_usage and supported_accessory_context:
@@ -469,9 +552,9 @@ def _evaluate_field_outcome(
             )
         if machine_only:
             return LocalRuleOutcome("low", "structured", "stability_low_machine_only", 1.00)
-        if freeweight_or_bodyweight and compound_used:
+        if freeweight_or_bodyweight and compound_like:
             return LocalRuleOutcome("moderate", "structured", "stability_moderate_freeweight_compound", 1.00)
-        if compound_used and compound_pattern:
+        if compound_like:
             return LocalRuleOutcome(
                 "moderate",
                 "structured",

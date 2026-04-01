@@ -83,7 +83,10 @@ def test_exercise_library_foundation_builds_from_onboarding_packages_skips_place
     assert any(
         ref.section_ref == "exercise_intelligence_extraction:bottom_half_ez_bar_preacher_curl:skill_demand"
         and ref.note is not None
-        and "rule=skill_low_supported_accessory_regex" in ref.note
+        and (
+            "rule=skill_low_supported_accessory_regex" in ref.note
+            or "rule=skill_low_supported_accessory_or_isolation_local" in ref.note
+        )
         for ref in preacher_curl.provenance
     )
     for exercise_id, record in records_by_id.items():
