@@ -79,6 +79,51 @@ def _scheduler_rule_dict(rule_set: dict[str, Any] | None, key: str) -> dict[str,
     return _coerce_dict(scheduler_rules.get(key))
 
 
+_DEFAULT_SCHEDULER_TRACKED_MUSCLES = [
+    "chest",
+    "back",
+    "quads",
+    "hamstrings",
+    "glutes",
+    "shoulders",
+    "biceps",
+    "triceps",
+    "calves",
+]
+
+_DEFAULT_SCHEDULER_AUTHORED_LABEL_NORMALIZATION = {
+    "chest": "chest",
+    "pec": "chest",
+    "pecs": "chest",
+    "back": "back",
+    "lats": "back",
+    "lat": "back",
+    "mid_back": "back",
+    "upper_back": "back",
+    "erectors": "back",
+    "quads": "quads",
+    "quadriceps": "quads",
+    "hamstrings": "hamstrings",
+    "glutes": "glutes",
+    "shoulders": "shoulders",
+    "delts": "shoulders",
+    "front_delts": "shoulders",
+    "rear_delts": "shoulders",
+    "side_delts": "shoulders",
+    "biceps": "biceps",
+    "triceps": "triceps",
+    "calves": "calves",
+}
+
+
+def _default_scheduler_muscle_coverage_rules() -> dict[str, Any]:
+    return {
+        "tracked_muscles": list(_DEFAULT_SCHEDULER_TRACKED_MUSCLES),
+        "minimum_sets_per_muscle": 2,
+        "authored_label_normalization": dict(_DEFAULT_SCHEDULER_AUTHORED_LABEL_NORMALIZATION),
+    }
+
+
 def _rule_rationale(rule_set: dict[str, Any] | None, key: str, fallback: str) -> str:
     rationale_templates = _coerce_dict(_coerce_dict(rule_set).get("rationale_templates"))
     value = rationale_templates.get(key)
@@ -929,17 +974,30 @@ def resolve_scheduler_muscle_coverage_runtime(
     rule_set: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     muscle_coverage_rules = _scheduler_rule_dict(rule_set, "muscle_coverage")
+    fallback_applied = not bool(muscle_coverage_rules)
+    effective_rules = (
+        _default_scheduler_muscle_coverage_rules() if fallback_applied else muscle_coverage_rules
+    )
+
     tracked_muscles = [
         _normalize_scheduler_label(item)
-        for item in muscle_coverage_rules.get("tracked_muscles") or []
+        for item in effective_rules.get("tracked_muscles") or []
         if _normalize_scheduler_label(item)
     ]
-    minimum_sets_per_muscle = int(muscle_coverage_rules.get("minimum_sets_per_muscle") or 0)
+    if not tracked_muscles:
+        tracked_muscles = list(_DEFAULT_SCHEDULER_TRACKED_MUSCLES)
+
+    minimum_sets_per_muscle = int(effective_rules.get("minimum_sets_per_muscle") or 0)
+    if minimum_sets_per_muscle <= 0:
+        minimum_sets_per_muscle = int(_default_scheduler_muscle_coverage_rules()["minimum_sets_per_muscle"])
+
     authored_label_normalization = {
         _normalize_scheduler_label(key): _normalize_scheduler_label(value)
-        for key, value in _coerce_dict(muscle_coverage_rules.get("authored_label_normalization")).items()
+        for key, value in _coerce_dict(effective_rules.get("authored_label_normalization")).items()
         if _normalize_scheduler_label(key) and _normalize_scheduler_label(value)
     }
+    if not authored_label_normalization:
+        authored_label_normalization = dict(_DEFAULT_SCHEDULER_AUTHORED_LABEL_NORMALIZATION)
 
     return {
         "tracked_muscles": tracked_muscles,
@@ -950,6 +1008,7 @@ def resolve_scheduler_muscle_coverage_runtime(
             "version": "v1",
             "inputs": {
                 "has_scheduler_rule_contract": bool(muscle_coverage_rules),
+                "fallback_applied": fallback_applied,
             },
             "outcome": {
                 "tracked_muscles": list(tracked_muscles),

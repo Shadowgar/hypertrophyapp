@@ -537,6 +537,32 @@ def test_resolve_scheduler_muscle_coverage_runtime_uses_canonical_contract() -> 
     assert runtime["decision_trace"]["interpreter"] == "resolve_scheduler_muscle_coverage_runtime"
 
 
+def test_resolve_scheduler_muscle_coverage_runtime_falls_back_to_canonical_contract_when_missing() -> None:
+    runtime = resolve_scheduler_muscle_coverage_runtime(
+        rule_set={
+            "generated_week_scheduler_rules": {
+                "mesocycle": _scheduler_rule_set()["generated_week_scheduler_rules"]["mesocycle"],
+            }
+        }
+    )
+
+    assert runtime["tracked_muscles"] == [
+        "chest",
+        "back",
+        "quads",
+        "hamstrings",
+        "glutes",
+        "shoulders",
+        "biceps",
+        "triceps",
+        "calves",
+    ]
+    assert runtime["minimum_sets_per_muscle"] == 2
+    assert runtime["authored_label_normalization"]["lats"] == "back"
+    assert runtime["decision_trace"]["inputs"]["has_scheduler_rule_contract"] is False
+    assert runtime["decision_trace"]["inputs"]["fallback_applied"] is True
+
+
 def test_resolve_scheduler_exercise_muscles_runtime_normalizes_only_explicit_authored_metadata() -> None:
     muscle_coverage_runtime = resolve_scheduler_muscle_coverage_runtime(rule_set=_scheduler_rule_set())
     runtime = resolve_scheduler_exercise_muscles_runtime(

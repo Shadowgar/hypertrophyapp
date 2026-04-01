@@ -185,6 +185,39 @@ def _session_set_total(session: dict[str, Any]) -> int:
     return sum(int(exercise.get("sets") or 0) for exercise in session.get("exercises") or [])
 
 
+def _assert_non_zero_weekly_volume_payload(payload: dict[str, Any]) -> None:
+    exercises = [
+        exercise
+        for session in payload.get("sessions") or []
+        for exercise in session.get("exercises") or []
+        if isinstance(exercise, dict)
+    ]
+    planned_sets = sum(int(exercise.get("sets") or 0) for exercise in exercises)
+    assert planned_sets > 0
+
+    weekly_volume = payload.get("weekly_volume_by_muscle")
+    muscle_coverage = payload.get("muscle_coverage")
+    assert isinstance(weekly_volume, dict)
+    assert isinstance(muscle_coverage, dict)
+    assert weekly_volume
+
+    covered_muscles = {
+        str(muscle).strip()
+        for muscle in muscle_coverage.get("covered_muscles") or []
+        if str(muscle).strip()
+    }
+    under_target_muscles = {
+        str(muscle).strip()
+        for muscle in muscle_coverage.get("under_target_muscles") or []
+        if str(muscle).strip()
+    }
+    expected_key_set = covered_muscles | under_target_muscles
+
+    assert expected_key_set
+    assert set(weekly_volume.keys()) == expected_key_set
+    assert any(int(value) > 0 for value in weekly_volume.values())
+
+
 def _contains_key(value: Any, target_key: str) -> bool:
     if isinstance(value, dict):
         if target_key in value:
@@ -753,6 +786,37 @@ def test_today_total_sets_matches_progress_planned_total(
     assert int(today_payload.get("total_sets") or 0) == expected_total_sets
     assert int(progress_payload.get("planned_total") or 0) == expected_total_sets
     assert int(today_payload.get("total_sets") or 0) == int(progress_payload.get("planned_total") or 0)
+
+
+@pytest.mark.parametrize(
+    "selected_program_id",
+    [
+        "pure_bodybuilding_phase_1_full_body",
+        "pure_bodybuilding_phase_2_full_body",
+        "full_body_v1",
+    ],
+)
+def test_generate_and_latest_week_volume_by_muscle_non_zero_when_planned_sets_exist(
+    selected_program_id: str,
+) -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register(client, email=f"volume-by-muscle-{selected_program_id}@example.com")
+
+    _upsert_profile(
+        client,
+        headers=headers,
+        selected_program_id=selected_program_id,
+        days_available=3,
+    )
+
+    generated_payload = _generate_week(client, headers=headers)
+    latest_week = client.get("/plan/latest-week", headers=headers)
+    assert latest_week.status_code == 200
+    latest_payload = latest_week.json()
+
+    _assert_non_zero_weekly_volume_payload(generated_payload)
+    _assert_non_zero_weekly_volume_payload(latest_payload)
 
 
 def test_current_week_regenerate_keeps_displayed_and_authored_week_indices() -> None:
