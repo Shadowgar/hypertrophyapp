@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Disclosure } from "@/components/ui/disclosure";
 import { UiIcon } from "@/components/ui/icons";
-import { api, getProgramDisplayName, type GeneratedWeekExercise, type GeneratedWeekPlan, type ProgramTemplateOption } from "@/lib/api";
+import { api, getProgramDisplayName, type GeneratedWeekExercise, type GeneratedWeekPlan, type ProgramTemplateOption, type Profile } from "@/lib/api";
 import { kgToLbs } from "@/lib/weight";
 
 function formatLabel(value: string): string {
@@ -302,11 +302,29 @@ function uniqueMuscles(exercises: GeneratedWeekExercise[]): string[] {
   ).map((muscle) => formatLabel(muscle));
 }
 
+function resolvePlanTargetDays(plan: GeneratedWeekPlan | null): number | null {
+  if (!plan) {
+    return null;
+  }
+  const adaptationTarget = plan.applied_frequency_adaptation?.target_days;
+  if (typeof adaptationTarget === "number") {
+    return adaptationTarget;
+  }
+  const runtimeDays = plan.generation_runtime_trace?.outcome?.effective_days_available;
+  if (typeof runtimeDays === "number") {
+    return runtimeDays;
+  }
+  const profileDays = plan.user?.days_available;
+  return typeof profileDays === "number" ? profileDays : null;
+}
+
 export default function WeekPage() {
   const [planStatus, setPlanStatus] = useState("Generate a weekly plan.");
   const [plan, setPlan] = useState<GeneratedWeekPlan | null>(null);
   const [programs, setPrograms] = useState<ProgramTemplateOption[]>([]);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
+  const [targetDays, setTargetDays] = useState<number>(3);
   const [isGenerating, setIsGenerating] = useState(false);
 
   const commandDeck = useMemo(() => {
@@ -341,7 +359,8 @@ export default function WeekPage() {
         setPlanStatus("Sunday review required. Open Check-In, submit weekly review, then generate the next week.");
         return;
       }
-      const data = await api.generateWeek(selectedProgramId);
+      const templateId = selectedProgramId ?? plan?.program_template_id ?? null;
+      const data = await api.generateWeek(templateId, targetDays);
       setPlan(data);
       setPlanStatus(`Week generated for ${getProgramDisplayName({ id: data.program_template_id })}.`);
     } catch (error) {
@@ -355,25 +374,23 @@ export default function WeekPage() {
 
   useEffect(() => {
     let mounted = true;
-    api
-      .listPrograms()
-      .then((list) => {
-        if (mounted) setPrograms(list);
-      })
-      .catch(() => {});
-
-    // Attempt to load the latest generated week plan on mount so the user
-    // does not need to regenerate after navigation.
-    api
-      .getLatestWeekPlan()
-      .then((data) => {
-        if (!mounted) return;
-        setPlan(data);
-        setPlanStatus(`Week generated for ${getProgramDisplayName({ id: data.program_template_id })}.`);
-      })
-      .catch(() => {
-        // No existing plan is fine; keep default status.
-      });
+    Promise.all([
+      api.listPrograms().catch(() => [] as ProgramTemplateOption[]),
+      api.getProfile().catch(() => null as Profile | null),
+      api.getLatestWeekPlan().catch(() => null as GeneratedWeekPlan | null),
+    ]).then(([list, loadedProfile, latestPlan]) => {
+      if (!mounted) {
+        return;
+      }
+      setPrograms(list);
+      setProfile(loadedProfile);
+      const resolvedTargetDays = resolvePlanTargetDays(latestPlan) ?? loadedProfile?.days_available ?? 3;
+      setTargetDays(Math.max(2, Math.min(5, resolvedTargetDays)));
+      if (latestPlan) {
+        setPlan(latestPlan);
+        setPlanStatus(`Week generated for ${getProgramDisplayName({ id: latestPlan.program_template_id })}.`);
+      }
+    });
 
     return () => {
       mounted = false;
@@ -391,13 +408,36 @@ export default function WeekPage() {
         </span>
       </Button>
 
+      <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-2">
+        <label className="flex flex-col gap-2 text-sm text-zinc-200" htmlFor="week-target-days">
+          <span className="font-medium">Target training days</span>
+          <select
+            id="week-target-days"
+            aria-label="Week target training days selector"
+            className="ui-select"
+            value={String(targetDays)}
+            onChange={(event) => setTargetDays(Number(event.target.value))}
+          >
+            {["2", "3", "4", "5"].map((value) => (
+              <option key={value} value={value}>
+                {value} days
+              </option>
+            ))}
+          </select>
+        </label>
+        <p className="text-xs text-zinc-400">
+          Generating for <span className="font-medium text-zinc-200">{targetDays}</span> training day{targetDays === 1 ? "" : "s"} this week.
+          {profile ? ` Profile default: ${profile.days_available} day${profile.days_available === 1 ? "" : "s"}.` : ""}
+        </p>
+      </div>
+
       <Disclosure title="Program Override" badge={selectedProgramId ? "custom" : "auto"} defaultOpen={false}>
         <div className="space-y-2">
           <select id="week-program" aria-label="Week program override selector" className="ui-select" value={selectedProgramId ?? ""} onChange={(e) => setSelectedProgramId(e.target.value || null)}>
             <option value="">Auto — trainer&apos;s recommended program</option>
             {programs.map((p) => <option key={p.id} value={p.id}>{getProgramDisplayName(p)}</option>)}
           </select>
-          <p className="text-xs text-zinc-500">Override the server selection for this generated week.</p>
+          <p className="text-xs text-zinc-500">Override the server selection for this week generation request.</p>
         </div>
       </Disclosure>
 

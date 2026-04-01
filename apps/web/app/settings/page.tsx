@@ -25,6 +25,22 @@ function parseLaggingMuscles(raw: string): string[] {
     .filter((item) => item.length > 0);
 }
 
+const MIN_TRAINING_DAYS = 2;
+const MAX_TRAINING_DAYS = 5;
+const MIN_TEMPORARY_DURATION_WEEKS = 1;
+const MAX_TEMPORARY_DURATION_WEEKS = 8;
+
+function validateTemporaryDurationInput(raw: string): string | null {
+  if (!/^\d+$/.test(raw.trim())) {
+    return `Enter a whole number between ${MIN_TEMPORARY_DURATION_WEEKS} and ${MAX_TEMPORARY_DURATION_WEEKS}.`;
+  }
+  const parsed = Number(raw);
+  if (parsed < MIN_TEMPORARY_DURATION_WEEKS || parsed > MAX_TEMPORARY_DURATION_WEEKS) {
+    return `Temporary duration must be between ${MIN_TEMPORARY_DURATION_WEEKS} and ${MAX_TEMPORARY_DURATION_WEEKS} weeks.`;
+  }
+  return null;
+}
+
 export default function SettingsPage() {
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -39,7 +55,7 @@ export default function SettingsPage() {
   const [isGeneratingPostApplyWeek, setIsGeneratingPostApplyWeek] = useState(false);
   const [previewFromDays, setPreviewFromDays] = useState<number>(5);
   const [previewToDays, setPreviewToDays] = useState<number>(3);
-  const [previewDurationWeeks, setPreviewDurationWeeks] = useState<number>(4);
+  const [previewDurationWeeksInput, setPreviewDurationWeeksInput] = useState<string>("4");
   const [previewPhase, setPreviewPhase] = useState<"accumulation" | "intensification" | "deload">("accumulation");
   const [previewSoreness, setPreviewSoreness] = useState<SorenessSeverity>("mild");
   const [previewLaggingMuscles, setPreviewLaggingMuscles] = useState<string>("biceps, shoulders");
@@ -62,8 +78,8 @@ export default function SettingsPage() {
       .then((data) => {
         if (!mounted) return;
         setProfile(data);
-        setPreviewFromDays(Math.max(2, Math.min(7, data.days_available || 5)));
-        setPreviewToDays(Math.max(2, Math.min(7, Math.min(data.days_available || 5, 3))));
+        setPreviewFromDays(Math.max(MIN_TRAINING_DAYS, Math.min(MAX_TRAINING_DAYS, data.days_available || 5)));
+        setPreviewToDays(Math.max(MIN_TRAINING_DAYS, Math.min(MAX_TRAINING_DAYS, Math.min(data.days_available || 5, 3))));
         setEditTrainingLocation(data.training_location ?? "gym");
         setEditEquipment(Array.isArray(data.equipment_profile) ? data.equipment_profile : []);
       })
@@ -76,6 +92,7 @@ export default function SettingsPage() {
 
   const selectedProgramId = profile?.selected_program_id ?? "pure_bodybuilding_phase_1_full_body";
   const selectedProgramName = getProgramDisplayName({ id: selectedProgramId });
+  const temporaryDurationValidationMessage = validateTemporaryDurationInput(previewDurationWeeksInput);
 
   function toggleEquipmentTag(tag: string) {
     setEditEquipment((prev) =>
@@ -148,6 +165,13 @@ export default function SettingsPage() {
   }
 
   async function generateAdaptationPreview() {
+    if (temporaryDurationValidationMessage) {
+      setAdaptationStatus(temporaryDurationValidationMessage);
+      setAdaptationApplyStatus(null);
+      setAdaptationApplyOutcome("idle");
+      setPostApplyGenerateStatus(null);
+      return;
+    }
     setAdaptationStatus("Generating frequency adaptation...");
     setAdaptationApplyStatus(null);
     setAdaptationApplyOutcome("idle");
@@ -156,17 +180,24 @@ export default function SettingsPage() {
       const preview = await api.previewFrequencyAdaptation({
         program_id: selectedProgramId,
         target_days: previewToDays,
-        duration_weeks: previewDurationWeeks,
+        duration_weeks: Number(previewDurationWeeksInput),
         weak_areas: parseLaggingMuscles(previewLaggingMuscles),
       });
       setAdaptationPreview(preview);
       setAdaptationStatus("Frequency adaptation ready");
-    } catch {
-      setAdaptationStatus("Frequency adaptation failed");
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "Frequency adaptation failed";
+      setAdaptationStatus(detail);
     }
   }
 
   async function applyAdaptation() {
+    if (temporaryDurationValidationMessage) {
+      setAdaptationApplyStatus(temporaryDurationValidationMessage);
+      setAdaptationApplyOutcome("failed");
+      setPostApplyGenerateStatus(null);
+      return;
+    }
     setAdaptationApplyStatus("Applying frequency adaptation...");
     setAdaptationApplyOutcome("idle");
     setPostApplyGenerateStatus(null);
@@ -174,15 +205,16 @@ export default function SettingsPage() {
       const response = await api.applyFrequencyAdaptation({
         program_id: selectedProgramId,
         target_days: previewToDays,
-        duration_weeks: previewDurationWeeks,
+        duration_weeks: Number(previewDurationWeeksInput),
         weak_areas: parseLaggingMuscles(previewLaggingMuscles),
       });
       setAdaptationApplyStatus(
         `Applied (${response.target_days}d for ${response.duration_weeks} weeks, ${response.weeks_remaining} remaining)`,
       );
       setAdaptationApplyOutcome("success");
-    } catch {
-      setAdaptationApplyStatus("Apply frequency adaptation failed");
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "Apply frequency adaptation failed";
+      setAdaptationApplyStatus(detail);
       setAdaptationApplyOutcome("failed");
     }
   }
@@ -191,10 +223,11 @@ export default function SettingsPage() {
     setIsGeneratingPostApplyWeek(true);
     setPostApplyGenerateStatus("Generating week from adapted state...");
     try {
-      const generatedWeek = await api.generateWeek(selectedProgramId);
+      const generatedWeek = await api.generateWeek(selectedProgramId, previewToDays);
       setPostApplyGenerateStatus(`Generated week for ${getProgramDisplayName({ id: generatedWeek.program_template_id })}.`);
-    } catch {
-      setPostApplyGenerateStatus("Generate week failed. Open Week Plan and retry.");
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "Generate week failed. Open Week Plan and retry.";
+      setPostApplyGenerateStatus(detail);
     } finally {
       setIsGeneratingPostApplyWeek(false);
     }
@@ -418,11 +451,11 @@ export default function SettingsPage() {
             <label htmlFor="preview-from-days" className="ui-meta">
               From days (your current schedule)
             </label>
-            <input id="preview-from-days" className="ui-input" type="number" min={2} max={7} value={previewFromDays} onChange={(e) => setPreviewFromDays(Math.max(2, Math.min(7, Number(e.target.value) || 2)))} />
+            <input id="preview-from-days" className="ui-input" type="number" min={MIN_TRAINING_DAYS} max={MAX_TRAINING_DAYS} value={previewFromDays} onChange={(e) => setPreviewFromDays(Math.max(MIN_TRAINING_DAYS, Math.min(MAX_TRAINING_DAYS, Number(e.target.value) || MIN_TRAINING_DAYS)))} />
             <label htmlFor="preview-to-days" className="ui-meta">
               To days (the schedule you&apos;re testing)
             </label>
-            <input id="preview-to-days" className="ui-input" type="number" min={2} max={7} value={previewToDays} onChange={(e) => setPreviewToDays(Math.max(2, Math.min(7, Number(e.target.value) || 2)))} />
+            <input id="preview-to-days" className="ui-input" type="number" min={MIN_TRAINING_DAYS} max={MAX_TRAINING_DAYS} value={previewToDays} onChange={(e) => setPreviewToDays(Math.max(MIN_TRAINING_DAYS, Math.min(MAX_TRAINING_DAYS, Number(e.target.value) || MIN_TRAINING_DAYS)))} />
             <label htmlFor="preview-phase" className="ui-meta">
               Current phase (how hard you&apos;re pushing)
             </label>
@@ -442,7 +475,9 @@ export default function SettingsPage() {
           <label htmlFor="preview-lagging" className="ui-meta">Lagging Muscles (comma-separated)</label>
           <input id="preview-lagging" className="ui-input" value={previewLaggingMuscles} onChange={(e) => setPreviewLaggingMuscles(e.target.value)} />
           <label htmlFor="preview-duration" className="ui-meta">Temporary Duration (weeks)</label>
-          <input id="preview-duration" className="ui-input" type="number" min={1} max={12} value={previewDurationWeeks} onChange={(e) => setPreviewDurationWeeks(Math.max(1, Math.min(12, Number(e.target.value) || 1)))} />
+          <p className="text-[11px] text-zinc-500">Allowed range: 1-8 weeks</p>
+          <input id="preview-duration" className="ui-input" type="number" min={MIN_TEMPORARY_DURATION_WEEKS} max={MAX_TEMPORARY_DURATION_WEEKS} value={previewDurationWeeksInput} onChange={(e) => setPreviewDurationWeeksInput(e.target.value)} />
+          {temporaryDurationValidationMessage ? <p className="text-[11px] text-red-300">{temporaryDurationValidationMessage}</p> : null}
           <Button
             aria-label="Generate coaching preview"
             variant="secondary"

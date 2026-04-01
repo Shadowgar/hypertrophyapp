@@ -152,6 +152,10 @@ test("check-in page surfaces review command center and adaptive output", async (
       );
     }
 
+    if (url.includes("/plan/next-week") && init?.method === "POST") {
+      return Promise.resolve(new Response(JSON.stringify({ status: "ok" }), { status: 200 }));
+    }
+
     return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
   });
 
@@ -215,8 +219,13 @@ test("check-in page surfaces review command center and adaptive output", async (
     // @ts-ignore
     const calls = globalThis.fetch.mock.calls.filter((entry) => {
       const url = resolveUrl(entry[0]);
-      return url.includes("/plan/generate-week");
+      return url.includes("/plan/next-week");
     });
     expect(calls.length).toBeGreaterThan(0);
   });
+  // @ts-ignore
+  const nextWeekCalls = globalThis.fetch.mock.calls.filter((entry) => resolveUrl(entry[0]).includes("/plan/next-week"));
+  const lastNextWeekInit = nextWeekCalls[nextWeekCalls.length - 1][1] as RequestInit | undefined;
+  const nextWeekPayload = JSON.parse(String(lastNextWeekInit?.body || "{}"));
+  expect(nextWeekPayload.target_days).toBe(4);
 });

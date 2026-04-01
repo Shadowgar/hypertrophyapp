@@ -1,5 +1,6 @@
 from datetime import date
-from typing import Annotated, cast
+from copy import deepcopy
+from typing import Annotated, Any, cast
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -21,11 +22,13 @@ from core_engine import (
 from ..database import get_db
 from ..deps import get_current_user
 from ..models import ExerciseState, User, WorkoutPlan, WorkoutSessionState, WorkoutSetLog
+from ..observability import log_event
 from ..program_loader import (
     load_program_rule_set,
     resolve_active_administered_program_id,
     resolve_rule_program_id,
 )
+from .plan import ensure_current_workout_plans_for_user
 from ..schemas import (
     WorkoutLiveRecommendationResponse,
     WorkoutSetLogRequest,
@@ -41,6 +44,42 @@ DbSession = Annotated[Session, Depends(get_db)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
+def _coerce_int(value: Any) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _extract_session_observability_metrics(payload: dict[str, Any]) -> dict[str, Any]:
+    exercises = payload.get("exercises") if isinstance(payload.get("exercises"), list) else []
+    total_sets = 0
+    first_five_exercises: list[str] = []
+
+    for exercise in exercises:
+        if not isinstance(exercise, dict):
+            continue
+        if len(first_five_exercises) < 5:
+            label = str(exercise.get("name") or exercise.get("title") or exercise.get("id") or "")
+            if label:
+                first_five_exercises.append(label)
+
+        if isinstance(exercise.get("sets"), list):
+            total_sets += len(cast(list[Any], exercise.get("sets")))
+            continue
+        total_sets += _coerce_int(exercise.get("target_sets"))
+        total_sets += _coerce_int(exercise.get("planned_sets"))
+
+    if total_sets == 0:
+        total_sets = _coerce_int(payload.get("total_sets"))
+
+    return {
+        "total_exercises": len(exercises),
+        "total_sets": total_sets,
+        "first_5_exercise_names": first_five_exercises,
+    }
+
+
 def _list_workout_plans(db: Session, user_id: str) -> list[WorkoutPlan]:
     return (
         db.query(WorkoutPlan)
@@ -48,6 +87,10 @@ def _list_workout_plans(db: Session, user_id: str) -> list[WorkoutPlan]:
         .order_by(WorkoutPlan.created_at.desc())
         .all()
     )
+
+
+def _list_current_workout_plans(db: Session, current_user: User) -> list[WorkoutPlan]:
+    return ensure_current_workout_plans_for_user(db=db, current_user=current_user)
 
 
 def _upsert_workout_session_state(
@@ -113,12 +156,13 @@ def workout_today(
     db: DbSession,
     current_user: CurrentUser,
 ) -> dict:
-    plans = (
-        db.query(WorkoutPlan)
-        .filter(WorkoutPlan.user_id == current_user.id)
-        .order_by(WorkoutPlan.created_at.desc())
-        .all()
+    log_event(
+        "today_workout_fetch_started",
+        route="/workout/today",
+        action="today_fetch",
+        user_id=current_user.id,
     )
+    plans = _list_current_workout_plans(db, current_user)
     plan_runtime = prepare_workout_today_plan_route_runtime(plan_rows=plans)
     if not bool(plan_runtime["has_plan"]):
         raise HTTPException(status_code=404, detail="No plan generated")
@@ -194,7 +238,74 @@ def workout_today(
         resume_selected=resume_selected,
         daily_quote=daily_stoic_quote(),
     )
-    return cast(dict, response_runtime["response_payload"])
+    response_payload = cast(dict, response_runtime["response_payload"])
+    constructed_payload = cast(dict[str, Any], deepcopy(response_payload))
+    mesocycle = cast(dict, response_payload.get("mesocycle") or {})
+    session_metrics = _extract_session_observability_metrics(cast(dict[str, Any], response_payload))
+
+    log_event(
+        "session_constructed",
+        route="/workout/today",
+        action="today_fetch",
+        user_id=current_user.id,
+        selected_program_id=plan_runtime["selected_program_id"],
+        template_id=response_payload.get("program_template_id"),
+        session_id=response_payload.get("session_id"),
+        week_index=mesocycle.get("week_index"),
+        session_index=response_payload.get("session_index") or selected.get("session_index"),
+        session_title=response_payload.get("title") or selected.get("title"),
+        total_exercises=session_metrics["total_exercises"],
+        total_sets=session_metrics["total_sets"],
+        first_5_exercise_names=session_metrics["first_5_exercise_names"],
+    )
+
+    log_event(
+        "today_workout_fetched",
+        route="/workout/today",
+        action="today_fetch",
+        user_id=current_user.id,
+        selected_program_id=plan_runtime["selected_program_id"],
+        template_id=response_payload.get("program_template_id"),
+        session_id=response_payload.get("session_id"),
+        week_index=mesocycle.get("week_index"),
+        displayed_week_index=mesocycle.get("week_index"),
+        authored_week_index=mesocycle.get("authored_week_index"),
+        week_start=response_payload.get("week_start"),
+    )
+
+    session_unchanged = constructed_payload == cast(dict[str, Any], response_payload)
+    if not session_unchanged:
+        log_event(
+            "session_constructed_mismatch",
+            level="warning",
+            route="/workout/today",
+            action="today_fetch",
+            user_id=current_user.id,
+            selected_program_id=plan_runtime["selected_program_id"],
+            template_id=response_payload.get("program_template_id"),
+            session_id=response_payload.get("session_id"),
+            week_index=mesocycle.get("week_index"),
+            session_title=response_payload.get("title") or selected.get("title"),
+            error_message="Constructed session differs from returned session payload",
+        )
+
+    log_event(
+        "session_returned_to_client",
+        route="/workout/today",
+        action="today_fetch",
+        user_id=current_user.id,
+        selected_program_id=plan_runtime["selected_program_id"],
+        template_id=response_payload.get("program_template_id"),
+        session_id=response_payload.get("session_id"),
+        week_index=mesocycle.get("week_index"),
+        session_index=response_payload.get("session_index") or selected.get("session_index"),
+        session_title=response_payload.get("title") or selected.get("title"),
+        total_exercises=session_metrics["total_exercises"],
+        total_sets=session_metrics["total_sets"],
+        first_5_exercise_names=session_metrics["first_5_exercise_names"],
+        payload_match=session_unchanged,
+    )
+    return response_payload
 
 
 @router.post("/workout/{workout_id}/log-set")
@@ -206,7 +317,7 @@ def log_set(
 ) -> WorkoutSetLogResponse:
     context_runtime = prepare_workout_log_set_context_route_runtime(
         workout_id=workout_id,
-        plan_rows=_list_workout_plans(db, current_user.id),
+        plan_rows=_list_current_workout_plans(db, current_user),
         primary_exercise_id=payload.primary_exercise_id,
         exercise_id=payload.exercise_id,
         set_index=payload.set_index,
@@ -375,6 +486,13 @@ def workout_progress(
     current_user: CurrentUser,
 ):
     """Return per-exercise completed sets and an overall percent complete."""
+    log_event(
+        "workout_progress_fetch_started",
+        route="/workout/{session_id}/progress",
+        action="progress_fetch",
+        user_id=current_user.id,
+        session_id=workout_id,
+    )
     logs = (
         db.query(WorkoutSetLog)
         .filter(
@@ -385,10 +503,19 @@ def workout_progress(
     )
     route_runtime = prepare_workout_progress_route_runtime(
         workout_id=workout_id,
-        plan_rows=_list_workout_plans(db, current_user.id),
+        plan_rows=_list_current_workout_plans(db, current_user),
         selected_session_logs=logs,
     )
-    return cast(dict, route_runtime["response_payload"])
+    response_payload = cast(dict, route_runtime["response_payload"])
+    log_event(
+        "workout_progress_fetched",
+        route="/workout/{session_id}/progress",
+        action="progress_fetch",
+        user_id=current_user.id,
+        session_id=workout_id,
+        planned_total=response_payload.get("planned_total"),
+    )
+    return response_payload
 
 
 @router.get(
@@ -402,7 +529,7 @@ def workout_summary(
 ) -> WorkoutSummaryResponse:
     route_runtime = prepare_workout_summary_route_runtime(
         workout_id=workout_id,
-        plan_rows=_list_workout_plans(db, current_user.id),
+        plan_rows=_list_current_workout_plans(db, current_user),
         resolve_linked_program_id=resolve_rule_program_id,
         load_rule_set=load_program_rule_set,
     )

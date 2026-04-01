@@ -19,6 +19,7 @@ COPY docs/rules /app/docs/rules
 COPY importers /app/importers
 COPY knowledge /app/knowledge
 COPY programs /app/programs
+RUN mkdir -p /app/logs
 
 WORKDIR /app/apps/api
 EXPOSE 8000

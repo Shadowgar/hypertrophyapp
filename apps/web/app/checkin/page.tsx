@@ -114,7 +114,7 @@ export default function CheckinPage() {
     setIsGeneratingNextWeek(true);
     setNextWeekGenerationStatus("Generating next week...");
     try {
-      await api.generateWeek();
+      await api.generateNextWeek(null, Number(sessionsNextWeek));
       setNextWeekGenerationStatus("Next week generated. Open Week Plan to continue.");
     } catch (error) {
       const detail = error instanceof Error ? error.message : "Unknown error";

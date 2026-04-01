@@ -128,8 +128,22 @@ test("Week page sends template_id when override selected", async () => {
   // @ts-ignore
   globalThis.fetch.mockImplementation((input, init) => {
     const url = typeof input === "string" ? input : input.url;
+    if (url.endsWith("/profile")) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            selected_program_id: "pure_bodybuilding_phase_1_full_body",
+            days_available: 4,
+          }),
+          { status: 200 },
+        ),
+      );
+    }
     if (url.endsWith("/plan/programs")) {
       return Promise.resolve(new Response(JSON.stringify(programs), { status: 200 }));
+    }
+    if (url.endsWith("/plan/latest-week")) {
+      return Promise.resolve(new Response(JSON.stringify({ detail: "No plan generated" }), { status: 404 }));
     }
     if (url.endsWith("/weekly-review/status")) {
       return Promise.resolve(
@@ -214,15 +228,31 @@ test("Week page sends template_id when override selected", async () => {
     expect(calls.length).toBe(1);
     const parsed = JSON.parse(calls[0][1].body);
     expect(parsed.template_id).toBe("upper_lower");
+    expect(parsed.target_days).toBe(4);
   });
+  expect(screen.getByText(/Profile default: 4 days\./i)).toBeInTheDocument();
 });
 
 test("Week page blocks generation when Sunday review is required", async () => {
   // @ts-ignore
   globalThis.fetch.mockImplementation((input) => {
     const url = typeof input === "string" ? input : input.url;
+    if (url.endsWith("/profile")) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            selected_program_id: "pure_bodybuilding_phase_1_full_body",
+            days_available: 3,
+          }),
+          { status: 200 },
+        ),
+      );
+    }
     if (url.endsWith("/plan/programs")) {
       return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }));
+    }
+    if (url.endsWith("/plan/latest-week")) {
+      return Promise.resolve(new Response(JSON.stringify({ detail: "No plan generated" }), { status: 404 }));
     }
     if (url.endsWith("/weekly-review/status")) {
       return Promise.resolve(
@@ -276,8 +306,22 @@ test("Week page offers retry action after generation failure", async () => {
   // @ts-ignore
   globalThis.fetch.mockImplementation((input, init) => {
     const url = typeof input === "string" ? input : input.url;
+    if (url.endsWith("/profile")) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            selected_program_id: "pure_bodybuilding_phase_1_full_body",
+            days_available: 5,
+          }),
+          { status: 200 },
+        ),
+      );
+    }
     if (url.endsWith("/plan/programs")) {
       return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }));
+    }
+    if (url.endsWith("/plan/latest-week")) {
+      return Promise.resolve(new Response(JSON.stringify({ detail: "No plan generated" }), { status: 404 }));
     }
     if (url.endsWith("/weekly-review/status")) {
       return Promise.resolve(
@@ -316,6 +360,6 @@ test("Week page offers retry action after generation failure", async () => {
   fireEvent.click(screen.getByRole("button", { name: /Generate week plan/i }));
 
   await waitFor(() => {
-    expect(screen.getByText(/Week generated for Hypertrophy Phase 1\./i)).toBeInTheDocument();
+    expect(screen.getByText(/Week generated for Full Body Phase 1\./i)).toBeInTheDocument();
   });
 });

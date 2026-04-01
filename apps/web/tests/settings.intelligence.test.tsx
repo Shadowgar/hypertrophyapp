@@ -31,13 +31,13 @@ test("Settings coaching panel previews and applies intelligence decisions", asyn
     generated_at: new Date().toISOString(),
   };
   const programs = [
-    { id: "pure_bodybuilding_phase_1_full_body", name: "Hypertrophy Phase 1" },
+    { id: "pure_bodybuilding_phase_1_full_body", name: "Full Body Phase 1" },
     { id: "upper_lower", name: "Upper/Lower" },
   ];
   const preview = {
     recommendation_id: "rec_123",
     template_id: "pure_bodybuilding_phase_1_full_body",
-    program_name: "Hypertrophy Phase 1",
+    program_name: "Full Body Phase 1",
     schedule: {
       from_days: 5,
       to_days: 3,
@@ -202,7 +202,7 @@ test("Settings coaching panel previews and applies intelligence decisions", asyn
   render(<SettingsPage />);
 
   await waitFor(() => {
-    expect(screen.getByText(/Hypertrophy Phase 1/i)).toBeInTheDocument();
+    expect(screen.getByText(/Full Body Phase 1/i)).toBeInTheDocument();
   });
   expect(screen.getByRole("button", { name: /Get Recommendation/i })).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: /Get Recommendation/i }));
@@ -215,6 +215,7 @@ test("Settings coaching panel previews and applies intelligence decisions", asyn
   await waitFor(() => {
     expect(screen.getByRole("button", { name: /Generate coaching preview/i })).toBeInTheDocument();
   });
+  expect(screen.getByText(/Allowed range: 1-8 weeks/i)).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole("button", { name: /Generate coaching preview/i }));
 
@@ -247,7 +248,7 @@ test("Settings coaching panel previews and applies intelligence decisions", asyn
 
   fireEvent.click(screen.getByRole("button", { name: /Generate Week Now/i }));
   await waitFor(() => {
-    expect(screen.getByText(/Generated week for Hypertrophy Phase 1\./i)).toBeInTheDocument();
+    expect(screen.getByText(/Generated week for Full Body Phase 1\./i)).toBeInTheDocument();
   });
 
   fireEvent.click(screen.getByRole("button", { name: /Apply Coaching Decision/i }));
@@ -357,6 +358,7 @@ test("Settings coaching panel previews and applies intelligence decisions", asyn
   const generateWeekBody = typeof generateWeekRawBody === "string" ? JSON.parse(generateWeekRawBody) : {};
   expect(generateWeekBody).toMatchObject({
     template_id: "pure_bodybuilding_phase_1_full_body",
+    target_days: 3,
   });
 });
 
@@ -392,7 +394,7 @@ test("Settings adaptation apply failure exposes retry recovery actions", async (
       );
     }
     if (url.endsWith("/plan/adaptation/apply") && init?.method === "POST") {
-      return Promise.resolve(new Response(JSON.stringify({ detail: "fail" }), { status: 500 }));
+      return Promise.resolve(new Response(JSON.stringify({ detail: "Temporary duration must be between 1 and 8 weeks." }), { status: 422 }));
     }
     return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
   });
@@ -400,7 +402,7 @@ test("Settings adaptation apply failure exposes retry recovery actions", async (
   render(<SettingsPage />);
 
   await waitFor(() => {
-    expect(screen.getByText(/Hypertrophy Phase 1/i)).toBeInTheDocument();
+    expect(screen.getByText(/Full Body Phase 1/i)).toBeInTheDocument();
   });
 
   fireEvent.click(screen.getByRole("button", { name: /Coaching Preview/i }));
@@ -411,7 +413,53 @@ test("Settings adaptation apply failure exposes retry recovery actions", async (
 
   fireEvent.click(screen.getByRole("button", { name: /Apply frequency adaptation/i }));
   await waitFor(() => {
-    expect(screen.getByText(/Apply frequency adaptation failed/i)).toBeInTheDocument();
+    expect(screen.getByText(/Temporary duration must be between 1 and 8 weeks\./i)).toBeInTheDocument();
   });
   expect(screen.getByRole("button", { name: /Apply frequency adaptation/i })).toBeInTheDocument();
+});
+
+test("Settings page shows inline validation for invalid temporary duration", async () => {
+  const profile = {
+    selected_program_id: "pure_bodybuilding_phase_1_full_body",
+    training_location: "gym",
+    equipment_profile: ["dumbbell"],
+    days_available: 5,
+  };
+
+  // @ts-ignore
+  globalThis.fetch.mockImplementation((input, init) => {
+    const url = typeof input === "string" ? input : input.url;
+    if (url.endsWith("/profile") && (!init || init.method === "GET")) {
+      return Promise.resolve(new Response(JSON.stringify(profile), { status: 200 }));
+    }
+    if (url.endsWith("/plan/programs")) {
+      return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }));
+    }
+    return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
+  });
+
+  render(<SettingsPage />);
+
+  await waitFor(() => {
+    expect(screen.getByText(/Full Body Phase 1/i)).toBeInTheDocument();
+  });
+
+  fireEvent.click(screen.getByRole("button", { name: /Coaching Preview/i }));
+  await waitFor(() => {
+    expect(screen.getByLabelText(/Temporary Duration \(weeks\)/i)).toBeInTheDocument();
+  });
+
+  fireEvent.change(screen.getByLabelText(/Temporary Duration \(weeks\)/i), { target: { value: "10" } });
+  fireEvent.click(screen.getByRole("button", { name: /Generate frequency adaptation preview/i }));
+
+  await waitFor(() => {
+    expect(screen.getAllByText(/Temporary duration must be between 1 and 8 weeks\./i).length).toBeGreaterThan(0);
+  });
+
+  // @ts-ignore
+  const adaptationCalls = globalThis.fetch.mock.calls.filter(([input, init]) => {
+    const url = typeof input === "string" ? input : input.url;
+    return url.endsWith("/plan/adaptation/preview") && init?.method === "POST";
+  });
+  expect(adaptationCalls).toHaveLength(0);
 });

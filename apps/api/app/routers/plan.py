@@ -1,4 +1,4 @@
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from copy import deepcopy
 from typing import Annotated, Any, Literal, cast
 
@@ -51,7 +51,18 @@ from ..generated_full_body_runtime_adapter import (
     GENERATED_FULL_BODY_COMPATIBILITY_TEMPLATE_ID,
     prepare_generated_full_body_runtime_template,
 )
-from ..models import CoachingRecommendation, ExerciseState, SorenessEntry, User, WeeklyCheckin, WeeklyReviewCycle, WorkoutPlan, WorkoutSetLog
+from ..models import (
+    CoachingRecommendation,
+    ExerciseState,
+    SorenessEntry,
+    User,
+    WeeklyCheckin,
+    WeeklyReviewCycle,
+    WorkoutPlan,
+    WorkoutSessionState,
+    WorkoutSetLog,
+)
+from ..observability import log_event
 from ..program_loader import (
     is_authored_phase1_binding_id,
     is_authored_phase2_binding_id,
@@ -82,6 +93,7 @@ from ..schemas import (
     FrequencyAdaptationPreviewRequest,
     IntelligenceCoachPreviewRequest,
     IntelligenceCoachPreviewResponse,
+    NextWeekPlanRequest,
     ProgramDayGuideResponse,
     ProgramExerciseGuideResponse,
     ProgramGuideResponse,
@@ -97,6 +109,7 @@ GUIDE_RESPONSES: dict[int | str, dict[str, Any]] = {
     422: {"description": INVALID_TEMPLATE_DETAIL},
 }
 PROFILE_INCOMPLETE_DETAIL = "Complete profile first"
+GenerationMode = Literal["current_week_regenerate", "next_week_advance"]
 
 
 def _list_active_program_templates() -> list[dict[str, Any]]:
@@ -167,6 +180,156 @@ def _resolve_onboarding_week(
 
 def _exercise_identity(exercise: dict[str, Any]) -> str:
     return str(exercise.get("primary_exercise_id") or exercise.get("id") or "").strip()
+
+
+def _has_user_workout_activity(db: Session, *, user_id: str) -> bool:
+    return any(
+        (
+            db.query(WorkoutSessionState).filter(WorkoutSessionState.user_id == user_id).first(),
+            db.query(WorkoutSetLog).filter(WorkoutSetLog.user_id == user_id).first(),
+            db.query(ExerciseState).filter(ExerciseState.user_id == user_id).first(),
+        )
+    )
+
+
+def _list_user_workout_plans(db: Session, *, user_id: str) -> list[WorkoutPlan]:
+    return (
+        db.query(WorkoutPlan)
+        .filter(WorkoutPlan.user_id == user_id)
+        .order_by(WorkoutPlan.created_at.desc())
+        .all()
+    )
+
+
+def _session_signature(session: dict[str, Any]) -> dict[str, Any]:
+    exercises = [
+        exercise
+        for exercise in session.get("exercises") or []
+        if isinstance(exercise, dict)
+    ]
+    ordered_exercises = [
+        {
+            "exercise_id": _exercise_identity(exercise),
+            "sets": int(exercise.get("sets") or 0),
+        }
+        for exercise in exercises
+        if _exercise_identity(exercise)
+    ]
+    return {
+        "title": str(session.get("title") or session.get("name") or "").strip(),
+        "day_role": str(session.get("day_role") or "").strip() or None,
+        "exercise_order": [item["exercise_id"] for item in ordered_exercises],
+        "exercise_sets": ordered_exercises,
+        "planned_total": sum(item["sets"] for item in ordered_exercises),
+    }
+
+
+def _plan_payload_signature(payload: dict[str, Any]) -> dict[str, Any]:
+    mesocycle = cast(dict[str, Any], payload.get("mesocycle") or {})
+    return {
+        "program_template_id": resolve_selected_program_binding_id(payload.get("program_template_id")),
+        "week_index": int(mesocycle.get("week_index") or 0),
+        "authored_week_index": int(mesocycle.get("authored_week_index") or 0),
+        "sessions": [
+            _session_signature(session)
+            for session in payload.get("sessions") or []
+            if isinstance(session, dict)
+        ],
+    }
+
+
+def _delete_user_workout_plans_for_binding(
+    db: Session,
+    *,
+    user_id: str,
+    binding_id: str,
+) -> None:
+    for plan in _list_user_workout_plans(db, user_id=user_id):
+        payload = plan.payload if isinstance(plan.payload, dict) else {}
+        plan_binding_id = resolve_selected_program_binding_id(payload.get("program_template_id"))
+        if plan_binding_id == binding_id:
+            db.delete(plan)
+
+
+def _resolve_effective_days_available(
+    *,
+    current_days_available: int,
+    target_days_override: int | None,
+) -> int:
+    if target_days_override is not None:
+        return int(target_days_override)
+    return int(current_days_available)
+
+
+def _resolve_latest_binding_plan(
+    prior_plans: list[WorkoutPlan],
+    *,
+    binding_id: str,
+) -> WorkoutPlan | None:
+    matching_plans = [
+        plan
+        for plan in prior_plans
+        if resolve_selected_program_binding_id(
+            (plan.payload if isinstance(plan.payload, dict) else {}).get("program_template_id")
+        )
+        == binding_id
+    ]
+    return matching_plans[0] if matching_plans else None
+
+
+def _resolve_generation_week_context(
+    prior_plans: list[WorkoutPlan],
+    *,
+    binding_id: str,
+    generation_mode: GenerationMode,
+) -> tuple[list[WorkoutPlan], date | None]:
+    latest_binding_plan = _resolve_latest_binding_plan(prior_plans, binding_id=binding_id)
+    monday = date.today() - timedelta(days=date.today().weekday())
+    if generation_mode == "next_week_advance":
+        if latest_binding_plan is not None:
+            return prior_plans, latest_binding_plan.week_start + timedelta(days=7)
+        return prior_plans, monday + timedelta(days=7)
+    if latest_binding_plan is None:
+        return prior_plans, monday
+    current_week_start = monday
+    has_current_week_plan = latest_binding_plan.week_start >= current_week_start
+    if not has_current_week_plan:
+        return prior_plans, current_week_start
+    filtered_prior_plans = [
+        plan
+        for plan in prior_plans
+        if not (
+            resolve_selected_program_binding_id(
+                (plan.payload if isinstance(plan.payload, dict) else {}).get("program_template_id")
+            )
+            == binding_id
+            and plan.week_start == current_week_start
+        )
+    ]
+    return filtered_prior_plans, current_week_start
+
+
+def _apply_week_start_override_to_plan(
+    *,
+    base_plan: dict[str, Any],
+    week_start_override: date | None,
+) -> dict[str, Any]:
+    if week_start_override is None:
+        return base_plan
+    current_week_start = date.fromisoformat(str(base_plan.get("week_start") or ""))
+    if current_week_start == week_start_override:
+        return base_plan
+    shifted_plan = deepcopy(base_plan)
+    delta_days = (week_start_override - current_week_start).days
+    shifted_plan["week_start"] = week_start_override.isoformat()
+    for session in shifted_plan.get("sessions") or []:
+        if not isinstance(session, dict):
+            continue
+        session_date = str(session.get("date") or "").strip()
+        if not session_date:
+            continue
+        session["date"] = (date.fromisoformat(session_date) + timedelta(days=delta_days)).isoformat()
+    return shifted_plan
 
 
 def _build_authored_adapted_sessions(
@@ -342,7 +505,7 @@ def _prepare_authored_frequency_adapted_template(
 
     adapted_template = deepcopy(program_template)
     adapted_template["sessions"] = deepcopy(adapted_sessions)
-    passthrough_eligible = session_time_budget_minutes is None and not list(movement_restrictions or [])
+    passthrough_eligible = not list(movement_restrictions or [])
     if passthrough_eligible:
         adapted_template[AUTHORITATIVE_AUTHORED_PASSTHROUGH_KEY] = True
     adapted_weeks = cast(list[Any], adapted_template.get("authored_weeks") or [])
@@ -367,7 +530,10 @@ def _prepare_plan_generation_runtime(
     db: Session,
     current_user: User,
     selected_template_id: str,
+    effective_days_available: int,
     active_frequency_adaptation: dict[str, Any] | None,
+    prior_plans_override: list[WorkoutPlan] | None = None,
+    latest_plan_override: WorkoutPlan | None = None,
 ) -> dict[str, Any]:
     history_rows = (
         db.query(WorkoutSetLog)
@@ -377,8 +543,10 @@ def _prepare_plan_generation_runtime(
         .all()
     )
     exercise_states = db.query(ExerciseState).filter(ExerciseState.user_id == current_user.id).all()
-    prior_plans = db.query(WorkoutPlan).filter(WorkoutPlan.user_id == current_user.id).all()
-    latest_plan = max(prior_plans, key=lambda plan: plan.created_at) if prior_plans else None
+    prior_plans = list(prior_plans_override) if prior_plans_override is not None else _list_user_workout_plans(db, user_id=current_user.id)
+    latest_plan = latest_plan_override
+    if latest_plan is None and prior_plans:
+        latest_plan = max(prior_plans, key=lambda plan: plan.created_at)
 
     latest_soreness = (
         db.query(SorenessEntry)
@@ -401,7 +569,7 @@ def _prepare_plan_generation_runtime(
     )
     runtime = prepare_plan_generation_decision_runtime(
         selected_template_id=selected_template_id,
-        current_days_available=current_user.days_available,
+        current_days_available=effective_days_available,
         active_frequency_adaptation=active_frequency_adaptation,
         selected_program_id=current_user.selected_program_id,
         split_preference=current_user.split_preference,
@@ -749,6 +917,16 @@ def preview_frequency_adaptation(
 ) -> FrequencyAdaptationResult:
     if not current_user.days_available or not current_user.split_preference:
         raise HTTPException(status_code=400, detail=PROFILE_INCOMPLETE_DETAIL)
+    log_event(
+        "frequency_adaptation_preview_requested",
+        route="/plan/adaptation/preview",
+        action="preview_frequency_adaptation",
+        user_id=current_user.id,
+        selected_program_id=resolve_selected_program_binding_id(current_user.selected_program_id),
+        template_id=resolve_selected_program_binding_id(payload.program_id),
+        target_days=payload.target_days,
+        days_available=current_user.days_available,
+    )
 
     latest_plan = (
         db.query(WorkoutPlan)
@@ -791,6 +969,17 @@ def preview_frequency_adaptation(
         decision_kind="preview",
     )
     raw_result = cast(dict[str, Any], route_runtime["preview_payload"])
+    log_event(
+        "frequency_adaptation_preview_completed",
+        route="/plan/adaptation/preview",
+        action="preview_frequency_adaptation",
+        user_id=current_user.id,
+        selected_program_id=resolve_selected_program_binding_id(current_user.selected_program_id),
+        template_id=str(adaptation_runtime["program_id"]),
+        path_family="generated" if is_generated_full_body_binding_id(str(adaptation_runtime["program_id"])) else "authored",
+        target_days=payload.target_days,
+        days_available=current_user.days_available,
+    )
     return FrequencyAdaptationResult.model_validate(raw_result)
 
 
@@ -809,6 +998,16 @@ def apply_frequency_adaptation(
 ) -> FrequencyAdaptationApplyResponse:
     if not current_user.days_available or not current_user.split_preference:
         raise HTTPException(status_code=400, detail=PROFILE_INCOMPLETE_DETAIL)
+    log_event(
+        "frequency_adaptation_apply_requested",
+        route="/plan/adaptation/apply",
+        action="apply_frequency_adaptation",
+        user_id=current_user.id,
+        selected_program_id=resolve_selected_program_binding_id(current_user.selected_program_id),
+        template_id=resolve_selected_program_binding_id(payload.program_id),
+        target_days=payload.target_days,
+        days_available=current_user.days_available,
+    )
 
     latest_plan = (
         db.query(WorkoutPlan)
@@ -857,30 +1056,39 @@ def apply_frequency_adaptation(
     db.add(current_user)
     db.commit()
 
-    return FrequencyAdaptationApplyResponse(**cast(dict[str, Any], route_runtime["response_payload"]))
+    response_model = FrequencyAdaptationApplyResponse(**cast(dict[str, Any], route_runtime["response_payload"]))
+    log_event(
+        "frequency_adaptation_apply_completed",
+        route="/plan/adaptation/apply",
+        action="apply_frequency_adaptation",
+        user_id=current_user.id,
+        selected_program_id=resolve_selected_program_binding_id(current_user.selected_program_id),
+        template_id=response_model.program_id,
+        path_family="generated" if is_generated_full_body_binding_id(response_model.program_id) else "authored",
+        target_days=response_model.target_days,
+        days_available=current_user.days_available,
+    )
+    return response_model
 
 
-@router.post(
-    "/plan/generate-week",
-    responses={
-        400: {"description": PROFILE_INCOMPLETE_DETAIL},
-        404: {"description": "Program template not found"},
-        422: {"description": "Program template schema is invalid"},
-    },
-)
-def plan_generate_week(
-    payload: GenerateWeekPlanRequest,
-    db: DbSession,
-    current_user: CurrentUser,
-) -> dict:
-    if not current_user.days_available or not current_user.split_preference:
-        raise HTTPException(status_code=400, detail=PROFILE_INCOMPLETE_DETAIL)
-    explicit_template_id = resolve_selected_program_binding_id(payload.template_id) if payload.template_id else None
+def _build_week_plan_runtime_for_user(
+    *,
+    db: Session,
+    current_user: User,
+    explicit_template_id: str | None,
+    target_days_override: int | None = None,
+    generation_mode: GenerationMode = "current_week_regenerate",
+) -> dict[str, Any]:
+    effective_days_available = _resolve_effective_days_available(
+        current_days_available=current_user.days_available,
+        target_days_override=target_days_override,
+    )
     profile_template_id = resolve_selected_program_binding_id(current_user.selected_program_id)
+    normalized_explicit_template_id = resolve_selected_program_binding_id(explicit_template_id) if explicit_template_id else None
     program_recommendation_trace: dict[str, Any] | None = None
 
     auto_mode = (current_user.program_selection_mode or "manual") == "auto"
-    if auto_mode and explicit_template_id is None:
+    if auto_mode and normalized_explicit_template_id is None:
         latest_plan = (
             db.query(WorkoutPlan)
             .filter(WorkoutPlan.user_id == current_user.id)
@@ -904,7 +1112,7 @@ def plan_generate_week(
 
         training_state = build_plan_decision_training_state(
             selected_program_id=current_user.selected_program_id,
-            days_available=current_user.days_available,
+            days_available=effective_days_available,
             split_preference=current_user.split_preference,
             training_location=current_user.training_location,
             equipment_profile=current_user.equipment_profile or [],
@@ -923,7 +1131,7 @@ def plan_generate_week(
 
         route_runtime = prepare_profile_program_recommendation_route_runtime(
             selected_program_id=resolve_selected_program_binding_id(current_user.selected_program_id),
-            days_available=current_user.days_available,
+            days_available=effective_days_available,
             split_preference=current_user.split_preference,
             latest_plan=latest_plan,
             available_program_summaries=list_program_templates(),
@@ -938,28 +1146,22 @@ def plan_generate_week(
         program_recommendation_trace = cast(dict[str, Any], route_runtime.get("decision_trace") or {})
 
         if recommended_program_id:
-            # Persist the recommendation so the current program matches reality.
             current_user.selected_program_id = resolve_selected_program_binding_id(recommended_program_id) or recommended_program_id
             db.add(current_user)
             profile_template_id = resolve_selected_program_binding_id(current_user.selected_program_id)
-            explicit_template_id = resolve_selected_program_binding_id(recommended_program_id) or recommended_program_id
+            normalized_explicit_template_id = resolve_selected_program_binding_id(recommended_program_id) or recommended_program_id
 
-    try:
-        template_runtime = prepare_generation_template_runtime(
-            explicit_template_id=explicit_template_id,
-            profile_template_id=profile_template_id,
-            split_preference=current_user.split_preference,
-            days_available=current_user.days_available,
-            nutrition_phase=current_user.nutrition_phase or "maintenance",
-            available_equipment=current_user.equipment_profile or [],
-            candidate_summaries=_list_active_program_templates(),
-            load_template=load_program_template,
-            ignored_loader_exceptions=(FileNotFoundError, KeyError, ValidationError),
-        )
-    except FileNotFoundError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-    except ValidationError as exc:
-        raise HTTPException(status_code=422, detail=INVALID_TEMPLATE_DETAIL) from exc
+    template_runtime = prepare_generation_template_runtime(
+        explicit_template_id=normalized_explicit_template_id,
+        profile_template_id=profile_template_id,
+        split_preference=current_user.split_preference,
+        days_available=effective_days_available,
+        nutrition_phase=current_user.nutrition_phase or "maintenance",
+        available_equipment=current_user.equipment_profile or [],
+        candidate_summaries=_list_active_program_templates(),
+        load_template=load_program_template,
+        ignored_loader_exceptions=(FileNotFoundError, KeyError, ValidationError),
+    )
 
     selected_template_id = cast(str, template_runtime["selected_template_id"])
     template = cast(dict[str, Any], template_runtime["selected_template"])
@@ -972,21 +1174,33 @@ def plan_generate_week(
         load_rule_set=load_program_rule_set,
     )
 
-    active_state = dict(current_user.active_frequency_adaptation or {})
-    if active_state:
-        for key in ("template_id", "program_id"):
-            normalized = resolve_selected_program_binding_id(str(active_state.get(key) or "").strip())
-            if normalized:
-                active_state[key] = normalized
-    active_frequency_adaptation = resolve_active_frequency_adaptation_runtime(
-        active_state=active_state if active_state else None,
-        selected_template_id=selected_template_id,
+    active_frequency_adaptation = None
+    if target_days_override is None:
+        active_state = dict(current_user.active_frequency_adaptation or {})
+        if active_state:
+            for key in ("template_id", "program_id"):
+                normalized = resolve_selected_program_binding_id(str(active_state.get(key) or "").strip())
+                if normalized:
+                    active_state[key] = normalized
+        active_frequency_adaptation = resolve_active_frequency_adaptation_runtime(
+            active_state=active_state if active_state else None,
+            selected_template_id=selected_template_id,
+        )
+    prior_plans = _list_user_workout_plans(db, user_id=current_user.id)
+    filtered_prior_plans, week_start_override = _resolve_generation_week_context(
+        prior_plans,
+        binding_id=selected_template_id,
+        generation_mode=generation_mode,
     )
+    latest_plan = max(filtered_prior_plans, key=lambda plan: plan.created_at) if filtered_prior_plans else None
     generation_context = _prepare_plan_generation_runtime(
         db=db,
         current_user=current_user,
         selected_template_id=selected_template_id,
+        effective_days_available=effective_days_available,
         active_frequency_adaptation=active_frequency_adaptation,
+        prior_plans_override=filtered_prior_plans,
+        latest_plan_override=latest_plan,
     )
     generation_runtime = cast(dict[str, Any], generation_context["generation_runtime"])
     runtime_template = template
@@ -997,7 +1211,7 @@ def plan_generate_week(
             selected_template_id=selected_template_id,
             selected_template=template,
             profile_input=ProfileAssessmentInput(
-                days_available=int(current_user.days_available or 0),
+                days_available=int(effective_days_available),
                 split_preference=current_user.split_preference,
                 training_location=current_user.training_location,
                 equipment_profile=list(current_user.equipment_profile or []),
@@ -1014,11 +1228,26 @@ def plan_generate_week(
         template_selection_trace["generated_full_body_runtime_trace"] = cast(
             dict[str, Any], generated_runtime["generated_full_body_runtime_trace"]
         )
+        log_event(
+            "generation_path_selected",
+            route="/plan/generate-week" if generation_mode == "current_week_regenerate" else "/plan/next-week",
+            action="build_week_plan_runtime",
+            user_id=current_user.id,
+            selected_program_id=resolve_selected_program_binding_id(current_user.selected_program_id),
+            template_id=selected_template_id,
+            runtime_template_id=selected_template_id,
+            path_family="generated",
+            generation_mode=generation_mode,
+            week_index=cast(dict[str, Any], generated_runtime["generated_full_body_runtime_trace"]).get("week_index"),
+            authored_week_index=cast(dict[str, Any], generated_runtime["generated_full_body_runtime_trace"]).get("authored_week_index"),
+            days_available=current_user.days_available,
+            target_days=effective_days_available,
+        )
     else:
         runtime_template, authored_adaptation_trace = _prepare_authored_frequency_adapted_template(
             selected_template_id=selected_template_id,
             program_template=template,
-            current_days_available=current_user.days_available,
+            current_days_available=effective_days_available,
             active_frequency_adaptation=active_frequency_adaptation,
             training_state=cast(dict[str, Any], generation_context["training_state"]),
             stored_weak_areas=list(current_user.weak_areas or []),
@@ -1029,6 +1258,21 @@ def plan_generate_week(
         )
         if authored_adaptation_trace is not None:
             template_selection_trace["authored_frequency_adaptation_trace"] = authored_adaptation_trace
+        log_event(
+            "generation_path_selected",
+            route="/plan/generate-week" if generation_mode == "current_week_regenerate" else "/plan/next-week",
+            action="build_week_plan_runtime",
+            user_id=current_user.id,
+            selected_program_id=resolve_selected_program_binding_id(current_user.selected_program_id),
+            template_id=selected_template_id,
+            runtime_template_id=resolve_linked_program_id(selected_template_id),
+            path_family="authored",
+            generation_mode=generation_mode,
+            days_available=current_user.days_available,
+            target_days=effective_days_available,
+            week_index=cast(dict[str, Any], template_selection_trace.get("authored_frequency_adaptation_trace") or {}).get("week_index"),
+            authored_week_index=cast(dict[str, Any], template_selection_trace.get("authored_frequency_adaptation_trace") or {}).get("authored_week_index"),
+        )
     scheduler_runtime = prepare_generate_week_scheduler_runtime(
         user_name=current_user.name,
         split_preference=current_user.split_preference,
@@ -1040,6 +1284,10 @@ def plan_generate_week(
     )
 
     base_plan = generate_week_plan(**cast(dict[str, Any], scheduler_runtime["scheduler_kwargs"]))
+    base_plan = _apply_week_start_override_to_plan(
+        base_plan=base_plan,
+        week_start_override=week_start_override,
+    )
     review_lookup_runtime = prepare_generate_week_review_lookup_runtime(base_plan=base_plan)
     week_start = cast(date, review_lookup_runtime["week_start"])
     review_cycle = (
@@ -1065,17 +1313,210 @@ def plan_generate_week(
         active_frequency_adaptation=active_frequency_adaptation,
         review_cycle=review_cycle,
     )
-    plan = cast(dict[str, Any], finalize_runtime["response_payload"])
-    adaptation_persistence_payload = cast(dict[str, Any], finalize_runtime["adaptation_persistence_payload"])
+    return {
+        "selected_template_id": selected_template_id,
+        "response_payload": cast(dict[str, Any], finalize_runtime["response_payload"]),
+        "record_values": cast(dict[str, Any], finalize_runtime["record_values"]),
+        "adaptation_persistence_payload": cast(dict[str, Any], finalize_runtime["adaptation_persistence_payload"]),
+        "replace_current_week": generation_mode == "current_week_regenerate",
+    }
+
+
+def _persist_week_plan_runtime(
+    *,
+    db: Session,
+    current_user: User,
+    plan_runtime: dict[str, Any],
+) -> WorkoutPlan:
+    adaptation_persistence_payload = cast(dict[str, Any], plan_runtime["adaptation_persistence_payload"])
     if bool(adaptation_persistence_payload["state_updated"]):
         current_user.active_frequency_adaptation = cast(dict[str, Any] | None, adaptation_persistence_payload["next_state"])
         db.add(current_user)
 
-    record = WorkoutPlan(**cast(dict[str, Any], finalize_runtime["record_values"]))
+    record_values = cast(dict[str, Any], plan_runtime["record_values"])
+    if bool(plan_runtime.get("replace_current_week")):
+        record_payload = cast(dict[str, Any], record_values.get("payload") or {})
+        replace_binding_id = resolve_selected_program_binding_id(record_payload.get("program_template_id"))
+        replace_week_start = cast(date, record_values["week_start"])
+        rows_to_replace = (
+            db.query(WorkoutPlan)
+            .filter(WorkoutPlan.user_id == current_user.id, WorkoutPlan.week_start == replace_week_start)
+            .all()
+        )
+        for existing_row in rows_to_replace:
+            existing_payload = existing_row.payload if isinstance(existing_row.payload, dict) else {}
+            existing_binding_id = resolve_selected_program_binding_id(existing_payload.get("program_template_id"))
+            if existing_binding_id == replace_binding_id:
+                db.delete(existing_row)
+
+    record = WorkoutPlan(**record_values)
     db.add(record)
     db.commit()
+    db.refresh(record)
+    return record
 
-    return plan
+
+def _ensure_latest_authored_plan_current_if_needed(
+    *,
+    db: Session,
+    current_user: User,
+) -> WorkoutPlan | None:
+    selected_template_id = resolve_selected_program_binding_id(current_user.selected_program_id)
+    if not (is_authored_phase1_binding_id(selected_template_id) or is_authored_phase2_binding_id(selected_template_id)):
+        plans = _list_user_workout_plans(db, user_id=current_user.id)
+        return plans[0] if plans else None
+
+    plans = _list_user_workout_plans(db, user_id=current_user.id)
+    latest_plan = plans[0] if plans else None
+    if latest_plan is None or _has_user_workout_activity(db, user_id=current_user.id):
+        return latest_plan
+
+    latest_payload = latest_plan.payload if isinstance(latest_plan.payload, dict) else {}
+    latest_payload_binding_id = resolve_selected_program_binding_id(latest_payload.get("program_template_id"))
+    if latest_payload_binding_id != selected_template_id:
+        return latest_plan
+
+    candidate_runtime = _build_week_plan_runtime_for_user(
+        db=db,
+        current_user=current_user,
+        explicit_template_id=selected_template_id,
+        generation_mode="current_week_regenerate",
+    )
+    if _plan_payload_signature(latest_payload) == _plan_payload_signature(cast(dict[str, Any], candidate_runtime["response_payload"])):
+        return latest_plan
+
+    _delete_user_workout_plans_for_binding(
+        db,
+        user_id=current_user.id,
+        binding_id=selected_template_id,
+    )
+    return _persist_week_plan_runtime(
+        db=db,
+        current_user=current_user,
+        plan_runtime=candidate_runtime,
+    )
+
+
+def ensure_current_workout_plans_for_user(
+    *,
+    db: Session,
+    current_user: User,
+) -> list[WorkoutPlan]:
+    _ensure_latest_authored_plan_current_if_needed(db=db, current_user=current_user)
+    return _list_user_workout_plans(db, user_id=current_user.id)
+
+
+def _generate_week_for_user(
+    *,
+    db: Session,
+    current_user: User,
+    explicit_template_id: str | None,
+    target_days: int | None,
+    generation_mode: GenerationMode,
+) -> dict[str, Any]:
+    route = "/plan/generate-week" if generation_mode == "current_week_regenerate" else "/plan/next-week"
+    user_id = str(current_user.id)
+    selected_program_id = resolve_selected_program_binding_id(current_user.selected_program_id)
+    days_available = current_user.days_available
+    log_event(
+        "week_generate_requested" if generation_mode == "current_week_regenerate" else "week_next_requested",
+        route=route,
+        action="plan_generation",
+        user_id=user_id,
+        selected_program_id=selected_program_id,
+        template_id=explicit_template_id,
+        generation_mode=generation_mode,
+        days_available=days_available,
+        target_days=target_days,
+    )
+    try:
+        plan_runtime = _build_week_plan_runtime_for_user(
+            db=db,
+            current_user=current_user,
+            explicit_template_id=explicit_template_id,
+            target_days_override=target_days,
+            generation_mode=generation_mode,
+        )
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValidationError as exc:
+        raise HTTPException(status_code=422, detail=INVALID_TEMPLATE_DETAIL) from exc
+
+    record = _persist_week_plan_runtime(
+        db=db,
+        current_user=current_user,
+        plan_runtime=plan_runtime,
+    )
+    payload = cast(dict[str, Any], record.payload)
+    mesocycle = cast(dict[str, Any], payload.get("mesocycle") or {})
+    log_event(
+        "week_regenerated_current" if generation_mode == "current_week_regenerate" else "week_advanced_next",
+        route=route,
+        action="plan_generation",
+        user_id=user_id,
+        selected_program_id=selected_program_id,
+        template_id=payload.get("program_template_id"),
+        runtime_template_id=payload.get("program_template_id"),
+        generation_mode=generation_mode,
+        path_family="generated" if is_generated_full_body_binding_id(str(payload.get("program_template_id") or "")) else "authored",
+        week_index=mesocycle.get("week_index"),
+        displayed_week_index=mesocycle.get("week_index"),
+        authored_week_index=mesocycle.get("authored_week_index"),
+        week_start=payload.get("week_start"),
+        days_available=days_available,
+        target_days=target_days,
+    )
+    return payload
+
+
+@router.post(
+    "/plan/generate-week",
+    responses={
+        400: {"description": PROFILE_INCOMPLETE_DETAIL},
+        404: {"description": "Program template not found"},
+        422: {"description": "Program template schema is invalid"},
+    },
+)
+def plan_generate_week(
+    payload: GenerateWeekPlanRequest,
+    db: DbSession,
+    current_user: CurrentUser,
+) -> dict:
+    if not current_user.days_available or not current_user.split_preference:
+        raise HTTPException(status_code=400, detail=PROFILE_INCOMPLETE_DETAIL)
+    explicit_template_id = resolve_selected_program_binding_id(payload.template_id) if payload.template_id else None
+    return _generate_week_for_user(
+        db=db,
+        current_user=current_user,
+        explicit_template_id=explicit_template_id,
+        target_days=payload.target_days,
+        generation_mode="current_week_regenerate",
+    )
+
+
+@router.post(
+    "/plan/next-week",
+    responses={
+        400: {"description": PROFILE_INCOMPLETE_DETAIL},
+        404: {"description": "Program template not found"},
+        422: {"description": "Program template schema is invalid"},
+    },
+)
+def plan_generate_next_week(
+    payload: NextWeekPlanRequest,
+    db: DbSession,
+    current_user: CurrentUser,
+) -> dict:
+    if not current_user.days_available or not current_user.split_preference:
+        raise HTTPException(status_code=400, detail=PROFILE_INCOMPLETE_DETAIL)
+    explicit_template_id = resolve_selected_program_binding_id(payload.template_id) if payload.template_id else None
+    return _generate_week_for_user(
+        db=db,
+        current_user=current_user,
+        explicit_template_id=explicit_template_id,
+        target_days=payload.target_days,
+        generation_mode="next_week_advance",
+    )
 
 
 @router.get("/plan/latest-week")
@@ -1089,16 +1530,34 @@ def plan_latest_week(
     This mirrors the shape of the /plan/generate-week response but does not
     trigger a new generation.
     """
-    latest_plan = (
-        db.query(WorkoutPlan)
-        .filter(WorkoutPlan.user_id == current_user.id)
-        .order_by(WorkoutPlan.created_at.desc())
-        .first()
+    log_event(
+        "latest_week_fetch_started",
+        route="/plan/latest-week",
+        action="latest_week_fetch",
+        user_id=current_user.id,
+        selected_program_id=resolve_selected_program_binding_id(current_user.selected_program_id),
     )
+    plans = ensure_current_workout_plans_for_user(db=db, current_user=current_user)
+    latest_plan = plans[0] if plans else None
     if latest_plan is None:
         raise HTTPException(status_code=404, detail="No plan generated")
 
     payload = latest_plan.payload or {}
     if not isinstance(payload, dict):
         raise HTTPException(status_code=500, detail="Latest plan payload is invalid")
+    mesocycle = cast(dict[str, Any], payload.get("mesocycle") or {})
+    log_event(
+        "latest_week_fetched",
+        route="/plan/latest-week",
+        action="latest_week_fetch",
+        user_id=current_user.id,
+        selected_program_id=resolve_selected_program_binding_id(current_user.selected_program_id),
+        template_id=payload.get("program_template_id"),
+        runtime_template_id=payload.get("program_template_id"),
+        path_family="generated" if is_generated_full_body_binding_id(str(payload.get("program_template_id") or "")) else "authored",
+        week_index=mesocycle.get("week_index"),
+        displayed_week_index=mesocycle.get("week_index"),
+        authored_week_index=mesocycle.get("authored_week_index"),
+        week_start=payload.get("week_start"),
+    )
     return payload

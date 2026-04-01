@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     programs_dir: str = "/app/programs"
     compiled_knowledge_dir: str = "/app/knowledge/compiled"
     allow_dev_wipe_endpoints: bool = True
+    log_level: str = "INFO"
+    log_file_path: str = "logs/app-debug.log"
+    log_max_bytes: int = 5_000_000
+    log_backup_count: int = 5
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

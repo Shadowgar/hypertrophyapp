@@ -422,3 +422,22 @@ def test_frequency_adaptation_preserves_progression_state_across_5_to_3_to_5_win
         if item.get("exercise_id")
     }
     assert str(primary_id) in progression_ids
+
+
+def test_frequency_adaptation_preview_returns_precise_duration_validation_message() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_and_profile(client)
+
+    response = client.post(
+        "/plan/adaptation/preview",
+        headers=headers,
+        json={
+            "program_id": "pure_bodybuilding_phase_1_full_body",
+            "target_days": 3,
+            "duration_weeks": 10,
+        },
+    )
+    assert response.status_code == 422
+    detail = response.json()["detail"]
+    assert any(entry["msg"] == "Value error, Temporary duration must be between 1 and 8 weeks." for entry in detail)

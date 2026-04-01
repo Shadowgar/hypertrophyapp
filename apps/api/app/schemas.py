@@ -249,20 +249,56 @@ class BodyMeasurementEntryResponse(BaseModel):
 
 class GenerateWeekPlanRequest(BaseModel):
     template_id: str | None = None
+    target_days: int | None = Field(default=None, ge=2, le=5)
+
+
+class NextWeekPlanRequest(BaseModel):
+    template_id: str | None = None
+    target_days: int | None = Field(default=None, ge=2, le=5)
 
 
 class FrequencyAdaptationPreviewRequest(BaseModel):
     program_id: str | None = None
     target_days: int = Field(ge=2, le=5)
-    duration_weeks: int = Field(default=2, ge=1, le=4)
+    duration_weeks: int = Field(default=2)
     weak_areas: list[str] = Field(default_factory=list)
+
+    @field_validator("duration_weeks", mode="before")
+    @classmethod
+    def validate_duration_weeks(cls, value: Any) -> int:
+        if isinstance(value, bool):
+            raise ValueError("Enter a whole number between 1 and 8.")
+        if isinstance(value, float) and not value.is_integer():
+            raise ValueError("Enter a whole number between 1 and 8.")
+        try:
+            parsed = int(value)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("Enter a whole number between 1 and 8.") from exc
+        if parsed < 1 or parsed > 8:
+            raise ValueError("Temporary duration must be between 1 and 8 weeks.")
+        return parsed
 
 
 class FrequencyAdaptationApplyRequest(BaseModel):
     program_id: str | None = None
     target_days: int = Field(ge=2, le=5)
-    duration_weeks: int = Field(default=2, ge=1, le=8)
+    duration_weeks: int = Field(default=2)
     weak_areas: list[str] = Field(default_factory=list)
+
+    @field_validator("duration_weeks", mode="before")
+    @classmethod
+    def validate_duration_weeks(cls, value: Any) -> int:
+        if isinstance(value, bool):
+            raise ValueError("Enter a whole number between 1 and 8.")
+        if isinstance(value, float) and not value.is_integer():
+            raise ValueError("Enter a whole number between 1 and 8.")
+        try:
+            parsed = int(value)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("Enter a whole number between 1 and 8.") from exc
+        if parsed < 1 or parsed > 8:
+            raise ValueError("Temporary duration must be between 1 and 8 weeks.")
+        return parsed
 
 
 class FrequencyAdaptationApplyResponse(BaseModel):

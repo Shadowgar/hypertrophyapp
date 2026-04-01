@@ -235,6 +235,156 @@ def test_generate_week_preserves_generated_full_body_identity() -> None:
     assert plan["template_selection_trace"]["selected_template_id"] == "full_body_v1"
 
 
+def test_generate_week_regenerate_current_week_does_not_advance_week_index() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "generate-current-week@example.com", "password": TEST_CREDENTIAL, "name": "Current Week User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Current Week User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "full_body_v1",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "bench", "cable", "machine", "dumbbell"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    initial_plan = client.post("/plan/generate-week", headers=headers, json={})
+    assert initial_plan.status_code == 200
+    initial_payload = initial_plan.json()
+
+    regenerated = client.post("/plan/generate-week", headers=headers, json={"template_id": "full_body_v1"})
+    assert regenerated.status_code == 200
+    regenerated_payload = regenerated.json()
+
+    assert regenerated_payload["mesocycle"]["week_index"] == initial_payload["mesocycle"]["week_index"] == 1
+    assert regenerated_payload["week_start"] == initial_payload["week_start"]
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == "generate-current-week@example.com").first()
+        assert user is not None
+        binding_rows = [
+            row
+            for row in db.query(WorkoutPlan).filter(WorkoutPlan.user_id == user.id).all()
+            if (row.payload or {}).get("program_template_id") == "full_body_v1"
+        ]
+        assert len(binding_rows) == 1
+
+
+def test_next_week_route_advances_week_index() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "generate-next-week@example.com", "password": TEST_CREDENTIAL, "name": "Next Week User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Next Week User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "full_body_v1",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "bench", "cable", "machine", "dumbbell"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    initial_plan = client.post("/plan/generate-week", headers=headers, json={})
+    assert initial_plan.status_code == 200
+    initial_payload = initial_plan.json()
+
+    advanced = client.post("/plan/next-week", headers=headers, json={"template_id": "full_body_v1"})
+    assert advanced.status_code == 200
+    advanced_payload = advanced.json()
+
+    assert advanced_payload["mesocycle"]["week_index"] == initial_payload["mesocycle"]["week_index"] + 1
+    assert date.fromisoformat(advanced_payload["week_start"]) == date.fromisoformat(initial_payload["week_start"]) + timedelta(days=7)
+
+
+def test_generate_routes_honor_explicit_target_days_for_generated_path() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "generate-target-days@example.com", "password": TEST_CREDENTIAL, "name": "Target Days User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Target Days User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "full_body_v1",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "bench", "cable", "machine", "dumbbell"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    regenerated = client.post("/plan/generate-week", headers=headers, json={"target_days": 4})
+    assert regenerated.status_code == 200
+    regenerated_payload = regenerated.json()
+    _assert_generated_full_body_runtime(regenerated_payload)
+    assert regenerated_payload["generation_runtime_trace"]["outcome"]["effective_days_available"] == 4
+    assert len(regenerated_payload["sessions"]) == 4
+
+    advanced = client.post("/plan/next-week", headers=headers, json={"target_days": 2})
+    assert advanced.status_code == 200
+    advanced_payload = advanced.json()
+    _assert_generated_full_body_runtime(advanced_payload)
+    assert advanced_payload["generation_runtime_trace"]["outcome"]["effective_days_available"] == 2
+    assert len(advanced_payload["sessions"]) == 2
+
+
 def test_adaptive_gold_generate_week_exposes_minimum_generated_exercise_fields() -> None:
     _reset_db()
     client = TestClient(app)

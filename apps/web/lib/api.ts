@@ -826,10 +826,31 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       clearAuthToken();
     }
     const text = await res.text();
-    throw new Error(text || `HTTP ${res.status}`);
+    throw new Error(parseApiErrorMessage(text, res.status));
   }
 
   return (await res.json()) as T;
+}
+
+function parseApiErrorMessage(raw: string, status: number): string {
+  const fallback = raw || `HTTP ${status}`;
+  try {
+    const parsed = JSON.parse(raw) as { detail?: string | Array<{ msg?: string }> };
+    if (typeof parsed.detail === "string" && parsed.detail.trim().length > 0) {
+      return parsed.detail;
+    }
+    if (Array.isArray(parsed.detail)) {
+      const messages = parsed.detail
+        .map((entry) => (typeof entry?.msg === "string" ? entry.msg.trim() : ""))
+        .filter((message) => message.length > 0);
+      if (messages.length > 0) {
+        return messages.join(" ");
+      }
+    }
+  } catch {
+    return fallback;
+  }
+  return fallback;
 }
 
 export const api = {
@@ -837,10 +858,21 @@ export const api = {
   getTodayWorkout: () => request<WorkoutSession>("/workout/today"),
   getWorkoutProgress: (workoutId: string) => request<WorkoutProgress>(`/workout/${encodeURIComponent(workoutId)}/progress`),
   getWorkoutSummary: (workoutId: string) => request<WorkoutSummary>(`/workout/${encodeURIComponent(workoutId)}/summary`),
-  generateWeek: (templateId?: string | null) =>
+  generateWeek: (templateId?: string | null, targetDays?: number | null) =>
     request<GeneratedWeekPlan>("/plan/generate-week", {
       method: "POST",
-      body: JSON.stringify(templateId ? { template_id: templateId } : {}),
+      body: JSON.stringify({
+        ...(templateId ? { template_id: templateId } : {}),
+        ...(typeof targetDays === "number" ? { target_days: targetDays } : {}),
+      }),
+    }),
+  generateNextWeek: (templateId?: string | null, targetDays?: number | null) =>
+    request<GeneratedWeekPlan>("/plan/next-week", {
+      method: "POST",
+      body: JSON.stringify({
+        ...(templateId ? { template_id: templateId } : {}),
+        ...(typeof targetDays === "number" ? { target_days: targetDays } : {}),
+      }),
     }),
   getLatestWeekPlan: () => request<GeneratedWeekPlan>("/plan/latest-week"),
   getProfile: () => request<Profile>("/profile"),

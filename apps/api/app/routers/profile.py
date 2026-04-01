@@ -29,6 +29,7 @@ from ..database import get_db
 from ..deps import get_current_user
 from ..models import BodyMeasurementEntry, SorenessEntry, User, WeeklyCheckin, WeeklyReviewCycle, WorkoutSetLog
 from ..models import CoachingRecommendation, ExerciseState, PasswordResetToken, WorkoutPlan, WorkoutSessionState
+from ..observability import log_event
 from ..program_loader import (
     PHASE1_CANONICAL_PROGRAM_ID,
     list_program_templates,
@@ -75,14 +76,12 @@ def _clear_user_training_state(db: Session, *, user_id: str) -> None:
     db.query(CoachingRecommendation).filter(CoachingRecommendation.user_id == user_id).delete(synchronize_session=False)
 
 
-def _has_user_progress_activity(db: Session, *, user_id: str) -> bool:
+def _has_user_workout_activity(db: Session, *, user_id: str) -> bool:
     return any(
         (
             db.query(WorkoutSessionState).filter(WorkoutSessionState.user_id == user_id).first(),
             db.query(WorkoutSetLog).filter(WorkoutSetLog.user_id == user_id).first(),
             db.query(ExerciseState).filter(ExerciseState.user_id == user_id).first(),
-            db.query(WeeklyReviewCycle).filter(WeeklyReviewCycle.user_id == user_id).first(),
-            db.query(WeeklyCheckin).filter(WeeklyCheckin.user_id == user_id).first(),
         )
     )
 
@@ -344,13 +343,14 @@ def upsert_profile(
         and will_be_complete
         and previous_binding_id == next_binding_id
         and onboarding_answers_changed
-        and not _has_user_progress_activity(db, user_id=current_user.id)
+        and not _has_user_workout_activity(db, user_id=current_user.id)
     )
     should_reset_training_state = (
         (not was_complete and will_be_complete)
         or previous_binding_id != next_binding_id
         or same_binding_onboarding_reset
     )
+    profile_action = "onboarding_submit" if (not was_complete and will_be_complete) else "profile_update"
     if should_reset_training_state:
         _clear_user_training_state(db, user_id=current_user.id)
         current_user.active_frequency_adaptation = None
@@ -360,6 +360,15 @@ def upsert_profile(
     db.add(current_user)
     db.commit()
     db.refresh(current_user)
+    log_event(
+        "onboarding_submitted" if profile_action == "onboarding_submit" else "profile_updated",
+        route="/profile",
+        action=profile_action,
+        user_id=current_user.id,
+        selected_program_id=next_binding_id,
+        days_available=current_user.days_available,
+        target_days=current_user.days_available,
+    )
 
     return get_profile(current_user)
 
@@ -562,6 +571,16 @@ def submit_weekly_review(
     )
     db.add(review_entry)
     db.commit()
+    log_event(
+        "weekly_review_submitted",
+        route="/weekly-review",
+        action="weekly_review_submit",
+        user_id=current_user.id,
+        selected_program_id=resolve_selected_program_binding_id(current_user.selected_program_id),
+        days_available=current_user.days_available,
+        target_days=payload.sessions_next_week,
+        week_start=week_start,
+    )
 
     return WeeklyReviewSubmitResponse(**cast(dict[str, Any], route_runtime["response_payload"]))
 
