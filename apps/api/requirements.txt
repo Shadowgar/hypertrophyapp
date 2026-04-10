@@ -9,4 +9,4 @@ email-validator==2.2.0
 alembic==1.14.0
 pytest==8.3.4
 httpx==0.28.1
-pypdf==6.9.1
+pypdf==6.10.0
