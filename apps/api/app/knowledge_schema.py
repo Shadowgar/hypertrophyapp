@@ -46,14 +46,25 @@ class SourceRegistryEntry(BaseModel):
     title: str = Field(min_length=1)
     paired_source_ids: list[str] = Field(default_factory=list)
     program_family: str | None = None
+    source_family_id: str | None = None
     split_scope: list[str] = Field(default_factory=list)
     bodypart_scope: list[str] = Field(default_factory=list)
+    doctrine_modules: list[str] = Field(default_factory=list)
+    extraction_capabilities: list[str] = Field(default_factory=list)
     authority_weight: float = Field(ge=0)
     classification_confidence: float = Field(ge=0, le=1)
     curation_status: CurationStatus = "seeded"
     derived_doc_paths: list[str] = Field(default_factory=list)
+    provenance_refs: list[ProvenanceRef] = Field(default_factory=list)
 
-    @field_validator("paired_source_ids", "split_scope", "bodypart_scope", "derived_doc_paths")
+    @field_validator(
+        "paired_source_ids",
+        "split_scope",
+        "bodypart_scope",
+        "doctrine_modules",
+        "extraction_capabilities",
+        "derived_doc_paths",
+    )
     @classmethod
     def validate_sorted_unique_lists(cls, value: list[str]) -> list[str]:
         return _sorted_unique(value)

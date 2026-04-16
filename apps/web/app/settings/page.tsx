@@ -115,6 +115,8 @@ export default function SettingsPage() {
         split_preference: profile.split_preference,
         selected_program_id: profile.selected_program_id,
         program_selection_mode: profile.program_selection_mode,
+        choose_for_me_family: profile.choose_for_me_family ?? null,
+        choose_for_me_diagnostics: profile.choose_for_me_diagnostics ?? {},
         training_location: editTrainingLocation,
         equipment_profile: editEquipment,
         weak_areas: profile.weak_areas ?? [],

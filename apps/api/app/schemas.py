@@ -78,6 +78,8 @@ class ProfileUpsert(BaseModel):
     split_preference: str
     selected_program_id: str | None = None
     program_selection_mode: Literal["manual", "auto"] = "manual"
+    choose_for_me_family: Literal["full_body", "upper_lower", "push_pull"] | None = None
+    choose_for_me_diagnostics: dict[str, Any] = Field(default_factory=dict)
     training_location: str | None = None
     equipment_profile: list[str] = Field(default_factory=list)
     weak_areas: list[str] = Field(default_factory=list)

@@ -117,6 +117,13 @@ def test_source_registry_builds_deterministic_entries_with_overrides(tmp_path: P
     assert workbook.source_kind == "authored_program_workbook"
     assert guide.source_kind == "program_manual"
     assert technique.source_kind == "technique_guide"
+    assert workbook.source_family_id == "authored_program_workbook"
+    assert guide.source_family_id == "program_manual"
+    assert "exercise_selection" in workbook.doctrine_modules
+    assert "progression" in workbook.doctrine_modules
+    assert "exercise_execution" in technique.doctrine_modules
+    assert "program_intent" in workbook.extraction_capabilities
+    assert "technique_cues" in technique.extraction_capabilities
     assert workbook.paired_source_ids == [guide.source_id]
     assert guide.paired_source_ids == [workbook.source_id]
     assert workbook.derived_doc_paths == ["docs/guides/generated/program-sheet.md"]

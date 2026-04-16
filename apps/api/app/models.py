@@ -27,6 +27,8 @@ class User(Base):
     split_preference: Mapped[str | None] = mapped_column(String, nullable=True)
     selected_program_id: Mapped[str | None] = mapped_column(String, nullable=True)
     program_selection_mode: Mapped[str | None] = mapped_column(String, nullable=True, default="manual")
+    choose_for_me_family: Mapped[str | None] = mapped_column(String, nullable=True)
+    choose_for_me_diagnostics: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     training_location: Mapped[str | None] = mapped_column(String, nullable=True)
     equipment_profile: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     weak_areas: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)

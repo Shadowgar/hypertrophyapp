@@ -30,6 +30,20 @@ const FALLBACK_PROGRAMS: ProgramTemplateOption[] = [
     days_supported: [2, 3, 4, 5],
     description: "Deterministic generated full body path built from your constraints.",
   },
+  {
+    id: "upper_lower_v1",
+    name: "Upper/Lower",
+    split: "upper_lower",
+    days_supported: [4],
+    description: "Authored upper/lower progression path.",
+  },
+  {
+    id: "ppl_v1",
+    name: "Push/Pull",
+    split: "ppl",
+    days_supported: [3, 4, 5],
+    description: "Authored push-pull-legs progression path.",
+  },
 ];
 
 const INTRO_SLIDES = [
@@ -88,6 +102,7 @@ const LOCATION_OPTIONS = ["gym", "home"] as const;
 const EXPERIENCE_LEVEL_OPTIONS = ["beginner", "intermediate", "advanced"] as const;
 const DURATION_OPTIONS = [30, 45, 60] as const;
 const DAYS_OPTIONS = [2, 3, 4, 5] as const;
+const CHOOSE_FOR_ME_FAMILY_OPTIONS = ["full_body", "upper_lower", "push_pull"] as const;
 const EQUIPMENT_TAGS = ["barbell", "bench", "dumbbell", "cable", "machine", "bands", "bodyweight"] as const;
 type EquipmentTag = (typeof EQUIPMENT_TAGS)[number];
 const DEFAULT_EQUIPMENT_HOME: EquipmentTag[] = ["dumbbell", "bodyweight"];
@@ -156,6 +171,7 @@ type OnboardingDraft = {
   email: string;
   weakAreasRaw: string;
   selectedProgramId: string | null;
+  chooseForMeFamily: (typeof CHOOSE_FOR_ME_FAMILY_OPTIONS)[number];
 };
 
 function parseOnboardingDraft(raw: string): Partial<OnboardingDraft> | null {
@@ -360,6 +376,7 @@ export default function OnboardingPage() {
   const [programs, setPrograms] = useState<ProgramTemplateOption[]>([]);
   const [programCatalogStatus, setProgramCatalogStatus] = useState("Loading program catalog...");
   const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
+  const [chooseForMeFamily, setChooseForMeFamily] = useState<(typeof CHOOSE_FOR_ME_FAMILY_OPTIONS)[number]>("full_body");
 
   const [status, setStatus] = useState("Idle");
   const [draftReady, setDraftReady] = useState(false);
@@ -533,6 +550,12 @@ export default function OnboardingPage() {
     if (draft.selectedProgramId === null) {
       setSelectedProgramId(null);
     }
+    if (
+      typeof draft.chooseForMeFamily === "string"
+      && CHOOSE_FOR_ME_FAMILY_OPTIONS.includes(draft.chooseForMeFamily as (typeof CHOOSE_FOR_ME_FAMILY_OPTIONS)[number])
+    ) {
+      setChooseForMeFamily(draft.chooseForMeFamily as (typeof CHOOSE_FOR_ME_FAMILY_OPTIONS)[number]);
+    }
 
     setPhase(restoredPhase);
     setAuthMode(restoredAuthMode);
@@ -578,6 +601,7 @@ export default function OnboardingPage() {
       email,
       weakAreasRaw,
       selectedProgramId,
+      chooseForMeFamily,
     };
 
     if (!isMeaningfulDraft(draft)) {
@@ -612,6 +636,7 @@ export default function OnboardingPage() {
     questionIndex,
     movementRestrictions,
     selectedProgramId,
+    chooseForMeFamily,
     strengthFrequency,
     trainingAgeBucket,
     trainingLocation,
@@ -836,6 +861,31 @@ export default function OnboardingPage() {
         carbs: 280,
         selected_program_id: selectedProgramId,
         program_selection_mode: selectedProgramId ? "manual" : "auto",
+        choose_for_me_family: selectedProgramId ? null : chooseForMeFamily,
+        choose_for_me_diagnostics: {
+          readiness: {
+            training_age_bucket: trainingAgeBucket || null,
+            strength_frequency: strengthFrequency || null,
+            motivation_driver: motivationDriver || null,
+            obstacle: obstacle || null,
+          },
+          movement_screen: {
+            movement_restrictions: movementRestrictions,
+            experience_level: experienceLevel || null,
+          },
+          recovery_profile: {
+            preferred_workout_duration_minutes: workoutDurationMinutes,
+            days_available: resolvedDays,
+            session_time_budget_minutes: workoutDurationMinutes ?? null,
+          },
+          weak_spot_profile: {
+            weak_areas: resolvedWeakAreas,
+          },
+          equipment_constraints: {
+            training_location: resolvedLocation,
+            equipment_profile: resolvedEquipment,
+          },
+        },
       }),
     });
 
@@ -1482,6 +1532,22 @@ export default function OnboardingPage() {
                 </option>
               ))}
             </select>
+            {!selectedProgramId ? (
+              <div className="space-y-1 pt-2">
+                <label htmlFor="choose-for-me-family" className="ui-meta">Choose-for-me family</label>
+                <select
+                  id="choose-for-me-family"
+                  className="ui-select"
+                  value={chooseForMeFamily}
+                  onChange={(e) => setChooseForMeFamily(e.target.value as (typeof CHOOSE_FOR_ME_FAMILY_OPTIONS)[number])}
+                  aria-label="Choose-for-me family"
+                >
+                  <option value="full_body">Full body</option>
+                  <option value="upper_lower">Upper/Lower</option>
+                  <option value="push_pull">Push/Pull</option>
+                </select>
+              </div>
+            ) : null}
           </div>
 
           <div className="space-y-1">

@@ -67,6 +67,21 @@ def _infer_split_scope(source_path: str) -> list[str]:
     return sorted(set(scopes))
 
 
+def _infer_program_family(source_path: str) -> str | None:
+    lowered = source_path.lower()
+    if "full body" in lowered or "full_body" in lowered:
+        return "full_body"
+    if "upper lower" in lowered or "upper_lower" in lowered:
+        return "upper_lower"
+    if "push pull legs" in lowered or "push_pull_legs" in lowered or "ppl" in lowered:
+        return "ppl"
+    if "specialization" in lowered or "arm hypertrophy" in lowered or "glute" in lowered or "bench" in lowered:
+        return "specialization"
+    if "comeback" in lowered or "fundamentals" in lowered or "get-ready" in lowered:
+        return "rebuild_foundation"
+    return None
+
+
 def _infer_bodypart_scope(source_path: str) -> list[str]:
     lowered = source_path.lower()
     keyword_map = {
@@ -115,6 +130,34 @@ def _default_authority_weight(source_kind: str) -> float:
     if source_kind == "general_hypertrophy_guide":
         return 0.75
     return 0.5
+
+
+def _infer_extraction_capabilities(source_type: str, source_kind: str) -> list[str]:
+    capabilities: list[str] = []
+    if source_type == "xlsx":
+        capabilities.extend(["exercise_table", "week_structure", "session_layout"])
+    if source_type == "pdf":
+        capabilities.extend(["doctrine_text", "progression_guidance"])
+    if source_kind == "technique_guide":
+        capabilities.append("technique_cues")
+    if source_kind == "specialization_manual":
+        capabilities.append("specialization_signal")
+    if source_kind in {"program_manual", "authored_program_workbook"}:
+        capabilities.append("program_intent")
+    return sorted(set(capabilities))
+
+
+def _infer_doctrine_modules(source_kind: str, split_scope: list[str], bodypart_scope: list[str]) -> list[str]:
+    modules: set[str] = {"exercise_selection"}
+    if source_kind in {"program_manual", "authored_program_workbook"}:
+        modules.update({"progression", "volume_allocation", "mesocycle_management"})
+    if source_kind in {"technique_guide", "specialization_manual"}:
+        modules.add("exercise_execution")
+    if split_scope:
+        modules.add("split_selection")
+    if bodypart_scope:
+        modules.add("weak_spot_prioritization")
+    return sorted(modules)
 
 
 def _load_overrides(overrides_path: Path | None) -> dict[str, dict[str, Any]]:
@@ -225,6 +268,21 @@ def build_source_registry(
             or _infer_source_kind(source_path, source_type, paired_source_ids)
         )
         title = str(override.get("title") or _title_from_path(source_path))
+        split_scope = list(override.get("split_scope") or _infer_split_scope(source_path))
+        bodypart_scope = list(override.get("bodypart_scope") or _infer_bodypart_scope(source_path))
+        source_family_id = str(
+            override.get("source_family_id")
+            or _infer_program_family(source_path)
+            or source_kind
+        )
+        doctrine_modules = list(
+            override.get("doctrine_modules")
+            or _infer_doctrine_modules(source_kind, split_scope, bodypart_scope)
+        )
+        extraction_capabilities = list(
+            override.get("extraction_capabilities")
+            or _infer_extraction_capabilities(source_type, source_kind)
+        )
         entry = SourceRegistryEntry(
             source_id=_source_id(source_path, source_sha256),
             source_path=source_path,
@@ -234,12 +292,16 @@ def build_source_registry(
             title=title,
             paired_source_ids=paired_source_ids,
             program_family=override.get("program_family"),
-            split_scope=list(override.get("split_scope") or _infer_split_scope(source_path)),
-            bodypart_scope=list(override.get("bodypart_scope") or _infer_bodypart_scope(source_path)),
+            source_family_id=source_family_id,
+            split_scope=split_scope,
+            bodypart_scope=bodypart_scope,
+            doctrine_modules=doctrine_modules,
+            extraction_capabilities=extraction_capabilities,
             authority_weight=float(override.get("authority_weight") or _default_authority_weight(source_kind)),
             classification_confidence=float(override.get("classification_confidence") or 0.6),
             curation_status=str(override.get("curation_status") or "seeded"),
             derived_doc_paths=list(override.get("derived_doc_paths") or derived_doc_map.get(source_path, [])),
+            provenance_refs=list(override.get("provenance_refs") or []),
         )
         entries.append(entry)
 

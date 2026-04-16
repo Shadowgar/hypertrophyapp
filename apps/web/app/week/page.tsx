@@ -310,7 +310,10 @@ function resolvePlanTargetDays(plan: GeneratedWeekPlan | null): number | null {
   if (typeof adaptationTarget === "number") {
     return adaptationTarget;
   }
-  const runtimeDays = plan.generation_runtime_trace?.outcome?.effective_days_available;
+  const runtimeTrace = (plan.generation_runtime_trace ?? {}) as {
+    outcome?: { effective_days_available?: number };
+  };
+  const runtimeDays = runtimeTrace.outcome?.effective_days_available;
   if (typeof runtimeDays === "number") {
     return runtimeDays;
   }

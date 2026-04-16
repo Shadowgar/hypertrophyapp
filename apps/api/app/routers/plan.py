@@ -261,6 +261,73 @@ def _resolve_effective_days_available(
     return int(current_days_available)
 
 
+def _resolve_choose_for_me_family_template(family: str | None) -> str | None:
+    normalized = str(family or "").strip().lower()
+    mapping = {
+        "full_body": "full_body_v1",
+        # Until authored upper/lower and PPL templates pass active contract gates,
+        # route those family intents to the phase-2 canonical authored path.
+        "upper_lower": "pure_bodybuilding_phase_2_full_body",
+        "push_pull": "pure_bodybuilding_phase_2_full_body",
+    }
+    return mapping.get(normalized)
+
+
+def _build_adaptive_signal_summary(
+    *,
+    db: Session,
+    user_id: str,
+) -> dict[str, Any]:
+    latest_soreness = (
+        db.query(SorenessEntry)
+        .filter(SorenessEntry.user_id == user_id)
+        .order_by(SorenessEntry.entry_date.desc(), SorenessEntry.created_at.desc())
+        .first()
+    )
+    recent_checkins = (
+        db.query(WeeklyCheckin)
+        .filter(WeeklyCheckin.user_id == user_id)
+        .order_by(WeeklyCheckin.week_start.desc(), WeeklyCheckin.created_at.desc())
+        .limit(4)
+        .all()
+    )
+    recent_reviews = (
+        db.query(WeeklyReviewCycle)
+        .filter(WeeklyReviewCycle.user_id == user_id)
+        .order_by(WeeklyReviewCycle.week_start.desc(), WeeklyReviewCycle.created_at.desc())
+        .limit(4)
+        .all()
+    )
+    adherence_scores = [int(item.adherence_score) for item in recent_checkins if item.adherence_score is not None]
+    avg_adherence = round(sum(adherence_scores) / len(adherence_scores), 2) if adherence_scores else None
+    recent_fault_counts: list[int] = []
+    for review in recent_reviews:
+        summary = review.summary if isinstance(review.summary, dict) else {}
+        recent_fault_counts.append(int(summary.get("faulty_exercise_count") or 0))
+    avg_faulty_exercises = (
+        round(sum(recent_fault_counts) / len(recent_fault_counts), 2) if recent_fault_counts else None
+    )
+    severe_soreness_groups = 0
+    if latest_soreness and isinstance(latest_soreness.severity_by_muscle, dict):
+        severe_soreness_groups = sum(
+            1
+            for value in latest_soreness.severity_by_muscle.values()
+            if str(value).strip().lower() == "severe"
+        )
+    return {
+        "window_checkins": len(recent_checkins),
+        "window_reviews": len(recent_reviews),
+        "average_adherence_score": avg_adherence,
+        "average_faulty_exercise_count": avg_faulty_exercises,
+        "latest_severe_soreness_group_count": severe_soreness_groups,
+        "policy_band": (
+            "conservative"
+            if (avg_adherence is not None and avg_adherence <= 2) or severe_soreness_groups >= 3
+            else "progressive"
+        ),
+    }
+
+
 def _resolve_latest_binding_plan(
     prior_plans: list[WorkoutPlan],
     *,
@@ -1095,9 +1162,13 @@ def _build_week_plan_runtime_for_user(
     profile_template_id = resolve_selected_program_binding_id(current_user.selected_program_id)
     normalized_explicit_template_id = resolve_selected_program_binding_id(explicit_template_id) if explicit_template_id else None
     program_recommendation_trace: dict[str, Any] | None = None
+    choose_for_me_trace: dict[str, Any] | None = None
+    adaptive_signal_summary = _build_adaptive_signal_summary(db=db, user_id=current_user.id)
 
     auto_mode = (current_user.program_selection_mode or "manual") == "auto"
     if auto_mode and normalized_explicit_template_id is None:
+        preferred_family = str(current_user.choose_for_me_family or "").strip().lower() or None
+        preferred_family_template = _resolve_choose_for_me_family_template(preferred_family)
         latest_plan = (
             db.query(WorkoutPlan)
             .filter(WorkoutPlan.user_id == current_user.id)
@@ -1154,11 +1225,36 @@ def _build_week_plan_runtime_for_user(
         recommended_program_id = cast(str, response_payload.get("recommended_program_id") or "")
         program_recommendation_trace = cast(dict[str, Any], route_runtime.get("decision_trace") or {})
 
+        choose_for_me_trace = {
+            "preferred_family": preferred_family,
+            "preferred_family_template": preferred_family_template,
+            "adaptive_signal_summary": adaptive_signal_summary,
+            "engine_recommended_program_id": recommended_program_id,
+        }
+
+        if preferred_family_template:
+            active_ids = {str(item.get("id") or "") for item in _list_active_program_templates()}
+            if preferred_family_template in active_ids:
+                recommended_program_id = preferred_family_template
+                choose_for_me_trace["family_preference_applied"] = True
+            else:
+                choose_for_me_trace["family_preference_applied"] = False
+                choose_for_me_trace["family_preference_reason"] = "preferred_template_not_active"
+
         if recommended_program_id:
             current_user.selected_program_id = resolve_selected_program_binding_id(recommended_program_id) or recommended_program_id
             db.add(current_user)
             profile_template_id = resolve_selected_program_binding_id(current_user.selected_program_id)
             normalized_explicit_template_id = resolve_selected_program_binding_id(recommended_program_id) or recommended_program_id
+
+        current_diagnostics = (
+            dict(current_user.choose_for_me_diagnostics)
+            if isinstance(current_user.choose_for_me_diagnostics, dict)
+            else {}
+        )
+        current_diagnostics["adaptive_loop_v2"] = adaptive_signal_summary
+        current_user.choose_for_me_diagnostics = current_diagnostics
+        db.add(current_user)
 
     template_runtime = prepare_generation_template_runtime(
         explicit_template_id=normalized_explicit_template_id,
@@ -1177,6 +1273,16 @@ def _build_week_plan_runtime_for_user(
     template_selection_trace = cast(dict[str, Any], template_runtime["decision_trace"])
     if program_recommendation_trace is not None:
         template_selection_trace["program_recommendation_trace"] = program_recommendation_trace
+    if choose_for_me_trace is not None:
+        template_selection_trace["choose_for_me_trace"] = choose_for_me_trace
+    weak_areas = [str(area).strip() for area in (current_user.weak_areas or []) if str(area).strip()]
+    if weak_areas:
+        template_selection_trace["weak_spot_focus_synthesis"] = {
+            "focus_muscles": weak_areas[:3],
+            "focus_day_priority": "high" if len(weak_areas) >= 2 else "moderate",
+            "policy_band": adaptive_signal_summary.get("policy_band"),
+            "reason": "weak_area_overlay_for_choose_for_me_generation",
+        }
     rule_set = resolve_optional_rule_set(
         template_id=selected_template_id,
         resolve_linked_program_id=resolve_rule_program_id,

@@ -83,8 +83,6 @@ def test_program_catalog_lists_templates() -> None:
         "full_body_v1",
     }
     assert "adaptive_full_body_gold_v0_1" not in ids
-    assert "ppl_v1" not in ids
-    assert "upper_lower_v1" not in ids
     # These duplicate payload pairs exist in source imports and must collapse in API catalog.
     assert not {"my_new_program", "pure_bodybuilding_full_body"}.issubset(ids)
     assert not {

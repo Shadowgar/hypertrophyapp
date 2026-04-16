@@ -124,6 +124,8 @@ export type Profile = {
   carbs: number;
   selected_program_id?: string | null;
   program_selection_mode: "manual" | "auto";
+  choose_for_me_family?: "full_body" | "upper_lower" | "push_pull" | null;
+  choose_for_me_diagnostics?: Record<string, unknown>;
 };
 
 export type ProgramRecommendation = {

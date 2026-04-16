@@ -17,6 +17,8 @@ _DEFAULT_ACTIVE_ADMINISTERED_PROGRAM_IDS: set[str] = {
     PHASE1_CANONICAL_PROGRAM_ID,
     PHASE2_CANONICAL_PROGRAM_ID,
     GENERATED_FULL_BODY_CANONICAL_PROGRAM_ID,
+    "ppl_v1",
+    "upper_lower_v1",
 }
 
 _DEFAULT_CONTRACT_ENFORCED_TEMPLATE_IDS: set[str] = {
@@ -843,6 +845,10 @@ def list_program_templates(*, active_only: bool = True) -> list[dict]:
             winner_by_signature[signature] = template_id
 
     selected_ids = sorted(winner_by_signature.values())
+    # Keep active IDs visible even when signature dedupe would otherwise collapse them.
+    for active_id in sorted(ACTIVE_ADMINISTERED_PROGRAM_IDS):
+        if active_id in summaries_by_id and active_id not in selected_ids:
+            selected_ids.append(active_id)
     summaries = [summaries_by_id[key] for key in selected_ids]
     if not active_only:
         return summaries

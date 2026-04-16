@@ -357,3 +357,48 @@ def test_plan_generate_week_auto_selection_updates_program_before_template_choic
     updated_profile = client.get("/profile", headers=headers)
     assert updated_profile.status_code == 200
     assert updated_profile.json()["selected_program_id"] == recommended_program_id
+
+
+def test_plan_generate_week_choose_for_me_family_prefers_family_template() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "choose-family@example.com", "password": TEST_CREDENTIAL, "name": "Choose Family User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Choose Family User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "upper_lower",
+            "selected_program_id": "pure_bodybuilding_phase_1_full_body",
+            "program_selection_mode": "auto",
+            "choose_for_me_family": "upper_lower",
+            "choose_for_me_diagnostics": {"seed": True},
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "dumbbell", "bench", "machine", "cable"],
+            "days_available": 4,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+    assert plan["program_template_id"] == "pure_bodybuilding_phase_2_full_body"
+    assert plan["template_selection_trace"]["choose_for_me_trace"]["preferred_family"] == "upper_lower"
+    assert plan["template_selection_trace"]["choose_for_me_trace"]["family_preference_applied"] is True

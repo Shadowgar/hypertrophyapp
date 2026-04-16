@@ -144,3 +144,32 @@ def test_profile_upsert_accepts_coaching_constraint_fields() -> None:
     assert payload.session_time_budget_minutes == 75
     assert payload.movement_restrictions == ["deep_knee_flexion", "overhead_pressing"]
     assert payload.near_failure_tolerance == "moderate"
+
+
+def test_profile_upsert_accepts_choose_for_me_diagnostic_contract() -> None:
+    payload = ProfileUpsert(
+        name="Test",
+        age=30,
+        weight=80,
+        gender="male",
+        split_preference="upper_lower",
+        selected_program_id=None,
+        program_selection_mode="auto",
+        choose_for_me_family="upper_lower",
+        choose_for_me_diagnostics={
+            "movement_screen": {"movement_restrictions": ["deep_knee_flexion"]},
+            "recovery_profile": {"days_available": 4, "preferred_workout_duration_minutes": 60},
+        },
+        training_location="gym",
+        equipment_profile=["dumbbell", "machine"],
+        weak_areas=["chest"],
+        onboarding_answers={},
+        days_available=4,
+        nutrition_phase="maintenance",
+        calories=2500,
+        protein=180,
+        fat=70,
+        carbs=260,
+    )
+    assert payload.choose_for_me_family == "upper_lower"
+    assert payload.choose_for_me_diagnostics["recovery_profile"]["days_available"] == 4
