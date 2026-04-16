@@ -52,6 +52,15 @@ def _load_program_loader_id_set(filename: str, *, default: set[str]) -> set[str]
     return set(default).union(override_ids)
 
 
+def _safe_program_asset_id(value: str) -> str:
+    candidate = str(value or "").strip()
+    if not candidate:
+        raise FileNotFoundError("Program identifier is empty")
+    if not re.fullmatch(r"[A-Za-z0-9._-]+", candidate):
+        raise FileNotFoundError(f"Invalid program identifier: {value}")
+    return candidate
+
+
 ACTIVE_ADMINISTERED_PROGRAM_IDS: set[str] = _load_program_loader_id_set(
     "active_administered_program_ids.json",
     default=_DEFAULT_ACTIVE_ADMINISTERED_PROGRAM_IDS,
@@ -936,7 +945,11 @@ def list_program_onboarding_packages() -> list[dict[str, Any]]:
 
 
 def load_program_onboarding_package(program_id: str) -> dict[str, Any]:
-    candidate = _resolve_onboarding_path() / f"{resolve_onboarding_program_id(program_id)}.onboarding.json"
+    onboarding_root = _resolve_onboarding_path().resolve()
+    safe_program_id = _safe_program_asset_id(resolve_onboarding_program_id(program_id))
+    candidate = (onboarding_root / f"{safe_program_id}.onboarding.json").resolve()
+    if onboarding_root not in candidate.parents:
+        raise FileNotFoundError(f"Program onboarding package not found: {program_id}")
     if not candidate.exists():
         raise FileNotFoundError(f"Program onboarding package not found: {program_id}")
 

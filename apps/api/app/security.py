@@ -28,5 +28,13 @@ def create_password_reset_token() -> str:
 
 
 def hash_password_reset_token(token: str) -> str:
-    data = f"{settings.jwt_secret}:{token}".encode("utf-8")
-    return hashlib.sha256(data).hexdigest()
+    # Keep deterministic hashing for indexed token lookup while using
+    # a computationally expensive KDF rather than a fast hash primitive.
+    digest = hashlib.pbkdf2_hmac(
+        "sha256",
+        token.encode("utf-8"),
+        settings.jwt_secret.encode("utf-8"),
+        600_000,
+        dklen=32,
+    )
+    return digest.hex()

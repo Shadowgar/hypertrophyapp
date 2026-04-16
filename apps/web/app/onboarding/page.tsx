@@ -174,16 +174,36 @@ type OnboardingDraft = {
   chooseForMeFamily: (typeof CHOOSE_FOR_ME_FAMILY_OPTIONS)[number];
 };
 
-function parseOnboardingDraft(raw: string): Partial<OnboardingDraft> | null {
+type StoredOnboardingDraft = Omit<
+  OnboardingDraft,
+  "heightFeet" | "heightInches" | "heightCm" | "weightValue" | "birthday" | "firstName" | "lastName" | "email"
+>;
+
+function parseOnboardingDraft(raw: string): Partial<StoredOnboardingDraft> | null {
   try {
     const parsed = JSON.parse(raw) as unknown;
     if (!parsed || typeof parsed !== "object") {
       return null;
     }
-    return parsed as Partial<OnboardingDraft>;
+    return parsed as Partial<StoredOnboardingDraft>;
   } catch {
     return null;
   }
+}
+
+function buildStoredOnboardingDraft(draft: OnboardingDraft): StoredOnboardingDraft {
+  const {
+    heightFeet: _heightFeet,
+    heightInches: _heightInches,
+    heightCm: _heightCm,
+    weightValue: _weightValue,
+    birthday: _birthday,
+    firstName: _firstName,
+    lastName: _lastName,
+    email: _email,
+    ...storedDraft
+  } = draft;
+  return storedDraft;
 }
 
 function isMeaningfulDraft(draft: OnboardingDraft): boolean {
@@ -610,7 +630,7 @@ export default function OnboardingPage() {
       return;
     }
 
-    localStorage.setItem(ONBOARDING_DRAFT_KEY, JSON.stringify(draft));
+    localStorage.setItem(ONBOARDING_DRAFT_KEY, JSON.stringify(buildStoredOnboardingDraft(draft)));
     setHasSavedDraft(true);
   }, [
     authMode,
