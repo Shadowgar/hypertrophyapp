@@ -273,6 +273,16 @@ def _resolve_choose_for_me_family_template(family: str | None) -> str | None:
     return mapping.get(normalized)
 
 
+def _resolve_choose_for_me_family_target_days(family: str | None) -> int | None:
+    normalized = str(family or "").strip().lower()
+    mapping = {
+        "full_body": 3,
+        "upper_lower": 4,
+        "push_pull": 3,
+    }
+    return mapping.get(normalized)
+
+
 def _build_adaptive_signal_summary(
     *,
     db: Session,
@@ -1169,6 +1179,13 @@ def _build_week_plan_runtime_for_user(
     if auto_mode and normalized_explicit_template_id is None:
         preferred_family = str(current_user.choose_for_me_family or "").strip().lower() or None
         preferred_family_template = _resolve_choose_for_me_family_template(preferred_family)
+        preferred_family_target_days = _resolve_choose_for_me_family_target_days(preferred_family)
+        effective_days_adjusted = False
+        effective_days_adjustment_reason = ""
+        if preferred_family_target_days is not None and effective_days_available >= preferred_family_target_days:
+            effective_days_available = preferred_family_target_days
+            effective_days_adjusted = True
+            effective_days_adjustment_reason = "family_target_days"
         latest_plan = (
             db.query(WorkoutPlan)
             .filter(WorkoutPlan.user_id == current_user.id)
@@ -1228,9 +1245,17 @@ def _build_week_plan_runtime_for_user(
         choose_for_me_trace = {
             "preferred_family": preferred_family,
             "preferred_family_template": preferred_family_template,
+            "preferred_family_target_days": preferred_family_target_days,
+            "effective_days_adjusted": effective_days_adjusted,
+            "effective_days_adjustment_reason": effective_days_adjustment_reason or None,
             "adaptive_signal_summary": adaptive_signal_summary,
             "engine_recommended_program_id": recommended_program_id,
         }
+
+        if adaptive_signal_summary.get("policy_band") == "conservative" and effective_days_available > 2:
+            effective_days_available -= 1
+            choose_for_me_trace["effective_days_adjusted"] = True
+            choose_for_me_trace["effective_days_adjustment_reason"] = "conservative_policy_band_downshift"
 
         if preferred_family_template:
             active_ids = {str(item.get("id") or "") for item in _list_active_program_templates()}
