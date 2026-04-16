@@ -324,17 +324,45 @@ def _build_adaptive_signal_summary(
             for value in latest_soreness.severity_by_muscle.values()
             if str(value).strip().lower() == "severe"
         )
+    checkin_count = len(recent_checkins)
+    review_count = len(recent_reviews)
+    evidence_points = checkin_count + review_count
+    if evidence_points >= 6:
+        policy_confidence = "high"
+    elif evidence_points >= 3:
+        policy_confidence = "medium"
+    else:
+        policy_confidence = "low"
+
+    policy_reason = "stable_signals"
+    policy_band = "progressive"
+    downshift_guardrail_active = False
+    if severe_soreness_groups >= 3:
+        policy_band = "conservative"
+        policy_reason = "high_severe_soreness"
+        downshift_guardrail_active = True
+    elif avg_adherence is not None and avg_adherence <= 2:
+        policy_band = "conservative"
+        policy_reason = "low_adherence"
+        downshift_guardrail_active = True
+    elif avg_faulty_exercises is not None and avg_faulty_exercises >= 2:
+        policy_band = "conservative"
+        policy_reason = "high_faulty_exercise_count"
+        downshift_guardrail_active = True
+    elif policy_confidence == "low":
+        policy_band = "conservative"
+        policy_reason = "sparse_adaptive_signals"
+
     return {
-        "window_checkins": len(recent_checkins),
-        "window_reviews": len(recent_reviews),
+        "window_checkins": checkin_count,
+        "window_reviews": review_count,
         "average_adherence_score": avg_adherence,
         "average_faulty_exercise_count": avg_faulty_exercises,
         "latest_severe_soreness_group_count": severe_soreness_groups,
-        "policy_band": (
-            "conservative"
-            if (avg_adherence is not None and avg_adherence <= 2) or severe_soreness_groups >= 3
-            else "progressive"
-        ),
+        "policy_band": policy_band,
+        "policy_reason": policy_reason,
+        "policy_confidence": policy_confidence,
+        "downshift_guardrail_active": downshift_guardrail_active,
     }
 
 
@@ -1252,7 +1280,11 @@ def _build_week_plan_runtime_for_user(
             "engine_recommended_program_id": recommended_program_id,
         }
 
-        if adaptive_signal_summary.get("policy_band") == "conservative" and effective_days_available > 2:
+        if (
+            adaptive_signal_summary.get("policy_band") == "conservative"
+            and bool(adaptive_signal_summary.get("downshift_guardrail_active"))
+            and effective_days_available > 2
+        ):
             effective_days_available -= 1
             choose_for_me_trace["effective_days_adjusted"] = True
             choose_for_me_trace["effective_days_adjustment_reason"] = "conservative_policy_band_downshift"

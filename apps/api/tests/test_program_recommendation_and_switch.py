@@ -462,5 +462,58 @@ def test_plan_generate_week_choose_for_me_conservative_policy_downshifts_days() 
     trace = plan["template_selection_trace"]["choose_for_me_trace"]
 
     assert trace["adaptive_signal_summary"]["policy_band"] == "conservative"
+    assert trace["adaptive_signal_summary"]["policy_reason"] == "low_adherence"
+    assert trace["adaptive_signal_summary"]["policy_confidence"] in {"low", "medium", "high"}
+    assert trace["adaptive_signal_summary"]["downshift_guardrail_active"] is True
     assert trace["effective_days_adjusted"] is True
     assert trace["effective_days_adjustment_reason"] == "conservative_policy_band_downshift"
+
+
+def test_plan_generate_week_choose_for_me_sparse_signals_do_not_downshift_days() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    register = client.post(
+        "/auth/register",
+        json={"email": "choose-sparse-signals@example.com", "password": TEST_CREDENTIAL, "name": "Choose Sparse User"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    profile = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Choose Sparse User",
+            "age": 30,
+            "weight": 82,
+            "gender": "male",
+            "split_preference": "upper_lower",
+            "selected_program_id": "pure_bodybuilding_phase_1_full_body",
+            "program_selection_mode": "auto",
+            "choose_for_me_family": "upper_lower",
+            "choose_for_me_diagnostics": {"seed": True},
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "dumbbell", "bench", "machine", "cable"],
+            "days_available": 5,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+        },
+    )
+    assert profile.status_code == 200
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+    trace = plan["template_selection_trace"]["choose_for_me_trace"]
+
+    assert trace["adaptive_signal_summary"]["policy_band"] == "conservative"
+    assert trace["adaptive_signal_summary"]["policy_reason"] == "sparse_adaptive_signals"
+    assert trace["adaptive_signal_summary"]["policy_confidence"] == "low"
+    assert trace["adaptive_signal_summary"]["downshift_guardrail_active"] is False
+    assert trace["effective_days_adjusted"] is True
+    assert trace["effective_days_adjustment_reason"] == "family_target_days"
