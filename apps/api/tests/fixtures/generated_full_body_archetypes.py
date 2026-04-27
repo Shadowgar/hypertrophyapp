@@ -304,7 +304,7 @@ ARCHETYPE_FIXTURES = {
             "constructibility_status": "ready",
             "session_count": 3,
             "expects_insufficiency": False,
-            "expected_session_exercise_counts": [7, 7, 7],
+            "expected_session_exercise_counts": [8, 8, 8],
             "expected_selected_exercise_ids": [
                 "bottom_half_low_incline_db_press",
                 "roman_chair_leg_raise",

@@ -88,16 +88,18 @@ class _ThreeDayBalanceTargets:
     soft_cap_by_group: dict[str, int]
     hard_cap_by_group: dict[str, int]
     weak_point_bonus_by_group: dict[str, int]
+    combined_arm_delt_share_cap: float
+    weak_point_combined_arm_delt_share_cap: float
 
 
 THREE_DAY_VOLUME_BANDS: dict[str, _ThreeDayVolumeBand] = {
     "low_time": _ThreeDayVolumeBand(
         band_id="low_time",
-        target_exercises_per_session=7,
-        exercise_cap_per_session=8,
-        minimum_exercises_per_session=6,
-        minimum_weekly_planned_sets=45,
-        minimum_weekly_muscle_volume=60,
+        target_exercises_per_session=8,
+        exercise_cap_per_session=9,
+        minimum_exercises_per_session=7,
+        minimum_weekly_planned_sets=42,
+        minimum_weekly_muscle_volume=42,
     ),
     "low_recovery": _ThreeDayVolumeBand(
         band_id="low_recovery",
@@ -105,7 +107,7 @@ THREE_DAY_VOLUME_BANDS: dict[str, _ThreeDayVolumeBand] = {
         exercise_cap_per_session=8,
         minimum_exercises_per_session=6,
         minimum_weekly_planned_sets=42,
-        minimum_weekly_muscle_volume=58,
+        minimum_weekly_muscle_volume=42,
     ),
     "normal": _ThreeDayVolumeBand(
         band_id="normal",
@@ -113,7 +115,7 @@ THREE_DAY_VOLUME_BANDS: dict[str, _ThreeDayVolumeBand] = {
         exercise_cap_per_session=10,
         minimum_exercises_per_session=8,
         minimum_weekly_planned_sets=55,
-        minimum_weekly_muscle_volume=72,
+        minimum_weekly_muscle_volume=55,
     ),
     "higher_time_normal_recovery": _ThreeDayVolumeBand(
         band_id="higher_time_normal_recovery",
@@ -121,34 +123,42 @@ THREE_DAY_VOLUME_BANDS: dict[str, _ThreeDayVolumeBand] = {
         exercise_cap_per_session=11,
         minimum_exercises_per_session=9,
         minimum_weekly_planned_sets=62,
-        minimum_weekly_muscle_volume=82,
+        minimum_weekly_muscle_volume=62,
     ),
 }
 
 THREE_DAY_BALANCE_TARGETS: dict[str, _ThreeDayBalanceTargets] = {
     "low_time": _ThreeDayBalanceTargets(
-        major_floor_by_group={"chest": 6, "back": 8, "quads": 6, "hamstrings": 6, "core": 2},
-        soft_cap_by_group={"arms": 26, "delts": 16},
-        hard_cap_by_group={"arms": 30, "delts": 19},
+        major_floor_by_group={"chest": 7, "back": 8, "quads": 6, "hamstrings": 6, "core": 2},
+        soft_cap_by_group={"arms": 22, "delts": 14},
+        hard_cap_by_group={"arms": 26, "delts": 17},
         weak_point_bonus_by_group={"arms": 2, "delts": 1},
+        combined_arm_delt_share_cap=0.50,
+        weak_point_combined_arm_delt_share_cap=0.54,
     ),
     "low_recovery": _ThreeDayBalanceTargets(
-        major_floor_by_group={"chest": 6, "back": 8, "quads": 5, "hamstrings": 6, "core": 2},
-        soft_cap_by_group={"arms": 25, "delts": 15},
-        hard_cap_by_group={"arms": 29, "delts": 18},
+        major_floor_by_group={"chest": 7, "back": 8, "quads": 6, "hamstrings": 6, "core": 2},
+        soft_cap_by_group={"arms": 21, "delts": 14},
+        hard_cap_by_group={"arms": 25, "delts": 17},
         weak_point_bonus_by_group={"arms": 2, "delts": 1},
+        combined_arm_delt_share_cap=0.50,
+        weak_point_combined_arm_delt_share_cap=0.54,
     ),
     "normal": _ThreeDayBalanceTargets(
-        major_floor_by_group={"chest": 8, "back": 10, "quads": 6, "hamstrings": 7, "core": 3},
-        soft_cap_by_group={"arms": 30, "delts": 18},
-        hard_cap_by_group={"arms": 34, "delts": 21},
+        major_floor_by_group={"chest": 10, "back": 12, "quads": 8, "hamstrings": 8, "core": 3},
+        soft_cap_by_group={"arms": 24, "delts": 16},
+        hard_cap_by_group={"arms": 28, "delts": 18},
         weak_point_bonus_by_group={"arms": 3, "delts": 2},
+        combined_arm_delt_share_cap=0.48,
+        weak_point_combined_arm_delt_share_cap=0.52,
     ),
     "higher_time_normal_recovery": _ThreeDayBalanceTargets(
-        major_floor_by_group={"chest": 10, "back": 12, "quads": 8, "hamstrings": 8, "core": 4},
-        soft_cap_by_group={"arms": 34, "delts": 20},
-        hard_cap_by_group={"arms": 37, "delts": 22},
+        major_floor_by_group={"chest": 12, "back": 14, "quads": 9, "hamstrings": 9, "core": 4},
+        soft_cap_by_group={"arms": 26, "delts": 17},
+        hard_cap_by_group={"arms": 30, "delts": 19},
         weak_point_bonus_by_group={"arms": 3, "delts": 2},
+        combined_arm_delt_share_cap=0.47,
+        weak_point_combined_arm_delt_share_cap=0.51,
     ),
 }
 
@@ -356,7 +366,7 @@ def _build_exercise_draft(
         name=record["canonical_name"],
         movement_pattern=str(record.get("movement_pattern") or ""),
         slot_role=slot_role,
-        primary_muscles=list(record.get("primary_muscles") or []),
+        primary_muscles=_resolved_primary_muscles_for_generated_exercise(record),
         equipment_tags=list(record.get("equipment_tags") or []),
         sets=prescription.sets,
         rep_range=list(prescription.rep_range),
@@ -546,12 +556,57 @@ def _exercise_max_sets(*, slot_role: str, time_budget_minutes: int) -> int:
     if slot_role == "primary_compound":
         return 5 if time_budget_minutes >= 75 else 4
     if slot_role == "secondary_compound":
-        return 4 if time_budget_minutes >= 75 else 3
-    return 3 if time_budget_minutes >= 75 else 2
+        return 4
+    return 3
 
 
 def _normalize_muscle_set(muscles: list[str]) -> set[str]:
     return {str(item) for item in muscles if str(item)}
+
+
+_MOVEMENT_PATTERN_PRIMARY_MUSCLE: dict[str, str] = {
+    "horizontal_press": "chest",
+    "chest_fly": "chest",
+    "horizontal_pull": "lats",
+    "vertical_pull": "lats",
+    "vertical_press": "side_delts",
+    "lateral_raise": "side_delts",
+    "squat": "quads",
+    "knee_extension": "quads",
+    "hinge": "hamstrings",
+    "leg_curl": "hamstrings",
+    "curl": "biceps",
+    "triceps_extension": "triceps",
+    "core": "abs",
+}
+
+_PRIMARY_MUSCLE_GROUP_PRIORITY: tuple[str, ...] = (
+    "chest",
+    "lats",
+    "upper_back",
+    "mid_back",
+    "quads",
+    "hamstrings",
+    "side_delts",
+    "front_delts",
+    "rear_delts",
+    "biceps",
+    "triceps",
+    "abs",
+)
+
+
+def _resolved_primary_muscles_for_generated_exercise(record: dict[str, Any]) -> list[str]:
+    movement_pattern = str(record.get("movement_pattern") or "")
+    if movement_pattern in _MOVEMENT_PATTERN_PRIMARY_MUSCLE:
+        return [_MOVEMENT_PATTERN_PRIMARY_MUSCLE[movement_pattern]]
+    primary = [str(item) for item in (record.get("primary_muscles") or []) if str(item)]
+    if not primary:
+        return []
+    for muscle in _PRIMARY_MUSCLE_GROUP_PRIORITY:
+        if muscle in primary:
+            return [muscle]
+    return [primary[0]]
 
 
 def _major_group_weekly_targets(*, time_budget_minutes: int, volume_tier: str) -> dict[str, int]:
@@ -583,13 +638,9 @@ def _compute_major_group_volume(
     totals = {key: 0 for key in MAJOR_MUSCLE_TARGETS}
     for session in sessions:
         for exercise in session.exercises:
-            record = record_by_id.get(exercise.id) or {}
-            primary = _normalize_muscle_set(list(record.get("primary_muscles") or []))
-            secondary = _normalize_muscle_set(list(record.get("secondary_muscles") or []))
+            primary = _normalize_muscle_set(list(exercise.primary_muscles or []))
             for group in _major_group_matches(primary):
                 totals[group] += int(exercise.sets)
-            for group in _major_group_matches(secondary):
-                totals[group] += max(1, int(exercise.sets) // 2)
     return totals
 
 
@@ -598,18 +649,18 @@ def _compute_primary_major_group_volume(
     sessions: list[GeneratedSessionDraft],
     record_by_id: dict[str, dict[str, Any]],
 ) -> dict[str, int]:
+    del record_by_id
     totals = {key: 0 for key in MAJOR_MUSCLE_TARGETS}
     for session in sessions:
         for exercise in session.exercises:
-            record = record_by_id.get(exercise.id) or {}
-            primary = _normalize_muscle_set(list(record.get("primary_muscles") or []))
+            primary = _normalize_muscle_set(list(exercise.primary_muscles or []))
             for group in _major_group_matches(primary):
                 totals[group] += int(exercise.sets)
     return totals
 
 
 def _exercise_primary_major_groups(record: dict[str, Any]) -> set[str]:
-    return _major_group_matches(_normalize_muscle_set(list(record.get("primary_muscles") or [])))
+    return _major_group_matches(_normalize_muscle_set(_resolved_primary_muscles_for_generated_exercise(record)))
 
 
 def _weak_point_major_groups(assessment: UserAssessment) -> set[str]:
@@ -660,6 +711,7 @@ def _would_violate_arm_delt_caps(
     projected_set_increase: int = 1,
 ) -> bool:
     groups = _exercise_primary_major_groups(record)
+    projected_primary_volume = dict(current_primary_volume)
     for group in ("arms", "delts"):
         if group not in groups:
             continue
@@ -669,9 +721,23 @@ def _would_violate_arm_delt_caps(
             weak_point_groups=weak_point_groups,
             major_floors_satisfied=major_floors_satisfied,
         )
-        projected = int(current_primary_volume.get(group, 0)) + int(projected_set_increase)
+        projected = int(projected_primary_volume.get(group, 0)) + int(projected_set_increase)
+        projected_primary_volume[group] = projected
         if projected > allowed:
             return True
+    projected_total = int(sum(current_primary_volume.values())) + int(projected_set_increase)
+    if projected_total <= 0:
+        return False
+    projected_arms = int(projected_primary_volume.get("arms", 0))
+    projected_delts = int(projected_primary_volume.get("delts", 0))
+    combined_share_cap = (
+        float(targets.weak_point_combined_arm_delt_share_cap)
+        if major_floors_satisfied and ({"arms", "delts"} & weak_point_groups)
+        else float(targets.combined_arm_delt_share_cap)
+    )
+    combined_share = float(projected_arms + projected_delts) / float(projected_total)
+    if combined_share > combined_share_cap:
+        return True
     return False
 
 
@@ -820,6 +886,12 @@ def _escalate_three_day_volume_minima(
         _, selected_exercise = sorted(
             candidates,
             key=lambda pair: (
+                0
+                if (
+                    not deficits
+                    and _exercise_primary_major_groups(record_by_id.get(pair[1].id) or {}).intersection(weak_point_groups)
+                )
+                else 1,
                 session_totals.get(pair[0].session_id, 0),
                 _fatigue_rank(pair[1].id),
                 _role_rank(pair[1].slot_role),
@@ -1575,18 +1647,17 @@ def build_generated_full_body_template_draft(
                 ]
             )
             if apply_three_day_band and three_day_deficits:
-                lower_fatigue_slot = next_slot_role in {"accessory", "weak_point"}
                 deficit_pattern_map = {
                     "chest": ("chest_fly", "horizontal_press"),
                     "back": ("horizontal_pull", "vertical_pull"),
-                    "quads": ("knee_extension",) if lower_fatigue_slot else ("knee_extension", "squat"),
-                    "hamstrings": ("leg_curl",) if lower_fatigue_slot else ("leg_curl", "hinge"),
+                    "quads": ("knee_extension", "squat"),
+                    "hamstrings": ("leg_curl", "hinge"),
                     "core": ("core",),
                 }
                 deficit_candidate_ids = _unique_preserve_order(
                     [
                         exercise_id
-                        for group in ("core", "chest", "back", "quads", "hamstrings")
+                        for group in ("core", "quads", "hamstrings", "chest", "back")
                         if group in three_day_deficits
                         for pattern in deficit_pattern_map[group]
                         for exercise_id in blueprint_input.candidate_exercise_ids_by_pattern.get(pattern, [])
@@ -1614,7 +1685,7 @@ def build_generated_full_body_template_draft(
                 )
                 weak_point_groups = _weak_point_major_groups(assessment)
                 if deficits:
-                    ordered_groups = ["core", "chest", "back", "quads", "hamstrings"]
+                    ordered_groups = ["core", "quads", "hamstrings", "chest", "back"]
                     floor_prioritized_ids: list[str] = []
                     for group in ordered_groups:
                         if group not in deficits:

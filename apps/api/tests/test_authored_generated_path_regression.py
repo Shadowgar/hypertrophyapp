@@ -81,6 +81,7 @@ def _upsert_profile(
     selected_program_id: str,
     days_available: int,
     session_time_budget_minutes: int | None = None,
+    weak_areas: list[str] | None = None,
 ) -> dict:
     response = client.post(
         "/profile",
@@ -95,7 +96,7 @@ def _upsert_profile(
             "program_selection_mode": "manual",
             "training_location": "gym",
             "equipment_profile": ["barbell", "bench", "dumbbell", "cable", "machine"],
-            "weak_areas": ["chest", "hamstrings"],
+            "weak_areas": weak_areas or ["chest", "hamstrings"],
             "days_available": days_available,
             "session_time_budget_minutes": session_time_budget_minutes,
             "nutrition_phase": "maintenance",
@@ -242,6 +243,25 @@ def _assert_non_zero_weekly_volume_payload(payload: dict[str, Any]) -> None:
     assert expected_key_set
     assert set(weekly_volume.keys()) == expected_key_set
     assert any(int(value) > 0 for value in weekly_volume.values())
+
+
+def _visible_grouped_week_volume(payload: dict[str, Any]) -> dict[str, int]:
+    weekly = payload.get("weekly_volume_by_muscle") or {}
+    grouped = {
+        "chest": int(weekly.get("chest") or 0),
+        "back": int(weekly.get("back") or 0),
+        "quads": int(weekly.get("quads") or 0),
+        "hamstrings": int(weekly.get("hamstrings") or 0),
+        "delts": int(weekly.get("shoulders") or 0),
+        "arms": int(weekly.get("biceps") or 0) + int(weekly.get("triceps") or 0),
+        "core": 0,
+    }
+    for session in payload.get("sessions") or []:
+        for exercise in session.get("exercises") or []:
+            muscles = [str(item) for item in (exercise.get("primary_muscles") or [])]
+            if "abs" in muscles or "core" in muscles:
+                grouped["core"] += int(exercise.get("sets") or 0)
+    return grouped
 
 
 def _contains_key(value: Any, target_key: str) -> bool:
@@ -843,6 +863,89 @@ def test_generate_and_latest_week_volume_by_muscle_non_zero_when_planned_sets_ex
 
     _assert_non_zero_weekly_volume_payload(generated_payload)
     _assert_non_zero_weekly_volume_payload(latest_payload)
+
+
+def test_generated_week_visible_grouped_volume_is_balanced_and_latest_matches_generate() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register(client, email="generated-visible-volume-balance@example.com")
+
+    _upsert_profile(
+        client,
+        headers=headers,
+        selected_program_id="full_body_v1",
+        days_available=3,
+        session_time_budget_minutes=60,
+        weak_areas=["chest", "hamstrings"],
+    )
+
+    generated_payload = _generate_week(client, headers=headers)
+    latest_week = client.get("/plan/latest-week", headers=headers)
+    assert latest_week.status_code == 200
+    latest_payload = latest_week.json()
+
+    generated_grouped = _visible_grouped_week_volume(generated_payload)
+    latest_grouped = _visible_grouped_week_volume(latest_payload)
+    assert generated_grouped == latest_grouped
+
+    exercises = [
+        exercise
+        for session in generated_payload.get("sessions") or []
+        for exercise in session.get("exercises") or []
+        if isinstance(exercise, dict)
+    ]
+    planned_sets = sum(int(exercise.get("sets") or 0) for exercise in exercises)
+    assert planned_sets >= 30
+
+    assert generated_grouped["chest"] >= 7, generated_grouped
+    assert generated_grouped["back"] >= 5, generated_grouped
+    assert generated_grouped["quads"] >= 4, generated_grouped
+    assert generated_grouped["hamstrings"] >= 6, generated_grouped
+    assert generated_grouped["arms"] <= 28, generated_grouped
+    assert generated_grouped["delts"] <= 18, generated_grouped
+    total_visible = sum(generated_grouped.values())
+    assert (generated_grouped["arms"] + generated_grouped["delts"]) / max(1, total_visible) <= 0.48, generated_grouped
+
+
+def test_generated_week_visible_weak_point_arm_delt_bias_is_preserved_but_bounded() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register(client, email="generated-visible-volume-weakpoint@example.com")
+
+    _upsert_profile(
+        client,
+        headers=headers,
+        selected_program_id="full_body_v1",
+        days_available=3,
+        session_time_budget_minutes=60,
+        weak_areas=["chest", "hamstrings"],
+    )
+    baseline_payload = _generate_week(client, headers=headers)
+    baseline_grouped = _visible_grouped_week_volume(baseline_payload)
+
+    _upsert_profile(
+        client,
+        headers=headers,
+        selected_program_id="full_body_v1",
+        days_available=3,
+        session_time_budget_minutes=60,
+        weak_areas=["biceps", "side_delts"],
+    )
+    weak_payload = _generate_week(client, headers=headers)
+    weak_grouped = _visible_grouped_week_volume(weak_payload)
+
+    latest_week = client.get("/plan/latest-week", headers=headers)
+    assert latest_week.status_code == 200
+    assert _visible_grouped_week_volume(latest_week.json()) == weak_grouped
+
+    assert weak_grouped["arms"] >= baseline_grouped["arms"], (baseline_grouped, weak_grouped)
+    assert weak_grouped["delts"] >= baseline_grouped["delts"], (baseline_grouped, weak_grouped)
+    assert weak_grouped["arms"] <= 32, weak_grouped
+    assert weak_grouped["delts"] <= 20, weak_grouped
+    assert weak_grouped["chest"] >= 7, weak_grouped
+    assert weak_grouped["back"] >= 8, weak_grouped
+    assert weak_grouped["quads"] >= 5, weak_grouped
+    assert weak_grouped["hamstrings"] >= 6, weak_grouped
 
 
 @pytest.mark.parametrize(

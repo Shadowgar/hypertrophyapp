@@ -156,6 +156,25 @@ def _seed_same_week_review(
         session.commit()
 
 
+def _visible_grouped_week_volume(payload: dict) -> dict[str, int]:
+    weekly = payload.get("weekly_volume_by_muscle") or {}
+    grouped = {
+        "chest": int(weekly.get("chest") or 0),
+        "back": int(weekly.get("back") or 0),
+        "quads": int(weekly.get("quads") or 0),
+        "hamstrings": int(weekly.get("hamstrings") or 0),
+        "delts": int(weekly.get("shoulders") or 0),
+        "arms": int(weekly.get("biceps") or 0) + int(weekly.get("triceps") or 0),
+        "core": 0,
+    }
+    for session in payload.get("sessions") or []:
+        for exercise in session.get("exercises") or []:
+            muscles = [str(item) for item in (exercise.get("primary_muscles") or [])]
+            if "abs" in muscles or "core" in muscles:
+                grouped["core"] += int(exercise.get("sets") or 0)
+    return grouped
+
+
 def test_generate_week_uses_generated_constructor_on_canonical_full_body_compatibility_seam() -> None:
     _reset_db()
     client = TestClient(app)
@@ -475,3 +494,41 @@ def test_generate_week_explicit_weekly_review_suppresses_generated_adaptive_loop
         step for step in payload["decision_trace"]["execution_steps"] if step["step"] == "generated_adaptation"
     )
     assert generated_step["result"]["outcome"]["reason"] == "explicit_review_precedence"
+
+
+def test_generate_week_visible_grouped_volume_balancing_is_reflected_in_runtime_payload() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_user(
+        client,
+        email="generated-runtime-visible-volume-balance@example.com",
+        name="Generated Runtime Visible Balance",
+    )
+    _post_profile(
+        client,
+        headers=headers,
+        selected_program_id="full_body_v1",
+        split_preference="full_body",
+        training_location="gym",
+        equipment_profile=["barbell", "bench", "cable", "machine", "dumbbell"],
+        days_available=3,
+        weak_areas=["chest", "hamstrings"],
+    )
+
+    response = client.post("/plan/generate-week", headers=headers, json={})
+    assert response.status_code == 200
+    payload = response.json()
+    grouped = _visible_grouped_week_volume(payload)
+    planned_sets = sum(
+        int(exercise.get("sets") or 0)
+        for session in payload.get("sessions") or []
+        for exercise in session.get("exercises") or []
+    )
+
+    assert planned_sets >= 30
+    assert grouped["chest"] >= 7, grouped
+    assert grouped["back"] >= 5, grouped
+    assert grouped["quads"] >= 4, grouped
+    assert grouped["hamstrings"] >= 6, grouped
+    assert grouped["arms"] <= 28, grouped
+    assert grouped["delts"] <= 18, grouped
