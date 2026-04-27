@@ -245,7 +245,7 @@ ARCHETYPE_FIXTURES = {
             "constructibility_status": "ready",
             "session_count": 3,
             "expects_insufficiency": False,
-            "expected_session_exercise_counts": [7, 8, 8],
+            "expected_session_exercise_counts": [9, 9, 9],
             "expected_selected_exercise_ids": [
                 "hack_squat",
                 "neutral_grip_lat_pulldown",
@@ -304,7 +304,7 @@ ARCHETYPE_FIXTURES = {
             "constructibility_status": "ready",
             "session_count": 3,
             "expects_insufficiency": False,
-            "expected_session_exercise_counts": [6, 6, 6],
+            "expected_session_exercise_counts": [7, 7, 7],
             "expected_selected_exercise_ids": [
                 "bottom_half_low_incline_db_press",
                 "standing_calf_raise",
@@ -406,7 +406,7 @@ ARCHETYPE_FIXTURES = {
             "constructibility_status": "ready",
             "session_count": 3,
             "expects_insufficiency": False,
-            "expected_session_exercise_counts": [5, 5, 5],
+            "expected_session_exercise_counts": [7, 7, 7],
             "expected_selected_exercise_ids": [
                 "decline_machine_chest_press",
                 "neutral_grip_lat_pulldown",
@@ -461,7 +461,7 @@ ARCHETYPE_FIXTURES = {
             "constructibility_status": "ready",
             "session_count": 3,
             "expects_insufficiency": False,
-            "expected_session_exercise_counts": [5, 5, 5],
+            "expected_session_exercise_counts": [8, 8, 8],
         },
     },
     "comeback_full_body": {
@@ -510,7 +510,7 @@ ARCHETYPE_FIXTURES = {
             "constructibility_status": "ready",
             "session_count": 3,
             "expects_insufficiency": False,
-            "expected_session_exercise_counts": [5, 5, 5],
+            "expected_session_exercise_counts": [7, 7, 7],
         },
     },
     "two_day_full_body": {

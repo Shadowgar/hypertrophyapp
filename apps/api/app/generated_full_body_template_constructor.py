@@ -72,6 +72,52 @@ class _ResolvedRule:
     payload: dict[str, Any]
 
 
+@dataclass(frozen=True)
+class _ThreeDayVolumeBand:
+    band_id: str
+    target_exercises_per_session: int
+    exercise_cap_per_session: int
+    minimum_exercises_per_session: int
+    minimum_weekly_planned_sets: int
+    minimum_weekly_muscle_volume: int
+
+
+THREE_DAY_VOLUME_BANDS: dict[str, _ThreeDayVolumeBand] = {
+    "low_time": _ThreeDayVolumeBand(
+        band_id="low_time",
+        target_exercises_per_session=7,
+        exercise_cap_per_session=8,
+        minimum_exercises_per_session=6,
+        minimum_weekly_planned_sets=38,
+        minimum_weekly_muscle_volume=60,
+    ),
+    "low_recovery": _ThreeDayVolumeBand(
+        band_id="low_recovery",
+        target_exercises_per_session=7,
+        exercise_cap_per_session=8,
+        minimum_exercises_per_session=6,
+        minimum_weekly_planned_sets=36,
+        minimum_weekly_muscle_volume=58,
+    ),
+    "normal": _ThreeDayVolumeBand(
+        band_id="normal",
+        target_exercises_per_session=9,
+        exercise_cap_per_session=10,
+        minimum_exercises_per_session=8,
+        minimum_weekly_planned_sets=46,
+        minimum_weekly_muscle_volume=72,
+    ),
+    "higher_time_normal_recovery": _ThreeDayVolumeBand(
+        band_id="higher_time_normal_recovery",
+        target_exercises_per_session=10,
+        exercise_cap_per_session=11,
+        minimum_exercises_per_session=9,
+        minimum_weekly_planned_sets=52,
+        minimum_weekly_muscle_volume=82,
+    ),
+}
+
+
 def _stable_json(payload: object) -> str:
     return json.dumps(payload, sort_keys=True, separators=(",", ":"))
 
@@ -375,9 +421,11 @@ def _global_fill_candidate_ids(blueprint_input: GeneratedFullBodyBlueprintInput)
 def _density_targets_for_budget(
     *,
     assessment: UserAssessment,
+    session_count: int,
     volume_tier: str,
     doctrine_target: int,
     minimum_exercises_per_session: int,
+    apply_three_day_band: bool,
 ) -> tuple[int, int]:
     budget = int(assessment.session_time_budget_minutes or 75)
     if budget <= 45:
@@ -401,7 +449,22 @@ def _density_targets_for_budget(
 
     target = max(minimum_exercises_per_session, max(doctrine_target, target))
     cap = max(target, cap)
+    if session_count == 3 and apply_three_day_band:
+        band = _resolve_three_day_volume_band(assessment=assessment)
+        target = max(target, band.target_exercises_per_session)
+        cap = max(cap, band.exercise_cap_per_session)
     return target, cap
+
+
+def _resolve_three_day_volume_band(*, assessment: UserAssessment) -> _ThreeDayVolumeBand:
+    budget = int(assessment.session_time_budget_minutes or 75)
+    if assessment.schedule_profile == "low_time" or budget <= 45:
+        return THREE_DAY_VOLUME_BANDS["low_time"]
+    if assessment.recovery_profile == "low_recovery" or assessment.comeback_flag:
+        return THREE_DAY_VOLUME_BANDS["low_recovery"]
+    if budget >= 75 and assessment.recovery_profile == "normal" and assessment.schedule_profile == "normal":
+        return THREE_DAY_VOLUME_BANDS["higher_time_normal_recovery"]
+    return THREE_DAY_VOLUME_BANDS["normal"]
 
 
 def _flow_sort_key(exercise: GeneratedExerciseDraft, record_by_id: dict[str, dict[str, Any]]) -> tuple[Any, ...]:
@@ -490,12 +553,96 @@ def _compute_major_group_volume(
     return totals
 
 
+def _weekly_muscle_volume_sum(
+    *,
+    sessions: list[GeneratedSessionDraft],
+    record_by_id: dict[str, dict[str, Any]],
+) -> int:
+    return int(sum(_compute_major_group_volume(sessions=sessions, record_by_id=record_by_id).values()))
+
+
+def _weekly_planned_sets(sessions: list[GeneratedSessionDraft]) -> int:
+    return int(sum(_session_total_sets(session) for session in sessions))
+
+
+def _escalate_three_day_volume_minima(
+    *,
+    sessions: list[GeneratedSessionDraft],
+    record_by_id: dict[str, dict[str, Any]],
+    assessment: UserAssessment,
+    apply_three_day_band: bool,
+) -> None:
+    if len(sessions) != 3 or not apply_three_day_band:
+        return
+    band = _resolve_three_day_volume_band(assessment=assessment)
+    time_budget_minutes = int(assessment.session_time_budget_minutes or 75)
+
+    def _fatigue_rank(exercise_id: str) -> int:
+        fatigue = str((record_by_id.get(exercise_id) or {}).get("fatigue_cost") or "")
+        return {"low": 0, "moderate": 1, "high": 2}.get(fatigue, 2)
+
+    def _role_rank(slot_role: str) -> int:
+        if slot_role in {"accessory", "weak_point"}:
+            return 0
+        if slot_role == "secondary_compound":
+            return 1
+        if slot_role == "primary_compound":
+            return 2
+        return 3
+
+    for _ in range(96):
+        weekly_sets = _weekly_planned_sets(sessions)
+        weekly_muscle_volume = _weekly_muscle_volume_sum(sessions=sessions, record_by_id=record_by_id)
+        if weekly_sets >= band.minimum_weekly_planned_sets and weekly_muscle_volume >= band.minimum_weekly_muscle_volume:
+            break
+
+        session_high_counts = {
+            session.session_id: _session_high_fatigue_count(session=session, record_by_id=record_by_id)
+            for session in sessions
+        }
+        min_high = min(session_high_counts.values()) if session_high_counts else 0
+        candidates: list[tuple[GeneratedSessionDraft, GeneratedExerciseDraft]] = []
+        for session in sessions:
+            for exercise in session.exercises:
+                max_sets = _exercise_max_sets(
+                    slot_role=exercise.slot_role,
+                    time_budget_minutes=time_budget_minutes,
+                )
+                if int(exercise.sets) >= max_sets:
+                    continue
+                fatigue = str((record_by_id.get(exercise.id) or {}).get("fatigue_cost") or "")
+                if (
+                    fatigue == "high"
+                    and session_high_counts.get(session.session_id, 0) > min_high + 1
+                    and exercise.slot_role in {"secondary_compound", "primary_compound"}
+                ):
+                    continue
+                candidates.append((session, exercise))
+
+        if not candidates:
+            break
+
+        session_totals = {session.session_id: _session_total_sets(session) for session in sessions}
+        _, selected_exercise = sorted(
+            candidates,
+            key=lambda pair: (
+                session_totals.get(pair[0].session_id, 0),
+                _fatigue_rank(pair[1].id),
+                _role_rank(pair[1].slot_role),
+                pair[0].session_id,
+                pair[1].id,
+            ),
+        )[0]
+        selected_exercise.sets += 1
+
+
 def _apply_prescription_quality_refinement(
     *,
     sessions: list[GeneratedSessionDraft],
     record_by_id: dict[str, dict[str, Any]],
     assessment: UserAssessment,
     volume_tier: str,
+    apply_three_day_band: bool,
 ) -> None:
     time_budget_minutes = int(assessment.session_time_budget_minutes or 75)
     role_targets = _role_set_targets(volume_tier=volume_tier, time_budget_minutes=time_budget_minutes)
@@ -592,6 +739,13 @@ def _apply_prescription_quality_refinement(
             ),
         )[0]
         receiver.sets += 1
+
+    _escalate_three_day_volume_minima(
+        sessions=sessions,
+        record_by_id=record_by_id,
+        assessment=assessment,
+        apply_three_day_band=apply_three_day_band,
+    )
 
 
 def _optional_fill_trace(
@@ -741,15 +895,19 @@ def build_generated_full_body_template_draft(
         fill_target_rule.payload["volume_tier_to_target_exercises_per_session"][blueprint_input.volume_tier]
     )
     minimum_exercises_per_session = int(policy_bundle.minimum_viable_program_policy.minimum_exercises_per_session)
+    apply_three_day_band = blueprint_input.session_count == 3 and not bool(blueprint_input.pattern_insufficiencies)
     target_exercises_per_session, effective_session_exercise_cap = _density_targets_for_budget(
         assessment=assessment,
+        session_count=blueprint_input.session_count,
         volume_tier=blueprint_input.volume_tier,
         doctrine_target=doctrine_session_target,
         minimum_exercises_per_session=minimum_exercises_per_session,
+        apply_three_day_band=apply_three_day_band,
     )
     optional_fill_score_floor = scoring_rule.payload["minimum_total_score_floor"].get("optional_fill")
     if optional_fill_score_floor is not None:
         optional_fill_score_floor = int(optional_fill_score_floor)
+    three_day_band = _resolve_three_day_volume_band(assessment=assessment) if apply_three_day_band else None
     optional_fill_patterns = [
         str(item)
         for item in optional_fill_rule.payload["optional_patterns_by_complexity_ceiling"].get(
@@ -1170,6 +1328,11 @@ def build_generated_full_body_template_draft(
                 selected_pattern = str(selected_record.get("movement_pattern") or "")
                 if selected_pattern in missing_patterns:
                     pass
+                elif (
+                    three_day_band is not None
+                    and len(session.exercises) < three_day_band.minimum_exercises_per_session
+                ):
+                    pass
                 else:
                     session.optional_fill_trace = _optional_fill_trace(
                         score_floor=selection.score_floor,
@@ -1229,6 +1392,7 @@ def build_generated_full_body_template_draft(
         record_by_id=record_by_id,
         assessment=assessment,
         volume_tier=blueprint_input.volume_tier,
+        apply_three_day_band=apply_three_day_band,
     )
     _apply_session_flow_ordering(sessions=sessions, record_by_id=record_by_id)
 

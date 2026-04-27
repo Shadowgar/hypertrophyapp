@@ -2,14 +2,18 @@ from inspect import signature
 import json
 from pathlib import Path
 import sys
+from copy import deepcopy
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 API_ROOT = Path(__file__).resolve().parents[1]
+CORE_ENGINE_ROOT = Path(__file__).resolve().parents[3] / "packages" / "core-engine"
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 if str(API_ROOT) not in sys.path:
     sys.path.insert(0, str(API_ROOT))
+if str(CORE_ENGINE_ROOT) not in sys.path:
+    sys.path.insert(0, str(CORE_ENGINE_ROOT))
 
 from app.generated_assessment_builder import build_user_assessment
 from app.generated_assessment_schema import ProfileAssessmentInput
@@ -21,6 +25,8 @@ from app.generated_full_body_template_draft_schema import (
     GeneratedSessionDraft,
 )
 from app.knowledge_loader import load_doctrine_bundle, load_exercise_library, load_policy_bundle
+from app.program_loader import load_program_template
+from core_engine.scheduler import generate_week_plan
 from tests.fixtures.generated_full_body_archetypes import get_generated_full_body_archetypes
 
 
@@ -149,6 +155,23 @@ def _build_layers(archetype_fixture: dict):
     return doctrine_bundle, policy_bundle, exercise_library, assessment, blueprint, draft
 
 
+def _normal_three_day_fixture_from_low_time() -> dict:
+    fixture = deepcopy(get_generated_full_body_archetypes()["low_time_full_body"])
+    fixture["profile_input"]["split_preference"] = None
+    fixture["profile_input"]["session_time_budget_minutes"] = 60
+    fixture["profile_input"]["near_failure_tolerance"] = "moderate"
+    fixture["training_state"]["constraint_state"]["split_preference"] = None
+    fixture["training_state"]["constraint_state"]["session_time_budget_minutes"] = 60
+    fixture["training_state"]["constraint_state"]["near_failure_tolerance"] = "moderate"
+    fixture["training_state"]["adherence_state"]["latest_adherence_score"] = 4
+    fixture["training_state"]["adherence_state"]["rolling_average_score"] = 4.0
+    fixture["training_state"]["adherence_state"]["missed_session_count"] = 0
+    fixture["training_state"]["coaching_state"]["adherence"]["latest_adherence_score"] = 4
+    fixture["training_state"]["coaching_state"]["adherence"]["rolling_average_score"] = 4.0
+    fixture["training_state"]["coaching_state"]["adherence"]["missed_session_count"] = 0
+    return fixture
+
+
 def _covered_balance_categories(draft: GeneratedFullBodyTemplateDraft) -> set[str]:
     patterns = {
         str(exercise.movement_pattern)
@@ -208,6 +231,36 @@ def _major_group_weekly_volume(draft: GeneratedFullBodyTemplateDraft) -> dict[st
                 group = alias.get(muscle)
                 if group is not None:
                     totals[group] += int(exercise.sets)
+    return totals
+
+
+def _muscle_contribution_volume(draft: GeneratedFullBodyTemplateDraft, record_by_id: dict[str, dict]) -> dict[str, int]:
+    alias = {
+        "chest": "chest",
+        "lats": "back",
+        "upper_back": "back",
+        "mid_back": "back",
+        "quads": "quads",
+        "hamstrings": "hamstrings",
+        "front_delts": "delts",
+        "side_delts": "delts",
+        "rear_delts": "delts",
+        "biceps": "arms",
+        "triceps": "arms",
+        "abs": "core",
+    }
+    totals = {"chest": 0, "back": 0, "quads": 0, "hamstrings": 0, "delts": 0, "arms": 0, "core": 0}
+    for session in draft.sessions:
+        for exercise in session.exercises:
+            record = record_by_id.get(exercise.id) or {}
+            for muscle in record.get("primary_muscles") or []:
+                group = alias.get(str(muscle))
+                if group is not None:
+                    totals[group] += int(exercise.sets)
+            for muscle in record.get("secondary_muscles") or []:
+                group = alias.get(str(muscle))
+                if group is not None:
+                    totals[group] += max(1, int(exercise.sets) // 2)
     return totals
 
 
@@ -568,3 +621,75 @@ def test_v24_time_budget_scales_total_sets_not_only_exercise_count() -> None:
     low_time_sets = sum(_session_total_sets(session) for session in low_time.sessions)
     novice_sets = sum(_session_total_sets(session) for session in novice.sessions)
     assert novice_sets > low_time_sets
+
+
+def test_v25_normal_three_day_density_is_not_underdosed_vs_authored_reference_range() -> None:
+    generated_fixture = _normal_three_day_fixture_from_low_time()
+    _, _, exercise_library, _, _, generated = _build_layers(generated_fixture)
+    generated_record_by_id = _record_by_id(exercise_library)
+    generated_exercise_slots = sum(len(session.exercises) for session in generated.sessions)
+    generated_weekly_sets = sum(_session_total_sets(session) for session in generated.sessions)
+    generated_volume = sum(_muscle_contribution_volume(generated, generated_record_by_id).values())
+
+    authored_slot_totals: list[int] = []
+    for template_id in ("pure_bodybuilding_phase_1_full_body", "pure_bodybuilding_phase_2_full_body"):
+        authored_template = load_program_template(template_id)
+        authored_week = generate_week_plan(
+            user_profile={"name": "Reference"},
+            days_available=3,
+            split_preference="full_body",
+            program_template=authored_template,
+            history=[],
+            phase="hypertrophy",
+            available_equipment=["barbell", "bodyweight", "cable", "dumbbell", "machine", "bench"],
+            session_time_budget_minutes=60,
+            weak_areas=["chest", "lats"],
+            progression_state_per_exercise=[],
+        )
+        authored_slot_totals.append(sum(len(session.get("exercises") or []) for session in authored_week["sessions"]))
+
+    assert generated_exercise_slots >= int(min(authored_slot_totals) * 0.8)
+    assert generated_weekly_sets >= 60
+    assert generated_volume >= 68
+
+
+def test_v25_low_time_three_day_is_smaller_than_normal_but_not_skeletal() -> None:
+    archetypes = get_generated_full_body_archetypes()
+    _, _, _, _, _, low_time = _build_layers(archetypes["low_time_full_body"])
+    _, _, _, _, _, normal = _build_layers(_normal_three_day_fixture_from_low_time())
+
+    low_time_slots = [len(session.exercises) for session in low_time.sessions]
+    normal_slots = [len(session.exercises) for session in normal.sessions]
+    low_time_weekly_sets = sum(_session_total_sets(session) for session in low_time.sessions)
+
+    assert sum(low_time_slots) < sum(normal_slots)
+    assert min(low_time_slots) >= 6
+    assert low_time_weekly_sets >= 45
+
+
+def test_v25_three_day_volume_scales_with_time_and_recovery() -> None:
+    archetypes = get_generated_full_body_archetypes()
+    _, _, _, _, _, high_time_normal = _build_layers(archetypes["novice_gym_full_body"])
+    _, _, _, _, _, normal = _build_layers(_normal_three_day_fixture_from_low_time())
+    _, _, _, _, _, low_recovery = _build_layers(archetypes["low_recovery_full_body"])
+
+    high_time_sets = sum(_session_total_sets(session) for session in high_time_normal.sessions)
+    normal_sets = sum(_session_total_sets(session) for session in normal.sessions)
+    low_recovery_sets = sum(_session_total_sets(session) for session in low_recovery.sessions)
+
+    assert high_time_sets > normal_sets > low_recovery_sets
+
+
+def test_v25_generated_constructor_does_not_mutate_authored_program_templates() -> None:
+    phase1_before = load_program_template("pure_bodybuilding_phase_1_full_body")
+    phase2_before = load_program_template("pure_bodybuilding_phase_2_full_body")
+
+    archetypes = get_generated_full_body_archetypes()
+    _build_layers(archetypes["novice_gym_full_body"])
+    _build_layers(archetypes["low_time_full_body"])
+
+    phase1_after = load_program_template("pure_bodybuilding_phase_1_full_body")
+    phase2_after = load_program_template("pure_bodybuilding_phase_2_full_body")
+
+    assert phase1_before == phase1_after
+    assert phase2_before == phase2_after
