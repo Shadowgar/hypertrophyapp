@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 import uuid
 from typing import Any
 
@@ -14,7 +14,7 @@ configure_test_database("test_authored_generated_path_regression")
 
 from app.database import Base, SessionLocal, engine
 from app.main import app
-from app.models import User, WeeklyCheckin, WeeklyReviewCycle, WorkoutPlan, WorkoutSessionState, WorkoutSetLog
+from app.models import ExerciseState, User, WeeklyCheckin, WeeklyReviewCycle, WorkoutPlan, WorkoutSessionState, WorkoutSetLog
 from app.program_loader import load_program_template, resolve_selected_program_binding_id
 from app.routers import plan as plan_router
 from core_engine.scheduler import AUTHORITATIVE_AUTHORED_PASSTHROUGH_KEY
@@ -984,6 +984,120 @@ def test_blocked_regenerate_preserves_progress_artifacts_and_plan_payload(select
     assert after_logs == before_logs
     assert after_states == before_states
     assert after_plan_payload == before_plan_payload
+
+
+def test_current_week_regenerate_handles_replace_target_without_sessions() -> None:
+    _reset_db()
+    client = TestClient(app)
+    email = "regenerate-empty-sessions@example.com"
+    headers = _register(client, email=email)
+    _upsert_profile(
+        client,
+        headers=headers,
+        selected_program_id="full_body_v1",
+        days_available=3,
+    )
+
+    first = _generate_week(client, headers=headers)
+    monday = date.today() - timedelta(days=date.today().weekday())
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == email).first()
+        assert user is not None
+        row = (
+            db.query(WorkoutPlan)
+            .filter(WorkoutPlan.user_id == user.id, WorkoutPlan.week_start == monday)
+            .order_by(WorkoutPlan.created_at.desc())
+            .first()
+        )
+        assert row is not None
+        payload = deepcopy(row.payload if isinstance(row.payload, dict) else {})
+        payload["sessions"] = []
+        row.payload = payload
+        db.add(row)
+        db.commit()
+
+    regenerated = client.post("/plan/generate-week", headers=headers, json={})
+    assert regenerated.status_code == 200
+    latest = client.get("/plan/latest-week", headers=headers)
+    assert latest.status_code == 200
+    assert latest.json()["mesocycle"]["week_index"] == first["mesocycle"]["week_index"]
+
+
+def test_current_week_regenerate_ignores_stale_exercise_state_outside_target_week() -> None:
+    _reset_db()
+    client = TestClient(app)
+    email = "regenerate-stale-exposure@example.com"
+    headers = _register(client, email=email)
+    _upsert_profile(
+        client,
+        headers=headers,
+        selected_program_id="full_body_v1",
+        days_available=3,
+    )
+    first = _generate_week(client, headers=headers)
+    first_exercise = first["sessions"][0]["exercises"][0]
+    primary_exercise_id = first_exercise.get("primary_exercise_id") or first_exercise["id"]
+    stale_timestamp = datetime.now().replace(tzinfo=None) - timedelta(days=10)
+
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == email).first()
+        assert user is not None
+        db.add(
+            ExerciseState(
+                user_id=user.id,
+                exercise_id=primary_exercise_id,
+                current_working_weight=20.0,
+                exposure_count=2,
+                consecutive_under_target_exposures=0,
+                last_progression_action="hold",
+                fatigue_score=0.0,
+                last_updated_at=stale_timestamp,
+            )
+        )
+        db.commit()
+
+    regenerated = client.post("/plan/generate-week", headers=headers, json={})
+    assert regenerated.status_code == 200
+    assert regenerated.json()["mesocycle"]["week_index"] == first["mesocycle"]["week_index"]
+
+
+def test_current_week_regenerate_does_not_block_for_progress_on_different_binding() -> None:
+    _reset_db()
+    client = TestClient(app)
+    email = "regenerate-other-binding-progress@example.com"
+    headers = _register(client, email=email)
+    _upsert_profile(
+        client,
+        headers=headers,
+        selected_program_id="pure_bodybuilding_phase_1_full_body",
+        days_available=3,
+    )
+
+    _generate_week(client, headers=headers)
+    switched_generation = _generate_week(client, headers=headers, json_body={"template_id": "full_body_v1"})
+    assert switched_generation["program_template_id"] == "full_body_v1"
+    switched_session = switched_generation["sessions"][0]
+    switched_exercise = switched_session["exercises"][0]
+    logged = client.post(
+        f"/workout/{switched_session['session_id']}/log-set",
+        headers=headers,
+        json={
+            "primary_exercise_id": switched_exercise.get("primary_exercise_id"),
+            "exercise_id": switched_exercise["id"],
+            "set_index": 1,
+            "reps": 10,
+            "weight": float(switched_exercise.get("recommended_working_weight") or 20.0),
+        },
+    )
+    assert logged.status_code == 200
+
+    switch_back = client.post(
+        "/plan/generate-week",
+        headers=headers,
+        json={"template_id": "pure_bodybuilding_phase_1_full_body"},
+    )
+    assert switch_back.status_code == 200
+    assert switch_back.json()["program_template_id"] == "pure_bodybuilding_phase_1_full_body"
 
 
 @pytest.mark.parametrize(

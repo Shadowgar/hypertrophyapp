@@ -1682,6 +1682,18 @@ def _extract_target_session_and_exercise_ids(
     *,
     payload: dict[str, Any],
 ) -> tuple[set[str], set[str]]:
+    def _is_clearly_exercise_identifier(exercise: dict[str, Any]) -> bool:
+        return any(
+            key in exercise
+            for key in (
+                "sets",
+                "rep_range",
+                "movement_pattern",
+                "primary_muscles",
+                "recommended_working_weight",
+            )
+        )
+
     session_ids: set[str] = set()
     primary_exercise_ids: set[str] = set()
     for session in payload.get("sessions") or []:
@@ -1698,7 +1710,7 @@ def _extract_target_session_and_exercise_ids(
                 primary_exercise_ids.add(primary_exercise_id)
                 continue
             fallback_exercise_id = str(exercise.get("id") or "").strip()
-            if fallback_exercise_id:
+            if fallback_exercise_id and _is_clearly_exercise_identifier(exercise):
                 primary_exercise_ids.add(fallback_exercise_id)
     return session_ids, primary_exercise_ids
 
@@ -1722,22 +1734,32 @@ def _current_regenerate_would_replace_with_existing_progress(
         .all()
     )
     replace_target_payload: dict[str, Any] | None = None
+    other_binding_payloads: list[dict[str, Any]] = []
     for row in rows_to_replace:
         existing_payload = row.payload if isinstance(row.payload, dict) else {}
         existing_binding_id = resolve_selected_program_binding_id(existing_payload.get("program_template_id"))
         if existing_binding_id == replace_binding_id:
             replace_target_payload = existing_payload
-            break
+            continue
+        other_binding_payloads.append(existing_payload)
     if replace_target_payload is None:
         return False
 
     session_ids, primary_exercise_ids = _extract_target_session_and_exercise_ids(payload=replace_target_payload)
-    if session_ids:
+    ambiguous_session_ids: set[str] = set()
+    if session_ids and other_binding_payloads:
+        for payload in other_binding_payloads:
+            other_session_ids, _ = _extract_target_session_and_exercise_ids(payload=payload)
+            ambiguous_session_ids.update(session_ids.intersection(other_session_ids))
+    effective_session_ids = session_ids.difference(ambiguous_session_ids)
+    has_session_logs = False
+    has_session_states = False
+    if effective_session_ids:
         has_session_logs = (
             db.query(WorkoutSetLog)
             .filter(
                 WorkoutSetLog.user_id == current_user.id,
-                WorkoutSetLog.workout_id.in_(list(session_ids)),
+                WorkoutSetLog.workout_id.in_(list(effective_session_ids)),
             )
             .first()
             is not None
@@ -1748,7 +1770,7 @@ def _current_regenerate_would_replace_with_existing_progress(
             db.query(WorkoutSessionState)
             .filter(
                 WorkoutSessionState.user_id == current_user.id,
-                WorkoutSessionState.workout_id.in_(list(session_ids)),
+                WorkoutSessionState.workout_id.in_(list(effective_session_ids)),
             )
             .first()
             is not None
@@ -1756,8 +1778,17 @@ def _current_regenerate_would_replace_with_existing_progress(
         if has_session_states:
             return True
 
+    # ExerciseState is global per exercise_id and not scoped to a workout/session row.
+    # Only consult it when target session context exists and no definitive
+    # target-session progress has already been found.
     exercise_state_timestamp = getattr(ExerciseState, "last_updated_at", None)
-    if primary_exercise_ids and exercise_state_timestamp is not None:
+    if (
+        effective_session_ids
+        and (not has_session_logs and not has_session_states)
+        and not other_binding_payloads
+        and primary_exercise_ids
+        and exercise_state_timestamp is not None
+    ):
         has_exercise_progress = (
             db.query(ExerciseState)
             .filter(

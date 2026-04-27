@@ -408,7 +408,12 @@ def test_frequency_adaptation_preserves_progression_state_across_5_to_3_to_5_win
         assert state is not None
         assert float(state.current_working_weight) > 0
 
-    week_two = client.post("/plan/generate-week", headers=headers, json={})
+    week_two_regenerate = client.post("/plan/generate-week", headers=headers, json={})
+    assert week_two_regenerate.status_code == 409
+    assert week_two_regenerate.json()["detail"] == (
+        "This week has logged workout data. Regenerating would replace the current plan and clear progress."
+    )
+    week_two = client.post("/plan/next-week", headers=headers, json={})
     assert week_two.status_code == 200
     week_two_payload = week_two.json()
     assert week_two_payload["user"]["days_available"] == 5

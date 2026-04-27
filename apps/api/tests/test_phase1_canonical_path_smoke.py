@@ -159,8 +159,13 @@ def test_phase1_canonical_smoke_path_preserves_identity_and_session_continuity()
     assert apply_adaptation.json()["status"] == "applied"
 
     regenerate_week = client.post("/plan/generate-week", headers=headers, json={})
-    assert regenerate_week.status_code == 200
-    regenerated_payload = regenerate_week.json()
+    assert regenerate_week.status_code == 409
+    assert regenerate_week.json()["detail"] == (
+        "This week has logged workout data. Regenerating would replace the current plan and clear progress."
+    )
+    next_week = client.post("/plan/next-week", headers=headers, json={})
+    assert next_week.status_code == 200
+    regenerated_payload = next_week.json()
 
     assert regenerated_payload["program_template_id"] == CANONICAL_PROGRAM_ID
     assert len(regenerated_payload["sessions"]) == 3
