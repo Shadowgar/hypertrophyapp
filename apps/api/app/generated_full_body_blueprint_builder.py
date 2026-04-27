@@ -284,6 +284,8 @@ def build_generated_full_body_blueprint_input(
         for pattern in optional_fill_rule["optional_patterns_by_complexity_ceiling"].get(complexity_ceiling, [])
         if pattern in available_patterns and pattern not in required_pattern_names
     ]
+    if "core" in available_patterns and "core" not in required_pattern_names and "core" not in optional_fill_patterns:
+        optional_fill_patterns.append("core")
     for movement_pattern in optional_fill_patterns:
         candidate_ids, excluded_for_pattern, included_records = _candidate_pool_for_pattern(
             pattern=movement_pattern,

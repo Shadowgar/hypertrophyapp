@@ -172,6 +172,13 @@ def _normal_three_day_fixture_from_low_time() -> dict:
     return fixture
 
 
+def _arm_delt_weak_point_normal_fixture() -> dict:
+    fixture = _normal_three_day_fixture_from_low_time()
+    fixture["profile_input"]["weak_areas"] = ["biceps", "side_delts"]
+    fixture["training_state"]["constraint_state"]["weak_areas"] = ["biceps", "side_delts"]
+    return fixture
+
+
 def _covered_balance_categories(draft: GeneratedFullBodyTemplateDraft) -> set[str]:
     patterns = {
         str(exercise.movement_pattern)
@@ -649,8 +656,55 @@ def test_v25_normal_three_day_density_is_not_underdosed_vs_authored_reference_ra
         authored_slot_totals.append(sum(len(session.get("exercises") or []) for session in authored_week["sessions"]))
 
     assert generated_exercise_slots >= int(min(authored_slot_totals) * 0.8)
-    assert generated_weekly_sets >= 60
+    assert generated_weekly_sets >= 55
     assert generated_volume >= 68
+
+
+def test_v25b_normal_three_day_major_volume_floors_are_satisfied() -> None:
+    _, _, _, _, _, draft = _build_layers(_normal_three_day_fixture_from_low_time())
+    totals = _major_group_weekly_volume(draft)
+    assert totals["chest"] >= 8, totals
+    assert totals["back"] >= 10, totals
+    assert totals["quads"] >= 6, totals
+    assert totals["hamstrings"] >= 7, totals
+    assert totals["core"] >= 3, totals
+
+
+def test_v25b_non_weak_point_normal_three_day_arm_and_delt_dominance_is_capped() -> None:
+    _, _, _, _, _, draft = _build_layers(_normal_three_day_fixture_from_low_time())
+    totals = _major_group_weekly_volume(draft)
+    total_volume = sum(totals.values())
+    assert totals["arms"] <= 30, totals
+    assert totals["delts"] <= 18, totals
+    assert totals["arms"] / max(1, total_volume) <= 0.35, totals
+    assert (totals["arms"] + totals["delts"]) / max(1, total_volume) <= 0.55, totals
+
+
+def test_v25b_core_is_non_zero_when_core_candidates_are_viable() -> None:
+    fixture = _normal_three_day_fixture_from_low_time()
+    _, _, _, _, blueprint, draft = _build_layers(fixture)
+    assert blueprint.candidate_exercise_ids_by_pattern.get("core"), "expected viable core pool"
+    totals = _major_group_weekly_volume(draft)
+    assert totals["core"] > 0, totals
+
+
+def test_v25b_weak_point_arm_delt_bias_is_preserved_but_bounded_and_major_floors_hold() -> None:
+    _, _, _, _, _, baseline = _build_layers(_normal_three_day_fixture_from_low_time())
+    _, _, _, _, _, weak_point = _build_layers(_arm_delt_weak_point_normal_fixture())
+
+    baseline_totals = _major_group_weekly_volume(baseline)
+    weak_point_totals = _major_group_weekly_volume(weak_point)
+
+    assert weak_point_totals["arms"] >= baseline_totals["arms"], (baseline_totals, weak_point_totals)
+    assert weak_point_totals["delts"] >= baseline_totals["delts"], (baseline_totals, weak_point_totals)
+
+    assert weak_point_totals["arms"] <= 34, weak_point_totals
+    assert weak_point_totals["delts"] <= 20, weak_point_totals
+    assert weak_point_totals["chest"] >= 8, weak_point_totals
+    assert weak_point_totals["back"] >= 10, weak_point_totals
+    assert weak_point_totals["quads"] >= 6, weak_point_totals
+    assert weak_point_totals["hamstrings"] >= 7, weak_point_totals
+    assert weak_point_totals["core"] >= 3, weak_point_totals
 
 
 def test_v25_low_time_three_day_is_smaller_than_normal_but_not_skeletal() -> None:

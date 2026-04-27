@@ -82,13 +82,21 @@ class _ThreeDayVolumeBand:
     minimum_weekly_muscle_volume: int
 
 
+@dataclass(frozen=True)
+class _ThreeDayBalanceTargets:
+    major_floor_by_group: dict[str, int]
+    soft_cap_by_group: dict[str, int]
+    hard_cap_by_group: dict[str, int]
+    weak_point_bonus_by_group: dict[str, int]
+
+
 THREE_DAY_VOLUME_BANDS: dict[str, _ThreeDayVolumeBand] = {
     "low_time": _ThreeDayVolumeBand(
         band_id="low_time",
         target_exercises_per_session=7,
         exercise_cap_per_session=8,
         minimum_exercises_per_session=6,
-        minimum_weekly_planned_sets=38,
+        minimum_weekly_planned_sets=45,
         minimum_weekly_muscle_volume=60,
     ),
     "low_recovery": _ThreeDayVolumeBand(
@@ -96,7 +104,7 @@ THREE_DAY_VOLUME_BANDS: dict[str, _ThreeDayVolumeBand] = {
         target_exercises_per_session=7,
         exercise_cap_per_session=8,
         minimum_exercises_per_session=6,
-        minimum_weekly_planned_sets=36,
+        minimum_weekly_planned_sets=42,
         minimum_weekly_muscle_volume=58,
     ),
     "normal": _ThreeDayVolumeBand(
@@ -104,7 +112,7 @@ THREE_DAY_VOLUME_BANDS: dict[str, _ThreeDayVolumeBand] = {
         target_exercises_per_session=9,
         exercise_cap_per_session=10,
         minimum_exercises_per_session=8,
-        minimum_weekly_planned_sets=46,
+        minimum_weekly_planned_sets=55,
         minimum_weekly_muscle_volume=72,
     ),
     "higher_time_normal_recovery": _ThreeDayVolumeBand(
@@ -112,8 +120,35 @@ THREE_DAY_VOLUME_BANDS: dict[str, _ThreeDayVolumeBand] = {
         target_exercises_per_session=10,
         exercise_cap_per_session=11,
         minimum_exercises_per_session=9,
-        minimum_weekly_planned_sets=52,
+        minimum_weekly_planned_sets=62,
         minimum_weekly_muscle_volume=82,
+    ),
+}
+
+THREE_DAY_BALANCE_TARGETS: dict[str, _ThreeDayBalanceTargets] = {
+    "low_time": _ThreeDayBalanceTargets(
+        major_floor_by_group={"chest": 6, "back": 8, "quads": 6, "hamstrings": 6, "core": 2},
+        soft_cap_by_group={"arms": 26, "delts": 16},
+        hard_cap_by_group={"arms": 30, "delts": 19},
+        weak_point_bonus_by_group={"arms": 2, "delts": 1},
+    ),
+    "low_recovery": _ThreeDayBalanceTargets(
+        major_floor_by_group={"chest": 6, "back": 8, "quads": 5, "hamstrings": 6, "core": 2},
+        soft_cap_by_group={"arms": 25, "delts": 15},
+        hard_cap_by_group={"arms": 29, "delts": 18},
+        weak_point_bonus_by_group={"arms": 2, "delts": 1},
+    ),
+    "normal": _ThreeDayBalanceTargets(
+        major_floor_by_group={"chest": 8, "back": 10, "quads": 6, "hamstrings": 7, "core": 3},
+        soft_cap_by_group={"arms": 30, "delts": 18},
+        hard_cap_by_group={"arms": 34, "delts": 21},
+        weak_point_bonus_by_group={"arms": 3, "delts": 2},
+    ),
+    "higher_time_normal_recovery": _ThreeDayBalanceTargets(
+        major_floor_by_group={"chest": 10, "back": 12, "quads": 8, "hamstrings": 8, "core": 4},
+        soft_cap_by_group={"arms": 34, "delts": 20},
+        hard_cap_by_group={"arms": 37, "delts": 22},
+        weak_point_bonus_by_group={"arms": 3, "delts": 2},
     ),
 }
 
@@ -467,6 +502,11 @@ def _resolve_three_day_volume_band(*, assessment: UserAssessment) -> _ThreeDayVo
     return THREE_DAY_VOLUME_BANDS["normal"]
 
 
+def _resolve_three_day_balance_targets(*, assessment: UserAssessment) -> _ThreeDayBalanceTargets:
+    band = _resolve_three_day_volume_band(assessment=assessment)
+    return THREE_DAY_BALANCE_TARGETS[band.band_id]
+
+
 def _flow_sort_key(exercise: GeneratedExerciseDraft, record_by_id: dict[str, dict[str, Any]]) -> tuple[Any, ...]:
     record = record_by_id.get(exercise.id) or {}
     fatigue = str(record.get("fatigue_cost") or "")
@@ -553,6 +593,88 @@ def _compute_major_group_volume(
     return totals
 
 
+def _compute_primary_major_group_volume(
+    *,
+    sessions: list[GeneratedSessionDraft],
+    record_by_id: dict[str, dict[str, Any]],
+) -> dict[str, int]:
+    totals = {key: 0 for key in MAJOR_MUSCLE_TARGETS}
+    for session in sessions:
+        for exercise in session.exercises:
+            record = record_by_id.get(exercise.id) or {}
+            primary = _normalize_muscle_set(list(record.get("primary_muscles") or []))
+            for group in _major_group_matches(primary):
+                totals[group] += int(exercise.sets)
+    return totals
+
+
+def _exercise_primary_major_groups(record: dict[str, Any]) -> set[str]:
+    return _major_group_matches(_normalize_muscle_set(list(record.get("primary_muscles") or [])))
+
+
+def _weak_point_major_groups(assessment: UserAssessment) -> set[str]:
+    weak_groups: set[str] = set()
+    for item in assessment.weak_point_priorities:
+        weak_groups.update(_major_group_matches({str(item.muscle_group)}))
+    return weak_groups
+
+
+def _major_floor_deficits(
+    *,
+    primary_volume: dict[str, int],
+    targets: _ThreeDayBalanceTargets,
+    core_viable: bool,
+) -> dict[str, int]:
+    deficits: dict[str, int] = {}
+    for group, floor in targets.major_floor_by_group.items():
+        if group == "core" and not core_viable:
+            continue
+        deficit = int(floor) - int(primary_volume.get(group, 0))
+        if deficit > 0:
+            deficits[group] = deficit
+    return deficits
+
+
+def _allowed_cap_for_group(
+    *,
+    group: str,
+    targets: _ThreeDayBalanceTargets,
+    weak_point_groups: set[str],
+    major_floors_satisfied: bool,
+) -> int:
+    soft = int(targets.soft_cap_by_group[group])
+    hard = int(targets.hard_cap_by_group[group])
+    if group in weak_point_groups and major_floors_satisfied:
+        bonus = int(targets.weak_point_bonus_by_group.get(group, 0))
+        return min(hard, soft + bonus)
+    return soft
+
+
+def _would_violate_arm_delt_caps(
+    *,
+    record: dict[str, Any],
+    current_primary_volume: dict[str, int],
+    targets: _ThreeDayBalanceTargets,
+    weak_point_groups: set[str],
+    major_floors_satisfied: bool,
+    projected_set_increase: int = 1,
+) -> bool:
+    groups = _exercise_primary_major_groups(record)
+    for group in ("arms", "delts"):
+        if group not in groups:
+            continue
+        allowed = _allowed_cap_for_group(
+            group=group,
+            targets=targets,
+            weak_point_groups=weak_point_groups,
+            major_floors_satisfied=major_floors_satisfied,
+        )
+        projected = int(current_primary_volume.get(group, 0)) + int(projected_set_increase)
+        if projected > allowed:
+            return True
+    return False
+
+
 def _weekly_muscle_volume_sum(
     *,
     sessions: list[GeneratedSessionDraft],
@@ -565,140 +687,11 @@ def _weekly_planned_sets(sessions: list[GeneratedSessionDraft]) -> int:
     return int(sum(_session_total_sets(session) for session in sessions))
 
 
-def _escalate_three_day_volume_minima(
+def _rebalance_session_set_totals(
     *,
     sessions: list[GeneratedSessionDraft],
-    record_by_id: dict[str, dict[str, Any]],
-    assessment: UserAssessment,
-    apply_three_day_band: bool,
+    time_budget_minutes: int,
 ) -> None:
-    if len(sessions) != 3 or not apply_three_day_band:
-        return
-    band = _resolve_three_day_volume_band(assessment=assessment)
-    time_budget_minutes = int(assessment.session_time_budget_minutes or 75)
-
-    def _fatigue_rank(exercise_id: str) -> int:
-        fatigue = str((record_by_id.get(exercise_id) or {}).get("fatigue_cost") or "")
-        return {"low": 0, "moderate": 1, "high": 2}.get(fatigue, 2)
-
-    def _role_rank(slot_role: str) -> int:
-        if slot_role in {"accessory", "weak_point"}:
-            return 0
-        if slot_role == "secondary_compound":
-            return 1
-        if slot_role == "primary_compound":
-            return 2
-        return 3
-
-    for _ in range(96):
-        weekly_sets = _weekly_planned_sets(sessions)
-        weekly_muscle_volume = _weekly_muscle_volume_sum(sessions=sessions, record_by_id=record_by_id)
-        if weekly_sets >= band.minimum_weekly_planned_sets and weekly_muscle_volume >= band.minimum_weekly_muscle_volume:
-            break
-
-        session_high_counts = {
-            session.session_id: _session_high_fatigue_count(session=session, record_by_id=record_by_id)
-            for session in sessions
-        }
-        min_high = min(session_high_counts.values()) if session_high_counts else 0
-        candidates: list[tuple[GeneratedSessionDraft, GeneratedExerciseDraft]] = []
-        for session in sessions:
-            for exercise in session.exercises:
-                max_sets = _exercise_max_sets(
-                    slot_role=exercise.slot_role,
-                    time_budget_minutes=time_budget_minutes,
-                )
-                if int(exercise.sets) >= max_sets:
-                    continue
-                fatigue = str((record_by_id.get(exercise.id) or {}).get("fatigue_cost") or "")
-                if (
-                    fatigue == "high"
-                    and session_high_counts.get(session.session_id, 0) > min_high + 1
-                    and exercise.slot_role in {"secondary_compound", "primary_compound"}
-                ):
-                    continue
-                candidates.append((session, exercise))
-
-        if not candidates:
-            break
-
-        session_totals = {session.session_id: _session_total_sets(session) for session in sessions}
-        _, selected_exercise = sorted(
-            candidates,
-            key=lambda pair: (
-                session_totals.get(pair[0].session_id, 0),
-                _fatigue_rank(pair[1].id),
-                _role_rank(pair[1].slot_role),
-                pair[0].session_id,
-                pair[1].id,
-            ),
-        )[0]
-        selected_exercise.sets += 1
-
-
-def _apply_prescription_quality_refinement(
-    *,
-    sessions: list[GeneratedSessionDraft],
-    record_by_id: dict[str, dict[str, Any]],
-    assessment: UserAssessment,
-    volume_tier: str,
-    apply_three_day_band: bool,
-) -> None:
-    time_budget_minutes = int(assessment.session_time_budget_minutes or 75)
-    role_targets = _role_set_targets(volume_tier=volume_tier, time_budget_minutes=time_budget_minutes)
-
-    for session in sessions:
-        for exercise in session.exercises:
-            role = str(exercise.slot_role)
-            record = record_by_id.get(exercise.id) or {}
-            fatigue = str(record.get("fatigue_cost") or "")
-            desired = int(role_targets.get(role, 2))
-            if fatigue == "high":
-                desired -= 1
-            elif fatigue == "low" and role in {"accessory", "weak_point"}:
-                desired += 1 if time_budget_minutes >= 60 else 0
-            exercise.sets = _clamp(desired, 1, _exercise_max_sets(slot_role=role, time_budget_minutes=time_budget_minutes))
-
-    weekly_targets = _major_group_weekly_targets(
-        time_budget_minutes=time_budget_minutes,
-        volume_tier=volume_tier,
-    )
-    weekly_volume = _compute_major_group_volume(sessions=sessions, record_by_id=record_by_id)
-
-    adjustable = [
-        (session, exercise)
-        for session in sessions
-        for exercise in session.exercises
-        if exercise.slot_role in {"secondary_compound", "accessory", "weak_point"}
-    ]
-    adjustable = sorted(
-        adjustable,
-        key=lambda pair: (
-            0 if (record_by_id.get(pair[1].id) or {}).get("fatigue_cost") == "low" else 1,
-            SLOT_ROLE_ORDER.get(pair[1].slot_role, 9),
-            pair[0].session_id,
-            pair[1].id,
-        ),
-    )
-
-    for group, target in weekly_targets.items():
-        deficit = int(target) - int(weekly_volume.get(group, 0))
-        if deficit <= 0:
-            continue
-        for session, exercise in adjustable:
-            if deficit <= 0:
-                break
-            record = record_by_id.get(exercise.id) or {}
-            muscles = _normalize_muscle_set(list(record.get("primary_muscles") or []))
-            if group not in _major_group_matches(muscles):
-                continue
-            max_sets = _exercise_max_sets(slot_role=exercise.slot_role, time_budget_minutes=time_budget_minutes)
-            if int(exercise.sets) >= max_sets:
-                continue
-            exercise.sets += 1
-            weekly_volume[group] = int(weekly_volume.get(group, 0)) + 1
-            deficit -= 1
-
     for _ in range(24):
         session_totals = {session.session_id: _session_total_sets(session) for session in sessions}
         max_session = max(sessions, key=lambda item: (session_totals[item.session_id], item.session_id))
@@ -740,12 +733,315 @@ def _apply_prescription_quality_refinement(
         )[0]
         receiver.sets += 1
 
+
+def _escalate_three_day_volume_minima(
+    *,
+    sessions: list[GeneratedSessionDraft],
+    record_by_id: dict[str, dict[str, Any]],
+    assessment: UserAssessment,
+    core_viable: bool,
+    apply_three_day_band: bool,
+) -> None:
+    if len(sessions) != 3 or not apply_three_day_band:
+        return
+    band = _resolve_three_day_volume_band(assessment=assessment)
+    balance_targets = _resolve_three_day_balance_targets(assessment=assessment)
+    time_budget_minutes = int(assessment.session_time_budget_minutes or 75)
+    weak_point_groups = _weak_point_major_groups(assessment)
+
+    def _fatigue_rank(exercise_id: str) -> int:
+        fatigue = str((record_by_id.get(exercise_id) or {}).get("fatigue_cost") or "")
+        return {"low": 0, "moderate": 1, "high": 2}.get(fatigue, 2)
+
+    def _role_rank(slot_role: str) -> int:
+        if slot_role in {"accessory", "weak_point"}:
+            return 0
+        if slot_role == "secondary_compound":
+            return 1
+        if slot_role == "primary_compound":
+            return 2
+        return 3
+
+    for _ in range(96):
+        weekly_sets = _weekly_planned_sets(sessions)
+        weekly_muscle_volume = _weekly_muscle_volume_sum(sessions=sessions, record_by_id=record_by_id)
+        primary_volume = _compute_primary_major_group_volume(sessions=sessions, record_by_id=record_by_id)
+        deficits = _major_floor_deficits(
+            primary_volume=primary_volume,
+            targets=balance_targets,
+            core_viable=core_viable,
+        )
+        if (
+            weekly_sets >= band.minimum_weekly_planned_sets
+            and weekly_muscle_volume >= band.minimum_weekly_muscle_volume
+            and not deficits
+        ):
+            break
+
+        session_high_counts = {
+            session.session_id: _session_high_fatigue_count(session=session, record_by_id=record_by_id)
+            for session in sessions
+        }
+        min_high = min(session_high_counts.values()) if session_high_counts else 0
+        candidates: list[tuple[GeneratedSessionDraft, GeneratedExerciseDraft]] = []
+        for session in sessions:
+            for exercise in session.exercises:
+                max_sets = _exercise_max_sets(
+                    slot_role=exercise.slot_role,
+                    time_budget_minutes=time_budget_minutes,
+                )
+                if int(exercise.sets) >= max_sets:
+                    continue
+                fatigue = str((record_by_id.get(exercise.id) or {}).get("fatigue_cost") or "")
+                record = record_by_id.get(exercise.id) or {}
+                if (
+                    fatigue == "high"
+                    and session_high_counts.get(session.session_id, 0) > min_high + 1
+                    and exercise.slot_role in {"secondary_compound", "primary_compound"}
+                ):
+                    continue
+                groups = _exercise_primary_major_groups(record)
+                if deficits and not groups.intersection(set(deficits)):
+                    continue
+                if _would_violate_arm_delt_caps(
+                    record=record,
+                    current_primary_volume=primary_volume,
+                    targets=balance_targets,
+                    weak_point_groups=weak_point_groups,
+                    major_floors_satisfied=not deficits,
+                ):
+                    continue
+                candidates.append((session, exercise))
+
+        if not candidates:
+            break
+
+        session_totals = {session.session_id: _session_total_sets(session) for session in sessions}
+        _, selected_exercise = sorted(
+            candidates,
+            key=lambda pair: (
+                session_totals.get(pair[0].session_id, 0),
+                _fatigue_rank(pair[1].id),
+                _role_rank(pair[1].slot_role),
+                pair[0].session_id,
+                pair[1].id,
+            ),
+        )[0]
+        selected_exercise.sets += 1
+
+
+def _apply_prescription_quality_refinement(
+    *,
+    sessions: list[GeneratedSessionDraft],
+    record_by_id: dict[str, dict[str, Any]],
+    assessment: UserAssessment,
+    core_viable: bool,
+    volume_tier: str,
+    apply_three_day_band: bool,
+) -> None:
+    time_budget_minutes = int(assessment.session_time_budget_minutes or 75)
+    role_targets = _role_set_targets(volume_tier=volume_tier, time_budget_minutes=time_budget_minutes)
+
+    for session in sessions:
+        for exercise in session.exercises:
+            role = str(exercise.slot_role)
+            record = record_by_id.get(exercise.id) or {}
+            fatigue = str(record.get("fatigue_cost") or "")
+            desired = int(role_targets.get(role, 2))
+            if fatigue == "high":
+                desired -= 1
+            elif fatigue == "low" and role in {"accessory", "weak_point"}:
+                desired += 1 if time_budget_minutes >= 60 else 0
+            exercise.sets = _clamp(desired, 1, _exercise_max_sets(slot_role=role, time_budget_minutes=time_budget_minutes))
+
+    weekly_targets = _major_group_weekly_targets(
+        time_budget_minutes=time_budget_minutes,
+        volume_tier=volume_tier,
+    )
+    weekly_volume = _compute_major_group_volume(sessions=sessions, record_by_id=record_by_id)
+    primary_volume = _compute_primary_major_group_volume(sessions=sessions, record_by_id=record_by_id)
+    balance_targets = _resolve_three_day_balance_targets(assessment=assessment) if apply_three_day_band else None
+    weak_point_groups = _weak_point_major_groups(assessment)
+
+    adjustable = [
+        (session, exercise)
+        for session in sessions
+        for exercise in session.exercises
+        if exercise.slot_role in {"secondary_compound", "accessory", "weak_point"}
+    ]
+    adjustable = sorted(
+        adjustable,
+        key=lambda pair: (
+            0 if (record_by_id.get(pair[1].id) or {}).get("fatigue_cost") == "low" else 1,
+            SLOT_ROLE_ORDER.get(pair[1].slot_role, 9),
+            pair[0].session_id,
+            pair[1].id,
+        ),
+    )
+
+    for group, target in weekly_targets.items():
+        if apply_three_day_band and group in {"arms", "delts"}:
+            continue
+        if apply_three_day_band and group == "core" and not core_viable:
+            continue
+        deficit = int(target) - int(weekly_volume.get(group, 0))
+        if deficit <= 0:
+            continue
+        for session, exercise in adjustable:
+            if deficit <= 0:
+                break
+            record = record_by_id.get(exercise.id) or {}
+            muscles = _normalize_muscle_set(list(record.get("primary_muscles") or []))
+            if group not in _major_group_matches(muscles):
+                continue
+            max_sets = _exercise_max_sets(slot_role=exercise.slot_role, time_budget_minutes=time_budget_minutes)
+            if int(exercise.sets) >= max_sets:
+                continue
+            if apply_three_day_band and balance_targets is not None:
+                deficits = _major_floor_deficits(
+                    primary_volume=primary_volume,
+                    targets=balance_targets,
+                    core_viable=core_viable,
+                )
+                if _would_violate_arm_delt_caps(
+                    record=record,
+                    current_primary_volume=primary_volume,
+                    targets=balance_targets,
+                    weak_point_groups=weak_point_groups,
+                    major_floors_satisfied=not deficits,
+                ):
+                    continue
+            exercise.sets += 1
+            weekly_volume[group] = int(weekly_volume.get(group, 0)) + 1
+            for matched_group in _exercise_primary_major_groups(record):
+                primary_volume[matched_group] = int(primary_volume.get(matched_group, 0)) + 1
+            deficit -= 1
+
+    if apply_three_day_band and balance_targets is not None:
+        for _ in range(120):
+            primary_volume = _compute_primary_major_group_volume(sessions=sessions, record_by_id=record_by_id)
+            deficits = _major_floor_deficits(
+                primary_volume=primary_volume,
+                targets=balance_targets,
+                core_viable=core_viable,
+            )
+            if not deficits:
+                break
+            candidates: list[tuple[GeneratedSessionDraft, GeneratedExerciseDraft]] = []
+            for session in sessions:
+                for exercise in session.exercises:
+                    record = record_by_id.get(exercise.id) or {}
+                    groups = _exercise_primary_major_groups(record)
+                    if not groups.intersection(set(deficits)):
+                        continue
+                    max_sets = _exercise_max_sets(slot_role=exercise.slot_role, time_budget_minutes=time_budget_minutes)
+                    if int(exercise.sets) >= max_sets:
+                        continue
+                    if _would_violate_arm_delt_caps(
+                        record=record,
+                        current_primary_volume=primary_volume,
+                        targets=balance_targets,
+                        weak_point_groups=weak_point_groups,
+                        major_floors_satisfied=False,
+                    ):
+                        continue
+                    candidates.append((session, exercise))
+            if not candidates:
+                break
+            session_totals = {session.session_id: _session_total_sets(session) for session in sessions}
+            _, target_exercise = sorted(
+                candidates,
+                key=lambda pair: (
+                    session_totals.get(pair[0].session_id, 0),
+                    SLOT_ROLE_ORDER.get(pair[1].slot_role, 9),
+                    pair[0].session_id,
+                    pair[1].id,
+                ),
+            )[0]
+            target_exercise.sets += 1
+
+    _rebalance_session_set_totals(sessions=sessions, time_budget_minutes=time_budget_minutes)
+
+    if apply_three_day_band and balance_targets is not None:
+        for _ in range(120):
+            primary_volume = _compute_primary_major_group_volume(sessions=sessions, record_by_id=record_by_id)
+            deficits = _major_floor_deficits(
+                primary_volume=primary_volume,
+                targets=balance_targets,
+                core_viable=core_viable,
+            )
+            major_floors_satisfied = not deficits
+            cap_violations: dict[str, int] = {}
+            for group in ("arms", "delts"):
+                if major_floors_satisfied:
+                    allowed = _allowed_cap_for_group(
+                        group=group,
+                        targets=balance_targets,
+                        weak_point_groups=weak_point_groups,
+                        major_floors_satisfied=True,
+                    )
+                else:
+                    allowed = int(balance_targets.hard_cap_by_group[group])
+                cap_violations[group] = int(primary_volume.get(group, 0)) - int(allowed)
+            cap_violations = {group: over for group, over in cap_violations.items() if over > 0}
+            if not cap_violations:
+                break
+            dominant = sorted(cap_violations.items(), key=lambda item: (-item[1], item[0]))[0][0]
+            donors: list[GeneratedExerciseDraft] = []
+            for session in sessions:
+                for exercise in session.exercises:
+                    record = record_by_id.get(exercise.id) or {}
+                    groups = _exercise_primary_major_groups(record)
+                    if dominant not in groups:
+                        continue
+                    if int(exercise.sets) <= 1:
+                        continue
+                    if exercise.slot_role not in {"weak_point", "accessory", "secondary_compound", "primary_compound"}:
+                        continue
+                    donors.append(exercise)
+            if not donors:
+                break
+            donor_priority = {
+                "weak_point": 0,
+                "accessory": 1,
+                "secondary_compound": 2,
+                "primary_compound": 3,
+            }
+            donor = sorted(
+                donors,
+                key=lambda item: (
+                    donor_priority.get(item.slot_role, 4),
+                    item.id,
+                ),
+            )[0]
+            donor_record = record_by_id.get(donor.id) or {}
+            donor_groups = _exercise_primary_major_groups(donor_record)
+            next_primary = dict(primary_volume)
+            for group in donor_groups:
+                next_primary[group] = max(0, int(next_primary.get(group, 0)) - 1)
+            next_deficits = _major_floor_deficits(
+                primary_volume=next_primary,
+                targets=balance_targets,
+                core_viable=core_viable,
+            )
+            worsened_floor_gap = any(
+                int(next_deficits.get(group, 0)) > int(deficits.get(group, 0))
+                for group in balance_targets.major_floor_by_group
+            )
+            if worsened_floor_gap:
+                break
+            donor.sets -= 1
+
+        _rebalance_session_set_totals(sessions=sessions, time_budget_minutes=time_budget_minutes)
+
     _escalate_three_day_volume_minima(
         sessions=sessions,
         record_by_id=record_by_id,
         assessment=assessment,
+        core_viable=core_viable,
         apply_three_day_band=apply_three_day_band,
     )
+    _rebalance_session_set_totals(sessions=sessions, time_budget_minutes=time_budget_minutes)
 
 
 def _optional_fill_trace(
@@ -914,6 +1210,10 @@ def build_generated_full_body_template_draft(
             blueprint_input.complexity_ceiling, []
         )
     ]
+    core_candidate_ids = list(blueprint_input.candidate_exercise_ids_by_pattern.get("core", []))
+    if core_candidate_ids and "core" not in optional_fill_patterns:
+        optional_fill_patterns.append("core")
+    core_viable = bool(core_candidate_ids)
     weak_point_slot_limit = int(
         weak_point_rule.payload.get("volume_tier_to_max_weekly_weak_point_slots", {}).get(
             blueprint_input.volume_tier,
@@ -1249,6 +1549,15 @@ def build_generated_full_body_template_draft(
                 candidate_exercise_ids_by_pattern=blueprint_input.candidate_exercise_ids_by_pattern,
             )
             missing_categories = sorted(required_categories - _covered_balance_categories(sessions))
+            three_day_deficits: dict[str, int] = {}
+            if apply_three_day_band:
+                balance_targets = _resolve_three_day_balance_targets(assessment=assessment)
+                primary_volume = _compute_primary_major_group_volume(sessions=sessions, record_by_id=record_by_id)
+                three_day_deficits = _major_floor_deficits(
+                    primary_volume=primary_volume,
+                    targets=balance_targets,
+                    core_viable=core_viable,
+                )
             missing_patterns = {
                 pattern
                 for category in missing_categories
@@ -1265,6 +1574,25 @@ def build_generated_full_body_template_draft(
                     for exercise_id in blueprint_input.candidate_exercise_ids_by_pattern.get(movement_pattern, [])
                 ]
             )
+            if apply_three_day_band and three_day_deficits:
+                lower_fatigue_slot = next_slot_role in {"accessory", "weak_point"}
+                deficit_pattern_map = {
+                    "chest": ("chest_fly", "horizontal_press"),
+                    "back": ("horizontal_pull", "vertical_pull"),
+                    "quads": ("knee_extension",) if lower_fatigue_slot else ("knee_extension", "squat"),
+                    "hamstrings": ("leg_curl",) if lower_fatigue_slot else ("leg_curl", "hinge"),
+                    "core": ("core",),
+                }
+                deficit_candidate_ids = _unique_preserve_order(
+                    [
+                        exercise_id
+                        for group in ("core", "chest", "back", "quads", "hamstrings")
+                        if group in three_day_deficits
+                        for pattern in deficit_pattern_map[group]
+                        for exercise_id in blueprint_input.candidate_exercise_ids_by_pattern.get(pattern, [])
+                    ]
+                )
+                optional_fill_candidate_ids = _unique_preserve_order(deficit_candidate_ids + optional_fill_candidate_ids)
             if len(optional_fill_candidate_ids) < target_exercises_per_session:
                 optional_fill_candidate_ids = _unique_preserve_order(
                     optional_fill_candidate_ids + _global_fill_candidate_ids(blueprint_input)
@@ -1276,6 +1604,51 @@ def build_generated_full_body_template_draft(
                 allow_reuse_after_unique_candidates_exhausted=allow_reuse_after_exhaustion,
                 session_exercise_ids=session_exercise_ids,
             )
+            if feasible_candidate_ids and apply_three_day_band:
+                balance_targets = _resolve_three_day_balance_targets(assessment=assessment)
+                primary_volume = _compute_primary_major_group_volume(sessions=sessions, record_by_id=record_by_id)
+                deficits = _major_floor_deficits(
+                    primary_volume=primary_volume,
+                    targets=balance_targets,
+                    core_viable=core_viable,
+                )
+                weak_point_groups = _weak_point_major_groups(assessment)
+                if deficits:
+                    ordered_groups = ["core", "chest", "back", "quads", "hamstrings"]
+                    floor_prioritized_ids: list[str] = []
+                    for group in ordered_groups:
+                        if group not in deficits:
+                            continue
+                        group_ids = [
+                            exercise_id
+                            for exercise_id in feasible_candidate_ids
+                            if group in _exercise_primary_major_groups(record_by_id.get(exercise_id) or {})
+                        ]
+                        if group_ids:
+                            floor_prioritized_ids = group_ids
+                            break
+                    if not floor_prioritized_ids:
+                        floor_prioritized_ids = [
+                            exercise_id
+                            for exercise_id in feasible_candidate_ids
+                            if _exercise_primary_major_groups(record_by_id.get(exercise_id) or {}).intersection(set(deficits))
+                        ]
+                    if floor_prioritized_ids:
+                        feasible_candidate_ids = floor_prioritized_ids
+                capped_ids = []
+                for exercise_id in feasible_candidate_ids:
+                    record = record_by_id.get(exercise_id) or {}
+                    if _would_violate_arm_delt_caps(
+                        record=record,
+                        current_primary_volume=primary_volume,
+                        targets=balance_targets,
+                        weak_point_groups=weak_point_groups,
+                        major_floors_satisfied=not deficits,
+                    ):
+                        continue
+                    capped_ids.append(exercise_id)
+                if capped_ids:
+                    feasible_candidate_ids = capped_ids
             if feasible_candidate_ids and missing_patterns:
                 missing_pattern_ids = [
                     exercise_id
@@ -1326,7 +1699,19 @@ def build_generated_full_body_template_draft(
             if not selection.cleared_score_floor:
                 selected_record = record_by_id.get(selection.selected_id) or {}
                 selected_pattern = str(selected_record.get("movement_pattern") or "")
+                if apply_three_day_band:
+                    balance_targets = _resolve_three_day_balance_targets(assessment=assessment)
+                    primary_volume = _compute_primary_major_group_volume(sessions=sessions, record_by_id=record_by_id)
+                    deficits = _major_floor_deficits(
+                        primary_volume=primary_volume,
+                        targets=balance_targets,
+                        core_viable=core_viable,
+                    )
+                else:
+                    deficits = {}
                 if selected_pattern in missing_patterns:
+                    pass
+                elif deficits:
                     pass
                 elif (
                     three_day_band is not None
@@ -1391,6 +1776,7 @@ def build_generated_full_body_template_draft(
         sessions=sessions,
         record_by_id=record_by_id,
         assessment=assessment,
+        core_viable=core_viable,
         volume_tier=blueprint_input.volume_tier,
         apply_three_day_band=apply_three_day_band,
     )

@@ -149,3 +149,28 @@ def test_generated_full_body_blueprint_is_deterministic_and_traceable() -> None:
             if not candidate_pool:
                 assert coverage.status == "empty", archetype_name
                 assert any(item.movement_pattern == coverage.movement_pattern for item in blueprint_first.pattern_insufficiencies), archetype_name
+
+
+def test_v25b_three_day_blueprint_exposes_core_pool_when_viable() -> None:
+    compiled_dir = REPO_ROOT / "knowledge" / "compiled"
+    doctrine_bundle = load_doctrine_bundle("multi_source_hypertrophy_v1", compiled_dir)
+    policy_bundle = load_policy_bundle("system_coaching_policy_v1", compiled_dir)
+    exercise_library = load_exercise_library(compiled_dir)
+    archetypes = get_generated_full_body_archetypes()
+
+    for archetype_name in ("novice_gym_full_body", "low_time_full_body"):
+        fixture = archetypes[archetype_name]
+        assessment = build_user_assessment(
+            profile_input=ProfileAssessmentInput.model_validate(fixture["profile_input"]),
+            training_state=fixture["training_state"],
+            doctrine_bundle=doctrine_bundle,
+            policy_bundle=policy_bundle,
+        )
+        blueprint = build_generated_full_body_blueprint_input(
+            assessment=assessment,
+            doctrine_bundle=doctrine_bundle,
+            policy_bundle=policy_bundle,
+            exercise_library=exercise_library,
+        )
+        assert blueprint.session_count == 3, archetype_name
+        assert blueprint.candidate_exercise_ids_by_pattern.get("core"), archetype_name
