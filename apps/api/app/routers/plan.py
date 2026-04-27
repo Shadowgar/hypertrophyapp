@@ -397,6 +397,21 @@ def _resolve_generation_week_context(
     if latest_binding_plan is None:
         return prior_plans, monday
     current_week_start = monday
+    if latest_binding_plan.week_start > current_week_start:
+        target_week_start = latest_binding_plan.week_start
+        filtered_prior_plans = [
+            plan
+            for plan in prior_plans
+            if not (
+                resolve_selected_program_binding_id(
+                    (plan.payload if isinstance(plan.payload, dict) else {}).get("program_template_id")
+                )
+                == binding_id
+                and plan.week_start == target_week_start
+            )
+        ]
+        return filtered_prior_plans, target_week_start
+
     has_current_week_plan = latest_binding_plan.week_start >= current_week_start
     if not has_current_week_plan:
         return prior_plans, current_week_start
@@ -412,6 +427,98 @@ def _resolve_generation_week_context(
         )
     ]
     return filtered_prior_plans, current_week_start
+
+
+def _resolve_current_regenerate_week_pin(
+    *,
+    prior_plans: list[WorkoutPlan],
+    binding_id: str,
+    week_start_override: date | None,
+) -> tuple[int, int]:
+    monday = date.today() - timedelta(days=date.today().weekday())
+    effective_week_start = week_start_override or monday
+    if effective_week_start <= monday:
+        week_index = 1
+    else:
+        week_index = max(1, ((effective_week_start - monday).days // 7) + 1)
+
+    matching_week_plans = [
+        plan
+        for plan in prior_plans
+        if resolve_selected_program_binding_id(
+            (plan.payload if isinstance(plan.payload, dict) else {}).get("program_template_id")
+        )
+        == binding_id
+        and plan.week_start == effective_week_start
+    ]
+    latest_matching_week_plan = max(matching_week_plans, key=lambda plan: plan.created_at) if matching_week_plans else None
+    authored_week_index = week_index
+    if latest_matching_week_plan is not None:
+        payload = latest_matching_week_plan.payload if isinstance(latest_matching_week_plan.payload, dict) else {}
+        mesocycle = cast(dict[str, Any], payload.get("mesocycle") or {})
+        try:
+            authored_week_index = max(1, int(mesocycle.get("authored_week_index") or authored_week_index))
+        except (TypeError, ValueError):
+            authored_week_index = week_index
+    authored_week_index = max(1, min(authored_week_index, week_index))
+    return week_index, authored_week_index
+
+
+def _apply_current_regenerate_generation_overrides(
+    *,
+    generation_context: dict[str, Any],
+    selected_template_id: str,
+    pinned_week_index: int,
+    pinned_authored_week_index: int,
+) -> None:
+    pinned_prior_weeks = max(0, int(pinned_week_index) - 1)
+    generation_runtime = cast(dict[str, Any], generation_context.get("generation_runtime") or {})
+    generation_runtime["prior_generated_weeks"] = pinned_prior_weeks
+    runtime_trace = cast(dict[str, Any], generation_runtime.get("decision_trace") or {})
+    runtime_outcome = cast(dict[str, Any], runtime_trace.get("outcome") or {})
+    runtime_outcome["prior_generated_weeks"] = pinned_prior_weeks
+    runtime_outcome["prior_generation_source"] = "current_week_regenerate_pin"
+    runtime_trace["outcome"] = runtime_outcome
+    generation_runtime["decision_trace"] = runtime_trace
+    generation_context["generation_runtime"] = generation_runtime
+
+    training_state = cast(dict[str, Any], generation_context.get("training_state") or {})
+    generation_state = cast(dict[str, Any], training_state.get("generation_state") or {})
+    prior_by_program = cast(dict[str, Any], generation_state.get("prior_generated_weeks_by_program") or {})
+    updated_prior_by_program: dict[str, int] = {}
+    matched_binding = False
+    for program_id, value in prior_by_program.items():
+        normalized_program_id = str(program_id).strip()
+        normalized_binding_id = resolve_selected_program_binding_id(normalized_program_id)
+        if normalized_binding_id == selected_template_id:
+            updated_prior_by_program[normalized_program_id] = pinned_prior_weeks
+            matched_binding = True
+        else:
+            try:
+                updated_prior_by_program[normalized_program_id] = max(0, int(value or 0))
+            except (TypeError, ValueError):
+                updated_prior_by_program[normalized_program_id] = 0
+    if not matched_binding:
+        updated_prior_by_program[selected_template_id] = pinned_prior_weeks
+    generation_state["prior_generated_weeks_by_program"] = updated_prior_by_program
+
+    latest_mesocycle = cast(dict[str, Any], generation_state.get("latest_mesocycle") or {})
+    latest_mesocycle["week_index"] = int(pinned_week_index)
+    latest_mesocycle["authored_week_index"] = int(pinned_authored_week_index)
+    generation_state["latest_mesocycle"] = latest_mesocycle
+    training_state["generation_state"] = generation_state
+
+    user_program_state = cast(dict[str, Any], training_state.get("user_program_state") or {})
+    user_program_state["week_index"] = int(pinned_week_index)
+    training_state["user_program_state"] = user_program_state
+
+    coaching_state = cast(dict[str, Any], training_state.get("coaching_state") or {})
+    coaching_mesocycle = cast(dict[str, Any], coaching_state.get("mesocycle") or {})
+    coaching_mesocycle["week_index"] = int(pinned_week_index)
+    coaching_mesocycle["authored_week_index"] = int(pinned_authored_week_index)
+    coaching_state["mesocycle"] = coaching_mesocycle
+    training_state["coaching_state"] = coaching_state
+    generation_context["training_state"] = training_state
 
 
 def _apply_week_start_override_to_plan(
@@ -1359,37 +1466,23 @@ def _build_week_plan_runtime_for_user(
             selected_template_id=selected_template_id,
         )
     prior_plans = _list_user_workout_plans(db, user_id=current_user.id)
+    regenerate_week_index_pin: int | None = None
+    regenerate_authored_week_index_pin: int | None = None
     authored_week_index_override: int | None = None
-    if generation_mode == "current_week_regenerate":
-        monday = date.today() - timedelta(days=date.today().weekday())
-        current_week_binding_plans = [
-            plan
-            for plan in prior_plans
-            if resolve_selected_program_binding_id(
-                (plan.payload if isinstance(plan.payload, dict) else {}).get("program_template_id")
-            )
-            == selected_template_id
-            and plan.week_start >= monday
-        ]
-        # Only pin authored week when there is a single unambiguous current-week row.
-        if len(current_week_binding_plans) == 1:
-            latest_payload = (
-                current_week_binding_plans[0].payload
-                if isinstance(current_week_binding_plans[0].payload, dict)
-                else {}
-            )
-            latest_mesocycle = cast(dict[str, Any], latest_payload.get("mesocycle") or {})
-            authored_candidate = latest_mesocycle.get("authored_week_index") or latest_mesocycle.get("week_index")
-            try:
-                authored_week_index_override = max(1, int(authored_candidate))
-            except (TypeError, ValueError):
-                authored_week_index_override = None
 
     filtered_prior_plans, week_start_override = _resolve_generation_week_context(
         prior_plans,
         binding_id=selected_template_id,
         generation_mode=generation_mode,
     )
+    if generation_mode == "current_week_regenerate":
+        regenerate_week_index_pin, regenerate_authored_week_index_pin = _resolve_current_regenerate_week_pin(
+            prior_plans=prior_plans,
+            binding_id=selected_template_id,
+            week_start_override=week_start_override,
+        )
+        authored_week_index_override = regenerate_authored_week_index_pin
+
     latest_plan = max(filtered_prior_plans, key=lambda plan: plan.created_at) if filtered_prior_plans else None
     generation_context = _prepare_plan_generation_runtime(
         db=db,
@@ -1400,6 +1493,17 @@ def _build_week_plan_runtime_for_user(
         prior_plans_override=filtered_prior_plans,
         latest_plan_override=latest_plan,
     )
+    if (
+        generation_mode == "current_week_regenerate"
+        and regenerate_week_index_pin is not None
+        and regenerate_authored_week_index_pin is not None
+    ):
+        _apply_current_regenerate_generation_overrides(
+            generation_context=generation_context,
+            selected_template_id=selected_template_id,
+            pinned_week_index=regenerate_week_index_pin,
+            pinned_authored_week_index=regenerate_authored_week_index_pin,
+        )
     generation_runtime = cast(dict[str, Any], generation_context["generation_runtime"])
     runtime_template = template
     generated_full_body_adaptive_loop_policy = None
@@ -1512,10 +1616,29 @@ def _build_week_plan_runtime_for_user(
         active_frequency_adaptation=active_frequency_adaptation,
         review_cycle=review_cycle,
     )
+    response_payload = cast(dict[str, Any], finalize_runtime["response_payload"])
+    record_values = cast(dict[str, Any], finalize_runtime["record_values"])
+    if (
+        generation_mode == "current_week_regenerate"
+        and regenerate_week_index_pin is not None
+        and regenerate_authored_week_index_pin is not None
+    ):
+        response_mesocycle = cast(dict[str, Any], response_payload.get("mesocycle") or {})
+        response_mesocycle["week_index"] = int(regenerate_week_index_pin)
+        response_mesocycle["authored_week_index"] = int(regenerate_authored_week_index_pin)
+        response_payload["mesocycle"] = response_mesocycle
+
+        record_payload = cast(dict[str, Any], record_values.get("payload") or {})
+        record_mesocycle = cast(dict[str, Any], record_payload.get("mesocycle") or {})
+        record_mesocycle["week_index"] = int(regenerate_week_index_pin)
+        record_mesocycle["authored_week_index"] = int(regenerate_authored_week_index_pin)
+        record_payload["mesocycle"] = record_mesocycle
+        record_values["payload"] = record_payload
+
     return {
         "selected_template_id": selected_template_id,
-        "response_payload": cast(dict[str, Any], finalize_runtime["response_payload"]),
-        "record_values": cast(dict[str, Any], finalize_runtime["record_values"]),
+        "response_payload": response_payload,
+        "record_values": record_values,
         "adaptation_persistence_payload": cast(dict[str, Any], finalize_runtime["adaptation_persistence_payload"]),
         "replace_current_week": generation_mode == "current_week_regenerate",
     }

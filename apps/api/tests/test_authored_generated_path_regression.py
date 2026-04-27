@@ -120,6 +120,32 @@ def _generate_week(
     return response.json()
 
 
+def _log_first_set_for_today(client: TestClient, *, headers: dict[str, str]) -> dict[str, Any]:
+    today = client.get("/workout/today", headers=headers)
+    assert today.status_code == 200
+    today_payload = today.json()
+    exercise = today_payload["exercises"][0]
+    weight = (
+        exercise.get("recommended_working_weight")
+        or exercise.get("recommended_weight")
+        or exercise.get("start_weight")
+        or 100.0
+    )
+    log_set = client.post(
+        f"/workout/{today_payload['session_id']}/log-set",
+        headers=headers,
+        json={
+            "primary_exercise_id": exercise["primary_exercise_id"],
+            "exercise_id": exercise["id"],
+            "set_index": 1,
+            "reps": 10,
+            "weight": float(weight),
+        },
+    )
+    assert log_set.status_code == 200
+    return today_payload
+
+
 _PRIMARY_COMPOUND_PATTERNS = {
     "horizontal_press",
     "vertical_press",
@@ -819,32 +845,131 @@ def test_generate_and_latest_week_volume_by_muscle_non_zero_when_planned_sets_ex
     _assert_non_zero_weekly_volume_payload(latest_payload)
 
 
-def test_current_week_regenerate_keeps_displayed_and_authored_week_indices() -> None:
+@pytest.mark.parametrize(
+    "selected_program_id",
+    [
+        "pure_bodybuilding_phase_1_full_body",
+        "pure_bodybuilding_phase_2_full_body",
+        "full_body_v1",
+    ],
+)
+def test_current_week_regenerate_keeps_displayed_and_authored_week_indices(selected_program_id: str) -> None:
     _reset_db()
     client = TestClient(app)
-    headers = _register(client, email="regenerate-current-week@example.com")
+    headers = _register(client, email=f"regenerate-current-week-{selected_program_id}@example.com")
     _upsert_profile(
         client,
         headers=headers,
-        selected_program_id="pure_bodybuilding_phase_1_full_body",
+        selected_program_id=selected_program_id,
         days_available=3,
     )
 
     first = _generate_week(client, headers=headers)
+    regenerated = _generate_week(client, headers=headers)
+    latest = client.get("/plan/latest-week", headers=headers)
+    assert latest.status_code == 200
+    latest_payload = latest.json()
+
+    assert regenerated["mesocycle"]["week_index"] == first["mesocycle"]["week_index"]
+    assert regenerated["mesocycle"]["authored_week_index"] == first["mesocycle"]["authored_week_index"]
+    assert latest_payload["mesocycle"]["week_index"] == first["mesocycle"]["week_index"]
+    assert latest_payload["mesocycle"]["authored_week_index"] == first["mesocycle"]["authored_week_index"]
+
+
+@pytest.mark.parametrize(
+    "selected_program_id",
+    [
+        "pure_bodybuilding_phase_1_full_body",
+        "pure_bodybuilding_phase_2_full_body",
+        "full_body_v1",
+    ],
+)
+def test_current_week_regenerate_with_activity_still_keeps_week_indices(selected_program_id: str) -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register(client, email=f"regenerate-with-activity-{selected_program_id}@example.com")
+    _upsert_profile(
+        client,
+        headers=headers,
+        selected_program_id=selected_program_id,
+        days_available=3,
+    )
+
+    first = _generate_week(client, headers=headers)
+    _log_first_set_for_today(client, headers=headers)
     regenerated = _generate_week(client, headers=headers)
 
     assert regenerated["mesocycle"]["week_index"] == first["mesocycle"]["week_index"]
     assert regenerated["mesocycle"]["authored_week_index"] == first["mesocycle"]["authored_week_index"]
 
 
-def test_next_week_advance_increments_week_index() -> None:
+@pytest.mark.parametrize(
+    "selected_program_id",
+    [
+        "pure_bodybuilding_phase_1_full_body",
+        "pure_bodybuilding_phase_2_full_body",
+        "full_body_v1",
+    ],
+)
+def test_current_week_regenerate_ignores_stale_prior_rows_for_week_progression(selected_program_id: str) -> None:
     _reset_db()
     client = TestClient(app)
-    headers = _register(client, email="advance-next-week@example.com")
+    email = f"regenerate-stale-prior-{selected_program_id}@example.com"
+    headers = _register(client, email=email)
     _upsert_profile(
         client,
         headers=headers,
-        selected_program_id="pure_bodybuilding_phase_1_full_body",
+        selected_program_id=selected_program_id,
+        days_available=3,
+    )
+    first = _generate_week(client, headers=headers)
+    monday = date.today() - timedelta(days=date.today().weekday())
+    stale_week_start = monday - timedelta(days=28)
+
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == email).first()
+        assert user is not None
+        row = (
+            db.query(WorkoutPlan)
+            .filter(WorkoutPlan.user_id == user.id)
+            .order_by(WorkoutPlan.created_at.desc())
+            .first()
+        )
+        assert row is not None
+        payload = deepcopy(row.payload if isinstance(row.payload, dict) else {})
+        payload["week_start"] = stale_week_start.isoformat()
+        row.week_start = stale_week_start
+        row.payload = payload
+        db.add(row)
+        db.commit()
+
+    regenerated = _generate_week(client, headers=headers)
+    latest = client.get("/plan/latest-week", headers=headers)
+    assert latest.status_code == 200
+    latest_payload = latest.json()
+
+    assert regenerated["mesocycle"]["week_index"] == first["mesocycle"]["week_index"]
+    assert regenerated["mesocycle"]["authored_week_index"] == first["mesocycle"]["authored_week_index"]
+    assert latest_payload["mesocycle"]["week_index"] == first["mesocycle"]["week_index"]
+    assert latest_payload["mesocycle"]["authored_week_index"] == first["mesocycle"]["authored_week_index"]
+
+
+@pytest.mark.parametrize(
+    "selected_program_id",
+    [
+        "pure_bodybuilding_phase_1_full_body",
+        "pure_bodybuilding_phase_2_full_body",
+        "full_body_v1",
+    ],
+)
+def test_next_week_advance_increments_week_index(selected_program_id: str) -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register(client, email=f"advance-next-week-{selected_program_id}@example.com")
+    _upsert_profile(
+        client,
+        headers=headers,
+        selected_program_id=selected_program_id,
         days_available=3,
     )
 

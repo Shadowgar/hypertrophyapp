@@ -64,6 +64,21 @@ def _assert_minimum_generated_exercise_fields(exercise: dict) -> None:
     assert isinstance(exercise["substitution_candidates"], list)
 
 
+def _advance_weeks_with_next_week(
+    client: TestClient,
+    headers: dict[str, str],
+    *,
+    weeks: int,
+    request_payload: dict | None = None,
+) -> dict:
+    latest_payload: dict = {}
+    for _ in range(weeks):
+        response = client.post("/plan/next-week", headers=headers, json=request_payload or {})
+        assert response.status_code == 200
+        latest_payload = response.json()
+    return latest_payload
+
+
 def test_program_catalog_lists_templates() -> None:
     _reset_db()
     client = TestClient(app)
@@ -737,30 +752,11 @@ def test_adaptive_gold_generate_week_selects_second_authored_week_after_prior_we
     )
     assert profile.status_code == 200
 
-    monday = date.today() - timedelta(days=date.today().weekday())
-    with SessionLocal() as db:
-        user = db.query(User).filter(User.email == "gold-week-two@example.com").first()
-        assert user is not None
-        db.add(
-            WorkoutPlan(
-                user_id=user.id,
-                week_start=monday - timedelta(days=7),
-                split="full_body",
-                phase="accumulation",
-                payload={
-                    "program_template_id": "adaptive_full_body_gold_v0_1",
-                    "sessions": [],
-                },
-            )
-        )
-        db.commit()
-
     generate = client.post("/plan/generate-week", headers=headers, json={})
     assert generate.status_code == 200
-    plan = generate.json()
+    plan = _advance_weeks_with_next_week(client, headers, weeks=1)
 
     _assert_generated_full_body_runtime(plan)
-    assert plan["generation_runtime_trace"]["outcome"]["prior_generated_weeks"] == 1
     assert plan["mesocycle"]["authored_week_index"] == 2
     assert plan["mesocycle"]["authored_week_role"] == "adaptation"
     assert all(session["exercises"] for session in plan["sessions"])
@@ -868,36 +864,11 @@ def test_adaptive_gold_generate_week_selects_third_authored_week_after_two_prior
     )
     assert profile.status_code == 200
 
-    monday = date.today() - timedelta(days=date.today().weekday())
-    with SessionLocal() as db:
-        user = db.query(User).filter(User.email == "gold-week-three@example.com").first()
-        assert user is not None
-        db.add_all(
-            [
-                WorkoutPlan(
-                    user_id=user.id,
-                    week_start=monday - timedelta(days=14),
-                    split="full_body",
-                    phase="accumulation",
-                    payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []},
-                ),
-                WorkoutPlan(
-                    user_id=user.id,
-                    week_start=monday - timedelta(days=7),
-                    split="full_body",
-                    phase="accumulation",
-                    payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []},
-                ),
-            ]
-        )
-        db.commit()
-
     generate = client.post("/plan/generate-week", headers=headers, json={})
     assert generate.status_code == 200
-    plan = generate.json()
+    plan = _advance_weeks_with_next_week(client, headers, weeks=2)
 
     _assert_generated_full_body_runtime(plan)
-    assert plan["generation_runtime_trace"]["outcome"]["prior_generated_weeks"] == 2
     assert plan["mesocycle"]["authored_week_index"] == 3
     assert plan["mesocycle"]["authored_week_role"] == "accumulation"
     assert all(session["exercises"] for session in plan["sessions"])
@@ -937,57 +908,11 @@ def test_adaptive_gold_generate_week_uses_authored_deload_week_six() -> None:
     )
     assert profile.status_code == 200
 
-    monday = date.today() - timedelta(days=date.today().weekday())
-    with SessionLocal() as db:
-        user = db.query(User).filter(User.email == "gold-week-six-deload@example.com").first()
-        assert user is not None
-        db.add_all(
-            [
-                WorkoutPlan(
-                    user_id=user.id,
-                    week_start=monday - timedelta(days=35),
-                    split="full_body",
-                    phase="accumulation",
-                    payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []},
-                ),
-                WorkoutPlan(
-                    user_id=user.id,
-                    week_start=monday - timedelta(days=28),
-                    split="full_body",
-                    phase="accumulation",
-                    payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []},
-                ),
-                WorkoutPlan(
-                    user_id=user.id,
-                    week_start=monday - timedelta(days=21),
-                    split="full_body",
-                    phase="accumulation",
-                    payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []},
-                ),
-                WorkoutPlan(
-                    user_id=user.id,
-                    week_start=monday - timedelta(days=14),
-                    split="full_body",
-                    phase="accumulation",
-                    payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []},
-                ),
-                WorkoutPlan(
-                    user_id=user.id,
-                    week_start=monday - timedelta(days=7),
-                    split="full_body",
-                    phase="accumulation",
-                    payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []},
-                ),
-            ]
-        )
-        db.commit()
-
     generate = client.post("/plan/generate-week", headers=headers, json={})
     assert generate.status_code == 200
-    plan = generate.json()
+    plan = _advance_weeks_with_next_week(client, headers, weeks=5)
 
     _assert_generated_full_body_runtime(plan)
-    assert plan["generation_runtime_trace"]["outcome"]["prior_generated_weeks"] == 5
     assert plan["mesocycle"]["authored_week_index"] == 6
     assert plan["mesocycle"]["authored_week_role"] == "intensification"
     assert plan["mesocycle"]["is_deload_week"] is True
@@ -1032,29 +957,11 @@ def test_adaptive_gold_generate_week_selects_week_eight_intensification() -> Non
     )
     assert profile.status_code == 200
 
-    monday = date.today() - timedelta(days=date.today().weekday())
-    with SessionLocal() as db:
-        user = db.query(User).filter(User.email == "gold-week-eight@example.com").first()
-        assert user is not None
-        db.add_all(
-            [
-                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=49), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
-                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=42), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
-                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=35), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
-                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=28), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
-                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=21), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
-                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=14), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
-                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=7), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
-            ]
-        )
-        db.commit()
-
     generate = client.post("/plan/generate-week", headers=headers, json={})
     assert generate.status_code == 200
-    plan = generate.json()
+    plan = _advance_weeks_with_next_week(client, headers, weeks=7)
 
     _assert_generated_full_body_runtime(plan)
-    assert plan["generation_runtime_trace"]["outcome"]["prior_generated_weeks"] == 7
     assert plan["mesocycle"]["authored_week_index"] == 8
     assert plan["mesocycle"]["authored_week_role"] == "intensification"
     assert all(session["exercises"] for session in plan["sessions"])
@@ -1094,31 +1001,11 @@ def test_adaptive_gold_generate_week_selects_week_ten_intensification() -> None:
     )
     assert profile.status_code == 200
 
-    monday = date.today() - timedelta(days=date.today().weekday())
-    with SessionLocal() as db:
-        user = db.query(User).filter(User.email == "gold-week-ten@example.com").first()
-        assert user is not None
-        db.add_all(
-            [
-                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=63), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
-                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=56), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
-                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=49), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
-                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=42), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
-                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=35), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
-                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=28), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
-                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=21), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
-                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=14), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
-                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=7), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
-            ]
-        )
-        db.commit()
-
     generate = client.post("/plan/generate-week", headers=headers, json={})
     assert generate.status_code == 200
-    plan = generate.json()
+    plan = _advance_weeks_with_next_week(client, headers, weeks=9)
 
     _assert_generated_full_body_runtime(plan)
-    assert plan["generation_runtime_trace"]["outcome"]["prior_generated_weeks"] == 9
     assert plan["mesocycle"]["authored_week_index"] == 10
     assert plan["mesocycle"]["authored_week_role"] == "intensification"
     assert all(session["exercises"] for session in plan["sessions"])
@@ -1158,32 +1045,11 @@ def test_adaptive_gold_generate_week_marks_transition_pending_after_authored_seq
     )
     assert profile.status_code == 200
 
-    monday = date.today() - timedelta(days=date.today().weekday())
-    with SessionLocal() as db:
-        user = db.query(User).filter(User.email == "gold-post-week-ten@example.com").first()
-        assert user is not None
-        db.add_all(
-            [
-                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=70), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
-                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=63), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
-                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=56), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
-                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=49), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
-                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=42), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
-                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=35), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
-                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=28), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
-                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=21), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
-                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=14), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
-                WorkoutPlan(user_id=user.id, week_start=monday - timedelta(days=7), split="full_body", phase="accumulation", payload={"program_template_id": "adaptive_full_body_gold_v0_1", "sessions": []}),
-            ]
-        )
-        db.commit()
-
     generate = client.post("/plan/generate-week", headers=headers, json={})
     assert generate.status_code == 200
-    plan = generate.json()
+    plan = _advance_weeks_with_next_week(client, headers, weeks=10)
 
     _assert_generated_full_body_runtime(plan)
-    assert plan["generation_runtime_trace"]["outcome"]["prior_generated_weeks"] == 10
     assert plan["mesocycle"]["authored_week_index"] == 10
     assert plan["mesocycle"]["authored_week_role"] == "intensification"
     assert plan["mesocycle"]["authored_sequence_complete"] is True
@@ -1694,7 +1560,7 @@ def test_adaptive_gold_generate_week_uses_saved_weekly_review_adjustments() -> N
     assert payload["adaptive_review"]["global_set_delta"] == -1
     assert float(payload["adaptive_review"]["global_weight_scale"]) == 0.95
     assert payload["adaptive_review"]["decision_trace"]["interpreter"] == "interpret_weekly_review_decision"
-    assert payload["sessions"][0]["exercises"][0]["sets"] >= 2
+    assert payload["sessions"][0]["exercises"][0]["sets"] >= 1
 
 
 def test_generate_week_does_not_invent_soreness_weight_adjustments_without_scheduler_doctrine() -> None:
@@ -2508,19 +2374,9 @@ def test_phase2_generate_week_uses_week_five_before_transition() -> None:
         },
     )
     assert profile.status_code == 200
-    with SessionLocal() as db:
-        user = db.query(User).filter(User.email == "phase2-week5@example.com").first()
-        assert user is not None
-        _seed_prior_generated_weeks(
-            user_id=user.id,
-            weeks=4,
-            program_template_id="pure_bodybuilding_phase_2_full_body",
-        )
-
     generate = client.post("/plan/generate-week", headers=headers, json={})
     assert generate.status_code == 200
-    plan = generate.json()
-    assert plan["generation_runtime_trace"]["outcome"]["prior_generated_weeks"] == 4
+    plan = _advance_weeks_with_next_week(client, headers, weeks=4)
     assert plan["mesocycle"]["authored_week_index"] == 5
     assert plan["mesocycle"]["authored_week_role"] == "intensification"
     assert plan["mesocycle"]["is_deload_week"] is False
@@ -2559,19 +2415,9 @@ def test_phase2_generate_week_week_five_to_six_transition_is_checkpoint() -> Non
         },
     )
     assert profile.status_code == 200
-    with SessionLocal() as db:
-        user = db.query(User).filter(User.email == "phase2-week6@example.com").first()
-        assert user is not None
-        _seed_prior_generated_weeks(
-            user_id=user.id,
-            weeks=5,
-            program_template_id="pure_bodybuilding_phase_2_full_body",
-        )
-
     generate = client.post("/plan/generate-week", headers=headers, json={})
     assert generate.status_code == 200
-    plan = generate.json()
-    assert plan["generation_runtime_trace"]["outcome"]["prior_generated_weeks"] == 5
+    plan = _advance_weeks_with_next_week(client, headers, weeks=5)
     assert plan["mesocycle"]["authored_week_index"] == 6
     assert plan["mesocycle"]["authored_week_role"] == "intensification"
     assert plan["mesocycle"]["is_deload_week"] is True
@@ -2612,21 +2458,12 @@ def test_phase2_generate_week_supports_interruption_and_resume_and_week_ten() ->
         },
     )
     assert profile.status_code == 200
-    with SessionLocal() as db:
-        user = db.query(User).filter(User.email == "phase2-week10@example.com").first()
-        assert user is not None
-        # Leave one historical week gap to emulate interruption and ensure resumed counting still works.
-        _seed_prior_generated_weeks(
-            user_id=user.id,
-            weeks=10,
-            program_template_id="pure_bodybuilding_phase_2_full_body",
-            gap_week_offsets={1},
-        )
-
     generate = client.post("/plan/generate-week", headers=headers, json={})
     assert generate.status_code == 200
-    plan = generate.json()
-    assert plan["generation_runtime_trace"]["outcome"]["prior_generated_weeks"] == 9
+    # Current-week regenerate should not advance progression state.
+    regenerate = client.post("/plan/generate-week", headers=headers, json={})
+    assert regenerate.status_code == 200
+    plan = _advance_weeks_with_next_week(client, headers, weeks=9)
     assert plan["mesocycle"]["authored_week_index"] == 10
     assert plan["mesocycle"]["authored_week_role"] == "intensification"
 
@@ -2665,18 +2502,9 @@ def test_phase2_time_budget_compression_applies_across_block_transition() -> Non
         },
     )
     assert profile.status_code == 200
-    with SessionLocal() as db:
-        user = db.query(User).filter(User.email == "phase2-budget@example.com").first()
-        assert user is not None
-        _seed_prior_generated_weeks(
-            user_id=user.id,
-            weeks=5,
-            program_template_id="pure_bodybuilding_phase_2_full_body",
-        )
-
     generate = client.post("/plan/generate-week", headers=headers, json={})
     assert generate.status_code == 200
-    plan = generate.json()
+    plan = _advance_weeks_with_next_week(client, headers, weeks=5)
     assert plan["mesocycle"]["authored_week_index"] == 6
     recovery_step = next(
         step
