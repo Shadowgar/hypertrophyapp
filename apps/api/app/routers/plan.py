@@ -1678,6 +1678,103 @@ def _persist_week_plan_runtime(
     return record
 
 
+def _extract_target_session_and_exercise_ids(
+    *,
+    payload: dict[str, Any],
+) -> tuple[set[str], set[str]]:
+    session_ids: set[str] = set()
+    primary_exercise_ids: set[str] = set()
+    for session in payload.get("sessions") or []:
+        if not isinstance(session, dict):
+            continue
+        session_id = str(session.get("session_id") or "").strip()
+        if session_id:
+            session_ids.add(session_id)
+        for exercise in session.get("exercises") or []:
+            if not isinstance(exercise, dict):
+                continue
+            primary_exercise_id = str(exercise.get("primary_exercise_id") or "").strip()
+            if primary_exercise_id:
+                primary_exercise_ids.add(primary_exercise_id)
+                continue
+            fallback_exercise_id = str(exercise.get("id") or "").strip()
+            if fallback_exercise_id:
+                primary_exercise_ids.add(fallback_exercise_id)
+    return session_ids, primary_exercise_ids
+
+
+def _current_regenerate_would_replace_with_existing_progress(
+    *,
+    db: Session,
+    current_user: User,
+    plan_runtime: dict[str, Any],
+) -> bool:
+    record_values = cast(dict[str, Any], plan_runtime.get("record_values") or {})
+    record_payload = cast(dict[str, Any], record_values.get("payload") or {})
+    replace_binding_id = resolve_selected_program_binding_id(record_payload.get("program_template_id"))
+    replace_week_start = cast(date | None, record_values.get("week_start"))
+    if not replace_binding_id or replace_week_start is None:
+        return False
+
+    rows_to_replace = (
+        db.query(WorkoutPlan)
+        .filter(WorkoutPlan.user_id == current_user.id, WorkoutPlan.week_start == replace_week_start)
+        .all()
+    )
+    replace_target_payload: dict[str, Any] | None = None
+    for row in rows_to_replace:
+        existing_payload = row.payload if isinstance(row.payload, dict) else {}
+        existing_binding_id = resolve_selected_program_binding_id(existing_payload.get("program_template_id"))
+        if existing_binding_id == replace_binding_id:
+            replace_target_payload = existing_payload
+            break
+    if replace_target_payload is None:
+        return False
+
+    session_ids, primary_exercise_ids = _extract_target_session_and_exercise_ids(payload=replace_target_payload)
+    if session_ids:
+        has_session_logs = (
+            db.query(WorkoutSetLog)
+            .filter(
+                WorkoutSetLog.user_id == current_user.id,
+                WorkoutSetLog.workout_id.in_(list(session_ids)),
+            )
+            .first()
+            is not None
+        )
+        if has_session_logs:
+            return True
+        has_session_states = (
+            db.query(WorkoutSessionState)
+            .filter(
+                WorkoutSessionState.user_id == current_user.id,
+                WorkoutSessionState.workout_id.in_(list(session_ids)),
+            )
+            .first()
+            is not None
+        )
+        if has_session_states:
+            return True
+
+    exercise_state_timestamp = getattr(ExerciseState, "last_updated_at", None)
+    if primary_exercise_ids and exercise_state_timestamp is not None:
+        has_exercise_progress = (
+            db.query(ExerciseState)
+            .filter(
+                ExerciseState.user_id == current_user.id,
+                ExerciseState.exercise_id.in_(list(primary_exercise_ids)),
+                ExerciseState.exposure_count > 0,
+                exercise_state_timestamp >= replace_week_start,
+            )
+            .first()
+            is not None
+        )
+        if has_exercise_progress:
+            return True
+
+    return False
+
+
 def _ensure_latest_authored_plan_current_if_needed(
     *,
     db: Session,
@@ -1769,6 +1866,17 @@ def _generate_week_for_user(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except ValidationError as exc:
         raise HTTPException(status_code=422, detail=INVALID_TEMPLATE_DETAIL) from exc
+
+    if generation_mode == "current_week_regenerate":
+        if _current_regenerate_would_replace_with_existing_progress(
+            db=db,
+            current_user=current_user,
+            plan_runtime=plan_runtime,
+        ):
+            raise HTTPException(
+                status_code=409,
+                detail="This week has logged workout data. Regenerating would replace the current plan and clear progress.",
+            )
 
     record = _persist_week_plan_runtime(
         db=db,

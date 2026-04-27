@@ -1133,13 +1133,21 @@ def test_adaptive_gold_runtime_path_survives_logset_and_weekly_review() -> None:
     assert review_payload["decision_trace"]["interpreter"] == "interpret_weekly_review_decision"
 
     next_generate = client.post("/plan/generate-week", headers=headers, json={})
-    assert next_generate.status_code == 200
-    next_plan = next_generate.json()
+    assert next_generate.status_code == 409
+    assert next_generate.json()["detail"] == (
+        "This week has logged workout data. Regenerating would replace the current plan and clear progress."
+    )
+    next_week = client.post("/plan/next-week", headers=headers, json={})
+    assert next_week.status_code == 200
+    next_plan = next_week.json()
 
     _assert_generated_full_body_runtime(next_plan)
     # adaptive_review is present when the generated week has a matching saved review (same week_start)
     if next_plan.get("adaptive_review"):
-        assert next_plan["adaptive_review"]["decision_trace"]["interpreter"] == "interpret_weekly_review_decision"
+        assert next_plan["adaptive_review"]["decision_trace"]["interpreter"] in {
+            "interpret_weekly_review_decision",
+            "recommend_generated_full_body_adaptation",
+        }
         assert next_plan["adaptive_review"]["global_weight_scale"] <= 1.0
     assert len(next_plan["sessions"]) == 3
     assert any(exercise["movement_pattern"] == "hinge" for session in next_plan["sessions"] for exercise in session["exercises"])

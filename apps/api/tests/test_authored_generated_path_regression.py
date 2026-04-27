@@ -14,7 +14,7 @@ configure_test_database("test_authored_generated_path_regression")
 
 from app.database import Base, SessionLocal, engine
 from app.main import app
-from app.models import User, WeeklyCheckin, WeeklyReviewCycle, WorkoutPlan
+from app.models import User, WeeklyCheckin, WeeklyReviewCycle, WorkoutPlan, WorkoutSessionState, WorkoutSetLog
 from app.program_loader import load_program_template, resolve_selected_program_binding_id
 from app.routers import plan as plan_router
 from core_engine.scheduler import AUTHORITATIVE_AUTHORED_PASSTHROUGH_KEY
@@ -884,7 +884,7 @@ def test_current_week_regenerate_keeps_displayed_and_authored_week_indices(selec
         "full_body_v1",
     ],
 )
-def test_current_week_regenerate_with_activity_still_keeps_week_indices(selected_program_id: str) -> None:
+def test_current_week_regenerate_with_progress_is_blocked(selected_program_id: str) -> None:
     _reset_db()
     client = TestClient(app)
     headers = _register(client, email=f"regenerate-with-activity-{selected_program_id}@example.com")
@@ -897,10 +897,93 @@ def test_current_week_regenerate_with_activity_still_keeps_week_indices(selected
 
     first = _generate_week(client, headers=headers)
     _log_first_set_for_today(client, headers=headers)
-    regenerated = _generate_week(client, headers=headers)
+    regenerated = client.post("/plan/generate-week", headers=headers, json={})
+    assert regenerated.status_code == 409
+    assert regenerated.json()["detail"] == "This week has logged workout data. Regenerating would replace the current plan and clear progress."
 
-    assert regenerated["mesocycle"]["week_index"] == first["mesocycle"]["week_index"]
-    assert regenerated["mesocycle"]["authored_week_index"] == first["mesocycle"]["authored_week_index"]
+    latest = client.get("/plan/latest-week", headers=headers)
+    assert latest.status_code == 200
+    latest_payload = latest.json()
+    assert latest_payload["mesocycle"]["week_index"] == first["mesocycle"]["week_index"]
+    assert latest_payload["mesocycle"]["authored_week_index"] == first["mesocycle"]["authored_week_index"]
+
+
+@pytest.mark.parametrize(
+    "selected_program_id",
+    [
+        "pure_bodybuilding_phase_1_full_body",
+        "pure_bodybuilding_phase_2_full_body",
+        "full_body_v1",
+    ],
+)
+def test_blocked_regenerate_preserves_progress_artifacts_and_plan_payload(selected_program_id: str) -> None:
+    _reset_db()
+    client = TestClient(app)
+    email = f"regenerate-preserve-progress-{selected_program_id}@example.com"
+    headers = _register(client, email=email)
+    _upsert_profile(
+        client,
+        headers=headers,
+        selected_program_id=selected_program_id,
+        days_available=3,
+    )
+
+    _generate_week(client, headers=headers)
+    today_payload = _log_first_set_for_today(client, headers=headers)
+    selected_session_id = today_payload["session_id"]
+    monday = date.today() - timedelta(days=date.today().weekday())
+
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == email).first()
+        assert user is not None
+        before_logs = (
+            db.query(WorkoutSetLog)
+            .filter(WorkoutSetLog.user_id == user.id, WorkoutSetLog.workout_id == selected_session_id)
+            .count()
+        )
+        before_states = (
+            db.query(WorkoutSessionState)
+            .filter(WorkoutSessionState.user_id == user.id, WorkoutSessionState.workout_id == selected_session_id)
+            .count()
+        )
+        row = (
+            db.query(WorkoutPlan)
+            .filter(WorkoutPlan.user_id == user.id, WorkoutPlan.week_start == monday)
+            .order_by(WorkoutPlan.created_at.desc())
+            .first()
+        )
+        assert row is not None
+        before_plan_payload = deepcopy(row.payload if isinstance(row.payload, dict) else {})
+
+    blocked = client.post("/plan/generate-week", headers=headers, json={})
+    assert blocked.status_code == 409
+    assert blocked.json()["detail"] == "This week has logged workout data. Regenerating would replace the current plan and clear progress."
+
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == email).first()
+        assert user is not None
+        after_logs = (
+            db.query(WorkoutSetLog)
+            .filter(WorkoutSetLog.user_id == user.id, WorkoutSetLog.workout_id == selected_session_id)
+            .count()
+        )
+        after_states = (
+            db.query(WorkoutSessionState)
+            .filter(WorkoutSessionState.user_id == user.id, WorkoutSessionState.workout_id == selected_session_id)
+            .count()
+        )
+        row = (
+            db.query(WorkoutPlan)
+            .filter(WorkoutPlan.user_id == user.id, WorkoutPlan.week_start == monday)
+            .order_by(WorkoutPlan.created_at.desc())
+            .first()
+        )
+        assert row is not None
+        after_plan_payload = deepcopy(row.payload if isinstance(row.payload, dict) else {})
+
+    assert after_logs == before_logs
+    assert after_states == before_states
+    assert after_plan_payload == before_plan_payload
 
 
 @pytest.mark.parametrize(

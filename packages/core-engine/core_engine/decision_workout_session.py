@@ -1046,7 +1046,6 @@ def build_workout_today_state_payloads(
         exercise_id = str(state.get("exercise_id") or "")
         if not exercise_id:
             continue
-        merged_completed_sets[exercise_id] = int(state.get("completed_sets") or 0)
         live_recommendations_by_exercise[exercise_id] = hydrate_live_workout_recommendation(
             completed_sets=int(state.get("completed_sets") or 0),
             remaining_sets=int(state.get("remaining_sets") or 0),

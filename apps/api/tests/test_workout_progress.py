@@ -81,3 +81,74 @@ def test_workout_progress_endpoint_reports_completed_sets() -> None:
     payload = progress.json()
     assert payload["completed_total"] >= 1
     assert any(e.get("exercise_id") == exercise["id"] for e in payload.get("exercises", []))
+
+
+def test_workout_today_and_progress_agree_when_no_logs() -> None:
+    _reset_db()
+    client = TestClient(app)
+    token = _register_token(client)
+    headers = {"Authorization": f"Bearer {token}"}
+    _onboard_profile(client, token)
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+
+    today = client.get("/workout/today", headers=headers)
+    assert today.status_code == 200
+    today_payload = today.json()
+
+    progress = client.get(f"/workout/{today_payload['session_id']}/progress", headers=headers)
+    assert progress.status_code == 200
+    progress_payload = progress.json()
+
+    today_completed = {item["id"]: int(item.get("completed_sets") or 0) for item in today_payload.get("exercises", [])}
+    progress_completed = {
+        item["exercise_id"]: int(item.get("completed_sets") or 0)
+        for item in progress_payload.get("exercises", [])
+    }
+    assert sum(today_completed.values()) == 0
+    assert progress_payload["completed_total"] == 0
+    assert today_completed == progress_completed
+
+
+def test_workout_today_and_progress_agree_when_logged_sets_exist() -> None:
+    _reset_db()
+    client = TestClient(app)
+    token = _register_token(client)
+    headers = {"Authorization": f"Bearer {token}"}
+    _onboard_profile(client, token)
+
+    generate = client.post("/plan/generate-week", headers=headers, json={})
+    assert generate.status_code == 200
+    plan = generate.json()
+    first_session = plan["sessions"][0]
+    exercise = first_session["exercises"][0]
+
+    log_set = client.post(
+        f"/workout/{first_session['session_id']}/log-set",
+        headers=headers,
+        json={
+            "primary_exercise_id": exercise["primary_exercise_id"],
+            "exercise_id": exercise["id"],
+            "set_index": 1,
+            "reps": 10,
+            "weight": float(exercise["recommended_working_weight"]),
+        },
+    )
+    assert log_set.status_code == 200
+
+    today = client.get("/workout/today", headers=headers)
+    assert today.status_code == 200
+    today_payload = today.json()
+
+    progress = client.get(f"/workout/{today_payload['session_id']}/progress", headers=headers)
+    assert progress.status_code == 200
+    progress_payload = progress.json()
+
+    today_completed = {item["id"]: int(item.get("completed_sets") or 0) for item in today_payload.get("exercises", [])}
+    progress_completed = {
+        item["exercise_id"]: int(item.get("completed_sets") or 0)
+        for item in progress_payload.get("exercises", [])
+    }
+    assert today_completed == progress_completed
+    assert sum(today_completed.values()) == int(progress_payload["completed_total"] or 0)
