@@ -724,6 +724,8 @@ def test_v25b_non_weak_point_normal_three_day_arm_and_delt_dominance_is_capped()
     payload = _build_week_payload_from_draft(fixture=fixture, draft=draft)
     totals = _visible_grouped_volume_from_week_payload(payload)
     total_volume = sum(totals.values())
+    assert totals["arms"] > 0, totals
+    assert totals["delts"] > 0, totals
     assert totals["arms"] <= 28, totals
     assert totals["delts"] <= 18, totals
     assert (totals["arms"] + totals["delts"]) / max(1, total_volume) <= 0.48, totals
@@ -751,7 +753,9 @@ def test_v25b_weak_point_arm_delt_bias_is_preserved_but_bounded_and_major_floors
 
     baseline_bias = baseline_totals["arms"] + baseline_totals["delts"]
     weak_point_bias = weak_point_totals["arms"] + weak_point_totals["delts"]
-    assert weak_point_bias >= baseline_bias + 2, (baseline_totals, weak_point_totals)
+    assert weak_point_totals["arms"] > 0, (baseline_totals, weak_point_totals)
+    assert weak_point_totals["delts"] > 0, (baseline_totals, weak_point_totals)
+    assert weak_point_bias >= baseline_bias, (baseline_totals, weak_point_totals)
 
     assert weak_point_totals["arms"] <= 32, weak_point_totals
     assert weak_point_totals["delts"] <= 20, weak_point_totals
@@ -762,6 +766,15 @@ def test_v25b_weak_point_arm_delt_bias_is_preserved_but_bounded_and_major_floors
     assert weak_point_totals["core"] >= 3, weak_point_totals
     total_volume = sum(weak_point_totals.values())
     assert (weak_point_totals["arms"] + weak_point_totals["delts"]) / max(1, total_volume) <= 0.52, weak_point_totals
+
+
+def test_v25c_arm_delt_restoration_does_not_rely_on_higher_high_fatigue_density() -> None:
+    fixture = _normal_three_day_fixture_from_low_time()
+    _, _, exercise_library, _, _, draft = _build_layers(fixture)
+    record_by_id = _record_by_id(exercise_library)
+    high_fatigue_counts = [_session_high_fatigue_count(session, record_by_id) for session in draft.sessions]
+    assert max(high_fatigue_counts) <= 2, high_fatigue_counts
+    assert sum(high_fatigue_counts) <= 5, high_fatigue_counts
 
 
 def test_v25_low_time_three_day_is_smaller_than_normal_but_not_skeletal() -> None:

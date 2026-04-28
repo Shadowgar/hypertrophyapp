@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-04-27
+Last updated: 2026-04-28
 
 Purpose: this is the canonical documentation index for implementation work. Use it to determine reading order, authority hierarchy, and where a document belongs before adding or moving anything.
 
@@ -9,17 +9,23 @@ Purpose: this is the canonical documentation index for implementation work. Use 
 1. `docs/DOCUMENTATION_STATUS.md`
 2. `docs/DECISIONS.md`
 3. `docs/AI_WORKING_RULES.md`
-4. `docs/ROADMAP.md`
-5. `docs/GENERATED_PROGRAM_STRATEGY.md`
-6. `docs/ONBOARDING_GENERATED_PLAN_SPEC.md`
-7. `docs/GENERATED_PROFILE_SCHEMA.md`
-8. `docs/IMPLEMENTATION_PLAN_CURRENT_MILESTONE.md`
-9. `docs/NEXT_ACTIONS.md`
-10. `docs/CURRENT_STATE.md`
-11. `docs/VISION.md`
-12. `docs/ARCHITECTURE_ROADMAP.md`
-13. `docs/current_state_decision_runtime_map.md`
-14. Only then read older top-level roadmap material as supporting context
+4. `docs/architecture/GOVERNANCE_CONSTITUTION.md`
+5. `docs/architecture/RUNTIME_AUTHORITY_MAP.md`
+6. `docs/context/CONTEXT_MANIFEST.yaml`
+7. `docs/architecture/GENERATED_PLAN_DOCTRINE.md`
+8. `docs/architecture/EXERCISE_METADATA_MODEL.md`
+9. `docs/implementation/GENERATED_PLAN_REMEDIATION_ROADMAP.md`
+10. `docs/ROADMAP.md`
+11. `docs/GENERATED_PROGRAM_STRATEGY.md`
+12. `docs/ONBOARDING_GENERATED_PLAN_SPEC.md`
+13. `docs/GENERATED_PROFILE_SCHEMA.md`
+14. `docs/IMPLEMENTATION_PLAN_CURRENT_MILESTONE.md`
+15. `docs/NEXT_ACTIONS.md`
+16. `docs/CURRENT_STATE.md`
+17. `docs/VISION.md`
+18. `docs/ARCHITECTURE_ROADMAP.md`
+19. `docs/current_state_decision_runtime_map.md`
+20. Only then read older top-level roadmap material as supporting context
 
 ## Authority Hierarchy
 
@@ -27,22 +33,51 @@ Purpose: this is the canonical documentation index for implementation work. Use 
    This is the locked product and architecture decision log for active work.
 2. `docs/AI_WORKING_RULES.md`
    This is the implementation governance baseline for deterministic generated planning.
-3. `docs/ROADMAP.md`
+3. Constitutional governance docs:
+   - `docs/architecture/GOVERNANCE_CONSTITUTION.md`
+   - `docs/architecture/RUNTIME_AUTHORITY_MAP.md`
+4. Generated-plan doctrine docs:
+   - `docs/architecture/GENERATED_PLAN_DOCTRINE.md`
+   - `docs/architecture/EXERCISE_METADATA_MODEL.md`
+   - `docs/implementation/GENERATED_PLAN_REMEDIATION_ROADMAP.md`
+5. `docs/ROADMAP.md`
    This is the active product-focus roadmap for what gets built next.
-4. Generated planning doctrine docs:
+6. Generated planning doctrine docs:
    - `docs/GENERATED_PROGRAM_STRATEGY.md`
    - `docs/ONBOARDING_GENERATED_PLAN_SPEC.md`
    - `docs/GENERATED_PROFILE_SCHEMA.md`
-5. `docs/IMPLEMENTATION_PLAN_CURRENT_MILESTONE.md`
+7. `docs/IMPLEMENTATION_PLAN_CURRENT_MILESTONE.md`
    This is the implementation authority for the currently active milestone, or the completion record for the most recently finished milestone when no new milestone has been approved yet.
-6. `docs/NEXT_ACTIONS.md`
+8. `docs/NEXT_ACTIONS.md`
    This is the short execution rail for the active repo state.
-7. `docs/CURRENT_STATE.md`
+9. `docs/CURRENT_STATE.md`
    This is the branch-reality summary.
-8. `docs/VISION.md` and `docs/ARCHITECTURE_ROADMAP.md`
+10. `docs/VISION.md` and `docs/ARCHITECTURE_ROADMAP.md`
    These define the long-term destination.
-9. Older top-level docs and all supporting, audit, and archive material
+11. Older top-level docs and all supporting, audit, and archive material
    Useful context only. They do not override the current milestone docs.
+
+## Required AI Context
+
+Before any edits to generated-plan logic, onboarding, exercise selection/substitution, progression, specialization, program selection/routing, or workout-plan generation, the following are required context:
+
+- `docs/context/CONTEXT_MANIFEST.yaml`
+- `docs/architecture/GOVERNANCE_CONSTITUTION.md`
+- `docs/architecture/RUNTIME_AUTHORITY_MAP.md`
+- `docs/architecture/GENERATED_PLAN_DOCTRINE.md`
+- `docs/architecture/EXERCISE_METADATA_MODEL.md`
+- `docs/implementation/GENERATED_PLAN_REMEDIATION_ROADMAP.md`
+- `docs/ONBOARDING_GENERATED_PLAN_SPEC.md`
+- `docs/GENERATED_PROFILE_SCHEMA.md`
+- `docs/GENERATED_PROGRAM_STRATEGY.md`
+- `docs/ROADMAP.md`
+- `docs/AI_WORKING_RULES.md`
+- `docs/DOCUMENTATION_STATUS.md`
+
+Governance reminder:
+
+- Authored Full Body Phase 1 and Authored Full Body Phase 2 remain separate authored program paths.
+- Generated programs must never overwrite, modify, replace, or reinterpret authored templates.
 
 ## Active Authority
 
@@ -50,6 +85,12 @@ These are the first docs to consult for current work:
 
 - `docs/DECISIONS.md`
 - `docs/AI_WORKING_RULES.md`
+- `docs/architecture/GOVERNANCE_CONSTITUTION.md`
+- `docs/architecture/RUNTIME_AUTHORITY_MAP.md`
+- `docs/context/CONTEXT_MANIFEST.yaml`
+- `docs/architecture/GENERATED_PLAN_DOCTRINE.md`
+- `docs/architecture/EXERCISE_METADATA_MODEL.md`
+- `docs/implementation/GENERATED_PLAN_REMEDIATION_ROADMAP.md`
 - `docs/ROADMAP.md`
 - `docs/GENERATED_PROGRAM_STRATEGY.md`
 - `docs/ONBOARDING_GENERATED_PLAN_SPEC.md`
@@ -165,6 +206,7 @@ Context docs that are still useful but should not guide generated onboarding imp
 - `docs/ROADMAP_MASTER_DEVELOPMENT_PLAN.md`
 - `docs/implementation/ONBOARDING_ENGINE_ROADMAP.md`
 - `docs/flows/Onboarding_and_Flows.md`
+- `docs/Architecture.md`
 
 Recommended migration actions:
 

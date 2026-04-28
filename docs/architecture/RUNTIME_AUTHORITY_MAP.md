@@ -134,3 +134,38 @@ Those meanings must come from:
 - State assemblers collect and normalize canonical inputs without changing meaning.
 - Orchestrators call owners, persist outputs, and return data without reinterpretation.
 - Presentation layers render outputs without inventing rationale.
+
+## Generated Plan Authority Boundaries
+
+### Authored Program Authority
+
+- Authored Full Body Phase 1 and authored Full Body Phase 2 are independent authored families.
+- Their templates, progression intent, and structure are owned by authored-program authorities.
+- Generated-plan runtime is not permitted to overwrite, reinterpret, or replace authored templates.
+
+### Generated Plan Decision Authority
+
+- Generated-plan policy owners may decide outcomes only for generated-plan family outputs.
+- Generated-plan logic must remain path-scoped and separated from authored-family execution paths.
+
+### Exercise Metadata Authority
+
+- Exercise metadata taxonomy and tags are app-owned doctrine artifacts.
+- Metadata may support generated-plan substitution, collision checks, and fatigue budgeting.
+- Metadata execution does not grant authority to alter authored-template doctrine.
+
+### Progression Authority
+
+- Progression policy for generated plans must be owned by named generated-plan decision families.
+- Execution modules may apply progression outputs but may not invent progression doctrine.
+
+### Specialization Authority
+
+- Specialization policies (muscle or lift-specific) belong to named generated-plan policy owners.
+- Collision and compatibility gates must be doctrinally defined and traceable.
+- Specialization outputs must not mutate authored program families.
+
+### UI Display Authority
+
+- UI may render authored and generated outputs, but must not merge their identity or authority.
+- UI must not present generated adaptations as modifications of authored Full Body Phase 1 or Phase 2.

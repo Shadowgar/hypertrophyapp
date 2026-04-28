@@ -57,12 +57,12 @@ SLOT_ROLE_ORDER: dict[str, int] = {
 
 MAJOR_MUSCLE_TARGETS: dict[str, tuple[str, ...]] = {
     "chest": ("chest",),
-    "back": ("lats", "upper_back", "mid_back"),
+    "back": ("back", "lats", "upper_back", "mid_back"),
     "quads": ("quads",),
     "hamstrings": ("hamstrings",),
-    "delts": ("front_delts", "side_delts", "rear_delts"),
-    "arms": ("biceps", "triceps"),
-    "core": ("abs",),
+    "delts": ("shoulders", "delts", "front_delts", "side_delts", "rear_delts"),
+    "arms": ("arms", "biceps", "triceps"),
+    "core": ("core", "abs"),
 }
 
 
@@ -85,8 +85,10 @@ class _ThreeDayVolumeBand:
 @dataclass(frozen=True)
 class _ThreeDayBalanceTargets:
     major_floor_by_group: dict[str, int]
+    minimum_exposure_by_group: dict[str, int]
     soft_cap_by_group: dict[str, int]
     hard_cap_by_group: dict[str, int]
+    weak_point_minimum_bonus_by_group: dict[str, int]
     weak_point_bonus_by_group: dict[str, int]
     combined_arm_delt_share_cap: float
     weak_point_combined_arm_delt_share_cap: float
@@ -130,32 +132,40 @@ THREE_DAY_VOLUME_BANDS: dict[str, _ThreeDayVolumeBand] = {
 THREE_DAY_BALANCE_TARGETS: dict[str, _ThreeDayBalanceTargets] = {
     "low_time": _ThreeDayBalanceTargets(
         major_floor_by_group={"chest": 7, "back": 8, "quads": 6, "hamstrings": 6, "core": 2},
+        minimum_exposure_by_group={"arms": 2, "delts": 2},
         soft_cap_by_group={"arms": 22, "delts": 14},
         hard_cap_by_group={"arms": 26, "delts": 17},
+        weak_point_minimum_bonus_by_group={"arms": 1, "delts": 0},
         weak_point_bonus_by_group={"arms": 2, "delts": 1},
         combined_arm_delt_share_cap=0.50,
         weak_point_combined_arm_delt_share_cap=0.54,
     ),
     "low_recovery": _ThreeDayBalanceTargets(
         major_floor_by_group={"chest": 7, "back": 8, "quads": 6, "hamstrings": 6, "core": 2},
+        minimum_exposure_by_group={"arms": 2, "delts": 2},
         soft_cap_by_group={"arms": 21, "delts": 14},
         hard_cap_by_group={"arms": 25, "delts": 17},
+        weak_point_minimum_bonus_by_group={"arms": 1, "delts": 0},
         weak_point_bonus_by_group={"arms": 2, "delts": 1},
         combined_arm_delt_share_cap=0.50,
         weak_point_combined_arm_delt_share_cap=0.54,
     ),
     "normal": _ThreeDayBalanceTargets(
         major_floor_by_group={"chest": 10, "back": 12, "quads": 8, "hamstrings": 8, "core": 3},
+        minimum_exposure_by_group={"arms": 3, "delts": 3},
         soft_cap_by_group={"arms": 24, "delts": 16},
         hard_cap_by_group={"arms": 28, "delts": 18},
+        weak_point_minimum_bonus_by_group={"arms": 2, "delts": 0},
         weak_point_bonus_by_group={"arms": 3, "delts": 2},
         combined_arm_delt_share_cap=0.48,
         weak_point_combined_arm_delt_share_cap=0.52,
     ),
     "higher_time_normal_recovery": _ThreeDayBalanceTargets(
         major_floor_by_group={"chest": 12, "back": 14, "quads": 9, "hamstrings": 9, "core": 4},
+        minimum_exposure_by_group={"arms": 4, "delts": 4},
         soft_cap_by_group={"arms": 26, "delts": 17},
         hard_cap_by_group={"arms": 30, "delts": 19},
+        weak_point_minimum_bonus_by_group={"arms": 2, "delts": 0},
         weak_point_bonus_by_group={"arms": 3, "delts": 2},
         combined_arm_delt_share_cap=0.47,
         weak_point_combined_arm_delt_share_cap=0.51,
@@ -701,6 +711,19 @@ def _allowed_cap_for_group(
     return soft
 
 
+def _minimum_exposure_for_group(
+    *,
+    group: str,
+    targets: _ThreeDayBalanceTargets,
+    weak_point_groups: set[str],
+    major_floors_satisfied: bool,
+) -> int:
+    base = int(targets.minimum_exposure_by_group.get(group, 0))
+    if major_floors_satisfied and group in weak_point_groups:
+        base += int(targets.weak_point_minimum_bonus_by_group.get(group, 0))
+    return base
+
+
 def _would_violate_arm_delt_caps(
     *,
     record: dict[str, Any],
@@ -739,6 +762,141 @@ def _would_violate_arm_delt_caps(
     if combined_share > combined_share_cap:
         return True
     return False
+
+
+def _replacement_candidates_for_group(
+    *,
+    group: str,
+    record_by_id: dict[str, dict[str, Any]],
+    selected_ids: set[str],
+) -> list[dict[str, Any]]:
+    candidates: list[dict[str, Any]] = []
+    for record in record_by_id.values():
+        exercise_id = str(record.get("exercise_id") or "")
+        if not exercise_id or exercise_id in selected_ids:
+            continue
+        if group not in _exercise_primary_major_groups(record):
+            continue
+        candidates.append(record)
+    return sorted(
+        candidates,
+        key=lambda record: (
+            {"low": 0, "moderate": 1, "high": 2}.get(str(record.get("fatigue_cost") or ""), 2),
+            str(record.get("exercise_id") or ""),
+        ),
+    )
+
+
+def _ensure_minimum_arm_delt_presence(
+    *,
+    sessions: list[GeneratedSessionDraft],
+    record_by_id: dict[str, dict[str, Any]],
+    targets: _ThreeDayBalanceTargets,
+    weak_point_groups: set[str],
+    core_viable: bool,
+) -> None:
+    for _ in range(12):
+        primary_volume = _compute_primary_major_group_volume(sessions=sessions, record_by_id=record_by_id)
+        deficits = _major_floor_deficits(primary_volume=primary_volume, targets=targets, core_viable=core_viable)
+        major_floors_satisfied = not deficits
+        needed = {
+            group: max(
+                0,
+                _minimum_exposure_for_group(
+                    group=group,
+                    targets=targets,
+                    weak_point_groups=weak_point_groups,
+                    major_floors_satisfied=major_floors_satisfied,
+                )
+                - int(primary_volume.get(group, 0)),
+            )
+            for group in ("arms", "delts")
+        }
+        if needed["arms"] == 0 and needed["delts"] == 0:
+            return
+        target_group = "arms" if needed["arms"] >= needed["delts"] else "delts"
+        selected_ids = {exercise.id for session in sessions for exercise in session.exercises}
+        candidates = _replacement_candidates_for_group(
+            group=target_group,
+            record_by_id=record_by_id,
+            selected_ids=selected_ids,
+        )
+        if not candidates:
+            return
+        replacement_applied = False
+        for session in sessions:
+            for exercise in sorted(
+                session.exercises,
+                key=lambda item: (
+                    {"weak_point": 0, "accessory": 1, "secondary_compound": 2, "primary_compound": 3}.get(item.slot_role, 4),
+                    item.id,
+                ),
+            ):
+                existing_record = record_by_id.get(exercise.id) or {}
+                existing_groups = _exercise_primary_major_groups(existing_record)
+                if target_group in existing_groups:
+                    continue
+                if int(exercise.sets) <= 0:
+                    continue
+                weak_point_arm_delt_mode = bool({"arms", "delts"} & weak_point_groups)
+                donor_pool = {"arms", "delts"} if weak_point_arm_delt_mode else {"chest", "back", "arms", "delts"}
+                # Preserve lower-body/core viability by never swapping out lower/core anchors.
+                if not existing_groups.intersection(donor_pool):
+                    continue
+                if existing_groups.intersection({"quads", "hamstrings", "core"}):
+                    continue
+                projected_primary = dict(primary_volume)
+                for group in existing_groups:
+                    projected_primary[group] = max(0, int(projected_primary.get(group, 0)) - int(exercise.sets))
+                donor_breaks_floor = False
+                for group in existing_groups:
+                    if group in {"arms", "delts"}:
+                        min_group = _minimum_exposure_for_group(
+                            group=group,
+                            targets=targets,
+                            weak_point_groups=weak_point_groups,
+                            major_floors_satisfied=major_floors_satisfied,
+                        )
+                        if int(projected_primary.get(group, 0)) < int(min_group):
+                            donor_breaks_floor = True
+                            break
+                    elif group in targets.major_floor_by_group:
+                        if int(projected_primary.get(group, 0)) < int(targets.major_floor_by_group[group]):
+                            donor_breaks_floor = True
+                            break
+                if donor_breaks_floor:
+                    continue
+                next_deficits = _major_floor_deficits(
+                    primary_volume=projected_primary,
+                    targets=targets,
+                    core_viable=core_viable,
+                )
+                worsened_floor_gap = any(int(next_deficits.get(group, 0)) > int(deficits.get(group, 0)) for group in targets.major_floor_by_group)
+                if worsened_floor_gap:
+                    continue
+                for candidate in candidates:
+                    if _would_violate_arm_delt_caps(
+                        record=candidate,
+                        current_primary_volume=projected_primary,
+                        targets=targets,
+                        weak_point_groups=weak_point_groups,
+                        major_floors_satisfied=major_floors_satisfied,
+                        projected_set_increase=int(exercise.sets),
+                    ):
+                        continue
+                    exercise.id = str(candidate.get("exercise_id") or exercise.id)
+                    exercise.name = str(candidate.get("canonical_name") or exercise.name)
+                    exercise.movement_pattern = str(candidate.get("movement_pattern") or exercise.movement_pattern)
+                    exercise.primary_muscles = _resolved_primary_muscles_for_generated_exercise(candidate)
+                    exercise.equipment_tags = [str(item) for item in (candidate.get("equipment_tags") or []) if str(item)]
+                    replacement_applied = True
+                    break
+                if replacement_applied:
+                    break
+            if replacement_applied:
+                break
+        if not replacement_applied:
+            return
 
 
 def _weekly_muscle_volume_sum(
@@ -997,6 +1155,67 @@ def _apply_prescription_quality_refinement(
                 targets=balance_targets,
                 core_viable=core_viable,
             )
+            major_floors_satisfied = not deficits
+            needs = {
+                group: max(
+                    0,
+                    _minimum_exposure_for_group(
+                        group=group,
+                        targets=balance_targets,
+                        weak_point_groups=weak_point_groups,
+                        major_floors_satisfied=major_floors_satisfied,
+                    )
+                    - int(primary_volume.get(group, 0)),
+                )
+                for group in ("arms", "delts")
+            }
+            if needs["arms"] == 0 and needs["delts"] == 0:
+                break
+            target_group = "arms" if needs["arms"] >= needs["delts"] else "delts"
+            candidates: list[tuple[GeneratedSessionDraft, GeneratedExerciseDraft]] = []
+            for session in sessions:
+                for exercise in session.exercises:
+                    record = record_by_id.get(exercise.id) or {}
+                    groups = _exercise_primary_major_groups(record)
+                    if target_group not in groups:
+                        continue
+                    max_sets = _exercise_max_sets(slot_role=exercise.slot_role, time_budget_minutes=time_budget_minutes)
+                    if int(exercise.sets) >= max_sets:
+                        continue
+                    fatigue = str(record.get("fatigue_cost") or "")
+                    if fatigue == "high" and exercise.slot_role in {"secondary_compound", "primary_compound"}:
+                        continue
+                    if _would_violate_arm_delt_caps(
+                        record=record,
+                        current_primary_volume=primary_volume,
+                        targets=balance_targets,
+                        weak_point_groups=weak_point_groups,
+                        major_floors_satisfied=major_floors_satisfied,
+                    ):
+                        continue
+                    candidates.append((session, exercise))
+            if not candidates:
+                break
+            session_totals = {session.session_id: _session_total_sets(session) for session in sessions}
+            _, selected = sorted(
+                candidates,
+                key=lambda pair: (
+                    0 if str((record_by_id.get(pair[1].id) or {}).get("fatigue_cost") or "") != "high" else 1,
+                    SLOT_ROLE_ORDER.get(pair[1].slot_role, 9),
+                    session_totals.get(pair[0].session_id, 0),
+                    pair[0].session_id,
+                    pair[1].id,
+                ),
+            )[0]
+            selected.sets += 1
+
+        for _ in range(120):
+            primary_volume = _compute_primary_major_group_volume(sessions=sessions, record_by_id=record_by_id)
+            deficits = _major_floor_deficits(
+                primary_volume=primary_volume,
+                targets=balance_targets,
+                core_viable=core_viable,
+            )
             if not deficits:
                 break
             candidates: list[tuple[GeneratedSessionDraft, GeneratedExerciseDraft]] = []
@@ -1035,6 +1254,58 @@ def _apply_prescription_quality_refinement(
     _rebalance_session_set_totals(sessions=sessions, time_budget_minutes=time_budget_minutes)
 
     if apply_three_day_band and balance_targets is not None:
+        _ensure_minimum_arm_delt_presence(
+            sessions=sessions,
+            record_by_id=record_by_id,
+            targets=balance_targets,
+            weak_point_groups=weak_point_groups,
+            core_viable=core_viable,
+        )
+        if {"arms", "delts"} & weak_point_groups:
+            for _ in range(4):
+                primary_volume = _compute_primary_major_group_volume(sessions=sessions, record_by_id=record_by_id)
+                deficits = _major_floor_deficits(
+                    primary_volume=primary_volume,
+                    targets=balance_targets,
+                    core_viable=core_viable,
+                )
+                major_floors_satisfied = not deficits
+                target_group = (
+                    "arms"
+                    if int(primary_volume.get("arms", 0)) <= int(primary_volume.get("delts", 0))
+                    else "delts"
+                )
+                uplift_candidates: list[tuple[GeneratedSessionDraft, GeneratedExerciseDraft]] = []
+                for session in sessions:
+                    for exercise in session.exercises:
+                        record = record_by_id.get(exercise.id) or {}
+                        groups = _exercise_primary_major_groups(record)
+                        if target_group not in groups:
+                            continue
+                        max_sets = _exercise_max_sets(slot_role=exercise.slot_role, time_budget_minutes=time_budget_minutes)
+                        if int(exercise.sets) >= max_sets:
+                            continue
+                        if _would_violate_arm_delt_caps(
+                            record=record,
+                            current_primary_volume=primary_volume,
+                            targets=balance_targets,
+                            weak_point_groups=weak_point_groups,
+                            major_floors_satisfied=major_floors_satisfied,
+                        ):
+                            continue
+                        uplift_candidates.append((session, exercise))
+                if not uplift_candidates:
+                    break
+                _, uplift = sorted(
+                    uplift_candidates,
+                    key=lambda pair: (
+                        0 if str((record_by_id.get(pair[1].id) or {}).get("fatigue_cost") or "") != "high" else 1,
+                        SLOT_ROLE_ORDER.get(pair[1].slot_role, 9),
+                        pair[0].session_id,
+                        pair[1].id,
+                    ),
+                )[0]
+                uplift.sets += 1
         for _ in range(120):
             primary_volume = _compute_primary_major_group_volume(sessions=sessions, record_by_id=record_by_id)
             deficits = _major_floor_deficits(
@@ -1079,30 +1350,48 @@ def _apply_prescription_quality_refinement(
                 "secondary_compound": 2,
                 "primary_compound": 3,
             }
-            donor = sorted(
+            selected_donor: GeneratedExerciseDraft | None = None
+            for donor in sorted(
                 donors,
                 key=lambda item: (
                     donor_priority.get(item.slot_role, 4),
                     item.id,
                 ),
-            )[0]
-            donor_record = record_by_id.get(donor.id) or {}
-            donor_groups = _exercise_primary_major_groups(donor_record)
-            next_primary = dict(primary_volume)
-            for group in donor_groups:
-                next_primary[group] = max(0, int(next_primary.get(group, 0)) - 1)
-            next_deficits = _major_floor_deficits(
-                primary_volume=next_primary,
-                targets=balance_targets,
-                core_viable=core_viable,
-            )
-            worsened_floor_gap = any(
-                int(next_deficits.get(group, 0)) > int(deficits.get(group, 0))
-                for group in balance_targets.major_floor_by_group
-            )
-            if worsened_floor_gap:
+            ):
+                donor_record = record_by_id.get(donor.id) or {}
+                donor_groups = _exercise_primary_major_groups(donor_record)
+                next_primary = dict(primary_volume)
+                for group in donor_groups:
+                    next_primary[group] = max(0, int(next_primary.get(group, 0)) - 1)
+                donor_breaks_minimum = any(
+                    group in {"arms", "delts"}
+                    and int(next_primary.get(group, 0))
+                    < _minimum_exposure_for_group(
+                        group=group,
+                        targets=balance_targets,
+                        weak_point_groups=weak_point_groups,
+                        major_floors_satisfied=not deficits,
+                    )
+                    for group in donor_groups
+                )
+                if donor_breaks_minimum:
+                    continue
+                next_deficits = _major_floor_deficits(
+                    primary_volume=next_primary,
+                    targets=balance_targets,
+                    core_viable=core_viable,
+                )
+                worsened_floor_gap = any(
+                    int(next_deficits.get(group, 0)) > int(deficits.get(group, 0))
+                    for group in balance_targets.major_floor_by_group
+                )
+                if worsened_floor_gap:
+                    continue
+                selected_donor = donor
                 break
-            donor.sets -= 1
+            if selected_donor is None:
+                break
+            selected_donor.sets -= 1
 
         _rebalance_session_set_totals(sessions=sessions, time_budget_minutes=time_budget_minutes)
 

@@ -2,7 +2,7 @@ from datetime import UTC, date, datetime, timedelta
 from copy import deepcopy
 from typing import Annotated, Any, Literal, cast
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
@@ -44,9 +44,11 @@ from core_engine import (
 )
 from core_engine.scheduler import AUTHORITATIVE_AUTHORED_PASSTHROUGH_KEY
 
+from ..config import settings
 from ..database import get_db
 from ..deps import get_current_user
 from ..generated_assessment_schema import ProfileAssessmentInput
+from ..generated_decision_profile import GeneratedDecisionProfile, build_generated_decision_profile
 from ..generated_full_body_runtime_adapter import (
     GENERATED_FULL_BODY_COMPATIBILITY_TEMPLATE_ID,
     prepare_generated_full_body_runtime_template,
@@ -813,9 +815,78 @@ def _prepare_plan_generation_runtime(
     return runtime
 
 
+def _build_generated_decision_profile(
+    *,
+    current_user: User,
+    effective_days_available: int | None,
+    training_state: dict[str, Any] | None,
+) -> GeneratedDecisionProfile:
+    return build_generated_decision_profile(
+        selected_program_id=current_user.selected_program_id,
+        program_selection_mode=current_user.program_selection_mode,
+        days_available=effective_days_available,
+        session_time_budget_minutes=current_user.session_time_budget_minutes,
+        temporary_duration_minutes=None,
+        near_failure_tolerance=current_user.near_failure_tolerance,
+        weak_areas=list(current_user.weak_areas or []),
+        movement_restrictions=list(current_user.movement_restrictions or []),
+        equipment_profile=list(current_user.equipment_profile or []),
+        onboarding_answers=cast(dict[str, Any], current_user.onboarding_answers or {}),
+        training_state=training_state,
+    )
+
+
 @router.get("/plan/programs", response_model=list[ProgramTemplateSummary])
 def plan_list_programs() -> list[dict]:
     return _list_active_program_templates()
+
+
+@router.get("/plan/generated-decision-profile/debug")
+def get_generated_decision_profile_debug(
+    db: DbSession,
+    current_user: CurrentUser,
+) -> dict[str, Any]:
+    if not settings.allow_dev_wipe_endpoints:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Debug endpoints disabled")
+
+    selected_template_id = resolve_selected_program_binding_id(current_user.selected_program_id) or GENERATED_FULL_BODY_COMPATIBILITY_TEMPLATE_ID
+    effective_days_available = int(current_user.days_available) if current_user.days_available is not None else 3
+    generation_context = _prepare_plan_generation_runtime(
+        db=db,
+        current_user=current_user,
+        selected_template_id=selected_template_id,
+        effective_days_available=effective_days_available,
+        active_frequency_adaptation=None,
+    )
+    decision_profile = _build_generated_decision_profile(
+        current_user=current_user,
+        effective_days_available=current_user.days_available,
+        training_state=cast(dict[str, Any], generation_context.get("training_state") or {}),
+    )
+    payload = decision_profile.model_dump(mode="json")
+    log_event(
+        "generated_decision_profile_debug_viewed",
+        route="/plan/generated-decision-profile/debug",
+        action="read_generated_decision_profile",
+        user_id=current_user.id,
+        selected_program_id=decision_profile.selected_program_id,
+        path_family=decision_profile.path_family,
+        generated_mode=decision_profile.generated_mode,
+        target_days=decision_profile.target_days,
+        session_time_band=decision_profile.session_time_band,
+        recovery_modifier=decision_profile.recovery_modifier,
+        training_status=decision_profile.training_status,
+        detraining_status=decision_profile.detraining_status,
+        goal_mode=decision_profile.goal_mode,
+        equipment_scope=decision_profile.equipment_scope,
+        weakpoint_count=len(decision_profile.weakpoint_targets),
+        movement_restriction_count=len(decision_profile.movement_restriction_flags),
+        defaults_applied=list(decision_profile.decision_trace.defaults_applied),
+        missing_fields=list(decision_profile.decision_trace.missing_fields),
+        reentry_required=decision_profile.reentry_required,
+        insufficient_data_avoided=decision_profile.decision_trace.insufficient_data_avoided,
+    )
+    return payload
 
 
 @router.get("/plan/guides/programs")
@@ -1509,17 +1580,24 @@ def _build_week_plan_runtime_for_user(
     generated_full_body_adaptive_loop_policy = None
     generated_full_body_block_review_policy = None
     if is_generated_full_body_binding_id(selected_template_id):
+        decision_profile = _build_generated_decision_profile(
+            current_user=current_user,
+            effective_days_available=effective_days_available,
+            training_state=cast(dict[str, Any], generation_context["training_state"]),
+        )
+        # Phase 1A precedence: normalized decision-profile inputs are authoritative for mode-routing inputs.
+        # Assessment builder remains authoritative for downstream coaching/assessment internals.
         generated_runtime = prepare_generated_full_body_runtime_template(
             selected_template_id=selected_template_id,
             selected_template=template,
             profile_input=ProfileAssessmentInput(
-                days_available=int(effective_days_available),
+                days_available=int(decision_profile.target_days),
                 split_preference=current_user.split_preference,
                 training_location=current_user.training_location,
                 equipment_profile=list(current_user.equipment_profile or []),
-                weak_areas=list(current_user.weak_areas or []),
+                weak_areas=list(decision_profile.weakpoint_targets),
                 session_time_budget_minutes=current_user.session_time_budget_minutes,
-                movement_restrictions=list(current_user.movement_restrictions or []),
+                movement_restrictions=list(decision_profile.movement_restriction_flags),
                 near_failure_tolerance=current_user.near_failure_tolerance,
             ),
             training_state=cast(dict[str, Any], generation_context["training_state"]),
@@ -1544,6 +1622,28 @@ def _build_week_plan_runtime_for_user(
             authored_week_index=cast(dict[str, Any], generated_runtime["generated_full_body_runtime_trace"]).get("authored_week_index"),
             days_available=current_user.days_available,
             target_days=effective_days_available,
+        )
+        log_event(
+            "generated_decision_profile_resolved",
+            route="/plan/generate-week" if generation_mode == "current_week_regenerate" else "/plan/next-week",
+            action="build_generated_decision_profile",
+            user_id=current_user.id,
+            selected_program_id=decision_profile.selected_program_id,
+            path_family=decision_profile.path_family,
+            generated_mode=decision_profile.generated_mode,
+            target_days=decision_profile.target_days,
+            session_time_band=decision_profile.session_time_band,
+            recovery_modifier=decision_profile.recovery_modifier,
+            training_status=decision_profile.training_status,
+            detraining_status=decision_profile.detraining_status,
+            goal_mode=decision_profile.goal_mode,
+            equipment_scope=decision_profile.equipment_scope,
+            weakpoint_count=len(decision_profile.weakpoint_targets),
+            movement_restriction_count=len(decision_profile.movement_restriction_flags),
+            defaults_applied=list(decision_profile.decision_trace.defaults_applied),
+            missing_fields=list(decision_profile.decision_trace.missing_fields),
+            reentry_required=decision_profile.reentry_required,
+            insufficient_data_avoided=decision_profile.decision_trace.insufficient_data_avoided,
         )
     else:
         runtime_template, authored_adaptation_trace = _prepare_authored_frequency_adapted_template(

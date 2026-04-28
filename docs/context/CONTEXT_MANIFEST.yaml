@@ -1,0 +1,68 @@
+version: 1
+last_updated: 2026-04-28
+owner: documentation-governance
+purpose: >-
+  Mandatory context manifest for AI/code agents before touching generated-plan,
+  onboarding, exercise-selection, progression, specialization, or workout routing logic.
+
+mandatory_read_groups:
+  - group: global_governance
+    required: true
+    authority: constitutional
+    docs:
+      - path: docs/architecture/GOVERNANCE_CONSTITUTION.md
+        role: Master governance law. Generated plans are separate from authored templates.
+      - path: docs/architecture/RUNTIME_AUTHORITY_MAP.md
+        role: Runtime authority boundaries and owner-role constraints.
+      - path: docs/AI_WORKING_RULES.md
+        role: Deterministic AI implementation rules (no runtime LLM, GenerationProfile-first).
+
+  - group: generated_plan_doctrine
+    required: true
+    authority: generated-plan-policy
+    docs:
+      - path: docs/architecture/GENERATED_PLAN_DOCTRINE.md
+        role: Canonical doctrine for generated planning, specialization, and re-entry rules.
+      - path: docs/architecture/EXERCISE_METADATA_MODEL.md
+        role: Canonical metadata requirements for substitutions/collisions/advanced methods.
+      - path: docs/implementation/GENERATED_PLAN_REMEDIATION_ROADMAP.md
+        role: Phased implementation sequencing and guardrails.
+
+  - group: onboarding_profile_doctrine
+    required: true
+    authority: onboarding-generated-profile
+    docs:
+      - path: docs/ONBOARDING_GENERATED_PLAN_SPEC.md
+        role: Onboarding decision and generation-profile mapping contract.
+      - path: docs/GENERATED_PROFILE_SCHEMA.md
+        role: Deterministic GenerationProfile schema contract.
+      - path: docs/GENERATED_PROGRAM_STRATEGY.md
+        role: Generated-program strategy and mode positioning.
+
+  - group: roadmap_current_state
+    required: true
+    authority: execution-priority
+    docs:
+      - path: docs/ROADMAP.md
+        role: Active product roadmap and sequencing priorities.
+      - path: docs/DOCUMENTATION_STATUS.md
+        role: Canonical doc authority/read-order index.
+
+authority_notes:
+  - Authored Full Body Phase 1 and Authored Full Body Phase 2 are separate authored paths.
+  - Generated plans must never overwrite, modify, replace, or reinterpret authored templates.
+  - Raw onboarding answers must be mapped into deterministic GenerationProfile before generation.
+  - Runtime must remain deterministic and must not use runtime LLM inference.
+
+change_gates:
+  applies_to:
+    - generated-plan logic
+    - onboarding logic
+    - program selection and routing
+    - exercise selection and substitution
+    - progression and specialization
+    - workout-plan generation
+  required_before_edit:
+    - Read all docs in mandatory_read_groups.
+    - Confirm generated/authored separation constraints in final report.
+    - Include tests and decision-trace/logging updates when behavior changes.

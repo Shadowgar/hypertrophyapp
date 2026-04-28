@@ -12,6 +12,7 @@ configure_test_database("test_generated_full_body_runtime_integration")
 
 from app.database import Base, engine
 from app.database import SessionLocal
+from app.generated_decision_profile import GeneratedDecisionProfile
 from app.generated_assessment_schema import ProfileAssessmentInput
 from app import generated_full_body_runtime_adapter as runtime_adapter
 from app.main import app
@@ -307,6 +308,105 @@ def test_non_full_body_runtime_path_does_not_activate_generated_runtime_adapter(
     assert payload["program_template_id"] == "upper_lower_v1"
     assert payload["template_selection_trace"]["selected_template_id"] == "upper_lower_v1"
     assert "generated_full_body_runtime_trace" not in payload["template_selection_trace"]
+
+
+def test_authored_paths_bypass_generated_decision_profile(monkeypatch: pytest.MonkeyPatch) -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    def _unexpected_decision_profile(*args, **kwargs):
+        raise AssertionError("Generated decision profile should not run for authored templates.")
+
+    monkeypatch.setattr(plan_router, "build_generated_decision_profile", _unexpected_decision_profile)
+
+    headers = _register_user(
+        client,
+        email="authored-bypass-generated-decision@example.com",
+        name="Authored Bypass Generated Decision",
+    )
+    _post_profile(
+        client,
+        headers=headers,
+        selected_program_id="pure_bodybuilding_phase_1_full_body",
+        split_preference="full_body",
+        training_location="gym",
+        equipment_profile=["barbell", "bench", "dumbbell"],
+        days_available=3,
+    )
+
+    response = client.post("/plan/generate-week", headers=headers, json={})
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["program_template_id"] == "pure_bodybuilding_phase_1_full_body"
+    assert "generated_full_body_runtime_trace" not in payload["template_selection_trace"]
+
+
+def test_generated_decision_profile_normalized_inputs_take_precedence_for_mode_routing(monkeypatch: pytest.MonkeyPatch) -> None:
+    _reset_db()
+    client = TestClient(app)
+    captured: dict[str, int | list[str]] = {}
+
+    def _mock_decision_profile(*args, **kwargs):
+        return GeneratedDecisionProfile.model_validate(
+            {
+                "selected_program_id": "full_body_v1",
+                "path_family": "generated",
+                "target_days": 2,
+                "session_time_band": "low",
+                "recovery_modifier": "standard",
+                "training_status": "intermediate",
+                "detraining_status": "active",
+                "goal_mode": "lean_gain",
+                "equipment_scope": "dumbbell",
+                "weakpoint_targets": ["arms"],
+                "movement_restriction_flags": ["overhead_pressing"],
+                "generated_mode": "low_time_full_body",
+                "reentry_required": False,
+                "decision_trace": {
+                    "selected_mode_reason": "session_time_low",
+                    "defaults_applied": [],
+                    "missing_fields": [],
+                    "ignored_future_fields": ["gender", "sex", "height", "weight"],
+                    "rule_hits": ["phase1a.mode.low_time"],
+                    "insufficient_data_avoided": False,
+                },
+            }
+        )
+
+    original_prepare = runtime_adapter.prepare_generated_full_body_runtime_template
+
+    def _capture_prepare(*args, **kwargs):
+        profile_input = kwargs["profile_input"]
+        assert isinstance(profile_input, ProfileAssessmentInput)
+        captured["days_available"] = profile_input.days_available
+        captured["weak_areas"] = list(profile_input.weak_areas)
+        captured["movement_restrictions"] = list(profile_input.movement_restrictions)
+        return original_prepare(*args, **kwargs)
+
+    monkeypatch.setattr(plan_router, "build_generated_decision_profile", _mock_decision_profile)
+    monkeypatch.setattr(plan_router, "prepare_generated_full_body_runtime_template", _capture_prepare)
+
+    headers = _register_user(
+        client,
+        email="generated-decision-precedence@example.com",
+        name="Generated Decision Precedence",
+    )
+    _post_profile(
+        client,
+        headers=headers,
+        selected_program_id="full_body_v1",
+        split_preference="full_body",
+        training_location="gym",
+        equipment_profile=["barbell", "bench", "dumbbell", "machine"],
+        days_available=5,
+        weak_areas=["chest", "hamstrings"],
+    )
+
+    response = client.post("/plan/generate-week", headers=headers, json={})
+    assert response.status_code == 200
+    assert captured["days_available"] == 2
+    assert captured["weak_areas"] == ["arms"]
+    assert captured["movement_restrictions"] == ["overhead_pressing"]
 
 
 def test_runtime_adapter_stage_failures_return_stable_fallback_reasons(monkeypatch) -> None:

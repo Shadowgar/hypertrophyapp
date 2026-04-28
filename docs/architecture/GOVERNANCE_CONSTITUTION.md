@@ -18,6 +18,14 @@ It defines:
 
 If another document conflicts with this one, this document wins.
 
+## Program Family Separation Law
+
+No generated-plan runtime may modify, replace, or reinterpret authored program templates.
+
+Generated plans are a separate program family.
+
+This includes explicit preservation of authored Full Body Phase 1 and authored Full Body Phase 2 as distinct user-facing authored paths.
+
 ## Scope
 
 This constitution applies to every first-class path.
@@ -307,4 +315,3 @@ Examples:
 - A surface is structurally strong but still bounded in doctrine depth
 - A path is trustworthy internally but not yet ready for public-facing claims
 - A module boundary is awkward but is not currently creating shadow authority
-
