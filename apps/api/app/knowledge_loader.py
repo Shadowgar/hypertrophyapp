@@ -11,6 +11,7 @@ from .knowledge_schema import (
     CanonicalExerciseLibraryBundle,
     CompiledKnowledgeManifest,
     DoctrineBundle,
+    ExerciseMetadataV2Bundle,
     PolicyBundle,
     SourceRegistryBundle,
 )
@@ -58,6 +59,14 @@ def load_source_registry(base_dir: Path | None = None) -> SourceRegistryBundle:
 def load_exercise_library(base_dir: Path | None = None) -> CanonicalExerciseLibraryBundle:
     compiled_dir = _resolve_compiled_dir(base_dir)
     return _load_model(compiled_dir / "exercise_library.foundation.v1.json", CanonicalExerciseLibraryBundle)
+
+
+def load_exercise_metadata_v2(base_dir: Path | None = None) -> ExerciseMetadataV2Bundle | None:
+    compiled_dir = _resolve_compiled_dir(base_dir)
+    path = compiled_dir / "exercise_library.metadata.v2.json"
+    if not path.exists():
+        return None
+    return _load_model(path, ExerciseMetadataV2Bundle)
 
 
 def load_doctrine_bundle(bundle_id: str, base_dir: Path | None = None) -> DoctrineBundle:

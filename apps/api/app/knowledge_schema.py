@@ -9,6 +9,44 @@ BundleStatus = Literal["seed", "placeholder", "curated", "active", "deprecated"]
 CurationStatus = Literal["seeded", "placeholder", "curated", "deprecated"]
 ExerciseDemandLevel = Literal["low", "moderate", "high"] | None
 ProgressionCompatibilityLevel = Literal["low", "moderate", "high"]
+MovementPatternV2 = Literal[
+    "horizontal_push",
+    "vertical_push",
+    "horizontal_pull",
+    "vertical_pull",
+    "squat",
+    "hinge",
+    "lunge_split_squat",
+    "hip_thrust_bridge",
+    "knee_flexion",
+    "knee_extension",
+    "hip_abduction",
+    "elbow_flexion",
+    "elbow_extension",
+    "shoulder_abduction",
+    "shoulder_extension_adduction",
+    "trunk_flexion",
+    "trunk_stability",
+    "calf_raise",
+    "loaded_carry_grip",
+]
+ExerciseRoleTagV2 = Literal["primary", "secondary", "tertiary", "warmup_preactivation", "pump_metabolic", "specialization"]
+FatigueLevelV2 = Literal["low", "moderate", "high"]
+SubstitutionEquivalenceV2 = Literal["exact", "near", "fallback"]
+SkillLevelV2 = Literal["beginner_friendly", "intermediate", "advanced"]
+SetupComplexityV2 = Literal["low", "moderate", "high"]
+LoadabilityV2 = Literal["low", "moderate", "high"]
+RestNeedV2 = Literal["short", "moderate", "long"]
+RestrictionFlagV2 = Literal[
+    "avoid_overhead_pressing",
+    "avoid_deep_knee_flexion",
+    "avoid_barbell_from_floor",
+    "avoid_unsupported_bent_row",
+    "avoid_axial_loading",
+    "avoid_high_grip_demand",
+    "avoid_high_lower_back_fatigue",
+]
+ConfidenceTagV2 = Literal["high", "moderate", "low"]
 
 
 def _sorted_unique(values: list[str]) -> list[str]:
@@ -93,6 +131,146 @@ class ExerciseOverlapRelation(BaseModel):
     relation: str = Field(min_length=1)
 
 
+class MuscleTargetingV2(BaseModel):
+    primary_muscles: list[str] = Field(default_factory=list)
+    secondary_muscles: list[str] = Field(default_factory=list)
+    visible_grouped_muscle_mapping: list[str] = Field(default_factory=list)
+
+    @field_validator("primary_muscles", "secondary_muscles", "visible_grouped_muscle_mapping")
+    @classmethod
+    def validate_unique_lists(cls, value: list[str]) -> list[str]:
+        return _sorted_unique(value)
+
+
+class MovementV2(BaseModel):
+    primary_pattern: MovementPatternV2
+    secondary_patterns: list[MovementPatternV2] = Field(default_factory=list)
+    joint_actions: list[str] = Field(default_factory=list)
+
+    @field_validator("secondary_patterns", "joint_actions")
+    @classmethod
+    def validate_unique_lists(cls, value: list[str]) -> list[str]:
+        return _sorted_unique(value)
+
+
+class ExerciseRoleV2(BaseModel):
+    tags: list[ExerciseRoleTagV2] = Field(default_factory=list)
+    primary_role: ExerciseRoleTagV2 = "primary"
+
+    @field_validator("tags")
+    @classmethod
+    def validate_role_tags(cls, value: list[ExerciseRoleTagV2]) -> list[ExerciseRoleTagV2]:
+        return _sorted_unique(value)
+
+
+class FatigueV2(BaseModel):
+    systemic_fatigue: FatigueLevelV2
+    local_fatigue: FatigueLevelV2
+    axial_loading: FatigueLevelV2
+    lower_back_fatigue: FatigueLevelV2
+    grip_demand: FatigueLevelV2
+    joint_stress_flags: list[str] = Field(default_factory=list)
+
+    @field_validator("joint_stress_flags")
+    @classmethod
+    def validate_joint_stress_flags(cls, value: list[str]) -> list[str]:
+        return _sorted_unique(value)
+
+
+class OverlapV2(BaseModel):
+    pressing_overlap: bool = False
+    front_delt_overlap: bool = False
+    triceps_overlap: bool = False
+    biceps_overlap: bool = False
+    grip_overlap: bool = False
+    trap_overlap: bool = False
+    lower_back_overlap: bool = False
+    knee_stress: bool = False
+    hip_hinge_overlap: bool = False
+
+
+class SubstitutionV2(BaseModel):
+    substitution_family: str = Field(min_length=1)
+    equipment_substitution_family: str = Field(min_length=1)
+    pattern_equivalent: SubstitutionEquivalenceV2
+    muscle_equivalent: SubstitutionEquivalenceV2
+    fatigue_equivalent: SubstitutionEquivalenceV2
+    preferred_substitution_rank: int = Field(ge=1)
+
+
+class SkillStabilitySafetyV2(BaseModel):
+    skill_requirement: SkillLevelV2
+    stability_requirement: SkillLevelV2
+    setup_complexity: SetupComplexityV2
+    spotter_required: bool = False
+    machine_supported: bool = False
+    unilateral: bool = False
+    bilateral: bool = False
+    bodyweight_dependent: bool = False
+    loadability: LoadabilityV2
+
+
+class HypertrophyMethodsV2(BaseModel):
+    stretch_biased: bool = False
+    shortened_biased: bool = False
+    lengthened_partial_compatible: bool = False
+    myo_rep_compatible: bool = False
+    drop_set_compatible: bool = False
+    rest_pause_compatible: bool = False
+    cluster_set_compatible: bool = False
+    static_stretch_compatible: bool = False
+    feeder_set_compatible: bool = False
+    failure_safe: bool = False
+
+
+class TimeEfficiencyV2(BaseModel):
+    setup_time: FatigueLevelV2
+    rest_need: RestNeedV2
+    superset_compatible: bool = False
+    antagonist_pairable: bool = False
+    non_interfering_pair_tags: list[str] = Field(default_factory=list)
+
+    @field_validator("non_interfering_pair_tags")
+    @classmethod
+    def validate_non_interfering_pair_tags(cls, value: list[str]) -> list[str]:
+        return _sorted_unique(value)
+
+
+class RestrictionsV2(BaseModel):
+    flags: list[RestrictionFlagV2] = Field(default_factory=list)
+
+    @field_validator("flags")
+    @classmethod
+    def validate_flags(cls, value: list[RestrictionFlagV2]) -> list[RestrictionFlagV2]:
+        return _sorted_unique(value)
+
+
+class MetadataProvenanceV2(BaseModel):
+    source: str = Field(min_length=1)
+    confidence: ConfidenceTagV2
+    review_status: CurationStatus = "seeded"
+    notes: list[str] = Field(default_factory=list)
+
+    @field_validator("notes")
+    @classmethod
+    def validate_notes(cls, value: list[str]) -> list[str]:
+        return _sorted_unique(value)
+
+
+class ExerciseMetadataV2(BaseModel):
+    muscle_targeting: MuscleTargetingV2
+    movement: MovementV2
+    role: ExerciseRoleV2
+    fatigue: FatigueV2
+    overlap: OverlapV2
+    substitution: SubstitutionV2
+    skill_stability_safety: SkillStabilitySafetyV2
+    hypertrophy_methods: HypertrophyMethodsV2
+    time_efficiency: TimeEfficiencyV2
+    restrictions: RestrictionsV2
+    provenance: MetadataProvenanceV2
+
+
 class CanonicalExerciseRecord(BaseModel):
     exercise_id: str = Field(min_length=1)
     canonical_name: str = Field(min_length=1)
@@ -112,6 +290,7 @@ class CanonicalExerciseRecord(BaseModel):
     overlap_relations: list[ExerciseOverlapRelation] = Field(default_factory=list)
     source_program_ids: list[str] = Field(default_factory=list)
     provenance: list[ProvenanceRef] = Field(default_factory=list)
+    metadata_v2: ExerciseMetadataV2 | None = None
     confidence: float = Field(ge=0, le=1)
     curation_status: CurationStatus = "seeded"
 
@@ -180,6 +359,27 @@ class CanonicalExerciseLibraryBundle(BaseModel):
     @field_validator("records")
     @classmethod
     def validate_unique_exercise_ids(cls, value: list[CanonicalExerciseRecord]) -> list[CanonicalExerciseRecord]:
+        exercise_ids = [record.exercise_id for record in value]
+        if len(exercise_ids) != len(set(exercise_ids)):
+            raise ValueError("records must have unique exercise_id values")
+        return value
+
+
+class ExerciseMetadataV2Record(BaseModel):
+    exercise_id: str = Field(min_length=1)
+    metadata_v2: ExerciseMetadataV2
+
+
+class ExerciseMetadataV2Bundle(BaseModel):
+    schema_version: str = Field(min_length=1)
+    bundle_id: str = Field(min_length=1)
+    bundle_version: str = Field(min_length=1)
+    build_marker: str = Field(min_length=1)
+    records: list[ExerciseMetadataV2Record] = Field(default_factory=list)
+
+    @field_validator("records")
+    @classmethod
+    def validate_unique_exercise_ids(cls, value: list[ExerciseMetadataV2Record]) -> list[ExerciseMetadataV2Record]:
         exercise_ids = [record.exercise_id for record in value]
         if len(exercise_ids) != len(set(exercise_ids)):
             raise ValueError("records must have unique exercise_id values")

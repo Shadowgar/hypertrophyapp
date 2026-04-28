@@ -1,0 +1,756 @@
+{
+  "schema_version": "knowledge-2",
+  "bundle_id": "exercise_library_metadata_v2",
+  "bundle_version": "0.1.0",
+  "build_marker": "static-seed-2026-04-28",
+  "records": [
+    {
+      "exercise_id": "flat_machine_chest_press",
+      "metadata_v2": {
+        "muscle_targeting": {
+          "primary_muscles": [
+            "chest"
+          ],
+          "secondary_muscles": [
+            "front_delts",
+            "triceps"
+          ],
+          "visible_grouped_muscle_mapping": [
+            "chest",
+            "delts",
+            "arms"
+          ]
+        },
+        "movement": {
+          "primary_pattern": "horizontal_push",
+          "secondary_patterns": [
+            "elbow_extension"
+          ],
+          "joint_actions": [
+            "horizontal_adduction",
+            "elbow_extension"
+          ]
+        },
+        "role": {
+          "tags": [
+            "primary",
+            "specialization"
+          ],
+          "primary_role": "primary"
+        },
+        "fatigue": {
+          "systemic_fatigue": "moderate",
+          "local_fatigue": "moderate",
+          "axial_loading": "low",
+          "lower_back_fatigue": "low",
+          "grip_demand": "low",
+          "joint_stress_flags": [
+            "shoulder_pressing"
+          ]
+        },
+        "overlap": {
+          "pressing_overlap": true,
+          "front_delt_overlap": true,
+          "triceps_overlap": true,
+          "biceps_overlap": false,
+          "grip_overlap": false,
+          "trap_overlap": false,
+          "lower_back_overlap": false,
+          "knee_stress": false,
+          "hip_hinge_overlap": false
+        },
+        "substitution": {
+          "substitution_family": "machine_horizontal_press",
+          "equipment_substitution_family": "machine_press",
+          "pattern_equivalent": "exact",
+          "muscle_equivalent": "exact",
+          "fatigue_equivalent": "near",
+          "preferred_substitution_rank": 1
+        },
+        "skill_stability_safety": {
+          "skill_requirement": "beginner_friendly",
+          "stability_requirement": "beginner_friendly",
+          "setup_complexity": "low",
+          "spotter_required": false,
+          "machine_supported": true,
+          "unilateral": false,
+          "bilateral": true,
+          "bodyweight_dependent": false,
+          "loadability": "high"
+        },
+        "hypertrophy_methods": {
+          "stretch_biased": false,
+          "shortened_biased": false,
+          "lengthened_partial_compatible": false,
+          "myo_rep_compatible": true,
+          "drop_set_compatible": true,
+          "rest_pause_compatible": true,
+          "cluster_set_compatible": false,
+          "static_stretch_compatible": false,
+          "feeder_set_compatible": true,
+          "failure_safe": true
+        },
+        "time_efficiency": {
+          "setup_time": "low",
+          "rest_need": "moderate",
+          "superset_compatible": true,
+          "antagonist_pairable": true,
+          "non_interfering_pair_tags": [
+            "calves",
+            "core"
+          ]
+        },
+        "restrictions": {
+          "flags": [
+            "avoid_overhead_pressing"
+          ]
+        },
+        "provenance": {
+          "source": "curated_seed_v2",
+          "confidence": "high",
+          "review_status": "curated",
+          "notes": [
+            "seed_record"
+          ]
+        }
+      }
+    },
+    {
+      "exercise_id": "chest_supported_machine_row",
+      "metadata_v2": {
+        "muscle_targeting": {
+          "primary_muscles": [
+            "lats",
+            "mid_back"
+          ],
+          "secondary_muscles": [
+            "biceps",
+            "rear_delts"
+          ],
+          "visible_grouped_muscle_mapping": [
+            "back",
+            "arms",
+            "delts"
+          ]
+        },
+        "movement": {
+          "primary_pattern": "horizontal_pull",
+          "secondary_patterns": [
+            "elbow_flexion"
+          ],
+          "joint_actions": [
+            "shoulder_extension_adduction",
+            "elbow_flexion"
+          ]
+        },
+        "role": {
+          "tags": [
+            "primary"
+          ],
+          "primary_role": "primary"
+        },
+        "fatigue": {
+          "systemic_fatigue": "moderate",
+          "local_fatigue": "moderate",
+          "axial_loading": "low",
+          "lower_back_fatigue": "low",
+          "grip_demand": "moderate",
+          "joint_stress_flags": [
+            "elbow_flexor_load"
+          ]
+        },
+        "overlap": {
+          "pressing_overlap": false,
+          "front_delt_overlap": false,
+          "triceps_overlap": false,
+          "biceps_overlap": true,
+          "grip_overlap": true,
+          "trap_overlap": true,
+          "lower_back_overlap": false,
+          "knee_stress": false,
+          "hip_hinge_overlap": false
+        },
+        "substitution": {
+          "substitution_family": "supported_horizontal_row",
+          "equipment_substitution_family": "machine_row",
+          "pattern_equivalent": "exact",
+          "muscle_equivalent": "exact",
+          "fatigue_equivalent": "near",
+          "preferred_substitution_rank": 1
+        },
+        "skill_stability_safety": {
+          "skill_requirement": "beginner_friendly",
+          "stability_requirement": "beginner_friendly",
+          "setup_complexity": "low",
+          "spotter_required": false,
+          "machine_supported": true,
+          "unilateral": false,
+          "bilateral": true,
+          "bodyweight_dependent": false,
+          "loadability": "high"
+        },
+        "hypertrophy_methods": {
+          "stretch_biased": true,
+          "shortened_biased": false,
+          "lengthened_partial_compatible": false,
+          "myo_rep_compatible": true,
+          "drop_set_compatible": true,
+          "rest_pause_compatible": false,
+          "cluster_set_compatible": false,
+          "static_stretch_compatible": false,
+          "feeder_set_compatible": true,
+          "failure_safe": true
+        },
+        "time_efficiency": {
+          "setup_time": "low",
+          "rest_need": "moderate",
+          "superset_compatible": true,
+          "antagonist_pairable": true,
+          "non_interfering_pair_tags": [
+            "triceps",
+            "calves"
+          ]
+        },
+        "restrictions": {
+          "flags": [
+            "avoid_high_grip_demand"
+          ]
+        },
+        "provenance": {
+          "source": "curated_seed_v2",
+          "confidence": "high",
+          "review_status": "curated",
+          "notes": [
+            "seed_record"
+          ]
+        }
+      }
+    },
+    {
+      "exercise_id": "hack_squat",
+      "metadata_v2": {
+        "muscle_targeting": {
+          "primary_muscles": [
+            "quads"
+          ],
+          "secondary_muscles": [
+            "glutes"
+          ],
+          "visible_grouped_muscle_mapping": [
+            "quads",
+            "glutes"
+          ]
+        },
+        "movement": {
+          "primary_pattern": "squat",
+          "secondary_patterns": [
+            "knee_extension"
+          ],
+          "joint_actions": [
+            "knee_extension",
+            "hip_extension"
+          ]
+        },
+        "role": {
+          "tags": [
+            "primary"
+          ],
+          "primary_role": "primary"
+        },
+        "fatigue": {
+          "systemic_fatigue": "high",
+          "local_fatigue": "high",
+          "axial_loading": "moderate",
+          "lower_back_fatigue": "moderate",
+          "grip_demand": "low",
+          "joint_stress_flags": [
+            "knee_loading"
+          ]
+        },
+        "overlap": {
+          "pressing_overlap": false,
+          "front_delt_overlap": false,
+          "triceps_overlap": false,
+          "biceps_overlap": false,
+          "grip_overlap": false,
+          "trap_overlap": false,
+          "lower_back_overlap": true,
+          "knee_stress": true,
+          "hip_hinge_overlap": false
+        },
+        "substitution": {
+          "substitution_family": "machine_squat_pattern",
+          "equipment_substitution_family": "machine_lower",
+          "pattern_equivalent": "exact",
+          "muscle_equivalent": "exact",
+          "fatigue_equivalent": "near",
+          "preferred_substitution_rank": 1
+        },
+        "skill_stability_safety": {
+          "skill_requirement": "intermediate",
+          "stability_requirement": "beginner_friendly",
+          "setup_complexity": "moderate",
+          "spotter_required": false,
+          "machine_supported": true,
+          "unilateral": false,
+          "bilateral": true,
+          "bodyweight_dependent": false,
+          "loadability": "high"
+        },
+        "hypertrophy_methods": {
+          "stretch_biased": true,
+          "shortened_biased": false,
+          "lengthened_partial_compatible": true,
+          "myo_rep_compatible": false,
+          "drop_set_compatible": false,
+          "rest_pause_compatible": false,
+          "cluster_set_compatible": false,
+          "static_stretch_compatible": false,
+          "feeder_set_compatible": true,
+          "failure_safe": false
+        },
+        "time_efficiency": {
+          "setup_time": "moderate",
+          "rest_need": "long",
+          "superset_compatible": false,
+          "antagonist_pairable": false,
+          "non_interfering_pair_tags": []
+        },
+        "restrictions": {
+          "flags": [
+            "avoid_deep_knee_flexion",
+            "avoid_axial_loading"
+          ]
+        },
+        "provenance": {
+          "source": "curated_seed_v2",
+          "confidence": "high",
+          "review_status": "curated",
+          "notes": [
+            "seed_record"
+          ]
+        }
+      }
+    },
+    {
+      "exercise_id": "barbell_rdl",
+      "metadata_v2": {
+        "muscle_targeting": {
+          "primary_muscles": [
+            "hamstrings",
+            "glutes"
+          ],
+          "secondary_muscles": [
+            "lower_back"
+          ],
+          "visible_grouped_muscle_mapping": [
+            "hamstrings",
+            "glutes",
+            "lower_back"
+          ]
+        },
+        "movement": {
+          "primary_pattern": "hinge",
+          "secondary_patterns": [
+            "hip_thrust_bridge"
+          ],
+          "joint_actions": [
+            "hip_extension"
+          ]
+        },
+        "role": {
+          "tags": [
+            "primary"
+          ],
+          "primary_role": "primary"
+        },
+        "fatigue": {
+          "systemic_fatigue": "high",
+          "local_fatigue": "high",
+          "axial_loading": "high",
+          "lower_back_fatigue": "high",
+          "grip_demand": "moderate",
+          "joint_stress_flags": [
+            "lumbar_loading"
+          ]
+        },
+        "overlap": {
+          "pressing_overlap": false,
+          "front_delt_overlap": false,
+          "triceps_overlap": false,
+          "biceps_overlap": false,
+          "grip_overlap": true,
+          "trap_overlap": true,
+          "lower_back_overlap": true,
+          "knee_stress": false,
+          "hip_hinge_overlap": true
+        },
+        "substitution": {
+          "substitution_family": "barbell_hinge",
+          "equipment_substitution_family": "barbell_hinge",
+          "pattern_equivalent": "exact",
+          "muscle_equivalent": "exact",
+          "fatigue_equivalent": "exact",
+          "preferred_substitution_rank": 1
+        },
+        "skill_stability_safety": {
+          "skill_requirement": "intermediate",
+          "stability_requirement": "intermediate",
+          "setup_complexity": "moderate",
+          "spotter_required": false,
+          "machine_supported": false,
+          "unilateral": false,
+          "bilateral": true,
+          "bodyweight_dependent": false,
+          "loadability": "high"
+        },
+        "hypertrophy_methods": {
+          "stretch_biased": true,
+          "shortened_biased": false,
+          "lengthened_partial_compatible": false,
+          "myo_rep_compatible": false,
+          "drop_set_compatible": false,
+          "rest_pause_compatible": false,
+          "cluster_set_compatible": false,
+          "static_stretch_compatible": false,
+          "feeder_set_compatible": true,
+          "failure_safe": false
+        },
+        "time_efficiency": {
+          "setup_time": "moderate",
+          "rest_need": "long",
+          "superset_compatible": false,
+          "antagonist_pairable": false,
+          "non_interfering_pair_tags": []
+        },
+        "restrictions": {
+          "flags": [
+            "avoid_barbell_from_floor",
+            "avoid_high_lower_back_fatigue"
+          ]
+        },
+        "provenance": {
+          "source": "curated_seed_v2",
+          "confidence": "high",
+          "review_status": "curated",
+          "notes": [
+            "seed_record"
+          ]
+        }
+      }
+    },
+    {
+      "exercise_id": "bayesian_cable_curl",
+      "metadata_v2": {
+        "muscle_targeting": {
+          "primary_muscles": [
+            "biceps"
+          ],
+          "secondary_muscles": [
+            "brachialis"
+          ],
+          "visible_grouped_muscle_mapping": [
+            "arms"
+          ]
+        },
+        "movement": {
+          "primary_pattern": "elbow_flexion",
+          "secondary_patterns": [],
+          "joint_actions": [
+            "elbow_flexion"
+          ]
+        },
+        "role": {
+          "tags": [
+            "secondary",
+            "pump_metabolic"
+          ],
+          "primary_role": "secondary"
+        },
+        "fatigue": {
+          "systemic_fatigue": "low",
+          "local_fatigue": "moderate",
+          "axial_loading": "low",
+          "lower_back_fatigue": "low",
+          "grip_demand": "low",
+          "joint_stress_flags": [
+            "elbow_flexor_load"
+          ]
+        },
+        "overlap": {
+          "pressing_overlap": false,
+          "front_delt_overlap": false,
+          "triceps_overlap": false,
+          "biceps_overlap": true,
+          "grip_overlap": false,
+          "trap_overlap": false,
+          "lower_back_overlap": false,
+          "knee_stress": false,
+          "hip_hinge_overlap": false
+        },
+        "substitution": {
+          "substitution_family": "cable_biceps_curl",
+          "equipment_substitution_family": "cable_arms",
+          "pattern_equivalent": "exact",
+          "muscle_equivalent": "exact",
+          "fatigue_equivalent": "near",
+          "preferred_substitution_rank": 1
+        },
+        "skill_stability_safety": {
+          "skill_requirement": "beginner_friendly",
+          "stability_requirement": "beginner_friendly",
+          "setup_complexity": "low",
+          "spotter_required": false,
+          "machine_supported": true,
+          "unilateral": true,
+          "bilateral": false,
+          "bodyweight_dependent": false,
+          "loadability": "moderate"
+        },
+        "hypertrophy_methods": {
+          "stretch_biased": true,
+          "shortened_biased": false,
+          "lengthened_partial_compatible": true,
+          "myo_rep_compatible": true,
+          "drop_set_compatible": true,
+          "rest_pause_compatible": true,
+          "cluster_set_compatible": false,
+          "static_stretch_compatible": false,
+          "feeder_set_compatible": true,
+          "failure_safe": true
+        },
+        "time_efficiency": {
+          "setup_time": "low",
+          "rest_need": "short",
+          "superset_compatible": true,
+          "antagonist_pairable": true,
+          "non_interfering_pair_tags": [
+            "triceps",
+            "calves",
+            "core"
+          ]
+        },
+        "restrictions": {
+          "flags": []
+        },
+        "provenance": {
+          "source": "curated_seed_v2",
+          "confidence": "high",
+          "review_status": "curated",
+          "notes": [
+            "seed_record"
+          ]
+        }
+      }
+    },
+    {
+      "exercise_id": "meadows_incline_db_lateral_raise",
+      "metadata_v2": {
+        "muscle_targeting": {
+          "primary_muscles": [
+            "side_delts"
+          ],
+          "secondary_muscles": [
+            "upper_traps"
+          ],
+          "visible_grouped_muscle_mapping": [
+            "delts"
+          ]
+        },
+        "movement": {
+          "primary_pattern": "shoulder_abduction",
+          "secondary_patterns": [],
+          "joint_actions": [
+            "shoulder_abduction"
+          ]
+        },
+        "role": {
+          "tags": [
+            "secondary",
+            "pump_metabolic"
+          ],
+          "primary_role": "secondary"
+        },
+        "fatigue": {
+          "systemic_fatigue": "low",
+          "local_fatigue": "moderate",
+          "axial_loading": "low",
+          "lower_back_fatigue": "low",
+          "grip_demand": "low",
+          "joint_stress_flags": [
+            "shoulder_abduction_stress"
+          ]
+        },
+        "overlap": {
+          "pressing_overlap": false,
+          "front_delt_overlap": false,
+          "triceps_overlap": false,
+          "biceps_overlap": false,
+          "grip_overlap": false,
+          "trap_overlap": true,
+          "lower_back_overlap": false,
+          "knee_stress": false,
+          "hip_hinge_overlap": false
+        },
+        "substitution": {
+          "substitution_family": "lateral_raise",
+          "equipment_substitution_family": "dumbbell_delts",
+          "pattern_equivalent": "exact",
+          "muscle_equivalent": "exact",
+          "fatigue_equivalent": "near",
+          "preferred_substitution_rank": 1
+        },
+        "skill_stability_safety": {
+          "skill_requirement": "beginner_friendly",
+          "stability_requirement": "beginner_friendly",
+          "setup_complexity": "low",
+          "spotter_required": false,
+          "machine_supported": false,
+          "unilateral": true,
+          "bilateral": false,
+          "bodyweight_dependent": false,
+          "loadability": "low"
+        },
+        "hypertrophy_methods": {
+          "stretch_biased": false,
+          "shortened_biased": true,
+          "lengthened_partial_compatible": false,
+          "myo_rep_compatible": true,
+          "drop_set_compatible": true,
+          "rest_pause_compatible": true,
+          "cluster_set_compatible": false,
+          "static_stretch_compatible": false,
+          "feeder_set_compatible": true,
+          "failure_safe": true
+        },
+        "time_efficiency": {
+          "setup_time": "low",
+          "rest_need": "short",
+          "superset_compatible": true,
+          "antagonist_pairable": true,
+          "non_interfering_pair_tags": [
+            "biceps",
+            "triceps",
+            "core"
+          ]
+        },
+        "restrictions": {
+          "flags": [
+            "avoid_overhead_pressing"
+          ]
+        },
+        "provenance": {
+          "source": "curated_seed_v2",
+          "confidence": "high",
+          "review_status": "curated",
+          "notes": [
+            "seed_record"
+          ]
+        }
+      }
+    },
+    {
+      "exercise_id": "cable_crunch",
+      "metadata_v2": {
+        "muscle_targeting": {
+          "primary_muscles": [
+            "abs"
+          ],
+          "secondary_muscles": [
+            "obliques"
+          ],
+          "visible_grouped_muscle_mapping": [
+            "core"
+          ]
+        },
+        "movement": {
+          "primary_pattern": "trunk_flexion",
+          "secondary_patterns": [
+            "trunk_stability"
+          ],
+          "joint_actions": [
+            "trunk_flexion"
+          ]
+        },
+        "role": {
+          "tags": [
+            "secondary",
+            "pump_metabolic"
+          ],
+          "primary_role": "secondary"
+        },
+        "fatigue": {
+          "systemic_fatigue": "low",
+          "local_fatigue": "moderate",
+          "axial_loading": "low",
+          "lower_back_fatigue": "low",
+          "grip_demand": "low",
+          "joint_stress_flags": []
+        },
+        "overlap": {
+          "pressing_overlap": false,
+          "front_delt_overlap": false,
+          "triceps_overlap": false,
+          "biceps_overlap": false,
+          "grip_overlap": false,
+          "trap_overlap": false,
+          "lower_back_overlap": false,
+          "knee_stress": false,
+          "hip_hinge_overlap": false
+        },
+        "substitution": {
+          "substitution_family": "cable_core_flexion",
+          "equipment_substitution_family": "cable_core",
+          "pattern_equivalent": "exact",
+          "muscle_equivalent": "exact",
+          "fatigue_equivalent": "near",
+          "preferred_substitution_rank": 1
+        },
+        "skill_stability_safety": {
+          "skill_requirement": "beginner_friendly",
+          "stability_requirement": "beginner_friendly",
+          "setup_complexity": "low",
+          "spotter_required": false,
+          "machine_supported": true,
+          "unilateral": false,
+          "bilateral": true,
+          "bodyweight_dependent": false,
+          "loadability": "moderate"
+        },
+        "hypertrophy_methods": {
+          "stretch_biased": false,
+          "shortened_biased": true,
+          "lengthened_partial_compatible": false,
+          "myo_rep_compatible": true,
+          "drop_set_compatible": true,
+          "rest_pause_compatible": true,
+          "cluster_set_compatible": false,
+          "static_stretch_compatible": false,
+          "feeder_set_compatible": true,
+          "failure_safe": true
+        },
+        "time_efficiency": {
+          "setup_time": "low",
+          "rest_need": "short",
+          "superset_compatible": true,
+          "antagonist_pairable": true,
+          "non_interfering_pair_tags": [
+            "calves",
+            "rear_delts"
+          ]
+        },
+        "restrictions": {
+          "flags": []
+        },
+        "provenance": {
+          "source": "curated_seed_v2",
+          "confidence": "high",
+          "review_status": "curated",
+          "notes": [
+            "seed_record"
+          ]
+        }
+      }
+    }
+  ]
+}
