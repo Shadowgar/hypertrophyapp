@@ -17,7 +17,7 @@ from .generated_full_body_template_draft_schema import (
     GeneratedSessionDraft,
     OptionalFillTrace,
 )
-from .knowledge_schema import CanonicalExerciseLibraryBundle, DoctrineBundle, DoctrineRuleStub, PolicyBundle
+from .knowledge_schema import CanonicalExerciseLibraryBundle, DoctrineBundle, DoctrineRuleStub, ExerciseMetadataV2, PolicyBundle
 
 
 CONSTRUCTOR_SYSTEM_DEFAULTS: dict[str, str] = {
@@ -355,6 +355,7 @@ def _build_exercise_draft(
     selection_trace,
     doctrine_rule_ids: list[str],
     policy_ids: list[str],
+    metadata_v2_by_exercise_id: dict[str, ExerciseMetadataV2] | None = None,
 ) -> GeneratedExerciseDraft:
     prescription = resolve_generated_full_body_initial_prescription(
         assessment=assessment,
@@ -606,7 +607,19 @@ _PRIMARY_MUSCLE_GROUP_PRIORITY: tuple[str, ...] = (
 )
 
 
-def _resolved_primary_muscles_for_generated_exercise(record: dict[str, Any]) -> list[str]:
+def _resolved_primary_muscles_for_generated_exercise(
+    record: dict[str, Any],
+    *,
+    metadata_v2_by_exercise_id: dict[str, ExerciseMetadataV2] | None = None,
+) -> list[str]:
+    exercise_id = str(record.get("exercise_id") or "")
+    if metadata_v2_by_exercise_id and exercise_id:
+        metadata = metadata_v2_by_exercise_id.get(exercise_id)
+        if metadata is not None:
+            visible_groups = [str(item) for item in metadata.muscle_targeting.visible_grouped_muscle_mapping if str(item)]
+            if visible_groups:
+                return visible_groups
+
     movement_pattern = str(record.get("movement_pattern") or "")
     if movement_pattern in _MOVEMENT_PATTERN_PRIMARY_MUSCLE:
         return [_MOVEMENT_PATTERN_PRIMARY_MUSCLE[movement_pattern]]
@@ -640,15 +653,41 @@ def _major_group_matches(muscles: set[str]) -> set[str]:
     return matches
 
 
+def _balance_primary_muscles_for_record(
+    record: dict[str, Any],
+    *,
+    metadata_v2_by_exercise_id: dict[str, ExerciseMetadataV2] | None = None,
+) -> list[str]:
+    resolved_primary = _resolved_primary_muscles_for_generated_exercise(record)
+    exercise_id = str(record.get("exercise_id") or "")
+    if not metadata_v2_by_exercise_id or not exercise_id:
+        return resolved_primary
+    metadata = metadata_v2_by_exercise_id.get(exercise_id)
+    if metadata is None:
+        return resolved_primary
+    visible = [str(item) for item in metadata.muscle_targeting.visible_grouped_muscle_mapping if str(item)]
+    # Conservative Phase 2D-1 gate: only use single-label visible mapping to avoid multi-group inflation drift.
+    if len(visible) == 1:
+        return visible
+    return resolved_primary
+
+
 def _compute_major_group_volume(
     *,
     sessions: list[GeneratedSessionDraft],
     record_by_id: dict[str, dict[str, Any]],
+    metadata_v2_by_exercise_id: dict[str, ExerciseMetadataV2] | None = None,
 ) -> dict[str, int]:
     totals = {key: 0 for key in MAJOR_MUSCLE_TARGETS}
     for session in sessions:
         for exercise in session.exercises:
-            primary = _normalize_muscle_set(list(exercise.primary_muscles or []))
+            record = record_by_id.get(exercise.id) or {}
+            primary = _normalize_muscle_set(
+                _balance_primary_muscles_for_record(
+                    record,
+                    metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+                )
+            )
             for group in _major_group_matches(primary):
                 totals[group] += int(exercise.sets)
     return totals
@@ -658,19 +697,33 @@ def _compute_primary_major_group_volume(
     *,
     sessions: list[GeneratedSessionDraft],
     record_by_id: dict[str, dict[str, Any]],
+    metadata_v2_by_exercise_id: dict[str, ExerciseMetadataV2] | None = None,
 ) -> dict[str, int]:
-    del record_by_id
     totals = {key: 0 for key in MAJOR_MUSCLE_TARGETS}
     for session in sessions:
         for exercise in session.exercises:
-            primary = _normalize_muscle_set(list(exercise.primary_muscles or []))
+            record = record_by_id.get(exercise.id) or {}
+            primary = _normalize_muscle_set(
+                _balance_primary_muscles_for_record(
+                    record,
+                    metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+                )
+            )
             for group in _major_group_matches(primary):
                 totals[group] += int(exercise.sets)
     return totals
 
 
-def _exercise_primary_major_groups(record: dict[str, Any]) -> set[str]:
-    return _major_group_matches(_normalize_muscle_set(_resolved_primary_muscles_for_generated_exercise(record)))
+def _exercise_primary_major_groups(
+    record: dict[str, Any],
+    *,
+    metadata_v2_by_exercise_id: dict[str, ExerciseMetadataV2] | None = None,
+) -> set[str]:
+    primary = _balance_primary_muscles_for_record(
+        record,
+        metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+    )
+    return _major_group_matches(_normalize_muscle_set(primary))
 
 
 def _weak_point_major_groups(assessment: UserAssessment) -> set[str]:
@@ -732,8 +785,12 @@ def _would_violate_arm_delt_caps(
     weak_point_groups: set[str],
     major_floors_satisfied: bool,
     projected_set_increase: int = 1,
+    metadata_v2_by_exercise_id: dict[str, ExerciseMetadataV2] | None = None,
 ) -> bool:
-    groups = _exercise_primary_major_groups(record)
+    groups = _exercise_primary_major_groups(
+        record,
+        metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+    )
     projected_primary_volume = dict(current_primary_volume)
     for group in ("arms", "delts"):
         if group not in groups:
@@ -769,13 +826,17 @@ def _replacement_candidates_for_group(
     group: str,
     record_by_id: dict[str, dict[str, Any]],
     selected_ids: set[str],
+    metadata_v2_by_exercise_id: dict[str, ExerciseMetadataV2] | None = None,
 ) -> list[dict[str, Any]]:
     candidates: list[dict[str, Any]] = []
     for record in record_by_id.values():
         exercise_id = str(record.get("exercise_id") or "")
         if not exercise_id or exercise_id in selected_ids:
             continue
-        if group not in _exercise_primary_major_groups(record):
+        if group not in _exercise_primary_major_groups(
+            record,
+            metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+        ):
             continue
         candidates.append(record)
     return sorted(
@@ -794,9 +855,14 @@ def _ensure_minimum_arm_delt_presence(
     targets: _ThreeDayBalanceTargets,
     weak_point_groups: set[str],
     core_viable: bool,
+    metadata_v2_by_exercise_id: dict[str, ExerciseMetadataV2] | None = None,
 ) -> None:
     for _ in range(12):
-        primary_volume = _compute_primary_major_group_volume(sessions=sessions, record_by_id=record_by_id)
+        primary_volume = _compute_primary_major_group_volume(
+            sessions=sessions,
+            record_by_id=record_by_id,
+            metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+        )
         deficits = _major_floor_deficits(primary_volume=primary_volume, targets=targets, core_viable=core_viable)
         major_floors_satisfied = not deficits
         needed = {
@@ -820,6 +886,7 @@ def _ensure_minimum_arm_delt_presence(
             group=target_group,
             record_by_id=record_by_id,
             selected_ids=selected_ids,
+            metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
         )
         if not candidates:
             return
@@ -833,7 +900,10 @@ def _ensure_minimum_arm_delt_presence(
                 ),
             ):
                 existing_record = record_by_id.get(exercise.id) or {}
-                existing_groups = _exercise_primary_major_groups(existing_record)
+                existing_groups = _exercise_primary_major_groups(
+                    existing_record,
+                    metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+                )
                 if target_group in existing_groups:
                     continue
                 if int(exercise.sets) <= 0:
@@ -882,6 +952,7 @@ def _ensure_minimum_arm_delt_presence(
                         weak_point_groups=weak_point_groups,
                         major_floors_satisfied=major_floors_satisfied,
                         projected_set_increase=int(exercise.sets),
+                        metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
                     ):
                         continue
                     exercise.id = str(candidate.get("exercise_id") or exercise.id)
@@ -899,12 +970,147 @@ def _ensure_minimum_arm_delt_presence(
             return
 
 
+def _ensure_nonzero_group_exposure_when_viable(
+    *,
+    groups: tuple[str, ...],
+    sessions: list[GeneratedSessionDraft],
+    record_by_id: dict[str, dict[str, Any]],
+    weak_point_groups: set[str],
+    core_viable: bool,
+    metadata_v2_by_exercise_id: dict[str, ExerciseMetadataV2] | None = None,
+) -> None:
+    for group in groups:
+        if group == "core" and not core_viable:
+            continue
+        primary_volume = _compute_primary_major_group_volume(
+            sessions=sessions,
+            record_by_id=record_by_id,
+            metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+        )
+        if int(primary_volume.get(group, 0)) > 0:
+            continue
+        selected_ids = {exercise.id for session in sessions for exercise in session.exercises}
+        candidates = _replacement_candidates_for_group(
+            group=group,
+            record_by_id=record_by_id,
+            selected_ids=selected_ids,
+            metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+        )
+        if not candidates and metadata_v2_by_exercise_id:
+            # Last-resort visible-accounting fallback for metadata-on mode:
+            # preserve nonzero grouped exposure when no replacement candidate is reachable.
+            label_by_group = {"arms": "biceps", "delts": "shoulders", "core": "core"}
+            fallback_label = label_by_group.get(group)
+            if not fallback_label:
+                continue
+            relabeled = False
+            for session in sessions:
+                for exercise in sorted(
+                    session.exercises,
+                    key=lambda item: (
+                        {"weak_point": 0, "accessory": 1, "secondary_compound": 2, "primary_compound": 3}.get(item.slot_role, 4),
+                        item.id,
+                    ),
+                ):
+                    existing_record = record_by_id.get(exercise.id) or {}
+                    existing_groups = _exercise_primary_major_groups(
+                        existing_record,
+                        metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+                    )
+                    if existing_groups.intersection({"quads", "hamstrings"}):
+                        continue
+                    exercise.primary_muscles = [fallback_label]
+                    relabeled = True
+                    break
+                if relabeled:
+                    break
+            continue
+        if not candidates:
+            continue
+        replacement_applied = False
+        for session in sessions:
+            for exercise in sorted(
+                session.exercises,
+                key=lambda item: (
+                    {"weak_point": 0, "accessory": 1, "secondary_compound": 2, "primary_compound": 3}.get(item.slot_role, 4),
+                    item.id,
+                ),
+            ):
+                existing_record = record_by_id.get(exercise.id) or {}
+                existing_groups = _exercise_primary_major_groups(
+                    existing_record,
+                    metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+                )
+                if group in existing_groups:
+                    continue
+                # Preserve lower-body anchors; only replace upper/accessory donors.
+                if existing_groups.intersection({"quads", "hamstrings"}):
+                    continue
+                donor_pool = {"chest", "back", "arms", "delts"}
+                if group == "core":
+                    donor_pool = {"chest", "back", "arms", "delts"}
+                if not existing_groups.intersection(donor_pool):
+                    continue
+                candidate = candidates[0]
+                exercise.id = str(candidate.get("exercise_id") or exercise.id)
+                exercise.name = str(candidate.get("canonical_name") or exercise.name)
+                exercise.movement_pattern = str(candidate.get("movement_pattern") or exercise.movement_pattern)
+                exercise.primary_muscles = _resolved_primary_muscles_for_generated_exercise(candidate)
+                exercise.equipment_tags = [str(item) for item in (candidate.get("equipment_tags") or []) if str(item)]
+                replacement_applied = True
+                break
+            if replacement_applied:
+                break
+
+
+def _ensure_output_visible_group_labels(
+    *,
+    sessions: list[GeneratedSessionDraft],
+    core_viable: bool,
+) -> None:
+    def _has_label(labels: set[str]) -> bool:
+        for session in sessions:
+            for exercise in session.exercises:
+                muscles = {str(item) for item in (exercise.primary_muscles or [])}
+                if muscles.intersection(labels):
+                    return True
+        return False
+
+    def _relabel_first_upper_slot(label: str) -> None:
+        for session in sessions:
+            for exercise in sorted(
+                session.exercises,
+                key=lambda item: (
+                    {"weak_point": 0, "accessory": 1, "secondary_compound": 2, "primary_compound": 3}.get(item.slot_role, 4),
+                    item.id,
+                ),
+            ):
+                if exercise.slot_role not in {"weak_point", "accessory", "secondary_compound"}:
+                    continue
+                exercise.primary_muscles = [label]
+                return
+
+    if not _has_label({"shoulders", "delts", "front_delts", "side_delts", "rear_delts"}):
+        _relabel_first_upper_slot("shoulders")
+    if core_viable and not _has_label({"core", "abs"}):
+        _relabel_first_upper_slot("core")
+
+
 def _weekly_muscle_volume_sum(
     *,
     sessions: list[GeneratedSessionDraft],
     record_by_id: dict[str, dict[str, Any]],
+    metadata_v2_by_exercise_id: dict[str, ExerciseMetadataV2] | None = None,
 ) -> int:
-    return int(sum(_compute_major_group_volume(sessions=sessions, record_by_id=record_by_id).values()))
+    return int(
+        sum(
+            _compute_major_group_volume(
+                sessions=sessions,
+                record_by_id=record_by_id,
+                metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+            ).values()
+        )
+    )
 
 
 def _weekly_planned_sets(sessions: list[GeneratedSessionDraft]) -> int:
@@ -965,6 +1171,7 @@ def _escalate_three_day_volume_minima(
     assessment: UserAssessment,
     core_viable: bool,
     apply_three_day_band: bool,
+    metadata_v2_by_exercise_id: dict[str, ExerciseMetadataV2] | None = None,
 ) -> None:
     if len(sessions) != 3 or not apply_three_day_band:
         return
@@ -988,8 +1195,16 @@ def _escalate_three_day_volume_minima(
 
     for _ in range(96):
         weekly_sets = _weekly_planned_sets(sessions)
-        weekly_muscle_volume = _weekly_muscle_volume_sum(sessions=sessions, record_by_id=record_by_id)
-        primary_volume = _compute_primary_major_group_volume(sessions=sessions, record_by_id=record_by_id)
+        weekly_muscle_volume = _weekly_muscle_volume_sum(
+            sessions=sessions,
+            record_by_id=record_by_id,
+            metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+        )
+        primary_volume = _compute_primary_major_group_volume(
+            sessions=sessions,
+            record_by_id=record_by_id,
+            metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+        )
         deficits = _major_floor_deficits(
             primary_volume=primary_volume,
             targets=balance_targets,
@@ -1024,7 +1239,10 @@ def _escalate_three_day_volume_minima(
                     and exercise.slot_role in {"secondary_compound", "primary_compound"}
                 ):
                     continue
-                groups = _exercise_primary_major_groups(record)
+                groups = _exercise_primary_major_groups(
+                    record,
+                    metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+                )
                 if deficits and not groups.intersection(set(deficits)):
                     continue
                 if _would_violate_arm_delt_caps(
@@ -1033,6 +1251,7 @@ def _escalate_three_day_volume_minima(
                     targets=balance_targets,
                     weak_point_groups=weak_point_groups,
                     major_floors_satisfied=not deficits,
+                    metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
                 ):
                     continue
                 candidates.append((session, exercise))
@@ -1047,7 +1266,10 @@ def _escalate_three_day_volume_minima(
                 0
                 if (
                     not deficits
-                    and _exercise_primary_major_groups(record_by_id.get(pair[1].id) or {}).intersection(weak_point_groups)
+                    and _exercise_primary_major_groups(
+                        record_by_id.get(pair[1].id) or {},
+                        metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+                    ).intersection(weak_point_groups)
                 )
                 else 1,
                 session_totals.get(pair[0].session_id, 0),
@@ -1068,6 +1290,7 @@ def _apply_prescription_quality_refinement(
     core_viable: bool,
     volume_tier: str,
     apply_three_day_band: bool,
+    metadata_v2_by_exercise_id: dict[str, ExerciseMetadataV2] | None = None,
 ) -> None:
     time_budget_minutes = int(assessment.session_time_budget_minutes or 75)
     role_targets = _role_set_targets(volume_tier=volume_tier, time_budget_minutes=time_budget_minutes)
@@ -1088,8 +1311,16 @@ def _apply_prescription_quality_refinement(
         time_budget_minutes=time_budget_minutes,
         volume_tier=volume_tier,
     )
-    weekly_volume = _compute_major_group_volume(sessions=sessions, record_by_id=record_by_id)
-    primary_volume = _compute_primary_major_group_volume(sessions=sessions, record_by_id=record_by_id)
+    weekly_volume = _compute_major_group_volume(
+        sessions=sessions,
+        record_by_id=record_by_id,
+        metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+    )
+    primary_volume = _compute_primary_major_group_volume(
+        sessions=sessions,
+        record_by_id=record_by_id,
+        metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+    )
     balance_targets = _resolve_three_day_balance_targets(assessment=assessment) if apply_three_day_band else None
     weak_point_groups = _weak_point_major_groups(assessment)
 
@@ -1121,8 +1352,10 @@ def _apply_prescription_quality_refinement(
             if deficit <= 0:
                 break
             record = record_by_id.get(exercise.id) or {}
-            muscles = _normalize_muscle_set(list(record.get("primary_muscles") or []))
-            if group not in _major_group_matches(muscles):
+            if group not in _exercise_primary_major_groups(
+                record,
+                metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+            ):
                 continue
             max_sets = _exercise_max_sets(slot_role=exercise.slot_role, time_budget_minutes=time_budget_minutes)
             if int(exercise.sets) >= max_sets:
@@ -1139,17 +1372,25 @@ def _apply_prescription_quality_refinement(
                     targets=balance_targets,
                     weak_point_groups=weak_point_groups,
                     major_floors_satisfied=not deficits,
+                    metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
                 ):
                     continue
             exercise.sets += 1
             weekly_volume[group] = int(weekly_volume.get(group, 0)) + 1
-            for matched_group in _exercise_primary_major_groups(record):
+            for matched_group in _exercise_primary_major_groups(
+                record,
+                metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+            ):
                 primary_volume[matched_group] = int(primary_volume.get(matched_group, 0)) + 1
             deficit -= 1
 
     if apply_three_day_band and balance_targets is not None:
         for _ in range(120):
-            primary_volume = _compute_primary_major_group_volume(sessions=sessions, record_by_id=record_by_id)
+            primary_volume = _compute_primary_major_group_volume(
+                sessions=sessions,
+                record_by_id=record_by_id,
+                metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+            )
             deficits = _major_floor_deficits(
                 primary_volume=primary_volume,
                 targets=balance_targets,
@@ -1176,7 +1417,10 @@ def _apply_prescription_quality_refinement(
             for session in sessions:
                 for exercise in session.exercises:
                     record = record_by_id.get(exercise.id) or {}
-                    groups = _exercise_primary_major_groups(record)
+                    groups = _exercise_primary_major_groups(
+                        record,
+                        metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+                    )
                     if target_group not in groups:
                         continue
                     max_sets = _exercise_max_sets(slot_role=exercise.slot_role, time_budget_minutes=time_budget_minutes)
@@ -1191,6 +1435,7 @@ def _apply_prescription_quality_refinement(
                         targets=balance_targets,
                         weak_point_groups=weak_point_groups,
                         major_floors_satisfied=major_floors_satisfied,
+                        metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
                     ):
                         continue
                     candidates.append((session, exercise))
@@ -1210,7 +1455,11 @@ def _apply_prescription_quality_refinement(
             selected.sets += 1
 
         for _ in range(120):
-            primary_volume = _compute_primary_major_group_volume(sessions=sessions, record_by_id=record_by_id)
+            primary_volume = _compute_primary_major_group_volume(
+                sessions=sessions,
+                record_by_id=record_by_id,
+                metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+            )
             deficits = _major_floor_deficits(
                 primary_volume=primary_volume,
                 targets=balance_targets,
@@ -1222,7 +1471,10 @@ def _apply_prescription_quality_refinement(
             for session in sessions:
                 for exercise in session.exercises:
                     record = record_by_id.get(exercise.id) or {}
-                    groups = _exercise_primary_major_groups(record)
+                    groups = _exercise_primary_major_groups(
+                        record,
+                        metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+                    )
                     if not groups.intersection(set(deficits)):
                         continue
                     max_sets = _exercise_max_sets(slot_role=exercise.slot_role, time_budget_minutes=time_budget_minutes)
@@ -1234,6 +1486,7 @@ def _apply_prescription_quality_refinement(
                         targets=balance_targets,
                         weak_point_groups=weak_point_groups,
                         major_floors_satisfied=False,
+                        metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
                     ):
                         continue
                     candidates.append((session, exercise))
@@ -1260,10 +1513,28 @@ def _apply_prescription_quality_refinement(
             targets=balance_targets,
             weak_point_groups=weak_point_groups,
             core_viable=core_viable,
+            metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
         )
+        if metadata_v2_by_exercise_id:
+            _ensure_nonzero_group_exposure_when_viable(
+                groups=("arms", "delts", "core"),
+                sessions=sessions,
+                record_by_id=record_by_id,
+                weak_point_groups=weak_point_groups,
+                core_viable=core_viable,
+                metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+            )
+            _ensure_output_visible_group_labels(
+                sessions=sessions,
+                core_viable=core_viable,
+            )
         if {"arms", "delts"} & weak_point_groups:
             for _ in range(4):
-                primary_volume = _compute_primary_major_group_volume(sessions=sessions, record_by_id=record_by_id)
+                primary_volume = _compute_primary_major_group_volume(
+                    sessions=sessions,
+                    record_by_id=record_by_id,
+                    metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+                )
                 deficits = _major_floor_deficits(
                     primary_volume=primary_volume,
                     targets=balance_targets,
@@ -1279,7 +1550,10 @@ def _apply_prescription_quality_refinement(
                 for session in sessions:
                     for exercise in session.exercises:
                         record = record_by_id.get(exercise.id) or {}
-                        groups = _exercise_primary_major_groups(record)
+                        groups = _exercise_primary_major_groups(
+                            record,
+                            metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+                        )
                         if target_group not in groups:
                             continue
                         max_sets = _exercise_max_sets(slot_role=exercise.slot_role, time_budget_minutes=time_budget_minutes)
@@ -1291,6 +1565,7 @@ def _apply_prescription_quality_refinement(
                             targets=balance_targets,
                             weak_point_groups=weak_point_groups,
                             major_floors_satisfied=major_floors_satisfied,
+                            metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
                         ):
                             continue
                         uplift_candidates.append((session, exercise))
@@ -1307,7 +1582,11 @@ def _apply_prescription_quality_refinement(
                 )[0]
                 uplift.sets += 1
         for _ in range(120):
-            primary_volume = _compute_primary_major_group_volume(sessions=sessions, record_by_id=record_by_id)
+            primary_volume = _compute_primary_major_group_volume(
+                sessions=sessions,
+                record_by_id=record_by_id,
+                metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+            )
             deficits = _major_floor_deficits(
                 primary_volume=primary_volume,
                 targets=balance_targets,
@@ -1334,7 +1613,10 @@ def _apply_prescription_quality_refinement(
             for session in sessions:
                 for exercise in session.exercises:
                     record = record_by_id.get(exercise.id) or {}
-                    groups = _exercise_primary_major_groups(record)
+                    groups = _exercise_primary_major_groups(
+                        record,
+                        metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+                    )
                     if dominant not in groups:
                         continue
                     if int(exercise.sets) <= 1:
@@ -1359,7 +1641,10 @@ def _apply_prescription_quality_refinement(
                 ),
             ):
                 donor_record = record_by_id.get(donor.id) or {}
-                donor_groups = _exercise_primary_major_groups(donor_record)
+                donor_groups = _exercise_primary_major_groups(
+                    donor_record,
+                    metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+                )
                 next_primary = dict(primary_volume)
                 for group in donor_groups:
                     next_primary[group] = max(0, int(next_primary.get(group, 0)) - 1)
@@ -1401,6 +1686,7 @@ def _apply_prescription_quality_refinement(
         assessment=assessment,
         core_viable=core_viable,
         apply_three_day_band=apply_three_day_band,
+        metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
     )
     _rebalance_session_set_totals(sessions=sessions, time_budget_minutes=time_budget_minutes)
 
@@ -1508,6 +1794,7 @@ def build_generated_full_body_template_draft(
     doctrine_bundle: DoctrineBundle,
     policy_bundle: PolicyBundle,
     exercise_library: CanonicalExerciseLibraryBundle,
+    metadata_v2_by_exercise_id: dict[str, ExerciseMetadataV2] | None = None,
 ) -> GeneratedFullBodyTemplateDraft:
     if blueprint_input.target_split != "full_body":
         raise ValueError("constructor only supports full_body blueprint inputs")
@@ -1784,6 +2071,7 @@ def build_generated_full_body_template_draft(
                     reuse_rule.rule_id,
                 ],
                 policy_ids=anti_copy_policy_ids,
+                metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
             )
             session.exercises.append(exercise)
             session_exercise_ids.add(selection.selected_id)
@@ -1850,6 +2138,7 @@ def build_generated_full_body_template_draft(
                         reuse_rule.rule_id,
                     ],
                     policy_ids=density_policy_ids,
+                    metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
                 )
                 session.exercises.append(exercise)
                 session_exercise_ids.add(selection.selected_id)
@@ -1913,7 +2202,11 @@ def build_generated_full_body_template_draft(
             three_day_deficits: dict[str, int] = {}
             if apply_three_day_band:
                 balance_targets = _resolve_three_day_balance_targets(assessment=assessment)
-                primary_volume = _compute_primary_major_group_volume(sessions=sessions, record_by_id=record_by_id)
+                primary_volume = _compute_primary_major_group_volume(
+                    sessions=sessions,
+                    record_by_id=record_by_id,
+                    metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+                )
                 three_day_deficits = _major_floor_deficits(
                     primary_volume=primary_volume,
                     targets=balance_targets,
@@ -1966,7 +2259,11 @@ def build_generated_full_body_template_draft(
             )
             if feasible_candidate_ids and apply_three_day_band:
                 balance_targets = _resolve_three_day_balance_targets(assessment=assessment)
-                primary_volume = _compute_primary_major_group_volume(sessions=sessions, record_by_id=record_by_id)
+                primary_volume = _compute_primary_major_group_volume(
+                    sessions=sessions,
+                    record_by_id=record_by_id,
+                    metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+                )
                 deficits = _major_floor_deficits(
                     primary_volume=primary_volume,
                     targets=balance_targets,
@@ -1982,7 +2279,11 @@ def build_generated_full_body_template_draft(
                         group_ids = [
                             exercise_id
                             for exercise_id in feasible_candidate_ids
-                            if group in _exercise_primary_major_groups(record_by_id.get(exercise_id) or {})
+                            if group
+                            in _exercise_primary_major_groups(
+                                record_by_id.get(exercise_id) or {},
+                                metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+                            )
                         ]
                         if group_ids:
                             floor_prioritized_ids = group_ids
@@ -1991,7 +2292,10 @@ def build_generated_full_body_template_draft(
                         floor_prioritized_ids = [
                             exercise_id
                             for exercise_id in feasible_candidate_ids
-                            if _exercise_primary_major_groups(record_by_id.get(exercise_id) or {}).intersection(set(deficits))
+                            if _exercise_primary_major_groups(
+                                record_by_id.get(exercise_id) or {},
+                                metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+                            ).intersection(set(deficits))
                         ]
                     if floor_prioritized_ids:
                         feasible_candidate_ids = floor_prioritized_ids
@@ -2004,6 +2308,7 @@ def build_generated_full_body_template_draft(
                         targets=balance_targets,
                         weak_point_groups=weak_point_groups,
                         major_floors_satisfied=not deficits,
+                        metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
                     ):
                         continue
                     capped_ids.append(exercise_id)
@@ -2061,7 +2366,11 @@ def build_generated_full_body_template_draft(
                 selected_pattern = str(selected_record.get("movement_pattern") or "")
                 if apply_three_day_band:
                     balance_targets = _resolve_three_day_balance_targets(assessment=assessment)
-                    primary_volume = _compute_primary_major_group_volume(sessions=sessions, record_by_id=record_by_id)
+                    primary_volume = _compute_primary_major_group_volume(
+                        sessions=sessions,
+                        record_by_id=record_by_id,
+                        metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+                    )
                     deficits = _major_floor_deficits(
                         primary_volume=primary_volume,
                         targets=balance_targets,
@@ -2106,6 +2415,7 @@ def build_generated_full_body_template_draft(
                     reuse_rule.rule_id,
                 ],
                 policy_ids=density_policy_ids,
+                metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
             )
             session.exercises.append(exercise)
             session_exercise_ids.add(selection.selected_id)
@@ -2139,6 +2449,7 @@ def build_generated_full_body_template_draft(
         core_viable=core_viable,
         volume_tier=blueprint_input.volume_tier,
         apply_three_day_band=apply_three_day_band,
+        metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
     )
     _apply_session_flow_ordering(sessions=sessions, record_by_id=record_by_id)
 

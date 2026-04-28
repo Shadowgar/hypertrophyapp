@@ -12,6 +12,7 @@ from .generated_full_body_blueprint_schema import (
     PatternInsufficiencyRecord,
 )
 from .knowledge_schema import CanonicalExerciseLibraryBundle, DoctrineBundle, PolicyBundle
+from .knowledge_schema import ExerciseMetadataV2
 
 
 BLUEPRINT_SYSTEM_DEFAULTS: dict[str, str] = {
@@ -122,7 +123,9 @@ def build_generated_full_body_blueprint_input(
     doctrine_bundle: DoctrineBundle,
     policy_bundle: PolicyBundle,
     exercise_library: CanonicalExerciseLibraryBundle,
+    metadata_v2_by_exercise_id: dict[str, ExerciseMetadataV2] | None = None,
 ) -> GeneratedFullBodyBlueprintInput:
+    del metadata_v2_by_exercise_id
     defaults_used: list[str] = []
     doctrine_rule_ids = {
         "split": "split_full_body_supported_days_v1",

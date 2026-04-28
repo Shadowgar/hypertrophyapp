@@ -10,7 +10,7 @@ from .generated_assessment_builder import build_user_assessment
 from .generated_assessment_schema import ProfileAssessmentInput
 from .generated_full_body_blueprint_builder import build_generated_full_body_blueprint_input
 from .generated_full_body_template_constructor import build_generated_full_body_template_draft
-from .knowledge_loader import load_doctrine_bundle, load_exercise_library, load_policy_bundle
+from .knowledge_loader import load_doctrine_bundle, load_exercise_library, load_exercise_metadata_v2, load_policy_bundle
 from .template_schema import CanonicalProgramTemplate
 
 
@@ -205,6 +205,18 @@ def prepare_generated_full_body_runtime_template(
             fallback_reason=FALLBACK_REASON_BUNDLE_LOAD_FAILED,
         )
 
+    metadata_v2_loaded = False
+    metadata_v2_record_count = 0
+    metadata_v2_by_exercise_id: dict[str, Any] | None = None
+    try:
+        metadata_bundle = load_exercise_metadata_v2(compiled_base_dir)
+    except Exception:
+        metadata_bundle = None
+    if metadata_bundle is not None:
+        metadata_v2_by_exercise_id = {record.exercise_id: record.metadata_v2 for record in metadata_bundle.records}
+        metadata_v2_loaded = True
+        metadata_v2_record_count = len(metadata_bundle.records)
+
     try:
         assessment = build_user_assessment(
             profile_input=profile_input,
@@ -225,6 +237,7 @@ def prepare_generated_full_body_runtime_template(
             doctrine_bundle=doctrine_bundle,
             policy_bundle=policy_bundle,
             exercise_library=exercise_library,
+            metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
         )
     except (ValidationError, ValueError):
         return _fallback_result(
@@ -241,6 +254,7 @@ def prepare_generated_full_body_runtime_template(
             doctrine_bundle=doctrine_bundle,
             policy_bundle=policy_bundle,
             exercise_library=exercise_library,
+            metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
         )
     except Exception:
         return _fallback_result(
@@ -280,6 +294,36 @@ def prepare_generated_full_body_runtime_template(
         )
 
     trace = _base_trace(selected_template_id=selected_template_id, activation_guard_matched=True)
+    candidate_ids = {
+        exercise_id
+        for exercise_ids in blueprint_input.candidate_exercise_ids_by_pattern.values()
+        for exercise_id in exercise_ids
+    }
+    candidate_coverage = (
+        float(
+            len(
+                [
+                    exercise_id
+                    for exercise_id in candidate_ids
+                    if metadata_v2_by_exercise_id is not None and exercise_id in metadata_v2_by_exercise_id
+                ]
+            )
+        )
+        / float(len(candidate_ids))
+        if candidate_ids
+        else 0.0
+    )
+    selected_exercises = [exercise for session in draft.sessions for exercise in session.exercises]
+    fallback_count = 0
+    metadata_visible_count = 0
+    for exercise in selected_exercises:
+        metadata = None if metadata_v2_by_exercise_id is None else metadata_v2_by_exercise_id.get(exercise.id)
+        visible = [] if metadata is None else list(metadata.muscle_targeting.visible_grouped_muscle_mapping)
+        if visible:
+            metadata_visible_count += 1
+        else:
+            fallback_count += 1
+
     trace.update(
         {
             "status": "generated_constructor_applied",
@@ -289,6 +333,11 @@ def prepare_generated_full_body_runtime_template(
             "generated_blueprint_input_id": blueprint_input.blueprint_input_id,
             "generated_template_draft_id": draft.template_draft_id,
             "constructibility_status": draft.constructibility_status,
+            "metadata_v2_loaded": metadata_v2_loaded,
+            "metadata_v2_record_count": metadata_v2_record_count,
+            "metadata_v2_candidate_coverage_ratio": candidate_coverage,
+            "metadata_v2_used_for_visible_balance": bool(metadata_v2_loaded and metadata_visible_count > 0),
+            "metadata_v2_fallback_count": fallback_count,
         }
     )
     return {

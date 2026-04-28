@@ -56,6 +56,9 @@ def _post_profile(
     days_available: int,
     weak_areas: list[str] | None = None,
     program_selection_mode: str = "manual",
+    session_time_budget_minutes: int | None = None,
+    near_failure_tolerance: str | None = None,
+    movement_restrictions: list[str] | None = None,
 ) -> None:
     response = client.post(
         "/profile",
@@ -77,6 +80,9 @@ def _post_profile(
             "protein": 180,
             "fat": 70,
             "carbs": 280,
+            "session_time_budget_minutes": session_time_budget_minutes,
+            "near_failure_tolerance": near_failure_tolerance,
+            "movement_restrictions": movement_restrictions or [],
         },
     )
     assert response.status_code == 200
@@ -176,6 +182,22 @@ def _visible_grouped_week_volume(payload: dict) -> dict[str, int]:
     return grouped
 
 
+def _session_exercise_lookup(payload: dict) -> dict[str, dict]:
+    lookup: dict[str, dict] = {}
+    for session in payload.get("sessions") or []:
+        for exercise in session.get("exercises") or []:
+            lookup[str(exercise.get("id") or "")] = exercise
+    return lookup
+
+
+def _has_movement_pattern(payload: dict, patterns: set[str]) -> bool:
+    for session in payload.get("sessions") or []:
+        for exercise in session.get("exercises") or []:
+            if str(exercise.get("movement_pattern") or "") in patterns:
+                return True
+    return False
+
+
 def test_generate_week_uses_generated_constructor_on_canonical_full_body_compatibility_seam() -> None:
     _reset_db()
     client = TestClient(app)
@@ -208,6 +230,11 @@ def test_generate_week_uses_generated_constructor_on_canonical_full_body_compati
     assert runtime_trace["generated_constructor_applied"] is True
     assert runtime_trace["activation_guard_matched"] is True
     assert runtime_trace["anti_copy_guard_mode"] == "doctrine_blueprint_constructor_only"
+    assert "metadata_v2_loaded" in runtime_trace
+    assert "metadata_v2_record_count" in runtime_trace
+    assert "metadata_v2_candidate_coverage_ratio" in runtime_trace
+    assert "metadata_v2_used_for_visible_balance" in runtime_trace
+    assert "metadata_v2_fallback_count" in runtime_trace
     assert all(session["session_id"].startswith(f"{CANONICAL_PROGRAM_ID}-") for session in payload["sessions"])
     assert payload["decision_trace"]["outcome"]["content_origin"] == "generated_constructor_applied"
     assert payload["decision_trace"]["outcome"]["generated_constructor_applied"] is True
@@ -632,3 +659,238 @@ def test_generate_week_visible_grouped_volume_balancing_is_reflected_in_runtime_
     assert grouped["hamstrings"] >= 6, grouped
     assert grouped["arms"] <= 28, grouped
     assert grouped["delts"] <= 18, grouped
+
+
+def test_generated_runtime_metadata_missing_still_builds_with_trace_defaults(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_user(
+        client,
+        email="generated-runtime-metadata-missing@example.com",
+        name="Generated Runtime Metadata Missing",
+    )
+    _post_profile(
+        client,
+        headers=headers,
+        selected_program_id="full_body_v1",
+        split_preference="full_body",
+        training_location="gym",
+        equipment_profile=["barbell", "bench", "cable", "machine", "dumbbell"],
+        days_available=3,
+        weak_areas=["chest", "hamstrings"],
+    )
+    monkeypatch.setattr(runtime_adapter, "load_exercise_metadata_v2", lambda *args, **kwargs: None)
+
+    response = client.post("/plan/generate-week", headers=headers, json={})
+    assert response.status_code == 200
+    payload = response.json()
+    runtime_trace = payload["template_selection_trace"]["generated_full_body_runtime_trace"]
+    assert runtime_trace["content_origin"] == "generated_constructor_applied"
+    assert runtime_trace["metadata_v2_loaded"] is False
+    assert runtime_trace["metadata_v2_record_count"] == 0
+    assert runtime_trace["metadata_v2_candidate_coverage_ratio"] == 0.0
+    assert runtime_trace["metadata_v2_used_for_visible_balance"] is False
+    assert runtime_trace["metadata_v2_fallback_count"] >= 0
+
+
+def test_generated_runtime_metadata_visible_mapping_is_applied_when_present(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_user(
+        client,
+        email="generated-runtime-metadata-visible-map@example.com",
+        name="Generated Runtime Metadata Visible Map",
+    )
+    _post_profile(
+        client,
+        headers=headers,
+        selected_program_id="full_body_v1",
+        split_preference="full_body",
+        training_location="gym",
+        equipment_profile=["barbell", "bench", "cable", "machine", "dumbbell"],
+        days_available=3,
+        weak_areas=["chest", "hamstrings"],
+    )
+
+    baseline_response = client.post("/plan/generate-week", headers=headers, json={})
+    assert baseline_response.status_code == 200
+    baseline_payload = baseline_response.json()
+    baseline_lookup = _session_exercise_lookup(baseline_payload)
+    assert baseline_lookup
+    target_id = sorted(baseline_lookup.keys())[0]
+
+    metadata_bundle = runtime_adapter.load_exercise_metadata_v2()
+    assert metadata_bundle is not None
+    mutated = metadata_bundle.model_copy(deep=True)
+    mutated_records = []
+    for record in mutated.records:
+        if record.exercise_id == target_id:
+            rec = record.model_copy(deep=True)
+            rec.metadata_v2.muscle_targeting.visible_grouped_muscle_mapping = ["core"]
+            mutated_records.append(rec)
+        else:
+            mutated_records.append(record)
+    mutated.records = mutated_records
+
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_user(
+        client,
+        email="generated-runtime-metadata-visible-map-2@example.com",
+        name="Generated Runtime Metadata Visible Map 2",
+    )
+    _post_profile(
+        client,
+        headers=headers,
+        selected_program_id="full_body_v1",
+        split_preference="full_body",
+        training_location="gym",
+        equipment_profile=["barbell", "bench", "cable", "machine", "dumbbell"],
+        days_available=3,
+        weak_areas=["chest", "hamstrings"],
+    )
+    monkeypatch.setattr(runtime_adapter, "load_exercise_metadata_v2", lambda *args, **kwargs: mutated)
+
+    mapped_response = client.post("/plan/generate-week", headers=headers, json={})
+    assert mapped_response.status_code == 200
+    mapped_payload = mapped_response.json()
+    baseline_grouped = _visible_grouped_week_volume(baseline_payload)
+    mapped_grouped = _visible_grouped_week_volume(mapped_payload)
+    assert baseline_grouped
+    assert mapped_grouped
+
+    runtime_trace = mapped_payload["template_selection_trace"]["generated_full_body_runtime_trace"]
+    assert runtime_trace["metadata_v2_loaded"] is True
+    assert runtime_trace["metadata_v2_record_count"] >= 1
+    assert runtime_trace["metadata_v2_used_for_visible_balance"] is True
+    assert runtime_trace["metadata_v2_candidate_coverage_ratio"] > 0.0
+
+
+def test_generated_runtime_with_metadata_present_is_deterministic_and_reports_coverage() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_user(
+        client,
+        email="generated-runtime-metadata-deterministic@example.com",
+        name="Generated Runtime Metadata Deterministic",
+    )
+    _post_profile(
+        client,
+        headers=headers,
+        selected_program_id="full_body_v1",
+        split_preference="full_body",
+        training_location="gym",
+        equipment_profile=["barbell", "bench", "cable", "machine", "dumbbell"],
+        days_available=3,
+        weak_areas=["chest", "hamstrings"],
+    )
+
+    first = client.post("/plan/generate-week", headers=headers, json={})
+    second = client.post("/plan/generate-week", headers=headers, json={})
+    assert first.status_code == 200
+    assert second.status_code == 200
+    first_payload = first.json()
+    second_payload = second.json()
+    assert first_payload["sessions"] == second_payload["sessions"]
+
+    runtime_trace = first_payload["template_selection_trace"]["generated_full_body_runtime_trace"]
+    assert runtime_trace["metadata_v2_loaded"] is True
+    assert runtime_trace["metadata_v2_record_count"] >= 1
+    assert 0.0 <= float(runtime_trace["metadata_v2_candidate_coverage_ratio"]) <= 1.0
+    assert runtime_trace["metadata_v2_fallback_count"] >= 0
+
+
+def test_generated_runtime_low_time_metadata_on_preserves_nonzero_viable_exposure() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_user(
+        client,
+        email="generated-runtime-low-time-metadata-on@example.com",
+        name="Generated Runtime Low Time Metadata",
+    )
+    _post_profile(
+        client,
+        headers=headers,
+        selected_program_id="full_body_v1",
+        split_preference="full_body",
+        training_location="gym",
+        equipment_profile=["barbell", "bench", "cable", "machine", "dumbbell"],
+        days_available=3,
+        weak_areas=["quads"],
+        session_time_budget_minutes=45,
+        near_failure_tolerance="high",
+    )
+
+    response = client.post("/plan/generate-week", headers=headers, json={})
+    assert response.status_code == 200
+    payload = response.json()
+    grouped = _visible_grouped_week_volume(payload)
+    trace = payload["template_selection_trace"]["generated_full_body_runtime_trace"]
+    planned_sets = sum(
+        int(exercise.get("sets") or 0)
+        for session in payload.get("sessions") or []
+        for exercise in session.get("exercises") or []
+    )
+
+    assert trace["metadata_v2_loaded"] is True
+    assert trace["metadata_v2_used_for_visible_balance"] is True
+    assert grouped["arms"] > 0, grouped
+    if _has_movement_pattern(payload, {"vertical_press", "lateral_raise"}):
+        assert grouped["delts"] > 0, grouped
+    if _has_movement_pattern(payload, {"core"}):
+        assert grouped["core"] > 0, grouped
+    if planned_sets >= 42:
+        assert grouped["chest"] >= 7, grouped
+        assert grouped["back"] >= 8, grouped
+        assert grouped["quads"] >= 6, grouped
+        assert grouped["hamstrings"] >= 6, grouped
+
+
+def test_generated_runtime_low_recovery_metadata_on_preserves_nonzero_viable_exposure() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_user(
+        client,
+        email="generated-runtime-low-recovery-metadata-on@example.com",
+        name="Generated Runtime Low Recovery Metadata",
+    )
+    _post_profile(
+        client,
+        headers=headers,
+        selected_program_id="full_body_v1",
+        split_preference="full_body",
+        training_location="gym",
+        equipment_profile=["barbell", "bench", "cable", "machine", "dumbbell"],
+        days_available=3,
+        weak_areas=["delts"],
+        session_time_budget_minutes=60,
+        near_failure_tolerance="low",
+    )
+
+    response = client.post("/plan/generate-week", headers=headers, json={})
+    assert response.status_code == 200
+    payload = response.json()
+    grouped = _visible_grouped_week_volume(payload)
+    trace = payload["template_selection_trace"]["generated_full_body_runtime_trace"]
+    planned_sets = sum(
+        int(exercise.get("sets") or 0)
+        for session in payload.get("sessions") or []
+        for exercise in session.get("exercises") or []
+    )
+
+    assert trace["metadata_v2_loaded"] is True
+    assert trace["metadata_v2_used_for_visible_balance"] is True
+    assert grouped["arms"] > 0, grouped
+    if _has_movement_pattern(payload, {"vertical_press", "lateral_raise"}):
+        assert grouped["delts"] > 0, grouped
+    if _has_movement_pattern(payload, {"core"}):
+        assert grouped["core"] > 0, grouped
+    if planned_sets >= 42:
+        assert grouped["chest"] >= 7, grouped
+        assert grouped["back"] >= 8, grouped
+        assert grouped["quads"] >= 6, grouped
+        assert grouped["hamstrings"] >= 6, grouped
