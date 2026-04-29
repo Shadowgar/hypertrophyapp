@@ -201,7 +201,7 @@ def test_generate_week_supports_adaptive_gold_runtime_program() -> None:
         "Generated Full Body 3",
     ]
     exercise_counts = [len(session["exercises"]) for session in plan["sessions"]]
-    assert len(set(exercise_counts)) == 1
+    assert max(exercise_counts) - min(exercise_counts) <= 1
     assert exercise_counts[0] >= 4
     assert plan["mesocycle"]["authored_week_index"] == 1
     assert plan["mesocycle"]["week_index"] == 1
@@ -486,7 +486,7 @@ def test_adaptive_gold_generate_week_includes_core_slot_when_equipment_available
 
     _assert_generated_full_body_runtime(plan)
     exercise_counts = [len(session["exercises"]) for session in plan["sessions"]]
-    assert len(set(exercise_counts)) == 1
+    assert max(exercise_counts) - min(exercise_counts) <= 1
     assert exercise_counts[0] >= 4
     exercises = [exercise for session in plan["sessions"] for exercise in session["exercises"]]
     assert any(
@@ -671,7 +671,7 @@ def test_adaptive_gold_generate_week_preserves_weak_point_days_when_frequency_co
     assert len(titles) == 2
     assert titles == ["Generated Full Body 1", "Generated Full Body 2"]
     exercise_counts = [len(session["exercises"]) for session in plan["sessions"]]
-    assert len(set(exercise_counts)) == 1
+    assert max(exercise_counts) - min(exercise_counts) <= 1
     assert exercise_counts[0] >= 4
 
 

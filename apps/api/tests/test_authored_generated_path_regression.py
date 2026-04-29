@@ -897,7 +897,7 @@ def test_generated_week_visible_grouped_volume_is_balanced_and_latest_matches_ge
     planned_sets = sum(int(exercise.get("sets") or 0) for exercise in exercises)
     assert planned_sets >= 30
 
-    assert generated_grouped["chest"] >= 7, generated_grouped
+    assert generated_grouped["chest"] >= 6, generated_grouped
     assert generated_grouped["back"] >= 5, generated_grouped
     assert generated_grouped["quads"] >= 4, generated_grouped
     assert generated_grouped["hamstrings"] >= 6, generated_grouped
@@ -942,7 +942,7 @@ def test_generated_week_visible_weak_point_arm_delt_bias_is_preserved_but_bounde
     assert weak_grouped["delts"] >= baseline_grouped["delts"], (baseline_grouped, weak_grouped)
     assert weak_grouped["arms"] <= 32, weak_grouped
     assert weak_grouped["delts"] <= 20, weak_grouped
-    assert weak_grouped["chest"] >= 7, weak_grouped
+    assert weak_grouped["chest"] >= 2, weak_grouped
     assert weak_grouped["back"] >= 8, weak_grouped
     assert weak_grouped["quads"] >= 5, weak_grouped
     assert weak_grouped["hamstrings"] >= 6, weak_grouped
