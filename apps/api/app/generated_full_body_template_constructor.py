@@ -482,6 +482,7 @@ def _density_targets_for_budget(
     doctrine_target: int,
     minimum_exercises_per_session: int,
     apply_three_day_band: bool,
+    session_exercise_cap_limit: int | None = None,
 ) -> tuple[int, int]:
     budget = int(assessment.session_time_budget_minutes or 75)
     if budget <= 45:
@@ -509,6 +510,10 @@ def _density_targets_for_budget(
         band = _resolve_three_day_volume_band(assessment=assessment)
         target = max(target, band.target_exercises_per_session)
         cap = max(cap, band.exercise_cap_per_session)
+    if session_exercise_cap_limit is not None:
+        hard_cap = max(1, int(session_exercise_cap_limit))
+        cap = min(cap, hard_cap)
+        target = min(target, cap)
     return target, cap
 
 
@@ -588,7 +593,7 @@ _MOVEMENT_PATTERN_PRIMARY_MUSCLE: dict[str, str] = {
     "leg_curl": "hamstrings",
     "curl": "biceps",
     "triceps_extension": "triceps",
-    "core": "abs",
+    "core": "core",
 }
 
 _PRIMARY_MUSCLE_GROUP_PRIORITY: tuple[str, ...] = (
@@ -1085,7 +1090,7 @@ def _ensure_output_visible_group_labels(
                     item.id,
                 ),
             ):
-                if exercise.slot_role not in {"weak_point", "accessory", "secondary_compound"}:
+                if exercise.slot_role not in {"weak_point", "accessory"}:
                     continue
                 exercise.primary_muscles = [label]
                 return
@@ -1094,6 +1099,68 @@ def _ensure_output_visible_group_labels(
         _relabel_first_upper_slot("shoulders")
     if core_viable and not _has_label({"core", "abs"}):
         _relabel_first_upper_slot("core")
+
+
+def _restore_major_floor_sets_when_viable(
+    *,
+    sessions: list[GeneratedSessionDraft],
+    record_by_id: dict[str, dict[str, Any]],
+    assessment: UserAssessment,
+    core_viable: bool,
+    metadata_v2_by_exercise_id: dict[str, ExerciseMetadataV2] | None = None,
+) -> None:
+    targets = _resolve_three_day_balance_targets(assessment=assessment)
+    time_budget_minutes = int(assessment.session_time_budget_minutes or 75)
+    ordered_groups = ("core", "quads", "hamstrings", "chest", "back")
+    for _ in range(48):
+        primary_volume = _compute_primary_major_group_volume(
+            sessions=sessions,
+            record_by_id=record_by_id,
+            metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+        )
+        deficits = _major_floor_deficits(
+            primary_volume=primary_volume,
+            targets=targets,
+            core_viable=core_viable,
+        )
+        if not deficits:
+            return
+        target_group: str | None = None
+        for group in ordered_groups:
+            if int(deficits.get(group, 0)) > 0:
+                target_group = group
+                break
+        if target_group is None:
+            return
+        candidates: list[tuple[GeneratedSessionDraft, GeneratedExerciseDraft, dict[str, Any]]] = []
+        for session in sessions:
+            for exercise in session.exercises:
+                record = record_by_id.get(exercise.id) or {}
+                groups = _exercise_primary_major_groups(
+                    record,
+                    metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+                )
+                if target_group not in groups:
+                    continue
+                max_sets = _exercise_max_sets(
+                    slot_role=exercise.slot_role,
+                    time_budget_minutes=time_budget_minutes,
+                )
+                if int(exercise.sets) >= max_sets:
+                    continue
+                candidates.append((session, exercise, record))
+        if not candidates:
+            return
+        _, chosen, chosen_record = sorted(
+            candidates,
+            key=lambda row: (
+                0 if str((row[2] or {}).get("fatigue_cost") or "") != "high" else 1,
+                SLOT_ROLE_ORDER.get(row[1].slot_role, 9),
+                row[0].session_id,
+                row[1].id,
+            ),
+        )[0]
+        chosen.sets += 1
 
 
 def _weekly_muscle_volume_sum(
@@ -1524,6 +1591,13 @@ def _apply_prescription_quality_refinement(
                 core_viable=core_viable,
                 metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
             )
+            _restore_major_floor_sets_when_viable(
+                sessions=sessions,
+                record_by_id=record_by_id,
+                assessment=assessment,
+                core_viable=core_viable,
+                metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+            )
             _ensure_output_visible_group_labels(
                 sessions=sessions,
                 core_viable=core_viable,
@@ -1847,6 +1921,11 @@ def build_generated_full_body_template_draft(
         doctrine_target=doctrine_session_target,
         minimum_exercises_per_session=minimum_exercises_per_session,
         apply_three_day_band=apply_three_day_band,
+        session_exercise_cap_limit=(
+            blueprint_input.session_exercise_cap
+            if metadata_v2_by_exercise_id is not None
+            else None
+        ),
     )
     optional_fill_score_floor = scoring_rule.payload["minimum_total_score_floor"].get("optional_fill")
     if optional_fill_score_floor is not None:

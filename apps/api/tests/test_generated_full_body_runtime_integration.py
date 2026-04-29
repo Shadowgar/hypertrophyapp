@@ -15,6 +15,7 @@ from app.database import SessionLocal
 from app.generated_decision_profile import GeneratedDecisionProfile
 from app.generated_assessment_schema import ProfileAssessmentInput
 from app import generated_full_body_runtime_adapter as runtime_adapter
+from app.knowledge_loader import load_exercise_library
 from app.main import app
 from app.models import User, WeeklyCheckin, WeeklyReviewCycle, WorkoutPlan
 from app.program_loader import load_program_template
@@ -196,6 +197,20 @@ def _has_movement_pattern(payload: dict, patterns: set[str]) -> bool:
             if str(exercise.get("movement_pattern") or "") in patterns:
                 return True
     return False
+
+
+def _high_fatigue_count(payload: dict) -> int:
+    bundle = load_exercise_library()
+    fatigue_by_id = {
+        str(record.exercise_id): str(record.fatigue_cost or "")
+        for record in bundle.records
+    }
+    return sum(
+        1
+        for session in payload.get("sessions") or []
+        for exercise in session.get("exercises") or []
+        if fatigue_by_id.get(str(exercise.get("id") or "")) == "high"
+    )
 
 
 def test_generate_week_uses_generated_constructor_on_canonical_full_body_compatibility_seam() -> None:
@@ -894,3 +909,47 @@ def test_generated_runtime_low_recovery_metadata_on_preserves_nonzero_viable_exp
         assert grouped["back"] >= 8, grouped
         assert grouped["quads"] >= 6, grouped
         assert grouped["hamstrings"] >= 6, grouped
+
+
+def test_generated_runtime_metadata_on_does_not_collapse_low_recovery_quads_or_raise_high_fatigue_density(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_user(
+        client,
+        email="generated-runtime-low-recovery-metadata-compare@example.com",
+        name="Generated Runtime Low Recovery Metadata Compare",
+    )
+    _post_profile(
+        client,
+        headers=headers,
+        selected_program_id="full_body_v1",
+        split_preference="full_body",
+        training_location="gym",
+        equipment_profile=["barbell", "bodyweight", "bench", "cable", "machine", "dumbbell"],
+        days_available=3,
+        weak_areas=["delts"],
+        session_time_budget_minutes=60,
+        near_failure_tolerance="low",
+    )
+
+    monkeypatch.setattr(runtime_adapter, "load_exercise_metadata_v2", lambda *args, **kwargs: None)
+    baseline_response = client.post("/plan/generate-week", headers=headers, json={})
+    assert baseline_response.status_code == 200
+    baseline_payload = baseline_response.json()
+    baseline_grouped = _visible_grouped_week_volume(baseline_payload)
+    baseline_high_fatigue = _high_fatigue_count(baseline_payload)
+
+    monkeypatch.undo()
+    mapped_response = client.post("/plan/generate-week", headers=headers, json={})
+    assert mapped_response.status_code == 200
+    mapped_payload = mapped_response.json()
+    mapped_grouped = _visible_grouped_week_volume(mapped_payload)
+    mapped_high_fatigue = _high_fatigue_count(mapped_payload)
+    mapped_trace = mapped_payload["template_selection_trace"]["generated_full_body_runtime_trace"]
+
+    assert mapped_trace["metadata_v2_loaded"] is True
+    assert mapped_trace["metadata_v2_used_for_visible_balance"] is True
+    assert mapped_grouped["quads"] >= 6, (baseline_grouped, mapped_grouped)
+    assert mapped_high_fatigue <= baseline_high_fatigue, (baseline_high_fatigue, mapped_high_fatigue)

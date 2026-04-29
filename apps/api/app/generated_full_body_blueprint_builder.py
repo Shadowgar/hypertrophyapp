@@ -218,6 +218,8 @@ def build_generated_full_body_blueprint_input(
     ]
 
     available_equipment_tags = set(assessment.baseline_signal_summary.available_equipment_tags)
+    # Bodyweight movements are always viable, even if not explicitly listed in profile equipment tags.
+    available_equipment_tags.add("bodyweight")
     movement_restrictions = set(assessment.movement_restrictions)
     excluded_exercise_ids: list[str] = []
     candidate_exercise_ids_by_pattern: dict[str, list[str]] = {}
