@@ -252,6 +252,14 @@ def _is_runtime_template_file(path: Path) -> bool:
     return True
 
 
+def _onboarding_package_id_from_path(path: Path) -> str:
+    name = path.name
+    suffix = ".onboarding.json"
+    if name.endswith(suffix):
+        return name[: -len(suffix)]
+    return _normalized_stem(path)
+
+
 def _fallback_program_name(program_id: str) -> str:
     return " ".join(part.capitalize() for part in program_id.replace("-", "_").split("_") if part)
 
@@ -947,10 +955,21 @@ def list_program_onboarding_packages() -> list[dict[str, Any]]:
 def load_program_onboarding_package(program_id: str) -> dict[str, Any]:
     onboarding_root = _resolve_onboarding_path().resolve()
     safe_program_id = _safe_program_asset_id(resolve_onboarding_program_id(program_id))
-    candidate = (onboarding_root / f"{safe_program_id}.onboarding.json").resolve()
-    if onboarding_root not in candidate.parents:
-        raise FileNotFoundError(f"Program onboarding package not found: {program_id}")
-    if not candidate.exists():
+
+    candidate: Path | None = None
+    for path in onboarding_root.glob("*.onboarding.json"):
+        try:
+            resolved_path = path.resolve()
+        except OSError:
+            continue
+        if onboarding_root not in resolved_path.parents:
+            continue
+        if _onboarding_package_id_from_path(resolved_path) != safe_program_id:
+            continue
+        candidate = resolved_path
+        break
+
+    if candidate is None:
         raise FileNotFoundError(f"Program onboarding package not found: {program_id}")
 
     raw = json.loads(candidate.read_text(encoding="utf-8"))

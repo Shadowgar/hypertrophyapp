@@ -38,6 +38,16 @@ def test_loader_lists_and_loads_onboarding_packages() -> None:
     assert loaded["blueprint"]["default_training_days"] == 5
 
 
+def test_loader_rejects_path_traversal_style_program_id() -> None:
+    with pytest.raises(FileNotFoundError):
+        load_program_onboarding_package("../../etc/passwd")
+
+
+def test_loader_rejects_nonexistent_program_id() -> None:
+    with pytest.raises(FileNotFoundError):
+        load_program_onboarding_package("definitely_not_a_real_program_id")
+
+
 def test_gold_onboarding_package_preserves_manual_backed_phase_intent() -> None:
     loaded = load_program_onboarding_package("pure_bodybuilding_phase_1_full_body")
     intent = loaded["program_intent"]
