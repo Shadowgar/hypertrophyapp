@@ -13,6 +13,7 @@ configure_test_database("test_generated_full_body_runtime_integration")
 from app.database import Base, engine
 from app.database import SessionLocal
 from app.generated_decision_profile import GeneratedDecisionProfile
+from app.generated_training_profile import GeneratedTrainingProfile
 from app.generated_assessment_schema import ProfileAssessmentInput
 from app import generated_full_body_runtime_adapter as runtime_adapter
 from app.knowledge_loader import load_exercise_library
@@ -367,14 +368,14 @@ def test_non_full_body_runtime_path_does_not_activate_generated_runtime_adapter(
     assert "generated_full_body_runtime_trace" not in payload["template_selection_trace"]
 
 
-def test_authored_paths_bypass_generated_decision_profile(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_authored_paths_bypass_generated_training_profile(monkeypatch: pytest.MonkeyPatch) -> None:
     _reset_db()
     client = TestClient(app)
 
-    def _unexpected_decision_profile(*args, **kwargs):
-        raise AssertionError("Generated decision profile should not run for authored templates.")
+    def _unexpected_training_profile(*args, **kwargs):
+        raise AssertionError("Generated training profile should not run for authored templates.")
 
-    monkeypatch.setattr(plan_router, "build_generated_decision_profile", _unexpected_decision_profile)
+    monkeypatch.setattr(plan_router, "build_generated_training_profile", _unexpected_training_profile)
 
     headers = _register_user(
         client,
@@ -398,13 +399,15 @@ def test_authored_paths_bypass_generated_decision_profile(monkeypatch: pytest.Mo
     assert "generated_full_body_runtime_trace" not in payload["template_selection_trace"]
 
 
-def test_generated_decision_profile_normalized_inputs_take_precedence_for_mode_routing(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_generated_training_profile_runtime_active_inputs_take_precedence_for_mode_routing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     _reset_db()
     client = TestClient(app)
     captured: dict[str, int | list[str]] = {}
 
-    def _mock_decision_profile(*args, **kwargs):
-        return GeneratedDecisionProfile.model_validate(
+    def _mock_training_profile(*args, **kwargs):
+        decision = GeneratedDecisionProfile.model_validate(
             {
                 "selected_program_id": "full_body_v1",
                 "path_family": "generated",
@@ -429,6 +432,54 @@ def test_generated_decision_profile_normalized_inputs_take_precedence_for_mode_r
                 },
             }
         )
+        return GeneratedTrainingProfile.model_validate(
+            {
+                "selected_program_id": "full_body_v1",
+                "path_family": "generated",
+                "decision_profile": decision.model_dump(mode="json"),
+                "runtime_active": {
+                    "target_days": 2,
+                    "session_time_band": "low",
+                    "recovery_modifier": "standard",
+                    "weakpoint_targets": ["arms"],
+                    "movement_restriction_flags": ["overhead_pressing"],
+                    "generated_mode": "low_time_full_body",
+                },
+                "trace_only_controls": {
+                    "starting_rir": 3,
+                    "high_fatigue_cap": 1,
+                    "weekly_volume_band": {"planned_sets_min": 36, "planned_sets_max": 42},
+                    "major_muscle_floors": {"chest": 8, "back": 10, "quads": 8, "hamstrings": 8},
+                    "arm_delt_caps": {"arm_soft_cap": 10, "delt_soft_cap": 10},
+                    "core_floor": 2,
+                    "rep_bands": {"main_lift": "6-10", "accessory": "8-15"},
+                    "progression_mode": "reps_first",
+                    "sex_related_physiology_flag": "off",
+                    "anthropometry_flags": {"long_femurs": False, "long_arms": False},
+                    "bodyweight_regression_flag": False,
+                },
+                "decision_trace": {
+                    "selected_mode_reason": "session_time_low",
+                    "defaults_applied": [],
+                    "missing_fields": [],
+                    "rule_hits": ["phase1a.mode.low_time", "phase3a.generated_training_profile_bridge_v1"],
+                    "trace_only_fields": [
+                        "starting_rir",
+                        "high_fatigue_cap",
+                        "weekly_volume_band",
+                        "major_muscle_floors",
+                        "arm_delt_caps",
+                        "core_floor",
+                        "rep_bands",
+                        "progression_mode",
+                        "sex_related_physiology_flag",
+                        "anthropometry_flags",
+                        "bodyweight_regression_flag",
+                    ],
+                    "insufficient_data_avoided": False,
+                },
+            }
+        )
 
     original_prepare = runtime_adapter.prepare_generated_full_body_runtime_template
 
@@ -440,7 +491,7 @@ def test_generated_decision_profile_normalized_inputs_take_precedence_for_mode_r
         captured["movement_restrictions"] = list(profile_input.movement_restrictions)
         return original_prepare(*args, **kwargs)
 
-    monkeypatch.setattr(plan_router, "build_generated_decision_profile", _mock_decision_profile)
+    monkeypatch.setattr(plan_router, "build_generated_training_profile", _mock_training_profile)
     monkeypatch.setattr(plan_router, "prepare_generated_full_body_runtime_template", _capture_prepare)
 
     headers = _register_user(

@@ -48,7 +48,8 @@ from ..config import settings
 from ..database import get_db
 from ..deps import get_current_user
 from ..generated_assessment_schema import ProfileAssessmentInput
-from ..generated_decision_profile import GeneratedDecisionProfile, build_generated_decision_profile
+from ..generated_decision_profile import GeneratedDecisionProfile
+from ..generated_training_profile import GeneratedTrainingProfile, build_generated_training_profile
 from ..generated_full_body_runtime_adapter import (
     GENERATED_FULL_BODY_COMPATIBILITY_TEMPLATE_ID,
     prepare_generated_full_body_runtime_template,
@@ -815,13 +816,13 @@ def _prepare_plan_generation_runtime(
     return runtime
 
 
-def _build_generated_decision_profile(
+def _build_generated_training_profile(
     *,
     current_user: User,
     effective_days_available: int | None,
     training_state: dict[str, Any] | None,
-) -> GeneratedDecisionProfile:
-    return build_generated_decision_profile(
+) -> GeneratedTrainingProfile:
+    return build_generated_training_profile(
         selected_program_id=current_user.selected_program_id,
         program_selection_mode=current_user.program_selection_mode,
         days_available=effective_days_available,
@@ -858,11 +859,12 @@ def get_generated_decision_profile_debug(
         effective_days_available=effective_days_available,
         active_frequency_adaptation=None,
     )
-    decision_profile = _build_generated_decision_profile(
+    training_profile = _build_generated_training_profile(
         current_user=current_user,
         effective_days_available=current_user.days_available,
         training_state=cast(dict[str, Any], generation_context.get("training_state") or {}),
     )
+    decision_profile = training_profile.decision_profile
     payload = decision_profile.model_dump(mode="json")
     log_event(
         "generated_decision_profile_debug_viewed",
@@ -1580,24 +1582,25 @@ def _build_week_plan_runtime_for_user(
     generated_full_body_adaptive_loop_policy = None
     generated_full_body_block_review_policy = None
     if is_generated_full_body_binding_id(selected_template_id):
-        decision_profile = _build_generated_decision_profile(
+        training_profile = _build_generated_training_profile(
             current_user=current_user,
             effective_days_available=effective_days_available,
             training_state=cast(dict[str, Any], generation_context["training_state"]),
         )
-        # Phase 1A precedence: normalized decision-profile inputs are authoritative for mode-routing inputs.
-        # Assessment builder remains authoritative for downstream coaching/assessment internals.
+        decision_profile = training_profile.decision_profile
+        # Phase 3A precedence: GeneratedTrainingProfile owns upstream normalization and control tracing.
+        # Assessment builder remains authoritative for downstream coaching-assessment internals.
         generated_runtime = prepare_generated_full_body_runtime_template(
             selected_template_id=selected_template_id,
             selected_template=template,
             profile_input=ProfileAssessmentInput(
-                days_available=int(decision_profile.target_days),
+                days_available=int(training_profile.runtime_active.target_days),
                 split_preference=current_user.split_preference,
                 training_location=current_user.training_location,
                 equipment_profile=list(current_user.equipment_profile or []),
-                weak_areas=list(decision_profile.weakpoint_targets),
+                weak_areas=list(training_profile.runtime_active.weakpoint_targets),
                 session_time_budget_minutes=current_user.session_time_budget_minutes,
-                movement_restrictions=list(decision_profile.movement_restriction_flags),
+                movement_restrictions=list(training_profile.runtime_active.movement_restriction_flags),
                 near_failure_tolerance=current_user.near_failure_tolerance,
             ),
             training_state=cast(dict[str, Any], generation_context["training_state"]),
@@ -1644,6 +1647,26 @@ def _build_week_plan_runtime_for_user(
             missing_fields=list(decision_profile.decision_trace.missing_fields),
             reentry_required=decision_profile.reentry_required,
             insufficient_data_avoided=decision_profile.decision_trace.insufficient_data_avoided,
+        )
+        log_event(
+            "generated_training_profile_resolved",
+            route="/plan/generate-week" if generation_mode == "current_week_regenerate" else "/plan/next-week",
+            action="build_generated_training_profile",
+            user_id=current_user.id,
+            selected_program_id=training_profile.selected_program_id,
+            path_family=training_profile.path_family,
+            generated_mode=training_profile.runtime_active.generated_mode,
+            target_days=training_profile.runtime_active.target_days,
+            session_time_band=training_profile.runtime_active.session_time_band,
+            recovery_modifier=training_profile.runtime_active.recovery_modifier,
+            goal_mode=training_profile.decision_profile.goal_mode,
+            training_status=training_profile.decision_profile.training_status,
+            weekly_volume_band=training_profile.trace_only_controls.weekly_volume_band.model_dump(mode="json"),
+            starting_rir=training_profile.trace_only_controls.starting_rir,
+            high_fatigue_cap=training_profile.trace_only_controls.high_fatigue_cap,
+            weakpoint_count=len(training_profile.runtime_active.weakpoint_targets),
+            defaults_applied=list(training_profile.decision_trace.defaults_applied),
+            trace_only_fields=list(training_profile.decision_trace.trace_only_fields),
         )
     else:
         runtime_template, authored_adaptation_trace = _prepare_authored_frequency_adapted_template(
