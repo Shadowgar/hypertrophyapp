@@ -41,6 +41,31 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Validate SonarQube endpoint configuration
+        shell: bash
+        env:
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SONAR_HOST_URL:-}" ] || [ -z "${SONAR_TOKEN:-}" ]; then
+            echo "::error::SONAR_HOST_URL and SONAR_TOKEN must be configured in repository secrets."
+            exit 1
+          fi
+
+          if ! [[ "$SONAR_HOST_URL" =~ ^https?:// ]]; then
+            echo "::error::SONAR_HOST_URL must include scheme (https://...)."
+            exit 1
+          fi
+
+          version_response="$(curl -fsS -u "${SONAR_TOKEN}:" "${SONAR_HOST_URL%/}/api/server/version" || true)"
+          if [ -z "${version_response}" ]; then
+            echo "::error::Unable to reach SonarQube API at ${SONAR_HOST_URL%/}/api/server/version."
+            echo "::error::Current host may point to an HTML landing page/proxy instead of SonarQube API."
+            exit 1
+          fi
+          echo "SonarQube server version: ${version_response}"
+
       - name: Analyze with SonarQube
 
         # You can pin the exact commit or the version.
