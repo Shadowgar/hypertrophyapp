@@ -32,3 +32,9 @@ These rules govern AI-assisted implementation for generated onboarding and deter
   - `docs/GENERATED_PROGRAM_STRATEGY.md`
 
 If these docs conflict, stop implementation and resolve documentation authority first.
+
+## Metadata-v2 Scoring Freeze Rule (Phase 2E)
+
+- Metadata-v2 scoring signals are frozen/no-op in current accepted runtime.
+- Do not re-enable metadata-driven scoring (fatigue/time/role/overlap/substitution/skill) without explicit phase approval.
+- Any future reactivation must be one-signal-at-a-time with before/after archetype metrics and guardrail test evidence.

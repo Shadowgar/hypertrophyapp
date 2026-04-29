@@ -242,3 +242,28 @@ Doctrine linkage:
 - It introduces no runtime behavior changes.
 - It introduces no database migrations.
 - It does not copy full source program tables.
+
+## Phase 2E Metadata Runtime Hardening
+
+Accepted runtime state:
+
+- metadata-v2 seam is active in generated full-body runtime
+- metadata-v2 visible grouped accounting is active
+- metadata-v2 scoring influence is frozen/no-op
+
+Frozen scoring dimensions (not active):
+
+- fatigue/recoverability
+- overlap/collision
+- time efficiency
+- role-fit
+- substitution
+- skill/stability
+
+Reactivation policy:
+
+- re-enable one metadata scoring signal at a time
+- capture before/after archetype metrics
+- require floor/guardrail test pass and metadata-off fallback pass
+- require authored Phase 1/2 smoke pass
+- require explicit approval before proceeding to additional signals

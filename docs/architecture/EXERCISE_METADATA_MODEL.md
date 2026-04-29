@@ -152,3 +152,25 @@ Tag usage rules:
 - Metadata values must be app-owned and maintainable.
 - Source references may inform tags, but direct table copying is prohibited.
 - Runtime adoption occurs only in future implementation phases.
+
+## Phase 2E Runtime Lock (Current Accepted State)
+
+Metadata-v2 is currently active only for:
+
+- generated full-body metadata seam loading
+- visible grouped balance accounting
+- metadata trace/coverage reporting
+
+Metadata-v2 is currently frozen and NOT used for:
+
+- fatigue scoring
+- overlap/collision scoring
+- time-efficiency scoring
+- role-fit scoring
+- substitution scoring
+- skill/stability scoring
+- restriction filtering
+- advanced hypertrophy method logic
+- specialization logic
+
+Phase 2D-2 attempted metadata scoring integration and was rolled back/frozen because regression risk was observed (core disappearance and major-group volume drops in some archetypes). Reactivation requires explicit phased approval and guardrail evidence.

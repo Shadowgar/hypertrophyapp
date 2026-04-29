@@ -110,6 +110,9 @@ Current status (generated-path focus update):
 - `Generated Full Body Runtime Integration` is complete enough for active generated calibration/onboarding follow-up.
 - Active focus is generated-path calibration and generated onboarding profile specification.
 - Authored-path feature expansion is paused except for regressions/integrity fixes.
+- Metadata-v2 runtime status is locked:
+  - seam + visible grouped accounting active
+  - metadata-based scoring disabled/no-op pending explicit reactivation gate
 
 ## Supporting Current-State
 

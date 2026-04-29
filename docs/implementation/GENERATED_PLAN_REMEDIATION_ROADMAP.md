@@ -158,3 +158,22 @@ Exit criteria:
 - Do not begin Phase 4+ runtime generation changes before Phase 1-3 contracts are validated.
 - Require doctrine/trace tests at each phase boundary.
 - Run authored-path regression checks at each phase to preserve family separation.
+
+## Phase 2E Stabilization Checkpoint (Locked)
+
+Phase 2D-2 scoring integration is frozen after regression findings.
+
+Locked runtime behavior:
+
+- metadata-v2 seam loading: enabled
+- metadata-v2 visible grouped accounting: enabled
+- metadata-v2 scoring influence: disabled/no-op
+
+Release gate for any future metadata scoring reactivation:
+
+1. Introduce exactly one scoring signal.
+2. Produce before/after metrics for novice, low-time, low-recovery, and weak-point arms/delts.
+3. Pass runtime floor guardrails (core/arms/delts nonzero when viable; major floors intact).
+4. Pass metadata-off fallback tests.
+5. Pass authored Phase 1/2 smoke tests.
+6. Obtain explicit approval before enabling additional signals.

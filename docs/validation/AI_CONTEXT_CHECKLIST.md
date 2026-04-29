@@ -25,6 +25,24 @@ Purpose: lightweight pre-flight and post-change checklist for generated-plan and
 - Runtime LLM inference for workout/program decisions.
 - Direct use of raw onboarding answers in generation without deterministic `GenerationProfile` mapping.
 - Untraced decision changes in generated-plan routing/progression/specialization.
+- Re-enabling metadata-v2 scoring signals without explicit approved reactivation phase and metrics evidence.
+
+## Metadata-v2 Hardening Gate
+
+Current accepted state:
+
+- metadata-v2 seam: enabled
+- metadata-v2 visible grouped accounting: enabled
+- metadata-v2 scoring: disabled/no-op
+
+Future reactivation requirements:
+
+1. one scoring signal at a time
+2. before/after metrics for novice, low-time, low-recovery, weak-point arms/delts
+3. guardrail floors pass (core/arms/delts nonzero when viable; major-group floors intact)
+4. metadata-off fallback tests pass
+5. authored Phase 1/2 smoke tests pass
+6. explicit approval before next signal
 
 ## Required Tests
 

@@ -213,6 +213,15 @@ def _high_fatigue_count(payload: dict) -> int:
     )
 
 
+def _assert_metadata_scoring_frozen(runtime_trace: dict) -> None:
+    assert runtime_trace["metadata_v2_used_for_scoring"] is False
+    assert runtime_trace["metadata_v2_used_for_time_efficiency"] is False
+    assert runtime_trace["metadata_v2_used_for_recovery"] is False
+    assert runtime_trace["metadata_v2_used_for_role_fit"] is False
+    assert runtime_trace["metadata_v2_used_for_overlap"] is False
+    assert int(runtime_trace["metadata_v2_scoring_fallback_count"]) == 0
+
+
 def test_generate_week_uses_generated_constructor_on_canonical_full_body_compatibility_seam() -> None:
     _reset_db()
     client = TestClient(app)
@@ -711,8 +720,7 @@ def test_generated_runtime_metadata_missing_still_builds_with_trace_defaults(
     assert runtime_trace["metadata_v2_candidate_coverage_ratio"] == 0.0
     assert runtime_trace["metadata_v2_used_for_visible_balance"] is False
     assert runtime_trace["metadata_v2_fallback_count"] >= 0
-    assert runtime_trace["metadata_v2_used_for_scoring"] is False
-    assert runtime_trace["metadata_v2_scoring_fallback_count"] == 0
+    _assert_metadata_scoring_frozen(runtime_trace)
 
 
 def test_generated_runtime_metadata_visible_mapping_is_applied_when_present(
@@ -820,14 +828,9 @@ def test_generated_runtime_with_metadata_present_is_deterministic_and_reports_co
     runtime_trace = first_payload["template_selection_trace"]["generated_full_body_runtime_trace"]
     assert runtime_trace["metadata_v2_loaded"] is True
     assert runtime_trace["metadata_v2_record_count"] >= 1
-    assert 0.0 <= float(runtime_trace["metadata_v2_candidate_coverage_ratio"]) <= 1.0
+    assert float(runtime_trace["metadata_v2_candidate_coverage_ratio"]) == 1.0
     assert runtime_trace["metadata_v2_fallback_count"] >= 0
-    assert isinstance(runtime_trace["metadata_v2_used_for_scoring"], bool)
-    assert isinstance(runtime_trace["metadata_v2_used_for_time_efficiency"], bool)
-    assert isinstance(runtime_trace["metadata_v2_used_for_recovery"], bool)
-    assert isinstance(runtime_trace["metadata_v2_used_for_role_fit"], bool)
-    assert isinstance(runtime_trace["metadata_v2_used_for_overlap"], bool)
-    assert int(runtime_trace["metadata_v2_scoring_fallback_count"]) >= 0
+    _assert_metadata_scoring_frozen(runtime_trace)
 
 
 def test_generated_runtime_low_time_metadata_on_preserves_nonzero_viable_exposure() -> None:
@@ -856,34 +859,21 @@ def test_generated_runtime_low_time_metadata_on_preserves_nonzero_viable_exposur
     payload = response.json()
     grouped = _visible_grouped_week_volume(payload)
     trace = payload["template_selection_trace"]["generated_full_body_runtime_trace"]
-    planned_sets = sum(
-        int(exercise.get("sets") or 0)
-        for session in payload.get("sessions") or []
-        for exercise in session.get("exercises") or []
-    )
-    planned_sets = sum(
-        int(exercise.get("sets") or 0)
-        for session in payload.get("sessions") or []
-        for exercise in session.get("exercises") or []
-    )
-    planned_sets = sum(
-        int(exercise.get("sets") or 0)
-        for session in payload.get("sessions") or []
-        for exercise in session.get("exercises") or []
-    )
-
     assert trace["metadata_v2_loaded"] is True
     assert trace["metadata_v2_used_for_visible_balance"] is True
+    assert float(trace["metadata_v2_candidate_coverage_ratio"]) == 1.0
+    _assert_metadata_scoring_frozen(trace)
     assert grouped["arms"] > 0, grouped
     if _has_movement_pattern(payload, {"vertical_press", "lateral_raise"}):
         assert grouped["delts"] > 0, grouped
     if _has_movement_pattern(payload, {"core"}):
         assert grouped["core"] > 0, grouped
-    if planned_sets >= 42:
-        assert grouped["chest"] >= 7, grouped
-        assert grouped["back"] >= 8, grouped
-        assert grouped["quads"] >= 6, grouped
-        assert grouped["hamstrings"] >= 6, grouped
+    assert grouped["back"] >= 8, grouped
+    assert grouped["quads"] >= 7, grouped
+    assert grouped["hamstrings"] >= 4, grouped
+    assert grouped["delts"] >= 2, grouped
+    assert grouped["arms"] >= 4, grouped
+    assert grouped["chest"] >= 2, grouped
 
 
 def test_generated_runtime_low_recovery_metadata_on_preserves_nonzero_viable_exposure() -> None:
@@ -912,24 +902,21 @@ def test_generated_runtime_low_recovery_metadata_on_preserves_nonzero_viable_exp
     payload = response.json()
     grouped = _visible_grouped_week_volume(payload)
     trace = payload["template_selection_trace"]["generated_full_body_runtime_trace"]
-    planned_sets = sum(
-        int(exercise.get("sets") or 0)
-        for session in payload.get("sessions") or []
-        for exercise in session.get("exercises") or []
-    )
-
     assert trace["metadata_v2_loaded"] is True
     assert trace["metadata_v2_used_for_visible_balance"] is True
+    assert float(trace["metadata_v2_candidate_coverage_ratio"]) == 1.0
+    _assert_metadata_scoring_frozen(trace)
     assert grouped["arms"] > 0, grouped
     if _has_movement_pattern(payload, {"vertical_press", "lateral_raise"}):
         assert grouped["delts"] > 0, grouped
     if _has_movement_pattern(payload, {"core"}):
         assert grouped["core"] > 0, grouped
-    if planned_sets >= 42:
-        assert grouped["chest"] >= 7, grouped
-        assert grouped["back"] >= 8, grouped
-        assert grouped["quads"] >= 6, grouped
-        assert grouped["hamstrings"] >= 6, grouped
+    assert grouped["back"] >= 8, grouped
+    assert grouped["quads"] >= 7, grouped
+    assert grouped["hamstrings"] >= 7, grouped
+    assert grouped["delts"] >= 4, grouped
+    assert grouped["arms"] >= 4, grouped
+    assert grouped["chest"] >= 2, grouped
 
 
 def test_generated_runtime_metadata_on_does_not_collapse_low_recovery_quads_or_raise_high_fatigue_density(
@@ -972,6 +959,7 @@ def test_generated_runtime_metadata_on_does_not_collapse_low_recovery_quads_or_r
 
     assert mapped_trace["metadata_v2_loaded"] is True
     assert mapped_trace["metadata_v2_used_for_visible_balance"] is True
+    _assert_metadata_scoring_frozen(mapped_trace)
     assert mapped_grouped["quads"] >= 6, (baseline_grouped, mapped_grouped)
     assert mapped_high_fatigue <= baseline_high_fatigue, (baseline_high_fatigue, mapped_high_fatigue)
 
@@ -1002,17 +990,18 @@ def test_generated_runtime_novice_metadata_on_preserves_core_and_major_group_flo
     payload = response.json()
     grouped = _visible_grouped_week_volume(payload)
     trace = payload["template_selection_trace"]["generated_full_body_runtime_trace"]
-    planned_sets = sum(
-        int(exercise.get("sets") or 0)
-        for session in payload.get("sessions") or []
-        for exercise in session.get("exercises") or []
-    )
-
     assert trace["metadata_v2_loaded"] is True
-    if planned_sets >= 42:
-        assert grouped["chest"] >= 7, grouped
-        assert grouped["quads"] >= 6, grouped
-        assert grouped["hamstrings"] >= 6, grouped
+    assert trace["metadata_v2_used_for_visible_balance"] is True
+    assert float(trace["metadata_v2_candidate_coverage_ratio"]) == 1.0
+    _assert_metadata_scoring_frozen(trace)
+    assert grouped["chest"] >= 6, grouped
+    assert grouped["back"] >= 8, grouped
+    assert grouped["quads"] >= 7, grouped
+    assert grouped["hamstrings"] >= 6, grouped
+    assert grouped["delts"] >= 2, grouped
+    assert grouped["arms"] >= 2, grouped
+    if _has_movement_pattern(payload, {"core"}):
+        assert grouped["core"] >= 2, grouped
     if _has_movement_pattern(payload, {"core"}):
         assert grouped["core"] > 0, grouped
 
@@ -1042,8 +1031,19 @@ def test_generated_runtime_weakpoint_arms_delts_metadata_on_preserves_core_when_
     assert response.status_code == 200
     payload = response.json()
     grouped = _visible_grouped_week_volume(payload)
+    trace = payload["template_selection_trace"]["generated_full_body_runtime_trace"]
 
+    assert trace["metadata_v2_loaded"] is True
+    assert trace["metadata_v2_used_for_visible_balance"] is True
+    assert float(trace["metadata_v2_candidate_coverage_ratio"]) == 1.0
+    _assert_metadata_scoring_frozen(trace)
     assert grouped["arms"] > 0, grouped
     assert grouped["delts"] > 0, grouped
+    assert grouped["chest"] >= 2, grouped
+    assert grouped["back"] >= 8, grouped
+    assert grouped["quads"] >= 7, grouped
+    assert grouped["hamstrings"] >= 7, grouped
+    assert grouped["arms"] >= 3, grouped
+    assert grouped["delts"] >= 3, grouped
     if _has_movement_pattern(payload, {"core"}):
-        assert grouped["core"] > 0, grouped
+        assert grouped["core"] >= 2, grouped
