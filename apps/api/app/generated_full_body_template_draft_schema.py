@@ -42,6 +42,12 @@ class ExerciseSelectionTrace(BaseModel):
     total_score: int
     top_candidates: list[ScoredCandidateTrace] = Field(default_factory=list)
     metadata_defaults_used: list[str] = Field(default_factory=list)
+    metadata_v2_used_for_scoring: bool = False
+    metadata_v2_used_for_time_efficiency: bool = False
+    metadata_v2_used_for_recovery: bool = False
+    metadata_v2_used_for_role_fit: bool = False
+    metadata_v2_used_for_overlap: bool = False
+    metadata_v2_scoring_fallback_count: int = Field(default=0, ge=0)
 
 
 class OptionalFillTrace(BaseModel):

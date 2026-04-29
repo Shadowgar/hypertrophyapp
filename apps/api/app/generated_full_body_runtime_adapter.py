@@ -316,6 +316,12 @@ def prepare_generated_full_body_runtime_template(
     selected_exercises = [exercise for session in draft.sessions for exercise in session.exercises]
     fallback_count = 0
     metadata_visible_count = 0
+    metadata_scoring_used = False
+    metadata_scoring_time = False
+    metadata_scoring_recovery = False
+    metadata_scoring_role = False
+    metadata_scoring_overlap = False
+    metadata_scoring_fallback_count = 0
     for exercise in selected_exercises:
         metadata = None if metadata_v2_by_exercise_id is None else metadata_v2_by_exercise_id.get(exercise.id)
         visible = [] if metadata is None else list(metadata.muscle_targeting.visible_grouped_muscle_mapping)
@@ -323,6 +329,13 @@ def prepare_generated_full_body_runtime_template(
             metadata_visible_count += 1
         else:
             fallback_count += 1
+        selection_trace = exercise.selection_trace
+        metadata_scoring_used = metadata_scoring_used or bool(selection_trace.metadata_v2_used_for_scoring)
+        metadata_scoring_time = metadata_scoring_time or bool(selection_trace.metadata_v2_used_for_time_efficiency)
+        metadata_scoring_recovery = metadata_scoring_recovery or bool(selection_trace.metadata_v2_used_for_recovery)
+        metadata_scoring_role = metadata_scoring_role or bool(selection_trace.metadata_v2_used_for_role_fit)
+        metadata_scoring_overlap = metadata_scoring_overlap or bool(selection_trace.metadata_v2_used_for_overlap)
+        metadata_scoring_fallback_count += int(selection_trace.metadata_v2_scoring_fallback_count)
 
     trace.update(
         {
@@ -338,6 +351,12 @@ def prepare_generated_full_body_runtime_template(
             "metadata_v2_candidate_coverage_ratio": candidate_coverage,
             "metadata_v2_used_for_visible_balance": bool(metadata_v2_loaded and metadata_visible_count > 0),
             "metadata_v2_fallback_count": fallback_count,
+            "metadata_v2_used_for_scoring": metadata_scoring_used,
+            "metadata_v2_used_for_time_efficiency": metadata_scoring_time,
+            "metadata_v2_used_for_recovery": metadata_scoring_recovery,
+            "metadata_v2_used_for_role_fit": metadata_scoring_role,
+            "metadata_v2_used_for_overlap": metadata_scoring_overlap,
+            "metadata_v2_scoring_fallback_count": metadata_scoring_fallback_count,
         }
     )
     return {

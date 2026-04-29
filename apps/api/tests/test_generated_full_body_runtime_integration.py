@@ -250,6 +250,12 @@ def test_generate_week_uses_generated_constructor_on_canonical_full_body_compati
     assert "metadata_v2_candidate_coverage_ratio" in runtime_trace
     assert "metadata_v2_used_for_visible_balance" in runtime_trace
     assert "metadata_v2_fallback_count" in runtime_trace
+    assert "metadata_v2_used_for_scoring" in runtime_trace
+    assert "metadata_v2_used_for_time_efficiency" in runtime_trace
+    assert "metadata_v2_used_for_recovery" in runtime_trace
+    assert "metadata_v2_used_for_role_fit" in runtime_trace
+    assert "metadata_v2_used_for_overlap" in runtime_trace
+    assert "metadata_v2_scoring_fallback_count" in runtime_trace
     assert all(session["session_id"].startswith(f"{CANONICAL_PROGRAM_ID}-") for session in payload["sessions"])
     assert payload["decision_trace"]["outcome"]["content_origin"] == "generated_constructor_applied"
     assert payload["decision_trace"]["outcome"]["generated_constructor_applied"] is True
@@ -708,6 +714,8 @@ def test_generated_runtime_metadata_missing_still_builds_with_trace_defaults(
     assert runtime_trace["metadata_v2_candidate_coverage_ratio"] == 0.0
     assert runtime_trace["metadata_v2_used_for_visible_balance"] is False
     assert runtime_trace["metadata_v2_fallback_count"] >= 0
+    assert runtime_trace["metadata_v2_used_for_scoring"] is False
+    assert runtime_trace["metadata_v2_scoring_fallback_count"] == 0
 
 
 def test_generated_runtime_metadata_visible_mapping_is_applied_when_present(
@@ -817,6 +825,12 @@ def test_generated_runtime_with_metadata_present_is_deterministic_and_reports_co
     assert runtime_trace["metadata_v2_record_count"] >= 1
     assert 0.0 <= float(runtime_trace["metadata_v2_candidate_coverage_ratio"]) <= 1.0
     assert runtime_trace["metadata_v2_fallback_count"] >= 0
+    assert isinstance(runtime_trace["metadata_v2_used_for_scoring"], bool)
+    assert isinstance(runtime_trace["metadata_v2_used_for_time_efficiency"], bool)
+    assert isinstance(runtime_trace["metadata_v2_used_for_recovery"], bool)
+    assert isinstance(runtime_trace["metadata_v2_used_for_role_fit"], bool)
+    assert isinstance(runtime_trace["metadata_v2_used_for_overlap"], bool)
+    assert int(runtime_trace["metadata_v2_scoring_fallback_count"]) >= 0
 
 
 def test_generated_runtime_low_time_metadata_on_preserves_nonzero_viable_exposure() -> None:

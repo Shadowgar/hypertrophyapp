@@ -2126,6 +2126,7 @@ def build_generated_full_body_template_draft(
                 target_exercises_per_session=target_exercises_per_session,
                 target_movement_pattern=movement_pattern,
                 target_weak_point_muscles=[item.muscle_group for item in assessment.weak_point_priorities],
+                metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
             )
             if selection is None:
                 continue
@@ -2194,6 +2195,7 @@ def build_generated_full_body_template_draft(
                     session_exercise_count=len(session.exercises),
                     target_exercises_per_session=target_exercises_per_session,
                     target_weak_point_muscles=[weak_point.muscle_group],
+                    metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
                 )
                 if selection is None:
                     continue
@@ -2433,6 +2435,7 @@ def build_generated_full_body_template_draft(
                 session_exercise_count=len(session.exercises),
                 target_exercises_per_session=target_exercises_per_session,
                 target_weak_point_muscles=[item.muscle_group for item in assessment.weak_point_priorities],
+                metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
             )
             if selection is None:
                 session.optional_fill_trace = _optional_fill_trace(

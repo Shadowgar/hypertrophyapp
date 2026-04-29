@@ -1,5 +1,6 @@
 from pathlib import Path
 import sys
+from types import SimpleNamespace
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -15,6 +16,40 @@ from app.generated_full_body_blueprint_builder import build_generated_full_body_
 from app.generated_full_body_candidate_scoring import select_scored_candidate
 from app.knowledge_loader import load_doctrine_bundle, load_exercise_library, load_policy_bundle
 from tests.fixtures.generated_full_body_archetypes import get_generated_full_body_archetypes
+
+
+def _metadata_stub(
+    *,
+    systemic: str = "moderate",
+    local: str = "moderate",
+    setup: str = "moderate",
+    rest: str = "moderate",
+    role: str = "primary",
+    tags: list[str] | None = None,
+    skill: str = "intermediate",
+    stability: str = "intermediate",
+    overlap: dict[str, bool] | None = None,
+):
+    overlap_payload = {
+        "pressing_overlap": False,
+        "front_delt_overlap": False,
+        "triceps_overlap": False,
+        "biceps_overlap": False,
+        "grip_overlap": False,
+        "trap_overlap": False,
+        "lower_back_overlap": False,
+        "knee_stress": False,
+        "hip_hinge_overlap": False,
+    }
+    if overlap:
+        overlap_payload.update(overlap)
+    return SimpleNamespace(
+        fatigue=SimpleNamespace(systemic_fatigue=systemic, local_fatigue=local),
+        time_efficiency=SimpleNamespace(setup_time=setup, rest_need=rest),
+        role=SimpleNamespace(primary_role=role, tags=list(tags or [])),
+        skill_stability_safety=SimpleNamespace(skill_requirement=skill, stability_requirement=stability),
+        overlap=SimpleNamespace(**overlap_payload),
+    )
 
 
 def _assessment_and_blueprint(archetype_name: str):
@@ -496,3 +531,428 @@ def test_optional_fill_penalizes_overused_weekly_movement_pattern_for_variety() 
 
     assert result is not None
     assert result.selected_id == "triceps_fill"
+
+def test_metadata_off_preserves_prior_winner_behavior() -> None:
+    doctrine_bundle, assessment, blueprint = _assessment_and_blueprint("low_recovery_full_body")
+    record_by_id = {
+        "press_machine": {
+            "exercise_id": "press_machine",
+            "family_id": "press_machine",
+            "movement_pattern": "horizontal_press",
+            "primary_muscles": ["chest", "triceps"],
+            "secondary_muscles": ["front_delts"],
+            "equipment_tags": ["machine"],
+            "fatigue_cost": "moderate",
+            "skill_demand": "low",
+            "stability_demand": "low",
+            "progression_compatibility": ["high"],
+        },
+        "press_unstable": {
+            "exercise_id": "press_unstable",
+            "family_id": "press_unstable",
+            "movement_pattern": "horizontal_press",
+            "primary_muscles": ["chest", "triceps"],
+            "secondary_muscles": ["front_delts"],
+            "equipment_tags": ["dumbbell"],
+            "fatigue_cost": "high",
+            "skill_demand": "high",
+            "stability_demand": "high",
+            "progression_compatibility": ["moderate"],
+        },
+    }
+    result = select_scored_candidate(
+        doctrine_bundle=doctrine_bundle,
+        selection_mode="required_slot",
+        candidate_ids=["press_machine", "press_unstable"],
+        record_by_id=record_by_id,
+        assessment=assessment,
+        blueprint_input=blueprint,
+        assigned_counts={},
+        weekly_selected_exercise_ids=[],
+        session_exercise_count=0,
+        target_exercises_per_session=4,
+        target_movement_pattern="horizontal_press",
+        target_weak_point_muscles=[],
+        metadata_v2_by_exercise_id=None,
+    )
+    assert result is not None
+    assert result.selected_id == "press_machine"
+    assert result.selection_trace.metadata_v2_used_for_scoring is False
+
+
+def test_metadata_on_scoring_is_deterministic() -> None:
+    doctrine_bundle, assessment, blueprint = _assessment_and_blueprint("low_time_full_body")
+    record_by_id = {
+        "a": {
+            "exercise_id": "a",
+            "family_id": "fa",
+            "movement_pattern": "curl",
+            "primary_muscles": ["biceps"],
+            "secondary_muscles": [],
+            "equipment_tags": ["cable"],
+            "fatigue_cost": "moderate",
+            "skill_demand": "moderate",
+            "stability_demand": "moderate",
+            "progression_compatibility": ["moderate"],
+        },
+        "b": {
+            "exercise_id": "b",
+            "family_id": "fb",
+            "movement_pattern": "curl",
+            "primary_muscles": ["biceps"],
+            "secondary_muscles": [],
+            "equipment_tags": ["cable"],
+            "fatigue_cost": "moderate",
+            "skill_demand": "moderate",
+            "stability_demand": "moderate",
+            "progression_compatibility": ["moderate"],
+        },
+    }
+    metadata = {
+        "a": _metadata_stub(setup="low", rest="short", systemic="low", local="low"),
+        "b": _metadata_stub(setup="high", rest="long", systemic="high", local="high"),
+    }
+    first = select_scored_candidate(
+        doctrine_bundle=doctrine_bundle,
+        selection_mode="optional_fill",
+        candidate_ids=["a", "b"],
+        record_by_id=record_by_id,
+        assessment=assessment,
+        blueprint_input=blueprint,
+        assigned_counts={},
+        weekly_selected_exercise_ids=[],
+        session_exercise_count=3,
+        target_exercises_per_session=4,
+        target_weak_point_muscles=[],
+        metadata_v2_by_exercise_id=metadata,
+    )
+    second = select_scored_candidate(
+        doctrine_bundle=doctrine_bundle,
+        selection_mode="optional_fill",
+        candidate_ids=["a", "b"],
+        record_by_id=record_by_id,
+        assessment=assessment,
+        blueprint_input=blueprint,
+        assigned_counts={},
+        weekly_selected_exercise_ids=[],
+        session_exercise_count=3,
+        target_exercises_per_session=4,
+        target_weak_point_muscles=[],
+        metadata_v2_by_exercise_id=metadata,
+    )
+    assert first is not None and second is not None
+    assert first.selected_id == second.selected_id
+    assert first.selection_trace.total_score == second.selection_trace.total_score
+
+
+def test_low_time_prefers_lower_setup_and_rest_when_candidates_are_comparable() -> None:
+    doctrine_bundle, assessment, blueprint = _assessment_and_blueprint("low_time_full_body")
+    record_by_id = {
+        "fast": {
+            "exercise_id": "fast",
+            "family_id": "f_fast",
+            "movement_pattern": "curl",
+            "primary_muscles": ["biceps"],
+            "secondary_muscles": [],
+            "equipment_tags": ["cable"],
+            "fatigue_cost": "moderate",
+            "skill_demand": "moderate",
+            "stability_demand": "moderate",
+            "progression_compatibility": ["moderate"],
+        },
+        "slow": {
+            "exercise_id": "slow",
+            "family_id": "f_slow",
+            "movement_pattern": "curl",
+            "primary_muscles": ["biceps"],
+            "secondary_muscles": [],
+            "equipment_tags": ["cable"],
+            "fatigue_cost": "moderate",
+            "skill_demand": "moderate",
+            "stability_demand": "moderate",
+            "progression_compatibility": ["moderate"],
+        },
+    }
+    metadata = {
+        "fast": _metadata_stub(setup="low", rest="short"),
+        "slow": _metadata_stub(setup="high", rest="long"),
+    }
+    result = select_scored_candidate(
+        doctrine_bundle=doctrine_bundle,
+        selection_mode="optional_fill",
+        candidate_ids=["slow", "fast"],
+        record_by_id=record_by_id,
+        assessment=assessment,
+        blueprint_input=blueprint,
+        assigned_counts={},
+        weekly_selected_exercise_ids=[],
+        session_exercise_count=3,
+        target_exercises_per_session=4,
+        target_weak_point_muscles=[],
+        metadata_v2_by_exercise_id=metadata,
+    )
+    assert result is not None
+    assert result.selected_id == "fast"
+    assert result.selection_trace.metadata_v2_used_for_time_efficiency is True
+
+
+def test_low_recovery_prefers_lower_systemic_fatigue_when_candidates_are_comparable() -> None:
+    doctrine_bundle, assessment, blueprint = _assessment_and_blueprint("low_recovery_full_body")
+    record_by_id = {
+        "recovery_easy": {
+            "exercise_id": "recovery_easy",
+            "family_id": "r_easy",
+            "movement_pattern": "horizontal_press",
+            "primary_muscles": ["chest"],
+            "secondary_muscles": ["triceps"],
+            "equipment_tags": ["machine"],
+            "fatigue_cost": "moderate",
+            "skill_demand": "moderate",
+            "stability_demand": "moderate",
+            "progression_compatibility": ["moderate"],
+        },
+        "recovery_hard": {
+            "exercise_id": "recovery_hard",
+            "family_id": "r_hard",
+            "movement_pattern": "horizontal_press",
+            "primary_muscles": ["chest"],
+            "secondary_muscles": ["triceps"],
+            "equipment_tags": ["machine"],
+            "fatigue_cost": "moderate",
+            "skill_demand": "moderate",
+            "stability_demand": "moderate",
+            "progression_compatibility": ["moderate"],
+        },
+    }
+    metadata = {
+        "recovery_easy": _metadata_stub(systemic="low", local="low"),
+        "recovery_hard": _metadata_stub(systemic="high", local="high"),
+    }
+    result = select_scored_candidate(
+        doctrine_bundle=doctrine_bundle,
+        selection_mode="required_slot",
+        candidate_ids=["recovery_hard", "recovery_easy"],
+        record_by_id=record_by_id,
+        assessment=assessment,
+        blueprint_input=blueprint,
+        assigned_counts={},
+        weekly_selected_exercise_ids=[],
+        session_exercise_count=0,
+        target_exercises_per_session=4,
+        target_movement_pattern="horizontal_press",
+        target_weak_point_muscles=[],
+        metadata_v2_by_exercise_id=metadata,
+    )
+    assert result is not None
+    assert result.selected_id == "recovery_easy"
+    assert result.selection_trace.metadata_v2_used_for_recovery is True
+
+
+def test_required_slot_prefers_primary_secondary_role_over_tertiary_when_comparable() -> None:
+    doctrine_bundle, assessment, blueprint = _assessment_and_blueprint("novice_gym_full_body")
+    record_by_id = {
+        "slot_primary": {
+            "exercise_id": "slot_primary",
+            "family_id": "sp",
+            "movement_pattern": "horizontal_press",
+            "primary_muscles": ["chest"],
+            "secondary_muscles": ["triceps"],
+            "equipment_tags": ["machine"],
+            "fatigue_cost": "moderate",
+            "skill_demand": "moderate",
+            "stability_demand": "moderate",
+            "progression_compatibility": ["moderate"],
+        },
+        "slot_tertiary": {
+            "exercise_id": "slot_tertiary",
+            "family_id": "st",
+            "movement_pattern": "horizontal_press",
+            "primary_muscles": ["chest"],
+            "secondary_muscles": ["triceps"],
+            "equipment_tags": ["machine"],
+            "fatigue_cost": "moderate",
+            "skill_demand": "moderate",
+            "stability_demand": "moderate",
+            "progression_compatibility": ["moderate"],
+        },
+    }
+    metadata = {
+        "slot_primary": _metadata_stub(role="primary", tags=["primary"]),
+        "slot_tertiary": _metadata_stub(role="tertiary", tags=["tertiary"]),
+    }
+    result = select_scored_candidate(
+        doctrine_bundle=doctrine_bundle,
+        selection_mode="required_slot",
+        candidate_ids=["slot_tertiary", "slot_primary"],
+        record_by_id=record_by_id,
+        assessment=assessment,
+        blueprint_input=blueprint,
+        assigned_counts={},
+        weekly_selected_exercise_ids=[],
+        session_exercise_count=0,
+        target_exercises_per_session=4,
+        target_movement_pattern="horizontal_press",
+        target_weak_point_muscles=[],
+        metadata_v2_by_exercise_id=metadata,
+    )
+    assert result is not None
+    assert result.selected_id == "slot_primary"
+    assert result.selection_trace.metadata_v2_used_for_role_fit is True
+
+
+def test_late_optional_fill_prefers_tertiary_pump_role_when_comparable() -> None:
+    doctrine_bundle, assessment, blueprint = _assessment_and_blueprint("low_time_full_body")
+    record_by_id = {
+        "late_tertiary": {
+            "exercise_id": "late_tertiary",
+            "family_id": "lt",
+            "movement_pattern": "lateral_raise",
+            "primary_muscles": ["side_delts"],
+            "secondary_muscles": [],
+            "equipment_tags": ["cable"],
+            "fatigue_cost": "low",
+            "skill_demand": "low",
+            "stability_demand": "low",
+            "progression_compatibility": ["moderate"],
+        },
+        "late_primary": {
+            "exercise_id": "late_primary",
+            "family_id": "lp",
+            "movement_pattern": "lateral_raise",
+            "primary_muscles": ["side_delts"],
+            "secondary_muscles": [],
+            "equipment_tags": ["cable"],
+            "fatigue_cost": "low",
+            "skill_demand": "low",
+            "stability_demand": "low",
+            "progression_compatibility": ["moderate"],
+        },
+    }
+    metadata = {
+        "late_tertiary": _metadata_stub(role="tertiary", tags=["pump_metabolic"]),
+        "late_primary": _metadata_stub(role="primary", tags=["primary"]),
+    }
+    result = select_scored_candidate(
+        doctrine_bundle=doctrine_bundle,
+        selection_mode="optional_fill",
+        candidate_ids=["late_primary", "late_tertiary"],
+        record_by_id=record_by_id,
+        assessment=assessment,
+        blueprint_input=blueprint,
+        assigned_counts={},
+        weekly_selected_exercise_ids=[],
+        session_exercise_count=3,
+        target_exercises_per_session=4,
+        target_weak_point_muscles=[],
+        metadata_v2_by_exercise_id=metadata,
+    )
+    assert result is not None
+    assert result.selected_id == "late_tertiary"
+
+
+def test_optional_fill_avoids_repeated_overlap_bottleneck_when_comparable() -> None:
+    doctrine_bundle, assessment, blueprint = _assessment_and_blueprint("novice_gym_full_body")
+    record_by_id = {
+        "candidate_press": {
+            "exercise_id": "candidate_press",
+            "family_id": "cp",
+            "movement_pattern": "horizontal_press",
+            "primary_muscles": ["chest"],
+            "secondary_muscles": ["triceps"],
+            "equipment_tags": ["machine"],
+            "fatigue_cost": "moderate",
+            "skill_demand": "moderate",
+            "stability_demand": "moderate",
+            "progression_compatibility": ["moderate"],
+        },
+        "candidate_neutral": {
+            "exercise_id": "candidate_neutral",
+            "family_id": "cn",
+            "movement_pattern": "chest_fly",
+            "primary_muscles": ["chest"],
+            "secondary_muscles": [],
+            "equipment_tags": ["machine"],
+            "fatigue_cost": "moderate",
+            "skill_demand": "moderate",
+            "stability_demand": "moderate",
+            "progression_compatibility": ["moderate"],
+        },
+        "week_press": {
+            "exercise_id": "week_press",
+            "family_id": "wp",
+            "movement_pattern": "horizontal_press",
+            "primary_muscles": ["chest"],
+            "secondary_muscles": ["triceps"],
+            "equipment_tags": ["machine"],
+            "fatigue_cost": "moderate",
+            "skill_demand": "moderate",
+            "stability_demand": "moderate",
+            "progression_compatibility": ["moderate"],
+        },
+    }
+    metadata = {
+        "candidate_press": _metadata_stub(overlap={"pressing_overlap": True, "triceps_overlap": True}),
+        "candidate_neutral": _metadata_stub(overlap={"pressing_overlap": False, "triceps_overlap": False}),
+        "week_press": _metadata_stub(overlap={"pressing_overlap": True, "triceps_overlap": True}),
+    }
+    result = select_scored_candidate(
+        doctrine_bundle=doctrine_bundle,
+        selection_mode="optional_fill",
+        candidate_ids=["candidate_press", "candidate_neutral"],
+        record_by_id=record_by_id,
+        assessment=assessment,
+        blueprint_input=blueprint,
+        assigned_counts={},
+        weekly_selected_exercise_ids=["week_press"],
+        session_exercise_count=2,
+        target_exercises_per_session=4,
+        target_weak_point_muscles=[],
+        metadata_v2_by_exercise_id=metadata,
+    )
+    assert result is not None
+    assert result.selected_id == "candidate_neutral"
+    assert result.selection_trace.metadata_v2_used_for_overlap is True
+
+
+def test_metadata_scoring_fallback_count_increments_when_fields_missing() -> None:
+    doctrine_bundle, assessment, blueprint = _assessment_and_blueprint("low_time_full_body")
+    record_by_id = {
+        "fallback_test": {
+            "exercise_id": "fallback_test",
+            "family_id": "ft",
+            "movement_pattern": "curl",
+            "primary_muscles": ["biceps"],
+            "secondary_muscles": [],
+            "equipment_tags": ["cable"],
+            "fatigue_cost": "moderate",
+            "skill_demand": "moderate",
+            "stability_demand": "moderate",
+            "progression_compatibility": ["moderate"],
+        }
+    }
+    partial_metadata = {
+        "fallback_test": SimpleNamespace(
+            fatigue=None,
+            time_efficiency=None,
+            role=None,
+            skill_stability_safety=None,
+            overlap=None,
+        )
+    }
+    result = select_scored_candidate(
+        doctrine_bundle=doctrine_bundle,
+        selection_mode="optional_fill",
+        candidate_ids=["fallback_test"],
+        record_by_id=record_by_id,
+        assessment=assessment,
+        blueprint_input=blueprint,
+        assigned_counts={},
+        weekly_selected_exercise_ids=[],
+        session_exercise_count=3,
+        target_exercises_per_session=4,
+        target_weak_point_muscles=[],
+        metadata_v2_by_exercise_id=partial_metadata,
+    )
+    assert result is not None
+    assert result.selection_trace.metadata_v2_used_for_scoring is True
+    assert result.selection_trace.metadata_v2_scoring_fallback_count >= 4

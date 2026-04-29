@@ -67,6 +67,8 @@ class _ScoredCandidate:
     total_score: int
     dimension_scores: dict[str, int]
     metadata_defaults_used: list[str]
+    metadata_scoring_flags: dict[str, bool]
+    metadata_scoring_fallback_count: int
 
 
 def _rule_index(bundle: DoctrineBundle) -> dict[str, DoctrineRuleStub]:
@@ -239,6 +241,34 @@ def _band_fit_score(actual: str | None, preferred: str, bands: dict[str, int]) -
     return int(lookup[preferred][actual])
 
 
+def _metadata_lookup(*, exercise_id: str, metadata_v2_by_exercise_id: dict[str, Any] | None) -> Any | None:
+    if not metadata_v2_by_exercise_id:
+        return None
+    return metadata_v2_by_exercise_id.get(exercise_id)
+
+
+def _coerce_fatigue_level(value: Any) -> str | None:
+    text = str(value) if value is not None else ""
+    return text if text in {"low", "moderate", "high"} else None
+
+
+def _coerce_skill_level(value: Any) -> str | None:
+    return {
+        "beginner_friendly": "low",
+        "intermediate": "moderate",
+        "advanced": "high",
+    }.get(str(value))
+
+
+def _coerce_rest_need(value: Any) -> str | None:
+    text = str(value) if value is not None else ""
+    return text if text in {"short", "moderate", "long"} else None
+
+
+def _bool_field(value: Any) -> bool:
+    return bool(value) if value is not None else False
+
+
 def _recoverability_fit(
     *,
     record: dict[str, Any],
@@ -249,6 +279,7 @@ def _recoverability_fit(
     target_exercises_per_session: int,
     weekly_selected_records: list[dict[str, Any]],
     bands: dict[str, int],
+    metadata_v2: Any | None,
 ) -> int:
     preferred = _preferred_recoverability_band(
         assessment=assessment,
@@ -257,7 +288,19 @@ def _recoverability_fit(
         session_exercise_count=session_exercise_count,
         target_exercises_per_session=target_exercises_per_session,
     )
-    base = _band_fit_score(record.get("fatigue_cost"), preferred, bands)
+    fatigue_source = record.get("fatigue_cost")
+    if metadata_v2 is not None:
+        fatigue = getattr(metadata_v2, "fatigue", None)
+        if fatigue is not None:
+            systemic = _coerce_fatigue_level(getattr(fatigue, "systemic_fatigue", None))
+            local = _coerce_fatigue_level(getattr(fatigue, "local_fatigue", None))
+            if systemic is not None and local is not None:
+                fatigue_source = "high" if "high" in {systemic, local} else ("moderate" if "moderate" in {systemic, local} else "low")
+            elif systemic is not None:
+                fatigue_source = systemic
+            elif local is not None:
+                fatigue_source = local
+    base = _band_fit_score(fatigue_source, preferred, bands)
     return base + _fatigue_distribution_adjustment(
         record=record,
         weekly_selected_records=weekly_selected_records,
@@ -285,15 +328,27 @@ def _complexity_fit(
     session_exercise_count: int,
     target_exercises_per_session: int,
     bands: dict[str, int],
+    metadata_v2: Any | None,
 ) -> int:
     preferred = _preferred_complexity_band(assessment=assessment, blueprint_input=blueprint_input)
-    skill_score = _band_fit_score(record.get("skill_demand"), preferred, bands)
-    stability_score = _band_fit_score(record.get("stability_demand"), preferred, bands)
+    skill = record.get("skill_demand")
+    stability = record.get("stability_demand")
+    if metadata_v2 is not None:
+        safety = getattr(metadata_v2, "skill_stability_safety", None)
+        if safety is not None:
+            meta_skill = _coerce_skill_level(getattr(safety, "skill_requirement", None))
+            meta_stability = _coerce_skill_level(getattr(safety, "stability_requirement", None))
+            if meta_skill is not None:
+                skill = meta_skill
+            if meta_stability is not None:
+                stability = meta_stability
+    skill_score = _band_fit_score(skill, preferred, bands)
+    stability_score = _band_fit_score(stability, preferred, bands)
     score = min(skill_score, stability_score)
     if selection_mode != "required_slot" and session_exercise_count >= max(1, target_exercises_per_session - 1):
-        if record.get("skill_demand") == "high" or record.get("stability_demand") == "high":
+        if skill == "high" or stability == "high":
             score += _band_score(bands, "negative")
-        elif record.get("skill_demand") == "low" and record.get("stability_demand") == "low":
+        elif skill == "low" and stability == "low":
             score += _band_score(bands, "positive")
     return score
 
@@ -328,15 +383,38 @@ def _practicality_fit(
     record: dict[str, Any],
     assessment: UserAssessment,
     selection_mode: SelectionMode,
+    session_exercise_count: int,
+    target_exercises_per_session: int,
     bands: dict[str, int],
+    metadata_v2: Any | None,
 ) -> int:
     equipment_count = len(record.get("equipment_tags") or [])
     low_time = assessment.schedule_profile == "low_time" or (assessment.session_time_budget_minutes or 0) <= 45
     if equipment_count <= 1:
-        return _band_score(bands, "strong_positive" if low_time or selection_mode == "optional_fill" else "positive")
-    if equipment_count == 2:
-        return _band_score(bands, "neutral")
-    return _band_score(bands, "negative")
+        score = _band_score(bands, "strong_positive" if low_time or selection_mode == "optional_fill" else "positive")
+    elif equipment_count == 2:
+        score = _band_score(bands, "neutral")
+    else:
+        score = _band_score(bands, "negative")
+    if metadata_v2 is None:
+        return score
+    time_efficiency = getattr(metadata_v2, "time_efficiency", None)
+    if time_efficiency is None:
+        return score
+    late_optional = selection_mode == "optional_fill" and session_exercise_count >= max(1, target_exercises_per_session - 1)
+    if not (low_time or late_optional):
+        return score
+    setup_time = _coerce_fatigue_level(getattr(time_efficiency, "setup_time", None))
+    rest_need = _coerce_rest_need(getattr(time_efficiency, "rest_need", None))
+    if setup_time == "low":
+        score += _band_score(bands, "positive")
+    elif setup_time == "high":
+        score += _band_score(bands, "negative")
+    if rest_need == "short":
+        score += _band_score(bands, "positive")
+    elif rest_need == "long":
+        score += _band_score(bands, "negative")
+    return score
 
 
 def _family_redundancy_penalty(
@@ -345,6 +423,9 @@ def _family_redundancy_penalty(
     assigned_counts: dict[str, int],
     weekly_selected_records: list[dict[str, Any]],
     bands: dict[str, int],
+    selection_mode: SelectionMode,
+    metadata_v2: Any | None,
+    weekly_selected_metadata: list[Any],
 ) -> int:
     if assigned_counts.get(record["exercise_id"], 0) > 0:
         return _band_score(bands, "strong_negative")
@@ -369,7 +450,34 @@ def _family_redundancy_penalty(
         )
         if overlap_count >= 3:
             return _band_score(bands, "negative")
-    return _band_score(bands, "neutral")
+    score = _band_score(bands, "neutral")
+    if selection_mode != "optional_fill" or metadata_v2 is None:
+        return score
+    overlap = getattr(metadata_v2, "overlap", None)
+    if overlap is None:
+        return score
+    overlap_keys = (
+        "pressing_overlap",
+        "front_delt_overlap",
+        "triceps_overlap",
+        "biceps_overlap",
+        "grip_overlap",
+        "trap_overlap",
+        "lower_back_overlap",
+        "knee_stress",
+        "hip_hinge_overlap",
+    )
+    active_keys = [key for key in overlap_keys if _bool_field(getattr(overlap, key, False))]
+    if not active_keys:
+        return score
+    for selected in weekly_selected_metadata:
+        selected_overlap = None if selected is None else getattr(selected, "overlap", None)
+        if selected_overlap is None:
+            continue
+        if any(_bool_field(getattr(selected_overlap, key, False)) for key in active_keys):
+            score += _band_score(bands, "negative")
+            break
+    return score
 
 
 def _metadata_defaults_used(record: dict[str, Any]) -> list[str]:
@@ -385,6 +493,36 @@ def _metadata_defaults_used(record: dict[str, Any]) -> list[str]:
     return defaults
 
 
+def _metadata_role_fit_adjustment(
+    *,
+    selection_mode: SelectionMode,
+    session_exercise_count: int,
+    target_exercises_per_session: int,
+    metadata_v2: Any | None,
+    bands: dict[str, int],
+) -> int:
+    if metadata_v2 is None:
+        return 0
+    role = getattr(metadata_v2, "role", None)
+    if role is None:
+        return 0
+    primary_role = str(getattr(role, "primary_role", ""))
+    tags = {str(item) for item in list(getattr(role, "tags", []) or [])}
+    role_set = tags.union({primary_role})
+    if selection_mode == "required_slot":
+        if role_set.intersection({"primary", "secondary"}):
+            return _band_score(bands, "positive")
+        if "tertiary" in role_set:
+            return _band_score(bands, "negative")
+        return 0
+    if selection_mode == "optional_fill" and session_exercise_count >= max(1, target_exercises_per_session - 1):
+        if role_set.intersection({"tertiary", "pump_metabolic"}):
+            return _band_score(bands, "positive")
+        if "primary" in role_set:
+            return _band_score(bands, "negative")
+    return 0
+
+
 def _score_candidate(
     *,
     record: dict[str, Any],
@@ -398,8 +536,42 @@ def _score_candidate(
     target_exercises_per_session: int,
     assigned_counts: dict[str, int],
     weekly_selected_records: list[dict[str, Any]],
+    metadata_v2_by_exercise_id: dict[str, Any] | None,
+    weekly_selected_exercise_ids: list[str],
 ) -> _ScoredCandidate:
     bands = contract.dimension_bands
+    metadata_v2 = _metadata_lookup(exercise_id=record["exercise_id"], metadata_v2_by_exercise_id=metadata_v2_by_exercise_id)
+    weekly_selected_metadata = [
+        _metadata_lookup(exercise_id=exercise_id, metadata_v2_by_exercise_id=metadata_v2_by_exercise_id)
+        for exercise_id in weekly_selected_exercise_ids
+    ]
+    fallback_count = 0
+    used_time_efficiency = False
+    used_recovery = False
+    used_role_fit = False
+    used_overlap = False
+
+    if metadata_v2 is not None:
+        if getattr(metadata_v2, "time_efficiency", None) is not None:
+            used_time_efficiency = True
+        else:
+            fallback_count += 1
+        fatigue = getattr(metadata_v2, "fatigue", None)
+        if fatigue is not None and (
+            _coerce_fatigue_level(getattr(fatigue, "systemic_fatigue", None)) is not None
+            or _coerce_fatigue_level(getattr(fatigue, "local_fatigue", None)) is not None
+        ):
+            used_recovery = True
+        else:
+            fallback_count += 1
+        if getattr(metadata_v2, "role", None) is not None:
+            used_role_fit = True
+        else:
+            fallback_count += 1
+        if getattr(metadata_v2, "overlap", None) is not None:
+            used_overlap = True
+        else:
+            fallback_count += 1
     dimension_scores = {
         "stimulus_fit": _stimulus_fit(
             record=record,
@@ -417,6 +589,7 @@ def _score_candidate(
             target_exercises_per_session=target_exercises_per_session,
             weekly_selected_records=weekly_selected_records,
             bands=bands,
+            metadata_v2=metadata_v2,
         ),
         "complexity_fit": _complexity_fit(
             record=record,
@@ -426,6 +599,7 @@ def _score_candidate(
             session_exercise_count=session_exercise_count,
             target_exercises_per_session=target_exercises_per_session,
             bands=bands,
+            metadata_v2=metadata_v2,
         ),
         "progression_fit": _progression_fit(record=record, bands=bands),
         "weak_point_alignment": _weak_point_alignment(
@@ -437,15 +611,28 @@ def _score_candidate(
             record=record,
             assessment=assessment,
             selection_mode=selection_mode,
+            session_exercise_count=session_exercise_count,
+            target_exercises_per_session=target_exercises_per_session,
             bands=bands,
+            metadata_v2=metadata_v2,
         ),
         "family_redundancy_penalty": _family_redundancy_penalty(
             record=record,
             assigned_counts=assigned_counts,
             weekly_selected_records=weekly_selected_records,
             bands=bands,
+            selection_mode=selection_mode,
+            metadata_v2=metadata_v2,
+            weekly_selected_metadata=weekly_selected_metadata,
         ),
     }
+    dimension_scores["stimulus_fit"] += _metadata_role_fit_adjustment(
+        selection_mode=selection_mode,
+        session_exercise_count=session_exercise_count,
+        target_exercises_per_session=target_exercises_per_session,
+        metadata_v2=metadata_v2,
+        bands=bands,
+    )
     weights = contract.dimension_weights[selection_mode]
     total_score = sum(int(weights[key]) * int(value) for key, value in dimension_scores.items())
     return _ScoredCandidate(
@@ -453,6 +640,14 @@ def _score_candidate(
         total_score=total_score,
         dimension_scores=dimension_scores,
         metadata_defaults_used=_metadata_defaults_used(record),
+        metadata_scoring_flags={
+            "metadata_v2_used_for_scoring": bool(metadata_v2 is not None),
+            "metadata_v2_used_for_time_efficiency": bool(metadata_v2 is not None and used_time_efficiency),
+            "metadata_v2_used_for_recovery": bool(metadata_v2 is not None and used_recovery),
+            "metadata_v2_used_for_role_fit": bool(metadata_v2 is not None and used_role_fit),
+            "metadata_v2_used_for_overlap": bool(metadata_v2 is not None and used_overlap),
+        },
+        metadata_scoring_fallback_count=fallback_count,
     )
 
 
@@ -494,6 +689,7 @@ def select_scored_candidate(
     target_exercises_per_session: int,
     target_movement_pattern: str | None = None,
     target_weak_point_muscles: list[str] | None = None,
+    metadata_v2_by_exercise_id: dict[str, Any] | None = None,
 ) -> CandidateSelectionResult | None:
     if not candidate_ids:
         return None
@@ -527,6 +723,8 @@ def select_scored_candidate(
             target_exercises_per_session=target_exercises_per_session,
             assigned_counts=assigned_counts,
             weekly_selected_records=weekly_selected_records,
+            metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+            weekly_selected_exercise_ids=weekly_selected_exercise_ids,
         )
         for candidate_id in candidate_ids
         if candidate_id in record_by_id
@@ -566,6 +764,14 @@ def select_scored_candidate(
                 for item in ranked_candidates[:3]
             ],
             metadata_defaults_used=list(winner.metadata_defaults_used),
+            metadata_v2_used_for_scoring=bool(winner.metadata_scoring_flags.get("metadata_v2_used_for_scoring")),
+            metadata_v2_used_for_time_efficiency=bool(
+                winner.metadata_scoring_flags.get("metadata_v2_used_for_time_efficiency")
+            ),
+            metadata_v2_used_for_recovery=bool(winner.metadata_scoring_flags.get("metadata_v2_used_for_recovery")),
+            metadata_v2_used_for_role_fit=bool(winner.metadata_scoring_flags.get("metadata_v2_used_for_role_fit")),
+            metadata_v2_used_for_overlap=bool(winner.metadata_scoring_flags.get("metadata_v2_used_for_overlap")),
+            metadata_v2_scoring_fallback_count=int(winner.metadata_scoring_fallback_count),
         ),
         total_score=winner.total_score,
         score_floor=score_floor,
