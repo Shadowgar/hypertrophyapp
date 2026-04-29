@@ -864,6 +864,16 @@ def test_generated_runtime_low_time_metadata_on_preserves_nonzero_viable_exposur
         for session in payload.get("sessions") or []
         for exercise in session.get("exercises") or []
     )
+    planned_sets = sum(
+        int(exercise.get("sets") or 0)
+        for session in payload.get("sessions") or []
+        for exercise in session.get("exercises") or []
+    )
+    planned_sets = sum(
+        int(exercise.get("sets") or 0)
+        for session in payload.get("sessions") or []
+        for exercise in session.get("exercises") or []
+    )
 
     assert trace["metadata_v2_loaded"] is True
     assert trace["metadata_v2_used_for_visible_balance"] is True
@@ -967,3 +977,76 @@ def test_generated_runtime_metadata_on_does_not_collapse_low_recovery_quads_or_r
     assert mapped_trace["metadata_v2_used_for_visible_balance"] is True
     assert mapped_grouped["quads"] >= 6, (baseline_grouped, mapped_grouped)
     assert mapped_high_fatigue <= baseline_high_fatigue, (baseline_high_fatigue, mapped_high_fatigue)
+
+
+def test_generated_runtime_novice_metadata_on_preserves_core_and_major_group_floors() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_user(
+        client,
+        email="generated-runtime-novice-metadata-floors@example.com",
+        name="Generated Runtime Novice Metadata Floors",
+    )
+    _post_profile(
+        client,
+        headers=headers,
+        selected_program_id="full_body_v1",
+        split_preference="full_body",
+        training_location="gym",
+        equipment_profile=["barbell", "bench", "cable", "machine", "dumbbell", "bodyweight"],
+        days_available=3,
+        weak_areas=["chest", "hamstrings"],
+        session_time_budget_minutes=60,
+        near_failure_tolerance="moderate",
+    )
+
+    response = client.post("/plan/generate-week", headers=headers, json={})
+    assert response.status_code == 200
+    payload = response.json()
+    grouped = _visible_grouped_week_volume(payload)
+    trace = payload["template_selection_trace"]["generated_full_body_runtime_trace"]
+    planned_sets = sum(
+        int(exercise.get("sets") or 0)
+        for session in payload.get("sessions") or []
+        for exercise in session.get("exercises") or []
+    )
+
+    assert trace["metadata_v2_loaded"] is True
+    if planned_sets >= 42:
+        assert grouped["chest"] >= 7, grouped
+        assert grouped["quads"] >= 6, grouped
+        assert grouped["hamstrings"] >= 6, grouped
+    if _has_movement_pattern(payload, {"core"}):
+        assert grouped["core"] > 0, grouped
+
+
+def test_generated_runtime_weakpoint_arms_delts_metadata_on_preserves_core_when_viable() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_user(
+        client,
+        email="generated-runtime-weakpoint-arms-delts-core@example.com",
+        name="Generated Runtime Weakpoint Arms Delts Core",
+    )
+    _post_profile(
+        client,
+        headers=headers,
+        selected_program_id="full_body_v1",
+        split_preference="full_body",
+        training_location="gym",
+        equipment_profile=["barbell", "bench", "cable", "machine", "dumbbell", "bodyweight"],
+        days_available=3,
+        weak_areas=["arms", "delts"],
+        session_time_budget_minutes=60,
+        near_failure_tolerance="moderate",
+    )
+
+    response = client.post("/plan/generate-week", headers=headers, json={})
+    assert response.status_code == 200
+    payload = response.json()
+    grouped = _visible_grouped_week_volume(payload)
+
+    assert grouped["arms"] > 0, grouped
+    assert grouped["delts"] > 0, grouped
+    if _has_movement_pattern(payload, {"core"}):
+        assert grouped["core"] > 0, grouped

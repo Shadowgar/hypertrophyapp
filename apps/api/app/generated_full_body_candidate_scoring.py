@@ -289,17 +289,8 @@ def _recoverability_fit(
         target_exercises_per_session=target_exercises_per_session,
     )
     fatigue_source = record.get("fatigue_cost")
-    if metadata_v2 is not None:
-        fatigue = getattr(metadata_v2, "fatigue", None)
-        if fatigue is not None:
-            systemic = _coerce_fatigue_level(getattr(fatigue, "systemic_fatigue", None))
-            local = _coerce_fatigue_level(getattr(fatigue, "local_fatigue", None))
-            if systemic is not None and local is not None:
-                fatigue_source = "high" if "high" in {systemic, local} else ("moderate" if "moderate" in {systemic, local} else "low")
-            elif systemic is not None:
-                fatigue_source = systemic
-            elif local is not None:
-                fatigue_source = local
+    # Phase 2D-2 remediation: keep recoverability scoring canonical so
+    # metadata cannot override full-body exposure guardrails.
     base = _band_fit_score(fatigue_source, preferred, bands)
     return base + _fatigue_distribution_adjustment(
         record=record,
@@ -331,17 +322,10 @@ def _complexity_fit(
     metadata_v2: Any | None,
 ) -> int:
     preferred = _preferred_complexity_band(assessment=assessment, blueprint_input=blueprint_input)
+    # Phase 2D-2 remediation: keep complexity scoring canonical to prevent
+    # metadata-driven drift in required-slot exercise ordering.
     skill = record.get("skill_demand")
     stability = record.get("stability_demand")
-    if metadata_v2 is not None:
-        safety = getattr(metadata_v2, "skill_stability_safety", None)
-        if safety is not None:
-            meta_skill = _coerce_skill_level(getattr(safety, "skill_requirement", None))
-            meta_stability = _coerce_skill_level(getattr(safety, "stability_requirement", None))
-            if meta_skill is not None:
-                skill = meta_skill
-            if meta_stability is not None:
-                stability = meta_stability
     skill_score = _band_fit_score(skill, preferred, bands)
     stability_score = _band_fit_score(stability, preferred, bands)
     score = min(skill_score, stability_score)
@@ -396,24 +380,8 @@ def _practicality_fit(
         score = _band_score(bands, "neutral")
     else:
         score = _band_score(bands, "negative")
-    if metadata_v2 is None:
-        return score
-    time_efficiency = getattr(metadata_v2, "time_efficiency", None)
-    if time_efficiency is None:
-        return score
-    late_optional = selection_mode == "optional_fill" and session_exercise_count >= max(1, target_exercises_per_session - 1)
-    if not (low_time or late_optional):
-        return score
-    setup_time = _coerce_fatigue_level(getattr(time_efficiency, "setup_time", None))
-    rest_need = _coerce_rest_need(getattr(time_efficiency, "rest_need", None))
-    if setup_time == "low":
-        score += _band_score(bands, "positive")
-    elif setup_time == "high":
-        score += _band_score(bands, "negative")
-    if rest_need == "short":
-        score += _band_score(bands, "positive")
-    elif rest_need == "long":
-        score += _band_score(bands, "negative")
+    # Phase 2D-2 remediation: keep practicality scoring canonical so
+    # metadata cannot bias optional-fill away from core/major floor coverage.
     return score
 
 
@@ -450,34 +418,9 @@ def _family_redundancy_penalty(
         )
         if overlap_count >= 3:
             return _band_score(bands, "negative")
-    score = _band_score(bands, "neutral")
-    if selection_mode != "optional_fill" or metadata_v2 is None:
-        return score
-    overlap = getattr(metadata_v2, "overlap", None)
-    if overlap is None:
-        return score
-    overlap_keys = (
-        "pressing_overlap",
-        "front_delt_overlap",
-        "triceps_overlap",
-        "biceps_overlap",
-        "grip_overlap",
-        "trap_overlap",
-        "lower_back_overlap",
-        "knee_stress",
-        "hip_hinge_overlap",
-    )
-    active_keys = [key for key in overlap_keys if _bool_field(getattr(overlap, key, False))]
-    if not active_keys:
-        return score
-    for selected in weekly_selected_metadata:
-        selected_overlap = None if selected is None else getattr(selected, "overlap", None)
-        if selected_overlap is None:
-            continue
-        if any(_bool_field(getattr(selected_overlap, key, False)) for key in active_keys):
-            score += _band_score(bands, "negative")
-            break
-    return score
+    # Phase 2D-2 remediation: disable metadata overlap scoring so optional-fill
+    # guardrails remain the dominant mechanism for balance/collision control.
+    return _band_score(bands, "neutral")
 
 
 def _metadata_defaults_used(record: dict[str, Any]) -> list[str]:
@@ -501,25 +444,8 @@ def _metadata_role_fit_adjustment(
     metadata_v2: Any | None,
     bands: dict[str, int],
 ) -> int:
-    if metadata_v2 is None:
-        return 0
-    role = getattr(metadata_v2, "role", None)
-    if role is None:
-        return 0
-    primary_role = str(getattr(role, "primary_role", ""))
-    tags = {str(item) for item in list(getattr(role, "tags", []) or [])}
-    role_set = tags.union({primary_role})
-    if selection_mode == "required_slot":
-        if role_set.intersection({"primary", "secondary"}):
-            return _band_score(bands, "positive")
-        if "tertiary" in role_set:
-            return _band_score(bands, "negative")
-        return 0
-    if selection_mode == "optional_fill" and session_exercise_count >= max(1, target_exercises_per_session - 1):
-        if role_set.intersection({"tertiary", "pump_metabolic"}):
-            return _band_score(bands, "positive")
-        if "primary" in role_set:
-            return _band_score(bands, "negative")
+    # Phase 2D-2 remediation: keep role-fit disabled to avoid overriding
+    # visible-balance floor restoration in late optional fill.
     return 0
 
 
@@ -552,26 +478,8 @@ def _score_candidate(
     used_overlap = False
 
     if metadata_v2 is not None:
-        if getattr(metadata_v2, "time_efficiency", None) is not None:
-            used_time_efficiency = True
-        else:
-            fallback_count += 1
-        fatigue = getattr(metadata_v2, "fatigue", None)
-        if fatigue is not None and (
-            _coerce_fatigue_level(getattr(fatigue, "systemic_fatigue", None)) is not None
-            or _coerce_fatigue_level(getattr(fatigue, "local_fatigue", None)) is not None
-        ):
-            used_recovery = True
-        else:
-            fallback_count += 1
-        if getattr(metadata_v2, "role", None) is not None:
-            used_role_fit = True
-        else:
-            fallback_count += 1
-        if getattr(metadata_v2, "overlap", None) is not None:
-            used_overlap = True
-        else:
-            fallback_count += 1
+        # All metadata scoring signals are disabled in remediation.
+        pass
     dimension_scores = {
         "stimulus_fit": _stimulus_fit(
             record=record,
@@ -641,11 +549,11 @@ def _score_candidate(
         dimension_scores=dimension_scores,
         metadata_defaults_used=_metadata_defaults_used(record),
         metadata_scoring_flags={
-            "metadata_v2_used_for_scoring": bool(metadata_v2 is not None),
-            "metadata_v2_used_for_time_efficiency": bool(metadata_v2 is not None and used_time_efficiency),
-            "metadata_v2_used_for_recovery": bool(metadata_v2 is not None and used_recovery),
-            "metadata_v2_used_for_role_fit": bool(metadata_v2 is not None and used_role_fit),
-            "metadata_v2_used_for_overlap": bool(metadata_v2 is not None and used_overlap),
+            "metadata_v2_used_for_scoring": False,
+            "metadata_v2_used_for_time_efficiency": False,
+            "metadata_v2_used_for_recovery": False,
+            "metadata_v2_used_for_role_fit": False,
+            "metadata_v2_used_for_overlap": False,
         },
         metadata_scoring_fallback_count=fallback_count,
     )

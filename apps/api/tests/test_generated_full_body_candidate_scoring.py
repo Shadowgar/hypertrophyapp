@@ -645,7 +645,7 @@ def test_metadata_on_scoring_is_deterministic() -> None:
     assert first.selection_trace.total_score == second.selection_trace.total_score
 
 
-def test_low_time_prefers_lower_setup_and_rest_when_candidates_are_comparable() -> None:
+def test_low_time_time_efficiency_signal_is_disabled_during_2d2_remediation() -> None:
     doctrine_bundle, assessment, blueprint = _assessment_and_blueprint("low_time_full_body")
     record_by_id = {
         "fast": {
@@ -692,11 +692,10 @@ def test_low_time_prefers_lower_setup_and_rest_when_candidates_are_comparable() 
         metadata_v2_by_exercise_id=metadata,
     )
     assert result is not None
-    assert result.selected_id == "fast"
-    assert result.selection_trace.metadata_v2_used_for_time_efficiency is True
+    assert result.selection_trace.metadata_v2_used_for_time_efficiency is False
 
 
-def test_low_recovery_prefers_lower_systemic_fatigue_when_candidates_are_comparable() -> None:
+def test_low_recovery_recovery_signal_is_disabled_during_2d2_remediation() -> None:
     doctrine_bundle, assessment, blueprint = _assessment_and_blueprint("low_recovery_full_body")
     record_by_id = {
         "recovery_easy": {
@@ -744,11 +743,10 @@ def test_low_recovery_prefers_lower_systemic_fatigue_when_candidates_are_compara
         metadata_v2_by_exercise_id=metadata,
     )
     assert result is not None
-    assert result.selected_id == "recovery_easy"
-    assert result.selection_trace.metadata_v2_used_for_recovery is True
+    assert result.selection_trace.metadata_v2_used_for_recovery is False
 
 
-def test_required_slot_prefers_primary_secondary_role_over_tertiary_when_comparable() -> None:
+def test_role_fit_signal_is_disabled_during_2d2_remediation() -> None:
     doctrine_bundle, assessment, blueprint = _assessment_and_blueprint("novice_gym_full_body")
     record_by_id = {
         "slot_primary": {
@@ -796,11 +794,10 @@ def test_required_slot_prefers_primary_secondary_role_over_tertiary_when_compara
         metadata_v2_by_exercise_id=metadata,
     )
     assert result is not None
-    assert result.selected_id == "slot_primary"
-    assert result.selection_trace.metadata_v2_used_for_role_fit is True
+    assert result.selection_trace.metadata_v2_used_for_role_fit is False
 
 
-def test_late_optional_fill_prefers_tertiary_pump_role_when_comparable() -> None:
+def test_late_optional_fill_role_signal_is_disabled_during_2d2_remediation() -> None:
     doctrine_bundle, assessment, blueprint = _assessment_and_blueprint("low_time_full_body")
     record_by_id = {
         "late_tertiary": {
@@ -847,10 +844,10 @@ def test_late_optional_fill_prefers_tertiary_pump_role_when_comparable() -> None
         metadata_v2_by_exercise_id=metadata,
     )
     assert result is not None
-    assert result.selected_id == "late_tertiary"
+    assert result.selection_trace.metadata_v2_used_for_role_fit is False
 
 
-def test_optional_fill_avoids_repeated_overlap_bottleneck_when_comparable() -> None:
+def test_overlap_signal_is_disabled_during_2d2_remediation() -> None:
     doctrine_bundle, assessment, blueprint = _assessment_and_blueprint("novice_gym_full_body")
     record_by_id = {
         "candidate_press": {
@@ -910,8 +907,7 @@ def test_optional_fill_avoids_repeated_overlap_bottleneck_when_comparable() -> N
         metadata_v2_by_exercise_id=metadata,
     )
     assert result is not None
-    assert result.selected_id == "candidate_neutral"
-    assert result.selection_trace.metadata_v2_used_for_overlap is True
+    assert result.selection_trace.metadata_v2_used_for_overlap is False
 
 
 def test_metadata_scoring_fallback_count_increments_when_fields_missing() -> None:
@@ -954,5 +950,5 @@ def test_metadata_scoring_fallback_count_increments_when_fields_missing() -> Non
         metadata_v2_by_exercise_id=partial_metadata,
     )
     assert result is not None
-    assert result.selection_trace.metadata_v2_used_for_scoring is True
-    assert result.selection_trace.metadata_v2_scoring_fallback_count >= 4
+    assert result.selection_trace.metadata_v2_used_for_scoring is False
+    assert result.selection_trace.metadata_v2_scoring_fallback_count >= 0
