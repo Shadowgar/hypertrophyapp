@@ -59,6 +59,13 @@ WEEKLY_BALANCE_CATEGORY_TO_PATTERNS = {
     "core": {"core"},
 }
 
+SESSION_SKELETON_PATTERNS = {
+    "press": {"horizontal_press", "vertical_press"},
+    "pull": {"horizontal_pull", "vertical_pull"},
+    "lower": {"squat", "knee_extension", "hinge", "leg_curl"},
+    "shoulder_rear_delt": {"vertical_press", "lateral_raise", "horizontal_pull"},
+}
+
 
 def _collect_doctrine_ids(draft) -> set[str]:
     ids = set()
@@ -199,6 +206,17 @@ def _required_balance_categories(blueprint) -> set[str]:
         if any(blueprint.candidate_exercise_ids_by_pattern.get(pattern) for pattern in category_patterns):
             required.add(category)
     return required
+
+
+def _missing_session_skeleton_categories(session: GeneratedSessionDraft, blueprint) -> list[str]:
+    patterns = {str(exercise.movement_pattern) for exercise in session.exercises}
+    missing: list[str] = []
+    for category, category_patterns in SESSION_SKELETON_PATTERNS.items():
+        if not any(blueprint.candidate_exercise_ids_by_pattern.get(pattern) for pattern in category_patterns):
+            continue
+        if not patterns.intersection(category_patterns):
+            missing.append(category)
+    return missing
 
 
 def _record_by_id(exercise_library):
@@ -722,6 +740,50 @@ def test_v25b_normal_three_day_major_volume_floors_are_satisfied() -> None:
     assert totals["quads"] >= 8, totals
     assert totals["hamstrings"] >= 8, totals
     assert totals["core"] >= 3, totals
+
+
+def test_v25d_normal_three_day_each_session_meets_structural_skeleton() -> None:
+    fixture = _normal_three_day_fixture_from_low_time()
+    _, _, _, _, blueprint, draft = _build_layers(fixture)
+    assert len(draft.sessions) == 3
+    for session in draft.sessions:
+        missing = _missing_session_skeleton_categories(session, blueprint)
+        assert not missing, f"{session.session_id}: missing={missing}"
+
+
+def test_v25d_normal_three_day_avoids_double_knee_before_push_pull() -> None:
+    fixture = _normal_three_day_fixture_from_low_time()
+    _, _, _, _, blueprint, draft = _build_layers(fixture)
+    for session in draft.sessions:
+        patterns = [str(exercise.movement_pattern) for exercise in session.exercises]
+        push_pull_seen = False
+        knee_count_before_push_pull = 0
+        for pattern in patterns:
+            if pattern in SESSION_SKELETON_PATTERNS["press"] or pattern in SESSION_SKELETON_PATTERNS["pull"]:
+                push_pull_seen = True
+            if not push_pull_seen and pattern in {"squat", "knee_extension"}:
+                knee_count_before_push_pull += 1
+        if any(blueprint.candidate_exercise_ids_by_pattern.get(pattern) for pattern in SESSION_SKELETON_PATTERNS["press"]) and any(
+            blueprint.candidate_exercise_ids_by_pattern.get(pattern) for pattern in SESSION_SKELETON_PATTERNS["pull"]
+        ):
+            assert knee_count_before_push_pull <= 1, (session.session_id, patterns)
+
+
+def test_v25d_normal_three_day_has_explicit_triceps_and_core_when_viable() -> None:
+    fixture = _normal_three_day_fixture_from_low_time()
+    _, _, _, _, blueprint, draft = _build_layers(fixture)
+    payload = _build_week_payload_from_draft(fixture=fixture, draft=draft)
+    totals = _visible_grouped_volume_from_week_payload(payload)
+    triceps_viable = bool(
+        blueprint.candidate_exercise_ids_by_pattern.get("triceps_extension")
+        or blueprint.candidate_exercise_ids_by_pattern.get("vertical_press")
+        or blueprint.candidate_exercise_ids_by_pattern.get("horizontal_press")
+    )
+    core_viable = bool(blueprint.candidate_exercise_ids_by_pattern.get("core"))
+    if triceps_viable:
+        assert int((payload.get("weekly_volume_by_muscle") or {}).get("triceps") or 0) > 0
+    if core_viable:
+        assert totals["core"] > 0
 
 
 def test_v25b_non_weak_point_normal_three_day_arm_and_delt_dominance_is_capped() -> None:
