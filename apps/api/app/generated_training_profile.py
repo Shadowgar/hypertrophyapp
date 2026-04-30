@@ -48,6 +48,8 @@ class GeneratedTrainingProfileTrace(BaseModel):
     selected_mode_reason: str
     defaults_applied: list[str] = Field(default_factory=list)
     missing_fields: list[str] = Field(default_factory=list)
+    generated_onboarding_complete: bool = False
+    profile_completeness: Literal["low", "medium", "high"] = "low"
     rule_hits: list[str] = Field(default_factory=list)
     trace_only_fields: list[str] = Field(default_factory=list)
     insufficient_data_avoided: bool = False
@@ -269,6 +271,8 @@ def build_generated_training_profile(
         selected_mode_reason=decision_profile.decision_trace.selected_mode_reason,
         defaults_applied=list(decision_profile.decision_trace.defaults_applied),
         missing_fields=list(decision_profile.decision_trace.missing_fields),
+        generated_onboarding_complete=decision_profile.decision_trace.generated_onboarding_complete,
+        profile_completeness=decision_profile.decision_trace.profile_completeness,
         rule_hits=list(decision_profile.decision_trace.rule_hits) + ["phase3a.generated_training_profile_bridge_v1"],
         trace_only_fields=list(_TRACE_ONLY_FIELDS),
         insufficient_data_avoided=decision_profile.decision_trace.insufficient_data_avoided,

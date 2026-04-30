@@ -104,6 +104,51 @@ class ProgramSelectionUpdateRequest(BaseModel):
     program_selection_mode: Literal["manual", "auto"] = "manual"
 
 
+GeneratedGoalMode = Literal["hypertrophy", "strength", "size_strength"]
+GeneratedSessionTimeBandSource = Literal["30_45", "50_70", "75_100"]
+GeneratedTrainingStatus = Literal["new", "returning", "normal", "advanced"]
+GeneratedRecoveryModifier = Literal["low", "normal", "high"]
+GeneratedPreferenceBias = Literal["free_weights", "machines_cables", "mixed"]
+GeneratedBodyweightExerciseComfort = Literal["comfortable", "mixed", "limited"]
+GeneratedOnboardingCompleteness = Literal["low", "medium", "high"]
+
+
+class GeneratedOnboardingDislikedTags(BaseModel):
+    disliked_exercises: list[str] = Field(default_factory=list)
+    disliked_equipment: list[str] = Field(default_factory=list)
+
+
+class GeneratedOnboardingPayload(BaseModel):
+    goal_mode: GeneratedGoalMode | None = None
+    target_days: int | None = Field(default=None, ge=2, le=5)
+    session_time_band_source: GeneratedSessionTimeBandSource | None = None
+    training_status: GeneratedTrainingStatus | None = None
+    trained_consistently_last_4_weeks: bool | None = None
+    equipment_pool: list[str] = Field(default_factory=list)
+    movement_restrictions: list[str] = Field(default_factory=list)
+    recovery_modifier: GeneratedRecoveryModifier | None = None
+    weakpoint_targets: list[str] = Field(default_factory=list)
+    preference_bias: GeneratedPreferenceBias | None = None
+    height_cm: float | None = Field(default=None, ge=120, le=230)
+    bodyweight_kg: float | None = Field(default=None, ge=35, le=250)
+    bodyweight_exercise_comfort: GeneratedBodyweightExerciseComfort | None = None
+    disliked_tags: GeneratedOnboardingDislikedTags | None = None
+
+
+class GeneratedOnboardingUpsertRequest(BaseModel):
+    generated_onboarding: GeneratedOnboardingPayload
+    mark_complete: bool = True
+
+
+class GeneratedOnboardingResponse(BaseModel):
+    generated_onboarding: GeneratedOnboardingPayload
+    generated_onboarding_version: str
+    generated_onboarding_completed_at: datetime | None = None
+    generated_onboarding_complete: bool
+    missing_fields: list[str] = Field(default_factory=list)
+    profile_completeness: GeneratedOnboardingCompleteness
+
+
 class UserTrainingStateResponse(UserTrainingState):
     pass
 

@@ -39,6 +39,8 @@ from ..schemas import (
     BodyMeasurementEntryCreateRequest,
     BodyMeasurementEntryResponse,
     BodyMeasurementEntryUpdateRequest,
+    GeneratedOnboardingResponse,
+    GeneratedOnboardingUpsertRequest,
     ProfileResponse,
     ProfileUpsert,
     ProgramSelectionUpdateRequest,
@@ -63,6 +65,38 @@ router = APIRouter()
 
 DbSession = Annotated[Session, Depends(get_db)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+GENERATED_ONBOARDING_VERSION = "v1"
+GENERATED_ONBOARDING_REQUIRED_FIELDS: tuple[str, ...] = (
+    "goal_mode",
+    "target_days",
+    "session_time_band_source",
+    "training_status",
+    "trained_consistently_last_4_weeks",
+    "equipment_pool",
+    "movement_restrictions",
+    "recovery_modifier",
+    "weakpoint_targets",
+)
+CANONICAL_EQUIPMENT_TAGS: set[str] = {"barbell", "bench", "dumbbell", "cable", "machine", "bands", "bodyweight", "rack"}
+CANONICAL_MOVEMENT_RESTRICTIONS: set[str] = {
+    "deep_knee_flexion",
+    "overhead_pressing",
+    "barbell_from_floor",
+    "long_length_hamstrings",
+    "unsupported_bent_over_rowing",
+    "none",
+    "other",
+}
+CANONICAL_WEAKPOINTS: set[str] = {"chest", "back", "quads", "hamstrings", "glutes", "delts", "arms", "calves", "core"}
+CANONICAL_DISLIKED_EXERCISE_TAGS: set[str] = {
+    "barbell_bench_press",
+    "barbell_back_squat",
+    "conventional_deadlift",
+    "overhead_press",
+    "pullup",
+    "dip",
+}
 
 
 def _clear_user_training_state(db: Session, *, user_id: str) -> None:
@@ -93,6 +127,46 @@ def _latest_plan(db: Session, user_id: str) -> WorkoutPlan | None:
         .filter(WorkoutPlan.user_id == user_id)
         .order_by(WorkoutPlan.created_at.desc())
         .first()
+    )
+
+
+def _normalize_tag_list(values: Sequence[str], *, allowed: set[str], field_name: str) -> list[str]:
+    normalized: list[str] = []
+    for raw in values:
+        candidate = str(raw or "").strip().lower().replace("-", "_").replace(" ", "_")
+        if not candidate:
+            continue
+        if candidate not in allowed:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Invalid {field_name} tag: {candidate}")
+        if candidate not in normalized:
+            normalized.append(candidate)
+    return normalized
+
+
+def _resolve_generated_onboarding_completeness(*, missing_required_count: int) -> str:
+    if missing_required_count == 0:
+        return "high"
+    if missing_required_count <= 3:
+        return "medium"
+    return "low"
+
+
+def _build_generated_onboarding_response(raw_payload: dict[str, Any] | None) -> GeneratedOnboardingResponse:
+    payload = dict(raw_payload or {})
+    generated_onboarding = cast(dict[str, Any], payload.get("generated_onboarding") or {})
+    required_field_presence = cast(dict[str, bool], payload.get("required_field_presence") or {})
+    missing_fields = sorted(
+        field_name
+        for field_name in GENERATED_ONBOARDING_REQUIRED_FIELDS
+        if required_field_presence.get(field_name) is not True
+    )
+    return GeneratedOnboardingResponse(
+        generated_onboarding=generated_onboarding,
+        generated_onboarding_version=str(payload.get("generated_onboarding_version") or GENERATED_ONBOARDING_VERSION),
+        generated_onboarding_completed_at=payload.get("generated_onboarding_completed_at"),
+        generated_onboarding_complete=bool(payload.get("generated_onboarding_complete")),
+        missing_fields=missing_fields,
+        profile_completeness=_resolve_generated_onboarding_completeness(missing_required_count=len(missing_fields)),
     )
 
 
@@ -477,6 +551,87 @@ def update_program_selection(
         selected_program_id=next_binding_id,
     )
     return get_profile(current_user)
+
+
+@router.get("/profile/generated-onboarding")
+def get_generated_onboarding(current_user: CurrentUser) -> GeneratedOnboardingResponse:
+    onboarding_answers = cast(dict[str, Any], current_user.onboarding_answers or {})
+    return _build_generated_onboarding_response(cast(dict[str, Any], onboarding_answers.get("generated_onboarding") or {}))
+
+
+@router.post("/profile/generated-onboarding")
+def upsert_generated_onboarding(
+    payload: GeneratedOnboardingUpsertRequest,
+    db: DbSession,
+    current_user: CurrentUser,
+) -> GeneratedOnboardingResponse:
+    generated_onboarding_payload = payload.generated_onboarding.model_dump(mode="json")
+    generated_onboarding_payload["equipment_pool"] = _normalize_tag_list(
+        cast(list[str], generated_onboarding_payload.get("equipment_pool") or []),
+        allowed=CANONICAL_EQUIPMENT_TAGS,
+        field_name="equipment_pool",
+    )
+    generated_onboarding_payload["movement_restrictions"] = _normalize_tag_list(
+        cast(list[str], generated_onboarding_payload.get("movement_restrictions") or []),
+        allowed=CANONICAL_MOVEMENT_RESTRICTIONS,
+        field_name="movement_restrictions",
+    )
+    generated_onboarding_payload["weakpoint_targets"] = _normalize_tag_list(
+        cast(list[str], generated_onboarding_payload.get("weakpoint_targets") or []),
+        allowed=CANONICAL_WEAKPOINTS,
+        field_name="weakpoint_targets",
+    )[:2]
+    disliked_tags = cast(dict[str, Any], generated_onboarding_payload.get("disliked_tags") or {})
+    generated_onboarding_payload["disliked_tags"] = {
+        "disliked_exercises": _normalize_tag_list(
+            cast(list[str], disliked_tags.get("disliked_exercises") or []),
+            allowed=CANONICAL_DISLIKED_EXERCISE_TAGS,
+            field_name="disliked_exercises",
+        ),
+        "disliked_equipment": _normalize_tag_list(
+            cast(list[str], disliked_tags.get("disliked_equipment") or []),
+            allowed=CANONICAL_EQUIPMENT_TAGS,
+            field_name="disliked_equipment",
+        ),
+    }
+
+    required_field_presence: dict[str, bool] = {}
+    for field_name in GENERATED_ONBOARDING_REQUIRED_FIELDS:
+        value = generated_onboarding_payload.get(field_name)
+        if isinstance(value, list):
+            required_field_presence[field_name] = len(value) > 0
+        else:
+            required_field_presence[field_name] = value is not None and str(value).strip() != ""
+    missing_fields = sorted(
+        field_name
+        for field_name, present in required_field_presence.items()
+        if not present
+    )
+
+    onboarding_answers = cast(dict[str, Any], current_user.onboarding_answers or {})
+    generated_onboarding_state = {
+        "generated_onboarding": generated_onboarding_payload,
+        "generated_onboarding_version": GENERATED_ONBOARDING_VERSION,
+        "generated_onboarding_completed_at": datetime.now(UTC).isoformat() if payload.mark_complete else None,
+        "generated_onboarding_complete": payload.mark_complete and len(missing_fields) == 0,
+        "required_field_presence": required_field_presence,
+    }
+    onboarding_answers["generated_onboarding"] = generated_onboarding_state
+    current_user.onboarding_answers = onboarding_answers
+    db.add(current_user)
+    db.commit()
+    db.refresh(current_user)
+    log_event(
+        "generated_onboarding_saved",
+        route="/profile/generated-onboarding",
+        action="upsert_generated_onboarding",
+        user_id=current_user.id,
+        selected_program_id=resolve_selected_program_binding_id(current_user.selected_program_id),
+        generated_onboarding_complete=generated_onboarding_state["generated_onboarding_complete"],
+        missing_fields=missing_fields,
+        profile_completeness=_resolve_generated_onboarding_completeness(missing_required_count=len(missing_fields)),
+    )
+    return _build_generated_onboarding_response(generated_onboarding_state)
 
 
 @router.post("/weekly-checkin")

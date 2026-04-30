@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from pydantic import BaseModel, Field
 
@@ -27,6 +27,8 @@ class GeneratedDecisionTrace(BaseModel):
     selected_mode_reason: str
     defaults_applied: list[str] = Field(default_factory=list)
     missing_fields: list[str] = Field(default_factory=list)
+    generated_onboarding_complete: bool = False
+    profile_completeness: Literal["low", "medium", "high"] = "low"
     ignored_future_fields: list[str] = Field(default_factory=list)
     rule_hits: list[str] = Field(default_factory=list)
     insufficient_data_avoided: bool = False
@@ -75,6 +77,21 @@ def _find_value(payload: dict[str, Any], *keys: str) -> Any:
         if key in payload and payload[key] is not None:
             return payload[key]
     return None
+
+
+def _extract_generated_onboarding_answers(onboarding_answers: dict[str, Any]) -> tuple[dict[str, Any], bool, str]:
+    generated_onboarding_state = dict(onboarding_answers.get("generated_onboarding") or {})
+    generated_onboarding_answers = dict(generated_onboarding_state.get("generated_onboarding") or {})
+    generated_onboarding_complete = bool(generated_onboarding_state.get("generated_onboarding_complete"))
+    required_field_presence = dict(generated_onboarding_state.get("required_field_presence") or {})
+    missing_required_count = sum(1 for present in required_field_presence.values() if present is not True)
+    if missing_required_count == 0 and required_field_presence:
+        profile_completeness: Literal["low", "medium", "high"] = "high"
+    elif missing_required_count <= 3 and required_field_presence:
+        profile_completeness = "medium"
+    else:
+        profile_completeness = "low"
+    return generated_onboarding_answers, generated_onboarding_complete, profile_completeness
 
 
 def _normalize_target_days(days_available: int | None, *, defaults: list[str], missing: list[str]) -> int:
@@ -144,6 +161,7 @@ def _normalize_training_status(onboarding_answers: dict[str, Any]) -> TrainingSt
         _find_value(
             onboarding_answers,
             "training_status",
+            "experience_level_generated",
             "experience_level",
             "lifting_experience",
         )
@@ -195,7 +213,9 @@ def _normalize_goal_mode(onboarding_answers: dict[str, Any]) -> GoalMode:
         return "recomposition"
     if raw in {"lean_gain", "gain", "build_muscle", "hypertrophy"}:
         return "lean_gain"
-    if raw in {"strength", "strength_focus", "size_strength"}:
+    if raw in {"strength", "strength_focus"}:
+        return "strength_focus"
+    if raw == "size_strength":
         return "strength_focus"
     if raw:
         return "general_fitness"
@@ -291,26 +311,64 @@ def build_generated_decision_profile(
         missing_fields.append("selected_program_id")
 
     answers = dict(onboarding_answers or {})
+    generated_onboarding_answers, generated_onboarding_complete, profile_completeness = _extract_generated_onboarding_answers(answers)
+    merged_answers = {**answers, **generated_onboarding_answers}
     path_family = _resolve_path_family(resolved_program_id, program_selection_mode)
-    target_days = _normalize_target_days(days_available, defaults=defaults_applied, missing=missing_fields)
+    generated_target_days = generated_onboarding_answers.get("target_days")
+    if generated_target_days is not None:
+        try:
+            target_days = _normalize_target_days(int(generated_target_days), defaults=defaults_applied, missing=missing_fields)
+        except (TypeError, ValueError):
+            target_days = _normalize_target_days(days_available, defaults=defaults_applied, missing=missing_fields)
+    else:
+        target_days = _normalize_target_days(days_available, defaults=defaults_applied, missing=missing_fields)
+    generated_time_band = _as_clean_str(generated_onboarding_answers.get("session_time_band_source")).lower()
+    source_session_time_budget_minutes = session_time_budget_minutes
+    if generated_time_band == "30_45":
+        source_session_time_budget_minutes = 45
+    elif generated_time_band == "50_70":
+        source_session_time_budget_minutes = 60
+    elif generated_time_band == "75_100":
+        source_session_time_budget_minutes = 90
     session_time_band = _normalize_session_time_band(
         temporary_duration_minutes=temporary_duration_minutes,
-        session_time_budget_minutes=session_time_budget_minutes,
+        session_time_budget_minutes=source_session_time_budget_minutes,
         defaults=defaults_applied,
         missing=missing_fields,
     )
+    source_near_failure_tolerance = near_failure_tolerance
+    generated_recovery = _as_clean_str(generated_onboarding_answers.get("recovery_modifier")).lower()
+    if generated_recovery == "low":
+        source_near_failure_tolerance = "low"
+    elif generated_recovery == "high":
+        source_near_failure_tolerance = "high"
     recovery_modifier = _normalize_recovery_modifier(
-        near_failure_tolerance=near_failure_tolerance,
+        near_failure_tolerance=source_near_failure_tolerance,
         training_state=training_state,
-        onboarding_answers=answers,
+        onboarding_answers=merged_answers,
         defaults=defaults_applied,
     )
-    training_status = _normalize_training_status(answers)
-    detraining_status = _normalize_detraining_status(answers, defaults=defaults_applied)
-    goal_mode = _normalize_goal_mode(answers)
-    equipment_scope = _normalize_equipment_scope(equipment_profile)
-    weakpoint_targets = _normalize_weakpoints(weak_areas)
-    movement_restriction_flags = _normalize_movement_restrictions(movement_restrictions)
+    training_status = _normalize_training_status(merged_answers)
+    detraining_status = _normalize_detraining_status(merged_answers, defaults=defaults_applied)
+    goal_mode = _normalize_goal_mode(merged_answers)
+    source_equipment_profile = (
+        cast(list[str], generated_onboarding_answers.get("equipment_pool"))
+        if isinstance(generated_onboarding_answers.get("equipment_pool"), list) and generated_onboarding_answers.get("equipment_pool")
+        else equipment_profile
+    )
+    equipment_scope = _normalize_equipment_scope(source_equipment_profile)
+    source_weak_areas = (
+        cast(list[str], generated_onboarding_answers.get("weakpoint_targets"))
+        if isinstance(generated_onboarding_answers.get("weakpoint_targets"), list) and generated_onboarding_answers.get("weakpoint_targets")
+        else weak_areas
+    )
+    weakpoint_targets = _normalize_weakpoints(source_weak_areas)
+    source_movement_restrictions = (
+        cast(list[str], generated_onboarding_answers.get("movement_restrictions"))
+        if isinstance(generated_onboarding_answers.get("movement_restrictions"), list) and generated_onboarding_answers.get("movement_restrictions")
+        else movement_restrictions
+    )
+    movement_restriction_flags = _normalize_movement_restrictions(source_movement_restrictions)
 
     reentry_required = detraining_status == "complete_layoff"
     contradictory_core = target_days < 2 or target_days > 5
@@ -364,6 +422,8 @@ def build_generated_decision_profile(
             selected_mode_reason=reason,
             defaults_applied=defaults_applied,
             missing_fields=missing_fields,
+            generated_onboarding_complete=generated_onboarding_complete,
+            profile_completeness=profile_completeness,
             ignored_future_fields=ignored_future_fields,
             rule_hits=rule_hits,
             insufficient_data_avoided=insufficient_data_avoided,
