@@ -23,6 +23,7 @@ from core_engine import (
     resolve_weekly_review_window,
 )
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.attributes import flag_modified
 
 from ..config import settings
 from ..database import get_db
@@ -556,7 +557,8 @@ def update_program_selection(
 @router.get("/profile/generated-onboarding")
 def get_generated_onboarding(current_user: CurrentUser) -> GeneratedOnboardingResponse:
     onboarding_answers = cast(dict[str, Any], current_user.onboarding_answers or {})
-    return _build_generated_onboarding_response(cast(dict[str, Any], onboarding_answers.get("generated_onboarding") or {}))
+    generated_onboarding_state = cast(dict[str, Any], onboarding_answers.get("generated_onboarding") or {})
+    return _build_generated_onboarding_response(generated_onboarding_state)
 
 
 @router.post("/profile/generated-onboarding")
@@ -608,7 +610,9 @@ def upsert_generated_onboarding(
         if not present
     )
 
-    onboarding_answers = cast(dict[str, Any], current_user.onboarding_answers or {})
+    # Reassign a brand-new top-level JSON object so SQLAlchemy/Postgres reliably
+    # persists nested generated_onboarding updates across requests.
+    onboarding_answers = dict(cast(dict[str, Any], current_user.onboarding_answers or {}))
     generated_onboarding_state = {
         "generated_onboarding": generated_onboarding_payload,
         "generated_onboarding_version": GENERATED_ONBOARDING_VERSION,
@@ -618,6 +622,7 @@ def upsert_generated_onboarding(
     }
     onboarding_answers["generated_onboarding"] = generated_onboarding_state
     current_user.onboarding_answers = onboarding_answers
+    flag_modified(current_user, "onboarding_answers")
     db.add(current_user)
     db.commit()
     db.refresh(current_user)
@@ -631,7 +636,9 @@ def upsert_generated_onboarding(
         missing_fields=missing_fields,
         profile_completeness=_resolve_generated_onboarding_completeness(missing_required_count=len(missing_fields)),
     )
-    return _build_generated_onboarding_response(generated_onboarding_state)
+    persisted_answers = dict(cast(dict[str, Any], current_user.onboarding_answers or {}))
+    persisted_state = cast(dict[str, Any], persisted_answers.get("generated_onboarding") or {})
+    return _build_generated_onboarding_response(persisted_state)
 
 
 @router.post("/weekly-checkin")

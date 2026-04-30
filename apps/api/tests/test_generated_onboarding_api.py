@@ -165,6 +165,19 @@ def test_generated_onboarding_get_returns_saved_payload_and_metadata() -> None:
     assert payload["generated_onboarding_complete"] is True
     assert payload["profile_completeness"] == "high"
     assert payload["generated_onboarding"]["goal_mode"] == "hypertrophy"
+    assert payload["generated_onboarding"]["equipment_pool"] == ["barbell", "bench", "dumbbell", "machine"]
+    assert payload["missing_fields"] == []
+
+    with SessionLocal() as session:
+        user = session.query(User).filter(User.email == "generated-onboarding-get@example.com").first()
+        assert user is not None
+        onboarding_answers = dict(user.onboarding_answers or {})
+        saved_state = dict(onboarding_answers.get("generated_onboarding") or {})
+        saved_payload = dict(saved_state.get("generated_onboarding") or {})
+    assert saved_state.get("generated_onboarding_complete") is True
+    assert saved_state.get("generated_onboarding_version") == "v1"
+    assert saved_payload.get("goal_mode") == "hypertrophy"
+    assert saved_payload.get("equipment_pool") == ["barbell", "bench", "dumbbell", "machine"]
 
 
 def test_generated_onboarding_invalid_values_are_rejected() -> None:
@@ -224,6 +237,32 @@ def test_generated_training_profile_prefers_generated_onboarding_payload_when_pr
     assert payload["decision_trace"]["profile_completeness"] == "high"
 
 
+def test_generated_onboarding_post_and_get_are_consistent_round_trip() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_user(client, email="generated-onboarding-roundtrip@example.com", name="Generated Onboarding Roundtrip")
+    _post_profile(
+        client,
+        headers=headers,
+        selected_program_id="full_body_v1",
+        split_preference="full_body",
+        days_available=3,
+    )
+    save = client.post("/profile/generated-onboarding", headers=headers, json=_generated_onboarding_payload())
+    assert save.status_code == 200
+    saved = save.json()
+
+    get = client.get("/profile/generated-onboarding", headers=headers)
+    assert get.status_code == 200
+    fetched = get.json()
+
+    assert fetched["generated_onboarding"] == saved["generated_onboarding"]
+    assert fetched["generated_onboarding_complete"] == saved["generated_onboarding_complete"]
+    assert fetched["generated_onboarding_version"] == saved["generated_onboarding_version"]
+    assert fetched["missing_fields"] == saved["missing_fields"]
+    assert fetched["profile_completeness"] == saved["profile_completeness"]
+
+
 def test_authored_user_remains_authored_even_with_generated_onboarding_saved() -> None:
     _reset_db()
     client = TestClient(app)
@@ -240,4 +279,3 @@ def test_authored_user_remains_authored_even_with_generated_onboarding_saved() -
     debug = client.get("/plan/generated-training-profile/debug", headers=headers)
     assert debug.status_code == 200
     assert debug.json()["path_family"] == "authored"
-
