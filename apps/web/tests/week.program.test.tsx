@@ -363,3 +363,77 @@ test("Week page offers retry action after generation failure", async () => {
     expect(screen.getByText(/Week generated for Full Body Phase 1\./i)).toBeInTheDocument();
   });
 });
+
+test("Week page saves program preference without calling generate-week", async () => {
+  // @ts-ignore
+  globalThis.fetch.mockImplementation((input, init) => {
+    const url = typeof input === "string" ? input : input.url;
+    if (url.endsWith("/profile") && (!init?.method || init.method === "GET")) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            selected_program_id: "pure_bodybuilding_phase_1_full_body",
+            program_selection_mode: "manual",
+            days_available: 3,
+          }),
+          { status: 200 },
+        ),
+      );
+    }
+    if (url.endsWith("/plan/programs")) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify([
+            { id: "pure_bodybuilding_phase_1_full_body", name: "Full Body Phase 1" },
+            { id: "full_body_v1", name: "Make me a plan" },
+          ]),
+          { status: 200 },
+        ),
+      );
+    }
+    if (url.endsWith("/plan/latest-week")) {
+      return Promise.resolve(new Response(JSON.stringify({ detail: "No plan generated" }), { status: 404 }));
+    }
+    if (url.endsWith("/profile/program-selection") && init?.method === "POST") {
+      const body = JSON.parse(String(init.body));
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            selected_program_id: body.selected_program_id,
+            program_selection_mode: body.program_selection_mode,
+            days_available: 3,
+          }),
+          { status: 200 },
+        ),
+      );
+    }
+    return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
+  });
+
+  render(<WeekPage />);
+  await waitFor(() => expect(screen.getByRole("button", { name: /Program Override/i })).toBeInTheDocument());
+  fireEvent.click(screen.getByRole("button", { name: /Program Override/i }));
+  const select = await screen.findByLabelText(/Week program override selector/i);
+  fireEvent.change(select, { target: { value: "full_body_v1" } });
+  fireEvent.click(screen.getByRole("button", { name: /Save program preference/i }));
+
+  await waitFor(() => {
+    expect(screen.getByText(/Program preference saved: Make me a plan\./i)).toBeInTheDocument();
+  });
+
+  // @ts-ignore
+  const generateCalls = globalThis.fetch.mock.calls.filter((entry) => {
+    const url = typeof entry[0] === "string" ? entry[0] : entry[0].url;
+    const method = entry[1]?.method ?? "GET";
+    return url.endsWith("/plan/generate-week") && method === "POST";
+  });
+  expect(generateCalls.length).toBe(0);
+
+  // @ts-ignore
+  const selectionCalls = globalThis.fetch.mock.calls.filter((entry) => {
+    const url = typeof entry[0] === "string" ? entry[0] : entry[0].url;
+    const method = entry[1]?.method ?? "GET";
+    return url.endsWith("/profile/program-selection") && method === "POST";
+  });
+  expect(selectionCalls.length).toBe(1);
+});

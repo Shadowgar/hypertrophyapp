@@ -934,6 +934,11 @@ export const api = {
       body: JSON.stringify(payload),
     }),
   updateProfile: (payload: Partial<Profile>) => request<Profile>("/profile", { method: "POST", body: JSON.stringify(payload) }),
+  updateProgramSelection: (payload: { selected_program_id: string | null; program_selection_mode: "manual" | "auto" }) =>
+    request<Profile>("/profile/program-selection", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   getWeeklyReviewStatus: () => request<WeeklyReviewStatus>("/weekly-review/status"),
   submitWeeklyReview: (payload: WeeklyReviewPayload) =>
     request<WeeklyReviewResponse>("/weekly-review", {

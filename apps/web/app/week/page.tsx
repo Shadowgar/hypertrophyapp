@@ -329,6 +329,7 @@ export default function WeekPage() {
   const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
   const [targetDays, setTargetDays] = useState<number>(3);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSavingProgramSelection, setIsSavingProgramSelection] = useState(false);
 
   const commandDeck = useMemo(() => {
     if (!plan) {
@@ -352,6 +353,34 @@ export default function WeekPage() {
   const requiresSundayReview = planStatus.startsWith("Sunday review required.");
   const generationFailed = planStatus.startsWith("Failed to generate week plan:");
   const awaitingInitialGeneration = !plan && !requiresSundayReview && !generationFailed;
+  const profileSelectedProgramId = profile?.selected_program_id ?? null;
+  const selectionDirty = selectedProgramId !== profileSelectedProgramId;
+
+  async function saveProgramPreference() {
+    if (!selectionDirty || isSavingProgramSelection) {
+      return;
+    }
+    setIsSavingProgramSelection(true);
+    try {
+      const nextMode = selectedProgramId ? "manual" : "auto";
+      const updated = await api.updateProgramSelection({
+        selected_program_id: selectedProgramId,
+        program_selection_mode: nextMode,
+      });
+      setProfile(updated);
+      setSelectedProgramId(updated.selected_program_id ?? null);
+      setPlanStatus(
+        selectedProgramId
+          ? `Program preference saved: ${getProgramDisplayName({ id: selectedProgramId })}. Generate Week when ready.`
+          : "Program preference saved: Auto selection. Generate Week when ready.",
+      );
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "Unknown error";
+      setPlanStatus(`Failed to save program preference: ${detail}`);
+    } finally {
+      setIsSavingProgramSelection(false);
+    }
+  }
 
   async function generate() {
     setIsGenerating(true);
@@ -387,6 +416,7 @@ export default function WeekPage() {
       }
       setPrograms(list);
       setProfile(loadedProfile);
+      setSelectedProgramId(loadedProfile?.selected_program_id ?? null);
       const resolvedTargetDays = resolvePlanTargetDays(latestPlan) ?? loadedProfile?.days_available ?? 3;
       setTargetDays(Math.max(2, Math.min(5, resolvedTargetDays)));
       if (latestPlan) {
@@ -440,7 +470,19 @@ export default function WeekPage() {
             <option value="">Auto — trainer&apos;s recommended program</option>
             {programs.map((p) => <option key={p.id} value={p.id}>{getProgramDisplayName(p)}</option>)}
           </select>
-          <p className="text-xs text-zinc-500">Override the server selection for this week generation request.</p>
+          <div className="flex items-center gap-2">
+            <Button
+              aria-label="Save program preference"
+              className="min-h-[40px] px-3 text-xs font-semibold"
+              onClick={saveProgramPreference}
+              disabled={isSavingProgramSelection || !selectionDirty}
+            >
+              {isSavingProgramSelection ? "Saving..." : "Save Preference"}
+            </Button>
+            <p className="text-xs text-zinc-500">
+              Save preference without regenerating. Generate Week still respects logged-progress safety guard.
+            </p>
+          </div>
         </div>
       </Disclosure>
 

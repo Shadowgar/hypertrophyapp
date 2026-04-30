@@ -328,3 +328,35 @@ def test_generated_training_profile_debug_output_is_deterministic_for_same_user(
     assert first.status_code == 200
     assert second.status_code == 200
     assert first.json() == second.json()
+
+
+def test_generated_training_debug_reflects_generated_path_after_non_destructive_program_selection_update() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_user(
+        client,
+        email="generated-training-debug-selection-update@example.com",
+        name="Generated Training Debug Selection Update",
+    )
+    _post_profile(
+        client,
+        headers=headers,
+        selected_program_id="pure_bodybuilding_phase_1_full_body",
+        split_preference="full_body",
+        days_available=3,
+    )
+
+    update = client.post(
+        "/profile/program-selection",
+        headers=headers,
+        json={"selected_program_id": "full_body_v1", "program_selection_mode": "manual"},
+    )
+    assert update.status_code == 200
+    updated_profile = update.json()
+    assert updated_profile["selected_program_id"] == "full_body_v1"
+
+    debug = client.get("/plan/generated-training-profile/debug", headers=headers)
+    assert debug.status_code == 200
+    debug_payload = debug.json()
+    assert debug_payload["path_family"] == "generated"
+    assert debug_payload["selected_program_id"] == "full_body_v1"

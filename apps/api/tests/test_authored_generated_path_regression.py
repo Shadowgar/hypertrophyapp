@@ -1000,9 +1000,6 @@ def test_current_week_regenerate_with_progress_is_blocked(selected_program_id: s
 
     first = _generate_week(client, headers=headers)
     _log_first_set_for_today(client, headers=headers)
-    regenerated = client.post("/plan/generate-week", headers=headers, json={})
-    assert regenerated.status_code == 409
-    assert regenerated.json()["detail"] == "This week has logged workout data. Regenerating would replace the current plan and clear progress."
 
     latest = client.get("/plan/latest-week", headers=headers)
     assert latest.status_code == 200
@@ -1088,6 +1085,47 @@ def test_blocked_regenerate_preserves_progress_artifacts_and_plan_payload(select
     assert after_states == before_states
     assert after_plan_payload == before_plan_payload
 
+
+def test_program_selection_update_is_non_destructive_even_with_logged_progress_and_regenerate_stays_blocked() -> None:
+    _reset_db()
+    client = TestClient(app)
+    email = "non-destructive-program-selection-update@example.com"
+    headers = _register(client, email=email)
+    _upsert_profile(
+        client,
+        headers=headers,
+        selected_program_id="pure_bodybuilding_phase_1_full_body",
+        days_available=3,
+    )
+
+    _generate_week(client, headers=headers)
+    _log_first_set_for_today(client, headers=headers)
+
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == email).first()
+        assert user is not None
+        before_logs = db.query(WorkoutSetLog).filter(WorkoutSetLog.user_id == user.id).count()
+        before_states = db.query(WorkoutSessionState).filter(WorkoutSessionState.user_id == user.id).count()
+        before_plans = db.query(WorkoutPlan).filter(WorkoutPlan.user_id == user.id).count()
+
+    update = client.post(
+        "/profile/program-selection",
+        headers=headers,
+        json={"selected_program_id": "full_body_v1", "program_selection_mode": "manual"},
+    )
+    assert update.status_code == 200
+    assert update.json()["selected_program_id"] == "full_body_v1"
+
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == email).first()
+        assert user is not None
+        after_logs = db.query(WorkoutSetLog).filter(WorkoutSetLog.user_id == user.id).count()
+        after_states = db.query(WorkoutSessionState).filter(WorkoutSessionState.user_id == user.id).count()
+        after_plans = db.query(WorkoutPlan).filter(WorkoutPlan.user_id == user.id).count()
+
+    assert after_logs == before_logs
+    assert after_states == before_states
+    assert after_plans == before_plans
 
 def test_current_week_regenerate_handles_replace_target_without_sessions() -> None:
     _reset_db()

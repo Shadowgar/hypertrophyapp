@@ -99,6 +99,11 @@ class ProfileResponse(ProfileUpsert):
     email: EmailStr
 
 
+class ProgramSelectionUpdateRequest(BaseModel):
+    selected_program_id: str | None = None
+    program_selection_mode: Literal["manual", "auto"] = "manual"
+
+
 class UserTrainingStateResponse(UserTrainingState):
     pass
 

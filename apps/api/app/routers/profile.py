@@ -41,6 +41,7 @@ from ..schemas import (
     BodyMeasurementEntryUpdateRequest,
     ProfileResponse,
     ProfileUpsert,
+    ProgramSelectionUpdateRequest,
     ProgramRecommendationResponse,
     ProgramSwitchRequest,
     ProgramSwitchResponse,
@@ -451,6 +452,31 @@ def switch_program(
         db.commit()
 
     return ProgramSwitchResponse(**runtime["response_payload"])
+
+
+@router.post("/profile/program-selection")
+def update_program_selection(
+    payload: ProgramSelectionUpdateRequest,
+    db: DbSession,
+    current_user: CurrentUser,
+) -> ProfileResponse:
+    next_binding_id = resolve_selected_program_binding_id(payload.selected_program_id)
+    if payload.program_selection_mode == "manual" and not next_binding_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="selected_program_id is required in manual mode")
+
+    current_user.selected_program_id = next_binding_id
+    current_user.program_selection_mode = payload.program_selection_mode
+    db.add(current_user)
+    db.commit()
+    db.refresh(current_user)
+    log_event(
+        "profile_program_selection_updated",
+        route="/profile/program-selection",
+        action="program_selection_update",
+        user_id=current_user.id,
+        selected_program_id=next_binding_id,
+    )
+    return get_profile(current_user)
 
 
 @router.post("/weekly-checkin")
