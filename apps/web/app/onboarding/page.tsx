@@ -174,24 +174,29 @@ type OnboardingDraft = {
   chooseForMeFamily: (typeof CHOOSE_FOR_ME_FAMILY_OPTIONS)[number];
 };
 
-type StoredOnboardingDraft = Omit<
+type StoredOnboardingDraftV1 = Omit<
   OnboardingDraft,
   "heightFeet" | "heightInches" | "heightCm" | "weightValue" | "birthday" | "firstName" | "lastName" | "email"
 >;
 
-function parseOnboardingDraft(raw: string): Partial<StoredOnboardingDraft> | null {
+type RestorableOnboardingDraft = Partial<StoredOnboardingDraftV1> & Partial<Pick<
+  OnboardingDraft,
+  "heightFeet" | "heightInches" | "heightCm" | "weightValue" | "birthday" | "firstName" | "lastName" | "email"
+>>;
+
+function parseOnboardingDraft(raw: string): RestorableOnboardingDraft | null {
   try {
     const parsed = JSON.parse(raw) as unknown;
     if (!parsed || typeof parsed !== "object") {
       return null;
     }
-    return parsed as Partial<StoredOnboardingDraft>;
+    return parsed as RestorableOnboardingDraft;
   } catch {
     return null;
   }
 }
 
-function buildStoredOnboardingDraft(draft: OnboardingDraft): StoredOnboardingDraft {
+function buildStoredOnboardingDraft(draft: OnboardingDraft): StoredOnboardingDraftV1 {
   const {
     heightFeet: _heightFeet,
     heightInches: _heightInches,

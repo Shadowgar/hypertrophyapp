@@ -330,6 +330,7 @@ export default function WeekPage() {
   const [targetDays, setTargetDays] = useState<number>(3);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSavingProgramSelection, setIsSavingProgramSelection] = useState(false);
+  const [generatedOnboardingPrompt, setGeneratedOnboardingPrompt] = useState<string | null>(null);
 
   const commandDeck = useMemo(() => {
     if (!plan) {
@@ -369,6 +370,20 @@ export default function WeekPage() {
       });
       setProfile(updated);
       setSelectedProgramId(updated.selected_program_id ?? null);
+      if (updated.selected_program_id === "full_body_v1") {
+        try {
+          const onboardingState = await api.getGeneratedOnboarding();
+          setGeneratedOnboardingPrompt(
+            onboardingState.generated_onboarding_complete
+              ? "Generated onboarding preferences complete."
+              : "Generated onboarding recommended to improve plan fit. You can still generate with defaults.",
+          );
+        } catch {
+          setGeneratedOnboardingPrompt("Generated onboarding recommended to improve plan fit.");
+        }
+      } else {
+        setGeneratedOnboardingPrompt(null);
+      }
       setPlanStatus(
         selectedProgramId
           ? `Program preference saved: ${getProgramDisplayName({ id: selectedProgramId })}. Generate Week when ready.`
@@ -483,6 +498,14 @@ export default function WeekPage() {
               Save preference without regenerating. Generate Week still respects logged-progress safety guard.
             </p>
           </div>
+          {generatedOnboardingPrompt ? (
+            <div className="rounded-md border border-zinc-700 bg-zinc-900/60 p-2 text-xs text-zinc-300">
+              <p>{generatedOnboardingPrompt}</p>
+              <a className="mt-1 inline-flex underline decoration-zinc-500 underline-offset-2" href="/generated-onboarding">
+                Update generated plan preferences
+              </a>
+            </div>
+          ) : null}
         </div>
       </Disclosure>
 

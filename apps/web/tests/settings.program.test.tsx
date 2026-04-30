@@ -63,6 +63,7 @@ test("Settings page shows active program and config in one-program-first mode", 
   await waitFor(() => {
     expect(screen.getByText(/Make me a plan/i)).toBeInTheDocument();
   });
+  expect(screen.getByRole("link", { name: /Update generated plan preferences/i })).toHaveAttribute("href", "/generated-onboarding");
   expect(screen.getByRole("button", { name: /Get Recommendation/i })).toBeInTheDocument();
   expect(screen.getByRole("button", { name: /Wipe Current User Data/i })).toBeInTheDocument();
 });

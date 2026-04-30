@@ -128,6 +128,51 @@ export type Profile = {
   choose_for_me_diagnostics?: Record<string, unknown>;
 };
 
+export type GeneratedOnboardingDislikedTags = {
+  disliked_exercises: string[];
+  disliked_equipment: string[];
+};
+
+export type GeneratedOnboardingPayload = {
+  goal_mode: "hypertrophy" | "strength" | "size_strength" | null;
+  target_days: 2 | 3 | 4 | 5 | null;
+  session_time_band_source: "30_45" | "50_70" | "75_100" | null;
+  training_status: "new" | "returning" | "normal" | "advanced" | null;
+  trained_consistently_last_4_weeks: boolean | null;
+  equipment_pool: string[];
+  movement_restrictions: string[];
+  recovery_modifier: "low" | "normal" | "high" | null;
+  weakpoint_targets: string[];
+  preference_bias: "free_weights" | "machines_cables" | "mixed" | null;
+  height_cm: number | null;
+  bodyweight_kg: number | null;
+  bodyweight_exercise_comfort: "comfortable" | "mixed" | "limited" | null;
+  disliked_tags: GeneratedOnboardingDislikedTags | null;
+};
+
+export type GeneratedOnboardingUpsertRequest = {
+  generated_onboarding: GeneratedOnboardingPayload;
+  mark_complete?: boolean;
+};
+
+export type GeneratedOnboardingResponse = {
+  generated_onboarding: GeneratedOnboardingPayload;
+  generated_onboarding_version: string;
+  generated_onboarding_completed_at: string | null;
+  generated_onboarding_complete: boolean;
+  missing_fields: string[];
+  profile_completeness: "low" | "medium" | "high";
+};
+
+export type GeneratedTrainingProfileDebug = {
+  selected_program_id: string;
+  path_family: "authored" | "generated";
+  decision_profile: Record<string, unknown>;
+  runtime_active: Record<string, unknown>;
+  trace_only_controls: Record<string, unknown>;
+  decision_trace: Record<string, unknown>;
+};
+
 export type ProgramRecommendation = {
   current_program_id: string;
   recommended_program_id: string;
@@ -939,6 +984,14 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  getGeneratedOnboarding: () => request<GeneratedOnboardingResponse>("/profile/generated-onboarding"),
+  saveGeneratedOnboarding: (payload: GeneratedOnboardingUpsertRequest) =>
+    request<GeneratedOnboardingResponse>("/profile/generated-onboarding", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  getGeneratedTrainingProfileDebug: () =>
+    request<GeneratedTrainingProfileDebug>("/plan/generated-training-profile/debug"),
   getWeeklyReviewStatus: () => request<WeeklyReviewStatus>("/weekly-review/status"),
   submitWeeklyReview: (payload: WeeklyReviewPayload) =>
     request<WeeklyReviewResponse>("/weekly-review", {

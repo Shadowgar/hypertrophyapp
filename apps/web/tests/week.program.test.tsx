@@ -407,6 +407,36 @@ test("Week page saves program preference without calling generate-week", async (
         ),
       );
     }
+    if (url.endsWith("/profile/generated-onboarding") && (!init?.method || init.method === "GET")) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            generated_onboarding: {
+              goal_mode: "hypertrophy",
+              target_days: 3,
+              session_time_band_source: "50_70",
+              training_status: "normal",
+              trained_consistently_last_4_weeks: true,
+              equipment_pool: ["barbell", "bench", "dumbbell"],
+              movement_restrictions: ["none"],
+              recovery_modifier: "normal",
+              weakpoint_targets: ["chest", "arms"],
+              preference_bias: "mixed",
+              height_cm: null,
+              bodyweight_kg: null,
+              bodyweight_exercise_comfort: "mixed",
+              disliked_tags: { disliked_exercises: [], disliked_equipment: [] },
+            },
+            generated_onboarding_version: "v1",
+            generated_onboarding_completed_at: "2026-04-30T08:00:00Z",
+            generated_onboarding_complete: false,
+            missing_fields: ["movement_restrictions"],
+            profile_completeness: "medium",
+          }),
+          { status: 200 },
+        ),
+      );
+    }
     return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
   });
 
@@ -420,6 +450,8 @@ test("Week page saves program preference without calling generate-week", async (
   await waitFor(() => {
     expect(screen.getByText(/Program preference saved: Make me a plan\./i)).toBeInTheDocument();
   });
+  expect(screen.getByText(/Generated onboarding recommended to improve plan fit/i)).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: /Update generated plan preferences/i })).toHaveAttribute("href", "/generated-onboarding");
 
   // @ts-ignore
   const generateCalls = globalThis.fetch.mock.calls.filter((entry) => {

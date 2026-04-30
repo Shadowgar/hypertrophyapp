@@ -354,6 +354,16 @@ export default function SettingsPage() {
       </div>
 
       <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-2">
+        <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Generated Plan Preferences</p>
+        <p className="text-xs text-zinc-400">
+          Update generated onboarding inputs to improve fit for Make me a plan.
+        </p>
+        <Link href="/generated-onboarding" className="inline-flex text-sm text-zinc-100 underline decoration-zinc-500 underline-offset-2">
+          Update generated plan preferences
+        </Link>
+      </div>
+
+      <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-2">
         <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Choose for me</p>
         <p className="text-xs text-zinc-400">
           Ask the engine for the best-fit program based on your profile and current constraints.
