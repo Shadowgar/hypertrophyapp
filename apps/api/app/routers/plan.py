@@ -837,6 +837,58 @@ def _build_generated_training_profile(
     )
 
 
+def _build_generated_training_profile_debug_payload(
+    training_profile: GeneratedTrainingProfile,
+) -> dict[str, Any]:
+    payload = training_profile.model_dump(mode="json")
+    return {
+        "selected_program_id": payload["selected_program_id"],
+        "path_family": payload["path_family"],
+        "decision_profile": payload["decision_profile"],
+        "runtime_active": payload["runtime_active"],
+        "trace_only_controls": payload["trace_only_controls"],
+        "decision_trace": payload["decision_trace"],
+    }
+
+
+def _log_generated_training_profile_event(
+    *,
+    event: str,
+    route: str,
+    action: str,
+    user_id: int,
+    training_profile: GeneratedTrainingProfile,
+) -> None:
+    runtime_active_payload = training_profile.runtime_active.model_dump(mode="json")
+    trace_only_payload = training_profile.trace_only_controls.model_dump(mode="json")
+    decision_profile = training_profile.decision_profile
+    decision_trace = training_profile.decision_trace
+    missing_fields = list(decision_trace.missing_fields)
+    log_event(
+        event,
+        route=route,
+        action=action,
+        user_id=user_id,
+        selected_program_id=training_profile.selected_program_id,
+        path_family=training_profile.path_family,
+        generated_mode=runtime_active_payload.get("generated_mode"),
+        target_days=runtime_active_payload.get("target_days"),
+        session_time_band=runtime_active_payload.get("session_time_band"),
+        recovery_modifier=runtime_active_payload.get("recovery_modifier"),
+        goal_mode=decision_profile.goal_mode,
+        training_status=decision_profile.training_status,
+        weekly_volume_band=trace_only_payload.get("weekly_volume_band"),
+        starting_rir=trace_only_payload.get("starting_rir"),
+        high_fatigue_cap=trace_only_payload.get("high_fatigue_cap"),
+        weakpoint_count=len(cast(list[str], runtime_active_payload.get("weakpoint_targets") or [])),
+        defaults_applied=list(decision_trace.defaults_applied),
+        missing_fields=missing_fields,
+        missing_fields_count=len(missing_fields),
+        trace_only_fields=list(decision_trace.trace_only_fields),
+        runtime_active_fields=sorted(runtime_active_payload.keys()),
+    )
+
+
 @router.get("/plan/programs", response_model=list[ProgramTemplateSummary])
 def plan_list_programs() -> list[dict]:
     return _list_active_program_templates()
@@ -889,6 +941,38 @@ def get_generated_decision_profile_debug(
         insufficient_data_avoided=decision_profile.decision_trace.insufficient_data_avoided,
     )
     return payload
+
+
+@router.get("/plan/generated-training-profile/debug")
+def get_generated_training_profile_debug(
+    db: DbSession,
+    current_user: CurrentUser,
+) -> dict[str, Any]:
+    if not settings.allow_dev_wipe_endpoints:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Debug endpoints disabled")
+
+    selected_template_id = resolve_selected_program_binding_id(current_user.selected_program_id) or GENERATED_FULL_BODY_COMPATIBILITY_TEMPLATE_ID
+    effective_days_available = int(current_user.days_available) if current_user.days_available is not None else 3
+    generation_context = _prepare_plan_generation_runtime(
+        db=db,
+        current_user=current_user,
+        selected_template_id=selected_template_id,
+        effective_days_available=effective_days_available,
+        active_frequency_adaptation=None,
+    )
+    training_profile = _build_generated_training_profile(
+        current_user=current_user,
+        effective_days_available=current_user.days_available,
+        training_state=cast(dict[str, Any], generation_context.get("training_state") or {}),
+    )
+    _log_generated_training_profile_event(
+        event="generated_training_profile_debug_viewed",
+        route="/plan/generated-training-profile/debug",
+        action="read_generated_training_profile",
+        user_id=current_user.id,
+        training_profile=training_profile,
+    )
+    return _build_generated_training_profile_debug_payload(training_profile)
 
 
 @router.get("/plan/guides/programs")
@@ -1648,25 +1732,12 @@ def _build_week_plan_runtime_for_user(
             reentry_required=decision_profile.reentry_required,
             insufficient_data_avoided=decision_profile.decision_trace.insufficient_data_avoided,
         )
-        log_event(
-            "generated_training_profile_resolved",
+        _log_generated_training_profile_event(
+            event="generated_training_profile_resolved",
             route="/plan/generate-week" if generation_mode == "current_week_regenerate" else "/plan/next-week",
             action="build_generated_training_profile",
             user_id=current_user.id,
-            selected_program_id=training_profile.selected_program_id,
-            path_family=training_profile.path_family,
-            generated_mode=training_profile.runtime_active.generated_mode,
-            target_days=training_profile.runtime_active.target_days,
-            session_time_band=training_profile.runtime_active.session_time_band,
-            recovery_modifier=training_profile.runtime_active.recovery_modifier,
-            goal_mode=training_profile.decision_profile.goal_mode,
-            training_status=training_profile.decision_profile.training_status,
-            weekly_volume_band=training_profile.trace_only_controls.weekly_volume_band.model_dump(mode="json"),
-            starting_rir=training_profile.trace_only_controls.starting_rir,
-            high_fatigue_cap=training_profile.trace_only_controls.high_fatigue_cap,
-            weakpoint_count=len(training_profile.runtime_active.weakpoint_targets),
-            defaults_applied=list(training_profile.decision_trace.defaults_applied),
-            trace_only_fields=list(training_profile.decision_trace.trace_only_fields),
+            training_profile=training_profile,
         )
     else:
         runtime_template, authored_adaptation_trace = _prepare_authored_frequency_adapted_template(
