@@ -28,6 +28,7 @@ build/
 coverage/
 reference/
 logs/*.log
+logs/
 
 # Local sqlite test artifacts
 apps/api/.tmp*.sqlite3
