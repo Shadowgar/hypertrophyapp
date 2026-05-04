@@ -963,7 +963,7 @@ def test_generated_runtime_low_recovery_metadata_on_preserves_nonzero_viable_exp
         equipment_profile=["barbell", "bench", "cable", "machine", "dumbbell"],
         days_available=3,
         weak_areas=["delts"],
-        session_time_budget_minutes=60,
+        session_time_budget_minutes=75,
         near_failure_tolerance="low",
     )
 
@@ -1008,7 +1008,7 @@ def test_generated_runtime_metadata_on_does_not_collapse_low_recovery_quads_or_r
         equipment_profile=["barbell", "bodyweight", "bench", "cable", "machine", "dumbbell"],
         days_available=3,
         weak_areas=["delts"],
-        session_time_budget_minutes=60,
+        session_time_budget_minutes=75,
         near_failure_tolerance="low",
     )
 
@@ -1051,7 +1051,7 @@ def test_generated_runtime_novice_metadata_on_preserves_core_and_major_group_flo
         equipment_profile=["barbell", "bench", "cable", "machine", "dumbbell", "bodyweight"],
         days_available=3,
         weak_areas=["chest", "hamstrings"],
-        session_time_budget_minutes=60,
+        session_time_budget_minutes=75,
         near_failure_tolerance="moderate",
     )
     response = client.post("/plan/generate-week", headers=headers, json={})
@@ -1092,7 +1092,7 @@ def test_generated_runtime_weakpoint_arms_delts_metadata_on_preserves_core_when_
         equipment_profile=["barbell", "bench", "cable", "machine", "dumbbell", "bodyweight"],
         days_available=3,
         weak_areas=["arms", "delts"],
-        session_time_budget_minutes=60,
+        session_time_budget_minutes=75,
         near_failure_tolerance="moderate",
     )
     response = client.post("/plan/generate-week", headers=headers, json={})
@@ -1134,7 +1134,7 @@ def test_generate_week_full_body_v1_normal_three_day_enforces_runtime_quality_fl
         equipment_profile=["barbell", "bench", "cable", "machine", "dumbbell", "bodyweight"],
         days_available=3,
         weak_areas=["chest", "hamstrings"],
-        session_time_budget_minutes=60,
+        session_time_budget_minutes=75,
         near_failure_tolerance="moderate",
     )
     save_generated_onboarding = client.post(
@@ -1170,7 +1170,7 @@ def test_generate_week_full_body_v1_normal_three_day_enforces_runtime_quality_fl
         for session in payload["sessions"]
         for exercise in session.get("exercises") or []
     )
-    assert planned_sets > 30
+    assert planned_sets > 37
 
     triceps_viable = _has_movement_pattern(payload, {"triceps_extension"})
     core_viable = _has_movement_pattern(payload, {"core"})
@@ -1185,6 +1185,14 @@ def test_generate_week_full_body_v1_normal_three_day_enforces_runtime_quality_fl
     assert "skeleton_categories_by_session" in runtime_trace
     assert runtime_trace["generated_constructor_version"] == "v25d"
     assert "constructor_fallback_reason" in runtime_trace
+    assert runtime_trace["generated_quality_floor_active"] is True
+    assert not runtime_trace["session_skeleton_unmet_after_optional_fill"]
+    skeleton_by_session = runtime_trace["skeleton_categories_by_session"]
+    assert isinstance(skeleton_by_session, dict) and skeleton_by_session
+    for session in payload["sessions"]:
+        session_id = str(session.get("session_id") or "")
+        assert _missing_session_skeleton_categories(session) == []
+        assert skeleton_by_session.get(session_id, []) == []
     _assert_metadata_scoring_frozen(runtime_trace)
 
 
@@ -1241,7 +1249,6 @@ def test_generate_week_normal_three_day_regression_day1_no_longer_knee_curl_only
         "Leg Extension",
         "Seated Leg Curl",
     ]
-    if first_five_names == bad_shape:
-        skeleton_by_session = runtime_trace.get("skeleton_categories_by_session") or {}
-        assert runtime_trace.get("generated_quality_floor_active") is False
-        assert any(len(items or []) > 0 for items in skeleton_by_session.values())
+    assert first_five_names != bad_shape
+    assert _missing_session_skeleton_categories(day1) == []
+    assert runtime_trace.get("generated_quality_floor_active") is True

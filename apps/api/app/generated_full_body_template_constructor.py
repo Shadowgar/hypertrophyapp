@@ -1952,6 +1952,13 @@ def _enforce_final_session_skeleton_floor(
     density_policy_ids: list[str],
     metadata_v2_by_exercise_id: dict[str, ExerciseMetadataV2] | None = None,
 ) -> None:
+    category_patterns = {
+        "press": {"horizontal_press", "vertical_press"},
+        "pull": {"horizontal_pull", "vertical_pull"},
+        "lower": {"squat", "knee_extension", "hinge", "leg_curl"},
+        "shoulder_rear_delt": {"vertical_press", "lateral_raise", "horizontal_pull"},
+    }
+
     def _matches_category(record: dict[str, Any], category: str) -> bool:
         pattern = str(record.get("movement_pattern") or "")
         muscles = {str(item).lower() for item in (record.get("primary_muscles") or [])}
@@ -1972,6 +1979,12 @@ def _enforce_final_session_skeleton_floor(
                 {"shoulders", "rear_delts", "side_delts"} & muscles
             )
         return False
+
+    def _candidate_matches_any_missing(record: dict[str, Any], missing_categories: list[str]) -> bool:
+        pattern = str(record.get("movement_pattern") or "")
+        if any(pattern in category_patterns.get(category, set()) for category in missing_categories):
+            return True
+        return any(_matches_category(record, category) for category in missing_categories)
 
     for session in sessions:
         for _ in range(6):
@@ -2009,6 +2022,11 @@ def _enforce_final_session_skeleton_floor(
                 allow_reuse_after_unique_candidates_exhausted=allow_reuse_after_exhaustion,
                 session_exercise_ids=session_exercise_ids,
             )
+            feasible_candidate_ids = [
+                exercise_id
+                for exercise_id in feasible_candidate_ids
+                if _candidate_matches_any_missing(record_by_id.get(exercise_id) or {}, missing)
+            ]
             if not feasible_candidate_ids:
                 break
             selection = select_scored_candidate(
@@ -2440,11 +2458,8 @@ def build_generated_full_body_template_draft(
 
     # In normal 3-day generated mode, ensure explicit triceps exposure is not silently
     # dropped before optional-fill expansion. This preserves full-body session seriousness.
-    three_day_band_for_skeleton = _resolve_three_day_volume_band(assessment=assessment) if apply_three_day_band else None
-    enforce_normal_three_day_floor = bool(
-        three_day_band_for_skeleton
-        and three_day_band_for_skeleton.band_id in {"normal", "higher_time_normal_recovery"}
-    )
+    three_day_band_for_skeleton = _resolve_three_day_volume_band(assessment=assessment) if blueprint_input.session_count == 3 else None
+    enforce_normal_three_day_floor = bool(blueprint_input.session_count == 3)
     if enforce_normal_three_day_floor:
         has_triceps_primary = any(
             "triceps" in {str(m).lower() for m in exercise.primary_muscles}

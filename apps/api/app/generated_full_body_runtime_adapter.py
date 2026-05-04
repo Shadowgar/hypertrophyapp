@@ -477,11 +477,6 @@ def prepare_generated_full_body_runtime_template(
         )
     if int(getattr(assessment, "days_available", 0) or 0) == 3:
         _apply_minimum_three_day_normal_set_floor(program_template, minimum_sets=38)
-        _enforce_program_template_session_skeleton(
-            program_template=program_template,
-            exercise_library=exercise_library,
-            available_equipment=list(getattr(profile_input, "equipment_profile", []) or []),
-        )
 
     trace = _base_trace(selected_template_id=selected_template_id, activation_guard_matched=True)
     candidate_ids = {
