@@ -96,6 +96,64 @@ exports[`visual snapshot: week route 1`] = `
     </span>
   </button>
   <div
+    class="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-2"
+  >
+    <label
+      class="flex flex-col gap-2 text-sm text-zinc-200"
+      for="week-target-days"
+    >
+      <span
+        class="font-medium"
+      >
+        Target training days
+      </span>
+      <select
+        aria-label="Week target training days selector"
+        class="ui-select"
+        id="week-target-days"
+      >
+        <option
+          value="2"
+        >
+          2
+           days
+        </option>
+        <option
+          value="3"
+        >
+          3
+           days
+        </option>
+        <option
+          value="4"
+        >
+          4
+           days
+        </option>
+        <option
+          value="5"
+        >
+          5
+           days
+        </option>
+      </select>
+    </label>
+    <p
+      class="text-xs text-zinc-400"
+    >
+      Generating for 
+      <span
+        class="font-medium text-zinc-200"
+      >
+        3
+      </span>
+       training day
+      s
+       this week.
+       Profile default: undefined days.
+    </p>
+  </div>
+  <div
     class="rounded-lg border border-zinc-800 bg-zinc-900/40 overflow-hidden"
   >
     <button

@@ -381,6 +381,16 @@ def upsert_profile(
     db: DbSession,
     current_user: CurrentUser,
 ) -> ProfileResponse:
+    existing_onboarding_answers = dict(cast(dict[str, Any], current_user.onboarding_answers or {}))
+    incoming_onboarding_answers = dict(payload.onboarding_answers or {})
+    if (
+        "generated_onboarding" in existing_onboarding_answers
+        and "generated_onboarding" not in incoming_onboarding_answers
+    ):
+        # Preserve generated onboarding state unless this request explicitly
+        # updates/removes it. /profile/generated-onboarding remains source-of-truth.
+        incoming_onboarding_answers["generated_onboarding"] = existing_onboarding_answers["generated_onboarding"]
+
     previous_binding_id = resolve_selected_program_binding_id(current_user.selected_program_id)
     next_binding_id = resolve_selected_program_binding_id(payload.selected_program_id)
     was_complete = _is_profile_complete(
@@ -406,7 +416,7 @@ def upsert_profile(
         training_location=payload.training_location,
         equipment_profile=payload.equipment_profile,
         weak_areas=payload.weak_areas,
-        onboarding_answers=payload.onboarding_answers,
+        onboarding_answers=incoming_onboarding_answers,
         days_available=payload.days_available,
         session_time_budget_minutes=payload.session_time_budget_minutes,
         movement_restrictions=payload.movement_restrictions,

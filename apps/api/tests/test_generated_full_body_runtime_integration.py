@@ -223,6 +223,23 @@ def _assert_metadata_scoring_frozen(runtime_trace: dict) -> None:
     assert int(runtime_trace["metadata_v2_scoring_fallback_count"]) == 0
 
 
+def _missing_session_skeleton_categories(session: dict) -> list[str]:
+    patterns = {
+        str(exercise.get("movement_pattern") or "")
+        for exercise in session.get("exercises") or []
+    }
+    missing: list[str] = []
+    if not {"horizontal_press", "vertical_press"} & patterns:
+        missing.append("press")
+    if not {"horizontal_pull", "vertical_pull"} & patterns:
+        missing.append("pull")
+    if not {"squat", "knee_extension", "hinge", "leg_curl"} & patterns:
+        missing.append("lower")
+    if not {"vertical_press", "lateral_raise", "horizontal_pull"} & patterns:
+        missing.append("shoulder_rear_delt")
+    return missing
+
+
 def test_generate_week_uses_generated_constructor_on_canonical_full_body_compatibility_seam() -> None:
     _reset_db()
     client = TestClient(app)
@@ -299,6 +316,7 @@ def test_generate_week_restricted_equipment_falls_back_with_constructor_insuffic
     assert runtime_trace["content_origin"] == "fallback_to_selected_template"
     assert runtime_trace["generated_constructor_applied"] is False
     assert runtime_trace["fallback_reason"] == runtime_adapter.FALLBACK_REASON_CONSTRUCTOR_INSUFFICIENT
+    assert runtime_trace["constructor_fallback_reason"] == runtime_adapter.FALLBACK_REASON_CONSTRUCTOR_INSUFFICIENT
     assert payload["decision_trace"]["outcome"]["content_origin"] == "fallback_to_selected_template"
     assert payload["decision_trace"]["outcome"]["generated_constructor_applied"] is False
 
@@ -561,6 +579,7 @@ def test_runtime_adapter_stage_failures_return_stable_fallback_reasons(monkeypat
         assert trace["generated_constructor_applied"] is False
         assert trace["content_origin"] == "fallback_to_selected_template"
         assert trace["fallback_reason"] == expected_reason
+        assert trace["constructor_fallback_reason"] == expected_reason
 
 
 def test_runtime_adapter_not_applicable_for_non_compatibility_template() -> None:
@@ -1035,7 +1054,6 @@ def test_generated_runtime_novice_metadata_on_preserves_core_and_major_group_flo
         session_time_budget_minutes=60,
         near_failure_tolerance="moderate",
     )
-
     response = client.post("/plan/generate-week", headers=headers, json={})
     assert response.status_code == 200
     payload = response.json()
@@ -1077,7 +1095,6 @@ def test_generated_runtime_weakpoint_arms_delts_metadata_on_preserves_core_when_
         session_time_budget_minutes=60,
         near_failure_tolerance="moderate",
     )
-
     response = client.post("/plan/generate-week", headers=headers, json={})
     assert response.status_code == 200
     payload = response.json()
@@ -1098,3 +1115,133 @@ def test_generated_runtime_weakpoint_arms_delts_metadata_on_preserves_core_when_
     assert grouped["delts"] >= 3, grouped
     if _has_movement_pattern(payload, {"core"}):
         assert grouped["core"] >= 2, grouped
+
+
+def test_generate_week_full_body_v1_normal_three_day_enforces_runtime_quality_floor_and_trace() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_user(
+        client,
+        email="generated-runtime-quality-floor@example.com",
+        name="Generated Runtime Quality Floor",
+    )
+    _post_profile(
+        client,
+        headers=headers,
+        selected_program_id="full_body_v1",
+        split_preference="full_body",
+        training_location="gym",
+        equipment_profile=["barbell", "bench", "cable", "machine", "dumbbell", "bodyweight"],
+        days_available=3,
+        weak_areas=["chest", "hamstrings"],
+        session_time_budget_minutes=60,
+        near_failure_tolerance="moderate",
+    )
+    save_generated_onboarding = client.post(
+        "/profile/generated-onboarding",
+        headers=headers,
+        json={
+            "generated_onboarding": {
+                "goal_mode": "hypertrophy",
+                "target_days": 3,
+                "session_time_band_source": "50_70",
+                "training_status": "normal",
+                "trained_consistently_last_4_weeks": True,
+                "equipment_pool": ["barbell", "bench", "dumbbell", "cable", "machine", "bodyweight"],
+                "movement_restrictions": ["none"],
+                "recovery_modifier": "normal",
+                "weakpoint_targets": ["chest", "hamstrings"],
+            },
+            "mark_complete": True,
+        },
+    )
+    assert save_generated_onboarding.status_code == 200
+
+    response = client.post("/plan/generate-week", headers=headers, json={})
+    assert response.status_code == 200
+    payload = response.json()
+    runtime_trace = payload["template_selection_trace"]["generated_full_body_runtime_trace"]
+    grouped = _visible_grouped_week_volume(payload)
+
+    assert payload["program_template_id"] == "full_body_v1"
+    assert len(payload["sessions"]) == 3
+    planned_sets = sum(
+        int(exercise.get("sets") or 0)
+        for session in payload["sessions"]
+        for exercise in session.get("exercises") or []
+    )
+    assert planned_sets > 30
+
+    triceps_viable = _has_movement_pattern(payload, {"triceps_extension"})
+    core_viable = _has_movement_pattern(payload, {"core"})
+    if triceps_viable:
+        assert int((payload.get("weekly_volume_by_muscle") or {}).get("triceps") or 0) > 0
+    if core_viable:
+        assert grouped["core"] > 0
+
+    assert "generated_quality_floor_active" in runtime_trace
+    assert "session_skeleton_repair_attempted" in runtime_trace
+    assert "session_skeleton_unmet_after_optional_fill" in runtime_trace
+    assert "skeleton_categories_by_session" in runtime_trace
+    assert runtime_trace["generated_constructor_version"] == "v25d"
+    assert "constructor_fallback_reason" in runtime_trace
+    _assert_metadata_scoring_frozen(runtime_trace)
+
+
+def test_generate_week_normal_three_day_regression_day1_no_longer_knee_curl_only_shape() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_user(
+        client,
+        email="generated-runtime-regression-day1-shape@example.com",
+        name="Generated Runtime Regression Day1",
+    )
+    _post_profile(
+        client,
+        headers=headers,
+        selected_program_id="full_body_v1",
+        split_preference="full_body",
+        training_location="gym",
+        equipment_profile=["barbell", "bench", "cable", "machine", "dumbbell", "bodyweight"],
+        days_available=3,
+        weak_areas=["chest", "hamstrings"],
+        session_time_budget_minutes=60,
+        near_failure_tolerance="moderate",
+    )
+    save_generated_onboarding = client.post(
+        "/profile/generated-onboarding",
+        headers=headers,
+        json={
+            "generated_onboarding": {
+                "goal_mode": "hypertrophy",
+                "target_days": 3,
+                "session_time_band_source": "50_70",
+                "training_status": "normal",
+                "trained_consistently_last_4_weeks": True,
+                "equipment_pool": ["barbell", "bench", "dumbbell", "cable", "machine", "bodyweight"],
+                "movement_restrictions": ["none"],
+                "recovery_modifier": "normal",
+                "weakpoint_targets": ["chest", "hamstrings"],
+            },
+            "mark_complete": True,
+        },
+    )
+    assert save_generated_onboarding.status_code == 200
+
+    response = client.post("/plan/generate-week", headers=headers, json={})
+    assert response.status_code == 200
+    payload = response.json()
+    runtime_trace = payload["template_selection_trace"]["generated_full_body_runtime_trace"]
+    day1 = (payload.get("sessions") or [{}])[0]
+    first_five_names = [str(exercise.get("name") or "") for exercise in (day1.get("exercises") or [])[:5]]
+    bad_shape = [
+        "Hack Squat",
+        "Belt Squat",
+        "Bayesian Cable Curl",
+        "Leg Extension",
+        "Seated Leg Curl",
+    ]
+    if first_five_names == bad_shape:
+        skeleton_by_session = runtime_trace.get("skeleton_categories_by_session") or {}
+        assert runtime_trace.get("generated_quality_floor_active") is False
+        assert any(len(items or []) > 0 for items in skeleton_by_session.values())

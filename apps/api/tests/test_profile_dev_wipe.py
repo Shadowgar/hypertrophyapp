@@ -6,6 +6,7 @@ configure_test_database("test_profile_dev_wipe")
 
 from app.database import Base, engine
 from app.main import app
+from app.routers import profile as profile_router
 
 
 def _reset_db() -> None:
@@ -15,6 +16,7 @@ def _reset_db() -> None:
 
 def test_profile_dev_wipe_removes_current_user_and_data() -> None:
     _reset_db()
+    profile_router.settings.allow_dev_wipe_endpoints = True
     client = TestClient(app)
 
     register = client.post(
@@ -95,6 +97,7 @@ def test_profile_get_returns_default_payload_before_onboarding() -> None:
 
 def test_profile_dev_reset_phase1_clears_training_state_and_keeps_account() -> None:
     _reset_db()
+    profile_router.settings.allow_dev_wipe_endpoints = True
     client = TestClient(app)
 
     register = client.post(
@@ -157,3 +160,19 @@ def test_profile_dev_reset_phase1_clears_training_state_and_keeps_account() -> N
     payload_after_reset = generated_after_reset.json()
     assert payload_after_reset["program_template_id"] == "pure_bodybuilding_phase_1_full_body"
     assert len(payload_after_reset["sessions"]) == 5
+
+
+def test_dev_wipe_disabled_by_default_and_profile_dev_wipe_forbidden() -> None:
+    _reset_db()
+    profile_router.settings.allow_dev_wipe_endpoints = False
+    client = TestClient(app)
+    register = client.post(
+        "/auth/register",
+        json={"email": "wipe-disabled@example.com", "password": "WipeDisabled1", "name": "Wipe Disabled"},
+    )
+    assert register.status_code == 200
+    token = register.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+    wipe = client.post("/profile/dev/wipe", headers=headers)
+    assert wipe.status_code == 403
+    assert wipe.json()["detail"] == "Dev wipe endpoints disabled"

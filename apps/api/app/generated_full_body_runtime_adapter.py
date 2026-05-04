@@ -15,6 +15,7 @@ from .template_schema import CanonicalProgramTemplate
 
 
 GENERATED_FULL_BODY_COMPATIBILITY_TEMPLATE_ID = "full_body_v1"
+GENERATED_CONSTRUCTOR_VERSION = "v25d"
 
 FALLBACK_REASON_BUNDLE_LOAD_FAILED = "bundle_load_failed"
 FALLBACK_REASON_ASSESSMENT_VALIDATION_FAILED = "assessment_validation_failed"
@@ -41,6 +42,53 @@ def _base_trace(*, selected_template_id: str, activation_guard_matched: bool) ->
         "compatibility_mode": "canonical_template_id_preserved",
         "activation_guard_matched": activation_guard_matched,
         "anti_copy_guard_mode": "doctrine_blueprint_constructor_only",
+        "generated_constructor_version": GENERATED_CONSTRUCTOR_VERSION,
+    }
+
+
+def _quality_floor_trace_defaults(*, enabled: bool) -> dict[str, Any]:
+    return {
+        "generated_quality_floor_active": enabled,
+        "session_skeleton_repair_attempted": enabled,
+        "session_skeleton_unmet_after_optional_fill": [],
+        "skeleton_categories_by_session": {},
+    }
+
+
+def _derive_quality_floor_trace_from_draft(draft: Any) -> dict[str, Any]:
+    unmet: list[dict[str, Any]] = []
+    for issue in list(getattr(draft, "insufficiencies", []) or []):
+        if str(getattr(issue, "issue_type", "") or "") != "session_skeleton_unmet_after_optional_fill":
+            continue
+        reason = str(getattr(issue, "reason", "") or "")
+        missing: list[str] = []
+        if reason.startswith("missing_session_skeleton_categories:"):
+            missing = [item for item in reason.split(":", 1)[1].split(",") if item]
+        unmet.append({"issue_id": str(getattr(issue, "issue_id", "") or ""), "missing_categories": missing})
+
+    categories_by_session: dict[str, list[str]] = {}
+    for session in list(getattr(draft, "sessions", []) or []):
+        session_id = str(getattr(session, "session_id", "") or "")
+        if not session_id:
+            continue
+        patterns = {str(getattr(exercise, "movement_pattern", "") or "") for exercise in list(getattr(session, "exercises", []) or [])}
+        missing: list[str] = []
+        if not {"horizontal_press", "vertical_press"} & patterns:
+            missing.append("press")
+        if not {"horizontal_pull", "vertical_pull"} & patterns:
+            missing.append("pull")
+        if not {"squat", "knee_extension", "hinge", "leg_curl"} & patterns:
+            missing.append("lower")
+        if not {"vertical_press", "lateral_raise", "horizontal_pull"} & patterns:
+            missing.append("shoulder_rear_delt")
+        categories_by_session[session_id] = missing
+
+    all_sessions_pass = all(len(missing) == 0 for missing in categories_by_session.values()) if categories_by_session else False
+    return {
+        "generated_quality_floor_active": all_sessions_pass and not unmet,
+        "session_skeleton_repair_attempted": True,
+        "session_skeleton_unmet_after_optional_fill": unmet,
+        "skeleton_categories_by_session": categories_by_session,
     }
 
 
@@ -51,6 +99,8 @@ def _not_applicable_result(*, selected_template_id: str, selected_template: dict
             "status": "not_applicable",
             "content_origin": "fallback_to_selected_template",
             "generated_constructor_applied": False,
+            "constructor_fallback_reason": "not_applicable",
+            **_quality_floor_trace_defaults(enabled=False),
         }
     )
     return {
@@ -79,6 +129,8 @@ def _fallback_result(
             "content_origin": "fallback_to_selected_template",
             "generated_constructor_applied": False,
             "fallback_reason": fallback_reason,
+            "constructor_fallback_reason": fallback_reason,
+            **_quality_floor_trace_defaults(enabled=False),
         }
     )
     if assessment_id:
@@ -180,6 +232,135 @@ def _adapt_draft_to_program_template(
     return validated.model_dump(mode="json")
 
 
+def _total_planned_sets(program_template: dict[str, Any]) -> int:
+    return sum(
+        int(exercise.get("sets") or 0)
+        for session in program_template.get("sessions") or []
+        if isinstance(session, dict)
+        for exercise in session.get("exercises") or []
+        if isinstance(exercise, dict)
+    )
+
+
+def _apply_minimum_three_day_normal_set_floor(program_template: dict[str, Any], *, minimum_sets: int = 38) -> None:
+    current_total = _total_planned_sets(program_template)
+    if current_total >= minimum_sets:
+        return
+    sessions = [session for session in program_template.get("sessions") or [] if isinstance(session, dict)]
+    if not sessions:
+        return
+    while current_total < minimum_sets:
+        changed = False
+        for session in sessions:
+            exercises = [exercise for exercise in session.get("exercises") or [] if isinstance(exercise, dict)]
+            for exercise in exercises:
+                sets_value = int(exercise.get("sets") or 0)
+                if sets_value <= 0:
+                    continue
+                exercise["sets"] = sets_value + 1
+                current_total += 1
+                changed = True
+                if current_total >= minimum_sets:
+                    return
+        if not changed:
+            return
+
+
+def _enforce_program_template_session_skeleton(
+    *,
+    program_template: dict[str, Any],
+    exercise_library: Any,
+    available_equipment: list[str],
+) -> None:
+    sessions = [session for session in (program_template.get("sessions") or []) if isinstance(session, dict)]
+    if not sessions:
+        return
+    available = {str(tag or "").strip().lower() for tag in available_equipment if str(tag or "").strip()}
+    pattern_to_candidates: dict[str, list[dict[str, Any]]] = {}
+    all_candidates: list[dict[str, Any]] = []
+    for record in list(getattr(exercise_library, "records", []) or []):
+        pattern = str(getattr(record, "movement_pattern", "") or "")
+        if not pattern:
+            continue
+        equipment_tags = [str(tag) for tag in (getattr(record, "equipment_tags", None) or [])]
+        if available and equipment_tags and not set(equipment_tags).intersection(available):
+            continue
+        candidate = {
+            "id": str(getattr(record, "exercise_id", "") or ""),
+            "name": str(getattr(record, "canonical_name", "") or ""),
+            "movement_pattern": pattern,
+            "primary_muscles": [str(item) for item in (getattr(record, "primary_muscles", None) or [])],
+        }
+        pattern_to_candidates.setdefault(pattern, []).append(candidate)
+        all_candidates.append(candidate)
+
+    def _missing(session: dict[str, Any]) -> list[str]:
+        patterns = {str(exercise.get("movement_pattern") or "") for exercise in (session.get("exercises") or []) if isinstance(exercise, dict)}
+        missing: list[str] = []
+        if not {"horizontal_press", "vertical_press"} & patterns:
+            missing.append("press")
+        if not {"horizontal_pull", "vertical_pull"} & patterns:
+            missing.append("pull")
+        if not {"squat", "knee_extension", "hinge", "leg_curl"} & patterns:
+            missing.append("lower")
+        if not {"vertical_press", "lateral_raise", "horizontal_pull"} & patterns:
+            missing.append("shoulder_rear_delt")
+        return missing
+
+    category_patterns = {
+        "press": ("horizontal_press", "vertical_press"),
+        "pull": ("horizontal_pull", "vertical_pull"),
+        "lower": ("squat", "knee_extension", "hinge", "leg_curl"),
+        "shoulder_rear_delt": ("vertical_press", "lateral_raise", "horizontal_pull"),
+    }
+
+    for session in sessions:
+        exercises = [exercise for exercise in (session.get("exercises") or []) if isinstance(exercise, dict)]
+        if not exercises:
+            continue
+        for category in _missing(session):
+            replacement = None
+            for pattern in category_patterns[category]:
+                candidates = pattern_to_candidates.get(pattern) or []
+                if candidates:
+                    replacement = dict(candidates[0])
+                    break
+            if replacement is None:
+                for candidate in all_candidates:
+                    name = str(candidate.get("name") or "").lower()
+                    muscles = {str(item).lower() for item in (candidate.get("primary_muscles") or [])}
+                    if category == "press" and ("press" in name or {"chest", "triceps"} & muscles):
+                        replacement = dict(candidate)
+                        break
+                    if category == "pull" and (any(token in name for token in ("row", "pull", "lat")) or {"back", "lats", "biceps"} & muscles):
+                        replacement = dict(candidate)
+                        break
+                    if category == "lower" and (any(token in name for token in ("squat", "deadlift", "leg")) or {"quads", "hamstrings", "glutes"} & muscles):
+                        replacement = dict(candidate)
+                        break
+                    if category == "shoulder_rear_delt" and (any(token in name for token in ("lateral", "rear", "shoulder", "face pull")) or {"shoulders", "rear_delts", "side_delts"} & muscles):
+                        replacement = dict(candidate)
+                        break
+            if replacement is None:
+                continue
+            replace_index = None
+            for idx, exercise in enumerate(exercises):
+                role = str(exercise.get("slot_role") or "")
+                if role in {"weak_point", "accessory"}:
+                    replace_index = idx
+                    break
+            if replace_index is None:
+                replace_index = len(exercises) - 1
+            current = dict(exercises[replace_index])
+            current["id"] = replacement["id"]
+            current["primary_exercise_id"] = replacement["id"]
+            current["name"] = replacement["name"]
+            current["movement_pattern"] = replacement["movement_pattern"]
+            current["primary_muscles"] = replacement["primary_muscles"]
+            exercises[replace_index] = current
+        session["exercises"] = exercises
+
+
 def prepare_generated_full_body_runtime_template(
     *,
     selected_template_id: str,
@@ -276,6 +457,8 @@ def prepare_generated_full_body_runtime_template(
             constructibility_status=draft.constructibility_status,
         )
 
+    quality_floor_trace = _derive_quality_floor_trace_from_draft(draft)
+
     try:
         program_template = _adapt_draft_to_program_template(
             selected_template_id=selected_template_id,
@@ -291,6 +474,13 @@ def prepare_generated_full_body_runtime_template(
             blueprint_input_id=blueprint_input.blueprint_input_id,
             generated_template_draft_id=draft.template_draft_id,
             constructibility_status=draft.constructibility_status,
+        )
+    if int(getattr(assessment, "days_available", 0) or 0) == 3:
+        _apply_minimum_three_day_normal_set_floor(program_template, minimum_sets=38)
+        _enforce_program_template_session_skeleton(
+            program_template=program_template,
+            exercise_library=exercise_library,
+            available_equipment=list(getattr(profile_input, "equipment_profile", []) or []),
         )
 
     trace = _base_trace(selected_template_id=selected_template_id, activation_guard_matched=True)
@@ -346,6 +536,7 @@ def prepare_generated_full_body_runtime_template(
             "generated_blueprint_input_id": blueprint_input.blueprint_input_id,
             "generated_template_draft_id": draft.template_draft_id,
             "constructibility_status": draft.constructibility_status,
+            "constructor_fallback_reason": None,
             "metadata_v2_loaded": metadata_v2_loaded,
             "metadata_v2_record_count": metadata_v2_record_count,
             "metadata_v2_candidate_coverage_ratio": candidate_coverage,
@@ -357,6 +548,7 @@ def prepare_generated_full_body_runtime_template(
             "metadata_v2_used_for_role_fit": metadata_scoring_role,
             "metadata_v2_used_for_overlap": metadata_scoring_overlap,
             "metadata_v2_scoring_fallback_count": metadata_scoring_fallback_count,
+            **quality_floor_trace,
         }
     )
     return {

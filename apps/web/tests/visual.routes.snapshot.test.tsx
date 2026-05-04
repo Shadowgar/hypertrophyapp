@@ -126,13 +126,16 @@ test("visual snapshot: settings route", async () => {
         ),
       );
     }
+    if (url.endsWith("/plan/generated-training-profile/debug")) {
+      return Promise.resolve(new Response(JSON.stringify({ detail: "Debug endpoints disabled" }), { status: 403 }));
+    }
 
     return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
   });
 
-  const { getByText, getByRole } = render(<SettingsPage />);
-  await waitFor(() => expect(getByText(/Hypertrophy Phase 1/i)).toBeInTheDocument());
-  expect(getByRole("button", { name: /Wipe Current User Data/i })).toBeInTheDocument();
+  const { getByText, queryByRole } = render(<SettingsPage />);
+  await waitFor(() => expect(getByText(/Full Body Phase 1/i)).toBeInTheDocument());
+  expect(queryByRole("button", { name: /Wipe Current User Data/i })).not.toBeInTheDocument();
 });
 
 test("visual snapshot: today route initial state", async () => {

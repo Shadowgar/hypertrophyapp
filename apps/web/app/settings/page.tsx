@@ -70,6 +70,7 @@ export default function SettingsPage() {
     reason: string;
     rationale?: string;
   } | null>(null);
+  const [devWipeEnabled, setDevWipeEnabled] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -85,6 +86,23 @@ export default function SettingsPage() {
       })
       .catch(() => setProfile(null));
 
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    api
+      .getGeneratedTrainingProfileDebug()
+      .then(() => {
+        if (!mounted) return;
+        setDevWipeEnabled(true);
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setDevWipeEnabled(false);
+      });
     return () => {
       mounted = false;
     };
@@ -269,6 +287,10 @@ export default function SettingsPage() {
   }
 
   async function wipeUserData() {
+    if (!devWipeEnabled) {
+      setStatus("Developer wipe is disabled.");
+      return;
+    }
     const confirmed = globalThis.confirm("This will permanently wipe your current user account and all related data. Continue?");
     if (!confirmed) {
       return;
@@ -563,6 +585,7 @@ export default function SettingsPage() {
         </div>
       </Disclosure>
 
+      {devWipeEnabled ? (
       <div className="rounded-lg border border-red-700/40 bg-red-950/20 p-4 space-y-3">
         <p className="text-xs font-medium uppercase tracking-wide text-red-400/80">Developer Tools</p>
         <p className="text-xs text-zinc-400">Wipe your current user and retest onboarding from scratch.</p>
@@ -574,6 +597,7 @@ export default function SettingsPage() {
         </Button>
         {status ? <p className="text-xs text-zinc-400">{status}</p> : null}
       </div>
+      ) : null}
 
       <p className="text-center text-[10px] text-zinc-600">
         {process.env.NEXT_PUBLIC_APP_VERSION ?? "dev"}

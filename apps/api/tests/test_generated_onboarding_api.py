@@ -13,6 +13,7 @@ from app.database import Base, engine
 from app.database import SessionLocal
 from app.main import app
 from app.models import User, WorkoutPlan, WorkoutSetLog
+from app.routers import plan as plan_router
 
 
 TEST_CREDENTIAL = f"T{uuid.uuid4().hex[:15]}"
@@ -226,6 +227,7 @@ def test_generated_training_profile_prefers_generated_onboarding_payload_when_pr
     )
     save = client.post("/profile/generated-onboarding", headers=headers, json=_generated_onboarding_payload())
     assert save.status_code == 200
+    plan_router.settings.allow_dev_wipe_endpoints = True
     debug = client.get("/plan/generated-training-profile/debug", headers=headers)
     assert debug.status_code == 200
     payload = debug.json()
@@ -276,6 +278,54 @@ def test_authored_user_remains_authored_even_with_generated_onboarding_saved() -
     )
     save = client.post("/profile/generated-onboarding", headers=headers, json=_generated_onboarding_payload())
     assert save.status_code == 200
+    plan_router.settings.allow_dev_wipe_endpoints = True
     debug = client.get("/plan/generated-training-profile/debug", headers=headers)
     assert debug.status_code == 200
     assert debug.json()["path_family"] == "authored"
+
+
+def test_profile_update_preserves_generated_onboarding_subtree_by_default() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_user(client, email="generated-onboarding-preserve@example.com", name="Generated Onboarding Preserve")
+    _post_profile(
+        client,
+        headers=headers,
+        selected_program_id="full_body_v1",
+        split_preference="full_body",
+        days_available=3,
+    )
+    save = client.post("/profile/generated-onboarding", headers=headers, json=_generated_onboarding_payload())
+    assert save.status_code == 200
+    assert save.json()["generated_onboarding_complete"] is True
+
+    profile_update = client.post(
+        "/profile",
+        headers=headers,
+        json={
+            "name": "Generated Onboarding Preserve",
+            "age": 31,
+            "weight": 83,
+            "gender": "male",
+            "split_preference": "full_body",
+            "selected_program_id": "full_body_v1",
+            "program_selection_mode": "manual",
+            "training_location": "gym",
+            "equipment_profile": ["barbell", "bench", "dumbbell", "machine"],
+            "weak_areas": ["chest"],
+            "days_available": 3,
+            "nutrition_phase": "maintenance",
+            "calories": 2600,
+            "protein": 180,
+            "fat": 70,
+            "carbs": 280,
+            "onboarding_answers": {},
+        },
+    )
+    assert profile_update.status_code == 200
+
+    get = client.get("/profile/generated-onboarding", headers=headers)
+    assert get.status_code == 200
+    payload = get.json()
+    assert payload["generated_onboarding_complete"] is True
+    assert payload["missing_fields"] == []
