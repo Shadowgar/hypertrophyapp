@@ -928,11 +928,17 @@ def test_generated_runtime_low_time_metadata_on_preserves_nonzero_viable_exposur
     assert response.status_code == 200
     payload = response.json()
     grouped = _visible_grouped_week_volume(payload)
+    planned_sets = sum(
+        int(exercise.get("sets") or 0)
+        for session in payload.get("sessions") or []
+        for exercise in session.get("exercises") or []
+    )
     trace = payload["template_selection_trace"]["generated_full_body_runtime_trace"]
     assert trace["metadata_v2_loaded"] is True
     assert trace["metadata_v2_used_for_visible_balance"] is True
     assert float(trace["metadata_v2_candidate_coverage_ratio"]) == 1.0
     _assert_metadata_scoring_frozen(trace)
+    assert 45 <= planned_sets <= 60
     assert grouped["arms"] > 0, grouped
     if _has_movement_pattern(payload, {"vertical_press", "lateral_raise"}):
         assert grouped["delts"] > 0, grouped
@@ -971,11 +977,17 @@ def test_generated_runtime_low_recovery_metadata_on_preserves_nonzero_viable_exp
     assert response.status_code == 200
     payload = response.json()
     grouped = _visible_grouped_week_volume(payload)
+    planned_sets = sum(
+        int(exercise.get("sets") or 0)
+        for session in payload.get("sessions") or []
+        for exercise in session.get("exercises") or []
+    )
     trace = payload["template_selection_trace"]["generated_full_body_runtime_trace"]
     assert trace["metadata_v2_loaded"] is True
     assert trace["metadata_v2_used_for_visible_balance"] is True
     assert float(trace["metadata_v2_candidate_coverage_ratio"]) == 1.0
     _assert_metadata_scoring_frozen(trace)
+    assert 40 <= planned_sets <= 55
     assert grouped["arms"] > 0, grouped
     if _has_movement_pattern(payload, {"vertical_press", "lateral_raise"}):
         assert grouped["delts"] > 0, grouped
@@ -987,6 +999,59 @@ def test_generated_runtime_low_recovery_metadata_on_preserves_nonzero_viable_exp
     assert grouped["delts"] >= 4, grouped
     assert grouped["arms"] >= 4, grouped
     assert grouped["chest"] >= 2, grouped
+
+
+def test_generated_runtime_comeback_reentry_mode_keeps_conservative_three_day_band() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register_user(
+        client,
+        email="generated-runtime-comeback-reentry-band@example.com",
+        name="Generated Runtime Comeback Reentry",
+    )
+    _post_profile(
+        client,
+        headers=headers,
+        selected_program_id="full_body_v1",
+        split_preference="full_body",
+        training_location="gym",
+        equipment_profile=["barbell", "bench", "cable", "machine", "dumbbell", "bodyweight"],
+        days_available=3,
+        weak_areas=["hamstrings"],
+        session_time_budget_minutes=75,
+        near_failure_tolerance="moderate",
+    )
+    save_generated_onboarding = client.post(
+        "/profile/generated-onboarding",
+        headers=headers,
+        json={
+            "generated_onboarding": {
+                "goal_mode": "hypertrophy",
+                "target_days": 3,
+                "session_time_band_source": "50_70",
+                "training_status": "returning",
+                "trained_consistently_last_4_weeks": False,
+                "equipment_pool": ["barbell", "bench", "dumbbell", "cable", "machine", "bodyweight"],
+                "movement_restrictions": ["none"],
+                "recovery_modifier": "normal",
+                "weakpoint_targets": ["hamstrings"],
+            },
+            "mark_complete": True,
+        },
+    )
+    assert save_generated_onboarding.status_code == 200
+
+    response = client.post("/plan/generate-week", headers=headers, json={})
+    assert response.status_code == 200
+    payload = response.json()
+    planned_sets = sum(
+        int(exercise.get("sets") or 0)
+        for session in payload.get("sessions") or []
+        for exercise in session.get("exercises") or []
+    )
+    trace = payload["template_selection_trace"]["generated_full_body_runtime_trace"]
+    assert trace.get("generated_mode") == "comeback_reentry"
+    assert 40 <= planned_sets <= 55
 
 
 def test_generated_runtime_metadata_on_does_not_collapse_low_recovery_quads_or_raise_high_fatigue_density(
@@ -1170,11 +1235,17 @@ def test_generate_week_full_body_v1_normal_three_day_enforces_runtime_quality_fl
         for session in payload["sessions"]
         for exercise in session.get("exercises") or []
     )
-    assert planned_sets >= 50
-    assert planned_sets <= 65
+    assert planned_sets >= 75
+    assert planned_sets <= 90
+    stage_trace = payload.get("generated_volume_stage_trace") or {}
+    assert int(stage_trace.get("constructor_planned_sets") or 0) >= 75
+    assert int(stage_trace.get("runtime_adapter_planned_sets") or 0) >= 75
+    assert int(stage_trace.get("scheduler_input_planned_sets") or 0) >= 75
+    assert int(stage_trace.get("scheduler_output_planned_sets") or 0) >= 75
+    assert int(stage_trace.get("final_payload_planned_sets") or 0) >= 75
     for session in payload["sessions"]:
         session_exercises = session.get("exercises") or []
-        assert 7 <= len(session_exercises) <= 9
+        assert 8 <= len(session_exercises) <= 12
         lower_posterior_count = sum(
             1
             for exercise in session_exercises
@@ -1182,7 +1253,7 @@ def test_generate_week_full_body_v1_normal_three_day_enforces_runtime_quality_fl
         )
         assert lower_posterior_count <= 2
         session_sets = sum(int(exercise.get("sets") or 0) for exercise in session.get("exercises") or [])
-        assert session_sets >= 15
+        assert session_sets >= 24
         for exercise in session_exercises:
             sets = int(exercise.get("sets") or 0)
             slot_role = str(exercise.get("slot_role") or "")

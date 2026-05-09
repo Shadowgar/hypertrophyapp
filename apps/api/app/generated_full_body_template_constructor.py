@@ -108,32 +108,32 @@ THREE_DAY_VOLUME_BANDS: dict[str, _ThreeDayVolumeBand] = {
         target_exercises_per_session=8,
         exercise_cap_per_session=9,
         minimum_exercises_per_session=7,
-        minimum_weekly_planned_sets=42,
-        minimum_weekly_muscle_volume=42,
+        minimum_weekly_planned_sets=45,
+        minimum_weekly_muscle_volume=55,
     ),
     "low_recovery": _ThreeDayVolumeBand(
         band_id="low_recovery",
         target_exercises_per_session=7,
         exercise_cap_per_session=8,
         minimum_exercises_per_session=6,
-        minimum_weekly_planned_sets=42,
-        minimum_weekly_muscle_volume=42,
+        minimum_weekly_planned_sets=40,
+        minimum_weekly_muscle_volume=50,
     ),
     "normal": _ThreeDayVolumeBand(
         band_id="normal",
-        target_exercises_per_session=9,
-        exercise_cap_per_session=10,
-        minimum_exercises_per_session=8,
-        minimum_weekly_planned_sets=55,
-        minimum_weekly_muscle_volume=55,
+        target_exercises_per_session=11,
+        exercise_cap_per_session=12,
+        minimum_exercises_per_session=9,
+        minimum_weekly_planned_sets=75,
+        minimum_weekly_muscle_volume=90,
     ),
     "higher_time_normal_recovery": _ThreeDayVolumeBand(
         band_id="higher_time_normal_recovery",
-        target_exercises_per_session=10,
-        exercise_cap_per_session=11,
-        minimum_exercises_per_session=9,
-        minimum_weekly_planned_sets=62,
-        minimum_weekly_muscle_volume=62,
+        target_exercises_per_session=12,
+        exercise_cap_per_session=13,
+        minimum_exercises_per_session=10,
+        minimum_weekly_planned_sets=85,
+        minimum_weekly_muscle_volume=100,
     ),
 }
 
@@ -159,24 +159,24 @@ THREE_DAY_BALANCE_TARGETS: dict[str, _ThreeDayBalanceTargets] = {
         weak_point_combined_arm_delt_share_cap=0.54,
     ),
     "normal": _ThreeDayBalanceTargets(
-        major_floor_by_group={"chest": 10, "back": 12, "quads": 8, "hamstrings": 8, "core": 3},
-        minimum_exposure_by_group={"arms": 3, "delts": 3},
-        soft_cap_by_group={"arms": 24, "delts": 16},
-        hard_cap_by_group={"arms": 28, "delts": 18},
+        major_floor_by_group={"chest": 14, "back": 14, "quads": 10, "hamstrings": 10, "core": 4},
+        minimum_exposure_by_group={"arms": 8, "delts": 6},
+        soft_cap_by_group={"arms": 26, "delts": 18},
+        hard_cap_by_group={"arms": 30, "delts": 20},
         weak_point_minimum_bonus_by_group={"arms": 2, "delts": 0},
         weak_point_bonus_by_group={"arms": 3, "delts": 2},
-        combined_arm_delt_share_cap=0.48,
-        weak_point_combined_arm_delt_share_cap=0.52,
+        combined_arm_delt_share_cap=0.45,
+        weak_point_combined_arm_delt_share_cap=0.50,
     ),
     "higher_time_normal_recovery": _ThreeDayBalanceTargets(
-        major_floor_by_group={"chest": 12, "back": 14, "quads": 9, "hamstrings": 9, "core": 4},
-        minimum_exposure_by_group={"arms": 4, "delts": 4},
-        soft_cap_by_group={"arms": 26, "delts": 17},
-        hard_cap_by_group={"arms": 30, "delts": 19},
+        major_floor_by_group={"chest": 16, "back": 16, "quads": 12, "hamstrings": 12, "core": 5},
+        minimum_exposure_by_group={"arms": 10, "delts": 8},
+        soft_cap_by_group={"arms": 28, "delts": 20},
+        hard_cap_by_group={"arms": 32, "delts": 22},
         weak_point_minimum_bonus_by_group={"arms": 2, "delts": 0},
         weak_point_bonus_by_group={"arms": 3, "delts": 2},
-        combined_arm_delt_share_cap=0.47,
-        weak_point_combined_arm_delt_share_cap=0.51,
+        combined_arm_delt_share_cap=0.44,
+        weak_point_combined_arm_delt_share_cap=0.49,
     ),
 }
 
@@ -2192,13 +2192,26 @@ def _enforce_normal_three_day_density_floor(
     if len(sessions) != 3:
         return
     band = _resolve_three_day_volume_band(assessment=assessment)
-    if band.band_id not in {"normal", "higher_time_normal_recovery"}:
+    serious_normal_mode = (
+        int(assessment.session_time_budget_minutes or 75) >= 60
+        and str(assessment.recovery_profile or "") == "normal"
+        and not bool(assessment.comeback_flag)
+        and str(assessment.schedule_profile or "") != "low_time"
+    )
+    if band.band_id not in {"normal", "higher_time_normal_recovery"} and not serious_normal_mode:
         return
 
     time_budget_minutes = int(assessment.session_time_budget_minutes or 75)
-    minimum_weekly_sets = 50
-    minimum_session_sets = 15
-    minimum_exercises_per_session = min(effective_session_exercise_cap, max(7, min(target_exercises_per_session, 7)))
+    if band.band_id == "higher_time_normal_recovery":
+        minimum_weekly_sets = 85
+        maximum_weekly_sets = 100
+        minimum_session_sets = 28
+        minimum_exercises_per_session = min(effective_session_exercise_cap, max(10, target_exercises_per_session))
+    else:
+        minimum_weekly_sets = 75
+        maximum_weekly_sets = 90
+        minimum_session_sets = 24
+        minimum_exercises_per_session = min(effective_session_exercise_cap, max(9, target_exercises_per_session))
     core_viable = bool(blueprint_input.candidate_exercise_ids_by_pattern.get("core"))
 
     def _movement_pattern(exercise_id: str) -> str:
@@ -2611,6 +2624,8 @@ def _enforce_normal_three_day_density_floor(
             slot_max = _exercise_set_cap(exercise)
             if int(exercise.sets) >= slot_max:
                 continue
+            if weekly_sets >= maximum_weekly_sets:
+                break
             if weekly_sets < minimum_weekly_sets:
                 exercise.sets += 1
                 changed = True
@@ -2818,10 +2833,11 @@ def build_generated_full_body_template_draft(
         session_exercise_cap_limit=session_exercise_cap_limit,
     )
     if apply_normal_three_day_density_seriousness:
-        target_exercises_per_session = min(max(target_exercises_per_session, 7), 9)
-        effective_session_exercise_cap = min(
-            max(effective_session_exercise_cap, target_exercises_per_session),
-            9,
+        band = _resolve_three_day_volume_band(assessment=assessment)
+        target_exercises_per_session = max(target_exercises_per_session, band.minimum_exercises_per_session)
+        effective_session_exercise_cap = max(
+            effective_session_exercise_cap,
+            max(target_exercises_per_session, band.exercise_cap_per_session),
         )
     optional_fill_score_floor = scoring_rule.payload["minimum_total_score_floor"].get("optional_fill")
     if optional_fill_score_floor is not None:

@@ -727,8 +727,8 @@ def test_v25_normal_three_day_density_is_not_underdosed_vs_authored_reference_ra
         authored_slot_totals.append(sum(len(session.get("exercises") or []) for session in authored_week["sessions"]))
 
     assert generated_exercise_slots >= int(min(authored_slot_totals) * 0.8)
-    assert generated_weekly_sets >= 55
-    assert generated_volume >= 68
+    assert 75 <= generated_weekly_sets <= 90
+    assert generated_volume >= 95
 
 
 def test_v25b_normal_three_day_major_volume_floors_are_satisfied() -> None:
@@ -814,10 +814,7 @@ def test_v25d_normal_three_day_density_uses_slot_coverage_not_five_set_inflation
     payload = _build_week_payload_from_draft(fixture=fixture, draft=draft)
     assert len(draft.sessions) == 3
     for session in draft.sessions:
-        assert 7 <= len(session.exercises) <= 9
-        lower_posterior_count = sum(
-            1 for exercise in session.exercises if str(exercise.movement_pattern) in {"squat", "knee_extension", "hinge", "leg_curl"}
-        )
+        assert 8 <= len(session.exercises) <= 12
         for exercise in session.exercises:
             sets = int(exercise.sets)
             if sets > 4:
@@ -914,7 +911,7 @@ def test_v25_low_time_three_day_is_smaller_than_normal_but_not_skeletal() -> Non
 
     assert sum(low_time_slots) < sum(normal_slots)
     assert min(low_time_slots) >= 6
-    assert low_time_weekly_sets >= 42
+    assert 45 <= low_time_weekly_sets <= 60
 
 
 def test_v25_three_day_volume_scales_with_time_and_recovery() -> None:
@@ -928,6 +925,8 @@ def test_v25_three_day_volume_scales_with_time_and_recovery() -> None:
     low_recovery_sets = sum(_session_total_sets(session) for session in low_recovery.sessions)
 
     assert high_time_sets > normal_sets > low_recovery_sets
+    assert 75 <= normal_sets <= 90
+    assert 40 <= low_recovery_sets <= 55
 
 
 def test_v25b_visible_grouped_low_time_and_low_recovery_major_floors_hold() -> None:
@@ -936,6 +935,8 @@ def test_v25b_visible_grouped_low_time_and_low_recovery_major_floors_hold() -> N
     low_recovery_fixture = archetypes["low_recovery_full_body"]
     _, _, _, _, _, low_time_draft = _build_layers(low_time_fixture)
     _, _, _, _, _, low_recovery_draft = _build_layers(low_recovery_fixture)
+    low_time_weekly_sets = sum(_session_total_sets(session) for session in low_time_draft.sessions)
+    low_recovery_weekly_sets = sum(_session_total_sets(session) for session in low_recovery_draft.sessions)
     low_time_totals = _visible_grouped_volume_from_week_payload(
         _build_week_payload_from_draft(fixture=low_time_fixture, draft=low_time_draft)
     )
@@ -948,6 +949,8 @@ def test_v25b_visible_grouped_low_time_and_low_recovery_major_floors_hold() -> N
         assert totals["quads"] >= 6, totals
         assert totals["hamstrings"] >= 6, totals
         assert totals["core"] >= 2, totals
+    assert 45 <= low_time_weekly_sets <= 60
+    assert 40 <= low_recovery_weekly_sets <= 55
 
 
 def test_v25_generated_constructor_does_not_mutate_authored_program_templates() -> None:

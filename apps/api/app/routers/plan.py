@@ -227,6 +227,22 @@ def _session_signature(session: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _planned_sets_from_sessions(sessions: list[dict[str, Any]] | None) -> int:
+    return sum(
+        int(exercise.get("sets") or 0)
+        for session in sessions or []
+        if isinstance(session, dict)
+        for exercise in session.get("exercises") or []
+        if isinstance(exercise, dict)
+    )
+
+
+def _planned_sets_from_template(program_template: dict[str, Any] | None) -> int:
+    return _planned_sets_from_sessions(
+        cast(list[dict[str, Any]] | None, (program_template or {}).get("sessions"))
+    )
+
+
 def _plan_payload_signature(payload: dict[str, Any]) -> dict[str, Any]:
     mesocycle = cast(dict[str, Any], payload.get("mesocycle") or {})
     return {
@@ -553,10 +569,16 @@ def _enforce_generated_three_day_runtime_set_floor(
     minimum_weekly_sets: int = 50,
     minimum_session_sets: int = 15,
     per_exercise_set_cap: int = 5,
-) -> None:
+) -> dict[str, Any]:
     sessions = [session for session in (plan_payload.get("sessions") or []) if isinstance(session, dict)]
+    before_total = _planned_sets_from_sessions(cast(list[dict[str, Any]], sessions))
     if len(sessions) != 3:
-        return
+        return {
+            "applied": False,
+            "before_planned_sets": before_total,
+            "after_planned_sets": before_total,
+            "reason": "not_three_sessions",
+        }
 
     def _session_sets(session: dict[str, Any]) -> int:
         return sum(
@@ -609,6 +631,132 @@ def _enforce_generated_three_day_runtime_set_floor(
             break
         if not changed:
             break
+
+    after_total = _planned_sets_from_sessions(cast(list[dict[str, Any]], sessions))
+    return {
+        "applied": after_total > before_total,
+        "before_planned_sets": before_total,
+        "after_planned_sets": after_total,
+        "reason": "three_day_runtime_floor" if after_total > before_total else "floor_already_met_or_capped",
+    }
+
+
+def _generated_mode_set_band(generated_mode: str, target_days: int) -> tuple[int, int] | None:
+    if int(target_days) != 3:
+        return None
+    if generated_mode == "normal_full_body":
+        return (75, 90)
+    if generated_mode == "low_time_full_body":
+        return (45, 60)
+    if generated_mode in {"low_recovery_full_body", "comeback_reentry"}:
+        return (40, 55)
+    return None
+
+
+def _enforce_generated_mode_set_band(
+    *,
+    plan_payload: dict[str, Any],
+    generated_mode: str,
+    target_days: int,
+    per_exercise_set_cap: int = 5,
+) -> dict[str, Any]:
+    band = _generated_mode_set_band(generated_mode, target_days)
+    before_total = _planned_sets_from_sessions(cast(list[dict[str, Any]], plan_payload.get("sessions") or []))
+    if band is None:
+        return {
+            "generated_mode_set_band_applied": False,
+            "generated_mode_set_band_reason": "mode_not_band_eligible",
+            "generated_mode_set_band_before": before_total,
+            "generated_mode_set_band_after": before_total,
+        }
+
+    min_sets, max_sets = band
+    sessions = [session for session in (plan_payload.get("sessions") or []) if isinstance(session, dict)]
+    if len(sessions) != 3:
+        return {
+            "generated_mode_set_band_applied": False,
+            "generated_mode_set_band_reason": "not_three_sessions",
+            "generated_mode_set_band_before": before_total,
+            "generated_mode_set_band_after": before_total,
+            "generated_mode_set_band_target": [min_sets, max_sets],
+        }
+
+    def _ordered(session: dict[str, Any], *, increase: bool) -> list[dict[str, Any]]:
+        if increase:
+            slot_rank = {"primary_compound": 0, "secondary_compound": 1, "accessory": 2, "weak_point": 3}
+        else:
+            slot_rank = {"weak_point": 0, "accessory": 1, "secondary_compound": 2, "primary_compound": 3}
+        exercises = [exercise for exercise in session.get("exercises") or [] if isinstance(exercise, dict)]
+        return sorted(
+            exercises,
+            key=lambda exercise: (
+                slot_rank.get(str(exercise.get("slot_role") or ""), 4),
+                str(exercise.get("movement_pattern") or ""),
+                str(exercise.get("id") or ""),
+            ),
+        )
+
+    if before_total < min_sets:
+        normal_mode = generated_mode == "normal_full_body"
+        for _ in range(400):
+            current_total = _planned_sets_from_sessions(cast(list[dict[str, Any]], sessions))
+            if current_total >= min_sets:
+                break
+            target_session = min(
+                sessions,
+                key=lambda session: sum(
+                    int(exercise.get("sets") or 0)
+                    for exercise in session.get("exercises") or []
+                    if isinstance(exercise, dict)
+                ),
+            )
+            changed = False
+            for exercise in _ordered(target_session, increase=True):
+                sets_value = int(exercise.get("sets") or 0)
+                if sets_value <= 0 or sets_value >= int(per_exercise_set_cap):
+                    continue
+                if normal_mode:
+                    slot_role = str(exercise.get("slot_role") or "")
+                    if slot_role == "primary_compound" and sets_value >= 5:
+                        continue
+                    if slot_role != "primary_compound" and sets_value >= 4:
+                        continue
+                exercise["sets"] = sets_value + 1
+                changed = True
+                break
+            if not changed:
+                break
+
+    if _planned_sets_from_sessions(cast(list[dict[str, Any]], sessions)) > max_sets:
+        all_exercises = [
+            exercise
+            for session in sessions
+            for exercise in _ordered(session, increase=False)
+            if isinstance(exercise, dict)
+        ]
+        for _ in range(1000):
+            current_total = _planned_sets_from_sessions(cast(list[dict[str, Any]], sessions))
+            if current_total <= max_sets:
+                break
+            changed = False
+            for exercise in all_exercises:
+                sets_value = int(exercise.get("sets") or 0)
+                if sets_value <= 1:
+                    continue
+                exercise["sets"] = sets_value - 1
+                changed = True
+                break
+            if not changed:
+                break
+
+    after_total = _planned_sets_from_sessions(cast(list[dict[str, Any]], sessions))
+    return {
+        "generated_mode_set_band_applied": after_total != before_total,
+        "generated_mode_set_band_reason": "band_applied" if after_total != before_total else "already_in_band",
+        "generated_mode_set_band_before": before_total,
+        "generated_mode_set_band_after": after_total,
+        "generated_mode_set_band_target": [min_sets, max_sets],
+    }
 
 
 def _build_authored_adapted_sessions(
@@ -1730,6 +1878,7 @@ def _build_week_plan_runtime_for_user(
     generated_full_body_adaptive_loop_policy = None
     generated_full_body_block_review_policy = None
     apply_generated_normal_density_floor = False
+    generated_volume_stage_trace: dict[str, Any] | None = None
     if is_generated_full_body_binding_id(selected_template_id):
         training_profile = _build_generated_training_profile(
             current_user=current_user,
@@ -1737,6 +1886,14 @@ def _build_week_plan_runtime_for_user(
             training_state=cast(dict[str, Any], generation_context["training_state"]),
         )
         decision_profile = training_profile.decision_profile
+        generated_runtime_hints = {
+            "generated_mode": decision_profile.generated_mode,
+            "target_days": int(decision_profile.target_days),
+            "session_time_band": decision_profile.session_time_band,
+            "recovery_modifier": decision_profile.recovery_modifier,
+        }
+        generated_training_state = deepcopy(cast(dict[str, Any], generation_context["training_state"]))
+        generated_training_state["generated_runtime_hints"] = generated_runtime_hints
         apply_generated_normal_density_floor = bool(
             decision_profile.generated_mode == "normal_full_body"
             and int(decision_profile.target_days) == 3
@@ -1758,7 +1915,7 @@ def _build_week_plan_runtime_for_user(
                 movement_restrictions=list(training_profile.runtime_active.movement_restriction_flags),
                 near_failure_tolerance=current_user.near_failure_tolerance,
             ),
-            training_state=cast(dict[str, Any], generation_context["training_state"]),
+            training_state=generated_training_state,
         )
         runtime_template = cast(dict[str, Any], generated_runtime["program_template"])
         generated_full_body_adaptive_loop_policy = generated_runtime.get("generated_full_body_adaptive_loop_policy")
@@ -1766,6 +1923,17 @@ def _build_week_plan_runtime_for_user(
         template_selection_trace["generated_full_body_runtime_trace"] = cast(
             dict[str, Any], generated_runtime["generated_full_body_runtime_trace"]
         )
+        generated_volume_stage_trace = {
+            "constructor_planned_sets": int(
+                cast(dict[str, Any], generated_runtime["generated_full_body_runtime_trace"]).get("constructor_planned_sets")
+                or 0
+            ),
+            "runtime_adapter_planned_sets": _planned_sets_from_template(runtime_template),
+            "generated_mode": decision_profile.generated_mode,
+            "target_days": int(decision_profile.target_days),
+            "session_time_band": decision_profile.session_time_band,
+            "recovery_modifier": decision_profile.recovery_modifier,
+        }
         log_event(
             "generation_path_selected",
             route="/plan/generate-week" if generation_mode == "current_week_regenerate" else "/plan/next-week",
@@ -1851,12 +2019,43 @@ def _build_week_plan_runtime_for_user(
         rule_set=rule_set,
     )
 
+    if generated_volume_stage_trace is not None:
+        scheduler_input_template = cast(dict[str, Any], scheduler_runtime["scheduler_kwargs"]).get("program_template")
+        generated_volume_stage_trace["scheduler_input_planned_sets"] = _planned_sets_from_template(
+            cast(dict[str, Any], scheduler_input_template) if isinstance(scheduler_input_template, dict) else {}
+        )
+
     base_plan = generate_week_plan(**cast(dict[str, Any], scheduler_runtime["scheduler_kwargs"]))
+    if generated_volume_stage_trace is not None:
+        generated_volume_stage_trace["scheduler_output_planned_sets"] = _planned_sets_from_sessions(
+            cast(list[dict[str, Any]], base_plan.get("sessions") or [])
+        )
+
+    generated_floor_trace: dict[str, Any] = {
+        "generated_volume_floor_applied": False,
+        "generated_volume_floor_bypass_reason": "not_normal_three_day_standard",
+    }
     if apply_generated_normal_density_floor:
-        _enforce_generated_three_day_runtime_set_floor(
+        floor_runtime = _enforce_generated_three_day_runtime_set_floor(
             plan_payload=base_plan,
-            minimum_weekly_sets=50,
-            minimum_session_sets=15,
+            minimum_weekly_sets=75,
+            minimum_session_sets=24,
+        )
+        generated_floor_trace = {
+            "generated_volume_floor_applied": bool(floor_runtime.get("applied")),
+            "generated_volume_floor_bypass_reason": None
+            if bool(floor_runtime.get("applied"))
+            else str(floor_runtime.get("reason") or "floor_not_applied"),
+            "floor_before_planned_sets": int(floor_runtime.get("before_planned_sets") or 0),
+            "floor_after_planned_sets": int(floor_runtime.get("after_planned_sets") or 0),
+        }
+
+    generated_mode_band_trace: dict[str, Any] | None = None
+    if generated_volume_stage_trace is not None:
+        generated_mode_band_trace = _enforce_generated_mode_set_band(
+            plan_payload=base_plan,
+            generated_mode=str(generated_volume_stage_trace.get("generated_mode") or ""),
+            target_days=int(generated_volume_stage_trace.get("target_days") or 0),
         )
     base_plan = _apply_week_start_override_to_plan(
         base_plan=base_plan,
@@ -1889,6 +2088,19 @@ def _build_week_plan_runtime_for_user(
     )
     response_payload = cast(dict[str, Any], finalize_runtime["response_payload"])
     record_values = cast(dict[str, Any], finalize_runtime["record_values"])
+    if generated_volume_stage_trace is not None:
+        generated_volume_stage_trace["final_payload_planned_sets"] = _planned_sets_from_sessions(
+            cast(list[dict[str, Any]], response_payload.get("sessions") or [])
+        )
+        generated_volume_stage_trace.update(generated_floor_trace)
+        if generated_mode_band_trace is not None:
+            generated_volume_stage_trace.update(generated_mode_band_trace)
+        response_payload["generated_volume_stage_trace"] = deepcopy(generated_volume_stage_trace)
+
+        record_payload = cast(dict[str, Any], record_values.get("payload") or {})
+        record_payload["generated_volume_stage_trace"] = deepcopy(generated_volume_stage_trace)
+        record_values["payload"] = record_payload
+
     if (
         generation_mode == "current_week_regenerate"
         and regenerate_week_index_pin is not None

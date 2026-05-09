@@ -244,6 +244,285 @@ def _total_planned_sets(program_template: dict[str, Any]) -> int:
     )
 
 
+def _total_draft_sets(draft: Any) -> int:
+    return sum(
+        int(getattr(exercise, "sets", 0) or 0)
+        for session in list(getattr(draft, "sessions", []) or [])
+        for exercise in list(getattr(session, "exercises", []) or [])
+    )
+
+
+def _generated_runtime_hints(training_state: dict[str, Any]) -> dict[str, Any]:
+    hints = training_state.get("generated_runtime_hints")
+    return hints if isinstance(hints, dict) else {}
+
+
+def _is_normal_three_day_standard_mode(hints: dict[str, Any]) -> bool:
+    return (
+        str(hints.get("generated_mode") or "") == "normal_full_body"
+        and int(hints.get("target_days") or 0) == 3
+        and str(hints.get("session_time_band") or "") == "standard"
+        and str(hints.get("recovery_modifier") or "") == "standard"
+    )
+
+
+def _normalize_assessment_for_normal_three_day_mode(
+    *,
+    assessment: Any,
+    hints: dict[str, Any],
+) -> tuple[Any, dict[str, Any]]:
+    override_trace: dict[str, Any] = {
+        "generated_mode_override_applied": False,
+        "generated_mode_override_reason": None,
+        "assessment_flags_before": list(getattr(assessment, "user_class_flags", []) or []),
+        "assessment_flags_after": list(getattr(assessment, "user_class_flags", []) or []),
+        "assessment_comeback_before": bool(getattr(assessment, "comeback_flag", False)),
+        "assessment_comeback_after": bool(getattr(assessment, "comeback_flag", False)),
+        "assessment_budget_before": int(getattr(assessment, "session_time_budget_minutes", 0) or 0),
+        "assessment_budget_after": int(getattr(assessment, "session_time_budget_minutes", 0) or 0),
+    }
+
+    if not _is_normal_three_day_standard_mode(hints):
+        override_trace["generated_mode_override_reason"] = "mode_not_normal_three_day_standard"
+        return assessment, override_trace
+
+    if str(getattr(assessment, "schedule_profile", "") or "") != "normal":
+        override_trace["generated_mode_override_reason"] = "assessment_schedule_profile_not_normal"
+        return assessment, override_trace
+    if str(getattr(assessment, "recovery_profile", "") or "") != "normal":
+        override_trace["generated_mode_override_reason"] = "assessment_recovery_profile_not_normal"
+        return assessment, override_trace
+
+    flags_before = list(getattr(assessment, "user_class_flags", []) or [])
+    flags_after = [flag for flag in flags_before if flag not in {"novice", "comeback"}]
+    comeback_before = bool(getattr(assessment, "comeback_flag", False))
+    budget_before = int(getattr(assessment, "session_time_budget_minutes", 0) or 0)
+    budget_after = min(70, budget_before) if budget_before > 0 else budget_before
+
+    needs_override = flags_after != flags_before or comeback_before or budget_after != budget_before
+    if not needs_override:
+        override_trace["generated_mode_override_reason"] = "assessment_already_normal_band"
+        return assessment, override_trace
+
+    normalized_assessment = assessment.model_copy(
+        update={
+            "user_class_flags": flags_after,
+            "comeback_flag": False,
+            "session_time_budget_minutes": budget_after,
+        }
+    )
+    override_trace.update(
+        {
+            "generated_mode_override_applied": True,
+            "generated_mode_override_reason": "runtime_normal_three_day_band_alignment",
+            "assessment_flags_after": list(flags_after),
+            "assessment_comeback_after": False,
+            "assessment_budget_after": int(budget_after),
+        }
+    )
+    return normalized_assessment, override_trace
+
+
+def _generated_mode_three_day_set_band(hints: dict[str, Any]) -> tuple[int, int] | None:
+    mode = str(hints.get("generated_mode") or "")
+    target_days = int(hints.get("target_days") or 0)
+    if target_days != 3:
+        return None
+    if mode == "normal_full_body":
+        return (75, 90)
+    if mode == "low_time_full_body":
+        return (45, 60)
+    if mode in {"low_recovery_full_body", "comeback_reentry"}:
+        return (40, 55)
+    return None
+
+
+def _exercise_sort_for_band_adjustment(exercises: list[dict[str, Any]], *, increase: bool) -> list[dict[str, Any]]:
+    if increase:
+        slot_rank = {"primary_compound": 0, "secondary_compound": 1, "accessory": 2, "weak_point": 3}
+    else:
+        slot_rank = {"weak_point": 0, "accessory": 1, "secondary_compound": 2, "primary_compound": 3}
+    return sorted(
+        exercises,
+        key=lambda exercise: (
+            slot_rank.get(str(exercise.get("slot_role") or ""), 4),
+            str(exercise.get("movement_pattern") or ""),
+            str(exercise.get("id") or ""),
+        ),
+    )
+
+
+def _limit_normal_three_day_lower_pattern_density(
+    program_template: dict[str, Any],
+    *,
+    max_lower_exercises_per_session: int = 2,
+) -> dict[str, Any]:
+    lower_patterns = {"squat", "knee_extension", "hinge", "leg_curl"}
+    removed_total = 0
+    sessions = [session for session in (program_template.get("sessions") or []) if isinstance(session, dict)]
+    for session in sessions:
+        exercises = [exercise for exercise in session.get("exercises") or [] if isinstance(exercise, dict)]
+        if not exercises:
+            continue
+        lower_indices = [
+            idx
+            for idx, exercise in enumerate(exercises)
+            if str(exercise.get("movement_pattern") or "") in lower_patterns
+        ]
+        if len(lower_indices) <= max_lower_exercises_per_session:
+            continue
+        removable_indices = lower_indices[max_lower_exercises_per_session:]
+        removable_indices.sort(
+            key=lambda idx: (
+                {"weak_point": 0, "accessory": 1, "secondary_compound": 2, "primary_compound": 3}.get(
+                    str(exercises[idx].get("slot_role") or ""),
+                    4,
+                ),
+                idx,
+            ),
+        )
+        keep: list[dict[str, Any]] = []
+        removable_set = set(removable_indices)
+        for idx, exercise in enumerate(exercises):
+            if idx in removable_set:
+                removed_total += 1
+                continue
+            keep.append(exercise)
+        session["exercises"] = keep
+
+    return {
+        "normal_three_day_lower_density_trimmed": removed_total > 0,
+        "normal_three_day_lower_density_removed_exercises": removed_total,
+    }
+
+
+def _enforce_normal_three_day_role_set_caps(
+    program_template: dict[str, Any],
+    *,
+    max_non_primary_sets: int = 4,
+) -> dict[str, Any]:
+    reduced_sets = 0
+    sessions = [session for session in (program_template.get("sessions") or []) if isinstance(session, dict)]
+    for session in sessions:
+        for exercise in session.get("exercises") or []:
+            if not isinstance(exercise, dict):
+                continue
+            slot_role = str(exercise.get("slot_role") or "")
+            sets_value = int(exercise.get("sets") or 0)
+            if slot_role == "primary_compound" or sets_value <= max_non_primary_sets:
+                continue
+            exercise["sets"] = int(max_non_primary_sets)
+            reduced_sets += sets_value - int(max_non_primary_sets)
+    return {
+        "normal_three_day_role_set_cap_applied": reduced_sets > 0,
+        "normal_three_day_role_set_cap_reduced_sets": reduced_sets,
+    }
+
+
+def _enforce_three_day_generated_mode_set_band(
+    program_template: dict[str, Any],
+    *,
+    hints: dict[str, Any],
+    per_exercise_set_cap: int = 5,
+) -> dict[str, Any]:
+    band = _generated_mode_three_day_set_band(hints)
+    before_total = _total_planned_sets(program_template)
+    if band is None:
+        return {
+            "generated_mode_set_band_applied": False,
+            "generated_mode_set_band_reason": "mode_not_band_eligible",
+            "generated_mode_set_band_before": before_total,
+            "generated_mode_set_band_after": before_total,
+        }
+
+    min_sets, max_sets = band
+    sessions = [session for session in (program_template.get("sessions") or []) if isinstance(session, dict)]
+    if len(sessions) != 3:
+        return {
+            "generated_mode_set_band_applied": False,
+            "generated_mode_set_band_reason": "not_three_sessions",
+            "generated_mode_set_band_before": before_total,
+            "generated_mode_set_band_after": before_total,
+            "generated_mode_set_band_target": [min_sets, max_sets],
+        }
+
+    if before_total < min_sets:
+        normal_mode = str(hints.get("generated_mode") or "") == "normal_full_body"
+        for _ in range(600):
+            current_total = _total_planned_sets(program_template)
+            if current_total >= min_sets:
+                break
+            target_session = min(
+                sessions,
+                key=lambda session: sum(
+                    int(exercise.get("sets") or 0)
+                    for exercise in session.get("exercises") or []
+                    if isinstance(exercise, dict)
+                ),
+            )
+            exercises = [exercise for exercise in target_session.get("exercises") or [] if isinstance(exercise, dict)]
+            changed = False
+            for exercise in _exercise_sort_for_band_adjustment(exercises, increase=True):
+                sets_value = int(exercise.get("sets") or 0)
+                if sets_value <= 0 or sets_value >= int(per_exercise_set_cap):
+                    continue
+                if normal_mode:
+                    slot_role = str(exercise.get("slot_role") or "")
+                    if slot_role == "primary_compound" and sets_value >= 5:
+                        continue
+                    if slot_role != "primary_compound" and sets_value >= 4:
+                        continue
+                if sets_value <= 0:
+                    continue
+                exercise["sets"] = sets_value + 1
+                changed = True
+                break
+            if not changed:
+                break
+
+    if _total_planned_sets(program_template) > max_sets:
+        all_exercises: list[dict[str, Any]] = []
+        for session in sessions:
+            for exercise in session.get("exercises") or []:
+                if isinstance(exercise, dict):
+                    all_exercises.append(exercise)
+        ordered_for_reduction = _exercise_sort_for_band_adjustment(all_exercises, increase=False)
+        for _ in range(1200):
+            current_total = _total_planned_sets(program_template)
+            if current_total <= max_sets:
+                break
+            changed = False
+            for exercise in ordered_for_reduction:
+                sets_value = int(exercise.get("sets") or 0)
+                if sets_value <= 1:
+                    continue
+                exercise["sets"] = sets_value - 1
+                changed = True
+                break
+            if not changed:
+                break
+
+    after_total = _total_planned_sets(program_template)
+    return {
+        "generated_mode_set_band_applied": after_total != before_total,
+        "generated_mode_set_band_reason": "band_applied" if after_total != before_total else "already_in_band",
+        "generated_mode_set_band_before": before_total,
+        "generated_mode_set_band_after": after_total,
+        "generated_mode_set_band_target": [min_sets, max_sets],
+    }
+
+
+def _sync_authored_weeks_sessions(program_template: dict[str, Any]) -> None:
+    sessions = [session for session in (program_template.get("sessions") or []) if isinstance(session, dict)]
+    authored_weeks = program_template.get("authored_weeks")
+    if not isinstance(authored_weeks, list):
+        return
+    for week in authored_weeks:
+        if not isinstance(week, dict):
+            continue
+        week["sessions"] = deepcopy(sessions)
+
+
 def _apply_minimum_three_day_normal_set_floor(program_template: dict[str, Any], *, minimum_sets: int = 38) -> None:
     current_total = _total_planned_sets(program_template)
     if current_total >= minimum_sets:
@@ -266,6 +545,20 @@ def _apply_minimum_three_day_normal_set_floor(program_template: dict[str, Any], 
                     return
         if not changed:
             return
+
+
+def _three_day_minimum_sets_for_assessment(assessment: Any) -> int:
+    budget = int(getattr(assessment, "session_time_budget_minutes", 75) or 75)
+    schedule_profile = str(getattr(assessment, "schedule_profile", "") or "")
+    recovery_profile = str(getattr(assessment, "recovery_profile", "") or "")
+    comeback_flag = bool(getattr(assessment, "comeback_flag", False))
+    if schedule_profile == "low_time" or budget <= 45:
+        return 45
+    if recovery_profile == "low_recovery" or comeback_flag:
+        return 40
+    if budget >= 75 and recovery_profile == "normal" and schedule_profile == "normal":
+        return 85
+    return 75
 
 
 def _enforce_program_template_session_skeleton(
@@ -414,9 +707,15 @@ def prepare_generated_full_body_runtime_template(
             fallback_reason=FALLBACK_REASON_ASSESSMENT_VALIDATION_FAILED,
         )
 
+    hints = _generated_runtime_hints(training_state)
+    assessment_for_generation, mode_override_trace = _normalize_assessment_for_normal_three_day_mode(
+        assessment=assessment,
+        hints=hints,
+    )
+
     try:
         blueprint_input = build_generated_full_body_blueprint_input(
-            assessment=assessment,
+            assessment=assessment_for_generation,
             doctrine_bundle=doctrine_bundle,
             policy_bundle=policy_bundle,
             exercise_library=exercise_library,
@@ -432,7 +731,7 @@ def prepare_generated_full_body_runtime_template(
 
     try:
         draft = build_generated_full_body_template_draft(
-            assessment=assessment,
+            assessment=assessment_for_generation,
             blueprint_input=blueprint_input,
             doctrine_bundle=doctrine_bundle,
             policy_bundle=policy_bundle,
@@ -477,9 +776,34 @@ def prepare_generated_full_body_runtime_template(
             generated_template_draft_id=draft.template_draft_id,
             constructibility_status=draft.constructibility_status,
         )
-    if int(getattr(assessment, "days_available", 0) or 0) == 3:
-        _apply_minimum_three_day_normal_set_floor(program_template, minimum_sets=38)
+    constructor_planned_sets = _total_draft_sets(draft)
+
+    if int(getattr(assessment_for_generation, "days_available", 0) or 0) == 3:
+        _apply_minimum_three_day_normal_set_floor(
+            program_template,
+            minimum_sets=_three_day_minimum_sets_for_assessment(assessment_for_generation),
+        )
         program_template[AUTHORITATIVE_AUTHORED_PASSTHROUGH_KEY] = True
+
+    lower_density_trace = {
+        "normal_three_day_lower_density_trimmed": False,
+        "normal_three_day_lower_density_removed_exercises": 0,
+    }
+    role_set_cap_trace = {
+        "normal_three_day_role_set_cap_applied": False,
+        "normal_three_day_role_set_cap_reduced_sets": 0,
+    }
+    if _is_normal_three_day_standard_mode(hints):
+        lower_density_trace = _limit_normal_three_day_lower_pattern_density(program_template)
+        role_set_cap_trace = _enforce_normal_three_day_role_set_caps(program_template)
+
+    mode_band_trace = _enforce_three_day_generated_mode_set_band(
+        program_template,
+        hints=hints,
+    )
+    _sync_authored_weeks_sessions(program_template)
+
+    runtime_adapter_planned_sets = _total_planned_sets(program_template)
 
     trace = _base_trace(selected_template_id=selected_template_id, activation_guard_matched=True)
     candidate_ids = {
@@ -535,6 +859,23 @@ def prepare_generated_full_body_runtime_template(
             "generated_template_draft_id": draft.template_draft_id,
             "constructibility_status": draft.constructibility_status,
             "constructor_fallback_reason": None,
+            "constructor_planned_sets": constructor_planned_sets,
+            "runtime_adapter_planned_sets": runtime_adapter_planned_sets,
+            "generated_mode": hints.get("generated_mode"),
+            "target_days": hints.get("target_days"),
+            "session_time_band": hints.get("session_time_band"),
+            "recovery_modifier": hints.get("recovery_modifier"),
+            "generated_mode_override_applied": mode_override_trace["generated_mode_override_applied"],
+            "generated_mode_override_reason": mode_override_trace["generated_mode_override_reason"],
+            "assessment_flags_before": mode_override_trace["assessment_flags_before"],
+            "assessment_flags_after": mode_override_trace["assessment_flags_after"],
+            "assessment_comeback_before": mode_override_trace["assessment_comeback_before"],
+            "assessment_comeback_after": mode_override_trace["assessment_comeback_after"],
+            "assessment_budget_before": mode_override_trace["assessment_budget_before"],
+            "assessment_budget_after": mode_override_trace["assessment_budget_after"],
+            **lower_density_trace,
+            **role_set_cap_trace,
+            **mode_band_trace,
             "metadata_v2_loaded": metadata_v2_loaded,
             "metadata_v2_record_count": metadata_v2_record_count,
             "metadata_v2_candidate_coverage_ratio": candidate_coverage,
