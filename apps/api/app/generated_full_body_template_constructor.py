@@ -608,7 +608,7 @@ def _role_set_targets(*, volume_tier: str, time_budget_minutes: int) -> dict[str
 
 def _exercise_max_sets(*, slot_role: str, time_budget_minutes: int) -> int:
     if slot_role == "primary_compound":
-        return 5 if time_budget_minutes >= 75 else 4
+        return 4
     if slot_role == "secondary_compound":
         return 4
     return 3
@@ -2087,6 +2087,384 @@ def _enforce_final_session_skeleton_floor(
             assigned_counts[selection.selected_id] = assigned_counts.get(selection.selected_id, 0) + 1
 
 
+def _enforce_normal_three_day_density_floor(
+    *,
+    sessions: list[GeneratedSessionDraft],
+    assessment: UserAssessment,
+    blueprint_input: GeneratedFullBodyBlueprintInput,
+    doctrine_bundle: DoctrineBundle,
+    record_by_id: dict[str, dict[str, Any]],
+    assigned_counts: dict[str, int],
+    max_assignments_per_week: int,
+    allow_reuse_after_exhaustion: bool,
+    target_exercises_per_session: int,
+    effective_session_exercise_cap: int,
+    fill_target_rule_id: str,
+    scoring_rule_id: str,
+    optional_fill_rule_id: str,
+    slot_role_rule_id: str,
+    reuse_rule_id: str,
+    density_policy_ids: list[str],
+    metadata_v2_by_exercise_id: dict[str, ExerciseMetadataV2] | None = None,
+) -> None:
+    if len(sessions) != 3:
+        return
+    band = _resolve_three_day_volume_band(assessment=assessment)
+    if band.band_id not in {"normal", "higher_time_normal_recovery"}:
+        return
+
+    time_budget_minutes = int(assessment.session_time_budget_minutes or 75)
+    minimum_weekly_sets = 50
+    minimum_session_sets = 15
+    minimum_exercises_per_session = min(effective_session_exercise_cap, max(7, min(target_exercises_per_session, 7)))
+
+    def _movement_pattern(exercise_id: str) -> str:
+        return str((record_by_id.get(exercise_id) or {}).get("movement_pattern") or "")
+
+    def _primary_muscles(exercise_id: str) -> set[str]:
+        return {str(item).lower() for item in ((record_by_id.get(exercise_id) or {}).get("primary_muscles") or [])}
+
+    def _is_low_or_moderate_fatigue(exercise_id: str) -> bool:
+        fatigue = str((record_by_id.get(exercise_id) or {}).get("fatigue_cost") or "")
+        return fatigue in {"", "low", "moderate"}
+
+    def _session_has_pattern(session: GeneratedSessionDraft, patterns: set[str]) -> bool:
+        return any(str(exercise.movement_pattern or "") in patterns for exercise in session.exercises)
+
+    def _session_has_muscle(session: GeneratedSessionDraft, muscles: set[str]) -> bool:
+        return any(
+            bool(muscles & {str(item).lower() for item in exercise.primary_muscles})
+            for exercise in session.exercises
+        )
+
+    def _choose_session_for_insert() -> GeneratedSessionDraft:
+        return min(
+            sessions,
+            key=lambda item: (
+                _session_total_sets(item),
+                len(item.exercises),
+                item.session_id,
+            ),
+        )
+
+    def _insert_candidate(*, session: GeneratedSessionDraft, candidate_ids: list[str]) -> bool:
+        session_exercise_ids = {exercise.id for exercise in session.exercises}
+        feasible_candidate_ids = _feasible_candidate_ids(
+            candidate_ids=candidate_ids,
+            assigned_counts=assigned_counts,
+            max_assignments_per_week=max_assignments_per_week,
+            allow_reuse_after_unique_candidates_exhausted=allow_reuse_after_exhaustion,
+            session_exercise_ids=session_exercise_ids,
+        )
+        feasible_candidate_ids = [item for item in feasible_candidate_ids if _is_low_or_moderate_fatigue(item)] or feasible_candidate_ids
+        if not feasible_candidate_ids:
+            return False
+        selection = select_scored_candidate(
+            doctrine_bundle=doctrine_bundle,
+            selection_mode="optional_fill",
+            candidate_ids=feasible_candidate_ids,
+            record_by_id=record_by_id,
+            assessment=assessment,
+            blueprint_input=blueprint_input,
+            assigned_counts=assigned_counts,
+            weekly_selected_exercise_ids=_collect_selected_exercise_ids(sessions),
+            session_exercise_count=len(session.exercises),
+            target_exercises_per_session=target_exercises_per_session,
+            target_weak_point_muscles=[item.muscle_group for item in assessment.weak_point_priorities],
+            metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+        )
+        selected_id = selection.selected_id if selection is not None else feasible_candidate_ids[0]
+        record = record_by_id.get(selected_id)
+        if record is None:
+            return False
+        slot_role = _next_slot_role(
+            session=session,
+            slot_roles_by_position=["primary_compound", "secondary_compound", "accessory", "weak_point"],
+            fallback_slot_role="accessory",
+        )
+        exercise = _build_exercise_draft(
+            assessment=assessment,
+            blueprint_input=blueprint_input,
+            doctrine_bundle=doctrine_bundle,
+            record=record,
+            slot_role=slot_role,
+            selection_mode="optional_fill",
+            day_role=session.day_role,
+            selection_trace=None if selection is None else selection.selection_trace,
+            doctrine_rule_ids=[
+                fill_target_rule_id,
+                scoring_rule_id,
+                optional_fill_rule_id,
+                slot_role_rule_id,
+                reuse_rule_id,
+            ],
+            policy_ids=density_policy_ids,
+            metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+        )
+        if len(session.exercises) < effective_session_exercise_cap:
+            session.exercises.append(exercise)
+        else:
+            replace_index = _choose_replacement_index_for_skeleton(session=session, missing_categories=[])
+            if replace_index is None:
+                return False
+            replaced = session.exercises[replace_index]
+            session.exercises[replace_index] = exercise
+            assigned_counts[replaced.id] = max(0, assigned_counts.get(replaced.id, 0) - 1)
+        assigned_counts[selected_id] = assigned_counts.get(selected_id, 0) + 1
+        return True
+
+    def _candidate_ids_for_patterns(patterns: list[str]) -> list[str]:
+        ids = _unique_preserve_order(
+            [
+                exercise_id
+                for pattern in patterns
+                for exercise_id in blueprint_input.candidate_exercise_ids_by_pattern.get(pattern, [])
+            ]
+        )
+        if not ids:
+            return []
+        return ids
+
+    def _ensure_primary_muscle_label(*, patterns: set[str], label: str) -> None:
+        has_label = any(
+            label in {str(item).lower() for item in exercise.primary_muscles}
+            for session in sessions
+            for exercise in session.exercises
+        )
+        if has_label:
+            return
+        for session in sessions:
+            for exercise in session.exercises:
+                if str(exercise.movement_pattern or "") not in patterns:
+                    continue
+                muscles = [str(item) for item in exercise.primary_muscles]
+                lowered = {item.lower() for item in muscles}
+                if label not in lowered:
+                    muscles.append(label)
+                    exercise.primary_muscles = muscles
+                return
+
+    # Guarantee biceps and triceps weekly presence when viable.
+    weak_point_groups = _weak_point_major_groups(assessment)
+    if not any(_session_has_pattern(session, {"curl"}) for session in sessions):
+        strict_biceps_ids = _candidate_ids_for_patterns(["curl"])
+        biceps_ids = strict_biceps_ids or _candidate_ids_for_patterns(["horizontal_pull", "vertical_pull"])
+        if biceps_ids:
+            if not _insert_candidate(session=_choose_session_for_insert(), candidate_ids=biceps_ids) and strict_biceps_ids:
+                forced_id = next((exercise_id for exercise_id in strict_biceps_ids if record_by_id.get(exercise_id) is not None), None)
+                if forced_id is not None:
+                    target_session = _choose_session_for_insert()
+                    slot_role = _next_slot_role(
+                        session=target_session,
+                        slot_roles_by_position=["primary_compound", "secondary_compound", "accessory", "weak_point"],
+                        fallback_slot_role="accessory",
+                    )
+                    target_session.exercises.append(
+                        _build_exercise_draft(
+                            assessment=assessment,
+                            blueprint_input=blueprint_input,
+                            doctrine_bundle=doctrine_bundle,
+                            record=record_by_id[forced_id],
+                            slot_role=slot_role,
+                            selection_mode="optional_fill",
+                            day_role=target_session.day_role,
+                            selection_trace=None,
+                            doctrine_rule_ids=[
+                                fill_target_rule_id,
+                                scoring_rule_id,
+                                optional_fill_rule_id,
+                                slot_role_rule_id,
+                                reuse_rule_id,
+                            ],
+                            policy_ids=density_policy_ids,
+                            metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+                        )
+                    )
+                    assigned_counts[forced_id] = assigned_counts.get(forced_id, 0) + 1
+    if "arms" in weak_point_groups:
+        strict_biceps_ids = _candidate_ids_for_patterns(["curl"])
+        if strict_biceps_ids and not any(_session_has_pattern(session, {"curl"}) for session in sessions):
+            _insert_candidate(session=_choose_session_for_insert(), candidate_ids=strict_biceps_ids)
+    if not any(_session_has_pattern(session, {"triceps_extension"}) or _session_has_muscle(session, {"triceps"}) for session in sessions):
+        triceps_ids = _candidate_ids_for_patterns(["triceps_extension", "vertical_press", "horizontal_press"])
+        if triceps_ids:
+            _insert_candidate(session=_choose_session_for_insert(), candidate_ids=triceps_ids)
+    _ensure_primary_muscle_label(patterns={"curl", "horizontal_pull", "vertical_pull"}, label="biceps")
+    _ensure_primary_muscle_label(patterns={"triceps_extension", "vertical_press", "horizontal_press"}, label="triceps")
+
+    # Ensure core appears in at least two sessions when viable.
+    core_ids = _candidate_ids_for_patterns(["core"])
+    if core_ids:
+        for _ in range(3):
+            core_sessions = sum(1 for session in sessions if _session_has_pattern(session, {"core"}))
+            if core_sessions >= 2:
+                break
+            target_session = min(
+                [session for session in sessions if not _session_has_pattern(session, {"core"})] or sessions,
+                key=lambda item: (_session_total_sets(item), len(item.exercises), item.session_id),
+            )
+            if _insert_candidate(session=target_session, candidate_ids=core_ids):
+                continue
+            # Reuse fallback for viability: if core pool exists but reuse limits block insertion,
+            # allow one deterministic core reuse so weekly core isn't single-exposure only.
+            forced_id = next(
+                (
+                    exercise_id
+                    for exercise_id in core_ids
+                    if exercise_id not in {exercise.id for exercise in target_session.exercises}
+                ),
+                None,
+            )
+            if forced_id is None:
+                break
+            record = record_by_id.get(forced_id)
+            if record is None:
+                break
+            slot_role = _next_slot_role(
+                session=target_session,
+                slot_roles_by_position=["primary_compound", "secondary_compound", "accessory", "weak_point"],
+                fallback_slot_role="accessory",
+            )
+            forced_exercise = _build_exercise_draft(
+                assessment=assessment,
+                blueprint_input=blueprint_input,
+                doctrine_bundle=doctrine_bundle,
+                record=record,
+                slot_role=slot_role,
+                selection_mode="optional_fill",
+                day_role=target_session.day_role,
+                selection_trace=None,
+                doctrine_rule_ids=[
+                    fill_target_rule_id,
+                    scoring_rule_id,
+                    optional_fill_rule_id,
+                    slot_role_rule_id,
+                    reuse_rule_id,
+                ],
+                policy_ids=density_policy_ids,
+                metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+            )
+            if len(target_session.exercises) < effective_session_exercise_cap:
+                target_session.exercises.append(forced_exercise)
+            else:
+                replace_index = _choose_replacement_index_for_skeleton(session=target_session, missing_categories=[])
+                if replace_index is None:
+                    break
+                replaced = target_session.exercises[replace_index]
+                target_session.exercises[replace_index] = forced_exercise
+                assigned_counts[replaced.id] = max(0, assigned_counts.get(replaced.id, 0) - 1)
+            assigned_counts[forced_id] = assigned_counts.get(forced_id, 0) + 1
+
+    # Expand exercise density using low-risk accessory categories.
+    fill_patterns = [
+        "core",
+        "curl",
+        "triceps_extension",
+        "lateral_raise",
+        "horizontal_pull",
+        "horizontal_press",
+        "leg_curl",
+        "hinge",
+    ]
+    fill_ids = _candidate_ids_for_patterns(fill_patterns)
+    global_fill_ids = _global_fill_candidate_ids(blueprint_input)
+    for _ in range(36):
+        changed = False
+        session_order = sorted(sessions, key=lambda item: (_session_total_sets(item), len(item.exercises), item.session_id))
+        for session in session_order:
+            if len(session.exercises) >= minimum_exercises_per_session:
+                continue
+            if fill_ids and _insert_candidate(session=session, candidate_ids=fill_ids):
+                changed = True
+                continue
+            if global_fill_ids and _insert_candidate(session=session, candidate_ids=global_fill_ids):
+                changed = True
+        if all(len(session.exercises) >= minimum_exercises_per_session for session in sessions):
+            break
+        if not changed:
+            break
+    if any(len(session.exercises) < minimum_exercises_per_session for session in sessions):
+        forced_ids = _unique_preserve_order(fill_ids + global_fill_ids)
+        for session in sorted(sessions, key=lambda item: (_session_total_sets(item), len(item.exercises), item.session_id)):
+            while len(session.exercises) < minimum_exercises_per_session:
+                session_exercise_ids = {exercise.id for exercise in session.exercises}
+                forced_id = next((exercise_id for exercise_id in forced_ids if exercise_id not in session_exercise_ids), None)
+                if forced_id is None:
+                    break
+                record = record_by_id.get(forced_id)
+                if record is None:
+                    break
+                slot_role = _next_slot_role(
+                    session=session,
+                    slot_roles_by_position=["primary_compound", "secondary_compound", "accessory", "weak_point"],
+                    fallback_slot_role="accessory",
+                )
+                forced_exercise = _build_exercise_draft(
+                    assessment=assessment,
+                    blueprint_input=blueprint_input,
+                    doctrine_bundle=doctrine_bundle,
+                    record=record,
+                    slot_role=slot_role,
+                    selection_mode="optional_fill",
+                    day_role=session.day_role,
+                    selection_trace=None,
+                    doctrine_rule_ids=[
+                        fill_target_rule_id,
+                        scoring_rule_id,
+                        optional_fill_rule_id,
+                        slot_role_rule_id,
+                        reuse_rule_id,
+                    ],
+                    policy_ids=density_policy_ids,
+                    metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+                )
+                session.exercises.append(forced_exercise)
+                assigned_counts[forced_id] = assigned_counts.get(forced_id, 0) + 1
+
+    # Raise per-session and weekly set floors with low/moderate fatigue bias.
+    def _set_increment_candidates() -> list[GeneratedExerciseDraft]:
+        all_exercises = [exercise for session in sessions for exercise in session.exercises]
+        return sorted(
+            all_exercises,
+            key=lambda exercise: (
+                0 if _is_low_or_moderate_fatigue(exercise.id) else 1,
+                SLOT_ROLE_ORDER.get(exercise.slot_role, 9),
+                exercise.id,
+            ),
+        )
+
+    def _exercise_set_cap(exercise: GeneratedExerciseDraft) -> int:
+        slot_max = _exercise_max_sets(slot_role=exercise.slot_role, time_budget_minutes=time_budget_minutes)
+        if slot_max <= 4:
+            return slot_max
+        pattern = str(exercise.movement_pattern or "")
+        primary_five_set_patterns = {"horizontal_press", "vertical_press", "horizontal_pull", "vertical_pull", "squat", "hinge"}
+        if exercise.slot_role != "primary_compound" or pattern not in primary_five_set_patterns:
+            return 4
+        return slot_max
+
+    for _ in range(180):
+        weekly_sets = _weekly_planned_sets(sessions)
+        underfilled_session = min(sessions, key=lambda item: _session_total_sets(item))
+        if weekly_sets >= minimum_weekly_sets and _session_total_sets(underfilled_session) >= minimum_session_sets:
+            break
+        changed = False
+        for exercise in _set_increment_candidates():
+            slot_max = _exercise_set_cap(exercise)
+            if int(exercise.sets) >= slot_max:
+                continue
+            if weekly_sets < minimum_weekly_sets:
+                exercise.sets += 1
+                changed = True
+                break
+            if _session_total_sets(underfilled_session) < minimum_session_sets and exercise in underfilled_session.exercises:
+                exercise.sets += 1
+                changed = True
+                break
+        if not changed:
+            break
+
+
 def build_generated_full_body_template_draft(
     *,
     assessment: UserAssessment,
@@ -2140,6 +2518,17 @@ def build_generated_full_body_template_draft(
     )
     minimum_exercises_per_session = int(policy_bundle.minimum_viable_program_policy.minimum_exercises_per_session)
     apply_three_day_band = blueprint_input.session_count == 3 and not bool(blueprint_input.pattern_insufficiencies)
+    apply_normal_three_day_density_seriousness = blueprint_input.session_count == 3
+    session_exercise_cap_limit: int | None = (
+        blueprint_input.session_exercise_cap
+        if metadata_v2_by_exercise_id is not None
+        else None
+    )
+    # Blueprint cap tiers represent minimum viable generation guardrails.
+    # For normal 3-day full-body runtime generation, keep density seriousness in constructor:
+    # do not let the minimum-viable cap collapse sessions to 5 slots.
+    if apply_normal_three_day_density_seriousness:
+        session_exercise_cap_limit = None
     target_exercises_per_session, effective_session_exercise_cap = _density_targets_for_budget(
         assessment=assessment,
         session_count=blueprint_input.session_count,
@@ -2147,12 +2536,14 @@ def build_generated_full_body_template_draft(
         doctrine_target=doctrine_session_target,
         minimum_exercises_per_session=minimum_exercises_per_session,
         apply_three_day_band=apply_three_day_band,
-        session_exercise_cap_limit=(
-            blueprint_input.session_exercise_cap
-            if metadata_v2_by_exercise_id is not None
-            else None
-        ),
+        session_exercise_cap_limit=session_exercise_cap_limit,
     )
+    if apply_normal_three_day_density_seriousness:
+        target_exercises_per_session = min(max(target_exercises_per_session, 7), 9)
+        effective_session_exercise_cap = min(
+            max(effective_session_exercise_cap, target_exercises_per_session),
+            9,
+        )
     optional_fill_score_floor = scoring_rule.payload["minimum_total_score_floor"].get("optional_fill")
     if optional_fill_score_floor is not None:
         optional_fill_score_floor = int(optional_fill_score_floor)
@@ -2868,6 +3259,25 @@ def build_generated_full_body_template_draft(
     _apply_session_flow_ordering(sessions=sessions, record_by_id=record_by_id)
     if enforce_normal_three_day_floor:
         _enforce_final_session_skeleton_floor(
+            sessions=sessions,
+            assessment=assessment,
+            blueprint_input=blueprint_input,
+            doctrine_bundle=doctrine_bundle,
+            record_by_id=record_by_id,
+            assigned_counts=assigned_counts,
+            max_assignments_per_week=max_assignments_per_week,
+            allow_reuse_after_exhaustion=allow_reuse_after_exhaustion,
+            target_exercises_per_session=target_exercises_per_session,
+            effective_session_exercise_cap=effective_session_exercise_cap,
+            fill_target_rule_id=fill_target_rule.rule_id,
+            scoring_rule_id=scoring_rule.rule_id,
+            optional_fill_rule_id=optional_fill_rule.rule_id,
+            slot_role_rule_id=slot_role_rule.rule_id,
+            reuse_rule_id=reuse_rule.rule_id,
+            density_policy_ids=density_policy_ids,
+            metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+        )
+        _enforce_normal_three_day_density_floor(
             sessions=sessions,
             assessment=assessment,
             blueprint_input=blueprint_input,

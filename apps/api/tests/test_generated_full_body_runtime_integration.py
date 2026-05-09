@@ -1170,13 +1170,32 @@ def test_generate_week_full_body_v1_normal_three_day_enforces_runtime_quality_fl
         for session in payload["sessions"]
         for exercise in session.get("exercises") or []
     )
-    assert planned_sets > 37
+    assert planned_sets >= 50
+    assert planned_sets <= 65
+    for session in payload["sessions"]:
+        session_exercises = session.get("exercises") or []
+        assert 7 <= len(session_exercises) <= 9
+        session_sets = sum(int(exercise.get("sets") or 0) for exercise in session.get("exercises") or [])
+        assert session_sets >= 15
+        for exercise in session_exercises:
+            sets = int(exercise.get("sets") or 0)
+            slot_role = str(exercise.get("slot_role") or "")
+            pattern = str(exercise.get("movement_pattern") or "")
+            if sets > 4:
+                assert slot_role == "primary_compound"
+                assert pattern in {"horizontal_press", "vertical_press", "horizontal_pull", "vertical_pull", "squat", "hinge"}
 
-    triceps_viable = _has_movement_pattern(payload, {"triceps_extension"})
-    core_viable = _has_movement_pattern(payload, {"core"})
-    if triceps_viable:
-        assert int((payload.get("weekly_volume_by_muscle") or {}).get("triceps") or 0) > 0
-    if core_viable:
+    weekly_volume = payload.get("weekly_volume_by_muscle") or {}
+    assert int(weekly_volume.get("triceps") or 0) > 0
+    if _has_movement_pattern(payload, {"curl"}):
+        assert int(weekly_volume.get("biceps") or 0) > 0
+    core_exposure_sessions = sum(
+        1
+        for session in payload["sessions"]
+        if any(str(exercise.get("movement_pattern") or "") == "core" for exercise in session.get("exercises") or [])
+    )
+    if _has_movement_pattern(payload, {"core"}):
+        assert core_exposure_sessions >= 1
         assert grouped["core"] > 0
 
     assert "generated_quality_floor_active" in runtime_trace

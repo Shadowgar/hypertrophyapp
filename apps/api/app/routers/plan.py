@@ -547,6 +547,70 @@ def _apply_week_start_override_to_plan(
     return shifted_plan
 
 
+def _enforce_generated_three_day_runtime_set_floor(
+    *,
+    plan_payload: dict[str, Any],
+    minimum_weekly_sets: int = 50,
+    minimum_session_sets: int = 15,
+    per_exercise_set_cap: int = 5,
+) -> None:
+    sessions = [session for session in (plan_payload.get("sessions") or []) if isinstance(session, dict)]
+    if len(sessions) != 3:
+        return
+
+    def _session_sets(session: dict[str, Any]) -> int:
+        return sum(
+            int(exercise.get("sets") or 0)
+            for exercise in (session.get("exercises") or [])
+            if isinstance(exercise, dict)
+        )
+
+    def _ordered_exercises(session: dict[str, Any]) -> list[dict[str, Any]]:
+        slot_rank = {"weak_point": 0, "accessory": 1, "secondary_compound": 2, "primary_compound": 3}
+        exercises = [exercise for exercise in (session.get("exercises") or []) if isinstance(exercise, dict)]
+        return sorted(
+            exercises,
+            key=lambda exercise: (
+                slot_rank.get(str(exercise.get("slot_role") or ""), 4),
+                str(exercise.get("movement_pattern") or ""),
+                str(exercise.get("id") or ""),
+            ),
+        )
+
+    # Raise each session to floor first.
+    for _ in range(180):
+        target_session = min(sessions, key=_session_sets)
+        if _session_sets(target_session) >= minimum_session_sets:
+            break
+        changed = False
+        for exercise in _ordered_exercises(target_session):
+            sets_value = int(exercise.get("sets") or 0)
+            if sets_value <= 0 or sets_value >= int(per_exercise_set_cap):
+                continue
+            exercise["sets"] = sets_value + 1
+            changed = True
+            break
+        if not changed:
+            break
+
+    # Then raise weekly floor while preserving balanced distribution.
+    for _ in range(240):
+        weekly_sets = sum(_session_sets(session) for session in sessions)
+        if weekly_sets >= minimum_weekly_sets:
+            break
+        target_session = min(sessions, key=_session_sets)
+        changed = False
+        for exercise in _ordered_exercises(target_session):
+            sets_value = int(exercise.get("sets") or 0)
+            if sets_value <= 0 or sets_value >= int(per_exercise_set_cap):
+                continue
+            exercise["sets"] = sets_value + 1
+            changed = True
+            break
+        if not changed:
+            break
+
+
 def _build_authored_adapted_sessions(
     *,
     preview_week: dict[str, Any],
@@ -1665,6 +1729,7 @@ def _build_week_plan_runtime_for_user(
     runtime_template = template
     generated_full_body_adaptive_loop_policy = None
     generated_full_body_block_review_policy = None
+    apply_generated_normal_density_floor = False
     if is_generated_full_body_binding_id(selected_template_id):
         training_profile = _build_generated_training_profile(
             current_user=current_user,
@@ -1672,6 +1737,12 @@ def _build_week_plan_runtime_for_user(
             training_state=cast(dict[str, Any], generation_context["training_state"]),
         )
         decision_profile = training_profile.decision_profile
+        apply_generated_normal_density_floor = bool(
+            decision_profile.generated_mode == "normal_full_body"
+            and int(decision_profile.target_days) == 3
+            and decision_profile.session_time_band == "standard"
+            and decision_profile.recovery_modifier == "standard"
+        )
         # Phase 3A precedence: GeneratedTrainingProfile owns upstream normalization and control tracing.
         # Assessment builder remains authoritative for downstream coaching-assessment internals.
         generated_runtime = prepare_generated_full_body_runtime_template(
@@ -1781,6 +1852,12 @@ def _build_week_plan_runtime_for_user(
     )
 
     base_plan = generate_week_plan(**cast(dict[str, Any], scheduler_runtime["scheduler_kwargs"]))
+    if apply_generated_normal_density_floor:
+        _enforce_generated_three_day_runtime_set_floor(
+            plan_payload=base_plan,
+            minimum_weekly_sets=50,
+            minimum_session_sets=15,
+        )
     base_plan = _apply_week_start_override_to_plan(
         base_plan=base_plan,
         week_start_override=week_start_override,

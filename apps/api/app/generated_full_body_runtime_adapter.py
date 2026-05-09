@@ -6,6 +6,8 @@ from typing import Any
 
 from pydantic import ValidationError
 
+from core_engine.scheduler import AUTHORITATIVE_AUTHORED_PASSTHROUGH_KEY
+
 from .generated_assessment_builder import build_user_assessment
 from .generated_assessment_schema import ProfileAssessmentInput
 from .generated_full_body_blueprint_builder import build_generated_full_body_blueprint_input
@@ -477,6 +479,7 @@ def prepare_generated_full_body_runtime_template(
         )
     if int(getattr(assessment, "days_available", 0) or 0) == 3:
         _apply_minimum_three_day_normal_set_floor(program_template, minimum_sets=38)
+        program_template[AUTHORITATIVE_AUTHORED_PASSTHROUGH_KEY] = True
 
     trace = _base_trace(selected_template_id=selected_template_id, activation_guard_matched=True)
     candidate_ids = {

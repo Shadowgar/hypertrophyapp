@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import sys
 from copy import deepcopy
+import pytest
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -784,6 +785,40 @@ def test_v25d_normal_three_day_has_explicit_triceps_and_core_when_viable() -> No
         assert int((payload.get("weekly_volume_by_muscle") or {}).get("triceps") or 0) > 0
     if core_viable:
         assert totals["core"] > 0
+
+
+def test_v25d_normal_three_day_core_hits_two_sessions_when_multi_core_pool_viable() -> None:
+    fixture = _normal_three_day_fixture_from_low_time()
+    _, _, _, _, blueprint, draft = _build_layers(fixture)
+    core_pool = list(blueprint.candidate_exercise_ids_by_pattern.get("core", []))
+    if len(core_pool) < 2:
+        pytest.skip("core pool is not deep enough for two-session expectation")
+    core_session_count = sum(
+        1
+        for session in draft.sessions
+        if any(str(exercise.movement_pattern) == "core" for exercise in session.exercises)
+    )
+    assert core_session_count >= 2
+
+
+def test_v25d_normal_three_day_density_uses_slot_coverage_not_five_set_inflation() -> None:
+    fixture = _normal_three_day_fixture_from_low_time()
+    _, _, _, _, _, draft = _build_layers(fixture)
+    assert len(draft.sessions) == 3
+    for session in draft.sessions:
+        assert 7 <= len(session.exercises) <= 9
+        for exercise in session.exercises:
+            sets = int(exercise.sets)
+            if sets > 4:
+                assert str(exercise.slot_role) == "primary_compound"
+                assert str(exercise.movement_pattern) in {
+                    "horizontal_press",
+                    "vertical_press",
+                    "horizontal_pull",
+                    "vertical_pull",
+                    "squat",
+                    "hinge",
+                }
 
 
 def test_v25b_non_weak_point_normal_three_day_arm_and_delt_dominance_is_capped() -> None:
