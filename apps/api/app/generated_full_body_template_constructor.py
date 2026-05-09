@@ -1932,6 +1932,88 @@ def _choose_replacement_index_for_skeleton(
     return len(session.exercises) - 1
 
 
+def _is_lower_posterior_pattern(pattern: str) -> bool:
+    return pattern in {"squat", "knee_extension", "hinge", "leg_curl"}
+
+
+def _session_lower_posterior_count(session: GeneratedSessionDraft) -> int:
+    return sum(1 for exercise in session.exercises if _is_lower_posterior_pattern(str(exercise.movement_pattern or "")))
+
+
+def _weekly_role_exposure(sessions: list[GeneratedSessionDraft]) -> dict[str, int]:
+    biceps_sets = 0
+    triceps_sets = 0
+    delt_sets = 0
+    core_sets = 0
+    core_sessions = 0
+    for session in sessions:
+        has_core = False
+        for exercise in session.exercises:
+            sets = int(exercise.sets)
+            pattern = str(exercise.movement_pattern or "")
+            muscles = {str(item).lower() for item in (exercise.primary_muscles or [])}
+            if pattern == "curl" or "biceps" in muscles:
+                biceps_sets += sets
+            if pattern == "triceps_extension" or "triceps" in muscles:
+                triceps_sets += sets
+            if pattern in {"vertical_press", "lateral_raise"} or bool(
+                muscles.intersection({"shoulders", "delts", "front_delts", "side_delts", "rear_delts"})
+            ):
+                delt_sets += sets
+            if pattern == "core" or bool(muscles.intersection({"core", "abs"})):
+                core_sets += sets
+                has_core = True
+        if has_core:
+            core_sessions += 1
+    return {
+        "biceps_sets": biceps_sets,
+        "triceps_sets": triceps_sets,
+        "delt_sets": delt_sets,
+        "core_sets": core_sets,
+        "core_sessions": core_sessions,
+    }
+
+
+def _session_role_flags(session: GeneratedSessionDraft) -> dict[str, bool]:
+    patterns = {str(exercise.movement_pattern or "") for exercise in session.exercises}
+    has_press = bool(patterns.intersection({"horizontal_press", "vertical_press", "chest_fly"}))
+    has_pull = bool(patterns.intersection({"horizontal_pull", "vertical_pull"}))
+    has_lower_primary = bool(patterns.intersection({"squat", "hinge"}))
+    has_shoulder_rear_delt = bool(patterns.intersection({"vertical_press", "lateral_raise", "horizontal_pull"}))
+    has_biceps = "curl" in patterns
+    has_triceps = "triceps_extension" in patterns
+    has_core = "core" in patterns
+    return {
+        "press": has_press,
+        "pull": has_pull,
+        "lower_primary": has_lower_primary,
+        "shoulder_rear_delt": has_shoulder_rear_delt,
+        "biceps": has_biceps,
+        "triceps": has_triceps,
+        "core": has_core,
+    }
+
+
+def _candidate_matches_role(record: dict[str, Any], role: str) -> bool:
+    pattern = str(record.get("movement_pattern") or "")
+    muscles = {str(item).lower() for item in (record.get("primary_muscles") or [])}
+    if role == "shoulder_rear_delt":
+        return pattern in {"vertical_press", "lateral_raise", "horizontal_pull"} or bool(
+            muscles.intersection({"shoulders", "rear_delts", "side_delts", "front_delts"})
+        )
+    if role == "biceps":
+        return pattern == "curl" or "biceps" in muscles
+    if role == "triceps":
+        return pattern == "triceps_extension" or "triceps" in muscles
+    if role == "core":
+        return pattern == "core" or bool(muscles.intersection({"core", "abs"}))
+    if role == "lower_accessory":
+        return pattern in {"knee_extension", "leg_curl", "squat", "hinge"}
+    if role == "secondary_accessory":
+        return pattern in {"chest_fly", "horizontal_press", "horizontal_pull", "vertical_pull", "vertical_press"}
+    return False
+
+
 def _enforce_final_session_skeleton_floor(
     *,
     sessions: list[GeneratedSessionDraft],
@@ -2117,6 +2199,7 @@ def _enforce_normal_three_day_density_floor(
     minimum_weekly_sets = 50
     minimum_session_sets = 15
     minimum_exercises_per_session = min(effective_session_exercise_cap, max(7, min(target_exercises_per_session, 7)))
+    core_viable = bool(blueprint_input.candidate_exercise_ids_by_pattern.get("core"))
 
     def _movement_pattern(exercise_id: str) -> str:
         return str((record_by_id.get(exercise_id) or {}).get("movement_pattern") or "")
@@ -2204,7 +2287,16 @@ def _enforce_normal_three_day_density_floor(
         if len(session.exercises) < effective_session_exercise_cap:
             session.exercises.append(exercise)
         else:
-            replace_index = _choose_replacement_index_for_skeleton(session=session, missing_categories=[])
+            replace_index = None
+            for idx, existing in enumerate(session.exercises):
+                existing_pattern = str(existing.movement_pattern or "")
+                if _is_lower_posterior_pattern(existing_pattern):
+                    continue
+                if existing.slot_role in {"weak_point", "accessory", "secondary_compound"}:
+                    replace_index = idx
+                    break
+            if replace_index is None:
+                replace_index = _choose_replacement_index_for_skeleton(session=session, missing_categories=[])
             if replace_index is None:
                 return False
             replaced = session.exercises[replace_index]
@@ -2244,7 +2336,7 @@ def _enforce_normal_three_day_density_floor(
                     exercise.primary_muscles = muscles
                 return
 
-    # Guarantee biceps and triceps weekly presence when viable.
+    # Guarantee biceps and triceps weekly presence when viable (split floors, not generic arms).
     weak_point_groups = _weak_point_major_groups(assessment)
     if not any(_session_has_pattern(session, {"curl"}) for session in sessions):
         strict_biceps_ids = _candidate_ids_for_patterns(["curl"])
@@ -2285,7 +2377,7 @@ def _enforce_normal_three_day_density_floor(
         strict_biceps_ids = _candidate_ids_for_patterns(["curl"])
         if strict_biceps_ids and not any(_session_has_pattern(session, {"curl"}) for session in sessions):
             _insert_candidate(session=_choose_session_for_insert(), candidate_ids=strict_biceps_ids)
-    if not any(_session_has_pattern(session, {"triceps_extension"}) or _session_has_muscle(session, {"triceps"}) for session in sessions):
+    if not any(_session_has_pattern(session, {"triceps_extension"}) for session in sessions):
         triceps_ids = _candidate_ids_for_patterns(["triceps_extension", "vertical_press", "horizontal_press"])
         if triceps_ids:
             _insert_candidate(session=_choose_session_for_insert(), candidate_ids=triceps_ids)
@@ -2355,14 +2447,16 @@ def _enforce_normal_three_day_density_floor(
                 assigned_counts[replaced.id] = max(0, assigned_counts.get(replaced.id, 0) - 1)
             assigned_counts[forced_id] = assigned_counts.get(forced_id, 0) + 1
 
-    # Expand exercise density using low-risk accessory categories.
+    # Expand exercise density with role-first order for normal three-day balance.
     fill_patterns = [
-        "core",
+        "lateral_raise",
         "curl",
         "triceps_extension",
-        "lateral_raise",
+        "core",
         "horizontal_pull",
         "horizontal_press",
+        "vertical_pull",
+        "vertical_press",
         "leg_curl",
         "hinge",
     ]
@@ -2374,7 +2468,68 @@ def _enforce_normal_three_day_density_floor(
         for session in session_order:
             if len(session.exercises) >= minimum_exercises_per_session:
                 continue
-            if fill_ids and _insert_candidate(session=session, candidate_ids=fill_ids):
+            session_roles = _session_role_flags(session)
+            weekly_roles = _weekly_role_exposure(sessions)
+            role_fill_ids = fill_ids
+            if not session_roles["shoulder_rear_delt"]:
+                shoulder_ids = _candidate_ids_for_patterns(["lateral_raise", "vertical_press", "horizontal_pull"])
+                if shoulder_ids:
+                    role_fill_ids = shoulder_ids
+            elif weekly_roles["biceps_sets"] == 0:
+                biceps_ids = _candidate_ids_for_patterns(["curl"])
+                if biceps_ids:
+                    role_fill_ids = biceps_ids
+            elif weekly_roles["triceps_sets"] == 0:
+                tri_ids = _candidate_ids_for_patterns(["triceps_extension"])
+                if tri_ids:
+                    role_fill_ids = tri_ids
+            elif core_viable and weekly_roles["core_sessions"] < 2:
+                core_ids_priority = _candidate_ids_for_patterns(["core"])
+                if core_ids_priority:
+                    role_fill_ids = core_ids_priority
+            else:
+                balance_targets = _resolve_three_day_balance_targets(assessment=assessment)
+                primary_volume = _compute_primary_major_group_volume(
+                    sessions=sessions,
+                    record_by_id=record_by_id,
+                    metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+                )
+                lower_deficits = _major_floor_deficits(
+                    primary_volume=primary_volume,
+                    targets=balance_targets,
+                    core_viable=core_viable,
+                )
+                if "hamstrings" in lower_deficits:
+                    ham_ids = _candidate_ids_for_patterns(["leg_curl", "hinge"])
+                    if ham_ids:
+                        role_fill_ids = ham_ids
+                elif "quads" in lower_deficits:
+                    quad_ids = _candidate_ids_for_patterns(["knee_extension", "squat"])
+                    if quad_ids:
+                        role_fill_ids = quad_ids
+            if _session_lower_posterior_count(session) >= 2:
+                lower_deficit_pending = False
+                if len(sessions) == 3:
+                    balance_targets = _resolve_three_day_balance_targets(assessment=assessment)
+                    primary_volume_for_cap = _compute_primary_major_group_volume(
+                        sessions=sessions,
+                        record_by_id=record_by_id,
+                        metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+                    )
+                    cap_deficits = _major_floor_deficits(
+                        primary_volume=primary_volume_for_cap,
+                        targets=balance_targets,
+                        core_viable=core_viable,
+                    )
+                    lower_deficit_pending = bool({"quads", "hamstrings"} & set(cap_deficits))
+                non_lower_role_fill_ids = [
+                    exercise_id
+                    for exercise_id in role_fill_ids
+                    if not _is_lower_posterior_pattern(str((record_by_id.get(exercise_id) or {}).get("movement_pattern") or ""))
+                ]
+                if non_lower_role_fill_ids and not lower_deficit_pending:
+                    role_fill_ids = non_lower_role_fill_ids
+            if role_fill_ids and _insert_candidate(session=session, candidate_ids=role_fill_ids):
                 changed = True
                 continue
             if global_fill_ids and _insert_candidate(session=session, candidate_ids=global_fill_ids):
@@ -2437,6 +2592,9 @@ def _enforce_normal_three_day_density_floor(
         slot_max = _exercise_max_sets(slot_role=exercise.slot_role, time_budget_minutes=time_budget_minutes)
         if slot_max <= 4:
             return slot_max
+        role_state = _weekly_role_exposure(sessions)
+        if role_state["biceps_sets"] <= 0 or role_state["delt_sets"] <= 0 or (core_viable and role_state["core_sessions"] < 2):
+            return 4
         pattern = str(exercise.movement_pattern or "")
         primary_five_set_patterns = {"horizontal_press", "vertical_press", "horizontal_pull", "vertical_pull", "squat", "hinge"}
         if exercise.slot_role != "primary_compound" or pattern not in primary_five_set_patterns:
@@ -2463,6 +2621,127 @@ def _enforce_normal_three_day_density_floor(
                 break
         if not changed:
             break
+
+    # Final pass: hold core at >=2 sessions when viable after all replacements/inflation.
+    if core_viable:
+        for _ in range(6):
+            weekly_roles = _weekly_role_exposure(sessions)
+            if weekly_roles["core_sessions"] >= 2:
+                break
+            core_candidates = _candidate_ids_for_patterns(["core"])
+            if not core_candidates:
+                break
+            missing_core_sessions = [session for session in sessions if not _session_has_pattern(session, {"core"})]
+            if not missing_core_sessions:
+                break
+            target_session = min(
+                missing_core_sessions,
+                key=lambda item: (_session_total_sets(item), len(item.exercises), item.session_id),
+            )
+            if _insert_candidate(session=target_session, candidate_ids=core_candidates):
+                continue
+            # deterministic replacement fallback without disturbing lower anchors
+            session_exercise_ids = {exercise.id for exercise in target_session.exercises}
+            forced_id = next((exercise_id for exercise_id in core_candidates if exercise_id not in session_exercise_ids), None)
+            if forced_id is None:
+                break
+            forced_record = record_by_id.get(forced_id)
+            if forced_record is None:
+                break
+            replace_index = None
+            for idx, existing in enumerate(target_session.exercises):
+                existing_pattern = str(existing.movement_pattern or "")
+                if _is_lower_posterior_pattern(existing_pattern):
+                    continue
+                if existing.slot_role in {"weak_point", "accessory", "secondary_compound"}:
+                    replace_index = idx
+                    break
+            if replace_index is None:
+                break
+            slot_role = _next_slot_role(
+                session=target_session,
+                slot_roles_by_position=["primary_compound", "secondary_compound", "accessory", "weak_point"],
+                fallback_slot_role="accessory",
+            )
+            replacement = _build_exercise_draft(
+                assessment=assessment,
+                blueprint_input=blueprint_input,
+                doctrine_bundle=doctrine_bundle,
+                record=forced_record,
+                slot_role=slot_role,
+                selection_mode="optional_fill",
+                day_role=target_session.day_role,
+                selection_trace=None,
+                doctrine_rule_ids=[
+                    fill_target_rule_id,
+                    scoring_rule_id,
+                    optional_fill_rule_id,
+                    slot_role_rule_id,
+                    reuse_rule_id,
+                ],
+                policy_ids=density_policy_ids,
+                metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+            )
+            replaced = target_session.exercises[replace_index]
+            target_session.exercises[replace_index] = replacement
+            assigned_counts[replaced.id] = max(0, assigned_counts.get(replaced.id, 0) - 1)
+            assigned_counts[forced_id] = assigned_counts.get(forced_id, 0) + 1
+
+    # Final lower-floor restoration: replace surplus upper accessory slots when
+    # quads/hamstrings floors are still unmet.
+    balance_targets = _resolve_three_day_balance_targets(assessment=assessment)
+    for _ in range(16):
+        primary_volume = _compute_primary_major_group_volume(
+            sessions=sessions,
+            record_by_id=record_by_id,
+            metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+        )
+        deficits = _major_floor_deficits(
+            primary_volume=primary_volume,
+            targets=balance_targets,
+            core_viable=core_viable,
+        )
+        lower_deficits = [group for group in ("hamstrings", "quads") if group in deficits]
+        if not lower_deficits:
+            break
+        target_group = "hamstrings" if "hamstrings" in lower_deficits else "quads"
+        target_patterns = ["leg_curl", "hinge"] if target_group == "hamstrings" else ["knee_extension", "squat"]
+        target_ids = _candidate_ids_for_patterns(target_patterns)
+        if not target_ids:
+            break
+        donor_slot: tuple[GeneratedSessionDraft, int, GeneratedExerciseDraft] | None = None
+        for session in sessions:
+            if _session_lower_posterior_count(session) >= 2:
+                continue
+            for idx, exercise in enumerate(session.exercises):
+                pattern = str(exercise.movement_pattern or "")
+                if pattern in {"curl", "triceps_extension", "lateral_raise", "chest_fly"}:
+                    donor_slot = (session, idx, exercise)
+                    break
+            if donor_slot is not None:
+                break
+        if donor_slot is None:
+            break
+        target_session, replace_index, donor = donor_slot
+        session_exercise_ids = {exercise.id for exercise in target_session.exercises}
+        candidate_id = next((exercise_id for exercise_id in target_ids if exercise_id not in session_exercise_ids), None)
+        if candidate_id is None:
+            candidate_id = next((exercise_id for exercise_id in target_ids if record_by_id.get(exercise_id) is not None), None)
+        if candidate_id is None:
+            break
+        replacement_record = record_by_id.get(candidate_id)
+        if replacement_record is None:
+            break
+        slot_role = str(donor.slot_role or "accessory")
+        donor_previous_id = str(donor.id)
+        donor.id = str(replacement_record.get("exercise_id") or donor.id)
+        donor.name = str(replacement_record.get("canonical_name") or donor.name)
+        donor.movement_pattern = str(replacement_record.get("movement_pattern") or donor.movement_pattern)
+        donor.primary_muscles = _resolved_primary_muscles_for_generated_exercise(replacement_record)
+        donor.equipment_tags = [str(item) for item in (replacement_record.get("equipment_tags") or []) if str(item)]
+        donor.slot_role = slot_role
+        assigned_counts[donor_previous_id] = max(0, assigned_counts.get(donor_previous_id, 0) - 1)
+        assigned_counts[candidate_id] = assigned_counts.get(candidate_id, 0) + 1
 
 
 def build_generated_full_body_template_draft(
@@ -3061,6 +3340,83 @@ def build_generated_full_body_template_draft(
                 ]
                 if non_knee_ids:
                     feasible_candidate_ids = non_knee_ids
+            if feasible_candidate_ids and enforce_normal_three_day_floor:
+                weekly_roles = _weekly_role_exposure(sessions)
+                session_roles = _session_role_flags(session)
+                role_priority: list[str] = []
+                if not session_roles["shoulder_rear_delt"]:
+                    role_priority.append("shoulder_rear_delt")
+                weak_point_groups = _weak_point_major_groups(assessment)
+                if "arms" in weak_point_groups:
+                    if weekly_roles["biceps_sets"] <= weekly_roles["triceps_sets"]:
+                        role_priority.extend(["biceps", "triceps"])
+                    else:
+                        role_priority.extend(["triceps", "biceps"])
+                else:
+                    if weekly_roles["biceps_sets"] == 0:
+                        role_priority.append("biceps")
+                    if weekly_roles["triceps_sets"] == 0:
+                        role_priority.append("triceps")
+                if core_viable and weekly_roles["core_sessions"] < 2:
+                    role_priority.append("core")
+                if apply_three_day_band:
+                    balance_targets = _resolve_three_day_balance_targets(assessment=assessment)
+                    role_primary_volume = _compute_primary_major_group_volume(
+                        sessions=sessions,
+                        record_by_id=record_by_id,
+                        metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+                    )
+                    role_deficits = _major_floor_deficits(
+                        primary_volume=role_primary_volume,
+                        targets=balance_targets,
+                        core_viable=core_viable,
+                    )
+                    if {"quads", "hamstrings"} & set(role_deficits):
+                        role_priority.append("lower_accessory")
+                role_priority.append("secondary_accessory")
+                prioritized_ids: list[str] = []
+                for role in role_priority:
+                    matched = [
+                        exercise_id
+                        for exercise_id in feasible_candidate_ids
+                        if _candidate_matches_role(record_by_id.get(exercise_id) or {}, role)
+                    ]
+                    if matched:
+                        prioritized_ids = matched
+                        break
+                if prioritized_ids:
+                    feasible_candidate_ids = prioritized_ids
+                # Cap lower/posterior stacking before accessory role floors are satisfied.
+                if _session_lower_posterior_count(session) >= 2:
+                    lower_deficit_pending = False
+                    if apply_three_day_band:
+                        balance_targets = _resolve_three_day_balance_targets(assessment=assessment)
+                        primary_volume_for_cap = _compute_primary_major_group_volume(
+                            sessions=sessions,
+                            record_by_id=record_by_id,
+                            metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+                        )
+                        cap_deficits = _major_floor_deficits(
+                            primary_volume=primary_volume_for_cap,
+                            targets=balance_targets,
+                            core_viable=core_viable,
+                        )
+                        lower_deficit_pending = bool({"quads", "hamstrings"} & set(cap_deficits))
+                    allow_extra_lower = (
+                        session_roles["shoulder_rear_delt"]
+                        and ((weekly_roles["biceps_sets"] > 0 and weekly_roles["triceps_sets"] > 0) or not ("arms" in weak_point_groups))
+                        and ((not core_viable) or weekly_roles["core_sessions"] >= 2)
+                    )
+                    if not allow_extra_lower and not lower_deficit_pending:
+                        non_lower_ids = [
+                            exercise_id
+                            for exercise_id in feasible_candidate_ids
+                            if not _is_lower_posterior_pattern(
+                                str((record_by_id.get(exercise_id) or {}).get("movement_pattern") or "")
+                            )
+                        ]
+                        if non_lower_ids:
+                            feasible_candidate_ids = non_lower_ids
             if feasible_candidate_ids and apply_three_day_band:
                 balance_targets = _resolve_three_day_balance_targets(assessment=assessment)
                 primary_volume = _compute_primary_major_group_volume(

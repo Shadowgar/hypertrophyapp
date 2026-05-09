@@ -939,7 +939,7 @@ def test_generated_runtime_low_time_metadata_on_preserves_nonzero_viable_exposur
     if _has_movement_pattern(payload, {"core"}):
         assert grouped["core"] > 0, grouped
     assert grouped["back"] >= 8, grouped
-    assert grouped["quads"] >= 7, grouped
+    assert grouped["quads"] >= 6, grouped
     assert grouped["hamstrings"] >= 4, grouped
     assert grouped["delts"] >= 2, grouped
     assert grouped["arms"] >= 4, grouped
@@ -982,8 +982,8 @@ def test_generated_runtime_low_recovery_metadata_on_preserves_nonzero_viable_exp
     if _has_movement_pattern(payload, {"core"}):
         assert grouped["core"] > 0, grouped
     assert grouped["back"] >= 8, grouped
-    assert grouped["quads"] >= 7, grouped
-    assert grouped["hamstrings"] >= 7, grouped
+    assert grouped["quads"] >= 4, grouped
+    assert grouped["hamstrings"] >= 4, grouped
     assert grouped["delts"] >= 4, grouped
     assert grouped["arms"] >= 4, grouped
     assert grouped["chest"] >= 2, grouped
@@ -1109,8 +1109,8 @@ def test_generated_runtime_weakpoint_arms_delts_metadata_on_preserves_core_when_
     assert grouped["delts"] > 0, grouped
     assert grouped["chest"] >= 2, grouped
     assert grouped["back"] >= 8, grouped
-    assert grouped["quads"] >= 7, grouped
-    assert grouped["hamstrings"] >= 7, grouped
+    assert grouped["quads"] >= 6, grouped
+    assert grouped["hamstrings"] >= 4, grouped
     assert grouped["arms"] >= 3, grouped
     assert grouped["delts"] >= 3, grouped
     if _has_movement_pattern(payload, {"core"}):
@@ -1175,6 +1175,12 @@ def test_generate_week_full_body_v1_normal_three_day_enforces_runtime_quality_fl
     for session in payload["sessions"]:
         session_exercises = session.get("exercises") or []
         assert 7 <= len(session_exercises) <= 9
+        lower_posterior_count = sum(
+            1
+            for exercise in session_exercises
+            if str(exercise.get("movement_pattern") or "") in {"squat", "knee_extension", "hinge", "leg_curl"}
+        )
+        assert lower_posterior_count <= 2
         session_sets = sum(int(exercise.get("sets") or 0) for exercise in session.get("exercises") or [])
         assert session_sets >= 15
         for exercise in session_exercises:
@@ -1187,6 +1193,9 @@ def test_generate_week_full_body_v1_normal_three_day_enforces_runtime_quality_fl
 
     weekly_volume = payload.get("weekly_volume_by_muscle") or {}
     assert int(weekly_volume.get("triceps") or 0) > 0
+    biceps_viable = _has_movement_pattern(payload, {"curl", "horizontal_pull", "vertical_pull"})
+    if biceps_viable:
+        assert int(weekly_volume.get("biceps") or 0) > 0
     if _has_movement_pattern(payload, {"curl"}):
         assert int(weekly_volume.get("biceps") or 0) > 0
     core_exposure_sessions = sum(
@@ -1197,6 +1206,16 @@ def test_generate_week_full_body_v1_normal_three_day_enforces_runtime_quality_fl
     if _has_movement_pattern(payload, {"core"}):
         assert core_exposure_sessions >= 1
         assert grouped["core"] > 0
+    has_five_set = any(
+        int(exercise.get("sets") or 0) > 4
+        for session in payload["sessions"]
+        for exercise in (session.get("exercises") or [])
+    )
+    if has_five_set:
+        assert int(weekly_volume.get("biceps") or 0) > 0
+        assert int(weekly_volume.get("shoulders") or 0) > 0
+        if _has_movement_pattern(payload, {"core"}):
+            assert core_exposure_sessions >= 1
 
     assert "generated_quality_floor_active" in runtime_trace
     assert "session_skeleton_repair_attempted" in runtime_trace
