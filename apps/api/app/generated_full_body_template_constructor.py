@@ -12,10 +12,12 @@ from .generated_full_body_prescription import resolve_generated_full_body_initia
 from .generated_full_body_template_draft_schema import (
     ConstructibilityIssue,
     ConstructorTraceRef,
+    ExerciseSelectionTrace,
     GeneratedExerciseDraft,
     GeneratedFullBodyTemplateDraft,
     GeneratedSessionDraft,
     OptionalFillTrace,
+    ScoredCandidateTrace,
 )
 from .knowledge_schema import CanonicalExerciseLibraryBundle, DoctrineBundle, DoctrineRuleStub, ExerciseMetadataV2, PolicyBundle
 
@@ -365,6 +367,24 @@ def _build_exercise_draft(
     policy_ids: list[str],
     metadata_v2_by_exercise_id: dict[str, ExerciseMetadataV2] | None = None,
 ) -> GeneratedExerciseDraft:
+    if selection_trace is None:
+        selection_trace = ExerciseSelectionTrace(
+            selection_mode="optional_fill",
+            scoring_rule_id="full_body_candidate_scoring_v1",
+            candidate_pool_ids=[str(record.get("exercise_id") or "")],
+            candidate_count=1,
+            total_score=0,
+            top_candidates=[
+                ScoredCandidateTrace(
+                    exercise_id=str(record.get("exercise_id") or ""),
+                    total_score=0,
+                    dimension_scores={},
+                )
+            ],
+            metadata_defaults_used=["selection_trace_fallback"],
+            metadata_v2_scoring_fallback_count=0,
+        )
+
     prescription = resolve_generated_full_body_initial_prescription(
         assessment=assessment,
         doctrine_bundle=doctrine_bundle,
@@ -2894,6 +2914,173 @@ def _enforce_normal_three_day_density_floor(
         assigned_counts[donor_previous_id] = max(0, assigned_counts.get(donor_previous_id, 0) - 1)
         assigned_counts[candidate_id] = assigned_counts.get(candidate_id, 0) + 1
 
+    # Final core-set floor durability: when core is viable in normal three-day density mode,
+    # keep at least a minimal direct weekly core dose even after replacements.
+    if core_viable:
+        weekly_roles = _weekly_role_exposure(sessions)
+        minimum_core_sets = 3
+        if int(weekly_roles.get("core_sets", 0)) < minimum_core_sets:
+            for session in sessions:
+                for exercise in session.exercises:
+                    if str(exercise.movement_pattern or "") != "core":
+                        continue
+                    while int(exercise.sets) < 4 and int(weekly_roles.get("core_sets", 0)) < minimum_core_sets:
+                        exercise.sets += 1
+                        weekly_roles["core_sets"] = int(weekly_roles.get("core_sets", 0)) + 1
+                    if int(weekly_roles.get("core_sets", 0)) >= minimum_core_sets:
+                        break
+                if int(weekly_roles.get("core_sets", 0)) >= minimum_core_sets:
+                    break
+
+    # Final per-session high-fatigue cap: prevent dense sessions from relying on >2 high-fatigue slots.
+    for session in sessions:
+        for _ in range(6):
+            if _session_high_fatigue_count(session=session, record_by_id=record_by_id) <= 2:
+                break
+            replace_index = None
+            for idx, existing in enumerate(session.exercises):
+                fatigue = str((record_by_id.get(existing.id) or {}).get("fatigue_cost") or "")
+                if fatigue != "high":
+                    continue
+                if str(existing.slot_role or "") in {"weak_point", "accessory", "secondary_compound"}:
+                    replace_index = idx
+                    break
+            if replace_index is None:
+                for idx, existing in enumerate(session.exercises):
+                    fatigue = str((record_by_id.get(existing.id) or {}).get("fatigue_cost") or "")
+                    if fatigue == "high":
+                        replace_index = idx
+                        break
+            if replace_index is None:
+                break
+
+            replacement_ids = [
+                exercise_id
+                for exercise_id in _global_fill_candidate_ids(blueprint_input)
+                if str((record_by_id.get(exercise_id) or {}).get("fatigue_cost") or "") != "high"
+                and exercise_id not in {item.id for item in session.exercises}
+            ]
+            if not replacement_ids:
+                break
+            replacement_record = record_by_id.get(replacement_ids[0])
+            if replacement_record is None:
+                break
+            existing = session.exercises[replace_index]
+            replacement = _build_exercise_draft(
+                assessment=assessment,
+                blueprint_input=blueprint_input,
+                doctrine_bundle=doctrine_bundle,
+                record=replacement_record,
+                slot_role=str(existing.slot_role or "accessory"),
+                selection_mode="optional_fill",
+                day_role=session.day_role,
+                selection_trace=None,
+                doctrine_rule_ids=[
+                    fill_target_rule_id,
+                    scoring_rule_id,
+                    optional_fill_rule_id,
+                    slot_role_rule_id,
+                    reuse_rule_id,
+                ],
+                policy_ids=density_policy_ids,
+                metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+            )
+            assigned_counts[existing.id] = max(0, assigned_counts.get(existing.id, 0) - 1)
+            assigned_counts[replacement.id] = assigned_counts.get(replacement.id, 0) + 1
+            session.exercises[replace_index] = replacement
+
+    # Final session-set spread rebalance for 3-day quality consistency.
+    for _ in range(24):
+        totals = [_session_total_sets(session) for session in sessions]
+        if not totals or (max(totals) - min(totals)) <= 4:
+            break
+        high_session = max(sessions, key=_session_total_sets)
+        low_session = min(sessions, key=_session_total_sets)
+        donor = next(
+            (
+                exercise
+                for exercise in sorted(
+                    high_session.exercises,
+                    key=lambda item: (SLOT_ROLE_ORDER.get(item.slot_role, 9), item.id),
+                    reverse=True,
+                )
+                if int(exercise.sets) > 1
+            ),
+            None,
+        )
+        receiver = next(
+            (
+                exercise
+                for exercise in sorted(
+                    low_session.exercises,
+                    key=lambda item: (SLOT_ROLE_ORDER.get(item.slot_role, 9), item.id),
+                )
+                if int(exercise.sets) < _exercise_set_cap(exercise)
+            ),
+            None,
+        )
+        if donor is None or receiver is None:
+            break
+        donor.sets -= 1
+        receiver.sets += 1
+
+    # Final pull-cap repair: keep pull-dominant slots <=2 per session in normal 3-day mode.
+    for session in sessions:
+        for _ in range(8):
+            pull_count = sum(
+                1
+                for exercise in session.exercises
+                if _is_back_dominant_pattern(str(exercise.movement_pattern or ""))
+            )
+            if pull_count <= 2:
+                break
+            replace_index = None
+            for idx, existing in enumerate(session.exercises):
+                if not _is_back_dominant_pattern(str(existing.movement_pattern or "")):
+                    continue
+                if str(existing.slot_role or "") in {"weak_point", "accessory", "secondary_compound"}:
+                    replace_index = idx
+                    break
+            if replace_index is None:
+                break
+            replacement_ids = _unique_preserve_order(
+                _candidate_ids_for_patterns(["core", "triceps_extension", "lateral_raise", "leg_curl", "hinge", "horizontal_press"])
+            )
+            replacement_ids = [
+                exercise_id
+                for exercise_id in replacement_ids
+                if not _is_back_dominant_candidate(exercise_id)
+                and exercise_id not in {item.id for item in session.exercises}
+            ]
+            if not replacement_ids:
+                break
+            replacement_record = record_by_id.get(replacement_ids[0])
+            if replacement_record is None:
+                break
+            existing = session.exercises[replace_index]
+            replacement = _build_exercise_draft(
+                assessment=assessment,
+                blueprint_input=blueprint_input,
+                doctrine_bundle=doctrine_bundle,
+                record=replacement_record,
+                slot_role=str(existing.slot_role or "accessory"),
+                selection_mode="optional_fill",
+                day_role=session.day_role,
+                selection_trace=None,
+                doctrine_rule_ids=[
+                    fill_target_rule_id,
+                    scoring_rule_id,
+                    optional_fill_rule_id,
+                    slot_role_rule_id,
+                    reuse_rule_id,
+                ],
+                policy_ids=density_policy_ids,
+                metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+            )
+            assigned_counts[existing.id] = max(0, assigned_counts.get(existing.id, 0) - 1)
+            assigned_counts[replacement.id] = assigned_counts.get(replacement.id, 0) + 1
+            session.exercises[replace_index] = replacement
+
 
 def build_generated_full_body_template_draft(
     *,
@@ -2948,7 +3135,13 @@ def build_generated_full_body_template_draft(
     )
     minimum_exercises_per_session = int(policy_bundle.minimum_viable_program_policy.minimum_exercises_per_session)
     apply_three_day_band = blueprint_input.session_count == 3 and not bool(blueprint_input.pattern_insufficiencies)
-    apply_normal_three_day_density_seriousness = blueprint_input.session_count == 3
+    apply_normal_three_day_density_seriousness = (
+        blueprint_input.session_count == 3
+        and int(assessment.session_time_budget_minutes or 75) >= 60
+        and str(assessment.recovery_profile or "") == "normal"
+        and not bool(assessment.comeback_flag)
+        and str(assessment.schedule_profile or "") != "low_time"
+    )
     session_exercise_cap_limit: int | None = (
         blueprint_input.session_exercise_cap
         if metadata_v2_by_exercise_id is not None

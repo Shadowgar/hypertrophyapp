@@ -748,15 +748,24 @@ def prepare_generated_full_body_runtime_template(
         )
 
     if draft.constructibility_status != "ready":
-        return _fallback_result(
-            selected_template_id=selected_template_id,
-            selected_template=selected_template,
-            fallback_reason=FALLBACK_REASON_CONSTRUCTOR_INSUFFICIENT,
-            assessment_id=assessment.assessment_id,
-            blueprint_input_id=blueprint_input.blueprint_input_id,
-            generated_template_draft_id=draft.template_draft_id,
-            constructibility_status=draft.constructibility_status,
-        )
+        insufficiency_types = {
+            str(getattr(issue, "issue_type", "") or "").strip()
+            for issue in list(getattr(draft, "insufficiencies", []) or [])
+        }
+        soft_issue_types = {
+            "minimum_viable_session_floor_unmet",
+            "session_skeleton_unmet_after_optional_fill",
+        }
+        if not insufficiency_types or not insufficiency_types.issubset(soft_issue_types):
+            return _fallback_result(
+                selected_template_id=selected_template_id,
+                selected_template=selected_template,
+                fallback_reason=FALLBACK_REASON_CONSTRUCTOR_INSUFFICIENT,
+                assessment_id=assessment.assessment_id,
+                blueprint_input_id=blueprint_input.blueprint_input_id,
+                generated_template_draft_id=draft.template_draft_id,
+                constructibility_status=draft.constructibility_status,
+            )
 
     quality_floor_trace = _derive_quality_floor_trace_from_draft(draft)
 
@@ -766,7 +775,7 @@ def prepare_generated_full_body_runtime_template(
             selected_template=selected_template,
             draft=draft,
         )
-    except (ValidationError, ValueError):
+    except Exception:
         return _fallback_result(
             selected_template_id=selected_template_id,
             selected_template=selected_template,

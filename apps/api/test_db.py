@@ -44,4 +44,6 @@ def configure_test_database(test_name: str) -> str:
 
     os.environ["DATABASE_URL"] = url
     os.environ.setdefault("PYTEST_ACTIVE_TEST", test_name)
+    # Keep dev-only debug/wipe routes available in test context.
+    os.environ.setdefault("ALLOW_DEV_WIPE_ENDPOINTS", "true")
     return url
