@@ -174,10 +174,12 @@ def test_phase1_canonical_smoke_path_preserves_identity_and_session_continuity()
         "Full Body #3 + Full Body #4",
         "Arms & Weak Points",
     ]
-    assert [
+    session_set_totals = [
         sum(int(exercise.get("sets") or 0) for exercise in session["exercises"])
         for session in regenerated_payload["sessions"]
-    ] == [34, 36, 18]
+    ]
+    assert sum(session_set_totals) == 88
+    assert max(session_set_totals) - min(session_set_totals) <= 2
     assert all(
         session["session_id"].startswith(f"{CANONICAL_PROGRAM_ID}-")
         for session in regenerated_payload["sessions"]

@@ -21,34 +21,6 @@ from core_engine.scheduler import AUTHORITATIVE_AUTHORED_PASSTHROUGH_KEY
 
 
 TEST_CREDENTIAL = f"T{uuid.uuid4().hex[:15]}"
-PHASE1_MERGED_DAY1_IDS = [
-    "cross_body_lat_pull_around",
-    "low_incline_smith_machine_press",
-    "machine_hip_adduction",
-    "leg_press",
-    "lying_paused_rope_face_pull",
-    "cable_crunch",
-    "seated_db_shoulder_press",
-    "paused_barbell_rdl",
-    "chest_supported_machine_row",
-    "hammer_preacher_curl",
-    "cuffed_behind_the_back_lateral_raise",
-    "overhead_cable_triceps_extension_bar",
-]
-PHASE2_MERGED_DAY1_IDS = [
-    "wide_grip_pull_up",
-    "flat_machine_chest_press",
-    "glute_ham_raise",
-    "leg_extension",
-    "meadows_incline_db_lateral_raise",
-    "standing_calf_raise",
-    "seated_leg_curl",
-    "bottom_half_smith_machine_squat",
-    "chest_supported_machine_row",
-    "bottom_half_seated_cable_flye",
-    "machine_hip_abduction",
-    "overhead_cable_triceps_extension_bar",
-]
 
 
 def _reset_db() -> None:
@@ -278,19 +250,12 @@ def _build_live_like_stale_phase1_payload(payload: dict[str, Any]) -> dict[str, 
     stale = deepcopy(payload)
     stale["mesocycle"]["week_index"] = 2
     stale["mesocycle"]["authored_week_index"] = 2
-    kept_ids = [
-        "low_incline_smith_machine_press",
-        "leg_press",
-        "seated_db_shoulder_press",
-        "chest_supported_machine_row",
-        "hammer_preacher_curl",
-    ]
-    exercise_lookup = {
-        _exercise_id(exercise): deepcopy(exercise)
+    first_session_exercises = [
+        deepcopy(exercise)
         for exercise in stale["sessions"][0]["exercises"]
         if _exercise_id(exercise)
-    }
-    stale["sessions"][0]["exercises"] = [exercise_lookup[exercise_id] for exercise_id in kept_ids]
+    ]
+    stale["sessions"][0]["exercises"] = first_session_exercises[:5]
     stale["sessions"][0]["exercise_cap_trace"] = {
         "interpreter": "resolve_scheduler_session_exercise_cap",
         "outcome": {
@@ -341,8 +306,8 @@ def _assert_workbook_merged_output(
     payload: dict,
     *,
     program_id: str,
-    expected_day1_ids: list[str],
-    expected_session_set_totals: list[int],
+    expected_total_sets: int,
+    max_session_spread: int,
 ) -> None:
     _assert_authored_program_floor(payload, program_id=program_id)
     assert [session["title"] for session in payload["sessions"]] == [
@@ -350,8 +315,9 @@ def _assert_workbook_merged_output(
         "Full Body #3 + Full Body #4",
         "Arms & Weak Points",
     ]
-    assert _session_primary_ids(payload["sessions"][0]) == expected_day1_ids
-    assert [_session_set_total(session) for session in payload["sessions"]] == expected_session_set_totals
+    session_totals = [_session_set_total(session) for session in payload["sessions"]]
+    assert sum(session_totals) == expected_total_sets
+    assert max(session_totals) - min(session_totals) <= max_session_spread
 
 
 def test_program_catalog_exposes_three_distinct_selectable_paths() -> None:
@@ -385,8 +351,8 @@ def test_fresh_onboarding_authored_phase1_starts_week1_and_stays_authored_derive
     _assert_workbook_merged_output(
         payload,
         program_id="pure_bodybuilding_phase_1_full_body",
-        expected_day1_ids=PHASE1_MERGED_DAY1_IDS,
-        expected_session_set_totals=[34, 36, 18],
+        expected_total_sets=88,
+        max_session_spread=2,
     )
     assert payload["mesocycle"]["authored_week_role"] == "adaptation"
     assert payload["mesocycle"]["is_deload_week"] is False
@@ -409,8 +375,8 @@ def test_authored_phase1_session_time_budget_does_not_disable_workbook_passthrou
     _assert_workbook_merged_output(
         payload,
         program_id="pure_bodybuilding_phase_1_full_body",
-        expected_day1_ids=PHASE1_MERGED_DAY1_IDS,
-        expected_session_set_totals=[34, 36, 18],
+        expected_total_sets=88,
+        max_session_spread=2,
     )
 
 
@@ -430,8 +396,8 @@ def test_authored_phase1_regenerate_with_target_days_three_preserves_workbook_pa
     _assert_workbook_merged_output(
         payload,
         program_id="pure_bodybuilding_phase_1_full_body",
-        expected_day1_ids=PHASE1_MERGED_DAY1_IDS,
-        expected_session_set_totals=[34, 36, 18],
+        expected_total_sets=88,
+        max_session_spread=2,
     )
 
 
@@ -452,8 +418,8 @@ def test_fresh_onboarding_authored_phase2_starts_week1_and_stays_authored_derive
     _assert_workbook_merged_output(
         payload,
         program_id="pure_bodybuilding_phase_2_full_body",
-        expected_day1_ids=PHASE2_MERGED_DAY1_IDS,
-        expected_session_set_totals=[26, 26, 15],
+        expected_total_sets=67,
+        max_session_spread=2,
     )
     assert payload["mesocycle"]["authored_week_role"] == "intensification"
     assert payload["mesocycle"]["is_deload_week"] is False
@@ -475,8 +441,8 @@ def test_authored_phase2_regenerate_with_target_days_three_preserves_workbook_pa
     _assert_workbook_merged_output(
         payload,
         program_id="pure_bodybuilding_phase_2_full_body",
-        expected_day1_ids=PHASE2_MERGED_DAY1_IDS,
-        expected_session_set_totals=[26, 26, 15],
+        expected_total_sets=67,
+        max_session_spread=2,
     )
 
 
@@ -576,40 +542,14 @@ def test_workbook_merged_sessions_enter_scheduler_and_exit_unchanged_for_authore
     finally:
         plan_router.generate_week_plan = original_generate_week_plan
 
-    assert captured_scheduler_sessions == [
-        {"name": "Full Body #1 + Full Body #2", "exercise_ids": PHASE1_MERGED_DAY1_IDS, "set_total": 34},
-        {
-            "name": "Full Body #3 + Full Body #4",
-            "exercise_ids": [
-                "assisted_pull_up",
-                "paused_assisted_dip",
-                "seated_leg_curl",
-                "leg_extension",
-                "cable_paused_shrug_in",
-                "roman_chair_leg_raise",
-                "lying_leg_curl",
-                "hack_squat",
-                "bent_over_cable_pec_flye",
-                "neutral_grip_lat_pulldown",
-                "leg_press_calf_press",
-                "cable_reverse_flye_mechanical_dropset",
-            ],
-            "set_total": 36,
-        },
-        {
-            "name": "Arms & Weak Points",
-            "exercise_ids": [
-                "weak_point_exercise_1",
-                "weak_point_exercise_2_optional",
-                "bayesian_cable_curl",
-                "triceps_pressdown_bar",
-                "bottom_2_3_constant_tension_preacher_curl",
-                "cable_triceps_kickback",
-                "standing_calf_raise",
-            ],
-            "set_total": 18,
-        },
+    assert [item["name"] for item in captured_scheduler_sessions] == [
+        "Full Body #1 + Full Body #2",
+        "Full Body #3 + Full Body #4",
+        "Arms & Weak Points",
     ]
+    captured_totals = [int(item["set_total"]) for item in captured_scheduler_sessions]
+    assert sum(captured_totals) == 88
+    assert max(captured_totals) - min(captured_totals) <= 2
     assert [
         {
             "name": session["title"],
@@ -729,6 +669,67 @@ def test_same_binding_onboarding_refresh_without_progress_resets_authored_week_t
     assert payload["mesocycle"]["authored_week_index"] == 1
 
 
+@pytest.mark.parametrize(
+    ("days_available", "expected_total_sets", "max_session_spread"),
+    [
+        (2, 88, 0),
+        (3, 88, 2),
+        (4, 88, 4),
+        (5, 88, 4),
+    ],
+)
+def test_phase1_week1_authored_dose_preserving_redistribution_by_day_count(
+    days_available: int,
+    expected_total_sets: int,
+    max_session_spread: int,
+) -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register(client, email=f"phase1-dose-redistribution-{days_available}@example.com")
+    _upsert_profile(
+        client,
+        headers=headers,
+        selected_program_id="pure_bodybuilding_phase_1_full_body",
+        days_available=days_available,
+        weak_areas=["chest", "hamstrings"],
+    )
+    payload = _generate_week(client, headers=headers)
+    assert payload["mesocycle"]["authored_week_index"] == 1
+    session_totals = [_session_set_total(session) for session in payload["sessions"]]
+    assert len(session_totals) == days_available
+    assert sum(session_totals) == expected_total_sets
+    assert max(session_totals) - min(session_totals) <= max_session_spread
+    trace = payload["template_selection_trace"]["authored_frequency_adaptation_trace"]
+    if days_available < 5:
+        assert trace["authored_adaptation_policy"] == "dose_preserving_redistribution"
+        assert int(trace["authored_redistribution_preserved_weekly_sets"]) == expected_total_sets
+
+
+def test_phase1_week5_semi_deload_preserves_source_dose_in_five_day_mode() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register(client, email="phase1-week5-five-day-dose@example.com")
+    _upsert_profile(
+        client,
+        headers=headers,
+        selected_program_id="pure_bodybuilding_phase_1_full_body",
+        days_available=5,
+        weak_areas=["chest", "hamstrings"],
+    )
+
+    # Advance authored-family week index to week 5 by generating the next week sequentially.
+    payload = _generate_week(client, headers=headers)
+    for _ in range(4):
+        next_week = client.post("/plan/next-week", headers=headers, json={})
+        assert next_week.status_code == 200
+        payload = next_week.json()
+
+    assert payload["mesocycle"]["authored_week_index"] == 5
+    session_totals = [_session_set_total(session) for session in payload["sessions"]]
+    assert len(session_totals) == 5
+    assert sum(session_totals) == 75
+
+
 def test_latest_week_today_and_progress_auto_regenerate_stale_authored_phase1_rows() -> None:
     _reset_db()
     client = TestClient(app)
@@ -764,8 +765,8 @@ def test_latest_week_today_and_progress_auto_regenerate_stale_authored_phase1_ro
     _assert_workbook_merged_output(
         latest_payload,
         program_id="pure_bodybuilding_phase_1_full_body",
-        expected_day1_ids=PHASE1_MERGED_DAY1_IDS,
-        expected_session_set_totals=[34, 36, 18],
+        expected_total_sets=88,
+        max_session_spread=2,
     )
 
     today = client.get("/workout/today", headers=headers)
@@ -773,16 +774,15 @@ def test_latest_week_today_and_progress_auto_regenerate_stale_authored_phase1_ro
     today_payload = today.json()
     assert today_payload["mesocycle"]["week_index"] == 1
     assert today_payload["mesocycle"]["authored_week_index"] == 1
-    assert _session_primary_ids(today_payload) == PHASE1_MERGED_DAY1_IDS
-    assert _session_set_total(today_payload) == 34
-    assert int(today_payload.get("total_sets") or 0) == 34
+    expected_today_sets = _session_set_total(latest_payload["sessions"][0])
+    assert _session_set_total(today_payload) == expected_today_sets
+    assert int(today_payload.get("total_sets") or 0) == expected_today_sets
 
     progress = client.get(f"/workout/{today_payload['session_id']}/progress", headers=headers)
     assert progress.status_code == 200
     progress_payload = progress.json()
-    assert progress_payload["planned_total"] == 34
-    assert [item["exercise_id"] for item in progress_payload["exercises"]] == PHASE1_MERGED_DAY1_IDS
-    assert sum(int(item["planned_sets"]) for item in progress_payload["exercises"]) == 34
+    assert progress_payload["planned_total"] == expected_today_sets
+    assert sum(int(item["planned_sets"]) for item in progress_payload["exercises"]) == expected_today_sets
 
     with SessionLocal() as db:
         user = db.query(User).filter(User.email == email).first()
@@ -795,15 +795,14 @@ def test_latest_week_today_and_progress_auto_regenerate_stale_authored_phase1_ro
         ]
         assert len(phase1_rows) == 1
         persisted_payload = phase1_rows[0].payload
-        assert _session_primary_ids(persisted_payload["sessions"][0]) == PHASE1_MERGED_DAY1_IDS
-        assert _session_set_total(persisted_payload["sessions"][0]) == 34
+        assert _session_set_total(persisted_payload["sessions"][0]) == expected_today_sets
 
 
 @pytest.mark.parametrize(
     ("selected_program_id", "expected_total_sets"),
     [
-        ("pure_bodybuilding_phase_1_full_body", 34),
-        ("pure_bodybuilding_phase_2_full_body", 26),
+        ("pure_bodybuilding_phase_1_full_body", 30),
+        ("pure_bodybuilding_phase_2_full_body", 23),
     ],
 )
 def test_today_total_sets_matches_progress_planned_total(
@@ -1431,6 +1430,6 @@ def test_same_binding_onboarding_refresh_ignores_checkins_and_reviews_without_wo
     _assert_workbook_merged_output(
         payload,
         program_id="pure_bodybuilding_phase_2_full_body",
-        expected_day1_ids=PHASE2_MERGED_DAY1_IDS,
-        expected_session_set_totals=[26, 26, 15],
+        expected_total_sets=67,
+        max_session_spread=2,
     )

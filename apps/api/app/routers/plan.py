@@ -764,7 +764,127 @@ def _build_authored_adapted_sessions(
     preview_week: dict[str, Any],
     onboarding_week: dict[str, Any] | None,
     runtime_week_sessions: list[dict[str, Any]],
-) -> list[dict[str, Any]]:
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    def _exercise_sets(exercise: dict[str, Any]) -> int:
+        return int(exercise.get("sets") or 0)
+
+    def _session_sets(session: dict[str, Any]) -> int:
+        return sum(_exercise_sets(exercise) for exercise in session.get("exercises") or [] if isinstance(exercise, dict))
+
+    def _is_weak_point_exercise(exercise: dict[str, Any]) -> bool:
+        slot_role = str(exercise.get("slot_role") or "").strip().lower()
+        if slot_role == "weak_point":
+            return True
+        exercise_id = str(exercise.get("primary_exercise_id") or exercise.get("id") or "").strip().lower()
+        return exercise_id.startswith("weak_point_")
+
+    def _superset_marker(exercise_name: str) -> tuple[str, int] | None:
+        import re
+
+        match = re.match(r"^(?:superset\s+)?([a-z])(\d)\s*:\s*", str(exercise_name or "").strip(), re.IGNORECASE)
+        if not match:
+            return None
+        return match.group(1).upper(), int(match.group(2))
+
+    def _build_units(source_sessions: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        units: list[dict[str, Any]] = []
+        for source_index, source_session in enumerate(source_sessions):
+            source_exercises = [exercise for exercise in source_session.get("exercises") or [] if isinstance(exercise, dict)]
+            cursor = 0
+            while cursor < len(source_exercises):
+                exercise = deepcopy(source_exercises[cursor])
+                marker = _superset_marker(str(exercise.get("name") or ""))
+                grouped = [exercise]
+                cursor += 1
+                if marker is not None and cursor < len(source_exercises):
+                    next_exercise = source_exercises[cursor]
+                    next_marker = _superset_marker(str(next_exercise.get("name") or ""))
+                    if next_marker is not None and next_marker[0] == marker[0] and abs(next_marker[1] - marker[1]) == 1:
+                        grouped.append(deepcopy(next_exercise))
+                        cursor += 1
+                units.append(
+                    {
+                        "source_index": source_index,
+                        "source_day_name": str(source_session.get("name") or ""),
+                        "exercises": grouped,
+                        "sets": sum(_exercise_sets(item) for item in grouped),
+                        "weak_point_sets": sum(_exercise_sets(item) for item in grouped if _is_weak_point_exercise(item)),
+                    }
+                )
+        return units
+
+    def _balanced_targets(total_sets: int, day_count: int) -> list[int]:
+        if day_count <= 0:
+            return []
+        base = total_sets // day_count
+        remainder = total_sets % day_count
+        return [base + (1 if index < remainder else 0) for index in range(day_count)]
+
+    def _redistribute_sessions(
+        *,
+        source_sessions: list[dict[str, Any]],
+        adapted_days: list[dict[str, Any]],
+    ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+        if not adapted_days:
+            return [], {}
+        units = _build_units(source_sessions)
+        if not units:
+            return [], {}
+        day_count = len(adapted_days)
+        total_sets = sum(int(unit["sets"]) for unit in units)
+        targets = _balanced_targets(total_sets, day_count)
+        buckets: list[dict[str, Any]] = [
+            {
+                "sets": 0,
+                "weak_point_sets": 0,
+                "exercises": [],
+            }
+            for _ in range(day_count)
+        ]
+
+        for unit in units:
+            best_index = 0
+            best_score: tuple[int, int, int, int] | None = None
+            for index, bucket in enumerate(buckets):
+                projected_sets = int(bucket["sets"]) + int(unit["sets"])
+                target_sets = int(targets[index]) if index < len(targets) else 0
+                overflow = max(0, projected_sets - target_sets)
+                distance = abs(projected_sets - target_sets)
+                projected_weak = int(bucket["weak_point_sets"]) + int(unit["weak_point_sets"])
+                score = (overflow, distance, projected_weak, int(bucket["sets"]))
+                if best_score is None or score < best_score:
+                    best_score = score
+                    best_index = index
+            bucket = buckets[best_index]
+            bucket["sets"] = int(bucket["sets"]) + int(unit["sets"])
+            bucket["weak_point_sets"] = int(bucket["weak_point_sets"]) + int(unit["weak_point_sets"])
+            bucket["exercises"].extend(cast(list[dict[str, Any]], unit["exercises"]))
+
+        redistributed_sessions: list[dict[str, Any]] = []
+        for index, bucket in enumerate(buckets):
+            adapted_day = adapted_days[index]
+            day_name = str(adapted_day.get("day_name") or "").strip() or f"Adapted Full Body #{index + 1}"
+            day_role = str(adapted_day.get("day_role") or "").strip() or f"full_body_adapted_{index + 1}"
+            redistributed_sessions.append(
+                {
+                    "name": day_name,
+                    "day_role": day_role,
+                    "day_offset": min(6, index),
+                    "exercises": cast(list[dict[str, Any]], bucket["exercises"]),
+                }
+            )
+
+        return redistributed_sessions, {
+            "authored_adaptation_policy": "dose_preserving_redistribution",
+            "authored_source_week_total_sets": total_sets,
+            "authored_selected_day_count": day_count,
+            "authored_redistributed_session_set_targets": targets,
+            "authored_redistributed_session_set_actuals": [int(bucket["sets"]) for bucket in buckets],
+            "authored_redistribution_preserved_exercise_count": sum(len(bucket["exercises"]) for bucket in buckets),
+            "authored_redistribution_preserved_weekly_sets": sum(int(bucket["sets"]) for bucket in buckets),
+            "authored_redistribution_notes": "Whole-exercise row redistribution with superset-pair preservation.",
+        }
+
     onboarding_days = [
         day
         for day in (onboarding_week or {}).get("days") or []
@@ -786,8 +906,34 @@ def _build_authored_adapted_sessions(
             "session": runtime_session,
         }
 
+    adapted_days = [day for day in (preview_week.get("adapted_days") or []) if isinstance(day, dict)]
+    source_day_order = list(source_day_lookup.keys())
+    selected_source_day_ids: list[str] = []
+    for adapted_day in adapted_days:
+        for source_day_id in adapted_day.get("source_day_ids") or []:
+            normalized = str(source_day_id).strip()
+            if not normalized or normalized not in source_day_lookup or normalized in selected_source_day_ids:
+                continue
+            selected_source_day_ids.append(normalized)
+    if not selected_source_day_ids:
+        selected_source_day_ids = source_day_order
+
+    source_sessions = [
+        deepcopy(cast(dict[str, Any], source_day_lookup[source_day_id]["session"]))
+        for source_day_id in selected_source_day_ids
+        if source_day_id in source_day_lookup
+    ]
+
+    if adapted_days and source_sessions and len(adapted_days) < len(source_sessions):
+        redistributed_sessions, redistribution_trace = _redistribute_sessions(
+            source_sessions=source_sessions,
+            adapted_days=adapted_days,
+        )
+        if redistributed_sessions:
+            return redistributed_sessions, redistribution_trace
+
     adapted_sessions: list[dict[str, Any]] = []
-    for adapted_index, adapted_day in enumerate(preview_week.get("adapted_days") or []):
+    for adapted_index, adapted_day in enumerate(adapted_days):
         if not isinstance(adapted_day, dict):
             continue
         source_day_ids = [
@@ -827,7 +973,17 @@ def _build_authored_adapted_sessions(
             }
         )
 
-    return adapted_sessions
+    fallback_total_sets = sum(_session_sets(session) for session in adapted_sessions)
+    return adapted_sessions, {
+        "authored_adaptation_policy": "legacy_preview_merge",
+        "authored_source_week_total_sets": fallback_total_sets,
+        "authored_selected_day_count": len(adapted_sessions),
+        "authored_redistributed_session_set_targets": [sum(_exercise_sets(exercise) for exercise in session.get("exercises") or []) for session in adapted_sessions],
+        "authored_redistributed_session_set_actuals": [sum(_exercise_sets(exercise) for exercise in session.get("exercises") or []) for session in adapted_sessions],
+        "authored_redistribution_preserved_exercise_count": sum(len(session.get("exercises") or []) for session in adapted_sessions),
+        "authored_redistribution_preserved_weekly_sets": fallback_total_sets,
+        "authored_redistribution_notes": "Fallback preview merge path.",
+    }
 
 
 def _prepare_authored_frequency_adapted_template(
@@ -866,6 +1022,12 @@ def _prepare_authored_frequency_adapted_template(
     if target_days >= default_training_days:
         trace["status"] = "not_applied"
         trace["reason"] = "target_days_not_below_authored_default"
+        passthrough_eligible = not list(movement_restrictions or [])
+        trace["authoritative_passthrough_eligible"] = passthrough_eligible
+        if passthrough_eligible:
+            passthrough_template = deepcopy(program_template)
+            passthrough_template[AUTHORITATIVE_AUTHORED_PASSTHROUGH_KEY] = True
+            return passthrough_template, trace
         return program_template, trace
 
     authored_weeks = program_template.get("authored_weeks") or []
@@ -927,7 +1089,7 @@ def _prepare_authored_frequency_adapted_template(
         trace["preview_trace"] = cast(dict[str, Any], preview_payload.get("decision_trace") or {})
         return program_template, trace
 
-    adapted_sessions = _build_authored_adapted_sessions(
+    adapted_sessions, redistribution_trace = _build_authored_adapted_sessions(
         preview_week=preview_week[0],
         onboarding_week=onboarding_week,
         runtime_week_sessions=runtime_week_sessions,
@@ -957,6 +1119,7 @@ def _prepare_authored_frequency_adapted_template(
     trace["authored_week_index_override"] = authored_week_index_override
     trace["session_count"] = len(adapted_sessions)
     trace["authoritative_passthrough_eligible"] = passthrough_eligible
+    trace.update(redistribution_trace)
     trace["preview_trace"] = cast(dict[str, Any], preview_payload.get("decision_trace") or {})
     return adapted_template, trace
 
