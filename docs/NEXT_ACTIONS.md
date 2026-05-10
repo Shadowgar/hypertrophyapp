@@ -1,49 +1,46 @@
 # Next Actions
 
-Last updated: 2026-03-21
+Last updated: 2026-05-10
 
-This is the short execution rail for the active milestone only: `Generated Full Body Runtime Integration`.
+This is the short execution rail for the active milestone: `Runtime Quality Stabilization and Documentation Alignment`.
 
 ## Ordered Steps
 
-1. Update the active milestone docs first.
-2. Create `apps/api/app/generated_full_body_runtime_adapter.py`.
-3. Update `apps/api/app/routers/plan.py` to call the adapter only at the canonical full-body compatibility seam.
-4. Preserve outward compatibility by forcing the scheduler-facing `program_template["id"]` to the selected compatibility template id when generated content is used.
-5. Add additive runtime trace fields that separate compatibility identity from content origin and include:
-   - `generated_constructor_applied`
-   - stable `fallback_reason`
-6. Update `packages/core-engine/core_engine/decision_generated_week.py` reason-summary and trace wording to reflect constructor-vs-fallback origin.
-7. Add `apps/api/tests/test_generated_full_body_runtime_integration.py`.
-8. Rewrite canonical generated-path assertions in:
-   - `apps/api/tests/test_program_catalog_and_selection.py`
-   - `apps/api/tests/test_phase1_canonical_path_smoke.py`
-   - `apps/api/tests/test_workout_session_state.py`
-9. Update `packages/core-engine/tests/test_generation.py`.
-10. Run focused route and core-engine tests first, then the regression suite.
+1. Complete Phase A documentation truth sync across active authority docs.
+2. Run authored-path live/browser validation for Phase 1 and Phase 2 redistribution behavior (2/3/4/5-day).
+3. Define generated weekly-volume-first distribution stage ownership and handoff rules.
+4. Build generated quality-lock regression pack covering:
+   - role/skeleton durability
+   - weekly volume caps/floors balance
+   - core exposure/reporting visibility
+   - today/latest-week consistency
+5. Strengthen safety/ops technical guardrails for destructive DB/test actions.
 
-## Verification Commands
+## Verification Command Categories
 
-- `cd apps/api && PYTHONPATH=. python3 -m pytest tests/test_generated_full_body_runtime_integration.py tests/test_program_catalog_and_selection.py tests/test_phase1_canonical_path_smoke.py tests/test_workout_session_state.py -q`
-- `cd packages/core-engine && python3 -m pytest tests/test_generation.py -q`
-- `scripts/reference_ingest.sh ci`
-- `./scripts/deterministic_regression_validate.sh`
+- Generated runtime integration + quality:
+  - `apps/api/tests/test_generated_full_body_template_constructor.py`
+  - `apps/api/tests/test_generated_full_body_runtime_integration.py`
+- Authored adaptation + continuity:
+  - `apps/api/tests/test_authored_generated_path_regression.py`
+  - `apps/api/tests/test_phase1_canonical_path_smoke.py`
+- Catalog/selection/workout continuity non-regressions:
+  - `apps/api/tests/test_program_catalog_and_selection.py`
+  - `apps/api/tests/test_workout_session_state.py`
+- Core-engine generation non-regressions:
+  - `packages/core-engine/tests/test_generation.py`
 
 ## Stop Conditions
 
-- stop if the work expands beyond generated `Full Body`
-- stop if the work requires router additions or DB changes
-- stop if the work changes scheduler semantics instead of runtime wiring
-- stop if compatibility identity and content origin become ambiguous in trace
-- stop if fallback reasons become vague or non-deterministic
-- stop if anti-copy safeguards weaken during runtime activation
+- stop if generated and authored logic boundaries are blurred
+- stop if authored prescriptions are mutated
+- stop if metadata-v2 scoring is unintentionally re-enabled
+- stop if progress/regenerate guards are weakened
+- stop if documentation claims exceed validated runtime behavior
 
 ## Out Of Scope
 
-- `Upper/Lower`
-- `PPL`
-- mesocycle review
-- specialization overlays
-- adaptation ledger
-- authored-detail parity restoration for generated `Full Body`
-- permanent generated-runtime identity redesign
+- authored program redesign
+- runtime LLM integration
+- schema-driven architecture rewrite
+- expansion to non-full-body generated runtime families in this milestone

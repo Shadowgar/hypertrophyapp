@@ -1,45 +1,64 @@
 # Roadmap (Active Product Focus)
 
-Last updated: 2026-04-27
+Last updated: 2026-05-10
 Status: active delivery roadmap
 
 ## Why This File Is Active
-This roadmap is the current execution-layer roadmap for product focus and sequencing. `docs/ARCHITECTURE_ROADMAP.md` remains the long-horizon architecture destination and does not get replaced by this file.
+
+This roadmap is the execution-layer roadmap for product focus and sequencing. `docs/ARCHITECTURE_ROADMAP.md` remains the long-horizon architecture destination and does not get replaced by this file.
 
 ## Current Focus Split
-- Authored path: stable and paused except for regressions/contract integrity fixes.
-- Generated path: active focus for deterministic quality, balance, and onboarding-driven calibration.
+
+- Authored path: source prescriptions stable; active only for source parity certification, day-count adaptation regression protection, and contract integrity.
+- Generated path: active focus for deterministic quality stabilization and weekly-volume-first distribution architecture.
 
 ## Immediate Priorities
-1. Generated v2.5b muscle-volume balance calibration.
-2. Generated v2.6 deterministic onboarding profile implementation.
-3. Generated v2.7 starting-load/RIR calibration.
-4. Generated v2.8 week-to-week adaptation.
 
-## Frontend Onboarding Dependency Rule
-Frontend onboarding implementation should wait until `docs/ONBOARDING_GENERATED_PLAN_SPEC.md` and `docs/GENERATED_PROFILE_SCHEMA.md` are finalized and accepted as backend mapping authority.
+1. Phase A documentation truth sync (this pass).
+2. Browser/live validation of authored redistribution behavior for Phase 1 and Phase 2.
+3. Generated weekly-volume-first distribution design and stage ownership map.
+4. Generated quality-lock regression pack (distribution/floors/caps/consistency).
+5. Safety/ops guardrails for destructive DB/test workflows.
 
 ## Sequenced Milestones
 
 ### M0 (done)
+
 - Generated full-body constructor integrated into runtime.
 - Deterministic safety/fallback and path separation enforced.
 
 ### M1 (active)
-- Generated volume calibration hardening (post-v2.5 distribution fix).
-- Enforce major-group floors, bounded weak-point behavior, and core exposure viability.
+
+- Runtime quality stabilization and documentation alignment.
+- Generated distribution hardening:
+  - role/skeleton durability
+  - weekly volume caps/floors balance
+  - core exposure/reporting consistency
+  - latest-week/today consistency
 
 ### M2
-- GenerationProfile derivation from onboarding responses.
-- Deterministic mapping tests and skip-path defaults.
+
+- Generated weekly-volume-first architecture formalization.
+- Explicit stage-level ownership of set targets vs muscle distribution repair.
 
 ### M3
-- Logs-first starting-load initialization with RIR correction loop.
+
+- Authored doctrine certification closure:
+  - full source-vs-app parity matrix
+  - adaptation policy certification across 2/3/4/5-day modes
 
 ### M4
-- Generated week-over-week adaptation logic and evidence traces.
+
+- Product readiness gate:
+  - deterministic release check categories
+  - gold-path verification evidence
+
+## Frontend Onboarding Dependency Rule
+
+Frontend onboarding implementation should wait until `docs/ONBOARDING_GENERATED_PLAN_SPEC.md` and `docs/GENERATED_PROFILE_SCHEMA.md` are finalized and accepted as backend mapping authority.
 
 ## Explicit Non-Goals (Current Wave)
+
 - No authored-program redesign.
 - No runtime LLM.
 - No schema-driven architecture rewrite.

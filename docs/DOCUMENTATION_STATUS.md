@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-04-28
+Last updated: 2026-05-10
 
 Purpose: this is the canonical documentation index for implementation work. Use it to determine reading order, authority hierarchy, and where a document belongs before adding or moving anything.
 
@@ -179,17 +179,12 @@ Top-level `docs/` is allowed to hold the stable product and milestone operating 
 
 Current milestone note:
 
-- The active milestone integrates the generated `Full Body` constructor into live runtime behind the current canonical compatibility seam only.
-- `pure_bodybuilding_phase_1_full_body` is a temporary compatibility anchor, not the conceptual long-term generated identity.
-- Runtime trace must clearly separate compatibility identity from actual content origin and include `generated_constructor_applied`.
-- Stable fallback reasons are required:
-  - `bundle_load_failed`
-  - `assessment_validation_failed`
-  - `blueprint_validation_failed`
-  - `constructor_insufficient`
-  - `draft_adaptation_failed`
-  - `unexpected_exception`
-- The milestone must preserve deterministic fallback behavior, anti-copy safeguards, and non-full-body runtime behavior.
+- Generated `Full Body` runtime integration is shipped baseline.
+- Active milestone is runtime quality stabilization plus documentation alignment.
+- `pure_bodybuilding_phase_1_full_body` remains a compatibility seam, not long-term generated identity.
+- Runtime trace separation between compatibility identity and content origin remains required.
+- Metadata-v2 scoring remains frozen/no-op pending explicit reactivation gate.
+- Authored adaptation now includes dose-preserving redistribution for selected days `< 5` and source-dose-preserving 5-day passthrough.
 
 Older docs remain useful, but they no longer govern the active milestone unless the new operating-guide docs explicitly defer to them.
 

@@ -1,6 +1,6 @@
 # Current State
 
-Last updated: 2026-03-21
+Last updated: 2026-05-10
 
 This document describes branch reality. For active implementation work, use `docs/IMPLEMENTATION_PLAN_CURRENT_MILESTONE.md`.
 
@@ -13,89 +13,66 @@ This document describes branch reality. For active implementation work, use `doc
 - deterministic decision modules under `packages/core-engine/core_engine/*`
 - focused boundary and regression tests
 - compiled knowledge foundation artifacts under `knowledge/compiled/*`
-- a first-class `SourceRegistry` contract and deterministic builder
-- a compiled `CanonicalExerciseLibrary` foundation bundle seeded from onboarding packages
-- validated doctrine and policy bundle contracts plus curated seed files
-- a runtime-safe `knowledge_loader.py` boundary that loads compiled artifacts only
-- deterministic `UserAssessment`
-- deterministic `GeneratedFullBodyBlueprintInput`
-- a deterministic, anti-copy-safe `GeneratedFullBodyTemplateDraft` constructor
-- hardened generated `Full Body` draft composition with 2/4/5-day constructible coverage in tests
+- runtime-safe compiled knowledge loaders and schema boundaries
+- deterministic generated full-body runtime flow:
+  - assessment builder
+  - blueprint builder
+  - template constructor
+  - guarded runtime adapter
+- generated and authored path separation maintained in runtime and tests
 
-## What Is Partially Complete
+## Confirmed Runtime Reality
 
-- the `SourceRegistry` is still a foundation-stage source map, not a fully curated source graph
-- the canonical exercise library is still a deterministic foundation bundle seeded from onboarding packages, not yet a full `/reference`-derived exercise knowledge model
-- doctrine and policy bundles exist and validate structurally, but they are still seed-level rather than runtime-complete coaching knowledge
-- canonical outward runtime identity still depends on existing template ids for compatibility
-- the live generated runtime has not yet been switched to the new constructor-backed full-body path
+- Generated Full Body runtime is integrated in live `/plan/generate-week` behind compatibility guardrails.
+- Generated runtime remains deterministic and non-LLM at runtime.
+- Runtime trace separates compatibility identity from content origin.
+- Metadata-v2 scoring remains frozen/no-op at runtime.
+- Non-full-body runtime behavior remains template-first.
 
-## What Still Uses Template-First Behavior
+## Generated Quality Status
 
-- non-full-body generated runtime behavior remains template-first
-- program recommendation still behaves like catalog selection, not true generation
+Recent generated quality work has landed across constructor/runtime/test layers, including:
 
-## What Still Depends On Loader Inference Or Legacy Fallback
+- session skeleton enforcement checks
+- normal 3-day volume floor behavior
+- core volume reporting visibility fixes
+- back-dominance caps/floors and rebalancing behavior
+- today/latest-week consistency checks and regressions
 
-- `apps/api/app/program_loader.py` still infers some exercise metadata
-- Phase 1 canonical rules still rely on a legacy scheduler overlay fallback when canonical scheduler blocks are absent
-- live runtime consumers still do not broadly use the new canonical source registry or exercise library bundles directly outside the generated full-body path
+Status:
 
-## Milestone Status
+- generated quality lock is active and still requires ongoing hardening via integration/live validation packs.
 
-- Completed milestone: `Compiled Knowledge Foundation`
-- Completed milestone: `Diagnostics And Full Body Blueprint Inputs`
-- Completed milestone: `Generated Full Body Template Constructor`
-- Completed milestone: `Generated Full Body Constructor Hardening + Doctrine Coverage Expansion`
-- Active milestone: `Generated Full Body Runtime Integration`
-- Active milestone result target:
-  - guarded live runtime use of the generated `Full Body` constructor
-  - preserved top-level response compatibility
-  - explicit separation of compatibility identity from actual content origin
-  - deterministic fallback to the selected template-backed path when generation cannot be used
+## Authored Path Status
 
-## Important Baseline
+- Authored source prescriptions remain unchanged.
+- Authored day-count adaptation now includes dose-preserving redistribution for selected days `< 5`.
+- Authored 5-day mode preserves source dose via passthrough behavior.
+- Authored path remains separated from generated path logic.
 
-The active milestone assumes these systems already exist and should be treated as the integration baseline:
+Status:
 
-- `apps/api/app/knowledge_loader.py`
-- `apps/api/app/generated_assessment_builder.py`
-- `apps/api/app/generated_full_body_blueprint_builder.py`
-- `apps/api/app/generated_full_body_template_constructor.py`
-- `knowledge/compiled/doctrine_bundles/multi_source_hypertrophy_v1.bundle.json`
-- `knowledge/compiled/policy_bundles/system_coaching_policy_v1.bundle.json`
-- `knowledge/compiled/exercise_library.foundation.v1.json`
+- authored doctrine certification is not fully closed until a complete source-vs-app parity report is finalized across the full authored sequence.
 
-## Current Runtime Integration Gap
+## What Is Still Partial
 
-- `/plan/generate-week` still feeds an authored template directly into the scheduler
-- the generated `Full Body` constructor is still library-only and test-only
-- runtime trace does not yet clearly distinguish compatibility identity from actual content origin
-- canonical `program_template_id` continuity must be preserved for workout history, training state, and frequency adaptation
+- `SourceRegistry` remains foundation-stage rather than a fully curated source graph.
+- canonical exercise library remains a foundation bundle seeded from onboarding packages, not full `/reference`-derived exercise intelligence.
+- doctrine/policy bundles are operational but still not a complete final coaching knowledge model.
+- technical safety guardrails for destructive dev/test DB operations are partially hardened but still need stronger enforcement.
+
+## Active Milestone Direction
+
+- Current active work is runtime quality stabilization and documentation alignment, not initial runtime integration.
+- Generated path remains primary active focus.
+- Authored path changes are limited to parity, adaptation regression protection, and contract integrity.
 
 ## Intentionally Deferred
 
-- any runtime integration beyond generated `Full Body`
-- any replacement of non-full-body generated behavior
-- DB model or migration work
-- mesocycle review
+- runtime integration beyond generated `Full Body`
+- replacement of non-full-body generated behavior
+- DB model/migration expansion for this wave
+- mesocycle review redesign
 - specialization overlays
 - adaptation ledger
-- transparency UI and product explanations
-- broader core-engine behavior changes
-
-## Current Live Behavior
-
-- the assessment, blueprint, constructor, and hardening layers are complete
-- live runtime integration is the current milestone
-- generated `Full Body` content will be introduced only through the current canonical compatibility seam
-- non-full-body runtime behavior remains template-first during this milestone
-- canonical outward identity must remain stable even when live full-body content becomes generated
-
-## Do Not Modify In This Milestone
-
-- all routers except `apps/api/app/routers/plan.py`
-- `apps/api/app/models.py`
-- `apps/api/app/schemas.py`
-- `packages/core-engine/core_engine/*` except additive trace wording in `decision_generated_week.py`
-- existing authored-program catalog, loading, and workout behavior outside the guarded full-body runtime seam
+- transparency UI/product explanation redesign
