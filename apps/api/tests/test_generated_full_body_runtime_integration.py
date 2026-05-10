@@ -1263,6 +1263,9 @@ def test_generate_week_full_body_v1_normal_three_day_enforces_runtime_quality_fl
                 assert pattern in {"horizontal_press", "vertical_press", "horizontal_pull", "vertical_pull", "squat", "hinge"}
 
     weekly_volume = payload.get("weekly_volume_by_muscle") or {}
+    assert int(weekly_volume.get("back") or 0) <= 22
+    assert grouped["hamstrings"] >= 8, grouped
+    assert int(weekly_volume.get("shoulders") or 0) >= 6
     assert int(weekly_volume.get("triceps") or 0) > 0
     biceps_viable = _has_movement_pattern(payload, {"curl", "horizontal_pull", "vertical_pull"})
     if biceps_viable:
@@ -1275,8 +1278,17 @@ def test_generate_week_full_body_v1_normal_three_day_enforces_runtime_quality_fl
         if any(str(exercise.get("movement_pattern") or "") == "core" for exercise in session.get("exercises") or [])
     )
     if _has_movement_pattern(payload, {"core"}):
-        assert core_exposure_sessions >= 1
+        assert "core" in weekly_volume
+        assert int(weekly_volume.get("core") or 0) > 0
+        assert core_exposure_sessions >= 2
         assert grouped["core"] > 0
+    for session in payload["sessions"]:
+        pull_count = sum(
+            1
+            for exercise in (session.get("exercises") or [])
+            if str(exercise.get("movement_pattern") or "") in {"horizontal_pull", "vertical_pull"}
+        )
+        assert pull_count <= 2
     has_five_set = any(
         int(exercise.get("sets") or 0) > 4
         for session in payload["sessions"]
@@ -1303,6 +1315,21 @@ def test_generate_week_full_body_v1_normal_three_day_enforces_runtime_quality_fl
         assert _missing_session_skeleton_categories(session) == []
         assert skeleton_by_session.get(session_id, []) == []
     _assert_metadata_scoring_frozen(runtime_trace)
+
+    today_response = client.get("/workout/today", headers=headers)
+    assert today_response.status_code == 200
+    today_payload = today_response.json()
+    today_total_sets = int(today_payload.get("planned_total") or today_payload.get("total_sets") or 0)
+    assert today_total_sets > 0
+    today_exercise_sets = sum(int(exercise.get("sets") or exercise.get("planned_sets") or 0) for exercise in (today_payload.get("exercises") or []))
+    assert today_exercise_sets > 0
+
+    latest_week_response = client.get("/plan/latest-week", headers=headers)
+    assert latest_week_response.status_code == 200
+    latest_payload = latest_week_response.json()
+    latest_weekly_volume = latest_payload.get("weekly_volume_by_muscle") or {}
+    if _has_movement_pattern(payload, {"core"}):
+        assert int(latest_weekly_volume.get("core") or 0) == int(weekly_volume.get("core") or 0)
 
 
 def test_generate_week_normal_three_day_regression_day1_no_longer_knee_curl_only_shape() -> None:

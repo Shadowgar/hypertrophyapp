@@ -738,8 +738,10 @@ def test_v25b_normal_three_day_major_volume_floors_are_satisfied() -> None:
     totals = _visible_grouped_volume_from_week_payload(payload)
     assert totals["chest"] >= 10, totals
     assert totals["back"] >= 12, totals
+    assert totals["back"] <= 22, totals
     assert totals["quads"] >= 8, totals
     assert totals["hamstrings"] >= 8, totals
+    assert totals["delts"] >= 6, totals
     assert totals["core"] >= 3, totals
 
 

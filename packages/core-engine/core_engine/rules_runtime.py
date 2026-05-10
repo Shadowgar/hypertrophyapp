@@ -88,6 +88,7 @@ _DEFAULT_SCHEDULER_TRACKED_MUSCLES = [
     "shoulders",
     "biceps",
     "triceps",
+    "core",
     "calves",
 ]
 
@@ -112,6 +113,9 @@ _DEFAULT_SCHEDULER_AUTHORED_LABEL_NORMALIZATION = {
     "side_delts": "shoulders",
     "biceps": "biceps",
     "triceps": "triceps",
+    "core": "core",
+    "abs": "core",
+    "abdominals": "core",
     "calves": "calves",
 }
 
@@ -986,6 +990,8 @@ def resolve_scheduler_muscle_coverage_runtime(
     ]
     if not tracked_muscles:
         tracked_muscles = list(_DEFAULT_SCHEDULER_TRACKED_MUSCLES)
+    elif "core" not in tracked_muscles:
+        tracked_muscles.append("core")
 
     minimum_sets_per_muscle = int(effective_rules.get("minimum_sets_per_muscle") or 0)
     if minimum_sets_per_muscle <= 0:
@@ -998,6 +1004,10 @@ def resolve_scheduler_muscle_coverage_runtime(
     }
     if not authored_label_normalization:
         authored_label_normalization = dict(_DEFAULT_SCHEDULER_AUTHORED_LABEL_NORMALIZATION)
+    else:
+        authored_label_normalization.setdefault("core", "core")
+        authored_label_normalization.setdefault("abs", "core")
+        authored_label_normalization.setdefault("abdominals", "core")
 
     return {
         "tracked_muscles": tracked_muscles,

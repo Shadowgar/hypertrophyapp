@@ -1199,6 +1199,39 @@ def test_generate_week_plan_does_not_infer_muscle_coverage_from_exercise_name_to
     assert all(value == 0 for value in plan["weekly_volume_by_muscle"].values())
 
 
+def test_generate_week_plan_reports_core_volume_from_abs_labels() -> None:
+    template = {
+        "id": "coverage_core_test",
+        "sessions": [
+            {
+                "name": "A",
+                "exercises": [
+                    {
+                        "id": "leg_raise",
+                        "name": "Roman Chair Leg Raise",
+                        "sets": 3,
+                        "primary_muscles": ["abs"],
+                    }
+                ],
+            }
+        ],
+    }
+
+    plan = generate_week_plan(
+        user_profile={"name": "Test"},
+        days_available=2,
+        split_preference="full_body",
+        program_template=template,
+        history=[],
+        phase="maintenance",
+        rule_set=_scheduler_rule_set(),
+    )
+
+    volume = plan["weekly_volume_by_muscle"]
+    assert "core" in volume
+    assert int(volume["core"]) == 3
+
+
 def test_generate_week_plan_applies_scheduled_deload_at_trigger_week() -> None:
     template = {
         "id": "scheduled_deload_test",

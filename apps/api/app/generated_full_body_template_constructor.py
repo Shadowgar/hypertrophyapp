@@ -2213,6 +2213,13 @@ def _enforce_normal_three_day_density_floor(
         minimum_session_sets = 24
         minimum_exercises_per_session = min(effective_session_exercise_cap, max(9, target_exercises_per_session))
     core_viable = bool(blueprint_input.candidate_exercise_ids_by_pattern.get("core"))
+    back_cap = 22 if band.band_id == "normal" else 24
+    hamstrings_floor = 8 if band.band_id == "normal" else 10
+    delt_floor = 6 if band.band_id == "normal" else 8
+    core_floor_sets = 4 if band.band_id == "normal" else 5
+    arm_weakpoint_active = any(str(item.muscle_group or "").strip().lower() == "arms" for item in assessment.weak_point_priorities)
+    biceps_floor = 4 if arm_weakpoint_active else 2
+    triceps_floor = 4 if arm_weakpoint_active else 2
 
     def _movement_pattern(exercise_id: str) -> str:
         return str((record_by_id.get(exercise_id) or {}).get("movement_pattern") or "")
@@ -2232,6 +2239,34 @@ def _enforce_normal_three_day_density_floor(
             bool(muscles & {str(item).lower() for item in exercise.primary_muscles})
             for exercise in session.exercises
         )
+
+    def _is_back_dominant_pattern(pattern: str) -> bool:
+        return pattern in {"horizontal_pull", "vertical_pull"}
+
+    def _is_back_dominant_candidate(exercise_id: str) -> bool:
+        return _is_back_dominant_pattern(_movement_pattern(exercise_id))
+
+    def _distribution_status() -> dict[str, Any]:
+        primary_volume = _compute_primary_major_group_volume(
+            sessions=sessions,
+            record_by_id=record_by_id,
+            metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+        )
+        weekly_roles = _weekly_role_exposure(sessions)
+        unmet = {
+            "hamstrings": int(primary_volume.get("hamstrings", 0)) < hamstrings_floor,
+            "delts": int(weekly_roles.get("delt_sets", 0)) < delt_floor,
+            "biceps": int(weekly_roles.get("biceps_sets", 0)) < biceps_floor,
+            "triceps": int(weekly_roles.get("triceps_sets", 0)) < triceps_floor,
+            "core": bool(core_viable and (int(weekly_roles.get("core_sessions", 0)) < 2 or int(weekly_roles.get("core_sets", 0)) < core_floor_sets)),
+        }
+        return {
+            "primary_volume": primary_volume,
+            "weekly_roles": weekly_roles,
+            "back_over_cap": int(primary_volume.get("back", 0)) > back_cap,
+            "has_unmet_support_floor": any(unmet.values()),
+            "unmet": unmet,
+        }
 
     def _choose_session_for_insert() -> GeneratedSessionDraft:
         return min(
@@ -2485,7 +2520,7 @@ def _enforce_normal_three_day_density_floor(
             weekly_roles = _weekly_role_exposure(sessions)
             role_fill_ids = fill_ids
             if not session_roles["shoulder_rear_delt"]:
-                shoulder_ids = _candidate_ids_for_patterns(["lateral_raise", "vertical_press", "horizontal_pull"])
+                shoulder_ids = _candidate_ids_for_patterns(["lateral_raise", "vertical_press"])
                 if shoulder_ids:
                     role_fill_ids = shoulder_ids
             elif weekly_roles["biceps_sets"] == 0:
@@ -2520,6 +2555,21 @@ def _enforce_normal_three_day_density_floor(
                     quad_ids = _candidate_ids_for_patterns(["knee_extension", "squat"])
                     if quad_ids:
                         role_fill_ids = quad_ids
+            distribution = _distribution_status()
+            if distribution["back_over_cap"] and distribution["has_unmet_support_floor"]:
+                role_fill_ids = [exercise_id for exercise_id in role_fill_ids if not _is_back_dominant_candidate(exercise_id)]
+                if not role_fill_ids:
+                    unmet = distribution["unmet"]
+                    if unmet["core"]:
+                        role_fill_ids = _candidate_ids_for_patterns(["core"])
+                    elif unmet["triceps"]:
+                        role_fill_ids = _candidate_ids_for_patterns(["triceps_extension"])
+                    elif unmet["delts"]:
+                        role_fill_ids = _candidate_ids_for_patterns(["lateral_raise", "vertical_press"])
+                    elif unmet["hamstrings"]:
+                        role_fill_ids = _candidate_ids_for_patterns(["leg_curl", "hinge"])
+                    elif unmet["biceps"]:
+                        role_fill_ids = _candidate_ids_for_patterns(["curl"])
             if _session_lower_posterior_count(session) >= 2:
                 lower_deficit_pending = False
                 if len(sessions) == 3:
@@ -2614,6 +2664,9 @@ def _enforce_normal_three_day_density_floor(
             return 4
         return slot_max
 
+    def _session_pull_count(session: GeneratedSessionDraft) -> int:
+        return sum(1 for ex in session.exercises if _is_back_dominant_pattern(str(ex.movement_pattern or "")))
+
     for _ in range(180):
         weekly_sets = _weekly_planned_sets(sessions)
         underfilled_session = min(sessions, key=lambda item: _session_total_sets(item))
@@ -2621,6 +2674,13 @@ def _enforce_normal_three_day_density_floor(
             break
         changed = False
         for exercise in _set_increment_candidates():
+            distribution = _distribution_status()
+            if (
+                _is_back_dominant_pattern(str(exercise.movement_pattern or ""))
+                and distribution["back_over_cap"]
+                and distribution["has_unmet_support_floor"]
+            ):
+                continue
             slot_max = _exercise_set_cap(exercise)
             if int(exercise.sets) >= slot_max:
                 continue
@@ -2636,6 +2696,82 @@ def _enforce_normal_three_day_density_floor(
                 break
         if not changed:
             break
+
+    # Rebalance surplus pull/back slots when back is above cap and support floors are unmet.
+    for _ in range(18):
+        distribution = _distribution_status()
+        if not (distribution["back_over_cap"] and distribution["has_unmet_support_floor"]):
+            break
+        replacement_ids: list[str] = []
+        unmet = distribution["unmet"]
+        if unmet["core"]:
+            replacement_ids = _candidate_ids_for_patterns(["core"])
+        elif unmet["triceps"]:
+            replacement_ids = _candidate_ids_for_patterns(["triceps_extension"])
+        elif unmet["delts"]:
+            replacement_ids = _candidate_ids_for_patterns(["lateral_raise", "vertical_press"])
+        elif unmet["hamstrings"]:
+            replacement_ids = _candidate_ids_for_patterns(["leg_curl", "hinge"])
+        elif unmet["biceps"]:
+            replacement_ids = _candidate_ids_for_patterns(["curl"])
+        replacement_ids = [exercise_id for exercise_id in replacement_ids if not _is_back_dominant_candidate(exercise_id)]
+        if not replacement_ids:
+            break
+        donor_session: GeneratedSessionDraft | None = None
+        donor_index: int | None = None
+        for session in sorted(sessions, key=lambda item: (_session_pull_count(item), _session_total_sets(item)), reverse=True):
+            pull_count = _session_pull_count(session)
+            if pull_count <= 1:
+                continue
+            for idx, existing in enumerate(session.exercises):
+                if not _is_back_dominant_pattern(str(existing.movement_pattern or "")):
+                    continue
+                if existing.slot_role not in {"weak_point", "accessory", "secondary_compound", "primary_compound"}:
+                    continue
+                donor_session = session
+                donor_index = idx
+                break
+            if donor_session is not None:
+                break
+        if donor_session is None or donor_index is None:
+            break
+        session_exercise_ids = {exercise.id for exercise in donor_session.exercises}
+        feasible_candidate_ids = _feasible_candidate_ids(
+            candidate_ids=replacement_ids,
+            assigned_counts=assigned_counts,
+            max_assignments_per_week=max_assignments_per_week,
+            allow_reuse_after_unique_candidates_exhausted=allow_reuse_after_exhaustion,
+            session_exercise_ids=session_exercise_ids,
+        )
+        if not feasible_candidate_ids:
+            feasible_candidate_ids = replacement_ids
+        selected_id = feasible_candidate_ids[0]
+        selected_record = record_by_id.get(selected_id)
+        if selected_record is None:
+            break
+        replacement = _build_exercise_draft(
+            assessment=assessment,
+            blueprint_input=blueprint_input,
+            doctrine_bundle=doctrine_bundle,
+            record=selected_record,
+            slot_role=donor_session.exercises[donor_index].slot_role,
+            selection_mode="optional_fill",
+            day_role=donor_session.day_role,
+            selection_trace=None,
+            doctrine_rule_ids=[
+                fill_target_rule_id,
+                scoring_rule_id,
+                optional_fill_rule_id,
+                slot_role_rule_id,
+                reuse_rule_id,
+            ],
+            policy_ids=density_policy_ids,
+            metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+        )
+        replaced = donor_session.exercises[donor_index]
+        donor_session.exercises[donor_index] = replacement
+        assigned_counts[replaced.id] = max(0, assigned_counts.get(replaced.id, 0) - 1)
+        assigned_counts[selected_id] = assigned_counts.get(selected_id, 0) + 1
 
     # Final pass: hold core at >=2 sessions when viable after all replacements/inflation.
     if core_viable:

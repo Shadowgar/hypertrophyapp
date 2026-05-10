@@ -258,6 +258,12 @@ def workout_today(
     if progress_planned_total > 0:
         response_payload["total_sets"] = progress_planned_total
         response_payload["planned_total"] = progress_planned_total
+    else:
+        inferred_total = _extract_session_observability_metrics(cast(dict[str, Any], response_payload)).get("total_sets") or 0
+        inferred_total = _coerce_int(inferred_total)
+        if inferred_total > 0:
+            response_payload["total_sets"] = inferred_total
+            response_payload["planned_total"] = inferred_total
 
     constructed_payload = cast(dict[str, Any], deepcopy(response_payload))
     mesocycle = cast(dict, response_payload.get("mesocycle") or {})
