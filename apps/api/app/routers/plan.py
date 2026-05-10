@@ -1000,6 +1000,8 @@ def _prepare_authored_frequency_adapted_template(
     prior_generated_weeks: int,
     authored_week_index_override: int | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any] | None]:
+    if str(selected_template_id or "") in {"full_body_v1", "adaptive_full_body_gold_v0_1"}:
+        return program_template, None
     if not (is_authored_phase1_binding_id(selected_template_id) or is_authored_phase2_binding_id(selected_template_id)):
         return program_template, None
 

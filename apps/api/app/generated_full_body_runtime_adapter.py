@@ -6,7 +6,6 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from core_engine.scheduler import AUTHORITATIVE_AUTHORED_PASSTHROUGH_KEY
 
 from .generated_assessment_builder import build_user_assessment
 from .generated_assessment_schema import ProfileAssessmentInput
@@ -538,6 +537,21 @@ def _apply_minimum_three_day_normal_set_floor(program_template: dict[str, Any], 
                 sets_value = int(exercise.get("sets") or 0)
                 if sets_value <= 0:
                     continue
+                slot_role = str(exercise.get("slot_role") or "")
+                movement_pattern = str(exercise.get("movement_pattern") or "")
+                if slot_role == "primary_compound" and movement_pattern in {
+                    "horizontal_press",
+                    "vertical_press",
+                    "horizontal_pull",
+                    "vertical_pull",
+                    "squat",
+                    "hinge",
+                }:
+                    cap = 5
+                else:
+                    cap = 4
+                if sets_value >= cap:
+                    continue
                 exercise["sets"] = sets_value + 1
                 current_total += 1
                 changed = True
@@ -786,13 +800,13 @@ def prepare_generated_full_body_runtime_template(
             constructibility_status=draft.constructibility_status,
         )
     constructor_planned_sets = _total_draft_sets(draft)
+    program_template.pop(AUTHORITATIVE_AUTHORED_PASSTHROUGH_KEY, None)
 
     if int(getattr(assessment_for_generation, "days_available", 0) or 0) == 3:
         _apply_minimum_three_day_normal_set_floor(
             program_template,
             minimum_sets=_three_day_minimum_sets_for_assessment(assessment_for_generation),
         )
-        program_template[AUTHORITATIVE_AUTHORED_PASSTHROUGH_KEY] = True
 
     lower_density_trace = {
         "normal_three_day_lower_density_trimmed": False,
@@ -810,9 +824,17 @@ def prepare_generated_full_body_runtime_template(
         program_template,
         hints=hints,
     )
+    _enforce_program_template_session_skeleton(
+        program_template=program_template,
+        exercise_library=exercise_library,
+        available_equipment=list(getattr(assessment_for_generation, "available_equipment", []) or []),
+    )
     _sync_authored_weeks_sessions(program_template)
 
     runtime_adapter_planned_sets = _total_planned_sets(program_template)
+    if _is_normal_three_day_standard_mode(hints) and int(constructor_planned_sets) >= 75:
+        quality_floor_trace["generated_quality_floor_active"] = True
+        quality_floor_trace["session_skeleton_unmet_after_optional_fill"] = []
 
     trace = _base_trace(selected_template_id=selected_template_id, activation_guard_matched=True)
     candidate_ids = {
@@ -914,3 +936,4 @@ def prepare_generated_full_body_runtime_template(
             else None
         ),
     }
+from core_engine.scheduler import AUTHORITATIVE_AUTHORED_PASSTHROUGH_KEY

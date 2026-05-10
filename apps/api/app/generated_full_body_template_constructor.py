@@ -2218,28 +2218,41 @@ def _enforce_normal_three_day_density_floor(
         and not bool(assessment.comeback_flag)
         and str(assessment.schedule_profile or "") != "low_time"
     )
-    if band.band_id not in {"normal", "higher_time_normal_recovery"} and not serious_normal_mode:
-        return
-
     time_budget_minutes = int(assessment.session_time_budget_minutes or 75)
     if band.band_id == "higher_time_normal_recovery":
         minimum_weekly_sets = 85
         maximum_weekly_sets = 100
         minimum_session_sets = 28
         minimum_exercises_per_session = min(effective_session_exercise_cap, max(10, target_exercises_per_session))
-    else:
+    elif band.band_id == "normal" or serious_normal_mode:
         minimum_weekly_sets = 75
         maximum_weekly_sets = 90
         minimum_session_sets = 24
-        minimum_exercises_per_session = min(effective_session_exercise_cap, max(9, target_exercises_per_session))
+        minimum_exercises_per_session = min(effective_session_exercise_cap, max(10, target_exercises_per_session))
+    elif band.band_id == "low_time":
+        minimum_weekly_sets = 45
+        maximum_weekly_sets = 60
+        minimum_session_sets = 14
+        minimum_exercises_per_session = min(
+            effective_session_exercise_cap,
+            max(int(band.minimum_exercises_per_session), target_exercises_per_session),
+        )
+    else:
+        minimum_weekly_sets = 40
+        maximum_weekly_sets = 55
+        minimum_session_sets = 13
+        minimum_exercises_per_session = min(
+            effective_session_exercise_cap,
+            max(int(band.minimum_exercises_per_session), target_exercises_per_session),
+        )
     core_viable = bool(blueprint_input.candidate_exercise_ids_by_pattern.get("core"))
     back_cap = 22 if band.band_id == "normal" else 24
-    hamstrings_floor = 8 if band.band_id == "normal" else 10
+    hamstrings_floor = 6 if band.band_id == "normal" else 8
     delt_floor = 6 if band.band_id == "normal" else 8
     core_floor_sets = 4 if band.band_id == "normal" else 5
     arm_weakpoint_active = any(str(item.muscle_group or "").strip().lower() == "arms" for item in assessment.weak_point_priorities)
-    biceps_floor = 4 if arm_weakpoint_active else 2
-    triceps_floor = 4 if arm_weakpoint_active else 2
+    biceps_floor = 5 if arm_weakpoint_active else 2
+    triceps_floor = 5 if arm_weakpoint_active else 2
 
     def _movement_pattern(exercise_id: str) -> str:
         return str((record_by_id.get(exercise_id) or {}).get("movement_pattern") or "")
@@ -2448,7 +2461,39 @@ def _enforce_normal_three_day_density_floor(
     if not any(_session_has_pattern(session, {"triceps_extension"}) for session in sessions):
         triceps_ids = _candidate_ids_for_patterns(["triceps_extension", "vertical_press", "horizontal_press"])
         if triceps_ids:
-            _insert_candidate(session=_choose_session_for_insert(), candidate_ids=triceps_ids)
+            inserted = _insert_candidate(session=_choose_session_for_insert(), candidate_ids=triceps_ids)
+            if not inserted:
+                strict_triceps_ids = _candidate_ids_for_patterns(["triceps_extension"])
+                forced_id = next((exercise_id for exercise_id in strict_triceps_ids if record_by_id.get(exercise_id) is not None), None)
+                if forced_id is not None:
+                    target_session = _choose_session_for_insert()
+                    slot_role = _next_slot_role(
+                        session=target_session,
+                        slot_roles_by_position=["primary_compound", "secondary_compound", "accessory", "weak_point"],
+                        fallback_slot_role="accessory",
+                    )
+                    target_session.exercises.append(
+                        _build_exercise_draft(
+                            assessment=assessment,
+                            blueprint_input=blueprint_input,
+                            doctrine_bundle=doctrine_bundle,
+                            record=record_by_id[forced_id],
+                            slot_role=slot_role,
+                            selection_mode="optional_fill",
+                            day_role=target_session.day_role,
+                            selection_trace=None,
+                            doctrine_rule_ids=[
+                                fill_target_rule_id,
+                                scoring_rule_id,
+                                optional_fill_rule_id,
+                                slot_role_rule_id,
+                                reuse_rule_id,
+                            ],
+                            policy_ids=density_policy_ids,
+                            metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+                        )
+                    )
+                    assigned_counts[forced_id] = assigned_counts.get(forced_id, 0) + 1
     _ensure_primary_muscle_label(patterns={"curl", "horizontal_pull", "vertical_pull"}, label="biceps")
     _ensure_primary_muscle_label(patterns={"triceps_extension", "vertical_press", "horizontal_press"}, label="triceps")
 
@@ -2717,6 +2762,31 @@ def _enforce_normal_three_day_density_floor(
         if not changed:
             break
 
+    # Deterministic floor catch-up: if set-cap logic leaves normal-band weeks slightly under
+    # target, finish with bounded primary-compound increments before giving up.
+    for _ in range(120):
+        weekly_sets = _weekly_planned_sets(sessions)
+        if weekly_sets >= minimum_weekly_sets:
+            break
+        changed = False
+        for exercise in _set_increment_candidates():
+            slot_role = str(exercise.slot_role or "")
+            cap = 5 if slot_role == "primary_compound" else 4
+            if int(exercise.sets) >= cap:
+                continue
+            distribution = _distribution_status()
+            if (
+                _is_back_dominant_pattern(str(exercise.movement_pattern or ""))
+                and distribution["back_over_cap"]
+                and distribution["has_unmet_support_floor"]
+            ):
+                continue
+            exercise.sets += 1
+            changed = True
+            break
+        if not changed:
+            break
+
     # Rebalance surplus pull/back slots when back is above cap and support floors are unmet.
     for _ in range(18):
         distribution = _distribution_status()
@@ -2746,7 +2816,7 @@ def _enforce_normal_three_day_density_floor(
             for idx, existing in enumerate(session.exercises):
                 if not _is_back_dominant_pattern(str(existing.movement_pattern or "")):
                     continue
-                if existing.slot_role not in {"weak_point", "accessory", "secondary_compound", "primary_compound"}:
+                if existing.slot_role not in {"weak_point", "accessory", "secondary_compound"}:
                     continue
                 donor_session = session
                 donor_index = idx
@@ -4049,6 +4119,33 @@ def build_generated_full_body_template_draft(
                     ),
                 ),
             )
+
+    if (
+        blueprint_input.session_count == 3
+        and int(assessment.session_time_budget_minutes or 75) >= 60
+        and str(assessment.recovery_profile or "") == "normal"
+        and not bool(assessment.comeback_flag)
+        and str(assessment.schedule_profile or "") != "low_time"
+    ):
+        # Final hard floor for normal 3-day seriousness before draft materialization.
+        for _ in range(200):
+            weekly_sets = _weekly_planned_sets(sessions)
+            if weekly_sets >= 75:
+                break
+            increased = False
+            for session in sessions:
+                for exercise in session.exercises:
+                    slot_role = str(exercise.slot_role or "")
+                    cap = 5 if slot_role == "primary_compound" else 4
+                    if int(exercise.sets) >= cap:
+                        continue
+                    exercise.sets += 1
+                    increased = True
+                    break
+                if increased:
+                    break
+            if not increased:
+                break
 
     selected_exercise_ids = _collect_selected_exercise_ids(sessions)
     constructibility_status = "insufficient" if insufficiencies else "ready"
