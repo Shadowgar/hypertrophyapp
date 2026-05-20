@@ -411,6 +411,62 @@ def _trim_session_volume_for_time_budget(
     }
 
 
+def _missing_session_skeleton_categories(exercises: list[dict[str, Any]]) -> list[str]:
+    patterns = {str(exercise.get("movement_pattern") or "") for exercise in exercises if isinstance(exercise, dict)}
+    missing: list[str] = []
+    if not {"horizontal_press", "vertical_press"} & patterns:
+        missing.append("press")
+    if not {"horizontal_pull", "vertical_pull"} & patterns:
+        missing.append("pull")
+    if not {"squat", "knee_extension", "hinge", "leg_curl"} & patterns:
+        missing.append("lower")
+    if not {"vertical_press", "lateral_raise", "horizontal_pull"} & patterns:
+        missing.append("shoulder_rear_delt")
+    return missing
+
+
+def _enforce_session_skeleton_after_cap(
+    *,
+    exercises: list[dict[str, Any]],
+    source_exercises: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    if not exercises:
+        return exercises
+    category_patterns = {
+        "press": {"horizontal_press", "vertical_press"},
+        "pull": {"horizontal_pull", "vertical_pull"},
+        "lower": {"squat", "knee_extension", "hinge", "leg_curl"},
+        "shoulder_rear_delt": {"vertical_press", "lateral_raise", "horizontal_pull"},
+    }
+    slot_rank = {"weak_point": 0, "accessory": 1, "isolation": 1, "secondary_compound": 2, "primary_compound": 3}
+    stabilized = [deepcopy(exercise) for exercise in exercises if isinstance(exercise, dict)]
+    source = [deepcopy(exercise) for exercise in source_exercises if isinstance(exercise, dict)]
+    for _ in range(6):
+        missing = _missing_session_skeleton_categories(stabilized)
+        if not missing:
+            break
+        category = missing[0]
+        candidate = next(
+            (
+                item
+                for item in source
+                if str(item.get("movement_pattern") or "") in category_patterns[category]
+            ),
+            None,
+        )
+        if candidate is None:
+            break
+        replace_index = sorted(
+            range(len(stabilized)),
+            key=lambda idx: (
+                slot_rank.get(str(stabilized[idx].get("slot_role") or ""), 9),
+                idx,
+            ),
+        )[0]
+        stabilized[replace_index] = candidate
+    return stabilized
+
+
 def _nearest_selected_session_index(index: int, selected_indices: list[int]) -> int:
     return min(selected_indices, key=lambda item: (abs(item - index), item))
 
@@ -757,6 +813,10 @@ def generate_week_plan(
                 for index, exercise in enumerate(trimmed_exercises)
                 if index in set(cap_runtime["kept_indices"])
             ]
+            exercises = _enforce_session_skeleton_after_cap(
+                exercises=exercises,
+                source_exercises=trimmed_exercises,
+            )
 
         planned_sessions.append(
             {

@@ -165,7 +165,7 @@ THREE_DAY_BALANCE_TARGETS: dict[str, _ThreeDayBalanceTargets] = {
         minimum_exposure_by_group={"arms": 8, "delts": 6},
         soft_cap_by_group={"arms": 26, "delts": 18},
         hard_cap_by_group={"arms": 30, "delts": 20},
-        weak_point_minimum_bonus_by_group={"arms": 2, "delts": 0},
+        weak_point_minimum_bonus_by_group={"arms": 5, "delts": 0},
         weak_point_bonus_by_group={"arms": 3, "delts": 2},
         combined_arm_delt_share_cap=0.45,
         weak_point_combined_arm_delt_share_cap=0.50,
@@ -2130,6 +2130,16 @@ def _enforce_final_session_skeleton_floor(
                 if _candidate_matches_any_missing(record_by_id.get(exercise_id) or {}, missing)
             ]
             if not feasible_candidate_ids:
+                # Skeleton completion is a hard quality floor. If strict weekly
+                # reuse limits block all candidates, allow a bounded fallback
+                # within the current session to recover missing categories.
+                feasible_candidate_ids = [
+                    exercise_id
+                    for exercise_id in candidate_ids
+                    if exercise_id not in session_exercise_ids
+                    and _candidate_matches_any_missing(record_by_id.get(exercise_id) or {}, missing)
+                ]
+            if not feasible_candidate_ids:
                 break
             selection = select_scored_candidate(
                 doctrine_bundle=doctrine_bundle,
@@ -3424,10 +3434,16 @@ def build_generated_full_body_template_draft(
                     )
                 )
                 continue
+            historical_anchor_ids = [
+                exercise_id
+                for exercise_id in feasible_candidate_ids
+                if exercise_id in (assessment.prior_working_weight_by_exercise_id or {})
+            ]
+            prioritized_required_candidate_ids = historical_anchor_ids or feasible_candidate_ids
             selection = select_scored_candidate(
                 doctrine_bundle=doctrine_bundle,
                 selection_mode="required_slot",
-                candidate_ids=feasible_candidate_ids,
+                candidate_ids=prioritized_required_candidate_ids,
                 record_by_id=record_by_id,
                 assessment=assessment,
                 blueprint_input=blueprint_input,
@@ -4067,6 +4083,25 @@ def build_generated_full_body_template_draft(
             density_policy_ids=density_policy_ids,
             metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
         )
+        _enforce_final_session_skeleton_floor(
+            sessions=sessions,
+            assessment=assessment,
+            blueprint_input=blueprint_input,
+            doctrine_bundle=doctrine_bundle,
+            record_by_id=record_by_id,
+            assigned_counts=assigned_counts,
+            max_assignments_per_week=max_assignments_per_week,
+            allow_reuse_after_exhaustion=allow_reuse_after_exhaustion,
+            target_exercises_per_session=target_exercises_per_session,
+            effective_session_exercise_cap=effective_session_exercise_cap,
+            fill_target_rule_id=fill_target_rule.rule_id,
+            scoring_rule_id=scoring_rule.rule_id,
+            optional_fill_rule_id=optional_fill_rule.rule_id,
+            slot_role_rule_id=slot_role_rule.rule_id,
+            reuse_rule_id=reuse_rule.rule_id,
+            density_policy_ids=density_policy_ids,
+            metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+        )
 
     if any(len(session.exercises) < minimum_exercises_per_session for session in sessions):
         _append_issue(
@@ -4128,24 +4163,234 @@ def build_generated_full_body_template_draft(
         and str(assessment.schedule_profile or "") != "low_time"
     ):
         # Final hard floor for normal 3-day seriousness before draft materialization.
+        balance_targets = _resolve_three_day_balance_targets(assessment=assessment)
+        final_min_sets = int(_resolve_three_day_volume_band(assessment=assessment).minimum_weekly_planned_sets)
         for _ in range(200):
             weekly_sets = _weekly_planned_sets(sessions)
-            if weekly_sets >= 75:
+            if weekly_sets >= final_min_sets:
                 break
-            increased = False
+            primary_volume = _compute_primary_major_group_volume(
+                sessions=sessions,
+                record_by_id=record_by_id,
+                metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+            )
+            deficits = _major_floor_deficits(
+                primary_volume=primary_volume,
+                targets=balance_targets,
+                core_viable=core_viable,
+            )
+            target_session = min(
+                sessions,
+                key=lambda item: (
+                    _session_total_sets(item),
+                    item.session_id,
+                ),
+            )
+            candidates: list[GeneratedExerciseDraft] = []
+            for exercise in target_session.exercises:
+                slot_role = str(exercise.slot_role or "")
+                cap = 5 if slot_role == "primary_compound" else 4
+                if int(exercise.sets) >= cap:
+                    continue
+                candidates.append(exercise)
+            if not candidates:
+                break
+
+            deficit_candidates: list[GeneratedExerciseDraft] = []
+            if deficits:
+                for exercise in candidates:
+                    exercise_groups = _exercise_primary_major_groups(
+                        record_by_id.get(exercise.id) or {},
+                        metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+                    )
+                    if exercise_groups.intersection(set(deficits)):
+                        deficit_candidates.append(exercise)
+            pool = deficit_candidates or candidates
+            selected = sorted(
+                pool,
+                key=lambda item: (
+                    0 if str((record_by_id.get(item.id) or {}).get("fatigue_cost") or "") != "high" else 1,
+                    SLOT_ROLE_ORDER.get(item.slot_role, 9),
+                    item.id,
+                ),
+            )[0]
+            selected.sets += 1
+        _rebalance_session_set_totals(
+            sessions=sessions,
+            time_budget_minutes=int(assessment.session_time_budget_minutes or 75),
+        )
+        if apply_three_day_band:
+            final_targets = _resolve_three_day_balance_targets(assessment=assessment)
+            donor_priority = {
+                "weak_point": 0,
+                "accessory": 1,
+                "secondary_compound": 2,
+                "primary_compound": 3,
+            }
+            for group in ("arms", "delts"):
+                for _ in range(24):
+                    primary_volume = _compute_primary_major_group_volume(
+                        sessions=sessions,
+                        record_by_id=record_by_id,
+                        metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+                    )
+                    over = int(primary_volume.get(group, 0)) - int(final_targets.hard_cap_by_group[group])
+                    if over <= 0:
+                        break
+                    donors: list[GeneratedExerciseDraft] = []
+                    for session in sessions:
+                        for exercise in session.exercises:
+                            if int(exercise.sets) <= 1:
+                                continue
+                            exercise_groups = _exercise_primary_major_groups(
+                                record_by_id.get(exercise.id) or {},
+                                metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+                            )
+                            if group in exercise_groups:
+                                donors.append(exercise)
+                    if not donors:
+                        break
+                    selected_donor = sorted(
+                        donors,
+                        key=lambda item: (
+                            donor_priority.get(item.slot_role, 4),
+                            item.id,
+                        ),
+                    )[0]
+                    selected_donor.sets -= 1
+
+    # Preserve deterministic carryover anchors from prior working-weight history
+    # when an equivalent movement-pattern slot already exists in the generated week.
+    prior_anchor_ids = list((assessment.prior_working_weight_by_exercise_id or {}).keys())
+    if prior_anchor_ids:
+        selected_ids = {exercise.id for session in sessions for exercise in session.exercises}
+        for anchor_id in prior_anchor_ids:
+            if anchor_id in selected_ids:
+                continue
+            anchor_record = record_by_id.get(anchor_id)
+            if not anchor_record:
+                continue
+            anchor_pattern = str(anchor_record.get("movement_pattern") or "")
+            if not anchor_pattern:
+                continue
+            replacement_target: tuple[GeneratedSessionDraft, GeneratedExerciseDraft] | None = None
             for session in sessions:
-                for exercise in session.exercises:
-                    slot_role = str(exercise.slot_role or "")
-                    cap = 5 if slot_role == "primary_compound" else 4
-                    if int(exercise.sets) >= cap:
-                        continue
-                    exercise.sets += 1
-                    increased = True
+                for exercise in sorted(
+                    session.exercises,
+                    key=lambda item: (
+                        SLOT_ROLE_ORDER.get(item.slot_role, 9),
+                        item.id,
+                    ),
+                    reverse=True,
+                ):
+                    if exercise.id == anchor_id:
+                        replacement_target = None
+                        break
+                    if str(exercise.movement_pattern or "") == anchor_pattern:
+                        replacement_target = (session, exercise)
+                        break
+                if replacement_target is not None:
                     break
-                if increased:
+            if replacement_target is None:
+                continue
+            _, target_exercise = replacement_target
+            target_exercise.id = anchor_id
+            target_exercise.name = str(anchor_record.get("canonical_name") or anchor_id)
+            target_exercise.movement_pattern = anchor_pattern
+            target_exercise.primary_muscles = _resolved_primary_muscles_for_generated_exercise(
+                anchor_record,
+                metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+            )
+            anchor_weight = (assessment.prior_working_weight_by_exercise_id or {}).get(anchor_id)
+            if anchor_weight is not None:
+                target_exercise.start_weight = float(anchor_weight)
+                target_exercise.field_trace["start_weight"] = _trace(
+                    doctrine_rule_ids=["full_body_start_weight_initialization_v1"],
+                    exercise_ids=[anchor_id],
+                )
+            selected_ids.add(anchor_id)
+
+    if apply_three_day_band:
+        cap_targets = _resolve_three_day_balance_targets(assessment=assessment)
+        weak_point_groups = _weak_point_major_groups(assessment)
+        donor_priority = {
+            "weak_point": 0,
+            "accessory": 1,
+            "secondary_compound": 2,
+            "primary_compound": 3,
+        }
+        if {"arms", "delts"} & weak_point_groups:
+            for group in ("arms", "delts"):
+                for _ in range(48):
+                    primary_volume = _compute_primary_major_group_volume(
+                        sessions=sessions,
+                        record_by_id=record_by_id,
+                        metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+                    )
+                    over = int(primary_volume.get(group, 0)) - int(cap_targets.hard_cap_by_group[group])
+                    if over <= 0:
+                        break
+                    donors: list[GeneratedExerciseDraft] = []
+                    for session in sessions:
+                        for exercise in session.exercises:
+                            if int(exercise.sets) <= 1:
+                                continue
+                            exercise_groups = _exercise_primary_major_groups(
+                                record_by_id.get(exercise.id) or {},
+                                metadata_v2_by_exercise_id=metadata_v2_by_exercise_id,
+                            )
+                            if group in exercise_groups:
+                                donors.append(exercise)
+                    if not donors:
+                        break
+                    selected_donor = sorted(
+                        donors,
+                        key=lambda item: (
+                            donor_priority.get(item.slot_role, 4),
+                            item.id,
+                        ),
+                    )[0]
+                    selected_donor.sets -= 1
+
+            def _visible_arm_total() -> int:
+                total = 0
+                for session in sessions:
+                    for exercise in session.exercises:
+                        record = record_by_id.get(exercise.id) or {}
+                        muscles = {
+                            str(item).lower()
+                            for item in (list(record.get("primary_muscles") or []) + list(record.get("secondary_muscles") or []))
+                            if str(item)
+                        }
+                        if muscles.intersection({"arms", "biceps", "triceps"}):
+                            total += int(exercise.sets)
+                return total
+
+            visible_over = max(0, _visible_arm_total() - 32)
+            for _ in range(visible_over):
+                arm_isolation_donors: list[GeneratedExerciseDraft] = []
+                for session in sessions:
+                    for exercise in session.exercises:
+                        if int(exercise.sets) <= 1:
+                            continue
+                        if str(exercise.movement_pattern or "") not in {"curl", "triceps_extension"}:
+                            continue
+                        arm_isolation_donors.append(exercise)
+                if not arm_isolation_donors:
                     break
-            if not increased:
-                break
+                selected_donor = sorted(
+                    arm_isolation_donors,
+                    key=lambda item: (
+                        donor_priority.get(item.slot_role, 4),
+                        item.id,
+                    ),
+                )[0]
+                selected_donor.sets -= 1
+
+        _rebalance_session_set_totals(
+            sessions=sessions,
+            time_budget_minutes=int(assessment.session_time_budget_minutes or 75),
+        )
 
     selected_exercise_ids = _collect_selected_exercise_ids(sessions)
     constructibility_status = "insufficient" if insufficiencies else "ready"

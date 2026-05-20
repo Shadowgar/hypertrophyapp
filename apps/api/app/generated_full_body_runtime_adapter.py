@@ -627,7 +627,11 @@ def _enforce_program_template_session_skeleton(
         exercises = [exercise for exercise in (session.get("exercises") or []) if isinstance(exercise, dict)]
         if not exercises:
             continue
-        for category in _missing(session):
+        for _ in range(6):
+            missing_categories = _missing({"exercises": exercises})
+            if not missing_categories:
+                break
+            category = missing_categories[0]
             replacement = None
             for pattern in category_patterns[category]:
                 candidates = pattern_to_candidates.get(pattern) or []

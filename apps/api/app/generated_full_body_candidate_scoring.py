@@ -337,7 +337,16 @@ def _complexity_fit(
     return score
 
 
-def _progression_fit(*, record: dict[str, Any], bands: dict[str, int]) -> int:
+def _progression_fit(
+    *,
+    record: dict[str, Any],
+    assessment: UserAssessment,
+    bands: dict[str, int],
+) -> int:
+    # Deterministic anchor: when a user has prior working-weight history for
+    # this exact exercise, keep it strongly preferred for continuity.
+    if str(record.get("exercise_id") or "") in (assessment.prior_working_weight_by_exercise_id or {}):
+        return _band_score(bands, "strong_positive")
     level = _first_progression_level(record)
     if level is None:
         return _band_score(bands, "neutral")
@@ -509,7 +518,7 @@ def _score_candidate(
             bands=bands,
             metadata_v2=metadata_v2,
         ),
-        "progression_fit": _progression_fit(record=record, bands=bands),
+        "progression_fit": _progression_fit(record=record, assessment=assessment, bands=bands),
         "weak_point_alignment": _weak_point_alignment(
             record=record,
             target_weak_point_muscles=target_weak_point_muscles,

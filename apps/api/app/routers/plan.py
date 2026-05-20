@@ -759,6 +759,49 @@ def _enforce_generated_mode_set_band(
     }
 
 
+def _recompute_weekly_volume_by_muscle_from_sessions(
+    sessions: list[dict[str, Any]],
+) -> dict[str, int]:
+    totals = {
+        "chest": 0,
+        "back": 0,
+        "quads": 0,
+        "hamstrings": 0,
+        "glutes": 0,
+        "shoulders": 0,
+        "biceps": 0,
+        "triceps": 0,
+        "calves": 0,
+        "core": 0,
+    }
+    aliases = {
+        "back": {"back", "lats", "lat", "mid_back", "upper_back", "erectors"},
+        "shoulders": {"shoulders", "delts", "front_delts", "side_delts", "rear_delts"},
+        "core": {"core", "abs"},
+    }
+    for session in sessions:
+        for exercise in session.get("exercises") or []:
+            if not isinstance(exercise, dict):
+                continue
+            sets = int(exercise.get("sets") or 0)
+            movement_pattern = str(exercise.get("movement_pattern") or "").strip().lower()
+            muscles = {str(item).strip().lower() for item in (exercise.get("primary_muscles") or []) if str(item).strip()}
+            normalized: set[str] = set()
+            for muscle in muscles:
+                if muscle in totals:
+                    normalized.add(muscle)
+                    continue
+                for canonical, mapped in aliases.items():
+                    if muscle in mapped:
+                        normalized.add(canonical)
+                        break
+            if movement_pattern in {"hinge", "leg_curl", "squat"}:
+                normalized.add("hamstrings")
+            for muscle in normalized:
+                totals[muscle] = int(totals.get(muscle, 0)) + sets
+    return totals
+
+
 def _build_authored_adapted_sessions(
     *,
     preview_week: dict[str, Any],
@@ -2222,6 +2265,9 @@ def _build_week_plan_runtime_for_user(
             generated_mode=str(generated_volume_stage_trace.get("generated_mode") or ""),
             target_days=int(generated_volume_stage_trace.get("target_days") or 0),
         )
+    base_plan["weekly_volume_by_muscle"] = _recompute_weekly_volume_by_muscle_from_sessions(
+        cast(list[dict[str, Any]], base_plan.get("sessions") or []),
+    )
     base_plan = _apply_week_start_override_to_plan(
         base_plan=base_plan,
         week_start_override=week_start_override,
