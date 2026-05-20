@@ -84,6 +84,12 @@ export default function LoginPage() {
             Forgot password?
           </Link>
         </p>
+        <Link
+          href="/"
+          className="inline-flex w-full items-center justify-center rounded-md border border-[var(--ui-edge-idle)] bg-[var(--ui-surface-1)] px-3 py-2 text-sm text-zinc-100 hover:border-[var(--ui-edge-active)]"
+        >
+          Back to Main Screen
+        </Link>
       </form>
       <p className="ui-body-sm">Status: {status}</p>
       {status.startsWith("Login failed") && (

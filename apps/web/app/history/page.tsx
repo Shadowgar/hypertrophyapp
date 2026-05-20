@@ -674,10 +674,55 @@ export default function HistoryPage() {
 
   const heatmap = dashboard?.volume_heatmap;
   const heatmapMax = Math.max(heatmap?.max_volume ?? 0, 1);
+  const hasAnalyticsSignal = (
+    weeklyCheckins.length > 0
+    || prHighlights.length > 0
+    || (primaryStrengthTrend?.points.length ?? 0) > 0
+    || (dashboard?.bodyweight_trend.length ?? 0) > 1
+    || timelineEntries.length > 0
+    || measurementTrends.length > 0
+    || ((heatmap?.weeks.length ?? 0) > 0)
+  );
+
+  if (!hasAnalyticsSignal) {
+    return (
+      <div className="space-y-4">
+        <h1 className="ui-title-page">History</h1>
+        <div className="main-card main-card--module spacing-grid spacing-grid--tight">
+          <p className="telemetry-kicker">What this page is for</p>
+          <p className="telemetry-meta">History helps answer three questions: Are you showing up? Are lifts trending up? Is recovery good enough to push volume?</p>
+        </div>
+        <div className="main-card main-card--shell spacing-grid spacing-grid--tight">
+          <p className="telemetry-kicker">No Signal Yet</p>
+          <p className="telemetry-meta">Log a few workouts and weekly check-ins first. Then this page will surface adherence, PRs, and coach adjustments.</p>
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+            <a
+              className="inline-flex items-center justify-center rounded-md border border-white/10 bg-zinc-900/70 px-3 py-2 text-xs text-zinc-100 hover:bg-zinc-900"
+              href="/today"
+            >
+              Open Today Workout
+            </a>
+            <a
+              className="inline-flex items-center justify-center rounded-md border border-white/10 bg-zinc-900/70 px-3 py-2 text-xs text-zinc-100 hover:bg-zinc-900"
+              href="/checkin"
+            >
+              Open Weekly Check-In
+            </a>
+          </div>
+        </div>
+        <HistoryCalendarPanel />
+        {trendStatus ? <p className="text-xs text-zinc-500">{trendStatus}</p> : null}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
       <h1 className="ui-title-page">History</h1>
+      <div className="main-card main-card--module spacing-grid spacing-grid--tight">
+        <p className="telemetry-kicker">What this page is for</p>
+        <p className="telemetry-meta">Use this view to spot adherence patterns, confirm progression on key lifts, and review coaching adjustments over time.</p>
+      </div>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <div className="main-card main-card--shell">
           <p className="telemetry-kicker">Adherence</p>

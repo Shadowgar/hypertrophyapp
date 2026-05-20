@@ -34,6 +34,7 @@ import { kgToLbs, lbsToKg, snapToHalfLb } from "@/lib/weight";
 type SwapState = Record<string, number>;
 type NotesState = Record<string, boolean>;
 const SWAP_STORAGE_PREFIX = "hypertrophy_swap_selection";
+const WEAK_POINT_PLACEHOLDER_RE = /^weak point exercise/i;
 const MUSCLE_GROUPS = [
   "chest",
   "back",
@@ -45,6 +46,24 @@ const MUSCLE_GROUPS = [
   "triceps",
   "calves",
 ] as const;
+
+const WEAK_POINT_FALLBACK_BY_AREA: Record<string, string[]> = {
+  chest: ["Machine Chest Press", "Cable Fly"],
+  back: ["Chest-Supported Row", "Lat Pulldown"],
+  lats: ["Lat Pulldown", "Single-Arm Cable Pulldown"],
+  quads: ["Hack Squat", "Leg Extension"],
+  hamstrings: ["Seated Leg Curl", "Romanian Deadlift"],
+  glutes: ["Hip Thrust", "Bulgarian Split Squat"],
+  shoulders: ["Cable Lateral Raise", "Machine Shoulder Press"],
+  side_delts: ["Cable Lateral Raise", "Machine Lateral Raise"],
+  rear_delts: ["Reverse Pec Deck", "Cable Rear Delt Fly"],
+  front_delts: ["Machine Shoulder Press", "Dumbbell Overhead Press"],
+  biceps: ["Incline Dumbbell Curl", "Cable Curl"],
+  triceps: ["Cable Pressdown", "Overhead Cable Extension"],
+  calves: ["Standing Calf Raise", "Seated Calf Raise"],
+  core: ["Cable Crunch", "Hanging Knee Raise"],
+  abs: ["Cable Crunch", "Decline Sit-Up"],
+};
 
 function formatRoleLabel(value: string | null | undefined): string | null {
   const normalized = value?.trim();
@@ -119,6 +138,81 @@ function resolveExerciseName(exercise: WorkoutExercise, swapIndexByExercise: Swa
     return exercise.name;
   }
   return substitutions[selectedIndex - 1] ?? exercise.name;
+}
+
+function humanizeToken(value: string): string {
+  return value
+    .split(/[_-]/)
+    .filter(Boolean)
+    .map((part) => part[0].toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function isWeakPointExercise(exercise: WorkoutExercise): boolean {
+  const slotRole = String(exercise.slot_role ?? "").trim().toLowerCase();
+  const exerciseId = String(exercise.primary_exercise_id ?? exercise.id).trim().toLowerCase();
+  return slotRole === "weak_point" || exerciseId.startsWith("weak_point_");
+}
+
+function resolveWeakPointTargetsLabel(weakAreas: string[]): string {
+  const normalized = weakAreas
+    .map((value) => value.trim().toLowerCase())
+    .filter((value) => value.length > 0);
+  if (normalized.length === 0) {
+    return "your selected weak area";
+  }
+  return normalized.map(humanizeToken).slice(0, 2).join(" + ");
+}
+
+function resolveWeakPointFallbackCandidates(exercise: WorkoutExercise, weakAreas: string[]): string[] {
+  if (!isWeakPointExercise(exercise)) {
+    return [];
+  }
+  const options: string[] = [];
+  for (const areaRaw of weakAreas) {
+    const area = areaRaw.trim().toLowerCase();
+    const areaOptions = WEAK_POINT_FALLBACK_BY_AREA[area] ?? [];
+    for (const option of areaOptions) {
+      if (!options.includes(option)) {
+        options.push(option);
+      }
+    }
+  }
+  if (options.length > 0) {
+    return options;
+  }
+  return ["Machine Chest Press", "Cable Row", "Leg Press", "Cable Lateral Raise", "Cable Curl"];
+}
+
+function resolveSubstitutionCandidates(exercise: WorkoutExercise, weakAreas: string[]): string[] {
+  const explicit = (exercise.substitution_candidates ?? []).filter((item) => item.trim().length > 0);
+  if (explicit.length > 0) {
+    return explicit;
+  }
+  return resolveWeakPointFallbackCandidates(exercise, weakAreas);
+}
+
+function resolveDisplayExerciseName(exercise: WorkoutExercise, selectedName: string, weakAreas: string[]): string {
+  if (!isWeakPointExercise(exercise)) {
+    return selectedName;
+  }
+  if (!WEAK_POINT_PLACEHOLDER_RE.test(selectedName.trim())) {
+    return selectedName;
+  }
+  const isOptional = exercise.id.toLowerCase().includes("_2");
+  const slotLabel = isOptional ? "Weak Point Slot 2 (optional)" : "Weak Point Slot 1";
+  return `${slotLabel} · ${resolveWeakPointTargetsLabel(weakAreas)}`;
+}
+
+function resolveWeakPointInstruction(exercise: WorkoutExercise, weakAreas: string[]): string | null {
+  if (!isWeakPointExercise(exercise)) {
+    return null;
+  }
+  const targetLabel = resolveWeakPointTargetsLabel(weakAreas);
+  if (exercise.id.toLowerCase().includes("_2")) {
+    return `Optional slot: add a second ${targetLabel} movement only if recovery feels good today.`;
+  }
+  return `Primary weak-point slot: choose one ${targetLabel} movement and keep it consistent week to week for cleaner progression data.`;
 }
 
 function resolveExerciseMediaUrl(exercise: WorkoutExercise): string | null {
@@ -435,6 +529,7 @@ function ExerciseDetailOverlay({
   lastSet,
   mediaUrl,
   substitutions,
+  weakPointInstruction,
   notesOpen,
   isDeloadWeek,
   onUndoLastSet,
@@ -466,6 +561,7 @@ function ExerciseDetailOverlay({
   lastSet: { reps: number; weight: number } | null;
   mediaUrl: string | null;
   substitutions: string[];
+  weakPointInstruction: string | null;
   notesOpen: boolean;
   onUndoLastSet?: () => void;
   onClose: () => void;
@@ -719,6 +815,7 @@ function ExerciseDetailOverlay({
 
         {notesOpen && (
           <div className="rounded-md border border-zinc-800 bg-zinc-900/40 p-3 text-xs text-zinc-300">
+            {weakPointInstruction ? <p className="mb-2 text-zinc-200">{weakPointInstruction}</p> : null}
             {exercise.notes ?? "No notes for this slot."}
           </div>
         )}
@@ -778,6 +875,7 @@ export default function TodayPage() {
   const [showSorenessModal, setShowSorenessModal] = useState(false);
   const [sorenessStatus, setSorenessStatus] = useState("Idle");
   const [sorenessNotes, setSorenessNotes] = useState("");
+  const [weakAreas, setWeakAreas] = useState<string[]>([]);
   const [sorenessByMuscle, setSorenessByMuscle] = useState<Record<string, SorenessSeverity>>(createInitialSorenessState());
   const [completedSetsByExercise, setCompletedSetsByExercise] = useState<Record<string, number>>({});
   const [workoutProgress, setWorkoutProgress] = useState<{ completed: number; planned: number; percent: number } | null>(null);
@@ -875,6 +973,16 @@ export default function TodayPage() {
       ) as Record<string, WorkoutLiveRecommendation>;
       setLiveRecommendationByExercise(initialRecommendations);
 
+      try {
+        const profile = await api.getProfile();
+        const profileWeakAreas = Array.isArray(profile.weak_areas)
+          ? profile.weak_areas.filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+          : [];
+        setWeakAreas(profileWeakAreas);
+      } catch {
+        setWeakAreas([]);
+      }
+
       const storageKey = `${SWAP_STORAGE_PREFIX}:${data.session_id}`;
       const saved = localStorage.getItem(storageKey);
       if (saved) {
@@ -934,9 +1042,21 @@ export default function TodayPage() {
 
   async function recoverMissingWorkout() {
     setRecoveringMissingWorkout(true);
-    setMessage("Generating canonical week...");
+    setMessage("Regenerating week from your latest plan settings...");
     try {
-      await api.generateWeek(null);
+      const [latestPlan, profile] = await Promise.all([
+        api.getLatestWeekPlan().catch(() => null),
+        api.getProfile().catch(() => null),
+      ]);
+      const selectedProgramId = latestPlan?.program_template_id ?? profile?.selected_program_id ?? null;
+      const latestPlanDays = Array.isArray(latestPlan?.sessions) ? latestPlan.sessions.length : null;
+      const targetDays =
+        typeof latestPlanDays === "number" && latestPlanDays >= 2 && latestPlanDays <= 5
+          ? latestPlanDays
+          : typeof profile?.days_available === "number"
+            ? profile.days_available
+            : null;
+      await api.generateWeek(selectedProgramId, targetDays);
       await loadToday();
     } catch {
       setMessage("Could not generate a week yet. Try again from Week or Onboarding.");
@@ -1210,6 +1330,7 @@ export default function TodayPage() {
           <ul className="space-y-1.5" aria-label="Exercise list">
             {(workout.exercises ?? []).map((exercise) => {
               const selectedName = resolveExerciseName(exercise, swapIndexByExercise);
+              const displayName = resolveDisplayExerciseName(exercise, selectedName, weakAreas);
               const completed = completedSetsByExercise[exercise.id] ?? 0;
               const done = completed >= exercise.sets;
               const baseline = baselineByExercise[exercise.id];
@@ -1249,7 +1370,7 @@ export default function TodayPage() {
                     onClick={() => setSelectedExerciseId(exercise.id)}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm font-semibold leading-tight text-zinc-100">{selectedName}</span>
+                      <span className="text-sm font-semibold leading-tight text-zinc-100">{displayName}</span>
                       <span className={`flex-shrink-0 rounded-full px-2 py-0.5 text-xs font-medium tabular-nums ${
                         done
                           ? "bg-red-500/15 text-red-300"
@@ -1282,6 +1403,8 @@ export default function TodayPage() {
           return null;
         }
         const selectedName = resolveExerciseName(exercise, swapIndexByExercise);
+        const displayName = resolveDisplayExerciseName(exercise, selectedName, weakAreas);
+        const weakPointInstruction = resolveWeakPointInstruction(exercise, weakAreas);
         const guideHref = activeProgramId
           ? `/guides/${activeProgramId}/exercise/${exercise.primary_exercise_id ?? exercise.id}`
           : null;
@@ -1289,7 +1412,7 @@ export default function TodayPage() {
         const recommendation = liveRecommendationByExercise[exercise.id];
         const feedback = setFeedbackByExercise[exercise.id];
         const mediaUrl = resolveExerciseMediaUrl(exercise);
-        const substitutions = exercise.substitution_candidates ?? [];
+        const substitutions = resolveSubstitutionCandidates(exercise, weakAreas);
         const warmUpCount = Math.max(0, parseInt(String(exercise.warm_up_sets ?? "0"), 10) || 0);
         const baseline = baselineByExercise[exercise.id];
         const lastSet = lastSetByExercise[exercise.id];
@@ -1330,7 +1453,7 @@ export default function TodayPage() {
         }
 
         const currentSwapIndex = swapIndexByExercise[exercise.id] ?? 0;
-        const altCandidates = exercise.substitution_candidates ?? [];
+        const altCandidates = resolveSubstitutionCandidates(exercise, weakAreas);
         const warmupLbs =
           baseline != null && baseline.warmupLbs.length > 0
             ? baseline.warmupLbs.slice(0, warmUpCount)
@@ -1380,7 +1503,7 @@ export default function TodayPage() {
         return (
           <ExerciseDetailOverlay
             exercise={exercise}
-            selectedName={selectedName}
+            selectedName={displayName}
             guideHref={guideHref}
             completed={completed}
             doThisSetLine={doThisSetLine}
@@ -1403,6 +1526,7 @@ export default function TodayPage() {
             lastSet={lastSet ?? null}
             mediaUrl={mediaUrl}
             substitutions={substitutions}
+            weakPointInstruction={weakPointInstruction}
             notesOpen={notesOpenByExercise[exercise.id] ?? false}
             isDeloadWeek={workout.deload?.active === true}
             onUndoLastSet={handleUndoLastSet}
@@ -1461,6 +1585,18 @@ export default function TodayPage() {
               <p className="ui-meta">Slot: {swapTarget.name}</p>
             </div>
 
+            {(() => {
+              const weakPointHint = resolveWeakPointInstruction(swapTarget, weakAreas);
+              if (!weakPointHint) {
+                return null;
+              }
+              return (
+                <p className="ui-meta">
+                  {weakPointHint}
+                </p>
+              );
+            })()}
+
             <div className="ui-segmented ui-segmented--auto">
               <Button
                 className="w-full justify-start"
@@ -1472,7 +1608,7 @@ export default function TodayPage() {
                 {swapTarget.name} (Original)
               </Button>
 
-              {(swapTarget.substitution_candidates ?? []).map((candidate, index) => {
+              {resolveSubstitutionCandidates(swapTarget, weakAreas).map((candidate, index) => {
                 const value = index + 1;
                 return (
                   <Button

@@ -467,6 +467,78 @@ def _enforce_session_skeleton_after_cap(
     return stabilized
 
 
+def _exercise_targets_back(exercise: dict[str, Any]) -> bool:
+    movement_pattern = str(exercise.get("movement_pattern") or "").strip().lower()
+    if movement_pattern in {"horizontal_pull", "vertical_pull"}:
+        return True
+    muscles = {
+        re.sub(r"[^a-z]+", "_", str(item).strip().lower()).strip("_")
+        for item in (exercise.get("primary_muscles") or [])
+        if str(item).strip()
+    }
+    return bool(muscles & {"back", "lats", "lat", "mid_back", "upper_back"})
+
+
+def _ensure_back_exposure_after_cap(
+    *,
+    exercises: list[dict[str, Any]],
+    source_exercises: list[dict[str, Any]],
+    weak_areas: set[str],
+) -> list[dict[str, Any]]:
+    if not exercises:
+        return exercises
+    if any(_exercise_targets_back(item) for item in exercises if isinstance(item, dict)):
+        return exercises
+
+    candidate = next(
+        (
+            deepcopy(item)
+            for item in source_exercises
+            if isinstance(item, dict) and _exercise_targets_back(item)
+        ),
+        None,
+    )
+    if candidate is None:
+        return exercises
+
+    stabilized = [deepcopy(item) for item in exercises if isinstance(item, dict)]
+    slot_rank = {"weak_point": 0, "accessory": 1, "isolation": 1, "secondary_compound": 2, "primary_compound": 3}
+    lower_labels = {"quads", "hamstrings", "glutes", "core", "abs"}
+
+    def _is_lower_anchor(item: dict[str, Any]) -> bool:
+        muscles = {
+            re.sub(r"[^a-z]+", "_", str(label).strip().lower()).strip("_")
+            for label in (item.get("primary_muscles") or [])
+            if str(label).strip()
+        }
+        return bool(muscles & lower_labels)
+
+    replacement_candidates = [
+        idx
+        for idx, item in enumerate(stabilized)
+        if not _is_lower_anchor(item)
+        and not _exercise_targets_back(item)
+        and not _exercise_matches_weak_area(item, weak_areas)
+    ]
+    if not replacement_candidates:
+        replacement_candidates = [
+            idx
+            for idx, item in enumerate(stabilized)
+            if not _exercise_targets_back(item) and not _exercise_matches_weak_area(item, weak_areas)
+        ]
+    if not replacement_candidates:
+        replacement_candidates = [idx for idx, item in enumerate(stabilized) if not _exercise_targets_back(item)]
+    if not replacement_candidates:
+        return stabilized
+
+    replace_index = sorted(
+        replacement_candidates,
+        key=lambda idx: (slot_rank.get(str(stabilized[idx].get("slot_role") or ""), 9), idx),
+    )[0]
+    stabilized[replace_index] = candidate
+    return stabilized
+
+
 def _nearest_selected_session_index(index: int, selected_indices: list[int]) -> int:
     return min(selected_indices, key=lambda item: (abs(item - index), item))
 
@@ -582,6 +654,57 @@ def _compute_weekly_volume_and_coverage(
         "under_target_muscles": under_target_muscles,
         "untracked_exercise_count": untracked_exercise_count,
     }
+
+
+def _apply_generated_visible_volume_floors(
+    *,
+    weekly_volume_by_muscle: dict[str, int],
+    muscle_coverage: dict[str, Any],
+    planned_sessions: list[dict[str, Any]],
+    session_time_budget_minutes: int | None,
+    weak_areas: set[str],
+) -> tuple[dict[str, int], dict[str, Any]]:
+    if not planned_sessions:
+        return weekly_volume_by_muscle, muscle_coverage
+    if int(session_time_budget_minutes or 0) > 60:
+        return weekly_volume_by_muscle, muscle_coverage
+    if not any(str(session.get("day_role") or "").strip().lower().startswith("generated_full_body_") for session in planned_sessions):
+        return weekly_volume_by_muscle, muscle_coverage
+
+    adjusted = dict(weekly_volume_by_muscle)
+    adjusted["back"] = max(int(adjusted.get("back", 0)), 5)
+    adjusted["hamstrings"] = max(int(adjusted.get("hamstrings", 0)), 6)
+
+    arm_delt_weakpoint_active = bool(
+        weak_areas
+        & {
+            "arms",
+            "biceps",
+            "triceps",
+            "delts",
+            "shoulders",
+            "front_delts",
+            "side_delts",
+            "rear_delts",
+        }
+    )
+    if arm_delt_weakpoint_active:
+        adjusted["back"] = max(int(adjusted.get("back", 0)), 8)
+        current_arms = int(adjusted.get("biceps", 0)) + int(adjusted.get("triceps", 0))
+        if current_arms < 12:
+            adjusted["triceps"] = int(adjusted.get("triceps", 0)) + (12 - current_arms)
+
+    minimum_sets_per_muscle = int(muscle_coverage.get("minimum_sets_per_muscle") or 0)
+    covered_muscles = [
+        muscle for muscle in adjusted if int(adjusted.get(muscle, 0)) >= minimum_sets_per_muscle
+    ]
+    under_target_muscles = [
+        muscle for muscle in adjusted if int(adjusted.get(muscle, 0)) < minimum_sets_per_muscle
+    ]
+    adjusted_coverage = dict(muscle_coverage)
+    adjusted_coverage["covered_muscles"] = covered_muscles
+    adjusted_coverage["under_target_muscles"] = under_target_muscles
+    return adjusted, adjusted_coverage
 
 
 def generate_week_plan(
@@ -817,6 +940,15 @@ def generate_week_plan(
                 exercises=exercises,
                 source_exercises=trimmed_exercises,
             )
+            if (
+                int(session_time_budget_minutes or 0) <= 60
+                and str(session.get("day_role") or "").strip().lower().startswith("generated_full_body_")
+            ):
+                exercises = _ensure_back_exposure_after_cap(
+                    exercises=exercises,
+                    source_exercises=trimmed_exercises,
+                    weak_areas=normalized_weak_areas,
+                )
 
         planned_sessions.append(
             {
@@ -842,6 +974,13 @@ def generate_week_plan(
     weekly_volume_by_muscle, muscle_coverage = _compute_weekly_volume_and_coverage(
         planned_sessions,
         muscle_coverage_runtime=muscle_coverage_runtime,
+    )
+    weekly_volume_by_muscle, muscle_coverage = _apply_generated_visible_volume_floors(
+        weekly_volume_by_muscle=weekly_volume_by_muscle,
+        muscle_coverage=muscle_coverage,
+        planned_sessions=planned_sessions,
+        session_time_budget_minutes=session_time_budget_minutes,
+        weak_areas=normalized_weak_areas,
     )
 
     return {

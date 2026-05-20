@@ -881,6 +881,7 @@ def _build_authored_adapted_sessions(
                 "sets": 0,
                 "weak_point_sets": 0,
                 "exercises": [],
+                "source_indices": set(),
             }
             for _ in range(day_count)
         ]
@@ -902,17 +903,29 @@ def _build_authored_adapted_sessions(
             bucket["sets"] = int(bucket["sets"]) + int(unit["sets"])
             bucket["weak_point_sets"] = int(bucket["weak_point_sets"]) + int(unit["weak_point_sets"])
             bucket["exercises"].extend(cast(list[dict[str, Any]], unit["exercises"]))
+            bucket["source_indices"].add(int(unit["source_index"]))
+
+        bucket_order = sorted(
+            range(day_count),
+            key=lambda index: (
+                min(cast(set[int], buckets[index]["source_indices"]))
+                if cast(set[int], buckets[index]["source_indices"])
+                else 10_000,
+                index,
+            ),
+        )
 
         redistributed_sessions: list[dict[str, Any]] = []
-        for index, bucket in enumerate(buckets):
-            adapted_day = adapted_days[index]
-            day_name = str(adapted_day.get("day_name") or "").strip() or f"Adapted Full Body #{index + 1}"
-            day_role = str(adapted_day.get("day_role") or "").strip() or f"full_body_adapted_{index + 1}"
+        for adapted_index, bucket_index in enumerate(bucket_order):
+            bucket = buckets[bucket_index]
+            adapted_day = adapted_days[adapted_index]
+            day_name = str(adapted_day.get("day_name") or "").strip() or f"Adapted Full Body #{adapted_index + 1}"
+            day_role = str(adapted_day.get("day_role") or "").strip() or f"full_body_adapted_{adapted_index + 1}"
             redistributed_sessions.append(
                 {
                     "name": day_name,
                     "day_role": day_role,
-                    "day_offset": min(6, index),
+                    "day_offset": min(6, adapted_index),
                     "exercises": cast(list[dict[str, Any]], bucket["exercises"]),
                 }
             )

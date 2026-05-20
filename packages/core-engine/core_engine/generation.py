@@ -27,6 +27,7 @@ GENERATED_FULL_BODY_PROGRAM_ALIASES: set[str] = {
     GENERATED_FULL_BODY_CANONICAL_PROGRAM_ID,
     "adaptive_full_body_gold_v0_1",
 }
+AUTHORITATIVE_AUTHORED_PASSTHROUGH_KEY = "__authoritative_authored_passthrough__"
 
 
 def _read_attr(value: Any, key: str, default: Any = None) -> Any:
@@ -100,6 +101,23 @@ def _coerce_stimulus_fatigue_response_snapshot(value: Any) -> dict[str, Any]:
     if any(not normalized[field] for field in required_fields):
         return {}
     return normalized
+
+
+def _should_skip_weekly_review_overlay_for_authored_passthrough(
+    *,
+    selected_template_id: str,
+    base_plan: dict[str, Any],
+    generation_runtime_trace: dict[str, Any],
+) -> bool:
+    compatibility_selected_template_id = str(
+        generation_runtime_trace.get("compatibility_selected_template_id") or ""
+    ).strip()
+    if compatibility_selected_template_id in GENERATED_FULL_BODY_PROGRAM_ALIASES:
+        return False
+
+    normalized_template_id = str(selected_template_id or "").strip()
+    is_authored_template = normalized_template_id in (PHASE1_PROGRAM_ALIASES | PHASE2_PROGRAM_ALIASES)
+    return is_authored_template and bool(base_plan.get(AUTHORITATIVE_AUTHORED_PASSTHROUGH_KEY))
 
 
 def _equivalent_program_ids(program_id: str) -> set[str]:
@@ -1474,7 +1492,14 @@ def prepare_generate_week_finalize_runtime(
     active_frequency_adaptation: dict[str, Any] | None,
     review_cycle: Any | None,
 ) -> dict[str, Any]:
-    review_overlay = prepare_generated_week_review_overlay(review_cycle)
+    if _should_skip_weekly_review_overlay_for_authored_passthrough(
+        selected_template_id=selected_template_id,
+        base_plan=base_plan,
+        generation_runtime_trace=generation_runtime_trace,
+    ):
+        review_overlay: dict[str, Any] = {}
+    else:
+        review_overlay = prepare_generated_week_review_overlay(review_cycle)
     finalized_plan = build_generated_week_plan_payload(
         base_plan=base_plan,
         template_selection_trace=template_selection_trace,
