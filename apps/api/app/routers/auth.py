@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..config import settings
+from ..emailer import is_smtp_configured, send_password_reset_email
 from ..models import PasswordResetToken, User
 from ..models import BodyMeasurementEntry, CoachingRecommendation, ExerciseState, SorenessEntry, WeeklyCheckin, WeeklyReviewCycle
 from ..models import WorkoutPlan, WorkoutSessionState, WorkoutSetLog
@@ -112,7 +113,20 @@ def password_reset_request(payload: PasswordResetRequest, db: DbSession) -> Pass
     db.add(entry)
     db.commit()
 
-    return PasswordResetRequestResponse(status="accepted", reset_token=reset_token)
+    smtp_configured = is_smtp_configured(settings)
+    delivery = None
+    if smtp_configured:
+        delivery = send_password_reset_email(to_email=normalized_email, reset_token=reset_token, config=settings)
+        if not delivery.sent and settings.password_reset_require_email_delivery:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Password reset email could not be sent",
+            )
+
+    expose_token = settings.password_reset_expose_token or not smtp_configured
+    response_token = reset_token if expose_token else None
+    response_status = "accepted" if delivery is None or delivery.sent or not smtp_configured else "email_failed"
+    return PasswordResetRequestResponse(status=response_status, reset_token=response_token)
 
 
 @router.post("/password-reset/confirm")

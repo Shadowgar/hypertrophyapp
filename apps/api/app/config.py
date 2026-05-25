@@ -18,6 +18,17 @@ class Settings(BaseSettings):
     log_file_path: str = "logs/app-debug.log"
     log_max_bytes: int = 5_000_000
     log_backup_count: int = 5
+    smtp_host: str | None = None
+    smtp_port: int = 587
+    smtp_username: str | None = None
+    smtp_password: str | None = None
+    smtp_from_email: str | None = None
+    smtp_from_name: str = "Hypertrophy App"
+    smtp_use_tls: bool = True
+    smtp_timeout_seconds: float = 10.0
+    password_reset_base_url: str = "http://localhost:18080/reset-password"
+    password_reset_expose_token: bool = True
+    password_reset_require_email_delivery: bool = False
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
