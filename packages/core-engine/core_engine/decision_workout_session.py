@@ -1078,16 +1078,6 @@ def build_workout_today_payload(
     for raw_exercise in selected_session.get("exercises") or []:
         exercise = dict(_coerce_dict(raw_exercise))
         exercise_id = str(exercise.get("id") or "")
-        # Align scheduled sets to authored working_sets minimum so prescription and counts match
-        authored_working = exercise.get("working_sets")
-        if authored_working is not None:
-            try:
-                min_sets = max(1, int(float(str(authored_working))))
-                current_sets = int(exercise.get("sets", 0) or 0)
-                if current_sets < min_sets:
-                    exercise["sets"] = min_sets
-            except (TypeError, ValueError):
-                pass
         recommended_weight, starting_load_quality_source = _resolve_today_recommended_weight(exercise)
         exercise["recommended_working_weight"] = recommended_weight
         exercise["starting_load_quality_source"] = starting_load_quality_source

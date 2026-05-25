@@ -109,15 +109,24 @@ def _should_skip_weekly_review_overlay_for_authored_passthrough(
     base_plan: dict[str, Any],
     generation_runtime_trace: dict[str, Any],
 ) -> bool:
+    normalized_template_id = str(selected_template_id or "").strip()
+    is_authored_template = normalized_template_id in (PHASE1_PROGRAM_ALIASES | PHASE2_PROGRAM_ALIASES)
+    authoritative_passthrough_flag = bool(base_plan.get(AUTHORITATIVE_AUTHORED_PASSTHROUGH_KEY))
+    if not authoritative_passthrough_flag:
+        session_selection_trace = _coerce_dict(base_plan.get("session_selection_trace"))
+        outcome = _coerce_dict(session_selection_trace.get("outcome"))
+        authoritative_passthrough_flag = (
+            str(outcome.get("selection_strategy") or "").strip().lower() == "authoritative_passthrough"
+        )
+    if is_authored_template and authoritative_passthrough_flag:
+        return True
+
     compatibility_selected_template_id = str(
         generation_runtime_trace.get("compatibility_selected_template_id") or ""
     ).strip()
     if compatibility_selected_template_id in GENERATED_FULL_BODY_PROGRAM_ALIASES:
         return False
-
-    normalized_template_id = str(selected_template_id or "").strip()
-    is_authored_template = normalized_template_id in (PHASE1_PROGRAM_ALIASES | PHASE2_PROGRAM_ALIASES)
-    return is_authored_template and bool(base_plan.get(AUTHORITATIVE_AUTHORED_PASSTHROUGH_KEY))
+    return False
 
 
 def _equivalent_program_ids(program_id: str) -> set[str]:
