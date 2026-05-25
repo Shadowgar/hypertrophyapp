@@ -37,6 +37,8 @@ REQUIRED_EVENT_FIELDS: tuple[str, ...] = (
 )
 
 REQUEST_ID_CONTEXT: ContextVar[str | None] = ContextVar("request_id", default=None)
+ROUTE_CONTEXT: ContextVar[str | None] = ContextVar("route", default=None)
+ACTION_CONTEXT: ContextVar[str | None] = ContextVar("action", default=None)
 
 SENSITIVE_KEY_FRAGMENTS: tuple[str, ...] = (
     "password",
@@ -62,6 +64,30 @@ def reset_request_id(token: Token[str | None]) -> None:
 
 def get_request_id() -> str | None:
     return REQUEST_ID_CONTEXT.get()
+
+
+def set_request_route(route: str | None) -> Token[str | None]:
+    return ROUTE_CONTEXT.set(route)
+
+
+def reset_request_route(token: Token[str | None]) -> None:
+    ROUTE_CONTEXT.reset(token)
+
+
+def get_request_route() -> str | None:
+    return ROUTE_CONTEXT.get()
+
+
+def set_request_action(action: str | None) -> Token[str | None]:
+    return ACTION_CONTEXT.set(action)
+
+
+def reset_request_action(token: Token[str | None]) -> None:
+    ACTION_CONTEXT.reset(token)
+
+
+def get_request_action() -> str | None:
+    return ACTION_CONTEXT.get()
 
 
 def configure_logging(
@@ -140,16 +166,24 @@ def log_event(event: str, level: str = "info", **fields: Any) -> None:
         "timestamp": datetime.utcnow().isoformat() + "Z",
         "level": str(level or "info").upper(),
         "event": event,
-        "request_id": get_request_id(),
+        "request_id": get_request_id() or "missing_request_id",
     }
-    payload.update({required_key: None for required_key in REQUIRED_EVENT_FIELDS})
-    payload.update(
-        {
-            key: sanitized
-            for key, raw in fields.items()
-            if (sanitized := _sanitize(raw, key_hint=key)) is not None
-        }
-    )
+    sanitized_fields = {
+        key: sanitized
+        for key, raw in fields.items()
+        if (sanitized := _sanitize(raw, key_hint=key)) is not None
+    }
+    payload.update(sanitized_fields)
+    required_field_defaults: dict[str, Any] = {
+        "request_id": payload.get("request_id"),
+        "route": get_request_route() or "missing_route",
+        "action": get_request_action() or "missing_action",
+        "error_class": "none",
+        "error_message": "none",
+    }
+    for required_key in REQUIRED_EVENT_FIELDS:
+        if required_key not in payload:
+            payload[required_key] = required_field_defaults.get(required_key, "missing")
     message = json.dumps(payload, sort_keys=True, separators=(",", ":"))
     getattr(logger, level.lower(), logger.info)(message)
 

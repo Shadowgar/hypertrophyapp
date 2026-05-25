@@ -14,8 +14,12 @@ from .database import Base, engine
 from .observability import (
     configure_logging,
     log_event,
+    reset_request_action,
     reset_request_id,
+    reset_request_route,
+    set_request_action,
     set_request_id,
+    set_request_route,
     validation_failure_event_name,
 )
 from .routers import auth, history, plan, profile, workout
@@ -77,6 +81,8 @@ async def log_unhandled_exceptions(request: Request, call_next):
     request_id = incoming_request_id[:128] if incoming_request_id else str(uuid4())
     request.state.request_id = request_id
     request_id_token = set_request_id(request_id)
+    route_token = set_request_route(request.url.path)
+    action_token = set_request_action(request.method.lower())
     try:
         response = await call_next(request)
         response.headers["X-Request-ID"] = request_id
@@ -93,6 +99,8 @@ async def log_unhandled_exceptions(request: Request, call_next):
         )
         raise
     finally:
+        reset_request_action(action_token)
+        reset_request_route(route_token)
         reset_request_id(request_id_token)
 
 
