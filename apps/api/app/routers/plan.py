@@ -417,19 +417,7 @@ def _resolve_generation_week_context(
         return prior_plans, monday
     current_week_start = monday
     if latest_binding_plan.week_start > current_week_start:
-        target_week_start = latest_binding_plan.week_start
-        filtered_prior_plans = [
-            plan
-            for plan in prior_plans
-            if not (
-                resolve_selected_program_binding_id(
-                    (plan.payload if isinstance(plan.payload, dict) else {}).get("program_template_id")
-                )
-                == binding_id
-                and plan.week_start == target_week_start
-            )
-        ]
-        return filtered_prior_plans, target_week_start
+        return prior_plans, current_week_start
 
     has_current_week_plan = latest_binding_plan.week_start >= current_week_start
     if not has_current_week_plan:
@@ -471,6 +459,8 @@ def _resolve_current_regenerate_week_pin(
         and plan.week_start == effective_week_start
     ]
     latest_matching_week_plan = max(matching_week_plans, key=lambda plan: plan.created_at) if matching_week_plans else None
+    if latest_matching_week_plan is None:
+        return 1, 1
     authored_week_index = week_index
     if latest_matching_week_plan is not None:
         payload = latest_matching_week_plan.payload if isinstance(latest_matching_week_plan.payload, dict) else {}
@@ -2580,6 +2570,13 @@ def _generate_week_for_user(
         db.flush()
 
     selected_program_id = resolve_selected_program_binding_id(current_user.selected_program_id)
+    if target_days is not None:
+        normalized_target_days = max(2, min(5, int(target_days)))
+        if current_user.days_available != normalized_target_days:
+            current_user.days_available = normalized_target_days
+            db.add(current_user)
+            db.flush()
+            target_days = normalized_target_days
     days_available = current_user.days_available
     log_event(
         "week_generate_requested" if generation_mode == "current_week_regenerate" else "week_next_requested",

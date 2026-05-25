@@ -156,6 +156,9 @@ function WeekOverviewCards({ plan, selectedProgramId }: Readonly<{ plan: Generat
     .sort((left, right) => right[1] - left[1])
     .slice(0, 4);
   const coveredMuscles = muscleCoverage.covered_muscles ?? [];
+  const visibleCoveredMuscles = Object.entries(plan.weekly_volume_by_muscle ?? {})
+    .filter(([, sets]) => typeof sets === "number" && sets > 0)
+    .map(([muscle]) => muscle);
   const underTarget = muscleCoverage.under_target_muscles ?? [];
   const authoredBlockLabel = formatAuthoredBlockLabel(plan);
   const weakPointScheduled = hasWeakPointEmphasis(plan);
@@ -184,9 +187,14 @@ function WeekOverviewCards({ plan, selectedProgramId }: Readonly<{ plan: Generat
           </div>
         </Disclosure>
 
-        <Disclosure title="Coverage Radar" badge={`${coveredMuscles.length} covered · ${underTarget.length} gaps`} defaultOpen={false}>
+        <Disclosure title="Coverage Radar" badge={`${visibleCoveredMuscles.length} covered · ${underTarget.length} gaps`} defaultOpen={false}>
           <div className="space-y-2 text-sm text-zinc-200">
             <p>Minimum {muscleCoverage.minimum_sets_per_muscle ?? 0} sets per muscle</p>
+            {visibleCoveredMuscles.length !== coveredMuscles.length ? (
+              <p className="text-zinc-400">
+                Tracked coverage: {coveredMuscles.length} muscles meeting target.
+              </p>
+            ) : null}
             {underTarget.length > 0 ? <p className="text-yellow-400/80">Under target: {underTarget.join(", ")}</p> : <p className="text-zinc-400">All muscles on target.</p>}
             <div className="space-y-1 text-xs text-zinc-300">
               {weeklyVolumeEntries.map(([muscle, sets]) => (
@@ -356,21 +364,34 @@ export default function WeekPage() {
   const awaitingInitialGeneration = !plan && !requiresSundayReview && !generationFailed;
   const profileSelectedProgramId = profile?.selected_program_id ?? null;
   const selectionDirty = selectedProgramId !== profileSelectedProgramId;
+  const profileDaysAvailable = typeof profile?.days_available === "number" ? profile.days_available : null;
+  const daysDirty = profileDaysAvailable !== null && targetDays !== profileDaysAvailable;
+  const preferenceDirty = selectionDirty || daysDirty;
 
   async function saveProgramPreference() {
-    if (!selectionDirty || isSavingProgramSelection) {
+    if (!preferenceDirty || isSavingProgramSelection) {
       return;
     }
     setIsSavingProgramSelection(true);
     try {
-      const nextMode = selectedProgramId ? "manual" : "auto";
-      const updated = await api.updateProgramSelection({
-        selected_program_id: selectedProgramId,
-        program_selection_mode: nextMode,
-      });
-      setProfile(updated);
-      setSelectedProgramId(updated.selected_program_id ?? null);
-      if (updated.selected_program_id === "full_body_v1") {
+      let updatedProfile = profile;
+      if (daysDirty) {
+        updatedProfile = await api.updateProfile({ days_available: targetDays });
+        setProfile(updatedProfile);
+      }
+
+      if (selectionDirty) {
+        const nextMode = selectedProgramId ? "manual" : "auto";
+        const updated = await api.updateProgramSelection({
+          selected_program_id: selectedProgramId,
+          program_selection_mode: nextMode,
+        });
+        updatedProfile = updated;
+        setProfile(updated);
+        setSelectedProgramId(updated.selected_program_id ?? null);
+      }
+
+      if (updatedProfile?.selected_program_id === "full_body_v1") {
         try {
           const onboardingState = await api.getGeneratedOnboarding();
           setGeneratedOnboardingPrompt(
@@ -384,14 +405,20 @@ export default function WeekPage() {
       } else {
         setGeneratedOnboardingPrompt(null);
       }
-      setPlanStatus(
-        selectedProgramId
-          ? `Program preference saved: ${getProgramDisplayName({ id: selectedProgramId })}. Generate Week when ready.`
-          : "Program preference saved: Auto selection. Generate Week when ready.",
-      );
+      if (selectionDirty && daysDirty) {
+        setPlanStatus(`Preferences saved: ${targetDays} training days and ${selectedProgramId ? getProgramDisplayName({ id: selectedProgramId }) : "Auto selection"}. Generate Week when ready.`);
+      } else if (daysDirty) {
+        setPlanStatus(`Preferences saved: ${targetDays} training days. Generate Week when ready.`);
+      } else {
+        setPlanStatus(
+          selectedProgramId
+            ? `Program preference saved: ${getProgramDisplayName({ id: selectedProgramId })}. Generate Week when ready.`
+            : "Program preference saved: Auto selection. Generate Week when ready.",
+        );
+      }
     } catch (error) {
       const detail = error instanceof Error ? error.message : "Unknown error";
-      setPlanStatus(`Failed to save program preference: ${detail}`);
+      setPlanStatus(`Failed to save preferences: ${detail}`);
     } finally {
       setIsSavingProgramSelection(false);
     }
@@ -400,6 +427,10 @@ export default function WeekPage() {
   async function generate() {
     setIsGenerating(true);
     try {
+      if (profile && targetDays !== profile.days_available) {
+        const updatedProfile = await api.updateProfile({ days_available: targetDays });
+        setProfile(updatedProfile);
+      }
       const reviewStatus = await api.getWeeklyReviewStatus();
       if (reviewStatus.today_is_sunday && reviewStatus.review_required) {
         setPlan(null);
@@ -490,9 +521,9 @@ export default function WeekPage() {
               aria-label="Save program preference"
               className="min-h-[40px] px-3 text-xs font-semibold"
               onClick={saveProgramPreference}
-              disabled={isSavingProgramSelection || !selectionDirty}
+              disabled={isSavingProgramSelection || !preferenceDirty}
             >
-              {isSavingProgramSelection ? "Saving..." : "Save Preference"}
+              {isSavingProgramSelection ? "Saving..." : "Save Preferences"}
             </Button>
             <p className="text-xs text-zinc-500">
               Save preference without regenerating. Generate Week still respects logged-progress safety guard.
