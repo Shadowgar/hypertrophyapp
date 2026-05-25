@@ -180,7 +180,7 @@ def test_load_program_template_phase2_keeps_week_one_as_non_deload_source_week()
     assert authored_weeks[5]["week_role"] == "intensification"
 
 
-REFERENCE_PHASE1_WORKBOOK = REPO_ROOT / "reference" / "Hypertrophy Phase 1 Sheet.xlsx"
+REFERENCE_PHASE1_WORKBOOK = REPO_ROOT / "reference" / "Pure Bodybuilding Phase 1 - Full Body Sheet.xlsx"
 
 
 @pytest.mark.skipif(not REFERENCE_PHASE1_WORKBOOK.exists(), reason="reference workbook not available")

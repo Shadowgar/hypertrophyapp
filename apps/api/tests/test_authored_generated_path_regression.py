@@ -358,6 +358,80 @@ def test_fresh_onboarding_authored_phase1_starts_week1_and_stays_authored_derive
     assert payload["mesocycle"]["is_deload_week"] is False
 
 
+def test_fresh_onboarding_authored_phase1_five_day_plan_is_exact_workbook_week_one() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register(client, email="phase1-exact-five-day@example.com")
+
+    _upsert_profile(
+        client,
+        headers=headers,
+        selected_program_id="pure_bodybuilding_phase_1_full_body",
+        days_available=5,
+    )
+
+    payload = _generate_week(client, headers=headers)
+
+    assert payload["program_template_id"] == "pure_bodybuilding_phase_1_full_body"
+    assert "generated_full_body_runtime_trace" not in payload["template_selection_trace"]
+    assert payload["mesocycle"]["authored_week_index"] == 1
+    assert payload["mesocycle"]["authored_week_role"] == "adaptation"
+    assert [session["title"] for session in payload["sessions"]] == [
+        "Full Body #1",
+        "Full Body #2",
+        "Full Body #3",
+        "Full Body #4",
+        "Arms & Weak Points",
+    ]
+    assert [_session_set_total(session) for session in payload["sessions"]] == [18, 16, 20, 16, 18]
+    assert [
+        [exercise["name"] for exercise in session["exercises"]]
+        for session in payload["sessions"]
+    ] == [
+        [
+            "Cross-Body Lat Pull-Around",
+            "Low Incline Smith Machine Press",
+            "Machine Hip Adduction",
+            "Leg Press",
+            "Lying Paused Rope Face Pull",
+            "Cable Crunch",
+        ],
+        [
+            "Seated DB Shoulder Press",
+            "Paused Barbell RDL",
+            "Chest-Supported Machine Row",
+            "Hammer Preacher Curl",
+            "Cuffed Behind-The-Back Lateral Raise",
+            "Overhead Cable Triceps Extension (Bar)",
+        ],
+        [
+            "Superset A1: Assisted Pull-Up",
+            "Superset A2: Paused Assisted Dip",
+            "Superset B1: Seated Leg Curl",
+            "Superset B2: Leg Extension",
+            "Cable Paused Shrug-In",
+            "Roman Chair Leg Raise",
+        ],
+        [
+            "Lying Leg Curl",
+            "Hack Squat",
+            "Bent-Over Cable Pec Flye",
+            "Neutral-Grip Lat Pulldown",
+            "Leg Press Calf Press",
+            "Cable Reverse Flye (Mechanical Dropset)",
+        ],
+        [
+            "Weak Point Exercise 1",
+            "Weak Point Exercise 2 (optional)",
+            "Bayesian Cable Curl",
+            "Triceps Pressdown (Bar)",
+            "Bottom-2/3 Constant Tension Preacher Curl",
+            "Cable Triceps Kickback",
+            "Standing Calf Raise",
+        ],
+    ]
+
+
 def test_authored_phase1_session_time_budget_does_not_disable_workbook_passthrough() -> None:
     _reset_db()
     client = TestClient(app)

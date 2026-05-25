@@ -185,7 +185,7 @@ def test_build_onboarding_package_preserves_tracking_sets_when_present(tmp_path:
     assert slot.tracking_set_4 == "115x7"
 
 
-REFERENCE_PHASE1_WORKBOOK = REPO_ROOT / "reference" / "Hypertrophy Phase 1 Sheet.xlsx"
+REFERENCE_PHASE1_WORKBOOK = REPO_ROOT / "reference" / "Pure Bodybuilding Phase 1 - Full Body Sheet.xlsx"
 
 
 @pytest.mark.skipif(not REFERENCE_PHASE1_WORKBOOK.exists(), reason="reference workbook not available")

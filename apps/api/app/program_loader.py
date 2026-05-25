@@ -617,12 +617,17 @@ def _adaptive_slot_to_runtime_exercise(
         or slot_source.get("demo_url")
         or exercise_knowledge.get("default_video_url")
     )
+    resolved_name = str(
+        slot_source.get("exercise")
+        or exercise_knowledge.get("canonical_name")
+        or _fallback_exercise_name(exercise_id)
+    )
     movement_pattern = exercise_knowledge.get("movement_pattern")
     secondary_muscles = exercise_knowledge.get("secondary_muscles") or []
     return {
         "id": exercise_id,
         "primary_exercise_id": exercise_id,
-        "name": str(exercise_knowledge.get("canonical_name") or _fallback_exercise_name(exercise_id)),
+        "name": resolved_name,
         "sets": max(1, total_sets or 3),
         "rep_range": [
             int((rep_target or {}).get("min") or 8),
