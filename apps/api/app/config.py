@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     smtp_from_name: str = "Hypertrophy App"
     smtp_use_tls: bool = True
     smtp_timeout_seconds: float = 10.0
-    password_reset_base_url: str = "http://localhost:18080/reset-password"
+    password_reset_base_url: str = "https://hypertrophy.theroccos.us/reset-password"
     password_reset_expose_token: bool = True
     password_reset_require_email_delivery: bool = False
 
