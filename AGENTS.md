@@ -2,7 +2,7 @@
 
 ## Purpose and active context
 
-Mandatory guardrails for agents in this repository. Start from [docs/README.md](docs/README.md), the [product contract](docs/requirements/product-contract.md), [constitution](docs/governance/constitution.md) and [AI working rules](docs/governance/ai-working-rules.md). The documentation integration basis is owner approved on 2026-09-28 for this review branch; it is not release acceptance or implementation/deployment approval.
+Mandatory guardrails for agents in this repository. Start from [docs/README.md](docs/README.md), the [product contract](docs/requirements/product-contract.md), [constitution](docs/governance/constitution.md) and [AI working rules](docs/governance/ai-working-rules.md). The documentation authority baseline was owner-approved on 2026-09-28; product requirements, Proposed mechanisms, implementation, verification and release acceptance remain distinct.
 
 Before sensitive changes, follow [docs/context/CONTEXT_MANIFEST.yaml](docs/context/CONTEXT_MANIFEST.yaml): read the common group, then **only the groups matching every affected area**, in order. Within each area: product/constitution → relevant ADR/status → area contract → runtime authority → requirement/catalog/traceability → current roadmap and registered bounded plan. Read historical material only when an active document explicitly requires a compatibility/provenance question. No blanket legacy-document read requirement remains.
 
@@ -26,6 +26,6 @@ Forbidden: silent authored/generated merging, raw answers inside generation, non
 
 ## Production and data safety
 
-Follow the unchanged [DB_SAFETY_LOCK.md](DB_SAFETY_LOCK.md). Before tests/imports/startup/DDL use explicit verified disposable targets and isolated environment; never trust inherited DB/Compose defaults or a fresh container. Production checkout/data/config/services/deployment, secrets/private keys/logs/personal records and source licensing require their own authorized scope. Approval to draft/integrate docs is not permission to implement, migrate, deploy or merge.
+Follow [DB_SAFETY_LOCK.md](DB_SAFETY_LOCK.md). Before tests/imports/startup/DDL use explicit verified disposable targets and isolated environment; never trust inherited DB/Compose defaults or a fresh container. Production checkout/data/config/services/deployment, secrets/private keys/logs/personal records and source licensing require their own authorized scope. Approval to draft/integrate docs is not permission to implement, migrate, deploy or merge.
 
-For this documentation integration, work only in the separate documentation review worktree; documentation commit/publication on the existing review branch is authorized. No application/runtime/workflow/packaging/rule/source-artifact changes, production tests/services/builds/installations/migrations, production checkout/branch changes, main merge, PR, WSL rebase repair or subagents. Leave the pre-existing debug-log modification untouched. Stop after publication for owner review.
+Work within the authorized task scope and preserve unrelated work. Production changes require explicit authorization; deployment authorization is separate from implementation approval. Proposed ADRs/plans and historical checklists do not authorize implementation, production operations or release acceptance.

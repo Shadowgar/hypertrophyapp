@@ -1,6 +1,6 @@
 # Evidence policy and audit references
 
-Status: **Proposed policy**. This file is a portable provenance registry and migration plan, not a completed test run or managed security export. The source audit date is 2026-09-28; application revision is `df9965232ce731f8234d222acc526a90bc6be620`. No application tests, live probes, migrations, builds or deployments were performed in this documentation batch.
+Status: **Proposed policy**. This file is a portable provenance registry and migration plan, not a completed test run or managed security export. The source audit date is 2026-09-28; application revision is `df9965232ce731f8234d222acc526a90bc6be620`. This registry is not evidence that any new application test, live probe, migration, build or deployment was performed.
 
 ## Evidence and acceptance
 
@@ -10,7 +10,7 @@ Retain failures and append corrected evidence. Do not replace the full audit res
 
 ## Audit reference and migration plan
 
-Reference key **AUD-20260928** identifies the completed audit, not a new certification. The original files remain in the owner’s external audit collection and are **not copied or publicly available as raw artifacts on this branch**. Record basename + hash + source revision rather than a broken host path. This registry preserves provenance without implying reviewers can fetch the artifacts. Public source links elsewhere resolve against this branch’s unchanged application tree; the audited revision is authoritative if that tree later changes.
+Reference key **AUD-20260928** identifies the completed audit, not a new certification. The original files remain in the owner’s external audit collection and are **not retained or publicly available as raw artifacts in Git**. Record basename + hash + source revision rather than a broken host path. This registry preserves provenance without implying reviewers can fetch the artifacts. Repository source links locate implementation areas; the audited revision, rather than the current source tree, controls historical claims.
 
 | Original artifact | SHA-256 | Availability |
 |---|---|---|
@@ -45,7 +45,7 @@ Original bodies, negative findings, task dispositions, runtime path exceptions, 
 
 **AUD-20260928:limits**: copied disposable source/dependencies with network/database guards, cleared environment and temporary persistence/logs; no production records/config/log inspection. Initial fixture-copy problems prevent claiming an initially byte-identical complete snapshot. Rule fixture hashes matched at recheck. SQLite does not establish PostgreSQL behavior. No copyrighted source workbook/manual was republished.
 
-**AUD-20260928:security**: independent source findings retained; managed export **failed** its ancestor-directory privacy check. No permissions changed and no sealed complete scan, dependency inventory, live-ingress, secret/session/backup or deployed-image certification exists. This batch drafts documents from those findings, not another scan.
+**AUD-20260928:security**: independent source findings retained; managed export **failed** its ancestor-directory privacy check. No permissions changed and no sealed complete scan, dependency inventory, live-ingress, secret/session/backup or deployed-image certification exists. This registry references those findings; it does not establish another scan.
 
 ## Future evidence by claim
 

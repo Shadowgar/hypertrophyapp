@@ -1,6 +1,6 @@
 # Authored source and execution qualification
 
-Planned procedure; **not performed by this migration**. Governing [source](../contracts/authored-source.md), [execution](../contracts/execution-plan.md), [load](../contracts/load-progression.md), [dates](../contracts/selected-date-scheduling.md), [AUTH-FID requirements](../requirements/catalog.md#auth-fid), [M1](../roadmap/milestones.md#m1-and-parallel-m2-tracks).
+Planned procedure; **qualification remains pending**. Governing [source](../contracts/authored-source.md), [execution](../contracts/execution-plan.md), [load](../contracts/load-progression.md), [dates](../contracts/selected-date-scheduling.md), [AUTH-FID requirements](../requirements/catalog.md#auth-fid), [M1](../roadmap/milestones.md#m1-and-parallel-m2-tracks).
 
 Use licensed source fixtures and an independent source parser. Record source/build/runtime hashes and compare every slot, order, working/warm-up prescription, nonnumeric and set-specific target, effort/rest/technique/notes and source relationship through import, compilation, loading, allocation and runner display. Preserve repeated-slot identity and source-approved alternatives with explicit confirmation. Verify constraints/time/recovery do not mutate unrelated Authored dose; dates preserve relationships/dose or disclose infeasibility.
 

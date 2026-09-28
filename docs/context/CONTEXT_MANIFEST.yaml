@@ -1,7 +1,7 @@
 version: 2
 last_updated: '2026-09-28'
 owner: documentation-governance
-purpose: Ordered area-scoped context under the owner-approved documentation integration basis. Common group plus
+purpose: Ordered area-scoped context under the owner-approved documentation authority baseline. Common group plus
   every affected area; no blanket historical reads.
 selection_rule: Read common_governance once, then each matching area in listed order. Explicit product/constitution
   -> ADR -> contract -> runtime authority -> requirements -> roadmap/registered plan. Resolve referenced historical

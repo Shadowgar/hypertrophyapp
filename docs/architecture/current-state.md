@@ -1,6 +1,6 @@
 # Current implementation at the audited revision
 
-Descriptive baseline: `df9965232ce731f8234d222acc526a90bc6be620`, audited 2026-09-28. Reference [AUD-20260928](../evidence/README.md#audit-reference-and-migration-plan). Application source on this review branch remains at that baseline; documentation changes are not runtime implementation. No broad audit or production inspection was repeated. This document never overrides the [product contract](../requirements/product-contract.md).
+Descriptive baseline: `df9965232ce731f8234d222acc526a90bc6be620`, audited 2026-09-28. Reference [AUD-20260928](../evidence/README.md#audit-reference-and-migration-plan). Observations describe that audited revision, not necessarily the current checkout or deployed image. Documentation changes do not establish runtime implementation or subsequent qualification. This document never overrides the [product contract](../requirements/product-contract.md).
 
 ## Existing system and paths
 
@@ -24,7 +24,7 @@ Authored bindings `pure_bodybuilding_phase_1_full_body` and `pure_bodybuilding_p
 | Generated ownership | Constructor, adapter, scheduler and router repair/floor/band policies overlap; reporting may require post-route recalculation. | Single ownership needed; no judgment here that a particular band is physiologically optimal. Metadata-v2 scoring remains disabled/no-op; accounting is active. |
 | Analytics | Primary-ID grouping, weight/estimated strength calculations and activity-based calendar completion lack complete variant/effort/technique filters. | Partial charts are not reliable comparable PRs, full completion or personal-response proof. |
 
-Source entry points: [plan router](../../apps/api/app/routers/plan.py), [loader](../../apps/api/app/program_loader.py), [models](../../apps/api/app/models.py), [core](../../packages/core-engine/core_engine), and [Today](../../apps/web/app/today/page.tsx). Links identify audited implementation areas, not proof that every line was reviewed in this pass.
+Source entry points: [plan router](../../apps/api/app/routers/plan.py), [loader](../../apps/api/app/program_loader.py), [models](../../apps/api/app/models.py), [core](../../packages/core-engine/core_engine), and [Today](../../apps/web/app/today/page.tsx). Links identify audited implementation areas, not proof of exhaustive line-by-line review.
 
 ## Security and operations
 
@@ -45,4 +45,4 @@ Destructive tests can inherit ordinary database targets. Compose runs Alembic an
 
 CI covers API pytest/web lint; standalone core/web suite/build coverage is incomplete and mini-validate suppresses failure with `|| true`. No production build, real-device/browser, PostgreSQL concurrency/migration or live smoke evidence was obtained. Managed security export remains failed due to its privacy check; no permissions repair or sealed certification. Initial audit snapshot fixture caveats remain in the [evidence registry](../evidence/README.md).
 
-Historical failing cases must be classified individually using [test strategy](../quality/test-strategy.md). No new tests or runtime verification occurred in this documentation batch. Targets and acceptance gates are in the [roadmap](../roadmap/milestones.md).
+Historical failing cases must be classified individually using [test strategy](../quality/test-strategy.md). Later implementation/qualification requires its own revision-scoped evidence. Targets and acceptance gates are in the [roadmap](../roadmap/milestones.md).

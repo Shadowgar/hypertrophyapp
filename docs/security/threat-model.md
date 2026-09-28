@@ -1,6 +1,6 @@
 # Repository threat model
 
-Status: **Draft from completed audit evidence**, application revision `df9965232ce731f8234d222acc526a90bc6be620`. No new broad scan, subagent review, production access or runtime probe. This pass sequentially reconciles the supplied source/threat evidence; it is not a new independent review. [Audit provenance](../evidence/README.md#audit-reference-and-migration-plan) retains the original independent architecture analysis. Proposed controls are not qualified controls. [SECURITY.md](../../SECURITY.md) governs private reporting and non-destructive research; no external report is sent.
+Status: **Draft from completed audit evidence**, application revision `df9965232ce731f8234d222acc526a90bc6be620`. This model reconciles the completed source/threat evidence; it does not establish a new independent scan, live production inspection or runtime qualification. [Audit provenance](../evidence/README.md#audit-reference-and-migration-plan) retains the original independent architecture analysis. Proposed controls are not qualified controls. [SECURITY.md](../../SECURITY.md) governs private reporting and non-destructive research; external reports require separately authorized scope.
 
 ## Overview
 

@@ -1,10 +1,10 @@
 # Test and qualification strategy
 
-Status: **Proposed policy under production-safety requirements**. This documentation batch runs only static Markdown/link/scope checks. No application test, build, installation, migration or service startup. [Evidence policy](../evidence/README.md) owns manifests/results; [traceability](../requirements/traceability.md) links existing partial protections and missing qualification.
+Status: **Proposed policy under production-safety requirements**. Select static documentation checks or applicable application qualification according to the authorized change scope. Application tests, migrations and startup helpers require verified disposable targets; deployment requires separate authorization. [Evidence policy](../evidence/README.md) owns manifests/results; [traceability](../requirements/traceability.md) links existing partial protections and missing qualification.
 
 ## Isolation before execution
 
-Future authorized tests run in a disposable checkout/container and persistence target with an explicit identity contract. Use synthetic users/history, temporary logs/artifacts, cleared inherited settings and fake mail/network denied by default. Set both test and ordinary database URLs explicitly; guard target identity/path before connection or DDL. A fresh container, a database-name suffix or inherited Compose environment alone is insufficient. Test destructive helper rejection of production-like/inherited targets without contacting those targets.
+Authorized tests run in a disposable checkout/container and persistence target with an explicit identity contract. Use synthetic users/history, temporary logs/artifacts, cleared inherited settings and fake mail/network denied by default. Set both test and ordinary database URLs explicitly; guard target identity/path before connection or DDL. A fresh container, a database-name suffix or inherited Compose environment alone is insufficient. Test destructive helper rejection of production-like/inherited targets without contacting those targets.
 
 Never run drop/create/truncate/reset fixtures, migrations or service-startup helpers against production. Do not read/copy private logs, live environment files, credentials or personal records to construct fixtures. Approved isolated PostgreSQL requires its own unmistakable target, credentials/access boundaries and reset lifecycle. This policy is not authorization to provision or run it.
 

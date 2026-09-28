@@ -1,13 +1,13 @@
 # Constitution, authority and working rules
 
-Date: 2026-09-28. Status: **Owner-approved integration basis, 2026-09-28**. This hierarchy is active for documentation and future work on this review branch. Detailed ADR mechanisms remain Proposed; integration is not release acceptance or main-branch activation. Evidence: [audit](../evidence/README.md#audit-reference-and-migration-plan), [inventory](../evidence/README.md#audit-reference-and-migration-plan), and the existing [decision ledger](../DECISIONS.md).
+Date: 2026-09-28. Status: **Owner-approved documentation authority baseline, 2026-09-28**. This hierarchy governs repository documentation and work. Detailed ADR mechanisms remain Proposed; documentation approval is separate from implementation, verification and release acceptance. Evidence: [audit](../evidence/README.md#audit-reference-and-migration-plan), [inventory](../evidence/README.md#audit-reference-and-migration-plan), and the existing [decision ledger](../DECISIONS.md).
 
 ## Active documentation authority hierarchy
 
 | Order | Authority | Scope and conflict treatment |
 |---|---|---|
 | 1 | Explicit owner requirements and applicable safety/privacy/licensing constraints | Define desired outcomes and authorized scope; do not infer owner consent. |
-| 2 | Product contract and constitution | Governing mode permissions, invariants and documentation authority, approved as this branch's integration basis. |
+| 2 | Product contract and constitution | Governing mode permissions, invariants and documentation authority, owner-approved as the documentation authority baseline. |
 | 3 | Accepted ADRs + preserved historical decision ledger | Durable choices under the product contract. All ten new ADRs remain Proposed; D-001–D-022 are retained and not silently superseded. |
 | 4 | Contracts / requirements | Operationalize approved outcomes; proposed mechanisms are labeled. Catalog and traceability connect predicates to evidence. |
 | 5 | Architecture | Desired ownership is distinct from revision-scoped current-state observations. Neither changes product permissions. |
@@ -32,7 +32,7 @@ No application-wide event-sourcing rewrite is mandated. Evaluate the smallest de
 
 ## Concordance with the existing decision ledger
 
-Retain original IDs and the ledger's existing 2026-03-20 date context. The ledger contains **D-001 through D-022**. The audit's shorter D-001–D-020 preservation reference must not omit D-021 or D-022. This integration records concordance and labels the ledger role; it preserves the original ledger body, does not mint accepted ADRs or invent new dates for old decisions.
+Retain original IDs and the ledger's existing 2026-03-20 date context. The ledger contains **D-001 through D-022**. The audit's shorter D-001–D-020 preservation reference must not omit D-021 or D-022. The concordance records the ledger's role without rewriting its original body, accepting ADRs or re-dating decisions.
 
 | Existing identifiers | Retained meaning and proposed interpretation |
 |---|---|
@@ -43,7 +43,7 @@ Retain original IDs and the ledger's existing 2026-03-20 date context. The ledge
 | D-011 | Preserve minimum-viable fallback intent within current consent/safety boundaries: disclose reductions/infeasibility; never unlock hidden authored mutation or unsafe execution. |
 | D-012–D-013 | Retain bounded adaptation and data-sufficiency checks, with an explicit safety exception. |
 | D-014–D-015 | Retain generated v1 Full Body scope; Upper/Lower, PPL and best-split selection remain future work until accepted. |
-| D-016 | Preserve the historical milestone's no-router/database/authored/generated behavior-change constraint. It is not a perpetual ban on later separately authorized milestones; this pass is independently docs-only. |
+| D-016 | Preserve the historical milestone's no-router/database/authored/generated behavior-change constraint. It is not a perpetual ban on later separately authorized milestones. Later work requires its own authorized scope. |
 | D-017–D-018 | Preserve declared temporary onboarding seeds and local/offline compilation goals without elevating seeds into permanent doctrine. |
 | D-019–D-020 | Generated programs are original designs; temporary compatibility defaults are named, traced and nonauthoritative. |
 | D-021–D-022 | Preserve anti-copy topology boundaries; source program IDs can support exercise provenance/ranking, never target layout reconstruction. |
@@ -64,16 +64,16 @@ A milestone is not complete because a plan exists, tests happen to pass, or an o
 
 Before sensitive work, follow [AGENTS.md](../../AGENTS.md) and the [scoped context manifest](../context/CONTEXT_MANIFEST.yaml). Read the product contract/constitution, relevant ADR (including its Proposed status), area contract, runtime authority, requirements and registered plan in that order. Read historical material only when an active reference makes it relevant. There is no blanket requirement to read every historical doctrine/index.
 
-Use the completed audit as starting evidence. Read additional source only for a specific contract/planning question; record unresolved issues instead of broadening the audit. Classify existing failures individually as confirmed implementation defect, obsolete/conflicting expectation, fixture/environment issue, or unresolved. Replace obsolete checks with protections grounded in the controlling contract; never restore authored mutation or weaken intended protection merely to obtain green results.
+Use revision-scoped audits as starting evidence. Read source needed for the authorized task; record unresolved assumptions and avoid expanding scope without authorization. Classify existing failures individually as confirmed implementation defect, obsolete/conflicting expectation, fixture/environment issue, or unresolved. Replace obsolete checks with protections grounded in the controlling contract; never restore authored mutation or weaken intended protection merely to obtain green results.
 
-Use explicit disposable verification environments for any later authorized tests. Do not trust database defaults, inherited Compose settings or SQLite results as proof of PostgreSQL concurrency/migration safety. No qualifying run is authorized by these drafts. Protect credentials and personal data; evidence must not retain reset tokens, passwords or sensitive URLs.
+Use explicit disposable verification environments for authorized tests. Do not trust database defaults, inherited Compose settings or SQLite results as proof of PostgreSQL concurrency/migration safety. Proposed documents do not authorize verification runs or production operations. Protect credentials and personal data; evidence must not retain reset tokens, passwords or sensitive URLs.
 
-For this architecture pass, modify documentation only in the separate review worktree on `docs/planning-baseline-2026-09-28`; the owner authorizes a documentation commit and branch publication. Never modify the production checkout/branch, runtime code/rules/artifacts, database, personal records, live configuration, credentials, private keys, logs, services or deployment. Do not run application tests/builds/installations/startup/migrations, merge into main or create a PR. Leave the debug log, abandoned WSL rebase and `.codex` permissions untouched. Use no subagents. Stop after publishing this batch for owner review.
+Work within the authorized task scope and preserve unrelated work. Production changes require explicit authorization and the applicable data/configuration/recovery safeguards. Implementation approval does not authorize deployment; Proposed ADRs/plans do not authorize implementation. Runtime asset and source-path changes require separately scoped consumer migration and qualification. Follow [database safety](../../DB_SAFETY_LOCK.md) before persistence operations.
 
 ## Integration ownership
 
-The [documentation index](../README.md) and [complete migration registry](../audits/2026-09-28-documentation-migration-registry.md) establish active navigation and explicit historical roles on this branch. The [migration report](../audits/2026-09-28-documentation-authority-migration.md) records paths, compatibility exceptions and static qualification. The product owner accepts permissions/outcomes; technical/security maintainers review mechanisms; the operator owns separately authorized deployment/recovery evidence.
+The [documentation index](../README.md) and [complete migration registry](../audits/2026-09-28-documentation-migration-registry.md) establish active navigation and explicit historical roles throughout the repository. The [migration report](../audits/2026-09-28-documentation-authority-migration.md) records paths, compatibility exceptions and static qualification. The product owner accepts permissions/outcomes; technical/security maintainers review mechanisms; the operator owns separately authorized deployment/recovery evidence.
 
 Preserve the path-scoped authority and truth-budget principles carried from the old governance: name the family owner, applicable path, actual inputs/outcomes and limits before claiming sovereignty; do not infer repository-wide ownership from one qualified path. Presentation may render owned explanation facts; it must not invent causes from rule-code names. Compatibility façades and executors must not introduce shadow doctrine. Behavioral verification must exercise outcomes and must-fail boundaries, not only narrative strings. Proposed replacement modules are not an instruction to remove compatibility wrappers now.
 
-The [ADR concordance](../adr/README.md#historical-concordance) retains D-001–D-022 and unresolved interpretations. Old authority claims remain in historical bodies behind explicit notices; they no longer compete with this hierarchy. No Proposed ADR overrides a historical decision. Main-branch integration and every runtime implementation/release remain separately authorized.
+The [ADR concordance](../adr/README.md#historical-concordance) retains D-001–D-022 and unresolved interpretations. Old authority claims remain in historical bodies behind explicit notices; they no longer compete with this hierarchy. No Proposed ADR overrides a historical decision. Repository integration, runtime implementation and release/deployment each require their applicable authorization and evidence.

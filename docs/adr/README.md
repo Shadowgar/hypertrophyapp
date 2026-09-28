@@ -1,6 +1,6 @@
 # Architecture decisions
 
-Status: active decision registry under the owner-approved documentation integration basis; detailed technical mechanisms remain Proposed. Decision context: 2026-09-28. This index does not accept the detailed ADR mechanisms.
+Status: active decision registry under the owner-approved documentation authority baseline; detailed technical mechanisms remain Proposed. Decision context: 2026-09-28. This index does not accept the detailed ADR mechanisms.
 
 ## Lifecycle and approval
 
@@ -54,4 +54,4 @@ The [ledger](../DECISIONS.md) retains its original IDs and 2026-03-20 last-updat
 | D-021 | ADR-002/007 | Anti-copy topology safeguard retained. |
 | D-022 | ADR-002/003 | Source program IDs remain exercise-level provenance/ranking only. |
 
-The owner authorized documentation integration on 2026-09-28. [Successor classifications](../audits/2026-09-28-documentation-migration-registry.md), the scoped manifest and ledger notice now establish the branch read order without accepting ADR-001 or any other technical mechanism. The original ledger body and date remain unchanged. Acceptance evidence follows the [evidence policy](../evidence/README.md).
+The owner authorized documentation integration on 2026-09-28. [Successor classifications](../audits/2026-09-28-documentation-migration-registry.md), the scoped manifest and ledger notice establish the repository read order without accepting ADR-001 or any other technical mechanism. The original ledger body and date remain unchanged. Acceptance evidence follows the [evidence policy](../evidence/README.md).

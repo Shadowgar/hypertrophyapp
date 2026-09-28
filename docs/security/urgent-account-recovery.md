@@ -17,7 +17,7 @@ The development wipe endpoint is flag-gated and defaults off; it is not describe
 
 ## Minimum separately authorized production assessment
 
-An authorized operator may determine the following states using approved configuration/control metadata. This pass does none of these inspections. Do not dump environments, credentials, headers, tokens, reset links, logs, database records or user sessions into evidence. Report only the listed sanitized states; use **unknown** when a state cannot be established safely.
+An authorized operator may determine the following states using approved configuration/control metadata. The listed states are unknown until independently established within that authorized scope. Do not dump environments, credentials, headers, tokens, reset links, logs, database records or user sessions into evidence. Report only the listed sanitized states; use **unknown** when a state cannot be established safely.
 
 | Question | Allowed reporting |
 |---|---|
@@ -34,7 +34,7 @@ Do not make a live recovery request or send mail to a production account as part
 
 If effective conditions cannot rule out exposure, the recommended containment is to disable **both** reset request and confirmation across every ingress until a qualified patch and delivery path exist. Blocking only requests leaves previously issued tokens usable. This is a proposed operator action requiring separate authorization, not an action taken here. Record availability impact and a safe user-facing explanation.
 
-The immediate [SEC-S1 plan](../plans/urgent-account-recovery.md) removes every HTTP credential-return path, validates signing configuration, verifies mail TLS, redacts validation secrets and makes request acknowledgments uniform. It needs no training-history migration or auth-version schema change. It can be reviewed and released before full documentation migration.
+The immediate [SEC-S1 plan](../plans/urgent-account-recovery.md) removes every HTTP credential-return path, validates signing configuration, verifies mail TLS, redacts validation secrets and makes request acknowledgments uniform. It needs no training-history migration or auth-version schema change. Its review/release need not depend on unrelated documentation or history work.
 
 SEC-S2 separately qualifies atomic credential consumption, password-reset session revocation, auth-version migration and abuse controls. Until then, label prior-session persistence and concurrency/rate limitations explicitly. Key rotation is an incident option if the signing key is compromised/defaulted; it causes broad sign-out and invalidates reset-token lookup under the current hashing design. It does not undo an earlier account takeover. Do not rotate a live key automatically from this plan.
 
@@ -49,6 +49,6 @@ Effective production configuration, ingress coverage, operator ownership and rat
 
 Before deployment: qualify the exact patch in a disposable environment, verify secret-free negative cases and verified staging mail, approve configuration/key strategy, confirm recovery and rollback prerequisites, and qualify PostgreSQL migration/concurrency for SEC-S2. Rollback must preserve the closed recovery boundary; vulnerable rollback requires route containment or a forward fix. The [implementation plan](../plans/urgent-account-recovery.md) supplies exact gates and stop conditions.
 
-The managed security export remains **failed**; `.codex` permissions were not changed. Neither this brief nor SQLite test evidence certifies live secrets, TLS edge, active sessions, backups, dependency coverage or production security.
+The managed security export remains **failed**. No permissions repair or sealed export is claimed. Neither this brief nor SQLite test evidence certifies live secrets, TLS edge, active sessions, backups, dependency coverage or production security.
 
-Review context (2026-09-28): the owner approved overall direction subject to corrections; recovery mechanisms, availability and legacy-token cutover remain Proposed/unresolved. See [ADR-010](../adr/0010-account-recovery-and-auth-lifecycle.md), [security architecture](../security/architecture.md), [test strategy](../quality/test-strategy.md) and the portable [evidence registry](../evidence/README.md). No audit/raw test artifact is copied into this branch.
+Review context (2026-09-28): the owner approved overall direction subject to corrections; recovery mechanisms, availability and legacy-token cutover remain Proposed/unresolved. See [ADR-010](../adr/0010-account-recovery-and-auth-lifecycle.md), [security architecture](../security/architecture.md), [test strategy](../quality/test-strategy.md) and the portable [evidence registry](../evidence/README.md). Original raw audit/test artifacts remain outside Git; retained summaries and provenance are identified by the evidence registry.

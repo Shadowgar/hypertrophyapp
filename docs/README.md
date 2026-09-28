@@ -1,6 +1,6 @@
 # Documentation authority and navigation
 
-Integration basis approved by the owner on **2026-09-28**. This is the single documentation entry point on the review branch `docs/planning-baseline-2026-09-28`. The hierarchy and successor classifications are active for work on this branch. They are not merged into main and do not establish runtime implementation or release acceptance. Audited application revision: `df9965232ce731f8234d222acc526a90bc6be620`; integration starts from documentation commit `64c3269dd33bea8c6a72e5a6151d985cf9ea8470`.
+The documentation authority baseline was owner-approved on **2026-09-28**. This is the repository's single documentation entry point and controlling hierarchy. Product requirements, Proposed technical mechanisms, implementation, revision-scoped verification and release acceptance remain distinct. Audited application revision: `df9965232ce731f8234d222acc526a90bc6be620`; documentation migration history is retained in the audit records linked below.
 
 ## Controlling hierarchy
 
@@ -29,10 +29,10 @@ Owner-approved product directions govern desired behavior. All ten [ADRs](adr/RE
 |---|---|
 | Owner-approved desired requirement/direction | Owner accepted the intended product outcome; mechanism, implementation and release evidence remain separate. |
 | Proposed technical mechanism | Design awaiting appropriate review; grants no implementation/deployment authority. |
-| Accepted ADR | A record with explicit approver, date and scope. No new ADR in this package has this status. |
+| Accepted ADR | A record with explicit approver, date and scope. All ten current ADRs remain Proposed. |
 | Implemented | Code or documentation exists for the stated scope and revision; not automatically verified. |
 | Verified for revision/environment | Named procedure and evidence support stated criteria within recorded limits. |
-| Owner-accepted release/milestone | Explicit owner acceptance of a particular release scope and evidence. No M0–M6 release is accepted by this migration. |
+| Owner-accepted release/milestone | Explicit owner acceptance of a particular release scope and evidence. Documentation approval alone does not accept an M0–M6 release. |
 | Superseded | Original authority replaced by a named current successor. Ledger decisions require an actually Accepted superseding ADR; notices on old indexes do not revoke them. |
 | Historical/supporting | Original observations, designs, rationale or evidence retained at their original date/revision/environment. No current implementation permission. |
 
@@ -42,8 +42,8 @@ Plan lifecycle is defined once in the [plan registry](plans/README.md). Drafting
 
 All 199 audited files have an explicit disposition, retained path, original SHA-256 and current role in the registry. Original bodies, negative findings and unfinished work are retained; some old paths remain compatibility notices. Historical Markdown is interpreted under its notice, not its old internal authority claims. Legacy evidence and generator-owned reports remain scoped to their original context; missing revision/environment remains unknown.
 
-`docs/rules/**`, generated training knowledge, generated guide artifacts, source materials, asset catalog and provenance index remain unchanged. Generated guides are reference/build products, not runtime prescription authority. Rule relocation requires separately authorized application migration and tests. Tool-consumed Master Plan and validation report paths stay in place; tooling migration is unresolved and not performed here.
+`docs/rules/**`, generated training knowledge, generated guide artifacts, source materials, asset catalog and provenance index are protected runtime/source/build assets. Generated guides are reference/build products, not runtime prescription authority. Rule relocation requires separately authorized application migration and tests. Tool-consumed Master Plan and validation report paths stay in place; tooling migration remains a separately scoped implementation task.
 
-Active references resolve inside the repository without owner-machine or `.codex` paths. The complete raw audit package originally lived outside Git and remains there; the repository retains a sanitized summary and all-file disposition registry, not private raw output or proprietary sources. Historical unavailable links are explicitly accounted for in the migration report.
+Active references resolve inside the repository without owner-machine or private audit-state paths. The complete raw audit package originally lived outside Git and remains there; the repository retains a sanitized summary and all-file disposition registry, not private raw output or proprietary sources. Historical unavailable links are explicitly accounted for in the migration report.
 
 SnakeTracker's pinned [documentation index](https://github.com/Shadowgar/SnakeTracker/blob/87652f8ea80f6328a15385dc2cc32beaf4dbc9e2/docs/README.md) and [decision-freeze process](https://github.com/Shadowgar/SnakeTracker/blob/87652f8ea80f6328a15385dc2cc32beaf4dbc9e2/docs/adr/0028-architecture-governance-and-decision-freeze.md) remain quality/process references studied in the audit. Their application architecture is not adopted.

@@ -6,6 +6,6 @@ Offline build/importers own generated guides and compiled knowledge. [Asset cata
 
 Raw licensed workbooks/manuals remain source material and are excluded from runtime inference. A source-approved alternative is not inferred from a similar exercise name. Admit compiled prescription/rules only under declared runtime contracts and known provenance. The audited Phase 2 omission remains unresolved; generated output does not erase that negative finding.
 
-Do not bulk delete duplicate-looking guides or rewrite generated artifacts. A future deduplication/rebuild must retain licensing/access, original/derived hash mappings, catalog consistency and all path consumers, and must be separately scoped. Public evidence cannot republish raw proprietary source materials. The documentation migration makes no new source extraction or all-corpus fidelity claim.
+Do not bulk delete duplicate-looking guides or rewrite generated artifacts. A future deduplication/rebuild must retain licensing/access, original/derived hash mappings, catalog consistency and all path consumers, and must be separately scoped. Public evidence cannot republish raw proprietary source materials. This provenance registry alone does not certify source extraction or all-corpus fidelity.
 
-Executable [docs/rules](../rules) is runtime-consumed data, not archive prose. Its bytes/paths stay unchanged. Any future relocation needs application/packaging consumer changes and regression verification outside this documentation pass.
+Executable [docs/rules](../rules) is runtime-consumed data, not archive prose. Its bytes/paths are a compatibility boundary. Any relocation requires separately authorized application/packaging consumer changes and regression verification.
