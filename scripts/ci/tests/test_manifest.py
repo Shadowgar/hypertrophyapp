@@ -8,7 +8,7 @@ import unittest
 import yaml
 
 from test_checks import FakeSnapshot
-from check_docs import structural_errors
+from check_docs import Snapshot, link_error, structural_errors
 
 
 CONTEXT = "docs/context/CONTEXT_MANIFEST.yaml"
@@ -235,6 +235,58 @@ class ManifestTests(unittest.TestCase):
                 self.assertIn("New active link failures: 0", result.stdout)
                 if expected:
                     self.assertIn(CONTEXT, result.stdout)
+
+
+class TrackedTargetTests(unittest.TestCase):
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory(prefix="hypertrophy-ci-tracked-target-")
+        self.addCleanup(temp.cleanup)
+        self.root = Path(temp.name)
+        (self.root / "docs/architecture").mkdir(parents=True)
+        (self.root / CONTEXT).parent.mkdir(parents=True)
+        (self.root / "README.md").write_text("# Synthetic index\n")
+        for target in ("system.md", "policy.yaml", "source.txt"):
+            (self.root / "docs/architecture" / target).write_text("# Synthetic document\n")
+        self.git("init", "-q")
+
+    def git(self, *args):
+        return subprocess.check_output([
+            "git", "-c", "core.hooksPath=/dev/null", "-c", "commit.gpgsign=false",
+            "-c", "user.name=CI Fixture", "-c", "user.email=ci-fixture@example.invalid",
+            "-C", str(self.root), *args], stderr=subprocess.DEVNULL).decode().strip()
+
+    def snapshot(self, target):
+        payload = {"version": 1, "mandatory_read_groups": [{"group": "context", "docs": [{"path": target}]}]}
+        (self.root / CONTEXT).write_text(yaml.safe_dump(payload))
+        self.git("add", ".")
+        self.git("commit", "-qm", "synthetic tracked target")
+        return Snapshot(self.root, "HEAD")
+
+    def test_exact_tracked_manifest_files_pass(self):
+        for target in ("docs/architecture/system.md", "docs/architecture/policy.yaml", "docs/architecture/source.txt"):
+            with self.subTest(target=target):
+                snapshot = self.snapshot(target)
+                self.assertIn(target, snapshot.paths)
+                self.assertEqual(structural_errors(snapshot, {CONTEXT}), [])
+
+    def test_missing_manifest_file_fails(self):
+        snapshot = self.snapshot("docs/missing.md")
+        errors = structural_errors(snapshot, {CONTEXT})
+        self.assertTrue(any("does not exist" in error and "docs/missing.md" in error for error in errors), errors)
+
+    def test_manifest_directory_with_tracked_children_fails(self):
+        snapshot = self.snapshot("docs/architecture")
+        self.assertTrue(snapshot.exists("docs/architecture"))
+        self.assertNotIn("docs/architecture", snapshot.paths)
+        errors = structural_errors(snapshot, {CONTEXT})
+        self.assertTrue(any("docs/architecture" in error for error in errors), errors)
+
+    def test_ordinary_markdown_directory_links_still_pass(self):
+        snapshot = self.snapshot("docs/architecture/system.md")
+        for target in ("docs/architecture", "docs/architecture/"):
+            with self.subTest(target=target):
+                self.assertTrue(snapshot.exists(target))
+                self.assertIsNone(link_error(snapshot, "README.md", target))
 
 
 if __name__ == "__main__":

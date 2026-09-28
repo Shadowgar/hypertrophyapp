@@ -178,8 +178,8 @@ def manifest_errors(snapshot, path, payload, base=None, changed=frozenset()):
     errors = [f"{path}: {error}" for error in structural]
     for targets in mandatory.values():
         for target in sorted(targets):
-            if not snapshot.exists(target):
-                errors.append(f"{path}: context path does not exist: {target}")
+            if target not in snapshot.paths:
+                errors.append(f"{path}: context path does not exist as a tracked file: {target}")
     if errors or base is None or path not in base.paths:
         return errors
     try:
