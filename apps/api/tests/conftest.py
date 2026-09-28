@@ -12,4 +12,4 @@ from test_db import configure_test_database
 # don't accidentally bind to default Postgres when it's not available locally.
 configure_test_database("pytest_session_default")
 # An explicit synthetic signing key; runtime has no development fallback.
-os.environ.setdefault("JWT_SECRET", "isolated-api-test-signing-key-not-for-deployment-000")
+os.environ["JWT_SECRET"] = "isolated-api-test-signing-key-not-for-deployment-000"
