@@ -69,3 +69,7 @@ No artifact in the external audit becomes release owner acceptance. Publication 
 ## Authority integration checks
 
 The subsequent documentation-only integration starts from `64c3269dd33bea8c6a72e5a6151d985cf9ea8470`. Its complete static checks, scope and historical exceptions are recorded in the [migration report](../audits/2026-09-28-documentation-authority-migration.md). Previous 865-link/33-file counts above describe the earlier batch and are not reused as the integration result. No application checks or security certification were added.
+
+## SEC-S1 implementation and live cutover
+
+**SEC-S1-20260928** identifies the actual separately owner-authorized S1 procedure, recorded in the [sanitized cutover evidence](2026-09-28-sec-s1-cutover.md). Source head `33da45146a1b7cb8bcf2bd54125daddb6e87da4b`, merge/activated revision `250a0912adccb509024bc3f06a057831d4eb382b`. This later bounded record does not replace AUD-20260928, certify the whole security surface, approve ADR-010, complete S2/M0-SEC, or supply whole-release acceptance. The [next M0-HIST package](../plans/M0-history-integrity.md) is prepared only; its proposed acceptance cases are not test results.

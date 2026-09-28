@@ -1,6 +1,12 @@
 # Urgent account-recovery implementation plan
 
-Date: 2026-09-28. Status: **Proposed; implementation and deployment require separate authorization**. Baseline: `df9965232ce731f8234d222acc526a90bc6be620`. Scope: M0-SEC in the [roadmap](../roadmap/milestones.md). Source findings, sanitized inspection and owner choices are in the [decision brief](../security/urgent-account-recovery.md); original qualification limits are in the [verification notes](../evidence/README.md#audit-reference-and-migration-plan).
+Date: 2026-09-28. Status: **SEC-S1 separately owner-authorized, implemented and activated with bounded verification; SEC-S2 remains Proposed**. Original baseline: `df9965232ce731f8234d222acc526a90bc6be620`. Scope: M0-SEC in the [roadmap](../roadmap/milestones.md). Source findings, sanitized inspection and owner choices are in the [decision brief](../security/urgent-account-recovery.md); original qualification limits are in the [verification notes](../evidence/README.md#audit-reference-and-migration-plan).
+
+## Recorded S1 implementation and cutover
+
+The owner separately authorized S1 source implementation and affected-service activation on 2026-09-28, then explicitly approved replacing the live placeholder signing key and accepted forced sign-out and invalidation of old pending reset links. [PR #38](https://github.com/Shadowgar/hypertrophyapp/pull/38) source head `33da45146a1b7cb8bcf2bd54125daddb6e87da4b` merged as `250a0912adccb509024bc3f06a057831d4eb382b`. The API runs that merged revision with the provisioned key: present, validator pass, known placeholder no.
+
+See the [sanitized cutover evidence](../evidence/2026-09-28-sec-s1-cutover.md) for focused checks, baseline failure disposition, live non-account smoke, synthetic old-JWT rejection, log-scan limits and deferred quick-start P2. No S2 implementation, ADR-010 acceptance, whole-M0-SEC completion or whole-release owner acceptance is recorded. The original proposed design below remains distinguishable from this bounded implementation record.
 
 ## Objective and release boundaries
 
@@ -8,7 +14,7 @@ An unauthenticated recovery requester must never receive a reset credential. Rec
 
 Split implementation into **SEC-S1**, a no-schema correction closing disclosure/configuration/transport boundaries, and **SEC-S2**, the independently reviewed recovery lifecycle with auth-version migration and concurrency/rate qualification. SEC-S1 is not held for full documentation migration, general history redesign or unrelated baseline-test repairs. Its remaining session/concurrency/abuse limitations must remain visible; S1 alone does not complete M0-SEC.
 
-Do not change workout routing, generation, training artifacts, personal records, load algorithms or historical identity. Do not add a development HTTP endpoint that returns credentials. Do not include raw secrets or reset URLs in evidence. This plan performs no work against a live account, database or service.
+Do not change workout routing, generation, training artifacts, personal records, load algorithms or historical identity. Do not add a development HTTP endpoint that returns credentials. Do not include raw secrets or reset URLs in evidence. The plan itself grants no live-operation authority; the separately authorized S1 cutover above used no real-account recovery request and performed no database wipe/reset/reseed or destructive migration.
 
 ## Affected implementation surfaces
 
