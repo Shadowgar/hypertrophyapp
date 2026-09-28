@@ -1,6 +1,6 @@
 "use client";
 
-import { authoredRepLabel, authoredSetRepRange, authoredSetDetails, authoredWarmupLabel, isBodyweightAuthored } from "@/lib/authored-prescription";
+import { authoredRepLabel, authoredSetRepRange, authoredSetDetails, authoredWarmupLabel, isBodyweightAuthored, authoredSetTechnique } from "@/lib/authored-prescription";
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -245,6 +245,9 @@ type TechniqueModalState =
       kind: "dropset" | "mechanical_drop" | "rest_pause_cluster";
       baseWeightLb: number;
       baseReps: number;
+      authored?: boolean;
+      bodyweight?: boolean;
+      instruction?: string | null;
     }
   | null;
 
@@ -307,9 +310,9 @@ function InlineTechniquePanel({
   onLog: (performed: { reps: number; weight: number }, ordinal: number) => Promise<void>;
 }>) {
   const [ordinal, setOrdinal] = useState(1);
-  const [reps, setReps] = useState(String(Math.max(1, Math.round(state.baseReps / 2))));
+  const [reps, setReps] = useState(state.authored ? "" : String(Math.max(1, Math.round(state.baseReps / 2))));
   const [weight, setWeight] = useState(
-    String(state.kind === "dropset" ? Math.max(2.5, Math.round(state.baseWeightLb * 0.85 * 10) / 10) : state.baseWeightLb),
+    state.authored ? (state.bodyweight ? "0" : "") : String(state.kind === "dropset" ? Math.max(2.5, Math.round(state.baseWeightLb * 0.85 * 10) / 10) : state.baseWeightLb),
   );
   const [status, setStatus] = useState<string | null>(null);
 
@@ -323,7 +326,13 @@ function InlineTechniquePanel({
   async function handleLog() {
     setStatus("Logging technique set...");
     try {
-      await onLog({ reps: Number(reps) || 1, weight: Number(weight) || state.baseWeightLb }, ordinal);
+      const actualReps = Number(reps);
+      const actualWeight = Number(weight);
+      if (state.authored && (!Number.isInteger(actualReps) || actualReps < 1 || !Number.isFinite(actualWeight) || (state.bodyweight ? actualWeight < 0 : actualWeight <= 0))) {
+        setStatus("Enter actual reps and external load for this technique set.");
+        return;
+      }
+      await onLog({ reps: state.authored ? actualReps : actualReps || 1, weight: state.authored ? actualWeight : actualWeight || state.baseWeightLb }, ordinal);
       setOrdinal((prev) => prev + 1);
       setStatus("Logged. Add another or close.");
     } catch {
@@ -337,7 +346,7 @@ function InlineTechniquePanel({
         <div>
           <p className="text-sm font-semibold text-zinc-100">{title}</p>
           <p className="ui-meta">
-            {state.exerciseName} · after your last working set
+            {state.exerciseName} · after working set {state.parentSetIndex}
           </p>
         </div>
         <Button type="button" variant="ghost" className="min-h-[32px] px-2 text-xs" onClick={onClose}>
@@ -346,7 +355,9 @@ function InlineTechniquePanel({
       </div>
 
       <div className="rounded-md border border-zinc-800 bg-zinc-900/40 p-3 text-xs text-zinc-300 space-y-1">
-        {state.kind === "mechanical_drop" ? (
+        {state.authored ? (
+          <p>{state.instruction}</p>
+        ) : state.kind === "mechanical_drop" ? (
           <p>Keep the same load, change the leverage/position to make it easier, then continue.</p>
         ) : state.kind === "dropset" ? (
           <p>Reduce load and continue with strict form (this logs as a technique sub-set).</p>
@@ -368,7 +379,7 @@ function InlineTechniquePanel({
           />
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className="text-[11px] uppercase tracking-wide text-zinc-500">Weight (lb)</span>
+          <span className="text-[11px] uppercase tracking-wide text-zinc-500">{state.bodyweight ? "Added load (lb), optional" : "Weight (lb)"}</span>
           <input
             className="ui-input h-12 w-full rounded-lg px-3 text-center text-lg font-semibold tabular-nums"
             type="number"
@@ -601,8 +612,10 @@ function ExerciseDetailOverlay({
       : undefined;
 
   const isAssistance = String(exercise.load_semantics ?? "").toLowerCase() === "assistance";
-  const checklistItems = requiresLastSetChecklist(exercise);
-  const techniqueKind = resolveTechniqueKind(exercise);
+  const currentTechnique = authoredSetTechnique(exercise, ctrl.completedSets + 1);
+  const techniqueExercise = exercise.authored_prescription ? { ...exercise, last_set_intensity_technique: currentTechnique } : exercise;
+  const checklistItems = exercise.authored_prescription ? (currentTechnique ? [currentTechnique] : []) : requiresLastSetChecklist(exercise);
+  const techniqueKind = resolveTechniqueKind(techniqueExercise);
   const [checklistAccepted, setChecklistAccepted] = useState(false);
   useEffect(() => {
     // Reset checklist gate when changing exercise or moving off last set.
@@ -610,7 +623,8 @@ function ExerciseDetailOverlay({
   }, [exerciseKey(exercise), ctrl.completedSets]);
 
   const isLastSetNext = ctrl.completedSets === ctrl.totalSets - 1;
-  const gateLastSet = checklistItems.length > 0 && isLastSetNext && !checklistAccepted;
+  const techniqueApplies = exercise.authored_prescription ? Boolean(currentTechnique) : isLastSetNext;
+  const gateLastSet = checklistItems.length > 0 && techniqueApplies && !checklistAccepted;
   const hasTechnique = checklistItems.length > 0 || techniqueKind != null || techniquePanelState != null;
 
   return (
@@ -743,9 +757,9 @@ function ExerciseDetailOverlay({
               )}
 
               {/* Technique (last set) checklist at bottom so user can confirm before Complete Set */}
-              {checklistItems.length > 0 && isLastSetNext ? (
+              {checklistItems.length > 0 && techniqueApplies ? (
                 <div className="rounded-xl border border-amber-500/50 bg-amber-950/30 p-3 space-y-2">
-                  <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Technique (last set)</p>
+                  <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">{exercise.authored_prescription ? "Technique (this set)" : "Technique (last set)"}</p>
                   <ul className="list-disc pl-5 text-xs text-zinc-200 space-y-1">
                     {checklistItems.map((item) => (
                       <li key={item}>{item}</li>
@@ -1243,8 +1257,9 @@ export default function TodayPage() {
         restCycle,
       });
 
-      const techniqueKind = resolveTechniqueKind(exercise);
-      if (techniqueKind && completedCount >= exercise.sets) {
+      const prescribedTechnique = authoredSetTechnique(exercise, completedCount);
+      const techniqueKind = resolveTechniqueKind(exercise.authored_prescription ? { ...exercise, last_set_intensity_technique: prescribedTechnique } : exercise);
+      if (techniqueKind && (exercise.authored_prescription ? Boolean(prescribedTechnique) : completedCount >= exercise.sets)) {
         setTechniqueModal({
           exerciseId,
           exerciseName: resolveExerciseName(exercise, swapIndexByExercise),
@@ -1253,6 +1268,9 @@ export default function TodayPage() {
           kind: techniqueKind,
           baseWeightLb: performed.weight,
           baseReps: performed.reps,
+          instruction: prescribedTechnique,
+          authored: Boolean(exercise.authored_prescription),
+          bodyweight: isBodyweightAuthored(exercise),
         });
       }
 

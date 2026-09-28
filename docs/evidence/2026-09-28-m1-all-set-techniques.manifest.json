@@ -1,0 +1,118 @@
+{
+  "manifest_version": 1,
+  "parent_revision": "32c43e2e1917e36f7dbc1de740ee009b96324424",
+  "status": "Review candidate; no milestone/ADR/release acceptance",
+  "revision_binding": "Containing commit and exact candidate file hashes bind the all-set technique correction",
+  "source_rows": {
+    "phase_1": 315,
+    "phase_2": 310,
+    "phase_2_amrap_slots": 5,
+    "amrap_working_sets_each": 2
+  },
+  "explicit_all_set_technique_slots": {
+    "phase_1": 15,
+    "phase_2": 10
+  },
+  "candidate_files": [
+    {
+      "path": "apps/api/tests/test_authored_source_runtime_fidelity.py",
+      "sha256": "509ee2afc3fa36a0acf9086b51de42e434634e2eba426d16885b7ea25c57f52d"
+    },
+    {
+      "path": "apps/api/tests/test_authored_typed_execution.py",
+      "sha256": "6d5fa233cc59c76089c6ea87f634e14a991aa5ace6004833edc3828959107f82"
+    },
+    {
+      "path": "apps/web/app/today/page.tsx",
+      "sha256": "589e2d0205837ddd50cb91d9bf6fe61f367bc8930b6f02f6d3530ba2391aca08"
+    },
+    {
+      "path": "apps/web/lib/authored-prescription.ts",
+      "sha256": "888e9faf6fa981eb5fc0b989ad0a021c296846a877352add731d47f13ed54f68"
+    },
+    {
+      "path": "apps/web/tests/authored-prescription.test.tsx",
+      "sha256": "5c916db9c70972d8a5babb1bb0d57bac9d7354dd18ec9b9ee8f4a534c80c3fe9"
+    },
+    {
+      "path": "packages/core-engine/core_engine/authored_prescription.py",
+      "sha256": "7e6d5973feb74815ed3f2940c16831658427c4ce6d7bebc3353ebc3908278e83"
+    },
+    {
+      "path": "packages/core-engine/tests/test_authored_prescription.py",
+      "sha256": "23f9cedfb5c6f8b8a5f06b6e6ace0fa0908455f7f2bc3f23fc0ad5826ebf48c3"
+    },
+    {
+      "path": "programs/gold/pure_bodybuilding_phase_1_full_body.json",
+      "sha256": "16256e46bcf9bdca9c922f67f93029602a6fa81be6af704fb76f1062e3a531a8"
+    },
+    {
+      "path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json",
+      "sha256": "32f1169c5c7be2e1d3185b953cc44d6998960a43906587f9fe218f6909174409"
+    },
+    {
+      "path": "programs/gold/pure_bodybuilding_phase_2_full_body.json",
+      "sha256": "88dc46925112332a46612da3b94aa7ed82756c73964e3b4b323f3faf316768e0"
+    },
+    {
+      "path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json",
+      "sha256": "79d08ddb53b08f8e07a6d89d2a5354df833eba73e35b37d5e64331122b37e12a"
+    }
+  ],
+  "raw_outputs": [
+    {
+      "procedure": "technique-api",
+      "sha256": "48d493117f281933bcc0724f4e7d86bcdc9efb4dae1831470ccbef6f576e416b",
+      "availability": "Temporary owner evidence outside Git"
+    },
+    {
+      "procedure": "core-technique",
+      "sha256": "9e51cb12ac1f38a206055a88854fe0a21a2e3dcfb31c8b17162effc3b0ca58dd",
+      "availability": "Temporary owner evidence outside Git"
+    },
+    {
+      "procedure": "web",
+      "sha256": "cdddc21ea6252d873afefe0238bb8d20cb75a727313cb9f8caa3374228c11143",
+      "availability": "Temporary owner evidence outside Git"
+    },
+    {
+      "procedure": "compile-recheck",
+      "sha256": "f850adfb85f225e2135033a207f787a483e95553ea6894aa305244f413bbdff6",
+      "availability": "Temporary owner evidence outside Git"
+    },
+    {
+      "procedure": "lint",
+      "sha256": "73fa35faf01420e6c64b1c76224b42f9be987f898ae0f17b8f5c7c66c1d29144",
+      "availability": "Temporary owner evidence outside Git"
+    },
+    {
+      "procedure": "build",
+      "sha256": "8624d9d15559bbf991d53bdadd2adb9d225e93f083e15d5e9af18fc42cc6ba61",
+      "availability": "Temporary owner evidence outside Git"
+    },
+    {
+      "procedure": "types",
+      "sha256": "05f38959e85dc8dc68ad410560b78355e5e130c1fff032998442642c44be9a20",
+      "availability": "Temporary owner evidence outside Git"
+    }
+  ],
+  "sources": [
+    {
+      "name": "Pure Bodybuilding Phase 1 - Full Body Sheet.xlsx",
+      "sha256": "46f50999771cbb454b325729b2d2a77515dbcf2cdd86891e4543eab65019bb71",
+      "unchanged": true,
+      "published": false
+    },
+    {
+      "name": "Pure Bodybuilding Phase 2 - Full Body Sheet.xlsx",
+      "sha256": "3068701dc79bfa5dd7dff0daa55c670213125fce0cc1bb56abff22083b93bb23",
+      "unchanged": true,
+      "published": false
+    }
+  ],
+  "limits": [
+    "Scoped API/core/JSDOM; no whole-final-tree API or PostgreSQL concurrency qualification",
+    "Only explicit all-set scope is interpreted; other source prose stays raw",
+    "No M1 migration or live activation occurred for this candidate"
+  ]
+}

@@ -33,3 +33,8 @@ export function authoredWarmupLabel(exercise: WorkoutExercise): string | null {
 export function isBodyweightAuthored(exercise: Pick<WorkoutExercise, "authored_prescription" | "load_semantics">): boolean {
   return Boolean(exercise.authored_prescription) && exercise.load_semantics === "bodyweight";
 }
+
+export function authoredSetTechnique(exercise: WorkoutExercise, setIndex: number): string | null {
+  const raw = exercise.authored_prescription?.sets[setIndex - 1]?.intensity_technique ?? null;
+  return raw && !["n/a", "na", "none", "-", "–", "—"].includes(raw.trim().toLowerCase()) ? raw : null;
+}

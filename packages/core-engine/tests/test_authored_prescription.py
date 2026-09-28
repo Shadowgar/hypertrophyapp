@@ -90,3 +90,12 @@ def test_serialized_occurrence_receipts_match_raw_persisted_plan_source_slots():
     assert fault["completed_sets"] == 1 and fault["average_performed_reps"] == 5
     assert "below_target_reps" in fault["fault_reasons"] and "missed_sets" not in fault["fault_reasons"]
     assert summary["decision_trace"]["steps"][0]["ambiguous_legacy_log_count"] == 0
+
+
+def test_explicit_all_set_techniques_preserve_scope_without_expanding_last_set_cues():
+    for instruction in ["Mechanical Dropset (on all sets)", "Integrated Partials (All Sets)"]:
+        prescribed = preserve_prescription({"reps": "8-12", "last_set_intensity_technique": instruction}, 3)
+        assert [item["intensity_technique"] for item in prescribed["sets"]] == [instruction] * 3
+    instruction = "Long-length Partials (on all reps of the last set)"
+    prescribed = preserve_prescription({"reps": "8-12", "last_set_intensity_technique": instruction}, 3)
+    assert [item["intensity_technique"] for item in prescribed["sets"]] == [None, None, instruction]

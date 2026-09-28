@@ -104,3 +104,6 @@ the subsequent current-head summary/load/rep-bound corrections.
 
 [Persisted-plan review identity follow-up](2026-09-28-m1-weekly-review-source-identity.md)
 records production serialization/source-slot cohort matching.
+
+[Explicit all-set technique qualification](2026-09-28-m1-all-set-techniques.md)
+records the subsequent compiler/runner source-scope correction.

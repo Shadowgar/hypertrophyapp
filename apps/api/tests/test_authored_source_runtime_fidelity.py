@@ -124,7 +124,9 @@ def test_source_import_canonical_runtime_today_parity(phase, expected_count):
                 expected_effort = row["raw"]["last_set_rpe"] if set_index == count - 1 else row["raw"]["early_set_rpe"]
                 assert comparable(item["effort_target"]["raw"]) == comparable(expected_effort), (location, stage, "effort", set_index)
                 assert comparable(item["rest"]) == comparable(row["raw"]["rest"]), (location, stage, "rest")
-                expected_technique = row["raw"]["last_set_intensity_technique"] if set_index == count - 1 else None
+                source_technique = row["raw"]["last_set_intensity_technique"]
+                all_sets = bool(re.search(r"\ball(?:\s+working)?\s+sets\b", source_technique or "", re.I))
+                expected_technique = source_technique if all_sets or set_index == count - 1 else None
                 assert comparable(item["intensity_technique"]) == comparable(expected_technique), (location, stage, "intensity")
         assert canonical_rows[source_index]["warmup_prescription"] == [], location
         assert execution_rows[source_index]["warmups"] == [], location

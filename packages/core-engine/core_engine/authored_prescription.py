@@ -43,6 +43,8 @@ def preserve_prescription(raw_fields, count, *, effort_kind="rpe", set_type="wor
     early = _per_set(raw["early_set_rpe"], count)
     last = raw["last_set_rpe"]
     sets = []
+    technique = raw["last_set_intensity_technique"]
+    all_set_technique = bool(re.search(r"\ball(?:\s+working)?\s+sets\b", str(technique or ""), re.IGNORECASE))
     for index in range(count):
         effort = (last if index == count - 1 else early[index])
         if effort is None and raw["effort"] is not None:
@@ -56,7 +58,7 @@ def preserve_prescription(raw_fields, count, *, effort_kind="rpe", set_type="wor
         sets.append({"set_index": index + 1, "set_type": role[1].lower() if role else set_type,
             "rep_target": rep_target, "effort_target": target(effort, kind=effort_kind),
             "rest": raw["rest"],
-            "intensity_technique": raw["last_set_intensity_technique"] if index == count - 1 else None})
+            "intensity_technique": technique if all_set_technique or index == count - 1 else None})
     return {"version": PRESCRIPTION_VERSION, "raw": raw, "sets": sets}
 
 

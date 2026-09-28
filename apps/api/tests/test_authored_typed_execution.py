@@ -96,6 +96,30 @@ def test_numeric_owner_rejects_nonnumeric_prescription():
         resolve_workout_log_set_plan_context(planned_exercise={"sets": 2, "rep_range": None, "authored_prescription": prescribed}, fallback_weight=20)
 
 
+def test_all_set_technique_child_retains_first_parent_source_without_extra_work_count(scenario):
+    user, headers, client = scenario
+    session = typed_plan(user)
+    instruction = "Mechanical Dropset (on all sets)"
+    with SessionLocal() as db:
+        row = db.get(WorkoutPlan, session["plan_id"])
+        changed = deepcopy(row.payload)
+        exercise = changed["sessions"][0]["exercises"][0]
+        exercise["authored_prescription"] = preserve_prescription({"reps": "AMRAP", "last_set_intensity_technique": instruction}, 2)
+        row.payload = changed
+        db.commit()
+    assert log(client, headers, session, submission(session)).status_code == 200
+    child = submission(session)
+    child.update(parent_set_index=1, set_kind="technique", technique={"ordinal": 1}, reps=5, weight=15)
+    result = log(client, headers, session, child)
+    assert result.status_code == 200, result.text
+    assert client.get(f"/workout/{session['workout_occurrence_id']}/progress", headers=headers).json()["completed_total"] == 1
+    with SessionLocal() as db:
+        rows = db.query(WorkoutSetLog).filter_by(user_id=user).all()
+        assert len(rows) == 2
+        assert all(row.replay_context["planned_exercise"]["authored_prescription"]["sets"][0]["intensity_technique"] == instruction for row in rows)
+        assert next(row for row in rows if row.set_kind == "technique").parent_set_index == 1
+
+
 @pytest.mark.parametrize("raw", ["AMRAP", "8-12"])
 def test_bodyweight_receipts_do_not_invent_external_load(scenario, raw):
     user, headers, client = scenario

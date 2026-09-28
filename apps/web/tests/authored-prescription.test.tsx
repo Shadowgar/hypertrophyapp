@@ -2,7 +2,7 @@ import React from "react";
 import { beforeEach, expect, test, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import TodayPage from "@/app/today/page";
-import { authoredRepLabel, authoredSetDetails, authoredSetRepRange } from "@/lib/authored-prescription";
+import { authoredRepLabel, authoredSetDetails, authoredSetRepRange, authoredSetTechnique } from "@/lib/authored-prescription";
 import type { WorkoutExercise } from "@/lib/api";
 
 const exercise: WorkoutExercise = {
@@ -31,6 +31,59 @@ test("typed labels never invent numeric AMRAP bounds and preserve distinct set d
   expect(authoredSetRepRange(positional, 1)).toEqual([6, 6]);
   expect(authoredSetRepRange(positional, 2)).toEqual([10, 10]);
   expect(authoredRepLabel(positional, 2)).toBe("10");
+});
+
+test.each(["Mechanical Dropset (on all sets)", "Integrated Partials (All Sets)", "Mechanical Dropset (last set)"])("runner follows per-set scope for %s", async (instruction) => {
+  const prescribed = structuredClone(exercise);
+  prescribed.rep_range = [8, 12];
+  prescribed.last_set_intensity_technique = instruction;
+  const allSets = instruction.includes("all sets") || instruction.includes("All Sets");
+  prescribed.authored_prescription!.sets.forEach((set, index) => {
+    set.rep_target = { kind: "reps", raw: "8-12", min: 8, max: 12 };
+    set.intensity_technique = allSets || index === 1 ? instruction : null;
+  });
+  expect(authoredSetTechnique(prescribed, 1)).toBe(allSets ? instruction : null);
+  let completed = 0;
+  const workout = { session_id: "synthetic", workout_occurrence_id: "synthetic-occurrence", title: "Synthetic authored",
+    date: new Date().toISOString().slice(0, 10), exercises: [prescribed] };
+  const mock = vi.mocked(globalThis.fetch);
+  mock.mockImplementation(async (input, init) => {
+    const url = String(input);
+    let payload: object = {};
+    if (url.includes("/workout/today")) payload = workout;
+    else if (url.includes("/soreness")) payload = [{ id: "example" }];
+    else if (url.includes("/progress")) payload = { completed_total: completed, planned_total: 2, percent_complete: completed * 50,
+      exercises: [{ exercise_id: prescribed.id, exercise_occurrence_id: prescribed.exercise_occurrence_id, completed_sets: completed }] };
+    else if (url.endsWith("/log-set")) {
+      const body = JSON.parse(String(init?.body));
+      if (body.set_kind !== "technique") completed += 1;
+      payload = { id: "receipt", reps: body.reps, weight: body.weight, next_working_weight: 20,
+        planned_reps_min: 8, planned_reps_max: 12, planned_weight: 20, rep_delta: 0, weight_delta: 0,
+        guidance: "Follow source", decision_trace: {} };
+    }
+    return new Response(JSON.stringify(payload), { status: 200 });
+  });
+  render(<TodayPage />);
+  fireEvent.click(screen.getByRole("button", { name: /Load today's workout/i }));
+  await waitFor(() => expect(screen.getByRole("button", { name: /Synthetic Push-Up/i })).toBeInTheDocument());
+  fireEvent.click(screen.getByRole("button", { name: /Synthetic Push-Up/i }));
+  await waitFor(() => expect(screen.getByRole("dialog")).toBeInTheDocument());
+  const complete = screen.getByRole("button", { name: /Complete (Set|technique steps first)/i });
+  if (allSets) {
+    expect(complete).toBeDisabled();
+    fireEvent.click(screen.getByRole("checkbox", { name: /I will execute these technique cues/ }));
+  } else expect(screen.queryByRole("checkbox", { name: /I will execute these technique cues/ })).not.toBeInTheDocument();
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Reps" }), { target: { value: "12" } });
+  fireEvent.click(complete);
+  await waitFor(() => expect(completed).toBe(1));
+  if (allSets && instruction.startsWith("Mechanical")) {
+    await waitFor(() => expect(screen.getByText(/after working set 1/)).toBeInTheDocument());
+    const techniqueLog = screen.getByRole("button", { name: /Log technique/i });
+    const prior = mock.mock.calls.filter(([input]) => String(input).endsWith("/log-set")).length;
+    fireEvent.click(techniqueLog);
+    await waitFor(() => expect(screen.getByText(/Enter actual reps and external load/)).toBeInTheDocument());
+    expect(mock.mock.calls.filter(([input]) => String(input).endsWith("/log-set")).length).toBe(prior);
+  }
 });
 
 test("runner renders AMRAP, requires actual reps and avoids the numeric baseline calculator", async () => {
@@ -116,4 +169,12 @@ test.each([0, 5])("day summary keeps bodyweight context for %s added kg and nume
   expect(screen.getByText("Next: Bodyweight")).toBeInTheDocument();
   expect(screen.getByText(added ? /Bodyweight \+ 11 lb added/ : /Bodyweight \(no added load\)/)).toBeInTheDocument();
   expect(screen.queryByText(/0 lbs/)).not.toBeInTheDocument();
+});
+
+
+test("source N/A technique marker remains raw but does not become an execution cue", () => {
+  const unavailable = structuredClone(exercise);
+  unavailable.authored_prescription!.sets[1].intensity_technique = "N/A";
+  expect(authoredSetTechnique(unavailable, 2)).toBeNull();
+  expect(unavailable.authored_prescription!.sets[1].intensity_technique).toBe("N/A");
 });
