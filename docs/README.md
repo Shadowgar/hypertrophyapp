@@ -1,55 +1,49 @@
-# Documentation and planning review baseline
+# Documentation authority and navigation
 
-Owner review context: **2026-09-28**. The owner approved the overall product/documentation direction subject to explicit substitution/load/date/link corrections, and approved the deterministic-runtime/AI prescription boundary. Detailed mechanisms/ADRs remain **Proposed**; no release milestone is owner-accepted by this package.
+Integration basis approved by the owner on **2026-09-28**. This is the single documentation entry point on the review branch `docs/planning-baseline-2026-09-28`. The hierarchy and successor classifications are active for work on this branch. They are not merged into main and do not establish runtime implementation or release acceptance. Audited application revision: `df9965232ce731f8234d222acc526a90bc6be620`; integration starts from documentation commit `64c3269dd33bea8c6a72e5a6151d985cf9ea8470`.
 
-Application evidence revision: `df9965232ce731f8234d222acc526a90bc6be620`. First published documentation baseline: `311dc00b5a8c97f5df4f0f33188303d27bbdfc91`. This review branch changes documentation only; current-source descriptions are not deployed-image certification.
+## Controlling hierarchy
 
-## Governing direction and decisions
+Owner requirements → **[product contract](requirements/product-contract.md) / [constitution](governance/constitution.md)** → Accepted ADRs + [preserved historical decision ledger](DECISIONS.md) → contracts / requirements → architecture → roadmap / bounded plans → tests / evidence → historical / supporting / archive.
 
-| Document | Purpose |
+Owner-approved product directions govern desired behavior. All ten [ADRs](adr/README.md) remain **Proposed**; a Proposed ADR cannot supersede D-001–D-022. ADR-004's deterministic prescription principle is owner-approved on 2026-09-28; its detailed enforcement remains Proposed. Current-state observations and runtime defects cannot amend the product contract.
+
+| Area | Entry point and role |
 |---|---|
-| [Product contract](requirements/product-contract.md) | Authored/Customized consent, confirmed substitutions, automatic working-load authority and actual dates. |
-| [Constitution and working rules](governance/constitution.md) | Proposed precedence, owner/technical approval, retained decision history and safe work. |
-| [ADR index and ten proposed records](adr/README.md) | Durable alternatives/compatibility/verification, including newly approved deterministic principle and D-001–D-022 concordance. |
-| [Requirements catalog](requirements/catalog.md) | 80 stable desired outcomes/proposals with current state and acceptance needs. |
-| [Traceability](requirements/traceability.md) | All 80 IDs linked to product/ADR/contracts/modules/limited tests and missing qualification. |
-| [Milestone roadmap](roadmap/milestones.md) | Independent M0 packages; M1 fidelity; parallel M2A load and M2B dates; M3–M6 intelligence/reliability. |
+| Product / governance | [Product](requirements/product-contract.md), [constitution](governance/constitution.md), [AI working rules](governance/ai-working-rules.md), [working agreements](governance/working-agreements.md), [source provenance](governance/source-provenance.md). |
+| Decisions | [ADR lifecycle, ten records and D-001–D-022 concordance](adr/README.md). |
+| Requirements | [80-ID catalog](requirements/catalog.md) and [traceability](requirements/traceability.md); partial implementation is distinguished from missing full qualification. |
+| Architecture | [Target system](architecture/system.md), [audited current state](architecture/current-state.md), [domain](architecture/domain-model.md), [data](architecture/data-model.md), [runtime authority](architecture/runtime-authority.md), [exercise catalog](architecture/exercise-catalog.md). |
+| High-risk contracts | [Contract map](contracts/README.md): source/execution, normalized onboarding, Customized generation, load/exposure, selected dates, recommendations and metadata accounting. |
+| Roadmap / plans | One [milestone roadmap](roadmap/milestones.md); [bounded plan registry and statuses](plans/README.md). M2A load and M2B actual dates are parallel after relevant M0/M1 foundations. |
+| Security | [Security architecture](security/architecture.md), [threat model](security/threat-model.md), [urgent recovery brief](security/urgent-account-recovery.md), [Proposed recovery plan](plans/urgent-account-recovery.md). [Disclosure policy](../SECURITY.md) and [database safety lock](../DB_SAFETY_LOCK.md) remain applicable. |
+| Quality | [Test strategy](quality/test-strategy.md), [release gates](quality/release-gates.md), [Authored qualification](quality/authored-qualification.md), [manual qualification](quality/manual-qualification.md), [issue template](problems/issue-template.md). |
+| User flow / development | [Desired flows](ux/flows.md), [safe development context](operations/development.md), [agent instructions](../AGENTS.md) and [scoped context manifest](context/CONTEXT_MANIFEST.yaml). |
+| Audit / evidence | [Evidence/provenance registry](evidence/README.md), [sanitized September audit](audits/2026-09-28-codebase-product-documentation-audit.md), [199-file disposition registry](audits/2026-09-28-documentation-migration-registry.md), [migration report](audits/2026-09-28-documentation-authority-migration.md). |
+| Historical material | [Archive navigation](archive/README.md), [legacy evidence](evidence/legacy/README.md), [retained unfinished tasks](audits/2026-09-28-legacy-task-register.md). Old root/architecture/implementation indexes and plans are historical/supporting despite original active/master claims below their notices. |
+| Generated reference / runtime assets | [Generated guides notice](guides/generated/README.md) and [source provenance](governance/source-provenance.md). Executable [docs/rules](rules) is a compatibility/runtime asset boundary, outside prose migration. |
 
-## Architecture
+## Status vocabulary
 
-| Document | Purpose |
+| Status | Meaning |
 |---|---|
-| [Target system](architecture/system.md) | Component/dataflow ownership without a rewrite mandate. |
-| [Current state](architecture/current-state.md) | Revision-scoped runtime paths, defects/limits and original test baseline. |
-| [Domain model](architecture/domain-model.md) | Program/slot/occurrence/set/exposure/recommendation vocabulary and lifecycle. |
-| [Data model](architecture/data-model.md) | Existing records, additive identities, correction/units/time and migration choices. |
-| [Runtime authority](architecture/runtime-authority.md) | Today versus target decision owner, mode/input/mutation/trace boundaries. |
+| Owner-approved desired requirement/direction | Owner accepted the intended product outcome; mechanism, implementation and release evidence remain separate. |
+| Proposed technical mechanism | Design awaiting appropriate review; grants no implementation/deployment authority. |
+| Accepted ADR | A record with explicit approver, date and scope. No new ADR in this package has this status. |
+| Implemented | Code or documentation exists for the stated scope and revision; not automatically verified. |
+| Verified for revision/environment | Named procedure and evidence support stated criteria within recorded limits. |
+| Owner-accepted release/milestone | Explicit owner acceptance of a particular release scope and evidence. No M0–M6 release is accepted by this migration. |
+| Superseded | Original authority replaced by a named current successor. Ledger decisions require an actually Accepted superseding ADR; notices on old indexes do not revoke them. |
+| Historical/supporting | Original observations, designs, rationale or evidence retained at their original date/revision/environment. No current implementation permission. |
 
-## High-risk training contracts
+Plan lifecycle is defined once in the [plan registry](plans/README.md). Drafting/integration approval does not approve the urgent recovery plan for implementation.
 
-- [Authored source](contracts/authored-source.md): original/compiled provenance, full fidelity and known AMRAP omission.
-- [Execution plan](contracts/execution-plan.md): preserved prescriptions, consent, occurrence/revision and effective history.
-- [Load progression](contracts/load-progression.md): completed comparable exposure, actual effort/load, actions, uncertainty and override.
-- [Selected-date scheduling](contracts/selected-date-scheduling.md): manual local-week dates, relationships, spacing, reschedule and infeasibility.
-- [Recommendations](contracts/recommendations.md): evidence/permissions, automatic prefill versus explicit outcomes and advisory no-write behavior.
+## Compatibility and evidence boundaries
 
-## Security, testing and evidence
+All 199 audited files have an explicit disposition, retained path, original SHA-256 and current role in the registry. Original bodies, negative findings and unfinished work are retained; some old paths remain compatibility notices. Historical Markdown is interpreted under its notice, not its old internal authority claims. Legacy evidence and generator-owned reports remain scoped to their original context; missing revision/environment remains unknown.
 
-- [Security architecture](security/architecture.md) and [threat model](security/threat-model.md): source-established versus conditional/unknown/proposed/qualified controls.
-- [Urgent recovery brief](security/urgent-account-recovery.md) and [implementation plan](plans/urgent-account-recovery.md): independent S1 closure/S2 lifecycle; no live action authorized.
-- [Test strategy](quality/test-strategy.md): isolated targets, meaningful categories, PostgreSQL boundaries and failure disposition.
-- [Evidence policy and migration registry](evidence/README.md): artifact basenames/hashes, original results/limitations and stable-retention plan. Original audit artifacts remain outside Git and are not linked as publicly accessible files.
+`docs/rules/**`, generated training knowledge, generated guide artifacts, source materials, asset catalog and provenance index remain unchanged. Generated guides are reference/build products, not runtime prescription authority. Rule relocation requires separately authorized application migration and tests. Tool-consumed Master Plan and validation report paths stay in place; tooling migration is unresolved and not performed here.
 
-## Status, provenance and integration
+Active references resolve inside the repository without owner-machine or `.codex` paths. The complete raw audit package originally lived outside Git and remains there; the repository retains a sanitized summary and all-file disposition registry, not private raw output or proprietary sources. Historical unavailable links are explicitly accounted for in the migration report.
 
-Separate owner-approved desired requirement, Proposed technical mechanism, Implemented, Verified for a named revision/environment and release Owner-accepted. ADR lifecycle is Proposed/Accepted/Superseded/Rejected. A partially implemented component or historical pass does not qualify a complete criterion. The explicit AI boundary approval is dated 2026-09-28, not retroactively assigned to D-005; no detailed implementation consequence is automatically accepted.
-
-This package consolidates content ownership without editing competing legacy governance, the [historical ledger](DECISIONS.md), [context manifest](context/CONTEXT_MANIFEST.yaml) or executable `docs/rules/**`. Later approved integration must reconcile all 199 inventory rows, open tasks, provenance/licensing, successors and path consumers in code/tests/workflows/packaging/AI instructions. Update indexes/context references together. Architecture/operations plans not authored here remain deferred, not empty placeholders.
-
-Use repository-relative links; every added repository reference must resolve from another checkout/GitHub. Large/private/proprietary raw artifacts are not copied to fix inconvenient paths. Pinned SnakeTracker [index](https://github.com/Shadowgar/SnakeTracker/blob/87652f8ea80f6328a15385dc2cc32beaf4dbc9e2/docs/README.md) and [decision-freeze discipline](https://github.com/Shadowgar/SnakeTracker/blob/87652f8ea80f6328a15385dc2cc32beaf4dbc9e2/docs/adr/0028-architecture-governance-and-decision-freeze.md) remain process references studied in the audit, not architecture/database/event-store or hardware mandates.
-
-## This batch’s verification and safety
-
-Static checks on 2026-09-28 passed: 33 documentation files (6 updated, 27 new), 10 Proposed ADRs, 80 unique catalog/traceability IDs, all D-001–D-022 retained, and 865 resolving repository-relative link/anchor occurrences. Two pinned external links were not fetched. Markdown table/fence and diff-whitespace checks passed. Semantic review covered substitution consent, automatic load-only authority, parallel M2A/M2B, distinct repeated-slot identity, exposure completeness, AI approval date, statuses, security limits and scoring freeze; no application test, build, installation, migration or service startup is run. Link checks validate local targets/anchors, requirement/ADR/milestone consistency and changed-file scope; they do not qualify runtime behavior, external URL availability, scientific outcomes or live production security.
-
-Only this separate documentation worktree/branch is modified and published. Production checkout/branch, database/personal records, configuration, services, deployment, credentials and existing modified debug log remain untouched. No subagents, main merge or PR. Original audit export remains failed; `.codex` permissions were not changed. Stop after publication for owner review.
+SnakeTracker's pinned [documentation index](https://github.com/Shadowgar/SnakeTracker/blob/87652f8ea80f6328a15385dc2cc32beaf4dbc9e2/docs/README.md) and [decision-freeze process](https://github.com/Shadowgar/SnakeTracker/blob/87652f8ea80f6328a15385dc2cc32beaf4dbc9e2/docs/adr/0028-architecture-governance-and-decision-freeze.md) remain quality/process references studied in the audit. Their application architecture is not adopted.

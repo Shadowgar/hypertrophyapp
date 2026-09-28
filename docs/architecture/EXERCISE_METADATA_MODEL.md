@@ -1,3 +1,5 @@
+> **Historical / superseded as an authority source — 2026-09-28.** This original body is retained for context, evidence and unresolved work; it is not current implementation authority. Current successor(s): [docs/architecture/exercise-catalog.md](exercise-catalog.md), [docs/contracts/metadata-accounting.md](../contracts/metadata-accounting.md). Original dates, claims and checkmarks below describe their original scope, not qualification of the current product. Specialized detail not yet adopted remains supporting/proposed; no runtime permission is inherited.
+
 # Exercise Metadata Model
 
 ## Purpose

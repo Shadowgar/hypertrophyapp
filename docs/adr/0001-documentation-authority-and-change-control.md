@@ -23,3 +23,7 @@ A documentation move can break executable rules, packaging and AI reads. Reconci
 Link/status check; inventory disposition including every unresolved task; context-consumer review; separate owner acceptance of hierarchy. No runtime test is evidence of documentation acceptance.
 
 Controlling document: [governance/constitution.md](../governance/constitution.md). Milestone: M0-DOC. Historical concordance: Historical D-001–D-022 all retained; D-016 and D-017 retain milestone context. Existing ledger date/IDs remain unchanged; this record does not silently supersede them. A conflict requires a named accepted successor. See [ADR governance](README.md).
+
+## Integration amendment — 2026-09-28
+
+The owner explicitly authorized applying the documentation hierarchy, successor classifications and scoped context on this review branch. That integration has been performed; this ADR remains **Proposed**, and its technical/change-control mechanisms and ledger supersession have not been accepted. See the [migration report](../audits/2026-09-28-documentation-authority-migration.md).

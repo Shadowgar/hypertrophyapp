@@ -1,3 +1,5 @@
+> **Preserved historical decision ledger — 2026-09-28 integration notice.** D-001–D-022 and the original 2026-03-20 context are retained verbatim below. These decisions remain constraints at the decision tier under the owner requirements/product contract/constitution. Proposed ADRs do not supersede them. Relationships and unresolved interpretations: [docs/adr/README.md#historical-concordance](adr/README.md#historical-concordance). Read [docs/README.md](README.md) for current authority. No decision is re-dated or silently revoked.
+
 # Decisions
 
 Last updated: 2026-03-20

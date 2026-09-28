@@ -1,19 +1,19 @@
 # Constitution, authority and working rules
 
-Date: 2026-09-28. Status: **Owner approved the overall direction on 2026-09-28 subject to corrections; detailed hierarchy/change mechanisms remain Proposed**. This is a reviewable hierarchy, not a claim that current repository authority has already changed. Evidence: [audit](../evidence/README.md#audit-reference-and-migration-plan), [inventory](../evidence/README.md#audit-reference-and-migration-plan), and the existing [decision ledger](../DECISIONS.md).
+Date: 2026-09-28. Status: **Owner-approved integration basis, 2026-09-28**. This hierarchy is active for documentation and future work on this review branch. Detailed ADR mechanisms remain Proposed; integration is not release acceptance or main-branch activation. Evidence: [audit](../evidence/README.md#audit-reference-and-migration-plan), [inventory](../evidence/README.md#audit-reference-and-migration-plan), and the existing [decision ledger](../DECISIONS.md).
 
-## Proposed authority hierarchy
+## Active documentation authority hierarchy
 
 | Order | Authority | Scope and conflict treatment |
 |---|---|---|
-| 1 | Explicit owner requirements and applicable safety, privacy and licensing constraints | State intended user outcomes and boundaries. New technical proposals cannot manufacture owner consent. Record a conflict that cannot be satisfied. |
-| 2 | Accepted product contract and constitution | Define mode permissions, invariants and change control. Amend explicitly; do not infer new permissions from current code. |
-| 3 | Accepted ADRs and retained decision ledger | Durable technical choices within the product contract; changes require a named successor and compatibility analysis. |
-| 4 | Accepted domain, runtime-authority and high-risk contracts | Define identities, units, inputs, outputs, failure behavior and component ownership under those decisions. |
-| 5 | Requirements catalog and traceability | Translate governing outcomes into testable predicates; link evidence, dependencies and gates. |
-| 6 | Architecture descriptions and operations/quality procedures | Describe implementations and safe qualification. Current-state documents are descriptive and revision-scoped. |
-| 7 | Roadmap and bounded plans | Sequence authorized work and tests. A proposed plan confers no execution or deployment authority. |
-| 8 | Audits, evidence, research, generated guides and archives | Preserve observations, provenance and history. Passing tests and old checkmarks do not override a requirement. |
+| 1 | Explicit owner requirements and applicable safety/privacy/licensing constraints | Define desired outcomes and authorized scope; do not infer owner consent. |
+| 2 | Product contract and constitution | Governing mode permissions, invariants and documentation authority, approved as this branch's integration basis. |
+| 3 | Accepted ADRs + preserved historical decision ledger | Durable choices under the product contract. All ten new ADRs remain Proposed; D-001–D-022 are retained and not silently superseded. |
+| 4 | Contracts / requirements | Operationalize approved outcomes; proposed mechanisms are labeled. Catalog and traceability connect predicates to evidence. |
+| 5 | Architecture | Desired ownership is distinct from revision-scoped current-state observations. Neither changes product permissions. |
+| 6 | Roadmap / bounded plans | Sequence separately authorized work; Proposed plans do not authorize implementation. |
+| 7 | Tests / evidence | Scope observations by revision/environment; passing tests cannot override requirements. |
+| 8 | Historical / supporting / archive | Preserve original rationale, unfinished work, provenance and dated observations without competing current authority. |
 
 The central index owns navigation and status, not duplicate normative prose. Role names identify responsibilities; one person may hold several. Keep check execution, review and product acceptance separately recorded.
 
@@ -32,7 +32,7 @@ No application-wide event-sourcing rewrite is mandated. Evaluate the smallest de
 
 ## Concordance with the existing decision ledger
 
-Retain original IDs and the ledger's existing 2026-03-20 date context. The ledger contains **D-001 through D-022**. The audit's shorter D-001–D-020 preservation reference must not omit D-021 or D-022. This draft records concordance; it does not rewrite the ledger, mint accepted ADRs or invent new dates for old decisions.
+Retain original IDs and the ledger's existing 2026-03-20 date context. The ledger contains **D-001 through D-022**. The audit's shorter D-001–D-020 preservation reference must not omit D-021 or D-022. This integration records concordance and labels the ledger role; it preserves the original ledger body, does not mint accepted ADRs or invent new dates for old decisions.
 
 | Existing identifiers | Retained meaning and proposed interpretation |
 |---|---|
@@ -62,7 +62,7 @@ A milestone is not complete because a plan exists, tests happen to pass, or an o
 
 ## Contributor and AI working rules
 
-Before future sensitive runtime changes, read every document listed in the existing [context manifest](../context/CONTEXT_MANIFEST.yaml), including the constitution, runtime map, generated doctrine, metadata model, remediation roadmap, onboarding/profile/strategy specifications, roadmap, AI rules and documentation status required by [AGENTS.md](../../AGENTS.md). Update the manifest and instruction references together only during separately approved integration. This draft does not replace that mandatory reading contract.
+Before sensitive work, follow [AGENTS.md](../../AGENTS.md) and the [scoped context manifest](../context/CONTEXT_MANIFEST.yaml). Read the product contract/constitution, relevant ADR (including its Proposed status), area contract, runtime authority, requirements and registered plan in that order. Read historical material only when an active reference makes it relevant. There is no blanket requirement to read every historical doctrine/index.
 
 Use the completed audit as starting evidence. Read additional source only for a specific contract/planning question; record unresolved issues instead of broadening the audit. Classify existing failures individually as confirmed implementation defect, obsolete/conflicting expectation, fixture/environment issue, or unresolved. Replace obsolete checks with protections grounded in the controlling contract; never restore authored mutation or weaken intended protection merely to obtain green results.
 
@@ -72,6 +72,8 @@ For this architecture pass, modify documentation only in the separate review wor
 
 ## Integration ownership
 
-The maintainer proposes successors using the complete 199-file inventory, preserving decisions, negative findings, licensing and unresolved task disposition. Check real path consumers before relocation. The product owner accepts permissions and outcomes; technical/security maintainers review mechanisms; the operator owns deployment and recovery evidence. Indexes, authority labels, context references and successor notices change coherently. No competing hierarchy is made active merely by copying these drafts into the repository.
+The [documentation index](../README.md) and [complete migration registry](../audits/2026-09-28-documentation-migration-registry.md) establish active navigation and explicit historical roles on this branch. The [migration report](../audits/2026-09-28-documentation-authority-migration.md) records paths, compatibility exceptions and static qualification. The product owner accepts permissions/outcomes; technical/security maintainers review mechanisms; the operator owns separately authorized deployment/recovery evidence.
 
-The [ADR index](../adr/README.md) records complete ledger concordance and proposed successors. The new [evidence registry](../evidence/README.md) preserves external-audit identity without host-dependent links. Existing authority claims remain in their original files pending explicit successor notices/context migration; ADR-001 resolves their intended precedence without silently editing them.
+Preserve the path-scoped authority and truth-budget principles carried from the old governance: name the family owner, applicable path, actual inputs/outcomes and limits before claiming sovereignty; do not infer repository-wide ownership from one qualified path. Presentation may render owned explanation facts; it must not invent causes from rule-code names. Compatibility façades and executors must not introduce shadow doctrine. Behavioral verification must exercise outcomes and must-fail boundaries, not only narrative strings. Proposed replacement modules are not an instruction to remove compatibility wrappers now.
+
+The [ADR concordance](../adr/README.md#historical-concordance) retains D-001–D-022 and unresolved interpretations. Old authority claims remain in historical bodies behind explicit notices; they no longer compete with this hierarchy. No Proposed ADR overrides a historical decision. Main-branch integration and every runtime implementation/release remain separately authorized.

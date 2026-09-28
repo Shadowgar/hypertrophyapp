@@ -1,3 +1,5 @@
+> **Historical / superseded as an authority source — 2026-09-28.** This original body is retained for context, evidence and unresolved work; it is not current implementation authority. Current successor(s): [docs/contracts/onboarding-profile.md](contracts/onboarding-profile.md), [docs/architecture/data-model.md](architecture/data-model.md). Original dates, claims and checkmarks below describe their original scope, not qualification of the current product. Specialized detail not yet adopted remains supporting/proposed; no runtime permission is inherited.
+
 # Deterministic Generated Profile Schema
 
 Last updated: 2026-04-27

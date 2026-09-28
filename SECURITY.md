@@ -1,3 +1,5 @@
+> Security design and evidence navigation: [documentation index](docs/README.md), [security architecture](docs/security/architecture.md), [threat model](docs/security/threat-model.md), [urgent recovery brief](docs/security/urgent-account-recovery.md) and [Proposed implementation plan](docs/plans/urgent-account-recovery.md). These revision-scoped findings/proposals do not certify deployed controls or authorize implementation. The disclosure policy and contact placeholder below remain unchanged.
+
 # Security Policy
 
 This document explains which versions of **Rocco's HyperTrophy** receive security updates and how security issues should be reported.

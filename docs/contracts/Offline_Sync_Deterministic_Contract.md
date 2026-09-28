@@ -1,3 +1,5 @@
+> **Historical / supporting — classified 2026-09-28.** Retained at its original path with original context/body. This is reference/design material, not current implementation authority or a qualified procedure. Current controlling navigation: [docs/roadmap/milestones.md#m3m6-intelligence-and-qualification](../roadmap/milestones.md#m3m6-intelligence-and-qualification). The inventory Keep disposition is applied; its proposed alternate filename is not authorization for a cosmetic relocation.
+
 # Offline Sync Deterministic Contract (Phase 10)
 
 **Implementation Status: Not Started.** This document defines the contract for a future phase. No client-side queue, replay API, or offline sync logic exists in the codebase.

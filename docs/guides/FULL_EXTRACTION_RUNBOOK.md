@@ -1,3 +1,5 @@
+> **Historical / supporting — classified 2026-09-28.** Retained at its original path with original context/body. This is reference/design material, not current implementation authority or a qualified procedure. Current controlling navigation: [docs/governance/source-provenance.md](../governance/source-provenance.md). The inventory Keep disposition is applied; its proposed alternate filename is not authorization for a cosmetic relocation.
+
 # Full Extraction Runbook
 
 This runbook defines deterministic ingestion policy for `reference/` assets across CI and local workflows.

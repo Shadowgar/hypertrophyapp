@@ -1,3 +1,5 @@
+> **Historical / superseded as an authority source — 2026-09-28.** This original body is retained for context, evidence and unresolved work; it is not current implementation authority. Current successor(s): [docs/contracts/README.md](README.md), [docs/quality/test-strategy.md](../quality/test-strategy.md). Original dates, claims and checkmarks below describe their original scope, not qualification of the current product. Specialized detail not yet adopted remains supporting/proposed; no runtime permission is inherited.
+
 # High-Risk Contracts (Deterministic Core)
 
 Purpose: define the contracts that must remain stable unless a change is intentionally coordinated across engine, API, web, tests, and docs in one session.

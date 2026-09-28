@@ -1,3 +1,5 @@
+> **Historical / supporting — classified 2026-09-28.** Retained at its original path with original context/body. This is reference/design material, not current implementation authority or a qualified procedure. Current controlling navigation: [docs/plans/security-hardening.md](../plans/security-hardening.md). The inventory Keep disposition is applied; its proposed alternate filename is not authorization for a cosmetic relocation.
+
 # Auth Expansion Architecture Contract (Phase 12)
 
 **Implementation Status: Not Started.** This document defines the contract for a future phase. Only email/password JWT authentication is currently implemented.

@@ -1,0 +1,9 @@
+# Authored source and execution qualification
+
+Planned procedure; **not performed by this migration**. Governing [source](../contracts/authored-source.md), [execution](../contracts/execution-plan.md), [load](../contracts/load-progression.md), [dates](../contracts/selected-date-scheduling.md), [AUTH-FID requirements](../requirements/catalog.md#auth-fid), [M1](../roadmap/milestones.md#m1-and-parallel-m2-tracks).
+
+Use licensed source fixtures and an independent source parser. Record source/build/runtime hashes and compare every slot, order, working/warm-up prescription, nonnumeric and set-specific target, effort/rest/technique/notes and source relationship through import, compilation, loading, allocation and runner display. Preserve repeated-slot identity and source-approved alternatives with explicit confirmation. Verify constraints/time/recovery do not mutate unrelated Authored dose; dates preserve relationships/dose or disclose infeasibility.
+
+Retained September findings: Phase 1 315/315 matched tested fields; Phase 2 310 source/305 retained, AMRAP push-up in weeks 6–10 omitted; 80 unrestricted multiset cases do not certify ordering or missing data. Corrective evidence must reconcile the original diagnostics and aligned omissions, not cite a positional mismatch count as independent defects.
+
+Legacy [dogfood](../evidence/legacy/phase1-dogfood.md), [run checklist](../implementation/DOGFOOD_PHASE1_RUN_CHECKLIST.md), [Phase 2 handoff](../evidence/legacy/phase2-handoff.md) and [parity matrix](../validation/phase2_fullbody_parity_matrix.md) retain original checks, limits and unresolved work. Their historic passes do not certify full source fidelity or current deployment. Add safe synthetic/browser/manual evidence and revision/environment manifest before owner acceptance; no proprietary source is republished.
