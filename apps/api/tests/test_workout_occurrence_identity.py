@@ -327,3 +327,35 @@ def test_authorized_wipe_deletes_occurrence_dependents_only_for_target_user(scen
             assert db.query(model).filter_by(user_id=user).count() == 0
             assert db.query(model).filter_by(user_id=other_id).count() == 1
     assert client.get(f"/workout/{other_session['workout_occurrence_id']}/progress", headers=other_headers).json()["completed_total"] == 1
+
+
+@pytest.mark.parametrize("concurrent", [False, True])
+def test_distinct_commands_cannot_duplicate_logical_set_and_new_attempt_after_undo(scenario, concurrent):
+    if concurrent and engine.dialect.name != "postgresql":
+        pytest.skip("PostgreSQL transaction qualification")
+    user, headers, client = scenario
+    session = plan(user, date(2026, 9, 7))
+    first, second = submission(session), submission(session)
+    if concurrent:
+        barrier = Barrier(2)
+        def submit(payload):
+            with TestClient(app) as other_client:
+                barrier.wait(timeout=10)
+                return log(other_client, headers, session, payload)
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            futures = [pool.submit(submit, payload) for payload in (first, second)]
+            results = [future.result(timeout=30) for future in futures]
+    else:
+        results = [log(client, headers, session, payload) for payload in (first, second)]
+    assert sorted(result.status_code for result in results) == [200, 409]
+    assert counts(user) == (1, 1, 1)
+    with SessionLocal() as db:
+        before = db.query(ExerciseState).filter_by(user_id=user).one().exposure_count
+    progress = client.get(f"/workout/{session['workout_occurrence_id']}/progress", headers=headers).json()
+    summary = client.get(f"/workout/{session['workout_occurrence_id']}/summary", headers=headers).json()
+    assert progress["completed_total"] == summary["completed_total"] == 1
+    assert client.post(f"/workout/{session['workout_occurrence_id']}/undo-last-set", headers=headers,
+        json={"exercise_id": "same-catalog", "exercise_occurrence_id": first["exercise_occurrence_id"]}).status_code == 200
+    assert log(client, headers, session, submission(session)).status_code == 200
+    with SessionLocal() as db:
+        assert db.query(ExerciseState).filter_by(user_id=user).one().exposure_count == before + 1

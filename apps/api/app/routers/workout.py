@@ -408,6 +408,16 @@ def _apply_log_set(
     command_id: str,
     digest: str,
 ) -> WorkoutSetLogResponse:
+    # User lock held by log_set: distinct commands cannot both claim one slot.
+    existing_slots = db.query(WorkoutSetLog).filter_by(
+        user_id=current_user.id, workout_occurrence_id=occurrence.id,
+        exercise_occurrence_id=exercise["exercise_occurrence_id"], set_index=payload.set_index,
+    ).all()
+    kind = (payload.set_kind or "work").strip().lower() or "work"
+    ordinal = (payload.technique or {}).get("ordinal")
+    for entry in existing_slots:
+        if ((entry.set_kind or "work").strip().lower() or "work") == kind and entry.parent_set_index == payload.parent_set_index and (entry.technique or {}).get("ordinal") == ordinal:
+            raise HTTPException(409, "Logical set already logged; undo before starting a new attempt")
     context_runtime = prepare_workout_log_set_context_route_runtime(
         workout_id=occurrence.workout_id,
         plan_rows=occurrence_plan(occurrence, session),
