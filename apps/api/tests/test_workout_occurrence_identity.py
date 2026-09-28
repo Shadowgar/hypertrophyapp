@@ -30,7 +30,7 @@ def scenario():
         assert engine.url.database.startswith("hist_disposable")
         assert os.environ.get("HIST_MIGRATED_DATABASE") == "1"
     with SessionLocal() as db:
-        user = User(id=str(uuid4()), email=f"{uuid4()}@example.invalid", name="Synthetic history", password_hash="unused", selected_program_id="full_body_v1")
+        user = User(id=str(uuid4()), email=f"{uuid4()}@example.com", name="Synthetic history", password_hash="unused", selected_program_id="full_body_v1")
         db.add(user)
         db.commit()
         user_id = user.id
@@ -294,3 +294,36 @@ def test_postgres_concurrent_distinct_commands_preserve_projection(scenario):
     assert counts(user) == (2, 1, 2)
     with SessionLocal() as db:
         assert db.query(WorkoutSessionState).filter_by(user_id=user).one().completed_sets == 2
+
+
+@pytest.mark.parametrize("route", ["auth", "profile"])
+def test_authorized_wipe_deletes_occurrence_dependents_only_for_target_user(scenario, monkeypatch, route):
+    from app.config import settings
+    monkeypatch.setattr(settings, "allow_dev_wipe_endpoints", True)
+    user, headers, client = scenario
+    session = plan(user, date(2026, 9, 7))
+    assert log(client, headers, session, submission(session)).status_code == 200
+    with SessionLocal() as db:
+        other = User(id=str(uuid4()), email=f"{uuid4()}@example.invalid", name="Other synthetic", password_hash="unused")
+        db.add(other)
+        db.commit()
+        other_id = other.id
+        target_email = db.get(User, user).email
+    other_headers = {"Authorization": f"Bearer {create_access_token(other_id)}"}
+    other_session = plan(other_id, date(2026, 9, 7))
+    assert log(client, other_headers, other_session, submission(other_session)).status_code == 200
+    # Enforce the same FK boundary as PostgreSQL in the SQLite test too.
+    if engine.dialect.name == "sqlite":
+        with engine.connect() as connection:
+            connection.exec_driver_sql("PRAGMA foreign_keys=ON")
+            assert connection.exec_driver_sql("PRAGMA foreign_keys").scalar() == 1
+    response = client.post("/auth/dev/wipe-user", json={"email": target_email, "confirmation": "WIPE"}) if route == "auth" else client.post("/profile/dev/wipe", headers=headers)
+    assert response.status_code == 200, response.text
+    assert response.json() == {"status": "wiped"}
+    with SessionLocal() as db:
+        assert db.get(User, user) is None
+        assert db.get(User, other_id) is not None
+        for model in (WorkoutLogCommand, WorkoutSessionState, WorkoutSetLog, WorkoutOccurrence):
+            assert db.query(model).filter_by(user_id=user).count() == 0
+            assert db.query(model).filter_by(user_id=other_id).count() == 1
+    assert client.get(f"/workout/{other_session['workout_occurrence_id']}/progress", headers=other_headers).json()["completed_total"] == 1
