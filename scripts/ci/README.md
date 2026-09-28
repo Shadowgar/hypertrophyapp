@@ -5,12 +5,15 @@ This package scopes GitHub checks to the complete changed-file diff and propagat
 | Changed scope | Applicable checks |
 |---|---|
 | Markdown / documentation JSON or YAML | Offline local links and anchors, changed JSON/YAML syntax, context-manifest paths, release-evidence schema boundaries; tooling tests and actionlint. |
-| API | API tests with explicit disposable SQLite/log targets. Settings defaults run with the dev flag absent; the remaining suite runs with synthetic dev routes explicitly enabled. |
+| API | API tests with explicit disposable SQLite/log targets. Settings defaults run directly in Python, outside pytest/conftest, with the dev flag absent and dotenv disabled; the remaining suite runs with synthetic dev routes explicitly enabled. |
 | Core engine | Core tests plus API tests for consumers. |
 | Programs, compiled knowledge, importers, reference inputs, runtime `docs/rules`, generated guide/catalog assets | Core and API qualification; these are not classified as narrative documentation. |
 | Web | Lockfile install, lint, unit/component tests, TypeScript and production build, reported separately. |
 | Workflow / CI tooling | Selection/gate/checker tests, actionlint and documentation checks. |
-| Unknown shared configuration | Conservative API, core and web coverage. |
+| API/web Dockerfiles, Compose, `.dockerignore` | Compose validation and real builds of all buildable services, preserving applicable runtime checks. Documentation and ordinary API Python changes do not select container builds. |
+| Unknown shared configuration | Conservative API, core, web and container coverage. |
+
+Container builds use the root contexts and API/web Dockerfiles defined in `docker-compose.yml`, with automatic dotenv loading disabled. They build images without starting services, running migrations or connecting to application persistence. Build failures, cancellations and unexpected skips fail qualification when container coverage applies.
 
 [CI](../../.github/workflows/ci.yml) always produces `CI qualification`, which fails if any applicable job fails, is cancelled or is skipped. Nonapplicable checks are visibly skipped, not described as validation passes. Full manual dispatch selects all categories. Push CI runs on main; PR CI runs on pull requests, avoiding duplicate branch-push suites. No branch protection or repository integration settings are changed here. Owners may separately choose the aggregate as a required check.
 
@@ -34,7 +37,7 @@ CodeRabbit's green skipped status and Copilot's exhausted quota are review-not-p
 
 PR #35 API CI reported 450 passed, 9 failed, 7 skipped. Six behavioral failures reproduce the September 28 audit: two Today/progress totals, generated core-slot balance, generated alias/deload behavior, weekly-review overlay and substitution-guidance selection. Reconcile those against the approved product contract in separately scoped work; never reintroduce authored mutation to satisfy obsolete assertions.
 
-Two failures require a licensed Phase 1 workbook absent from Git and nonportable embedded paths. Fixture provision/licensing and provenance portability remain later M0 work. The workflow does not publish proprietary files, skip those tests or label missing fixtures successful. The settings-default failure came from enabling the dev flag suite-wide; CI now runs that settings test separately with its required absent-flag environment, without changing runtime defaults or test assertions.
+Two failures require a licensed Phase 1 workbook absent from Git and nonportable embedded paths. Fixture provision/licensing and provenance portability remain later M0 work. The workflow does not publish proprietary files, skip those tests or label missing fixtures successful. The default-settings assertion runs in a standalone Python process, outside pytest/conftest setup, with the dev flag absent and `Settings(_env_file=None)`. Its mandatory assertion preserves the false runtime default; the remaining suite explicitly enables synthetic dev routes.
 
 Core/web/type failures established by the audit remain failures when their category applies. SQLite does not qualify PostgreSQL concurrency, migrations, live configuration, deployed security, browser/device behavior or scientific outcomes.
 

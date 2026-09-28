@@ -8,12 +8,15 @@ import re
 import subprocess
 
 
-CATEGORIES = ("docs", "api", "core", "web", "tooling")
+CATEGORIES = ("docs", "api", "core", "web", "tooling", "containers")
+CONTAINER_DEFINITIONS = {"apps/api/Dockerfile", "apps/web/Dockerfile", "docker-compose.yml", ".dockerignore"}
 
 
 def classify(paths):
     selected = {key: False for key in CATEGORIES}
     for path in paths:
+        if path in CONTAINER_DEFINITIONS:
+            selected["containers"] = True
         if path.startswith(".github/") or path.startswith("scripts/ci/"):
             selected["tooling"] = True
         elif path.startswith(("docs/rules/", "programs/", "knowledge/", "importers/", "reference/")):
@@ -33,6 +36,7 @@ def classify(paths):
         else:
             # Unknown/shared build and configuration changes fail open to coverage.
             selected["api"] = selected["core"] = selected["web"] = True
+            selected["containers"] = True
     return selected
 
 

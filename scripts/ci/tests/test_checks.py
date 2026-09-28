@@ -1,3 +1,4 @@
+import ast
 import json
 import os
 from pathlib import Path
@@ -6,6 +7,8 @@ import sys
 import tempfile
 import unittest
 from unittest.mock import patch
+
+import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -20,6 +23,7 @@ class SelectionTests(unittest.TestCase):
                              "docs/guides/FULL_EXTRACTION_RUNBOOK.md", "docs/guides/generated/README.md"])
         self.assertTrue(selected["docs"])
         self.assertFalse(any(selected[key] for key in ("api", "core", "web")))
+        self.assertFalse(selected["containers"])
 
     def test_runtime_docs_and_training_artifacts_are_not_prose(self):
         for path in ("docs/rules/policy.json", "programs/gold/plan.json", "knowledge/compiled/guide.md",
@@ -40,6 +44,27 @@ class SelectionTests(unittest.TestCase):
     def test_unknown_inputs_conservatively_run_runtime_checks(self):
         selected = classify(["new-shared-build-config.toml"])
         self.assertTrue(all(selected[key] for key in ("api", "core", "web")))
+        self.assertTrue(selected["containers"])
+
+    def test_real_container_definitions_select_builds_and_preserve_runtime_coverage(self):
+        expected = {
+            "apps/api/Dockerfile": {"api"},
+            "apps/web/Dockerfile": {"web"},
+            "docker-compose.yml": {"api", "core", "web"},
+            ".dockerignore": {"api", "core", "web"},
+        }
+        for path, runtime in expected.items():
+            with self.subTest(path=path):
+                selected = classify([path])
+                self.assertTrue(selected["containers"])
+                self.assertEqual({key for key in ("api", "core", "web") if selected[key]}, runtime)
+
+    def test_api_python_changes_do_not_build_containers_unless_another_input_requires_it(self):
+        path = "apps/api/app/config.py"
+        selected = classify([path])
+        self.assertTrue(selected["api"])
+        self.assertFalse(selected["containers"])
+        self.assertTrue(classify([path, "apps/api/Dockerfile"])["containers"])
 
     def test_workflow_changes_run_tooling_checks(self):
         self.assertTrue(classify([".github/workflows/ci.yml"])["tooling"])
@@ -91,6 +116,114 @@ class GateTests(unittest.TestCase):
         needs = self.needs()
         del needs["changes"]["outputs"]["api"]
         self.assertTrue(evaluate(needs))
+
+    def test_required_container_build_failures_cancellations_and_skips_fail_qualification(self):
+        for state in ("success", "failure", "cancelled", "skipped"):
+            with self.subTest(state=state):
+                needs = self.needs()
+                needs["changes"]["outputs"]["containers"] = "true"
+                needs["container-build"] = {"result": state}
+                errors = evaluate(needs)
+                if state == "success":
+                    self.assertEqual(errors, [])
+                else:
+                    self.assertTrue(any("container-build" in error for error in errors), errors)
+
+    def test_missing_or_invalid_container_applicability_fails_qualification(self):
+        for flag in (None, "", "invalid"):
+            with self.subTest(flag=flag):
+                needs = self.needs()
+                if flag is None:
+                    needs["changes"]["outputs"].pop("containers", None)
+                else:
+                    needs["changes"]["outputs"]["containers"] = flag
+                self.assertTrue(any("containers" in error for error in evaluate(needs)))
+
+
+class ConfigDefaultTests(unittest.TestCase):
+    def run_default_check(self, true_default=False):
+        repo = Path(__file__).resolve().parents[3]
+        workflow = yaml.safe_load((repo / ".github/workflows/ci.yml").read_text())
+        step = next(step for step in workflow["jobs"]["api-tests"]["steps"]
+                    if step.get("name") == "Verify settings defaults with dev flag absent")
+        source = (repo / "apps/api/app/config.py").read_text()
+        if true_default:
+            tree = ast.parse(source)
+            settings = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == "Settings")
+            default = next(node for node in settings.body if isinstance(node, ast.AnnAssign)
+                           and isinstance(node.target, ast.Name) and node.target.id == "allow_dev_wipe_endpoints")
+            default.value = ast.Constant(True)
+            source = ast.unparse(tree)
+        with tempfile.TemporaryDirectory(prefix="hypertrophy-ci-default-test-") as temp:
+            root = Path(temp)
+            (root / "app").mkdir()
+            (root / "app/__init__.py").write_text("")
+            (root / "app/config.py").write_text(source)
+            # A dotenv override must not replace the default under test.
+            (root / ".env").write_text("ALLOW_DEV_WIPE_ENDPOINTS=true\n")
+            poison = ("import os\nfrom pathlib import Path\n"
+                      "Path('pytest-setup-imported').write_text('loaded')\n"
+                      "os.environ.setdefault('ALLOW_DEV_WIPE_ENDPOINTS', 'true')\n"
+                      "raise RuntimeError('pytest setup must not run before the assertion')\n")
+            (root / "pytest.py").write_text(poison)
+            (root / "conftest.py").write_text(poison)
+            (root / "tests").mkdir()
+            (root / "tests/conftest.py").write_text(poison)
+            env = {"PATH": str(Path(sys.executable).parent) + os.pathsep + os.defpath,
+                   "PYTHONDONTWRITEBYTECODE": "1", "ALLOW_DEV_WIPE_ENDPOINTS": "true"}
+            result = subprocess.run(["bash", "-euo", "pipefail", "-c", step["run"]],
+                                    cwd=temp, env=env, capture_output=True, text=True)
+            self.assertFalse((root / "pytest-setup-imported").exists(), result.stdout + result.stderr)
+            return result
+
+    def test_current_false_default_passes_outside_pytest_with_the_flag_removed(self):
+        result = self.run_default_check()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_a_true_runtime_default_fails_the_same_isolated_check(self):
+        result = self.run_default_check(true_default=True)
+        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("Dev wipe endpoints must default to false", result.stderr)
+
+
+class ContainerCommandTests(unittest.TestCase):
+    def test_workflow_build_command_propagates_compose_and_build_failures_to_the_gate(self):
+        repo = Path(__file__).resolve().parents[3]
+        workflow = yaml.safe_load((repo / ".github/workflows/ci.yml").read_text())
+        job = workflow["jobs"]["container-build"]
+        self.assertEqual(job["if"], "needs.changes.outputs.containers == 'true'")
+        self.assertIn("container-build", workflow["jobs"]["qualification"]["needs"])
+        command = next(step["run"] for step in job["steps"] if "run" in step)
+        expected = [
+            ["compose", "--env-file", "/dev/null", "-f", "docker-compose.yml", "config", "--quiet"],
+            ["compose", "--env-file", "/dev/null", "-f", "docker-compose.yml", "build", "--pull"],
+        ]
+        for failure in ("", "config", "build"):
+            with self.subTest(failure=failure), tempfile.TemporaryDirectory(prefix="hypertrophy-ci-build-test-") as temp:
+                root = Path(temp)
+                docker = root / "docker"
+                docker.write_text(f"#!{sys.executable}\n"
+                                  "import json, os, sys\n"
+                                  "with open(os.environ['CI_TEST_DOCKER_CALLS'], 'a') as calls:\n"
+                                  "    calls.write(json.dumps(sys.argv[1:]) + '\\n')\n"
+                                  "raise SystemExit(17 if os.environ['CI_TEST_DOCKER_FAILURE'] in ('config', 'build') "
+                                  "and os.environ['CI_TEST_DOCKER_FAILURE'] in sys.argv[1:] else 0)\n")
+                docker.chmod(0o700)
+                calls = root / "calls.jsonl"
+                env = {"PATH": str(root) + os.pathsep + os.defpath, "PYTHONDONTWRITEBYTECODE": "1",
+                       "CI_TEST_DOCKER_CALLS": str(calls), "CI_TEST_DOCKER_FAILURE": failure}
+                result = subprocess.run(["bash", "-euo", "pipefail", "-c", command],
+                                        cwd=temp, env=env, capture_output=True, text=True)
+                recorded = [json.loads(line) for line in calls.read_text().splitlines()]
+                self.assertEqual(recorded, expected[:1] if failure == "config" else expected)
+                self.assertEqual(result.returncode == 0, not failure, result.stdout + result.stderr)
+                needs = {"changes": {"result": "success", "outputs": {key: "false" for key in JOBS}}}
+                needs["changes"]["outputs"]["containers"] = "true"
+                for category, jobs in JOBS.items():
+                    for name in jobs:
+                        needs[name] = {"result": ("failure" if failure else "success")
+                                       if category == "containers" else "skipped"}
+                self.assertEqual(bool(evaluate(needs)), bool(failure))
 
 
 class FakeSnapshot:

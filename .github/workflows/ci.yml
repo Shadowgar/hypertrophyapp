@@ -22,6 +22,7 @@ jobs:
       core: ${{ steps.scope.outputs.core }}
       web: ${{ steps.scope.outputs.web }}
       tooling: ${{ steps.scope.outputs.tooling }}
+      containers: ${{ steps.scope.outputs.containers }}
       base: ${{ steps.scope.outputs.base }}
     steps:
       - uses: actions/checkout@v5
@@ -108,12 +109,20 @@ jobs:
           } >> "$GITHUB_ENV"
       - name: Verify settings defaults with dev flag absent
         working-directory: apps/api
-        run: env -u ALLOW_DEV_WIPE_ENDPOINTS PYTHONPATH=. python -m pytest -q tests/test_config_defaults.py
+        run: |
+          env -u ALLOW_DEV_WIPE_ENDPOINTS PYTHONPATH=. python -c '
+          import os
+          assert "ALLOW_DEV_WIPE_ENDPOINTS" not in os.environ, "Dev flag must be absent"
+          from app.config import Settings
+          settings = Settings(_env_file=None)
+          assert settings.allow_dev_wipe_endpoints is False, "Dev wipe endpoints must default to false"
+          '
       - name: API behavior with explicitly enabled synthetic dev routes
         working-directory: apps/api
         env:
           ALLOW_DEV_WIPE_ENDPOINTS: 'true'
-        # The settings file runs separately above; no baseline test is deselected.
+        # The default assertion runs outside pytest above to avoid conftest's
+        # dev-flag setup; its equivalent assertion remains mandatory.
         # Missing licensed source fixtures remain failures, not synthetic passes.
         run: PYTHONPATH=. python -m pytest -q --ignore=tests/test_config_defaults.py
 
@@ -211,9 +220,24 @@ jobs:
       - run: npm run build
         working-directory: apps/web
 
+  container-build:
+    needs: changes
+    if: needs.changes.outputs.containers == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Validate Compose and build its images without starting services
+        run: |
+          set -euo pipefail
+          docker compose --env-file /dev/null -f docker-compose.yml config --quiet
+          docker compose --env-file /dev/null -f docker-compose.yml build --pull
+
   qualification:
     name: CI qualification
-    needs: [changes, documentation, workflow-checks, api-tests, core-tests, web-lint, web-tests, web-types, web-build]
+    needs: [changes, documentation, workflow-checks, api-tests, core-tests, web-lint, web-tests, web-types, web-build, container-build]
     if: always()
     runs-on: ubuntu-latest
     steps:

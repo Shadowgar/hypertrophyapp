@@ -10,6 +10,7 @@ JOBS = {
     "api": ("api-tests",),
     "core": ("core-tests",),
     "web": ("web-lint", "web-tests", "web-types", "web-build"),
+    "containers": ("container-build",),
 }
 
 
