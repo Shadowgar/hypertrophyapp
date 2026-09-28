@@ -564,7 +564,7 @@ function ExerciseDetailOverlay({
   substitutions: string[];
   weakPointInstruction: string | null;
   notesOpen: boolean;
-  onUndoLastSet?: () => void;
+  onUndoLastSet?: () => Promise<number | false> | void;
   onClose: () => void;
   onSwap: (exerciseId: string, index: number) => void;
   onToggleNotes: () => void;
@@ -900,6 +900,7 @@ export default function TodayPage() {
     restCycle: number;
   } | null>(null);
   const currentOccurrence = useRef<string | null>(null);
+  const undoInFlight = useRef(false);
   const hasAutoLoadStarted = useRef(false);
   const isBeginWorkoutLoadInProgress = useRef(false);
   const sorenessDismissedThisSession = useRef(false);
@@ -1490,39 +1491,51 @@ export default function TodayPage() {
           || (typeof exercise.notes === "string" && exercise.notes.trim().length > 0)
         );
 
-        const handleUndoLastSet =
-          completed > 0
-            ? async () => {
-                try {
-                  await api.undoLastSet(workoutReference(workout), exercise.id, exercise.exercise_occurrence_id);
-                  // Clear local last-set hint so UI falls back to authoritative weight.
-                  setLastSetByExercise((prev) => {
-                    const next = { ...prev };
-                    delete next[exerciseKey(exercise)];
-                    return next;
-                  });
-                  // Refresh progress to resync completed-set counts.
-                  const progress = await api.getWorkoutProgress(workoutReference(workout));
-                  if (currentOccurrence.current !== workoutReference(workout)) return;
-                  const serverCompleted = Object.fromEntries(
-                    (progress.exercises ?? []).map((item) => [item.exercise_occurrence_id ?? item.exercise_id, Number(item.completed_sets) || 0]),
-                  ) as Record<string, number>;
-                  if (Object.keys(serverCompleted).length > 0) {
-                    setCompletedSetsByExercise(serverCompleted);
-                    const percent = Number(progress.percent_complete) || 0;
-                    setWorkoutProgress({
-                      completed: Number(progress.completed_total) || 0,
-                      planned: Number(progress.planned_total) || 0,
-                      percent,
-                    });
-                    const completedKey = occurrenceStorageKey("completed", workout);
-                    localStorage.setItem(completedKey, JSON.stringify(serverCompleted));
-                  }
-                } catch {
-                  // best-effort: keep existing UI state on failure
-                }
-              }
-            : undefined;
+        const handleUndoLastSet = completed > 0 ? async (): Promise<number | false> => {
+          if (undoInFlight.current) return false;
+          undoInFlight.current = true;
+          const commandKey = pendingCommandKey(occurrenceStorageKey("attempt", workout), exerciseKey(exercise), "undo");
+          try {
+            const result = await api.undoLastSet(workoutReference(workout), exercise.id, exercise.exercise_occurrence_id, getLogCommand(commandKey));
+            acknowledgeLogCommand(commandKey);
+            if (currentOccurrence.current !== workoutReference(workout)) return false;
+            setLastSetByExercise((prev) => { const next = { ...prev }; delete next[exerciseKey(exercise)]; return next; });
+            setSetFeedbackByExercise((prev) => { const next = { ...prev }; delete next[exerciseKey(exercise)]; return next; });
+            setLiveRecommendationByExercise((prev) => {
+              const next = { ...prev }; delete next[exerciseKey(exercise)];
+              if (result.live_recommendation) next[exerciseKey(exercise)] = result.live_recommendation;
+              return next;
+            });
+            setWorkoutSummary(null);
+            const [progressResult, todayResult] = await Promise.allSettled([
+              api.getWorkoutProgress(workoutReference(workout)), api.getTodayWorkout(),
+            ]);
+            if (currentOccurrence.current !== workoutReference(workout)) return false;
+            if (todayResult.status === "fulfilled" && workoutReference(todayResult.value) === workoutReference(workout)) {
+              setWorkout(todayResult.value);
+              setLiveRecommendationByExercise(Object.fromEntries((todayResult.value.exercises ?? [])
+                .filter((item) => item.live_recommendation).map((item) => [exerciseKey(item), item.live_recommendation as WorkoutLiveRecommendation])));
+            }
+            if (progressResult.status === "fulfilled") {
+              const progress = progressResult.value;
+              const serverCompleted = Object.fromEntries((progress.exercises ?? []).map((item) =>
+                [item.exercise_occurrence_id ?? item.exercise_id, Number(item.completed_sets) || 0])) as Record<string, number>;
+              setCompletedSetsByExercise(serverCompleted);
+              setWorkoutProgress({ completed: Number(progress.completed_total) || 0, planned: Number(progress.planned_total) || 0, percent: Number(progress.percent_complete) || 0 });
+              try { localStorage.setItem(occurrenceStorageKey("completed", workout), JSON.stringify(serverCompleted)); } catch { /* server still confirmed */ }
+            } else if (result.live_recommendation) {
+              setCompletedSetsByExercise((prev) => ({ ...prev, [exerciseKey(exercise)]: result.live_recommendation!.completed_sets }));
+            }
+            setMessage("");
+            if (progressResult.status === "fulfilled") {
+              return Number(progressResult.value.exercises?.find((item) => (item.exercise_occurrence_id ?? item.exercise_id) === exerciseKey(exercise))?.completed_sets) || 0;
+            }
+            return result.live_recommendation?.completed_sets ?? Math.max(0, completed - 1);
+          } catch {
+            setMessage("Undo was not confirmed. Retry to confirm the same action.");
+            return false;
+          } finally { undoInFlight.current = false; }
+        } : undefined;
 
         return (
           <ExerciseDetailOverlay

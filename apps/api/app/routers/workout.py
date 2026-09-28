@@ -10,6 +10,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
 from core_engine import (
+    build_workout_session_state_defaults,
+    hydrate_live_workout_recommendation,
     prepare_workout_log_set_context_route_runtime,
     prepare_workout_log_set_decision_route_runtime,
     prepare_workout_log_set_response_runtime,
@@ -27,6 +29,7 @@ from ..database import get_db
 from ..deps import get_current_user
 from ..models import ExerciseState, User, WorkoutPlan, WorkoutSessionState, WorkoutSetLog, WorkoutOccurrence, WorkoutLogCommand
 from ..workout_identity import identified_plans, resolve_occurrence, resolve_exercise, occurrence_plan
+from ..workout_history import effective_set_logs, capture_replay_context, require_replay_context, rebuild_exercise_state, rebuild_session_state, invalidate_history_advice
 from ..observability import log_event
 from ..program_loader import (
     load_program_rule_set,
@@ -40,6 +43,7 @@ from ..schemas import (
     WorkoutSetLogResponse,
     WorkoutSummaryResponse,
     WorkoutUndoLastSetRequest,
+    WorkoutSetCorrectionRequest,
 )
 from ..stoic_quotes import daily_stoic_quote
 
@@ -122,6 +126,7 @@ def _upsert_workout_session_state(
     weight: float,
     substitution_recommendation: dict | None,
     rule_set: dict | None,
+    qualifying: bool = True,
 ) -> WorkoutLiveRecommendationResponse:
     state = (
         db.query(WorkoutSessionState)
@@ -133,6 +138,17 @@ def _upsert_workout_session_state(
         .first()
     )
 
+    if not qualifying:
+        if state is None:
+            state = WorkoutSessionState(user_id=user_id, workout_id=workout_id, exercise_id=exercise_id,
+                workout_occurrence_id=workout_occurrence_id, exercise_occurrence_id=exercise_occurrence_id,
+                **build_workout_session_state_defaults(primary_exercise_id=primary_exercise_id, planned_sets=planned_sets,
+                    planned_reps_min=planned_rep_range[0], planned_reps_max=planned_rep_range[1], planned_weight=planned_weight))
+            db.add(state)
+        return WorkoutLiveRecommendationResponse(**hydrate_live_workout_recommendation(completed_sets=state.completed_sets,
+            remaining_sets=state.remaining_sets, recommended_reps_min=state.recommended_reps_min,
+            recommended_reps_max=state.recommended_reps_max, recommended_weight=state.recommended_weight,
+            guidance=state.last_guidance, substitution_recommendation=substitution_recommendation, rule_set=rule_set))
     upsert_runtime = prepare_workout_session_state_route_runtime(
         existing_state=state,
         user_id=user_id,
@@ -187,7 +203,7 @@ def workout_today(
     recent_logs = []
     if session_ids:
         recent_logs = (
-            db.query(WorkoutSetLog)
+            effective_set_logs(db)
             .filter(
                 WorkoutSetLog.user_id == current_user.id,
                 WorkoutSetLog.workout_occurrence_id.in_(session_ids),
@@ -207,7 +223,7 @@ def workout_today(
         raise HTTPException(status_code=404, detail="No workouts available")
 
     logs = (
-        db.query(WorkoutSetLog)
+        effective_set_logs(db)
         .filter(
             WorkoutSetLog.user_id == current_user.id,
             WorkoutSetLog.workout_occurrence_id == selected.get("workout_occurrence_id"),
@@ -353,6 +369,8 @@ def _replay_command(db: Session, user_id: str, command_id: str, digest: str):
     if command:
         if command.request_digest != digest:
             raise HTTPException(409, "Log command was already used with a different payload")
+        if command.response.get("operation"):
+            raise HTTPException(409, "Command already used for another history action")
         return WorkoutSetLogResponse(**command.response)
     return None
 
@@ -409,14 +427,14 @@ def _apply_log_set(
     digest: str,
 ) -> WorkoutSetLogResponse:
     # User lock held by log_set: distinct commands cannot both claim one slot.
-    existing_slots = db.query(WorkoutSetLog).filter_by(
+    existing_slots = effective_set_logs(db).filter_by(
         user_id=current_user.id, workout_occurrence_id=occurrence.id,
         exercise_occurrence_id=exercise["exercise_occurrence_id"], set_index=payload.set_index,
     ).all()
     kind = (payload.set_kind or "work").strip().lower() or "work"
-    ordinal = (payload.technique or {}).get("ordinal")
+    ordinal = (payload.technique or {}).get("ordinal") if payload.parent_set_index is not None or kind != "work" else None
     for entry in existing_slots:
-        if ((entry.set_kind or "work").strip().lower() or "work") == kind and entry.parent_set_index == payload.parent_set_index and (entry.technique or {}).get("ordinal") == ordinal:
+        if ((entry.set_kind or "work").strip().lower() or "work") == kind and entry.parent_set_index == payload.parent_set_index and ((entry.technique or {}).get("ordinal") if entry.parent_set_index is not None or kind != "work" else None) == ordinal:
             raise HTTPException(409, "Logical set already logged; undo before starting a new attempt")
     context_runtime = prepare_workout_log_set_context_route_runtime(
         workout_id=occurrence.workout_id,
@@ -458,6 +476,8 @@ def _apply_log_set(
         **cast(dict, log_set_runtime["record_values"]),
         workout_occurrence_id=occurrence.id, exercise_occurrence_id=exercise["exercise_occurrence_id"],
         command_id=command_id, request_digest=digest,
+        replay_context=capture_replay_context(state=state, context=context_runtime,
+            nutrition_phase=current_user.nutrition_phase, equipment_profile=current_user.equipment_profile),
     )
     db.add(record)
 
@@ -473,11 +493,13 @@ def _apply_log_set(
         user_id=current_user.id,
         workout_id=occurrence.workout_id,
         workout_occurrence_id=occurrence.id, exercise_occurrence_id=exercise["exercise_occurrence_id"],
+        qualifying=payload.parent_set_index is None and ((payload.set_kind or "work").strip().lower() or "work") == "work",
         **cast(dict, log_set_runtime["session_state_inputs"]),
     )
 
     db.add(state)
     db.flush()
+    state.last_updated_at = record.created_at
     response_runtime = prepare_workout_log_set_response_runtime(
         record=record,
         decision_runtime=cast(dict, log_set_runtime),
@@ -499,109 +521,124 @@ def _apply_log_set(
     return response
 
 
+def _history_digest(operation: str, reference: str, payload: dict) -> str:
+    return hashlib.sha256(json.dumps({"operation": operation, "reference": reference, **payload},
+        sort_keys=True, separators=(",", ":"), allow_nan=False).encode()).hexdigest()
+
+
+def _replay_history_action(db, user_id, command_id, digest):
+    if not command_id:
+        return None
+    command = db.query(WorkoutLogCommand).filter_by(user_id=user_id, command_id=command_id).first()
+    if command:
+        if command.request_digest != digest or not command.response.get("operation"):
+            raise HTTPException(409, "Command already used with different history inputs")
+        return command.response["result"]
+    return None
+
+
+def _save_history_action(db, *, user_id, command_id, digest, operation, occurrence, exercise_occurrence_id, result):
+    if command_id:
+        db.add(occurrence)
+        db.flush()
+        db.add(WorkoutLogCommand(user_id=user_id, command_id=command_id, request_digest=digest,
+            workout_occurrence_id=occurrence.id, exercise_occurrence_id=exercise_occurrence_id,
+            response={"operation": operation, "result": result}))
+
+
+def _void_set(db, record, *, reason, source, timestamp):
+    record.voided_at = timestamp
+    record.void_reason = reason
+    record.void_source = source
+    invalidate_history_advice(db, record, timestamp)
+    if record.command_id:
+        command = db.query(WorkoutLogCommand).filter_by(user_id=record.user_id, command_id=record.command_id).first()
+        if command:
+            command.undone_at = timestamp
+
+
+def _reconstruct_history(db, record):
+    db.flush()
+    progression = rebuild_exercise_state(db, user_id=record.user_id, primary_exercise_id=record.primary_exercise_id)
+    session = rebuild_session_state(db, user_id=record.user_id, occurrence_id=record.workout_occurrence_id,
+        exercise_occurrence_id=record.exercise_occurrence_id, session_inputs=progression["session_inputs"])
+    return {**session, "exercise_state": progression["exercise_state"], "decision_trace": progression["decision_trace"]}
+
+
 @router.post("/workout/{workout_id}/undo-last-set")
-def undo_last_set(
-    workout_id: str,
-    payload: WorkoutUndoLastSetRequest,
-    db: DbSession,
-    current_user: CurrentUser,
-) -> dict:
-    """
-    Remove the last logged set for a given exercise in this workout and
-    recompute the in-session state for that exercise.
-    """
+def undo_last_set(workout_id: str, payload: WorkoutUndoLastSetRequest, db: DbSession, current_user: CurrentUser) -> dict:
     _lock_history_user(db, current_user.id)
+    digest = _history_digest("undo", workout_id, payload.model_dump(mode="json", exclude={"command_id"}))
+    replay = _replay_history_action(db, current_user.id, payload.command_id, digest)
+    if replay is not None:
+        return replay
     occurrence, session = resolve_occurrence(db, current_user.id, workout_id, _list_workout_plans(db, current_user.id))
     exercise = resolve_exercise(session, payload.exercise_id, payload.exercise_occurrence_id)
-    logs = (
-        db.query(WorkoutSetLog)
-        .filter(
-            WorkoutSetLog.user_id == current_user.id,
-            WorkoutSetLog.workout_occurrence_id == occurrence.id,
-            WorkoutSetLog.exercise_occurrence_id == exercise["exercise_occurrence_id"],
-        )
-        .order_by(WorkoutSetLog.created_at.asc(), WorkoutSetLog.id.asc())
-        .all()
-    )
-    if not logs:
-        # Nothing to undo; treat as successful no-op.
-        return {"status": "no_sets"}
-
-    # Delete the last-set log entry.
-    last_log = logs[-1]
-    command = db.query(WorkoutLogCommand).filter_by(user_id=current_user.id, command_id=last_log.command_id).first()
-    if command:
-        command.undone_at = datetime.now(UTC).replace(tzinfo=None)
-    db.delete(last_log)
-    db.flush()
-
-    # Rebuild session state for this exercise from remaining logs using the
-    # existing planned_* fields as the authoritative prescription.
-    state = (
-        db.query(WorkoutSessionState)
-        .filter(
-            WorkoutSessionState.user_id == current_user.id,
-            WorkoutSessionState.workout_occurrence_id == occurrence.id,
-            WorkoutSessionState.exercise_occurrence_id == exercise["exercise_occurrence_id"],
-        )
-        .first()
-    )
-    if not state:
-        db.commit()
-        return {"status": "ok"}
-
-    from core_engine import resolve_workout_session_state_update  # local import to avoid cycle at module load
-
-    history: list[dict] = []
-    latest_reduction: dict | None = None
-
-    remaining_logs = [
-        log
-        for log in logs
-        if log.id != last_log.id
-    ]
-    for entry in remaining_logs:
-        latest_reduction = resolve_workout_session_state_update(
-            existing_set_history=history,
-            primary_exercise_id=state.primary_exercise_id,
-            planned_sets=state.planned_sets,
-            planned_reps_min=state.planned_reps_min,
-            planned_reps_max=state.planned_reps_max,
-            planned_weight=state.planned_weight,
-            set_index=entry.set_index,
-            reps=entry.reps,
-            weight=entry.weight,
-            substitution_recommendation=None,
-            rule_set=None,
-        )
-        history = list(latest_reduction["state"]["set_history"])
-
-    if latest_reduction is None:
-        # All sets were removed; reset state to defaults.
-        state.completed_sets = 0
-        state.total_logged_reps = 0
-        state.total_logged_weight = 0.0
-        state.set_history = []
-        state.remaining_sets = state.planned_sets
-        state.recommended_reps_min = state.planned_reps_min
-        state.recommended_reps_max = state.planned_reps_max
-        state.recommended_weight = state.planned_weight
-        state.last_guidance = "remaining_sets_hold_load_and_match_target_reps"
-    else:
-        reduced_state = latest_reduction["state"]
-        state.completed_sets = int(reduced_state["completed_sets"])
-        state.total_logged_reps = int(reduced_state["total_logged_reps"])
-        state.total_logged_weight = float(reduced_state["total_logged_weight"])
-        state.set_history = list(reduced_state["set_history"])
-        state.remaining_sets = int(reduced_state["remaining_sets"])
-        state.recommended_reps_min = int(reduced_state["recommended_reps_min"])
-        state.recommended_reps_max = int(reduced_state["recommended_reps_max"])
-        state.recommended_weight = float(reduced_state["recommended_weight"])
-        state.last_guidance = str(reduced_state["last_guidance"])
-
-    db.add(state)
+    record = effective_set_logs(db).filter_by(user_id=current_user.id, workout_occurrence_id=occurrence.id,
+        exercise_occurrence_id=exercise["exercise_occurrence_id"]).order_by(WorkoutSetLog.created_at.desc(), WorkoutSetLog.id.desc()).first()
+    result = {"status": "no_sets"}
+    if record:
+        require_replay_context(record)
+        _void_set(db, record, reason=payload.reason or "undo_last_set", source="user_undo", timestamp=datetime.now(UTC).replace(tzinfo=None))
+        result = {"status": "ok", "voided_set_id": record.id, **_reconstruct_history(db, record)}
+    _save_history_action(db, user_id=current_user.id, command_id=payload.command_id, digest=digest, operation="undo",
+        occurrence=occurrence, exercise_occurrence_id=exercise["exercise_occurrence_id"], result=result)
     db.commit()
-    return {"status": "ok"}
+    return result
+
+
+@router.post("/workout/set/{set_id}/correct")
+def correct_set(set_id: str, payload: WorkoutSetCorrectionRequest, db: DbSession, current_user: CurrentUser) -> dict:
+    _lock_history_user(db, current_user.id)
+    digest = _history_digest("correct", set_id, payload.model_dump(mode="json", exclude={"command_id"}) | {"rpe_supplied": "rpe" in payload.model_fields_set})
+    replay = _replay_history_action(db, current_user.id, payload.command_id, digest)
+    if replay is not None:
+        return replay
+    original = db.query(WorkoutSetLog).filter_by(id=set_id, user_id=current_user.id).first()
+    if original is None:
+        raise HTTPException(404, "Set not found")
+    context = require_replay_context(original)
+    if original.voided_at:
+        raise HTTPException(409, "Set already voided or superseded; correct its effective replacement")
+    now = datetime.now(UTC).replace(tzinfo=None)
+    _void_set(db, original, reason=payload.reason, source="user_correction", timestamp=now)
+    replacement = WorkoutSetLog(user_id=current_user.id, workout_id=original.workout_id,
+        workout_occurrence_id=original.workout_occurrence_id, exercise_occurrence_id=original.exercise_occurrence_id,
+        primary_exercise_id=original.primary_exercise_id, exercise_id=original.exercise_id,
+        set_index=original.set_index, reps=payload.reps, weight=payload.weight,
+        rpe=payload.rpe if "rpe" in payload.model_fields_set else original.rpe,
+        set_kind=original.set_kind, parent_set_index=original.parent_set_index, technique=deepcopy(original.technique),
+        created_at=original.created_at, amended_at=now, supersedes_id=original.id,
+        replay_context=deepcopy(context), command_id=payload.command_id, request_digest=digest)
+    db.add(replacement)
+    result = {"status": "corrected", "original_set_id": original.id, "effective_set_id": replacement.id,
+        **_reconstruct_history(db, replacement)}
+    # UUID defaults are assigned by the reconstruction flush.
+    result["effective_set_id"] = replacement.id
+    occurrence = db.query(WorkoutOccurrence).filter_by(id=original.workout_occurrence_id, user_id=current_user.id).one()
+    _save_history_action(db, user_id=current_user.id, command_id=payload.command_id, digest=digest, operation="correct",
+        occurrence=occurrence, exercise_occurrence_id=original.exercise_occurrence_id, result=result)
+    db.commit()
+    return result
+
+
+@router.get("/workout/set/{set_id}/audit")
+def set_audit(set_id: str, db: DbSession, current_user: CurrentUser) -> dict:
+    record = db.query(WorkoutSetLog).filter_by(id=set_id, user_id=current_user.id).first()
+    if record is None:
+        raise HTTPException(404, "Set not found")
+    parent = record
+    while parent.supersedes_id:
+        parent = db.query(WorkoutSetLog).filter_by(id=parent.supersedes_id, user_id=current_user.id).one()
+    chain = []
+    while parent:
+        chain.append({"id": parent.id, "supersedes_id": parent.supersedes_id, "effective": parent.voided_at is None,
+            "reps": parent.reps, "weight": parent.weight, "rpe": parent.rpe, "created_at": parent.created_at,
+            "amended_at": parent.amended_at, "voided_at": parent.voided_at, "reason": parent.void_reason, "source": parent.void_source,
+            "workout_occurrence_id": parent.workout_occurrence_id, "exercise_occurrence_id": parent.exercise_occurrence_id,
+            "replay_context_available": parent.replay_context is not None})
+        parent = db.query(WorkoutSetLog).filter_by(supersedes_id=parent.id, user_id=current_user.id).first()
+    return {"original_set_id": chain[0]["id"], "revisions": chain}
 
 
 @router.get("/workout/{workout_id}/progress")
@@ -620,7 +657,7 @@ def workout_progress(
     )
     occurrence, session_snapshot = resolve_occurrence(db, current_user.id, workout_id, _list_workout_plans(db, current_user.id))
     logs = (
-        db.query(WorkoutSetLog)
+        effective_set_logs(db)
         .filter(
             WorkoutSetLog.user_id == current_user.id,
             WorkoutSetLog.workout_occurrence_id == occurrence.id,
@@ -666,7 +703,7 @@ def workout_summary(
         raise HTTPException(status_code=404, detail="Workout not found")
 
     logs = (
-        db.query(WorkoutSetLog)
+        effective_set_logs(db)
         .filter(
             WorkoutSetLog.user_id == current_user.id,
             WorkoutSetLog.workout_occurrence_id == occurrence.id,

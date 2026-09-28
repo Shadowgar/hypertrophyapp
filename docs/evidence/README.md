@@ -76,3 +76,12 @@ The subsequent documentation-only integration starts from `64c3269dd33bea8c6a72e
 application candidate, isolated PostgreSQL migration/concurrency results, legacy
 compatibility and remaining undo/ExerciseState defects. This is separate from
 the historical audit and does not establish deployment or release acceptance.
+
+## M0-HIST activation and correction candidate
+
+[HIST-A merge/live activation](2026-09-28-m0-hist-a-activation.md) records the
+separately authorized PR #39 deployment and live migration 0019.
+[HIST-B qualification](2026-09-28-m0-hist-b.md) and its
+[manifest](2026-09-28-m0-hist-b.manifest.json) describe the unmerged correction
+candidate and disposable migration 0020. Neither record constitutes whole-M0,
+ADR or release owner acceptance.

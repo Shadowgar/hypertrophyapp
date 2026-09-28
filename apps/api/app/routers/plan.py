@@ -46,6 +46,7 @@ from core_engine.scheduler import AUTHORITATIVE_AUTHORED_PASSTHROUGH_KEY
 
 from ..config import settings
 from ..database import get_db
+from ..workout_history import effective_set_logs, valid_weekly_reviews, lock_history_user
 from ..deps import get_current_user
 from ..generated_assessment_schema import ProfileAssessmentInput
 from ..generated_decision_profile import GeneratedDecisionProfile
@@ -322,7 +323,7 @@ def _build_adaptive_signal_summary(
         .all()
     )
     recent_reviews = (
-        db.query(WeeklyReviewCycle)
+        valid_weekly_reviews(db)
         .filter(WeeklyReviewCycle.user_id == user_id)
         .order_by(WeeklyReviewCycle.week_start.desc(), WeeklyReviewCycle.created_at.desc())
         .limit(4)
@@ -1184,7 +1185,7 @@ def _prepare_plan_generation_runtime(
     latest_plan_override: WorkoutPlan | None = None,
 ) -> dict[str, Any]:
     history_rows = (
-        db.query(WorkoutSetLog)
+        effective_set_logs(db)
         .filter(WorkoutSetLog.user_id == current_user.id)
         .order_by(WorkoutSetLog.created_at.desc())
         .limit(100)
@@ -1209,7 +1210,7 @@ def _prepare_plan_generation_runtime(
         .first()
     )
     recent_review_cycles = (
-        db.query(WeeklyReviewCycle)
+        valid_weekly_reviews(db)
         .filter(WeeklyReviewCycle.user_id == current_user.id)
         .order_by(WeeklyReviewCycle.reviewed_on.desc(), WeeklyReviewCycle.created_at.desc())
         .limit(3)
@@ -1470,6 +1471,8 @@ def _resolve_preview_recommendation(db: Session, *, user_id: str, recommendation
     )
     if recommendation is None:
         raise HTTPException(status_code=404, detail="Recommendation not found")
+    if recommendation.status == "invalidated_history":
+        raise HTTPException(409, "History changed; request a fresh recommendation")
     return recommendation
 
 
@@ -1481,6 +1484,7 @@ def _apply_coaching_decision_route(
     confirm: bool,
     decision_kind: Literal["phase", "specialization"],
 ) -> dict[str, Any]:
+    lock_history_user(db, current_user.id)
     source_recommendation = _resolve_preview_recommendation(
         db,
         user_id=current_user.id,
@@ -1600,6 +1604,7 @@ def coach_intelligence_preview(
     db: DbSession,
     current_user: CurrentUser,
 ) -> IntelligenceCoachPreviewResponse:
+    lock_history_user(db, current_user.id)
     if not current_user.split_preference:
         raise HTTPException(status_code=400, detail=PROFILE_INCOMPLETE_DETAIL)
 
@@ -1638,7 +1643,7 @@ def coach_intelligence_preview(
     )
 
     history_rows = (
-        db.query(WorkoutSetLog)
+        effective_set_logs(db)
         .filter(WorkoutSetLog.user_id == current_user.id)
         .order_by(WorkoutSetLog.created_at.desc())
         .limit(100)
@@ -1916,7 +1921,7 @@ def _build_week_plan_runtime_for_user(
             .all()
         )
         recent_reviews = (
-            db.query(WeeklyReviewCycle)
+            valid_weekly_reviews(db)
             .filter(WeeklyReviewCycle.user_id == current_user.id)
             .order_by(WeeklyReviewCycle.week_start.desc(), WeeklyReviewCycle.created_at.desc())
             .limit(4)
@@ -2279,7 +2284,7 @@ def _build_week_plan_runtime_for_user(
     review_lookup_runtime = prepare_generate_week_review_lookup_runtime(base_plan=base_plan)
     week_start = cast(date, review_lookup_runtime["week_start"])
     review_cycle = (
-        db.query(WeeklyReviewCycle)
+        valid_weekly_reviews(db)
         .filter(WeeklyReviewCycle.user_id == current_user.id, WeeklyReviewCycle.week_start == week_start)
         .order_by(WeeklyReviewCycle.created_at.desc())
         .first()
@@ -2464,7 +2469,7 @@ def _current_regenerate_would_replace_with_existing_progress(
     has_session_states = False
     if effective_session_ids:
         has_session_logs = (
-            db.query(WorkoutSetLog)
+            effective_set_logs(db)
             .filter(
                 WorkoutSetLog.user_id == current_user.id,
                 WorkoutSetLog.workout_occurrence_id.is_(None),

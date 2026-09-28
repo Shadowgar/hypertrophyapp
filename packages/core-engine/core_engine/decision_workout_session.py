@@ -225,6 +225,8 @@ def group_workout_logs_by_exercise(
 ) -> dict[str, list[dict[str, Any]]]:
     grouped: dict[str, list[dict[str, Any]]] = {}
     for row in performed_logs:
+        if row.get("parent_set_index") is not None or (str(row.get("set_kind") or "work").strip().lower() or "work") != "work":
+            continue
         exercise_id = str(row.get("exercise_occurrence_id") or row.get("exercise_id") or "")
         if not exercise_id:
             continue
@@ -237,6 +239,8 @@ def _serialize_workout_summary_log_row(row: Any) -> dict[str, Any]:
     return {
         "exercise_id": _read_attr(row, "exercise_id"),
         **({"exercise_occurrence_id": _read_attr(row, "exercise_occurrence_id")} if _read_attr(row, "exercise_occurrence_id") else {}),
+        "set_kind": _read_attr(row, "set_kind"),
+        "parent_set_index": _read_attr(row, "parent_set_index"),
         "set_index": _read_attr(row, "set_index"),
         "reps": _read_attr(row, "reps"),
         "weight": _read_attr(row, "weight"),

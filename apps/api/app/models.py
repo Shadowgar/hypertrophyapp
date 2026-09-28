@@ -191,8 +191,16 @@ class WorkoutSetLog(Base):
     request_digest: Mapped[str | None] = mapped_column(String(64), nullable=True)
     __table_args__ = (
         UniqueConstraint("user_id", "command_id", name="uq_workout_set_log_command_user"),
+        UniqueConstraint("supersedes_id", name="uq_set_log_supersedes"),
         CheckConstraint("(workout_occurrence_id IS NULL) = (exercise_occurrence_id IS NULL)", name="ck_set_log_occurrence_pair"),
     )
+    # Performance columns remain immutable; amendments retain receipt lineage.
+    voided_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    void_reason: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    void_source: Mapped[str | None] = mapped_column(String, nullable=True)
+    supersedes_id: Mapped[str | None] = mapped_column(String, ForeignKey("workout_set_logs.id"), nullable=True)
+    amended_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    replay_context: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     set_index: Mapped[int] = mapped_column(Integer)
     reps: Mapped[int] = mapped_column(Integer)
     weight: Mapped[float] = mapped_column(Float)
