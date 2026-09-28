@@ -104,8 +104,14 @@
       },
       "then": {
         "required": [
-          "acceptance_reference"
-        ]
+          "acceptance_reference",
+          "evidence"
+        ],
+        "properties": {
+          "evidence": {
+            "minItems": 1
+          }
+        }
       }
     }
   ]
