@@ -1,0 +1,92 @@
+{
+  "run_id": "HIST-A-20260928",
+  "recorded_at_utc": "2026-09-28T14:22:43.693216+00:00",
+  "base_revision": "250a0912adccb509024bc3f06a057831d4eb382b",
+  "branch": "m0/hist-occurrence-identity",
+  "candidate_status": "Implementation candidate identified by this Git revision and source hashes; release acceptance pending",
+  "operator": "Codex",
+  "data_class": "synthetic only",
+  "database_versions": {
+    "postgresql": "16.13",
+    "sqlite": "Python sqlite3; model-created runtime tests; 0018 model schema stamped for delta rehearsal"
+  },
+  "dependency_environment": {
+    "python": "3.12",
+    "sqlalchemy": "2.0.36",
+    "psycopg": "3.2.3",
+    "vitest": "3.2.4",
+    "node": "22.22.0"
+  },
+  "source_sha256": {
+    "apps/api/alembic/versions/0019_workout_occurrence_identity.py": "d9d1ca1b3d2babb10df6843c1e0160c68f4073e37368cd5c7a6afcc9ee668661",
+    "apps/api/app/workout_identity.py": "f174ad940d2079b0cd388044f1f08baf8ec32abc6c43f1d9bc8b6df0af9d1d02",
+    "apps/api/tests/test_workout_occurrence_identity.py": "33ccc722e08142e53dfe0b6e422cb8a90e26b391d870aec68c4afb91ce9f6577",
+    "apps/web/lib/workout-identity.ts": "2f91a3f5b76cf57167500a30e4301c351f0117ddfcc3556751bdf24030ffe07e",
+    "apps/web/tests/workout-identity.test.tsx": "8f81d9e41171e31290dd8f2b344c222f926b2a8f2e722fd96047323cacf5611e",
+    "apps/api/app/models.py": "17a0bcb37d46128fac0d5f6b509343338ffcc6696a82d6c5faec0a796d781dec",
+    "apps/api/app/routers/plan.py": "9162c4d0e99bad1a9054315ae7a277de021e90574c393147988972a6ac5da188",
+    "apps/api/app/routers/workout.py": "668e024068dcf18f864a12f6c3b932ae5ceced5644dd99bdf2bd21688db20792",
+    "apps/api/app/schemas.py": "ed82f98107d88d239484427aff67704dcb72c91cdfdd4a7ecefd5f5d7092fd51",
+    "apps/api/tests/test_workout_progress.py": "1c2f5735a838efc606237f77bd94b36b4e7620da1c9dd6d805da92b21f316fca",
+    "apps/web/app/today/page.tsx": "3cfa89f63d477c278dcfe3a390aad03946d7f8ff3ee734807994ad13a6219a5b",
+    "apps/web/app/week/page.tsx": "2c67aa2236703b4ff6ad6bac258f4b1a108390bb66ab0a962415b0375936676f",
+    "apps/web/components/exercise-control.tsx": "313689407d6d2f8e71d602b7b08d8f29d84cdaaacfcc1ef43c87d6e3869f706d",
+    "apps/web/lib/api.ts": "3d388ff5981c1bd2b80c569d553fdef95454784712d47fe2bfb059882d31d4c8",
+    "apps/web/tests/today.logset.test.tsx": "3a97816755b3d7ef4d37d513a44b917a9b87c7e28f48c8424f6eccfb8de1da2e",
+    "apps/web/tests/today.substitution.test.tsx": "0b1891feb6dfcb4798d990fdcec502cfdd5d8de05ee8ce448bbb9847fb01ef5f",
+    "packages/core-engine/core_engine/decision_workout_session.py": "06b47331180c0b6ce18ef060bb8062c5ed853d61914e171150c8bfc6ce75b84b",
+    "packages/core-engine/core_engine/intelligence.py": "34d626f413e8e0c150b49c98d10a63d175b6e35e3e46ad2e1c69993a13278110",
+    "apps/api/app/routers/auth.py": "80b6a4f5a51287b6a640cb15d28d2d25e8453612c28e2bd7e1c61c813bdd5fff",
+    "apps/api/app/routers/profile.py": "6297f24a8e3947af5a2d97fab0cf28cc13218f86ea9c1a776fdb4924b1d85329",
+    "apps/api/tests/test_generated_full_body_runtime_integration.py": "bc97c159d9522d25f2e3ca03efd34326bd43db736097fde09d37f294d131f386"
+  },
+  "external_output_sha256": {
+    "web-output.txt": "c286d4edf5e917cc4a911ee14ba67df868d82270167629e4ba94ee1f842d79d0",
+    "pg-qualified-output.txt": "e2d16c43a70636db093482f51e8fe42278e94607b7b8c32f08fe05bdcac9470a",
+    "pg-final-output.txt": "6dcacaaa7a429b6aef396184318df81d57cc1736a20af2cbb69c25b7a43a27bf",
+    "core-output.txt": "53c54cd105e44f7d1c2ee18ac085f1283265039af85bf74a1328108cc433c9fc",
+    "sqlite-final-output.txt": "63362b75f94f2dc4134b341d25a42115e1c134bab6ded74d4ba586b25cfc90b8",
+    "pg-migrate-output.txt": "84368caf08a67c4c7f7dd74fe5add10e92246f779e34ec5e31a149f7dd6d8d0c",
+    "sqlite-plan-output.txt": "f42e12de1adb086449ef930b8945d7b0302533445cbb2bc9ffcb8a00a0c669c2",
+    "core-final-output.txt": "81ebe188213cf6e91179a6ecd21817f612036629e224057f1611dc0a92f09f99",
+    "sqlite-delta-output.txt": "43cde6c832a57040cc000988fbe7b57d1b7dda630267ddfa8cd771bef72a5e89",
+    "sqlite-migration-output.txt": "cd3bcc76e169a635bd0653fcce1df27f51fa4e274feb68d205868d9864132d57",
+    "types-output.txt": "05f38959e85dc8dc68ad410560b78355e5e130c1fff032998442642c44be9a20",
+    "sqlite-workout-output.txt": "0a59402666363fa306cf0db895614b996de79bb7629febf7dc3d466df5d76b75",
+    "pg-final-qualified-output.txt": "b9d9b24aaddb9ea3028518ca3c2796f24fc11c2e02c291889f186dc472d09646",
+    "pg-legacy-output.txt": "72c8fafe058f849d1ae2d1f9321d195dc0128092fe233c17835d8aedfd2b5839",
+    "pg-tests-output.txt": "71e746bef8f782b726729ea38b45b0b11830f0f7a85f4a7f2802e725618cacce",
+    "sqlite-qualified-output.txt": "1a6c46de00ec21e4d7737b6fe46ebd036460368407e6d008283bee3bfc9df159",
+    "sqlite-final-slot-output.txt": "685ae7bb1e3d380408c85a75780e9341ce88da1c72d63bb4a40c73fbb57a5f03",
+    "pg-final-slot-output.txt": "7cf7e9632b463004c939a9a7598b95163a149630c9833372bc511a801ec42adf",
+    "sqlite-generated-final-output.txt": "d823f362b74fb981fd4b5ccdd84bab58646c328bd40640927498ac5734df410e",
+    "sqlite-wipe-output.txt": "e531b0c60128f3ae3028c160e59fa09576754daaec7beeddfc6598793af569a3",
+    "pg-wipe-output.txt": "540ac7908b471824fac0de1cd05285dbf8bf38171d0acb57a7e51e1b59be2ca9"
+  },
+  "external_artifacts_availability": "Owner temporary qualification directory; not published in Git or represented as permanent public artifacts",
+  "related_criteria": [
+    "HIST-001",
+    "HIST-002",
+    "HIST-003 scoped logging races",
+    "HIST-004 undo isolation only; reconstruction unresolved",
+    "HIST-005"
+  ],
+  "production_migrated": false,
+  "release_accepted": false,
+  "reviewer_acceptance": null,
+  "external_previous_output_sha256": {
+    "sqlite-qualified-previous-094828021722.txt": "f2c77d0811e7abbe8abb0b37013e4c1b173c56d8647b67bf916344ad05268501",
+    "web-previous-094720681648.txt": "29a4ac2d2d2ed657ed21bd7dd8b4fb680394dfed510cbeba9e5db569979fa518",
+    "web-previous-094425955608.txt": "6097447121323ddca1583302924ec6f5d52f7f717e7275561842e10fe66ce766",
+    "pg-final-qualified-previous-094829148878.txt": "641ae2a627404a5a9731daa1c4731357d0d61a4712c3f710b717dabcdf191a43",
+    "pg-migrate-previous-101406809720.txt": "84368caf08a67c4c7f7dd74fe5add10e92246f779e34ec5e31a149f7dd6d8d0c",
+    "sqlite-wipe-previous-101347140843.txt": "f6931fdd11e97e968b275d1a5d6e524826942d86e2b3ba8190a1f47702dbdc4f",
+    "sqlite-generated-previous-101433232563.txt": "3728a1bf5bfb95922f0d91b745e677dbc807f100b1053e4184822f14c21b4f36"
+  },
+  "followup_qualification": {
+    "parent_revision": "3bcfa41f0d5928666f129cb2e86069b29770085c",
+    "sqlite": "18 passed, 4 PostgreSQL skips",
+    "postgresql": "22 passed, including four PostgreSQL races",
+    "generated_prescription_determinism": "1 passed; only plan/occurrence identities excluded"
+  }
+}

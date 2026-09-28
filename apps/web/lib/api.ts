@@ -35,6 +35,7 @@ type AuthoredExecutionFields = {
 };
 
 export type WorkoutExercise = AuthoredExecutionFields & {
+  exercise_occurrence_id?: string;
   id: string;
   primary_exercise_id?: string;
   name: string;
@@ -62,6 +63,7 @@ export type WorkoutLiveRecommendation = {
 };
 
 export type WorkoutSession = {
+  workout_occurrence_id?: string;
   session_id: string;
   title: string;
   date: string;
@@ -94,12 +96,14 @@ export type WorkoutSession = {
 };
 
 export type WorkoutProgress = {
+  workout_occurrence_id?: string;
   workout_id: string;
   completed_total: number;
   planned_total: number;
   percent_complete: number;
   exercises: Array<{
     exercise_id: string;
+    exercise_occurrence_id?: string;
     planned_sets: number;
     completed_sets: number;
   }>;
@@ -193,6 +197,7 @@ export type ProgramTemplateOption = {
 };
 
 export type GeneratedWeekExercise = AuthoredExecutionFields & {
+  exercise_occurrence_id?: string;
   id: string;
   primary_exercise_id?: string | null;
   name: string;
@@ -207,6 +212,7 @@ export type GeneratedWeekExercise = AuthoredExecutionFields & {
 };
 
 export type GeneratedWeekSession = {
+  workout_occurrence_id?: string;
   session_id: string;
   title: string;
   date: string;
@@ -515,6 +521,9 @@ export type GuideExerciseDetail = {
 };
 
 export type WorkoutSetFeedback = {
+  workout_occurrence_id?: string;
+  exercise_occurrence_id?: string;
+  command_id?: string;
   id: string;
   primary_exercise_id: string;
   exercise_id: string;
@@ -538,6 +547,7 @@ export type WorkoutSetFeedback = {
 };
 
 export type WorkoutExerciseSummary = {
+  exercise_occurrence_id?: string;
   exercise_id: string;
   primary_exercise_id?: string | null;
   name: string;
@@ -558,6 +568,7 @@ export type WorkoutExerciseSummary = {
 };
 
 export type WorkoutSummary = {
+  workout_occurrence_id?: string;
   workout_id: string;
   completed_total: number;
   planned_total: number;
@@ -1047,6 +1058,8 @@ export const api = {
     payload: {
       primary_exercise_id?: string | null;
       exercise_id: string;
+      exercise_occurrence_id?: string;
+      command_id?: string;
       set_index: number;
       reps: number;
       weight: number;
@@ -1060,9 +1073,9 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  undoLastSet: (workoutId: string, exerciseId: string) =>
+  undoLastSet: (workoutId: string, exerciseId: string, exerciseOccurrenceId?: string) =>
     request<{ status: string }>(`/workout/${encodeURIComponent(workoutId)}/undo-last-set`, {
       method: "POST",
-      body: JSON.stringify({ exercise_id: exerciseId }),
+      body: JSON.stringify({ exercise_id: exerciseId, exercise_occurrence_id: exerciseOccurrenceId }),
     }),
 };

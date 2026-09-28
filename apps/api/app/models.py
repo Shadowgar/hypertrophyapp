@@ -1,7 +1,7 @@
 from datetime import UTC, date, datetime
 import uuid
 
-from sqlalchemy import Date, DateTime, Float, ForeignKey, Integer, JSON, String, UniqueConstraint
+from sqlalchemy import Date, DateTime, Float, ForeignKey, Integer, JSON, String, UniqueConstraint, Index, CheckConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .database import Base
@@ -145,14 +145,54 @@ class CoachingRecommendation(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive)
 
 
+class WorkoutOccurrence(Base):
+    """Execution snapshot; plan_id is lineage, not a FK to a replaceable plan."""
+    __tablename__ = "workout_occurrences"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    user_id: Mapped[str] = mapped_column(String, ForeignKey(USER_FK), index=True)
+    plan_id: Mapped[str] = mapped_column(String)
+    week_start: Mapped[date] = mapped_column(Date)
+    session_slot: Mapped[int] = mapped_column(Integer)
+    workout_id: Mapped[str] = mapped_column(String)
+    program_id: Mapped[str | None] = mapped_column(String, nullable=True)
+    payload: Mapped[dict] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive)
+    __table_args__ = (UniqueConstraint("user_id", "plan_id", "session_slot", name="uq_workout_occurrence_slot"),)
+
+
+class WorkoutLogCommand(Base):
+    """Retained after undo so a late retry cannot resurrect a removed set."""
+    __tablename__ = "workout_log_commands"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id: Mapped[str] = mapped_column(String, ForeignKey(USER_FK), index=True)
+    command_id: Mapped[str] = mapped_column(String(128))
+    request_digest: Mapped[str] = mapped_column(String(64))
+    workout_occurrence_id: Mapped[str] = mapped_column(String, ForeignKey("workout_occurrences.id"))
+    exercise_occurrence_id: Mapped[str] = mapped_column(String)
+    response: Mapped[dict] = mapped_column(JSON)
+    undone_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive)
+    __table_args__ = (UniqueConstraint("user_id", "command_id", name="uq_workout_log_command_user"),)
+
+
 class WorkoutSetLog(Base):
     __tablename__ = "workout_set_logs"
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     user_id: Mapped[str] = mapped_column(String, ForeignKey(USER_FK), index=True)
     workout_id: Mapped[str] = mapped_column(String, index=True)
+    workout_occurrence_id: Mapped[str | None] = mapped_column(String, ForeignKey("workout_occurrences.id"), nullable=True, index=True)
+    exercise_occurrence_id: Mapped[str | None] = mapped_column(String, nullable=True)
     primary_exercise_id: Mapped[str] = mapped_column(String, index=True)
     exercise_id: Mapped[str] = mapped_column(String, index=True)
+    command_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    request_digest: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    __table_args__ = (
+        UniqueConstraint("user_id", "command_id", name="uq_workout_set_log_command_user"),
+        CheckConstraint("(workout_occurrence_id IS NULL) = (exercise_occurrence_id IS NULL)", name="ck_set_log_occurrence_pair"),
+    )
     set_index: Mapped[int] = mapped_column(Integer)
     reps: Mapped[int] = mapped_column(Integer)
     weight: Mapped[float] = mapped_column(Float)
@@ -180,17 +220,17 @@ class ExerciseState(Base):
 class WorkoutSessionState(Base):
     __tablename__ = "workout_session_states"
     __table_args__ = (
-        UniqueConstraint(
-            "user_id",
-            "workout_id",
-            "exercise_id",
-            name="uq_workout_session_states_user_workout_exercise",
-        ),
+        UniqueConstraint("user_id", "workout_occurrence_id", "exercise_occurrence_id", name="uq_workout_session_occurrence"),
+        Index("uq_workout_session_legacy", "user_id", "workout_id", "exercise_id", unique=True,
+              postgresql_where=text("workout_occurrence_id IS NULL"), sqlite_where=text("workout_occurrence_id IS NULL")),
+        CheckConstraint("(workout_occurrence_id IS NULL) = (exercise_occurrence_id IS NULL)", name="ck_session_occurrence_pair"),
     )
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     user_id: Mapped[str] = mapped_column(String, ForeignKey(USER_FK), index=True)
     workout_id: Mapped[str] = mapped_column(String, index=True)
+    workout_occurrence_id: Mapped[str | None] = mapped_column(String, ForeignKey("workout_occurrences.id"), nullable=True, index=True)
+    exercise_occurrence_id: Mapped[str | None] = mapped_column(String, nullable=True)
     primary_exercise_id: Mapped[str] = mapped_column(String, index=True)
     exercise_id: Mapped[str] = mapped_column(String, index=True)
 

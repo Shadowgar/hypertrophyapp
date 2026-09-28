@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from copy import deepcopy
+
 from datetime import date, timedelta
 import uuid
 
@@ -893,7 +895,19 @@ def test_generated_runtime_with_metadata_present_is_deterministic_and_reports_co
     assert second.status_code == 200
     first_payload = first.json()
     second_payload = second.json()
-    assert first_payload["sessions"] == second_payload["sessions"]
+    # New plan revisions deliberately receive distinct execution identities.
+    # Prescription decisions and all other metadata must remain deterministic.
+    def prescription(sessions):
+        result = deepcopy(sessions)
+        for session in result:
+            session.pop("workout_occurrence_id")
+            session.pop("plan_id")
+            for exercise in session["exercises"]:
+                exercise.pop("exercise_occurrence_id")
+        return result
+
+    assert prescription(first_payload["sessions"]) == prescription(second_payload["sessions"])
+    assert first_payload["sessions"][0]["workout_occurrence_id"] != second_payload["sessions"][0]["workout_occurrence_id"]
 
     runtime_trace = first_payload["template_selection_trace"]["generated_full_body_runtime_trace"]
     assert runtime_trace["metadata_v2_loaded"] is True

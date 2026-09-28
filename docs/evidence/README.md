@@ -69,3 +69,10 @@ No artifact in the external audit becomes release owner acceptance. Publication 
 ## Authority integration checks
 
 The subsequent documentation-only integration starts from `64c3269dd33bea8c6a72e5a6151d985cf9ea8470`. Its complete static checks, scope and historical exceptions are recorded in the [migration report](../audits/2026-09-28-documentation-authority-migration.md). Previous 865-link/33-file counts above describe the earlier batch and are not reused as the integration result. No application checks or security certification were added.
+
+## M0-HIST-A implementation candidate
+
+[Occurrence/retry qualification](2026-09-28-m0-hist-a.md) records the bounded
+application candidate, isolated PostgreSQL migration/concurrency results, legacy
+compatibility and remaining undo/ExerciseState defects. This is separate from
+the historical audit and does not establish deployment or release acceptance.

@@ -8,7 +8,8 @@ configure_test_database("test_workout_progress")
 
 from app.database import Base, SessionLocal, engine
 from app.main import app
-from app.models import User, WorkoutSessionState
+from app.workout_identity import resolve_occurrence
+from app.models import User, WorkoutSessionState, WorkoutPlan
 
 
 def _reset_db() -> None:
@@ -280,10 +281,16 @@ def test_workout_today_keeps_live_recommendation_but_zero_completion_without_log
     with SessionLocal() as db:
         user = db.query(User).filter(User.email == "progress@example.com").first()
         assert user is not None
+        occurrence, _ = resolve_occurrence(db, user.id, first_session["workout_occurrence_id"],
+            db.query(WorkoutPlan).filter_by(user_id=user.id).all())
+        db.add(occurrence)
+        db.flush()
         db.add(
             WorkoutSessionState(
                 user_id=user.id,
                 workout_id=first_session["session_id"],
+                workout_occurrence_id=occurrence.id,
+                exercise_occurrence_id=exercise["exercise_occurrence_id"],
                 primary_exercise_id=exercise["primary_exercise_id"],
                 exercise_id=exercise["id"],
                 planned_sets=int(exercise["sets"]),

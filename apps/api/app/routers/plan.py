@@ -54,6 +54,7 @@ from ..generated_full_body_runtime_adapter import (
     GENERATED_FULL_BODY_COMPATIBILITY_TEMPLATE_ID,
     prepare_generated_full_body_runtime_template,
 )
+from ..workout_identity import identified_plans, identified_sessions
 from ..models import (
     CoachingRecommendation,
     ExerciseState,
@@ -2430,6 +2431,16 @@ def _current_regenerate_would_replace_with_existing_progress(
         .filter(WorkoutPlan.user_id == current_user.id, WorkoutPlan.week_start == replace_week_start)
         .all()
     )
+    target_occurrence_ids = [session["workout_occurrence_id"] for row in rows_to_replace
+        if resolve_selected_program_binding_id((row.payload or {}).get("program_template_id")) == replace_binding_id
+        for session in identified_sessions(row)]
+    if target_occurrence_ids:
+        if db.query(WorkoutSetLog).filter(WorkoutSetLog.user_id == current_user.id,
+                WorkoutSetLog.workout_occurrence_id.in_(target_occurrence_ids)).first():
+            return True
+        if db.query(WorkoutSessionState).filter(WorkoutSessionState.user_id == current_user.id,
+                WorkoutSessionState.workout_occurrence_id.in_(target_occurrence_ids)).first():
+            return True
     replace_target_payload: dict[str, Any] | None = None
     other_binding_payloads: list[dict[str, Any]] = []
     for row in rows_to_replace:
@@ -2456,6 +2467,7 @@ def _current_regenerate_would_replace_with_existing_progress(
             db.query(WorkoutSetLog)
             .filter(
                 WorkoutSetLog.user_id == current_user.id,
+                WorkoutSetLog.workout_occurrence_id.is_(None),
                 WorkoutSetLog.workout_id.in_(list(effective_session_ids)),
             )
             .first()
@@ -2467,6 +2479,7 @@ def _current_regenerate_would_replace_with_existing_progress(
             db.query(WorkoutSessionState)
             .filter(
                 WorkoutSessionState.user_id == current_user.id,
+                WorkoutSessionState.workout_occurrence_id.is_(None),
                 WorkoutSessionState.workout_id.in_(list(effective_session_ids)),
             )
             .first()
@@ -2478,9 +2491,14 @@ def _current_regenerate_would_replace_with_existing_progress(
     # ExerciseState is global per exercise_id and not scoped to a workout/session row.
     # Only consult it when target session context exists and no definitive
     # target-session progress has already been found.
+    has_identified_logs = db.query(WorkoutSetLog).filter(WorkoutSetLog.user_id == current_user.id,
+        WorkoutSetLog.workout_occurrence_id.is_not(None)).first() is not None
+    has_unmapped_logs = db.query(WorkoutSetLog).filter(WorkoutSetLog.user_id == current_user.id,
+        WorkoutSetLog.workout_occurrence_id.is_(None)).first() is not None
     exercise_state_timestamp = getattr(ExerciseState, "last_updated_at", None)
     if (
         effective_session_ids
+        and (not has_identified_logs or has_unmapped_logs)
         and (not has_session_logs and not has_session_states)
         and not other_binding_payloads
         and primary_exercise_ids
@@ -2618,7 +2636,7 @@ def _generate_week_for_user(
         current_user=current_user,
         plan_runtime=plan_runtime,
     )
-    payload = cast(dict[str, Any], record.payload)
+    payload = identified_plans(db, [record])[0].payload
     mesocycle = cast(dict[str, Any], payload.get("mesocycle") or {})
     log_event(
         "week_regenerated_current" if generation_mode == "current_week_regenerate" else "week_advanced_next",
@@ -2713,7 +2731,7 @@ def plan_latest_week(
     if latest_plan is None:
         raise HTTPException(status_code=404, detail="No plan generated")
 
-    payload = latest_plan.payload or {}
+    payload = identified_plans(db, [latest_plan])[0].payload
     if not isinstance(payload, dict):
         raise HTTPException(status_code=500, detail="Latest plan payload is invalid")
     mesocycle = cast(dict[str, Any], payload.get("mesocycle") or {})

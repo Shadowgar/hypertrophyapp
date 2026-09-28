@@ -29,7 +29,7 @@ from ..config import settings
 from ..database import get_db
 from ..deps import get_current_user
 from ..models import BodyMeasurementEntry, SorenessEntry, User, WeeklyCheckin, WeeklyReviewCycle, WorkoutSetLog
-from ..models import CoachingRecommendation, ExerciseState, PasswordResetToken, WorkoutPlan, WorkoutSessionState
+from ..models import CoachingRecommendation, ExerciseState, PasswordResetToken, WorkoutLogCommand, WorkoutOccurrence, WorkoutPlan, WorkoutSessionState
 from ..observability import log_event
 from ..program_loader import (
     PHASE1_CANONICAL_PROGRAM_ID,
@@ -101,8 +101,10 @@ CANONICAL_DISLIKED_EXERCISE_TAGS: set[str] = {
 
 
 def _clear_user_training_state(db: Session, *, user_id: str) -> None:
+    db.query(WorkoutLogCommand).filter(WorkoutLogCommand.user_id == user_id).delete(synchronize_session=False)
     db.query(WorkoutSessionState).filter(WorkoutSessionState.user_id == user_id).delete(synchronize_session=False)
     db.query(WorkoutSetLog).filter(WorkoutSetLog.user_id == user_id).delete(synchronize_session=False)
+    db.query(WorkoutOccurrence).filter(WorkoutOccurrence.user_id == user_id).delete(synchronize_session=False)
     db.query(ExerciseState).filter(ExerciseState.user_id == user_id).delete(synchronize_session=False)
     db.query(WorkoutPlan).filter(WorkoutPlan.user_id == user_id).delete(synchronize_session=False)
     db.query(WeeklyReviewCycle).filter(WeeklyReviewCycle.user_id == user_id).delete(synchronize_session=False)

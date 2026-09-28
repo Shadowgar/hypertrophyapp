@@ -13,6 +13,7 @@ test("Completing a set calls log-set POST and persists completed sets", async ()
 
   const workout = {
     session_id: "sess-1",
+    workout_occurrence_id: "sess-1",
     title: "Push Day",
     date: new Date().toISOString().slice(0, 10),
     resume: false,
@@ -125,7 +126,7 @@ test("Completing a set calls log-set POST and persists completed sets", async ()
   });
 
   // verify localStorage persisted completed sets for session
-  const key = `hypertrophy_completed_sets:${workout.session_id}`;
+  const key = `hypertrophy_occurrence_v2:completed:${workout.session_id}`;
   const stored = JSON.parse(localStorage.getItem(key) || "{}");
   expect(stored["ex-1"]).toBe(1);
 

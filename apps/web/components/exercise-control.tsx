@@ -105,7 +105,12 @@ export function useExerciseControl({
 
   const [loggedSets, setLoggedSets] = useState<{ setIndex: number; reps: number; weight: number }[]>([]);
 
-  const completeSet = useCallback(() => {
+  const submissionPending = useRef(false);
+  const [submitting, setSubmitting] = useState(false);
+  const completeSet = useCallback(async () => {
+    if (submissionPending.current || completedSets >= totalSets) return;
+    submissionPending.current = true;
+    setSubmitting(true);
     const parsedWeight = Number(actualWeightInput);
     const hasValidWeight = Number.isFinite(parsedWeight) && parsedWeight > 0;
     const safeReps = Number.isFinite(actualReps) ? Math.max(1, Math.round(actualReps)) : repRange?.[0] ?? 8;
@@ -113,19 +118,23 @@ export function useExerciseControl({
       ? Math.max(0, Math.round(parsedWeight * 100) / 100)
       : recommendedWorkingWeight ?? 0;
 
-    setCompletedSets((prev) => {
-      const next = Math.min(prev + 1, totalSets);
+    const next = Math.min(completedSets + 1, totalSets);
+    try {
+      if (onSetComplete) await onSetComplete(exerciseId, next, { reps: safeReps, weight: safeWeight });
+      setCompletedSets(next);
       setLoggedSets((logs) => [...logs, { setIndex: next, reps: safeReps, weight: safeWeight }]);
-      if (onSetComplete) {
-        Promise.resolve(onSetComplete(exerciseId, next, { reps: safeReps, weight: safeWeight })).catch(() => {});
-      }
-      return next;
-    });
+    } catch {
+      // Unconfirmed requests keep the logical slot available for the same retry.
+      return;
+    } finally {
+      submissionPending.current = false;
+      setSubmitting(false);
+    }
     if (!skipTimerOnComplete) {
       resetTimer();
       startTimer();
     }
-  }, [actualWeightInput, actualReps, repRange, recommendedWorkingWeight, totalSets, skipTimerOnComplete, onSetComplete, exerciseId, resetTimer, startTimer]);
+  }, [completedSets, actualWeightInput, actualReps, repRange, recommendedWorkingWeight, totalSets, skipTimerOnComplete, onSetComplete, exerciseId, resetTimer, startTimer]);
 
   const undoLastLoggedSet = useCallback(() => {
     setLoggedSets((logs) => {
@@ -137,6 +146,7 @@ export function useExerciseControl({
   }, []);
 
   return {
+    submitting,
     secondsLeft,
     restCycle,
     running,
@@ -182,7 +192,7 @@ type SetInputCardProps = Readonly<{
 
 export function SetInputCard({ exerciseId, guidanceLine, ctrl, weightLabel, disableComplete }: SetInputCardProps) {
   const allDone = ctrl.completedSets >= ctrl.totalSets;
-  const isDisabled = allDone || Boolean(disableComplete);
+  const isDisabled = allDone || ctrl.submitting || Boolean(disableComplete);
 
   return (
     <div className="glass-layer glass-layer--elevated rounded-xl p-4 space-y-3">
@@ -227,7 +237,7 @@ export function SetInputCard({ exerciseId, guidanceLine, ctrl, weightLabel, disa
         type="button"
         disabled={isDisabled}
       >
-        {allDone ? "All Sets Complete" : disableComplete ? "Complete technique steps first" : "Complete Set"}
+        {ctrl.submitting ? "Saving Set..." : allDone ? "All Sets Complete" : disableComplete ? "Complete technique steps first" : "Complete Set"}
       </Button>
     </div>
   );

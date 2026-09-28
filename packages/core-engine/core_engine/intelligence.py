@@ -450,8 +450,9 @@ def build_workout_progress_payload(
         exercises.append(
             {
                 "exercise_id": exercise_id,
+                **({"exercise_occurrence_id": exercise["exercise_occurrence_id"]} if exercise.get("exercise_occurrence_id") else {}),
                 "planned_sets": planned_sets,
-                "completed_sets": int(completed_sets_by_exercise.get(exercise_id, 0) or 0),
+                "completed_sets": int(completed_sets_by_exercise.get(str(exercise.get("exercise_occurrence_id") or exercise_id), 0) or 0),
             }
         )
 
@@ -460,6 +461,7 @@ def build_workout_progress_payload(
 
     return {
         "workout_id": workout_id,
+        **({"workout_occurrence_id": session["workout_occurrence_id"]} if session.get("workout_occurrence_id") else {}),
         "completed_total": completed_total,
         "planned_total": planned_total,
         "percent_complete": percent_complete,
@@ -1223,7 +1225,7 @@ def resolve_workout_completion_per_exercise(
 ) -> dict[str, int]:
     completed_by_exercise: dict[str, int] = {}
     for row in performed_logs:
-        exercise_id = str(row.get("exercise_id") or "")
+        exercise_id = str(row.get("exercise_occurrence_id") or row.get("exercise_id") or "")
         if not exercise_id:
             continue
         # Technique sub-sets (dropsets, rest-pause clusters, etc.) must not

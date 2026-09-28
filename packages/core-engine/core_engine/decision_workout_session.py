@@ -225,7 +225,7 @@ def group_workout_logs_by_exercise(
 ) -> dict[str, list[dict[str, Any]]]:
     grouped: dict[str, list[dict[str, Any]]] = {}
     for row in performed_logs:
-        exercise_id = str(row.get("exercise_id") or "")
+        exercise_id = str(row.get("exercise_occurrence_id") or row.get("exercise_id") or "")
         if not exercise_id:
             continue
         grouped.setdefault(exercise_id, []).append(dict(row))
@@ -236,6 +236,7 @@ def group_workout_logs_by_exercise(
 def _serialize_workout_summary_log_row(row: Any) -> dict[str, Any]:
     return {
         "exercise_id": _read_attr(row, "exercise_id"),
+        **({"exercise_occurrence_id": _read_attr(row, "exercise_occurrence_id")} if _read_attr(row, "exercise_occurrence_id") else {}),
         "set_index": _read_attr(row, "set_index"),
         "reps": _read_attr(row, "reps"),
         "weight": _read_attr(row, "weight"),
@@ -310,6 +311,7 @@ def summarize_workout_exercise_performance(
     }
     return {
         "exercise_id": exercise_id,
+        **({"exercise_occurrence_id": exercise["exercise_occurrence_id"]} if exercise.get("exercise_occurrence_id") else {}),
         "primary_exercise_id": exercise.get("primary_exercise_id"),
         "name": str(exercise.get("name") or exercise_id),
         "planned_sets": planned_sets,
@@ -358,7 +360,7 @@ def _build_workout_summary_exercise_summaries(
                     "reps": row.get("reps"),
                     "weight": row.get("weight"),
                 }
-                for row in logs_by_exercise.get(exercise_id, [])
+                for row in logs_by_exercise.get(str(exercise.get("exercise_occurrence_id") or exercise_id), [])
             ],
             next_working_weight=next_working_weight,
             rule_set=rule_set,
@@ -433,9 +435,9 @@ def build_workout_today_plan_runtime(
         if isinstance(session, dict)
     ]
     session_ids = [
-        str(session.get("session_id") or "")
+        str(session.get("workout_occurrence_id") or session.get("session_id") or "")
         for session in sessions
-        if str(session.get("session_id") or "")
+        if str(session.get("workout_occurrence_id") or session.get("session_id") or "")
     ]
     selected_program_id = str(payload.get("program_template_id") or "").strip() or None
     mesocycle = _coerce_dict(payload.get("mesocycle")) if isinstance(payload.get("mesocycle"), dict) else None
@@ -468,22 +470,22 @@ def resolve_latest_logged_workout_resume_state(
     performed_logs: list[dict[str, Any]],
 ) -> dict[str, Any]:
     session_by_id = {
-        str(session.get("session_id") or ""): session
+        str(session.get("workout_occurrence_id") or session.get("session_id") or ""): session
         for session in sessions
-        if str(session.get("session_id") or "")
+        if str(session.get("workout_occurrence_id") or session.get("session_id") or "")
     }
     latest_logged_workout_id = None
     latest_logged_session_incomplete = False
 
     if session_by_id and performed_logs:
-        latest_logged_workout_id = str(performed_logs[0].get("workout_id") or "") or None
+        latest_logged_workout_id = str(performed_logs[0].get("workout_occurrence_id") or performed_logs[0].get("workout_id") or "") or None
         latest_logged_session = session_by_id.get(str(latest_logged_workout_id or ""))
         if latest_logged_session is not None:
             planned_sets = sum(int(exercise.get("sets", 3) or 3) for exercise in latest_logged_session.get("exercises", []))
             logged_sets = sum(
                 1
                 for row in performed_logs
-                if str(row.get("workout_id") or "") == latest_logged_workout_id
+                if str(row.get("workout_occurrence_id") or row.get("workout_id") or "") == latest_logged_workout_id
                 and row.get("parent_set_index") is None
                 and (
                     not str(row.get("set_kind") or "").strip()
@@ -519,9 +521,9 @@ def resolve_workout_today_session_selection(
     performed_logs: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     session_by_id = {
-        str(session.get("session_id") or ""): session
+        str(session.get("workout_occurrence_id") or session.get("session_id") or ""): session
         for session in sessions
-        if str(session.get("session_id") or "")
+        if str(session.get("workout_occurrence_id") or session.get("session_id") or "")
     }
 
     selected_session: dict[str, Any] | None = None
@@ -539,7 +541,7 @@ def resolve_workout_today_session_selection(
         log_rows = list(performed_logs or [])
         log_counts: dict[str, int] = {}
         for row in log_rows:
-            workout_id = str(row.get("workout_id") or "")
+            workout_id = str(row.get("workout_occurrence_id") or row.get("workout_id") or "")
             if not workout_id:
                 continue
             if row.get("parent_set_index") is not None:
@@ -554,7 +556,7 @@ def resolve_workout_today_session_selection(
 
         queue_candidate = None
         for session in sessions:
-            session_id = str(session.get("session_id") or "")
+            session_id = str(session.get("workout_occurrence_id") or session.get("session_id") or "")
             if not session_id:
                 continue
             planned_sets = _planned_set_count(session)
@@ -897,6 +899,7 @@ def build_workout_today_log_runtime(
     resume_logs = [
         {
             "workout_id": str(_read_attr(row, "workout_id") or ""),
+            **({"workout_occurrence_id": _read_attr(row, "workout_occurrence_id")} if _read_attr(row, "workout_occurrence_id") else {}),
             "set_kind": str(_read_attr(row, "set_kind") or "") or None,
             "parent_set_index": _read_attr(row, "parent_set_index"),
         }
@@ -906,6 +909,7 @@ def build_workout_today_log_runtime(
     completion_logs = [
         {
             "exercise_id": str(_read_attr(row, "exercise_id") or ""),
+            **({"exercise_occurrence_id": _read_attr(row, "exercise_occurrence_id")} if _read_attr(row, "exercise_occurrence_id") else {}),
             "set_index": int(_read_attr(row, "set_index") or 0),
             "set_kind": str(_read_attr(row, "set_kind") or "") or None,
             "parent_set_index": _read_attr(row, "parent_set_index"),
@@ -998,7 +1002,7 @@ def build_workout_today_session_state_payloads(
     rule_set: dict[str, Any] | None,
 ) -> list[dict[str, Any]]:
     planned_exercise_by_id = {
-        str(_coerce_dict(exercise).get("id") or ""): _coerce_dict(exercise)
+        str(_coerce_dict(exercise).get("exercise_occurrence_id") or _coerce_dict(exercise).get("id") or ""): _coerce_dict(exercise)
         for exercise in planned_session.get("exercises") or []
         if str(_coerce_dict(exercise).get("id") or "")
     }
@@ -1013,7 +1017,7 @@ def build_workout_today_session_state_payloads(
         exercise_id = str(_read_attr(row, "exercise_id") or "")
         primary_exercise_id = str(_read_attr(row, "primary_exercise_id") or "")
         substitution_recommendation = build_repeat_failure_substitution_payload(
-            planned_exercise=planned_exercise_by_id.get(exercise_id),
+            planned_exercise=planned_exercise_by_id.get(str(_read_attr(row, "exercise_occurrence_id") or exercise_id)),
             exercise_state=progression_state_by_exercise.get(primary_exercise_id),
             equipment_profile=equipment_profile,
             rule_set=rule_set,
@@ -1021,6 +1025,7 @@ def build_workout_today_session_state_payloads(
         payloads.append(
             {
                 "exercise_id": exercise_id,
+                **({"exercise_occurrence_id": _read_attr(row, "exercise_occurrence_id")} if _read_attr(row, "exercise_occurrence_id") else {}),
                 "completed_sets": int(_read_attr(row, "completed_sets") or 0),
                 "remaining_sets": int(_read_attr(row, "remaining_sets") or 0),
                 "recommended_reps_min": int(_read_attr(row, "recommended_reps_min") or 0),
@@ -1043,7 +1048,7 @@ def build_workout_today_state_payloads(
     live_recommendations_by_exercise: dict[str, dict[str, Any]] = {}
 
     for state in session_states:
-        exercise_id = str(state.get("exercise_id") or "")
+        exercise_id = str(state.get("exercise_occurrence_id") or state.get("exercise_id") or "")
         if not exercise_id:
             continue
         live_recommendations_by_exercise[exercise_id] = hydrate_live_workout_recommendation(
@@ -1082,9 +1087,9 @@ def build_workout_today_payload(
         exercise["recommended_working_weight"] = recommended_weight
         exercise["starting_load_quality_source"] = starting_load_quality_source
         exercise["warmups"] = compute_warmups(recommended_weight, 3)
-        exercise["completed_sets"] = int(completed_sets_by_exercise.get(exercise_id, 0) or 0)
+        exercise["completed_sets"] = int(completed_sets_by_exercise.get(str(exercise.get("exercise_occurrence_id") or exercise_id), 0) or 0)
 
-        live_recommendation = live_recommendations_by_exercise.get(exercise_id)
+        live_recommendation = live_recommendations_by_exercise.get(str(exercise.get("exercise_occurrence_id") or exercise_id))
         if isinstance(live_recommendation, dict):
             exercise["live_recommendation"] = dict(live_recommendation)
 
