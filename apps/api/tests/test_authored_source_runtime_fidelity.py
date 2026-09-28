@@ -9,6 +9,11 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import sys
+
+ROOT = Path(__file__).resolve().parents[3]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 import pytest
 from openpyxl import load_workbook
@@ -19,7 +24,6 @@ from core_engine.decision_workout_session import build_workout_today_payload
 from importers.structured_program_builder import collect_structured_phases_from_workbook
 from importers.authored_lineage import artifact_sha256, compiler_sha256
 
-ROOT = Path(__file__).resolve().parents[3]
 # Fixed source table columns, independent of importer's header matching.
 COLUMNS = {"exercise": 2, "last_set_intensity_technique": 3, "warm_up_sets": 4,
     "working_sets": 5, "reps": 6, "tracking_set_1": 7, "tracking_set_2": 8,
@@ -124,6 +128,7 @@ def test_source_import_canonical_runtime_today_parity(phase, expected_count):
                 assert comparable(item["intensity_technique"]) == comparable(expected_technique), (location, stage, "intensity")
         assert canonical_rows[source_index]["warmup_prescription"] == [], location
         assert execution_rows[source_index]["warmups"] == [], location
+        assert comparable(execution_rows[source_index]["warm_up_sets"]) == comparable(row["raw"]["warm_up_sets"]), location
         lineage = runtime_rows[source_index]["source_lineage"]
         assert lineage["source_week"] == row["week"] and lineage["source_slot"] == row["order"]
         assert lineage["source_program_id"] == program_id and lineage["source_row"] == row["row"]
@@ -136,6 +141,9 @@ def test_source_import_canonical_runtime_today_parity(phase, expected_count):
         if row["raw"]["reps"] == "AMRAP":
             amrap_weeks.append(row["week"])
             assert count == 2
+            assert runtime_rows[source_index]["load_semantics"] == "bodyweight"
+            assert runtime_rows[source_index]["start_weight"] == 0
+            assert execution_rows[source_index]["recommended_working_weight"] == 0
             for stage, rows in stages.items():
                 assert all(item["rep_target"]["kind"] == "amrap" for item in rows[source_index]["authored_prescription"]["sets"]), (stage, location)
                 if stage in ("import", "runtime", "execution"):

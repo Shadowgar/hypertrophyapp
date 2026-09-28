@@ -1,6 +1,6 @@
 "use client";
 
-import { authoredRepLabel, authoredSetRepRange, authoredSetDetails } from "@/lib/authored-prescription";
+import { authoredRepLabel, authoredSetRepRange, authoredSetDetails, authoredWarmupLabel, isBodyweightAuthored } from "@/lib/authored-prescription";
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -578,12 +578,14 @@ function ExerciseDetailOverlay({
   onClearGlobalRestTimer: () => void;
 }>) {
   const defaultRestSeconds = parseRestToSeconds(exercise.rest) ?? 90;
+  const bodyweight = isBodyweightAuthored(exercise);
+  const sourceWarmups = authoredWarmupLabel(exercise);
   const currentRepRange = useMemo(() => authoredSetRepRange(exercise, Math.min(completed + 1, exercise.sets)), [exercise, completed]);
   const ctrl = useExerciseControl({
     exerciseId: exerciseKey(exercise),
     totalSets: exercise.sets,
     defaultRestSeconds,
-    recommendedWorkingWeight: snapToHalfLb(derivedWorkingLb),
+    recommendedWorkingWeight: bodyweight ? 0 : snapToHalfLb(derivedWorkingLb),
     repRange: currentRepRange,
     initialCompletedSets: completed,
     skipTimerOnComplete: true,
@@ -645,7 +647,7 @@ function ExerciseDetailOverlay({
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 pb-[max(7rem,env(safe-area-inset-bottom))] space-y-4 overscroll-contain">
 
         {/* == ZONE 1: Baseline calculator (expanded when no baseline) == */}
-        {exercise.rep_range ? <Disclosure title="Baseline Calculator" badge={baseline ? `1RM: ${Math.round(baseline.estimated1RM)} lb` : null} defaultOpen={!baseline}>
+        {exercise.rep_range && !bodyweight ? <Disclosure title="Baseline Calculator" badge={baseline ? `1RM: ${Math.round(baseline.estimated1RM)} lb` : null} defaultOpen={!baseline}>
           <BaselineBlock
             exerciseId={exerciseKey(exercise)}
             repRange={exercise.rep_range}
@@ -655,7 +657,11 @@ function ExerciseDetailOverlay({
         </Disclosure> : null}
 
         {/* == ZONE 2: Warm-up sets (expanded when warm-ups exist) == */}
-        {hasWarmup && (
+        {exercise.authored_prescription ? (
+          <Disclosure title="Warm-up Sets" badge={sourceWarmups ? `${sourceWarmups} sets` : null} defaultOpen>
+            <p className="text-sm text-zinc-200">{sourceWarmups != null ? `${sourceWarmups} warm-up sets` : "Warm-up prescription unspecified"}</p>
+          </Disclosure>
+        ) : hasWarmup && (
           <Disclosure title="Warm-up Sets" badge={`${warmupLbs.length} sets`} defaultOpen>
             <div className="space-y-2">
               <p className="text-xs text-zinc-400">
@@ -764,7 +770,7 @@ function ExerciseDetailOverlay({
           exerciseId={exerciseKey(exercise)}
           guidanceLine={doThisSetLine}
           ctrl={ctrl}
-          weightLabel={isAssistance ? "Assistance (lb) — lower is harder" : "Weight (lb)"}
+          weightLabel={bodyweight ? "Added load (lb), optional" : isAssistance ? "Assistance (lb) — lower is harder" : "Weight (lb)"}
           disableComplete={gateLastSet}
         />
 
@@ -1411,7 +1417,7 @@ export default function TodayPage() {
                     <div className="mt-1 flex items-center gap-2 text-xs text-zinc-500">
                       <span>{authoredRepLabel(exercise)} reps</span>
                       <span className="text-zinc-700">·</span>
-                      <span>~{rowWorkingLb} lb</span>
+                      <span>{isBodyweightAuthored(exercise) ? "Bodyweight" : `~${rowWorkingLb} lb`}</span>
                     </div>
                   </button>
                 </li>
@@ -1457,7 +1463,7 @@ export default function TodayPage() {
         //   1) backend live recommendation
         //   2) planned working weight
         const derivedWorkingLb =
-          completed === 0
+          isBodyweightAuthored(exercise) ? 0 : completed === 0
             ? (baseline != null
                 ? baselineWorkingLb
                 : hasRecommendation
@@ -1469,7 +1475,7 @@ export default function TodayPage() {
         let doThisSetLine: string;
         if (exercise.authored_prescription) {
           const index = Math.min(completed + 1, exercise.sets);
-          doThisSetLine = `${authoredRepLabel(exercise, index)} reps · ${authoredSetDetails(exercise, index)}`;
+          doThisSetLine = `${isBodyweightAuthored(exercise) ? "Bodyweight · " : ""}${authoredRepLabel(exercise, index)} reps · ${authoredSetDetails(exercise, index)}`;
         } else if (recommendation) {
           const guidance = resolveGuidanceText(recommendation.guidance_rationale, recommendation.guidance);
           doThisSetLine = guidance.trim()

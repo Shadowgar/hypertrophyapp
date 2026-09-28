@@ -560,6 +560,7 @@ export type WorkoutSetFeedback = {
 };
 
 export type WorkoutExerciseSummary = {
+  load_semantics?: string | null;
   exercise_occurrence_id?: string;
   exercise_id: string;
   primary_exercise_id?: string | null;

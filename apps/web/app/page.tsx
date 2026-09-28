@@ -1,6 +1,6 @@
 "use client";
 
-import { authoredRepLabel } from "@/lib/authored-prescription";
+import { authoredRepLabel, isBodyweightAuthored } from "@/lib/authored-prescription";
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -51,7 +51,7 @@ function humanizeTokenLabel(value: string): string {
 }
 
 function formatExercisePrescription(exercise: WorkoutExercise): string {
-  return `${exercise.sets} x ${authoredRepLabel(exercise)} @ ${kgToLbs(exercise.recommended_working_weight)} lbs`;
+  return `${exercise.sets} x ${authoredRepLabel(exercise)} @ ${isBodyweightAuthored(exercise) ? "Bodyweight" : `${isBodyweightAuthored(exercise) ? "Bodyweight" : `${kgToLbs(exercise.recommended_working_weight)} lbs`}`}`;
 }
 
 function formatLeadExercise(workout: WorkoutSession | null): string {

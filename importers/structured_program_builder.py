@@ -248,6 +248,7 @@ def _build_blueprint_slot(
             "rir_target": None, "rpe_target": None, "load_target": exercise.get("load_target")}
             for item in exercise["authored_prescription"]["sets"]] if exercise.get("authored_prescription") else [work_set],
         "authored_prescription": deepcopy(exercise.get("authored_prescription")),
+        "load_semantics": exercise.get("load_semantics"),
         "source_row": exercise.get("source_row"),
         "notes": notes,
     }
@@ -413,6 +414,7 @@ def _build_gold_day(day: dict[str, Any], *, week_index: int, day_index: int) -> 
             {
                 **{field: deepcopy(slot.get(field)) for field in SOURCE_FIELDS},
                 "authored_prescription": deepcopy(slot.get("authored_prescription")),
+                "load_semantics": slot.get("load_semantics"),
                 "source_row": slot.get("source_row"),
                 "slot_id": f"{week_day_id}_s{order_index}",
                 "order_index": order_index,

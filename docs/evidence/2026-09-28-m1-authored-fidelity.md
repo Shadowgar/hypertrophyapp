@@ -3,9 +3,10 @@
 Status: application candidate awaiting review; no M1 deployment, live migration,
 whole-M1 acceptance or ADR acceptance. Base main:
 `6e9b93ebc2f4570eeb0517131332e135b1d5c566`.
-Branch: `m1/authored-source-fidelity`. The containing Git revision and
-[manifest](2026-09-28-m1-authored-fidelity.manifest.json) bind candidate code,
-tests and artifact bytes. Owner-authorized [bounded plan](../plans/m1-authored-source-fidelity.md).
+Branch: `m1/authored-source-fidelity`. This original qualification is pinned to
+`6d835db4d0511b4eed360e6dfef6ed550ef48fc4`; its
+[manifest](2026-09-28-m1-authored-fidelity.manifest.json) binds that snapshot,
+not subsequent corrections. [Review-fix qualification](2026-09-28-m1-authored-fidelity-review-fixes.md) records the later candidate. Owner-authorized [bounded plan](../plans/m1-authored-source-fidelity.md).
 The preceding [HIST-B activation](2026-09-28-m0-hist-b-activation.md) is separate.
 
 ## What was qualified

@@ -25,3 +25,11 @@ export function authoredSetDetails(exercise: Exercise, setIndex: number): string
   return [set.effort_target.raw && `${set.effort_target.kind.toUpperCase()} ${set.effort_target.raw}`,
     set.rest && `Rest ${set.rest}`, set.intensity_technique].filter(Boolean).join(" · ");
 }
+
+export function authoredWarmupLabel(exercise: WorkoutExercise): string | null {
+  return exercise.authored_prescription?.raw.warm_up_sets ?? exercise.warm_up_sets ?? null;
+}
+
+export function isBodyweightAuthored(exercise: Pick<WorkoutExercise, "authored_prescription" | "load_semantics">): boolean {
+  return Boolean(exercise.authored_prescription) && exercise.load_semantics === "bodyweight";
+}

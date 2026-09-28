@@ -1,6 +1,6 @@
 "use client";
 
-import { authoredRepLabel } from "@/lib/authored-prescription";
+import { authoredRepLabel, isBodyweightAuthored } from "@/lib/authored-prescription";
 
 import { useEffect, useMemo, useState } from "react";
 
@@ -59,7 +59,7 @@ function formatLeadExercise(exercise: GeneratedWeekExercise | undefined): string
   if (!exercise) {
     return "No exercises planned.";
   }
-  return `${exercise.name} · ${exercise.sets} sets · ${authoredRepLabel(exercise)} reps @ ${kgToLbs(exercise.recommended_working_weight)} lbs`;
+  return `${exercise.name} · ${exercise.sets} sets · ${authoredRepLabel(exercise)} reps @ ${isBodyweightAuthored(exercise) ? "Bodyweight" : `${isBodyweightAuthored(exercise) ? "Bodyweight" : `${kgToLbs(exercise.recommended_working_weight)} lbs`}`}`;
 }
 
 function resolveExerciseMediaUrl(exercise: GeneratedWeekExercise): string | null {
@@ -90,7 +90,7 @@ function ExerciseExecutionDetails({ exercise }: Readonly<{ exercise: GeneratedWe
     <div className="rounded-md border border-white/10 bg-black/20 p-2 text-[11px] text-zinc-300">
       <p className="font-semibold text-zinc-100">{exercise.name}</p>
       <p className="telemetry-meta">
-        {exercise.sets} sets · {authoredRepLabel(exercise)} reps · {kgToLbs(exercise.recommended_working_weight)} lbs
+        {exercise.sets} sets · {authoredRepLabel(exercise)} reps · {isBodyweightAuthored(exercise) ? "Bodyweight" : `${kgToLbs(exercise.recommended_working_weight)} lbs`}
       </p>
       {hasPrescription ? (
         <p className="mt-1">

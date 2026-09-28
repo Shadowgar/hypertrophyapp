@@ -16,7 +16,7 @@ const exercise: WorkoutExercise = {
   ] },
 };
 
-beforeEach(() => { globalThis.fetch = vi.fn(); });
+beforeEach(() => { globalThis.fetch = vi.fn(); localStorage.clear(); });
 
 test("typed labels never invent numeric AMRAP bounds and preserve distinct set details", () => {
   expect(authoredRepLabel(exercise)).toBe("AMRAP");
@@ -56,4 +56,39 @@ test("runner renders AMRAP, requires actual reps and avoids the numeric baseline
   expect(screen.getByLabelText("Reps")).toHaveValue(0);
   fireEvent.click(screen.getByRole("button", { name: "Complete Set" }));
   expect(fetchMock.mock.calls.some(([input]) => String(input).endsWith("/log-set"))).toBe(false);
+});
+
+test.each(["2", "2-3"])("runner retains %s authored warm-up sets and logs bodyweight without invented load", async (warmups) => {
+  const bodyweight = structuredClone(exercise);
+  bodyweight.load_semantics = "bodyweight";
+  bodyweight.recommended_working_weight = 0;
+  bodyweight.warmups = [];
+  bodyweight.authored_prescription!.raw.warm_up_sets = warmups;
+  bodyweight.warm_up_sets = warmups;
+  const workout = { session_id: "synthetic", workout_occurrence_id: "synthetic-occurrence", title: "Synthetic authored",
+    date: new Date().toISOString().slice(0, 10), exercises: [bodyweight] };
+  const fetchMock = vi.mocked(globalThis.fetch);
+  fetchMock.mockImplementation(async (input) => {
+    const url = String(input);
+    const payload = url.includes("/workout/today") ? workout
+      : url.includes("/soreness") ? [{ id: "example" }]
+      : url.includes("/progress") ? { completed_total: 0, planned_total: 2, percent_complete: 0, exercises: [] }
+      : url.endsWith("/log-set") ? { id: "synthetic-receipt", reps: 12, weight: 0, next_working_weight: 0,
+        planned_reps_min: null, planned_reps_max: null, planned_weight: 0, rep_delta: null, weight_delta: 0,
+        guidance: "Follow the authored target", decision_trace: {} } : {};
+    return new Response(JSON.stringify(payload), { status: 200 });
+  });
+  render(<TodayPage />);
+  fireEvent.click(screen.getByRole("button", { name: /Load today's workout/i }));
+  await waitFor(() => expect(screen.getByText("Bodyweight")).toBeInTheDocument());
+  fireEvent.click(screen.getByRole("button", { name: /Synthetic Push-Up/i }));
+  await waitFor(() => expect(screen.getByText(`${warmups} warm-up sets`)).toBeInTheDocument());
+  expect(screen.queryByText("Baseline Calculator")).not.toBeInTheDocument();
+  expect(screen.queryByText(/Based on your working weight/)).not.toBeInTheDocument();
+  expect(screen.getByLabelText("Added load (lb), optional")).toHaveValue(0);
+  fireEvent.change(screen.getByLabelText("Reps"), { target: { value: "12" } });
+  fireEvent.click(screen.getByRole("button", { name: "Complete Set" }));
+  await waitFor(() => expect(fetchMock.mock.calls.some(([input]) => String(input).endsWith("/log-set"))).toBe(true));
+  const request = fetchMock.mock.calls.find(([input]) => String(input).endsWith("/log-set"));
+  expect(JSON.parse(String(request![1]?.body))).toMatchObject({ reps: 12, weight: 0 });
 });

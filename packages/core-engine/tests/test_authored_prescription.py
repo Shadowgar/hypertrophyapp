@@ -32,11 +32,34 @@ def test_review_retains_counts_and_excludes_incompatible_numeric_faults():
     start = date(2026, 9, 21)
     amrap = {"id": "example", "sets": 2, "rep_range": None, "recommended_working_weight": 20,
         "authored_prescription": preserve_prescription({"reps": "AMRAP"}, 2)}
-    # Same catalog ID must not blend a typed set with numeric sets into fault policy.
-    numeric = {"id": "example", "sets": 1, "rep_range": [8, 12], "recommended_working_weight": 20}
+    amrap["exercise_occurrence_id"] = "typed-occurrence"
+    numeric = {"id": "example", "exercise_occurrence_id": "numeric-occurrence", "sets": 1,
+        "rep_range": [8, 12], "recommended_working_weight": 20}
     summary = summarize_weekly_review_performance(previous_week_start=start, week_start=start + timedelta(days=7),
         previous_plan_payload={"sessions": [{"exercises": [amrap, numeric]}]},
-        performed_logs=[{"exercise_id": "example", "reps": 30, "weight": 20}])
-    assert summary["planned_sets_total"] == 3 and summary["completed_sets_total"] == 1
-    assert summary["exercise_faults"] == []
+        performed_logs=[{"exercise_id": "example", "exercise_occurrence_id": "typed-occurrence", "reps": 30, "weight": 0},
+            {"exercise_id": "example", "exercise_occurrence_id": "numeric-occurrence", "reps": 5, "weight": 20}])
+    assert summary["planned_sets_total"] == 3 and summary["completed_sets_total"] == 2
+    fault = summary["exercise_faults"][0]
+    assert fault["planned_sets"] == 1 and fault["completed_sets"] == 1
+    assert fault["average_performed_reps"] == 5 and "below_target_reps" in fault["fault_reasons"]
     assert summary["decision_trace"]["steps"][0]["numeric_fault_classification_excluded"]
+
+
+def test_review_source_slot_fallback_retains_numeric_cohort_and_marks_legacy_ambiguity():
+    start = date(2026, 9, 21)
+    typed = {"id": "shared", "sets": 2, "rep_range": None,
+        "source_lineage": {"source_sha256": "source", "source_slot_id": "typed-slot"},
+        "authored_prescription": preserve_prescription({"reps": "AMRAP"}, 2)}
+    numeric = {"id": "shared", "sets": 1, "rep_range": [8, 12], "recommended_working_weight": 20,
+        "source_lineage": {"source_sha256": "source", "source_slot_id": "numeric-slot"}}
+    summary = summarize_weekly_review_performance(previous_week_start=start, week_start=start + timedelta(days=7),
+        previous_plan_payload={"sessions": [{"exercises": [typed, numeric]}]}, performed_logs=[
+            {"exercise_id": "shared", "reps": 30, "weight": 0, "replay_context": {"planned_exercise": typed}},
+            {"exercise_id": "shared", "reps": 5, "weight": 20, "replay_context": {"planned_exercise": numeric}},
+            {"exercise_id": "shared", "reps": 99, "weight": 20}])
+    assert summary["planned_sets_total"] == 3 and summary["completed_sets_total"] == 3
+    fault = summary["exercise_faults"][0]
+    assert fault["completed_sets"] == 1 and fault["average_performed_reps"] == 5
+    assert "below_target_reps" in fault["fault_reasons"]
+    assert summary["decision_trace"]["steps"][0]["ambiguous_legacy_log_count"] == 1

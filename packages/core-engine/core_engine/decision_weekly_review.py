@@ -713,6 +713,15 @@ def prepare_weekly_review_status_route_runtime(
     }
 
 
+def _review_occurrence_key(exercise):
+    if exercise.get("exercise_occurrence_id"):
+        return ("occurrence", str(exercise["exercise_occurrence_id"]))
+    lineage = exercise.get("source_lineage") or {}
+    if lineage.get("source_slot_id"):
+        return ("source", str(lineage.get("source_sha256") or ""), str(lineage["source_slot_id"]))
+    return None
+
+
 def summarize_weekly_review_performance(
     *,
     previous_week_start: date,
@@ -720,24 +729,40 @@ def summarize_weekly_review_performance(
     previous_plan_payload: dict[str, Any],
     performed_logs: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    excluded_targets = [exercise.get("source_lineage") or {"exercise_id": exercise.get("id")}
-        for session in previous_plan_payload.get("sessions") or []
-        for exercise in session.get("exercises") or [] if requires_typed_tracking(exercise)]
-    excluded_ids = {str(exercise.get("primary_exercise_id") or exercise.get("id") or "")
-        for session in previous_plan_payload.get("sessions") or []
-        for exercise in session.get("exercises") or [] if requires_typed_tracking(exercise)}
+    exercises = [exercise for session in previous_plan_payload.get("sessions") or []
+        for exercise in session.get("exercises") or []]
+    typed = [exercise for exercise in exercises if requires_typed_tracking(exercise)]
+    excluded_targets = [exercise.get("source_lineage") or {"exercise_occurrence_id": exercise.get("exercise_occurrence_id"), "exercise_id": exercise.get("id")}
+        for exercise in typed]
+    typed_keys = {_review_occurrence_key(exercise) for exercise in typed} - {None}
+    typed_primary = {str(exercise.get("primary_exercise_id") or exercise.get("id") or "") for exercise in typed}
+    numeric_keys = {_review_occurrence_key(exercise) for exercise in exercises if not requires_typed_tracking(exercise)} - {None}
+    numeric_logs, excluded_logs = [], []
+    ambiguous_count = 0
+    for row in performed_logs:
+        context = (row.get("replay_context") or {}).get("planned_exercise") or {}
+        key = _review_occurrence_key(row) or _review_occurrence_key(context)
+        primary = str(row.get("primary_exercise_id") or row.get("exercise_id") or "")
+        if requires_typed_tracking(context) or key in typed_keys:
+            excluded_logs.append(row)
+        elif primary in typed_primary and key not in numeric_keys:
+            # Legacy receipts without a resolvable occurrence cannot be assigned to
+            # the numeric cohort merely because their catalog ID matches.
+            excluded_logs.append(row)
+            ambiguous_count += 1
+        else:
+            numeric_logs.append(row)
     scoped_plan = deepcopy(previous_plan_payload)
     for session in scoped_plan.get("sessions") or []:
-        session["exercises"] = [e for e in session.get("exercises") or [] if str(e.get("primary_exercise_id") or e.get("id") or "") not in excluded_ids]
+        session["exercises"] = [e for e in session.get("exercises") or [] if not requires_typed_tracking(e)]
     planned_index = _accumulate_planned_index(scoped_plan)
-    performed_index = _collect_performed_index(performed_logs, planned_index)
+    performed_index = _collect_performed_index(numeric_logs, planned_index)
 
     exercise_faults: list[dict[str, Any]] = []
-    planned_sets_total = sum(int(e.get("sets", 0)) for session in previous_plan_payload.get("sessions") or []
-        for e in session.get("exercises") or [] if str(e.get("primary_exercise_id") or e.get("id") or "") in excluded_ids)
-    completed_sets_total = sum(1 for row in performed_logs if str(row.get("primary_exercise_id") or row.get("exercise_id") or "") in excluded_ids
-        and row.get("parent_set_index") is None and (row.get("set_kind") or "work").strip().lower() == "work")
-    fault_steps: list[dict[str, Any]] = [{"numeric_fault_classification_excluded": excluded_targets}] if excluded_targets else []
+    planned_sets_total = sum(int(e.get("sets", 0)) for e in typed)
+    completed_sets_total = sum(1 for row in excluded_logs if row.get("parent_set_index") is None
+        and (row.get("set_kind") or "work").strip().lower() == "work")
+    fault_steps: list[dict[str, Any]] = [{"numeric_fault_classification_excluded": excluded_targets, "ambiguous_legacy_log_count": ambiguous_count}] if excluded_targets else []
 
     for primary_exercise_id, planned in planned_index.items():
         fault, planned_sets, completed_sets = _build_weekly_exercise_fault(
@@ -802,6 +827,11 @@ def build_weekly_review_performance_summary(
         {
             "primary_exercise_id": _read_attr(row, "primary_exercise_id"),
             "exercise_id": _read_attr(row, "exercise_id"),
+            "exercise_occurrence_id": _read_attr(row, "exercise_occurrence_id"),
+            "workout_occurrence_id": _read_attr(row, "workout_occurrence_id"),
+            "replay_context": _read_attr(row, "replay_context"),
+            "parent_set_index": _read_attr(row, "parent_set_index"),
+            "set_kind": _read_attr(row, "set_kind"),
             "reps": _read_attr(row, "reps"),
             "weight": _read_attr(row, "weight"),
         }

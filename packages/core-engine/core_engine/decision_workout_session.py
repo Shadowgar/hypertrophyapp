@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from .authored_prescription import requires_typed_tracking, typed_tracking_feedback
+from .authored_prescription import requires_receipt_tracking, is_bodyweight_authored, typed_tracking_feedback
 from typing import Any, Callable, cast
 
 from .decision_live_workout_guidance import (
@@ -265,12 +265,12 @@ def summarize_workout_exercise_performance(
 ) -> dict[str, Any]:
     exercise_id = str(exercise.get("id") or "")
     planned_sets = int(exercise.get("sets", 3) or 3)
-    if requires_typed_tracking(exercise):
+    if requires_receipt_tracking(exercise):
         count = len(performed_logs)
         live = typed_tracking_feedback(exercise, completed_sets=count)
         return {"exercise_id": exercise_id, "exercise_occurrence_id": exercise.get("exercise_occurrence_id"),
             "primary_exercise_id": exercise.get("primary_exercise_id"), "name": exercise.get("name", exercise_id),
-            "planned_sets": planned_sets, "planned_reps_min": None, "planned_reps_max": None,
+            "load_semantics": exercise.get("load_semantics"), "planned_sets": planned_sets, "planned_reps_min": None, "planned_reps_max": None,
             "planned_weight": float(exercise.get("recommended_working_weight", 0)),
             "performed_sets": count, "completion_pct": int(count / max(1, planned_sets) * 100),
             "average_performed_reps": sum(row["reps"] for row in performed_logs) / count if count else 0,
@@ -653,7 +653,7 @@ def resolve_workout_log_set_plan_context(
     fallback_weight: float,
 ) -> dict[str, Any]:
     exercise = _coerce_dict(planned_exercise)
-    if requires_typed_tracking(exercise):
+    if requires_receipt_tracking(exercise):
         raise ValueError("Typed authored target requires receipt-only tracking; numeric progression is unavailable")
     planned_reps_min, planned_reps_max = _resolve_rep_range(exercise.get("rep_range"))
     planned_sets = int(exercise.get("sets", 3) or 3)
@@ -1124,6 +1124,8 @@ def build_workout_today_payload(
 
 
 def _resolve_today_recommended_weight(exercise: dict[str, Any]) -> tuple[float, str]:
+    if is_bodyweight_authored(exercise):
+        return 0.0, "authored_bodyweight_no_external_load"
     planned = float(exercise.get("recommended_working_weight", 20) or 20)
     if planned > 0 and abs(planned - 20.0) > 1e-6:
         return planned, "planned_weight"

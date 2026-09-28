@@ -93,3 +93,8 @@ ADR or release owner acceptance.
 [Source-to-runtime qualification](2026-09-28-m1-authored-fidelity.md) records the
 authorized 315/310-row source-preservation candidate, typed execution boundaries
 and remaining work. No M1 deployment, whole-M1 acceptance or ADR acceptance is claimed.
+
+[PR #41 review-fix qualification](2026-09-28-m1-authored-fidelity-review-fixes.md)
+and its [manifest](2026-09-28-m1-authored-fidelity-review-fixes.manifest.json)
+record the later warm-up, bodyweight and occurrence-cohort correction snapshot.
+The original M1-A manifest remains bound to its earlier revision.

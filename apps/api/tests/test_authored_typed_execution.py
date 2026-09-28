@@ -1,4 +1,11 @@
 """Synthetic compatibility and frozen-source evidence on explicitly disposable DBs."""
+from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[3]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 from copy import deepcopy
 from datetime import date
 from uuid import uuid4
@@ -87,6 +94,54 @@ def test_numeric_owner_rejects_nonnumeric_prescription():
     prescribed = preserve_prescription({"reps": "AMRAP"}, 2)
     with pytest.raises(ValueError, match="receipt-only"):
         resolve_workout_log_set_plan_context(planned_exercise={"sets": 2, "rep_range": None, "authored_prescription": prescribed}, fallback_weight=20)
+
+
+@pytest.mark.parametrize("raw", ["AMRAP", "8-12"])
+def test_bodyweight_receipts_do_not_invent_external_load(scenario, raw):
+    user, headers, client = scenario
+    session = typed_plan(user, raw=raw)
+    exercise = session["exercises"][0]
+    exercise.update(load_semantics="bodyweight", recommended_working_weight=0)
+    with SessionLocal() as db:
+        row = db.get(WorkoutPlan, session["plan_id"])
+        changed = deepcopy(row.payload)
+        changed["sessions"][0]["exercises"][0] = exercise
+        row.payload = changed
+        db.commit()
+    payload = submission(session)
+    payload["weight"] = 0
+    response = log(client, headers, session, payload)
+    assert response.status_code == 200, response.text
+    assert response.json()["planned_weight"] == 0
+    assert response.json()["next_working_weight"] == 0
+    today = client.get("/workout/today", headers=headers).json()
+    assert today["exercises"][0]["recommended_working_weight"] == 0
+    correction = client.post(f"/workout/set/{response.json()['id']}/correct", headers=headers,
+        json={"command_id": str(uuid4()), "reps": 12, "weight": 0, "reason": "Synthetic correction"})
+    assert correction.status_code == 200, correction.text
+    with SessionLocal() as db:
+        rows = db.query(WorkoutSetLog).filter_by(user_id=user).all()
+        assert len(rows) == 2 and all(row.weight == 0 for row in rows)
+        assert all(row.replay_context["planned_exercise"]["load_semantics"] == "bodyweight" for row in rows)
+        assert db.query(ExerciseState).filter_by(user_id=user).count() == 0
+
+
+@pytest.mark.parametrize("raw", ["AMRAP", "8-12"])
+def test_external_load_zero_rejected_for_log_and_correction(scenario, raw):
+    user, headers, client = scenario
+    session = typed_plan(user, raw=raw)
+    payload = submission(session)
+    payload["weight"] = 0
+    assert log(client, headers, session, payload).status_code == 422
+    payload = submission(session)
+    response = log(client, headers, session, payload)
+    assert response.status_code == 200
+    correction = client.post(f"/workout/set/{response.json()['id']}/correct", headers=headers,
+        json={"command_id": str(uuid4()), "reps": 12, "weight": 0, "reason": "Synthetic correction"})
+    assert correction.status_code == 422
+    with SessionLocal() as db:
+        assert db.query(WorkoutSetLog).filter_by(user_id=user).count() == 1
+        assert db.query(WorkoutSetLog).filter_by(user_id=user).first().voided_at is None
 
 
 @pytest.mark.parametrize("parent", [None, 99])

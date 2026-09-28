@@ -77,6 +77,14 @@ def requires_typed_tracking(exercise):
     return bool((exercise or {}).get("authored_prescription")) and uniform_rep_range(exercise["authored_prescription"]) is None
 
 
+def is_bodyweight_authored(exercise):
+    return bool((exercise or {}).get("authored_prescription")) and exercise.get("load_semantics") == "bodyweight"
+
+
+def requires_receipt_tracking(exercise):
+    return requires_typed_tracking(exercise) or is_bodyweight_authored(exercise)
+
+
 def typed_tracking_feedback(exercise, *, completed_sets, set_index=1):
     """Receipt/count evidence only; no numeric progression for an unsupported target."""
     prescribed = exercise["authored_prescription"]["sets"]
@@ -87,6 +95,6 @@ def typed_tracking_feedback(exercise, *, completed_sets, set_index=1):
         "completed_sets": completed_sets}
     return {"completed_sets": completed_sets, "remaining_sets": max(0, int(exercise["sets"]) - completed_sets),
         "recommended_reps_min": None, "recommended_reps_max": None,
-        "recommended_weight": float(exercise["recommended_working_weight"]),
+        "recommended_weight": 0.0 if is_bodyweight_authored(exercise) else float(exercise["recommended_working_weight"]),
         "guidance": "Follow the authored target and record actual reps.",
         "guidance_rationale": "authored_typed_target", "decision_trace": trace}

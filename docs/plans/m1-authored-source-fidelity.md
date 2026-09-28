@@ -2,8 +2,9 @@
 
 Status: implemented candidate awaiting application PR review. Explicit owner
 2026-09-28 authorization covers importer/canonical/runtime preservation, isolated
-qualification and an unmerged PR. Deployment and live migrations are not
-authorized for M1-A. Base main: `6e9b93ebc2f4570eeb0517131332e135b1d5c566`.
+qualification and an unmerged PR. Subsequent explicit owner authorization covers
+the three PR #41 correctness fixes, fresh review, merge and API/web activation
+if no introduced fidelity blocker remains. No M1 migration is expected. Base main: `6e9b93ebc2f4570eeb0517131332e135b1d5c566`.
 Branch: `m1/authored-source-fidelity`. Whole M1 and ADR-003 remain unaccepted.
 
 Controlling context: [product contract](../requirements/product-contract.md),
@@ -62,7 +63,9 @@ and output directories. Run only in a disposable copy with a cleared environment
 verified disposable database targets and socket/database guards. Runtime never
 reads XLSX. No workbook/manual or private audit output is added to Git. Source
 hashes are checked unchanged; generated diagnostics remain outside this PR.
-No migration is introduced. M1-A is not deployed.
+No migration is introduced. M1-A awaits the separately authorized activation.
+[Review-fix evidence](../evidence/2026-09-28-m1-authored-fidelity-review-fixes.md) records raw warm-up visibility, explicit bodyweight load handling and
+occurrence-scoped weekly-review filtering.
 
 ## Remaining M1 work
 

@@ -77,6 +77,7 @@ class WorkSetPrescription(BaseModel):
 
 
 class AdaptiveSlot(BaseModel):
+    load_semantics: str | None = None
     exercise: str | None = None
     last_set_intensity_technique: str | None = None
     warm_up_sets: str | None = None
@@ -582,6 +583,7 @@ class WeakPointTableEntry(BaseModel):
 
 
 class ProgramBlueprintSlot(BaseModel):
+    load_semantics: str | None = None
     authored_prescription: AuthoredPrescription | None = None
     source_lineage: dict[str, Any] | None = None
     source_row: int | None = None

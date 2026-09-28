@@ -23,7 +23,7 @@ _EQUIPMENT_RULES: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"(?:^|[^a-z0-9])b\.?b\.?($|[^a-z0-9])|\bbarbell\b", re.IGNORECASE), "barbell"),
     (re.compile(r"\bCABLE\b", re.IGNORECASE), "cable"),
     (re.compile(r"\bMACHINE\b", re.IGNORECASE), "machine"),
-    (re.compile(r"\bBW\b|\bBODYWEIGHT\b|\bpush-up\b", re.IGNORECASE), "bodyweight"),
+    (re.compile(r"\bBW\b|\bBODYWEIGHT\b|\bpush[- ]?up\b", re.IGNORECASE), "bodyweight"),
 )
 
 _NS = {
@@ -1340,6 +1340,8 @@ def normalize_slot_exercise(raw_exercise: dict) -> dict:
     load_semantics = raw_exercise.get("load_semantics")
     if load_semantics is None and ("assisted_" in exercise_id or normalized_name.startswith("assisted ")):
         load_semantics = "assistance"
+    if load_semantics is None and (raw_exercise.get("equipment_tags") or infer_equipment_tags_from_name(name)) == ["bodyweight"]:
+        load_semantics = "bodyweight"
 
     prescription = preserve_prescription(raw_exercise, int(raw_exercise.get("sets", 3)), effort_kind=raw_exercise.get("effort_kind", "rpe"), set_type=raw_exercise.get("authored_set_type", "work")) if "source_row" in raw_exercise else raw_exercise.get("authored_prescription")
     return {

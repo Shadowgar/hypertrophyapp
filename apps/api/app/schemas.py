@@ -583,7 +583,7 @@ class WorkoutSetLogRequest(BaseModel):
     exercise_id: str
     set_index: int = Field(ge=1)
     reps: int = Field(ge=1)
-    weight: float = Field(gt=0, allow_inf_nan=False)
+    weight: float = Field(ge=0, allow_inf_nan=False)
     rpe: float | None = Field(default=None, allow_inf_nan=False)
     set_kind: str | None = None
     parent_set_index: int | None = Field(default=None, ge=1)
@@ -639,6 +639,7 @@ class WorkoutSetLogResponse(BaseModel):
 
 
 class WorkoutExerciseSummaryResponse(BaseModel):
+    load_semantics: str | None = None
     exercise_occurrence_id: str | None = None
     exercise_id: str
     primary_exercise_id: str | None = None
@@ -674,6 +675,6 @@ class WorkoutSummaryResponse(BaseModel):
 class WorkoutSetCorrectionRequest(BaseModel):
     command_id: str = Field(min_length=1, max_length=128)
     reps: int = Field(ge=1)
-    weight: float = Field(gt=0, allow_inf_nan=False)
+    weight: float = Field(ge=0, allow_inf_nan=False)
     rpe: float | None = Field(default=None, allow_inf_nan=False)
     reason: str = Field(min_length=1, max_length=500)
