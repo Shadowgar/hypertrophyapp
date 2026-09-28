@@ -1,6 +1,8 @@
 from datetime import date, timedelta
+from copy import deepcopy
+from types import SimpleNamespace
 from core_engine.authored_prescription import preserve_prescription, uniform_rep_range
-from core_engine.decision_weekly_review import summarize_weekly_review_performance
+from core_engine.decision_weekly_review import summarize_weekly_review_performance, build_weekly_review_performance_summary
 
 
 def test_distinct_targets_effort_ranges_and_explicit_top_backoff_roles():
@@ -63,3 +65,28 @@ def test_review_source_slot_fallback_retains_numeric_cohort_and_marks_legacy_amb
     assert fault["completed_sets"] == 1 and fault["average_performed_reps"] == 5
     assert "below_target_reps" in fault["fault_reasons"]
     assert summary["decision_trace"]["steps"][0]["ambiguous_legacy_log_count"] == 1
+
+
+def test_serialized_occurrence_receipts_match_raw_persisted_plan_source_slots():
+    start = date(2026, 9, 21)
+    typed = {"id": "shared", "sets": 2, "rep_range": None,
+        "source_lineage": {"source_sha256": "source", "source_slot_id": "typed-slot"},
+        "authored_prescription": preserve_prescription({"reps": "AMRAP"}, 2)}
+    numeric = {"id": "shared", "sets": 1, "rep_range": [8, 12], "recommended_working_weight": 20,
+        "source_lineage": {"source_sha256": "source", "source_slot_id": "numeric-slot"}}
+    rows = []
+    for exercise, occurrence, reps in [(typed, "typed-uuid", 30), (numeric, "numeric-uuid", 5)]:
+        frozen = {**deepcopy(exercise), "exercise_occurrence_id": occurrence}
+        rows.append(SimpleNamespace(exercise_id="shared", primary_exercise_id="shared",
+            exercise_occurrence_id=occurrence, workout_occurrence_id="workout-uuid",
+            replay_context={"planned_exercise": frozen}, reps=reps, weight=20,
+            parent_set_index=None, set_kind="work"))
+    summary = build_weekly_review_performance_summary(previous_week_start=start,
+        week_start=start + timedelta(days=7),
+        previous_plan=SimpleNamespace(payload={"sessions": [{"exercises": [typed, numeric]}]}),
+        performed_logs=rows)
+    fault = summary["exercise_faults"][0]
+    assert summary["completed_sets_total"] == 2
+    assert fault["completed_sets"] == 1 and fault["average_performed_reps"] == 5
+    assert "below_target_reps" in fault["fault_reasons"] and "missed_sets" not in fault["fault_reasons"]
+    assert summary["decision_trace"]["steps"][0]["ambiguous_legacy_log_count"] == 0

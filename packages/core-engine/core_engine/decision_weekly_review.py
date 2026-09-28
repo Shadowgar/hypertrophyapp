@@ -713,13 +713,14 @@ def prepare_weekly_review_status_route_runtime(
     }
 
 
-def _review_occurrence_key(exercise):
+def _review_identity_keys(exercise):
+    keys = set()
     if exercise.get("exercise_occurrence_id"):
-        return ("occurrence", str(exercise["exercise_occurrence_id"]))
+        keys.add(("occurrence", str(exercise["exercise_occurrence_id"])))
     lineage = exercise.get("source_lineage") or {}
     if lineage.get("source_slot_id"):
-        return ("source", str(lineage.get("source_sha256") or ""), str(lineage["source_slot_id"]))
-    return None
+        keys.add(("source", str(lineage.get("source_sha256") or ""), str(lineage["source_slot_id"])))
+    return keys
 
 
 def summarize_weekly_review_performance(
@@ -734,18 +735,24 @@ def summarize_weekly_review_performance(
     typed = [exercise for exercise in exercises if requires_typed_tracking(exercise)]
     excluded_targets = [exercise.get("source_lineage") or {"exercise_occurrence_id": exercise.get("exercise_occurrence_id"), "exercise_id": exercise.get("id")}
         for exercise in typed]
-    typed_keys = {_review_occurrence_key(exercise) for exercise in typed} - {None}
+    typed_keys = set().union(*(_review_identity_keys(exercise) for exercise in typed))
     typed_primary = {str(exercise.get("primary_exercise_id") or exercise.get("id") or "") for exercise in typed}
-    numeric_keys = {_review_occurrence_key(exercise) for exercise in exercises if not requires_typed_tracking(exercise)} - {None}
+    numeric_keys = set().union(*(_review_identity_keys(exercise) for exercise in exercises if not requires_typed_tracking(exercise)))
+    known_keys = typed_keys | numeric_keys
     numeric_logs, excluded_logs = [], []
     ambiguous_count = 0
     for row in performed_logs:
         context = (row.get("replay_context") or {}).get("planned_exercise") or {}
-        key = _review_occurrence_key(row) or _review_occurrence_key(context)
+        keys = _review_identity_keys(row) | _review_identity_keys(context)
+        # Persisted plans lack occurrence UUIDs. Prefer a matching occurrence,
+        # otherwise resolve the frozen source slot instead of treating an
+        # unmatched log UUID as proof that its source cohort is unknown.
+        matching_occurrences = {key for key in keys & known_keys if key[0] == "occurrence"}
+        matches = matching_occurrences or (keys & known_keys)
         primary = str(row.get("primary_exercise_id") or row.get("exercise_id") or "")
-        if requires_typed_tracking(context) or key in typed_keys:
+        if requires_typed_tracking(context) or matches & typed_keys:
             excluded_logs.append(row)
-        elif primary in typed_primary and key not in numeric_keys:
+        elif primary in typed_primary and not matches & numeric_keys:
             # Legacy receipts without a resolvable occurrence cannot be assigned to
             # the numeric cohort merely because their catalog ID matches.
             excluded_logs.append(row)

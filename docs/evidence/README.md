@@ -101,3 +101,6 @@ The original M1-A manifest remains bound to its earlier revision.
 
 [Bodyweight summary follow-up](2026-09-28-m1-bodyweight-summary.md) records
 the subsequent current-head summary/load/rep-bound corrections.
+
+[Persisted-plan review identity follow-up](2026-09-28-m1-weekly-review-source-identity.md)
+records production serialization/source-slot cohort matching.
