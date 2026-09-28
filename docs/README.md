@@ -1,43 +1,55 @@
-# Documentation and planning draft
+# Documentation and planning review baseline
 
-Date: 2026-09-28. Package status: **Proposed; review pending; not integrated**. These documents are a first review batch, not an accepted replacement for repository governance or authorization to implement a plan.
+Owner review context: **2026-09-28**. The owner approved the overall product/documentation direction subject to explicit substitution/load/date/link corrections, and approved the deterministic-runtime/AI prescription boundary. Detailed mechanisms/ADRs remain **Proposed**; no release milestone is owner-accepted by this package.
 
-Audited source: `df9965232ce731f8234d222acc526a90bc6be620`. The checkout still matched that revision when this package was prepared. Git status contained only the pre-existing modified `logs/app-debug.log`, which was left alone. Implementation descriptions refer to the audited source, not a verified deployed image.
+Application evidence revision: `df9965232ce731f8234d222acc526a90bc6be620`. First published documentation baseline: `311dc00b5a8c97f5df4f0f33188303d27bbdfc91`. This review branch changes documentation only; current-source descriptions are not deployed-image certification.
 
-## Read this package
+## Governing direction and decisions
 
-| Document | Purpose and proposed owner role |
+| Document | Purpose |
 |---|---|
-| [Product contract](requirements/product-contract.md) | Owner-stated mode permissions and user outcomes; product owner. |
-| [Constitution and working rules](governance/constitution.md) | Proposed authority hierarchy, decision concordance, contributor rules and change control; product owner and maintainer. |
-| [Milestone roadmap](roadmap/milestones.md) | Proposed sequence, independent M0 packages, dependencies and acceptance gates; product owner. |
-| [Urgent account-recovery brief](security/urgent-account-recovery.md) | Established source findings, unknown production conditions and containment choices; security maintainer and operator. |
-| [Urgent account-recovery implementation plan](plans/urgent-account-recovery.md) | Bounded changes, compatibility, tests, deployment prerequisites and stop conditions; implementing maintainer and operator. |
+| [Product contract](requirements/product-contract.md) | Authored/Customized consent, confirmed substitutions, automatic working-load authority and actual dates. |
+| [Constitution and working rules](governance/constitution.md) | Proposed precedence, owner/technical approval, retained decision history and safe work. |
+| [ADR index and ten proposed records](adr/README.md) | Durable alternatives/compatibility/verification, including newly approved deterministic principle and D-001–D-022 concordance. |
+| [Requirements catalog](requirements/catalog.md) | 80 stable desired outcomes/proposals with current state and acceptance needs. |
+| [Traceability](requirements/traceability.md) | All 80 IDs linked to product/ADR/contracts/modules/limited tests and missing qualification. |
+| [Milestone roadmap](roadmap/milestones.md) | Independent M0 packages; M1 fidelity; parallel M2A load and M2B dates; M3–M6 intelligence/reliability. |
 
-These six files mirror intended repository-relative paths. Working rules are consolidated in the constitution for this batch. No remaining documentation has been generated.
+## Architecture
 
-## Status and evidence
+| Document | Purpose |
+|---|---|
+| [Target system](architecture/system.md) | Component/dataflow ownership without a rewrite mandate. |
+| [Current state](architecture/current-state.md) | Revision-scoped runtime paths, defects/limits and original test baseline. |
+| [Domain model](architecture/domain-model.md) | Program/slot/occurrence/set/exposure/recommendation vocabulary and lifecycle. |
+| [Data model](architecture/data-model.md) | Existing records, additive identities, correction/units/time and migration choices. |
+| [Runtime authority](architecture/runtime-authority.md) | Today versus target decision owner, mode/input/mutation/trace boundaries. |
 
-Keep these states separate: **Proposed**, **Accepted requirement**, **Implemented**, **Verified for a revision/environment**, and **Owner-accepted**. A document can describe an owner-stated requirement while its proposed architecture remains unaccepted. Implementation and test results do not imply product acceptance. Record supersession explicitly; preserve original dated evidence and failures.
+## High-risk training contracts
 
-The starting evidence is the [audit](../../Hypertrophy-Audit-2026-09-28.md), [199-file migration inventory](../../Documentation-Migration-Inventory.md), [machine-readable inventory](../../document-inventory.json), and [verification notes](../../Verification-Notes.md). The notes govern interpretation of isolated runs and their limitations. The managed security export remains **failed** because its directory-privacy check rejected pre-existing permissions. Independent source findings are retained; there is no sealed managed result or complete dependency, ingress or production-security certification.
+- [Authored source](contracts/authored-source.md): original/compiled provenance, full fidelity and known AMRAP omission.
+- [Execution plan](contracts/execution-plan.md): preserved prescriptions, consent, occurrence/revision and effective history.
+- [Load progression](contracts/load-progression.md): completed comparable exposure, actual effort/load, actions, uncertainty and override.
+- [Selected-date scheduling](contracts/selected-date-scheduling.md): manual local-week dates, relationships, spacing, reschedule and infeasibility.
+- [Recommendations](contracts/recommendations.md): evidence/permissions, automatic prefill versus explicit outcomes and advisory no-write behavior.
 
-No broad audit was repeated. Additional source reads were limited to recovery/authentication, mail transport, validation logging, their existing tests and UI/configuration consumers, plus the decision ledger, to resolve specific planning questions. No live recovery requests or production configuration/session inspection occurred.
+## Security, testing and evidence
 
-## Continuation and integration
+- [Security architecture](security/architecture.md) and [threat model](security/threat-model.md): source-established versus conditional/unknown/proposed/qualified controls.
+- [Urgent recovery brief](security/urgent-account-recovery.md) and [implementation plan](plans/urgent-account-recovery.md): independent S1 closure/S2 lifecycle; no live action authorized.
+- [Test strategy](quality/test-strategy.md): isolated targets, meaningful categories, PostgreSQL boundaries and failure disposition.
+- [Evidence policy and migration registry](evidence/README.md): artifact basenames/hashes, original results/limitations and stable-retention plan. Original audit artifacts remain outside Git and are not linked as publicly accessible files.
 
-The [roadmap](roadmap/milestones.md) identifies later deliverables. Full architecture/domain documents, high-risk contracts, requirements catalog and traceability, ADRs, evidence/test policy, operations runbooks and the staged migration plan remain deferred pending approval to continue. Future paths mentioned in this batch are destinations, not existing authorities.
+## Status, provenance and integration
 
-Before a separately approved documentation integration, reconcile all 199 inventory rows, retain original decisions and unresolved tasks, and check path consumers in code, tests, workflows, packaging and AI instructions. Create successor notices and update indexes and the context manifest together. Keep executable `docs/rules/**` paths and contents intact; preserve generated-guide ownership, source provenance and licensing. No existing document was moved, archived or edited here.
+Separate owner-approved desired requirement, Proposed technical mechanism, Implemented, Verified for a named revision/environment and release Owner-accepted. ADR lifecycle is Proposed/Accepted/Superseded/Rejected. A partially implemented component or historical pass does not qualify a complete criterion. The explicit AI boundary approval is dated 2026-09-28, not retroactively assigned to D-005; no detailed implementation consequence is automatically accepted.
 
-Documentation approval, implementation authorization, and deployment authorization are separate actions. The immediate security packages can be reviewed independently of the full documentation migration and training-history redesign.
+This package consolidates content ownership without editing competing legacy governance, the [historical ledger](DECISIONS.md), [context manifest](context/CONTEXT_MANIFEST.yaml) or executable `docs/rules/**`. Later approved integration must reconcile all 199 inventory rows, open tasks, provenance/licensing, successors and path consumers in code/tests/workflows/packaging/AI instructions. Update indexes/context references together. Architecture/operations plans not authored here remain deferred, not empty placeholders.
 
-## Quality reference and checks
+Use repository-relative links; every added repository reference must resolve from another checkout/GitHub. Large/private/proprietary raw artifacts are not copied to fix inconvenient paths. Pinned SnakeTracker [index](https://github.com/Shadowgar/SnakeTracker/blob/87652f8ea80f6328a15385dc2cc32beaf4dbc9e2/docs/README.md) and [decision-freeze discipline](https://github.com/Shadowgar/SnakeTracker/blob/87652f8ea80f6328a15385dc2cc32beaf4dbc9e2/docs/adr/0028-architecture-governance-and-decision-freeze.md) remain process references studied in the audit, not architecture/database/event-store or hardware mandates.
 
-Use the pinned SnakeTracker [documentation index](https://github.com/Shadowgar/SnakeTracker/blob/87652f8ea80f6328a15385dc2cc32beaf4dbc9e2/docs/README.md), [decision-freeze record](https://github.com/Shadowgar/SnakeTracker/blob/87652f8ea80f6328a15385dc2cc32beaf4dbc9e2/docs/adr/0028-architecture-governance-and-decision-freeze.md), and [milestone roadmap](https://github.com/Shadowgar/SnakeTracker/blob/87652f8ea80f6328a15385dc2cc32beaf4dbc9e2/docs/roadmap/milestones.md) as process references already studied in the audit. Borrow explicit authority, supersession and criterion-linked evidence. No architecture, event-sourcing model, database choice or hardware target is adopted from that project, and its implementation is not independently certified here.
+## This batch’s verification and safety
 
-Static package verification completed on 2026-09-28: exactly six Markdown files; all 45 local link occurrences resolve; no missing targets. Three pinned external reference links were retained without fetching them again. Status labels, M0 package identifiers, SEC-S1/S2 boundaries, D-001–D-022 concordance and quoted baseline results were checked for consistency across the batch. Absolute source links refer to the current checkout and can drift later; use the recorded revision when interpreting them. No application test, build, installation or migration was run. These checks establish documentation consistency/navigation, not application behavior, external URL availability, deployment conditions or owner acceptance.
+Static checks on 2026-09-28 passed: 33 documentation files (6 updated, 27 new), 10 Proposed ADRs, 80 unique catalog/traceability IDs, all D-001–D-022 retained, and 865 resolving repository-relative link/anchor occurrences. Two pinned external links were not fetched. Markdown table/fence and diff-whitespace checks passed. Semantic review covered substitution consent, automatic load-only authority, parallel M2A/M2B, distinct repeated-slot identity, exposure completeness, AI approval date, statuses, security limits and scoring freeze; no application test, build, installation, migration or service startup is run. Link checks validate local targets/anchors, requirement/ADR/milestone consistency and changed-file scope; they do not qualify runtime behavior, external URL availability, scientific outcomes or live production security.
 
-## Production boundaries
-
-The production checkout stayed read-only. Database contents, personal training records, logs, credentials, private keys and live environment files were not read or copied into this package. No database mutation, tests/builds/installations, migration, service startup/restart, deployment or Git mutation was performed. The abandoned WSL rebase and `.codex` permissions were untouched. Draft creation occurred only under this separate output directory.
+Only this separate documentation worktree/branch is modified and published. Production checkout/branch, database/personal records, configuration, services, deployment, credentials and existing modified debug log remain untouched. No subagents, main merge or PR. Original audit export remains failed; `.codex` permissions were not changed. Stop after publication for owner review.

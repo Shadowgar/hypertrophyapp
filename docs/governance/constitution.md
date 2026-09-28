@@ -1,6 +1,6 @@
 # Constitution, authority and working rules
 
-Date: 2026-09-28. Status: **Proposed; not integrated or owner-accepted**. This is a reviewable hierarchy, not a claim that current repository authority has already changed. Evidence: [audit](../../../Hypertrophy-Audit-2026-09-28.md), [inventory](../../../Documentation-Migration-Inventory.md), and the existing [decision ledger](/home/rocco/hypertrophyapp/docs/DECISIONS.md).
+Date: 2026-09-28. Status: **Owner approved the overall direction on 2026-09-28 subject to corrections; detailed hierarchy/change mechanisms remain Proposed**. This is a reviewable hierarchy, not a claim that current repository authority has already changed. Evidence: [audit](../evidence/README.md#audit-reference-and-migration-plan), [inventory](../evidence/README.md#audit-reference-and-migration-plan), and the existing [decision ledger](../DECISIONS.md).
 
 ## Proposed authority hierarchy
 
@@ -23,8 +23,8 @@ Authored source prescriptions are domain authority under the Authored contract, 
 
 - Authored Full Body Phase 1 and Phase 2 remain separate from generated programs; generated paths cannot mutate or reinterpret authored templates.
 - Raw onboarding answers become deterministic `GenerationProfile` before generation decisions consume them.
-- No runtime LLM inference decides planning. Deterministic decisions disclose qualified inputs, rule/artifact versions and reasons where appropriate.
-- `manual`/`auto` selection is separate from explicit Customized consent. An equipment/safety exception is scoped to the affected source slot.
+- Explicit owner approval on 2026-09-28: core workout/program decisions remain deterministic and auditable; AI/LLMs may explain, converse, research, summarize, analyze and assist development, but never directly determine runtime training prescriptions. Explanations cannot acquire mutation authority. This is current approval, not retroactive acceptance of D-005 or detailed ADR-004 mechanisms.
+- `manual`/`auto` selection is separate from explicit Customized consent. An equipment/safety/pain exception is scoped to its source slot. Any source-approved substitution requires explicit user confirmation and preserves source-slot/performed-variant identity. Normal automatic Authored adaptation is working load, with reason/evidence and override.
 - Preserve existing decision modules and compatibility boundaries until a reviewed change names their replacement and consequences.
 - Metadata-v2 scoring activation remains frozen; accounting improvements are not implicit scoring approval.
 
@@ -37,7 +37,7 @@ Retain original IDs and the ledger's existing 2026-03-20 date context. The ledge
 | Existing identifiers | Retained meaning and proposed interpretation |
 |---|---|
 | D-001–D-004 | Preserve canonical/reference separation, diagnostic guide ownership, exclusion of raw reference documents from runtime, and compiled artifacts. |
-| D-005 | Preserve deterministic runtime/no paid-LLM dependency; the owner's current no-runtime-LLM requirement is stronger and applies to all runtime planning inference. |
+| D-005 | Preserve the historical deterministic/no-paid-LLM statement. The owner explicitly approved the stronger prescription boundary on 2026-09-28; [ADR-004](../adr/0004-deterministic-runtime-and-ai-boundary.md) records that date and separates proposed mechanisms. |
 | D-006–D-007 | Preserve first-class authored programs and explicit authored/generated mode separation. Proposed product terminology and consent must be mapped explicitly to existing keys. |
 | D-008–D-010 | Keep doctrine, policy and engine distinct; hard constraints govern soft preferences. |
 | D-011 | Preserve minimum-viable fallback intent within current consent/safety boundaries: disclose reductions/infeasibility; never unlock hidden authored mutation or unsafe execution. |
@@ -62,14 +62,16 @@ A milestone is not complete because a plan exists, tests happen to pass, or an o
 
 ## Contributor and AI working rules
 
-Before future sensitive runtime changes, read every document listed in the existing [context manifest](/home/rocco/hypertrophyapp/docs/context/CONTEXT_MANIFEST.yaml), including the constitution, runtime map, generated doctrine, metadata model, remediation roadmap, onboarding/profile/strategy specifications, roadmap, AI rules and documentation status required by [AGENTS.md](/home/rocco/hypertrophyapp/AGENTS.md). Update the manifest and instruction references together only during separately approved integration. This draft does not replace that mandatory reading contract.
+Before future sensitive runtime changes, read every document listed in the existing [context manifest](../context/CONTEXT_MANIFEST.yaml), including the constitution, runtime map, generated doctrine, metadata model, remediation roadmap, onboarding/profile/strategy specifications, roadmap, AI rules and documentation status required by [AGENTS.md](../../AGENTS.md). Update the manifest and instruction references together only during separately approved integration. This draft does not replace that mandatory reading contract.
 
 Use the completed audit as starting evidence. Read additional source only for a specific contract/planning question; record unresolved issues instead of broadening the audit. Classify existing failures individually as confirmed implementation defect, obsolete/conflicting expectation, fixture/environment issue, or unresolved. Replace obsolete checks with protections grounded in the controlling contract; never restore authored mutation or weaken intended protection merely to obtain green results.
 
 Use explicit disposable verification environments for any later authorized tests. Do not trust database defaults, inherited Compose settings or SQLite results as proof of PostgreSQL concurrency/migration safety. No qualifying run is authorized by these drafts. Protect credentials and personal data; evidence must not retain reset tokens, passwords or sensitive URLs.
 
-For this pass, create draft docs only in the separate output directory. Do not modify the checkout, rules, artifacts, database, personal records, live config, credentials, private keys, logs, services or deployment. Do not run production tests/builds/installations/startup/migrations or mutate Git. Leave the debug log, abandoned WSL rebase and `.codex` permissions untouched. Do not use subagents. Stop after this first batch and report unresolved decisions; continuation needs approval.
+For this architecture pass, modify documentation only in the separate review worktree on `docs/planning-baseline-2026-09-28`; the owner authorizes a documentation commit and branch publication. Never modify the production checkout/branch, runtime code/rules/artifacts, database, personal records, live configuration, credentials, private keys, logs, services or deployment. Do not run application tests/builds/installations/startup/migrations, merge into main or create a PR. Leave the debug log, abandoned WSL rebase and `.codex` permissions untouched. Use no subagents. Stop after publishing this batch for owner review.
 
 ## Integration ownership
 
 The maintainer proposes successors using the complete 199-file inventory, preserving decisions, negative findings, licensing and unresolved task disposition. Check real path consumers before relocation. The product owner accepts permissions and outcomes; technical/security maintainers review mechanisms; the operator owns deployment and recovery evidence. Indexes, authority labels, context references and successor notices change coherently. No competing hierarchy is made active merely by copying these drafts into the repository.
+
+The [ADR index](../adr/README.md) records complete ledger concordance and proposed successors. The new [evidence registry](../evidence/README.md) preserves external-audit identity without host-dependent links. Existing authority claims remain in their original files pending explicit successor notices/context migration; ADR-001 resolves their intended precedence without silently editing them.

@@ -1,6 +1,6 @@
 # Urgent account-recovery decision brief
 
-Date: 2026-09-28. Status: **Proposed; no live inspection or remediation authorized by this brief**. Source revision: `df9965232ce731f8234d222acc526a90bc6be620`. Evidence: [audit](../../../Hypertrophy-Audit-2026-09-28.md), [independent security findings](../../../security-worker.json), [verification notes](../../../Verification-Notes.md). This is a narrow account-recovery brief, not a new security scan.
+Date: 2026-09-28. Status: **Proposed; no live inspection or remediation authorized by this brief**. Source revision: `df9965232ce731f8234d222acc526a90bc6be620`. Evidence: [audit](../evidence/README.md#audit-reference-and-migration-plan), [independent security findings](../evidence/README.md#audit-reference-and-migration-plan), [verification notes](../evidence/README.md#audit-reference-and-migration-plan). This is a narrow account-recovery brief, not a new security scan.
 
 ## What the source establishes
 
@@ -50,3 +50,5 @@ Effective production configuration, ingress coverage, operator ownership and rat
 Before deployment: qualify the exact patch in a disposable environment, verify secret-free negative cases and verified staging mail, approve configuration/key strategy, confirm recovery and rollback prerequisites, and qualify PostgreSQL migration/concurrency for SEC-S2. Rollback must preserve the closed recovery boundary; vulnerable rollback requires route containment or a forward fix. The [implementation plan](../plans/urgent-account-recovery.md) supplies exact gates and stop conditions.
 
 The managed security export remains **failed**; `.codex` permissions were not changed. Neither this brief nor SQLite test evidence certifies live secrets, TLS edge, active sessions, backups, dependency coverage or production security.
+
+Review context (2026-09-28): the owner approved overall direction subject to corrections; recovery mechanisms, availability and legacy-token cutover remain Proposed/unresolved. See [ADR-010](../adr/0010-account-recovery-and-auth-lifecycle.md), [security architecture](../security/architecture.md), [test strategy](../quality/test-strategy.md) and the portable [evidence registry](../evidence/README.md). No audit/raw test artifact is copied into this branch.
