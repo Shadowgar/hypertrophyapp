@@ -11,6 +11,7 @@ from ..emailer import is_smtp_configured, send_password_reset_email
 from ..models import PasswordResetToken, User
 from ..models import BodyMeasurementEntry, CoachingRecommendation, ExerciseState, SorenessEntry, WeeklyCheckin, WeeklyReviewCycle
 from ..models import WorkoutPlan, WorkoutSessionState, WorkoutSetLog
+from ..observability import log_event
 from ..schemas import (
     DevWipeUserRequest,
     LoginRequest,
@@ -93,10 +94,15 @@ def dev_wipe_user(payload: DevWipeUserRequest, db: DbSession) -> StatusResponse:
 
 @router.post("/password-reset/request")
 def password_reset_request(payload: PasswordResetRequest, db: DbSession) -> PasswordResetRequestResponse:
+    accepted = PasswordResetRequestResponse(status="accepted", reset_token=None)
+    if not is_smtp_configured(settings):
+        log_event("password_reset_delivery_unavailable", level="warning")
+        return accepted
+
     normalized_email = payload.email.strip().lower()
     user = db.query(User).filter(func.lower(User.email) == normalized_email).first()
     if not user:
-        return PasswordResetRequestResponse(status="accepted")
+        return accepted
 
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     db.query(PasswordResetToken).filter(
@@ -108,25 +114,32 @@ def password_reset_request(payload: PasswordResetRequest, db: DbSession) -> Pass
     entry = PasswordResetToken(
         user_id=user.id,
         token_hash=hash_password_reset_token(reset_token),
-        expires_at=now + timedelta(minutes=30),
+        # Persist an already-expired credential first. Failed/uncertain delivery
+        # cannot leave it usable or require a compensation write.
+        expires_at=datetime.min,
     )
     db.add(entry)
-    db.commit()
-
-    smtp_configured = is_smtp_configured(settings)
-    delivery = None
-    if smtp_configured:
+    try:
+        db.commit()
         delivery = send_password_reset_email(to_email=normalized_email, reset_token=reset_token, config=settings)
-        if not delivery.sent and settings.password_reset_require_email_delivery:
-            raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail="Password reset email could not be sent",
-            )
-
-    expose_token = settings.password_reset_expose_token or not smtp_configured
-    response_token = reset_token if expose_token else None
-    response_status = "accepted" if delivery is None or delivery.sent or not smtp_configured else "email_failed"
-    return PasswordResetRequestResponse(status=response_status, reset_token=response_token)
+        if delivery.sent:
+            # A newer request can supersede this row while SMTP is in flight.
+            # Never reactivate a credential already marked used by that request.
+            db.query(PasswordResetToken).filter(
+                PasswordResetToken.id == entry.id,
+                PasswordResetToken.used_at.is_(None),
+                PasswordResetToken.expires_at == datetime.min,
+            ).update({PasswordResetToken.expires_at: now + timedelta(minutes=30)}, synchronize_session=False)
+            db.commit()
+        else:
+            log_event("password_reset_delivery_failed", level="warning")
+    except Exception:
+        try:
+            db.rollback()
+        except Exception:
+            log_event("password_reset_rollback_failed", level="error")
+        log_event("password_reset_operation_failed", level="error")
+    return accepted
 
 
 @router.post("/password-reset/confirm")

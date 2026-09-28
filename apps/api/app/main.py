@@ -21,6 +21,7 @@ from .observability import (
     set_request_id,
     set_request_route,
     validation_failure_event_name,
+    sanitize_auth_validation_errors,
 )
 from .routers import auth, history, plan, profile, workout
 
@@ -28,6 +29,7 @@ APP_VERSION = os.environ.get("APP_VERSION", "dev")
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    settings.validate_signing_configuration()
     configure_logging(
         log_level=settings.log_level,
         log_file_path=settings.log_file_path,
@@ -48,6 +50,14 @@ def health() -> dict:
 
 @app.exception_handler(RequestValidationError)
 async def handle_request_validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
+    if request.url.path.startswith("/auth/"):
+        errors = sanitize_auth_validation_errors(exc.errors())
+        log_event(
+            validation_failure_event_name(request.url.path), level="warning",
+            validation_errors=errors, error_class="RequestValidationError",
+            error_message="Invalid authentication request",
+        )
+        return JSONResponse(status_code=422, content={"detail": errors})
     messages = [error.get("msg", "Validation error") for error in exc.errors()]
     validation_errors: list[dict[str, Any]] = []
     for error in exc.errors():
@@ -88,15 +98,18 @@ async def log_unhandled_exceptions(request: Request, call_next):
         response.headers["X-Request-ID"] = request_id
         return response
     except Exception as exc:
+        is_auth = request.url.path.startswith("/auth/")
         log_event(
             "request_failed_exception",
-            level="exception",
+            level="error" if is_auth else "exception",
             route=request.url.path,
             action=request.method.lower(),
             user_id=getattr(request.state, "user_id", None),
             error_class=exc.__class__.__name__,
-            error_message=str(exc),
+            error_message="Authentication operation failed" if is_auth else str(exc),
         )
+        if is_auth:
+            return JSONResponse(status_code=500, content={"detail": "Authentication operation failed"})
         raise
     finally:
         reset_request_action(action_token)

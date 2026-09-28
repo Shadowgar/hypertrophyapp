@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     database_user: str = "hypertrophy"
     database_password: str = "change_me"
     database_url: str | None = None
-    jwt_secret: str = "change_me"
+    jwt_secret: str = ""
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 1440
     programs_dir: str = "/app/programs"
@@ -27,10 +27,20 @@ class Settings(BaseSettings):
     smtp_use_tls: bool = True
     smtp_timeout_seconds: float = 10.0
     password_reset_base_url: str = "https://hypertrophy.theroccos.us/reset-password"
-    password_reset_expose_token: bool = True
-    password_reset_require_email_delivery: bool = False
+    # Deprecated compatibility settings; neither permits HTTP credential return.
+    password_reset_expose_token: bool = False
+    password_reset_require_email_delivery: bool = True
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", hide_input_in_errors=True)
+
+    def validate_signing_configuration(self) -> None:
+        key = self.jwt_secret
+        if (
+            not key.strip()
+            or len(key.encode("utf-8")) < 32
+            or key.strip().lower().startswith(("change_me", "changeme", "replace_me", "your-secret"))
+        ):
+            raise RuntimeError("JWT signing configuration requires an explicit non-placeholder key of at least 32 bytes")
 
     @property
     def resolved_database_url(self) -> str:
