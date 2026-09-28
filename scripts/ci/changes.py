@@ -48,19 +48,22 @@ def sha(value):
 
 def changed_paths(event_name, event):
     if event_name == "workflow_dispatch":
-        return None, None
+        return None, None, None
     if event_name == "pull_request":
         base = sha(event["pull_request"]["base"]["sha"])
         head = sha(event["pull_request"]["head"]["sha"])
-        base = git("merge-base", base, head).decode().strip()
+        diff_base = git("merge-base", base, head).decode().strip()
     elif event_name == "push":
         base, head = sha(event["before"]), sha(event["after"])
         if base == "0" * 40:
-            return None, None
+            return None, None, None
+        diff_base = base
     else:
         raise ValueError(f"Unsupported event: {event_name}")
-    output = git("diff", "--name-only", "--no-renames", "-z", base, head)
-    return base, [p.decode("utf-8") for p in output.split(b"\0") if p]
+    # Keep the current base for documentation merge-snapshot validation;
+    # classify only changes since PR divergence (or the push's before commit).
+    output = git("diff", "--name-only", "--no-renames", "-z", diff_base, head)
+    return base, diff_base, [p.decode("utf-8") for p in output.split(b"\0") if p]
 
 
 def main():
@@ -69,23 +72,25 @@ def main():
     parser.add_argument("--head", default="HEAD")
     args = parser.parse_args()
     if args.base:
-        base = git("merge-base", args.base, args.head).decode().strip()
-        output = git("diff", "--name-only", "--no-renames", "-z", base, args.head)
+        base = git("rev-parse", "--verify", f"{args.base}^{{commit}}").decode().strip()
+        diff_base = git("merge-base", base, args.head).decode().strip()
+        output = git("diff", "--name-only", "--no-renames", "-z", diff_base, args.head)
         paths = [p.decode("utf-8") for p in output.split(b"\0") if p]
     else:
         event = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text())
-        base, paths = changed_paths(os.environ["GITHUB_EVENT_NAME"], event)
+        base, diff_base, paths = changed_paths(os.environ["GITHUB_EVENT_NAME"], event)
     selected = {key: True for key in CATEGORIES} if paths is None else classify(paths)
     # Exercise these selectors/checkers whenever their implementation changes.
     selected["tooling"] |= selected["docs"]
     selected["docs"] |= selected["tooling"]
-    report = {"base": base, "changed_files": None if paths is None else len(paths), **selected}
+    report = {"base": base, "diff_base": diff_base, "changed_files": None if paths is None else len(paths), **selected}
     print(json.dumps(report, indent=2))
     if "GITHUB_OUTPUT" in os.environ:
         with open(os.environ["GITHUB_OUTPUT"], "a") as out:
             for key, value in selected.items():
                 out.write(f"{key}={str(value).lower()}\n")
             out.write(f"base={base or ''}\n")
+            out.write(f"diff_base={diff_base or ''}\n")
     if "GITHUB_STEP_SUMMARY" in os.environ:
         with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as out:
             out.write("## Applicable checks\n\n")

@@ -1,12 +1,15 @@
+import json
+import os
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from changes import classify, sha
+from changes import changed_paths, classify, sha
 from check_docs import active_text, anchors, links, link_error, release_schema_errors, structural_errors
 from gate import JOBS, evaluate
 
@@ -47,6 +50,17 @@ class SelectionTests(unittest.TestCase):
             with self.subTest(value=value), self.assertRaises(ValueError):
                 sha(value)
         self.assertEqual(sha("a" * 40), "a" * 40)
+
+    def test_push_keeps_before_commit_for_both_baselines(self):
+        event = {"before": "a" * 40, "after": "b" * 40}
+        with patch("changes.git", return_value=b"README.md\0") as git:
+            self.assertEqual(changed_paths("push", event), (event["before"], event["before"], ["README.md"]))
+        git.assert_called_once_with("diff", "--name-only", "--no-renames", "-z", event["before"], event["after"])
+
+    def test_dispatch_and_initial_push_keep_full_coverage_without_a_baseline(self):
+        self.assertEqual(changed_paths("workflow_dispatch", {}), (None, None, None))
+        self.assertEqual(changed_paths("push", {"before": "0" * 40, "after": "b" * 40}),
+                         (None, None, None))
 
 
 class GateTests(unittest.TestCase):
@@ -158,18 +172,33 @@ class SchemaTests(unittest.TestCase):
                                  "mandatory_read_groups:\n- group: context\n  docs:\n  - path: docs/deleted.md\n"})
         self.assertTrue(any("does not exist" in error for error in structural_errors(snapshot, set())))
 
+    def test_valid_context_manifest_passes_even_if_unchanged(self):
+        snapshot = FakeSnapshot({"docs/context/CONTEXT_MANIFEST.yaml":
+                                 "mandatory_read_groups:\n- group: context\n  docs:\n  - path: docs/required.md\n",
+                                 "docs/required.md": "# Required context\n"})
+        self.assertEqual(structural_errors(snapshot, set()), [])
+
+    def test_missing_canonical_context_manifest_fails_even_after_rename(self):
+        for files in ({}, {"docs/context/RENAMED_MANIFEST.yaml": "mandatory_read_groups: []\n"}):
+            with self.subTest(files=files):
+                errors = structural_errors(FakeSnapshot(files), set())
+                self.assertTrue(any("docs/context/CONTEXT_MANIFEST.yaml" in error and "mandatory" in error
+                                    for error in errors), errors)
+
 
 class CommandTests(unittest.TestCase):
     def test_baseline_links_are_visible_and_new_errors_return_nonzero(self):
         with tempfile.TemporaryDirectory(prefix="hypertrophy-ci-check-test-") as temp:
             root = Path(temp)
             (root / "README.md").write_text("# Index\n\n[old failure](old-missing.md)\n")
+            (root / "docs/context").mkdir(parents=True)
+            (root / "docs/context/CONTEXT_MANIFEST.yaml").write_text("mandatory_read_groups: []\n")
             def git(*args):
                 return subprocess.check_output(["git", "-c", "core.hooksPath=/dev/null", "-c", "commit.gpgsign=false",
                                                 "-c", "user.name=CI Fixture", "-c", "user.email=ci-fixture@example.invalid",
                                                 "-C", temp, *args], stderr=subprocess.DEVNULL).decode().strip()
             git("init", "-q")
-            git("add", "README.md")
+            git("add", "README.md", "docs/context/CONTEXT_MANIFEST.yaml")
             git("commit", "-qm", "synthetic baseline")
             base = git("rev-parse", "HEAD")
             checker = Path(__file__).resolve().parents[1] / "check_docs.py"
@@ -181,6 +210,98 @@ class CommandTests(unittest.TestCase):
             result = subprocess.run(command, capture_output=True, text=True)
             self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
             self.assertIn("New active link failures: 1", result.stdout)
+
+    def test_pr_merge_snapshot_uses_current_base_after_branch_divergence(self):
+        with tempfile.TemporaryDirectory(prefix="hypertrophy-ci-pr-base-test-") as temp:
+            root = Path(temp)
+            (root / "docs/context").mkdir(parents=True)
+            (root / "docs/context/CONTEXT_MANIFEST.yaml").write_text("mandatory_read_groups: []\n")
+            (root / "README.md").write_text("# Index\n")
+
+            def git(*args):
+                return subprocess.check_output(["git", "-c", "core.hooksPath=/dev/null", "-c", "commit.gpgsign=false",
+                                                "-c", "user.name=CI Fixture", "-c", "user.email=ci-fixture@example.invalid",
+                                                "-C", temp, *args], stderr=subprocess.DEVNULL).decode().strip()
+
+            git("init", "-q", "-b", "main")
+            git("add", ".")
+            git("commit", "-qm", "synthetic divergence point")
+            divergence = git("rev-parse", "HEAD")
+            git("checkout", "-qb", "docs-review")
+            (root / "docs/pr.md").write_text("# PR documentation\n")
+            git("add", ".")
+            git("commit", "-qm", "synthetic PR documentation")
+            pr_head = git("rev-parse", "HEAD")
+            git("checkout", "-q", "main")
+            (root / "docs/base-only.md").write_text("# Base documentation\n\n[base-only failure](base-missing.md)\n")
+            git("add", ".")
+            git("commit", "-qm", "synthetic later base documentation")
+            current_base = git("rev-parse", "HEAD")
+            git("merge", "--no-ff", "-qm", "synthetic PR merge checkout", "docs-review")
+            self.assertNotEqual(current_base, divergence)
+
+            helpers = Path(__file__).resolve().parents[1]
+            event_path = root / "event.json"
+            event_path.write_text(json.dumps({"pull_request": {"base": {"sha": current_base},
+                                                              "head": {"sha": pr_head}}}))
+            output_path = root / "github-output.txt"
+            env = {key: value for key, value in os.environ.items()
+                   if key not in ("GITHUB_OUTPUT", "GITHUB_STEP_SUMMARY")}
+            env.update(GITHUB_EVENT_NAME="pull_request", GITHUB_EVENT_PATH=str(event_path),
+                       GITHUB_OUTPUT=str(output_path))
+            for arguments in ([], ["--base", current_base, "--head", pr_head]):
+                with self.subTest(arguments=arguments):
+                    output_path.write_text("")
+                    result = subprocess.run([sys.executable, "-B", str(helpers / "changes.py"), *arguments],
+                                            cwd=temp, env=env, capture_output=True, text=True)
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    report = json.loads(result.stdout)
+                    outputs = dict(line.split("=", 1) for line in output_path.read_text().splitlines())
+                    # Use the same output consumed by the workflow's documentation job.
+                    result = subprocess.run([sys.executable, "-B", str(helpers / "check_docs.py"),
+                                             "--repo", temp, "--base", outputs["base"]],
+                                            capture_output=True, text=True)
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertIn("Existing active link failures retained: 1", result.stdout)
+                    self.assertIn("New active link failures: 0", result.stdout)
+                    self.assertEqual(report["base"], current_base)
+                    self.assertEqual(report["diff_base"], divergence)
+                    self.assertEqual(outputs["diff_base"], divergence)
+                    self.assertEqual(report["changed_files"], 1)
+                    self.assertTrue(report["docs"] and report["tooling"])
+                    self.assertFalse(any(report[category] for category in ("api", "core", "web")))
+
+    def test_manifest_deletion_and_rename_fail_without_markdown_links(self):
+        for rename in (False, True):
+            with self.subTest(rename=rename), tempfile.TemporaryDirectory(prefix="hypertrophy-ci-manifest-test-") as temp:
+                root = Path(temp)
+                context = "docs/context/CONTEXT_MANIFEST.yaml"
+                (root / "docs/context").mkdir(parents=True)
+                (root / context).write_text("mandatory_read_groups: []\n")
+                (root / "README.md").write_text("# Index\n")
+
+                def git(*args):
+                    return subprocess.check_output(["git", "-c", "core.hooksPath=/dev/null", "-c", "commit.gpgsign=false",
+                                                    "-c", "user.name=CI Fixture", "-c", "user.email=ci-fixture@example.invalid",
+                                                    "-C", temp, *args], stderr=subprocess.DEVNULL).decode().strip()
+
+                git("init", "-q")
+                git("add", ".")
+                git("commit", "-qm", "synthetic valid manifest")
+                base = git("rev-parse", "HEAD")
+                checker = Path(__file__).resolve().parents[1] / "check_docs.py"
+                command = [sys.executable, "-B", str(checker), "--repo", temp, "--base", base]
+                result = subprocess.run(command, capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                if rename:
+                    git("mv", context, "docs/context/RENAMED_MANIFEST.yaml")
+                else:
+                    git("rm", "--", context)
+                git("commit", "-qm", "synthetic removed canonical manifest")
+                result = subprocess.run(command, capture_output=True, text=True)
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn("New active link failures: 0", result.stdout)
+                self.assertIn(context + ": mandatory context manifest is missing", result.stdout)
 
 
 if __name__ == "__main__":

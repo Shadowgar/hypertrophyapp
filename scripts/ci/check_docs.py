@@ -170,7 +170,9 @@ def release_schema_errors(schema):
 def structural_errors(head, changed):
     errors = []
     context = "docs/context/CONTEXT_MANIFEST.yaml"
-    selected = (changed | ({context} if context in head.paths else set())) & head.paths
+    if context not in head.paths:
+        errors.append(f"{context}: mandatory context manifest is missing")
+    selected = (changed | {context}) & head.paths
     for path in sorted(selected):
         if not path.startswith("docs/") or not path.endswith((".json", ".yaml", ".yml")):
             continue
