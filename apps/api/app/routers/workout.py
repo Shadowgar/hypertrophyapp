@@ -1,9 +1,13 @@
-from datetime import date
+from datetime import date, datetime, UTC
+import hashlib
+import json
+from uuid import uuid5, UUID
 from copy import deepcopy
 from typing import Annotated, Any, cast
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from core_engine import (
     prepare_workout_log_set_context_route_runtime,
@@ -21,7 +25,8 @@ from core_engine import (
 
 from ..database import get_db
 from ..deps import get_current_user
-from ..models import ExerciseState, User, WorkoutPlan, WorkoutSessionState, WorkoutSetLog
+from ..models import ExerciseState, User, WorkoutPlan, WorkoutSessionState, WorkoutSetLog, WorkoutOccurrence, WorkoutLogCommand
+from ..workout_identity import identified_plans, resolve_occurrence, resolve_exercise, occurrence_plan
 from ..observability import log_event
 from ..program_loader import (
     load_program_rule_set,
@@ -105,6 +110,8 @@ def _upsert_workout_session_state(
     db: Session,
     user_id: str,
     workout_id: str,
+    workout_occurrence_id: str,
+    exercise_occurrence_id: str,
     primary_exercise_id: str,
     exercise_id: str,
     planned_sets: int,
@@ -120,8 +127,8 @@ def _upsert_workout_session_state(
         db.query(WorkoutSessionState)
         .filter(
             WorkoutSessionState.user_id == user_id,
-            WorkoutSessionState.workout_id == workout_id,
-            WorkoutSessionState.exercise_id == exercise_id,
+            WorkoutSessionState.workout_occurrence_id == workout_occurrence_id,
+            WorkoutSessionState.exercise_occurrence_id == exercise_occurrence_id,
         )
         .first()
     )
@@ -144,6 +151,7 @@ def _upsert_workout_session_state(
     if not state:
         state = WorkoutSessionState(
             **cast(dict, upsert_runtime["create_values"]),
+            workout_occurrence_id=workout_occurrence_id, exercise_occurrence_id=exercise_occurrence_id,
         )
 
     state_payload = upsert_runtime["update_values"]
@@ -169,20 +177,20 @@ def workout_today(
         action="today_fetch",
         user_id=current_user.id,
     )
-    plans = _list_current_workout_plans(db, current_user)
+    plans = identified_plans(db, _list_current_workout_plans(db, current_user))
     plan_runtime = prepare_workout_today_plan_route_runtime(plan_rows=plans)
     if not bool(plan_runtime["has_plan"]):
         raise HTTPException(status_code=404, detail="No plan generated")
 
     sessions = cast(list[dict], plan_runtime["sessions"])
-    session_ids = cast(list[str], plan_runtime["session_ids"])
+    session_ids = [session["workout_occurrence_id"] for session in sessions]
     recent_logs = []
     if session_ids:
         recent_logs = (
             db.query(WorkoutSetLog)
             .filter(
                 WorkoutSetLog.user_id == current_user.id,
-                WorkoutSetLog.workout_id.in_(session_ids),
+                WorkoutSetLog.workout_occurrence_id.in_(session_ids),
             )
             .order_by(WorkoutSetLog.created_at.desc())
             .all()
@@ -202,7 +210,7 @@ def workout_today(
         db.query(WorkoutSetLog)
         .filter(
             WorkoutSetLog.user_id == current_user.id,
-            WorkoutSetLog.workout_id == selected.get("session_id"),
+            WorkoutSetLog.workout_occurrence_id == selected.get("workout_occurrence_id"),
         )
         .all()
     )
@@ -210,7 +218,7 @@ def workout_today(
         db.query(WorkoutSessionState)
         .filter(
             WorkoutSessionState.user_id == current_user.id,
-            WorkoutSessionState.workout_id == selected.get("session_id"),
+            WorkoutSessionState.workout_occurrence_id == selected.get("workout_occurrence_id"),
         )
         .all()
     )
@@ -248,7 +256,7 @@ def workout_today(
     response_payload = cast(dict, response_runtime["response_payload"])
     progress_runtime = prepare_workout_progress_route_runtime(
         workout_id=str(response_payload.get("session_id") or selected.get("session_id") or ""),
-        plan_rows=plans,
+        plan_rows=[{"payload": {"sessions": [selected]}}],
         selected_session_logs=logs,
     )
     progress_payload = cast(dict[str, Any], progress_runtime.get("response_payload") or {})
@@ -334,16 +342,75 @@ def workout_today(
     return response_payload
 
 
+def _lock_history_user(db: Session, user_id: str) -> None:
+    # PostgreSQL serializes record/projection writes for this user, including undo.
+    # This also prevents lost ExerciseState updates without changing its policy.
+    db.query(User).filter(User.id == user_id).with_for_update().one()
+
+
+def _replay_command(db: Session, user_id: str, command_id: str, digest: str):
+    command = db.query(WorkoutLogCommand).filter_by(user_id=user_id, command_id=command_id).first()
+    if command:
+        if command.request_digest != digest:
+            raise HTTPException(409, "Log command was already used with a different payload")
+        return WorkoutSetLogResponse(**command.response)
+    return None
+
+
 @router.post("/workout/{workout_id}/log-set")
-def log_set(
+def log_set(workout_id: str, payload: WorkoutSetLogRequest, db: DbSession, current_user: CurrentUser) -> WorkoutSetLogResponse:
+    normalized = payload.model_dump(mode="json", exclude={"command_id"})
+    normalized["set_kind"] = (payload.set_kind or "work").strip().lower() or "work"
+    normalized["primary_exercise_id"] = payload.primary_exercise_id or payload.exercise_id
+    try:
+        digest = hashlib.sha256(json.dumps({"workout": workout_id, **normalized},
+            sort_keys=True, separators=(",", ":"), allow_nan=False).encode()).hexdigest()
+    except ValueError as exc:
+        raise HTTPException(422, "Log payload must contain finite numbers") from exc
+    _lock_history_user(db, current_user.id)
+    if payload.command_id:
+        replay = _replay_command(db, current_user.id, payload.command_id, digest)
+        if replay:
+            return replay
+    occurrence, session = resolve_occurrence(db, current_user.id, workout_id, _list_workout_plans(db, current_user.id))
+    exercise = resolve_exercise(session, payload.exercise_id, payload.exercise_occurrence_id)
+    primary = str(exercise.get("primary_exercise_id") or exercise["id"])
+    if normalized["primary_exercise_id"] != primary:
+        raise HTTPException(409, "Primary exercise does not match the occurrence")
+    # Old clients lack command IDs: one deterministic command per logical slot.
+    # Modern clients always send explicit IDs, including new attempts after undo.
+    command_id = payload.command_id or str(uuid5(UUID(occurrence.id), json.dumps([
+        exercise["exercise_occurrence_id"], payload.set_index, normalized["set_kind"],
+        payload.parent_set_index, (payload.technique or {}).get("ordinal")], separators=(",", ":"))))
+    replay = _replay_command(db, current_user.id, command_id, digest)
+    if replay:
+        return replay
+    try:
+        db.add(occurrence)
+        db.flush()
+        return _apply_log_set(workout_id, payload, db, current_user, occurrence, session, exercise, command_id, digest)
+    except IntegrityError:
+        db.rollback()
+        replay = _replay_command(db, current_user.id, command_id, digest)
+        if replay:
+            return replay
+        raise HTTPException(409, "Concurrent workout update; retry this command")
+
+
+def _apply_log_set(
     workout_id: str,
     payload: WorkoutSetLogRequest,
     db: DbSession,
     current_user: CurrentUser,
+    occurrence: WorkoutOccurrence,
+    session: dict,
+    exercise: dict,
+    command_id: str,
+    digest: str,
 ) -> WorkoutSetLogResponse:
     context_runtime = prepare_workout_log_set_context_route_runtime(
-        workout_id=workout_id,
-        plan_rows=_list_current_workout_plans(db, current_user),
+        workout_id=occurrence.workout_id,
+        plan_rows=occurrence_plan(occurrence, session),
         primary_exercise_id=payload.primary_exercise_id,
         exercise_id=payload.exercise_id,
         set_index=payload.set_index,
@@ -356,6 +423,7 @@ def log_set(
         resolve_linked_program_id=resolve_rule_program_id,
         load_rule_set=load_program_rule_set,
     )
+    context_runtime["planned_exercise"] = exercise
     primary_exercise_id = str(context_runtime["primary_exercise_id"])
 
     state = (
@@ -368,7 +436,7 @@ def log_set(
     )
     log_set_runtime = prepare_workout_log_set_decision_route_runtime(
         user_id=current_user.id,
-        workout_id=workout_id,
+        workout_id=occurrence.workout_id,
         request_runtime=cast(dict, context_runtime["request_runtime"]),
         planned_exercise=cast(dict | None, context_runtime["planned_exercise"]),
         existing_exercise_state=state,
@@ -378,6 +446,8 @@ def log_set(
     )
     record = WorkoutSetLog(
         **cast(dict, log_set_runtime["record_values"]),
+        workout_occurrence_id=occurrence.id, exercise_occurrence_id=exercise["exercise_occurrence_id"],
+        command_id=command_id, request_digest=digest,
     )
     db.add(record)
 
@@ -391,19 +461,32 @@ def log_set(
     live_recommendation = _upsert_workout_session_state(
         db=db,
         user_id=current_user.id,
-        workout_id=workout_id,
+        workout_id=occurrence.workout_id,
+        workout_occurrence_id=occurrence.id, exercise_occurrence_id=exercise["exercise_occurrence_id"],
         **cast(dict, log_set_runtime["session_state_inputs"]),
     )
 
     db.add(state)
-    db.commit()
-    db.refresh(record)
+    db.flush()
     response_runtime = prepare_workout_log_set_response_runtime(
         record=record,
         decision_runtime=cast(dict, log_set_runtime),
         live_recommendation=cast(dict, live_recommendation.model_dump()),
     )
-    return WorkoutSetLogResponse(**cast(dict, response_runtime["response_payload"]))
+    response_payload = cast(dict, response_runtime["response_payload"])
+    response_payload["decision_trace"]["occurrence_identity"] = {
+        "owner": "api.workout_identity", "workout_occurrence_id": occurrence.id,
+        "plan_id": occurrence.plan_id, "week_start": occurrence.week_start.isoformat(),
+        "session_slot": occurrence.session_slot, "exercise_occurrence_id": exercise["exercise_occurrence_id"],
+        "execution_slot": exercise["execution_slot"],
+    }
+    response = WorkoutSetLogResponse(**response_payload,
+        workout_occurrence_id=occurrence.id, exercise_occurrence_id=exercise["exercise_occurrence_id"], command_id=command_id)
+    db.add(WorkoutLogCommand(user_id=current_user.id, command_id=command_id, request_digest=digest,
+        workout_occurrence_id=occurrence.id, exercise_occurrence_id=exercise["exercise_occurrence_id"],
+        response=response.model_dump(mode="json")))
+    db.commit()
+    return response
 
 
 @router.post("/workout/{workout_id}/undo-last-set")
@@ -417,14 +500,17 @@ def undo_last_set(
     Remove the last logged set for a given exercise in this workout and
     recompute the in-session state for that exercise.
     """
+    _lock_history_user(db, current_user.id)
+    occurrence, session = resolve_occurrence(db, current_user.id, workout_id, _list_workout_plans(db, current_user.id))
+    exercise = resolve_exercise(session, payload.exercise_id, payload.exercise_occurrence_id)
     logs = (
         db.query(WorkoutSetLog)
         .filter(
             WorkoutSetLog.user_id == current_user.id,
-            WorkoutSetLog.workout_id == workout_id,
-            WorkoutSetLog.exercise_id == payload.exercise_id,
+            WorkoutSetLog.workout_occurrence_id == occurrence.id,
+            WorkoutSetLog.exercise_occurrence_id == exercise["exercise_occurrence_id"],
         )
-        .order_by(WorkoutSetLog.set_index.asc(), WorkoutSetLog.created_at.asc())
+        .order_by(WorkoutSetLog.created_at.asc(), WorkoutSetLog.id.asc())
         .all()
     )
     if not logs:
@@ -433,6 +519,9 @@ def undo_last_set(
 
     # Delete the last-set log entry.
     last_log = logs[-1]
+    command = db.query(WorkoutLogCommand).filter_by(user_id=current_user.id, command_id=last_log.command_id).first()
+    if command:
+        command.undone_at = datetime.now(UTC).replace(tzinfo=None)
     db.delete(last_log)
     db.flush()
 
@@ -442,8 +531,8 @@ def undo_last_set(
         db.query(WorkoutSessionState)
         .filter(
             WorkoutSessionState.user_id == current_user.id,
-            WorkoutSessionState.workout_id == workout_id,
-            WorkoutSessionState.exercise_id == payload.exercise_id,
+            WorkoutSessionState.workout_occurrence_id == occurrence.id,
+            WorkoutSessionState.exercise_occurrence_id == exercise["exercise_occurrence_id"],
         )
         .first()
     )
@@ -519,17 +608,18 @@ def workout_progress(
         user_id=current_user.id,
         session_id=workout_id,
     )
+    occurrence, session_snapshot = resolve_occurrence(db, current_user.id, workout_id, _list_workout_plans(db, current_user.id))
     logs = (
         db.query(WorkoutSetLog)
         .filter(
             WorkoutSetLog.user_id == current_user.id,
-            WorkoutSetLog.workout_id == workout_id,
+            WorkoutSetLog.workout_occurrence_id == occurrence.id,
         )
         .all()
     )
     route_runtime = prepare_workout_progress_route_runtime(
-        workout_id=workout_id,
-        plan_rows=_list_current_workout_plans(db, current_user),
+        workout_id=occurrence.workout_id,
+        plan_rows=occurrence_plan(occurrence, session_snapshot),
         selected_session_logs=logs,
     )
     response_payload = cast(dict, route_runtime["response_payload"])
@@ -541,6 +631,7 @@ def workout_progress(
         session_id=workout_id,
         planned_total=response_payload.get("planned_total"),
     )
+    response_payload["workout_occurrence_id"] = occurrence.id
     return response_payload
 
 
@@ -553,9 +644,10 @@ def workout_summary(
     db: DbSession,
     current_user: CurrentUser,
 ) -> WorkoutSummaryResponse:
+    occurrence, session_snapshot = resolve_occurrence(db, current_user.id, workout_id, _list_workout_plans(db, current_user.id))
     route_runtime = prepare_workout_summary_route_runtime(
-        workout_id=workout_id,
-        plan_rows=_list_current_workout_plans(db, current_user),
+        workout_id=occurrence.workout_id,
+        plan_rows=occurrence_plan(occurrence, session_snapshot),
         resolve_linked_program_id=resolve_rule_program_id,
         load_rule_set=load_program_rule_set,
     )
@@ -567,7 +659,7 @@ def workout_summary(
         db.query(WorkoutSetLog)
         .filter(
             WorkoutSetLog.user_id == current_user.id,
-            WorkoutSetLog.workout_id == workout_id,
+            WorkoutSetLog.workout_occurrence_id == occurrence.id,
         )
         .all()
     )
@@ -585,10 +677,10 @@ def workout_summary(
         )
 
     response_runtime = prepare_workout_summary_response_runtime(
-        workout_id=workout_id,
+        workout_id=occurrence.workout_id,
         planned_session=session,
         performed_logs=logs,
         progression_states=progression_states,
         rule_set=cast(dict | None, route_runtime["rule_set"]),
     )
-    return WorkoutSummaryResponse(**cast(dict, response_runtime["response_payload"]))
+    return WorkoutSummaryResponse(**cast(dict, response_runtime["response_payload"]), workout_occurrence_id=occurrence.id)

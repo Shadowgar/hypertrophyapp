@@ -12,6 +12,7 @@ beforeEach(() => {
 test("substitution modal applies choice, keeps notes visible, and persists selection", async () => {
   const workout = {
     session_id: "sess-sub-1",
+    workout_occurrence_id: "sess-sub-1",
     title: "Push Day",
     date: new Date().toISOString().slice(0, 10),
     resume: false,
@@ -82,7 +83,7 @@ test("substitution modal applies choice, keeps notes visible, and persists selec
     expect(screen.getAllByText(/Keep elbows tucked/i).length).toBeGreaterThanOrEqual(1);
   });
 
-  const key = `hypertrophy_swap_selection:${workout.session_id}`;
+  const key = `hypertrophy_occurrence_v2:swaps:${workout.session_id}`;
   const saved = JSON.parse(localStorage.getItem(key) || "{}");
   expect(saved["ex-1"]).toBe(1);
 });

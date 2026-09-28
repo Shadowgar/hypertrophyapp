@@ -67,6 +67,7 @@ class StatusResponse(BaseModel):
 
 
 class WorkoutUndoLastSetRequest(BaseModel):
+    exercise_occurrence_id: str | None = None
     exercise_id: str
 
 
@@ -574,12 +575,14 @@ class ProgramExerciseGuideResponse(BaseModel):
 
 
 class WorkoutSetLogRequest(BaseModel):
+    command_id: str | None = Field(default=None, min_length=1, max_length=128)
+    exercise_occurrence_id: str | None = None
     primary_exercise_id: str | None = None
     exercise_id: str
     set_index: int = Field(ge=1)
     reps: int = Field(ge=1)
-    weight: float = Field(gt=0)
-    rpe: float | None = None
+    weight: float = Field(gt=0, allow_inf_nan=False)
+    rpe: float | None = Field(default=None, allow_inf_nan=False)
     set_kind: str | None = None
     parent_set_index: int | None = Field(default=None, ge=1)
     technique: dict[str, Any] | None = None
@@ -607,6 +610,9 @@ class WorkoutLiveRecommendationResponse(BaseModel):
 
 
 class WorkoutSetLogResponse(BaseModel):
+    workout_occurrence_id: str
+    exercise_occurrence_id: str
+    command_id: str
     id: str
     primary_exercise_id: str
     exercise_id: str
@@ -631,6 +637,7 @@ class WorkoutSetLogResponse(BaseModel):
 
 
 class WorkoutExerciseSummaryResponse(BaseModel):
+    exercise_occurrence_id: str | None = None
     exercise_id: str
     primary_exercise_id: str | None = None
     name: str
@@ -651,6 +658,7 @@ class WorkoutExerciseSummaryResponse(BaseModel):
 
 
 class WorkoutSummaryResponse(BaseModel):
+    workout_occurrence_id: str | None = None
     workout_id: str
     completed_total: int
     planned_total: int

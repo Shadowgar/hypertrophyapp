@@ -31,9 +31,10 @@ import { parseRestToSeconds } from "@/lib/rest";
 import { resolveGuidanceText } from "@/lib/today-guidance";
 import { kgToLbs, lbsToKg, snapToHalfLb } from "@/lib/weight";
 
+import { exerciseKey, workoutReference, occurrenceStorageKey, pendingCommandKey, getLogCommand, acknowledgeLogCommand } from "@/lib/workout-identity";
+
 type SwapState = Record<string, number>;
 type NotesState = Record<string, boolean>;
-const SWAP_STORAGE_PREFIX = "hypertrophy_swap_selection";
 const WEAK_POINT_PLACEHOLDER_RE = /^weak point exercise/i;
 const MUSCLE_GROUPS = [
   "chest",
@@ -133,7 +134,7 @@ function resolveExerciseStatus(completed: number, totalSets: number, resumed: bo
 
 function resolveExerciseName(exercise: WorkoutExercise, swapIndexByExercise: SwapState): string {
   const substitutions = exercise.substitution_candidates ?? [];
-  const selectedIndex = swapIndexByExercise[exercise.id] ?? 0;
+  const selectedIndex = swapIndexByExercise[exerciseKey(exercise)] ?? 0;
   if (selectedIndex === 0) {
     return exercise.name;
   }
@@ -416,7 +417,7 @@ function WorkoutSummaryCard({ summary }: Readonly<{ summary: WorkoutSummary | nu
       <p className="telemetry-meta">Overall guidance: {resolveGuidanceText(summary.overall_rationale, summary.overall_guidance)}</p>
       <div className="space-y-2">
         {exercises.map((item) => (
-          <div key={item.exercise_id} className="rounded-md border border-zinc-800 bg-zinc-900/40 p-2 text-xs text-zinc-300">
+          <div key={item.exercise_occurrence_id ?? item.exercise_id} className="rounded-md border border-zinc-800 bg-zinc-900/40 p-2 text-xs text-zinc-300">
             <p className="font-semibold text-zinc-100">{item.name}</p>
             <p>
               Planned: {item.planned_sets} sets · {item.planned_reps_min}-{item.planned_reps_max} reps @ {kgToLbs(item.planned_weight)} lbs
@@ -569,14 +570,14 @@ function ExerciseDetailOverlay({
   onToggleNotes: () => void;
   onSwapTarget: () => void;
   isDeloadWeek: boolean;
-  onSetComplete: (exerciseId: string, count: number, performed: { reps: number; weight: number }) => void;
+  onSetComplete: (exerciseId: string, count: number, performed: { reps: number; weight: number }) => Promise<void> | void;
   onCalculateBaseline: (weightLb: number, reps: number) => void;
   globalRestTimer: { exerciseId: string; exerciseName: string; secondsLeft: number; restCycle: number } | null;
   onClearGlobalRestTimer: () => void;
 }>) {
   const defaultRestSeconds = parseRestToSeconds(exercise.rest) ?? 90;
   const ctrl = useExerciseControl({
-    exerciseId: exercise.id,
+    exerciseId: exerciseKey(exercise),
     totalSets: exercise.sets,
     defaultRestSeconds,
     recommendedWorkingWeight: snapToHalfLb(derivedWorkingLb),
@@ -586,7 +587,7 @@ function ExerciseDetailOverlay({
     onSetComplete: onSetComplete,
   });
   const externalRest =
-    globalRestTimer?.exerciseId === exercise.id
+    globalRestTimer?.exerciseId === exerciseKey(exercise)
       ? {
           secondsLeft: globalRestTimer.secondsLeft,
           restCycle: globalRestTimer.restCycle,
@@ -601,7 +602,7 @@ function ExerciseDetailOverlay({
   useEffect(() => {
     // Reset checklist gate when changing exercise or moving off last set.
     setChecklistAccepted(false);
-  }, [exercise.id, ctrl.completedSets]);
+  }, [exerciseKey(exercise), ctrl.completedSets]);
 
   const isLastSetNext = ctrl.completedSets === ctrl.totalSets - 1;
   const gateLastSet = checklistItems.length > 0 && isLastSetNext && !checklistAccepted;
@@ -643,7 +644,7 @@ function ExerciseDetailOverlay({
         {/* == ZONE 1: Baseline calculator (expanded when no baseline) == */}
         <Disclosure title="Baseline Calculator" badge={baseline ? `1RM: ${Math.round(baseline.estimated1RM)} lb` : null} defaultOpen={!baseline}>
           <BaselineBlock
-            exerciseId={exercise.id}
+            exerciseId={exerciseKey(exercise)}
             repRange={exercise.rep_range}
             currentBaseline={baseline}
             onCalculate={onCalculateBaseline}
@@ -714,7 +715,7 @@ function ExerciseDetailOverlay({
               {(currentSwapIndex > 0 || altCandidates.length > 0) && (
                 <div className="flex flex-wrap gap-2 pt-1">
                   {currentSwapIndex > 0 ? (
-                    <Button type="button" variant="secondary" className="min-h-[32px] px-2 text-xs" onClick={() => onSwap(exercise.id, 0)}>
+                    <Button type="button" variant="secondary" className="min-h-[32px] px-2 text-xs" onClick={() => onSwap(exerciseKey(exercise), 0)}>
                       Use original exercise
                     </Button>
                   ) : null}
@@ -724,7 +725,7 @@ function ExerciseDetailOverlay({
                       type="button"
                       variant="secondary"
                       className="min-h-[32px] px-2 text-xs"
-                      onClick={() => onSwap(exercise.id, index + 1)}
+                      onClick={() => onSwap(exerciseKey(exercise), index + 1)}
                     >
                       Use {name}
                     </Button>
@@ -757,7 +758,7 @@ function ExerciseDetailOverlay({
 
         {/* == ZONE 4: Primary action (log set) == */}
         <SetInputCard
-          exerciseId={exercise.id}
+          exerciseId={exerciseKey(exercise)}
           guidanceLine={doThisSetLine}
           ctrl={ctrl}
           weightLabel={isAssistance ? "Assistance (lb) — lower is harder" : "Weight (lb)"}
@@ -768,7 +769,7 @@ function ExerciseDetailOverlay({
         <SetLogDisplay ctrl={ctrl} onUndoLastSet={onUndoLastSet} />
 
         {/* == ZONE 6: Set progress == */}
-        <SetProgressTimeline exerciseId={exercise.id} ctrl={ctrl} />
+        <SetProgressTimeline exerciseId={exerciseKey(exercise)} ctrl={ctrl} />
 
         {/* == ZONE 7: Rest timer == */}
         <RestTimerCard ctrl={ctrl} externalRest={externalRest} />
@@ -898,6 +899,7 @@ export default function TodayPage() {
     secondsLeft: number;
     restCycle: number;
   } | null>(null);
+  const currentOccurrence = useRef<string | null>(null);
   const hasAutoLoadStarted = useRef(false);
   const isBeginWorkoutLoadInProgress = useRef(false);
   const sorenessDismissedThisSession = useRef(false);
@@ -960,16 +962,36 @@ export default function TodayPage() {
   const loadToday = useCallback(async (): Promise<WorkoutSession | null> => {
     try {
       const data = await api.getTodayWorkout();
+      currentOccurrence.current = workoutReference(data);
+      const storageKey = occurrenceStorageKey("swaps", data);
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved) as SwapState;
+          setSwapIndexByExercise(parsed);
+        } catch {
+          setSwapIndexByExercise({});
+        }
+      } else {
+        setSwapIndexByExercise({});
+      }
       setWorkout(data);
+      setCompletedSetsByExercise({});
+      setWorkoutProgress(null);
       setMessage("");
       setNotesOpenByExercise({});
       setWorkoutSummary(null);
       setSetFeedbackByExercise({});
+      setLastSetByExercise({});
+      setBaselineByExercise({});
+      setSelectedExerciseId(null);
+      setTechniqueModal(null);
+      setGlobalRestTimer(null);
 
       const initialRecommendations = Object.fromEntries(
         (data.exercises ?? [])
           .filter((exercise) => Boolean(exercise.live_recommendation))
-          .map((exercise) => [exercise.id, exercise.live_recommendation as WorkoutLiveRecommendation]),
+          .map((exercise) => [exerciseKey(exercise), exercise.live_recommendation as WorkoutLiveRecommendation]),
       ) as Record<string, WorkoutLiveRecommendation>;
       setLiveRecommendationByExercise(initialRecommendations);
 
@@ -983,22 +1005,10 @@ export default function TodayPage() {
         setWeakAreas([]);
       }
 
-      const storageKey = `${SWAP_STORAGE_PREFIX}:${data.session_id}`;
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved) as SwapState;
-          setSwapIndexByExercise(parsed);
-        } catch {
-          setSwapIndexByExercise({});
-        }
-      } else {
-        setSwapIndexByExercise({});
-      }
       // restore completed sets for this session if present
       let localCompleted: Record<string, number> = {};
       try {
-        const completedKey = `hypertrophy_completed_sets:${data.session_id}`;
+        const completedKey = occurrenceStorageKey("completed", data);
         const savedCompleted = localStorage.getItem(completedKey);
         if (savedCompleted) {
           const parsed = JSON.parse(savedCompleted) as Record<string, number>;
@@ -1012,9 +1022,9 @@ export default function TodayPage() {
 
       // prefer server-side progress when available
       try {
-        const progress = await api.getWorkoutProgress(data.session_id);
+        const progress = await api.getWorkoutProgress(workoutReference(data));
         const serverCompleted = Object.fromEntries(
-          (progress.exercises ?? []).map((item) => [item.exercise_id, Number(item.completed_sets) || 0]),
+          (progress.exercises ?? []).map((item) => [item.exercise_occurrence_id ?? item.exercise_id, Number(item.completed_sets) || 0]),
         ) as Record<string, number>;
         const merged = Object.keys(serverCompleted).length > 0 ? serverCompleted : localCompleted;
         setCompletedSetsByExercise(merged);
@@ -1023,10 +1033,10 @@ export default function TodayPage() {
           planned: Number(progress.planned_total) || 0,
           percent: Number(progress.percent_complete) || 0,
         });
-        const completedKey = `hypertrophy_completed_sets:${data.session_id}`;
+        const completedKey = occurrenceStorageKey("completed", data);
         localStorage.setItem(completedKey, JSON.stringify(merged));
         if ((Number(progress.percent_complete) || 0) >= 100) {
-          await loadWorkoutSummary(data.session_id);
+          await loadWorkoutSummary(workoutReference(data));
         }
       } catch {
         setCompletedSetsByExercise(localCompleted);
@@ -1156,7 +1166,7 @@ export default function TodayPage() {
     if (!workout) {
       return;
     }
-    const storageKey = `${SWAP_STORAGE_PREFIX}:${workout.session_id}`;
+    const storageKey = occurrenceStorageKey("swaps", workout);
     localStorage.setItem(storageKey, JSON.stringify(swapIndexByExercise));
   }, [swapIndexByExercise, workout]);
 
@@ -1177,33 +1187,38 @@ export default function TodayPage() {
     performed: { reps: number; weight: number },
   ) {
     if (!workout) return;
-    setLastSetByExercise((prev) => ({ ...prev, [exerciseId]: performed }));
-    setCompletedSetsByExercise((prev) => {
-      const next = { ...prev, [exerciseId]: completedCount };
-      try {
-        const completedKey = `hypertrophy_completed_sets:${workout.session_id}`;
-        localStorage.setItem(completedKey, JSON.stringify(next));
-      } catch {
-        // ignore storage errors
-      }
-      return next;
-    });
-
     // find exercise info for payload
-    const exercise = (workout.exercises ?? []).find((e) => e.id === exerciseId);
+    const exercise = (workout.exercises ?? []).find((e) => exerciseKey(e) === exerciseId);
     if (!exercise) return;
 
     const payload = {
       primary_exercise_id: exercise.primary_exercise_id ?? null,
-      exercise_id: exerciseId,
+      exercise_id: exercise.id,
+      exercise_occurrence_id: exercise.exercise_occurrence_id,
       set_index: completedCount,
       reps: performed.reps,
       weight: lbsToKg(performed.weight),
       rpe: null,
     } as const;
 
+    const commandKey = pendingCommandKey(occurrenceStorageKey("attempt", workout), exerciseId, `work:${completedCount}`);
     try {
-      const feedback = await api.logSet(workout.session_id, payload);
+      const feedback = await api.logSet(workoutReference(workout), { ...payload, command_id: getLogCommand(commandKey) });
+      acknowledgeLogCommand(commandKey);
+      if (currentOccurrence.current !== workoutReference(workout)) return;
+      setLastSetByExercise((prev) => ({ ...prev, [exerciseId]: performed }));
+      setCompletedSetsByExercise((prev) => {
+        const next = { ...prev, [exerciseId]: completedCount };
+        try {
+          const completedKey = occurrenceStorageKey("completed", workout);
+          localStorage.setItem(completedKey, JSON.stringify(next));
+        } catch {
+          // ignore storage errors
+        }
+        return next;
+      });
+
+      setMessage("");
       setSetFeedbackByExercise((prev) => ({ ...prev, [exerciseId]: feedback }));
       setLiveRecommendationByExercise((prev) => ({
         ...prev,
@@ -1223,7 +1238,7 @@ export default function TodayPage() {
         setTechniqueModal({
           exerciseId,
           exerciseName: resolveExerciseName(exercise, swapIndexByExercise),
-          workoutId: workout.session_id,
+          workoutId: workoutReference(workout),
           parentSetIndex: completedCount,
           kind: techniqueKind,
           baseWeightLb: performed.weight,
@@ -1233,9 +1248,10 @@ export default function TodayPage() {
 
       // refresh from server-side progress to keep client in sync
       try {
-        const progress = await api.getWorkoutProgress(workout.session_id);
+        const progress = await api.getWorkoutProgress(workoutReference(workout));
+        if (currentOccurrence.current !== workoutReference(workout)) return;
         const serverCompleted = Object.fromEntries(
-          (progress.exercises ?? []).map((item) => [item.exercise_id, Number(item.completed_sets) || 0]),
+          (progress.exercises ?? []).map((item) => [item.exercise_occurrence_id ?? item.exercise_id, Number(item.completed_sets) || 0]),
         ) as Record<string, number>;
         if (Object.keys(serverCompleted).length > 0) {
           setCompletedSetsByExercise(serverCompleted);
@@ -1245,18 +1261,18 @@ export default function TodayPage() {
             planned: Number(progress.planned_total) || 0,
             percent,
           });
-          const completedKey = `hypertrophy_completed_sets:${workout.session_id}`;
+          const completedKey = occurrenceStorageKey("completed", workout);
           localStorage.setItem(completedKey, JSON.stringify(serverCompleted));
           if (percent >= 100) {
-            await loadWorkoutSummary(workout.session_id);
+            await loadWorkoutSummary(workoutReference(workout));
           }
         }
       } catch {
         // keep optimistic state when progress refresh fails
       }
     } catch (e) {
-      // log but don't interrupt user flow
-      console.warn("logSet failed", e);
+      if (currentOccurrence.current === workoutReference(workout)) setMessage("Set was not confirmed. Retry the same set before continuing.");
+      throw e;
     }
   }
 
@@ -1265,8 +1281,14 @@ export default function TodayPage() {
     performed: { reps: number; weight: number },
     ordinal: number,
   ) {
+    const exercise = (workout?.exercises ?? []).find((entry) => exerciseKey(entry) === state.exerciseId);
+    if (!exercise) throw new Error("Exercise occurrence is unavailable");
+    const commandKey = pendingCommandKey(workout ? occurrenceStorageKey("attempt", workout) : state.workoutId, state.exerciseId, `${state.kind}:${state.parentSetIndex}:${ordinal}`);
     await api.logSet(state.workoutId, {
-      exercise_id: state.exerciseId,
+      command_id: getLogCommand(commandKey),
+      primary_exercise_id: exercise.primary_exercise_id,
+      exercise_id: exercise.id,
+      exercise_occurrence_id: exercise.exercise_occurrence_id,
       set_index: state.parentSetIndex,
       reps: performed.reps,
       weight: lbsToKg(performed.weight),
@@ -1275,10 +1297,11 @@ export default function TodayPage() {
       parent_set_index: state.parentSetIndex,
       technique: { type: state.kind, ordinal },
     });
+    acknowledgeLogCommand(commandKey);
   }
 
-  const swapTarget = (workout?.exercises ?? []).find((exercise) => exercise.id === swapTargetExerciseId) ?? null;
-  const swapTargetCurrentIndex = swapTarget ? (swapIndexByExercise[swapTarget.id] ?? 0) : 0;
+  const swapTarget = (workout?.exercises ?? []).find((exercise) => exerciseKey(exercise) === swapTargetExerciseId) ?? null;
+  const swapTargetCurrentIndex = swapTarget ? (swapIndexByExercise[exerciseKey(swapTarget)] ?? 0) : 0;
   const activeProgramId = workout ? extractProgramId(workout.session_id) : null;
 
   const todayDate = new Date().toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
@@ -1331,11 +1354,11 @@ export default function TodayPage() {
             {(workout.exercises ?? []).map((exercise) => {
               const selectedName = resolveExerciseName(exercise, swapIndexByExercise);
               const displayName = resolveDisplayExerciseName(exercise, selectedName, weakAreas);
-              const completed = completedSetsByExercise[exercise.id] ?? 0;
+              const completed = completedSetsByExercise[exerciseKey(exercise)] ?? 0;
               const done = completed >= exercise.sets;
-              const baseline = baselineByExercise[exercise.id];
-              const lastSet = lastSetByExercise[exercise.id];
-              const live = liveRecommendationByExercise[exercise.id];
+              const baseline = baselineByExercise[exerciseKey(exercise)];
+              const lastSet = lastSetByExercise[exerciseKey(exercise)];
+              const live = liveRecommendationByExercise[exerciseKey(exercise)];
               const plannedWorkingLb = kgToLbs(exercise.recommended_working_weight);
               const baselineWorkingLb =
                 baseline != null ? baseline.workingWeightLb : plannedWorkingLb;
@@ -1359,7 +1382,7 @@ export default function TodayPage() {
                     ? kgToLbs(live!.recommended_weight)
                     : plannedWorkingLb;
               return (
-                <li key={exercise.id}>
+                <li key={exerciseKey(exercise)}>
                   <button
                     type="button"
                     className={`w-full rounded-lg border px-3 py-3 text-left transition-colors hover:border-zinc-700 hover:bg-zinc-800/80 ${
@@ -1367,7 +1390,7 @@ export default function TodayPage() {
                         ? "border-red-500/30 bg-red-500/5"
                         : "border-zinc-800 bg-zinc-900/50"
                     }`}
-                    onClick={() => setSelectedExerciseId(exercise.id)}
+                    onClick={() => setSelectedExerciseId(exerciseKey(exercise))}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-sm font-semibold leading-tight text-zinc-100">{displayName}</span>
@@ -1398,7 +1421,7 @@ export default function TodayPage() {
       ) : null}
 
       {workout && selectedExerciseId ? (() => {
-        const exercise = (workout.exercises ?? []).find((e) => e.id === selectedExerciseId);
+        const exercise = (workout.exercises ?? []).find((e) => exerciseKey(e) === selectedExerciseId);
         if (!exercise) {
           return null;
         }
@@ -1408,14 +1431,14 @@ export default function TodayPage() {
         const guideHref = activeProgramId
           ? `/guides/${activeProgramId}/exercise/${exercise.primary_exercise_id ?? exercise.id}`
           : null;
-        const completed = completedSetsByExercise[exercise.id] ?? 0;
-        const recommendation = liveRecommendationByExercise[exercise.id];
-        const feedback = setFeedbackByExercise[exercise.id];
+        const completed = completedSetsByExercise[exerciseKey(exercise)] ?? 0;
+        const recommendation = liveRecommendationByExercise[exerciseKey(exercise)];
+        const feedback = setFeedbackByExercise[exerciseKey(exercise)];
         const mediaUrl = resolveExerciseMediaUrl(exercise);
         const substitutions = resolveSubstitutionCandidates(exercise, weakAreas);
         const warmUpCount = Math.max(0, parseInt(String(exercise.warm_up_sets ?? "0"), 10) || 0);
-        const baseline = baselineByExercise[exercise.id];
-        const lastSet = lastSetByExercise[exercise.id];
+        const baseline = baselineByExercise[exerciseKey(exercise)];
+        const lastSet = lastSetByExercise[exerciseKey(exercise)];
         const plannedWorkingLb = kgToLbs(exercise.recommended_working_weight);
         const baselineWorkingLb =
           baseline != null ? baseline.workingWeightLb : plannedWorkingLb;
@@ -1452,7 +1475,7 @@ export default function TodayPage() {
           doThisSetLine = `Do ${exercise.rep_range[0]}-${exercise.rep_range[1]} reps @ ${Math.round(derivedWorkingLb)} lbs this set`;
         }
 
-        const currentSwapIndex = swapIndexByExercise[exercise.id] ?? 0;
+        const currentSwapIndex = swapIndexByExercise[exerciseKey(exercise)] ?? 0;
         const altCandidates = resolveSubstitutionCandidates(exercise, weakAreas);
         const warmupLbs =
           baseline != null && baseline.warmupLbs.length > 0
@@ -1471,17 +1494,18 @@ export default function TodayPage() {
           completed > 0
             ? async () => {
                 try {
-                  await api.undoLastSet(workout.session_id, exercise.id);
+                  await api.undoLastSet(workoutReference(workout), exercise.id, exercise.exercise_occurrence_id);
                   // Clear local last-set hint so UI falls back to authoritative weight.
                   setLastSetByExercise((prev) => {
                     const next = { ...prev };
-                    delete next[exercise.id];
+                    delete next[exerciseKey(exercise)];
                     return next;
                   });
                   // Refresh progress to resync completed-set counts.
-                  const progress = await api.getWorkoutProgress(workout.session_id);
+                  const progress = await api.getWorkoutProgress(workoutReference(workout));
+                  if (currentOccurrence.current !== workoutReference(workout)) return;
                   const serverCompleted = Object.fromEntries(
-                    (progress.exercises ?? []).map((item) => [item.exercise_id, Number(item.completed_sets) || 0]),
+                    (progress.exercises ?? []).map((item) => [item.exercise_occurrence_id ?? item.exercise_id, Number(item.completed_sets) || 0]),
                   ) as Record<string, number>;
                   if (Object.keys(serverCompleted).length > 0) {
                     setCompletedSetsByExercise(serverCompleted);
@@ -1491,7 +1515,7 @@ export default function TodayPage() {
                       planned: Number(progress.planned_total) || 0,
                       percent,
                     });
-                    const completedKey = `hypertrophy_completed_sets:${workout.session_id}`;
+                    const completedKey = occurrenceStorageKey("completed", workout);
                     localStorage.setItem(completedKey, JSON.stringify(serverCompleted));
                   }
                 } catch {
@@ -1502,6 +1526,7 @@ export default function TodayPage() {
 
         return (
           <ExerciseDetailOverlay
+            key={exerciseKey(exercise)}
             exercise={exercise}
             selectedName={displayName}
             guideHref={guideHref}
@@ -1513,10 +1538,10 @@ export default function TodayPage() {
             warmupLbs={warmupLbs}
             hasWarmup={hasWarmup}
             hasCoachingDetails={hasCoachingDetails}
-            techniquePanelState={techniqueModal && techniqueModal.exerciseId === exercise.id ? techniqueModal : null}
+            techniquePanelState={techniqueModal && techniqueModal.exerciseId === exerciseKey(exercise) ? techniqueModal : null}
             onCloseTechniquePanel={() => setTechniqueModal(null)}
             onLogTechniquePanel={async (performed, ordinal) => {
-              if (!techniqueModal || techniqueModal.exerciseId !== exercise.id) {
+              if (!techniqueModal || techniqueModal.exerciseId !== exerciseKey(exercise)) {
                 return;
               }
               await handleLogTechniqueSubSet(techniqueModal, performed, ordinal);
@@ -1527,13 +1552,13 @@ export default function TodayPage() {
             mediaUrl={mediaUrl}
             substitutions={substitutions}
             weakPointInstruction={weakPointInstruction}
-            notesOpen={notesOpenByExercise[exercise.id] ?? false}
+            notesOpen={notesOpenByExercise[exerciseKey(exercise)] ?? false}
             isDeloadWeek={workout.deload?.active === true}
             onUndoLastSet={handleUndoLastSet}
             onClose={() => setSelectedExerciseId(null)}
             onSwap={selectSwap}
-            onToggleNotes={() => toggleNotes(exercise.id)}
-            onSwapTarget={() => setSwapTargetExerciseId(exercise.id)}
+            onToggleNotes={() => toggleNotes(exerciseKey(exercise))}
+            onSwapTarget={() => setSwapTargetExerciseId(exerciseKey(exercise))}
             onSetComplete={handleSetComplete}
             onCalculateBaseline={(weightLb, reps) => {
               const estimated1RM = epleyEstimate1RMLbs(weightLb, reps);
@@ -1541,7 +1566,7 @@ export default function TodayPage() {
               const warmupLbsCalc = warmupsFromWorkingWeightLb(workingWeightLb, warmUpCount || 3);
               setBaselineByExercise((prev) => ({
                 ...prev,
-                [exercise.id]: { weightLb, reps, estimated1RM, workingWeightLb, warmupLbs: warmupLbsCalc },
+                [exerciseKey(exercise)]: { weightLb, reps, estimated1RM, workingWeightLb, warmupLbs: warmupLbsCalc },
               }));
             }}
             globalRestTimer={globalRestTimer}
@@ -1600,7 +1625,7 @@ export default function TodayPage() {
             <div className="ui-segmented ui-segmented--auto">
               <Button
                 className="w-full justify-start"
-                onClick={() => selectSwap(swapTarget.id, 0)}
+                onClick={() => selectSwap(exerciseKey(swapTarget), 0)}
                 type="button"
                 variant="segment"
                 aria-pressed={swapTargetCurrentIndex === 0}
@@ -1614,7 +1639,7 @@ export default function TodayPage() {
                   <Button
                     key={`${swapTarget.id}-${candidate}`}
                     className="w-full justify-start"
-                    onClick={() => selectSwap(swapTarget.id, value)}
+                    onClick={() => selectSwap(exerciseKey(swapTarget), value)}
                     type="button"
                     variant="segment"
                     aria-pressed={swapTargetCurrentIndex === value}

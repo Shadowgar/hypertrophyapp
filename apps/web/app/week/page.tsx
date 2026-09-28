@@ -236,7 +236,7 @@ function WeekExecutionCards({ plan }: Readonly<{ plan: GeneratedWeekPlan }>) {
           const weakPointSlotCount = countSlotRole(exercises, "weak_point");
           return (
             <Disclosure
-              key={session.session_id}
+              key={session.workout_occurrence_id ?? session.session_id}
               title={`Day ${index + 1}: ${session.title}`}
               badge={`${exercises.length} exercises · ${totalSets} sets`}
               defaultOpen={false}
@@ -251,7 +251,7 @@ function WeekExecutionCards({ plan }: Readonly<{ plan: GeneratedWeekPlan }>) {
                 {weakPointSlotCount > 0 ? <p className="telemetry-meta">Weak-point slots: {weakPointSlotCount}</p> : null}
                 <div className="mt-2 space-y-2">
                   {exercises.map((exercise) => (
-                    <ExerciseExecutionDetails key={`${session.session_id}-${exercise.id}`} exercise={exercise} />
+                    <ExerciseExecutionDetails key={exercise.exercise_occurrence_id ?? `${session.session_id}-${exercise.id}`} exercise={exercise} />
                   ))}
                 </div>
               </div>
