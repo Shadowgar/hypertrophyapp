@@ -821,7 +821,7 @@ export type SorenessCreatePayload = {
 
 export type PasswordResetRequestResponse = {
   status: string;
-  reset_token?: string | null;
+  reset_token?: null;
 };
 
 export function getToken(): string | null {

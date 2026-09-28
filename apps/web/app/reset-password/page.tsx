@@ -7,11 +7,6 @@ import { Button } from "@/components/ui/button";
 import { UiIcon } from "@/components/ui/icons";
 import { API_BASE_URL } from "@/lib/env";
 
-type ResetRequestResponse = {
-  status: string;
-  reset_token?: string | null;
-};
-
 export default function ResetPasswordPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -39,11 +34,7 @@ export default function ResetPasswordPage() {
         return;
       }
 
-      const payload = (await response.json()) as ResetRequestResponse;
-      if (payload.reset_token) {
-        setToken(payload.reset_token);
-      }
-      setRequestStatus(payload.reset_token ? "Reset token generated (dev mode: token shown below)." : "Reset requested. Check your email inbox.");
+      setRequestStatus("If recovery is available for this account, check your email.");
     } catch {
       setRequestStatus("Network error");
     }
@@ -91,7 +82,7 @@ export default function ResetPasswordPage() {
           </span>
         </Button>
         <p className="ui-meta">Status: {requestStatus}</p>
-        <p className="ui-meta">If your environment has no SMTP configured, this screen will auto-fill the reset token for dev testing.</p>
+        <p className="ui-meta">Use the reset link or token delivered to your mailbox.</p>
       </form>
 
       <form className="main-card main-card--module spacing-grid" onSubmit={handleConfirm}>

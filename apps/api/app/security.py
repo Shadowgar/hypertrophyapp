@@ -18,6 +18,7 @@ def verify_password(password: str, password_hash: str) -> bool:
 
 
 def create_access_token(subject: str) -> str:
+    settings.validate_signing_configuration()
     expire = datetime.now(timezone.utc) + timedelta(minutes=settings.jwt_expire_minutes)
     payload = {"sub": subject, "exp": expire}
     return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
@@ -28,6 +29,7 @@ def create_password_reset_token() -> str:
 
 
 def hash_password_reset_token(token: str) -> str:
+    settings.validate_signing_configuration()
     # Keep deterministic hashing for indexed token lookup while using
     # a computationally expensive KDF rather than a fast hash primitive.
     digest = hashlib.pbkdf2_hmac(

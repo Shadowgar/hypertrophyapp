@@ -198,3 +198,17 @@ def validation_failure_event_name(path: str) -> str:
     if path == "/plan/next-week":
         return "week_next_failed_validation"
     return "request_validation_failed"
+
+
+def sanitize_auth_validation_errors(errors: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Allowlist diagnostic metadata; never reflect rejected input or context."""
+    allowed_locations = {"body", "query", "path", "header", "email", "password", "name", "token", "new_password", "confirmation"}
+    allowed_types = {"missing", "string_type", "string_too_short", "string_too_long", "value_error", "json_invalid", "model_attributes_type"}
+    return [
+        {
+            "loc": [part if isinstance(part, int) or (isinstance(part, str) and part in allowed_locations) else "[field]" for part in error.get("loc", [])],
+            "type": error.get("type") if error.get("type") in allowed_types else "validation_error",
+            "msg": "Invalid value",
+        }
+        for error in errors
+    ]
