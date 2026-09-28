@@ -1,0 +1,56 @@
+# Proposed milestone roadmap
+
+Date: 2026-09-28. Status: **Proposed; no milestone is newly accepted or qualified by this package**. Basis: [product contract](../requirements/product-contract.md), [governance](../governance/constitution.md), and [audit](../../../Hypertrophy-Audit-2026-09-28.md), especially sections 12, 19 and 23. This roadmap proposes sequencing; it does not authorize implementation.
+
+## M0: independent stabilization packages
+
+M0 is a set of separately reviewable packages. Security review/delivery must not wait for complete documentation migration, general history redesign or every baseline test to turn green. Each implementation still needs its own minimum safe-verification and deployment prerequisites.
+
+| Package | Objective and boundary | Dependencies | Acceptance gate and evidence |
+|---|---|---|---|
+| M0-DOC: authority baseline | Review this first batch; subsequently create missing contracts, ADRs, catalog/traceability and migration plan. Preserve the complete inventory and historical decisions. | Owner review of mode permissions and hierarchy; approval before generating the rest. | One controlling index, clear accepted/proposed states, no orphan historical tasks, links/context consumers checked before approved integration. All 199 inventory rows reconciled; rules/provenance preserved. |
+| M0-SEC: recovery/configuration | Close reset-credential disclosure and insecure configuration/transport; separately qualify session revocation, reset atomicity and rate control. Scope is account recovery, not training-history changes. | Narrow recovery contract and an isolated test target; separately approved sanitized production review and deployment. | [Security plan](../plans/urgent-account-recovery.md) SEC-S1 and SEC-S2 evidence. S1 can ship independently; its remaining lifecycle risks stay explicit. |
+| M0-SAFE: test and recovery prerequisites | Make destructive helpers reject production targets and inherited defaults; establish production schema ownership and a minimal restore rehearsal. No training algorithm redesign. | Operator-approved disposable environments, storage/access boundaries and proposed schema/recovery decisions. | Negative tests for unsafe targets; guarded isolated commands; reviewed Alembic path; compatible restore evidence against owner-approved RPO/RTO. SQLite alone does not qualify PostgreSQL. |
+| M0-HIST: record integrity | Distinct workout/exercise occurrences and set records; retry idempotency, concurrent writes, corrections/undo and derived-state reconstruction. No mandatory global event sourcing. | Accepted identity/correction contract, M0-SAFE capability for affected migrations and PostgreSQL checks. | Two-week isolation; one logical set per retry; concurrent correctness; corrected/undone work removed from future state; explicit unresolved legacy mapping; bounded migration/recovery evidence. |
+| M0-CI: honest baseline | Classify each known failure and replace misleading checks with contract-grounded protections; remove advisory-success masking where checks are required. No weakening to preserve authored mutations. | Controlling product outcomes; isolated verification. Security-specific checks need not wait for all unrelated failure disposition. | Per-case disposition with replacement evidence; checks propagate required failures; revision/environment recorded; no assertion of complete green coverage from partial reruns. |
+
+Only the immediate M0-SEC implementation plan is authored in this batch. Detailed M0-SAFE/HIST/CI plans and supporting contracts are future documents; this table records their review boundaries without inventing implementation approval.
+
+Proposed delivery order: review M0-DOC and M0-SEC now; establish the minimum M0-SAFE subset needed to verify and recover each security release; deliver SEC-S1 independently; qualify SEC-S2 on its schema/deployment path. M0-HIST and M0-CI proceed as separately authorized work. Full M0-DOC migration and history completion are not gates on SEC-S1.
+
+## M1–M7: training and product milestones
+
+| Milestone | Product outcome and scope | Required dependencies | Acceptance examples and evidence |
+|---|---|---|---|
+| M1: authored fidelity | Both authored phases preserve full source prescriptions, AMRAP, set-specific targets, meaningful relationships and explicit conflict behavior. Fix importer omission and unauthorized restriction effects under source qualification. | Mode authority and source/execution contracts; safe verification. M0-HIST where changed execution/logging identities require it. | Source → canonical → runtime comparison for all admitted slots/weeks; order/relationship tests beyond multiset parity; restrictions/equipment/time/recovery matrix; unchanged source artifacts and reviewed infeasibility walkthrough. |
+| M2: load intelligence | Completed comparable exposures use actual performed loads and known effort. Preserve authored reps; model increments, assistance and unknowns. Trace user overrides and explanation. | M0-HIST; M1 prescription semantics; accepted exposure/load and recommendation contracts. | Actual-load cases, multi-set aggregation, missing effort, units/comparability, anomalies, correction/undo reconstruction; browser effort capture and explainable traces. No invented RPE. |
+| M3: actual-date scheduling | User-selected local dates, timezone/week boundaries, rescheduling and cross-week context; relationship/dose-preserving authored placement. | M0-HIST occurrence identity; M1 source relationships; scheduling contract. Design may proceed alongside M2 rather than waiting for it. | Tuesday/Friday/Sunday, duplicate/invalid dates, DST, cross-week spacing, reschedule/carryover and infeasible allocation; dated API/browser evidence and preserved prescription diff. |
+| M4: performance intelligence | Comparable PRs/trends, transparent denominators, reconciled counts and advisory program analysis; recommendations can be declined or edited. | M0-HIST and M2; M3 for date-dependent analysis; recommendation evidence contract. | Corrected histories, exercise variants/units, missing-data states, plan/log/report accounting parity; advisory analysis leaves authored prescriptions unchanged. |
+| M5: customized planning | Explicit customization consent, deterministic normalized profile, independent lifecycle, single policy ownership and visible fallback/infeasibility. Expand only accepted capabilities. | Mode/consent and normalized-profile/customized contracts; qualified metadata accounting; M0-HIST for revisions/history; M1 boundaries protected. | Active-control matrix, profile normalization, hard constraints, origin traces, deterministic replay, no authored scaffold copying, mode-transition preview. Metadata scoring and broader splits remain separately gated. |
+| M6: personalization | Bounded personal-response advice with sufficiency, comparability, confounders and uncertainty. Insufficient data yields no change. | M0-HIST, M2/M4; M5 if advice changes customized design; accepted longitudinal evidence policy. | Synthetic null/noisy/known-pattern histories, stability/reversal, abstention; predeclared observation protocol. Associations are not causal proof or guaranteed gains. |
+| M7: mobile/offline qualification | Accessible execution, resume and chosen offline scope; measured target-device and production performance/recovery behavior. | Identity/retry/correction foundation; offline policy decision; qualified enabled features and operations prerequisites. | Real-device/browser, keyboard/screen-reader, network interruption/background cases; durable conflict/replay only if offline writes are accepted; measured performance and recovery evidence. Accessibility for new flows applies earlier. |
+
+Detailed architecture, domain/data model, contracts, ADRs, requirements catalog/traceability, quality/evidence policy, operations and migration documentation remain deferred. Continuation must account for every section 12 requested feature and distinguish additional section 23 ideas as proposed; this first-batch roadmap is not a substitute for that complete catalog.
+
+## Preserve the audit baseline
+
+These are historical results from the isolated audit environment, not new runs or current production qualification. See the [verification notes](../../../Verification-Notes.md) for isolation, snapshot caveats and original commands/artifacts.
+
+| Evidence | Recorded result | Required interpretation |
+|---|---|---|
+| Core tests | 364 passed, 4 failed. | Preserve individual failures and classify against the controlling contract. |
+| Initial API tests | 430 passed, 18 failed, 8 skipped; approximately 18m27s. | Do not overwrite this result with selected reruns. |
+| Selected API recheck | 12 passed, including 11 formerly failing cases and one already passing case. | Nine flag-assumption failures and two transient copied-fixture failures cleared in that isolated recheck. One absolute-workbook-path failure remained an environment artifact. |
+| Persistent API behavior recheck | Six failures remained. | Two Today/progress expectations (30/23 versus 29/22), generated core-slot balance, adaptive alias deload expectation, authored weekly-review mutation expectation and hack-squat fixture selection require individual disposition. Some may conflict with the product contract; all six are not automatically implementation defects. |
+| Web tests | 51 passed, 1 failed across 20 files. | Ambiguous single-element query for Open Today Workout; preserve intended navigation protection when correcting the test. |
+| TypeScript | 102 diagnostics: 90 TS2304 and 12 TS2582, concerning test globals. | Type-check failure remains evidence; fixing test type setup is not proof of runtime correctness. |
+
+Phase 1 matched 315 source/canonical rows over the tested eleven fields; Phase 2 retained 305 of 310, omitting two-set AMRAP push-ups in weeks 6–10. Eighty unrestricted prescription-multiset cases passed, without certifying ordering. The aligned Phase 2 comparison, rather than positional mismatch counts, governs interpretation. These facts support M1, not blanket authored acceptance.
+
+## Gate recording and unresolved decisions
+
+Each future criterion records requirement/contract, source revision, environment, procedure, result, artifact, limitations, reviewer and separate owner acceptance. Failed evidence remains available. Deterministic correctness, PostgreSQL migration/concurrency qualification and training-outcome evidence are distinct gates.
+
+Immediate owner decisions are recovery availability until verified mail is qualified, and legacy-session cutover strategy; recommendations and alternatives are in the [security brief](../security/urgent-account-recovery.md). Review of this proposed hierarchy/sequence and approval to continue are separate from implementation/deployment authorization.
+
+Later decisions, before their affected work: RPO/RTO and recovery ownership (M0-SAFE), identity/mapping and correction policy (M0-HIST), Customized consent/legacy transition and scoring activation (M5), longitudinal evidence thresholds (M6), target devices, offline read/write scope and measured service targets (M7). This pass does not choose them by implication or require answers before the drafts can be reviewed.
