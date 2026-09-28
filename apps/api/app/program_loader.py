@@ -6,6 +6,7 @@ from typing import Any
 from pydantic import ValidationError
 
 from .config import settings
+from core_engine.authored_prescription import uniform_rep_range
 from .adaptive_schema import AdaptiveGoldProgramTemplate, AdaptiveGoldRuleSet, ProgramOnboardingPackage
 from .template_schema import CanonicalProgramTemplate
 
@@ -565,10 +566,14 @@ def _adaptive_slot_to_runtime_exercise(
     slot: dict[str, Any],
     exercise_library: dict[str, dict[str, Any]],
     authored_slot: dict[str, Any] | None = None,
+    artifact_hash: str | None = None,
 ) -> dict[str, Any]:
     slot_source = dict(slot)
     if authored_slot:
         slot_source.update(authored_slot)
+    if slot.get("authored_prescription"):
+        # The versioned canonical source controls prescriptions; old companion fields cannot overwrite it.
+        slot_source.update(slot)
 
     exercise_id = str(slot_source.get("exercise_id") or slot.get("exercise_id") or "").strip()
     library_exercise_id = ADAPTIVE_GOLD_EXERCISE_ID_ALIASES.get(exercise_id, exercise_id)
@@ -629,10 +634,12 @@ def _adaptive_slot_to_runtime_exercise(
         "primary_exercise_id": exercise_id,
         "name": resolved_name,
         "sets": max(1, total_sets or 3),
-        "rep_range": [
+        "rep_range": uniform_rep_range(slot_source["authored_prescription"]) if slot_source.get("authored_prescription") else [
             int((rep_target or {}).get("min") or 8),
             int((rep_target or {}).get("max") or (rep_target or {}).get("min") or 12),
         ],
+        "authored_prescription": slot_source.get("authored_prescription"),
+        "source_lineage": {**slot_source["source_lineage"], "artifact_sha256": artifact_hash} if slot_source.get("source_lineage") else None,
         "start_weight": 20.0,
         "priority": "standard",
         "slot_role": slot_source.get("slot_role"),
@@ -775,6 +782,7 @@ def _adaptive_gold_to_runtime_template(payload: dict[str, Any]) -> dict[str, Any
                             slot.model_dump(mode="json"),
                             exercise_library,
                             authored_slot=_resolve_authored_slot(onboarding_day, slot, slot_index),
+                            artifact_hash=(validated.source_provenance or {}).get("artifact_sha256"),
                         )
                         for slot_index, slot in enumerate(day.slots)
                     ],

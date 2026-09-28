@@ -6,6 +6,7 @@ from types import SimpleNamespace
 from fastapi import HTTPException
 from core_engine import prepare_workout_log_set_decision_route_runtime, resolve_workout_session_state_update
 
+from core_engine.authored_prescription import requires_typed_tracking
 from .models import ExerciseState, WorkoutSetLog, WorkoutSessionState, User, CoachingRecommendation, WeeklyReviewCycle
 
 STATE_FIELDS = ("current_working_weight", "exposure_count", "consecutive_under_target_exposures", "last_progression_action", "fatigue_score")
@@ -47,7 +48,7 @@ def rebuild_exercise_state(db, *, user_id, primary_exercise_id):
             seen.add(row.id)
             row = by_id[row.supersedes_id]
         return row
-    replayable = sorted([row for row in records if row.replay_context is not None], key=lambda row: (root(row).created_at, root(row).id))
+    replayable = sorted([row for row in records if row.replay_context is not None and not requires_typed_tracking(row.replay_context.get("planned_exercise"))], key=lambda row: (root(row).created_at, root(row).id))
     if not replayable:
         raise HTTPException(409, "No captured progression replay context")
     first = require_replay_context(replayable[0])

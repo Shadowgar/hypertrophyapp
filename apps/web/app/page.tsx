@@ -1,5 +1,7 @@
 "use client";
 
+import { authoredRepLabel } from "@/lib/authored-prescription";
+
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
@@ -49,8 +51,7 @@ function humanizeTokenLabel(value: string): string {
 }
 
 function formatExercisePrescription(exercise: WorkoutExercise): string {
-  const [minReps, maxReps] = exercise.rep_range;
-  return `${exercise.sets} x ${minReps}-${maxReps} @ ${kgToLbs(exercise.recommended_working_weight)} lbs`;
+  return `${exercise.sets} x ${authoredRepLabel(exercise)} @ ${kgToLbs(exercise.recommended_working_weight)} lbs`;
 }
 
 function formatLeadExercise(workout: WorkoutSession | null): string {

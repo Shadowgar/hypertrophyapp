@@ -1,5 +1,7 @@
 "use client";
 
+import { authoredRepLabel } from "@/lib/authored-prescription";
+
 import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -57,7 +59,7 @@ function formatLeadExercise(exercise: GeneratedWeekExercise | undefined): string
   if (!exercise) {
     return "No exercises planned.";
   }
-  return `${exercise.name} · ${exercise.sets} sets · ${exercise.rep_range[0]}-${exercise.rep_range[1]} reps @ ${kgToLbs(exercise.recommended_working_weight)} lbs`;
+  return `${exercise.name} · ${exercise.sets} sets · ${authoredRepLabel(exercise)} reps @ ${kgToLbs(exercise.recommended_working_weight)} lbs`;
 }
 
 function resolveExerciseMediaUrl(exercise: GeneratedWeekExercise): string | null {
@@ -88,11 +90,11 @@ function ExerciseExecutionDetails({ exercise }: Readonly<{ exercise: GeneratedWe
     <div className="rounded-md border border-white/10 bg-black/20 p-2 text-[11px] text-zinc-300">
       <p className="font-semibold text-zinc-100">{exercise.name}</p>
       <p className="telemetry-meta">
-        {exercise.sets} sets · {exercise.rep_range[0]}-{exercise.rep_range[1]} reps · {kgToLbs(exercise.recommended_working_weight)} lbs
+        {exercise.sets} sets · {authoredRepLabel(exercise)} reps · {kgToLbs(exercise.recommended_working_weight)} lbs
       </p>
       {hasPrescription ? (
         <p className="mt-1">
-          Authored prescription: {exercise.warm_up_sets ?? "0"} warm-up sets · {exercise.working_sets ?? String(exercise.sets)} working sets · {exercise.reps ?? `${exercise.rep_range[0]}-${exercise.rep_range[1]}`}
+          Authored prescription: {exercise.warm_up_sets ?? "Unknown"} warm-up sets · {exercise.working_sets ?? String(exercise.sets)} working sets · {exercise.reps ?? `${authoredRepLabel(exercise)}`}
         </p>
       ) : null}
       <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1">

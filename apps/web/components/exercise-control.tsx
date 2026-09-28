@@ -13,7 +13,7 @@ type UseExerciseControlProps = {
   defaultRestSeconds?: number;
   initialCompletedSets?: number;
   recommendedWorkingWeight?: number;
-  repRange?: [number, number];
+  repRange?: [number, number] | null;
   /** When true, completeSet does not start the rest timer (e.g. parent owns global timer). */
   skipTimerOnComplete?: boolean;
   onSetComplete?: (
@@ -37,7 +37,7 @@ export function useExerciseControl({
   const [secondsLeft, setSecondsLeft] = useState(defaultRestSeconds);
   const [running, setRunning] = useState(false);
   const [completedSets, setCompletedSets] = useState(initialCompletedSets ?? 0);
-  const [actualReps, setActualReps] = useState(repRange?.[0] ?? 8);
+  const [actualReps, setActualReps] = useState(repRange === null ? 0 : repRange?.[0] ?? 8);
   const [actualWeightInput, setActualWeightInput] = useState(
     recommendedWorkingWeight !== undefined ? String(recommendedWorkingWeight) : "",
   );
@@ -56,6 +56,7 @@ export function useExerciseControl({
 
   useEffect(() => {
     if (repRange) setActualReps(repRange[0]);
+    else if (repRange === null) setActualReps(0);
   }, [repRange]);
 
   useEffect(() => {
@@ -109,6 +110,7 @@ export function useExerciseControl({
   const [submitting, setSubmitting] = useState(false);
   const completeSet = useCallback(async () => {
     if (submissionPending.current || completedSets >= totalSets) return;
+    if (repRange === null && (!Number.isFinite(actualReps) || actualReps < 1)) return;
     submissionPending.current = true;
     setSubmitting(true);
     const parsedWeight = Number(actualWeightInput);
@@ -417,7 +419,7 @@ type LegacyProps = Readonly<{
   defaultRestSeconds?: number;
   initialCompletedSets?: number;
   recommendedWorkingWeight?: number;
-  repRange?: [number, number];
+  repRange?: [number, number] | null;
   onSetComplete?: (
     exerciseId: string,
     setIndex: number,

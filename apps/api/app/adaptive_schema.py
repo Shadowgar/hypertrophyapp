@@ -4,6 +4,50 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
 
+class AuthoredTarget(BaseModel):
+    kind: Literal["reps", "amrap", "text", "unknown", "rpe", "rir"]
+    raw: str | None
+    min: float | None = None
+    max: float | None = None
+    approximate: bool = False
+
+    @model_validator(mode="after")
+    def validate_typed_target(self):
+        numeric = self.kind in {"reps", "rpe", "rir"}
+        if numeric:
+            if self.min is None or self.max is None or self.min > self.max:
+                raise ValueError("Numeric authored targets require ordered bounds")
+            if self.kind == "reps" and (self.min < 1 or not self.min.is_integer() or not self.max.is_integer()):
+                raise ValueError("Reps require positive integer bounds")
+        elif self.min is not None or self.max is not None:
+            raise ValueError("Nonnumeric authored targets cannot carry invented numeric bounds")
+        if (self.kind == "unknown") != (self.raw is None):
+            raise ValueError("Unknown target must retain missing raw value")
+        return self
+
+
+class AuthoredSet(BaseModel):
+    set_index: int = Field(ge=1)
+    set_type: Literal["work", "top", "backoff"] = "work"
+    rep_target: AuthoredTarget
+    effort_target: AuthoredTarget
+    rest: str | None = None
+    intensity_technique: str | None = None
+    source_set_id: str | None = None
+
+
+class AuthoredPrescription(BaseModel):
+    version: Literal["authored-prescription-v1"]
+    raw: dict[str, str | None]
+    sets: list[AuthoredSet]
+
+    @model_validator(mode="after")
+    def validate_set_order(self):
+        if not self.sets or [item.set_index for item in self.sets] != list(range(1, len(self.sets) + 1)):
+            raise ValueError("Authored sets require consecutive, distinct prescription identities")
+        return self
+
+
 class RepTarget(BaseModel):
     min: int = Field(ge=1)
     max: int = Field(ge=1)
@@ -26,13 +70,30 @@ class WarmupStep(BaseModel):
 class WorkSetPrescription(BaseModel):
     set_type: Literal["work", "top", "backoff"] = "work"
     sets: int = Field(ge=1)
-    rep_target: RepTarget
+    rep_target: RepTarget | AuthoredTarget
     rir_target: int | None = Field(default=None, ge=0, le=6)
     rpe_target: float | None = Field(default=None, ge=1, le=10)
     load_target: str | None = None
 
 
 class AdaptiveSlot(BaseModel):
+    exercise: str | None = None
+    last_set_intensity_technique: str | None = None
+    warm_up_sets: str | None = None
+    working_sets: str | None = None
+    reps: str | None = None
+    early_set_rpe: str | None = None
+    last_set_rpe: str | None = None
+    rest: str | None = None
+    tracking_set_1: str | None = None
+    tracking_set_2: str | None = None
+    tracking_set_3: str | None = None
+    tracking_set_4: str | None = None
+    substitution_option_1: str | None = None
+    substitution_option_2: str | None = None
+    authored_prescription: AuthoredPrescription | None = None
+    source_lineage: dict[str, Any] | None = None
+    source_row: int | None = None
     slot_id: str = Field(min_length=1)
     order_index: int = Field(ge=1)
     exercise_id: str = Field(min_length=1)
@@ -92,6 +153,7 @@ class AdaptivePhase(BaseModel):
 
 
 class AdaptiveGoldProgramTemplate(BaseModel):
+    source_provenance: dict[str, Any] | None = None
     program_id: str = Field(min_length=1)
     program_name: str = Field(min_length=1)
     source_workbook: str = Field(min_length=1)
@@ -494,7 +556,7 @@ class BlueprintWarmupStep(BaseModel):
 class BlueprintWorkSet(BaseModel):
     set_type: Literal["work", "top", "backoff"] = "work"
     sets: int = Field(ge=1)
-    rep_target: RepTarget
+    rep_target: RepTarget | AuthoredTarget
     rir_target: int | None = Field(default=None, ge=0, le=6)
     rpe_target: float | None = Field(default=None, ge=1, le=10)
     load_target: str | None = None
@@ -520,6 +582,9 @@ class WeakPointTableEntry(BaseModel):
 
 
 class ProgramBlueprintSlot(BaseModel):
+    authored_prescription: AuthoredPrescription | None = None
+    source_lineage: dict[str, Any] | None = None
+    source_row: int | None = None
     slot_id: str = Field(min_length=1)
     order_index: int = Field(ge=1)
     exercise_id: str = Field(min_length=1)
@@ -621,6 +686,7 @@ class ProgramBlueprint(BaseModel):
 
 
 class ProgramOnboardingPackage(BaseModel):
+    source_provenance: dict[str, Any] | None = None
     program_id: str = Field(min_length=1)
     version: str = Field(min_length=1)
     source_pdf: str = Field(min_length=1)

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from .authored_prescription import requires_typed_tracking, typed_tracking_feedback
 from typing import Any, Callable, cast
 
 from .decision_live_workout_guidance import (
@@ -264,6 +265,19 @@ def summarize_workout_exercise_performance(
 ) -> dict[str, Any]:
     exercise_id = str(exercise.get("id") or "")
     planned_sets = int(exercise.get("sets", 3) or 3)
+    if requires_typed_tracking(exercise):
+        count = len(performed_logs)
+        live = typed_tracking_feedback(exercise, completed_sets=count)
+        return {"exercise_id": exercise_id, "exercise_occurrence_id": exercise.get("exercise_occurrence_id"),
+            "primary_exercise_id": exercise.get("primary_exercise_id"), "name": exercise.get("name", exercise_id),
+            "planned_sets": planned_sets, "planned_reps_min": None, "planned_reps_max": None,
+            "planned_weight": float(exercise.get("recommended_working_weight", 0)),
+            "performed_sets": count, "completion_pct": int(count / max(1, planned_sets) * 100),
+            "average_performed_reps": sum(row["reps"] for row in performed_logs) / count if count else 0,
+            "average_performed_weight": sum(row["weight"] for row in performed_logs) / count if count else 0,
+            "rep_delta": None, "weight_delta": (sum(row["weight"] for row in performed_logs) / count if count else 0) - float(exercise.get("recommended_working_weight", 0)), "next_working_weight": next_working_weight,
+            "guidance": live["guidance"], "guidance_rationale": live["guidance_rationale"],
+            "decision_trace": live["decision_trace"]}
     rep_range = exercise.get("rep_range") or [8, 12]
     planned_min = int(rep_range[0]) if len(rep_range) > 0 else 8
     planned_max = int(rep_range[1]) if len(rep_range) > 1 else planned_min
@@ -639,6 +653,8 @@ def resolve_workout_log_set_plan_context(
     fallback_weight: float,
 ) -> dict[str, Any]:
     exercise = _coerce_dict(planned_exercise)
+    if requires_typed_tracking(exercise):
+        raise ValueError("Typed authored target requires receipt-only tracking; numeric progression is unavailable")
     planned_reps_min, planned_reps_max = _resolve_rep_range(exercise.get("rep_range"))
     planned_sets = int(exercise.get("sets", 3) or 3)
     planned_weight = float(exercise.get("recommended_working_weight", fallback_weight) or fallback_weight)
@@ -1090,7 +1106,7 @@ def build_workout_today_payload(
         recommended_weight, starting_load_quality_source = _resolve_today_recommended_weight(exercise)
         exercise["recommended_working_weight"] = recommended_weight
         exercise["starting_load_quality_source"] = starting_load_quality_source
-        exercise["warmups"] = compute_warmups(recommended_weight, 3)
+        exercise["warmups"] = [] if exercise.get("authored_prescription") else compute_warmups(recommended_weight, 3)
         exercise["completed_sets"] = int(completed_sets_by_exercise.get(str(exercise.get("exercise_occurrence_id") or exercise_id), 0) or 0)
 
         live_recommendation = live_recommendations_by_exercise.get(str(exercise.get("exercise_occurrence_id") or exercise_id))

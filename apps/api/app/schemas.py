@@ -602,8 +602,8 @@ class WorkoutSubstitutionRecommendationResponse(BaseModel):
 class WorkoutLiveRecommendationResponse(BaseModel):
     completed_sets: int
     remaining_sets: int
-    recommended_reps_min: int
-    recommended_reps_max: int
+    recommended_reps_min: int | None
+    recommended_reps_max: int | None
     recommended_weight: float
     guidance: str
     guidance_rationale: str
@@ -624,10 +624,10 @@ class WorkoutSetLogResponse(BaseModel):
     set_kind: str | None = None
     parent_set_index: int | None = None
     technique: dict[str, Any] | None = None
-    planned_reps_min: int
-    planned_reps_max: int
+    planned_reps_min: int | None
+    planned_reps_max: int | None
     planned_weight: float
-    rep_delta: int
+    rep_delta: int | None
     weight_delta: float
     next_working_weight: float
     guidance: str
@@ -644,14 +644,14 @@ class WorkoutExerciseSummaryResponse(BaseModel):
     primary_exercise_id: str | None = None
     name: str
     planned_sets: int
-    planned_reps_min: int
-    planned_reps_max: int
+    planned_reps_min: int | None
+    planned_reps_max: int | None
     planned_weight: float
     performed_sets: int
     average_performed_reps: float
     average_performed_weight: float
     completion_pct: int
-    rep_delta: float
+    rep_delta: float | None
     weight_delta: float
     next_working_weight: float
     guidance: str

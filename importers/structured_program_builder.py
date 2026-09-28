@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
+from copy import deepcopy
 
 from importers.xlsx_to_program import (
     infer_equipment_tags_from_name,
@@ -11,6 +12,7 @@ from importers.xlsx_to_program import (
     slugify,
 )
 
+from core_engine.authored_prescription import SOURCE_FIELDS
 
 _WEAK_POINT_LABEL = "weak point"
 _PRIMARY_COMPOUND_TOKENS = ("squat", "bench", "deadlift", "pull-up", "pulldown", "press", "row")
@@ -142,6 +144,8 @@ def _normalized_rep_target(exercise: dict[str, Any]) -> dict[str, int]:
 
 
 def _warmup_prescription(exercise: dict[str, Any]) -> list[dict[str, int]]:
+    if exercise.get("authored_prescription"):
+        return []  # Source specifies a count/range, not percent/reps for invented warm-up steps.
     explicit_warmups = int(exercise.get("warmup_sets") or 0)
     if explicit_warmups > 0:
         templates: dict[int, list[dict[str, int]]] = {
@@ -210,8 +214,8 @@ def _build_blueprint_slot(
     work_set = {
         "set_type": str(exercise.get("set_type") or "work"),
         "sets": int(exercise.get("sets") or 3),
-        "rep_target": _normalized_rep_target(exercise),
-        "rir_target": 2 if exercise.get("rpe_target") is None else None,
+        "rep_target": _normalized_rep_target(exercise) if not exercise.get("authored_prescription") else exercise["authored_prescription"]["sets"][0]["rep_target"],
+        "rir_target": 2 if exercise.get("rpe_target") is None and not exercise.get("authored_prescription") else None,
         "rpe_target": exercise.get("rpe_target"),
         "load_target": exercise.get("load_target"),
     }
@@ -240,7 +244,11 @@ def _build_blueprint_slot(
         "demo_url": demo_url,
         "video_url": demo_url,
         "warmup_prescription": _warmup_prescription(exercise),
-        "work_sets": [work_set],
+        "work_sets": [{"set_type": item["set_type"], "sets": 1, "rep_target": item["rep_target"],
+            "rir_target": None, "rpe_target": None, "load_target": exercise.get("load_target")}
+            for item in exercise["authored_prescription"]["sets"]] if exercise.get("authored_prescription") else [work_set],
+        "authored_prescription": deepcopy(exercise.get("authored_prescription")),
+        "source_row": exercise.get("source_row"),
         "notes": notes,
     }
 
@@ -387,10 +395,7 @@ def _build_gold_work_sets(slot: dict[str, Any]) -> list[dict[str, Any]]:
             {
                 "set_type": str(work_set.get("set_type") or "work"),
                 "sets": int(work_set.get("sets") or 1),
-                "rep_target": {
-                    "min": int(((work_set.get("rep_target") or {}).get("min") or 8)),
-                    "max": int(((work_set.get("rep_target") or {}).get("max") or 12)),
-                },
+                "rep_target": deepcopy(work_set["rep_target"]),
                 "rir_target": int(work_set.get("rir_target")) if work_set.get("rir_target") is not None else None,
                 "rpe_target": float(work_set.get("rpe_target")) if work_set.get("rpe_target") is not None else None,
                 "load_target": str(work_set.get("load_target")) if work_set.get("load_target") else None,
@@ -406,6 +411,9 @@ def _build_gold_day(day: dict[str, Any], *, week_index: int, day_index: int) -> 
         order_index = int(slot.get("order_index") or len(slots) + 1)
         slots.append(
             {
+                **{field: deepcopy(slot.get(field)) for field in SOURCE_FIELDS},
+                "authored_prescription": deepcopy(slot.get("authored_prescription")),
+                "source_row": slot.get("source_row"),
                 "slot_id": f"{week_day_id}_s{order_index}",
                 "order_index": order_index,
                 "exercise_id": str(slot.get("exercise_id") or "unknown_exercise"),

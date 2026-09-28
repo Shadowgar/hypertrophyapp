@@ -381,6 +381,10 @@ def _build_slot_usage_index(payload: dict[str, Any]) -> dict[str, dict[str, Any]
                     ),
                     default=0,
                 )
+                if slot.get("authored_prescription"):
+                    # Typed entries describe individual sets; retain the source slot's
+                    # total for existing offline metadata accounting.
+                    max_sets = len(slot["authored_prescription"]["sets"])
                 usage["max_work_sets"] = max(int(usage["max_work_sets"]), max_sets)
                 usage["text_parts"].extend(
                     [

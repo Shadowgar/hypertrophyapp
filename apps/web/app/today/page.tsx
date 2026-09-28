@@ -1,7 +1,9 @@
 "use client";
 
+import { authoredRepLabel, authoredSetRepRange, authoredSetDetails } from "@/lib/authored-prescription";
+
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Disclosure } from "@/components/ui/disclosure";
@@ -420,7 +422,7 @@ function WorkoutSummaryCard({ summary }: Readonly<{ summary: WorkoutSummary | nu
           <div key={item.exercise_occurrence_id ?? item.exercise_id} className="rounded-md border border-zinc-800 bg-zinc-900/40 p-2 text-xs text-zinc-300">
             <p className="font-semibold text-zinc-100">{item.name}</p>
             <p>
-              Planned: {item.planned_sets} sets · {item.planned_reps_min}-{item.planned_reps_max} reps @ {kgToLbs(item.planned_weight)} lbs
+              Planned: {item.planned_sets} sets · {item.planned_reps_min != null ? `${item.planned_reps_min}-${item.planned_reps_max}` : "authored target"} reps @ {kgToLbs(item.planned_weight)} lbs
             </p>
             <p>
               Performed: {item.performed_sets} sets · avg {item.average_performed_reps} reps @ {kgToLbs(item.average_performed_weight)} lbs
@@ -443,12 +445,12 @@ function BaselineBlock({
   onCalculate,
 }: Readonly<{
   exerciseId: string;
-  repRange: [number, number];
+  repRange: [number, number] | null;
   currentBaseline: { weightLb: number; reps: number; estimated1RM: number; workingWeightLb: number; warmupLbs: number[] } | undefined;
   onCalculate: (weightLb: number, reps: number) => void;
 }>) {
   const [weightLb, setWeightLb] = useState<string>(() => (currentBaseline ? String(currentBaseline.weightLb) : ""));
-  const [reps, setReps] = useState<string>(() => (currentBaseline ? String(currentBaseline.reps) : String(repRange[0])));
+  const [reps, setReps] = useState<string>(() => (currentBaseline ? String(currentBaseline.reps) : String(repRange?.[0] ?? "")));
   useEffect(() => {
     if (currentBaseline) {
       setWeightLb(String(currentBaseline.weightLb));
@@ -503,7 +505,7 @@ function BaselineBlock({
       {currentBaseline ? (
         <div className="rounded border border-zinc-600 bg-zinc-800/40 px-3 py-2 text-xs text-zinc-200 space-y-1">
           <p className="font-medium">Estimated 1RM: {Math.round(currentBaseline.estimated1RM)} lb</p>
-          <p>Suggested working weight: {currentBaseline.workingWeightLb} lb (for {repRange[0]}-{repRange[1]} reps)</p>
+          <p>Suggested working weight: {currentBaseline.workingWeightLb} lb (for {repRange ? `${repRange[0]}-${repRange[1]}` : "authored target"} reps)</p>
         </div>
       ) : null}
     </div>
@@ -576,12 +578,13 @@ function ExerciseDetailOverlay({
   onClearGlobalRestTimer: () => void;
 }>) {
   const defaultRestSeconds = parseRestToSeconds(exercise.rest) ?? 90;
+  const currentRepRange = useMemo(() => authoredSetRepRange(exercise, Math.min(completed + 1, exercise.sets)), [exercise, completed]);
   const ctrl = useExerciseControl({
     exerciseId: exerciseKey(exercise),
     totalSets: exercise.sets,
     defaultRestSeconds,
     recommendedWorkingWeight: snapToHalfLb(derivedWorkingLb),
-    repRange: exercise.rep_range,
+    repRange: currentRepRange,
     initialCompletedSets: completed,
     skipTimerOnComplete: true,
     onSetComplete: onSetComplete,
@@ -642,14 +645,14 @@ function ExerciseDetailOverlay({
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 pb-[max(7rem,env(safe-area-inset-bottom))] space-y-4 overscroll-contain">
 
         {/* == ZONE 1: Baseline calculator (expanded when no baseline) == */}
-        <Disclosure title="Baseline Calculator" badge={baseline ? `1RM: ${Math.round(baseline.estimated1RM)} lb` : null} defaultOpen={!baseline}>
+        {exercise.rep_range ? <Disclosure title="Baseline Calculator" badge={baseline ? `1RM: ${Math.round(baseline.estimated1RM)} lb` : null} defaultOpen={!baseline}>
           <BaselineBlock
             exerciseId={exerciseKey(exercise)}
             repRange={exercise.rep_range}
             currentBaseline={baseline}
             onCalculate={onCalculateBaseline}
           />
-        </Disclosure>
+        </Disclosure> : null}
 
         {/* == ZONE 2: Warm-up sets (expanded when warm-ups exist) == */}
         {hasWarmup && (
@@ -1406,7 +1409,7 @@ export default function TodayPage() {
                       </span>
                     </div>
                     <div className="mt-1 flex items-center gap-2 text-xs text-zinc-500">
-                      <span>{exercise.rep_range[0]}-{exercise.rep_range[1]} reps</span>
+                      <span>{authoredRepLabel(exercise)} reps</span>
                       <span className="text-zinc-700">·</span>
                       <span>~{rowWorkingLb} lb</span>
                     </div>
@@ -1464,16 +1467,19 @@ export default function TodayPage() {
               ? kgToLbs(recommendation!.recommended_weight)
               : plannedWorkingLb;
         let doThisSetLine: string;
-        if (recommendation) {
+        if (exercise.authored_prescription) {
+          const index = Math.min(completed + 1, exercise.sets);
+          doThisSetLine = `${authoredRepLabel(exercise, index)} reps · ${authoredSetDetails(exercise, index)}`;
+        } else if (recommendation) {
           const guidance = resolveGuidanceText(recommendation.guidance_rationale, recommendation.guidance);
           doThisSetLine = guidance.trim()
             || `Next set: ${recommendation.recommended_reps_min}-${recommendation.recommended_reps_max} reps @ ${kgToLbs(recommendation.recommended_weight)} lbs`;
         } else if (feedback) {
           const guidance = resolveGuidanceText(feedback.guidance_rationale, feedback.guidance);
           doThisSetLine = guidance.trim()
-            || `${exercise.rep_range[0]}-${exercise.rep_range[1]} reps @ ${Math.round(derivedWorkingLb)} lbs this set`;
+            || `${authoredRepLabel(exercise)} reps @ ${Math.round(derivedWorkingLb)} lbs this set`;
         } else {
-          doThisSetLine = `Do ${exercise.rep_range[0]}-${exercise.rep_range[1]} reps @ ${Math.round(derivedWorkingLb)} lbs this set`;
+          doThisSetLine = `Do ${authoredRepLabel(exercise)} reps @ ${Math.round(derivedWorkingLb)} lbs this set`;
         }
 
         const currentSwapIndex = swapIndexByExercise[exerciseKey(exercise)] ?? 0;

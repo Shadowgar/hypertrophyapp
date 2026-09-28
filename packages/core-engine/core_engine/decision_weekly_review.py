@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from .authored_prescription import requires_typed_tracking
 from datetime import date, datetime, timedelta
 from typing import Any, cast
 
@@ -467,6 +468,8 @@ def _accumulate_single_planned_exercise(planned_index: dict[str, dict[str, Any]]
     if not primary_exercise_id:
         return
 
+    if requires_typed_tracking(exercise):
+        return
     planned_sets = int(exercise.get("sets", 0) or 0)
     target_min, target_max = _resolve_rep_range(exercise.get("rep_range"))
     target_weight = float(exercise.get("recommended_working_weight", 0) or 0)
@@ -717,13 +720,24 @@ def summarize_weekly_review_performance(
     previous_plan_payload: dict[str, Any],
     performed_logs: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    planned_index = _accumulate_planned_index(previous_plan_payload)
+    excluded_targets = [exercise.get("source_lineage") or {"exercise_id": exercise.get("id")}
+        for session in previous_plan_payload.get("sessions") or []
+        for exercise in session.get("exercises") or [] if requires_typed_tracking(exercise)]
+    excluded_ids = {str(exercise.get("primary_exercise_id") or exercise.get("id") or "")
+        for session in previous_plan_payload.get("sessions") or []
+        for exercise in session.get("exercises") or [] if requires_typed_tracking(exercise)}
+    scoped_plan = deepcopy(previous_plan_payload)
+    for session in scoped_plan.get("sessions") or []:
+        session["exercises"] = [e for e in session.get("exercises") or [] if str(e.get("primary_exercise_id") or e.get("id") or "") not in excluded_ids]
+    planned_index = _accumulate_planned_index(scoped_plan)
     performed_index = _collect_performed_index(performed_logs, planned_index)
 
     exercise_faults: list[dict[str, Any]] = []
-    planned_sets_total = 0
-    completed_sets_total = 0
-    fault_steps: list[dict[str, Any]] = []
+    planned_sets_total = sum(int(e.get("sets", 0)) for session in previous_plan_payload.get("sessions") or []
+        for e in session.get("exercises") or [] if str(e.get("primary_exercise_id") or e.get("id") or "") in excluded_ids)
+    completed_sets_total = sum(1 for row in performed_logs if str(row.get("primary_exercise_id") or row.get("exercise_id") or "") in excluded_ids
+        and row.get("parent_set_index") is None and (row.get("set_kind") or "work").strip().lower() == "work")
+    fault_steps: list[dict[str, Any]] = [{"numeric_fault_classification_excluded": excluded_targets}] if excluded_targets else []
 
     for primary_exercise_id, planned in planned_index.items():
         fault, planned_sets, completed_sets = _build_weekly_exercise_fault(

@@ -1,0 +1,372 @@
+{
+  "manifest_version": 1,
+  "status": "Review candidate; no milestone, ADR, release or owner acceptance",
+  "revision_binding": "The containing Git commit binds this manifest and the exact candidate file hashes; no self-referential commit hash is embedded",
+  "base_revision": "6e9b93ebc2f4570eeb0517131332e135b1d5c566",
+  "branch": "m1/authored-source-fidelity",
+  "source_rows": {
+    "phase_1": 315,
+    "phase_2": 310,
+    "phase_2_amrap_weeks": [
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "amrap_working_sets_each": 2
+  },
+  "sources": [
+    {
+      "name": "Pure Bodybuilding Phase 1 - Full Body Sheet.xlsx",
+      "sha256": "46f50999771cbb454b325729b2d2a77515dbcf2cdd86891e4543eab65019bb71",
+      "unchanged": true,
+      "published": false
+    },
+    {
+      "name": "Pure Bodybuilding Phase 2 - Full Body Sheet.xlsx",
+      "sha256": "3068701dc79bfa5dd7dff0daa55c670213125fce0cc1bb56abff22083b93bb23",
+      "unchanged": true,
+      "published": false
+    }
+  ],
+  "candidate_files": [
+    {
+      "path": "apps/api/app/workout_authored.py",
+      "sha256": "9bfe877a27513dcebe08c4865ac4498fb1183724ecac4992105581c3451d412b",
+      "qualification_snapshot": "final-compatibility"
+    },
+    {
+      "path": "apps/api/tests/test_authored_source_runtime_fidelity.py",
+      "sha256": "7b69478a3de05aeaaab39ff11ac1428bb08b4a5f71a1869378a9b0767bdf61aa",
+      "qualification_snapshot": "final-source"
+    },
+    {
+      "path": "apps/api/tests/test_authored_typed_execution.py",
+      "sha256": "70ba864252562945ebfc6b8068cc415b37a16dc439263e14467110955900715c",
+      "qualification_snapshot": "final-compatibility"
+    },
+    {
+      "path": "apps/web/lib/authored-prescription.ts",
+      "sha256": "1761ae34380e110ae757dfa69fc91c4383e567bdfa6d4aeeb82d36d636ef9e7f",
+      "qualification_snapshot": "final-source"
+    },
+    {
+      "path": "apps/web/tests/authored-prescription.test.tsx",
+      "sha256": "a6475a1b936386619f0d505a241116e341379dfe897240e2ddfdb120f37312eb",
+      "qualification_snapshot": "final-source"
+    },
+    {
+      "path": "importers/authored_lineage.py",
+      "sha256": "755a281e459f916152a733bd28ceb244028454feb8da23b040ab349f55d3d419",
+      "qualification_snapshot": "final-source"
+    },
+    {
+      "path": "importers/compile_authored_fidelity.py",
+      "sha256": "e959bd2359a4fc79ae8f90918049920a3e814bfbb135aa940066227c6411bc61",
+      "qualification_snapshot": "final-source"
+    },
+    {
+      "path": "packages/core-engine/core_engine/authored_prescription.py",
+      "sha256": "5ea4ad5be895717cc3f766d137c0dbd779823ef3a10796cf0f7904c2252b10cb",
+      "qualification_snapshot": "final-source"
+    },
+    {
+      "path": "packages/core-engine/tests/test_authored_prescription.py",
+      "sha256": "175a69f3c9ea08fef387d9a2b54c78b3e1b6ad50cc001e5dda21828def2427b1",
+      "qualification_snapshot": "final-source"
+    },
+    {
+      "path": "apps/api/app/adaptive_schema.py",
+      "sha256": "5cb10def3636abd4e602f847c29228d7cd2bfd64bb9852983292bc1228b6563b",
+      "qualification_snapshot": "final-source"
+    },
+    {
+      "path": "apps/api/app/program_loader.py",
+      "sha256": "66971d3e20f64858f51e59d25c06024db8a3e36a1837c245d76670c12592928a",
+      "qualification_snapshot": "final-source"
+    },
+    {
+      "path": "apps/api/app/routers/workout.py",
+      "sha256": "f2cbbfc95a512d777204009fd41ef77c961cae5524a6eb36378b4376c4a3b769",
+      "qualification_snapshot": "final-source"
+    },
+    {
+      "path": "apps/api/app/schemas.py",
+      "sha256": "835455388de496b67f393ba4bc8ffaa0cb5bb25641a7526b2dbad9f4044105d0",
+      "qualification_snapshot": "final-source"
+    },
+    {
+      "path": "apps/api/app/template_schema.py",
+      "sha256": "ee0115fa938190dc022a62e34183dc942b170859c7542a48164eae86fe4665ff",
+      "qualification_snapshot": "final-source"
+    },
+    {
+      "path": "apps/api/app/workout_history.py",
+      "sha256": "b1e0a25f5b5ee51724b539f6967b2274319d891e90aaf1f94f0daf96a141c611",
+      "qualification_snapshot": "final-source"
+    },
+    {
+      "path": "apps/api/tests/test_exercise_intelligence_extraction.py",
+      "sha256": "0b887ee07af56ff00dffc37f0dcfcd3a2cb7e417ee3a50210facb9d4fc08b63b",
+      "qualification_snapshot": "final-compatibility"
+    },
+    {
+      "path": "apps/api/tests/test_phase1_full_body_source_fidelity.py",
+      "sha256": "d9352ae1007f660bf419466eb767b2508d0816e75acc4fbb59af712a9dbbd7ae",
+      "qualification_snapshot": "final-source"
+    },
+    {
+      "path": "apps/api/tests/test_workout_resume.py",
+      "sha256": "f671b22a9108995bf319d0fba6522d81d89270dbffc2e668af50b0a7497ec779",
+      "qualification_snapshot": "final-compatibility"
+    },
+    {
+      "path": "apps/api/tests/test_xlsx_to_program_v2.py",
+      "sha256": "4c5485d8df9dfd9f8c848d2930cf3764e92463ce1ed9eff2ab9e23881dee2f85",
+      "qualification_snapshot": "final-source"
+    },
+    {
+      "path": "apps/web/app/page.tsx",
+      "sha256": "c19d58606d8655bed9b8e9597cdbe840a1ca128bef3770c617230438ac5b9f36",
+      "qualification_snapshot": "final-source"
+    },
+    {
+      "path": "apps/web/app/today/page.tsx",
+      "sha256": "af3bf8d18a78e8b316134c212d2d81ff79cf97325d0675d2975ac84647c36863",
+      "qualification_snapshot": "final-source"
+    },
+    {
+      "path": "apps/web/app/week/page.tsx",
+      "sha256": "149f439a96c15d9cae2c45b84fe1136adc58b40ab3b7555c05960c2226f0ba57",
+      "qualification_snapshot": "final-source"
+    },
+    {
+      "path": "apps/web/components/exercise-control.tsx",
+      "sha256": "22f7596c2930ecf33ecc387c854c958e43ba46b95bc821d998e1c6088a6db8e7",
+      "qualification_snapshot": "final-source"
+    },
+    {
+      "path": "apps/web/lib/api.ts",
+      "sha256": "e1b517e862e4bcace71d7d948d09a6cbdc83060962fde4636b403d16fa64413a",
+      "qualification_snapshot": "final-source"
+    },
+    {
+      "path": "importers/exercise_intelligence_extraction.py",
+      "sha256": "ac2c0bd7c927ed28cdda208ccda463d86eea05979cbed02ae1cec33723da9f4c",
+      "qualification_snapshot": "final-compatibility"
+    },
+    {
+      "path": "importers/structured_program_builder.py",
+      "sha256": "41817103887adcefae8b4fe8dc2ef5544befbea6e74489de730f98b03e5c0abf",
+      "qualification_snapshot": "final-source"
+    },
+    {
+      "path": "importers/xlsx_to_program.py",
+      "sha256": "ff530620ddd70faea312fbf3fd6e08539f2ed86fa14e33444a4289f512606165",
+      "qualification_snapshot": "final-source"
+    },
+    {
+      "path": "importers/xlsx_to_program_v2.py",
+      "sha256": "4c31a83d3012a5020eded1f11db657f1cb9b0c09e1a055838d78100e5bd9e75f",
+      "qualification_snapshot": "final-source"
+    },
+    {
+      "path": "packages/core-engine/core_engine/decision_weekly_review.py",
+      "sha256": "8e262d34ee3ecabeb9209612547578c43cd2c453055baba994e31528a6179bf2",
+      "qualification_snapshot": "final-source"
+    },
+    {
+      "path": "packages/core-engine/core_engine/decision_workout_session.py",
+      "sha256": "0f6e1b3010caebc1984e88eae7f39173cba8bfdd64229ddc06816b6dba7bffaf",
+      "qualification_snapshot": "final-source"
+    },
+    {
+      "path": "packages/core-engine/core_engine/scheduler.py",
+      "sha256": "6f2eba3c6aaf29dc8888feb5d28fad5175aed7d0b3380f204e569627984f1c8a",
+      "qualification_snapshot": "final-source"
+    },
+    {
+      "path": "programs/gold/pure_bodybuilding_phase_1_full_body.json",
+      "sha256": "21b327cd2f5ad4b7dbcde036f8cd39476eb5182c57edea4d4fb97c91a3013a69",
+      "qualification_snapshot": "final-source"
+    },
+    {
+      "path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json",
+      "sha256": "d0063f42ecf1b5e751aba491357dc77932325e25fb64f8bce45bb759ada12d18",
+      "qualification_snapshot": "final-source"
+    },
+    {
+      "path": "programs/gold/pure_bodybuilding_phase_2_full_body.json",
+      "sha256": "7dc403cbb2a4b6690f4c855711fd3581bc420bb22c7fba0136a794b281e7ab32",
+      "qualification_snapshot": "final-source"
+    },
+    {
+      "path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json",
+      "sha256": "1a911e8a99bbe31a3a1489d1acd3d9d7f51a14dda1af4333ec244c9e94fb0e70",
+      "qualification_snapshot": "final-source"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "programs/gold/pure_bodybuilding_phase_1_full_body.json",
+      "sha256": "21b327cd2f5ad4b7dbcde036f8cd39476eb5182c57edea4d4fb97c91a3013a69",
+      "source_provenance": {
+        "source_sha256": "46f50999771cbb454b325729b2d2a77515dbcf2cdd86891e4543eab65019bb71",
+        "source_name": "Pure Bodybuilding Phase 1 - Full Body Sheet.xlsx",
+        "sheet": "Full Body",
+        "importer_version": "authored-fidelity-1",
+        "importer_sha256": "a18310462daff9c03cd9d5728efea9d88378e37b5d23ea0afe007194414997fb",
+        "artifact_version": "0.3.0",
+        "artifact_sha256": "4b9e6bdb7d41915006b819e9a8e6c296e67f5fba22e3d61939840bfddca0af57"
+      }
+    },
+    {
+      "path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json",
+      "sha256": "d0063f42ecf1b5e751aba491357dc77932325e25fb64f8bce45bb759ada12d18",
+      "source_provenance": {
+        "source_sha256": "46f50999771cbb454b325729b2d2a77515dbcf2cdd86891e4543eab65019bb71",
+        "source_name": "Pure Bodybuilding Phase 1 - Full Body Sheet.xlsx",
+        "sheet": "Full Body",
+        "importer_version": "authored-fidelity-1",
+        "importer_sha256": "a18310462daff9c03cd9d5728efea9d88378e37b5d23ea0afe007194414997fb",
+        "artifact_version": "0.3.0",
+        "artifact_sha256": "a37b3b98321f1a15fdc82bae9378a092ff1cafb5bdb9ab602ed053fba17f509c",
+        "canonical_artifact_sha256": "4b9e6bdb7d41915006b819e9a8e6c296e67f5fba22e3d61939840bfddca0af57"
+      }
+    },
+    {
+      "path": "programs/gold/pure_bodybuilding_phase_2_full_body.json",
+      "sha256": "7dc403cbb2a4b6690f4c855711fd3581bc420bb22c7fba0136a794b281e7ab32",
+      "source_provenance": {
+        "source_sha256": "3068701dc79bfa5dd7dff0daa55c670213125fce0cc1bb56abff22083b93bb23",
+        "source_name": "Pure Bodybuilding Phase 2 - Full Body Sheet.xlsx",
+        "sheet": "Full Body",
+        "importer_version": "authored-fidelity-1",
+        "importer_sha256": "a18310462daff9c03cd9d5728efea9d88378e37b5d23ea0afe007194414997fb",
+        "artifact_version": "0.3.0",
+        "artifact_sha256": "fc52d45cf7485886910554a4e14401b8021fbc2a77c26d90c98336cfdda5e204"
+      }
+    },
+    {
+      "path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json",
+      "sha256": "1a911e8a99bbe31a3a1489d1acd3d9d7f51a14dda1af4333ec244c9e94fb0e70",
+      "source_provenance": {
+        "source_sha256": "3068701dc79bfa5dd7dff0daa55c670213125fce0cc1bb56abff22083b93bb23",
+        "source_name": "Pure Bodybuilding Phase 2 - Full Body Sheet.xlsx",
+        "sheet": "Full Body",
+        "importer_version": "authored-fidelity-1",
+        "importer_sha256": "a18310462daff9c03cd9d5728efea9d88378e37b5d23ea0afe007194414997fb",
+        "artifact_version": "0.3.0",
+        "artifact_sha256": "8ec2b6a48124a9c85dd06c0092ba873d21b8c261f37474ecef796625134352a1",
+        "canonical_artifact_sha256": "fc52d45cf7485886910554a4e14401b8021fbc2a77c26d90c98336cfdda5e204"
+      }
+    }
+  ],
+  "raw_output_hashes": [
+    {
+      "procedure": "focused",
+      "snapshot": "final-source",
+      "sha256": "e931aa7afca686c93aa374da46afe5ba56c9798bbb1ba5ac0e4c14170d899845",
+      "availability": "Owner temporary evidence outside Git; not publicly retained"
+    },
+    {
+      "procedure": "core",
+      "snapshot": "final-source",
+      "sha256": "73e33ace969b36f8389faba6cccdbb67087f6511162b5a63271841e24c7e9ad6",
+      "availability": "Owner temporary evidence outside Git; not publicly retained"
+    },
+    {
+      "procedure": "web",
+      "snapshot": "final-source",
+      "sha256": "f110ce9a267c1c4c7c5d79a5ea066012ef618ef47670a4cd1bccf6abffcbcde5",
+      "availability": "Owner temporary evidence outside Git; not publicly retained"
+    },
+    {
+      "procedure": "compile-recheck",
+      "snapshot": "final-source",
+      "sha256": "f850adfb85f225e2135033a207f787a483e95553ea6894aa305244f413bbdff6",
+      "availability": "Owner temporary evidence outside Git; not publicly retained"
+    },
+    {
+      "procedure": "full-api",
+      "snapshot": "final-source",
+      "sha256": "54fc7f35015fc857e9c7595d4f8194f83de4a8c35ef9e9bd38b806d6c02e0293",
+      "availability": "Owner temporary evidence outside Git; not publicly retained"
+    },
+    {
+      "procedure": "build",
+      "snapshot": "final-source",
+      "sha256": "3101d5833a71b444135c1d55e78fd18eec46a1564a43b179733fa1575d90f453",
+      "availability": "Owner temporary evidence outside Git; not publicly retained"
+    },
+    {
+      "procedure": "boundary",
+      "snapshot": "final-compatibility",
+      "sha256": "0362940455168a10addd943edb7bf5c4e4206669cf23bb001ee91aee52905e54",
+      "availability": "Owner temporary evidence outside Git; not publicly retained"
+    },
+    {
+      "procedure": "final-compatibility-recheck",
+      "snapshot": "final-compatibility",
+      "sha256": "a099bd2d5bc18fa1dd6046799af246e0a7e5445716e5aa75197659bfc7d4a813",
+      "availability": "Owner temporary evidence outside Git; not publicly retained"
+    },
+    {
+      "procedure": "dev-endpoint-recheck",
+      "snapshot": "final-compatibility",
+      "sha256": "472d4d1ccc29a7359bda35690e237b366e3012c630d19777f078227e5e33e08b",
+      "availability": "Owner temporary evidence outside Git; not publicly retained"
+    },
+    {
+      "procedure": "final-resume",
+      "snapshot": "final-compatibility",
+      "sha256": "112f41191ba8644b883aa07686dae1275ae00f0ec348829e37f7bd10e9eacc19",
+      "availability": "Owner temporary evidence outside Git; not publicly retained"
+    },
+    {
+      "procedure": "web",
+      "snapshot": "same-web-source",
+      "sha256": "2b8fe275088c48d009731b04c958723c9ec2763e065577fd77613f5b91a43c9c",
+      "availability": "Owner temporary evidence outside Git; not publicly retained"
+    },
+    {
+      "procedure": "types",
+      "snapshot": "same-web-source",
+      "sha256": "05f38959e85dc8dc68ad410560b78355e5e130c1fff032998442642c44be9a20",
+      "availability": "Owner temporary evidence outside Git; not publicly retained"
+    },
+    {
+      "procedure": "lint",
+      "snapshot": "same-web-source",
+      "sha256": "f45718ddda1d5e116e24cc219298623da4e0d9262fd101b1cfcdd067e917bf90",
+      "availability": "Owner temporary evidence outside Git; not publicly retained"
+    }
+  ],
+  "harnesses": [
+    {
+      "name": "final-source runner",
+      "sha256": "513e6a847d430d0b966124c8f34f06d84a0df03563de75246c23d31cb2db9c86"
+    },
+    {
+      "name": "final-boundary runner",
+      "sha256": "316316ceb63ada8e4ff490ddcb0bb42e6c6c60fd1459671cad453c9ea72800a9"
+    },
+    {
+      "name": "Python socket/database guard",
+      "sha256": "9ade638cbdfb802bdf27d7afc094964ff0fa1849748e0c33732c46837b97e659"
+    },
+    {
+      "name": "Node network guard",
+      "sha256": "c5482e6b8aab103c58b02e2bb338ca76f541d91489cdc10c0d8156e001a31975"
+    }
+  ],
+  "limits": [
+    "Full API and source/core snapshots precede the final authored set-index guard and offline typed-set metadata counting correction and source-based resume assertion update; these exact files and their tests are separately qualified with occurrence/correction/metadata/resume tests.",
+    "Full web/TypeScript/lint evidence uses byte-equal final web application/test sources.",
+    "SQLite does not qualify PostgreSQL concurrency; six PostgreSQL-only focused history cases were skipped.",
+    "Licensed source coverage is confined to recorded tabular columns and normal source-preserving runtime paths.",
+    "No completed-history rewrite, M1 migration or M1 deployment occurred.",
+    "Raw outputs are temporary owner evidence, not durable public build artifacts; source hashes do not independently establish authenticity."
+  ]
+}

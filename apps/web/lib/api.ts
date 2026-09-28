@@ -13,7 +13,20 @@ type ExerciseVideo = {
   youtube_url?: string;
 } | null;
 
+export type AuthoredTarget = {
+  kind: "reps" | "amrap" | "text" | "unknown" | "rpe" | "rir";
+  raw: string | null; min?: number | null; max?: number | null; approximate?: boolean;
+};
+export type AuthoredPrescription = {
+  version: "authored-prescription-v1";
+  raw: Record<string, string | null>;
+  sets: Array<{ set_index: number; set_type: string; rep_target: AuthoredTarget;
+    effort_target: AuthoredTarget; rest: string | null; intensity_technique: string | null; source_set_id?: string | null }>;
+};
+
 type AuthoredExecutionFields = {
+  authored_prescription?: AuthoredPrescription | null;
+  source_lineage?: Record<string, unknown> | null;
   load_semantics?: string | null;
   execution_modifiers?: Record<string, unknown> | null;
   last_set_intensity_technique?: string | null;
@@ -40,7 +53,7 @@ export type WorkoutExercise = AuthoredExecutionFields & {
   primary_exercise_id?: string;
   name: string;
   sets: number;
-  rep_range: [number, number];
+  rep_range: [number, number] | null;
   recommended_working_weight: number;
   /** Warmup weights in kg (from API); used to show warm-up set prescriptions. */
   warmups?: number[];
@@ -54,8 +67,8 @@ export type WorkoutExercise = AuthoredExecutionFields & {
 export type WorkoutLiveRecommendation = {
   completed_sets: number;
   remaining_sets: number;
-  recommended_reps_min: number;
-  recommended_reps_max: number;
+  recommended_reps_min: number | null;
+  recommended_reps_max: number | null;
   recommended_weight: number;
   guidance: string;
   guidance_rationale?: string;
@@ -202,7 +215,7 @@ export type GeneratedWeekExercise = AuthoredExecutionFields & {
   primary_exercise_id?: string | null;
   name: string;
   sets: number;
-  rep_range: [number, number];
+  rep_range: [number, number] | null;
   recommended_working_weight: number;
   slot_role?: string | null;
   primary_muscles?: string[];
@@ -533,10 +546,10 @@ export type WorkoutSetFeedback = {
   set_kind?: string | null;
   parent_set_index?: number | null;
   technique?: Record<string, unknown> | null;
-  planned_reps_min: number;
-  planned_reps_max: number;
+  planned_reps_min: number | null;
+  planned_reps_max: number | null;
   planned_weight: number;
-  rep_delta: number;
+  rep_delta: number | null;
   weight_delta: number;
   next_working_weight: number;
   guidance: string;
@@ -552,14 +565,14 @@ export type WorkoutExerciseSummary = {
   primary_exercise_id?: string | null;
   name: string;
   planned_sets: number;
-  planned_reps_min: number;
-  planned_reps_max: number;
+  planned_reps_min: number | null;
+  planned_reps_max: number | null;
   planned_weight: number;
   performed_sets: number;
   average_performed_reps: number;
   average_performed_weight: number;
   completion_pct: number;
-  rep_delta: number;
+  rep_delta: number | null;
   weight_delta: number;
   next_working_weight: number;
   guidance: string;

@@ -1,4 +1,6 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
+from .adaptive_schema import AuthoredPrescription
+from core_engine.authored_prescription import uniform_rep_range
 
 
 class VideoMetadata(BaseModel):
@@ -10,7 +12,9 @@ class CanonicalExercise(BaseModel):
     primary_exercise_id: str | None = None
     name: str
     sets: int = Field(ge=1)
-    rep_range: list[int]
+    rep_range: list[int] | None
+    authored_prescription: AuthoredPrescription | None = None
+    source_lineage: dict | None = None
     start_weight: float = Field(ge=0)
     priority: str = "standard"
     slot_role: str | None = None
@@ -39,9 +43,22 @@ class CanonicalExercise(BaseModel):
     notes: str | None = None
     video: VideoMetadata | None = None
 
+    @model_validator(mode="after")
+    def validate_numeric_compatibility(self):
+        if self.authored_prescription is not None:
+            if self.rep_range != uniform_rep_range(self.authored_prescription.model_dump()):
+                raise ValueError("Numeric compatibility must match every authored set")
+            if self.sets != len(self.authored_prescription.sets):
+                raise ValueError("Working-set count must match authored prescription")
+        elif self.rep_range is None:
+            raise ValueError("Legacy/generated exercise requires numeric rep range")
+        return self
+
     @field_validator("rep_range")
     @classmethod
-    def validate_rep_range(cls, value: list[int]) -> list[int]:
+    def validate_rep_range(cls, value: list[int] | None) -> list[int] | None:
+        if value is None:
+            return None
         if len(value) != 2:
             raise ValueError("rep_range must contain exactly 2 integers")
         if value[0] > value[1]:

@@ -82,6 +82,14 @@ the historical audit and does not establish deployment or release acceptance.
 [HIST-A merge/live activation](2026-09-28-m0-hist-a-activation.md) records the
 separately authorized PR #39 deployment and live migration 0019.
 [HIST-B qualification](2026-09-28-m0-hist-b.md) and its
-[manifest](2026-09-28-m0-hist-b.manifest.json) describe the unmerged correction
-candidate and disposable migration 0020. Neither record constitutes whole-M0,
+[manifest](2026-09-28-m0-hist-b.manifest.json) describe the pre-merge correction
+candidate and disposable migration 0020. [HIST-B merge/live activation](2026-09-28-m0-hist-b-activation.md) records the
+subsequent separately authorized deployment and outstanding HIST qualification.
+None of these records constitutes whole-M0,
 ADR or release owner acceptance.
+
+## M1-A authored source fidelity candidate
+
+[Source-to-runtime qualification](2026-09-28-m1-authored-fidelity.md) records the
+authorized 315/310-row source-preservation candidate, typed execution boundaries
+and remaining work. No M1 deployment, whole-M1 acceptance or ADR acceptance is claimed.

@@ -26,6 +26,8 @@ from core_engine import (
 )
 
 from ..database import get_db
+from core_engine.authored_prescription import requires_typed_tracking
+from ..workout_authored import log_typed_set, typed_projection
 from ..deps import get_current_user
 from ..models import ExerciseState, User, WorkoutPlan, WorkoutSessionState, WorkoutSetLog, WorkoutOccurrence, WorkoutLogCommand
 from ..workout_identity import identified_plans, resolve_occurrence, resolve_exercise, occurrence_plan
@@ -462,6 +464,9 @@ def _apply_log_set(
         )
         .first()
     )
+    if requires_typed_tracking(exercise):
+        return log_typed_set(db, current_user=current_user, occurrence=occurrence, exercise=exercise,
+            payload=payload, command_id=command_id, digest=digest, context=context_runtime, state=state)
     log_set_runtime = prepare_workout_log_set_decision_route_runtime(
         user_id=current_user.id,
         workout_id=occurrence.workout_id,
@@ -559,6 +564,8 @@ def _void_set(db, record, *, reason, source, timestamp):
 
 def _reconstruct_history(db, record):
     db.flush()
+    if requires_typed_tracking(record.replay_context["planned_exercise"]):
+        return typed_projection(db, record)
     progression = rebuild_exercise_state(db, user_id=record.user_id, primary_exercise_id=record.primary_exercise_id)
     session = rebuild_session_state(db, user_id=record.user_id, occurrence_id=record.workout_occurrence_id,
         exercise_occurrence_id=record.exercise_occurrence_id, session_inputs=progression["session_inputs"])
