@@ -1073,9 +1073,13 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  undoLastSet: (workoutId: string, exerciseId: string, exerciseOccurrenceId?: string) =>
-    request<{ status: string }>(`/workout/${encodeURIComponent(workoutId)}/undo-last-set`, {
+  correctSet: (setId: string, payload: { command_id: string; reps: number; weight: number; rpe?: number | null; reason: string }) =>
+    request<{ status: string; original_set_id: string; effective_set_id: string }>(`/workout/set/${encodeURIComponent(setId)}/correct`, {
+      method: "POST", body: JSON.stringify(payload),
+    }),
+  undoLastSet: (workoutId: string, exerciseId: string, exerciseOccurrenceId?: string, commandId?: string) =>
+    request<{ status: string; live_recommendation?: WorkoutLiveRecommendation | null; exercise_state?: { current_working_weight: number } | null }>(`/workout/${encodeURIComponent(workoutId)}/undo-last-set`, {
       method: "POST",
-      body: JSON.stringify({ exercise_id: exerciseId, exercise_occurrence_id: exerciseOccurrenceId }),
+      body: JSON.stringify({ exercise_id: exerciseId, exercise_occurrence_id: exerciseOccurrenceId, command_id: commandId }),
     }),
 };

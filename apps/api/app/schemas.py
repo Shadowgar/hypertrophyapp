@@ -67,6 +67,8 @@ class StatusResponse(BaseModel):
 
 
 class WorkoutUndoLastSetRequest(BaseModel):
+    command_id: str | None = Field(default=None, min_length=1, max_length=128)
+    reason: str | None = Field(default=None, max_length=500)
     exercise_occurrence_id: str | None = None
     exercise_id: str
 
@@ -667,3 +669,11 @@ class WorkoutSummaryResponse(BaseModel):
     overall_rationale: str
     decision_trace: dict[str, Any]
     exercises: list[WorkoutExerciseSummaryResponse]
+
+
+class WorkoutSetCorrectionRequest(BaseModel):
+    command_id: str = Field(min_length=1, max_length=128)
+    reps: int = Field(ge=1)
+    weight: float = Field(gt=0, allow_inf_nan=False)
+    rpe: float | None = Field(default=None, allow_inf_nan=False)
+    reason: str = Field(min_length=1, max_length=500)

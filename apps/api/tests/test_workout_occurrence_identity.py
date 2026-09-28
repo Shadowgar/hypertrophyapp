@@ -62,7 +62,7 @@ def log(client, headers, session, payload):
 
 def counts(user_id):
     with SessionLocal() as db:
-        return (db.query(WorkoutSetLog).filter_by(user_id=user_id).count(),
+        return (db.query(WorkoutSetLog).filter_by(user_id=user_id).filter(WorkoutSetLog.voided_at.is_(None)).count(),
                 db.query(WorkoutSessionState).filter_by(user_id=user_id).count(),
                 db.query(WorkoutLogCommand).filter_by(user_id=user_id).count())
 
@@ -302,7 +302,10 @@ def test_authorized_wipe_deletes_occurrence_dependents_only_for_target_user(scen
     monkeypatch.setattr(settings, "allow_dev_wipe_endpoints", True)
     user, headers, client = scenario
     session = plan(user, date(2026, 9, 7))
-    assert log(client, headers, session, submission(session)).status_code == 200
+    target = log(client, headers, session, submission(session))
+    assert target.status_code == 200
+    assert client.post(f"/workout/set/{target.json()['id']}/correct", headers=headers,
+        json={"command_id": str(uuid4()), "reps": 9, "weight": 25, "reason": "Synthetic correction before authorized wipe"}).status_code == 200
     with SessionLocal() as db:
         other = User(id=str(uuid4()), email=f"{uuid4()}@example.invalid", name="Other synthetic", password_hash="unused")
         db.add(other)
@@ -358,4 +361,4 @@ def test_distinct_commands_cannot_duplicate_logical_set_and_new_attempt_after_un
         json={"exercise_id": "same-catalog", "exercise_occurrence_id": first["exercise_occurrence_id"]}).status_code == 200
     assert log(client, headers, session, submission(session)).status_code == 200
     with SessionLocal() as db:
-        assert db.query(ExerciseState).filter_by(user_id=user).one().exposure_count == before + 1
+        assert db.query(ExerciseState).filter_by(user_id=user).one().exposure_count == before

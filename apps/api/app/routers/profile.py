@@ -27,6 +27,7 @@ from sqlalchemy.orm.attributes import flag_modified
 
 from ..config import settings
 from ..database import get_db
+from ..workout_history import effective_set_logs, valid_weekly_reviews, lock_history_user
 from ..deps import get_current_user
 from ..models import BodyMeasurementEntry, SorenessEntry, User, WeeklyCheckin, WeeklyReviewCycle, WorkoutSetLog
 from ..models import CoachingRecommendation, ExerciseState, PasswordResetToken, WorkoutLogCommand, WorkoutOccurrence, WorkoutPlan, WorkoutSessionState
@@ -200,7 +201,7 @@ def _build_program_recommendation_training_state(
         .all()
     )
     recent_reviews = (
-        db.query(WeeklyReviewCycle)
+        valid_weekly_reviews(db)
         .filter(WeeklyReviewCycle.user_id == current_user.id)
         .order_by(WeeklyReviewCycle.week_start.desc(), WeeklyReviewCycle.created_at.desc())
         .limit(4)
@@ -244,7 +245,7 @@ def _collect_previous_week_performance_summary(
         .first()
     )
     logs = (
-        db.query(WorkoutSetLog)
+        effective_set_logs(db)
         .filter(
             WorkoutSetLog.user_id == user_id,
             WorkoutSetLog.created_at >= cast(datetime, log_window_runtime["window_start"]),
@@ -316,14 +317,14 @@ def get_training_state(
         .all()
     )
     recent_reviews = (
-        db.query(WeeklyReviewCycle)
+        valid_weekly_reviews(db)
         .filter(WeeklyReviewCycle.user_id == current_user.id)
         .order_by(WeeklyReviewCycle.week_start.desc(), WeeklyReviewCycle.created_at.desc())
         .limit(4)
         .all()
     )
     recent_logs = (
-        db.query(WorkoutSetLog)
+        effective_set_logs(db)
         .filter(WorkoutSetLog.user_id == current_user.id)
         .order_by(WorkoutSetLog.created_at.desc())
         .limit(200)
@@ -693,7 +694,7 @@ def weekly_review_status(
     week_start = window["week_start"]
     previous_week_start = window["previous_week_start"]
     existing_review = (
-        db.query(WeeklyReviewCycle)
+        valid_weekly_reviews(db)
         .filter(WeeklyReviewCycle.user_id == current_user.id, WeeklyReviewCycle.week_start == week_start)
         .order_by(WeeklyReviewCycle.created_at.desc())
         .first()
@@ -718,6 +719,7 @@ def submit_weekly_review(
     db: DbSession,
     current_user: CurrentUser,
 ) -> WeeklyReviewSubmitResponse:
+    lock_history_user(db, current_user.id)
     today = date.today()
     submit_window = prepare_weekly_review_submit_window(
         today=today,

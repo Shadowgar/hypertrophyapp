@@ -1224,6 +1224,7 @@ def resolve_workout_completion_per_exercise(
     performed_logs: list[dict[str, Any]],
 ) -> dict[str, int]:
     completed_by_exercise: dict[str, int] = {}
+    occurrence_slots: dict[str, set[int]] = {}
     for row in performed_logs:
         exercise_id = str(row.get("exercise_occurrence_id") or row.get("exercise_id") or "")
         if not exercise_id:
@@ -1237,6 +1238,10 @@ def resolve_workout_completion_per_exercise(
         if set_kind and set_kind != "work":
             continue
         set_index = int(row.get("set_index") or 0)
+        if row.get("exercise_occurrence_id"):
+            occurrence_slots.setdefault(exercise_id, set()).add(set_index)
+            completed_by_exercise[exercise_id] = len(occurrence_slots[exercise_id])
+            continue
         previous_completed_sets = completed_by_exercise.get(exercise_id, 0)
         if set_index > previous_completed_sets:
             completed_by_exercise[exercise_id] = set_index

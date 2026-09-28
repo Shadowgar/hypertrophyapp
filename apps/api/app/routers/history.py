@@ -6,6 +6,7 @@ from core_engine import build_history_analytics, build_history_calendar, build_h
 from sqlalchemy.orm import Session
 
 from ..database import get_db
+from ..workout_history import effective_set_logs
 from ..deps import get_current_user
 from ..models import BodyMeasurementEntry, User, WeeklyCheckin, WorkoutPlan, WorkoutSetLog
 from ..program_loader import resolve_administered_program_id
@@ -68,7 +69,7 @@ def get_exercise_history(
     current_user: CurrentUser,
 ) -> dict:
     rows = (
-        db.query(WorkoutSetLog)
+        effective_set_logs(db)
         .filter(
             WorkoutSetLog.user_id == current_user.id,
             WorkoutSetLog.exercise_id == exercise_id,
@@ -139,7 +140,7 @@ def get_history_analytics(
     )
 
     log_rows = (
-        db.query(WorkoutSetLog)
+        effective_set_logs(db)
         .filter(
             WorkoutSetLog.user_id == current_user.id,
             WorkoutSetLog.created_at >= start_datetime,
@@ -187,7 +188,7 @@ def get_history_calendar(
     start_dt, end_dt = _date_window(resolved_start, resolved_end)
 
     rows = (
-        db.query(WorkoutSetLog)
+        effective_set_logs(db)
         .filter(
             WorkoutSetLog.user_id == current_user.id,
             WorkoutSetLog.created_at >= start_dt,
@@ -198,7 +199,7 @@ def get_history_calendar(
     )
 
     rows_until_end = (
-        db.query(WorkoutSetLog)
+        effective_set_logs(db)
         .filter(
             WorkoutSetLog.user_id == current_user.id,
             WorkoutSetLog.created_at < end_dt,
@@ -232,7 +233,7 @@ def get_history_day_detail(
 ) -> dict[str, Any]:
     start_dt, end_dt = _date_window(day, day)
     rows = (
-        db.query(WorkoutSetLog)
+        effective_set_logs(db)
         .filter(
             WorkoutSetLog.user_id == current_user.id,
             WorkoutSetLog.created_at >= start_dt,

@@ -136,13 +136,13 @@ export function useExerciseControl({
     }
   }, [completedSets, actualWeightInput, actualReps, repRange, recommendedWorkingWeight, totalSets, skipTimerOnComplete, onSetComplete, exerciseId, resetTimer, startTimer]);
 
-  const undoLastLoggedSet = useCallback(() => {
+  const undoLastLoggedSet = useCallback((confirmedCompletedSets?: number) => {
     setLoggedSets((logs) => {
       if (logs.length === 0) return logs;
       const nextLogs = logs.slice(0, -1);
       return nextLogs;
     });
-    setCompletedSets((prev) => (prev > 0 ? prev - 1 : 0));
+    setCompletedSets((prev) => confirmedCompletedSets ?? (prev > 0 ? prev - 1 : 0));
   }, []);
 
   return {
@@ -350,10 +350,12 @@ export function SetProgressTimeline({ exerciseId, ctrl }: SetProgressTimelinePro
 
 type SetLogDisplayProps = Readonly<{
   ctrl: ExerciseControlState;
-  onUndoLastSet?: () => void;
+  onUndoLastSet?: () => Promise<number | false> | void;
 }>;
 
 export function SetLogDisplay({ ctrl, onUndoLastSet }: SetLogDisplayProps) {
+  const pending = useRef(false);
+  const [undoing, setUndoing] = useState(false);
   if (ctrl.loggedSets.length === 0 && ctrl.completedSets === 0) {
     return null;
   }
@@ -367,9 +369,15 @@ export function SetLogDisplay({ ctrl, onUndoLastSet }: SetLogDisplayProps) {
             type="button"
             variant="ghost"
             className="px-2 py-0.5 text-[11px] text-zinc-400 hover:text-red-300"
-            onClick={() => {
-              ctrl.undoLastLoggedSet();
-              onUndoLastSet();
+            disabled={undoing || ctrl.submitting}
+            onClick={async () => {
+              if (pending.current) return;
+              pending.current = true;
+              setUndoing(true);
+              try {
+                const confirmed = await onUndoLastSet();
+                if (confirmed !== false) ctrl.undoLastLoggedSet(typeof confirmed === "number" ? confirmed : undefined);
+              } finally { pending.current = false; setUndoing(false); }
             }}
           >
             Undo Last Set
