@@ -2,9 +2,11 @@
 
 Status: owner-authorized PR #41 correctness candidate, awaiting fresh review and
 the separately authorized merge/activation. No milestone, ADR or release acceptance.
-Parent: `6d835db4d0511b4eed360e6dfef6ed550ef48fc4`. The containing commit and
+Parent: `6d835db4d0511b4eed360e6dfef6ed550ef48fc4`. This record is pinned to
+`b8a992cfeca22d2fda855483d3fdc967e0585b1b`; that commit and
 [manifest](2026-09-28-m1-authored-fidelity-review-fixes.manifest.json) bind this
-correction snapshot. [Original qualification](2026-09-28-m1-authored-fidelity.md)
+correction snapshot. [Summary follow-up](2026-09-28-m1-bodyweight-summary.md)
+records the next corrections. [Original qualification](2026-09-28-m1-authored-fidelity.md)
 remains pinned to its earlier revision rather than being relabeled as a final run.
 
 ## Corrected boundaries

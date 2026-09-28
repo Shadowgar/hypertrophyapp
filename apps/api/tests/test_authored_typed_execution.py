@@ -114,6 +114,17 @@ def test_bodyweight_receipts_do_not_invent_external_load(scenario, raw):
     assert response.status_code == 200, response.text
     assert response.json()["planned_weight"] == 0
     assert response.json()["next_working_weight"] == 0
+    if raw == "8-12":
+        assert response.json()["planned_reps_min"] == 8 and response.json()["planned_reps_max"] == 12
+    with SessionLocal() as db:
+        db.add(ExerciseState(user_id=user, exercise_id=exercise["id"], current_working_weight=20))
+        db.commit()
+    summary = client.get(f"/workout/{session['workout_occurrence_id']}/summary", headers=headers)
+    assert summary.status_code == 200, summary.text
+    item = summary.json()["exercises"][0]
+    assert item["next_working_weight"] == 0 and item["planned_weight"] == 0
+    assert item["planned_reps_min"] == (8 if raw == "8-12" else None)
+    assert item["planned_reps_max"] == (12 if raw == "8-12" else None)
     today = client.get("/workout/today", headers=headers).json()
     assert today["exercises"][0]["recommended_working_weight"] == 0
     correction = client.post(f"/workout/set/{response.json()['id']}/correct", headers=headers,
@@ -123,7 +134,7 @@ def test_bodyweight_receipts_do_not_invent_external_load(scenario, raw):
         rows = db.query(WorkoutSetLog).filter_by(user_id=user).all()
         assert len(rows) == 2 and all(row.weight == 0 for row in rows)
         assert all(row.replay_context["planned_exercise"]["load_semantics"] == "bodyweight" for row in rows)
-        assert db.query(ExerciseState).filter_by(user_id=user).count() == 0
+        assert db.query(ExerciseState).filter_by(user_id=user).one().current_working_weight == 20
 
 
 @pytest.mark.parametrize("raw", ["AMRAP", "8-12"])

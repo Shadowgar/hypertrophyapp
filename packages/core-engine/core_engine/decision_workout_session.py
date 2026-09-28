@@ -268,14 +268,15 @@ def summarize_workout_exercise_performance(
     if requires_receipt_tracking(exercise):
         count = len(performed_logs)
         live = typed_tracking_feedback(exercise, completed_sets=count)
+        planned_weight = 0.0 if is_bodyweight_authored(exercise) else float(exercise.get("recommended_working_weight", 0))
         return {"exercise_id": exercise_id, "exercise_occurrence_id": exercise.get("exercise_occurrence_id"),
             "primary_exercise_id": exercise.get("primary_exercise_id"), "name": exercise.get("name", exercise_id),
-            "load_semantics": exercise.get("load_semantics"), "planned_sets": planned_sets, "planned_reps_min": None, "planned_reps_max": None,
-            "planned_weight": float(exercise.get("recommended_working_weight", 0)),
+            "load_semantics": exercise.get("load_semantics"), "planned_sets": planned_sets, "planned_reps_min": live["recommended_reps_min"], "planned_reps_max": live["recommended_reps_max"],
+            "planned_weight": planned_weight,
             "performed_sets": count, "completion_pct": int(count / max(1, planned_sets) * 100),
             "average_performed_reps": sum(row["reps"] for row in performed_logs) / count if count else 0,
             "average_performed_weight": sum(row["weight"] for row in performed_logs) / count if count else 0,
-            "rep_delta": None, "weight_delta": (sum(row["weight"] for row in performed_logs) / count if count else 0) - float(exercise.get("recommended_working_weight", 0)), "next_working_weight": next_working_weight,
+            "rep_delta": None, "weight_delta": (sum(row["weight"] for row in performed_logs) / count if count else 0) - planned_weight, "next_working_weight": 0.0 if is_bodyweight_authored(exercise) else next_working_weight,
             "guidance": live["guidance"], "guidance_rationale": live["guidance_rationale"],
             "decision_trace": live["decision_trace"]}
     rep_range = exercise.get("rep_range") or [8, 12]

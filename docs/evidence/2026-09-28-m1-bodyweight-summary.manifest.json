@@ -1,0 +1,81 @@
+{
+  "manifest_version": 1,
+  "parent_revision": "b8a992cfeca22d2fda855483d3fdc967e0585b1b",
+  "revision_binding": "Containing commit and file hashes bind this follow-up",
+  "status": "Review candidate, no milestone/ADR/release acceptance",
+  "source_rows": {
+    "phase_1": 315,
+    "phase_2": 310,
+    "phase_2_amrap_slots": 5,
+    "working_sets_each": 2
+  },
+  "candidate_files": [
+    {
+      "path": "apps/api/app/workout_authored.py",
+      "sha256": "99b813edc346cb7b63454ec99f3fe8307f2e0c900e1775df7c843c97334b598f"
+    },
+    {
+      "path": "apps/api/tests/test_authored_typed_execution.py",
+      "sha256": "3df74acc20d5661d1a7465f229e858fb1231ab421cc540ec330746d72fedd9bf"
+    },
+    {
+      "path": "apps/web/app/today/page.tsx",
+      "sha256": "89c4bfce49ef3ff300d9c1a5d32367bdd6df75e1828513a189dc5464f79ba683"
+    },
+    {
+      "path": "apps/web/tests/authored-prescription.test.tsx",
+      "sha256": "0194a83fb8a31b59b6605dc87f0c44599c4d96104b7aac3f0e92d68320dbf646"
+    },
+    {
+      "path": "packages/core-engine/core_engine/authored_prescription.py",
+      "sha256": "f0f0ed4569ad288673f248c49a996795c146a23a95b7d3f70af6245cb05d85b5"
+    },
+    {
+      "path": "packages/core-engine/core_engine/decision_workout_session.py",
+      "sha256": "8eb81bb53a5511affc6e87a029370010b958e457e30b69b72e34deaaa68a247b"
+    },
+    {
+      "path": "programs/gold/pure_bodybuilding_phase_1_full_body.json",
+      "sha256": "48d0e32c7c090bbbc7fdeb33313e531028cb5b309cb32987875ba57398991773"
+    },
+    {
+      "path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json",
+      "sha256": "e5354807a12302d823250adc0e7f1cc64abff77c600bccd9d4d914d011a1ad22"
+    },
+    {
+      "path": "programs/gold/pure_bodybuilding_phase_2_full_body.json",
+      "sha256": "403e83cb8906f16c08ed196549816c21a48822fd05c0512a53162cb91b36346d"
+    },
+    {
+      "path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json",
+      "sha256": "5b973715766c2d90026a97bb4acebba1c3480a8a2229c2290ecfefd7e670d109"
+    }
+  ],
+  "raw_outputs": [
+    {
+      "procedure": "summary-api",
+      "sha256": "6e8b0dd59ffcc9958e841dda28e6376fb77b59a11dfa66ef0fb2085bc577b82e",
+      "availability": "Temporary owner evidence outside Git"
+    },
+    {
+      "procedure": "core-summary",
+      "sha256": "70b14c65d3e16bb3f46b380ca0fd59b5a00ebb95a4d41572c6d69455eac89785",
+      "availability": "Temporary owner evidence outside Git"
+    },
+    {
+      "procedure": "web",
+      "sha256": "66ddeb1dff870dbd6d8172df754358f2b6e35e016989e02e3af41d1a5e1f7f6d",
+      "availability": "Temporary owner evidence outside Git"
+    },
+    {
+      "procedure": "compile-recheck",
+      "sha256": "f850adfb85f225e2135033a207f787a483e95553ea6894aa305244f413bbdff6",
+      "availability": "Temporary owner evidence outside Git"
+    }
+  ],
+  "limits": [
+    "Selected API/core and JSDOM qualification; no full-final-tree API or PostgreSQL concurrency certification",
+    "Previous review and test snapshots remain pinned to their own revisions",
+    "No migration or deployment performed for this candidate"
+  ]
+}

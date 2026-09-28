@@ -92,3 +92,28 @@ test.each(["2", "2-3"])("runner retains %s authored warm-up sets and logs bodywe
   const request = fetchMock.mock.calls.find(([input]) => String(input).endsWith("/log-set"));
   expect(JSON.parse(String(request![1]?.body))).toMatchObject({ reps: 12, weight: 0 });
 });
+
+
+test.each([0, 5])("day summary keeps bodyweight context for %s added kg and numeric source bounds", async (added) => {
+  const bodyweight = { ...exercise, load_semantics: "bodyweight", recommended_working_weight: 0 };
+  const workout = { session_id: "synthetic", workout_occurrence_id: "synthetic-occurrence", title: "Synthetic authored",
+    date: new Date().toISOString().slice(0, 10), exercises: [bodyweight] };
+  vi.mocked(globalThis.fetch).mockImplementation(async (input) => {
+    const url = String(input);
+    const payload = url.includes("/workout/today") ? workout
+      : url.includes("/soreness") ? [{ id: "example" }]
+      : url.includes("/progress") ? { completed_total: 2, planned_total: 2, percent_complete: 100, exercises: [] }
+      : url.includes("/summary") ? { percent_complete: 100, overall_guidance: "Example", exercises: [{
+        exercise_id: "synthetic-pushup", name: "Synthetic Push-Up", load_semantics: "bodyweight",
+        planned_sets: 2, planned_reps_min: 8, planned_reps_max: 12, planned_weight: 0,
+        performed_sets: 1, average_performed_reps: 10, average_performed_weight: added,
+        next_working_weight: 0, guidance: "Example" }] } : {};
+    return new Response(JSON.stringify(payload), { status: 200 });
+  });
+  render(<TodayPage />);
+  fireEvent.click(screen.getByRole("button", { name: /Load today's workout/i }));
+  await waitFor(() => expect(screen.getByText(/Planned: 2 sets · 8-12 reps · Bodyweight/)).toBeInTheDocument());
+  expect(screen.getByText("Next: Bodyweight")).toBeInTheDocument();
+  expect(screen.getByText(added ? /Bodyweight \+ 11 lb added/ : /Bodyweight \(no added load\)/)).toBeInTheDocument();
+  expect(screen.queryByText(/0 lbs/)).not.toBeInTheDocument();
+});

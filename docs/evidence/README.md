@@ -98,3 +98,6 @@ and remaining work. No M1 deployment, whole-M1 acceptance or ADR acceptance is c
 and its [manifest](2026-09-28-m1-authored-fidelity-review-fixes.manifest.json)
 record the later warm-up, bodyweight and occurrence-cohort correction snapshot.
 The original M1-A manifest remains bound to its earlier revision.
+
+[Bodyweight summary follow-up](2026-09-28-m1-bodyweight-summary.md) records
+the subsequent current-head summary/load/rep-bound corrections.

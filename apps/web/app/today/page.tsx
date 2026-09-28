@@ -422,13 +422,13 @@ function WorkoutSummaryCard({ summary }: Readonly<{ summary: WorkoutSummary | nu
           <div key={item.exercise_occurrence_id ?? item.exercise_id} className="rounded-md border border-zinc-800 bg-zinc-900/40 p-2 text-xs text-zinc-300">
             <p className="font-semibold text-zinc-100">{item.name}</p>
             <p>
-              Planned: {item.planned_sets} sets · {item.planned_reps_min != null ? `${item.planned_reps_min}-${item.planned_reps_max}` : "authored target"} reps @ {kgToLbs(item.planned_weight)} lbs
+              Planned: {item.planned_sets} sets · {item.planned_reps_min != null ? `${item.planned_reps_min}-${item.planned_reps_max}` : "authored target"} reps · {item.load_semantics === "bodyweight" ? "Bodyweight" : `${kgToLbs(item.planned_weight)} lbs`}
             </p>
             <p>
-              Performed: {item.performed_sets} sets · avg {item.average_performed_reps} reps @ {kgToLbs(item.average_performed_weight)} lbs
+              Performed: {item.performed_sets} sets · avg {item.average_performed_reps} reps · {item.load_semantics === "bodyweight" ? (item.average_performed_weight > 0 ? `Bodyweight + ${kgToLbs(item.average_performed_weight)} lb added` : "Bodyweight (no added load)") : `${kgToLbs(item.average_performed_weight)} lbs`}
             </p>
             <p>
-              Next: {kgToLbs(item.next_working_weight)} lbs
+              Next: {item.load_semantics === "bodyweight" ? "Bodyweight" : `${kgToLbs(item.next_working_weight)} lbs`}
             </p>
             <p>{resolveGuidanceText(item.guidance_rationale, item.guidance)}</p>
           </div>

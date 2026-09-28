@@ -89,12 +89,13 @@ def typed_tracking_feedback(exercise, *, completed_sets, set_index=1):
     """Receipt/count evidence only; no numeric progression for an unsupported target."""
     prescribed = exercise["authored_prescription"]["sets"]
     current = prescribed[min(max(1, set_index), len(prescribed)) - 1]
+    bounds = uniform_rep_range(exercise["authored_prescription"])
     trace = {"owner": "core_engine.authored_prescription", "version": PRESCRIPTION_VERSION,
         "source_lineage": deepcopy(exercise.get("source_lineage")),
         "set_prescription": deepcopy(current), "numeric_progression": "not_applicable",
         "completed_sets": completed_sets}
     return {"completed_sets": completed_sets, "remaining_sets": max(0, int(exercise["sets"]) - completed_sets),
-        "recommended_reps_min": None, "recommended_reps_max": None,
+        "recommended_reps_min": bounds[0] if bounds else None, "recommended_reps_max": bounds[1] if bounds else None,
         "recommended_weight": 0.0 if is_bodyweight_authored(exercise) else float(exercise["recommended_working_weight"]),
         "guidance": "Follow the authored target and record actual reps.",
         "guidance_rationale": "authored_typed_target", "decision_trace": trace}
