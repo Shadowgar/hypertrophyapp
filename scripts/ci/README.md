@@ -23,7 +23,11 @@ Container builds use the root contexts and API/web Dockerfiles defined in `docke
 
 Historical notices explicitly beginning with Historical, Supporting, Generated or Tool-consumed keep their original dated bodies outside current qualification; their successor/navigation notices are checked. The headings in a historical target still resolve references into that historical document. This follows PR #35's original-body retention boundary, not an assertion that old historical links work.
 
-Changed structured documentation must parse; active context-manifest paths must exist. When the release scorecard is present, schema probes require pending records to remain representable, forbid empty evidence on accepted records and permit an evidenced acceptance. They do not fetch/hash evidence artifacts or establish their truth. The P2 schema finding in PR #35 is deliberately detected, not silently fixed in this tooling PR.
+Changed structured documentation must parse. The canonical context manifest must have a positive integer version and non-empty mandatory groups, each with a unique identifier and non-empty document list. Paths must be non-empty, unique within each group and present in the checked snapshot. Every listed group is mandatory; legacy `required` metadata is not needed.
+
+The current base manifest supplies the prior mandatory set. Same-version edits may add groups/documents but cannot remove or rename them. Versions cannot decrease. Destructive changes require a higher version and `AGENTS.md` in the same changed paths; the new structure and all targets must still validate. No fixed v1/v2 group or path list is embedded in CI, so an explicit coordinated governance migration can replace the set.
+
+When the release scorecard is present, schema probes require pending records to remain representable, forbid empty evidence on accepted records and permit an evidenced acceptance. They do not fetch/hash evidence artifacts or establish their truth. The P2 schema finding in PR #35 is deliberately detected, not silently fixed in this tooling PR.
 
 ## Removed and unqualified checks
 

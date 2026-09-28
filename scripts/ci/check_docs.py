@@ -131,13 +131,77 @@ def markdown_failures(snapshot):
     return failures, historical
 
 
-def manifest_errors(snapshot, path, payload):
+def manifest_structure(payload):
+    """Read the manifest's own version and mandatory set, without legacy policy lists."""
+    if not isinstance(payload, dict):
+        return None, {}, ["context manifest must be a mapping"]
     errors = []
-    for group in payload.get("mandatory_read_groups", []):
-        for doc in group.get("docs", []):
-            target = doc if isinstance(doc, str) else doc.get("path")
-            if not isinstance(target, str) or not snapshot.exists(target):
+    version = payload.get("version")
+    if type(version) is not int or version <= 0:
+        errors.append("version must be a positive integer")
+        version = None
+    groups = payload.get("mandatory_read_groups")
+    if not isinstance(groups, list) or not groups:
+        errors.append("mandatory_read_groups must exist and be a non-empty list")
+        return version, {}, errors
+    mandatory = {}
+    for group in groups:
+        if not isinstance(group, dict):
+            errors.append("each mandatory group must be a mapping")
+            continue
+        identifier = group.get("group")
+        if not isinstance(identifier, str) or not identifier.strip():
+            errors.append("each mandatory group needs a non-empty group identifier")
+            continue
+        if identifier in mandatory:
+            errors.append(f"duplicate mandatory group identifier: {identifier}")
+        docs = group.get("docs")
+        if not isinstance(docs, list) or not docs:
+            errors.append(f"mandatory group {identifier}: docs must be a non-empty list")
+            mandatory[identifier] = set()
+            continue
+        targets = set()
+        for doc in docs:
+            target = doc if isinstance(doc, str) else doc.get("path") if isinstance(doc, dict) else None
+            if not isinstance(target, str) or not target.strip():
+                errors.append(f"mandatory group {identifier}: each document needs a non-empty path")
+                continue
+            if target in targets:
+                errors.append(f"mandatory group {identifier}: duplicate document path: {target}")
+            targets.add(target)
+        mandatory[identifier] = targets
+    return version, mandatory, errors
+
+
+def manifest_errors(snapshot, path, payload, base=None, changed=frozenset()):
+    version, mandatory, structural = manifest_structure(payload)
+    errors = [f"{path}: {error}" for error in structural]
+    for targets in mandatory.values():
+        for target in sorted(targets):
+            if not snapshot.exists(target):
                 errors.append(f"{path}: context path does not exist: {target}")
+    if errors or base is None or path not in base.paths:
+        return errors
+    try:
+        base_version, previous, baseline_errors = manifest_structure(yaml.safe_load(base.text(path)))
+    except (ValueError, TypeError, yaml.YAMLError) as error:
+        return [f"{path}: invalid base context manifest: {error}"]
+    if baseline_errors:
+        return [f"{path}: invalid base context manifest: {error}" for error in baseline_errors]
+    if version < base_version:
+        errors.append(f"{path}: version must not decrease (base {base_version}, head {version})")
+    removals = []
+    for identifier in sorted(previous):
+        if identifier not in mandatory:
+            removals.append(f"mandatory group removed or renamed: {identifier}")
+        else:
+            for target in sorted(previous[identifier] - mandatory[identifier]):
+                removals.append(f"mandatory document removed or renamed in {identifier}: {target}")
+    if removals:
+        if version <= base_version:
+            errors.extend(f"{path}: {removal}; requires a version increase" for removal in removals)
+        elif "AGENTS.md" not in changed:
+            errors.append(f"{path}: destructive mandatory-set migration requires AGENTS.md in changed paths")
     return errors
 
 
@@ -167,7 +231,7 @@ def release_schema_errors(schema):
     return errors
 
 
-def structural_errors(head, changed):
+def structural_errors(head, changed, base=None):
     errors = []
     context = "docs/context/CONTEXT_MANIFEST.yaml"
     if context not in head.paths:
@@ -181,7 +245,7 @@ def structural_errors(head, changed):
             if path.endswith(".schema.json"):
                 validators.validator_for(payload).check_schema(payload)
             if path == "docs/context/CONTEXT_MANIFEST.yaml":
-                errors.extend(manifest_errors(head, path, payload))
+                errors.extend(manifest_errors(head, path, payload, base=base, changed=changed))
         except (ValueError, TypeError, AttributeError, SchemaError, yaml.YAMLError) as error:
             errors.append(f"{path}: invalid structured documentation: {error}")
     if RELEASE_SCHEMA in head.paths:
@@ -213,7 +277,7 @@ def main():
             changed.update(head.git("ls-files", "--others", "--exclude-standard", "-z").decode().strip("\0").split("\0"))
     else:
         changed = head.paths
-    errors = structural_errors(head, changed)
+    errors = structural_errors(head, changed, base=base)
     print(f"Markdown files: {sum(p.endswith('.md') for p in head.paths)}")
     print(f"Historical bodies excluded; successor notices checked: {historical}")
     print(f"Existing active link failures retained: {sum((failures & baseline).values())}")

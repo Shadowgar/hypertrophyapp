@@ -302,12 +302,12 @@ class SchemaTests(unittest.TestCase):
 
     def test_deleting_a_context_target_fails_even_if_manifest_is_unchanged(self):
         snapshot = FakeSnapshot({"docs/context/CONTEXT_MANIFEST.yaml":
-                                 "mandatory_read_groups:\n- group: context\n  docs:\n  - path: docs/deleted.md\n"})
+                                 "version: 1\nmandatory_read_groups:\n- group: context\n  docs:\n  - path: docs/deleted.md\n"})
         self.assertTrue(any("does not exist" in error for error in structural_errors(snapshot, set())))
 
     def test_valid_context_manifest_passes_even_if_unchanged(self):
         snapshot = FakeSnapshot({"docs/context/CONTEXT_MANIFEST.yaml":
-                                 "mandatory_read_groups:\n- group: context\n  docs:\n  - path: docs/required.md\n",
+                                 "version: 1\nmandatory_read_groups:\n- group: context\n  docs:\n  - path: docs/required.md\n",
                                  "docs/required.md": "# Required context\n"})
         self.assertEqual(structural_errors(snapshot, set()), [])
 
@@ -320,12 +320,14 @@ class SchemaTests(unittest.TestCase):
 
 
 class CommandTests(unittest.TestCase):
+    manifest = "version: 1\nmandatory_read_groups:\n- group: context\n  docs:\n  - path: README.md\n"
+
     def test_baseline_links_are_visible_and_new_errors_return_nonzero(self):
         with tempfile.TemporaryDirectory(prefix="hypertrophy-ci-check-test-") as temp:
             root = Path(temp)
             (root / "README.md").write_text("# Index\n\n[old failure](old-missing.md)\n")
             (root / "docs/context").mkdir(parents=True)
-            (root / "docs/context/CONTEXT_MANIFEST.yaml").write_text("mandatory_read_groups: []\n")
+            (root / "docs/context/CONTEXT_MANIFEST.yaml").write_text(self.manifest)
             def git(*args):
                 return subprocess.check_output(["git", "-c", "core.hooksPath=/dev/null", "-c", "commit.gpgsign=false",
                                                 "-c", "user.name=CI Fixture", "-c", "user.email=ci-fixture@example.invalid",
@@ -348,7 +350,7 @@ class CommandTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="hypertrophy-ci-pr-base-test-") as temp:
             root = Path(temp)
             (root / "docs/context").mkdir(parents=True)
-            (root / "docs/context/CONTEXT_MANIFEST.yaml").write_text("mandatory_read_groups: []\n")
+            (root / "docs/context/CONTEXT_MANIFEST.yaml").write_text(self.manifest)
             (root / "README.md").write_text("# Index\n")
 
             def git(*args):
@@ -410,7 +412,7 @@ class CommandTests(unittest.TestCase):
                 root = Path(temp)
                 context = "docs/context/CONTEXT_MANIFEST.yaml"
                 (root / "docs/context").mkdir(parents=True)
-                (root / context).write_text("mandatory_read_groups: []\n")
+                (root / context).write_text(self.manifest)
                 (root / "README.md").write_text("# Index\n")
 
                 def git(*args):
