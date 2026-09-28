@@ -1,43 +1,250 @@
 name: CI
 
 on:
-  push:
   pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  api-tests:
+  changes:
     runs-on: ubuntu-latest
+    outputs:
+      docs: ${{ steps.scope.outputs.docs }}
+      api: ${{ steps.scope.outputs.api }}
+      core: ${{ steps.scope.outputs.core }}
+      web: ${{ steps.scope.outputs.web }}
+      tooling: ${{ steps.scope.outputs.tooling }}
+      containers: ${{ steps.scope.outputs.containers }}
+      base: ${{ steps.scope.outputs.base }}
     steps:
-    - uses: actions/checkout@v5
-    - uses: actions/setup-python@v5
-      with:
-        python-version: "3.12"
-    - name: Install API deps
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r apps/api/requirements.txt
-        pip install -e packages/core-engine
-    - name: Run API tests
-      run: |
-        cd apps/api
-        PYTHONPATH=. pytest -q
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: scope
+        name: Select applicable checks
+        run: python3 scripts/ci/changes.py
+
+  documentation:
+    needs: changes
+    if: needs.changes.outputs.docs == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r scripts/ci/requirements.txt
+      - name: Check documentation without application imports or network probes
+        env:
+          DOCS_BASE: ${{ needs.changes.outputs.base }}
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: python scripts/ci/check_docs.py --base "$DOCS_BASE"
+
+  workflow-checks:
+    needs: changes
+    if: needs.changes.outputs.tooling == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r scripts/ci/requirements.txt
+      - name: Test selection, qualification and documentation failure handling
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: python -m unittest discover -s scripts/ci/tests -v
+      - name: Check GitHub Actions syntax and expressions
+        run: |
+          set -euo pipefail
+          curl -fsSL -o "$RUNNER_TEMP/actionlint.tar.gz" \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz
+          echo "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  $RUNNER_TEMP/actionlint.tar.gz" | sha256sum --check
+          tar -xzf "$RUNNER_TEMP/actionlint.tar.gz" -C "$RUNNER_TEMP" actionlint
+          "$RUNNER_TEMP/actionlint" -color
+
+  api-tests:
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install API test dependencies
+        run: |
+          python -m pip install -r apps/api/requirements.txt
+          python -m pip install -e packages/core-engine
+      - name: Create a disposable test target
+        run: |
+          set -euo pipefail
+          test_root="$(mktemp -d "$RUNNER_TEMP/hypertrophy-api-XXXXXXXX")"
+          {
+            echo "TEST_DATABASE_URL=sqlite:///$test_root/api.sqlite3"
+            echo "DATABASE_URL=sqlite:///$test_root/api.sqlite3"
+            echo "LOG_FILE_PATH=$test_root/api.log"
+            echo "PROGRAMS_DIR=$GITHUB_WORKSPACE/programs"
+            echo "COMPILED_KNOWLEDGE_DIR=$GITHUB_WORKSPACE/knowledge/compiled"
+            echo "PYTHONDONTWRITEBYTECODE=1"
+          } >> "$GITHUB_ENV"
+      - name: Verify settings defaults with dev flag absent
+        working-directory: apps/api
+        run: |
+          env -u ALLOW_DEV_WIPE_ENDPOINTS PYTHONPATH=. python -c '
+          import os
+          assert "ALLOW_DEV_WIPE_ENDPOINTS" not in os.environ, "Dev flag must be absent"
+          from app.config import Settings
+          settings = Settings(_env_file=None)
+          assert settings.allow_dev_wipe_endpoints is False, "Dev wipe endpoints must default to false"
+          '
+      - name: API behavior with explicitly enabled synthetic dev routes
+        working-directory: apps/api
+        env:
+          ALLOW_DEV_WIPE_ENDPOINTS: 'true'
+        # The default assertion runs outside pytest above to avoid conftest's
+        # dev-flag setup; its equivalent assertion remains mandatory.
+        # Missing licensed source fixtures remain failures, not synthetic passes.
+        run: PYTHONPATH=. python -m pytest -q --ignore=tests/test_config_defaults.py
+
+  core-tests:
+    needs: changes
+    if: needs.changes.outputs.core == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r apps/api/requirements.txt -e packages/core-engine
+      - name: Core engine tests
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: python -m pytest -q packages/core-engine/tests
 
   web-lint:
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+        working-directory: apps/web
+      - run: npm run lint
+        working-directory: apps/web
+
+  web-tests:
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+        working-directory: apps/web
+      - run: npm run test -- --maxWorkers=1
+        working-directory: apps/web
+
+  web-types:
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+        working-directory: apps/web
+      - run: node node_modules/typescript/bin/tsc --noEmit --incremental false
+        working-directory: apps/web
+
+  web-build:
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+        working-directory: apps/web
+      - run: npm run build
+        working-directory: apps/web
+
+  container-build:
+    needs: changes
+    if: needs.changes.outputs.containers == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Validate Compose and build its images without starting services
+        run: |
+          set -euo pipefail
+          docker compose --env-file /dev/null -f docker-compose.yml config --quiet
+          docker compose --env-file /dev/null -f docker-compose.yml build --pull
+
+  qualification:
+    name: CI qualification
+    needs: [changes, documentation, workflow-checks, api-tests, core-tests, web-lint, web-tests, web-types, web-build, container-build]
+    if: always()
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
-    - uses: actions/setup-node@v5
-      with:
-        node-version: "20"
-    - name: Install web deps
-      run: |
-        cd apps/web
-        npm install
-    - name: Lint web
-      run: |
-        cd apps/web
-        npm run lint
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Require every applicable check to succeed
+        env:
+          CI_NEEDS: ${{ toJSON(needs) }}
+        run: python3 scripts/ci/gate.py

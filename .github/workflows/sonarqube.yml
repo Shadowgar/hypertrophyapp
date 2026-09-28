@@ -27,10 +27,10 @@
 name: SonarQube analysis
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  # External integration is unqualified: PR #35's JRE metadata request returned
+  # HTTP 403 before source analysis. Keep diagnostics available without treating
+  # this broken integration as an automatic PR qualification check.
+  # Restore automatic source-scoped triggers after access is verified.
   workflow_dispatch:
 
 permissions:
