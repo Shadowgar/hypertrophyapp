@@ -1,3 +1,11 @@
+# Generated reference guides
+
+Build/reference artifacts, classified 2026-09-28. Offline importers own these files; do not manually rewrite, delete apparent duplicates or treat guides as runtime prescription authority. [Source provenance](../../governance/source-provenance.md) governs licensing, source/catalog/hash relationships and future rebuilds. [Documentation index](../../README.md) is the active entry point; [current state](../../architecture/current-state.md) records the audited limitations. Generated artifacts, [catalog](../asset_catalog.json), [provenance](../provenance_index.json) and source materials are protected build/source references; updates require their declared ownership and authorized scope.
+
+## Original manual notice (historical)
+
+The original notice below is retained for context; its old authority/read-order references are superseded by the links above.
+
 ## Generated Artifact Notice
 
 Files in this directory are generated extraction artifacts.

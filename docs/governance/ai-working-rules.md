@@ -1,0 +1,15 @@
+# AI and contributor working rules
+
+Active under the [constitution](constitution.md); owner-approved documentation authority baseline, 2026-09-28. These instructions preserve useful legacy constraints without activating proposed mechanisms. Use the [scoped manifest](../context/CONTEXT_MANIFEST.yaml) and [AGENTS.md](../../AGENTS.md) before sensitive work.
+
+Core workout/program decisions are deterministic and auditable. AI/LLMs may explain, converse, research, summarize, analyze and assist development; they may not directly determine runtime prescriptions. Explanations have no mutation authority. Normalize raw onboarding into a deterministic GenerationProfile before any generation consumes it. Authored Phase 1, Authored Phase 2 and generated programs stay separate; shared infrastructure changes need negative tests for each affected authored boundary.
+
+Name the decision owner and actual path; do not claim repository-wide sovereignty from a local test. Render family-owned rationale facts; never turn rule codes into invented causes or hide policy in the UI, façades or executors. Validate behavior, decision traces and must-fail boundaries together. Preserve prior failed evidence and distinguish fixture/environment issues, obsolete expectations, confirmed defects and unresolved cases.
+
+Metadata-v2 scoring remains frozen/no-op. Accounting work is not scoring activation. Future reactivation needs explicit phase approval, one signal at a time, comparative archetype evidence and guardrail tests. Generated weak-point bias cannot breach declared floors or fatigue/session bounds; do not use gender stereotypes. Optional physiology and anthropometry must remain minimized, sensitive, non-diagnostic, and limited to declared conservative fit/load purposes; unqualified fields cannot quietly affect programming.
+
+Use performed comparable logs before self-reported bests before conservative seeds/calibration, with origins and missing-data states. Numerical thresholds, temporary compatibility defaults and target fields need named owners and Proposed/implemented/verified status. Trace-only presence is not active influence.
+
+Use narrow source reads for contract questions. For authorized verification require explicit disposable targets before imports/DDL; do not trust inherited DB/Compose configuration. Follow [DB safety](../../DB_SAFETY_LOCK.md), [test strategy](../quality/test-strategy.md), privacy/licensing and source provenance. No personal data, secrets, logs or recovery credentials belong in evidence. Historical reset/mini-validation commands are not safe procedures or approval.
+
+Work within the authorized task scope and preserve unrelated work. Production changes require explicit authorization; implementation, external communications and deployment require their own authorized scope. Proposed plans and historical scripts do not grant those permissions. Historical context: [AI rules](../AI_WORKING_RULES.md), [context checklist](../validation/AI_CONTEXT_CHECKLIST.md), [forbidden patterns](../implementation/FORBIDDEN_PATTERNS.md).

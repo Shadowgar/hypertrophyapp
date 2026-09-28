@@ -1,54 +1,31 @@
 # AGENTS.md
 
-## Purpose
-This file defines mandatory context and guardrails for all AI coding agents working in this repository.
+## Purpose and active context
 
-## Mandatory Read Before Sensitive Changes
-Before modifying any of the following:
+Mandatory guardrails for agents in this repository. Start from [docs/README.md](docs/README.md), the [product contract](docs/requirements/product-contract.md), [constitution](docs/governance/constitution.md) and [AI working rules](docs/governance/ai-working-rules.md). The documentation authority baseline was owner-approved on 2026-09-28; product requirements, Proposed mechanisms, implementation, verification and release acceptance remain distinct.
 
-- generated-plan logic
-- onboarding logic
-- program selection
-- plan generation
-- progression logic
-- exercise metadata/substitution/collision logic
-- workout routing
+Before sensitive changes, follow [docs/context/CONTEXT_MANIFEST.yaml](docs/context/CONTEXT_MANIFEST.yaml): read the common group, then **only the groups matching every affected area**, in order. Within each area: product/constitution → relevant ADR/status → area contract → runtime authority → requirement/catalog/traceability → current roadmap and registered bounded plan. Read historical material only when an active document explicitly requires a compatibility/provenance question. No blanket legacy-document read requirement remains.
 
-you must read all documents listed in:
+Sensitive areas include Authored program behavior, Customized generation/onboarding/program selection/plan generation, progression/load, scheduling/workout routing, ingestion/source artifacts, exercise metadata/substitution/collision, recommendations, security and database/migrations. Cross-area changes require all affected groups. Unaccepted ADR mechanisms and Proposed plans grant no implementation permission. D-001–D-022 remain preserved decision constraints and cannot be overridden by a Proposed ADR.
 
-- `docs/context/CONTEXT_MANIFEST.yaml`
+## Non-negotiable runtime governance
 
-At minimum, this includes:
+- Authored Full Body Phase 1 and Authored Full Body Phase 2 remain separate from generated programs.
+- Generated programs never overwrite, modify, replace or reinterpret authored templates.
+- Core workout/program decisions remain deterministic and auditable; no runtime LLM inference may determine prescriptions. AI may explain, converse, research, summarize, analyze and assist development without prescription mutation authority.
+- Raw onboarding answers map into deterministic GenerationProfile before generation consumes them.
+- Authored adaptation is working-load authority; source-approved substitutions require explicit confirmation. Constraints grant no unrelated prescription-mutation permission.
+- Metadata-v2 scoring remains frozen/no-op; accounting changes are not activation approval.
+- Preserve runtime `docs/rules/**`, source/build provenance and licensing; relocation requires separately scoped consumer migration/tests.
 
-- `docs/architecture/GOVERNANCE_CONSTITUTION.md`
-- `docs/architecture/RUNTIME_AUTHORITY_MAP.md`
-- `docs/architecture/GENERATED_PLAN_DOCTRINE.md`
-- `docs/architecture/EXERCISE_METADATA_MODEL.md`
-- `docs/implementation/GENERATED_PLAN_REMEDIATION_ROADMAP.md`
-- `docs/ONBOARDING_GENERATED_PLAN_SPEC.md`
-- `docs/GENERATED_PROFILE_SCHEMA.md`
-- `docs/GENERATED_PROGRAM_STRATEGY.md`
-- `docs/ROADMAP.md`
-- `docs/AI_WORKING_RULES.md`
-- `docs/DOCUMENTATION_STATUS.md`
+## Implementation expectations
 
-## Non-Negotiable Runtime Governance
+For authorized generated/onboarding/progression/routing or other sensitive behavior changes, add/update meaningful behavior and negative-boundary tests; update deterministic decision traces/logging where appropriate. Name the current decision owner/path and actual inputs/outputs; do not overclaim authority or qualification. No presentation/compatibility façade/executor may invent shadow policy or causal explanations. Keep mode, source-slot/performed variant, occurrence/revision, retry/correction and evidence boundaries intact.
 
-- Authored Full Body Phase 1 and Authored Full Body Phase 2 must remain separate from generated programs.
-- Generated programs must never overwrite, modify, replace, or reinterpret authored templates.
-- No runtime LLM inference is allowed.
-- Raw onboarding answers must be mapped into deterministic `GenerationProfile` before any generation logic consumes them.
+Forbidden: silent authored/generated merging, raw answers inside generation, nondeterministic core decisions, source-layout replay presented as original generation, invented explanatory causes, unapproved scoring activation and historical checkmarks promoted to current acceptance.
 
-## Implementation Expectations
+## Production and data safety
 
-For generated-plan/onboarding/progression/routing behavior changes:
+Follow [DB_SAFETY_LOCK.md](DB_SAFETY_LOCK.md). Before tests/imports/startup/DDL use explicit verified disposable targets and isolated environment; never trust inherited DB/Compose defaults or a fresh container. Production checkout/data/config/services/deployment, secrets/private keys/logs/personal records and source licensing require their own authorized scope. Approval to draft/integrate docs is not permission to implement, migrate, deploy or merge.
 
-- Add or update tests that cover the behavior.
-- Include deterministic decision trace/logging updates where appropriate.
-- Do not claim authority beyond current doctrine and runtime boundaries.
-
-## Forbidden In These Areas
-
-- Silent authored/generated path merging.
-- Direct use of raw onboarding answers inside generation decisions.
-- Introducing non-deterministic logic for core planning outcomes.
+Work within the authorized task scope and preserve unrelated work. Production changes require explicit authorization; deployment authorization is separate from implementation approval. Proposed ADRs/plans and historical checklists do not authorize implementation, production operations or release acceptance.

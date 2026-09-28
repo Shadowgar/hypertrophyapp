@@ -1,58 +1,39 @@
-# Schema Validation — Design
+> **Historical / superseded — 2026-09-28.** This compatibility path is not current implementation authority. Original body, dates, evidence and unfinished tasks: [docs/archive/plans/2026-03-16-schema-validation-design.md](../archive/plans/2026-03-16-schema-validation-design.md). Current successor/navigation: [docs/architecture/system.md](../architecture/system.md).
 
-**Date:** 2026-03-16  
-**Status:** Historical design record. Core schema-validation slice has been implemented; this document remains as design provenance.  
-**Goal:** Scope "strict schema validation tests" and "ambiguity/error reporting" so implementation does not drift or over-build.
+# Retained historical sections
 
-## Context
+<a id="schema-validation--design"></a>
 
-- [Canonical_Program_Schema.md](docs/contracts/Canonical_Program_Schema.md) defines the runtime contract for program templates, phases/weeks/days/slots, exercise catalog, coaching rules, and user training state.
-- Master_Plan Phase B has an unchecked item: "Add strict schema validation tests and ambiguity/error reporting."
-- Current state: API uses Pydantic models ([adaptive_schema.py](apps/api/app/adaptive_schema.py), [template_schema.py](apps/api/app/template_schema.py)) for load-time validation; importers emit `import_diagnostics`; there is no single test suite that asserts canonical schema conformance for all artifact types.
+[Schema Validation — Design](../archive/plans/2026-03-16-schema-validation-design.md#schema-validation--design)
 
-## Scope
+<a id="context"></a>
 
-### What is validated
+[Context](../archive/plans/2026-03-16-schema-validation-design.md#context)
 
-1. **Program templates (runtime)** — JSON under `programs/` consumed by the loader.  
-   - Required: `program_id`, `program_name`, structure of phases/weeks/days/slots per Canonical_Program_Schema.  
-   - Optional but tracked: `source_workbook`, slot-level fields (e.g. `slot_role`, warmup/work_sets), exercise_id resolution.
+<a id="scope"></a>
 
-2. **Onboarding packages** — JSON under `programs/` (e.g. `*.onboarding.json`).  
-   - Required: alignment of `program_id` across package, blueprint, and intent; week-sequence entries mapping to declared week-template IDs; day slot IDs and order indices unique per day (per Master_Plan delivery delta).  
-   - Contract: [Canonical_Program_Schema](docs/contracts/Canonical_Program_Schema.md) plus onboarding-specific constraints used by [program_loader](apps/api/app/program_loader.py) and onboarding APIs.
+[Scope](../archive/plans/2026-03-16-schema-validation-design.md#scope)
 
-3. **Coaching rules** — Typed rule payloads under `docs/rules/` (e.g. `*.rules.json`).  
-   - Required: structure expected by [rules_runtime](packages/core-engine/core_engine/rules_runtime.py) (rule_set_id, program_scope, generated_week_scheduler_rules, deload_rules, etc.).  
-   - Optional: full Coaching Rules Contract from Canonical_Program_Schema; start with scheduler/deload/substitution blocks used on the gold path.
+<a id="what-is-validated"></a>
 
-### Where validation runs
+[What is validated](../archive/plans/2026-03-16-schema-validation-design.md#what-is-validated)
 
-- **Tests only (recommended first):** Pytest (or similar) that loads artifact files from `programs/` and `docs/rules/` and asserts conformance. No runtime load-time change initially.  
-- **Build-time (optional later):** Script or CI step that runs the same validators on commit or in CI; fails or reports when new artifacts are added or changed.  
-- **Load-time (optional later):** API/loader already use Pydantic; "strict" could mean failing fast on unknown fields or on missing required fields that today are defaulted. Only add if product needs hard fail on invalid artifacts in production.
+<a id="where-validation-runs"></a>
 
-### Ambiguity and error reporting
+[Where validation runs](../archive/plans/2026-03-16-schema-validation-design.md#where-validation-runs)
 
-- **Ambiguity:** Cases where the schema allows multiple interpretations (e.g. duplicate slot_id, week_index gaps, exercise_id not in catalog). Validators should emit explicit diagnostics (list of { path, code, message }) rather than silent defaults.  
-- **Error reporting:**  
-  - In tests: assert no errors or no ambiguities for gold artifacts; assert specific errors for intentionally invalid fixtures.  
-  - In build-time/CI: emit a small report (e.g. Markdown or JSON) listing file, path, and message for each violation.  
-  - Do not invent new UI or logging infrastructure; keep reporting to test output and optional artifact files (e.g. under `docs/validation/`).
+<a id="ambiguity-and-error-reporting"></a>
 
-## Out of scope
+[Ambiguity and error reporting](../archive/plans/2026-03-16-schema-validation-design.md#ambiguity-and-error-reporting)
 
-- Runtime validation of user-submitted payloads (already handled by FastAPI/Pydantic).  
-- Validation of PDF or XLSX source files (those are build-time importer concerns; importers already emit diagnostics).  
-- General-purpose JSON Schema or OpenAPI validation for the whole API.
+<a id="out-of-scope"></a>
 
-## Success criteria
+[Out of scope](../archive/plans/2026-03-16-schema-validation-design.md#out-of-scope)
 
-- One or more pytest modules that validate at least: (1) gold program template(s), (2) gold onboarding package(s), (3) gold rule set(s) against the canonical contracts.  
-- Clear pass/fail: gold artifacts pass; invalid fixtures fail with identifiable messages.  
-- Optional: CI step or script that runs these validators and, if desired, writes an ambiguity/error report artifact.  
-- Documentation: add a short section to [Canonical_Program_Schema](docs/contracts/Canonical_Program_Schema.md) or a dedicated `docs/validation/README.md` describing how to run validation and how to interpret the report.
+<a id="success-criteria"></a>
 
-## Implementation plan
+[Success criteria](../archive/plans/2026-03-16-schema-validation-design.md#success-criteria)
 
-See `docs/plans/2026-03-16-schema-validation-implementation.md` (to be created via writing-plans after this design is approved).
+<a id="implementation-plan"></a>
+
+[Implementation plan](../archive/plans/2026-03-16-schema-validation-design.md#implementation-plan)

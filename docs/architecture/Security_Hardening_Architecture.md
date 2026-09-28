@@ -1,3 +1,5 @@
+> **Historical / superseded as an authority source — 2026-09-28.** This original body is retained for context, evidence and unresolved work; it is not current implementation authority. Current successor(s): [docs/security/architecture.md](../security/architecture.md), [docs/plans/security-hardening.md](../plans/security-hardening.md). Original dates, claims and checkmarks below describe their original scope, not qualification of the current product. Specialized detail not yet adopted remains supporting/proposed; no runtime permission is inherited.
+
 # Security & Hardening Architecture Contract (Phase 11)
 
 **Implementation Status: Not Started.** This document defines the contract for a future phase. No secret rotation, rate limiting, backup/restore, or failure drill infrastructure exists in the codebase beyond basic `.env`-based config.

@@ -1,0 +1,9 @@
+# M4: generated stabilization proposal
+
+Status: **Proposed**; no implementation authorization. Governing [Customized contract](../contracts/customized-generation.md), [profile contract](../contracts/onboarding-profile.md), [runtime authority](../architecture/runtime-authority.md), [GEN-001–GEN-007](../requirements/catalog.md#gen), [M4 dependencies](../roadmap/milestones.md#m3m6-intelligence-and-qualification). [Legacy remediation](../implementation/GENERATED_PLAN_REMEDIATION_ROADMAP.md) retains detailed phases and open work.
+
+Bound the first package to existing Full Body v1. Inventory actual active versus trace-only inputs, normalize/clear them consistently, name single owners across constructor/adapter/scheduler/router and retain compatibility wrappers until consumers migrate. Design independent generated identity/lifecycle and original topology with visible fallback/infeasibility; preview/activate requires explicit mode consent. Broader splits and metadata scoring reactivation are separate proposals.
+
+Before implementation resolve ADR-002/004/005 mechanisms, legacy mode/profile mappings, affected history integrity and safe isolated verification. Preserve authored sources and test restricted/unrestricted authored negative boundaries. Verify deterministic replay, profile sensitivity/origins, hard constraints, trace-output consistency and absence of source-layout reconstruction. Use named revision/environment evidence and manual preview/consent walkthrough; no historical generator pass qualifies the whole criterion.
+
+This plan neither selects a replacement architecture nor adopts numerical scoring rules. Open legacy tasks remain in the [task register](../audits/2026-09-28-legacy-task-register.md). Scope ownership, precise package sequencing, migration and release acceptance remain pending.

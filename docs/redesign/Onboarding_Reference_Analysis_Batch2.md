@@ -1,3 +1,5 @@
+> **Historical / supporting — classified 2026-09-28.** Retained at its original path with original context/body. This is reference/design material, not current implementation authority or a qualified procedure. Current controlling navigation: [docs/archive/README.md](../archive/README.md). The inventory Keep disposition is applied; its proposed alternate filename is not authorization for a cosmetic relocation.
+
 # Onboarding Reference Analysis - Batch 2
 
 Last updated: 2026-03-06

@@ -1,3 +1,5 @@
+> **Historical / superseded as an authority source — 2026-09-28.** This original body is retained for context, evidence and unresolved work; it is not current implementation authority. Current successor(s): [docs/quality/authored-qualification.md](../quality/authored-qualification.md), [docs/quality/manual-qualification.md](../quality/manual-qualification.md). Original dates, claims and checkmarks below describe their original scope, not qualification of the current product. Specialized detail not yet adopted remains supporting/proposed; no runtime permission is inherited.
+
 # Phase 1 Canonical Path — Dogfood Run Checklist
 
 Use this as your **personal, check-off** run sheet while dogfooding the administered **Pure Bodybuilding Phase 1** path (desktop + mobile).

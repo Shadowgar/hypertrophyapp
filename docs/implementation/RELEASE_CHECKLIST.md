@@ -1,3 +1,5 @@
+> **Historical / superseded as an authority source — 2026-09-28.** This original body is retained for context, evidence and unresolved work; it is not current implementation authority. Current successor(s): [docs/quality/release-gates.md](../quality/release-gates.md). Original dates, claims and checkmarks below describe their original scope, not qualification of the current product. Specialized detail not yet adopted remains supporting/proposed; no runtime permission is inherited.
+
 # Release Checklist
 
 **Purpose:** Map [TRUST_AND_MATURITY_MODEL](docs/architecture/TRUST_AND_MATURITY_MODEL.md) release gates to concrete pass/fail criteria. Use this before claiming a path is ready for internal dogfood (Gate 1), private beta (Gate 2), or product-facing coach claim (Gate 3).

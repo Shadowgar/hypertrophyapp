@@ -1,3 +1,5 @@
+> Documentation entry point: [docs/README.md](docs/README.md). The documentation authority baseline was owner-approved on 2026-09-28; old overview/quickstart claims below are historical implementation guidance, not full qualification or permission to reset live data. Use [scoped agent context](AGENTS.md), [safe development](docs/operations/development.md) and the [database safety lock](DB_SAFETY_LOCK.md).
+
 # Rocco's HyperTrophy Plan Monorepo
 
 Deterministic hypertrophy planner + workout runner for local-first deployment.

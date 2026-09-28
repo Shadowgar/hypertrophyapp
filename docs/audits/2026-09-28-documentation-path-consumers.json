@@ -1,0 +1,767 @@
+{
+  "checked_before_relocations": true,
+  "date": "2026-09-28",
+  "revision": "64c3269dd33bea8c6a72e5a6151d985cf9ea8470",
+  "scope": [
+    "Markdown",
+    "AI context/instructions",
+    "source and tests",
+    "scripts",
+    "workflows",
+    "Docker/infra/packaging"
+  ],
+  "method": "Fixed-string rg search of full candidate paths and basenames before archive operations; matching path strings and line numbers retained, no source/secret/log data.",
+  "matches": [
+    {
+      "consumer": "README.md",
+      "line": 100,
+      "references": [
+        "docs/implementation/DOGFOOD_PHASE1_CHECKLIST.md"
+      ]
+    },
+    {
+      "consumer": "README.md",
+      "line": 212,
+      "references": [
+        "docs/redesign/Onboarding_Reference_Process_Map.md"
+      ]
+    },
+    {
+      "consumer": "README.md",
+      "line": 213,
+      "references": [
+        "docs/architecture/Auth_Expansion_Architecture.md"
+      ]
+    },
+    {
+      "consumer": "README.md",
+      "line": 255,
+      "references": [
+        "docs/Master_Plan.md"
+      ]
+    },
+    {
+      "consumer": "README.md",
+      "line": 261,
+      "references": [
+        "docs/contracts/Offline_Sync_Deterministic_Contract.md"
+      ]
+    },
+    {
+      "consumer": "README.md",
+      "line": 263,
+      "references": [
+        "docs/architecture/Auth_Expansion_Architecture.md"
+      ]
+    },
+    {
+      "consumer": "README.md",
+      "line": 266,
+      "references": [
+        "docs/redesign/Onboarding_Reference_Analysis_Batch1.md"
+      ]
+    },
+    {
+      "consumer": "README.md",
+      "line": 267,
+      "references": [
+        "docs/redesign/Onboarding_Reference_Analysis_Batch2.md"
+      ]
+    },
+    {
+      "consumer": "README.md",
+      "line": 268,
+      "references": [
+        "docs/redesign/Onboarding_Reference_Analysis_Batch3.md"
+      ]
+    },
+    {
+      "consumer": "README.md",
+      "line": 269,
+      "references": [
+        "docs/redesign/Onboarding_Reference_Process_Map.md"
+      ]
+    },
+    {
+      "consumer": "scripts/mini_next_task.sh",
+      "line": 34,
+      "references": [
+        "docs/Master_Plan.md"
+      ]
+    },
+    {
+      "consumer": "scripts/mini_next_task.sh",
+      "line": 41,
+      "references": [
+        "docs/Master_Plan.md"
+      ]
+    },
+    {
+      "consumer": "scripts/mini_preflight.sh",
+      "line": 12,
+      "references": [
+        "docs/Master_Plan.md"
+      ]
+    },
+    {
+      "consumer": "scripts/mobile_perf_check.mjs",
+      "line": 9,
+      "references": [
+        "mobile_perf_metrics.json"
+      ]
+    },
+    {
+      "consumer": "scripts/mobile_perf_check.mjs",
+      "line": 10,
+      "references": [
+        "mobile_perf_metrics.md"
+      ]
+    },
+    {
+      "consumer": "scripts/generate_exercise_metadata_audit.py",
+      "line": 489,
+      "references": [
+        "exercise_metadata_quality_audit.json"
+      ]
+    },
+    {
+      "consumer": "scripts/generate_exercise_metadata_audit.py",
+      "line": 495,
+      "references": [
+        "exercise_metadata_quality_audit.md"
+      ]
+    },
+    {
+      "consumer": "scripts/generate_ingestion_quality_report.py",
+      "line": 28,
+      "references": [
+        "ingestion_quality_report.json"
+      ]
+    },
+    {
+      "consumer": "scripts/generate_ingestion_quality_report.py",
+      "line": 34,
+      "references": [
+        "ingestion_quality_report.md"
+      ]
+    },
+    {
+      "consumer": "docs/redesign/Onboarding_Reference_Analysis_Batch2.md",
+      "line": 107,
+      "references": [
+        "docs/redesign/Onboarding_Reference_Analysis_Batch3.md"
+      ]
+    },
+    {
+      "consumer": "docs/redesign/Program_Onboarding_Architecture_Phase1.md",
+      "line": 96,
+      "references": [
+        "docs/redesign/Architecture_Audit_Matrix.md"
+      ]
+    },
+    {
+      "consumer": "docs/redesign/Architecture_Audit_Matrix.md",
+      "line": 27,
+      "references": [
+        "docs/guides/FULL_EXTRACTION_RUNBOOK.md"
+      ]
+    },
+    {
+      "consumer": "docs/redesign/Onboarding_Reference_Analysis_Batch1.md",
+      "line": 114,
+      "references": [
+        "docs/redesign/Onboarding_Reference_Analysis_Batch2.md"
+      ]
+    },
+    {
+      "consumer": "docs/audits/Master_Plan_Checkmark_Audit.md",
+      "line": 20,
+      "references": [
+        "docs/redesign/Onboarding_Reference_Analysis_Batch1.md",
+        "docs/redesign/Onboarding_Reference_Analysis_Batch2.md",
+        "docs/redesign/Onboarding_Reference_Analysis_Batch3.md"
+      ]
+    },
+    {
+      "consumer": "docs/audits/Master_Plan_Checkmark_Audit.md",
+      "line": 24,
+      "references": [
+        "docs/validation/ingestion_quality_report.json"
+      ]
+    },
+    {
+      "consumer": "docs/audits/Master_Plan_Checkmark_Audit.md",
+      "line": 25,
+      "references": [
+        "docs/guides/FULL_EXTRACTION_RUNBOOK.md"
+      ]
+    },
+    {
+      "consumer": "docs/audits/Master_Plan_Checkmark_Audit.md",
+      "line": 40,
+      "references": [
+        "docs/redesign/Architecture_Audit_Matrix.md"
+      ]
+    },
+    {
+      "consumer": "docs/audits/2026-03-11-pass2-trace-explanation-audit.md",
+      "line": 23,
+      "references": [
+        "docs/architecture/TRUST_AND_MATURITY_MODEL.md"
+      ]
+    },
+    {
+      "consumer": "docs/audits/2026-03-11-pass4-reality-verdict.md",
+      "line": 20,
+      "references": [
+        "docs/architecture/TRUST_AND_MATURITY_MODEL.md"
+      ]
+    },
+    {
+      "consumer": "docs/audits/2026-03-11-pass3-gold-trust-audit.md",
+      "line": 12,
+      "references": [
+        "docs/architecture/GOLD_PATH_MILESTONE.md"
+      ]
+    },
+    {
+      "consumer": "docs/audits/2026-03-11-pass3-gold-trust-audit.md",
+      "line": 13,
+      "references": [
+        "docs/architecture/TRUST_AND_MATURITY_MODEL.md"
+      ]
+    },
+    {
+      "consumer": "docs/contracts/High_Risk_Contracts.md",
+      "line": 27,
+      "references": [
+        "docs/Master_Plan.md"
+      ]
+    },
+    {
+      "consumer": "docs/contracts/High_Risk_Contracts.md",
+      "line": 78,
+      "references": [
+        "docs/contracts/Offline_Sync_Deterministic_Contract.md"
+      ]
+    },
+    {
+      "consumer": "docs/contracts/High_Risk_Contracts.md",
+      "line": 96,
+      "references": [
+        "docs/architecture/Auth_Expansion_Architecture.md"
+      ]
+    },
+    {
+      "consumer": "docs/DOCUMENTATION_STATUS.md",
+      "line": 123,
+      "references": [
+        "docs/Master_Plan.md"
+      ]
+    },
+    {
+      "consumer": "docs/DOCUMENTATION_STATUS.md",
+      "line": 124,
+      "references": [
+        "docs/ROADMAP_MASTER_DEVELOPMENT_PLAN.md"
+      ]
+    },
+    {
+      "consumer": "docs/DOCUMENTATION_STATUS.md",
+      "line": 148,
+      "references": [
+        "docs/validation/phase2_fullbody_handoff.md"
+      ]
+    },
+    {
+      "consumer": "docs/DOCUMENTATION_STATUS.md",
+      "line": 203,
+      "references": [
+        "docs/Master_Plan.md"
+      ]
+    },
+    {
+      "consumer": "docs/DOCUMENTATION_STATUS.md",
+      "line": 204,
+      "references": [
+        "docs/ROADMAP_MASTER_DEVELOPMENT_PLAN.md"
+      ]
+    },
+    {
+      "consumer": "docs/ROADMAP_MASTER_DEVELOPMENT_PLAN.md",
+      "line": 99,
+      "references": [
+        "docs/architecture/REMEDIATION_CHECKLIST.md"
+      ]
+    },
+    {
+      "consumer": "docs/ROADMAP_MASTER_DEVELOPMENT_PLAN.md",
+      "line": 204,
+      "references": [
+        "docs/implementation/DOGFOOD_PHASE1_CHECKLIST.md"
+      ]
+    },
+    {
+      "consumer": "docs/Master_Plan.md",
+      "line": 109,
+      "references": [
+        "docs/plans/2026-03-16-importer-v2-design.md"
+      ]
+    },
+    {
+      "consumer": "docs/Master_Plan.md",
+      "line": 110,
+      "references": [
+        "docs/plans/2026-03-16-pdf-to-rules-design.md"
+      ]
+    },
+    {
+      "consumer": "docs/Master_Plan.md",
+      "line": 145,
+      "references": [
+        "docs/redesign/Onboarding_Reference_Analysis_Batch1.md"
+      ]
+    },
+    {
+      "consumer": "docs/Master_Plan.md",
+      "line": 149,
+      "references": [
+        "docs/implementation/DOGFOOD_PHASE1_CHECKLIST.md"
+      ]
+    },
+    {
+      "consumer": "docs/Master_Plan.md",
+      "line": 166,
+      "references": [
+        "docs/redesign/Architecture_Audit_Matrix.md"
+      ]
+    },
+    {
+      "consumer": "docs/Master_Plan.md",
+      "line": 253,
+      "references": [
+        "docs/plans/2026-03-15-today-page-redesign-design.md",
+        "docs/implementation/ACTIVE_REMEDIATION_RAIL.md"
+      ]
+    },
+    {
+      "consumer": "docs/current_state_decision_runtime_map.md",
+      "line": 40,
+      "references": [
+        "docs/plans/2026-03-15-today-page-redesign-design.md"
+      ]
+    },
+    {
+      "consumer": "docs/architecture/Security_Hardening_Architecture.md",
+      "line": 137,
+      "references": [
+        "docs/Master_Plan.md"
+      ]
+    },
+    {
+      "consumer": "docs/plans/2026-03-16-pdf-to-rules-design.md",
+      "line": 56,
+      "references": [
+        "docs/plans/2026-03-16-pdf-to-rules-implementation.md"
+      ]
+    },
+    {
+      "consumer": "docs/architecture/ARCHITECTURE_INDEX.md",
+      "line": 13,
+      "references": [
+        "TRUST_AND_MATURITY_MODEL.md",
+        "docs/architecture/TRUST_AND_MATURITY_MODEL.md"
+      ]
+    },
+    {
+      "consumer": "docs/architecture/ARCHITECTURE_INDEX.md",
+      "line": 14,
+      "references": [
+        "GOLD_PATH_MILESTONE.md",
+        "docs/architecture/GOLD_PATH_MILESTONE.md"
+      ]
+    },
+    {
+      "consumer": "docs/architecture/ARCHITECTURE_INDEX.md",
+      "line": 20,
+      "references": [
+        "TRUST_AND_MATURITY_MODEL.md",
+        "docs/architecture/TRUST_AND_MATURITY_MODEL.md"
+      ]
+    },
+    {
+      "consumer": "docs/architecture/ARCHITECTURE_INDEX.md",
+      "line": 21,
+      "references": [
+        "GOLD_PATH_MILESTONE.md",
+        "docs/architecture/GOLD_PATH_MILESTONE.md"
+      ]
+    },
+    {
+      "consumer": "docs/implementation/WORKING_SET.md",
+      "line": 12,
+      "references": [
+        "docs/implementation/DOGFOOD_PHASE1_CHECKLIST.md"
+      ]
+    },
+    {
+      "consumer": "docs/implementation/WORKING_SET.md",
+      "line": 25,
+      "references": [
+        "docs/implementation/ACTIVE_REMEDIATION_RAIL.md"
+      ]
+    },
+    {
+      "consumer": "docs/implementation/WORKING_SET.md",
+      "line": 43,
+      "references": [
+        "docs/Master_Plan.md"
+      ]
+    },
+    {
+      "consumer": "docs/implementation/WORKING_SET.md",
+      "line": 51,
+      "references": [
+        "docs/implementation/ACTIVE_REMEDIATION_RAIL.md"
+      ]
+    },
+    {
+      "consumer": "docs/implementation/WORKING_SET.md",
+      "line": 53,
+      "references": [
+        "docs/implementation/DOGFOOD_PHASE1_CHECKLIST.md"
+      ]
+    },
+    {
+      "consumer": "docs/implementation/WORKING_SET.md",
+      "line": 66,
+      "references": [
+        "docs/plans/2026-03-15-today-page-redesign-design.md"
+      ]
+    },
+    {
+      "consumer": "docs/architecture/Auth_Expansion_Architecture.md",
+      "line": 142,
+      "references": [
+        "docs/Master_Plan.md"
+      ]
+    },
+    {
+      "consumer": "docs/implementation/DOGFOOD_PHASE1_CHECKLIST.md",
+      "line": 161,
+      "references": [
+        "docs/Master_Plan.md"
+      ]
+    },
+    {
+      "consumer": "docs/plans/2026-03-16-importer-v2-design.md",
+      "line": 9,
+      "references": [
+        "docs/redesign/Architecture_Audit_Matrix.md"
+      ]
+    },
+    {
+      "consumer": "docs/plans/2026-03-16-importer-v2-design.md",
+      "line": 51,
+      "references": [
+        "2026-03-16-schema-validation-design.md",
+        "2026-03-16-schema-validation-design.md"
+      ]
+    },
+    {
+      "consumer": "docs/plans/2026-03-16-importer-v2-design.md",
+      "line": 57,
+      "references": [
+        "docs/plans/2026-03-16-importer-v2-implementation.md"
+      ]
+    },
+    {
+      "consumer": "docs/architecture/REMEDIATION_CHECKLIST.md",
+      "line": 15,
+      "references": [
+        "docs/implementation/ACTIVE_REMEDIATION_RAIL.md"
+      ]
+    },
+    {
+      "consumer": "docs/plans/2026-03-15-today-page-redesign-design.md",
+      "line": 4,
+      "references": [
+        "docs/implementation/ACTIVE_REMEDIATION_RAIL.md"
+      ]
+    },
+    {
+      "consumer": "docs/plans/2026-03-15-today-page-redesign-design.md",
+      "line": 12,
+      "references": [
+        "docs/implementation/ACTIVE_REMEDIATION_RAIL.md"
+      ]
+    },
+    {
+      "consumer": "docs/plans/2026-03-15-today-page-redesign-design.md",
+      "line": 13,
+      "references": [
+        "docs/Master_Plan.md"
+      ]
+    },
+    {
+      "consumer": "docs/implementation/RELEASE_CHECKLIST.md",
+      "line": 3,
+      "references": [
+        "docs/architecture/TRUST_AND_MATURITY_MODEL.md"
+      ]
+    },
+    {
+      "consumer": "docs/implementation/RELEASE_CHECKLIST.md",
+      "line": 13,
+      "references": [
+        "docs/validation/phase2_fullbody_handoff.md"
+      ]
+    },
+    {
+      "consumer": "docs/implementation/RELEASE_CHECKLIST.md",
+      "line": 16,
+      "references": [
+        "docs/implementation/DOGFOOD_PHASE1_CHECKLIST.md"
+      ]
+    },
+    {
+      "consumer": "docs/implementation/RELEASE_CHECKLIST.md",
+      "line": 35,
+      "references": [
+        "docs/Master_Plan.md",
+        "docs/implementation/ACTIVE_REMEDIATION_RAIL.md"
+      ]
+    },
+    {
+      "consumer": "docs/implementation/RELEASE_CHECKLIST.md",
+      "line": 37,
+      "references": [
+        "docs/implementation/ACTIVE_REMEDIATION_RAIL.md"
+      ]
+    },
+    {
+      "consumer": "docs/implementation/RELEASE_CHECKLIST.md",
+      "line": 67,
+      "references": [
+        "TRUST_AND_MATURITY_MODEL.md",
+        "docs/architecture/TRUST_AND_MATURITY_MODEL.md"
+      ]
+    },
+    {
+      "consumer": "docs/plans/2026-03-16-importer-v2-implementation.md",
+      "line": 4,
+      "references": [
+        "2026-03-16-importer-v2-design.md",
+        "2026-03-16-importer-v2-design.md"
+      ]
+    },
+    {
+      "consumer": "docs/plans/2026-03-16-schema-validation-design.md",
+      "line": 58,
+      "references": [
+        "docs/plans/2026-03-16-schema-validation-implementation.md"
+      ]
+    },
+    {
+      "consumer": "docs/plans/2026-03-16-schema-validation-implementation.md",
+      "line": 4,
+      "references": [
+        "2026-03-16-schema-validation-design.md",
+        "2026-03-16-schema-validation-design.md"
+      ]
+    },
+    {
+      "consumer": "docs/implementation/ACTIVE_REMEDIATION_RAIL.md",
+      "line": 60,
+      "references": [
+        "DOGFOOD_PHASE1_CHECKLIST.md"
+      ]
+    },
+    {
+      "consumer": "docs/implementation/ACTIVE_REMEDIATION_RAIL.md",
+      "line": 87,
+      "references": [
+        "docs/implementation/DOGFOOD_PHASE1_CHECKLIST.md"
+      ]
+    },
+    {
+      "consumer": "docs/implementation/ACTIVE_REMEDIATION_RAIL.md",
+      "line": 95,
+      "references": [
+        "docs/implementation/DOGFOOD_PHASE1_CHECKLIST.md",
+        "docs/ROADMAP_MASTER_DEVELOPMENT_PLAN.md"
+      ]
+    },
+    {
+      "consumer": "docs/implementation/ACTIVE_REMEDIATION_RAIL.md",
+      "line": 145,
+      "references": [
+        "docs/plans/2026-03-15-today-page-redesign-design.md",
+        "docs/plans/2026-03-15-today-page-redesign-implementation.md"
+      ]
+    },
+    {
+      "consumer": "docs/plans/2026-03-16-pdf-to-rules-implementation.md",
+      "line": 4,
+      "references": [
+        "2026-03-16-pdf-to-rules-design.md",
+        "2026-03-16-pdf-to-rules-design.md"
+      ]
+    },
+    {
+      "consumer": "docs/implementation/DOGFOOD_PHASE1_RUN_CHECKLIST.md",
+      "line": 5,
+      "references": [
+        "docs/implementation/DOGFOOD_PHASE1_CHECKLIST.md"
+      ]
+    },
+    {
+      "consumer": "docs/plans/2026-03-15-today-page-redesign-implementation.md",
+      "line": 5,
+      "references": [
+        "docs/plans/2026-03-15-today-page-redesign-design.md"
+      ]
+    },
+    {
+      "consumer": "docs/plans/2026-03-15-today-page-redesign-implementation.md",
+      "line": 11,
+      "references": [
+        "docs/plans/2026-03-15-today-page-redesign-design.md"
+      ]
+    },
+    {
+      "consumer": "docs/plans/2026-03-15-today-page-redesign-implementation.md",
+      "line": 216,
+      "references": [
+        "docs/implementation/ACTIVE_REMEDIATION_RAIL.md"
+      ]
+    },
+    {
+      "consumer": "docs/plans/2026-03-15-today-page-redesign-implementation.md",
+      "line": 219,
+      "references": [
+        "docs/plans/2026-03-15-today-page-redesign-design.md"
+      ]
+    },
+    {
+      "consumer": "docs/plans/2026-03-15-today-page-redesign-implementation.md",
+      "line": 226,
+      "references": [
+        "docs/implementation/ACTIVE_REMEDIATION_RAIL.md"
+      ]
+    },
+    {
+      "consumer": "docs/plans/2026-03-15-today-page-redesign-implementation.md",
+      "line": 234,
+      "references": [
+        "docs/plans/2026-03-15-today-page-redesign-implementation.md"
+      ]
+    },
+    {
+      "consumer": "docs/archive/plans/README.md",
+      "line": 7,
+      "references": [
+        "docs/implementation/ACTIVE_REMEDIATION_RAIL.md"
+      ]
+    },
+    {
+      "consumer": "docs/archive/plans/2026-03-11-phase1-fidelity-first.md",
+      "line": 92,
+      "references": [
+        "docs/Master_Plan.md"
+      ]
+    },
+    {
+      "consumer": "docs/archive/plans/2026-03-11-phase1-fidelity-first.md",
+      "line": 107,
+      "references": [
+        "docs/Master_Plan.md"
+      ]
+    },
+    {
+      "consumer": "docs/archive/plans/2026-03-11-user-testing-rollout-plan.md",
+      "line": 3,
+      "references": [
+        "docs/Master_Plan.md"
+      ]
+    },
+    {
+      "consumer": "docs/archive/ai-handoffs/GPT5_MINI_HANDOFF.md",
+      "line": 14,
+      "references": [
+        "docs/Master_Plan.md"
+      ]
+    },
+    {
+      "consumer": "docs/archive/ai-handoffs/CODEX_5_3_PASSOFF_PROMPT.md",
+      "line": 16,
+      "references": [
+        "docs/Master_Plan.md"
+      ]
+    },
+    {
+      "consumer": "docs/archive/ai-handoffs/AI_CONTINUATION_GOVERNANCE.md",
+      "line": 18,
+      "references": [
+        "docs/Master_Plan.md"
+      ]
+    },
+    {
+      "consumer": "docs/archive/ai-handoffs/GPT5_MINI_RUNBOOK.md",
+      "line": 9,
+      "references": [
+        "docs/Master_Plan.md"
+      ]
+    },
+    {
+      "consumer": "docs/archive/ai-handoffs/GPT5_MINI_PASSOFF_PROMPT.md",
+      "line": 16,
+      "references": [
+        "docs/Master_Plan.md"
+      ]
+    },
+    {
+      "consumer": "docs/archive/ai-handoffs/GPT5_MINI_EXECUTION_BACKLOG.md",
+      "line": 218,
+      "references": [
+        "docs/redesign/Architecture_Audit_Matrix.md"
+      ]
+    },
+    {
+      "consumer": "docs/archive/ai-handoffs/GPT5_MINI_EXECUTION_BACKLOG.md",
+      "line": 841,
+      "references": [
+        "docs/redesign/Onboarding_Reference_Analysis_Batch1.md"
+      ]
+    },
+    {
+      "consumer": "docs/archive/ai-handoffs/GPT5_MINI_EXECUTION_BACKLOG.md",
+      "line": 842,
+      "references": [
+        "docs/redesign/Onboarding_Reference_Analysis_Batch2.md"
+      ]
+    },
+    {
+      "consumer": "docs/archive/ai-handoffs/GPT5_MINI_EXECUTION_BACKLOG.md",
+      "line": 843,
+      "references": [
+        "docs/redesign/Onboarding_Reference_Analysis_Batch3.md"
+      ]
+    },
+    {
+      "consumer": "docs/archive/ai-handoffs/GPT5_MINI_EXECUTION_BACKLOG.md",
+      "line": 844,
+      "references": [
+        "docs/redesign/Onboarding_Reference_Process_Map.md"
+      ]
+    },
+    {
+      "consumer": "docs/archive/reviews/EXHAUSTIVE_PROJECT_REVIEW_2026-03-07.md",
+      "line": 47,
+      "references": [
+        "Master_Plan.md"
+      ]
+    }
+  ],
+  "follow_up": "Focused CONTEXT_MANIFEST/mandatory_read_groups/release_scorecard_template/FULL_EXTRACTION_RUNBOOK reference search found documentation-only manifest/template consumers; no executable manifest parser identified."
+}

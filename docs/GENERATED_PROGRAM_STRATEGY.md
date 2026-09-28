@@ -1,3 +1,5 @@
+> **Historical / superseded as an authority source — 2026-09-28.** This original body is retained for context, evidence and unresolved work; it is not current implementation authority. Current successor(s): [docs/contracts/customized-generation.md](contracts/customized-generation.md), [docs/roadmap/milestones.md](roadmap/milestones.md). Original dates, claims and checkmarks below describe their original scope, not qualification of the current product. Specialized detail not yet adopted remains supporting/proposed; no runtime permission is inherited.
+
 # Generated Program Strategy
 
 Last updated: 2026-04-27

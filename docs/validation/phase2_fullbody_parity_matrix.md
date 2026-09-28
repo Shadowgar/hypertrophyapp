@@ -1,3 +1,5 @@
+> **Historical / superseded as an authority source — 2026-09-28.** This original body is retained for context, evidence and unresolved work; it is not current implementation authority. Current successor(s): [docs/quality/authored-qualification.md](../quality/authored-qualification.md), [docs/evidence/legacy/README.md](../evidence/legacy/README.md). Original dates, claims and checkmarks below describe their original scope, not qualification of the current product. Specialized detail not yet adopted remains supporting/proposed; no runtime permission is inherited.
+
 # Phase 1 vs Phase 2 Full-Body Parity Matrix
 
 ## Scenarios

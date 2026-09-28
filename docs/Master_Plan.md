@@ -1,3 +1,5 @@
+> **Historical / superseded — 2026-09-28.** Retained at this path because mini-task/preflight scripts parse it. Its unchecked tasks and script output confer no implementation permission. Current roadmap: [docs/roadmap/milestones.md](roadmap/milestones.md); archived snapshot: [docs/archive/plans/master-plan-2026-03.md](archive/plans/master-plan-2026-03.md). Original body and original 2026-03-20 date remain unchanged.
+
 # Master Plan - Adaptive Coaching Rebuild
 
 Last updated: 2026-03-20

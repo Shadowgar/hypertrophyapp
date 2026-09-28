@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Release evidence record (documentation only)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scope",
+    "revision",
+    "environment",
+    "requirements",
+    "evidence",
+    "qualification",
+    "owner_acceptance"
+  ],
+  "properties": {
+    "scope": {
+      "type": "string",
+      "minLength": 1
+    },
+    "revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "environment": {
+      "type": "string",
+      "minLength": 1
+    },
+    "requirements": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z][A-Z-]*-[0-9]{3}$"
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "locator",
+          "sha256",
+          "result",
+          "limits"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "locator": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "result": {
+            "enum": [
+              "passed",
+              "failed",
+              "skipped",
+              "unresolved"
+            ]
+          },
+          "limits": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "qualification": {
+      "enum": [
+        "pending",
+        "verified-for-recorded-scope",
+        "failed"
+      ]
+    },
+    "owner_acceptance": {
+      "enum": [
+        "pending",
+        "accepted",
+        "rejected"
+      ]
+    },
+    "acceptance_reference": {
+      "type": "string",
+      "minLength": 1
+    },
+    "deviations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "owner_acceptance": {
+            "const": "accepted"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "acceptance_reference",
+          "evidence"
+        ],
+        "properties": {
+          "evidence": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ]
+}
