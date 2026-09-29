@@ -30,8 +30,8 @@ export function authoredWarmupLabel(exercise: WorkoutExercise): string | null {
   return exercise.authored_prescription?.raw.warm_up_sets ?? exercise.warm_up_sets ?? null;
 }
 
-export function isBodyweightAuthored(exercise: Pick<WorkoutExercise, "authored_prescription" | "load_semantics">): boolean {
-  return Boolean(exercise.authored_prescription) && exercise.load_semantics === "bodyweight";
+export function isBodyweightAuthored(exercise: Pick<WorkoutExercise, "authored_prescription" | "load_semantics" | "performed_variant">): boolean {
+  return Boolean(exercise.authored_prescription) && (exercise.performed_variant?.load_semantics ?? exercise.load_semantics) === "bodyweight";
 }
 
 export function authoredSetTechnique(exercise: WorkoutExercise, setIndex: number): string | null {

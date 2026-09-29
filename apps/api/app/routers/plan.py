@@ -1053,6 +1053,9 @@ def _prepare_authored_frequency_adapted_template(
     if not (is_authored_phase1_binding_id(selected_template_id) or is_authored_phase2_binding_id(selected_template_id)):
         return program_template, None
 
+    # Constraints cannot grant generic prescription mutation authority.
+    program_template = deepcopy(program_template)
+    program_template[AUTHORITATIVE_AUTHORED_PASSTHROUGH_KEY] = True
     onboarding_package = load_program_onboarding_package(selected_template_id)
     blueprint = cast(dict[str, Any], onboarding_package.get("blueprint") or {})
     default_training_days = int(
@@ -1072,7 +1075,7 @@ def _prepare_authored_frequency_adapted_template(
     if target_days >= default_training_days:
         trace["status"] = "not_applied"
         trace["reason"] = "target_days_not_below_authored_default"
-        passthrough_eligible = not list(movement_restrictions or [])
+        passthrough_eligible = True
         trace["authoritative_passthrough_eligible"] = passthrough_eligible
         if passthrough_eligible:
             passthrough_template = deepcopy(program_template)
@@ -1152,7 +1155,7 @@ def _prepare_authored_frequency_adapted_template(
 
     adapted_template = deepcopy(program_template)
     adapted_template["sessions"] = deepcopy(adapted_sessions)
-    passthrough_eligible = not list(movement_restrictions or [])
+    passthrough_eligible = True
     if passthrough_eligible:
         adapted_template[AUTHORITATIVE_AUTHORED_PASSTHROUGH_KEY] = True
     adapted_weeks = cast(list[Any], adapted_template.get("authored_weeks") or [])

@@ -639,6 +639,9 @@ class WorkoutSetLogResponse(BaseModel):
 
 
 class WorkoutExerciseSummaryResponse(BaseModel):
+    performed_variant: dict | None = None
+    substitution_consent: dict | None = None
+    load_recommendation_available: bool = True
     load_semantics: str | None = None
     exercise_occurrence_id: str | None = None
     exercise_id: str
@@ -678,3 +681,14 @@ class WorkoutSetCorrectionRequest(BaseModel):
     weight: float = Field(ge=0, allow_inf_nan=False)
     rpe: float | None = Field(default=None, allow_inf_nan=False)
     reason: str = Field(min_length=1, max_length=500)
+
+
+class AuthoredSubstitutionRequest(BaseModel):
+    command_id: str = Field(min_length=1, max_length=128)
+    exercise_id: str
+    exercise_occurrence_id: str
+    expected_revision: int = Field(ge=0)
+    expected_source_lineage: dict
+    action: Literal["report", "confirm", "decline"]
+    reason: Literal["equipment", "pain", "safety"] | None = None
+    option_id: str | None = None

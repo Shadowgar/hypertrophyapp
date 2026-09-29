@@ -6,7 +6,7 @@ from types import SimpleNamespace
 from fastapi import HTTPException
 from core_engine import prepare_workout_log_set_decision_route_runtime, resolve_workout_session_state_update
 
-from core_engine.authored_prescription import requires_receipt_tracking
+from core_engine.authored_constraints import requires_receipt_tracking
 from .models import ExerciseState, WorkoutSetLog, WorkoutSessionState, User, CoachingRecommendation, WeeklyReviewCycle
 
 STATE_FIELDS = ("current_working_weight", "exposure_count", "consecutive_under_target_exposures", "last_progression_action", "fatigue_score")

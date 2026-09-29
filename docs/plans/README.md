@@ -8,7 +8,8 @@ One forward roadmap: [M0–M6 milestones](../roadmap/milestones.md). A plan desc
 | [Urgent account recovery](urgent-account-recovery.md) | M0-SEC S1 credential/config closure, S2 lifecycle. | **Proposed**; not approved for implementation/deployment. Security work need not wait for broad history redesign. |
 | [Generated stabilization](generated-stabilization.md) | M4 bounded ownership/normalization/originality consolidation. | **Proposed**; no runtime execution authorized. |
 | [M0-HIST-B correction and reconstruction](m0-hist-correction-reconstruction.md) | Effective history, retained amendments, deterministic projection replay and retry/concurrency. | Primary implementation merged and owner-authorized 0020/API/web activation completed; [activation and open follow-ups](../evidence/2026-09-28-m0-hist-b-activation.md). No whole-milestone acceptance. |
-| [M1-A authored source fidelity](m1-authored-source-fidelity.md) | AUTH-FID-001/005/006/007 source/import/canonical/execution preservation. | Explicitly authorized implementation; candidate awaiting review. No M1 deployment or live migration authorized. |
+| [M1-A authored source fidelity](m1-authored-source-fidelity.md) | AUTH-FID-001/005/006/007 source/import/canonical/execution preservation. | Merged PR #41 / separately owner-authorized API/web activation; [activation evidence](../evidence/2026-09-29-m1-authored-fidelity-activation.md). No whole-M1 acceptance. |
+| [M1-B constraint authority](m1-authored-constraint-authority.md) | AUTH-FID-002/004 slot conflicts and explicit source-approved variant consent. | Owner-authorized application candidate / awaiting review. No merge or deployment. |
 | [Deferred security hardening](security-hardening.md) | Cross-release security follow-ups outside urgent closure. | **Proposed**; scope/owners and individual package approval pending. |
 
 | Status | Required meaning |

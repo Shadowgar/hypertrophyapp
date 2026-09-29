@@ -110,3 +110,7 @@ records the subsequent compiler/runner source-scope correction.
 
 [Weekly-review receipt boundaries](2026-09-29-m1-weekly-review-receipts.md) records
 working-set-only aggregation and bodyweight/load advice separation.
+
+[M1-A live activation](2026-09-29-m1-authored-fidelity-activation.md) records the
+owner-authorized PR #41 cutover. [M1-B candidate qualification](2026-09-29-m1-authored-constraints.md)
+records source-scoped constraints/consent; it remains unmerged and unreleased.

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from .authored_prescription import requires_receipt_tracking, is_bodyweight_authored, typed_tracking_feedback
+from .authored_constraints import requires_receipt_tracking, is_bodyweight_authored, typed_tracking_feedback
 from typing import Any, Callable, cast
 
 from .decision_live_workout_guidance import (
@@ -268,15 +268,16 @@ def summarize_workout_exercise_performance(
     if requires_receipt_tracking(exercise):
         count = len(performed_logs)
         live = typed_tracking_feedback(exercise, completed_sets=count)
-        planned_weight = 0.0 if is_bodyweight_authored(exercise) else float(exercise.get("recommended_working_weight", 0))
+        planned_weight = 0.0 if is_bodyweight_authored(exercise) or exercise.get("performed_variant") else float(exercise.get("recommended_working_weight", 0))
         return {"exercise_id": exercise_id, "exercise_occurrence_id": exercise.get("exercise_occurrence_id"),
             "primary_exercise_id": exercise.get("primary_exercise_id"), "name": exercise.get("name", exercise_id),
-            "load_semantics": exercise.get("load_semantics"), "planned_sets": planned_sets, "planned_reps_min": live["recommended_reps_min"], "planned_reps_max": live["recommended_reps_max"],
+            "performed_variant": exercise.get("performed_variant"), "substitution_consent": exercise.get("substitution_consent"), "load_recommendation_available": not bool(exercise.get("performed_variant")),
+            "load_semantics": (exercise.get("performed_variant") or exercise).get("load_semantics"), "planned_sets": planned_sets, "planned_reps_min": live["recommended_reps_min"], "planned_reps_max": live["recommended_reps_max"],
             "planned_weight": planned_weight,
             "performed_sets": count, "completion_pct": int(count / max(1, planned_sets) * 100),
             "average_performed_reps": sum(row["reps"] for row in performed_logs) / count if count else 0,
             "average_performed_weight": sum(row["weight"] for row in performed_logs) / count if count else 0,
-            "rep_delta": None, "weight_delta": (sum(row["weight"] for row in performed_logs) / count if count else 0) - planned_weight, "next_working_weight": 0.0 if is_bodyweight_authored(exercise) else next_working_weight,
+            "rep_delta": None, "weight_delta": (sum(row["weight"] for row in performed_logs) / count if count else 0) - planned_weight, "next_working_weight": 0.0 if is_bodyweight_authored(exercise) or exercise.get("performed_variant") else next_working_weight,
             "guidance": live["guidance"], "guidance_rationale": live["guidance_rationale"],
             "decision_trace": live["decision_trace"]}
     rep_range = exercise.get("rep_range") or [8, 12]
@@ -1125,6 +1126,8 @@ def build_workout_today_payload(
 
 
 def _resolve_today_recommended_weight(exercise: dict[str, Any]) -> tuple[float, str]:
+    if exercise.get("performed_variant"):
+        return 0.0, "confirmed_variant_no_comparable_load_advice"
     if is_bodyweight_authored(exercise):
         return 0.0, "authored_bodyweight_no_external_load"
     planned = float(exercise.get("recommended_working_weight", 20) or 20)

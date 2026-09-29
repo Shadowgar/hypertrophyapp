@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from .authored_prescription import requires_receipt_tracking
+from .authored_constraints import requires_receipt_tracking
 from datetime import date, datetime, timedelta
 from typing import Any, cast
 
@@ -732,12 +732,17 @@ def summarize_weekly_review_performance(
 ) -> dict[str, Any]:
     exercises = [exercise for session in previous_plan_payload.get("sessions") or []
         for exercise in session.get("exercises") or []]
-    typed = [exercise for exercise in exercises if requires_receipt_tracking(exercise)]
+    variant_keys = set().union(*(_review_identity_keys((row.get("replay_context") or {}).get("planned_exercise") or {})
+        for row in performed_logs if ((row.get("replay_context") or {}).get("planned_exercise") or {}).get("performed_variant")))
+    def receipt_only(exercise):
+        # Consent is frozen on occurrences/receipts, not copied into the source plan.
+        return requires_receipt_tracking(exercise) or bool(_review_identity_keys(exercise) & variant_keys)
+    typed = [exercise for exercise in exercises if receipt_only(exercise)]
     excluded_targets = [exercise.get("source_lineage") or {"exercise_occurrence_id": exercise.get("exercise_occurrence_id"), "exercise_id": exercise.get("id")}
         for exercise in typed]
     typed_keys = set().union(*(_review_identity_keys(exercise) for exercise in typed))
     typed_primary = {str(exercise.get("primary_exercise_id") or exercise.get("id") or "") for exercise in typed}
-    numeric_keys = set().union(*(_review_identity_keys(exercise) for exercise in exercises if not requires_receipt_tracking(exercise)))
+    numeric_keys = set().union(*(_review_identity_keys(exercise) for exercise in exercises if not receipt_only(exercise)))
     known_keys = typed_keys | numeric_keys
     numeric_logs, excluded_logs = [], []
     ambiguous_count = 0
@@ -764,7 +769,7 @@ def summarize_weekly_review_performance(
             numeric_logs.append(row)
     scoped_plan = deepcopy(previous_plan_payload)
     for session in scoped_plan.get("sessions") or []:
-        session["exercises"] = [e for e in session.get("exercises") or [] if not requires_receipt_tracking(e)]
+        session["exercises"] = [e for e in session.get("exercises") or [] if not receipt_only(e)]
     planned_index = _accumulate_planned_index(scoped_plan)
     performed_index = _collect_performed_index(numeric_logs, planned_index)
 

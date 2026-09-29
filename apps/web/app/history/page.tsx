@@ -533,7 +533,7 @@ function HistoryCalendarPanel() {
                         {` · ${exercise.total_volume} volume`}
                       </p>
                       <p className="telemetry-meta">
-                        {exercise.sets.map((entry) => `#${entry.set_index} ${entry.reps}x${entry.weight}`).join(" · ")}
+                        {exercise.sets.map((entry) => `#${entry.set_index} ${entry.reps}x${entry.weight}${entry.performed_variant ? ` · ${entry.performed_variant.name} (confirmed variant; original ${entry.original_authored_name ?? exercise.planned_name ?? exercise.exercise_id})` : ""}`).join(" · ")}
                       </p>
                     </div>
                   ))}

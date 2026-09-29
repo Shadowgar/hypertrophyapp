@@ -617,6 +617,30 @@ def _adaptive_slot_to_runtime_exercise(
                 "youtube_url": candidate_knowledge.get("default_video_url"),
             },
         }
+    approved_alternatives = []
+    lineage = slot_source.get("source_lineage") or {}
+    raw = (slot_source.get("authored_prescription") or {}).get("raw") or {}
+    if lineage.get("source_slot_id") and artifact_hash:
+        for option in ("substitution_option_1", "substitution_option_2"):
+            source_name = raw.get(option)
+            if not source_name or str(source_name).strip().lower() in {"n/a", "na", "none", "-"}:
+                continue
+            normalized = " ".join(str(source_name).lower().split())
+            matches = [entry for entry in exercise_library.values() if normalized in
+                {" ".join(str(name).lower().split()) for name in
+                 [entry.get("canonical_name"), *(entry.get("aliases") or [])] if name}]
+            if len(matches) != 1:
+                continue  # Source permission exists, execution metadata remains unresolved.
+            candidate = matches[0]
+            if _PLACEHOLDER_SUBSTITUTION_PATTERN.search(str(candidate.get("exercise_id") or "")):
+                continue
+            tags = list(candidate.get("equipment_tags") or [])
+            approved_alternatives.append({"option_id": option, "id": candidate["exercise_id"],
+                "name": str(source_name), "movement_pattern": candidate.get("movement_pattern"),
+                "equipment_tags": tags,
+                "load_semantics": "bodyweight" if tags == ["bodyweight"] else "external_load" if tags else "unknown",
+                "permission": {**lineage, "artifact_sha256": artifact_hash,
+                    "source_option": option, "source_option_value": str(source_name)}})
     resolved_video_url = (
         slot_source.get("video_url")
         or slot_source.get("demo_url")
@@ -653,6 +677,7 @@ def _adaptive_slot_to_runtime_exercise(
             )
         ),
         "equipment_tags": list(exercise_knowledge.get("equipment_tags") or _infer_equipment_tags(exercise_id)),
+        "source_approved_alternatives": approved_alternatives,
         "substitution_candidates": substitution_candidates,
         "substitution_metadata": substitution_metadata,
         "last_set_intensity_technique": slot_source.get("last_set_intensity_technique"),

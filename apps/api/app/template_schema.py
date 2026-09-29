@@ -21,6 +21,7 @@ class CanonicalExercise(BaseModel):
     movement_pattern: str | None = None
     primary_muscles: list[str] = []
     equipment_tags: list[str] = []
+    source_approved_alternatives: list[dict] = []
     substitution_candidates: list[str] = []
     substitution_metadata: dict[str, dict[str, object]] = {}
     load_semantics: str | None = None

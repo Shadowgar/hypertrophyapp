@@ -3,6 +3,7 @@ from typing import Any
 import re
 from copy import deepcopy
 
+from .authored_constraints import annotate_constraints
 from .equipment import resolve_equipment_tags
 from .authored_prescription import is_bodyweight_authored, execution_fields
 from .equipment_profile import canonicalize_equipment_profile
@@ -245,6 +246,7 @@ def _build_authored_passthrough_exercise(
         "priority": exercise.get("priority", "standard"),
         "movement_pattern": exercise.get("movement_pattern"),
         "primary_muscles": list(exercise.get("primary_muscles") or []),
+        "source_approved_alternatives": deepcopy(exercise.get("source_approved_alternatives") or []),
         "substitution_candidates": list(exercise.get("substitution_candidates") or []),
         "substitution_pressure": "none",
         "substitution_guidance": None,
@@ -858,6 +860,8 @@ def generate_week_plan(
                     exercise,
                     history_index,
                 )
+                planned_exercise = annotate_constraints(planned_exercise,
+                    equipment=list(equipment_set), restrictions=list(normalized_movement_restrictions))
             else:
                 planned_exercise = _build_planned_exercise(
                     exercise,
