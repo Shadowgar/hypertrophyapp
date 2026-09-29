@@ -1,6 +1,7 @@
 # M1-B authored constraint authority and explicit substitutions
 
-Status: owner-authorized application implementation, awaiting PR/owner review.
+Status: PR #42 merged and API/web activated under owner authorization; see
+[activation evidence](../evidence/2026-09-29-m1-authored-constraints-activation.md).
 Base main: `32865d4f36ca11538e5762dab3029d5bafd5d517`.
 Branch: `m1/authored-constraint-authority`. The owner subsequently authorized
 fixing the three PR #42 review defects, merging after fresh review/qualification,

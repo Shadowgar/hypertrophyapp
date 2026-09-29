@@ -113,4 +113,10 @@ working-set-only aggregation and bodyweight/load advice separation.
 
 [M1-A live activation](2026-09-29-m1-authored-fidelity-activation.md) records the
 owner-authorized PR #41 cutover. [M1-B candidate qualification](2026-09-29-m1-authored-constraints.md)
-records source-scoped constraints/consent; it remains unmerged and unreleased.
+records source-scoped constraints/consent. [M1-B live activation](2026-09-29-m1-authored-constraints-activation.md)
+records the subsequent owner-authorized PR #42 cutover.
+
+[Security dependency triage and Caddy candidate](2026-09-29-security-dependency-triage.md)
+records the private-alert access gap, imported-advisory dispositions and isolated
+qualification for a separate unmerged dependency PR. No Caddy activation or
+complete security/secret-history coverage is claimed.
