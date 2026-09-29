@@ -107,3 +107,6 @@ records production serialization/source-slot cohort matching.
 
 [Explicit all-set technique qualification](2026-09-28-m1-all-set-techniques.md)
 records the subsequent compiler/runner source-scope correction.
+
+[Weekly-review receipt boundaries](2026-09-29-m1-weekly-review-receipts.md) records
+working-set-only aggregation and bodyweight/load advice separation.

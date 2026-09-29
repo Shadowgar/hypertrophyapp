@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from .authored_prescription import requires_typed_tracking
+from .authored_prescription import requires_receipt_tracking
 from datetime import date, datetime, timedelta
 from typing import Any, cast
 
@@ -468,7 +468,7 @@ def _accumulate_single_planned_exercise(planned_index: dict[str, dict[str, Any]]
     if not primary_exercise_id:
         return
 
-    if requires_typed_tracking(exercise):
+    if requires_receipt_tracking(exercise):
         return
     planned_sets = int(exercise.get("sets", 0) or 0)
     target_min, target_max = _resolve_rep_range(exercise.get("rep_range"))
@@ -732,16 +732,19 @@ def summarize_weekly_review_performance(
 ) -> dict[str, Any]:
     exercises = [exercise for session in previous_plan_payload.get("sessions") or []
         for exercise in session.get("exercises") or []]
-    typed = [exercise for exercise in exercises if requires_typed_tracking(exercise)]
+    typed = [exercise for exercise in exercises if requires_receipt_tracking(exercise)]
     excluded_targets = [exercise.get("source_lineage") or {"exercise_occurrence_id": exercise.get("exercise_occurrence_id"), "exercise_id": exercise.get("id")}
         for exercise in typed]
     typed_keys = set().union(*(_review_identity_keys(exercise) for exercise in typed))
     typed_primary = {str(exercise.get("primary_exercise_id") or exercise.get("id") or "") for exercise in typed}
-    numeric_keys = set().union(*(_review_identity_keys(exercise) for exercise in exercises if not requires_typed_tracking(exercise)))
+    numeric_keys = set().union(*(_review_identity_keys(exercise) for exercise in exercises if not requires_receipt_tracking(exercise)))
     known_keys = typed_keys | numeric_keys
     numeric_logs, excluded_logs = [], []
     ambiguous_count = 0
     for row in performed_logs:
+        # Technique children and warm-ups are receipts, not working exposures.
+        if row.get("parent_set_index") is not None or (row.get("set_kind") or "work").strip().lower() != "work":
+            continue
         context = (row.get("replay_context") or {}).get("planned_exercise") or {}
         keys = _review_identity_keys(row) | _review_identity_keys(context)
         # Persisted plans lack occurrence UUIDs. Prefer a matching occurrence,
@@ -750,7 +753,7 @@ def summarize_weekly_review_performance(
         matching_occurrences = {key for key in keys & known_keys if key[0] == "occurrence"}
         matches = matching_occurrences or (keys & known_keys)
         primary = str(row.get("primary_exercise_id") or row.get("exercise_id") or "")
-        if requires_typed_tracking(context) or matches & typed_keys:
+        if requires_receipt_tracking(context) or matches & typed_keys:
             excluded_logs.append(row)
         elif primary in typed_primary and not matches & numeric_keys:
             # Legacy receipts without a resolvable occurrence cannot be assigned to
@@ -761,7 +764,7 @@ def summarize_weekly_review_performance(
             numeric_logs.append(row)
     scoped_plan = deepcopy(previous_plan_payload)
     for session in scoped_plan.get("sessions") or []:
-        session["exercises"] = [e for e in session.get("exercises") or [] if not requires_typed_tracking(e)]
+        session["exercises"] = [e for e in session.get("exercises") or [] if not requires_receipt_tracking(e)]
     planned_index = _accumulate_planned_index(scoped_plan)
     performed_index = _collect_performed_index(numeric_logs, planned_index)
 

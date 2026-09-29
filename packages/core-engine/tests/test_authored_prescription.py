@@ -99,3 +99,49 @@ def test_explicit_all_set_techniques_preserve_scope_without_expanding_last_set_c
     instruction = "Long-length Partials (on all reps of the last set)"
     prescribed = preserve_prescription({"reps": "8-12", "last_set_intensity_technique": instruction}, 3)
     assert [item["intensity_technique"] for item in prescribed["sets"]] == [None, None, instruction]
+
+
+def test_weekly_review_ignores_all_set_technique_children_and_warmups():
+    start = date(2026, 9, 21)
+    exercise = {"id": "numeric", "sets": 2, "rep_range": [8, 12],
+        "recommended_working_weight": 20,
+        "authored_prescription": preserve_prescription({"reps": "8-12",
+            "last_set_intensity_technique": "Mechanical Dropset (on all sets)"}, 2)}
+    rows = [SimpleNamespace(exercise_id="numeric", primary_exercise_id="numeric",
+        exercise_occurrence_id="occurrence", workout_occurrence_id="workout",
+        replay_context={"planned_exercise": exercise}, reps=reps, weight=weight,
+        parent_set_index=parent, set_kind=kind)
+        for reps, weight, parent, kind in [(10, 20, None, "work"), (10, 20, None, "work"),
+            (3, 10, 1, "work"), (2, 10, 2, "work"), (5, 5, None, "warmup")]]
+    summary = build_weekly_review_performance_summary(previous_week_start=start,
+        week_start=start + timedelta(days=7),
+        previous_plan=SimpleNamespace(payload={"sessions": [{"exercises": [exercise]}]}),
+        performed_logs=rows)
+    assert summary["completed_sets_total"] == 2 and summary["completion_pct"] == 100
+    fault = summary["exercise_faults"][0]
+    assert fault["average_performed_reps"] == 10
+    assert fault["fault_reasons"] == []
+
+
+def test_numeric_bodyweight_review_counts_receipts_without_external_load_advice():
+    start = date(2026, 9, 21)
+    bodyweight = {"id": "shared", "sets": 1, "rep_range": [10, 20],
+        "load_semantics": "bodyweight", "recommended_working_weight": 0,
+        "source_lineage": {"source_sha256": "source", "source_slot_id": "bodyweight"},
+        "authored_prescription": preserve_prescription({"reps": "10-20"}, 1)}
+    numeric = {"id": "shared", "sets": 1, "rep_range": [8, 12],
+        "recommended_working_weight": 20,
+        "source_lineage": {"source_sha256": "source", "source_slot_id": "weighted"}}
+    summary = summarize_weekly_review_performance(previous_week_start=start,
+        week_start=start + timedelta(days=7),
+        previous_plan_payload={"sessions": [{"exercises": [bodyweight, numeric]}]},
+        performed_logs=[{"exercise_id": "shared", "reps": reps, "weight": weight,
+            "replay_context": {"planned_exercise": exercise}}
+            for exercise, reps, weight in [(bodyweight, 30, 0), (numeric, 5, 20)]])
+    assert summary["planned_sets_total"] == summary["completed_sets_total"] == 2
+    assert len(summary["exercise_faults"]) == 1
+    fault = summary["exercise_faults"][0]
+    assert fault["average_performed_reps"] == 5 and fault["planned_sets"] == 1
+    assert "below_target_reps" in fault["fault_reasons"]
+    assert fault["guidance"] != "increase_load_next_exposure"
+    assert summary["decision_trace"]["steps"][0]["numeric_fault_classification_excluded"] == [bodyweight["source_lineage"]]
