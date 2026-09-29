@@ -8,6 +8,7 @@ configure_test_database("test_workout_session_state")
 
 from app.database import Base, SessionLocal, engine
 from app.main import app
+from authored_test_helpers import source_equipment
 from app.models import ExerciseState, User, WorkoutPlan, WorkoutSessionState
 
 
@@ -37,7 +38,7 @@ def _onboard_profile(client: TestClient, token: str, *, equipment_profile: list[
             "gender": "male",
             "split_preference": "full_body",
             "training_location": "home",
-            "equipment_profile": equipment_profile or ["dumbbell"],
+            "equipment_profile": equipment_profile or source_equipment(),
             "days_available": 3,
             "nutrition_phase": "maintenance",
             "calories": 2500,
@@ -238,14 +239,14 @@ def test_log_set_live_recommendation_increases_load_when_reps_above_target() -> 
     assert float(live["recommended_weight"]) >= logged_weight
 
 
-def test_log_set_surfaces_repeat_failure_substitution_recommendation() -> None:
+def test_authored_repeat_failure_does_not_offer_generic_substitution() -> None:
     _reset_db()
     client = TestClient(app)
     email = "sessionstate-repeat@example.com"
     token = _register_token(client, email)
     headers = {"Authorization": f"Bearer {token}"}
 
-    _onboard_profile(client, token, equipment_profile=["cable", "machine", "dumbbell", "barbell"])
+    _onboard_profile(client, token)
     first_session, first_exercise = _setup_first_exercise(client, headers)
 
     with SessionLocal() as db:
@@ -279,17 +280,16 @@ def test_log_set_surfaces_repeat_failure_substitution_recommendation() -> None:
     payload = response.json()
 
     substitution = payload["live_recommendation"]["substitution_recommendation"]
-    assert substitution is not None
-    assert substitution["reason"] == "repeat_failure_threshold_reached"
-    assert substitution["recommended_name"] in substitution["compatible_substitutions"]
+    assert substitution is None  # Authored choices require exact source permission and consent.
 
     today = client.get("/workout/today", headers=headers)
     assert today.status_code == 200
     today_payload = today.json()
     matching = next(item for item in today_payload["exercises"] if item["id"] == first_exercise["id"])
     today_substitution = matching["live_recommendation"].get("substitution_recommendation")
-    assert today_substitution is not None
-    assert today_substitution["recommended_name"] == substitution["recommended_name"]
+    assert today_substitution is None
+    assert matching["name"] == first_exercise["name"]
+    assert matching["authored_prescription"] == first_exercise["authored_prescription"]
 
 
 def test_adaptive_gold_workout_today_reflects_generated_repeat_failure_substitution() -> None:

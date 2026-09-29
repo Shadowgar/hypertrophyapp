@@ -638,6 +638,7 @@ def _adaptive_slot_to_runtime_exercise(
             approved_alternatives.append({"option_id": option, "id": candidate["exercise_id"],
                 "name": str(source_name), "movement_pattern": candidate.get("movement_pattern"),
                 "equipment_tags": tags,
+                "video_url": candidate.get("default_video_url"),
                 "load_semantics": "bodyweight" if tags == ["bodyweight"] else "external_load" if tags else "unknown",
                 "permission": {**lineage, "artifact_sha256": artifact_hash,
                     "source_option": option, "source_option_value": str(source_name)}})

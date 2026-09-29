@@ -9,6 +9,7 @@ configure_test_database("test_program_frequency_adaptation_api")
 
 from app.database import Base, SessionLocal, engine
 from app.main import app
+from authored_test_helpers import source_equipment
 from app.models import ExerciseState, SorenessEntry, User, WorkoutPlan
 
 TEST_CREDENTIAL = f"T{uuid.uuid4().hex[:15]}"
@@ -360,6 +361,9 @@ def test_frequency_adaptation_preserves_progression_state_across_5_to_3_to_5_win
     _reset_db()
     client = TestClient(app)
     headers = _register_and_profile(client)
+
+    assert client.post('/profile', headers=headers,
+        json={'equipment_profile': source_equipment()}).status_code == 200
 
     apply_response = client.post(
         "/plan/adaptation/apply",

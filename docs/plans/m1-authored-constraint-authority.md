@@ -2,8 +2,10 @@
 
 Status: owner-authorized application implementation, awaiting PR/owner review.
 Base main: `32865d4f36ca11538e5762dab3029d5bafd5d517`.
-Branch: `m1/authored-constraint-authority`. Merge, deployment, migration, ADR and
-whole-M1/release acceptance are not authorized for this package.
+Branch: `m1/authored-constraint-authority`. The owner subsequently authorized
+fixing the three PR #42 review defects, merging after fresh review/qualification,
+and activating API/web without a migration. ADR and whole-M1/release acceptance
+remain separate.
 
 Governing [product](../requirements/product-contract.md),
 [ADR-002](../adr/0002-mode-authority-and-consent.md),

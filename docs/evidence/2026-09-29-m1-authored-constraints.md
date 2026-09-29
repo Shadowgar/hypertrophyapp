@@ -83,3 +83,32 @@ and broader generated changes remain outside this candidate.
 
 No M1-B deployment, live DB reset/reseed/wipe, history deletion or migration. M1-A's
 separate prior activation is recorded in its [activation evidence](2026-09-29-m1-authored-fidelity-activation.md).
+
+
+## PR #42 review correction qualification
+
+Review of head `88380ca2f6b6fe8fdcc23389a0856b955bc769de` identified three
+real defects. Confirmation now projects no variant starting-load advice and
+retains the original load separately; external variant input starts blank even
+if a stale client payload carries a source recommendation. Only explicit variant
+media is usable, and the source guide is disabled while a variant is active.
+Current profile feasibility is recomputed in Today, consent commands and logging.
+Frozen consent stays confirmed, while separate execution status blocks a newly
+incompatible variant; user-reported pain/safety conflicts survive profile changes.
+
+Final focused checks: 19 API cases passed, 13 constraint/prescription core cases
+passed, and 23 web cases passed. Full core: 378 passed and the same four baseline
+failures. Web build passed; lint retains one prior hook warning and no errors.
+TypeScript retains the same 102 diagnostics in the three existing test files.
+The broader API compatibility run and fresh GitHub checks/review are pending at
+this correction commit; their final disposition is required before activation.
+
+The original PR CI had 25 API failures: eight baseline/absent-source-fixture
+failures and 17 assertions affected by the newly enforced authored boundaries.
+Positive execution fixtures now declare source equipment rather than attempting
+to execute unavailable source exercises. The rotated restriction test verifies
+retained source slots and blocking conflict annotations. The authored repeat-failure
+test rejects generic substitution advice; generated substitution coverage remains.
+These are explicitly changed expectations, not described as baseline failures.
+Separate missing-equipment, stale-profile and pain/safety negative tests remain.
+No unrelated baseline application behavior is repaired by these fixture changes.

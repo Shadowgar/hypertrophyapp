@@ -77,3 +77,21 @@ def test_variant_receipts_exclude_the_frozen_source_slot_from_raw_plan_load_advi
     assert fault['planned_sets']==fault['completed_sets']==1
     assert fault['average_performed_reps']==5 and 'missed_sets' not in fault['fault_reasons']
     assert 'below_target_reps' in fault['fault_reasons']
+
+
+def test_refresh_retains_consent_and_reports_while_profile_conflicts_change():
+    from core_engine.authored_constraints import refresh_constraints, project_variant_load
+    e = source_exercise('source', 'squat')
+    e['authored_constraint'] = annotate_constraints(e, restrictions=['deep_knee_flexion'])['authored_constraint']
+    assert refresh_constraints(e, restrictions=[])['status'] == 'ready'
+    e['performed_variant'] = {'id': 'variant', 'movement_pattern': 'hinge', 'equipment_tags': ['barbell']}
+    e['authored_constraint'] = {**e['authored_constraint'], 'status': 'confirmed', 'revision': 2}
+    blocked = refresh_constraints(e, equipment=['dumbbell'])
+    assert blocked['status'] == 'confirmed' and blocked['execution_status'] == 'infeasible'
+    assert blocked['revision'] == 2
+    e['authored_constraint'] = blocked
+    assert refresh_constraints(e, equipment=['barbell'])['execution_status'] == 'ready'
+    e['recommended_working_weight'] = 50
+    projected = project_variant_load(e)
+    assert projected['recommended_working_weight'] == 0 and projected['load_recommendation_available'] is False
+    assert e['recommended_working_weight'] == projected['source_load_context']['recommended_working_weight'] == 50

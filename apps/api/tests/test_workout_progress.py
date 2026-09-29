@@ -8,6 +8,7 @@ configure_test_database("test_workout_progress")
 
 from app.database import Base, SessionLocal, engine
 from app.main import app
+from authored_test_helpers import source_equipment
 from app.workout_identity import resolve_occurrence
 from app.models import User, WorkoutSessionState, WorkoutPlan
 
@@ -38,7 +39,7 @@ def _onboard_profile(client: TestClient, token: str) -> None:
             "gender": "male",
             "split_preference": "full_body",
             "training_location": "home",
-            "equipment_profile": ["dumbbell"],
+            "equipment_profile": source_equipment(),
             "days_available": 3,
             "nutrition_phase": "maintenance",
             "calories": 2500,

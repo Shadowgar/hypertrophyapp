@@ -51,6 +51,38 @@ def annotate_constraints(exercise, *, equipment=None, restrictions=None):
     return result
 
 
+def refresh_constraints(exercise, *, equipment=None, restrictions=None):
+    """Current feasibility is separate from frozen substitution consent."""
+    old = exercise.get('authored_constraint') or {}
+    variant = exercise.get('performed_variant')
+    refreshed = annotate_constraints(variant or exercise, equipment=equipment,
+        restrictions=restrictions)['authored_constraint']
+    reports = deepcopy(old.get('reported_conflicts'))
+    if reports is None:
+        reports = [deepcopy(reason) for reason in old.get('reasons') or []
+            if 'user_reported' in (reason.get('details') or []) and old.get('status') != 'confirmed']
+    reasons = [*refreshed['reasons'], *reports]
+    status = ('unresolved' if refreshed['allowed_alternatives'] else 'infeasible') if reasons else 'ready'
+    if not variant and reasons and old.get('status') == 'declined':
+        status = 'declined'
+    return {**refreshed, 'revision': int(old.get('revision') or 0), 'reasons': reasons,
+        'reported_conflicts': reports, 'status': 'confirmed' if variant else status,
+        'execution_status': status}
+
+
+def project_variant_load(exercise):
+    """Presentation only: retain original load context without prescribing it for a variant."""
+    result = deepcopy(exercise)
+    if result.get('performed_variant'):
+        result['source_load_context'] = deepcopy(result.get('source_load_context') or {
+            'recommended_working_weight': result.get('recommended_working_weight'),
+            'warmups': result.get('warmups') or []})
+        result['recommended_working_weight'] = 0.0  # Compatibility DTO, not a starting-load recommendation.
+        result['warmups'] = []
+        result['load_recommendation_available'] = False
+    return result
+
+
 def requires_receipt_tracking(exercise):
     return bool((exercise or {}).get('performed_variant')) or _receipt(exercise)
 

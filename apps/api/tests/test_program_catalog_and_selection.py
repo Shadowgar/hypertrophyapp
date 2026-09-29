@@ -2573,4 +2573,8 @@ def test_phase2_movement_restrictions_remain_enforced_on_rotated_weeks() -> None
         for session in plan["sessions"]
         for exercise in session["exercises"]
     }
-    assert "vertical_press" not in patterns
+    assert "vertical_press" in patterns  # Preserve source slots; conflict blocks execution, not dose.
+    conflicts = [e for session in plan['sessions'] for e in session['exercises'] if e.get('movement_pattern') == 'vertical_press']
+    assert conflicts and all(e['authored_constraint']['status'] in {'unresolved', 'infeasible'} for e in conflicts)
+    assert all(any(r['kind'] == 'restriction' and 'overhead_pressing' in r['details']
+        for r in e['authored_constraint']['reasons']) for e in conflicts)

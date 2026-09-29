@@ -169,7 +169,8 @@ def test_pain_report_is_slot_scoped_and_pauses_a_started_confirmed_variant(scena
     reported=send(client,headers,session,decision(session,'report',reason='pain'))
     assert reported.status_code==200
     e=reported.json()['exercise']
-    assert e['authored_constraint']['status']=='unresolved'
+    assert e['authored_constraint']['status']=='confirmed'
+    assert e['authored_constraint']['execution_status'] in {'unresolved', 'infeasible'}
     assert any(r['kind']=='pain' for r in e['authored_constraint']['reasons'])
     assert e['performed_variant']==confirmed.json()['exercise']['performed_variant']
     next_set=submission(session,index=2);next_set['weight']=0
@@ -188,7 +189,8 @@ def test_current_profile_conflict_pauses_confirmed_variant_without_rewriting_fro
         changed=deepcopy(occurrence.payload);changed['exercises'][0]['performed_variant']['equipment_tags']=['barbell']
         occurrence.payload=changed;db.commit()
     today=client.get('/workout/today',headers=headers).json()['exercises'][0]
-    assert today['authored_constraint']['status']=='unresolved'
+    assert today['authored_constraint']['status']=='confirmed'
+    assert today['authored_constraint']['execution_status']=='infeasible'
     assert log(client,headers,session,submission(session)).status_code==409
     with SessionLocal() as db:
         assert db.get(WorkoutOccurrence,session['workout_occurrence_id']).payload['exercises'][0]['authored_constraint']['status']=='confirmed'
@@ -222,3 +224,65 @@ def test_legacy_authored_conflict_stays_unresolved_without_invented_permission(s
         'expected_revision':0,'expected_source_lineage':{},'action':'report','reason':'safety'}
     assert send(client,headers,session,request).status_code==200
     assert send(client,headers,session,{**request,'command_id':str(uuid4()),'action':'confirm','expected_revision':1,'option_id':'generic'}).status_code==409
+
+
+@pytest.mark.parametrize("kind", ["equipment", "restriction"])
+def test_profile_changes_restore_unconfirmed_original_without_new_occurrence(scenario, kind):
+    user, headers, client = scenario
+    session = constrained_plan(user)
+    with SessionLocal() as db:
+        u = db.get(User, user)
+        row = db.get(WorkoutPlan, session['plan_id'])
+        value = deepcopy(row.payload)
+        e = value['sessions'][0]['exercises'][0]
+        if kind == 'equipment':
+            u.movement_restrictions = []
+            u.equipment_profile = ['dumbbell']
+            e['equipment_tags'] = ['barbell']
+            e = annotate_constraints(e, equipment=u.equipment_profile)
+            value['sessions'][0]['exercises'][0] = e
+            row.payload = value
+        db.commit()
+    assert client.get('/workout/today', headers=headers).json()['exercises'][0]['authored_constraint']['status'] in {'unresolved', 'infeasible'}
+    assert log(client, headers, session, submission(session)).status_code == 409
+    with SessionLocal() as db:
+        u = db.get(User, user)
+        u.movement_restrictions = []
+        u.equipment_profile = ['barbell', 'bodyweight']
+        db.commit()
+    today = client.get('/workout/today', headers=headers).json()['exercises'][0]
+    assert today['authored_constraint']['status'] == 'ready'
+    assert today['exercise_occurrence_id'] == session['exercises'][0]['exercise_occurrence_id']
+    assert log(client, headers, session, submission(session)).status_code == 200
+
+
+@pytest.mark.parametrize("reason", ['pain', 'safety'])
+def test_profile_refresh_does_not_erase_reported_conflicts(scenario, reason):
+    user, headers, client = scenario
+    session = constrained_plan(user)
+    r = send(client, headers, session, decision(session, 'report', reason=reason))
+    assert r.status_code == 200
+    with SessionLocal() as db:
+        db.get(User, user).movement_restrictions = []
+        db.commit()
+    today = client.get('/workout/today', headers=headers).json()['exercises'][0]
+    assert today['authored_constraint']['reasons'] == [{'kind': reason, 'details': ['user_reported']}]
+    assert log(client, headers, session, submission(session)).status_code == 409
+
+
+def test_external_variant_response_clears_source_load_but_retains_frozen_source(scenario):
+    user, headers, client = scenario
+    session = constrained_plan(user, bodyweight=False)
+    source = deepcopy(session['exercises'][0])
+    response = send(client, headers, session, decision(session, 'confirm', option_id='substitution_option_1'))
+    assert response.status_code == 200
+    e = response.json()['exercise']
+    assert e['recommended_working_weight'] == 0 and e['load_recommendation_available'] is False
+    assert e['source_load_context']['recommended_working_weight'] == source['recommended_working_weight']
+    assert e['authored_prescription'] == source['authored_prescription']
+    assert not e['warmups']
+    with SessionLocal() as db:
+        frozen = db.get(WorkoutOccurrence, session['workout_occurrence_id']).payload['exercises'][0]
+        assert frozen['recommended_working_weight'] == source['recommended_working_weight']
+    today = client.get('/workout/today', headers=headers).json()['exercises'][0]
+    assert today['recommended_working_weight'] == 0 and not today['warmups']

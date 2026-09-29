@@ -8,6 +8,7 @@ configure_test_database("test_workout_summary")
 
 from app.database import Base, engine
 from app.main import app
+from authored_test_helpers import source_equipment
 
 
 def _reset_db() -> None:
@@ -37,7 +38,7 @@ def _onboard_profile(client: TestClient, token: str) -> None:
             "gender": "male",
             "split_preference": "full_body",
             "training_location": "home",
-            "equipment_profile": ["dumbbell"],
+            "equipment_profile": source_equipment(),
             "days_available": 3,
             "nutrition_phase": "maintenance",
             "calories": 2500,

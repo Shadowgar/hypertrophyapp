@@ -222,7 +222,9 @@ function resolveWeakPointInstruction(exercise: WorkoutExercise, weakAreas: strin
 }
 
 function resolveExerciseMediaUrl(exercise: WorkoutExercise): string | null {
-  const preferred = exercise.video?.youtube_url ?? exercise.video_url ?? exercise.demo_url;
+  const preferred = exercise.performed_variant
+    ? exercise.performed_variant.video_url
+    : exercise.video?.youtube_url ?? exercise.video_url ?? exercise.demo_url;
   return typeof preferred === "string" && preferred.trim().length > 0 ? preferred : null;
 }
 
@@ -602,7 +604,7 @@ function ExerciseDetailOverlay({
     exerciseId: exerciseKey(exercise),
     totalSets: exercise.sets,
     defaultRestSeconds,
-    recommendedWorkingWeight: bodyweight ? 0 : snapToHalfLb(derivedWorkingLb),
+    recommendedWorkingWeight: bodyweight ? 0 : exercise.performed_variant ? undefined : snapToHalfLb(derivedWorkingLb),
     repRange: currentRepRange,
     initialCompletedSets: completed,
     skipTimerOnComplete: true,
@@ -792,8 +794,8 @@ function ExerciseDetailOverlay({
           guidanceLine={doThisSetLine}
           ctrl={ctrl}
           weightLabel={bodyweight ? "Added load (lb), optional" : isAssistance ? "Assistance (lb) — lower is harder" : "Weight (lb)"}
-          disabledReason={["unresolved", "infeasible", "declined"].includes(exercise.authored_constraint?.status ?? "") ? "Resolve authored slot first" : undefined}
-          disableComplete={gateLastSet || ["unresolved", "infeasible", "declined"].includes(exercise.authored_constraint?.status ?? "")}
+          disabledReason={["unresolved", "infeasible", "declined"].includes(exercise.authored_constraint?.execution_status ?? exercise.authored_constraint?.status ?? "") ? "Resolve authored slot first" : undefined}
+          disableComplete={gateLastSet || ["unresolved", "infeasible", "declined"].includes(exercise.authored_constraint?.execution_status ?? exercise.authored_constraint?.status ?? "")}
         />
 
         {/* == ZONE 5: Set log (per-set logged values) == */}
@@ -1464,7 +1466,7 @@ export default function TodayPage() {
         const selectedName = resolveExerciseName(exercise, swapIndexByExercise);
         const displayName = resolveDisplayExerciseName(exercise, selectedName, weakAreas);
         const weakPointInstruction = resolveWeakPointInstruction(exercise, weakAreas);
-        const guideHref = activeProgramId
+        const guideHref = activeProgramId && !exercise.performed_variant
           ? `/guides/${activeProgramId}/exercise/${exercise.primary_exercise_id ?? exercise.id}`
           : null;
         const completed = completedSetsByExercise[exerciseKey(exercise)] ?? 0;
@@ -1489,7 +1491,7 @@ export default function TodayPage() {
         //   1) backend live recommendation
         //   2) planned working weight
         const derivedWorkingLb =
-          isBodyweightAuthored(exercise) ? 0 : completed === 0
+          exercise.performed_variant || isBodyweightAuthored(exercise) ? 0 : completed === 0
             ? (baseline != null
                 ? baselineWorkingLb
                 : hasRecommendation
@@ -1517,7 +1519,7 @@ export default function TodayPage() {
         const currentSwapIndex = swapIndexByExercise[exerciseKey(exercise)] ?? 0;
         const altCandidates = resolveSubstitutionCandidates(exercise, weakAreas);
         const warmupLbs =
-          baseline != null && baseline.warmupLbs.length > 0
+          exercise.performed_variant ? [] : baseline != null && baseline.warmupLbs.length > 0
             ? baseline.warmupLbs.slice(0, warmUpCount)
             : (exercise.warmups ?? []).slice(0, warmUpCount).map((kg) => kgToLbs(kg));
         const hasWarmup = warmUpCount > 0 && warmupLbs.length > 0;

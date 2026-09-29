@@ -25,12 +25,12 @@ export type AuthoredPrescription = {
 };
 
 export type SourceApprovedAlternative = { option_id: string; id: string; name: string;
-  load_semantics: string; permission: Record<string, unknown> };
+  load_semantics: string; video_url?: string | null; permission: Record<string, unknown> };
 
 type AuthoredExecutionFields = {
   performed_variant?: SourceApprovedAlternative | null;
   substitution_consent?: Record<string, unknown> | null;
-  authored_constraint?: { status: string; revision: number; reasons: Array<{kind: string; details: string[]}>;
+  authored_constraint?: { status: string; execution_status?: string; revision: number; reasons: Array<{kind: string; details: string[]}>;
     allowed_alternatives: SourceApprovedAlternative[] };
 
   authored_prescription?: AuthoredPrescription | null;

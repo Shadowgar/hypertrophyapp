@@ -11,7 +11,7 @@ export default function AuthoredConstraintCard({ exercise, onDecision }: {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const constraint = exercise.authored_constraint;
-  const unresolved = constraint && ["unresolved", "infeasible", "declined"].includes(constraint.status);
+  const unresolved = constraint && ["unresolved", "infeasible", "declined"].includes(constraint.execution_status ?? constraint.status);
   const choices = constraint?.allowed_alternatives ?? [];
   async function decide(decision: AuthoredDecision) {
     setBusy(true); setError("");
@@ -34,7 +34,7 @@ export default function AuthoredConstraintCard({ exercise, onDecision }: {
         </label>
         <button type="button" disabled={!selected || busy} onClick={() => decide({ action: "confirm", option_id: selected })}>Confirm this alternative</button>
       </> : <p>No qualified source-approved alternative is available. The slot remains infeasible.</p>}
-      <button type="button" disabled={busy} onClick={() => decide({ action: "decline" })}>Decline alternatives</button>
+      {!exercise.performed_variant ? <button type="button" disabled={busy} onClick={() => decide({ action: "decline" })}>Decline alternatives</button> : null}
     </> : null}
     <div className="flex flex-wrap gap-2">
       {(["equipment", "pain", "safety"] as const).map(reason => <button type="button" key={reason} disabled={busy} onClick={() => decide({ action: "report", reason })}>

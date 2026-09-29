@@ -69,3 +69,33 @@ test("Today blocks unresolved logging and uses server confirmation while retaini
   expect(screen.getByLabelText('Added load (lb), optional')).toHaveValue(0);
   expect(screen.queryByText('Baseline Calculator')).not.toBeInTheDocument();
 });
+
+
+for (const video of [undefined, 'https://example.com/variant-video']) {
+  test(`external variant never defaults source load or guide/media (${video ?? 'unknown media'})`, async () => {
+    const variant = {...source.authored_constraint!.allowed_alternatives[0], load_semantics: 'external_load', video_url: video};
+    const exercise = {...source, video_url: 'https://example.com/source-video', warmups: [10, 20],
+      performed_variant: variant, authored_constraint: {...source.authored_constraint!, status: 'confirmed', execution_status: 'ready'}};
+    vi.mocked(globalThis.fetch).mockImplementation(async input => {
+      const url = String(input);
+      const payload = url.endsWith('/workout/today') ? {session_id:'source-workout',workout_occurrence_id:'workout-occurrence',
+        title:'Source workout',date:new Date().toISOString().slice(0,10),exercises:[exercise]}
+        : url.includes('/soreness') ? [{id:'example'}] : url.endsWith('/progress') ? {completed_total:0,planned_total:1,percent_complete:0,exercises:[]}
+        : url.endsWith('/profile') ? {selected_program_id:'pure_bodybuilding_phase_1_full_body'} : {};
+      return new Response(JSON.stringify(payload),{status:200});
+    });
+    const open = vi.spyOn(window,'open').mockImplementation(() => null);
+    render(<TodayPage />);
+    fireEvent.click(screen.getByRole('button',{name:/Load today's workout/i}));
+    await waitFor(() => expect(screen.getByRole('button',{name:/Approved hinge/i})).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button',{name:/Approved hinge/i}));
+    expect(screen.getByLabelText('Weight (lb)')).toHaveValue(null);
+    expect(screen.queryByRole('link',{name:'Approved hinge'})).not.toBeInTheDocument();
+    expect(screen.queryByText('22 lb')).not.toBeInTheDocument();
+    expect(screen.queryByText('44 lb')).not.toBeInTheDocument();
+    const media = screen.getByRole('button',{name:/Watch|Video|Demo/i});
+    if(video) { fireEvent.click(media); expect(open).toHaveBeenCalledWith(video,'_blank','noopener,noreferrer'); }
+    else expect(media).toBeDisabled();
+    open.mockRestore();
+  });
+}

@@ -26,7 +26,7 @@ from core_engine import (
 )
 
 from ..database import get_db
-from core_engine.authored_constraints import requires_receipt_tracking, is_bodyweight_authored, annotate_constraints, restriction_conflicts, equipment_conflicts
+from core_engine.authored_constraints import requires_receipt_tracking, is_bodyweight_authored, annotate_constraints, refresh_constraints, project_variant_load, restriction_conflicts, equipment_conflicts
 from ..workout_authored import log_typed_set, typed_projection
 from ..deps import get_current_user
 from ..models import ExerciseState, User, WorkoutPlan, WorkoutSessionState, WorkoutSetLog, WorkoutOccurrence, WorkoutLogCommand
@@ -231,18 +231,9 @@ def workout_today(
             for session in plan.payload.get("sessions") or []) for plan in plans)
     for exercise in selected.get("exercises") or []:
         if authored_selected:
-            old_constraint = exercise.get("authored_constraint") or {}
-            if not old_constraint or old_constraint.get("status") == "ready":
-                refreshed = annotate_constraints(exercise,
-                    equipment=current_user.equipment_profile, restrictions=current_user.movement_restrictions)["authored_constraint"]
-                exercise["authored_constraint"] = {**refreshed, "revision": int(old_constraint.get("revision") or 0)}
-            elif old_constraint.get("status") == "confirmed" and exercise.get("performed_variant"):
-                variant = exercise["performed_variant"]
-                conflicts = annotate_constraints(variant, equipment=current_user.equipment_profile,
-                    restrictions=current_user.movement_restrictions)["authored_constraint"]
-                if conflicts["reasons"]:
-                    exercise["authored_constraint"] = {**old_constraint, "status": "unresolved",
-                        "reasons": [*old_constraint.get("reasons", []), *conflicts["reasons"]]}
+            exercise["authored_constraint"] = refresh_constraints(exercise,
+                equipment=current_user.equipment_profile, restrictions=current_user.movement_restrictions)
+            exercise.update(project_variant_load(exercise))
 
     logs = (
         effective_set_logs(db)
@@ -415,15 +406,12 @@ def log_set(workout_id: str, payload: WorkoutSetLogRequest, db: DbSession, curre
     occurrence, session = resolve_occurrence(db, current_user.id, workout_id, _list_workout_plans(db, current_user.id))
     exercise = resolve_exercise(session, payload.exercise_id, payload.exercise_occurrence_id)
     constraint = exercise.get("authored_constraint") or {}
-    if not constraint and occurrence.program_id in {"pure_bodybuilding_phase_1_full_body", "pure_bodybuilding_phase_2_full_body"}:
-        constraint = annotate_constraints(exercise, equipment=current_user.equipment_profile,
-            restrictions=current_user.movement_restrictions)["authored_constraint"]
-    if constraint.get("status") in {"unresolved", "infeasible", "declined"}:
+    if occurrence.program_id in {"pure_bodybuilding_phase_1_full_body", "pure_bodybuilding_phase_2_full_body"}:
+        constraint = refresh_constraints(exercise, equipment=current_user.equipment_profile,
+            restrictions=current_user.movement_restrictions)
+        exercise["authored_constraint"] = constraint
+    if constraint.get("execution_status", constraint.get("status")) in {"unresolved", "infeasible", "declined"}:
         raise HTTPException(409, "Authored slot is unresolved; confirm a source-approved alternative before logging")
-    if constraint:
-        performed = exercise.get("performed_variant") or exercise
-        if restriction_conflicts(performed, current_user.movement_restrictions) or equipment_conflicts(performed, current_user.equipment_profile):
-            raise HTTPException(409, "Current constraints conflict with this authored slot")
     if payload.weight == 0 and not is_bodyweight_authored(exercise):
         raise HTTPException(422, "Zero external load requires an explicitly bodyweight authored exercise")
     primary = str(exercise.get("primary_exercise_id") or exercise["id"])
@@ -798,24 +786,26 @@ def authored_substitution(workout_id: str, payload: AuthoredSubstitutionRequest,
     if payload.action != "report" and effective_set_logs(db).filter_by(user_id=current_user.id,
             workout_occurrence_id=occurrence.id, exercise_occurrence_id=exercise["exercise_occurrence_id"]).first():
         raise HTTPException(409, "Started occurrence retains its performed variant and consent")
-    refreshed = annotate_constraints(exercise, equipment=current_user.equipment_profile,
-        restrictions=current_user.movement_restrictions)["authored_constraint"]
-    # A declared pain/safety/equipment conflict persists until a deliberate decision.
-    reasons = deepcopy(old.get("reasons") or [])
-    for reason in refreshed["reasons"]:
-        if reason not in reasons:
-            reasons.append(reason)
+    refreshed = refresh_constraints(exercise, equipment=current_user.equipment_profile,
+        restrictions=current_user.movement_restrictions)
+    reasons = deepcopy(refreshed["reasons"])
+    reports = deepcopy(refreshed["reported_conflicts"])
     if payload.action == "report":
         if payload.reason is None:
             raise HTTPException(422, "Select an equipment, pain or safety reason")
         reason = {"kind": payload.reason, "details": ["user_reported"]}
+        if reason not in reports:
+            reports.append(reason)
         if reason not in reasons:
             reasons.append(reason)
     if not reasons:
         raise HTTPException(409, "No authored slot conflict was declared")
     choices = refreshed["allowed_alternatives"]
-    constraint = {**refreshed, "reasons": reasons, "revision": int(old.get("revision") or 0) + 1,
-        "status": "unresolved" if choices else "infeasible"}
+    execution_status = "unresolved" if choices else "infeasible"
+    constraint = {**refreshed, "reasons": reasons, "reported_conflicts": reports,
+        "revision": int(old.get("revision") or 0) + 1,
+        "status": "confirmed" if exercise.get("performed_variant") else execution_status,
+        "execution_status": execution_status}
     now = datetime.now(UTC).isoformat()
     if payload.action == "confirm":
         if exercise.get("performed_variant"):
@@ -830,16 +820,18 @@ def authored_substitution(workout_id: str, payload: AuthoredSubstitutionRequest,
             "original_exercise": {"id": exercise["id"], "name": exercise["name"]},
             "original_prescription": deepcopy(exercise["authored_prescription"]),
             "workout_occurrence_id": occurrence.id, "exercise_occurrence_id": exercise["exercise_occurrence_id"]}
-        constraint["status"] = "confirmed"
+        constraint.update(status="confirmed", execution_status="ready", reasons=[], reported_conflicts=[])
     elif payload.action == "decline":
-        constraint["status"] = "declined"
+        if exercise.get("performed_variant"):
+            raise HTTPException(409, "Confirmed consent remains bound to this occurrence")
+        constraint.update(status="declined", execution_status="declined")
     exercise["authored_constraint"] = constraint
     exercise.setdefault("substitution_decisions", []).append({"action": payload.action,
         "timestamp": now, "user_id": current_user.id, "revision": constraint["revision"],
         "reasons": deepcopy(reasons), "option_id": payload.option_id if payload.action == "confirm" else None})
     occurrence.payload = deepcopy(session)
     result = {"workout_occurrence_id": occurrence.id, "exercise_occurrence_id": exercise["exercise_occurrence_id"],
-        "exercise": deepcopy(exercise)}
+        "exercise": project_variant_load(exercise)}
     _save_history_action(db, user_id=current_user.id, command_id=payload.command_id, digest=digest,
         operation="authored_substitution", occurrence=occurrence,
         exercise_occurrence_id=exercise["exercise_occurrence_id"], result=result)
