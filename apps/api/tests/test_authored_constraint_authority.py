@@ -227,7 +227,8 @@ def test_legacy_authored_conflict_stays_unresolved_without_invented_permission(s
 
 
 @pytest.mark.parametrize("kind", ["equipment", "restriction"])
-def test_profile_changes_restore_unconfirmed_original_without_new_occurrence(scenario, kind):
+@pytest.mark.parametrize("declined", [False, True])
+def test_profile_changes_restore_unconfirmed_original_without_new_occurrence(scenario, kind, declined):
     user, headers, client = scenario
     session = constrained_plan(user)
     with SessionLocal() as db:
@@ -245,6 +246,8 @@ def test_profile_changes_restore_unconfirmed_original_without_new_occurrence(sce
         db.commit()
     assert client.get('/workout/today', headers=headers).json()['exercises'][0]['authored_constraint']['status'] in {'unresolved', 'infeasible'}
     assert log(client, headers, session, submission(session)).status_code == 409
+    if declined:
+        assert send(client, headers, session, decision(session, 'decline')).status_code == 200
     with SessionLocal() as db:
         u = db.get(User, user)
         u.movement_restrictions = []

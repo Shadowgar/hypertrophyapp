@@ -96,12 +96,14 @@ Current profile feasibility is recomputed in Today, consent commands and logging
 Frozen consent stays confirmed, while separate execution status blocks a newly
 incompatible variant; user-reported pain/safety conflicts survive profile changes.
 
-Final focused checks: 19 API cases passed, 13 constraint/prescription core cases
+Final focused checks: 21 constraint API cases plus one frequency-adaptation case passed, 13 constraint/prescription core cases
 passed, and 23 web cases passed. Full core: 378 passed and the same four baseline
 failures. Web build passed; lint retains one prior hook warning and no errors.
 TypeScript retains the same 102 diagnostics in the three existing test files.
-The broader API compatibility run and fresh GitHub checks/review are pending at
-this correction commit; their final disposition is required before activation.
+The broader API compatibility run passed 56 cases, with the known Adaptive Gold
+substitution-guidance failure and a correction-fixture failure. That fixture was
+then fixed and its case passed in the final 22-case API run. Fresh GitHub checks
+and review disposition remain required before activation.
 
 The original PR CI had 25 API failures: eight baseline/absent-source-fixture
 failures and 17 assertions affected by the newly enforced authored boundaries.
