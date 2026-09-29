@@ -1,7 +1,7 @@
 """Persistence of typed authored set receipts without inventing numeric policy."""
 from copy import deepcopy
 from fastapi import HTTPException
-from core_engine.authored_prescription import typed_tracking_feedback, is_bodyweight_authored
+from core_engine.authored_constraints import typed_tracking_feedback, is_bodyweight_authored
 from .models import WorkoutSetLog, WorkoutLogCommand
 from .schemas import WorkoutSetLogResponse
 from .workout_history import capture_replay_context, effective_set_logs
@@ -37,7 +37,7 @@ def log_typed_set(db, *, current_user, occurrence, exercise, payload, command_id
     db.flush()
     projection = typed_projection(db, record)
     live = projection["live_recommendation"]
-    weight = 0.0 if is_bodyweight_authored(exercise) else float(exercise["recommended_working_weight"])
+    weight = 0.0 if is_bodyweight_authored(exercise) or exercise.get("performed_variant") else float(exercise["recommended_working_weight"])
     trace = {**live["decision_trace"], "occurrence_identity": {"workout_occurrence_id": occurrence.id,
         "exercise_occurrence_id": exercise["exercise_occurrence_id"], "execution_slot": exercise["execution_slot"]}}
     response = WorkoutSetLogResponse(id=record.id, primary_exercise_id=record.primary_exercise_id,

@@ -130,6 +130,8 @@ def _build_strength_trends(log_rows: list[Any], *, limit: int = 4) -> tuple[list
     by_exercise: dict[str, dict[str, Any]] = {}
 
     for row in log_rows:
+        if (_read_attr(row, "replay_context") or {}).get("planned_exercise", {}).get("performed_variant"):
+            continue  # Variant loads are not comparable to the original exercise.
         exercise_key = str(_read_attr(row, "primary_exercise_id") or _read_attr(row, "exercise_id") or "").strip()
         if not exercise_key:
             continue
@@ -284,6 +286,8 @@ def _build_calendar_pr_metadata(
     by_day: dict[str, dict[str, Any]] = {}
 
     for row in ordered_log_rows:
+        if (_read_attr(row, "replay_context") or {}).get("planned_exercise", {}).get("performed_variant"):
+            continue  # Variant loads are not comparable to the original exercise.
         created_at = _read_attr(row, "created_at")
         day_key = created_at.date().isoformat()
         exercise_id = str(_read_attr(row, "primary_exercise_id") or _read_attr(row, "exercise_id") or "").strip()
@@ -475,6 +479,12 @@ def _accumulate_logged_day_rows(
         set_volume = weight * reps
         exercise_entry["sets"].append(
             {
+                "workout_occurrence_id": _read_attr(row, "workout_occurrence_id"),
+                "exercise_occurrence_id": _read_attr(row, "exercise_occurrence_id"),
+                "original_authored_name": (_read_attr(row, "replay_context") or {}).get("planned_exercise", {}).get("name"),
+                "source_lineage": (_read_attr(row, "replay_context") or {}).get("planned_exercise", {}).get("source_lineage"),
+                "performed_variant": (_read_attr(row, "replay_context") or {}).get("planned_exercise", {}).get("performed_variant"),
+                "substitution_consent": (_read_attr(row, "replay_context") or {}).get("planned_exercise", {}).get("substitution_consent"),
                 "set_index": int(_read_attr(row, "set_index", 0)),
                 "reps": reps,
                 "weight": weight,

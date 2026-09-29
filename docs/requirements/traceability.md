@@ -94,3 +94,13 @@ Every row’s evidence reference is [AUD-20260928](../evidence/README.md#audit-r
 Phase 1 source tests do not cover restored Phase 2 AMRAP/relationship fidelity. Frequency API tests check current compression, not selected local dates. Current progression tests do not prove full-exposure/actual-effort semantics. Workout/history tests do not establish PostgreSQL concurrency/migration. Auth tests currently include credential-exposure assumptions to replace under S1 without discarding the happy path. Generated-profile checks cover current controls, not independent lifecycle/full consent. New real-browser/device/restoration evidence remains missing.
 
 Update this matrix after an authorized implementation with exact test/criterion and evidence-manifest links. Preserve old failing results and record replacements/disposition. A proposed test name must be explicitly labeled proposed; this matrix allocates none. Owner acceptance must reference actual reviewed revision/evidence, not catalog completion.
+
+## M1-B revision-scoped candidate
+
+AUTH-FID-002/004 are addressed by the [bounded constraint/consent candidate](../plans/m1-authored-constraint-authority.md),
+[API tests](../../apps/api/tests/test_authored_constraint_authority.py),
+[core tests](../../packages/core-engine/tests/test_authored_constraints.py),
+[UI tests](../../apps/web/tests/authored-constraints.test.tsx) and
+[qualification evidence](../evidence/2026-09-29-m1-authored-constraints.md).
+This supplements the audit mapping, does not certify every criterion, and does
+not mark either requirement, ADR, milestone or release owner-accepted.

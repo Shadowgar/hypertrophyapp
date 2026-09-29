@@ -26,7 +26,7 @@ from core_engine import (
 )
 
 from ..database import get_db
-from core_engine.authored_prescription import requires_receipt_tracking, is_bodyweight_authored
+from core_engine.authored_constraints import requires_receipt_tracking, is_bodyweight_authored, annotate_constraints, refresh_constraints, project_variant_load, restriction_conflicts, equipment_conflicts
 from ..workout_authored import log_typed_set, typed_projection
 from ..deps import get_current_user
 from ..models import ExerciseState, User, WorkoutPlan, WorkoutSessionState, WorkoutSetLog, WorkoutOccurrence, WorkoutLogCommand
@@ -46,6 +46,7 @@ from ..schemas import (
     WorkoutSummaryResponse,
     WorkoutUndoLastSetRequest,
     WorkoutSetCorrectionRequest,
+    AuthoredSubstitutionRequest,
 )
 from ..stoic_quotes import daily_stoic_quote
 
@@ -224,6 +225,16 @@ def workout_today(
     if not selected:
         raise HTTPException(status_code=404, detail="No workouts available")
 
+    authored_selected = any(plan.payload.get("program_template_id") in
+        {"pure_bodybuilding_phase_1_full_body", "pure_bodybuilding_phase_2_full_body"} and
+        any(session.get("workout_occurrence_id") == selected.get("workout_occurrence_id")
+            for session in plan.payload.get("sessions") or []) for plan in plans)
+    for exercise in selected.get("exercises") or []:
+        if authored_selected:
+            exercise["authored_constraint"] = refresh_constraints(exercise,
+                equipment=current_user.equipment_profile, restrictions=current_user.movement_restrictions)
+            exercise.update(project_variant_load(exercise))
+
     logs = (
         effective_set_logs(db)
         .filter(
@@ -394,6 +405,13 @@ def log_set(workout_id: str, payload: WorkoutSetLogRequest, db: DbSession, curre
             return replay
     occurrence, session = resolve_occurrence(db, current_user.id, workout_id, _list_workout_plans(db, current_user.id))
     exercise = resolve_exercise(session, payload.exercise_id, payload.exercise_occurrence_id)
+    constraint = exercise.get("authored_constraint") or {}
+    if occurrence.program_id in {"pure_bodybuilding_phase_1_full_body", "pure_bodybuilding_phase_2_full_body"}:
+        constraint = refresh_constraints(exercise, equipment=current_user.equipment_profile,
+            restrictions=current_user.movement_restrictions)
+        exercise["authored_constraint"] = constraint
+    if constraint.get("execution_status", constraint.get("status")) in {"unresolved", "infeasible", "declined"}:
+        raise HTTPException(409, "Authored slot is unresolved; confirm a source-approved alternative before logging")
     if payload.weight == 0 and not is_bodyweight_authored(exercise):
         raise HTTPException(422, "Zero external load requires an explicitly bodyweight authored exercise")
     primary = str(exercise.get("primary_exercise_id") or exercise["id"])
@@ -742,3 +760,80 @@ def workout_summary(
         rule_set=cast(dict | None, route_runtime["rule_set"]),
     )
     return WorkoutSummaryResponse(**cast(dict, response_runtime["response_payload"]), workout_occurrence_id=occurrence.id)
+
+
+@router.post("/workout/{workout_id}/authored-substitution")
+def authored_substitution(workout_id: str, payload: AuthoredSubstitutionRequest,
+                          db: DbSession, current_user: CurrentUser) -> dict:
+    """Explicit occurrence consent; source prescription is never replaced."""
+    _lock_history_user(db, current_user.id)
+    digest = _history_digest("authored_substitution", workout_id,
+        payload.model_dump(mode="json", exclude={"command_id"}))
+    replay = _replay_history_action(db, current_user.id, payload.command_id, digest)
+    if replay is not None:
+        return replay
+    occurrence, session = resolve_occurrence(db, current_user.id, workout_id, _list_workout_plans(db, current_user.id))
+    if occurrence.program_id not in {"pure_bodybuilding_phase_1_full_body", "pure_bodybuilding_phase_2_full_body"}:
+        raise HTTPException(409, "This command requires an authored program occurrence")
+    exercise = resolve_exercise(session, payload.exercise_id, payload.exercise_occurrence_id)
+    if payload.action == "confirm" and (not exercise.get("authored_prescription") or not exercise.get("source_lineage")):
+        raise HTTPException(409, "Source permission is unavailable for this legacy slot")
+    if payload.expected_source_lineage != (exercise.get("source_lineage") or {}):
+        raise HTTPException(409, "Source revision changed")
+    old = deepcopy(exercise.get("authored_constraint") or {})
+    if payload.expected_revision != int(old.get("revision") or 0):
+        raise HTTPException(409, "Substitution decision changed; refresh the occurrence")
+    if payload.action != "report" and effective_set_logs(db).filter_by(user_id=current_user.id,
+            workout_occurrence_id=occurrence.id, exercise_occurrence_id=exercise["exercise_occurrence_id"]).first():
+        raise HTTPException(409, "Started occurrence retains its performed variant and consent")
+    refreshed = refresh_constraints(exercise, equipment=current_user.equipment_profile,
+        restrictions=current_user.movement_restrictions)
+    reasons = deepcopy(refreshed["reasons"])
+    reports = deepcopy(refreshed["reported_conflicts"])
+    if payload.action == "report":
+        if payload.reason is None:
+            raise HTTPException(422, "Select an equipment, pain or safety reason")
+        reason = {"kind": payload.reason, "details": ["user_reported"]}
+        if reason not in reports:
+            reports.append(reason)
+        if reason not in reasons:
+            reasons.append(reason)
+    if not reasons:
+        raise HTTPException(409, "No authored slot conflict was declared")
+    choices = refreshed["allowed_alternatives"]
+    execution_status = "unresolved" if choices else "infeasible"
+    constraint = {**refreshed, "reasons": reasons, "reported_conflicts": reports,
+        "revision": int(old.get("revision") or 0) + 1,
+        "status": "confirmed" if exercise.get("performed_variant") else execution_status,
+        "execution_status": execution_status}
+    now = datetime.now(UTC).isoformat()
+    if payload.action == "confirm":
+        if exercise.get("performed_variant"):
+            raise HTTPException(409, "A confirmed variant cannot be silently replaced; use a new occurrence")
+        matches = [choice for choice in choices if choice["option_id"] == payload.option_id]
+        if len(matches) != 1:
+            raise HTTPException(409, "Alternative lacks source permission or is incompatible with current constraints")
+        choice = deepcopy(matches[0])
+        exercise["performed_variant"] = choice
+        exercise["substitution_consent"] = {"confirmed": True, "user_id": current_user.id,
+            "timestamp": now, "reasons": deepcopy(reasons), "permission": deepcopy(choice["permission"]),
+            "original_exercise": {"id": exercise["id"], "name": exercise["name"]},
+            "original_prescription": deepcopy(exercise["authored_prescription"]),
+            "workout_occurrence_id": occurrence.id, "exercise_occurrence_id": exercise["exercise_occurrence_id"]}
+        constraint.update(status="confirmed", execution_status="ready", reasons=[], reported_conflicts=[])
+    elif payload.action == "decline":
+        if exercise.get("performed_variant"):
+            raise HTTPException(409, "Confirmed consent remains bound to this occurrence")
+        constraint.update(status="declined", execution_status="declined")
+    exercise["authored_constraint"] = constraint
+    exercise.setdefault("substitution_decisions", []).append({"action": payload.action,
+        "timestamp": now, "user_id": current_user.id, "revision": constraint["revision"],
+        "reasons": deepcopy(reasons), "option_id": payload.option_id if payload.action == "confirm" else None})
+    occurrence.payload = deepcopy(session)
+    result = {"workout_occurrence_id": occurrence.id, "exercise_occurrence_id": exercise["exercise_occurrence_id"],
+        "exercise": project_variant_load(exercise)}
+    _save_history_action(db, user_id=current_user.id, command_id=payload.command_id, digest=digest,
+        operation="authored_substitution", occurrence=occurrence,
+        exercise_occurrence_id=exercise["exercise_occurrence_id"], result=result)
+    db.commit()
+    return result

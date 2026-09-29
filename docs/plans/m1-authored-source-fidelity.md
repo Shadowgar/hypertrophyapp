@@ -1,6 +1,7 @@
 # M1-A authored source fidelity
 
-Status: implemented candidate awaiting application PR review. Explicit owner
+Status: PR #41 merged and owner-authorized API/web activation completed;
+[activation evidence](../evidence/2026-09-29-m1-authored-fidelity-activation.md). Explicit owner
 2026-09-28 authorization covers importer/canonical/runtime preservation, isolated
 qualification and an unmerged PR. Subsequent explicit owner authorization covers
 the three PR #41 correctness fixes, fresh review, merge and API/web activation
@@ -63,13 +64,14 @@ and output directories. Run only in a disposable copy with a cleared environment
 verified disposable database targets and socket/database guards. Runtime never
 reads XLSX. No workbook/manual or private audit output is added to Git. Source
 hashes are checked unchanged; generated diagnostics remain outside this PR.
-No migration is introduced. M1-A awaits the separately authorized activation.
+No migration is introduced. M1-A activation is recorded separately; whole-M1 acceptance remains pending.
 [Review-fix evidence](../evidence/2026-09-28-m1-authored-fidelity-review-fixes.md) records raw warm-up visibility, explicit bodyweight load handling and
 occurrence-scoped weekly-review filtering.
 
 ## Remaining M1 work
 
-Movement restriction authority, substitution confirmation, actual-date scheduling,
+Movement restriction authority and substitution confirmation are the separate
+[M1-B candidate](m1-authored-constraint-authority.md). Actual-date scheduling,
 load intelligence/M2A exposure semantics, Customized generation and broad authored
 redistribution remain separate slices. Unparsed prescription prose is preserved,
 not claimed as executable policy. Whole-program relationships, variant/units,

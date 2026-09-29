@@ -24,7 +24,15 @@ export type AuthoredPrescription = {
     effort_target: AuthoredTarget; rest: string | null; intensity_technique: string | null; source_set_id?: string | null }>;
 };
 
+export type SourceApprovedAlternative = { option_id: string; id: string; name: string;
+  load_semantics: string; video_url?: string | null; permission: Record<string, unknown> };
+
 type AuthoredExecutionFields = {
+  performed_variant?: SourceApprovedAlternative | null;
+  substitution_consent?: Record<string, unknown> | null;
+  authored_constraint?: { status: string; execution_status?: string; revision: number; reasons: Array<{kind: string; details: string[]}>;
+    allowed_alternatives: SourceApprovedAlternative[] };
+
   authored_prescription?: AuthoredPrescription | null;
   source_lineage?: Record<string, unknown> | null;
   load_semantics?: string | null;
@@ -560,6 +568,9 @@ export type WorkoutSetFeedback = {
 };
 
 export type WorkoutExerciseSummary = {
+  performed_variant?: SourceApprovedAlternative | null;
+  substitution_consent?: Record<string, unknown> | null;
+  load_recommendation_available?: boolean;
   load_semantics?: string | null;
   exercise_occurrence_id?: string;
   exercise_id: string;
@@ -709,6 +720,12 @@ export type HistoryCalendarResponse = {
 };
 
 export type HistoryDaySet = {
+  original_authored_name?: string | null;
+  workout_occurrence_id?: string | null;
+  exercise_occurrence_id?: string | null;
+  source_lineage?: Record<string, unknown> | null;
+  performed_variant?: SourceApprovedAlternative | null;
+  substitution_consent?: Record<string, unknown> | null;
   set_index: number;
   reps: number;
   weight: number;
@@ -928,6 +945,11 @@ function parseApiErrorMessage(raw: string, status: number): string {
 export const api = {
   health: () => request<{ status: string; date: string; version?: string }>("/health"),
   getTodayWorkout: () => request<WorkoutSession>("/workout/today"),
+  decideAuthoredSubstitution: (workoutId: string, payload: { command_id: string; exercise_id: string;
+    exercise_occurrence_id: string; expected_revision: number; expected_source_lineage: Record<string, unknown>;
+    action: "report" | "confirm" | "decline"; reason?: "equipment" | "pain" | "safety"; option_id?: string }) =>
+    request<{ exercise: WorkoutExercise; workout_occurrence_id: string }>(`/workout/${workoutId}/authored-substitution`,
+      { method: "POST", body: JSON.stringify(payload) }),
   getWorkoutProgress: (workoutId: string) => request<WorkoutProgress>(`/workout/${encodeURIComponent(workoutId)}/progress`),
   getWorkoutSummary: (workoutId: string) => request<WorkoutSummary>(`/workout/${encodeURIComponent(workoutId)}/summary`),
   generateWeek: (templateId?: string | null, targetDays?: number | null) =>

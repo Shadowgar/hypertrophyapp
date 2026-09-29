@@ -8,6 +8,7 @@ configure_test_database("test_workout_resume")
 
 from app.database import Base, engine
 from app.main import app
+from app.program_loader import load_program_template
 
 
 def _reset_db() -> None:
@@ -31,6 +32,11 @@ def _monday_of_current_week() -> date:
 
 
 def _onboard_profile(client: TestClient, token: str) -> None:
+    # Resume qualification needs a feasible authored prescription; the old home
+    # fixture silently performed source equipment it did not declare available.
+    template = load_program_template("pure_bodybuilding_phase_1_full_body")
+    equipment = sorted({tag for week in template["authored_weeks"] for session in week["sessions"]
+        for exercise in session["exercises"] for tag in exercise.get("equipment_tags") or []})
     response = client.post(
         "/profile",
         headers={"Authorization": f"Bearer {token}"},
@@ -40,8 +46,9 @@ def _onboard_profile(client: TestClient, token: str) -> None:
             "weight": 82,
             "gender": "male",
             "split_preference": "full_body",
-            "training_location": "home",
-            "equipment_profile": ["dumbbell", "bodyweight"],
+            "training_location": "gym",
+            "selected_program_id": "pure_bodybuilding_phase_1_full_body",
+            "equipment_profile": equipment,
             "days_available": 3,
             "nutrition_phase": "maintenance",
             "calories": 2600,

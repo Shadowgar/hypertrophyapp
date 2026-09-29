@@ -1,4 +1,5 @@
 "use client";
+import AuthoredConstraintCard, { type AuthoredDecision } from "@/components/AuthoredConstraintCard";
 
 import { authoredRepLabel, authoredSetRepRange, authoredSetDetails, authoredWarmupLabel, isBodyweightAuthored, authoredSetTechnique } from "@/lib/authored-prescription";
 
@@ -135,6 +136,7 @@ function resolveExerciseStatus(completed: number, totalSets: number, resumed: bo
 }
 
 function resolveExerciseName(exercise: WorkoutExercise, swapIndexByExercise: SwapState): string {
+  if (exercise.authored_prescription || exercise.authored_constraint) return exercise.performed_variant?.name ?? exercise.name;
   const substitutions = exercise.substitution_candidates ?? [];
   const selectedIndex = swapIndexByExercise[exerciseKey(exercise)] ?? 0;
   if (selectedIndex === 0) {
@@ -188,6 +190,7 @@ function resolveWeakPointFallbackCandidates(exercise: WorkoutExercise, weakAreas
 }
 
 function resolveSubstitutionCandidates(exercise: WorkoutExercise, weakAreas: string[]): string[] {
+  if (exercise.authored_prescription || exercise.authored_constraint) return [];
   const explicit = (exercise.substitution_candidates ?? []).filter((item) => item.trim().length > 0);
   if (explicit.length > 0) {
     return explicit;
@@ -219,7 +222,9 @@ function resolveWeakPointInstruction(exercise: WorkoutExercise, weakAreas: strin
 }
 
 function resolveExerciseMediaUrl(exercise: WorkoutExercise): string | null {
-  const preferred = exercise.video?.youtube_url ?? exercise.video_url ?? exercise.demo_url;
+  const preferred = exercise.performed_variant
+    ? exercise.performed_variant.video_url
+    : exercise.video?.youtube_url ?? exercise.video_url ?? exercise.demo_url;
   return typeof preferred === "string" && preferred.trim().length > 0 ? preferred : null;
 }
 
@@ -431,15 +436,16 @@ function WorkoutSummaryCard({ summary }: Readonly<{ summary: WorkoutSummary | nu
       <div className="space-y-2">
         {exercises.map((item) => (
           <div key={item.exercise_occurrence_id ?? item.exercise_id} className="rounded-md border border-zinc-800 bg-zinc-900/40 p-2 text-xs text-zinc-300">
-            <p className="font-semibold text-zinc-100">{item.name}</p>
+            <p className="font-semibold text-zinc-100">{item.performed_variant?.name ?? item.name}</p>
+            {item.performed_variant ? <p>Original authored exercise: {item.name} · confirmed source-approved variant</p> : null}
             <p>
-              Planned: {item.planned_sets} sets · {item.planned_reps_min != null ? `${item.planned_reps_min}-${item.planned_reps_max}` : "authored target"} reps · {item.load_semantics === "bodyweight" ? "Bodyweight" : `${kgToLbs(item.planned_weight)} lbs`}
+              Planned: {item.planned_sets} sets · {item.planned_reps_min != null ? `${item.planned_reps_min}-${item.planned_reps_max}` : "authored target"} reps · {item.load_semantics === "bodyweight" ? "Bodyweight" : item.load_recommendation_available === false ? "Record actual variant load" : `${kgToLbs(item.planned_weight)} lbs`}
             </p>
             <p>
               Performed: {item.performed_sets} sets · avg {item.average_performed_reps} reps · {item.load_semantics === "bodyweight" ? (item.average_performed_weight > 0 ? `Bodyweight + ${kgToLbs(item.average_performed_weight)} lb added` : "Bodyweight (no added load)") : `${kgToLbs(item.average_performed_weight)} lbs`}
             </p>
             <p>
-              Next: {item.load_semantics === "bodyweight" ? "Bodyweight" : `${kgToLbs(item.next_working_weight)} lbs`}
+              Next: {item.load_semantics === "bodyweight" ? "Bodyweight" : item.load_recommendation_available === false ? "Load advice pending comparable variant evidence" : `${kgToLbs(item.next_working_weight)} lbs`}
             </p>
             <p>{resolveGuidanceText(item.guidance_rationale, item.guidance)}</p>
           </div>
@@ -552,6 +558,7 @@ function ExerciseDetailOverlay({
   onToggleNotes,
   onSwapTarget,
   onSetComplete,
+  onAuthoredDecision,
   onCalculateBaseline,
   globalRestTimer,
   onClearGlobalRestTimer,
@@ -584,6 +591,7 @@ function ExerciseDetailOverlay({
   onSwapTarget: () => void;
   isDeloadWeek: boolean;
   onSetComplete: (exerciseId: string, count: number, performed: { reps: number; weight: number }) => Promise<void> | void;
+  onAuthoredDecision: (decision: AuthoredDecision) => Promise<void>;
   onCalculateBaseline: (weightLb: number, reps: number) => void;
   globalRestTimer: { exerciseId: string; exerciseName: string; secondsLeft: number; restCycle: number } | null;
   onClearGlobalRestTimer: () => void;
@@ -596,7 +604,7 @@ function ExerciseDetailOverlay({
     exerciseId: exerciseKey(exercise),
     totalSets: exercise.sets,
     defaultRestSeconds,
-    recommendedWorkingWeight: bodyweight ? 0 : snapToHalfLb(derivedWorkingLb),
+    recommendedWorkingWeight: bodyweight ? 0 : exercise.performed_variant ? undefined : snapToHalfLb(derivedWorkingLb),
     repRange: currentRepRange,
     initialCompletedSets: completed,
     skipTimerOnComplete: true,
@@ -661,7 +669,7 @@ function ExerciseDetailOverlay({
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 pb-[max(7rem,env(safe-area-inset-bottom))] space-y-4 overscroll-contain">
 
         {/* == ZONE 1: Baseline calculator (expanded when no baseline) == */}
-        {exercise.rep_range && !bodyweight ? <Disclosure title="Baseline Calculator" badge={baseline ? `1RM: ${Math.round(baseline.estimated1RM)} lb` : null} defaultOpen={!baseline}>
+        {exercise.rep_range && !bodyweight && !exercise.performed_variant ? <Disclosure title="Baseline Calculator" badge={baseline ? `1RM: ${Math.round(baseline.estimated1RM)} lb` : null} defaultOpen={!baseline}>
           <BaselineBlock
             exerciseId={exerciseKey(exercise)}
             repRange={exercise.rep_range}
@@ -779,13 +787,15 @@ function ExerciseDetailOverlay({
           </Disclosure>
         )}
 
+        {exercise.authored_prescription || exercise.authored_constraint ? <AuthoredConstraintCard exercise={exercise} onDecision={onAuthoredDecision} /> : null}
         {/* == ZONE 4: Primary action (log set) == */}
         <SetInputCard
           exerciseId={exerciseKey(exercise)}
           guidanceLine={doThisSetLine}
           ctrl={ctrl}
           weightLabel={bodyweight ? "Added load (lb), optional" : isAssistance ? "Assistance (lb) — lower is harder" : "Weight (lb)"}
-          disableComplete={gateLastSet}
+          disabledReason={["unresolved", "infeasible", "declined"].includes(exercise.authored_constraint?.execution_status ?? exercise.authored_constraint?.status ?? "") ? "Resolve authored slot first" : undefined}
+          disableComplete={gateLastSet || ["unresolved", "infeasible", "declined"].includes(exercise.authored_constraint?.execution_status ?? exercise.authored_constraint?.status ?? "")}
         />
 
         {/* == ZONE 5: Set log (per-set logged values) == */}
@@ -1384,7 +1394,7 @@ export default function TodayPage() {
               const displayName = resolveDisplayExerciseName(exercise, selectedName, weakAreas);
               const completed = completedSetsByExercise[exerciseKey(exercise)] ?? 0;
               const done = completed >= exercise.sets;
-              const baseline = baselineByExercise[exerciseKey(exercise)];
+              const baseline = exercise.performed_variant ? undefined : baselineByExercise[exerciseKey(exercise)];
               const lastSet = lastSetByExercise[exerciseKey(exercise)];
               const live = liveRecommendationByExercise[exerciseKey(exercise)];
               const plannedWorkingLb = kgToLbs(exercise.recommended_working_weight);
@@ -1435,7 +1445,7 @@ export default function TodayPage() {
                     <div className="mt-1 flex items-center gap-2 text-xs text-zinc-500">
                       <span>{authoredRepLabel(exercise)} reps</span>
                       <span className="text-zinc-700">·</span>
-                      <span>{isBodyweightAuthored(exercise) ? "Bodyweight" : `~${rowWorkingLb} lb`}</span>
+                      <span>{isBodyweightAuthored(exercise) ? "Bodyweight" : exercise.performed_variant ? "Record actual load" : `~${rowWorkingLb} lb`}</span>
                     </div>
                   </button>
                 </li>
@@ -1456,7 +1466,7 @@ export default function TodayPage() {
         const selectedName = resolveExerciseName(exercise, swapIndexByExercise);
         const displayName = resolveDisplayExerciseName(exercise, selectedName, weakAreas);
         const weakPointInstruction = resolveWeakPointInstruction(exercise, weakAreas);
-        const guideHref = activeProgramId
+        const guideHref = activeProgramId && !exercise.performed_variant
           ? `/guides/${activeProgramId}/exercise/${exercise.primary_exercise_id ?? exercise.id}`
           : null;
         const completed = completedSetsByExercise[exerciseKey(exercise)] ?? 0;
@@ -1465,7 +1475,7 @@ export default function TodayPage() {
         const mediaUrl = resolveExerciseMediaUrl(exercise);
         const substitutions = resolveSubstitutionCandidates(exercise, weakAreas);
         const warmUpCount = Math.max(0, parseInt(String(exercise.warm_up_sets ?? "0"), 10) || 0);
-        const baseline = baselineByExercise[exerciseKey(exercise)];
+        const baseline = exercise.performed_variant ? undefined : baselineByExercise[exerciseKey(exercise)];
         const lastSet = lastSetByExercise[exerciseKey(exercise)];
         const plannedWorkingLb = kgToLbs(exercise.recommended_working_weight);
         const baselineWorkingLb =
@@ -1481,7 +1491,7 @@ export default function TodayPage() {
         //   1) backend live recommendation
         //   2) planned working weight
         const derivedWorkingLb =
-          isBodyweightAuthored(exercise) ? 0 : completed === 0
+          exercise.performed_variant || isBodyweightAuthored(exercise) ? 0 : completed === 0
             ? (baseline != null
                 ? baselineWorkingLb
                 : hasRecommendation
@@ -1509,7 +1519,7 @@ export default function TodayPage() {
         const currentSwapIndex = swapIndexByExercise[exerciseKey(exercise)] ?? 0;
         const altCandidates = resolveSubstitutionCandidates(exercise, weakAreas);
         const warmupLbs =
-          baseline != null && baseline.warmupLbs.length > 0
+          exercise.performed_variant ? [] : baseline != null && baseline.warmupLbs.length > 0
             ? baseline.warmupLbs.slice(0, warmUpCount)
             : (exercise.warmups ?? []).slice(0, warmUpCount).map((kg) => kgToLbs(kg));
         const hasWarmup = warmUpCount > 0 && warmupLbs.length > 0;
@@ -1569,7 +1579,7 @@ export default function TodayPage() {
 
         return (
           <ExerciseDetailOverlay
-            key={exerciseKey(exercise)}
+            key={`${exerciseKey(exercise)}/${exercise.performed_variant?.option_id ?? "source"}`}
             exercise={exercise}
             selectedName={displayName}
             guideHref={guideHref}
@@ -1598,6 +1608,18 @@ export default function TodayPage() {
             notesOpen={notesOpenByExercise[exerciseKey(exercise)] ?? false}
             isDeloadWeek={workout.deload?.active === true}
             onUndoLastSet={handleUndoLastSet}
+            onAuthoredDecision={async (decision) => {
+              if (!exercise.exercise_occurrence_id) throw new Error("Occurrence unavailable");
+              const input = { ...decision, exercise_id: exercise.id, exercise_occurrence_id: exercise.exercise_occurrence_id,
+                expected_revision: exercise.authored_constraint?.revision ?? 0, expected_source_lineage: exercise.source_lineage ?? {} };
+              const commandKey = pendingCommandKey(occurrenceStorageKey("attempt", workout), exerciseKey(exercise), JSON.stringify(input));
+              const result = await api.decideAuthoredSubstitution(workoutReference(workout), { ...input, command_id: getLogCommand(commandKey) });
+              acknowledgeLogCommand(commandKey);
+              if (currentOccurrence.current !== workoutReference(workout)) return;
+              setWorkout(previous => previous ? { ...previous, exercises: previous.exercises.map(item =>
+                exerciseKey(item) === exerciseKey(exercise) ? result.exercise : item) } : previous);
+              setWorkoutSummary(null);
+            }}
             onClose={() => setSelectedExerciseId(null)}
             onSwap={selectSwap}
             onToggleNotes={() => toggleNotes(exerciseKey(exercise))}

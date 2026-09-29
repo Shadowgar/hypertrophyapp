@@ -9,6 +9,7 @@ configure_test_database("test_program_frequency_adaptation_api")
 
 from app.database import Base, SessionLocal, engine
 from app.main import app
+from authored_test_helpers import source_equipment
 from app.models import ExerciseState, SorenessEntry, User, WorkoutPlan
 
 TEST_CREDENTIAL = f"T{uuid.uuid4().hex[:15]}"
@@ -51,6 +52,7 @@ def _register_and_profile(
     client: TestClient,
     *,
     selected_program_id: str = "pure_bodybuilding_phase_1_full_body",
+    equipment_profile: list[str] | None = None,
 ) -> dict[str, str]:
     register = client.post(
         "/auth/register",
@@ -71,7 +73,7 @@ def _register_and_profile(
             "split_preference": "full_body",
             "selected_program_id": selected_program_id,
             "training_location": "home",
-            "equipment_profile": ["dumbbell", "bench", "barbell"],
+            "equipment_profile": equipment_profile or ["dumbbell", "bench", "barbell"],
             "weak_areas": ["chest", "hamstrings"],
             "days_available": 5,
             "nutrition_phase": "maintenance",
@@ -359,7 +361,7 @@ def test_phase2_frequency_adaptation_preview_and_runtime_expose_program_specific
 def test_frequency_adaptation_preserves_progression_state_across_5_to_3_to_5_windows() -> None:
     _reset_db()
     client = TestClient(app)
-    headers = _register_and_profile(client)
+    headers = _register_and_profile(client, equipment_profile=source_equipment())
 
     apply_response = client.post(
         "/plan/adaptation/apply",

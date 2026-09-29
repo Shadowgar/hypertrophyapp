@@ -190,9 +190,10 @@ type SetInputCardProps = Readonly<{
   ctrl: ExerciseControlState;
   weightLabel?: string;
   disableComplete?: boolean;
+  disabledReason?: string;
 }>;
 
-export function SetInputCard({ exerciseId, guidanceLine, ctrl, weightLabel, disableComplete }: SetInputCardProps) {
+export function SetInputCard({ exerciseId, guidanceLine, ctrl, weightLabel, disableComplete, disabledReason }: SetInputCardProps) {
   const allDone = ctrl.completedSets >= ctrl.totalSets;
   const isDisabled = allDone || ctrl.submitting || Boolean(disableComplete);
 
@@ -239,7 +240,7 @@ export function SetInputCard({ exerciseId, guidanceLine, ctrl, weightLabel, disa
         type="button"
         disabled={isDisabled}
       >
-        {ctrl.submitting ? "Saving Set..." : allDone ? "All Sets Complete" : disableComplete ? "Complete technique steps first" : "Complete Set"}
+        {ctrl.submitting ? "Saving Set..." : allDone ? "All Sets Complete" : disableComplete ? (disabledReason ?? "Complete technique steps first") : "Complete Set"}
       </Button>
     </div>
   );

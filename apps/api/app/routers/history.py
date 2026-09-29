@@ -82,6 +82,11 @@ def get_exercise_history(
         {
             "id": row.id,
             "primary_exercise_id": row.primary_exercise_id,
+            "workout_occurrence_id": row.workout_occurrence_id,
+            "exercise_occurrence_id": row.exercise_occurrence_id,
+            "source_lineage": (row.replay_context or {}).get("planned_exercise", {}).get("source_lineage"),
+            "performed_variant": (row.replay_context or {}).get("planned_exercise", {}).get("performed_variant"),
+            "substitution_consent": (row.replay_context or {}).get("planned_exercise", {}).get("substitution_consent"),
             "reps": row.reps,
             "weight": row.weight,
             "set_index": row.set_index,

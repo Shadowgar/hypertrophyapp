@@ -9,6 +9,7 @@ configure_test_database("test_workout_logset_feedback")
 from app.database import Base, engine
 from app.database import SessionLocal
 from app.main import app
+from authored_test_helpers import source_equipment
 from app.models import ExerciseState, User, WorkoutPlan
 
 
@@ -46,7 +47,7 @@ def _onboard_profile(
             "split_preference": split_preference,
             "selected_program_id": selected_program_id,
             "training_location": "home",
-            "equipment_profile": ["dumbbell", "bodyweight"],
+            "equipment_profile": source_equipment(selected_program_id),
             "days_available": days_available,
             "nutrition_phase": "maintenance",
             "calories": 2500,
