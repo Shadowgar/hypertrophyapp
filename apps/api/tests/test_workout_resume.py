@@ -95,7 +95,9 @@ def test_workout_today_resumes_incomplete_session() -> None:
     assert payload["exercises"][0].get("completed_sets", 0) == 1
     assert payload["exercises"][0].get("live_recommendation", {}).get("remaining_sets") == int(exercise.get("sets", 3)) - 1
     assert isinstance(payload["exercises"][0].get("warmups"), list)
-    assert payload["exercises"][0]["warmups"]
+    # Authored source gives a count/range, not percentages/reps for invented steps.
+    assert payload["exercises"][0]["warmups"] == []
+    assert payload["exercises"][0]["authored_prescription"]["raw"]["warm_up_sets"] == exercise["warm_up_sets"]
 
 
 def test_workout_today_returns_404_without_generated_plan() -> None:

@@ -26,6 +26,8 @@ from core_engine import (
 )
 
 from ..database import get_db
+from core_engine.authored_prescription import requires_receipt_tracking, is_bodyweight_authored
+from ..workout_authored import log_typed_set, typed_projection
 from ..deps import get_current_user
 from ..models import ExerciseState, User, WorkoutPlan, WorkoutSessionState, WorkoutSetLog, WorkoutOccurrence, WorkoutLogCommand
 from ..workout_identity import identified_plans, resolve_occurrence, resolve_exercise, occurrence_plan
@@ -392,6 +394,8 @@ def log_set(workout_id: str, payload: WorkoutSetLogRequest, db: DbSession, curre
             return replay
     occurrence, session = resolve_occurrence(db, current_user.id, workout_id, _list_workout_plans(db, current_user.id))
     exercise = resolve_exercise(session, payload.exercise_id, payload.exercise_occurrence_id)
+    if payload.weight == 0 and not is_bodyweight_authored(exercise):
+        raise HTTPException(422, "Zero external load requires an explicitly bodyweight authored exercise")
     primary = str(exercise.get("primary_exercise_id") or exercise["id"])
     if normalized["primary_exercise_id"] != primary:
         raise HTTPException(409, "Primary exercise does not match the occurrence")
@@ -462,6 +466,9 @@ def _apply_log_set(
         )
         .first()
     )
+    if requires_receipt_tracking(exercise):
+        return log_typed_set(db, current_user=current_user, occurrence=occurrence, exercise=exercise,
+            payload=payload, command_id=command_id, digest=digest, context=context_runtime, state=state)
     log_set_runtime = prepare_workout_log_set_decision_route_runtime(
         user_id=current_user.id,
         workout_id=occurrence.workout_id,
@@ -559,6 +566,8 @@ def _void_set(db, record, *, reason, source, timestamp):
 
 def _reconstruct_history(db, record):
     db.flush()
+    if requires_receipt_tracking(record.replay_context["planned_exercise"]):
+        return typed_projection(db, record)
     progression = rebuild_exercise_state(db, user_id=record.user_id, primary_exercise_id=record.primary_exercise_id)
     session = rebuild_session_state(db, user_id=record.user_id, occurrence_id=record.workout_occurrence_id,
         exercise_occurrence_id=record.exercise_occurrence_id, session_inputs=progression["session_inputs"])
@@ -598,6 +607,8 @@ def correct_set(set_id: str, payload: WorkoutSetCorrectionRequest, db: DbSession
     if original is None:
         raise HTTPException(404, "Set not found")
     context = require_replay_context(original)
+    if payload.weight == 0 and not is_bodyweight_authored(context["planned_exercise"]):
+        raise HTTPException(422, "Zero external load requires an explicitly bodyweight authored exercise")
     if original.voided_at:
         raise HTTPException(409, "Set already voided or superseded; correct its effective replacement")
     now = datetime.now(UTC).replace(tzinfo=None)

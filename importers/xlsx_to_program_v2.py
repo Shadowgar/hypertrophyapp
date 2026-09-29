@@ -29,6 +29,7 @@ from importers.structured_program_builder import (
     default_program_name,
 )
 from importers.xlsx_to_program import slugify, split_from_filename
+from importers.authored_lineage import stamp_source, artifact_sha256
 
 
 def build_program_template(
@@ -66,11 +67,16 @@ def build_program_template(
         phase_id=phase_id,
         phase_name=phase_name,
     )
+    if program_id in {"pure_bodybuilding_phase_1_full_body", "pure_bodybuilding_phase_2_full_body"}:
+        stamp_source(payload, input_file, sheet_name=sheet_name or "Full Body")
     validated = AdaptiveGoldProgramTemplate.model_validate(payload)
 
     destination = output_file or (REPO_ROOT / "programs" / "gold" / f"{program_id}.json")
     destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(json.dumps(validated.model_dump(mode="json"), indent=2), encoding="utf-8")
+    emitted = validated.model_dump(mode="json")
+    if emitted.get("source_provenance"):
+        emitted["source_provenance"]["artifact_sha256"] = artifact_sha256(emitted)
+    destination.write_text(json.dumps(emitted, indent=2), encoding="utf-8")
 
     emitted_week_count = sum(len(phase.weeks) for phase in validated.phases)
     representative_day_count = len(validated.phases[0].weeks[0].days) if validated.phases and validated.phases[0].weeks else 0

@@ -4,6 +4,7 @@ import re
 from copy import deepcopy
 
 from .equipment import resolve_equipment_tags
+from .authored_prescription import is_bodyweight_authored, execution_fields
 from .equipment_profile import canonicalize_equipment_profile
 from .rules_runtime import (
     resolve_equipment_substitution,
@@ -62,6 +63,7 @@ def _slugify(value: str) -> str:
 
 def _authored_execution_fields(exercise: dict[str, Any]) -> dict[str, Any]:
     return {
+        **execution_fields(exercise),
         "load_semantics": exercise.get("load_semantics"),
         "execution_modifiers": exercise.get("execution_modifiers"),
         "last_set_intensity_technique": exercise.get("last_set_intensity_technique"),
@@ -206,7 +208,7 @@ def _build_planned_exercise(
         "name": planned_name,
         "sets": planned_sets,
         "rep_range": exercise.get("rep_range", [8, 12]),
-        "recommended_working_weight": recommended,
+        "recommended_working_weight": 0.0 if is_bodyweight_authored(exercise) else recommended,
         "priority": exercise.get("priority", "standard"),
         "movement_pattern": planned_movement_pattern,
         "primary_muscles": planned_primary_muscles,
@@ -238,8 +240,8 @@ def _build_authored_passthrough_exercise(
         "primary_exercise_id": primary_exercise_id,
         "name": exercise.get("name"),
         "sets": int(exercise.get("sets", 3) or 3),
-        "rep_range": list(exercise.get("rep_range", [8, 12]) or [8, 12]),
-        "recommended_working_weight": recommended,
+        "rep_range": deepcopy(exercise.get("rep_range")) if exercise.get("authored_prescription") else list(exercise.get("rep_range", [8, 12]) or [8, 12]),
+        "recommended_working_weight": 0.0 if is_bodyweight_authored(exercise) else recommended,
         "priority": exercise.get("priority", "standard"),
         "movement_pattern": exercise.get("movement_pattern"),
         "primary_muscles": list(exercise.get("primary_muscles") or []),

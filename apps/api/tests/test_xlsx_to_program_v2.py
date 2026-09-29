@@ -139,13 +139,19 @@ def test_build_program_template_preserves_authored_phases_weeks_and_set_semantic
     top_slot = template.phases[0].weeks[0].days[0].slots[0]
     backoff_slot = template.phases[1].weeks[0].days[0].slots[0]
 
-    assert len(top_slot.warmup_prescription) == 4
+    # Source supplies only a warm-up count, not percent/reps for four invented steps.
+    assert top_slot.warmup_prescription == []
+    assert top_slot.authored_prescription.raw["warm_up_sets"] == "4"
     assert top_slot.work_sets[0].set_type == "top"
     assert top_slot.work_sets[0].load_target == "85-87.5%"
-    assert top_slot.work_sets[0].rpe_target == pytest.approx(7.0)
+    assert top_slot.work_sets[0].rpe_target is None
+    assert top_slot.authored_prescription.sets[0].effort_target.min == 6
+    assert top_slot.authored_prescription.sets[0].effort_target.max == 8
     assert backoff_slot.work_sets[0].set_type == "backoff"
     assert backoff_slot.work_sets[0].load_target == "72.5-75%"
-    assert backoff_slot.work_sets[0].rpe_target == pytest.approx(8.0)
+    assert backoff_slot.work_sets[0].rpe_target is None
+    assert backoff_slot.authored_prescription.sets[0].effort_target.min == 8
+    assert backoff_slot.authored_prescription.sets[0].effort_target.max == 8
 
 
 REFERENCE_PHASE1_WORKBOOK = REPO_ROOT / "reference" / "Pure Bodybuilding Phase 1 - Full Body Sheet.xlsx"

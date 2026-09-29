@@ -12,6 +12,10 @@ import json
 import re
 import zipfile
 from xml.etree import ElementTree as ET
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "packages" / "core-engine"))
+from core_engine.authored_prescription import preserve_prescription, uniform_rep_range
 
 
 _EQUIPMENT_RULES: tuple[tuple[re.Pattern[str], str], ...] = (
@@ -19,7 +23,7 @@ _EQUIPMENT_RULES: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"(?:^|[^a-z0-9])b\.?b\.?($|[^a-z0-9])|\bbarbell\b", re.IGNORECASE), "barbell"),
     (re.compile(r"\bCABLE\b", re.IGNORECASE), "cable"),
     (re.compile(r"\bMACHINE\b", re.IGNORECASE), "machine"),
-    (re.compile(r"\bBW\b|\bBODYWEIGHT\b", re.IGNORECASE), "bodyweight"),
+    (re.compile(r"\bBW\b|\bBODYWEIGHT\b|\bpush[- ]?up\b", re.IGNORECASE), "bodyweight"),
 )
 
 _NS = {
@@ -262,7 +266,7 @@ def infer_movement_pattern(exercise_name: str) -> str | None:
         (("calf",), "plantar_flexion"),
         (("lateral raise",), "lateral_raise"),
         (("curl",), "curl"),
-        (("bench", "press", "dip"), "horizontal_press"),
+        (("bench", "press", "dip", "push-up"), "horizontal_press"),
     )
     for keywords, pattern in rules:
         if any(keyword in normalized for keyword in keywords):
@@ -373,8 +377,9 @@ def as_column_map(header: list[str]) -> dict[str, int]:
         "load": find_any_index("load"),
         "percent_1rm": find_any_index("%1rm", "percent 1rm", "percentage 1rm"),
         "rpe": find_any_index("rpe", "rir"),
-        "early_set_rpe": find_index("early", "rpe"),
-        "last_set_rpe": find_index("last", "rpe"),
+        "early_set_rpe": find_any_index("early set rpe", "early set rir"),
+        "rir": find_any_index("early set rir", "last set rir", "rir"),
+        "last_set_rpe": find_any_index("last set rpe", "last set rir"),
         "rest": find_any_index("rest"),
         "sub1": find_index("substitution", "option", "1"),
         "sub2": find_index("substitution", "option", "2"),
@@ -554,6 +559,8 @@ def _parse_sheet_rows(
             while len(row_values) < col_index:
                 row_values.append("")
             row_values.append(_resolve_cell_value(cell, shared_strings, style_number_formats))
+        while len(rows) < int(row.attrib.get("r", len(rows) + 1)) - 1:
+            rows.append([])
         rows.append(normalize_row(row_values))
     return rows
 
@@ -788,11 +795,11 @@ def _parse_exercise_row(
 
     working_sets_raw = column_value(row, mapped["working_sets"])
     reps_raw = column_value(row, mapped["reps"])
-    if not (_has_numeric_prescription(working_sets_raw) and _has_numeric_prescription(reps_raw)):
+    if not _has_numeric_prescription(working_sets_raw):
         return None
 
     movement_pattern = infer_movement_pattern(exercise_name)
-    notes = pick_notes(row, mapped)
+    notes = column_value(row, mapped.get("notes", -1)) or None
     last_set_intensity_technique = column_value(row, mapped.get("last_set_intensity_technique", -1)) or None
     warm_up_sets = column_value(row, mapped.get("warmup_sets", -1)) or None
     working_sets = column_value(row, mapped.get("working_sets", -1)) or None
@@ -818,7 +825,7 @@ def _parse_exercise_row(
             "id": slugify(exercise_name),
             "name": exercise_name,
             "sets": parse_int(working_sets_raw, fallback=3),
-            "rep_range": parse_rep_range(reps_raw),
+            "rep_range": None,
             "start_weight": 20,
             "movement_pattern": movement_pattern,
             "primary_muscles": infer_primary_muscles(movement_pattern, exercise_name),
@@ -829,10 +836,14 @@ def _parse_exercise_row(
                 exercise_name,
                 " ".join(part for part in [last_set_intensity_technique, notes] if part) or None,
             ),
-            "rpe_target": parse_float(last_set_rpe or early_set_rpe or column_value(row, mapped.get("rpe", -1))),
-            "load_target": _parse_load_target(row, mapped),
-            "warmup_sets": parse_int(column_value(row, mapped.get("warmup_sets", -1)), fallback=0),
+            "rpe_target": None,  # Typed per-set effort is authoritative; never average a source range.
+            "load_target": _parse_load_target(row, mapped) if mapped.get("load", -1) not in {mapped.get(f"tracking_set_{i}", -1) for i in range(1, 5)} or mapped.get("percent_1rm", -1) >= 0 else None,
+            "warmup_sets": None,  # Raw count/range retained; no invented warm-up steps.
             "rest_seconds": _parse_rest_seconds(column_value(row, mapped.get("rest", -1))),
+            "source_row": row_index,
+            "effort_kind": "rir" if mapped.get("rir", -1) >= 0 else "rpe",
+            "authored_set_type": _parse_set_type(exercise_name, None),
+            "effort": column_value(row, mapped.get("rpe", -1)) or None if mapped.get("rpe", -1) not in {mapped.get("early_set_rpe", -1), mapped.get("last_set_rpe", -1)} else None,
             "exercise": raw_exercise_name,
             "last_set_intensity_technique": last_set_intensity_technique,
             "warm_up_sets": warm_up_sets,
@@ -1083,7 +1094,7 @@ def _handle_exercise_row(
             message=f"Exercise '{exercise_name}' was skipped because Working Sets is missing or non-numeric.",
         )
         return
-    if not _has_numeric_prescription(reps_raw):
+    if not reps_raw:
         _append_row_diagnostic(
             diagnostics,
             sheet_name=sheet_name,
@@ -1329,14 +1340,19 @@ def normalize_slot_exercise(raw_exercise: dict) -> dict:
     load_semantics = raw_exercise.get("load_semantics")
     if load_semantics is None and ("assisted_" in exercise_id or normalized_name.startswith("assisted ")):
         load_semantics = "assistance"
+    if load_semantics is None and (raw_exercise.get("equipment_tags") or infer_equipment_tags_from_name(name)) == ["bodyweight"]:
+        load_semantics = "bodyweight"
 
+    prescription = preserve_prescription(raw_exercise, int(raw_exercise.get("sets", 3)), effort_kind=raw_exercise.get("effort_kind", "rpe"), set_type=raw_exercise.get("authored_set_type", "work")) if "source_row" in raw_exercise else raw_exercise.get("authored_prescription")
     return {
+        "authored_prescription": prescription,
+        "source_row": raw_exercise.get("source_row"),
         "id": raw_exercise.get("id"),
         "primary_exercise_id": raw_exercise.get("primary_exercise_id") or raw_exercise.get("id"),
         "name": name,
         "exercise": raw_exercise.get("exercise"),
         "sets": raw_exercise.get("sets", 3),
-        "rep_range": raw_exercise.get("rep_range", [8, 12]),
+        "rep_range": uniform_rep_range(prescription) if prescription else raw_exercise.get("rep_range", [8, 12]),
         "start_weight": raw_exercise.get("start_weight", 20),
         "priority": raw_exercise.get("priority", "standard"),
         "movement_pattern": raw_exercise.get("movement_pattern"),

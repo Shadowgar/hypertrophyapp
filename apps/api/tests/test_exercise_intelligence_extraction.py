@@ -12,6 +12,7 @@ if str(API_ROOT) not in sys.path:
 from app.knowledge_loader import load_exercise_library, load_source_registry
 from importers.doctrine_extraction import ClaimCandidate
 from importers.exercise_intelligence_extraction import (
+    _build_slot_usage_index,
     ALLOWED_SOURCE_FAMILIES,
     build_exercise_intelligence_extraction_result,
     compute_reachable_generated_full_body_candidate_set,
@@ -25,6 +26,18 @@ FIXTURE_EXAMPLES = {
     "supported_accessory": "bottom_half_ez_bar_preacher_curl",
     "unsupported_unilateral_accessory": "bent_over_cable_pec_flye",
 }
+
+
+def test_typed_source_sets_retain_metadata_accounting_without_changing_legacy_groups() -> None:
+    slot = {"exercise_id": "example", "slot_role": "primary_compound",
+        "work_sets": [{"sets": 1}, {"sets": 1}, {"sets": 1}],
+        "authored_prescription": {"sets": [{"set_index": 1}, {"set_index": 2}, {"set_index": 3}]}}
+    payload = {"exercise_library": [{"exercise_id": "example", "canonical_name": "Example"}],
+        "blueprint": {"week_templates": [{"days": [{"day_role": "full_body_1", "slots": [slot]}]}]}}
+    assert _build_slot_usage_index(payload)["example"]["max_work_sets"] == 3
+    slot.pop("authored_prescription")
+    slot["work_sets"] = [{"sets": 1}, {"sets": 2}]
+    assert _build_slot_usage_index(payload)["example"]["max_work_sets"] == 2
 
 
 def test_compute_reachable_generated_full_body_candidate_set_is_deterministic() -> None:

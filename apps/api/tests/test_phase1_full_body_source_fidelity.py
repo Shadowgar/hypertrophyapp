@@ -138,9 +138,9 @@ def test_phase1_full_body_source_paths_point_to_real_companion_workbook() -> Non
     template = json.loads(PHASE1_TEMPLATE.read_text(encoding="utf-8"))
     onboarding = json.loads(PHASE1_ONBOARDING.read_text(encoding="utf-8"))
 
-    expected_path = str(PHASE1_WORKBOOK)
-    assert template["source_workbook"] == expected_path
-    assert onboarding["blueprint"]["source_workbook"] == expected_path
+    expected_path = Path("reference") / PHASE1_WORKBOOK.name
+    assert Path(template["source_workbook"]) == expected_path
+    assert Path(onboarding["blueprint"]["source_workbook"]) == expected_path
     assert Path(onboarding["source_pdf"]).name == "The_Pure_Bodybuilding_Program - Phase 1 - Full_Body.pdf"
 
 

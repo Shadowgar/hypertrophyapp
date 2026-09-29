@@ -1,0 +1,198 @@
+{
+  "manifest_version": 1,
+  "status": "Review-fix candidate; no milestone/ADR/release acceptance",
+  "parent_revision": "6d835db4d0511b4eed360e6dfef6ed550ef48fc4",
+  "revision_binding": "Containing Git commit plus exact file hashes bind correction snapshot",
+  "branch": "m1/authored-source-fidelity",
+  "source_rows": {
+    "phase_1": 315,
+    "phase_2": 310,
+    "phase_2_amrap_weeks": [
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "working_sets_each": 2
+  },
+  "sources": [
+    {
+      "name": "Pure Bodybuilding Phase 1 - Full Body Sheet.xlsx",
+      "sha256": "46f50999771cbb454b325729b2d2a77515dbcf2cdd86891e4543eab65019bb71",
+      "unchanged": true,
+      "published": false
+    },
+    {
+      "name": "Pure Bodybuilding Phase 2 - Full Body Sheet.xlsx",
+      "sha256": "3068701dc79bfa5dd7dff0daa55c670213125fce0cc1bb56abff22083b93bb23",
+      "unchanged": true,
+      "published": false
+    }
+  ],
+  "candidate_files": [
+    {
+      "path": "apps/api/app/adaptive_schema.py",
+      "sha256": "13dcaa05d97fbc8cbc9e1981b9db6c22084015d7b52cc9237a19f2a870b47912"
+    },
+    {
+      "path": "apps/api/app/program_loader.py",
+      "sha256": "b19ea73dbe76ec43dd65b698a703f6933e4ba0d2cd86fba357466160a85f7d05"
+    },
+    {
+      "path": "apps/api/app/routers/workout.py",
+      "sha256": "8a1f3a368ac5516cb31a3cbd08e910f663e1cd55570be8caed6a76905e2e94b3"
+    },
+    {
+      "path": "apps/api/app/schemas.py",
+      "sha256": "20f2738dbb8bed727eeab8e8fc8990dcb1566b5e05781f2cb3c8f1f9c3b9c9a6"
+    },
+    {
+      "path": "apps/api/app/workout_history.py",
+      "sha256": "9724a9ef94e5ebdea1877b03fa57eb727f95e8f39c5bec55d9969dc2b7811ae9"
+    },
+    {
+      "path": "apps/api/tests/test_authored_source_runtime_fidelity.py",
+      "sha256": "3fef146b7b301ded9fb72291353979b3ae3218dd917faa3c4020433f38ee7ffd"
+    },
+    {
+      "path": "apps/api/tests/test_authored_typed_execution.py",
+      "sha256": "9a1839ade94bc157099cddcd7a5b4d1131b3b192576e553e948dea02380e48b2"
+    },
+    {
+      "path": "apps/web/app/page.tsx",
+      "sha256": "0aa23592f50f7470f88f088f8b6ce21179446e958c04fbf1c9670eede31ed217"
+    },
+    {
+      "path": "apps/web/app/today/page.tsx",
+      "sha256": "64fa0e4594941379589335a92c612fe922ba5560da145b12852deb0625aba548"
+    },
+    {
+      "path": "apps/web/app/week/page.tsx",
+      "sha256": "61b9997f753930bc47f44c169aec1f5ccdecd0bd1f85de7810dd5a2c557c4bbd"
+    },
+    {
+      "path": "apps/web/lib/api.ts",
+      "sha256": "f05415fe9dd6c1bbe9f508c7146944edf665ea892debc07e747ceb1eb78819a8"
+    },
+    {
+      "path": "apps/web/lib/authored-prescription.ts",
+      "sha256": "bd39ca69cdf9829a9a9b1aee4c236f202ed01adee35a2aeb49a577637a85db32"
+    },
+    {
+      "path": "apps/web/tests/authored-prescription.test.tsx",
+      "sha256": "c8eeda0309d6ad2e9adedc1eae648870e6af257a33931af8202c228ed7c266f5"
+    },
+    {
+      "path": "importers/structured_program_builder.py",
+      "sha256": "ad71b2bb562788258c0ab99bdc3dd23f119d37681d6ae25f43b5d0eb9d249961"
+    },
+    {
+      "path": "importers/xlsx_to_program.py",
+      "sha256": "2f9a25af934a4ce781f36059ec30100d1444510d7538366ee05995a61372e300"
+    },
+    {
+      "path": "packages/core-engine/core_engine/authored_prescription.py",
+      "sha256": "a4605447fcc44466645fd7e6f8e5e8bebbf362242a15ae6676bb4ad31d8e0d2a"
+    },
+    {
+      "path": "packages/core-engine/core_engine/decision_weekly_review.py",
+      "sha256": "31986c4379654c089e1efe904e2a29ec9fe454a030d75ca2a0580299a295d68f"
+    },
+    {
+      "path": "packages/core-engine/core_engine/decision_workout_session.py",
+      "sha256": "c119754605d1a45e26e8f3e28c1fd2a65a91270a2ae04c65ded932310aa0f567"
+    },
+    {
+      "path": "packages/core-engine/core_engine/scheduler.py",
+      "sha256": "e6d72e63d495f6afaf4876314b2c940f5afd75e33e00b820bec3b3cf7d115e66"
+    },
+    {
+      "path": "packages/core-engine/tests/test_authored_prescription.py",
+      "sha256": "671f9ac61a6bd34dfb1d23e188747b91d814407a9e6d7b404215d1beab916811"
+    },
+    {
+      "path": "programs/gold/pure_bodybuilding_phase_1_full_body.json",
+      "sha256": "09a69cbbad0fe4fb33a7c6a54657d23064d6dadb8d639b5a91d44d5d6e24e831"
+    },
+    {
+      "path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json",
+      "sha256": "0bc49c21cb4f1db3fd0c465cb16a059a7994974770e354d4ea6a8384a9018908"
+    },
+    {
+      "path": "programs/gold/pure_bodybuilding_phase_2_full_body.json",
+      "sha256": "8e3fe32ab7c19397dcbfe39480441b2fa78832142bb8d6cc6f9707e5f4f5b3a8"
+    },
+    {
+      "path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json",
+      "sha256": "296aad1cfe0ed4a39820a9a2231263c3dc7ff811cef456b9fddee9d68d949453"
+    }
+  ],
+  "raw_output_hashes": [
+    {
+      "procedure": "api-fixes-final",
+      "sha256": "cda33bf1fdf86bd6e889a2c92390ca143a46b20e279575529093ee1b194a1640",
+      "availability": "Temporary owner evidence outside Git"
+    },
+    {
+      "procedure": "new-boundaries-final",
+      "sha256": "8bcb49fd59cc893e2dbc85496b345d05066e232d8243581ce12fcffd7af18028",
+      "availability": "Temporary owner evidence outside Git"
+    },
+    {
+      "procedure": "core",
+      "sha256": "dde69f854cf059a6510f5db4fbb2db20e358df438230e78e9697a31a8e62c9d2",
+      "availability": "Temporary owner evidence outside Git"
+    },
+    {
+      "procedure": "core-new",
+      "sha256": "9c714207acdb4637742c0d3473ba4d87be7b978f65d5b0063c39ad919e6fa9d7",
+      "availability": "Temporary owner evidence outside Git"
+    },
+    {
+      "procedure": "web",
+      "sha256": "bea9ba44909169e670409a09d5568803aed210836881f10dbe909db2da8229c3",
+      "availability": "Temporary owner evidence outside Git"
+    },
+    {
+      "procedure": "build",
+      "sha256": "7f5b8107baa6c81cf94b6760032f9d06ef47c91b448696eb8d7d3a22865142c5",
+      "availability": "Temporary owner evidence outside Git"
+    },
+    {
+      "procedure": "lint",
+      "sha256": "cf57356af5909c8f54f6dbec5a1bda3f84d3414ca15f526eae2b588488556ebb",
+      "availability": "Temporary owner evidence outside Git"
+    },
+    {
+      "procedure": "types",
+      "sha256": "05f38959e85dc8dc68ad410560b78355e5e130c1fff032998442642c44be9a20",
+      "availability": "Temporary owner evidence outside Git"
+    },
+    {
+      "procedure": "compile-recheck",
+      "sha256": "f850adfb85f225e2135033a207f787a483e95553ea6894aa305244f413bbdff6",
+      "availability": "Temporary owner evidence outside Git"
+    }
+  ],
+  "harnesses": [
+    {
+      "name": "m1a-fix-run.py",
+      "sha256": "b584243f06c9df6c68efe0f69d76d5cd93f878a95d1710da69167066859d9e44"
+    },
+    {
+      "name": "sitecustomize.py",
+      "sha256": "f477f3c8ff5e3e6fad16d7f02ff743d28390837cfd01a7a2285040b62fc1dc35"
+    },
+    {
+      "name": "node-network-guard.cjs",
+      "sha256": "c5482e6b8aab103c58b02e2bb338ca76f541d91489cdc10c0d8156e001a31975"
+    }
+  ],
+  "limits": [
+    "Selected API suite includes one existing generated-program failure; six PostgreSQL-only cases skipped",
+    "Full core before added fallback test; final authored boundary recheck separately recorded",
+    "JSDOM and offline build do not qualify actual browser journeys",
+    "No M1 deployment/migration yet; raw evidence outside Git is not durable public availability"
+  ]
+}

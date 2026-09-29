@@ -1,7 +1,9 @@
 "use client";
 
+import { authoredRepLabel, authoredSetRepRange, authoredSetDetails, authoredWarmupLabel, isBodyweightAuthored, authoredSetTechnique } from "@/lib/authored-prescription";
+
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Disclosure } from "@/components/ui/disclosure";
@@ -243,6 +245,9 @@ type TechniqueModalState =
       kind: "dropset" | "mechanical_drop" | "rest_pause_cluster";
       baseWeightLb: number;
       baseReps: number;
+      authored?: boolean;
+      bodyweight?: boolean;
+      instruction?: string | null;
     }
   | null;
 
@@ -305,9 +310,9 @@ function InlineTechniquePanel({
   onLog: (performed: { reps: number; weight: number }, ordinal: number) => Promise<void>;
 }>) {
   const [ordinal, setOrdinal] = useState(1);
-  const [reps, setReps] = useState(String(Math.max(1, Math.round(state.baseReps / 2))));
+  const [reps, setReps] = useState(state.authored ? "" : String(Math.max(1, Math.round(state.baseReps / 2))));
   const [weight, setWeight] = useState(
-    String(state.kind === "dropset" ? Math.max(2.5, Math.round(state.baseWeightLb * 0.85 * 10) / 10) : state.baseWeightLb),
+    state.authored ? (state.bodyweight ? "0" : "") : String(state.kind === "dropset" ? Math.max(2.5, Math.round(state.baseWeightLb * 0.85 * 10) / 10) : state.baseWeightLb),
   );
   const [status, setStatus] = useState<string | null>(null);
 
@@ -321,7 +326,13 @@ function InlineTechniquePanel({
   async function handleLog() {
     setStatus("Logging technique set...");
     try {
-      await onLog({ reps: Number(reps) || 1, weight: Number(weight) || state.baseWeightLb }, ordinal);
+      const actualReps = Number(reps);
+      const actualWeight = Number(weight);
+      if (state.authored && (!Number.isInteger(actualReps) || actualReps < 1 || !Number.isFinite(actualWeight) || (state.bodyweight ? actualWeight < 0 : actualWeight <= 0))) {
+        setStatus("Enter actual reps and external load for this technique set.");
+        return;
+      }
+      await onLog({ reps: state.authored ? actualReps : actualReps || 1, weight: state.authored ? actualWeight : actualWeight || state.baseWeightLb }, ordinal);
       setOrdinal((prev) => prev + 1);
       setStatus("Logged. Add another or close.");
     } catch {
@@ -335,7 +346,7 @@ function InlineTechniquePanel({
         <div>
           <p className="text-sm font-semibold text-zinc-100">{title}</p>
           <p className="ui-meta">
-            {state.exerciseName} · after your last working set
+            {state.exerciseName} · after working set {state.parentSetIndex}
           </p>
         </div>
         <Button type="button" variant="ghost" className="min-h-[32px] px-2 text-xs" onClick={onClose}>
@@ -344,7 +355,9 @@ function InlineTechniquePanel({
       </div>
 
       <div className="rounded-md border border-zinc-800 bg-zinc-900/40 p-3 text-xs text-zinc-300 space-y-1">
-        {state.kind === "mechanical_drop" ? (
+        {state.authored ? (
+          <p>{state.instruction}</p>
+        ) : state.kind === "mechanical_drop" ? (
           <p>Keep the same load, change the leverage/position to make it easier, then continue.</p>
         ) : state.kind === "dropset" ? (
           <p>Reduce load and continue with strict form (this logs as a technique sub-set).</p>
@@ -366,7 +379,7 @@ function InlineTechniquePanel({
           />
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className="text-[11px] uppercase tracking-wide text-zinc-500">Weight (lb)</span>
+          <span className="text-[11px] uppercase tracking-wide text-zinc-500">{state.bodyweight ? "Added load (lb), optional" : "Weight (lb)"}</span>
           <input
             className="ui-input h-12 w-full rounded-lg px-3 text-center text-lg font-semibold tabular-nums"
             type="number"
@@ -420,13 +433,13 @@ function WorkoutSummaryCard({ summary }: Readonly<{ summary: WorkoutSummary | nu
           <div key={item.exercise_occurrence_id ?? item.exercise_id} className="rounded-md border border-zinc-800 bg-zinc-900/40 p-2 text-xs text-zinc-300">
             <p className="font-semibold text-zinc-100">{item.name}</p>
             <p>
-              Planned: {item.planned_sets} sets · {item.planned_reps_min}-{item.planned_reps_max} reps @ {kgToLbs(item.planned_weight)} lbs
+              Planned: {item.planned_sets} sets · {item.planned_reps_min != null ? `${item.planned_reps_min}-${item.planned_reps_max}` : "authored target"} reps · {item.load_semantics === "bodyweight" ? "Bodyweight" : `${kgToLbs(item.planned_weight)} lbs`}
             </p>
             <p>
-              Performed: {item.performed_sets} sets · avg {item.average_performed_reps} reps @ {kgToLbs(item.average_performed_weight)} lbs
+              Performed: {item.performed_sets} sets · avg {item.average_performed_reps} reps · {item.load_semantics === "bodyweight" ? (item.average_performed_weight > 0 ? `Bodyweight + ${kgToLbs(item.average_performed_weight)} lb added` : "Bodyweight (no added load)") : `${kgToLbs(item.average_performed_weight)} lbs`}
             </p>
             <p>
-              Next: {kgToLbs(item.next_working_weight)} lbs
+              Next: {item.load_semantics === "bodyweight" ? "Bodyweight" : `${kgToLbs(item.next_working_weight)} lbs`}
             </p>
             <p>{resolveGuidanceText(item.guidance_rationale, item.guidance)}</p>
           </div>
@@ -443,12 +456,12 @@ function BaselineBlock({
   onCalculate,
 }: Readonly<{
   exerciseId: string;
-  repRange: [number, number];
+  repRange: [number, number] | null;
   currentBaseline: { weightLb: number; reps: number; estimated1RM: number; workingWeightLb: number; warmupLbs: number[] } | undefined;
   onCalculate: (weightLb: number, reps: number) => void;
 }>) {
   const [weightLb, setWeightLb] = useState<string>(() => (currentBaseline ? String(currentBaseline.weightLb) : ""));
-  const [reps, setReps] = useState<string>(() => (currentBaseline ? String(currentBaseline.reps) : String(repRange[0])));
+  const [reps, setReps] = useState<string>(() => (currentBaseline ? String(currentBaseline.reps) : String(repRange?.[0] ?? "")));
   useEffect(() => {
     if (currentBaseline) {
       setWeightLb(String(currentBaseline.weightLb));
@@ -503,7 +516,7 @@ function BaselineBlock({
       {currentBaseline ? (
         <div className="rounded border border-zinc-600 bg-zinc-800/40 px-3 py-2 text-xs text-zinc-200 space-y-1">
           <p className="font-medium">Estimated 1RM: {Math.round(currentBaseline.estimated1RM)} lb</p>
-          <p>Suggested working weight: {currentBaseline.workingWeightLb} lb (for {repRange[0]}-{repRange[1]} reps)</p>
+          <p>Suggested working weight: {currentBaseline.workingWeightLb} lb (for {repRange ? `${repRange[0]}-${repRange[1]}` : "authored target"} reps)</p>
         </div>
       ) : null}
     </div>
@@ -576,12 +589,15 @@ function ExerciseDetailOverlay({
   onClearGlobalRestTimer: () => void;
 }>) {
   const defaultRestSeconds = parseRestToSeconds(exercise.rest) ?? 90;
+  const bodyweight = isBodyweightAuthored(exercise);
+  const sourceWarmups = authoredWarmupLabel(exercise);
+  const currentRepRange = useMemo(() => authoredSetRepRange(exercise, Math.min(completed + 1, exercise.sets)), [exercise, completed]);
   const ctrl = useExerciseControl({
     exerciseId: exerciseKey(exercise),
     totalSets: exercise.sets,
     defaultRestSeconds,
-    recommendedWorkingWeight: snapToHalfLb(derivedWorkingLb),
-    repRange: exercise.rep_range,
+    recommendedWorkingWeight: bodyweight ? 0 : snapToHalfLb(derivedWorkingLb),
+    repRange: currentRepRange,
     initialCompletedSets: completed,
     skipTimerOnComplete: true,
     onSetComplete: onSetComplete,
@@ -596,8 +612,10 @@ function ExerciseDetailOverlay({
       : undefined;
 
   const isAssistance = String(exercise.load_semantics ?? "").toLowerCase() === "assistance";
-  const checklistItems = requiresLastSetChecklist(exercise);
-  const techniqueKind = resolveTechniqueKind(exercise);
+  const currentTechnique = authoredSetTechnique(exercise, ctrl.completedSets + 1);
+  const techniqueExercise = exercise.authored_prescription ? { ...exercise, last_set_intensity_technique: currentTechnique } : exercise;
+  const checklistItems = exercise.authored_prescription ? (currentTechnique ? [currentTechnique] : []) : requiresLastSetChecklist(exercise);
+  const techniqueKind = resolveTechniqueKind(techniqueExercise);
   const [checklistAccepted, setChecklistAccepted] = useState(false);
   useEffect(() => {
     // Reset checklist gate when changing exercise or moving off last set.
@@ -605,7 +623,8 @@ function ExerciseDetailOverlay({
   }, [exerciseKey(exercise), ctrl.completedSets]);
 
   const isLastSetNext = ctrl.completedSets === ctrl.totalSets - 1;
-  const gateLastSet = checklistItems.length > 0 && isLastSetNext && !checklistAccepted;
+  const techniqueApplies = exercise.authored_prescription ? Boolean(currentTechnique) : isLastSetNext;
+  const gateLastSet = checklistItems.length > 0 && techniqueApplies && !checklistAccepted;
   const hasTechnique = checklistItems.length > 0 || techniqueKind != null || techniquePanelState != null;
 
   return (
@@ -642,17 +661,21 @@ function ExerciseDetailOverlay({
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 pb-[max(7rem,env(safe-area-inset-bottom))] space-y-4 overscroll-contain">
 
         {/* == ZONE 1: Baseline calculator (expanded when no baseline) == */}
-        <Disclosure title="Baseline Calculator" badge={baseline ? `1RM: ${Math.round(baseline.estimated1RM)} lb` : null} defaultOpen={!baseline}>
+        {exercise.rep_range && !bodyweight ? <Disclosure title="Baseline Calculator" badge={baseline ? `1RM: ${Math.round(baseline.estimated1RM)} lb` : null} defaultOpen={!baseline}>
           <BaselineBlock
             exerciseId={exerciseKey(exercise)}
             repRange={exercise.rep_range}
             currentBaseline={baseline}
             onCalculate={onCalculateBaseline}
           />
-        </Disclosure>
+        </Disclosure> : null}
 
         {/* == ZONE 2: Warm-up sets (expanded when warm-ups exist) == */}
-        {hasWarmup && (
+        {exercise.authored_prescription ? (
+          <Disclosure title="Warm-up Sets" badge={sourceWarmups ? `${sourceWarmups} sets` : null} defaultOpen>
+            <p className="text-sm text-zinc-200">{sourceWarmups != null ? `${sourceWarmups} warm-up sets` : "Warm-up prescription unspecified"}</p>
+          </Disclosure>
+        ) : hasWarmup && (
           <Disclosure title="Warm-up Sets" badge={`${warmupLbs.length} sets`} defaultOpen>
             <div className="space-y-2">
               <p className="text-xs text-zinc-400">
@@ -734,9 +757,9 @@ function ExerciseDetailOverlay({
               )}
 
               {/* Technique (last set) checklist at bottom so user can confirm before Complete Set */}
-              {checklistItems.length > 0 && isLastSetNext ? (
+              {checklistItems.length > 0 && techniqueApplies ? (
                 <div className="rounded-xl border border-amber-500/50 bg-amber-950/30 p-3 space-y-2">
-                  <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Technique (last set)</p>
+                  <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">{exercise.authored_prescription ? "Technique (this set)" : "Technique (last set)"}</p>
                   <ul className="list-disc pl-5 text-xs text-zinc-200 space-y-1">
                     {checklistItems.map((item) => (
                       <li key={item}>{item}</li>
@@ -761,7 +784,7 @@ function ExerciseDetailOverlay({
           exerciseId={exerciseKey(exercise)}
           guidanceLine={doThisSetLine}
           ctrl={ctrl}
-          weightLabel={isAssistance ? "Assistance (lb) — lower is harder" : "Weight (lb)"}
+          weightLabel={bodyweight ? "Added load (lb), optional" : isAssistance ? "Assistance (lb) — lower is harder" : "Weight (lb)"}
           disableComplete={gateLastSet}
         />
 
@@ -1234,8 +1257,9 @@ export default function TodayPage() {
         restCycle,
       });
 
-      const techniqueKind = resolveTechniqueKind(exercise);
-      if (techniqueKind && completedCount >= exercise.sets) {
+      const prescribedTechnique = authoredSetTechnique(exercise, completedCount);
+      const techniqueKind = resolveTechniqueKind(exercise.authored_prescription ? { ...exercise, last_set_intensity_technique: prescribedTechnique } : exercise);
+      if (techniqueKind && (exercise.authored_prescription ? Boolean(prescribedTechnique) : completedCount >= exercise.sets)) {
         setTechniqueModal({
           exerciseId,
           exerciseName: resolveExerciseName(exercise, swapIndexByExercise),
@@ -1244,6 +1268,9 @@ export default function TodayPage() {
           kind: techniqueKind,
           baseWeightLb: performed.weight,
           baseReps: performed.reps,
+          instruction: prescribedTechnique,
+          authored: Boolean(exercise.authored_prescription),
+          bodyweight: isBodyweightAuthored(exercise),
         });
       }
 
@@ -1406,9 +1433,9 @@ export default function TodayPage() {
                       </span>
                     </div>
                     <div className="mt-1 flex items-center gap-2 text-xs text-zinc-500">
-                      <span>{exercise.rep_range[0]}-{exercise.rep_range[1]} reps</span>
+                      <span>{authoredRepLabel(exercise)} reps</span>
                       <span className="text-zinc-700">·</span>
-                      <span>~{rowWorkingLb} lb</span>
+                      <span>{isBodyweightAuthored(exercise) ? "Bodyweight" : `~${rowWorkingLb} lb`}</span>
                     </div>
                   </button>
                 </li>
@@ -1454,7 +1481,7 @@ export default function TodayPage() {
         //   1) backend live recommendation
         //   2) planned working weight
         const derivedWorkingLb =
-          completed === 0
+          isBodyweightAuthored(exercise) ? 0 : completed === 0
             ? (baseline != null
                 ? baselineWorkingLb
                 : hasRecommendation
@@ -1464,16 +1491,19 @@ export default function TodayPage() {
               ? kgToLbs(recommendation!.recommended_weight)
               : plannedWorkingLb;
         let doThisSetLine: string;
-        if (recommendation) {
+        if (exercise.authored_prescription) {
+          const index = Math.min(completed + 1, exercise.sets);
+          doThisSetLine = `${isBodyweightAuthored(exercise) ? "Bodyweight · " : ""}${authoredRepLabel(exercise, index)} reps · ${authoredSetDetails(exercise, index)}`;
+        } else if (recommendation) {
           const guidance = resolveGuidanceText(recommendation.guidance_rationale, recommendation.guidance);
           doThisSetLine = guidance.trim()
             || `Next set: ${recommendation.recommended_reps_min}-${recommendation.recommended_reps_max} reps @ ${kgToLbs(recommendation.recommended_weight)} lbs`;
         } else if (feedback) {
           const guidance = resolveGuidanceText(feedback.guidance_rationale, feedback.guidance);
           doThisSetLine = guidance.trim()
-            || `${exercise.rep_range[0]}-${exercise.rep_range[1]} reps @ ${Math.round(derivedWorkingLb)} lbs this set`;
+            || `${authoredRepLabel(exercise)} reps @ ${Math.round(derivedWorkingLb)} lbs this set`;
         } else {
-          doThisSetLine = `Do ${exercise.rep_range[0]}-${exercise.rep_range[1]} reps @ ${Math.round(derivedWorkingLb)} lbs this set`;
+          doThisSetLine = `Do ${authoredRepLabel(exercise)} reps @ ${Math.round(derivedWorkingLb)} lbs this set`;
         }
 
         const currentSwapIndex = swapIndexByExercise[exerciseKey(exercise)] ?? 0;

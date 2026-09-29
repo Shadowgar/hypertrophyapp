@@ -1,9 +1,13 @@
 # M0-HIST-B correction and reconstruction
 
-Status: implemented candidate awaiting PR review and qualification disposition.
+Status: primary implementation merged as PR #40 and owner-authorized deployment completed.
+[Activation and remaining qualification](../evidence/2026-09-28-m0-hist-b-activation.md)
+records the subsequent task authorization and rollout. Original implementation
+criteria and pre-merge evidence below retain their dated scope.
 Owner authorization: explicit 2026-09-28 task to implement this package, rehearse
 its migration on disposable PostgreSQL, and open an unmerged PR. Deployment of
-HIST-B is **not authorized**. Base: `e763c8392e3c1bf4c5b6367382c5a3d8ab04348c`.
+HIST-B was **not authorized by that implementation task**. The subsequent explicit
+merge/deployment task authorized only live 0020 and affected API/web activation. Base: `e763c8392e3c1bf4c5b6367382c5a3d8ab04348c`.
 Branch: `m0/hist-correction-reconstruction`.
 
 Related: [ADR-005](../adr/0005-training-history-identity-and-correction.md),

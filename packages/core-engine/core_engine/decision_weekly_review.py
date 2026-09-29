@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from .authored_prescription import requires_receipt_tracking
 from datetime import date, datetime, timedelta
 from typing import Any, cast
 
@@ -467,6 +468,8 @@ def _accumulate_single_planned_exercise(planned_index: dict[str, dict[str, Any]]
     if not primary_exercise_id:
         return
 
+    if requires_receipt_tracking(exercise):
+        return
     planned_sets = int(exercise.get("sets", 0) or 0)
     target_min, target_max = _resolve_rep_range(exercise.get("rep_range"))
     target_weight = float(exercise.get("recommended_working_weight", 0) or 0)
@@ -710,6 +713,16 @@ def prepare_weekly_review_status_route_runtime(
     }
 
 
+def _review_identity_keys(exercise):
+    keys = set()
+    if exercise.get("exercise_occurrence_id"):
+        keys.add(("occurrence", str(exercise["exercise_occurrence_id"])))
+    lineage = exercise.get("source_lineage") or {}
+    if lineage.get("source_slot_id"):
+        keys.add(("source", str(lineage.get("source_sha256") or ""), str(lineage["source_slot_id"])))
+    return keys
+
+
 def summarize_weekly_review_performance(
     *,
     previous_week_start: date,
@@ -717,13 +730,49 @@ def summarize_weekly_review_performance(
     previous_plan_payload: dict[str, Any],
     performed_logs: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    planned_index = _accumulate_planned_index(previous_plan_payload)
-    performed_index = _collect_performed_index(performed_logs, planned_index)
+    exercises = [exercise for session in previous_plan_payload.get("sessions") or []
+        for exercise in session.get("exercises") or []]
+    typed = [exercise for exercise in exercises if requires_receipt_tracking(exercise)]
+    excluded_targets = [exercise.get("source_lineage") or {"exercise_occurrence_id": exercise.get("exercise_occurrence_id"), "exercise_id": exercise.get("id")}
+        for exercise in typed]
+    typed_keys = set().union(*(_review_identity_keys(exercise) for exercise in typed))
+    typed_primary = {str(exercise.get("primary_exercise_id") or exercise.get("id") or "") for exercise in typed}
+    numeric_keys = set().union(*(_review_identity_keys(exercise) for exercise in exercises if not requires_receipt_tracking(exercise)))
+    known_keys = typed_keys | numeric_keys
+    numeric_logs, excluded_logs = [], []
+    ambiguous_count = 0
+    for row in performed_logs:
+        # Technique children and warm-ups are receipts, not working exposures.
+        if row.get("parent_set_index") is not None or (row.get("set_kind") or "work").strip().lower() != "work":
+            continue
+        context = (row.get("replay_context") or {}).get("planned_exercise") or {}
+        keys = _review_identity_keys(row) | _review_identity_keys(context)
+        # Persisted plans lack occurrence UUIDs. Prefer a matching occurrence,
+        # otherwise resolve the frozen source slot instead of treating an
+        # unmatched log UUID as proof that its source cohort is unknown.
+        matching_occurrences = {key for key in keys & known_keys if key[0] == "occurrence"}
+        matches = matching_occurrences or (keys & known_keys)
+        primary = str(row.get("primary_exercise_id") or row.get("exercise_id") or "")
+        if requires_receipt_tracking(context) or matches & typed_keys:
+            excluded_logs.append(row)
+        elif primary in typed_primary and not matches & numeric_keys:
+            # Legacy receipts without a resolvable occurrence cannot be assigned to
+            # the numeric cohort merely because their catalog ID matches.
+            excluded_logs.append(row)
+            ambiguous_count += 1
+        else:
+            numeric_logs.append(row)
+    scoped_plan = deepcopy(previous_plan_payload)
+    for session in scoped_plan.get("sessions") or []:
+        session["exercises"] = [e for e in session.get("exercises") or [] if not requires_receipt_tracking(e)]
+    planned_index = _accumulate_planned_index(scoped_plan)
+    performed_index = _collect_performed_index(numeric_logs, planned_index)
 
     exercise_faults: list[dict[str, Any]] = []
-    planned_sets_total = 0
-    completed_sets_total = 0
-    fault_steps: list[dict[str, Any]] = []
+    planned_sets_total = sum(int(e.get("sets", 0)) for e in typed)
+    completed_sets_total = sum(1 for row in excluded_logs if row.get("parent_set_index") is None
+        and (row.get("set_kind") or "work").strip().lower() == "work")
+    fault_steps: list[dict[str, Any]] = [{"numeric_fault_classification_excluded": excluded_targets, "ambiguous_legacy_log_count": ambiguous_count}] if excluded_targets else []
 
     for primary_exercise_id, planned in planned_index.items():
         fault, planned_sets, completed_sets = _build_weekly_exercise_fault(
@@ -788,6 +837,11 @@ def build_weekly_review_performance_summary(
         {
             "primary_exercise_id": _read_attr(row, "primary_exercise_id"),
             "exercise_id": _read_attr(row, "exercise_id"),
+            "exercise_occurrence_id": _read_attr(row, "exercise_occurrence_id"),
+            "workout_occurrence_id": _read_attr(row, "workout_occurrence_id"),
+            "replay_context": _read_attr(row, "replay_context"),
+            "parent_set_index": _read_attr(row, "parent_set_index"),
+            "set_kind": _read_attr(row, "set_kind"),
             "reps": _read_attr(row, "reps"),
             "weight": _read_attr(row, "weight"),
         }
