@@ -160,6 +160,7 @@ Reference contracts:
 ## Local Development Commands
 
 Web:
+- npm and `apps/web/package-lock.json` are the supported package manager and lockfile for local development, CI, and the production image.
 - `cd apps/web && npm install`
 - `cd apps/web && npm run dev`
 - `cd apps/web && npm run test`
