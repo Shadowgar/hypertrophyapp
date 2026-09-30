@@ -161,6 +161,11 @@ class ConsolidatedWorkflowTests(unittest.TestCase):
             "node node_modules/typescript/bin/tsc --noEmit --incremental false",
             "npm run build", "npm run test -- --maxWorkers=1",
         ])
+        install = next(step for step in job["steps"] if step.get("run") == "npm ci")
+        self.assertEqual(install.get("id"), "install")
+        for step in job["steps"]:
+            if step.get("name") in {"Lint", "Typecheck", "Build", "Component tests"}:
+                self.assertEqual(step.get("if"), "${{ !cancelled() && steps.install.outcome == 'success' }}")
         self.assertIn("web-checks", workflow["jobs"]["qualification"]["needs"])
         self.assertFalse({"web-lint", "web-tests", "web-types", "web-build"} & workflow["jobs"].keys())
 
