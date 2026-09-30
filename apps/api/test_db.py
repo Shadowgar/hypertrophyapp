@@ -2,6 +2,7 @@ import os
 import re
 import socket
 from pathlib import Path
+from sqlalchemy.engine import make_url
 
 
 def _postgres_is_reachable(host: str, port: int) -> bool:
@@ -16,6 +17,23 @@ def _sqlite_fallback_url(test_name: str) -> str:
     safe_name = re.sub(r"[^a-zA-Z0-9_.-]+", "_", test_name).strip("_") or "pytest"
     db_path = Path(__file__).resolve().parent / f".tmp_{safe_name}.sqlite3"
     return f"sqlite:///{db_path}"
+
+
+def isolated_worker_database_url(explicit_url: str, worker_id: str, test_root: str) -> str:
+    """Give each pytest worker a distinct SQLite file under an explicit test root."""
+    if not re.fullmatch(r"gw\d+", worker_id):
+        raise ValueError("Unexpected pytest worker ID")
+    if not explicit_url or not test_root:
+        raise ValueError("Parallel API tests require an explicit URL and test root")
+    url = make_url(explicit_url)
+    if url.get_backend_name() != "sqlite" or not url.database or url.database == ":memory:":
+        raise ValueError("Parallel API tests require a file-backed SQLite target")
+    root = Path(test_root).resolve(strict=True)
+    database = Path(url.database).resolve()
+    if root == Path("/") or not database.is_relative_to(root):
+        raise ValueError("Parallel API database must stay under the disposable test root")
+    worker_database = database.with_name(f"{database.stem}-{worker_id}{database.suffix}")
+    return str(url.set(database=str(worker_database)))
 
 
 def configure_test_database(test_name: str) -> str:

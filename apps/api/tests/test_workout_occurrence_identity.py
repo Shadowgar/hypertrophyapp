@@ -156,7 +156,7 @@ def test_retry_original_result_and_no_resurrection_after_undo(scenario):
     assert counts(user) == (0, 1, 2)
 
 
-@pytest.mark.parametrize("field,value", [("reps", 9), ("weight", 30), ("exercise_id", "other"), ("exercise_occurrence_id", str(uuid4()))])
+@pytest.mark.parametrize("field,value", [("reps", 9), ("weight", 30), ("exercise_id", "other"), ("exercise_occurrence_id", "00000000-0000-0000-0000-000000000001")])
 def test_changed_payload_conflicts_without_mutation(scenario, field, value):
     user, headers, client = scenario
     session = plan(user, date(2026, 9, 7))

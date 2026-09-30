@@ -9,7 +9,7 @@ JOBS = {
     "tooling": ("workflow-checks",),
     "api": ("api-tests",),
     "core": ("core-tests",),
-    "web": ("web-lint", "web-tests", "web-types", "web-build"),
+    "web": ("web-checks",),
     "containers": ("container-build",),
 }
 

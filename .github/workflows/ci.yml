@@ -95,6 +95,7 @@ jobs:
         run: |
           python -m pip install -r apps/api/requirements.txt
           python -m pip install -e packages/core-engine
+          python -m pip install pytest-xdist==3.8.0
       - name: Create a disposable test target
         run: |
           set -euo pipefail
@@ -106,6 +107,8 @@ jobs:
             echo "PROGRAMS_DIR=$GITHUB_WORKSPACE/programs"
             echo "COMPILED_KNOWLEDGE_DIR=$GITHUB_WORKSPACE/knowledge/compiled"
             echo "PYTHONDONTWRITEBYTECODE=1"
+            echo "CI_TEST_ROOT=$test_root"
+            echo "HIST_TEST_ROOT=$test_root"
           } >> "$GITHUB_ENV"
       - name: Verify settings defaults with dev flag absent
         working-directory: apps/api
@@ -124,7 +127,7 @@ jobs:
         # The default assertion runs outside pytest above to avoid conftest's
         # dev-flag setup; its equivalent assertion remains mandatory.
         # Missing licensed source fixtures remain failures, not synthetic passes.
-        run: PYTHONPATH=. python -m pytest -q --ignore=tests/test_config_defaults.py
+        run: PYTHONPATH=. python -m pytest -q -n 4 --dist=loadfile --ignore=tests/test_config_defaults.py
 
   core-tests:
     needs: changes
@@ -144,7 +147,7 @@ jobs:
           PYTHONDONTWRITEBYTECODE: '1'
         run: python -m pytest -q packages/core-engine/tests
 
-  web-lint:
+  web-checks:
     needs: changes
     if: needs.changes.outputs.web == 'true'
     runs-on: ubuntu-latest
@@ -158,66 +161,24 @@ jobs:
           node-version: '24'
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
-      - run: npm ci
+      - id: install
+        run: npm ci
         working-directory: apps/web
-      - run: npm run lint
+      - name: Lint
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: npm run lint
         working-directory: apps/web
-
-  web-tests:
-    needs: changes
-    if: needs.changes.outputs.web == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@v5
-        with:
-          node-version: '24'
-          cache: npm
-          cache-dependency-path: apps/web/package-lock.json
-      - run: npm ci
+      - name: Typecheck
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: node node_modules/typescript/bin/tsc --noEmit --incremental false
         working-directory: apps/web
-      - run: npm run test -- --maxWorkers=1
+      - name: Build
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: npm run build
         working-directory: apps/web
-
-  web-types:
-    needs: changes
-    if: needs.changes.outputs.web == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@v5
-        with:
-          node-version: '24'
-          cache: npm
-          cache-dependency-path: apps/web/package-lock.json
-      - run: npm ci
-        working-directory: apps/web
-      - run: node node_modules/typescript/bin/tsc --noEmit --incremental false
-        working-directory: apps/web
-
-  web-build:
-    needs: changes
-    if: needs.changes.outputs.web == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@v5
-        with:
-          node-version: '24'
-          cache: npm
-          cache-dependency-path: apps/web/package-lock.json
-      - run: npm ci
-        working-directory: apps/web
-      - run: npm run build
+      - name: Component tests
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: npm run test -- --maxWorkers=1
         working-directory: apps/web
 
   container-build:
@@ -237,7 +198,7 @@ jobs:
 
   qualification:
     name: CI qualification
-    needs: [changes, documentation, workflow-checks, api-tests, core-tests, web-lint, web-tests, web-types, web-build, container-build]
+    needs: [changes, documentation, workflow-checks, api-tests, core-tests, web-checks, container-build]
     if: always()
     runs-on: ubuntu-latest
     steps:

@@ -17,7 +17,10 @@ def classify(paths):
     for path in paths:
         if path in CONTAINER_DEFINITIONS:
             selected["containers"] = True
-        if path.startswith(".github/") or path.startswith("scripts/ci/"):
+        if path == ".github/workflows/ci.yml":
+            # Exercise the job graph when changing the workflow itself.
+            selected["tooling"] = selected["api"] = selected["core"] = selected["web"] = True
+        elif path.startswith(".github/") or path.startswith("scripts/ci/"):
             selected["tooling"] = True
         elif path.startswith(("docs/rules/", "programs/", "knowledge/", "importers/", "reference/")):
             selected["api"] = selected["core"] = True

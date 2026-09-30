@@ -67,7 +67,9 @@ class SelectionTests(unittest.TestCase):
         self.assertTrue(classify([path, "apps/api/Dockerfile"])["containers"])
 
     def test_workflow_changes_run_tooling_checks(self):
-        self.assertTrue(classify([".github/workflows/ci.yml"])["tooling"])
+        selected = classify([".github/workflows/ci.yml"])
+        self.assertTrue(all(selected[key] for key in ("tooling", "api", "core", "web")))
+        self.assertFalse(selected["containers"])
         self.assertTrue(classify(["scripts/ci/check_docs.py"])["tooling"])
 
     def test_event_sha_cannot_be_an_option_or_ref_expression(self):
@@ -138,6 +140,44 @@ class GateTests(unittest.TestCase):
                 else:
                     needs["changes"]["outputs"]["containers"] = flag
                 self.assertTrue(any("containers" in error for error in evaluate(needs)))
+
+    def test_web_checks_are_one_required_job_and_failure_remains_visible(self):
+        self.assertEqual(JOBS["web"], ("web-checks",))
+        needs = self.needs()
+        needs["changes"]["outputs"]["web"] = "true"
+        for result in ("failure", "cancelled", "skipped"):
+            needs["web-checks"]["result"] = result
+            self.assertTrue(any("web-checks" in error for error in evaluate(needs)))
+
+
+class ConsolidatedWorkflowTests(unittest.TestCase):
+    def test_web_job_keeps_all_four_checks_after_one_install(self):
+        repo = Path(__file__).resolve().parents[3]
+        workflow = yaml.safe_load((repo / ".github/workflows/ci.yml").read_text())
+        job = workflow["jobs"]["web-checks"]
+        commands = [step["run"] for step in job["steps"] if "run" in step]
+        self.assertEqual(commands, [
+            "npm ci", "npm run lint",
+            "node node_modules/typescript/bin/tsc --noEmit --incremental false",
+            "npm run build", "npm run test -- --maxWorkers=1",
+        ])
+        install = next(step for step in job["steps"] if step.get("run") == "npm ci")
+        self.assertEqual(install.get("id"), "install")
+        for step in job["steps"]:
+            if step.get("name") in {"Lint", "Typecheck", "Build", "Component tests"}:
+                self.assertEqual(step.get("if"), "${{ !cancelled() && steps.install.outcome == 'success' }}")
+        self.assertIn("web-checks", workflow["jobs"]["qualification"]["needs"])
+        self.assertFalse({"web-lint", "web-tests", "web-types", "web-build"} & workflow["jobs"].keys())
+
+    def test_api_job_runs_all_tests_with_worker_isolation(self):
+        repo = Path(__file__).resolve().parents[3]
+        workflow = yaml.safe_load((repo / ".github/workflows/ci.yml").read_text())
+        steps = workflow["jobs"]["api-tests"]["steps"]
+        self.assertTrue(any("pytest-xdist==3.8.0" in step.get("run", "") for step in steps))
+        self.assertTrue(any("CI_TEST_ROOT=$test_root" in step.get("run", "") for step in steps))
+        command = next(step["run"] for step in steps if step.get("name") == "API behavior with explicitly enabled synthetic dev routes")
+        self.assertIn("-n 4 --dist=loadfile", command)
+        self.assertNotIn("--ignore=tests/test_phase1_full_body_source_fidelity.py", command)
 
 
 class ConfigDefaultTests(unittest.TestCase):
