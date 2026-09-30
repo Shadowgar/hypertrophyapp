@@ -36,7 +36,7 @@ def test_redistribution_keeps_order_dose_relationships_and_repeated_slots(days):
     assert output == replay
     assert source == original
     slots = [e["source_lineage"]["source_slot_id"] for session in output for e in session["exercises"]]
-    assert sorted(slots) == [f"slot-{index}" for index in range(1, 7)]
+    assert slots == [f"slot-{index}" for index in range(1, 7)]
     for session in output:
         indices = [int(e["source_lineage"]["source_slot_id"].split("-")[-1]) for e in session["exercises"]]
         assert indices == sorted(indices)

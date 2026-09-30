@@ -72,6 +72,8 @@ def _assert_lossless(source, result):
     assert len(placed) == len(original)
     assert {e["source_lineage"]["source_slot_id"]: _fingerprint(e) for e in placed} == {
         e["source_lineage"]["source_slot_id"]: _fingerprint(e) for e in original}
+    assert [e["source_lineage"]["source_slot_id"] for e in placed] == [
+        e["source_lineage"]["source_slot_id"] for e in original]
     positions = {e["source_lineage"]["source_slot_id"]: index for index, e in enumerate(original)}
     for session in result:
         indices = [positions[e["source_lineage"]["source_slot_id"]] for e in session["exercises"]]

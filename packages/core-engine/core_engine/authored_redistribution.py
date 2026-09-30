@@ -4,6 +4,7 @@ This module changes session placement only. It owns no exercise selection,
 substitution, set prescription, or date policy.
 """
 from copy import deepcopy
+from itertools import combinations
 
 
 class AuthoredAllocationInfeasible(ValueError):
@@ -81,74 +82,35 @@ def redistribute_authored_sessions(source_sessions, adapted_days):
 
     total_sets = sum(unit["sets"] for unit in units)
     targets = [total_sets // day_count + (index < total_sets % day_count) for index in range(day_count)]
-    # Preserve the existing set-balancing behavior: whole source units move,
-    # while their order within each destination day never changes.
-    buckets = [{"sets": 0, "units": [], "first": len(units)} for _ in range(day_count)]
-    for source_index, unit in enumerate(units):
-        unit["source_index"] = source_index
-        choices = []
-        for index, bucket in enumerate(buckets):
-            projected = bucket["sets"] + unit["sets"]
-            maximum = adapted_days[index].get("max_working_sets")
-            if maximum is not None and projected > int(maximum):
-                continue
-            choices.append((max(0, projected - targets[index]), abs(projected - targets[index]), bucket["sets"], index))
-        if not choices:
-            raise AuthoredAllocationInfeasible("Complete authored workload cannot fit hard target-day limits")
-        index = min(choices)[-1]
-        buckets[index]["sets"] += unit["sets"]
-        buckets[index]["units"].append(unit)
-        buckets[index]["first"] = min(buckets[index]["first"], source_index)
-    if any(not bucket["units"] for bucket in buckets):
-        raise AuthoredAllocationInfeasible("Hard relationships leave an empty target day")
+    prefix_sets = [0]
+    for unit in units:
+        prefix_sets.append(prefix_sets[-1] + unit["sets"])
 
-    def balance_score():
-        values = [bucket["sets"] for bucket in buckets]
-        return max(values) - min(values), sum((value - targets[index]) ** 2 for index, value in enumerate(values))
-
-    # Moving one whole unit can repair a greedy boundary imbalance without
-    # changing the source order of any destination session or splitting links.
-    for _ in range(len(units) * day_count):
-        before = balance_score()
-        best = None
-        for source_index, source_bucket in enumerate(buckets):
-            if len(source_bucket["units"]) <= 1:
-                continue
-            for unit in source_bucket["units"]:
-                for target_index, target_bucket in enumerate(buckets):
-                    if source_index == target_index:
-                        continue
-                    maximum = adapted_days[target_index].get("max_working_sets")
-                    if maximum is not None and target_bucket["sets"] + unit["sets"] > int(maximum):
-                        continue
-                    source_bucket["sets"] -= unit["sets"]
-                    target_bucket["sets"] += unit["sets"]
-                    score = balance_score()
-                    source_bucket["sets"] += unit["sets"]
-                    target_bucket["sets"] -= unit["sets"]
-                    candidate = (score, unit["source_index"], source_index, target_index)
-                    if score < before and (best is None or candidate < best):
-                        best = candidate
-        if best is None:
-            break
-        _, unit_index, source_index, target_index = best
-        source_bucket, target_bucket = buckets[source_index], buckets[target_index]
-        unit = next(item for item in source_bucket["units"] if item["source_index"] == unit_index)
-        source_bucket["units"].remove(unit)
-        source_bucket["sets"] -= unit["sets"]
-        target_bucket["units"].append(unit)
-        target_bucket["units"].sort(key=lambda item: item["source_index"])
-        target_bucket["sets"] += unit["sets"]
-    for bucket in buckets:
-        bucket["first"] = bucket["units"][0]["source_index"]
-    bucket_order = sorted(range(day_count), key=lambda index: (buckets[index]["first"], index))
+    # Each day receives a nonempty contiguous source range. This preserves
+    # source order across the entire week, not merely within each session.
+    best = None
+    for cuts in combinations(range(1, len(units)), day_count - 1):
+        boundaries = (0, *cuts, len(units))
+        actuals = [prefix_sets[boundaries[index + 1]] - prefix_sets[boundaries[index]] for index in range(day_count)]
+        if any(
+            adapted_days[index].get("max_working_sets") is not None
+            and actuals[index] > int(adapted_days[index]["max_working_sets"])
+            for index in range(day_count)
+        ):
+            continue
+        score = (max(actuals) - min(actuals),
+                 sum((actuals[index] - targets[index]) ** 2 for index in range(day_count)),
+                 cuts)
+        if best is None or score < best[0]:
+            best = (score, boundaries, actuals)
+    if best is None:
+        raise AuthoredAllocationInfeasible("Complete authored workload cannot fit hard target-day limits")
+    _, boundaries, actuals = best
 
     sessions = []
-    actuals = []
-    for day_index, bucket_index in enumerate(bucket_order):
+    for day_index in range(day_count):
         day = adapted_days[day_index]
-        selected = buckets[bucket_index]["units"]
-        actuals.append(buckets[bucket_index]["sets"])
+        selected = units[boundaries[day_index]:boundaries[day_index + 1]]
         sessions.append({
             "name": str(day.get("day_name") or f"Adapted Full Body #{day_index + 1}"),
             "day_role": str(day.get("day_role") or f"full_body_adapted_{day_index + 1}"),
@@ -164,5 +126,5 @@ def redistribute_authored_sessions(source_sessions, adapted_days):
         "authored_redistribution_preserved_exercise_count": len(entries),
         "authored_redistribution_preserved_weekly_sets": sum(actuals),
         "authored_hard_relationship_count": len(groups),
-        "authored_redistribution_notes": "Source-order units within each adapted day; hard relationships stay together.",
+        "authored_redistribution_notes": "Contiguous source-order ranges across the adapted week; hard relationships stay together.",
     }
