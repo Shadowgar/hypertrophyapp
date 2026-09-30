@@ -67,15 +67,18 @@ def inline_text(token):
 
 @lru_cache(maxsize=512)
 def anchors(text):
-    result, seen = set(), Counter()
+    result, used_heading_ids = set(), set()
     tokens = MARKDOWN.parse(text)
     for index, token in enumerate(tokens):
         if token.type == "heading_open":
             title = inline_text(tokens[index + 1])
             slug = re.sub(r"[^\w\s-]", "", title.lower()).replace(" ", "-")
-            count = seen[slug]
-            seen[slug] += 1
-            result.add(slug if not count else f"{slug}-{count}")
+            candidate, count = slug, 0
+            while candidate in used_heading_ids:
+                count += 1
+                candidate = f"{slug}-{count}"
+            used_heading_ids.add(candidate)
+            result.add(candidate)
     for match in re.finditer(r"\b(?:id|name)\s*=\s*['\"]([^'\"]+)['\"]", text):
         result.add(html.unescape(match[1]))
     return result

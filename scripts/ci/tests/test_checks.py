@@ -247,6 +247,12 @@ class LinkTests(unittest.TestCase):
         text = '# First **heading**\n\n## First heading\n\n<a id="custom"></a>\n'
         self.assertTrue({"first-heading", "first-heading-1", "custom"} <= anchors(text))
 
+    def test_heading_ids_avoid_collisions_with_literal_numbered_headings(self):
+        text = "# Foo\n\n# Foo-1\n\n# Foo\n\n[third](#foo-2)\n"
+        snapshot = FakeSnapshot({"docs/guide.md": text})
+        self.assertEqual({"foo", "foo-1", "foo-2"}, anchors(text))
+        self.assertIsNone(link_error(snapshot, "docs/guide.md", "#foo-2"))
+
     def test_missing_and_invalid_source_anchors_fail(self):
         snapshot = FakeSnapshot({"docs/guide.md": "# Heading\n", "scripts/example.py": "first\nsecond\n"})
         self.assertIsNone(link_error(snapshot, "docs/guide.md", "#heading"))
