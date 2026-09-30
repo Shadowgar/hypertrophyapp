@@ -1,6 +1,7 @@
 # M1-B authored constraint authority and explicit substitutions
 
-Status: owner-authorized application implementation, awaiting PR/owner review.
+Status: PR #42 merged and API/web activated under owner authorization; see
+[activation evidence](../evidence/2026-09-29-m1-authored-constraints-activation.md).
 Base main: `32865d4f36ca11538e5762dab3029d5bafd5d517`.
 Branch: `m1/authored-constraint-authority`. The owner subsequently authorized
 fixing the three PR #42 review defects, merging after fresh review/qualification,
@@ -56,7 +57,9 @@ invent a qualified alternative or historical consent.
 [manifest](../evidence/2026-09-29-m1-authored-constraints.manifest.json) bind the
 candidate tests/files. Eleven owner cases plus retry, stale/ownership, equipment,
 pain, correction/undo and variant comparability negatives are covered by isolated
-API/core/web tests. No schema/artifact/source migration. No M1-B live operations.
+API/core/web tests. No schema/artifact/source migration was required. The
+subsequent PR #42 merge and API/web activation are recorded separately in the
+[live activation evidence](../evidence/2026-09-29-m1-authored-constraints-activation.md).
 
 Review must assess metadata completeness and conservative feasibility, real
 browser/background behavior, PostgreSQL concurrent consent qualification and
