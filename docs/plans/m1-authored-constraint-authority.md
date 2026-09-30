@@ -57,7 +57,9 @@ invent a qualified alternative or historical consent.
 [manifest](../evidence/2026-09-29-m1-authored-constraints.manifest.json) bind the
 candidate tests/files. Eleven owner cases plus retry, stale/ownership, equipment,
 pain, correction/undo and variant comparability negatives are covered by isolated
-API/core/web tests. No schema/artifact/source migration. No M1-B live operations.
+API/core/web tests. No schema/artifact/source migration was required. The
+subsequent PR #42 merge and API/web activation are recorded separately in the
+[live activation evidence](../evidence/2026-09-29-m1-authored-constraints-activation.md).
 
 Review must assess metadata completeness and conservative feasibility, real
 browser/background behavior, PostgreSQL concurrent consent qualification and
