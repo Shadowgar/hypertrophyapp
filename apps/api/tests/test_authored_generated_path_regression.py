@@ -746,7 +746,9 @@ def test_same_binding_onboarding_refresh_without_progress_resets_authored_week_t
 @pytest.mark.parametrize(
     ("days_available", "expected_total_sets", "max_session_spread"),
     [
-        (2, 88, 0),
+        # A whole-slot, source-ordered cut cannot land at 44: the authored
+        # B1/B2 pair spans the nearest boundary, leaving a 42/46 split.
+        (2, 88, 4),
         (3, 88, 2),
         (4, 88, 4),
         (5, 88, 4),
@@ -773,6 +775,8 @@ def test_phase1_week1_authored_dose_preserving_redistribution_by_day_count(
     assert len(session_totals) == days_available
     assert sum(session_totals) == expected_total_sets
     assert max(session_totals) - min(session_totals) <= max_session_spread
+    if days_available == 2:
+        assert sorted(session_totals) == [42, 46]
     trace = payload["template_selection_trace"]["authored_frequency_adaptation_trace"]
     if days_available < 5:
         assert trace["authored_adaptation_policy"] == "dose_preserving_redistribution"
