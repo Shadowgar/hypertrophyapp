@@ -31,6 +31,7 @@ import {
   workingWeightFrom1RMLb,
 } from "@/lib/oneRepMax";
 import { parseRestToSeconds } from "@/lib/rest";
+import { authoredRelationshipLabels } from "@/lib/authored-relationships";
 import { resolveGuidanceText } from "@/lib/today-guidance";
 import { kgToLbs, lbsToKg, snapToHalfLb } from "@/lib/weight";
 
@@ -1447,6 +1448,9 @@ export default function TodayPage() {
                       <span className="text-zinc-700">·</span>
                       <span>{isBodyweightAuthored(exercise) ? "Bodyweight" : exercise.performed_variant ? "Record actual load" : `~${rowWorkingLb} lb`}</span>
                     </div>
+                    {authoredRelationshipLabels(exercise).map((label) => (
+                      <span key={label} className="mt-1 mr-2 inline-block text-xs text-amber-300">{label}</span>
+                    ))}
                   </button>
                 </li>
               );

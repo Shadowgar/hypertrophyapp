@@ -35,6 +35,7 @@ type AuthoredExecutionFields = {
 
   authored_prescription?: AuthoredPrescription | null;
   source_lineage?: Record<string, unknown> | null;
+  source_relationships?: Array<{ kind: string; group_id: string; source_slot_ids: string[]; source_set_ids: string[]; role: string; hard: boolean; source_row: number; raw: string }>;
   load_semantics?: string | null;
   execution_modifiers?: Record<string, unknown> | null;
   last_set_intensity_technique?: string | null;
