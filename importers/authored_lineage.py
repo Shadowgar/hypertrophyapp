@@ -55,7 +55,7 @@ def annotate_source_relationships(slots):
         slot_id = lineage["source_slot_id"]
         prescribed = slot["authored_prescription"]["sets"]
         warmups = str(slot.get("warm_up_sets") or "").strip()
-        if warmups and warmups.lower() not in {"0", "n/a", "na", "none", "-"}:
+        if warmups and warmups.lower() not in {"n/a", "na", "none", "-"} and not re.fullmatch(r"[+-]?0+(?:[.,]0+)?", warmups):
             slot["source_relationships"].append({
                 "kind": "warmup_to_working", "group_id": f"{slot_id}:warmup",
                 "source_slot_ids": [slot_id],
@@ -74,24 +74,26 @@ def annotate_source_relationships(slots):
                     "source_row": lineage["source_row"], "raw": technique,
                 })
 
-    # A numbered Superset label is source evidence; adjacency by itself is not.
+    # A numbered pair label is source evidence, with or without "Superset".
+    # Adjacency by itself is not.
     labeled = {}
     for slot in slots:
-        match = re.match(r"^superset\s+([a-z])(\d+)\s*:", str(slot.get("exercise") or ""), re.I)
+        match = re.match(r"^(?:superset\s+)?([a-z])(\d+)\s*:", str(slot.get("exercise") or ""), re.I)
         if match:
-            labeled.setdefault(match[1].upper(), []).append((int(match[2]), slot))
+            labeled.setdefault(match[1].upper(), []).append((int(match[2]), slot, match[0].rstrip(":").strip()))
     for label, members in labeled.items():
-        members.sort(key=lambda item: item[0])
-        if len(members) != 2 or [number for number, _ in members] != [1, 2]:
+        if len(members) % 2 or [number for number, _, _ in members] != [1, 2] * (len(members) // 2):
             raise ValueError(f"Incomplete authored superset {label}")
-        ids = [slot["source_lineage"]["source_slot_id"] for _, slot in members]
-        for number, slot in members:
-            slot["source_relationships"].append({
-                "kind": "superset", "group_id": f"{ids[0]}:superset:{label}",
-                "source_slot_ids": ids, "source_set_ids": [], "role": f"{label}{number}",
-                "hard": True, "source_row": slot["source_lineage"]["source_row"],
-                "raw": f"Superset {label}{number}",
-            })
+        for offset in range(0, len(members), 2):
+            pair = members[offset:offset + 2]
+            ids = [slot["source_lineage"]["source_slot_id"] for _, slot, _ in pair]
+            for number, slot, raw in pair:
+                slot["source_relationships"].append({
+                    "kind": "superset", "group_id": f"{ids[0]}:superset:{label}",
+                    "source_slot_ids": ids, "source_set_ids": [], "role": f"{label}{number}",
+                    "hard": True, "source_row": slot["source_lineage"]["source_row"],
+                    "raw": raw,
+                })
 
     for index, slot in enumerate(slots[:-1]):
         notes = str(slot.get("notes") or "").lower()

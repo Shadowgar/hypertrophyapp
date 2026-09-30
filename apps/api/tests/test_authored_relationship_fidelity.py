@@ -23,15 +23,17 @@ GOLD = Path(__file__).resolve().parents[3] / "programs" / "gold"
 
 
 def test_compiler_emits_only_explicit_source_links_and_set_parents():
-    def slot(number, name, notes=""):
+    def slot(number, name, notes="", warmups="1"):
         slot_id = f"synthetic:w1:d1:s{number}"
-        return {"exercise": name, "notes": notes, "warm_up_sets": "1",
+        return {"exercise": name, "notes": notes, "warm_up_sets": warmups,
             "source_lineage": {"source_slot_id": slot_id, "source_row": number},
             "authored_prescription": {"sets": [{"source_set_id": f"{slot_id}:set1", "intensity_technique": "Dropset"}]}}
     slots = [
         slot(1, "Superset A1: Row"), slot(2, "Superset A2: Press"),
         slot(3, "Leg Curl", "Get warmed up before hack squats later."),
         slot(4, "Hack Squat"), slot(5, "Adjacent but unrelated"),
+        slot(6, "A1: Curl"), slot(7, "A2: Extension"),
+        slot(8, "No Warm-up", warmups="0.0"),
     ]
     annotate_source_relationships(slots)
     assert [r["kind"] for r in slots[0]["source_relationships"]] == [
@@ -40,6 +42,9 @@ def test_compiler_emits_only_explicit_source_links_and_set_parents():
     assert [r["kind"] for r in slots[3]["source_relationships"]][-1] == "primer"
     assert {r["kind"] for r in slots[4]["source_relationships"]} == {
         "warmup_to_working", "technique_child"}
+    assert [r["raw"] for r in slots[5]["source_relationships"] if r["kind"] == "superset"] == ["A1"]
+    assert [r["raw"] for r in slots[6]["source_relationships"] if r["kind"] == "superset"] == ["A2"]
+    assert all(r["kind"] != "warmup_to_working" for r in slots[7]["source_relationships"])
 
 
 def test_native_artifact_rejects_broken_hard_relationship():
@@ -161,6 +166,25 @@ def test_restriction_is_slot_scoped_after_redistribution():
     assert [_fingerprint(e) for e in _slots(plain["sessions"])] == [_fingerprint(e) for e in _slots(restricted["sessions"])]
     assert any(e["authored_constraint"]["status"] != "clear" for e in _slots(restricted["sessions"]))
     assert any(e["authored_constraint"]["status"] == "ready" for e in _slots(restricted["sessions"]))
+
+
+def test_phase1_bare_pair_survives_four_day_compression():
+    template = load_program_template("pure_bodybuilding_phase_1_full_body")
+    source = next(
+        week["sessions"] for week in template["authored_weeks"]
+        if any(e["name"] == "A1: Machine Hip Abduction" for e in _slots(week["sessions"]))
+    )
+    pair = [e for e in _slots(source) if e["name"] in {
+        "A1: Machine Hip Abduction", "A2: Machine Hip Adduction"}]
+    assert len(pair) == 2
+    links = [next(r for r in e["source_relationships"] if r["kind"] == "superset") for e in pair]
+    assert links[0]["source_slot_ids"] == links[1]["source_slot_ids"]
+    assert [r["raw"] for r in links] == ["A1", "A2"]
+    adapted, _ = redistribute_authored_sessions(source, [{}, {}, {}, {}])
+    _assert_lossless(source, adapted)
+    assert any(all(e["source_lineage"]["source_slot_id"] in {
+        item["source_lineage"]["source_slot_id"] for item in session["exercises"]}
+        for e in pair) for session in adapted)
 
 
 def test_compression_without_source_week_fails_explicitly():
