@@ -1,7 +1,27 @@
 import os
+import pytest
 
 import test_db
-from test_db import configure_test_database
+from test_db import configure_test_database, isolated_worker_database_url
+
+
+def test_parallel_worker_database_stays_unique_and_disposable(tmp_path) -> None:
+    base = f"sqlite:///{tmp_path / 'api.sqlite3'}"
+    first = isolated_worker_database_url(base, "gw0", str(tmp_path))
+    second = isolated_worker_database_url(base, "gw1", str(tmp_path))
+    assert first != second
+    assert first.endswith("/api-gw0.sqlite3")
+    assert second.endswith("/api-gw1.sqlite3")
+
+
+@pytest.mark.parametrize("url,worker", [
+    ("postgresql://localhost/test", "gw0"),
+    ("sqlite:////tmp/outside.sqlite3", "gw0"),
+    ("sqlite:////tmp/outside.sqlite3", "unexpected"),
+])
+def test_parallel_worker_database_rejects_unsafe_targets(tmp_path, url, worker) -> None:
+    with pytest.raises(ValueError):
+        isolated_worker_database_url(url, worker, str(tmp_path))
 
 
 def test_configure_test_database_uses_explicit_override(monkeypatch) -> None:

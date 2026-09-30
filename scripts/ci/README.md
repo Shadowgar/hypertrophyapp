@@ -5,10 +5,10 @@ This package scopes GitHub checks to the complete changed-file diff and propagat
 | Changed scope | Applicable checks |
 |---|---|
 | Markdown / documentation JSON or YAML | Offline local links and anchors, changed JSON/YAML syntax, context-manifest paths, release-evidence schema boundaries; tooling tests and actionlint. |
-| API | API tests with explicit disposable SQLite/log targets. Settings defaults run directly in Python, outside pytest/conftest, with the dev flag absent and dotenv disabled; the remaining suite runs with synthetic dev routes explicitly enabled. |
+| API | API tests with explicit disposable SQLite/log targets, split by test file across four isolated worker databases. Settings defaults run directly in Python, outside pytest/conftest, with the dev flag absent and dotenv disabled; the remaining suite runs with synthetic dev routes explicitly enabled. |
 | Core engine | Core tests plus API tests for consumers. |
 | Programs, compiled knowledge, importers, reference inputs, runtime `docs/rules`, generated guide/catalog assets | Core and API qualification; these are not classified as narrative documentation. |
-| Web | Lockfile install, lint, unit/component tests, TypeScript and production build, reported separately. |
+| Web | One lockfile install followed by lint, TypeScript, production build and unit/component tests in a single `web-checks` job with named steps. |
 | Workflow / CI tooling | Selection/gate/checker tests, actionlint and documentation checks. |
 | API/web Dockerfiles, Compose, `.dockerignore` | Compose validation and real builds of all buildable services, preserving applicable runtime checks. Documentation and ordinary API Python changes do not select container builds. |
 | Unknown shared configuration | Conservative API, core, web and container coverage. |
@@ -16,6 +16,9 @@ This package scopes GitHub checks to the complete changed-file diff and propagat
 Container builds use the root contexts and API/web Dockerfiles defined in `docker-compose.yml`, with automatic dotenv loading disabled. They build images without starting services, running migrations or connecting to application persistence. Build failures, cancellations and unexpected skips fail qualification when container coverage applies.
 
 [CI](../../.github/workflows/ci.yml) always produces `CI qualification`, which fails if any applicable job fails, is cancelled or is skipped. Nonapplicable checks are visibly skipped, not described as validation passes. Full manual dispatch selects all categories. Push CI runs on main; PR CI runs on pull requests, avoiding duplicate branch-push suites. No branch protection or repository integration settings are changed here. Owners may separately choose the aggregate as a required check.
+
+The API job uses `pytest-xdist` `--dist=loadfile`: every test still runs, while tests in the same file stay on one worker. The test harness derives a distinct SQLite URL and log path for each worker before importing the API, and rejects a missing or non-disposable root. The full API suite remains required when API changes apply; parallel execution reduces wall time without dropping coverage. Web checks share one npm installation instead of launching four jobs. GitHub-managed CodeQL and GitGuardian integrations remain independent security checks.
+Changes to the CI workflow itself exercise API, core and web jobs as well as documentation/tooling checks, so the consolidated job graph is qualified before it is used by other PRs.
 
 ## Documentation scope and limitations
 
