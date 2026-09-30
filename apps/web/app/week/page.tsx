@@ -1,6 +1,7 @@
 "use client";
 
 import { authoredRepLabel, isBodyweightAuthored } from "@/lib/authored-prescription";
+import { authoredRelationshipLabels } from "@/lib/authored-relationships";
 
 import { useEffect, useMemo, useState } from "react";
 
@@ -89,6 +90,9 @@ function ExerciseExecutionDetails({ exercise }: Readonly<{ exercise: GeneratedWe
   return (
     <div className="rounded-md border border-white/10 bg-black/20 p-2 text-[11px] text-zinc-300">
       <p className="font-semibold text-zinc-100">{exercise.name}</p>
+      {authoredRelationshipLabels(exercise).map((label) => (
+        <span key={label} className="mr-2 inline-block text-amber-300">{label}</span>
+      ))}
       <p className="telemetry-meta">
         {exercise.sets} sets · {authoredRepLabel(exercise)} reps · {isBodyweightAuthored(exercise) ? "Bodyweight" : `${kgToLbs(exercise.recommended_working_weight)} lbs`}
       </p>

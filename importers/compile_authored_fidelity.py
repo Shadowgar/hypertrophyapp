@@ -59,6 +59,7 @@ def compile_sources(source_dir: Path, output_dir: Path) -> None:
                 for slot, canonical_slot in zip(day["slots"], canonical_day["slots"], strict=True):
                     slot["source_lineage"] = canonical_slot["source_lineage"]
                     slot["authored_prescription"] = canonical_slot["authored_prescription"]
+                    slot["source_relationships"] = canonical_slot["source_relationships"]
         existing_ids = {entry["exercise_id"] for entry in companion["exercise_library"]}
         for entry in build_exercise_library(sessions):
             if entry["exercise_id"] not in existing_ids:

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, field_validator, model_validator
-from .adaptive_schema import AuthoredPrescription
+from .adaptive_schema import AuthoredPrescription, SourceRelationship
 from core_engine.authored_prescription import uniform_rep_range
 
 
@@ -15,6 +15,7 @@ class CanonicalExercise(BaseModel):
     rep_range: list[int] | None
     authored_prescription: AuthoredPrescription | None = None
     source_lineage: dict | None = None
+    source_relationships: list[SourceRelationship] = Field(default_factory=list)
     start_weight: float = Field(ge=0)
     priority: str = "standard"
     slot_role: str | None = None

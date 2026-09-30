@@ -48,6 +48,53 @@ class AuthoredPrescription(BaseModel):
         return self
 
 
+class SourceRelationship(BaseModel):
+    kind: Literal["superset", "primer", "warmup_to_working", "technique_child"]
+    group_id: str = Field(min_length=1)
+    source_slot_ids: list[str] = Field(min_length=1)
+    source_set_ids: list[str] = Field(default_factory=list)
+    role: str = Field(min_length=1)
+    hard: bool = True
+    source_row: int = Field(ge=1)
+    raw: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def validate_members(self):
+        if len(self.source_slot_ids) != len(set(self.source_slot_ids)):
+            raise ValueError("Relationship source slots must be distinct")
+        if self.kind in {"superset", "primer"} and len(self.source_slot_ids) < 2:
+            raise ValueError("Cross-slot relationship requires at least two source slots")
+        if self.kind == "technique_child" and len(self.source_set_ids) != 1:
+            raise ValueError("Technique child requires exactly one parent source set")
+        return self
+
+
+def _validate_day_relationships(slots: list[Any]) -> None:
+    by_source_slot = {
+        str(slot.source_lineage.get("source_slot_id")): slot
+        for slot in slots if slot.source_lineage and slot.source_lineage.get("source_slot_id")
+    }
+    for slot in slots:
+        slot_id = str((slot.source_lineage or {}).get("source_slot_id") or "")
+        source_sets = {
+            item.source_set_id for item in (slot.authored_prescription.sets if slot.authored_prescription else [])
+            if item.source_set_id
+        }
+        for relation in slot.source_relationships:
+            if not slot_id or slot_id not in relation.source_slot_ids:
+                raise ValueError("Authored relationship must include its owning source slot")
+            if relation.kind in {"superset", "primer"}:
+                for member_id in relation.source_slot_ids:
+                    member = by_source_slot.get(member_id)
+                    if member is None or not any(
+                        item.group_id == relation.group_id and item.source_slot_ids == relation.source_slot_ids
+                        for item in member.source_relationships
+                    ):
+                        raise ValueError("Authored hard relationship must have reciprocal source members")
+            elif relation.source_slot_ids != [slot_id] or not set(relation.source_set_ids) <= source_sets:
+                raise ValueError("Authored set relationship must stay within its source slot")
+
+
 class RepTarget(BaseModel):
     min: int = Field(ge=1)
     max: int = Field(ge=1)
@@ -94,6 +141,7 @@ class AdaptiveSlot(BaseModel):
     substitution_option_2: str | None = None
     authored_prescription: AuthoredPrescription | None = None
     source_lineage: dict[str, Any] | None = None
+    source_relationships: list[SourceRelationship] = Field(default_factory=list)
     source_row: int | None = None
     slot_id: str = Field(min_length=1)
     order_index: int = Field(ge=1)
@@ -123,6 +171,11 @@ class AdaptiveDay(BaseModel):
             raise ValueError("slots must have unique order_index values per day")
 
         return value
+
+    @model_validator(mode="after")
+    def validate_source_relationships(self):
+        _validate_day_relationships(self.slots)
+        return self
 
 
 class AdaptiveWeek(BaseModel):
@@ -586,6 +639,7 @@ class ProgramBlueprintSlot(BaseModel):
     load_semantics: str | None = None
     authored_prescription: AuthoredPrescription | None = None
     source_lineage: dict[str, Any] | None = None
+    source_relationships: list[SourceRelationship] = Field(default_factory=list)
     source_row: int | None = None
     slot_id: str = Field(min_length=1)
     order_index: int = Field(ge=1)
@@ -631,6 +685,11 @@ class ProgramBlueprintDay(BaseModel):
             raise ValueError("slots must have unique order_index values per day")
 
         return value
+
+    @model_validator(mode="after")
+    def validate_source_relationships(self):
+        _validate_day_relationships(self.slots)
+        return self
 
 
 class ProgramBlueprintWeekTemplate(BaseModel):

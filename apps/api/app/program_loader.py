@@ -665,6 +665,7 @@ def _adaptive_slot_to_runtime_exercise(
         ],
         "authored_prescription": slot_source.get("authored_prescription"),
         "source_lineage": {**slot_source["source_lineage"], "artifact_sha256": artifact_hash} if slot_source.get("source_lineage") else None,
+        "source_relationships": slot_source.get("source_relationships") or [],
         "start_weight": 0.0 if slot_source.get("load_semantics") == "bodyweight" else 20.0,
         "load_semantics": slot_source.get("load_semantics"),
         "priority": "standard",

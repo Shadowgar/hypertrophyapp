@@ -72,7 +72,7 @@ def uniform_rep_range(prescription):
 
 
 def execution_fields(exercise):
-    return {key: deepcopy(exercise[key]) for key in ("authored_prescription", "source_lineage") if exercise.get(key) is not None}
+    return {key: deepcopy(exercise[key]) for key in ("authored_prescription", "source_lineage", "source_relationships") if exercise.get(key) is not None}
 
 
 def requires_typed_tracking(exercise):
