@@ -207,7 +207,8 @@ def test_generated_training_profile_debug_route_requires_auth() -> None:
     _reset_db()
     client = TestClient(app)
     response = client.get("/plan/generated-training-profile/debug")
-    assert response.status_code == 403
+    assert response.status_code == 401
+    assert response.headers["WWW-Authenticate"] == "Bearer"
 
 
 def test_generated_training_profile_debug_route_respects_dev_guard(monkeypatch) -> None:

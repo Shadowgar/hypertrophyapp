@@ -11,6 +11,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from importers.reference_corpus_ingest import build_reference_catalog
 from importers.reference_corpus_ingest import ExtractionResult
+from importers.reference_corpus_ingest import extract_asset_text
 
 
 def _write_minimal_xlsx(path: Path) -> None:
@@ -55,6 +56,36 @@ def _write_minimal_epub(path: Path) -> None:
 
 def _write_minimal_pdf(path: Path, payload: bytes | None = None) -> None:
     path.write_bytes(payload or b"%PDF-1.4 synthetic")
+
+
+def test_patched_pypdf_extracts_valid_synthetic_pdf_and_rejects_malformed(tmp_path: Path) -> None:
+    from pypdf import PdfWriter
+    from pypdf.generic import DecodedStreamObject, DictionaryObject, NameObject
+
+    valid = tmp_path / "synthetic.pdf"
+    writer = PdfWriter()
+    page = writer.add_blank_page(width=300, height=300)
+    font = DictionaryObject({
+        NameObject("/Type"): NameObject("/Font"),
+        NameObject("/Subtype"): NameObject("/Type1"),
+        NameObject("/BaseFont"): NameObject("/Helvetica"),
+    })
+    page[NameObject("/Resources")] = DictionaryObject({
+        NameObject("/Font"): DictionaryObject({NameObject("/F1"): writer._add_object(font)}),
+    })
+    content = DecodedStreamObject()
+    content.set_data(b"BT /F1 12 Tf 72 200 Td (Synthetic PDF text) Tj ET")
+    page[NameObject("/Contents")] = writer._add_object(content)
+    with valid.open("wb") as stream:
+        writer.write(stream)
+
+    extracted = extract_asset_text(valid)
+    assert extracted.method == "pdf_pypdf"
+    assert extracted.text.strip() == "Synthetic PDF text"
+
+    malformed = tmp_path / "malformed.pdf"
+    malformed.write_bytes(b"not a PDF")
+    assert extract_asset_text(malformed).method == "pdf_parse_failed"
 
 
 def test_reference_ingestion_emits_catalog_and_provenance(tmp_path: Path) -> None:
