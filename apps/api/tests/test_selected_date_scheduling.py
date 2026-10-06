@@ -221,6 +221,13 @@ def test_count_change_explicitly_supersedes_unstarted_identity_and_preserves_dos
     assert sum(e['sets'] for s in first.json()['sessions'] for e in s['exercises']) == sum(
         e['sets'] for s in revised.json()['sessions'] for e in s['exercises'])
     assert revised.json()['schedule']['placement_revision'] == 2
+    removed_date = (current_monday() + timedelta(days=4)).isoformat()
+    day = client.get(f'/history/day/{removed_date}', headers=headers)
+    assert day.status_code == 200, day.text
+    assert day.json()['workouts'] == [] and day.json()['totals']['planned_set_count'] == 0
+    calendar = client.get(f'/history/calendar?start_date={removed_date}&end_date={removed_date}', headers=headers)
+    assert calendar.status_code == 200, calendar.text
+    assert calendar.json()['days'][0]['program_ids'] == []
     with SessionLocal() as db:
         rows = db.query(WorkoutPlan).filter_by(user_id=user_id).all()
         assert len(rows) == 2
@@ -450,3 +457,27 @@ def test_legacy_regeneration_cannot_replace_previous_local_week_at_utc_boundary(
     with SessionLocal() as db:
         assert db.get(WorkoutPlan, plan_id).payload == saved
         assert db.query(WorkoutPlan).filter_by(user_id=user_id).count() == 1
+
+
+def test_superseded_rows_do_not_consume_history_plan_limits(scenario):
+    user_id, headers, client = scenario
+    prior = current_monday() - timedelta(days=7)
+    base = {'program_template_id':'pure_bodybuilding_phase_1_full_body', 'sessions':[{
+        'session_id':'synthetic-prior-session', 'date':prior.isoformat(),
+        'exercises':[{'id':'synthetic_press', 'name':'Synthetic Press', 'sets':3, 'primary_muscles':['chest']}]}]}
+    with SessionLocal() as db:
+        db.add(WorkoutPlan(user_id=user_id, week_start=prior, split='full_body', phase='maintenance',
+            payload=base, created_at=datetime.now(UTC)-timedelta(days=7)))
+        for _ in range(26):
+            superseded = deepcopy(base)
+            superseded['schedule'] = {'mode':'selected_dates_superseded_v1'}
+            superseded['sessions'][0]['date'] = current_monday().isoformat()
+            db.add(WorkoutPlan(user_id=user_id, week_start=current_monday(), split='full_body', phase='maintenance',
+                payload=superseded))
+        db.commit()
+    day = client.get(f'/history/day/{prior.isoformat()}', headers=headers)
+    assert day.status_code == 200, day.text
+    assert day.json()['totals']['planned_set_count'] == 3
+    calendar = client.get(f'/history/calendar?start_date={prior.isoformat()}&end_date={prior.isoformat()}', headers=headers)
+    assert calendar.status_code == 200, calendar.text
+    assert calendar.json()['days'][0]['program_ids'] == ['pure_bodybuilding_phase_1_full_body']

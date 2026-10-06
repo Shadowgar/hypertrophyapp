@@ -90,7 +90,9 @@ export default function CheckinPage() {
     setStatus("Running Sunday review...");
 
     try {
+      if (!reviewStatus) throw new Error("Weekly review status unavailable");
       const response = await api.submitWeeklyReview({
+        week_start: reviewStatus.week_start,
         body_weight: Number(bodyWeight),
         calories: Number(calories),
         protein: Number(protein),

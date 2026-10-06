@@ -3,6 +3,7 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from core_engine import build_history_analytics, build_history_calendar, build_history_day_detail
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -15,6 +16,14 @@ router = APIRouter()
 
 DbSession = Annotated[Session, Depends(get_db)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+def _visible_history_plans(db: Session, user_id: str, limit: int) -> list[WorkoutPlan]:
+    """Retained unstarted replacements are provenance, not active planned work."""
+    mode = WorkoutPlan.payload["schedule"]["mode"].as_string()
+    return (db.query(WorkoutPlan).filter(WorkoutPlan.user_id == user_id,
+        func.coalesce(mode, "") != "selected_dates_superseded_v1")
+        .order_by(WorkoutPlan.created_at.desc()).limit(limit).all())
 
 _PROGRAM_ID_SCALAR_KEYS = {
     "program_id",
@@ -213,13 +222,7 @@ def get_history_calendar(
         .all()
     )
 
-    plans = (
-        db.query(WorkoutPlan)
-        .filter(WorkoutPlan.user_id == current_user.id)
-        .order_by(WorkoutPlan.created_at.desc())
-        .limit(24)
-        .all()
-    )
+    plans = _visible_history_plans(db, current_user.id, 24)
     payload = build_history_calendar(
         log_rows=rows,
         all_log_rows_until_end=rows_until_end,
@@ -248,12 +251,6 @@ def get_history_day_detail(
         .all()
     )
 
-    plans = (
-        db.query(WorkoutPlan)
-        .filter(WorkoutPlan.user_id == current_user.id)
-        .order_by(WorkoutPlan.created_at.desc())
-        .limit(12)
-        .all()
-    )
+    plans = _visible_history_plans(db, current_user.id, 12)
     payload = build_history_day_detail(day=day, log_rows=rows, plans=plans)
     return _normalize_program_identity_payload(payload)

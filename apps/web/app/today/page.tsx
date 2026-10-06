@@ -938,7 +938,8 @@ export default function TodayPage() {
   const undoInFlight = useRef(false);
   const hasAutoLoadStarted = useRef(false);
   const isBeginWorkoutLoadInProgress = useRef(false);
-  const sorenessDismissedThisSession = useRef(false);
+  const sorenessDismissedDate = useRef<string | null>(null);
+  const sorenessPromptDate = useRef<string | null>(null);
 
   const loadWorkoutSummary = useCallback(async (workoutId: string) => {
     try {
@@ -995,13 +996,17 @@ export default function TodayPage() {
       .catch(() => setHealth("offline"));
   }, []);
 
-  const loadToday = useCallback(async (): Promise<WorkoutSession | null> => {
+  const resolveLocalToday = useCallback(async (): Promise<string> => {
     const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
-    void api.getSchedulingContext(browserTimezone).then((context) => {
-      if (typeof context.local_today === "string" && typeof context.timezone === "string") {
-        setLocalToday({ date: context.local_today, timezone: context.timezone });
-      }
-    }).catch(() => setLocalToday(null));
+    const context = await api.getSchedulingContext(browserTimezone);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(context.local_today) || !context.timezone) {
+      throw new Error("Scheduling date unavailable");
+    }
+    setLocalToday({ date: context.local_today, timezone: context.timezone });
+    return context.local_today;
+  }, []);
+
+  const loadToday = useCallback(async (): Promise<WorkoutSession | null> => {
     try {
       const data = await api.getTodayWorkout();
       currentOccurrence.current = workoutReference(data);
@@ -1108,9 +1113,9 @@ export default function TodayPage() {
       return;
     }
     isBeginWorkoutLoadInProgress.current = true;
-    const today = new Date().toISOString().slice(0, 10);
-    const sorenessSkipKey = `hypertrophy_soreness_skip:${today}`;
     try {
+      const today = await resolveLocalToday();
+      const sorenessSkipKey = `hypertrophy_soreness_skip:${today}`;
       const reviewStatus = await api.getWeeklyReviewStatus();
       if (reviewStatus.today_is_sunday && reviewStatus.review_required) {
         setMessage("Sunday review required before starting workout. Go to Check-In to submit weekly review.");
@@ -1122,7 +1127,7 @@ export default function TodayPage() {
         return;
       }
 
-      if (sorenessDismissedThisSession.current) {
+      if (sorenessDismissedDate.current === today) {
         return;
       }
 
@@ -1142,13 +1147,14 @@ export default function TodayPage() {
         return;
       }
       resetSorenessForm();
+      sorenessPromptDate.current = today;
       setShowSorenessModal(true);
     } catch {
       setMessage("Unable to verify soreness status. Try again.");
     } finally {
       isBeginWorkoutLoadInProgress.current = false;
     }
-  }, [loadToday, resetSorenessForm, showSorenessModal]);
+  }, [loadToday, resolveLocalToday, resetSorenessForm, showSorenessModal]);
 
   useEffect(() => {
     if (health !== "ok" || workout !== null || hasAutoLoadStarted.current) {
@@ -1158,11 +1164,23 @@ export default function TodayPage() {
     beginWorkoutLoad();
   }, [health, workout, beginWorkoutLoad]);
 
+  function restartForChangedSorenessDate(today: string): boolean {
+    if (sorenessPromptDate.current === today) return false;
+    resetSorenessForm();
+    sorenessPromptDate.current = null;
+    sorenessDismissedDate.current = null;
+    setShowSorenessModal(false);
+    hasAutoLoadStarted.current = false;
+    setWorkout(null);
+    return true;
+  }
+
   async function submitSorenessAndLoad() {
-    const today = new Date().toISOString().slice(0, 10);
-    const sorenessSkipKey = `hypertrophy_soreness_skip:${today}`;
     setSorenessStatus("Saving soreness...");
     try {
+      const today = await resolveLocalToday();
+      if (restartForChangedSorenessDate(today)) return;
+      const sorenessSkipKey = `hypertrophy_soreness_skip:${today}`;
       await api.createSoreness({
         entry_date: today,
         severity_by_muscle: sorenessByMuscle,
@@ -1175,6 +1193,7 @@ export default function TodayPage() {
         // ignore localStorage errors
       }
       setShowSorenessModal(false);
+      sorenessPromptDate.current = null;
       await loadToday();
     } catch {
       setSorenessStatus("Failed to save soreness");
@@ -1768,16 +1787,22 @@ export default function TodayPage() {
               <Button
                 className="w-full"
                 onClick={async () => {
-                  const today = new Date().toISOString().slice(0, 10);
-                  const sorenessSkipKey = `hypertrophy_soreness_skip:${today}`;
                   try {
-                    localStorage.setItem(sorenessSkipKey, "1");
+                    const today = await resolveLocalToday();
+                    if (restartForChangedSorenessDate(today)) return;
+                    const sorenessSkipKey = `hypertrophy_soreness_skip:${today}`;
+                    try {
+                      localStorage.setItem(sorenessSkipKey, "1");
+                    } catch {
+                      // ignore localStorage errors
+                    }
+                    sorenessDismissedDate.current = today;
+                    sorenessPromptDate.current = null;
+                    setShowSorenessModal(false);
+                    await loadToday();
                   } catch {
-                    // ignore localStorage errors
+                    setSorenessStatus("Unable to verify the local date. Try again.");
                   }
-                  sorenessDismissedThisSession.current = true;
-                  setShowSorenessModal(false);
-                  await loadToday();
                 }}
                 type="button"
                 variant="secondary"

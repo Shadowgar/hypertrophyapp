@@ -29,6 +29,7 @@ test("partial selected-date resume uses the original occurrence progress", async
   const progressPaths: string[] = [];
   globalThis.fetch = vi.fn(async (input) => {
     const url = String(input);
+    if (url.includes("/plan/scheduling-context?")) return Promise.resolve(Response.json({ timezone: "UTC", local_today: new Date().toISOString().slice(0, 10), week_start: "2026-10-05", selected_dates: [], placement_revision: 0, plan: null }));
     if (url.endsWith("/health")) return Response.json({ status: "ok" });
     if (url.endsWith("/weekly-review/status")) return Response.json({ today_is_sunday: false, review_required: false });
     if (url.endsWith("/workout/today")) return Response.json({

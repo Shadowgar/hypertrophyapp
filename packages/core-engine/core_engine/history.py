@@ -226,6 +226,8 @@ def _iter_plan_sessions_for_day(plans: list[Any], target_day: str):
     for plan in plans:
         payload = _read_attr(plan, "payload")
         payload = payload if isinstance(payload, dict) else {}
+        if (payload.get("schedule") or {}).get("mode") == "selected_dates_superseded_v1":
+            continue
         program_id = str(payload.get("program_template_id") or "").strip()
         sessions = payload.get("sessions") or []
         for session in sessions:
@@ -259,6 +261,8 @@ def _extract_planned_calendar_metadata(
     for plan in plans:
         payload = _read_attr(plan, "payload")
         payload = payload if isinstance(payload, dict) else {}
+        if (payload.get("schedule") or {}).get("mode") == "selected_dates_superseded_v1":
+            continue
         program_id = str(payload.get("program_template_id") or "").strip()
         sessions = payload.get("sessions") or []
         for session in sessions:

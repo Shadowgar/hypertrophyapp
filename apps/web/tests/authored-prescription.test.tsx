@@ -49,6 +49,7 @@ test.each(["Mechanical Dropset (on all sets)", "Integrated Partials (All Sets)",
   const mock = vi.mocked(globalThis.fetch);
   mock.mockImplementation(async (input, init) => {
     const url = String(input);
+    if (url.includes("/plan/scheduling-context?")) return Promise.resolve(Response.json({ timezone: "UTC", local_today: new Date().toISOString().slice(0, 10), week_start: "2026-10-05", selected_dates: [], placement_revision: 0, plan: null }));
     let payload: object = {};
     if (url.includes("/workout/today")) payload = workout;
     else if (url.includes("/soreness")) payload = [{ id: "example" }];
@@ -92,6 +93,7 @@ test("runner renders AMRAP, requires actual reps and avoids the numeric baseline
   const fetchMock = vi.mocked(globalThis.fetch);
   fetchMock.mockImplementation(async (input) => {
     const url = String(input);
+    if (url.includes("/plan/scheduling-context?")) return Promise.resolve(Response.json({ timezone: "UTC", local_today: new Date().toISOString().slice(0, 10), week_start: "2026-10-05", selected_dates: [], placement_revision: 0, plan: null }));
     const payload = url.includes("/workout/today") ? workout
       : url.includes("/soreness") ? [{ id: "example" }]
       : url.includes("/progress") ? { completed_total: 0, planned_total: 2, percent_complete: 0, exercises: [] }
@@ -123,6 +125,7 @@ test.each(["2", "2-3"])("runner retains %s authored warm-up sets and logs bodywe
   const fetchMock = vi.mocked(globalThis.fetch);
   fetchMock.mockImplementation(async (input) => {
     const url = String(input);
+    if (url.includes("/plan/scheduling-context?")) return Promise.resolve(Response.json({ timezone: "UTC", local_today: new Date().toISOString().slice(0, 10), week_start: "2026-10-05", selected_dates: [], placement_revision: 0, plan: null }));
     const payload = url.includes("/workout/today") ? workout
       : url.includes("/soreness") ? [{ id: "example" }]
       : url.includes("/progress") ? { completed_total: 0, planned_total: 2, percent_complete: 0, exercises: [] }
@@ -153,6 +156,7 @@ test.each([0, 5])("day summary keeps bodyweight context for %s added kg and nume
     date: new Date().toISOString().slice(0, 10), exercises: [bodyweight] };
   vi.mocked(globalThis.fetch).mockImplementation(async (input) => {
     const url = String(input);
+    if (url.includes("/plan/scheduling-context?")) return Promise.resolve(Response.json({ timezone: "UTC", local_today: new Date().toISOString().slice(0, 10), week_start: "2026-10-05", selected_dates: [], placement_revision: 0, plan: null }));
     const payload = url.includes("/workout/today") ? workout
       : url.includes("/soreness") ? [{ id: "example" }]
       : url.includes("/progress") ? { completed_total: 2, planned_total: 2, percent_complete: 100, exercises: [] }

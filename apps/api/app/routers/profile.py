@@ -27,6 +27,7 @@ from sqlalchemy.orm.attributes import flag_modified
 
 from ..config import settings
 from ..database import get_db
+from ..selected_date_plans import local_week
 from ..workout_history import effective_set_logs, valid_weekly_reviews, lock_history_user
 from ..deps import get_current_user
 from ..models import BodyMeasurementEntry, SorenessEntry, User, WeeklyCheckin, WeeklyReviewCycle, WorkoutSetLog
@@ -684,12 +685,18 @@ def weekly_checkin(
     return build_weekly_checkin_response_payload(nutrition_phase=current_user.nutrition_phase)
 
 
+def _weekly_review_today(current_user: User) -> date:
+    if current_user.scheduling_timezone:
+        return local_week(current_user.scheduling_timezone, datetime.now(UTC))[0]
+    return date.today()
+
+
 @router.get("/weekly-review/status")
 def weekly_review_status(
     db: DbSession,
     current_user: CurrentUser,
 ) -> WeeklyReviewStatusResponse:
-    today = date.today()
+    today = _weekly_review_today(current_user)
     window = resolve_weekly_review_window(today=today)
     week_start = window["week_start"]
     previous_week_start = window["previous_week_start"]
@@ -720,7 +727,8 @@ def submit_weekly_review(
     current_user: CurrentUser,
 ) -> WeeklyReviewSubmitResponse:
     lock_history_user(db, current_user.id)
-    today = date.today()
+    db.refresh(current_user)
+    today = _weekly_review_today(current_user)
     submit_window = prepare_weekly_review_submit_window(
         today=today,
         requested_week_start=payload.week_start,
