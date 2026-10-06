@@ -34,6 +34,7 @@ test("substitution modal applies choice, keeps notes visible, and persists selec
   // @ts-ignore
   globalThis.fetch.mockImplementation((input, init) => {
     const url = typeof input === "string" ? input : input.url;
+    if (url.includes("/plan/scheduling-context?")) return Promise.resolve(Response.json({ timezone: "UTC", local_today: new Date().toISOString().slice(0, 10), week_start: "2026-10-05", selected_dates: [], placement_revision: 0, plan: null }));
     if (url.endsWith("/health")) {
       return Promise.resolve(new Response(JSON.stringify({ status: "ok", date: new Date().toISOString() }), { status: 200 }));
     }

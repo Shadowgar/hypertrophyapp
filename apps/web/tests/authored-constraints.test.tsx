@@ -40,6 +40,7 @@ test("Today blocks unresolved logging and uses server confirmation while retaini
   const fetch = vi.mocked(globalThis.fetch);
   fetch.mockImplementation(async (input, init) => {
     const url = String(input);
+    if (url.includes("/plan/scheduling-context?")) return Promise.resolve(Response.json({ timezone: "UTC", local_today: new Date().toISOString().slice(0, 10), week_start: "2026-10-05", selected_dates: [], placement_revision: 0, plan: null }));
     let payload: unknown = {};
     if(url.endsWith('/workout/today')) payload = { session_id:"source-workout",workout_occurrence_id:"workout-occurrence",title:"Source workout",date:new Date().toISOString().slice(0,10),exercises:[current] };
     if(url.includes('/soreness')) payload = [{id:"example"}];
@@ -78,6 +79,7 @@ for (const video of [undefined, 'https://example.com/variant-video']) {
       performed_variant: variant, authored_constraint: {...source.authored_constraint!, status: 'confirmed', execution_status: 'ready'}};
     vi.mocked(globalThis.fetch).mockImplementation(async input => {
       const url = String(input);
+      if (url.includes("/plan/scheduling-context?")) return Promise.resolve(Response.json({ timezone: "UTC", local_today: new Date().toISOString().slice(0, 10), week_start: "2026-10-05", selected_dates: [], placement_revision: 0, plan: null }));
       const payload = url.endsWith('/workout/today') ? {session_id:'source-workout',workout_occurrence_id:'workout-occurrence',
         title:'Source workout',date:new Date().toISOString().slice(0,10),exercises:[exercise]}
         : url.includes('/soreness') ? [{id:'example'}] : url.endsWith('/progress') ? {completed_total:0,planned_total:1,percent_complete:0,exercises:[]}

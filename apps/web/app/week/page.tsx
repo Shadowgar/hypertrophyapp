@@ -3,12 +3,12 @@
 import { authoredRepLabel, isBodyweightAuthored } from "@/lib/authored-prescription";
 import { authoredRelationshipLabels } from "@/lib/authored-relationships";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Disclosure } from "@/components/ui/disclosure";
-import { UiIcon } from "@/components/ui/icons";
-import { api, getProgramDisplayName, type GeneratedWeekExercise, type GeneratedWeekPlan, type ProgramTemplateOption, type Profile } from "@/lib/api";
+import { api, getProgramDisplayName, type GeneratedWeekExercise, type GeneratedWeekPlan, type ProgramTemplateOption, type Profile, type SchedulingContext, type SelectedDatePlanRequest } from "@/lib/api";
+import { datesInWeek, formatCalendarDate } from "@/lib/calendar-date";
 import { kgToLbs } from "@/lib/weight";
 
 function formatLabel(value: string): string {
@@ -124,14 +124,6 @@ function ExerciseExecutionDetails({ exercise }: Readonly<{ exercise: GeneratedWe
   );
 }
 
-function formatSessionDate(value: string): string {
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
-    return value;
-  }
-  return parsed.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
-}
-
 function resolveGeneratedWeekReasonSummary(trace: Record<string, unknown> | undefined): string | null {
   const reasonSummary = typeof trace?.reason_summary === "string" ? trace.reason_summary.trim() : "";
   return reasonSummary.length > 0 ? reasonSummary : null;
@@ -235,7 +227,7 @@ function WeekExecutionCards({ plan }: Readonly<{ plan: GeneratedWeekPlan }>) {
     <div className="grid grid-cols-1 gap-3 xl:grid-cols-[1.3fr_1fr]">
       <div className="space-y-3">
         <p className="telemetry-kicker">Sessions</p>
-        {(plan.sessions ?? []).map((session, index) => {
+        {(plan.sessions ?? []).map((session) => {
           const exercises = session.exercises ?? [];
           const totalSets = exercises.reduce((sum, exercise) => sum + exercise.sets, 0);
           const dayRoleLabel = formatRoleLabel(session.day_role);
@@ -243,12 +235,12 @@ function WeekExecutionCards({ plan }: Readonly<{ plan: GeneratedWeekPlan }>) {
           return (
             <Disclosure
               key={session.workout_occurrence_id ?? session.session_id}
-              title={`Day ${index + 1}: ${session.title}`}
+              title={`${formatCalendarDate(session.date)}: ${session.title}`}
               badge={`${exercises.length} exercises · ${totalSets} sets`}
               defaultOpen={false}
             >
               <div className="space-y-2 text-xs text-zinc-200">
-                <p className="telemetry-meta">{formatSessionDate(session.date)}</p>
+                <p className="telemetry-meta">{formatCalendarDate(session.date)}</p>
                 <p>Lead: {formatLeadExercise(exercises[0])}</p>
                 {dayRoleLabel ? <p className="telemetry-meta">Intent: {dayRoleLabel}</p> : null}
                 <p className="telemetry-meta">
@@ -316,273 +308,186 @@ function uniqueMuscles(exercises: GeneratedWeekExercise[]): string[] {
   ).map((muscle) => formatLabel(muscle));
 }
 
-function resolvePlanTargetDays(plan: GeneratedWeekPlan | null): number | null {
-  if (!plan) {
-    return null;
-  }
-  const adaptationTarget = plan.applied_frequency_adaptation?.target_days;
-  if (typeof adaptationTarget === "number") {
-    return adaptationTarget;
-  }
-  const runtimeTrace = (plan.generation_runtime_trace ?? {}) as {
-    outcome?: { effective_days_available?: number };
-  };
-  const runtimeDays = runtimeTrace.outcome?.effective_days_available;
-  if (typeof runtimeDays === "number") {
-    return runtimeDays;
-  }
-  const profileDays = plan.user?.days_available;
-  return typeof profileDays === "number" ? profileDays : null;
+function SchedulingWarnings({ plan }: { plan: GeneratedWeekPlan }) {
+  if (!plan.schedule) return null;
+  return <div className="rounded-md border border-amber-600/40 p-3 space-y-2 text-sm" aria-label="Scheduling workload and spacing">
+    <p>Timezone: {plan.schedule.timezone}</p>
+    {(plan.schedule.spacing?.warnings ?? []).map((warning) => <p key={warning} className="text-amber-300">{warning}</p>)}
+    {plan.schedule.spacing?.gap_days.length ? <p>Calendar gaps between workouts: {plan.schedule.spacing.gap_days.join(", ")} days.</p> : null}
+    <p>Review each session’s exercises and working sets. Duration estimates are not calibrated; elapsed time is unknown. Spacing advice does not establish safety or hypertrophy results.</p>
+    <p>Date changes cannot move started workouts. Changing the number of dates replaces an entirely unstarted placement; performed history remains attached to its original occurrence.</p>
+  </div>;
 }
 
 export default function WeekPage() {
-  const [planStatus, setPlanStatus] = useState("Generate a weekly plan.");
+  const [planStatus, setPlanStatus] = useState("Choose 2–5 dates, then preview your week.");
   const [plan, setPlan] = useState<GeneratedWeekPlan | null>(null);
   const [programs, setPrograms] = useState<ProgramTemplateOption[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
-  const [targetDays, setTargetDays] = useState<number>(3);
+  const [context, setContext] = useState<SchedulingContext | null>(null);
+  const contextRef = useRef<SchedulingContext | null>(null);
+  const [timezone, setTimezone] = useState("");
+  const timezoneRef = useRef("");
+  const [selectedDates, setSelectedDates] = useState<string[]>([]);
+  const [preview, setPreview] = useState<{ plan: GeneratedWeekPlan; request: SelectedDatePlanRequest; digest: string } | null>(null);
+  const contextRequest = useRef(0);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSavingProgramSelection, setIsSavingProgramSelection] = useState(false);
   const [generatedOnboardingPrompt, setGeneratedOnboardingPrompt] = useState<string | null>(null);
-
-  const commandDeck = useMemo(() => {
-    if (!plan) {
-      return null;
-    }
-    const totalPlannedSets = (plan.sessions ?? []).reduce(
-      (sum, session) => sum + (session.exercises ?? []).reduce((s, ex) => s + (ex.sets ?? 0), 0),
-      0,
-    );
-    const volumeByMuscle = Object.values(plan.weekly_volume_by_muscle ?? {}).reduce(
-      (sum, value) => sum + value,
-      0,
-    );
-    return {
-      totalPlannedSets,
-      volumeByMuscle,
-      underTarget: plan.muscle_coverage?.under_target_muscles ?? [],
-      leadSession: (plan.sessions ?? [])[0] ?? null,
-    };
-  }, [plan]);
-  const requiresSundayReview = planStatus.startsWith("Sunday review required.");
-  const generationFailed = planStatus.startsWith("Failed to generate week plan:");
-  const awaitingInitialGeneration = !plan && !requiresSundayReview && !generationFailed;
-  const profileSelectedProgramId = profile?.selected_program_id ?? null;
-  const selectionDirty = selectedProgramId !== profileSelectedProgramId;
-  const profileDaysAvailable = typeof profile?.days_available === "number" ? profile.days_available : null;
-  const daysDirty = profileDaysAvailable !== null && targetDays !== profileDaysAvailable;
-  const preferenceDirty = selectionDirty || daysDirty;
+  const preferenceDirty = selectedProgramId !== (profile?.selected_program_id ?? null);
 
   async function saveProgramPreference() {
-    if (!preferenceDirty || isSavingProgramSelection) {
-      return;
-    }
+    if (!preferenceDirty || isSavingProgramSelection) return;
     setIsSavingProgramSelection(true);
+    setPreview(null);
     try {
-      let updatedProfile = profile;
-      if (daysDirty) {
-        updatedProfile = await api.updateProfile({ days_available: targetDays });
-        setProfile(updatedProfile);
-      }
-
-      if (selectionDirty) {
-        const nextMode = selectedProgramId ? "manual" : "auto";
-        const updated = await api.updateProgramSelection({
-          selected_program_id: selectedProgramId,
-          program_selection_mode: nextMode,
-        });
-        updatedProfile = updated;
-        setProfile(updated);
-        setSelectedProgramId(updated.selected_program_id ?? null);
-      }
-
-      if (updatedProfile?.selected_program_id === "full_body_v1") {
+      const updated = await api.updateProgramSelection({ selected_program_id: selectedProgramId, program_selection_mode: selectedProgramId ? "manual" : "auto" });
+      setProfile(updated);
+      setSelectedProgramId(updated.selected_program_id ?? null);
+      if (updated.selected_program_id === "full_body_v1") {
         try {
-          const onboardingState = await api.getGeneratedOnboarding();
-          setGeneratedOnboardingPrompt(
-            onboardingState.generated_onboarding_complete
-              ? "Generated onboarding preferences complete."
-              : "Generated onboarding recommended to improve plan fit. You can still generate with defaults.",
-          );
-        } catch {
-          setGeneratedOnboardingPrompt("Generated onboarding recommended to improve plan fit.");
-        }
-      } else {
-        setGeneratedOnboardingPrompt(null);
-      }
-      if (selectionDirty && daysDirty) {
-        setPlanStatus(`Preferences saved: ${targetDays} training days and ${selectedProgramId ? getProgramDisplayName({ id: selectedProgramId }) : "Auto selection"}. Generate Week when ready.`);
-      } else if (daysDirty) {
-        setPlanStatus(`Preferences saved: ${targetDays} training days. Generate Week when ready.`);
-      } else {
-        setPlanStatus(
-          selectedProgramId
-            ? `Program preference saved: ${getProgramDisplayName({ id: selectedProgramId })}. Generate Week when ready.`
-            : "Program preference saved: Auto selection. Generate Week when ready.",
-        );
-      }
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : "Unknown error";
-      setPlanStatus(`Failed to save preferences: ${detail}`);
-    } finally {
-      setIsSavingProgramSelection(false);
-    }
+          const onboarding = await api.getGeneratedOnboarding();
+          setGeneratedOnboardingPrompt(onboarding.generated_onboarding_complete ? "Generated onboarding preferences complete." : "Generated onboarding recommended to improve plan fit.");
+        } catch { setGeneratedOnboardingPrompt("Generated onboarding recommended to improve plan fit."); }
+      } else setGeneratedOnboardingPrompt(null);
+      setPlanStatus(selectedProgramId ? `Program preference saved: ${getProgramDisplayName({ id: selectedProgramId })}. Preview your dates when ready.` : "Program preference saved: Auto selection. Preview your dates when ready.");
+    } catch (error) { setPlanStatus(`Failed to save preferences: ${error instanceof Error ? error.message : "Unknown error"}`); }
+    finally { setIsSavingProgramSelection(false); }
   }
 
-  async function generate() {
+  async function refreshContext(suggestedTimezone: string, force = false): Promise<SchedulingContext> {
+    const requestNumber = ++contextRequest.current;
+    const loaded = await api.getSchedulingContext(suggestedTimezone);
+    if (requestNumber !== contextRequest.current) throw new Error("Scheduling context changed. Try again.");
+    const previous = contextRef.current;
+    const changed = !previous || loaded.week_start !== previous.week_start || loaded.timezone !== previous.timezone || loaded.placement_revision !== previous.placement_revision;
+    contextRef.current = loaded;
+    setContext(loaded);
+    setPlan(loaded.plan?.week_start === loaded.week_start ? loaded.plan : null);
+    if (changed || force) {
+      const allowed = datesInWeek(loaded.week_start);
+      setSelectedDates(loaded.selected_dates.filter((date) => allowed.includes(date)));
+      setPreview(null);
+      setTimezone(loaded.timezone);
+      timezoneRef.current = loaded.timezone;
+      if (previous && changed) setPlanStatus("The local week or placement changed. Review your dates and preview again.");
+    }
+    return loaded;
+  }
+
+  function makeRequest(): SelectedDatePlanRequest | null {
+    if (!context || selectedDates.length < 2 || selectedDates.length > 5 || !timezone.trim()) return null;
+    return { template_id: selectedProgramId ?? plan?.program_template_id ?? null, week_start: context.week_start,
+      selected_dates: [...selectedDates].sort(), timezone: timezone.trim(), expected_placement_revision: context.placement_revision };
+  }
+
+  async function schedule(activate = false) {
+    const request = activate ? preview?.request : makeRequest();
+    if (!request) return;
+    if (activate && JSON.stringify(request) !== JSON.stringify(makeRequest())) {
+      setPreview(null);
+      setPlanStatus("Your inputs changed. Preview your selected dates again.");
+      return;
+    }
     setIsGenerating(true);
     try {
-      if (profile && targetDays !== profile.days_available) {
-        const updatedProfile = await api.updateProfile({ days_available: targetDays });
-        setProfile(updatedProfile);
-      }
-      const reviewStatus = await api.getWeeklyReviewStatus();
-      if (reviewStatus.today_is_sunday && reviewStatus.review_required) {
-        setPlan(null);
-        setPlanStatus("Sunday review required. Open Check-In, submit weekly review, then generate the next week.");
+      const fresh = await refreshContext(request.timezone);
+      if (fresh.week_start !== request.week_start || fresh.placement_revision !== request.expected_placement_revision || fresh.timezone !== context?.timezone) {
+        setPreview(null);
+        setPlanStatus("The local week or placement changed. Review your dates and preview again.");
         return;
       }
-      const templateId = selectedProgramId ?? plan?.program_template_id ?? null;
-      const data = await api.generateWeek(templateId, targetDays);
-      setPlan(data);
-      setPlanStatus(`Week generated for ${getProgramDisplayName({ id: data.program_template_id })}.`);
+      if (activate) {
+        if (!preview?.digest) throw new Error("Unable to verify this preview. Try previewing your dates again.");
+        await api.activateSelectedDates({ ...request, expected_preview_digest: preview.digest });
+        await refreshContext(request.timezone, true);
+        setPlanStatus("Selected dates activated. Today follows your local calendar dates.");
+      } else {
+        const data = await api.previewSelectedDates(request);
+        if (contextRef.current?.week_start !== request.week_start || contextRef.current?.placement_revision !== request.expected_placement_revision) return;
+        const digest = data.schedule?.preview_digest;
+        if (!digest || !/^[a-f0-9]{64}$/.test(digest)) throw new Error("Unable to verify this preview. Try previewing your dates again.");
+        setPreview({ plan: data, request, digest });
+        setPlanStatus("Preview only. Review workload and spacing, then activate these dates.");
+      }
     } catch (error) {
-      const detail = error instanceof Error ? error.message : "Unknown error";
-      setPlan(null);
-      setPlanStatus(`Failed to generate week plan: ${detail}`);
-    } finally {
-      setIsGenerating(false);
-    }
+      setPreview(null);
+      if (activate) await refreshContext(request.timezone).catch(() => undefined);
+      setPlanStatus(`Failed to ${activate ? "activate" : "preview"} selected dates: ${error instanceof Error ? error.message : "Unknown error"}`);
+    } finally { setIsGenerating(false); }
   }
 
   useEffect(() => {
     let mounted = true;
-    Promise.all([
-      api.listPrograms().catch(() => [] as ProgramTemplateOption[]),
-      api.getProfile().catch(() => null as Profile | null),
-      api.getLatestWeekPlan().catch(() => null as GeneratedWeekPlan | null),
-    ]).then(([list, loadedProfile, latestPlan]) => {
-      if (!mounted) {
-        return;
-      }
-      setPrograms(list);
-      setProfile(loadedProfile);
-      setSelectedProgramId(loadedProfile?.selected_program_id ?? null);
-      const resolvedTargetDays = resolvePlanTargetDays(latestPlan) ?? loadedProfile?.days_available ?? 3;
-      setTargetDays(Math.max(2, Math.min(5, resolvedTargetDays)));
-      if (latestPlan) {
-        setPlan(latestPlan);
-        setPlanStatus(`Week generated for ${getProgramDisplayName({ id: latestPlan.program_template_id })}.`);
-      }
+    const requests = contextRequest;
+    const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+    timezoneRef.current = browserTimezone;
+    Promise.all([api.listPrograms().catch(() => [] as ProgramTemplateOption[]), api.getProfile().catch(() => null as Profile | null)])
+      .then(([list, loadedProfile]) => {
+        if (!mounted) return;
+        setPrograms(list); setProfile(loadedProfile); setSelectedProgramId(loadedProfile?.selected_program_id ?? null);
+      });
+    const refresh = () => refreshContext(timezoneRef.current || browserTimezone).catch((error) => {
+      if (mounted) { setPreview(null); setPlanStatus(`Could not load current local week: ${error instanceof Error ? error.message : "Unknown error"}`); }
     });
-
-    return () => {
-      mounted = false;
-    };
+    void refresh();
+    window.addEventListener("focus", refresh);
+    const onVisibility = () => { if (document.visibilityState === "visible") void refresh(); };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => { mounted = false; ++requests.current; window.removeEventListener("focus", refresh); document.removeEventListener("visibilitychange", onVisibility); };
   }, []);
 
-  return (
-    <div className="space-y-4">
-      <h1 className="ui-title-page">Week Plan</h1>
-
-      <Button aria-label="Generate week plan" className="w-full min-h-[48px] text-sm font-semibold" onClick={generate} disabled={isGenerating}>
-        <span className="inline-flex items-center gap-2">
-          <UiIcon name="plan" className="ui-icon--action" />
-          {isGenerating ? "Generating Week..." : plan ? "Regenerate Week" : "Generate Week"}
-        </span>
-      </Button>
-
-      <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-2">
-        <label className="flex flex-col gap-2 text-sm text-zinc-200" htmlFor="week-target-days">
-          <span className="font-medium">Target training days</span>
-          <select
-            id="week-target-days"
-            aria-label="Week target training days selector"
-            className="ui-select"
-            value={String(targetDays)}
-            onChange={(event) => setTargetDays(Number(event.target.value))}
-          >
-            {["2", "3", "4", "5"].map((value) => (
-              <option key={value} value={value}>
-                {value} days
-              </option>
-            ))}
-          </select>
-        </label>
-        <p className="text-xs text-zinc-400">
-          Generating for <span className="font-medium text-zinc-200">{targetDays}</span> training day{targetDays === 1 ? "" : "s"} this week.
-          {profile ? ` Profile default: ${profile.days_available} day${profile.days_available === 1 ? "" : "s"}.` : ""}
-        </p>
+  const visiblePlan = preview?.plan ?? plan;
+  const plannedSets = visiblePlan?.sessions.reduce((sum, session) => sum + session.exercises.reduce((total, exercise) => total + exercise.sets, 0), 0);
+  return <div className="space-y-4">
+    <h1 className="ui-title-page">Week Plan</h1>
+    <section className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-3" aria-label="Current week scheduling">
+      <label htmlFor="scheduling-timezone" className="block space-y-2 text-sm">
+        <span>Scheduling timezone</span>
+        <input id="scheduling-timezone" className="ui-input w-full min-h-[44px]" value={timezone} disabled={isGenerating} placeholder="America/New_York"
+          onChange={(event) => { timezoneRef.current = event.target.value; setTimezone(event.target.value); setPreview(null); }}
+          onBlur={() => { if (timezone.trim() && timezone.trim() !== context?.timezone) void refreshContext(timezone.trim()).catch((error) => {
+            setPreview(null); setPlanStatus(`Could not load timezone: ${error instanceof Error ? error.message : "Unknown error"}`);
+          }); }} />
+      </label>
+      <p className="text-xs text-zinc-400">Confirm this IANA timezone when activating your dates. Dates use your local Monday–Sunday week.</p>
+      {context ? <fieldset disabled={isGenerating}>
+        <legend className="mb-2 text-sm">{`Current week: ${formatCalendarDate(context.week_start)} · Today: ${formatCalendarDate(context.local_today)}`}</legend>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {datesInWeek(context.week_start).map((date) => <label key={date} className="flex min-h-[48px] items-center gap-3 rounded-md border border-zinc-700 px-3 py-2 text-sm">
+            <input type="checkbox" className="h-5 w-5" checked={selectedDates.includes(date)} onChange={() => {
+              setSelectedDates((current) => current.includes(date) ? current.filter((item) => item !== date) : [...current, date].sort()); setPreview(null);
+            }} /><span>{formatCalendarDate(date)}</span>
+          </label>)}
+        </div>
+      </fieldset> : null}
+      <p className="text-sm" aria-live="polite">{selectedDates.length} of 2–5 dates selected</p>
+      {context && selectedDates.some((date) => date < context.local_today) ? <p className="text-sm text-amber-300">Elapsed dates are placements only; selecting them does not create performed workout history.</p> : null}
+      <Button aria-label="Preview selected dates" className="w-full min-h-[48px]" disabled={isGenerating || isSavingProgramSelection || !makeRequest()} onClick={() => schedule()}>{isGenerating ? "Checking dates..." : "Preview selected dates"}</Button>
+      {preview ? <Button aria-label="Activate selected dates" className="w-full min-h-[48px]" disabled={isGenerating} onClick={() => schedule(true)}>Activate selected dates</Button> : null}
+    </section>
+    <Disclosure title="Program Override" badge={selectedProgramId ? "custom" : "auto"} defaultOpen={false}>
+      <div className="space-y-2">
+        <select id="week-program" aria-label="Week program override selector" className="ui-select" value={selectedProgramId ?? ""} disabled={isGenerating}
+          onChange={(event) => { setSelectedProgramId(event.target.value || null); setPreview(null); }}>
+          <option value="">Auto — trainer&apos;s recommended program</option>
+          {programs.map((program) => <option key={program.id} value={program.id}>{getProgramDisplayName(program)}</option>)}
+        </select>
+        <Button aria-label="Save program preference" className="min-h-[44px] px-3 text-xs font-semibold" onClick={saveProgramPreference} disabled={isGenerating || isSavingProgramSelection || !preferenceDirty}>{isSavingProgramSelection ? "Saving..." : "Save Preferences"}</Button>
+        <p className="text-xs text-zinc-500">Save program preference separately. Activate dates after reviewing the preview.</p>
+        {generatedOnboardingPrompt ? <div className="rounded-md border border-zinc-700 p-2 text-xs"><p>{generatedOnboardingPrompt}</p><a className="underline" href="/generated-onboarding">Update generated plan preferences</a></div> : null}
       </div>
-
-      <Disclosure title="Program Override" badge={selectedProgramId ? "custom" : "auto"} defaultOpen={false}>
-        <div className="space-y-2">
-          <select id="week-program" aria-label="Week program override selector" className="ui-select" value={selectedProgramId ?? ""} onChange={(e) => setSelectedProgramId(e.target.value || null)}>
-            <option value="">Auto — trainer&apos;s recommended program</option>
-            {programs.map((p) => <option key={p.id} value={p.id}>{getProgramDisplayName(p)}</option>)}
-          </select>
-          <div className="flex items-center gap-2">
-            <Button
-              aria-label="Save program preference"
-              className="min-h-[40px] px-3 text-xs font-semibold"
-              onClick={saveProgramPreference}
-              disabled={isSavingProgramSelection || !preferenceDirty}
-            >
-              {isSavingProgramSelection ? "Saving..." : "Save Preferences"}
-            </Button>
-            <p className="text-xs text-zinc-500">
-              Save preference without regenerating. Generate Week still respects logged-progress safety guard.
-            </p>
-          </div>
-          {generatedOnboardingPrompt ? (
-            <div className="rounded-md border border-zinc-700 bg-zinc-900/60 p-2 text-xs text-zinc-300">
-              <p>{generatedOnboardingPrompt}</p>
-              <a className="mt-1 inline-flex underline decoration-zinc-500 underline-offset-2" href="/generated-onboarding">
-                Update generated plan preferences
-              </a>
-            </div>
-          ) : null}
-        </div>
-      </Disclosure>
-
-      {planStatus ? (
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3">
-          <p className="text-sm text-zinc-200">{planStatus}</p>
-          {requiresSundayReview ? (
-            <a className="mt-2 inline-flex items-center justify-center rounded-md border border-white/10 bg-zinc-900/70 px-3 py-2 text-xs text-zinc-100 hover:bg-zinc-900" href="/checkin">
-              Open Check-In
-            </a>
-          ) : null}
-        </div>
-      ) : null}
-
-      {commandDeck ? (
-        <div className="grid grid-cols-3 gap-2">
-          <div className="rounded-md border border-white/10 bg-zinc-900/70 p-2 text-center">
-            <p className="text-[10px] uppercase tracking-wide text-zinc-500">Planned sets</p>
-            <p className="text-sm font-semibold text-zinc-100">{commandDeck.totalPlannedSets}</p>
-            {commandDeck.volumeByMuscle !== commandDeck.totalPlannedSets ? (
-              <p className="text-[10px] text-zinc-500">Volume by muscle: {commandDeck.volumeByMuscle}</p>
-            ) : null}
-          </div>
-          <div className="rounded-md border border-white/10 bg-zinc-900/70 p-2 text-center">
-            <p className="text-[10px] uppercase tracking-wide text-zinc-500">Lead</p>
-            <p className="text-sm font-semibold text-zinc-100 truncate">{commandDeck.leadSession?.title ?? "—"}</p>
-          </div>
-          <div className="rounded-md border border-white/10 bg-zinc-900/70 p-2 text-center">
-            <p className="text-[10px] uppercase tracking-wide text-zinc-500">Gaps</p>
-            <p className="text-sm font-semibold text-zinc-100">{commandDeck.underTarget.length > 0 ? commandDeck.underTarget.map((muscle) => formatLabel(muscle)).join(", ") : "none"}</p>
-          </div>
-        </div>
-      ) : null}
-
-      {plan ? (
-        <>
-          <WeekOverviewCards plan={plan} selectedProgramId={selectedProgramId} />
-          <WeekExecutionCards plan={plan} />
-        </>
-      ) : null}
+    </Disclosure>
+    <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3" role="status">
+      <p className="text-sm text-zinc-200">{planStatus}</p>
     </div>
-  );
+    {visiblePlan ? <>
+      {preview ? <p className="text-sm font-semibold">Placement preview — awaiting activation</p> : null}
+      <p className="text-sm">Planned sets: {plannedSets}</p>
+      <SchedulingWarnings plan={visiblePlan} />
+      <WeekOverviewCards plan={visiblePlan} selectedProgramId={selectedProgramId} />
+      <WeekExecutionCards plan={visiblePlan} />
+    </> : null}
+  </div>;
 }

@@ -1,20 +1,30 @@
-from datetime import date, datetime, time, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from core_engine import build_history_analytics, build_history_calendar, build_history_day_detail
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..workout_history import effective_set_logs
+from ..history_dates import performed_log_rows
+from ..selected_date_plans import local_week
 from ..deps import get_current_user
-from ..models import BodyMeasurementEntry, User, WeeklyCheckin, WorkoutPlan, WorkoutSetLog
+from ..models import BodyMeasurementEntry, User, WeeklyCheckin, WorkoutPlan
 from ..program_loader import resolve_administered_program_id
 
 router = APIRouter()
 
 DbSession = Annotated[Session, Depends(get_db)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+def _visible_history_plans(db: Session, user_id: str, limit: int) -> list[WorkoutPlan]:
+    """Retained unstarted replacements are provenance, not active planned work."""
+    mode = WorkoutPlan.payload["schedule"]["mode"].as_string()
+    return (db.query(WorkoutPlan).filter(WorkoutPlan.user_id == user_id,
+        func.coalesce(mode, "") != "selected_dates_superseded_v1")
+        .order_by(WorkoutPlan.created_at.desc()).limit(limit).all())
 
 _PROGRAM_ID_SCALAR_KEYS = {
     "program_id",
@@ -32,10 +42,10 @@ def _monday_of(value: date) -> date:
     return value - timedelta(days=value.weekday())
 
 
-def _date_window(start_date: date, end_date: date) -> tuple[datetime, datetime]:
-    start_datetime = datetime.combine(start_date, time.min)
-    end_datetime = datetime.combine(end_date + timedelta(days=1), time.min)
-    return start_datetime, end_datetime
+def _history_today(user: User) -> date:
+    if user.scheduling_timezone:
+        return local_week(user.scheduling_timezone, datetime.now(UTC))[0]
+    return date.today()
 
 
 def _normalize_program_identity_payload(value: Any, *, key_hint: str | None = None) -> Any:
@@ -68,29 +78,22 @@ def get_exercise_history(
     db: DbSession,
     current_user: CurrentUser,
 ) -> dict:
-    rows = (
-        effective_set_logs(db)
-        .filter(
-            WorkoutSetLog.user_id == current_user.id,
-            WorkoutSetLog.exercise_id == exercise_id,
-        )
-        .order_by(WorkoutSetLog.created_at.desc())
-        .limit(50)
-        .all()
-    )
+    rows = performed_log_rows(db, user_id=current_user.id, exercise_id=exercise_id,
+        descending=True, limit=50)
     history = [
         {
-            "id": row.id,
-            "primary_exercise_id": row.primary_exercise_id,
-            "workout_occurrence_id": row.workout_occurrence_id,
-            "exercise_occurrence_id": row.exercise_occurrence_id,
-            "source_lineage": (row.replay_context or {}).get("planned_exercise", {}).get("source_lineage"),
-            "performed_variant": (row.replay_context or {}).get("planned_exercise", {}).get("performed_variant"),
-            "substitution_consent": (row.replay_context or {}).get("planned_exercise", {}).get("substitution_consent"),
-            "reps": row.reps,
-            "weight": row.weight,
-            "set_index": row.set_index,
-            "created_at": row.created_at.isoformat(),
+            "id": row['id'],
+            "primary_exercise_id": row['primary_exercise_id'],
+            "workout_occurrence_id": row['workout_occurrence_id'],
+            "exercise_occurrence_id": row['exercise_occurrence_id'],
+            "source_lineage": (row['replay_context'] or {}).get("planned_exercise", {}).get("source_lineage"),
+            "performed_variant": (row['replay_context'] or {}).get("planned_exercise", {}).get("performed_variant"),
+            "substitution_consent": (row['replay_context'] or {}).get("planned_exercise", {}).get("substitution_consent"),
+            "reps": row['reps'],
+            "weight": row['weight'],
+            "set_index": row['set_index'],
+            "created_at": row['created_at'].isoformat(),
+            "performed_date": row['performed_date'].isoformat(),
         }
         for row in rows
     ]
@@ -133,8 +136,8 @@ def get_history_analytics(
 ) -> dict[str, Any]:
     capped_weeks = max(2, min(26, int(limit_weeks)))
     capped_checkin_limit = max(4, min(52, int(checkin_limit)))
-    start_date = _monday_of(date.today()) - timedelta(days=(capped_weeks - 1) * 7)
-    start_datetime = datetime.combine(start_date, time.min)
+    today = _history_today(current_user)
+    start_date = _monday_of(today) - timedelta(days=(capped_weeks - 1) * 7)
 
     checkin_rows = (
         db.query(WeeklyCheckin)
@@ -144,15 +147,7 @@ def get_history_analytics(
         .all()
     )
 
-    log_rows = (
-        effective_set_logs(db)
-        .filter(
-            WorkoutSetLog.user_id == current_user.id,
-            WorkoutSetLog.created_at >= start_datetime,
-        )
-        .order_by(WorkoutSetLog.created_at.asc())
-        .all()
-    )
+    log_rows = performed_log_rows(db, user_id=current_user.id, start_date=start_date, end_date=today)
 
     measurement_rows = (
         db.query(BodyMeasurementEntry)
@@ -170,6 +165,7 @@ def get_history_analytics(
         measurement_rows=measurement_rows,
         limit_weeks=capped_weeks,
         checkin_limit=capped_checkin_limit,
+        today=today,
     )
     return _normalize_program_identity_payload(payload)
 
@@ -181,7 +177,7 @@ def get_history_calendar(
     start_date: date | None = None,
     end_date: date | None = None,
 ) -> dict[str, Any]:
-    today = date.today()
+    today = _history_today(current_user)
     resolved_end = end_date or today
     resolved_start = start_date or (resolved_end - timedelta(days=27))
 
@@ -190,42 +186,17 @@ def get_history_calendar(
     if (resolved_end - resolved_start).days > 180:
         raise HTTPException(status_code=400, detail="date window too large (max 180 days)")
 
-    start_dt, end_dt = _date_window(resolved_start, resolved_end)
+    rows = performed_log_rows(db, user_id=current_user.id, start_date=resolved_start, end_date=resolved_end)
+    rows_until_end = performed_log_rows(db, user_id=current_user.id, end_date=resolved_end)
 
-    rows = (
-        effective_set_logs(db)
-        .filter(
-            WorkoutSetLog.user_id == current_user.id,
-            WorkoutSetLog.created_at >= start_dt,
-            WorkoutSetLog.created_at < end_dt,
-        )
-        .order_by(WorkoutSetLog.created_at.asc())
-        .all()
-    )
-
-    rows_until_end = (
-        effective_set_logs(db)
-        .filter(
-            WorkoutSetLog.user_id == current_user.id,
-            WorkoutSetLog.created_at < end_dt,
-        )
-        .order_by(WorkoutSetLog.created_at.asc())
-        .all()
-    )
-
-    plans = (
-        db.query(WorkoutPlan)
-        .filter(WorkoutPlan.user_id == current_user.id)
-        .order_by(WorkoutPlan.created_at.desc())
-        .limit(24)
-        .all()
-    )
+    plans = _visible_history_plans(db, current_user.id, 24)
     payload = build_history_calendar(
         log_rows=rows,
         all_log_rows_until_end=rows_until_end,
         plans=plans,
         start_date=resolved_start,
         end_date=resolved_end,
+        today=today,
     )
     return _normalize_program_identity_payload(payload)
 
@@ -236,24 +207,8 @@ def get_history_day_detail(
     db: DbSession,
     current_user: CurrentUser,
 ) -> dict[str, Any]:
-    start_dt, end_dt = _date_window(day, day)
-    rows = (
-        effective_set_logs(db)
-        .filter(
-            WorkoutSetLog.user_id == current_user.id,
-            WorkoutSetLog.created_at >= start_dt,
-            WorkoutSetLog.created_at < end_dt,
-        )
-        .order_by(WorkoutSetLog.created_at.asc(), WorkoutSetLog.set_index.asc())
-        .all()
-    )
+    rows = performed_log_rows(db, user_id=current_user.id, start_date=day, end_date=day)
 
-    plans = (
-        db.query(WorkoutPlan)
-        .filter(WorkoutPlan.user_id == current_user.id)
-        .order_by(WorkoutPlan.created_at.desc())
-        .limit(12)
-        .all()
-    )
+    plans = _visible_history_plans(db, current_user.id, 12)
     payload = build_history_day_detail(day=day, log_rows=rows, plans=plans)
     return _normalize_program_identity_payload(payload)

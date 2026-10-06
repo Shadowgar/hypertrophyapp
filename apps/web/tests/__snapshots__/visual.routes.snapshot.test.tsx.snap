@@ -15,7 +15,7 @@ exports[`visual snapshot: today route initial state 1`] = `
     <p
       class="ui-meta text-zinc-400"
     >
-      Tue, Mar 17
+      Tue, Mar 17 · browser local date
     </p>
   </div>
   <div
@@ -47,6 +47,7 @@ exports[`visual snapshot: today route initial state 1`] = `
   </div>
   <div
     class="main-card main-card--shell space-y-2 ui-body-sm"
+    role="status"
   >
     <p>
       No workout loaded
@@ -64,95 +65,132 @@ exports[`visual snapshot: week route 1`] = `
   >
     Week Plan
   </h1>
-  <button
-    aria-label="Generate week plan"
-    class="inline-flex items-center justify-center rounded-md transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 border border-[var(--ui-edge-active)] bg-[var(--ui-accent-active)] text-white shadow-[var(--ui-depth-shadow-2)] hover:bg-[rgba(220,38,38,0.25)] hover:shadow-[var(--ui-glow-active),var(--ui-depth-shadow-3)] h-10 px-4 py-2 w-full min-h-[48px] text-sm font-semibold"
-  >
-    <span
-      class="inline-flex items-center gap-2"
-    >
-      <svg
-        aria-hidden="true"
-        class="ui-icon ui-icon--action"
-        fill="none"
-        stroke="currentColor"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="1.9"
-        viewBox="0 0 24 24"
-      >
-        <rect
-          height="15"
-          rx="2"
-          width="16"
-          x="4"
-          y="5"
-        />
-        <path
-          d="M8 3v4M16 3v4M7 11h10M7 15h6"
-        />
-      </svg>
-      Generate Week
-    </span>
-  </button>
-  <div
-    class="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-2"
+  <section
+    aria-label="Current week scheduling"
+    class="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-3"
   >
     <label
-      class="flex flex-col gap-2 text-sm text-zinc-200"
-      for="week-target-days"
+      class="block space-y-2 text-sm"
+      for="scheduling-timezone"
     >
-      <span
-        class="font-medium"
-      >
-        Target training days
+      <span>
+        Scheduling timezone
       </span>
-      <select
-        aria-label="Week target training days selector"
-        class="ui-select"
-        id="week-target-days"
-      >
-        <option
-          value="2"
-        >
-          2
-           days
-        </option>
-        <option
-          value="3"
-        >
-          3
-           days
-        </option>
-        <option
-          value="4"
-        >
-          4
-           days
-        </option>
-        <option
-          value="5"
-        >
-          5
-           days
-        </option>
-      </select>
+      <input
+        class="ui-input w-full min-h-[44px]"
+        id="scheduling-timezone"
+        placeholder="America/New_York"
+        value="America/New_York"
+      />
     </label>
     <p
       class="text-xs text-zinc-400"
     >
-      Generating for 
-      <span
-        class="font-medium text-zinc-200"
-      >
-        3
-      </span>
-       training day
-      s
-       this week.
-       Profile default: undefined days.
+      Confirm this IANA timezone when activating your dates. Dates use your local Monday–Sunday week.
     </p>
-  </div>
+    <fieldset>
+      <legend
+        class="mb-2 text-sm"
+      >
+        Current week: Mon, Mar 9 · Today: Tue, Mar 10
+      </legend>
+      <div
+        class="grid grid-cols-1 gap-2 sm:grid-cols-2"
+      >
+        <label
+          class="flex min-h-[48px] items-center gap-3 rounded-md border border-zinc-700 px-3 py-2 text-sm"
+        >
+          <input
+            class="h-5 w-5"
+            type="checkbox"
+          />
+          <span>
+            Mon, Mar 9
+          </span>
+        </label>
+        <label
+          class="flex min-h-[48px] items-center gap-3 rounded-md border border-zinc-700 px-3 py-2 text-sm"
+        >
+          <input
+            class="h-5 w-5"
+            type="checkbox"
+          />
+          <span>
+            Tue, Mar 10
+          </span>
+        </label>
+        <label
+          class="flex min-h-[48px] items-center gap-3 rounded-md border border-zinc-700 px-3 py-2 text-sm"
+        >
+          <input
+            class="h-5 w-5"
+            type="checkbox"
+          />
+          <span>
+            Wed, Mar 11
+          </span>
+        </label>
+        <label
+          class="flex min-h-[48px] items-center gap-3 rounded-md border border-zinc-700 px-3 py-2 text-sm"
+        >
+          <input
+            class="h-5 w-5"
+            type="checkbox"
+          />
+          <span>
+            Thu, Mar 12
+          </span>
+        </label>
+        <label
+          class="flex min-h-[48px] items-center gap-3 rounded-md border border-zinc-700 px-3 py-2 text-sm"
+        >
+          <input
+            class="h-5 w-5"
+            type="checkbox"
+          />
+          <span>
+            Fri, Mar 13
+          </span>
+        </label>
+        <label
+          class="flex min-h-[48px] items-center gap-3 rounded-md border border-zinc-700 px-3 py-2 text-sm"
+        >
+          <input
+            class="h-5 w-5"
+            type="checkbox"
+          />
+          <span>
+            Sat, Mar 14
+          </span>
+        </label>
+        <label
+          class="flex min-h-[48px] items-center gap-3 rounded-md border border-zinc-700 px-3 py-2 text-sm"
+        >
+          <input
+            class="h-5 w-5"
+            type="checkbox"
+          />
+          <span>
+            Sun, Mar 15
+          </span>
+        </label>
+      </div>
+    </fieldset>
+    <p
+      aria-live="polite"
+      class="text-sm"
+    >
+      0
+       of 2–5 dates selected
+    </p>
+    <button
+      aria-label="Preview selected dates"
+      class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 border border-[var(--ui-edge-active)] bg-[var(--ui-accent-active)] text-white shadow-[var(--ui-depth-shadow-2)] hover:bg-[rgba(220,38,38,0.25)] hover:shadow-[var(--ui-glow-active),var(--ui-depth-shadow-3)] h-10 px-4 py-2 w-full min-h-[48px]"
+      disabled=""
+    >
+      Preview selected dates
+    </button>
+  </section>
   <div
     class="rounded-lg border border-zinc-800 bg-zinc-900/40 overflow-hidden"
   >
@@ -188,11 +226,12 @@ exports[`visual snapshot: week route 1`] = `
   </div>
   <div
     class="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3"
+    role="status"
   >
     <p
       class="text-sm text-zinc-200"
     >
-      Generate a weekly plan.
+      Choose 2–5 dates, then preview your week.
     </p>
   </div>
 </div>

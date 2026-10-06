@@ -60,6 +60,7 @@ test("Today page loads workout and shows exercises", async () => {
   // @ts-ignore
   globalThis.fetch.mockImplementation((input, init) => {
     const url = typeof input === "string" ? input : input.url;
+    if (url.includes("/plan/scheduling-context?")) return Promise.resolve(Response.json({ timezone: "UTC", local_today: new Date().toISOString().slice(0, 10), week_start: "2026-10-05", selected_dates: [], placement_revision: 0, plan: null }));
     if (url.endsWith("/health")) {
       return Promise.resolve(new Response(JSON.stringify({ status: "ok", date: new Date().toISOString() }), { status: 200 }));
     }
@@ -113,6 +114,7 @@ test("Today page opens detail overlay on row tap and closes on back", async () =
   // @ts-ignore
   globalThis.fetch.mockImplementation((input, init) => {
     const url = typeof input === "string" ? input : input.url;
+    if (url.includes("/plan/scheduling-context?")) return Promise.resolve(Response.json({ timezone: "UTC", local_today: new Date().toISOString().slice(0, 10), week_start: "2026-10-05", selected_dates: [], placement_revision: 0, plan: null }));
     if (url.endsWith("/health")) {
       return Promise.resolve(new Response(JSON.stringify({ status: "ok" }), { status: 200 }));
     }
@@ -165,6 +167,7 @@ test("Skipping soreness modal keeps it dismissed while opening exercise detail",
   // @ts-ignore
   globalThis.fetch.mockImplementation((input) => {
     const url = typeof input === "string" ? input : input.url;
+    if (url.includes("/plan/scheduling-context?")) return Promise.resolve(Response.json({ timezone: "UTC", local_today: new Date().toISOString().slice(0, 10), week_start: "2026-10-05", selected_dates: [], placement_revision: 0, plan: null }));
     if (url.endsWith("/health")) {
       return Promise.resolve(new Response(JSON.stringify({ status: "ok" }), { status: 200 }));
     }
@@ -235,6 +238,7 @@ test("Skipping soreness modal suppresses it for the same day across re-mount", a
     // @ts-ignore
     globalThis.fetch.mockImplementation((input) => {
       const url = typeof input === "string" ? input : input.url;
+      if (url.includes("/plan/scheduling-context?")) return Promise.resolve(Response.json({ timezone: "UTC", local_today: new Date().toISOString().slice(0, 10), week_start: "2026-10-05", selected_dates: [], placement_revision: 0, plan: null }));
       if (url.endsWith("/health")) {
         return Promise.resolve(new Response(JSON.stringify({ status: "ok" }), { status: 200 }));
       }
@@ -271,96 +275,17 @@ test("Skipping soreness modal suppresses it for the same day across re-mount", a
   expect(screen.queryByText(/sore today\?/i)).not.toBeInTheDocument();
 });
 
-test("Today page can recover by generating week when no workout exists yet", async () => {
-  const workout = {
-    session_id: "pure_bodybuilding_phase_1_full_body-day1",
-    title: "Full Body #1",
-    date: new Date().toISOString().slice(0, 10),
-    resume: false,
-    day_role: "full_body_1",
-    mesocycle: {
-      week_index: 1,
-      trigger_weeks_base: 6,
-      trigger_weeks_effective: 6,
-      is_deload_week: false,
-      deload_reason: "none",
-      authored_week_index: 1,
-      authored_week_role: "adaptation",
-      authored_sequence_complete: false,
-      post_authored_behavior: "in_authored_sequence",
-    },
-    deload: {
-      active: false,
-      set_reduction_pct: 0,
-      load_reduction_pct: 0,
-      reason: "none",
-    },
-    exercises: [
-      {
-        id: "ex-1",
-        name: "Bayesian Curl",
-        sets: 3,
-        rep_range: [8, 12],
-        recommended_working_weight: 17.5,
-        substitution_candidates: [],
-        last_set_intensity_technique: "Long-length Partials",
-        warm_up_sets: "1",
-        working_sets: "3",
-        reps: "8-12",
-        early_set_rpe: "~9",
-        last_set_rpe: "10",
-        rest: "~1-2 min",
-        substitution_option_1: null,
-        substitution_option_2: null,
-        demo_url: null,
-        video_url: null,
-        notes: "Focus on full ROM",
-        video: null,
-        slot_role: "weak_point",
-      },
-    ],
-  };
-
-  let todayCalls = 0;
-  // @ts-ignore
-  globalThis.fetch.mockImplementation((input) => {
-    const url = typeof input === "string" ? input : input.url;
-    if (url.endsWith("/health")) {
-      return Promise.resolve(new Response(JSON.stringify({ status: "ok", date: new Date().toISOString() }), { status: 200 }));
-    }
-    if (url.endsWith("/weekly-review/status")) {
-      return Promise.resolve(new Response(JSON.stringify({ today_is_sunday: false, review_required: false }), { status: 200 }));
-    }
-    if (url.includes("/soreness")) {
-      return Promise.resolve(new Response(JSON.stringify([{ id: "s1", entry_date: "2026-03-03" }]), { status: 200 }));
-    }
-    if (url.endsWith("/workout/today")) {
-      todayCalls += 1;
-      if (todayCalls === 1) {
-        return Promise.resolve(new Response("not found", { status: 404 }));
-      }
-      return Promise.resolve(new Response(JSON.stringify(workout), { status: 200 }));
-    }
-    if (url.endsWith("/plan/generate-week")) {
-      return Promise.resolve(new Response(JSON.stringify({ status: "ok" }), { status: 200 }));
-    }
-    return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
+test("Today sends missing-plan users to Week without generating a plan", async () => {
+  globalThis.fetch = vi.fn(async (input) => {
+    const url = String(input);
+    if (url.includes("/plan/scheduling-context?")) return Promise.resolve(Response.json({ timezone: "UTC", local_today: new Date().toISOString().slice(0, 10), week_start: "2026-10-05", selected_dates: [], placement_revision: 0, plan: null }));
+    if (url.endsWith("/health")) return Response.json({ status: "ok" });
+    if (url.endsWith("/weekly-review/status")) return Response.json({ today_is_sunday: false, review_required: false });
+    if (url.endsWith("/workout/today")) return Response.json({ detail: "No workout available" }, { status: 404 });
+    return Response.json({});
   });
-
   render(<TodayPage />);
-
-  await waitFor(() => {
-    expect(screen.getByText(/No workout available\. Generate week plan first\./i)).toBeInTheDocument();
-  });
-
-  fireEvent.click(screen.getByRole("button", { name: /Generate Week and Reload Today/i }));
-
-  await waitFor(() => {
-    expect(screen.getAllByText(/Bayesian Curl/i).length).toBeGreaterThan(0);
-  });
-
-  expect(globalThis.fetch).toHaveBeenCalledWith(
-    expect.stringMatching(/\/plan\/generate-week$/),
-    expect.objectContaining({ method: "POST" }),
-  );
+  expect(await screen.findByRole("link", { name: "Open Week Plan" })).toHaveAttribute("href", "/week");
+  expect(screen.queryByRole("button", { name: /Generate Week and Reload Today/i })).not.toBeInTheDocument();
+  expect(globalThis.fetch).not.toHaveBeenCalledWith(expect.stringMatching(/\/plan\/generate-week$/), expect.objectContaining({ method: "POST" }));
 });

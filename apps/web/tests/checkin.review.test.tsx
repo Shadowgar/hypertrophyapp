@@ -192,6 +192,7 @@ test("check-in page surfaces review command center and adaptive output", async (
     const init = last[1] as RequestInit | undefined;
     const payload = JSON.parse(String(init?.body || "{}"));
     expect(payload.sessions_next_week).toBe(4);
+    expect(payload.week_start).toBe("2026-03-09");
   });
 
   expect(screen.queryByText(/Primed to push/i)).not.toBeInTheDocument();

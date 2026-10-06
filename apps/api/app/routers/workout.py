@@ -196,12 +196,31 @@ def workout_today(
         action="today_fetch",
         user_id=current_user.id,
     )
-    plans = identified_plans(db, _list_current_workout_plans(db, current_user))
+    raw_plans = _list_current_workout_plans(db, current_user)
+    today_iso = date.today().isoformat()
+    if current_user.scheduling_timezone:
+        from ..selected_date_plans import active_selected_plans, local_week
+        today, monday = local_week(current_user.scheduling_timezone, datetime.now(UTC))
+        today_iso = today.isoformat()
+        raw_plans = active_selected_plans(raw_plans, monday)
+        if not raw_plans:
+            raise HTTPException(404, "No workout scheduled today")
+        if len(raw_plans) != 1:
+            raise HTTPException(409, "Multiple active dated plans require reconciliation")
+    plans = identified_plans(db, raw_plans)
     plan_runtime = prepare_workout_today_plan_route_runtime(plan_rows=plans)
     if not bool(plan_runtime["has_plan"]):
         raise HTTPException(status_code=404, detail="No plan generated")
 
     sessions = cast(list[dict], plan_runtime["sessions"])
+    latest_payload = plans[0].payload if plans else {}
+    schedule = latest_payload.get("schedule") if isinstance(latest_payload, dict) else None
+    if isinstance(schedule, dict) and schedule.get("mode") == "selected_dates_v1":
+        sessions = [session for session in sessions if session.get("scheduled_date") == today_iso]
+        if not sessions:
+            raise HTTPException(status_code=404, detail="No workout scheduled today")
+        if len(sessions) != 1:
+            raise HTTPException(status_code=409, detail="Conflicting workouts share today's selected date")
     session_ids = [session["workout_occurrence_id"] for session in sessions]
     recent_logs = []
     if session_ids:
@@ -217,7 +236,7 @@ def workout_today(
     selection_runtime = prepare_workout_today_selection_route_runtime(
         sessions=sessions,
         recent_logs=recent_logs,
-        today_iso=date.today().isoformat(),
+        today_iso=today_iso,
     )
     selected = cast(dict, selection_runtime["selected_session"])
     resume_selected = bool(selection_runtime["resume_selected"])

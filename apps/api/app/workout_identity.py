@@ -1,5 +1,6 @@
 """Occurrence lineage only: this module has no prescription policy authority."""
 from copy import deepcopy
+from datetime import date
 from types import SimpleNamespace
 from uuid import UUID, uuid5
 
@@ -62,9 +63,14 @@ def resolve_occurrence(db: Session, user_id: str, reference: str, plans: list[Wo
     saved = snapshots.get(session["workout_occurrence_id"])
     if saved:
         return saved, deepcopy(saved.payload)
+    if (plan.payload.get("schedule") or {}).get("mode") == "selected_dates_superseded_v1":
+        raise HTTPException(409, "This unstarted occurrence was replaced; reload the active schedule")
     occurrence = WorkoutOccurrence(
         id=session["workout_occurrence_id"], user_id=user_id, plan_id=plan.id,
         week_start=plan.week_start, session_slot=session["session_slot"],
+        scheduled_date=date.fromisoformat(session["scheduled_date"]) if session.get("scheduled_date") else None,
+        schedule_timezone=session.get("schedule_timezone") or None,
+        placement_revision=session.get("placement_revision") or None,
         workout_id=session["session_id"], program_id=plan.payload.get("program_template_id"),
         payload=deepcopy(session),
     )

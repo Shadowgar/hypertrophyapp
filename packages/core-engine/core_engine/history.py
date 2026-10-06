@@ -15,6 +15,17 @@ def _monday_of(value: date) -> date:
     return value - timedelta(days=value.weekday())
 
 
+def _performed_date(row: Any) -> date:
+    """Use the API's owner-bound occurrence date; retain legacy timestamp dates.
+
+    The persisted audit timestamp still determines receipt ordering and display.
+    This projection changes calendar/week membership only, without inventing a
+    timezone for undated historical records.
+    """
+    value = _read_attr(row, "performed_date")
+    return value if type(value) is date else _read_attr(row, "created_at").date()
+
+
 def _round2(value: float) -> float:
     return round(float(value), 2)
 
@@ -30,8 +41,7 @@ def _build_volume_heatmap(log_rows: list[Any], *, limit_weeks: int, today: date)
     }
 
     for row in log_rows:
-        created_at = _read_attr(row, "created_at")
-        row_date = created_at.date()
+        row_date = _performed_date(row)
         week_key = _monday_of(row_date).isoformat()
         if week_key not in week_map:
             continue
@@ -72,9 +82,8 @@ def _get_or_create_strength_entry(by_exercise: dict[str, dict[str, Any]], exerci
 def _update_strength_entry(entry: dict[str, Any], row: Any) -> None:
     weight = float(_read_attr(row, "weight", 0.0))
     reps = int(_read_attr(row, "reps", 0))
-    created_at = _read_attr(row, "created_at")
     est_1rm = weight * (1 + (reps / 30.0))
-    week_key = _monday_of(created_at.date()).isoformat()
+    week_key = _monday_of(_performed_date(row)).isoformat()
 
     weekly = entry["weekly"][week_key]
     weekly["max_weight"] = max(float(weekly["max_weight"]), weight)
@@ -226,6 +235,8 @@ def _iter_plan_sessions_for_day(plans: list[Any], target_day: str):
     for plan in plans:
         payload = _read_attr(plan, "payload")
         payload = payload if isinstance(payload, dict) else {}
+        if (payload.get("schedule") or {}).get("mode") == "selected_dates_superseded_v1":
+            continue
         program_id = str(payload.get("program_template_id") or "").strip()
         sessions = payload.get("sessions") or []
         for session in sessions:
@@ -259,6 +270,8 @@ def _extract_planned_calendar_metadata(
     for plan in plans:
         payload = _read_attr(plan, "payload")
         payload = payload if isinstance(payload, dict) else {}
+        if (payload.get("schedule") or {}).get("mode") == "selected_dates_superseded_v1":
+            continue
         program_id = str(payload.get("program_template_id") or "").strip()
         sessions = payload.get("sessions") or []
         for session in sessions:
@@ -288,8 +301,7 @@ def _build_calendar_pr_metadata(
     for row in ordered_log_rows:
         if (_read_attr(row, "replay_context") or {}).get("planned_exercise", {}).get("performed_variant"):
             continue  # Variant loads are not comparable to the original exercise.
-        created_at = _read_attr(row, "created_at")
-        day_key = created_at.date().isoformat()
+        day_key = _performed_date(row).isoformat()
         exercise_id = str(_read_attr(row, "primary_exercise_id") or _read_attr(row, "exercise_id") or "").strip()
         if not exercise_id:
             continue
@@ -327,8 +339,7 @@ def _build_calendar_days(
     pr_day_metadata = pr_day_metadata or {}
     by_date: dict[str, dict[str, Any]] = {}
     for row in log_rows:
-        created_at = _read_attr(row, "created_at")
-        day_key = created_at.date().isoformat()
+        day_key = _performed_date(row).isoformat()
         entry = by_date.setdefault(
             day_key,
             {

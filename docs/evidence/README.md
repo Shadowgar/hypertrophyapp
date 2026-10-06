@@ -1,5 +1,7 @@
 # Evidence policy and audit references
 
+[M1-C deployment / M2B-1 actual-date scheduling](2026-10-06-m2b-actual-date-scheduling.md) records the 2026-10-06 owner-authorized manual-date candidate, isolated migration/races, source-preserving conversion/revision fixes, desktop/mobile qualification, baseline failures and managed-security retention gap. PR #76 remains the source of exact-head CI/review status; this record grants no M2B merge, migration, deployment or release acceptance.
+
 Status: **Proposed policy**. This file is a portable provenance registry and migration plan, not a completed test run or managed security export. The source audit date is 2026-09-28; application revision is `df9965232ce731f8234d222acc526a90bc6be620`. This registry is not evidence that any new application test, live probe, migration, build or deployment was performed.
 
 ## Evidence and acceptance

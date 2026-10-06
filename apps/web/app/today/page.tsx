@@ -32,6 +32,7 @@ import {
 } from "@/lib/oneRepMax";
 import { parseRestToSeconds } from "@/lib/rest";
 import { authoredRelationshipLabels } from "@/lib/authored-relationships";
+import { formatCalendarDate } from "@/lib/calendar-date";
 import { resolveGuidanceText } from "@/lib/today-guidance";
 import { kgToLbs, lbsToKg, snapToHalfLb } from "@/lib/weight";
 
@@ -917,7 +918,7 @@ export default function TodayPage() {
   const [setFeedbackByExercise, setSetFeedbackByExercise] = useState<Record<string, WorkoutSetFeedback>>({});
   const [liveRecommendationByExercise, setLiveRecommendationByExercise] = useState<Record<string, WorkoutLiveRecommendation>>({});
   const [workoutSummary, setWorkoutSummary] = useState<WorkoutSummary | null>(null);
-  const [recoveringMissingWorkout, setRecoveringMissingWorkout] = useState(false);
+  const [localToday, setLocalToday] = useState<{ date: string; timezone: string } | null>(null);
   const [selectedExerciseId, setSelectedExerciseId] = useState<string | null>(null);
   /** User-entered baseline: "I did X lb × Y reps" → 1RM, working weight, warmups. Keyed by exercise id. */
   const [baselineByExercise, setBaselineByExercise] = useState<
@@ -937,7 +938,8 @@ export default function TodayPage() {
   const undoInFlight = useRef(false);
   const hasAutoLoadStarted = useRef(false);
   const isBeginWorkoutLoadInProgress = useRef(false);
-  const sorenessDismissedThisSession = useRef(false);
+  const sorenessDismissedDate = useRef<string | null>(null);
+  const sorenessPromptDate = useRef<string | null>(null);
 
   const loadWorkoutSummary = useCallback(async (workoutId: string) => {
     try {
@@ -992,6 +994,16 @@ export default function TodayPage() {
     api.health()
       .then((data) => setHealth(data.status))
       .catch(() => setHealth("offline"));
+  }, []);
+
+  const resolveLocalToday = useCallback(async (): Promise<string> => {
+    const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+    const context = await api.getSchedulingContext(browserTimezone);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(context.local_today) || !context.timezone) {
+      throw new Error("Scheduling date unavailable");
+    }
+    setLocalToday({ date: context.local_today, timezone: context.timezone });
+    return context.local_today;
   }, []);
 
   const loadToday = useCallback(async (): Promise<WorkoutSession | null> => {
@@ -1078,37 +1090,14 @@ export default function TodayPage() {
         setWorkoutProgress(null);
       }
       return data;
-    } catch {
+    } catch (error) {
       setWorkout(null);
-      setMessage("No workout available. Generate week plan first.");
+      setMessage(error instanceof Error && error.message === "No workout scheduled today"
+        ? "Rest day — no workout is scheduled for your local date. Check Week for your selected dates."
+        : "No workout available. Choose dates in Week first.");
       return null;
     }
   }, [loadWorkoutSummary]);
-
-  async function recoverMissingWorkout() {
-    setRecoveringMissingWorkout(true);
-    setMessage("Regenerating week from your latest plan settings...");
-    try {
-      const [latestPlan, profile] = await Promise.all([
-        api.getLatestWeekPlan().catch(() => null),
-        api.getProfile().catch(() => null),
-      ]);
-      const selectedProgramId = latestPlan?.program_template_id ?? profile?.selected_program_id ?? null;
-      const latestPlanDays = Array.isArray(latestPlan?.sessions) ? latestPlan.sessions.length : null;
-      const targetDays =
-        typeof latestPlanDays === "number" && latestPlanDays >= 2 && latestPlanDays <= 5
-          ? latestPlanDays
-          : typeof profile?.days_available === "number"
-            ? profile.days_available
-            : null;
-      await api.generateWeek(selectedProgramId, targetDays);
-      await loadToday();
-    } catch {
-      setMessage("Could not generate a week yet. Try again from Week or Onboarding.");
-    } finally {
-      setRecoveringMissingWorkout(false);
-    }
-  }
 
   const resetSorenessForm = useCallback(() => {
     setSorenessByMuscle(createInitialSorenessState());
@@ -1124,9 +1113,9 @@ export default function TodayPage() {
       return;
     }
     isBeginWorkoutLoadInProgress.current = true;
-    const today = new Date().toISOString().slice(0, 10);
-    const sorenessSkipKey = `hypertrophy_soreness_skip:${today}`;
     try {
+      const today = await resolveLocalToday();
+      const sorenessSkipKey = `hypertrophy_soreness_skip:${today}`;
       const reviewStatus = await api.getWeeklyReviewStatus();
       if (reviewStatus.today_is_sunday && reviewStatus.review_required) {
         setMessage("Sunday review required before starting workout. Go to Check-In to submit weekly review.");
@@ -1138,7 +1127,7 @@ export default function TodayPage() {
         return;
       }
 
-      if (sorenessDismissedThisSession.current) {
+      if (sorenessDismissedDate.current === today) {
         return;
       }
 
@@ -1158,13 +1147,14 @@ export default function TodayPage() {
         return;
       }
       resetSorenessForm();
+      sorenessPromptDate.current = today;
       setShowSorenessModal(true);
     } catch {
       setMessage("Unable to verify soreness status. Try again.");
     } finally {
       isBeginWorkoutLoadInProgress.current = false;
     }
-  }, [loadToday, resetSorenessForm, showSorenessModal]);
+  }, [loadToday, resolveLocalToday, resetSorenessForm, showSorenessModal]);
 
   useEffect(() => {
     if (health !== "ok" || workout !== null || hasAutoLoadStarted.current) {
@@ -1174,11 +1164,23 @@ export default function TodayPage() {
     beginWorkoutLoad();
   }, [health, workout, beginWorkoutLoad]);
 
+  function restartForChangedSorenessDate(today: string): boolean {
+    if (sorenessPromptDate.current === today) return false;
+    resetSorenessForm();
+    sorenessPromptDate.current = null;
+    sorenessDismissedDate.current = null;
+    setShowSorenessModal(false);
+    hasAutoLoadStarted.current = false;
+    setWorkout(null);
+    return true;
+  }
+
   async function submitSorenessAndLoad() {
-    const today = new Date().toISOString().slice(0, 10);
-    const sorenessSkipKey = `hypertrophy_soreness_skip:${today}`;
     setSorenessStatus("Saving soreness...");
     try {
+      const today = await resolveLocalToday();
+      if (restartForChangedSorenessDate(today)) return;
+      const sorenessSkipKey = `hypertrophy_soreness_skip:${today}`;
       await api.createSoreness({
         entry_date: today,
         severity_by_muscle: sorenessByMuscle,
@@ -1191,6 +1193,7 @@ export default function TodayPage() {
         // ignore localStorage errors
       }
       setShowSorenessModal(false);
+      sorenessPromptDate.current = null;
       await loadToday();
     } catch {
       setSorenessStatus("Failed to save soreness");
@@ -1343,7 +1346,9 @@ export default function TodayPage() {
   const swapTargetCurrentIndex = swapTarget ? (swapIndexByExercise[exerciseKey(swapTarget)] ?? 0) : 0;
   const activeProgramId = workout ? extractProgramId(workout.session_id) : null;
 
-  const todayDate = new Date().toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  const todayDate = localToday
+    ? `${formatCalendarDate(localToday.date)} · ${localToday.timezone}`
+    : `${new Date().toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} · browser local date`;
 
   return (
     <div className="space-y-4 pb-[max(7rem,env(safe-area-inset-bottom))]">
@@ -1361,7 +1366,8 @@ export default function TodayPage() {
       </div>
 
       {message ? (
-        <div className="main-card main-card--shell space-y-2 ui-body-sm">
+        <div className="main-card main-card--shell space-y-2 ui-body-sm" role="status">
+          {message.startsWith("Rest day") ? <h2 className="text-base font-semibold">No workout scheduled today</h2> : null}
           <p>{message}</p>
           {message.includes("Check-In") ? (
             <Link
@@ -1372,13 +1378,11 @@ export default function TodayPage() {
               Go to Check-In
             </Link>
           ) : null}
-          {message.startsWith("No workout available") ? (
-            <Button type="button" onClick={recoverMissingWorkout} disabled={recoveringMissingWorkout}>
-              <span className="inline-flex items-center gap-2">
-                <UiIcon name="plan" className="ui-icon--action" />
-                {recoveringMissingWorkout ? "Generating..." : "Generate Week and Reload Today"}
-              </span>
-            </Button>
+          {message.startsWith("No workout available") || message.startsWith("Rest day") ? (
+            <Link href="/week" className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-zinc-900/70 px-3 py-2 text-sm text-zinc-100">
+              <UiIcon name="plan" className="ui-icon--action" />
+              Open Week Plan
+            </Link>
           ) : null}
         </div>
       ) : null}
@@ -1783,16 +1787,22 @@ export default function TodayPage() {
               <Button
                 className="w-full"
                 onClick={async () => {
-                  const today = new Date().toISOString().slice(0, 10);
-                  const sorenessSkipKey = `hypertrophy_soreness_skip:${today}`;
                   try {
-                    localStorage.setItem(sorenessSkipKey, "1");
+                    const today = await resolveLocalToday();
+                    if (restartForChangedSorenessDate(today)) return;
+                    const sorenessSkipKey = `hypertrophy_soreness_skip:${today}`;
+                    try {
+                      localStorage.setItem(sorenessSkipKey, "1");
+                    } catch {
+                      // ignore localStorage errors
+                    }
+                    sorenessDismissedDate.current = today;
+                    sorenessPromptDate.current = null;
+                    setShowSorenessModal(false);
+                    await loadToday();
                   } catch {
-                    // ignore localStorage errors
+                    setSorenessStatus("Unable to verify the local date. Try again.");
                   }
-                  sorenessDismissedThisSession.current = true;
-                  setShowSorenessModal(false);
-                  await loadToday();
                 }}
                 type="button"
                 variant="secondary"

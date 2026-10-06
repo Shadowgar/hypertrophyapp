@@ -730,9 +730,10 @@ def generate_week_plan(
     stimulus_fatigue_response_source: str | None = None,
     weak_areas: list[str] | None = None,
     rule_set: dict[str, Any] | None = None,
+    planning_date: date | None = None,
 ) -> dict[str, Any]:
     days_available = max(2, min(7, days_available))
-    today = date.today()
+    today = planning_date or date.today()
     week_start = today - timedelta(days=today.weekday())
     authoritative_authored_passthrough = bool(program_template.get(AUTHORITATIVE_AUTHORED_PASSTHROUGH_KEY))
 

@@ -243,6 +243,15 @@ export type GeneratedWeekSession = {
 };
 
 export type GeneratedWeekPlan = {
+  schedule?: {
+    mode: string;
+    timezone: string;
+    selected_dates: string[];
+    placement_revision: number;
+    preview_digest?: string;
+    preview_digest_version?: string;
+    spacing?: { gap_days: number[]; warnings: string[]; previous_date?: string | null; next_date?: string | null };
+  };
   program_template_id: string;
   split: string;
   phase: string;
@@ -299,6 +308,23 @@ export type GeneratedWeekPlan = {
   template_selection_trace: Record<string, unknown>;
   generation_runtime_trace: Record<string, unknown>;
   decision_trace?: Record<string, unknown>;
+};
+
+export type SelectedDatePlanRequest = {
+  template_id?: string | null;
+  week_start: string;
+  selected_dates: string[];
+  timezone: string;
+  expected_placement_revision: number;
+};
+
+export type SchedulingContext = {
+  timezone: string;
+  local_today: string;
+  week_start: string;
+  selected_dates: string[];
+  placement_revision: number;
+  plan: GeneratedWeekPlan | null;
 };
 
 export function getProgramDisplayName(program: ProgramTemplateOption): string {
@@ -970,6 +996,13 @@ export const api = {
       }),
     }),
   getLatestWeekPlan: () => request<GeneratedWeekPlan>("/plan/latest-week"),
+  getSchedulingContext: (timezone: string) => request<SchedulingContext>(`/plan/scheduling-context?timezone=${encodeURIComponent(timezone)}`),
+  previewSelectedDates: (payload: SelectedDatePlanRequest) => request<GeneratedWeekPlan>("/plan/selected-dates/preview", {
+    method: "POST", body: JSON.stringify(payload),
+  }),
+  activateSelectedDates: (payload: SelectedDatePlanRequest & { expected_preview_digest: string }) => request<GeneratedWeekPlan>("/plan/generate-week", {
+    method: "POST", body: JSON.stringify(payload),
+  }),
   getProfile: () => request<Profile>("/profile"),
   listPrograms: () => request<ProgramTemplateOption[]>("/plan/programs"),
   listGuidePrograms: () => request<GuideProgram[]>("/plan/guides/programs"),

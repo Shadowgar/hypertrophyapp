@@ -41,12 +41,21 @@ function formatPlannedSuffix(plannedSets?: number | null, delta?: number | null)
 type CalendarViewMode = "week" | "month";
 type CalendarCompletionFilter = "all" | "completed" | "missed" | "pr_days";
 
-function calendarRangeForMode(mode: CalendarViewMode, windowOffset: number): { startDate: string; endDate: string } {
+function calendarRangeForMode(mode: CalendarViewMode, windowOffset: number, localToday: string): { startDate: string; endDate: string } {
   const windowDays = mode === "week" ? 7 : 28;
-  const end = new Date();
-  end.setDate(end.getDate() - (Math.max(0, windowOffset) * windowDays));
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(localToday)) {
+    throw new Error("Invalid local calendar date");
+  }
+  const [year, month, day] = localToday.split("-").map(Number);
+  // UTC arithmetic preserves date-only components across browser timezone/DST;
+  // this is a calendar window, not an inferred workout instant.
+  const end = new Date(Date.UTC(year, month - 1, day));
+  if (end.toISOString().slice(0, 10) !== localToday) {
+    throw new Error("Invalid local calendar date");
+  }
+  end.setUTCDate(end.getUTCDate() - (Math.max(0, windowOffset) * windowDays));
   const start = new Date(end);
-  start.setDate(end.getDate() - (windowDays - 1));
+  start.setUTCDate(end.getUTCDate() - (windowDays - 1));
   return {
     startDate: start.toISOString().slice(0, 10),
     endDate: end.toISOString().slice(0, 10),
@@ -236,8 +245,16 @@ function HistoryCalendarPanel() {
   useEffect(() => {
     let mounted = true;
     (async () => {
+      let clockVerified = false;
       try {
-        const { startDate, endDate } = calendarRangeForMode(viewMode, windowOffset);
+        // Persisted scheduling timezone wins; UTC preserves the legacy day for
+        // accounts which have never confirmed a scheduling timezone.
+        const context = await api.getSchedulingContext("UTC");
+        const { startDate, endDate } = calendarRangeForMode(viewMode, windowOffset, context.local_today);
+        clockVerified = true;
+        if (!mounted) {
+          return;
+        }
         const payload = await api.getHistoryCalendar(startDate, endDate);
         if (!mounted) {
           return;
@@ -259,7 +276,7 @@ function HistoryCalendarPanel() {
           return;
         }
         setCalendar(null);
-        setCalendarStatus("Unable to load calendar history.");
+        setCalendarStatus(clockVerified ? "Unable to load calendar history." : "Unable to verify the current local date. Retry calendar load.");
         setSelectedDay(null);
         setDayDetail(null);
         setDayDetailStatus("Select a day to inspect performed exercises.");
@@ -444,7 +461,7 @@ function HistoryCalendarPanel() {
               <p className="text-xs text-zinc-400">Generate your first week from Week Plan, then log workouts to see history here.</p>
             ) : null}
             <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-              {(calendarStatus === "No calendar history yet." || calendarStatus === "Unable to load calendar history.") ? (
+              {(calendarStatus === "No calendar history yet." || calendarStatus === "Unable to load calendar history." || calendarStatus === "Unable to verify the current local date. Retry calendar load.") ? (
                 <Button type="button" variant="secondary" onClick={() => setCalendarReloadCount((value) => value + 1)} aria-label="Retry Calendar Load">
                   Retry Calendar Load
                 </Button>

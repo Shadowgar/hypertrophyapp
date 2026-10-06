@@ -4,6 +4,32 @@ from types import SimpleNamespace
 from core_engine import build_history_analytics, build_history_calendar, build_history_day_detail
 
 
+def test_superseded_date_placements_do_not_create_missed_history_or_discard_logs():
+    removed = date(2026,10,9)
+    replacement = date(2026,10,10)
+    def plan(day, mode=None):
+        payload = {'program_template_id':'full_body_v1', 'sessions':[{'session_id':'source-session',
+            'date':day.isoformat(), 'exercises':[{'id':'press', 'name':'Press', 'sets':3, 'primary_muscles':['chest']}]}]}
+        if mode:
+            payload['schedule'] = {'mode':mode}
+        return SimpleNamespace(payload=payload)
+    plans = [plan(removed, 'selected_dates_superseded_v1'), plan(replacement, 'selected_dates_v1')]
+    calendar = build_history_calendar(log_rows=[], all_log_rows_until_end=[], plans=plans,
+        start_date=removed, end_date=replacement, today=replacement)
+    assert calendar['days'][0]['program_ids'] == []
+    assert calendar['days'][0]['muscles'] == []
+    assert calendar['days'][1]['program_ids'] == ['full_body_v1']
+    cancelled = build_history_day_detail(day=removed, log_rows=[], plans=plans)
+    assert cancelled['workouts'] == [] and cancelled['totals']['planned_set_count'] == 0
+    assert build_history_day_detail(day=replacement, log_rows=[], plans=plans)['totals']['planned_set_count'] == 3
+    # A separately effective performed row survives regardless of plan metadata.
+    log = SimpleNamespace(workout_id='independent-workout', exercise_id='press', primary_exercise_id='press',
+        set_index=1, reps=7, weight=10, rpe=None, created_at=datetime.combine(removed, time(12)))
+    receipt = build_history_day_detail(day=removed, log_rows=[log], plans=plans)
+    assert receipt['totals']['set_count'] == 1 and receipt['totals']['total_volume'] == 70
+    assert len(receipt['workouts']) == 1
+
+
 def test_build_history_analytics_returns_pr_trends_measurements_and_heatmap() -> None:
     current_day = date(2026, 3, 5)
     current_monday = current_day - timedelta(days=current_day.weekday())

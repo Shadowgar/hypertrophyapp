@@ -54,6 +54,7 @@ describe("occurrence caches and retry commands", () => {
     const bodies: Record<string, unknown>[] = [];
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
+      if (url.includes("/plan/scheduling-context?")) return Promise.resolve(Response.json({ timezone: "UTC", local_today: new Date().toISOString().slice(0, 10), week_start: "2026-10-05", selected_dates: [], placement_revision: 0, plan: null }));
       const json = (value: unknown) => new Response(JSON.stringify(value), { status: 200 });
       if (url.endsWith("/health")) return json({ status: "ok" });
       if (url.endsWith("/workout/today")) return json({ session_id: "same-template", workout_occurrence_id: week,
