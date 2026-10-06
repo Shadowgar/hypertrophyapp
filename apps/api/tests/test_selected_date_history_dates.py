@@ -275,3 +275,36 @@ def test_weekly_summary_ignores_newer_retained_superseded_plan(scenario, monkeyp
     assert summary['completion_pct'] == 100
     with SessionLocal() as db:
         assert [(p.id, p.payload) for p in db.query(WorkoutPlan).filter_by(user_id=user_id).order_by(WorkoutPlan.id)] == before
+
+
+def test_analytics_excludes_future_scheduled_receipt_but_explicit_history_retains_it(scenario, monkeypatch):
+    today = date(2026, 10, 6)
+    future_day = date(2026, 10, 11)
+    user_id, headers, client, _ = scenario('America/New_York', today, datetime(2026, 10, 6, 16))
+    occurrence_id = str(uuid4())
+    with SessionLocal() as db:
+        db.add(WorkoutOccurrence(id=occurrence_id, user_id=user_id, plan_id=str(uuid4()),
+            week_start=date(2026, 10, 5), scheduled_date=future_day, schedule_timezone='America/New_York',
+            placement_revision=1, session_slot=1, workout_id='synthetic-future-workout',
+            program_id='pure_bodybuilding_phase_1_full_body', payload={'exercises': []},
+            created_at=datetime(2026, 10, 6, 16, 5)))
+        db.flush()
+        db.add(WorkoutSetLog(user_id=user_id, workout_id='synthetic-future-workout',
+            workout_occurrence_id=occurrence_id, exercise_occurrence_id='synthetic-future-exercise',
+            primary_exercise_id='bench_press', exercise_id='bench_press', set_index=1,
+            reps=8, weight=99, created_at=datetime(2026, 10, 6, 16, 5)))
+        db.commit()
+    before = stored_logs(user_id)
+    assert len(before) == 2
+    freeze_clock(monkeypatch, datetime(2026, 10, 6, 16, 10, tzinfo=UTC))
+    response = client.get('/history/analytics', headers=headers, params={'limit_weeks': 2})
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body['window']['end_date'] == today.isoformat()
+    assert sum(item['total_sets'] for item in body['strength_trends']) == 1
+    assert sum(cell['sets'] for week in body['volume_heatmap']['weeks'] for cell in week['days']) == 1
+    this_week = next(week for week in body['volume_heatmap']['weeks'] if week['week_start'] == '2026-10-05')
+    assert this_week['days'][1]['sets'] == 1 and this_week['days'][6]['sets'] == 0
+    explicit = client.get(f'/history/day/{future_day.isoformat()}', headers=headers)
+    assert explicit.status_code == 200 and explicit.json()['totals']['set_count'] == 1
+    assert stored_logs(user_id) == before

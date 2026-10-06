@@ -147,7 +147,7 @@ def get_history_analytics(
         .all()
     )
 
-    log_rows = performed_log_rows(db, user_id=current_user.id, start_date=start_date)
+    log_rows = performed_log_rows(db, user_id=current_user.id, start_date=start_date, end_date=today)
 
     measurement_rows = (
         db.query(BodyMeasurementEntry)
