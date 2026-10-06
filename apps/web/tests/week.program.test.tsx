@@ -234,7 +234,7 @@ test("Week page sends template_id when override selected", async () => {
   expect(screen.getByText(/4 of 2–5 dates selected/i)).toBeInTheDocument();
 });
 
-test("Week page blocks preview when Sunday review is required", async () => {
+test("Week page shows scheduling infeasibility without a weekly-review detour", async () => {
   // @ts-ignore
   globalThis.fetch.mockImplementation((input) => {
     const url = typeof input === "string" ? input : input.url;
@@ -272,6 +272,9 @@ test("Week page blocks preview when Sunday review is required", async () => {
         ),
       );
     }
+    if (url.endsWith("/plan/selected-dates/preview")) {
+      return Promise.resolve(Response.json({ detail: "Authored schedule is infeasible: hard source relationship cannot fit" }, { status: 409 }));
+    }
     return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
   });
 
@@ -280,9 +283,10 @@ test("Week page blocks preview when Sunday review is required", async () => {
   fireEvent.click(screen.getByRole("button", { name: /Preview selected dates/i }));
 
   await waitFor(() => {
-    expect(screen.getByText(/Sunday review required\. Open Check-In, submit weekly review, then preview your week\./i)).toBeInTheDocument();
+    expect(screen.getByText(/Authored schedule is infeasible: hard source relationship cannot fit/i)).toBeInTheDocument();
   });
-  expect(screen.getByRole("link", { name: /Open Check-In/i })).toHaveAttribute("href", "/checkin");
+  expect(screen.queryByRole("link", { name: /Open Check-In/i })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Activate selected dates" })).not.toBeInTheDocument();
 });
 
 test("Week page offers retry after preview failure", async () => {

@@ -17,9 +17,11 @@ const plan = {
 };
 let context: { timezone: string; local_today: string; week_start: string; selected_dates: string[]; placement_revision: number; plan: typeof plan | null };
 let writes: { path: string; body: Record<string, unknown> }[];
+let serverSundayReviewRequired: boolean;
 
 beforeEach(() => {
   writes = [];
+  serverSundayReviewRequired = false;
   context = { timezone: "America/Los_Angeles", local_today: "2026-10-06", week_start: "2026-10-05", selected_dates: [], placement_revision: 0, plan: null };
   globalThis.fetch = vi.fn(async (input, init) => {
     const url = String(input);
@@ -27,7 +29,7 @@ beforeEach(() => {
     if (url.endsWith("/plan/latest-week")) return Response.json({ detail: "No plan generated" }, { status: 404 });
     if (url.endsWith("/profile")) return Response.json({ selected_program_id: plan.program_template_id, days_available: 3 });
     if (url.endsWith("/plan/programs")) return Response.json([{ id: plan.program_template_id, name: "Full Body Phase 1" }]);
-    if (url.endsWith("/weekly-review/status")) return Response.json({ today_is_sunday: false, review_required: false });
+    if (url.endsWith("/weekly-review/status")) return Response.json({ today_is_sunday: serverSundayReviewRequired, review_required: serverSundayReviewRequired });
     if (init?.method === "POST") {
       writes.push({ path: url, body: JSON.parse(String(init.body)) });
       if (url.endsWith("/plan/generate-week")) context = { ...context, selected_dates: selected, placement_revision: 1, plan };
@@ -97,6 +99,25 @@ test("unchanged preview requires explicit activation and refreshes placement rev
     path: expect.any(String), body: { template_id: plan.program_template_id, week_start: "2026-10-05", timezone: "America/Los_Angeles", selected_dates: selected, expected_placement_revision: 0 },
   }]);
   expect(screen.queryByRole("button", { name: "Activate selected dates" })).not.toBeInTheDocument();
+});
+
+test("server Sunday review status cannot block local Saturday date placement", async () => {
+  context = { ...context, local_today: "2026-10-10" };
+  serverSundayReviewRequired = true;
+  render(<WeekPage />);
+  await chooseDates();
+  fireEvent.click(screen.getByRole("button", { name: "Preview selected dates" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Activate selected dates" }));
+  await screen.findByText(/Selected dates activated/);
+  expect(screen.getByText("Planned sets: 12")).toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: /Open Check-In/i })).not.toBeInTheDocument();
+  expect(screen.queryByText(/Sunday review required/i)).not.toBeInTheDocument();
+  expect(writes.map((write) => write.path)).toEqual([
+    expect.stringMatching(/\/plan\/selected-dates\/preview$/),
+    expect.stringMatching(/\/plan\/generate-week$/),
+  ]);
+  expect(writes.every((write) => Object.keys(write.body).sort().join(",") === "expected_placement_revision,selected_dates,template_id,timezone,week_start")).toBe(true);
+  expect(writes.map((write) => write.body.selected_dates)).toEqual([selected, selected]);
 });
 
 test("a changed placement revision invalidates preview without overwriting it", async () => {

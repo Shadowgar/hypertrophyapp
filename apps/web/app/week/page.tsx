@@ -398,12 +398,6 @@ export default function WeekPage() {
         setPlanStatus("The local week or placement changed. Review your dates and preview again.");
         return;
       }
-      const review = await api.getWeeklyReviewStatus();
-      if (review.today_is_sunday && review.review_required) {
-        setPreview(null);
-        setPlanStatus("Sunday review required. Open Check-In, submit weekly review, then preview your week.");
-        return;
-      }
       if (activate) {
         await api.activateSelectedDates(request);
         await refreshContext(request.timezone, true);
@@ -483,7 +477,6 @@ export default function WeekPage() {
     </Disclosure>
     <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3" role="status">
       <p className="text-sm text-zinc-200">{planStatus}</p>
-      {planStatus.startsWith("Sunday review required.") ? <a className="inline-flex min-h-[44px] items-center underline" href="/checkin">Open Check-In</a> : null}
     </div>
     {visiblePlan ? <>
       {preview ? <p className="text-sm font-semibold">Placement preview — awaiting activation</p> : null}

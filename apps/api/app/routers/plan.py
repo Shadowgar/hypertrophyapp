@@ -118,7 +118,7 @@ GUIDE_RESPONSES: dict[int | str, dict[str, Any]] = {
     422: {"description": INVALID_TEMPLATE_DETAIL},
 }
 PROFILE_INCOMPLETE_DETAIL = "Complete profile first"
-GenerationMode = Literal["current_week_regenerate", "next_week_advance"]
+GenerationMode = Literal["current_week_regenerate", "next_week_advance", "selected_date_current"]
 
 
 def _list_active_program_templates() -> list[dict[str, Any]]:
@@ -959,7 +959,9 @@ def _prepare_plan_generation_runtime(
     active_frequency_adaptation: dict[str, Any] | None,
     prior_plans_override: list[WorkoutPlan] | None = None,
     latest_plan_override: WorkoutPlan | None = None,
+    reference_date: date | None = None,
 ) -> dict[str, Any]:
+    planning_date = reference_date or date.today()
     history_rows = (
         effective_set_logs(db)
         .filter(WorkoutSetLog.user_id == current_user.id)
@@ -975,13 +977,13 @@ def _prepare_plan_generation_runtime(
 
     latest_soreness = (
         db.query(SorenessEntry)
-        .filter(SorenessEntry.user_id == current_user.id, SorenessEntry.entry_date <= date.today())
+        .filter(SorenessEntry.user_id == current_user.id, SorenessEntry.entry_date <= planning_date)
         .order_by(SorenessEntry.entry_date.desc(), SorenessEntry.created_at.desc())
         .first()
     )
     latest_checkin = (
         db.query(WeeklyCheckin)
-        .filter(WeeklyCheckin.user_id == current_user.id, WeeklyCheckin.week_start <= date.today())
+        .filter(WeeklyCheckin.user_id == current_user.id, WeeklyCheckin.week_start <= planning_date)
         .order_by(WeeklyCheckin.week_start.desc(), WeeklyCheckin.created_at.desc())
         .first()
     )
@@ -1665,6 +1667,7 @@ def _build_week_plan_runtime_for_user(
     target_days_override: int | None = None,
     generation_mode: GenerationMode = "current_week_regenerate",
     reference_date: date | None = None,
+    persist_profile_changes: bool = True,
 ) -> dict[str, Any]:
     effective_days_available = _resolve_effective_days_available(
         current_days_available=current_user.days_available,
@@ -1773,7 +1776,8 @@ def _build_week_plan_runtime_for_user(
 
         if recommended_program_id:
             current_user.selected_program_id = resolve_selected_program_binding_id(recommended_program_id) or recommended_program_id
-            db.add(current_user)
+            if persist_profile_changes:
+                db.add(current_user)
             profile_template_id = resolve_selected_program_binding_id(current_user.selected_program_id)
             normalized_explicit_template_id = resolve_selected_program_binding_id(recommended_program_id) or recommended_program_id
 
@@ -1784,7 +1788,8 @@ def _build_week_plan_runtime_for_user(
         )
         current_diagnostics["adaptive_loop_v2"] = adaptive_signal_summary
         current_user.choose_for_me_diagnostics = current_diagnostics
-        db.add(current_user)
+        if persist_profile_changes:
+            db.add(current_user)
 
     template_runtime = prepare_generation_template_runtime(
         explicit_template_id=normalized_explicit_template_id,
@@ -1832,6 +1837,11 @@ def _build_week_plan_runtime_for_user(
             selected_template_id=selected_template_id,
         )
     prior_plans = _list_user_workout_plans(db, user_id=current_user.id)
+    if generation_mode == "selected_date_current":
+        if reference_date is None:
+            raise ValueError("Selected-date generation requires an explicit local planning date")
+        prior_plans = [p for p in prior_plans if p.week_start < (reference_date - timedelta(days=reference_date.weekday()))
+            and (p.payload.get("schedule") or {}).get("mode") != "selected_dates_superseded_v1"]
     regenerate_week_index_pin: int | None = None
     regenerate_authored_week_index_pin: int | None = None
     authored_week_index_override: int | None = None
@@ -1860,6 +1870,7 @@ def _build_week_plan_runtime_for_user(
         active_frequency_adaptation=active_frequency_adaptation,
         prior_plans_override=filtered_prior_plans,
         latest_plan_override=latest_plan,
+        reference_date=reference_date,
     )
     if (
         generation_mode == "current_week_regenerate"
@@ -1935,7 +1946,7 @@ def _build_week_plan_runtime_for_user(
         }
         log_event(
             "generation_path_selected",
-            route="/plan/generate-week" if generation_mode == "current_week_regenerate" else "/plan/next-week",
+            route="/plan/generate-week" if generation_mode != "next_week_advance" else "/plan/next-week",
             action="build_week_plan_runtime",
             user_id=current_user.id,
             selected_program_id=resolve_selected_program_binding_id(current_user.selected_program_id),
@@ -1950,7 +1961,7 @@ def _build_week_plan_runtime_for_user(
         )
         log_event(
             "generated_decision_profile_resolved",
-            route="/plan/generate-week" if generation_mode == "current_week_regenerate" else "/plan/next-week",
+            route="/plan/generate-week" if generation_mode != "next_week_advance" else "/plan/next-week",
             action="build_generated_decision_profile",
             user_id=current_user.id,
             selected_program_id=decision_profile.selected_program_id,
@@ -1972,7 +1983,7 @@ def _build_week_plan_runtime_for_user(
         )
         _log_generated_training_profile_event(
             event="generated_training_profile_resolved",
-            route="/plan/generate-week" if generation_mode == "current_week_regenerate" else "/plan/next-week",
+            route="/plan/generate-week" if generation_mode != "next_week_advance" else "/plan/next-week",
             action="build_generated_training_profile",
             user_id=current_user.id,
             training_profile=training_profile,
@@ -1995,7 +2006,7 @@ def _build_week_plan_runtime_for_user(
             template_selection_trace["authored_frequency_adaptation_trace"] = authored_adaptation_trace
         log_event(
             "generation_path_selected",
-            route="/plan/generate-week" if generation_mode == "current_week_regenerate" else "/plan/next-week",
+            route="/plan/generate-week" if generation_mode != "next_week_advance" else "/plan/next-week",
             action="build_week_plan_runtime",
             user_id=current_user.id,
             selected_program_id=resolve_selected_program_binding_id(current_user.selected_program_id),
@@ -2368,11 +2379,10 @@ def ensure_current_workout_plans_for_user(
 
 
 def _reject_legacy_selected_week_mutation(db: Session, current_user: User) -> None:
-    from ..selected_date_plans import active_selected_plans, local_week
     if current_user.scheduling_timezone:
-        _, monday = local_week(current_user.scheduling_timezone, datetime.now(UTC))
-        if active_selected_plans(_list_user_workout_plans(db, user_id=current_user.id), monday):
-            raise HTTPException(409, "This week uses selected dates; use Week to change placement")
+        # A local week can differ from the server week even when no plan exists
+        # locally yet. Never let server-clock regeneration replace dated history.
+        raise HTTPException(409, "Selected dates are enabled; use Week to change placement")
 
 
 @router.get("/plan/scheduling-context")

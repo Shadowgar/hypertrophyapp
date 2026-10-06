@@ -97,10 +97,10 @@ def selected_week_command(*, db: Session, user: User, explicit_template_id: str 
     if user.scheduling_timezone and user.scheduling_timezone != selected_week.timezone:
         raise HTTPException(409, 'Use your configured scheduling timezone; timezone changes need a separate history policy')
     selected_id = resolve_selected_program_binding_id(explicit_template_id or user.selected_program_id)
-    if not selected_id:
-        raise HTTPException(400, 'Select a program before scheduling dates')
     plans = _list_user_workout_plans(db, user_id=user.id)
     active = active_selected_plans(plans, selected_week.week_start)
+    if not selected_id and len(active) == 1:
+        selected_id = resolve_selected_program_binding_id(active[0].payload.get('program_template_id'))
     if len(active) > 1 or (active and resolve_selected_program_binding_id(active[0].payload.get('program_template_id')) != selected_id):
         raise HTTPException(409, 'This week already has a dated program; a mode/program transition requires separate confirmation')
     matching = [p for p in plans if p.week_start == selected_week.week_start
@@ -120,23 +120,23 @@ def selected_week_command(*, db: Session, user: User, explicit_template_id: str 
         plan_runtime={'record_values': {'week_start': selected_week.week_start, 'payload': existing.payload}}):
         raise HTTPException(409, 'This week has workout progress; its dates cannot be regenerated')
 
-    is_dated = bool(existing and (existing.payload.get('schedule') or {}).get('mode') == SELECTED_MODE)
-    same_count = bool(is_dated and len(existing.payload.get('sessions') or []) == len(selected_week.dates))
-    if is_dated:
-        # Every unstarted revision retains the previous prescription, including
-        # confirmed/blocked source variants. Count changes only regroup it.
+    same_count = bool(existing and len(existing.payload.get('sessions') or []) == len(selected_week.dates))
+    if existing:
+        # Adding dates to legacy work is also placement-only. Preserve its
+        # authored source week, working loads and source-scoped variants.
         base = deepcopy(existing.payload)
         values = {'split': existing.split, 'phase': existing.phase}
     else:
         profile_values = {column.key: deepcopy(getattr(user, column.key)) for column in User.__table__.columns}
         profile_values.update(days_available=len(selected_week.dates), selected_program_id=selected_id,
-            program_selection_mode='manual', active_frequency_adaptation=None)
+            program_selection_mode=('manual' if selected_id else user.program_selection_mode), active_frequency_adaptation=None)
         transient_profile = User(**profile_values)
         try:
             with db.no_autoflush:
                 runtime = _build_week_plan_runtime_for_user(db=db, current_user=transient_profile,
                     explicit_template_id=selected_id, target_days_override=len(selected_week.dates),
-                    generation_mode='current_week_regenerate', reference_date=selected_week.local_today)
+                    generation_mode='selected_date_current', reference_date=selected_week.local_today,
+                    persist_profile_changes=False)
         except (FileNotFoundError, KeyError) as exc:
             raise HTTPException(404, 'Selected program template is unavailable') from exc
         except ValidationError as exc:
@@ -144,6 +144,7 @@ def selected_week_command(*, db: Session, user: User, explicit_template_id: str 
         except AuthoredAllocationInfeasible as exc:
             raise HTTPException(409, f'Authored schedule is infeasible: {exc}') from exc
         base, values = runtime['response_payload'], runtime['record_values']
+        selected_id = resolve_selected_program_binding_id(runtime['selected_template_id'])
     if selected_id not in AUTHORED and len(base.get('sessions') or []) != len(selected_week.dates):
         raise HTTPException(409, 'Generated program cannot fit the exact selected date count')
     previous, following = neighbor_context(plans, selected_week)
@@ -151,17 +152,17 @@ def selected_week_command(*, db: Session, user: User, explicit_template_id: str 
     try:
         placed = place_on_selected_dates(base, selected_week, placement_revision=revision,
             previous_context=previous, next_context=following,
-            preserve_grouping=same_count or selected_id not in AUTHORED or (not is_dated and len(selected_week.dates) == 5))
+            preserve_grouping=same_count or selected_id not in AUTHORED or (existing is None and len(selected_week.dates) == 5))
     except SelectedDateError as exc:
         raise HTTPException(409, str(exc)) from exc
     if selected_week.dates[0] < selected_week.local_today:
         placed['schedule']['spacing']['warnings'].append('Elapsed selected dates are placements only; no performed history is created.')
     placed['schedule']['revision_policy'] = 'unstarted-placement-v1; execution/consent freezes the week'
-    if is_dated and not same_count:
+    if existing and not same_count:
         placed['schedule']['replaces_plan_id'] = existing.id
     if preview:
         return placed
-    if existing and (same_count or not is_dated):
+    if existing and same_count:
         record = existing
         record.payload = placed
     else:
@@ -170,7 +171,7 @@ def selected_week_command(*, db: Session, user: User, explicit_template_id: str 
         db.add(record)
         if existing:
             old = deepcopy(existing.payload)
-            old['schedule']['mode'] = 'selected_dates_superseded_v1'
+            old.setdefault('schedule', {})['mode'] = 'selected_dates_superseded_v1'
             old['schedule']['superseded_by_placement_revision'] = revision
             existing.payload = old
     record.placement_revision = revision

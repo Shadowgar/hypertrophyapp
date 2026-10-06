@@ -343,3 +343,110 @@ def test_completed_today_and_next_local_week_leave_frozen_history_intact(scenari
         frozen = db.get(WorkoutOccurrence, session['workout_occurrence_id'])
         assert frozen.scheduled_date == date(2026,10,6)
         assert frozen.payload == original
+
+
+@pytest.mark.parametrize('offsets', [(1,2,3), (1,5)])
+def test_legacy_authored_week_conversion_preserves_saved_prescriptions(scenario, offsets):
+    user_id, headers, client = scenario
+    response = client.post('/plan/generate-week', headers=headers,
+        json={'template_id': 'pure_bodybuilding_phase_1_full_body', 'target_days': 3})
+    assert response.status_code == 200, response.text
+    with SessionLocal() as db:
+        row = db.query(WorkoutPlan).filter_by(user_id=user_id).one()
+        saved = deepcopy(row.payload)
+        saved['mesocycle']['authored_week_index'] = 4
+        saved['mesocycle']['week_index'] = 4
+        saved['sessions'][0]['exercises'][0]['recommended_working_weight'] = 77.5
+        row.payload = saved
+        db.commit()
+        plan_id = row.id
+        before_sessions = identified_sessions(row)
+    preview = client.post('/plan/selected-dates/preview', headers=headers, json=request_dates(current_monday(), offsets))
+    activated = client.post('/plan/generate-week', headers=headers, json=request_dates(current_monday(), offsets))
+    for response in (preview, activated):
+        assert response.status_code == 200, response.text
+        placed = response.json()
+        assert placed['mesocycle'] == saved['mesocycle']
+        # Projection-only occurrence IDs are added by activation; source content stays byte-equivalent.
+        strip_projection = lambda e: {k: v for k, v in e.items() if k not in ('exercise_occurrence_id', 'workout_occurrence_id', 'execution_slot')}
+        assert [strip_projection(e) for s in placed['sessions'] for e in s['exercises']] == [
+            strip_projection(e) for s in saved['sessions'] for e in s['exercises']]
+    after_sessions = activated.json()['sessions']
+    def identity_slots(sessions):
+        return {e['exercise_occurrence_id']: e['source_lineage']['source_slot_id']
+            for s in sessions for e in s['exercises']}
+    if len(offsets) == 3:
+        assert identity_slots(after_sessions) == identity_slots(before_sessions)
+        assert [s['workout_occurrence_id'] for s in after_sessions] == [s['workout_occurrence_id'] for s in before_sessions]
+    else:
+        assert set(identity_slots(after_sessions)).isdisjoint(identity_slots(before_sessions))
+        assert activated.json()['schedule']['replaces_plan_id'] == plan_id
+        with SessionLocal() as db:
+            retained = db.get(WorkoutPlan, plan_id).payload
+            assert retained['sessions'] == saved['sessions']
+            assert retained['mesocycle'] == saved['mesocycle']
+            assert retained['schedule']['mode'] == 'selected_dates_superseded_v1'
+
+
+def test_new_dated_week_uses_generation_history_instead_of_resetting_to_week_one(scenario, monkeypatch):
+    _, headers, client = scenario
+    instant = datetime(2026, 10, 6, 16, tzinfo=UTC)
+    fixed_clock(monkeypatch, instant)
+    first = client.post('/plan/generate-week', headers=headers, json=request_dates(date(2026,10,5)))
+    assert first.status_code == 200, first.text
+    fixed_clock(monkeypatch, instant + timedelta(days=7))
+    following = client.post('/plan/generate-week', headers=headers, json=request_dates(date(2026,10,12)))
+    assert following.status_code == 200, following.text
+    assert following.json()['mesocycle']['authored_week_index'] == 2
+    assert following.json()['mesocycle']['week_index'] == 2
+
+
+def test_auto_first_week_uses_existing_selector_without_preview_profile_writes(scenario):
+    user_id, headers, client = scenario
+    with SessionLocal() as db:
+        user = db.get(User, user_id)
+        user.selected_program_id = None
+        user.program_selection_mode = 'auto'
+        db.commit()
+    request = request_dates(current_monday())
+    request['template_id'] = None
+    preview = client.post('/plan/selected-dates/preview', headers=headers, json=request)
+    assert preview.status_code == 200, preview.text
+    with SessionLocal() as db:
+        user = db.get(User, user_id)
+        assert user.selected_program_id is None and user.program_selection_mode == 'auto'
+        assert user.scheduling_timezone is None and user.days_available == 5
+        assert db.query(WorkoutPlan).filter_by(user_id=user_id).count() == 0
+    activated = client.post('/plan/generate-week', headers=headers, json=request)
+    assert activated.status_code == 200, activated.text
+    assert activated.json()['program_template_id'] == preview.json()['program_template_id']
+    assert [s['scheduled_date'] for s in activated.json()['sessions']] == request['selected_dates']
+    with SessionLocal() as db:
+        assert db.query(User).filter_by(id=user_id).count() == 1
+        assert db.get(User, user_id).program_selection_mode == 'auto'
+
+
+def test_legacy_regeneration_cannot_replace_previous_local_week_at_utc_boundary(scenario, monkeypatch):
+    from app.routers import plan as plan_router
+    user_id, headers, client = scenario
+    fixed_clock(monkeypatch, datetime(2026,10,11,20,tzinfo=UTC))  # Auckland Monday; UTC Sunday.
+    class ServerSunday(date):
+        @classmethod
+        def today(cls):
+            return date(2026,10,11)
+    monkeypatch.setattr(plan_router, 'date', ServerSunday)
+    saved = {'program_template_id':'pure_bodybuilding_phase_1_full_body', 'sessions':[],
+        'schedule':{'mode':'selected_dates_v1', 'selected_dates':['2026-10-06','2026-10-09','2026-10-11']}}
+    with SessionLocal() as db:
+        db.get(User, user_id).scheduling_timezone = 'Pacific/Auckland'
+        row = WorkoutPlan(user_id=user_id, week_start=date(2026,10,5), split='full_body', phase='maintenance',
+            payload=deepcopy(saved), schedule_timezone='Pacific/Auckland', placement_revision=1)
+        db.add(row)
+        db.commit()
+        plan_id = row.id
+    response = client.post('/plan/generate-week', headers=headers,
+        json={'template_id':'pure_bodybuilding_phase_1_full_body', 'target_days':3})
+    assert response.status_code == 409, response.text
+    with SessionLocal() as db:
+        assert db.get(WorkoutPlan, plan_id).payload == saved
+        assert db.query(WorkoutPlan).filter_by(user_id=user_id).count() == 1
