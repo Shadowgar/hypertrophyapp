@@ -12,6 +12,7 @@ One forward roadmap: [M0–M6 milestones](../roadmap/milestones.md). A plan desc
 | [M1-B constraint authority](m1-authored-constraint-authority.md) | AUTH-FID-002/004 slot conflicts and explicit source-approved variant consent. | PR #42 merged / separately owner-authorized API/web activation; [activation evidence](../evidence/2026-09-29-m1-authored-constraints-activation.md). No whole-M1 acceptance. |
 | [M0 security dependency remediation](m0-security-dependency-remediation.md) | BLOCK NOW Caddy/Go HTTP transport/parser findings; one pinned image. | Owner-authorized implementation / locally qualified candidate; unmerged review PR and no Caddy deployment. M1-C paused. |
 | [Deferred security hardening](security-hardening.md) | Cross-release security follow-ups outside urgent closure. | **Proposed**; scope/owners and individual package approval pending. |
+| [M2B-1 actual-date scheduling](m2b-actual-date-scheduling.md) | Manual current-week dates, lossless placement, occurrence revisions and Today/Week routing. | Owner-authorized implementation in the 2026-10-06 task; qualification and PR review in progress. M2B migration, merge and deployment are excluded. |
 
 | Status | Required meaning |
 |---|---|

@@ -142,8 +142,8 @@ test("Week page sends template_id when override selected", async () => {
     if (url.endsWith("/plan/programs")) {
       return Promise.resolve(new Response(JSON.stringify(programs), { status: 200 }));
     }
-    if (url.endsWith("/plan/latest-week")) {
-      return Promise.resolve(new Response(JSON.stringify({ detail: "No plan generated" }), { status: 404 }));
+    if (url.includes("/plan/scheduling-context?")) {
+      return Promise.resolve(Response.json({ timezone: "America/New_York", local_today: "2026-03-10", week_start: "2026-03-09", selected_dates: [], placement_revision: 0, plan: null }));
     }
     if (url.endsWith("/weekly-review/status")) {
       return Promise.resolve(
@@ -162,7 +162,7 @@ test("Week page sends template_id when override selected", async () => {
         ),
       );
     }
-    if (url.endsWith("/plan/generate-week") && init?.method === "POST") {
+    if (url.endsWith("/plan/selected-dates/preview") && init?.method === "POST") {
       return Promise.resolve(new Response(JSON.stringify(generatedPlan), { status: 200 }));
     }
     return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
@@ -170,7 +170,7 @@ test("Week page sends template_id when override selected", async () => {
 
   render(<WeekPage />);
 
-  await waitFor(() => expect(screen.getByRole("button", { name: /Generate week plan/i })).toBeInTheDocument());
+  for (const name of ["Tue, Mar 10", "Thu, Mar 12", "Sat, Mar 14", "Sun, Mar 15"]) fireEvent.click(await screen.findByRole("checkbox", { name }));
 
   fireEvent.click(screen.getByRole("button", { name: /Program Override/i }));
 
@@ -179,7 +179,7 @@ test("Week page sends template_id when override selected", async () => {
   const select = screen.getByLabelText(/Week program override selector/i);
   fireEvent.change(select, { target: { value: "upper_lower" } });
 
-  const btn = screen.getByRole("button", { name: /Generate Week/i });
+  const btn = screen.getByRole("button", { name: /Preview selected dates/i });
   fireEvent.click(btn);
 
   await waitFor(() => expect(screen.getByText(/Week Overview/i)).toBeInTheDocument());
@@ -201,7 +201,7 @@ test("Week page sends template_id when override selected", async () => {
   });
   expect(screen.queryByText(/No rationale available\./i)).not.toBeInTheDocument();
 
-  fireEvent.click(screen.getByRole("button", { name: /Day 1: Upper 1/i }));
+  fireEvent.click(screen.getByRole("button", { name: /Tue, Mar 10: Upper 1/i }));
   await waitFor(() => {
     expect(screen.getByText(/Lead: Bench Press/i)).toBeInTheDocument();
   });
@@ -213,7 +213,7 @@ test("Week page sends template_id when override selected", async () => {
   expect(screen.getByRole("link", { name: /Demo link/i })).toHaveAttribute("href", "https://example.com/bench-video");
   expect(screen.getByText(/Intent: Full Body 1/i)).toBeInTheDocument();
 
-  fireEvent.click(screen.getByRole("button", { name: /Day 2: Arms & Weak Points/i }));
+  fireEvent.click(screen.getByRole("button", { name: /Thu, Mar 12: Arms & Weak Points/i }));
   await waitFor(() => {
     expect(screen.getByText(/Intent: Arms & Weak Points/i)).toBeInTheDocument();
   });
@@ -223,17 +223,18 @@ test("Week page sends template_id when override selected", async () => {
     // @ts-ignore
     const calls = globalThis.fetch.mock.calls.filter((entry) => {
       const url = typeof entry[0] === "string" ? entry[0] : entry[0].url;
-      return url.endsWith("/plan/generate-week");
+      return url.endsWith("/plan/selected-dates/preview");
     });
     expect(calls.length).toBe(1);
     const parsed = JSON.parse(calls[0][1].body);
     expect(parsed.template_id).toBe("upper_lower");
-    expect(parsed.target_days).toBe(4);
+    expect(parsed.selected_dates).toEqual(["2026-03-10", "2026-03-12", "2026-03-14", "2026-03-15"]);
+    expect(parsed.target_days).toBeUndefined();
   });
-  expect(screen.getByText(/Profile default: 4 days\./i)).toBeInTheDocument();
+  expect(screen.getByText(/4 of 2–5 dates selected/i)).toBeInTheDocument();
 });
 
-test("Week page blocks generation when Sunday review is required", async () => {
+test("Week page blocks preview when Sunday review is required", async () => {
   // @ts-ignore
   globalThis.fetch.mockImplementation((input) => {
     const url = typeof input === "string" ? input : input.url;
@@ -251,8 +252,8 @@ test("Week page blocks generation when Sunday review is required", async () => {
     if (url.endsWith("/plan/programs")) {
       return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }));
     }
-    if (url.endsWith("/plan/latest-week")) {
-      return Promise.resolve(new Response(JSON.stringify({ detail: "No plan generated" }), { status: 404 }));
+    if (url.includes("/plan/scheduling-context?")) {
+      return Promise.resolve(Response.json({ timezone: "America/New_York", local_today: "2026-03-10", week_start: "2026-03-09", selected_dates: [], placement_revision: 0, plan: null }));
     }
     if (url.endsWith("/weekly-review/status")) {
       return Promise.resolve(
@@ -275,16 +276,16 @@ test("Week page blocks generation when Sunday review is required", async () => {
   });
 
   render(<WeekPage />);
-
-  fireEvent.click(screen.getByRole("button", { name: /Generate Week/i }));
+  for (const name of ["Tue, Mar 10", "Thu, Mar 12", "Sun, Mar 15"]) fireEvent.click(await screen.findByRole("checkbox", { name }));
+  fireEvent.click(screen.getByRole("button", { name: /Preview selected dates/i }));
 
   await waitFor(() => {
-    expect(screen.getByText(/Sunday review required\. Open Check-In, submit weekly review, then generate the next week\./i)).toBeInTheDocument();
+    expect(screen.getByText(/Sunday review required\. Open Check-In, submit weekly review, then preview your week\./i)).toBeInTheDocument();
   });
   expect(screen.getByRole("link", { name: /Open Check-In/i })).toHaveAttribute("href", "/checkin");
 });
 
-test("Week page offers retry action after generation failure", async () => {
+test("Week page offers retry after preview failure", async () => {
   let generateCalls = 0;
   const generatedPlan = {
     program_template_id: "pure_bodybuilding_phase_1_full_body",
@@ -320,8 +321,8 @@ test("Week page offers retry action after generation failure", async () => {
     if (url.endsWith("/plan/programs")) {
       return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }));
     }
-    if (url.endsWith("/plan/latest-week")) {
-      return Promise.resolve(new Response(JSON.stringify({ detail: "No plan generated" }), { status: 404 }));
+    if (url.includes("/plan/scheduling-context?")) {
+      return Promise.resolve(Response.json({ timezone: "America/New_York", local_today: "2026-03-10", week_start: "2026-03-09", selected_dates: [], placement_revision: 0, plan: null }));
     }
     if (url.endsWith("/weekly-review/status")) {
       return Promise.resolve(
@@ -340,7 +341,7 @@ test("Week page offers retry action after generation failure", async () => {
         ),
       );
     }
-    if (url.endsWith("/plan/generate-week") && init?.method === "POST") {
+    if (url.endsWith("/plan/selected-dates/preview") && init?.method === "POST") {
       generateCalls += 1;
       if (generateCalls === 1) {
         return Promise.resolve(new Response(JSON.stringify({ detail: "boom" }), { status: 500 }));
@@ -351,16 +352,16 @@ test("Week page offers retry action after generation failure", async () => {
   });
 
   render(<WeekPage />);
-
-  fireEvent.click(screen.getByRole("button", { name: /Generate Week/i }));
+  for (const name of ["Tue, Mar 10", "Thu, Mar 12", "Sun, Mar 15"]) fireEvent.click(await screen.findByRole("checkbox", { name }));
+  fireEvent.click(screen.getByRole("button", { name: /Preview selected dates/i }));
 
   await waitFor(() => {
-    expect(screen.getByText(/Failed to generate week plan:/i)).toBeInTheDocument();
+    expect(screen.getByText(/Failed to preview selected dates:/i)).toBeInTheDocument();
   });
-  fireEvent.click(screen.getByRole("button", { name: /Generate week plan/i }));
+  fireEvent.click(screen.getByRole("button", { name: /Preview selected dates/i }));
 
   await waitFor(() => {
-    expect(screen.getByText(/Week generated for Full Body Phase 1\./i)).toBeInTheDocument();
+    expect(screen.getByText(/Preview only\./i)).toBeInTheDocument();
   });
 });
 
@@ -391,8 +392,8 @@ test("Week page saves program preference without calling generate-week", async (
         ),
       );
     }
-    if (url.endsWith("/plan/latest-week")) {
-      return Promise.resolve(new Response(JSON.stringify({ detail: "No plan generated" }), { status: 404 }));
+    if (url.includes("/plan/scheduling-context?")) {
+      return Promise.resolve(Response.json({ timezone: "America/New_York", local_today: "2026-03-10", week_start: "2026-03-09", selected_dates: [], placement_revision: 0, plan: null }));
     }
     if (url.endsWith("/profile/program-selection") && init?.method === "POST") {
       const body = JSON.parse(String(init.body));

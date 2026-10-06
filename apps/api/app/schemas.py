@@ -1,6 +1,7 @@
 from datetime import date, datetime
 from typing import Any
 from typing import Literal
+import re
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
@@ -305,6 +306,23 @@ class BodyMeasurementEntryResponse(BaseModel):
 class GenerateWeekPlanRequest(BaseModel):
     template_id: str | None = None
     target_days: int | None = Field(default=None, ge=2, le=5)
+    week_start: date | None = None
+    selected_dates: list[date] | None = None
+    timezone: str | None = None
+    expected_placement_revision: int | None = Field(default=None, ge=0)
+
+    @field_validator("week_start", "selected_dates", mode="before")
+    @classmethod
+    def validate_calendar_date_input(cls, value):
+        if value is None:
+            return value
+        values = value if isinstance(value, list) else [value]
+        for day in values:
+            if type(day) is date:
+                continue
+            if not isinstance(day, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", day):
+                raise ValueError("Use local calendar dates in YYYY-MM-DD format")
+        return value
 
 
 class NextWeekPlanRequest(BaseModel):

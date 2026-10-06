@@ -95,6 +95,12 @@ Phase 1 source tests do not cover restored Phase 2 AMRAP/relationship fidelity. 
 
 Update this matrix after an authorized implementation with exact test/criterion and evidence-manifest links. Preserve old failing results and record replacements/disposition. A proposed test name must be explicitly labeled proposed; this matrix allocates none. Owner acceptance must reference actual reviewed revision/evidence, not catalog completion.
 
+## M2B-1 revision-scoped candidate
+
+The [bounded actual-date scheduling plan](../plans/m2b-actual-date-scheduling.md) implements the manual current-week portion of SCHED-001/002/003/004/005/008. Placement is owned by [selected_date_scheduler.py](../../packages/core-engine/core_engine/selected_date_scheduler.py) and the M1-C allocator; activation/revision ownership is [selected_date_plans.py](../../apps/api/app/selected_date_plans.py). Meaningful protections are [core date/fidelity tests](../../packages/core-engine/tests/test_selected_date_scheduler.py), [API local-clock/history tests](../../apps/api/tests/test_selected_date_scheduling.py), [PostgreSQL race tests](../../apps/api/tests/test_selected_date_postgres.py), and [Week picker tests](../../apps/web/tests/week.selected-dates.test.tsx) / [Today date tests](../../apps/web/tests/today.selected-dates.test.tsx).
+
+SCHED-006 duration calibration and SCHED-007 adaptive timer behavior remain outside this slice. Adjacent-week context can be unknown, timezone changes and missed-workout carryover need separately reviewed policy, and no full requirement, ADR or release acceptance is inferred. Qualification evidence will record current checks and baseline failures separately.
+
 ## M1-B revision-scoped candidate
 
 AUTH-FID-002/004 are addressed by the [bounded constraint/consent candidate](../plans/m1-authored-constraint-authority.md),

@@ -32,6 +32,7 @@ import {
 } from "@/lib/oneRepMax";
 import { parseRestToSeconds } from "@/lib/rest";
 import { authoredRelationshipLabels } from "@/lib/authored-relationships";
+import { formatCalendarDate } from "@/lib/calendar-date";
 import { resolveGuidanceText } from "@/lib/today-guidance";
 import { kgToLbs, lbsToKg, snapToHalfLb } from "@/lib/weight";
 
@@ -917,7 +918,7 @@ export default function TodayPage() {
   const [setFeedbackByExercise, setSetFeedbackByExercise] = useState<Record<string, WorkoutSetFeedback>>({});
   const [liveRecommendationByExercise, setLiveRecommendationByExercise] = useState<Record<string, WorkoutLiveRecommendation>>({});
   const [workoutSummary, setWorkoutSummary] = useState<WorkoutSummary | null>(null);
-  const [recoveringMissingWorkout, setRecoveringMissingWorkout] = useState(false);
+  const [localToday, setLocalToday] = useState<{ date: string; timezone: string } | null>(null);
   const [selectedExerciseId, setSelectedExerciseId] = useState<string | null>(null);
   /** User-entered baseline: "I did X lb × Y reps" → 1RM, working weight, warmups. Keyed by exercise id. */
   const [baselineByExercise, setBaselineByExercise] = useState<
@@ -995,6 +996,12 @@ export default function TodayPage() {
   }, []);
 
   const loadToday = useCallback(async (): Promise<WorkoutSession | null> => {
+    const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+    void api.getSchedulingContext(browserTimezone).then((context) => {
+      if (typeof context.local_today === "string" && typeof context.timezone === "string") {
+        setLocalToday({ date: context.local_today, timezone: context.timezone });
+      }
+    }).catch(() => setLocalToday(null));
     try {
       const data = await api.getTodayWorkout();
       currentOccurrence.current = workoutReference(data);
@@ -1078,37 +1085,14 @@ export default function TodayPage() {
         setWorkoutProgress(null);
       }
       return data;
-    } catch {
+    } catch (error) {
       setWorkout(null);
-      setMessage("No workout available. Generate week plan first.");
+      setMessage(error instanceof Error && error.message === "No workout scheduled today"
+        ? "Rest day — no workout is scheduled for your local date. Check Week for your selected dates."
+        : "No workout available. Choose dates in Week first.");
       return null;
     }
   }, [loadWorkoutSummary]);
-
-  async function recoverMissingWorkout() {
-    setRecoveringMissingWorkout(true);
-    setMessage("Regenerating week from your latest plan settings...");
-    try {
-      const [latestPlan, profile] = await Promise.all([
-        api.getLatestWeekPlan().catch(() => null),
-        api.getProfile().catch(() => null),
-      ]);
-      const selectedProgramId = latestPlan?.program_template_id ?? profile?.selected_program_id ?? null;
-      const latestPlanDays = Array.isArray(latestPlan?.sessions) ? latestPlan.sessions.length : null;
-      const targetDays =
-        typeof latestPlanDays === "number" && latestPlanDays >= 2 && latestPlanDays <= 5
-          ? latestPlanDays
-          : typeof profile?.days_available === "number"
-            ? profile.days_available
-            : null;
-      await api.generateWeek(selectedProgramId, targetDays);
-      await loadToday();
-    } catch {
-      setMessage("Could not generate a week yet. Try again from Week or Onboarding.");
-    } finally {
-      setRecoveringMissingWorkout(false);
-    }
-  }
 
   const resetSorenessForm = useCallback(() => {
     setSorenessByMuscle(createInitialSorenessState());
@@ -1343,7 +1327,9 @@ export default function TodayPage() {
   const swapTargetCurrentIndex = swapTarget ? (swapIndexByExercise[exerciseKey(swapTarget)] ?? 0) : 0;
   const activeProgramId = workout ? extractProgramId(workout.session_id) : null;
 
-  const todayDate = new Date().toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  const todayDate = localToday
+    ? `${formatCalendarDate(localToday.date)} · ${localToday.timezone}`
+    : `${new Date().toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} · browser local date`;
 
   return (
     <div className="space-y-4 pb-[max(7rem,env(safe-area-inset-bottom))]">
@@ -1361,7 +1347,8 @@ export default function TodayPage() {
       </div>
 
       {message ? (
-        <div className="main-card main-card--shell space-y-2 ui-body-sm">
+        <div className="main-card main-card--shell space-y-2 ui-body-sm" role="status">
+          {message.startsWith("Rest day") ? <h2 className="text-base font-semibold">No workout scheduled today</h2> : null}
           <p>{message}</p>
           {message.includes("Check-In") ? (
             <Link
@@ -1372,13 +1359,11 @@ export default function TodayPage() {
               Go to Check-In
             </Link>
           ) : null}
-          {message.startsWith("No workout available") ? (
-            <Button type="button" onClick={recoverMissingWorkout} disabled={recoveringMissingWorkout}>
-              <span className="inline-flex items-center gap-2">
-                <UiIcon name="plan" className="ui-icon--action" />
-                {recoveringMissingWorkout ? "Generating..." : "Generate Week and Reload Today"}
-              </span>
-            </Button>
+          {message.startsWith("No workout available") || message.startsWith("Rest day") ? (
+            <Link href="/week" className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-zinc-900/70 px-3 py-2 text-sm text-zinc-100">
+              <UiIcon name="plan" className="ui-icon--action" />
+              Open Week Plan
+            </Link>
           ) : null}
         </div>
       ) : null}

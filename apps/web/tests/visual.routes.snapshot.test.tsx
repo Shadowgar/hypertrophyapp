@@ -45,8 +45,8 @@ test("visual snapshot: week route", async () => {
   globalThis.fetch.mockImplementation((input: RequestInfo | URL) => {
     const url = resolveUrl(input);
 
-    if (url.endsWith("/plan/latest-week")) {
-      return Promise.resolve(new Response(JSON.stringify({ detail: "not found" }), { status: 404 }));
+    if (url.includes("/plan/scheduling-context?")) {
+      return Promise.resolve(Response.json({ timezone: "America/New_York", local_today: "2026-03-10", week_start: "2026-03-09", selected_dates: [], placement_revision: 0, plan: null }));
     }
 
     if (url.endsWith("/plan/programs")) {
@@ -69,8 +69,8 @@ test("visual snapshot: week route", async () => {
     return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
   });
 
-  const { container, getByText } = render(<WeekPage />);
-  await waitFor(() => expect(getByText(/Week Plan/i)).toBeInTheDocument());
+  const { container, findByRole } = render(<WeekPage />);
+  await findByRole("checkbox", { name: "Tue, Mar 10" });
   expect(container.firstChild).toMatchSnapshot();
 });
 

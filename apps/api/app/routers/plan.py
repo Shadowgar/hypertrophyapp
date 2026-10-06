@@ -44,6 +44,9 @@ from core_engine import (
 )
 from core_engine.scheduler import AUTHORITATIVE_AUTHORED_PASSTHROUGH_KEY
 from core_engine.authored_redistribution import AuthoredAllocationInfeasible, redistribute_authored_sessions
+from core_engine.selected_date_scheduler import (
+    SelectedWeek,
+)
 
 from ..config import settings
 from ..database import get_db
@@ -409,9 +412,11 @@ def _resolve_generation_week_context(
     *,
     binding_id: str,
     generation_mode: GenerationMode,
+    reference_date: date | None = None,
 ) -> tuple[list[WorkoutPlan], date | None]:
     latest_binding_plan = _resolve_latest_binding_plan(prior_plans, binding_id=binding_id)
-    monday = date.today() - timedelta(days=date.today().weekday())
+    today = reference_date or date.today()
+    monday = today - timedelta(days=today.weekday())
     if generation_mode == "next_week_advance":
         if latest_binding_plan is not None:
             return prior_plans, latest_binding_plan.week_start + timedelta(days=7)
@@ -444,8 +449,10 @@ def _resolve_current_regenerate_week_pin(
     prior_plans: list[WorkoutPlan],
     binding_id: str,
     week_start_override: date | None,
+    reference_date: date | None = None,
 ) -> tuple[int, int]:
-    monday = date.today() - timedelta(days=date.today().weekday())
+    today = reference_date or date.today()
+    monday = today - timedelta(days=today.weekday())
     effective_week_start = week_start_override or monday
     if effective_week_start <= monday:
         week_index = 1
@@ -1572,6 +1579,9 @@ def apply_frequency_adaptation(
     db: DbSession,
     current_user: CurrentUser,
 ) -> FrequencyAdaptationApplyResponse:
+    lock_history_user(db, current_user.id)
+    db.refresh(current_user)
+    _reject_legacy_selected_week_mutation(db, current_user)
     if not current_user.days_available or not current_user.split_preference:
         raise HTTPException(status_code=400, detail=PROFILE_INCOMPLETE_DETAIL)
     log_event(
@@ -1654,6 +1664,7 @@ def _build_week_plan_runtime_for_user(
     explicit_template_id: str | None,
     target_days_override: int | None = None,
     generation_mode: GenerationMode = "current_week_regenerate",
+    reference_date: date | None = None,
 ) -> dict[str, Any]:
     effective_days_available = _resolve_effective_days_available(
         current_days_available=current_user.days_available,
@@ -1829,12 +1840,14 @@ def _build_week_plan_runtime_for_user(
         prior_plans,
         binding_id=selected_template_id,
         generation_mode=generation_mode,
+        reference_date=reference_date,
     )
     if generation_mode == "current_week_regenerate":
         regenerate_week_index_pin, regenerate_authored_week_index_pin = _resolve_current_regenerate_week_pin(
             prior_plans=prior_plans,
             binding_id=selected_template_id,
             week_start_override=week_start_override,
+            reference_date=reference_date,
         )
         authored_week_index_override = regenerate_authored_week_index_pin
 
@@ -2011,7 +2024,9 @@ def _build_week_plan_runtime_for_user(
             cast(dict[str, Any], scheduler_input_template) if isinstance(scheduler_input_template, dict) else {}
         )
 
-    base_plan = generate_week_plan(**cast(dict[str, Any], scheduler_runtime["scheduler_kwargs"]))
+    base_plan = generate_week_plan(
+        **cast(dict[str, Any], scheduler_runtime["scheduler_kwargs"]), planning_date=reference_date,
+    )
     if generated_volume_stage_trace is not None:
         generated_volume_stage_trace["scheduler_output_planned_sets"] = _planned_sets_from_sessions(
             cast(list[dict[str, Any]], base_plan.get("sessions") or [])
@@ -2310,6 +2325,11 @@ def _ensure_latest_authored_plan_current_if_needed(
     if latest_plan is None or _has_user_workout_activity(db, user_id=current_user.id):
         return latest_plan
 
+    # A read must never replace an explicitly dated plan or its occurrence IDs.
+    latest_schedule = latest_plan.payload.get("schedule") if isinstance(latest_plan.payload, dict) else None
+    if isinstance(latest_schedule, dict) and latest_schedule.get("mode") == "selected_dates_v1":
+        return latest_plan
+
     latest_payload = latest_plan.payload if isinstance(latest_plan.payload, dict) else {}
     latest_payload_binding_id = resolve_selected_program_binding_id(latest_payload.get("program_template_id"))
     if latest_payload_binding_id != selected_template_id:
@@ -2341,8 +2361,34 @@ def ensure_current_workout_plans_for_user(
     db: Session,
     current_user: User,
 ) -> list[WorkoutPlan]:
+    if current_user.scheduling_timezone:
+        return _list_user_workout_plans(db, user_id=current_user.id)
     _ensure_latest_authored_plan_current_if_needed(db=db, current_user=current_user)
     return _list_user_workout_plans(db, user_id=current_user.id)
+
+
+def _reject_legacy_selected_week_mutation(db: Session, current_user: User) -> None:
+    from ..selected_date_plans import active_selected_plans, local_week
+    if current_user.scheduling_timezone:
+        _, monday = local_week(current_user.scheduling_timezone, datetime.now(UTC))
+        if active_selected_plans(_list_user_workout_plans(db, user_id=current_user.id), monday):
+            raise HTTPException(409, "This week uses selected dates; use Week to change placement")
+
+
+@router.get("/plan/scheduling-context")
+def plan_scheduling_context(db: DbSession, current_user: CurrentUser, timezone: str | None = None) -> dict:
+    from ..selected_date_plans import scheduling_context
+    return scheduling_context(db, current_user, timezone, datetime.now(UTC))
+
+
+@router.post("/plan/selected-dates/preview")
+def preview_selected_dates(payload: GenerateWeekPlanRequest, db: DbSession, current_user: CurrentUser) -> dict:
+    from ..selected_date_plans import selected_week_command, validate_request
+    if not current_user.split_preference:
+        raise HTTPException(400, PROFILE_INCOMPLETE_DETAIL)
+    return selected_week_command(db=db, user=current_user, explicit_template_id=payload.template_id,
+        selected_week=validate_request(payload, datetime.now(UTC)),
+        expected_revision=payload.expected_placement_revision, preview=True)
 
 
 def _generate_week_for_user(
@@ -2352,7 +2398,22 @@ def _generate_week_for_user(
     explicit_template_id: str | None,
     target_days: int | None,
     generation_mode: GenerationMode,
+    selected_week: SelectedWeek | None = None,
+    expected_placement_revision: int | None = None,
 ) -> dict[str, Any]:
+    if selected_week is None:
+        lock_history_user(db, current_user.id)
+        db.refresh(current_user)
+    if selected_week is not None:
+        if generation_mode != "current_week_regenerate":
+            raise HTTPException(422, "Date selection is currently limited to this week")
+        from ..selected_date_plans import selected_week_command
+        return selected_week_command(
+            db=db, user=current_user, explicit_template_id=explicit_template_id,
+            selected_week=selected_week, expected_revision=expected_placement_revision,
+        )
+    if generation_mode == "current_week_regenerate":
+        _reject_legacy_selected_week_mutation(db, current_user)
     route = "/plan/generate-week" if generation_mode == "current_week_regenerate" else "/plan/next-week"
     user_id = str(current_user.id)
     normalized_explicit_template_id = resolve_selected_program_binding_id(explicit_template_id) if explicit_template_id else None
@@ -2445,15 +2506,23 @@ def plan_generate_week(
     db: DbSession,
     current_user: CurrentUser,
 ) -> dict:
-    if not current_user.days_available or not current_user.split_preference:
+    if not current_user.split_preference or (not current_user.days_available and payload.selected_dates is None):
         raise HTTPException(status_code=400, detail=PROFILE_INCOMPLETE_DETAIL)
     explicit_template_id = resolve_selected_program_binding_id(payload.template_id) if payload.template_id else None
+    selected_week = None
+    if payload.selected_dates is not None:
+        from ..selected_date_plans import validate_request
+        selected_week = validate_request(payload, datetime.now(UTC))
+    elif payload.week_start is not None or payload.timezone is not None or payload.expected_placement_revision is not None:
+        raise HTTPException(422, "Week, timezone and revision require selected dates")
     return _generate_week_for_user(
         db=db,
         current_user=current_user,
         explicit_template_id=explicit_template_id,
         target_days=payload.target_days,
         generation_mode="current_week_regenerate",
+        selected_week=selected_week,
+        expected_placement_revision=payload.expected_placement_revision,
     )
 
 
