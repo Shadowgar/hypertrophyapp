@@ -85,6 +85,9 @@ test("history calendar lets user inspect prior day exercises", async () => {
     if (url.includes("/plan/intelligence/recommendations")) {
       return Promise.resolve(new Response(JSON.stringify(timelinePayload), { status: 200 }));
     }
+    if (url.includes("/plan/scheduling-context?")) {
+      return Promise.resolve(Response.json({ timezone: "UTC", timezone_persisted: false, local_today: "2026-03-05", week_start: "2026-03-02", selected_dates: [], placement_revision: 0, plan: null }));
+    }
     if (url.includes("/history/calendar")) {
       return Promise.resolve(new Response(JSON.stringify(calendarPayload), { status: 200 }));
     }
@@ -214,6 +217,9 @@ test("history calendar supports view toggles, filters, and previous weekday jump
     }
     if (url.includes("/plan/intelligence/recommendations")) {
       return Promise.resolve(new Response(JSON.stringify(timelinePayload), { status: 200 }));
+    }
+    if (url.includes("/plan/scheduling-context?")) {
+      return Promise.resolve(Response.json({ timezone: "UTC", timezone_persisted: false, local_today: "2026-03-05", week_start: "2026-03-02", selected_dates: [], placement_revision: 0, plan: null }));
     }
     if (url.includes("/history/calendar")) {
       return Promise.resolve(new Response(JSON.stringify(calendarPayload), { status: 200 }));
@@ -346,6 +352,9 @@ test("history page summarizes progression signals and coach queue", async () => 
     if (url.includes("/plan/intelligence/recommendations")) {
       return Promise.resolve(new Response(JSON.stringify(timelinePayload), { status: 200 }));
     }
+    if (url.includes("/plan/scheduling-context?")) {
+      return Promise.resolve(Response.json({ timezone: "UTC", timezone_persisted: false, local_today: "2026-03-05", week_start: "2026-03-02", selected_dates: [], placement_revision: 0, plan: null }));
+    }
     if (url.includes("/history/calendar")) {
       return Promise.resolve(new Response(JSON.stringify(calendarPayload), { status: 200 }));
     }
@@ -402,6 +411,9 @@ test("history calendar offers retry and recovers after load failure", async () =
     }
     if (url.includes("/plan/intelligence/recommendations")) {
       return Promise.resolve(new Response(JSON.stringify(timelinePayload), { status: 200 }));
+    }
+    if (url.includes("/plan/scheduling-context?")) {
+      return Promise.resolve(Response.json({ timezone: "UTC", timezone_persisted: false, local_today: "2026-03-05", week_start: "2026-03-02", selected_dates: [], placement_revision: 0, plan: null }));
     }
     if (url.includes("/history/calendar")) {
       calendarCalls += 1;
@@ -487,6 +499,9 @@ test("history calendar shows planned detail on missed day with zero logged sets"
     }
     if (url.includes("/plan/intelligence/recommendations")) {
       return Promise.resolve(new Response(JSON.stringify(timelinePayload), { status: 200 }));
+    }
+    if (url.includes("/plan/scheduling-context?")) {
+      return Promise.resolve(Response.json({ timezone: "UTC", timezone_persisted: false, local_today: "2026-03-05", week_start: "2026-03-02", selected_dates: [], placement_revision: 0, plan: null }));
     }
     if (url.includes("/history/calendar")) {
       return Promise.resolve(new Response(JSON.stringify(calendarPayload), { status: 200 }));

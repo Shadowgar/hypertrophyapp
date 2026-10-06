@@ -110,3 +110,5 @@ AUTH-FID-002/004 are addressed by the [bounded constraint/consent candidate](../
 [qualification evidence](../evidence/2026-09-29-m1-authored-constraints.md).
 This supplements the audit mapping, does not certify every criterion, and does
 not mark either requirement, ADR, milestone or release owner-accepted.
+
+The bounded history projection uses [owner-bound performed dates](../../apps/api/app/history_dates.py) without modifying audit timestamps or undated legacy records. [History date/window tests](../../apps/api/tests/test_selected_date_history_dates.py), [core aggregation tests](../../packages/core-engine/tests/test_history_performed_dates.py) and [History local-window tests](../../apps/web/tests/history.selected-dates.test.tsx) cover the opposite UTC/local week boundaries, effective correction receipts and clock failure. This is implementation evidence, not broader HIST/PERF acceptance.

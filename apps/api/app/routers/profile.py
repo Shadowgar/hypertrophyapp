@@ -1,4 +1,4 @@
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from typing import Annotated, Any, Sequence, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -22,12 +22,14 @@ from core_engine import (
     prepare_program_switch_runtime,
     resolve_weekly_review_window,
 )
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
 
 from ..config import settings
 from ..database import get_db
 from ..selected_date_plans import local_week
+from ..history_dates import performed_log_rows
 from ..workout_history import effective_set_logs, valid_weekly_reviews, lock_history_user
 from ..deps import get_current_user
 from ..models import BodyMeasurementEntry, SorenessEntry, User, WeeklyCheckin, WeeklyReviewCycle, WorkoutSetLog
@@ -241,19 +243,14 @@ def _collect_previous_week_performance_summary(
     )
     previous_plan = (
         db.query(WorkoutPlan)
-        .filter(WorkoutPlan.user_id == user_id, WorkoutPlan.week_start == previous_week_start)
+        .filter(WorkoutPlan.user_id == user_id, WorkoutPlan.week_start == previous_week_start,
+            func.coalesce(WorkoutPlan.payload['schedule']['mode'].as_string(), '') != 'selected_dates_superseded_v1')
         .order_by(WorkoutPlan.created_at.desc())
         .first()
     )
-    logs = (
-        effective_set_logs(db)
-        .filter(
-            WorkoutSetLog.user_id == user_id,
-            WorkoutSetLog.created_at >= cast(datetime, log_window_runtime["window_start"]),
-            WorkoutSetLog.created_at < cast(datetime, log_window_runtime["window_end"]),
-        )
-        .all()
-    )
+    logs = performed_log_rows(db, user_id=user_id,
+        start_date=cast(datetime, log_window_runtime['window_start']).date(),
+        end_date=cast(datetime, log_window_runtime['window_end']).date() - timedelta(days=1))
     summary_runtime = prepare_weekly_review_summary_route_runtime(
         previous_week_start=previous_week_start,
         week_start=week_start,
