@@ -277,12 +277,14 @@ def test_context_requires_timezone_for_undated_user(scenario):
 
 def fixed_clock(monkeypatch, instant):
     from app.routers import plan, workout
+    from app import selected_date_plans
     class Clock(datetime):
         @classmethod
         def now(cls, tz=None):
             return instant.astimezone(tz) if tz else instant.replace(tzinfo=None)
     monkeypatch.setattr(plan, 'datetime', Clock)
     monkeypatch.setattr(workout, 'datetime', Clock)
+    monkeypatch.setattr(selected_date_plans, 'datetime', Clock)
 
 
 @pytest.mark.parametrize('instant, expected_today, expected_week', [

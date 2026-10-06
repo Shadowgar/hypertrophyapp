@@ -248,6 +248,8 @@ export type GeneratedWeekPlan = {
     timezone: string;
     selected_dates: string[];
     placement_revision: number;
+    preview_digest?: string;
+    preview_digest_version?: string;
     spacing?: { gap_days: number[]; warnings: string[]; previous_date?: string | null; next_date?: string | null };
   };
   program_template_id: string;
@@ -998,7 +1000,7 @@ export const api = {
   previewSelectedDates: (payload: SelectedDatePlanRequest) => request<GeneratedWeekPlan>("/plan/selected-dates/preview", {
     method: "POST", body: JSON.stringify(payload),
   }),
-  activateSelectedDates: (payload: SelectedDatePlanRequest) => request<GeneratedWeekPlan>("/plan/generate-week", {
+  activateSelectedDates: (payload: SelectedDatePlanRequest & { expected_preview_digest: string }) => request<GeneratedWeekPlan>("/plan/generate-week", {
     method: "POST", body: JSON.stringify(payload),
   }),
   getProfile: () => request<Profile>("/profile"),

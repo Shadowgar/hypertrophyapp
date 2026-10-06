@@ -163,7 +163,7 @@ test("Week page sends template_id when override selected", async () => {
       );
     }
     if (url.endsWith("/plan/selected-dates/preview") && init?.method === "POST") {
-      return Promise.resolve(new Response(JSON.stringify(generatedPlan), { status: 200 }));
+      return Promise.resolve(new Response(JSON.stringify({ ...generatedPlan, schedule: { preview_digest: "a".repeat(64) } }), { status: 200 }));
     }
     return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
   });
@@ -350,7 +350,7 @@ test("Week page offers retry after preview failure", async () => {
       if (generateCalls === 1) {
         return Promise.resolve(new Response(JSON.stringify({ detail: "boom" }), { status: 500 }));
       }
-      return Promise.resolve(new Response(JSON.stringify(generatedPlan), { status: 200 }));
+      return Promise.resolve(new Response(JSON.stringify({ ...generatedPlan, schedule: { preview_digest: "a".repeat(64) } }), { status: 200 }));
     }
     return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
   });

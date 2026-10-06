@@ -310,6 +310,8 @@ class GenerateWeekPlanRequest(BaseModel):
     selected_dates: list[date] | None = None
     timezone: str | None = None
     expected_placement_revision: int | None = Field(default=None, ge=0)
+    expected_preview_digest: str | None = Field(default=None, min_length=64, max_length=64,
+        pattern=r"^[0-9a-fA-F]{64}$")
 
     @field_validator("week_start", "selected_dates", mode="before")
     @classmethod

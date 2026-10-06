@@ -2410,6 +2410,7 @@ def _generate_week_for_user(
     generation_mode: GenerationMode,
     selected_week: SelectedWeek | None = None,
     expected_placement_revision: int | None = None,
+    expected_preview_digest: str | None = None,
 ) -> dict[str, Any]:
     if selected_week is None:
         lock_history_user(db, current_user.id)
@@ -2421,6 +2422,7 @@ def _generate_week_for_user(
         return selected_week_command(
             db=db, user=current_user, explicit_template_id=explicit_template_id,
             selected_week=selected_week, expected_revision=expected_placement_revision,
+            expected_preview_digest=expected_preview_digest,
         )
     if generation_mode == "current_week_regenerate":
         _reject_legacy_selected_week_mutation(db, current_user)
@@ -2523,8 +2525,9 @@ def plan_generate_week(
     if payload.selected_dates is not None:
         from ..selected_date_plans import validate_request
         selected_week = validate_request(payload, datetime.now(UTC))
-    elif payload.week_start is not None or payload.timezone is not None or payload.expected_placement_revision is not None:
-        raise HTTPException(422, "Week, timezone and revision require selected dates")
+    elif (payload.week_start is not None or payload.timezone is not None
+        or payload.expected_placement_revision is not None or payload.expected_preview_digest is not None):
+        raise HTTPException(422, "Week, timezone, revision and preview binding require selected dates")
     return _generate_week_for_user(
         db=db,
         current_user=current_user,
@@ -2533,6 +2536,7 @@ def plan_generate_week(
         generation_mode="current_week_regenerate",
         selected_week=selected_week,
         expected_placement_revision=payload.expected_placement_revision,
+        expected_preview_digest=payload.expected_preview_digest,
     )
 
 

@@ -330,7 +330,7 @@ export default function WeekPage() {
   const [timezone, setTimezone] = useState("");
   const timezoneRef = useRef("");
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
-  const [preview, setPreview] = useState<{ plan: GeneratedWeekPlan; request: SelectedDatePlanRequest } | null>(null);
+  const [preview, setPreview] = useState<{ plan: GeneratedWeekPlan; request: SelectedDatePlanRequest; digest: string } | null>(null);
   const contextRequest = useRef(0);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSavingProgramSelection, setIsSavingProgramSelection] = useState(false);
@@ -399,17 +399,21 @@ export default function WeekPage() {
         return;
       }
       if (activate) {
-        await api.activateSelectedDates(request);
+        if (!preview?.digest) throw new Error("Unable to verify this preview. Try previewing your dates again.");
+        await api.activateSelectedDates({ ...request, expected_preview_digest: preview.digest });
         await refreshContext(request.timezone, true);
         setPlanStatus("Selected dates activated. Today follows your local calendar dates.");
       } else {
         const data = await api.previewSelectedDates(request);
         if (contextRef.current?.week_start !== request.week_start || contextRef.current?.placement_revision !== request.expected_placement_revision) return;
-        setPreview({ plan: data, request });
+        const digest = data.schedule?.preview_digest;
+        if (!digest || !/^[a-f0-9]{64}$/.test(digest)) throw new Error("Unable to verify this preview. Try previewing your dates again.");
+        setPreview({ plan: data, request, digest });
         setPlanStatus("Preview only. Review workload and spacing, then activate these dates.");
       }
     } catch (error) {
       setPreview(null);
+      if (activate) await refreshContext(request.timezone).catch(() => undefined);
       setPlanStatus(`Failed to ${activate ? "activate" : "preview"} selected dates: ${error instanceof Error ? error.message : "Unknown error"}`);
     } finally { setIsGenerating(false); }
   }

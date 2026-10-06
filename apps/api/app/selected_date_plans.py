@@ -5,6 +5,8 @@ Preview uses a transient profile and never flushes or commits a planning change.
 """
 from copy import deepcopy
 from datetime import UTC, date, datetime, timedelta
+from hashlib import sha256
+import json
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import HTTPException
@@ -20,6 +22,44 @@ from .workout_identity import identified_plans
 
 SELECTED_MODE = 'selected_dates_v1'
 AUTHORED = {'pure_bodybuilding_phase_1_full_body', 'pure_bodybuilding_phase_2_full_body'}
+PREVIEW_DIGEST_VERSION = 'selected-date-preview-v1'
+_PREVIEW_PROJECTION_FIELDS = frozenset({
+    'workout_occurrence_id', 'exercise_occurrence_id', 'plan_id',
+    'session_slot', 'execution_slot', 'workout_slot', 'placement_revision',
+    'created_at', 'generated_at', 'updated_at',
+})
+
+
+def preview_content_digest(plan: dict) -> str:
+    """Bind reviewed content, with stable list order and explicit placement input.
+
+    Preserve program/block headers and every session/exercise prescription field,
+    including raw/typed source semantics, lineage, permissions, constraints,
+    working loads and variants. Trace narratives, occurrence projection, volatile
+    timestamps and placement-history metadata do not prescribe reviewed work.
+    """
+    def content(value):
+        if isinstance(value, dict):
+            return {key: content(item) for key, item in value.items()
+                if key not in _PREVIEW_PROJECTION_FIELDS
+                and key != 'decision_trace' and not key.endswith('_trace')}
+        if isinstance(value, list):
+            return [content(item) for item in value]
+        return value
+
+    schedule = plan.get('schedule') or {}
+    prescription = content({key: value for key, value in plan.items() if key not in ('schedule', 'user')})
+    for session in prescription.get('sessions') or []:
+        # identified_sessions adds this duplicate plan-identity projection.
+        # The actual selected week stays bound explicitly below.
+        session.pop('week_start', None)
+    canonical = {
+        'version': PREVIEW_DIGEST_VERSION,
+        'placement': {key: schedule.get(key) for key in ('week_start', 'timezone', 'selected_dates')},
+        'prescription': prescription,
+    }
+    encoded = json.dumps(canonical, sort_keys=True, separators=(',', ':'), ensure_ascii=False, allow_nan=False)
+    return sha256(encoded.encode('utf-8')).hexdigest()
 
 
 def local_week(timezone: str | None, planning_instant: datetime) -> tuple[date, date]:
@@ -89,13 +129,21 @@ def neighbor_context(plans: list[WorkoutPlan], week: SelectedWeek) -> tuple[dict
 
 
 def selected_week_command(*, db: Session, user: User, explicit_template_id: str | None,
-    selected_week: SelectedWeek, expected_revision: int | None, preview: bool = False) -> dict:
+    selected_week: SelectedWeek, expected_revision: int | None, preview: bool = False,
+    expected_preview_digest: str | None = None) -> dict:
     from .routers.plan import _build_week_plan_runtime_for_user, _current_regenerate_would_replace_with_existing_progress, _list_user_workout_plans
     if not preview:
         lock_history_user(db, user.id)
         db.refresh(user)
     if user.scheduling_timezone and user.scheduling_timezone != selected_week.timezone:
         raise HTTPException(409, 'Use your configured scheduling timezone; timezone changes need a separate history policy')
+    if not preview:
+        try:
+            selected_week = validate_selected_week(week_start=selected_week.week_start,
+                selected_dates=list(selected_week.dates), timezone=selected_week.timezone,
+                planning_instant=datetime.now(UTC))
+        except SelectedDateError as exc:
+            raise HTTPException(409, 'The current local week changed; review this week again before activating') from exc
     selected_id = resolve_selected_program_binding_id(explicit_template_id or user.selected_program_id)
     plans = _list_user_workout_plans(db, user_id=user.id)
     active = active_selected_plans(plans, selected_week.week_start)
@@ -160,6 +208,11 @@ def selected_week_command(*, db: Session, user: User, explicit_template_id: str 
     placed['schedule']['revision_policy'] = 'unstarted-placement-v1; execution/consent freezes the week'
     if existing and not same_count:
         placed['schedule']['replaces_plan_id'] = existing.id
+    digest = preview_content_digest(placed)
+    placed['schedule']['preview_digest'] = digest
+    placed['schedule']['preview_digest_version'] = PREVIEW_DIGEST_VERSION
+    if not preview and expected_preview_digest is not None and expected_preview_digest.lower() != digest:
+        raise HTTPException(409, 'Preview content changed; review the schedule again before activating')
     if preview:
         return placed
     if existing and same_count:

@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import WeekPage from "@/app/week/page";
 
 const selected = ["2026-10-06", "2026-10-09", "2026-10-11"];
+const digest = "a".repeat(64);
 const plan = {
   program_template_id: "pure_bodybuilding_phase_1_full_body", split: "full_body", phase: "maintenance",
   week_start: "2026-10-05", user: { days_available: 3 },
@@ -18,10 +19,16 @@ const plan = {
 let context: { timezone: string; local_today: string; week_start: string; selected_dates: string[]; placement_revision: number; plan: typeof plan | null };
 let writes: { path: string; body: Record<string, unknown> }[];
 let serverSundayReviewRequired: boolean;
+let previewDigest: string | undefined;
+let activationConflict: boolean;
+let activationWeekRollover: boolean;
 
 beforeEach(() => {
   writes = [];
   serverSundayReviewRequired = false;
+  previewDigest = digest;
+  activationConflict = false;
+  activationWeekRollover = false;
   context = { timezone: "America/Los_Angeles", local_today: "2026-10-06", week_start: "2026-10-05", selected_dates: [], placement_revision: 0, plan: null };
   globalThis.fetch = vi.fn(async (input, init) => {
     const url = String(input);
@@ -32,6 +39,12 @@ beforeEach(() => {
     if (url.endsWith("/weekly-review/status")) return Response.json({ today_is_sunday: serverSundayReviewRequired, review_required: serverSundayReviewRequired });
     if (init?.method === "POST") {
       writes.push({ path: url, body: JSON.parse(String(init.body)) });
+      if (url.endsWith("/plan/selected-dates/preview")) return Response.json({ ...plan, schedule: { ...plan.schedule, preview_digest: previewDigest } });
+      if (url.endsWith("/plan/generate-week") && activationWeekRollover) {
+        context = { ...context, local_today: "2026-10-12", week_start: "2026-10-12", selected_dates: [], placement_revision: 0, plan: null };
+        return Response.json({ detail: "Local week changed; preview your dates again" }, { status: 409 });
+      }
+      if (url.endsWith("/plan/generate-week") && activationConflict) return Response.json({ detail: "Preview content changed; preview your dates again" }, { status: 409 });
       if (url.endsWith("/plan/generate-week")) context = { ...context, selected_dates: selected, placement_revision: 1, plan };
       return Response.json(plan);
     }
@@ -96,7 +109,7 @@ test("unchanged preview requires explicit activation and refreshes placement rev
   fireEvent.click(await screen.findByRole("button", { name: "Activate selected dates" }));
   await screen.findByText(/Selected dates activated/);
   expect(writes.filter((item) => item.path.endsWith("/plan/generate-week"))).toEqual([{
-    path: expect.any(String), body: { template_id: plan.program_template_id, week_start: "2026-10-05", timezone: "America/Los_Angeles", selected_dates: selected, expected_placement_revision: 0 },
+    path: expect.any(String), body: { template_id: plan.program_template_id, week_start: "2026-10-05", timezone: "America/Los_Angeles", selected_dates: selected, expected_placement_revision: 0, expected_preview_digest: digest },
   }]);
   expect(screen.queryByRole("button", { name: "Activate selected dates" })).not.toBeInTheDocument();
 });
@@ -116,7 +129,8 @@ test("server Sunday review status cannot block local Saturday date placement", a
     expect.stringMatching(/\/plan\/selected-dates\/preview$/),
     expect.stringMatching(/\/plan\/generate-week$/),
   ]);
-  expect(writes.every((write) => Object.keys(write.body).sort().join(",") === "expected_placement_revision,selected_dates,template_id,timezone,week_start")).toBe(true);
+  expect(writes[0].body).not.toHaveProperty("expected_preview_digest");
+  expect(writes[1].body.expected_preview_digest).toBe(digest);
   expect(writes.map((write) => write.body.selected_dates)).toEqual([selected, selected]);
 });
 
@@ -154,4 +168,38 @@ test("selection outside the two to five date limit cannot preview", async () => 
   for (const name of ["Wed, Oct 7", "Thu, Oct 8", "Fri, Oct 9", "Sat, Oct 10", "Sun, Oct 11"]) fireEvent.click(screen.getByRole("checkbox", { name }));
   expect(screen.getByRole("button", { name: "Preview selected dates" })).toBeDisabled();
   expect(writes).toEqual([]);
+});
+
+test.each([undefined, "invalid"])("a preview without a valid content digest cannot activate (%s)", async (value) => {
+  previewDigest = value;
+  render(<WeekPage />);
+  await chooseDates();
+  fireEvent.click(screen.getByRole("button", { name: "Preview selected dates" }));
+  await screen.findByText(/Unable to verify this preview/);
+  expect(screen.queryByRole("button", { name: "Activate selected dates" })).not.toBeInTheDocument();
+  expect(writes.filter((item) => item.path.endsWith("/plan/generate-week"))).toHaveLength(0);
+});
+
+test("a rejected preview digest clears activation without adopting unreviewed content", async () => {
+  activationConflict = true;
+  render(<WeekPage />);
+  await chooseDates();
+  fireEvent.click(screen.getByRole("button", { name: "Preview selected dates" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Activate selected dates" }));
+  await screen.findByText(/Preview content changed; preview your dates again/);
+  expect(screen.queryByRole("button", { name: "Activate selected dates" })).not.toBeInTheDocument();
+  expect(screen.queryByText(/Selected dates activated/)).not.toBeInTheDocument();
+  expect(writes.at(-1)?.body.expected_preview_digest).toBe(digest);
+});
+
+test("an activation rejected after lock-wait rollover clears previous-week dates", async () => {
+  activationWeekRollover = true;
+  render(<WeekPage />);
+  await chooseDates();
+  fireEvent.click(screen.getByRole("button", { name: "Preview selected dates" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Activate selected dates" }));
+  await screen.findByRole("checkbox", { name: "Mon, Oct 12" });
+  expect(screen.getAllByRole("checkbox").every((el) => !(el as HTMLInputElement).checked)).toBe(true);
+  expect(screen.queryByRole("button", { name: "Activate selected dates" })).not.toBeInTheDocument();
+  expect(screen.queryByText(/Selected dates activated/)).not.toBeInTheDocument();
 });
