@@ -146,14 +146,30 @@ def selected_week_command(*, db: Session, user: User, explicit_template_id: str 
             raise HTTPException(409, 'The current local week changed; review this week again before activating') from exc
     selected_id = resolve_selected_program_binding_id(explicit_template_id or user.selected_program_id)
     plans = _list_user_workout_plans(db, user_id=user.id)
+    current_plans = [p for p in plans if p.week_start == selected_week.week_start
+        and not (p.payload.get('schedule') or {}).get('mode', '').startswith('selected_dates_superseded')]
+    if not selected_id and current_plans:
+        if len(current_plans) != 1:
+            raise HTTPException(409, 'Multiple current-week plans require manual reconciliation')
+        # Auto places retained current-week work instead of choosing a new
+        # program or regenerating its source prescriptions.
+        selected_id = resolve_selected_program_binding_id(current_plans[0].payload.get('program_template_id'))
+        if not selected_id:
+            raise HTTPException(409, 'Current-week program identity requires manual reconciliation')
+
+    def reject_displaced_program(binding_id):
+        if binding_id and any(resolve_selected_program_binding_id(p.payload.get('program_template_id')) != binding_id
+            for p in current_plans):
+            raise HTTPException(409, 'This week already has another program; an explicit program transition is required')
+
+    reject_displaced_program(selected_id)
     active = active_selected_plans(plans, selected_week.week_start)
     if not selected_id and len(active) == 1:
         selected_id = resolve_selected_program_binding_id(active[0].payload.get('program_template_id'))
     if len(active) > 1 or (active and resolve_selected_program_binding_id(active[0].payload.get('program_template_id')) != selected_id):
         raise HTTPException(409, 'This week already has a dated program; a mode/program transition requires separate confirmation')
-    matching = [p for p in plans if p.week_start == selected_week.week_start
-        and not (p.payload.get('schedule') or {}).get('mode', '').startswith('selected_dates_superseded')
-        and resolve_selected_program_binding_id(p.payload.get('program_template_id')) == selected_id]
+    matching = [p for p in current_plans
+        if resolve_selected_program_binding_id(p.payload.get('program_template_id')) == selected_id]
     if len(matching) > 1:
         raise HTTPException(409, 'Multiple current-week plans require manual reconciliation')
     existing = matching[0] if matching else None
@@ -193,6 +209,7 @@ def selected_week_command(*, db: Session, user: User, explicit_template_id: str 
             raise HTTPException(409, f'Authored schedule is infeasible: {exc}') from exc
         base, values = runtime['response_payload'], runtime['record_values']
         selected_id = resolve_selected_program_binding_id(runtime['selected_template_id'])
+    reject_displaced_program(selected_id)
     if selected_id not in AUTHORED and len(base.get('sessions') or []) != len(selected_week.dates):
         raise HTTPException(409, 'Generated program cannot fit the exact selected date count')
     previous, following = neighbor_context(plans, selected_week)
