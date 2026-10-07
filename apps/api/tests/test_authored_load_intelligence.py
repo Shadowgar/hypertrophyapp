@@ -118,6 +118,50 @@ def counts(user):
             (WorkoutSetLog, WorkoutLogCommand, WorkoutOccurrence, getattr(models, "AuthoredLoadState", ExerciseState)))
 
 
+@pytest.mark.parametrize("dated", [True, False])
+def test_out_of_order_exposures_use_owner_performed_date_with_legacy_audit_fallback(scenario, dated):
+    user, headers, client = scenario
+    week = date.today() - timedelta(days=date.today().weekday())
+    newer = plan(user, week)
+    older = plan(user, week - timedelta(days=7))
+    receipts = []
+    for session, weight, reps, rpe, performed_date in (
+        (newer, 50, 12, 9, week), (older, 40, 7, 10, week - timedelta(days=7))
+    ):
+        first = log(client, headers, session, submit(session, weight=weight, reps=reps, rpe=rpe))
+        assert first.status_code == 200, first.text
+        if dated:
+            with SessionLocal() as db:
+                occurrence = db.get(WorkoutOccurrence, session["workout_occurrence_id"])
+                assert occurrence.user_id == user
+                occurrence.scheduled_date = performed_date
+                db.commit()
+        final = log(client, headers, session, submit(session, 2, weight=weight, reps=reps, rpe=rpe))
+        assert final.status_code == 200, final.text
+        receipts.append(first.json()["id"])
+    expected = ("increase", 51.5, 0) if dated else ("hold", 40, 1)
+    def assert_decision(feedback):
+        decision = feedback["next_exposure"]
+        assert (decision["action"], decision["recommended_weight"],
+            decision["evidence"]["consecutive_underperformance_count"]) == expected
+        assert decision["evidence"]["completed_exposure_count"] == 2
+    assert_decision(final.json()["load_intelligence"])
+    changed = correct(client, headers, receipts[1], reps=6)
+    assert changed.status_code == 200, changed.text
+    assert_decision(changed.json()["load_intelligence"])
+    with SessionLocal() as db:
+        state = db.query(models.AuthoredLoadState).filter_by(user_id=user).one().state
+        assert (state["last_progression_action"], state["current_working_weight"],
+            state["consecutive_under_target_exposures"]) == expected
+    removed = undo(client, headers, newer)
+    assert removed.status_code == 200, removed.text
+    remaining = removed.json()["load_intelligence"]["next_exposure"]
+    assert remaining["evidence"]["completed_exposure_count"] == 1
+    # A partially undone latest performed occurrence stays incomplete/monitor;
+    # legacy audit order still places the older completed receipt last.
+    assert (remaining["action"], remaining["recommended_weight"]) == (("monitor", None) if dated else ("hold", 40))
+
+
 def test_partial_then_complete_counts_one_exposure_from_actual_load_and_preserves_source(scenario):
     user, headers, client = scenario
     session = plan(user)

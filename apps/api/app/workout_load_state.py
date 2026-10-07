@@ -128,7 +128,10 @@ def _all_groups(db, user):
         context = resolve_load_context(user=user, records=records)
         anchor = next((row for row in records if row.parent_set_index is None
             and (row.set_kind or "work").strip().lower() in {"work", "top", "backoff"}), records[0])
-        ordered.append((anchor.created_at, anchor.id, occurrence, exercise, records,
+        # Match occurrence-performed-date-v1. Retain the original receipt audit
+        # time as a legacy fallback and deterministic same-date tie-breaker.
+        chronology = (occurrence.scheduled_date or anchor.created_at.date(), anchor.created_at)
+        ordered.append((chronology, anchor.id, occurrence, exercise, records,
             _summarize(occurrence, exercise, records, context)))
     return sorted(ordered, key=lambda group: (group[0], group[1]))
 
