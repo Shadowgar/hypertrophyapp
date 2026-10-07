@@ -1,5 +1,7 @@
 # M2B-1 actual-date scheduling implementation plan
 
+2026-10-06 activation amendment: the subsequent owner task separately authorized merge and deployment. PR #76 was merged at `f7a6ca5eba48f66800fe5d183ee8edf153ea3e4e`; nullable migration 0021 and API/web activation completed. **M2B-1 LIVE**. See [activation evidence](../evidence/2026-10-06-m2b-activation.md) for backup, preserved history, smoke and remaining scope. The original implementation authorization below remains historical; it does not constrain or grant authorization beyond that later task.
+
 Status: owner-authorized implementation in the 2026-10-06 attached task. Deployment of M1-C is separately authorized; M2B migrations, deployment and merge are forbidden in this task. ADR-007 remains Proposed.
 
 Implementation and independent review fixes are on [PR #76](https://github.com/Shadowgar/hypertrophyapp/pull/76); [qualification evidence and limits](../evidence/2026-10-06-m2b-actual-date-scheduling.md). Local focused/migration/browser qualification is complete within that record; final exact-head hosted CI/Codex review is tracked on the PR. No owner acceptance is inferred.

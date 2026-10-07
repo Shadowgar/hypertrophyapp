@@ -231,6 +231,20 @@ class ExerciseState(Base):
     last_updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive, onupdate=_utcnow_naive)
 
 
+class AuthoredLoadState(Base):
+    """Reconstructible completed-exposure projection; never Generated state."""
+    __tablename__ = "authored_load_states"
+    __table_args__ = (UniqueConstraint("user_id", "comparison_key", name="uq_authored_load_comparison"),)
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id: Mapped[str] = mapped_column(String, ForeignKey(USER_FK, ondelete="CASCADE"), index=True)
+    comparison_key: Mapped[str] = mapped_column(String(64))
+    primary_exercise_id: Mapped[str] = mapped_column(String, index=True)
+    source_identity: Mapped[dict] = mapped_column(JSON)
+    state: Mapped[dict] = mapped_column(JSON)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive, onupdate=_utcnow_naive)
+
+
 class WorkoutSessionState(Base):
     __tablename__ = "workout_session_states"
     __table_args__ = (

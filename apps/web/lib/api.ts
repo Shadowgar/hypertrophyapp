@@ -13,6 +13,47 @@ type ExerciseVideo = {
   youtube_url?: string;
 } | null;
 
+export type LoadContext = {
+  unit: "kg";
+  display_unit: "kg" | "lb";
+  basis: "unknown" | "total_external" | "per_hand" | "machine_stack" | "bodyweight" | "added_bodyweight" | "assistance";
+  increment?: number | null;
+  increment_unit?: "kg" | "lb" | null;
+  equipment_key?: string | null;
+};
+// Projections include provenance; request schemas accept only declared context fields.
+export function declaredLoadContext(context: LoadContext): LoadContext {
+  return { unit: "kg", display_unit: context.display_unit, basis: context.basis,
+    ...(context.increment !== undefined ? { increment: context.increment } : {}),
+    ...(context.increment_unit != null ? { increment_unit: context.increment_unit } : {}),
+    ...(context.equipment_key !== undefined ? { equipment_key: context.equipment_key } : {}) };
+}
+export type LoadDecision = {
+  id: string;
+  evidence_revision: string;
+  scope: "next_exposure" | "remaining_sets";
+  action: "increase" | "hold" | "decrease" | "monitor";
+  recommended_weight: number | null;
+  known_baseline_weight: number | null;
+  prefill_available: boolean;
+  reason_codes: string[];
+  explanation: string;
+  evidence: { completed_exposure_count: number; comparable_completed_exposure_count: number;
+    consecutive_underperformance_count: number; actual_rpe_count: number; required_working_set_count: number;
+    actual_rpe_sufficient: boolean; effective_set_ids: string[]; exposure_ids?: Array<{ workout_occurrence_id: string; exercise_occurrence_id: string }> };
+  equipment_feasibility: { status: "declared_increment" | "compatibility_increment_unverified" | "unknown";
+    increment?: number | null; increment_unit?: string | null; limitations: string[] };
+  decision_trace: Record<string, unknown>;
+};
+export type EffectiveLoadSet = {
+  id: string; set_index: number; reps: number; weight: number; rpe: number | null;
+  set_kind: string | null; parent_set_index: number | null; technique: Record<string, unknown> | null; created_at: string;
+};
+export type LoadIntelligence = {
+  next_exposure: LoadDecision; remaining_sets: LoadDecision | null;
+  load_context: LoadContext; effective_sets: EffectiveLoadSet[];
+};
+
 export type AuthoredTarget = {
   kind: "reps" | "amrap" | "text" | "unknown" | "rpe" | "rir";
   raw: string | null; min?: number | null; max?: number | null; approximate?: boolean;
@@ -57,13 +98,14 @@ type AuthoredExecutionFields = {
 };
 
 export type WorkoutExercise = AuthoredExecutionFields & {
+  load_intelligence?: LoadIntelligence | null;
   exercise_occurrence_id?: string;
   id: string;
   primary_exercise_id?: string;
   name: string;
   sets: number;
   rep_range: [number, number] | null;
-  recommended_working_weight: number;
+  recommended_working_weight: number | null;
   /** Warmup weights in kg (from API); used to show warm-up set prescriptions. */
   warmups?: number[];
   slot_role?: string | null;
@@ -78,7 +120,7 @@ export type WorkoutLiveRecommendation = {
   remaining_sets: number;
   recommended_reps_min: number | null;
   recommended_reps_max: number | null;
-  recommended_weight: number;
+  recommended_weight: number | null;
   guidance: string;
   guidance_rationale?: string;
   decision_trace?: Record<string, unknown>;
@@ -124,6 +166,7 @@ export type WorkoutProgress = {
   planned_total: number;
   percent_complete: number;
   exercises: Array<{
+    load_intelligence?: LoadIntelligence | null;
     exercise_id: string;
     exercise_occurrence_id?: string;
     planned_sets: number;
@@ -569,6 +612,8 @@ export type GuideExerciseDetail = {
 };
 
 export type WorkoutSetFeedback = {
+  load_intelligence?: LoadIntelligence | null;
+  rpe?: number | null;
   workout_occurrence_id?: string;
   exercise_occurrence_id?: string;
   command_id?: string;
@@ -586,7 +631,7 @@ export type WorkoutSetFeedback = {
   planned_weight: number;
   rep_delta: number | null;
   weight_delta: number;
-  next_working_weight: number;
+  next_working_weight: number | null;
   guidance: string;
   guidance_rationale: string;
   decision_trace?: Record<string, unknown>;
@@ -595,6 +640,7 @@ export type WorkoutSetFeedback = {
 };
 
 export type WorkoutExerciseSummary = {
+  load_intelligence?: LoadIntelligence | null;
   performed_variant?: SourceApprovedAlternative | null;
   substitution_consent?: Record<string, unknown> | null;
   load_recommendation_available?: boolean;
@@ -613,7 +659,7 @@ export type WorkoutExerciseSummary = {
   completion_pct: number;
   rep_delta: number | null;
   weight_delta: number;
-  next_working_weight: number;
+  next_working_weight: number | null;
   guidance: string;
   guidance_rationale: string;
   decision_trace?: Record<string, unknown>;
@@ -923,6 +969,12 @@ export function clearAuthToken(): void {
   emitAuthTokenChanged();
 }
 
+export class ApiError extends Error {
+  constructor(message: string, public readonly status: number, public readonly code?: string) {
+    super(message); this.name = "ApiError";
+  }
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getToken();
   const headers = new Headers(init?.headers);
@@ -942,7 +994,13 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       clearAuthToken();
     }
     const text = await res.text();
-    throw new Error(parseApiErrorMessage(text, res.status));
+    let code: string | undefined;
+    let ownedMessage: string | undefined;
+    try { const body = JSON.parse(text); if (body.detail && typeof body.detail === "object") {
+      if (typeof body.detail.code === "string") code = body.detail.code;
+      if (typeof body.detail.message === "string") ownedMessage = body.detail.message;
+    } } catch { /* retain existing text/error normalization */ }
+    throw new ApiError(ownedMessage ?? parseApiErrorMessage(text, res.status), res.status, code);
   }
 
   return (await res.json()) as T;
@@ -1137,19 +1195,26 @@ export const api = {
       set_kind?: string | null;
       parent_set_index?: number | null;
       technique?: Record<string, unknown> | null;
+      load_context?: LoadContext;
+      load_recommendation_id?: string;
+      load_override_reason?: string | null;
     },
   ) =>
     request<WorkoutSetFeedback>(`/workout/${encodeURIComponent(workoutId)}/log-set`, {
       method: "POST",
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ ...payload, ...(payload.load_context ? { load_context: declaredLoadContext(payload.load_context) } : {}) }),
     }),
   correctSet: (setId: string, payload: { command_id: string; reps: number; weight: number; rpe?: number | null; reason: string }) =>
-    request<{ status: string; original_set_id: string; effective_set_id: string }>(`/workout/set/${encodeURIComponent(setId)}/correct`, {
+    request<{ status: string; original_set_id: string; effective_set_id: string; load_intelligence?: LoadIntelligence | null }>(`/workout/set/${encodeURIComponent(setId)}/correct`, {
       method: "POST", body: JSON.stringify(payload),
     }),
   undoLastSet: (workoutId: string, exerciseId: string, exerciseOccurrenceId?: string, commandId?: string) =>
-    request<{ status: string; live_recommendation?: WorkoutLiveRecommendation | null; exercise_state?: { current_working_weight: number } | null }>(`/workout/${encodeURIComponent(workoutId)}/undo-last-set`, {
+    request<{ status: string; load_intelligence?: LoadIntelligence | null; live_recommendation?: WorkoutLiveRecommendation | null; exercise_state?: { current_working_weight: number } | null }>(`/workout/${encodeURIComponent(workoutId)}/undo-last-set`, {
       method: "POST",
       body: JSON.stringify({ exercise_id: exerciseId, exercise_occurrence_id: exerciseOccurrenceId, command_id: commandId }),
+    }),
+  previewLoadGuidance: (workoutId: string, exerciseOccurrenceId: string, loadContext: LoadContext) =>
+    request<LoadIntelligence>(`/workout/${encodeURIComponent(workoutId)}/load-guidance`, {
+      method: "POST", body: JSON.stringify({ exercise_occurrence_id: exerciseOccurrenceId, load_context: declaredLoadContext(loadContext) }),
     }),
 };

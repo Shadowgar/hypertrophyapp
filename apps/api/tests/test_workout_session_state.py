@@ -27,7 +27,10 @@ def _register_token(client: TestClient, email: str) -> str:
     return response.json()["access_token"]
 
 
-def _onboard_profile(client: TestClient, token: str, *, equipment_profile: list[str] | None = None) -> None:
+def _onboard_profile(
+    client: TestClient, token: str, *, equipment_profile: list[str] | None = None,
+    selected_program_id: str = "full_body_v1",
+) -> None:
     response = client.post(
         "/profile",
         headers={"Authorization": f"Bearer {token}"},
@@ -37,6 +40,7 @@ def _onboard_profile(client: TestClient, token: str, *, equipment_profile: list[
             "weight": 79,
             "gender": "male",
             "split_preference": "full_body",
+            "selected_program_id": selected_program_id,
             "training_location": "home",
             "equipment_profile": equipment_profile or source_equipment(),
             "days_available": 3,
@@ -246,7 +250,7 @@ def test_authored_repeat_failure_does_not_offer_generic_substitution() -> None:
     token = _register_token(client, email)
     headers = {"Authorization": f"Bearer {token}"}
 
-    _onboard_profile(client, token)
+    _onboard_profile(client, token, selected_program_id="pure_bodybuilding_phase_1_full_body")
     first_session, first_exercise = _setup_first_exercise(client, headers)
 
     with SessionLocal() as db:

@@ -2,6 +2,11 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import type { EffectiveLoadSet, LoadContext, LoadIntelligence } from "@/lib/api";
+import { ApiError } from "@/lib/api";
+import { kgToLbs, lbsToKg } from "@/lib/weight";
+
+export type PerformedSet = { reps: number; weight: number; rpe: number | null; canonicalWeight?: number };
 
 /* ------------------------------------------------------------------ */
 /*  Hook: useExerciseControl                                          */
@@ -13,13 +18,15 @@ type UseExerciseControlProps = {
   defaultRestSeconds?: number;
   initialCompletedSets?: number;
   recommendedWorkingWeight?: number;
+  recommendedWeightCanonicalKg?: number;
+  requireWeight?: boolean;
   repRange?: [number, number] | null;
   /** When true, completeSet does not start the rest timer (e.g. parent owns global timer). */
   skipTimerOnComplete?: boolean;
   onSetComplete?: (
     exerciseId: string,
     setIndex: number,
-    performed: { reps: number; weight: number },
+    performed: PerformedSet,
   ) => Promise<void> | void;
 };
 
@@ -29,6 +36,8 @@ export function useExerciseControl({
   defaultRestSeconds = 90,
   initialCompletedSets = 0,
   recommendedWorkingWeight,
+  recommendedWeightCanonicalKg,
+  requireWeight = false,
   repRange,
   skipTimerOnComplete = false,
   onSetComplete,
@@ -38,23 +47,29 @@ export function useExerciseControl({
   const [running, setRunning] = useState(false);
   const [completedSets, setCompletedSets] = useState(initialCompletedSets ?? 0);
   const [actualReps, setActualReps] = useState(repRange === null ? 0 : repRange?.[0] ?? 8);
+  const [actualRpeInput, setActualRpeInput] = useState("");
   const [actualWeightInput, setActualWeightInput] = useState(
     recommendedWorkingWeight !== undefined ? String(recommendedWorkingWeight) : "",
   );
   const intervalRef = useRef<ReturnType<typeof globalThis.setInterval> | null>(null);
   const userHasEditedWeightRef = useRef(false);
+  const userHasEditedRepsRef = useRef(false);
+  const pendingPerformed = useRef<PerformedSet | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     userHasEditedWeightRef.current = false;
+    userHasEditedRepsRef.current = false;
   }, [exerciseId]);
 
   useEffect(() => {
-    if (recommendedWorkingWeight !== undefined && !userHasEditedWeightRef.current) {
-      setActualWeightInput(String(recommendedWorkingWeight));
+    if (!userHasEditedWeightRef.current && !pendingPerformed.current) {
+      setActualWeightInput(recommendedWorkingWeight === undefined ? "" : String(recommendedWorkingWeight));
     }
-  }, [recommendedWorkingWeight]);
+  }, [recommendedWorkingWeight, submitting]);
 
   useEffect(() => {
+    if (userHasEditedRepsRef.current) return;
     if (repRange) setActualReps(repRange[0]);
     else if (repRange === null) setActualReps(0);
   }, [repRange]);
@@ -103,29 +118,43 @@ export function useExerciseControl({
   const markWeightEdited = useCallback(() => {
     userHasEditedWeightRef.current = true;
   }, []);
+  const changeActualReps = useCallback((value: number) => {
+    userHasEditedRepsRef.current = true;
+    setActualReps(value);
+  }, []);
 
   const [loggedSets, setLoggedSets] = useState<{ setIndex: number; reps: number; weight: number }[]>([]);
 
   const submissionPending = useRef(false);
-  const [submitting, setSubmitting] = useState(false);
+  const validRpe = actualRpeInput.trim() === "" || (Number.isFinite(Number(actualRpeInput)) && Number(actualRpeInput) >= 0 && Number(actualRpeInput) <= 10);
+  const validWeight = !requireWeight || (actualWeightInput.trim() !== "" && Number.isFinite(Number(actualWeightInput)) && Number(actualWeightInput) > 0);
   const completeSet = useCallback(async () => {
     if (submissionPending.current || completedSets >= totalSets) return;
     if (repRange === null && (!Number.isFinite(actualReps) || actualReps < 1)) return;
+    if (!pendingPerformed.current && (!validRpe || !validWeight)) return;
     submissionPending.current = true;
     setSubmitting(true);
     const parsedWeight = Number(actualWeightInput);
-    const hasValidWeight = Number.isFinite(parsedWeight) && parsedWeight > 0;
+    const hasValidWeight = actualWeightInput.trim() !== "" && Number.isFinite(parsedWeight) && parsedWeight >= 0;
     const safeReps = Number.isFinite(actualReps) ? Math.max(1, Math.round(actualReps)) : repRange?.[0] ?? 8;
     const safeWeight = hasValidWeight
       ? Math.max(0, Math.round(parsedWeight * 100) / 100)
       : recommendedWorkingWeight ?? 0;
 
+    const performed = pendingPerformed.current ?? {
+      reps: safeReps, weight: safeWeight, rpe: actualRpeInput.trim() === "" ? null : Number(actualRpeInput),
+      ...(!userHasEditedWeightRef.current && recommendedWeightCanonicalKg !== undefined ? { canonicalWeight: recommendedWeightCanonicalKg } : {}),
+    };
+    pendingPerformed.current = performed;
     const next = Math.min(completedSets + 1, totalSets);
     try {
-      if (onSetComplete) await onSetComplete(exerciseId, next, { reps: safeReps, weight: safeWeight });
+      if (onSetComplete) await onSetComplete(exerciseId, next, performed);
+      pendingPerformed.current = null;
+      setActualRpeInput("");
       setCompletedSets(next);
-      setLoggedSets((logs) => [...logs, { setIndex: next, reps: safeReps, weight: safeWeight }]);
-    } catch {
+      setLoggedSets((logs) => [...logs, { setIndex: next, reps: performed.reps, weight: performed.weight }]);
+    } catch (error) {
+      if (error instanceof ApiError && (error.status === 422 || (error.status === 409 && error.code === "stale_load_recommendation"))) pendingPerformed.current = null;
       // Unconfirmed requests keep the logical slot available for the same retry.
       return;
     } finally {
@@ -136,7 +165,7 @@ export function useExerciseControl({
       resetTimer();
       startTimer();
     }
-  }, [completedSets, actualWeightInput, actualReps, repRange, recommendedWorkingWeight, totalSets, skipTimerOnComplete, onSetComplete, exerciseId, resetTimer, startTimer]);
+  }, [completedSets, actualWeightInput, actualReps, actualRpeInput, validRpe, validWeight, repRange, recommendedWorkingWeight, recommendedWeightCanonicalKg, totalSets, skipTimerOnComplete, onSetComplete, exerciseId, resetTimer, startTimer]);
 
   const undoLastLoggedSet = useCallback((confirmedCompletedSets?: number) => {
     setLoggedSets((logs) => {
@@ -155,7 +184,11 @@ export function useExerciseControl({
     completedSets,
     totalSets,
     actualReps,
-    setActualReps,
+    actualRpeInput,
+    setActualRpeInput,
+    validRpe,
+    validWeight,
+    setActualReps: changeActualReps,
     actualWeightInput,
     setActualWeightInput,
     markWeightEdited,
@@ -169,6 +202,93 @@ export function useExerciseControl({
 }
 
 export type ExerciseControlState = ReturnType<typeof useExerciseControl>;
+
+export function LoadIntelligencePanel({ guidance, completed, total, loadContext, onContextChange, onPreview, overrideReason, onOverrideReason, onCorrect, requireExternalWeight = false }: {
+  guidance: LoadIntelligence | null; completed: number; total: number; loadContext: LoadContext; requireExternalWeight?: boolean;
+  onContextChange: (context: LoadContext) => void; onPreview: (context: LoadContext) => Promise<void>;
+  overrideReason: string; onOverrideReason: (reason: string) => void;
+  onCorrect: (receipt: EffectiveLoadSet, values: { reps: number; weight: number; rpe?: number | null; reason: string }) => Promise<void>;
+}) {
+  const [pending, setPending] = useState(false);
+  const [status, setStatus] = useState("");
+  const [increment, setIncrement] = useState(loadContext.increment == null ? "" : String(loadContext.increment));
+  const [editing, setEditing] = useState<EffectiveLoadSet | null>(null);
+  const [reps, setReps] = useState("");
+  const [weight, setWeight] = useState("");
+  const [rpe, setRpe] = useState("");
+  const [rpeEdited, setRpeEdited] = useState(false);
+  const [weightEdited, setWeightEdited] = useState(false);
+  const [reason, setReason] = useState("");
+  const pendingAction = useRef(false);
+  const validIncrement = increment.trim() === "" || (Number.isFinite(Number(increment)) && Number(increment) > 0);
+  const shown = completed > 0 && completed < total ? guidance?.remaining_sets : guidance?.next_exposure;
+  return <section className="space-y-3 rounded-xl border border-white/10 p-3" aria-label="Load guidance">
+    <p className="text-sm font-medium">{completed > 0 && completed < total ? "Remaining sets" : "Next exposure"} load guidance</p>
+    {shown ? <>
+      <p className="text-sm">{shown.action}{shown.recommended_weight != null ? ` · ${kgToLbs(shown.recommended_weight)} lb` : " · no new load inferred"}</p>
+      <p className="text-sm text-zinc-300">{shown.explanation}</p>
+      {shown.known_baseline_weight != null ? <p className="text-xs text-zinc-400">Known baseline: {kgToLbs(shown.known_baseline_weight)} lb; separate from newly qualified advice.</p> : null}
+      <details><summary className="min-h-[44px] cursor-pointer py-2">Why this load?</summary>
+        <p className="text-xs">Completed exposures: {shown.evidence.completed_exposure_count}; comparable: {shown.evidence.comparable_completed_exposure_count}; recorded actual RPE: {shown.evidence.actual_rpe_count}.</p>
+        {shown.equipment_feasibility.limitations.map((limitation, index) => <p className="text-xs text-zinc-400" key={index}>{limitation}</p>)}
+      </details>
+    </> : <p className="text-xs text-zinc-400">No qualified load advice for this set. Enter the actual load you choose.</p>}
+    <label className="block text-xs">Load basis
+      <select className="ui-select min-h-[48px] w-full" value={loadContext.basis} onChange={event => onContextChange({ ...loadContext, basis: event.target.value as LoadContext["basis"] })}>
+        <option value="unknown">Unknown</option><option value="total_external">Total external load</option><option value="per_hand">Per hand</option>
+        <option value="machine_stack">Machine stack</option><option value="bodyweight">Bodyweight</option><option value="added_bodyweight">Added bodyweight load</option><option value="assistance">Assistance</option>
+      </select>
+    </label>
+    <label className="block text-xs">Equipment reference (optional)
+      <input className="ui-input min-h-[48px] w-full" maxLength={128} value={loadContext.equipment_key ?? ""}
+        onChange={event => onContextChange({ ...loadContext, equipment_key: event.target.value.trim() || null })} />
+    </label>
+    <div className="grid grid-cols-2 gap-2">
+      <label className="text-xs">Known increment (optional)
+        <input className="ui-input min-h-[48px] w-full" type="number" min={0} step="any" value={increment} onChange={event => {
+          setIncrement(event.target.value); const value = event.target.value.trim() === "" ? null : Number(event.target.value);
+          onContextChange({ ...loadContext, increment: value, increment_unit: loadContext.increment_unit ?? "lb" });
+        }} />
+      </label>
+      <label className="text-xs">Increment unit
+        <select className="ui-select min-h-[48px] w-full" value={loadContext.increment_unit ?? "lb"} onChange={event => onContextChange({ ...loadContext, increment_unit: event.target.value as "lb" | "kg" })}>
+          <option value="lb">lb</option><option value="kg">kg</option>
+        </select>
+      </label>
+    </div>
+    <Button className="min-h-[48px] w-full" disabled={pending || !validIncrement} onClick={async () => {
+      if (pendingAction.current) return; pendingAction.current = true; setPending(true); setStatus("");
+      try { await onPreview(loadContext); } catch { setStatus("Load guidance could not be refreshed. Your draft is preserved."); }
+      finally { pendingAction.current = false; setPending(false); }
+    }}>Preview load guidance</Button>
+    <label className="block text-xs">Load override reason (optional)
+      <input className="ui-input min-h-[48px] w-full" value={overrideReason} maxLength={500} onChange={event => onOverrideReason(event.target.value)} />
+    </label>
+    {guidance?.effective_sets.filter(entry => entry.parent_set_index == null && (["work", "working", "top", "backoff"].includes(entry.set_kind?.trim().toLowerCase() || "work"))).map(entry => <div className="rounded border border-white/10 p-2" key={entry.id}>
+      <p className="text-xs">Set {entry.set_index}: {entry.reps} reps @ {kgToLbs(entry.weight)} lb · Actual RPE {entry.rpe ?? "unknown"}</p>
+      <Button className="min-h-[44px] w-full" variant="secondary" disabled={pending} onClick={() => {
+        setEditing(entry); setReps(String(entry.reps)); setWeight(String(kgToLbs(entry.weight))); setRpe(entry.rpe == null ? "" : String(entry.rpe));
+        setRpeEdited(false); setWeightEdited(false); setReason(""); setStatus("");
+      }}>Edit set {entry.set_index}</Button>
+    </div>)}
+    {editing ? <div className="space-y-2 rounded border border-white/10 p-3">
+      <label className="block text-xs">Corrected reps<input className="ui-input min-h-[48px] w-full" type="number" min={1} step={1} value={reps} onChange={e => setReps(e.target.value)} /></label>
+      <label className="block text-xs">Corrected load (lb)<input className="ui-input min-h-[48px] w-full" type="number" min={0} step="any" value={weight} onChange={e => { setWeightEdited(true); setWeight(e.target.value); }} /></label>
+      <label className="block text-xs">Corrected actual RPE<input className="ui-input min-h-[48px] w-full" type="number" min={0} max={10} step={0.5} value={rpe} onChange={e => { setRpeEdited(true); setRpe(e.target.value); }} /></label>
+      <p className="text-xs text-zinc-400">Leave RPE unchanged to preserve it; clear the field to record unknown.</p>
+      <label className="block text-xs">Correction reason<input className="ui-input min-h-[48px] w-full" value={reason} maxLength={500} onChange={e => setReason(e.target.value)} /></label>
+      <Button className="min-h-[48px] w-full" disabled={pending || !Number.isInteger(Number(reps)) || Number(reps) < 1 || weight.trim() === "" || !Number.isFinite(Number(weight)) || (requireExternalWeight ? Number(weight) <= 0 : Number(weight) < 0) || (rpe.trim() !== "" && (!Number.isFinite(Number(rpe)) || Number(rpe) < 0 || Number(rpe) > 10))} onClick={async () => {
+        if (pendingAction.current) return; pendingAction.current = true; setPending(true); setStatus("");
+        try { await onCorrect(editing, { reps: Number(reps), weight: weightEdited ? lbsToKg(Number(weight)) : editing.weight,
+          ...(rpeEdited ? { rpe: rpe.trim() === "" ? null : Number(rpe) } : {}), reason: reason.trim() || "User corrected set" }); setEditing(null); }
+        catch { setStatus("Correction was not confirmed. Retry the same correction."); }
+        finally { pendingAction.current = false; setPending(false); }
+      }}>Save correction</Button>
+      <Button variant="ghost" className="min-h-[44px] w-full" disabled={pending} onClick={() => setEditing(null)}>Cancel correction</Button>
+    </div> : null}
+    {status ? <p role="status" className="text-xs text-zinc-400">{status}</p> : null}
+  </section>;
+}
 
 /* ------------------------------------------------------------------ */
 /*  Utility                                                           */
@@ -195,7 +315,7 @@ type SetInputCardProps = Readonly<{
 
 export function SetInputCard({ exerciseId, guidanceLine, ctrl, weightLabel, disableComplete, disabledReason }: SetInputCardProps) {
   const allDone = ctrl.completedSets >= ctrl.totalSets;
-  const isDisabled = allDone || ctrl.submitting || Boolean(disableComplete);
+  const isDisabled = allDone || ctrl.submitting || !ctrl.validRpe || !ctrl.validWeight || Boolean(disableComplete);
 
   return (
     <div className="glass-layer glass-layer--elevated rounded-xl p-4 space-y-3">
@@ -233,6 +353,14 @@ export function SetInputCard({ exerciseId, guidanceLine, ctrl, weightLabel, disa
           />
         </label>
       </div>
+
+      <label className="flex flex-col gap-1.5">
+        <span className="text-[11px] uppercase tracking-wide text-zinc-500">Actual RPE (optional,0–10)</span>
+        <input className="ui-input min-h-[48px] w-full" type="number" min={0} max={10} step={0.5}
+          value={ctrl.actualRpeInput} onChange={event => ctrl.setActualRpeInput(event.target.value)} />
+        <span className="text-xs text-zinc-500">Your effort on this set. Leave blank when unknown; source targets stay unchanged.</span>
+      </label>
+      {!ctrl.validRpe ? <p role="alert" className="text-xs text-red-300">Actual RPE must be between0 and10.</p> : null}
 
       <Button
         className="min-h-[48px] w-full text-sm font-semibold"
@@ -354,9 +482,10 @@ export function SetProgressTimeline({ exerciseId, ctrl }: SetProgressTimelinePro
 type SetLogDisplayProps = Readonly<{
   ctrl: ExerciseControlState;
   onUndoLastSet?: () => Promise<number | false> | void;
+  hideLocalReceipts?: boolean;
 }>;
 
-export function SetLogDisplay({ ctrl, onUndoLastSet }: SetLogDisplayProps) {
+export function SetLogDisplay({ ctrl, onUndoLastSet, hideLocalReceipts }: SetLogDisplayProps) {
   const pending = useRef(false);
   const [undoing, setUndoing] = useState(false);
   if (ctrl.loggedSets.length === 0 && ctrl.completedSets === 0) {
@@ -387,7 +516,7 @@ export function SetLogDisplay({ ctrl, onUndoLastSet }: SetLogDisplayProps) {
           </Button>
         ) : null}
       </div>
-      {ctrl.loggedSets.map((entry) => (
+      {!hideLocalReceipts && ctrl.loggedSets.map((entry) => (
         <div
           key={`log-${entry.setIndex}`}
           className="flex items-center justify-between rounded-md border border-red-400/30 bg-red-500/10 px-3 py-1.5 text-sm"
@@ -396,7 +525,7 @@ export function SetLogDisplay({ ctrl, onUndoLastSet }: SetLogDisplayProps) {
           <span className="tabular-nums text-zinc-300">{entry.reps} reps @ {entry.weight} lb</span>
         </div>
       ))}
-      {Array.from({ length: ctrl.totalSets - ctrl.loggedSets.length }).map((_, i) => (
+      {!hideLocalReceipts && Array.from({ length: Math.max(0, ctrl.totalSets - ctrl.loggedSets.length) }).map((_, i) => (
         <div
           key={`pending-${ctrl.loggedSets.length + i + 1}`}
           className="flex items-center justify-between rounded-md border border-zinc-700 bg-zinc-900/40 px-3 py-1.5 text-sm"
@@ -424,7 +553,7 @@ type LegacyProps = Readonly<{
   onSetComplete?: (
     exerciseId: string,
     setIndex: number,
-    performed: { reps: number; weight: number },
+    performed: PerformedSet,
   ) => Promise<void> | void;
 }>;
 

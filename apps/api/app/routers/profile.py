@@ -33,7 +33,7 @@ from ..history_dates import performed_log_rows
 from ..workout_history import effective_set_logs, valid_weekly_reviews, lock_history_user
 from ..deps import get_current_user
 from ..models import BodyMeasurementEntry, SorenessEntry, User, WeeklyCheckin, WeeklyReviewCycle, WorkoutSetLog
-from ..models import CoachingRecommendation, ExerciseState, PasswordResetToken, WorkoutLogCommand, WorkoutOccurrence, WorkoutPlan, WorkoutSessionState
+from ..models import AuthoredLoadState, CoachingRecommendation, ExerciseState, PasswordResetToken, WorkoutLogCommand, WorkoutOccurrence, WorkoutPlan, WorkoutSessionState
 from ..observability import log_event
 from ..program_loader import (
     PHASE1_CANONICAL_PROGRAM_ID,
@@ -110,6 +110,7 @@ def _clear_user_training_state(db: Session, *, user_id: str) -> None:
     db.query(WorkoutSetLog).filter(WorkoutSetLog.user_id == user_id).delete(synchronize_session=False)
     db.query(WorkoutOccurrence).filter(WorkoutOccurrence.user_id == user_id).delete(synchronize_session=False)
     db.query(ExerciseState).filter(ExerciseState.user_id == user_id).delete(synchronize_session=False)
+    db.query(AuthoredLoadState).filter(AuthoredLoadState.user_id == user_id).delete(synchronize_session=False)
     db.query(WorkoutPlan).filter(WorkoutPlan.user_id == user_id).delete(synchronize_session=False)
     db.query(WeeklyReviewCycle).filter(WeeklyReviewCycle.user_id == user_id).delete(synchronize_session=False)
     db.query(WeeklyCheckin).filter(WeeklyCheckin.user_id == user_id).delete(synchronize_session=False)
@@ -124,6 +125,7 @@ def _has_user_workout_activity(db: Session, *, user_id: str) -> bool:
             db.query(WorkoutSessionState).filter(WorkoutSessionState.user_id == user_id).first(),
             db.query(WorkoutSetLog).filter(WorkoutSetLog.user_id == user_id).first(),
             db.query(ExerciseState).filter(ExerciseState.user_id == user_id).first(),
+            db.query(AuthoredLoadState).filter(AuthoredLoadState.user_id == user_id).first(),
         )
     )
 

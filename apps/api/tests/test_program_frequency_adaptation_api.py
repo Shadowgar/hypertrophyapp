@@ -1,3 +1,4 @@
+from copy import deepcopy
 from datetime import date
 import uuid
 
@@ -10,7 +11,7 @@ configure_test_database("test_program_frequency_adaptation_api")
 from app.database import Base, SessionLocal, engine
 from app.main import app
 from authored_test_helpers import source_equipment
-from app.models import ExerciseState, SorenessEntry, User, WorkoutPlan
+from app.models import AuthoredLoadState, ExerciseState, SorenessEntry, User, WorkoutPlan, WorkoutSetLog
 
 TEST_CREDENTIAL = f"T{uuid.uuid4().hex[:15]}"
 PHASE1_MERGED_DAY1_IDS = [
@@ -394,7 +395,7 @@ def test_frequency_adaptation_preserves_progression_state_across_5_to_3_to_5_win
             "exercise_id": first_exercise["id"],
             "set_index": 1,
             "reps": int(first_exercise["rep_range"][0]),
-            "weight": float(first_exercise["recommended_working_weight"]),
+            "weight": 20.0,  # Manual actual load, independent of monitor advice.
         },
     )
     assert log_set.status_code == 200
@@ -402,13 +403,16 @@ def test_frequency_adaptation_preserves_progression_state_across_5_to_3_to_5_win
     with SessionLocal() as session:
         user = session.query(User).filter(User.email == "adaptation-api@example.com").first()
         assert user is not None
-        state = (
-            session.query(ExerciseState)
-            .filter(ExerciseState.user_id == user.id, ExerciseState.exercise_id == str(primary_id))
-            .first()
-        )
-        assert state is not None
-        assert float(state.current_working_weight) > 0
+        assert session.query(ExerciseState).filter_by(user_id=user.id).count() == 0
+        state = session.query(AuthoredLoadState).filter_by(user_id=user.id).one()
+        state_id, state_before = state.id, deepcopy(state.state)
+        assert state_before["completed_exposure_count"] == 0
+        assert state_before["qualified_exposure_count"] == 0
+        assert state_before["current_working_weight"] is None
+        receipt = session.query(WorkoutSetLog).filter_by(user_id=user.id).one()
+        receipt_id = receipt.id
+        assert receipt.weight == 20.0 and receipt.rpe is None
+
 
     week_two_regenerate = client.post("/plan/generate-week", headers=headers, json={})
     assert week_two_regenerate.status_code == 409
@@ -428,7 +432,10 @@ def test_frequency_adaptation_preserves_progression_state_across_5_to_3_to_5_win
         for item in training_state.json().get("progression_state_per_exercise", [])
         if item.get("exercise_id")
     }
-    assert str(primary_id) in progression_ids
+    assert str(primary_id) not in progression_ids  # Generated projection never owns this Authored receipt.
+    with SessionLocal() as session:
+        assert session.get(AuthoredLoadState, state_id).state == state_before
+        assert session.get(WorkoutSetLog, receipt_id).weight == 20.0
 
 
 def test_frequency_adaptation_preview_returns_precise_duration_validation_message() -> None:
