@@ -143,7 +143,7 @@ export function useExerciseControl({
 
     const performed = pendingPerformed.current ?? {
       reps: safeReps, weight: safeWeight, rpe: actualRpeInput.trim() === "" ? null : Number(actualRpeInput),
-      ...(!userHasEditedWeightRef.current && recommendedWeightCanonicalKg !== undefined ? { canonicalWeight: recommendedWeightCanonicalKg } : {}),
+      ...(safeWeight === recommendedWorkingWeight && recommendedWeightCanonicalKg !== undefined ? { canonicalWeight: recommendedWeightCanonicalKg } : {}),
     };
     pendingPerformed.current = performed;
     const next = Math.min(completedSets + 1, totalSets);
@@ -217,7 +217,6 @@ export function LoadIntelligencePanel({ guidance, completed, total, loadContext,
   const [weight, setWeight] = useState("");
   const [rpe, setRpe] = useState("");
   const [rpeEdited, setRpeEdited] = useState(false);
-  const [weightEdited, setWeightEdited] = useState(false);
   const [reason, setReason] = useState("");
   const pendingAction = useRef(false);
   const validIncrement = increment.trim() === "" || (Number.isFinite(Number(increment)) && Number(increment) > 0);
@@ -268,18 +267,18 @@ export function LoadIntelligencePanel({ guidance, completed, total, loadContext,
       <p className="text-xs">Set {entry.set_index}: {entry.reps} reps @ {kgToLbs(entry.weight)} lb · Actual RPE {entry.rpe ?? "unknown"}</p>
       <Button className="min-h-[44px] w-full" variant="secondary" disabled={pending} onClick={() => {
         setEditing(entry); setReps(String(entry.reps)); setWeight(String(kgToLbs(entry.weight))); setRpe(entry.rpe == null ? "" : String(entry.rpe));
-        setRpeEdited(false); setWeightEdited(false); setReason(""); setStatus("");
+        setRpeEdited(false); setReason(""); setStatus("");
       }}>Edit set {entry.set_index}</Button>
     </div>)}
     {editing ? <div className="space-y-2 rounded border border-white/10 p-3">
       <label className="block text-xs">Corrected reps<input className="ui-input min-h-[48px] w-full" type="number" min={1} step={1} value={reps} onChange={e => setReps(e.target.value)} /></label>
-      <label className="block text-xs">Corrected load (lb)<input className="ui-input min-h-[48px] w-full" type="number" min={0} step="any" value={weight} onChange={e => { setWeightEdited(true); setWeight(e.target.value); }} /></label>
+      <label className="block text-xs">Corrected load (lb)<input className="ui-input min-h-[48px] w-full" type="number" min={0} step="any" value={weight} onChange={e => setWeight(e.target.value)} /></label>
       <label className="block text-xs">Corrected actual RPE<input className="ui-input min-h-[48px] w-full" type="number" min={0} max={10} step={0.5} value={rpe} onChange={e => { setRpeEdited(true); setRpe(e.target.value); }} /></label>
       <p className="text-xs text-zinc-400">Leave RPE unchanged to preserve it; clear the field to record unknown.</p>
       <label className="block text-xs">Correction reason<input className="ui-input min-h-[48px] w-full" value={reason} maxLength={500} onChange={e => setReason(e.target.value)} /></label>
       <Button className="min-h-[48px] w-full" disabled={pending || !Number.isInteger(Number(reps)) || Number(reps) < 1 || weight.trim() === "" || !Number.isFinite(Number(weight)) || (requireExternalWeight ? Number(weight) <= 0 : Number(weight) < 0) || (rpe.trim() !== "" && (!Number.isFinite(Number(rpe)) || Number(rpe) < 0 || Number(rpe) > 10))} onClick={async () => {
         if (pendingAction.current) return; pendingAction.current = true; setPending(true); setStatus("");
-        try { await onCorrect(editing, { reps: Number(reps), weight: weightEdited ? lbsToKg(Number(weight)) : editing.weight,
+        try { await onCorrect(editing, { reps: Number(reps), weight: Number(weight) === kgToLbs(editing.weight) ? editing.weight : lbsToKg(Number(weight)),
           ...(rpeEdited ? { rpe: rpe.trim() === "" ? null : Number(rpe) } : {}), reason: reason.trim() || "User corrected set" }); setEditing(null); }
         catch { setStatus("Correction was not confirmed. Retry the same correction."); }
         finally { pendingAction.current = false; setPending(false); }

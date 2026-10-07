@@ -208,7 +208,8 @@ def _outcome(exposure):
     below = any(row["reps"] < item["rep_target"]["min"] for row, item in values)
     top = bool(values) and all(row["reps"] >= item["rep_target"]["max"] for row, item in values)
     within_effort = bool(values) and all(item["effort_target"]["min"] <= row["rpe"] <= item["effort_target"]["max"] for row, item in values)
-    return {"below": below, "top": top, "within_effort": within_effort}
+    reached_effort = bool(values) and all(row["rpe"] >= item["effort_target"]["min"] for row, item in values)
+    return {"below": below, "top": top, "within_effort": within_effort, "reached_effort": reached_effort}
 
 
 def _percentage_weight(baseline, percent, *, direction):
@@ -315,14 +316,15 @@ def decide_next_working_load(*, exposures, rule_set, load_context):
             exposures=distinct, latest=latest, rule_set=rule_set, context=context)
     outcome = _outcome(latest)
     streak = 0
-    if outcome["below"]:
+    if outcome["below"] and outcome["reached_effort"]:
         for previous in reversed(distinct):
             previous_key = previous.get("comparison_key")
             if previous_key is not None and previous_key != latest["comparison_key"]:
                 continue  # Other source positions/variants have independent histories.
             if not previous.get("comparable"):
                 break
-            if not _outcome(previous)["below"]:
+            previous_outcome = _outcome(previous)
+            if not previous_outcome["below"] or not previous_outcome["reached_effort"]:
                 break
             streak += 1
         if streak >= runtime["after_exposures"]:

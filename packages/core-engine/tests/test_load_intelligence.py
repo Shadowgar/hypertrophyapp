@@ -108,6 +108,28 @@ def test_in_range_complete_exposure_is_a_qualified_hold():
     assert result["evidence"]["actual_rpe_sufficient"] is True
 
 
+@pytest.mark.parametrize("efforts", [(5, 5), (7.5, 10), (10, 5)])
+def test_below_target_reps_without_source_minimum_effort_do_not_count_as_failures(efforts):
+    rows = [receipt(1, reps=7, rpe=efforts[0]), receipt(2, reps=7, rpe=efforts[1])]
+    result = decision(exposure(1, rows=rows), exposure(2, rows=rows))
+    assert result["action"] == "monitor"
+    assert result["recommended_weight"] is None
+    assert result["evidence"]["completed_exposure_count"] == 2
+    assert result["evidence"]["consecutive_underperformance_count"] == 0
+    assert "actual_effort_outside_source_target" in result["reason_codes"]
+
+
+def test_low_effort_early_stop_breaks_a_qualified_underperformance_streak():
+    result = decision(
+        exposure(1, rows=[receipt(1, reps=7, rpe=10), receipt(2, reps=7, rpe=10)]),
+        exposure(2, rows=[receipt(1, reps=7, rpe=5), receipt(2, reps=7, rpe=5)]),
+        exposure(3, rows=[receipt(1, reps=7, rpe=8), receipt(2, reps=7, rpe=8)]),
+    )
+    assert result["action"] == "hold"
+    assert result["recommended_weight"] == 100
+    assert result["evidence"]["consecutive_underperformance_count"] == 1
+
+
 def test_single_poor_exposure_does_not_decrease_after_many_successful_exposures():
     history = [exposure(number) for number in range(1, 8)]
     bad = exposure(8, rows=[receipt(1, reps=6), receipt(2, reps=7)])

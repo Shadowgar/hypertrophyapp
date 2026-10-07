@@ -162,6 +162,37 @@ def test_out_of_order_exposures_use_owner_performed_date_with_legacy_audit_fallb
     assert (remaining["action"], remaining["recommended_weight"]) == (("monitor", None) if dated else ("hold", 40))
 
 
+def test_low_effort_completed_work_monitors_and_corrected_effort_rebuilds_failure_streak(scenario):
+    user, headers, client = scenario
+    week = date.today() - timedelta(days=date.today().weekday())
+    receipts = []
+    for session in (plan(user, week - timedelta(days=7)), plan(user, week)):
+        occurrence_receipts = []
+        for index in (1, 2):
+            result = log(client, headers, session, submit(session, index, reps=7, rpe=5))
+            assert result.status_code == 200, result.text
+            occurrence_receipts.append(result.json()["id"])
+        receipts.append(occurrence_receipts)
+    decision = result.json()["load_intelligence"]["next_exposure"]
+    assert decision["action"] == "monitor" and decision["recommended_weight"] is None
+    assert decision["evidence"]["completed_exposure_count"] == 2
+    assert decision["evidence"]["consecutive_underperformance_count"] == 0
+    for occurrence_receipts in reversed(receipts):
+        for receipt_id in occurrence_receipts:
+            result = correct(client, headers, receipt_id, reps=7, rpe=10)
+            assert result.status_code == 200, result.text
+        decision = result.json()["load_intelligence"]["next_exposure"]
+        if occurrence_receipts == receipts[-1]:
+            assert decision["action"] == "hold"
+            assert decision["evidence"]["consecutive_underperformance_count"] == 1
+    assert (decision["action"], decision["recommended_weight"]) == ("decrease", 39)
+    assert decision["evidence"]["consecutive_underperformance_count"] == 2
+    with SessionLocal() as db:
+        state = db.query(models.AuthoredLoadState).filter_by(user_id=user).one().state
+        assert state["last_progression_action"] == "decrease"
+        assert state["consecutive_under_target_exposures"] == 2
+
+
 def test_partial_then_complete_counts_one_exposure_from_actual_load_and_preserves_source(scenario):
     user, headers, client = scenario
     session = plan(user)

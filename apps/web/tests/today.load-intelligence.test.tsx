@@ -117,6 +117,30 @@ test("focusing and blurring an unchanged prefill preserves the exact canonical p
   expect(writes.find(w => w.path.endsWith("/log-set"))!.body.weight).toBe(25.25);
 });
 
+test("restoring the original displayed correction load preserves canonical kilograms", async () => {
+  count = 1;
+  envelope.effective_sets = [{ id: "receipt-1", set_index: 1, reps: 8, weight: 25.25, rpe: 8.5, created_at: "2026-10-06T12:00:00", set_kind: "work", parent_set_index: null, technique: null }];
+  await open(); fireEvent.click(screen.getByRole("button", { name: "Edit set 1" }));
+  const weight = screen.getByRole("spinbutton", { name: "Corrected load (lb)" });
+  expect(weight).toHaveValue(55.7);
+  fireEvent.change(weight, { target: { value: "60" } });
+  fireEvent.change(weight, { target: { value: "55.70" } });
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Corrected reps" }), { target: { value: "10" } });
+  fireEvent.click(screen.getByRole("button", { name: "Save correction" }));
+  await waitFor(() => expect(writes.some(w => w.path.endsWith("/correct"))).toBe(true));
+  expect(writes.find(w => w.path.endsWith("/correct"))!.body).toMatchObject({ weight: 25.25, reps: 10 });
+});
+
+test("restoring the recommended logger display preserves its exact canonical load", async () => {
+  await open();
+  const weight = screen.getByRole("spinbutton", { name: "Weight (lb)" });
+  fireEvent.change(weight, { target: { value: "60" } });
+  fireEvent.change(weight, { target: { value: "55.70" } });
+  fireEvent.click(screen.getByRole("button", { name: "Complete Set" }));
+  await waitFor(() => expect(writes.some(w => w.path.endsWith("/log-set"))).toBe(true));
+  expect(writes.find(w => w.path.endsWith("/log-set"))!.body.weight).toBe(25.25);
+});
+
 test.each(["log", "correct", "undo"])("a preview from before %s cannot overwrite rebuilt receipt evidence", async operation => {
   if (operation !== "log") {
     count = 1; envelope.remaining_sets = decision(20, "remaining_sets", "hold");
