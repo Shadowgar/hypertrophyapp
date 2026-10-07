@@ -1710,8 +1710,9 @@ export default function TodayPage() {
               const key = exerciseKey(exercise);
               const version = (loadPreviewVersions.current[key] ?? 0) + 1;
               loadPreviewVersions.current[key] = version;
+              const generation = captureLoadGeneration();
               const result = await api.previewLoadGuidance(workoutReference(workout), exercise.exercise_occurrence_id, context);
-              if (currentOccurrence.current !== workoutReference(workout) || loadPreviewVersions.current[key] !== version) return;
+              if (currentOccurrence.current !== workoutReference(workout) || loadPreviewVersions.current[key] !== version || !isCurrentLoadGeneration(key, generation)) return;
               updateLoadIntelligence(exerciseKey(exercise), result);
             }}
             overrideReason={loadOverrideByExercise[exerciseKey(exercise)] ?? ""}

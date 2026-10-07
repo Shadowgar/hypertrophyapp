@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import TodayPage from "@/app/today/page";
 
 const digest = "b".repeat(64);
@@ -105,6 +105,45 @@ test("qualified server load owns untouched prefill without display rounding chan
   fireEvent.click(screen.getByRole("button", { name: "Complete Set" }));
   await waitFor(() => expect(writes.some(w => w.path.endsWith("/log-set"))).toBe(true));
   expect(writes.find(w => w.path.endsWith("/log-set"))!.body).toMatchObject({ weight: 25.25, rpe: 8.5, load_recommendation_id: digest, load_context: context });
+});
+
+test("focusing and blurring an unchanged prefill preserves the exact canonical performed load", async () => {
+  await open();
+  const weight = screen.getByRole("spinbutton", { name: "Weight (lb)" });
+  fireEvent.focus(weight);
+  fireEvent.blur(weight);
+  fireEvent.click(screen.getByRole("button", { name: "Complete Set" }));
+  await waitFor(() => expect(writes.some(w => w.path.endsWith("/log-set"))).toBe(true));
+  expect(writes.find(w => w.path.endsWith("/log-set"))!.body.weight).toBe(25.25);
+});
+
+test.each(["log", "correct", "undo"])("a preview from before %s cannot overwrite rebuilt receipt evidence", async operation => {
+  if (operation !== "log") {
+    count = 1; envelope.remaining_sets = decision(20, "remaining_sets", "hold");
+    envelope.effective_sets = [{ id: "receipt-1", set_index: 1, reps: 8, weight: 30, rpe: 8.5, created_at: "2026-10-06T12:00:00", set_kind: "work", parent_set_index: null, technique: null }];
+  }
+  await open(); deferPreview = true;
+  fireEvent.click(screen.getByRole("button", { name: "Preview load guidance" }));
+  await waitFor(() => expect(writes.some(w => w.path.endsWith("/load-guidance"))).toBe(true));
+  if (operation === "correct") {
+    fireEvent.click(screen.getByRole("button", { name: "Back to list" }));
+    fireEvent.click(await screen.findByRole("button", { name: /Intelligence Press/ }));
+    await screen.findByRole("dialog");
+  }
+  const receipts = envelope.effective_sets;
+  envelope = guidance(); envelope.effective_sets = receipts;
+  envelope.remaining_sets = decision(40, "remaining_sets", "decrease");
+  envelope.remaining_sets.explanation = "Rebuilt guidance from the changed effective receipts.";
+  if (operation === "log") fireEvent.click(screen.getByRole("button", { name: "Complete Set" }));
+  else if (operation === "correct") {
+    fireEvent.click(screen.getByRole("button", { name: "Edit set 1" }));
+    fireEvent.click(screen.getByRole("button", { name: "Save correction" }));
+  } else fireEvent.click(screen.getByRole("button", { name: "Undo Last Set" }));
+  if (operation === "undo") await waitFor(() => expect(screen.getByRole("spinbutton", { name: "Weight (lb)" })).toHaveValue(null));
+  else await screen.findByText("Rebuilt guidance from the changed effective receipts.");
+  await act(async () => { releasePreview(); });
+  if (operation === "undo") expect(screen.getByRole("spinbutton", { name: "Weight (lb)" })).toHaveValue(null);
+  else expect(screen.getByText("Rebuilt guidance from the changed effective receipts.")).toBeInTheDocument();
 });
 
 test("manual next-set draft survives a refreshed recommendation and override is recorded", async () => {

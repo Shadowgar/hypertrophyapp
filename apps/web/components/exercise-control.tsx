@@ -348,7 +348,6 @@ export function SetInputCard({ exerciseId, guidanceLine, ctrl, weightLabel, disa
               ctrl.setActualWeightInput(e.target.value);
               ctrl.markWeightEdited?.();
             }}
-            onBlur={() => ctrl.markWeightEdited?.()}
             style={{ fontSize: "18px" }}
           />
         </label>
