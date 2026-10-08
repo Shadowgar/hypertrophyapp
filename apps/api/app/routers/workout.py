@@ -27,7 +27,8 @@ from core_engine import (
 
 from ..database import get_db
 from core_engine.authored_constraints import requires_receipt_tracking, is_bodyweight_authored, annotate_constraints, refresh_constraints, project_variant_load, restriction_conflicts, equipment_conflicts
-from ..workout_authored import log_typed_set, typed_projection
+from ..workout_authored import log_typed_set, typed_projection, log_authored_set, authored_feedback_projection
+from ..workout_load_state import is_authored_occurrence, project_authored_load_feedback, rebuild_authored_load_state
 from ..deps import get_current_user
 from ..models import ExerciseState, User, WorkoutPlan, WorkoutSessionState, WorkoutSetLog, WorkoutOccurrence, WorkoutLogCommand
 from ..workout_identity import identified_plans, resolve_occurrence, resolve_exercise, occurrence_plan
@@ -47,6 +48,7 @@ from ..schemas import (
     WorkoutUndoLastSetRequest,
     WorkoutSetCorrectionRequest,
     AuthoredSubstitutionRequest,
+    WorkoutLoadGuidanceRequest,
 )
 from ..stoic_quotes import daily_stoic_quote
 
@@ -110,6 +112,54 @@ def _list_workout_plans(db: Session, user_id: str) -> list[WorkoutPlan]:
 
 def _list_current_workout_plans(db: Session, current_user: User) -> list[WorkoutPlan]:
     return ensure_current_workout_plans_for_user(db=db, current_user=current_user)
+
+
+def _validate_authored_load_permission(user, occurrence, exercise):
+    if not is_authored_occurrence(occurrence):
+        raise HTTPException(409, "Load guidance requires an authored workout occurrence")
+    constraint = refresh_constraints(exercise, equipment=user.equipment_profile, restrictions=user.movement_restrictions)
+    if constraint.get("execution_status", constraint.get("status")) in {"unresolved", "infeasible", "declined"}:
+        raise HTTPException(409, "Authored slot is unresolved; confirm a source-approved alternative before load guidance")
+    if exercise.get("performed_variant"):
+        consent = exercise.get("substitution_consent") or {}
+        if not consent.get("confirmed") or consent.get("user_id") != user.id:
+            raise HTTPException(409, "Performed variant requires occurrence-bound source consent")
+
+
+def _attach_authored_load_feedback(db, user, occurrence, session, response):
+    if not is_authored_occurrence(occurrence):
+        return
+    snapshots = {exercise["exercise_occurrence_id"]: exercise for exercise in session.get("exercises") or []}
+    for projected in response.get("exercises") or []:
+        exercise = snapshots.get(projected.get("exercise_occurrence_id"))
+        if exercise is None:
+            continue
+        projection = authored_feedback_projection(db, user=user, occurrence=occurrence, exercise=exercise)
+        projected["load_intelligence"] = projection["load_intelligence"]
+        projected["exercise_state"] = projection["exercise_state"]
+        offered = projection["load_intelligence"]["remaining_sets"] or projection["load_intelligence"]["next_exposure"]
+        projected["load_recommendation_available"] = offered["prefill_available"]
+        projected["live_recommendation"] = projection["live_recommendation"]
+        if "completed_sets" in projected:
+            projected["completed_sets"] = projection["session_state"]["completed_sets"]
+        if "recommended_working_weight" in projected:
+            projected["recommended_working_weight"] = offered["recommended_weight"]
+        if "next_working_weight" in projected:
+            projected["next_working_weight"] = projection["load_intelligence"]["next_exposure"]["recommended_weight"]
+
+
+@router.post("/workout/{workout_id}/load-guidance")
+def workout_load_guidance(workout_id: str, payload: WorkoutLoadGuidanceRequest, db: DbSession, current_user: CurrentUser) -> dict:
+    """Preview explicit authored load context without saving an occurrence/advice."""
+    occurrence, session = resolve_occurrence(db, current_user.id, workout_id, _list_workout_plans(db, current_user.id))
+    matches = [exercise for exercise in session.get("exercises") or []
+        if exercise.get("exercise_occurrence_id") == payload.exercise_occurrence_id]
+    if len(matches) != 1:
+        raise HTTPException(404, "Exercise occurrence not found")
+    exercise = matches[0]
+    _validate_authored_load_permission(current_user, occurrence, exercise)
+    return project_authored_load_feedback(db, user=current_user, occurrence=occurrence,
+        exercise=exercise, supplied_context=payload.load_context)
 
 
 def _upsert_workout_session_state(
@@ -321,6 +371,9 @@ def workout_today(
             response_payload["total_sets"] = inferred_total
             response_payload["planned_total"] = inferred_total
 
+    if authored_selected:
+        occurrence, frozen = resolve_occurrence(db, current_user.id, selected["workout_occurrence_id"], raw_plans)
+        _attach_authored_load_feedback(db, current_user, occurrence, frozen, response_payload)
     constructed_payload = cast(dict[str, Any], deepcopy(response_payload))
     mesocycle = cast(dict, response_payload.get("mesocycle") or {})
     session_metrics = _extract_session_observability_metrics(cast(dict[str, Any], response_payload))
@@ -410,6 +463,10 @@ def _replay_command(db: Session, user_id: str, command_id: str, digest: str):
 @router.post("/workout/{workout_id}/log-set")
 def log_set(workout_id: str, payload: WorkoutSetLogRequest, db: DbSession, current_user: CurrentUser) -> WorkoutSetLogResponse:
     normalized = payload.model_dump(mode="json", exclude={"command_id"})
+    # New absent fields must not change the digest of a pre-M2A command.
+    for field in ("load_context", "load_recommendation_id", "load_override_reason"):
+        if normalized[field] is None:
+            normalized.pop(field)
     normalized["set_kind"] = (payload.set_kind or "work").strip().lower() or "work"
     normalized["primary_exercise_id"] = payload.primary_exercise_id or payload.exercise_id
     try:
@@ -418,6 +475,7 @@ def log_set(workout_id: str, payload: WorkoutSetLogRequest, db: DbSession, curre
     except ValueError as exc:
         raise HTTPException(422, "Log payload must contain finite numbers") from exc
     _lock_history_user(db, current_user.id)
+    db.refresh(current_user)
     if payload.command_id:
         replay = _replay_command(db, current_user.id, payload.command_id, digest)
         if replay:
@@ -445,8 +503,6 @@ def log_set(workout_id: str, payload: WorkoutSetLogRequest, db: DbSession, curre
     if replay:
         return replay
     try:
-        db.add(occurrence)
-        db.flush()
         return _apply_log_set(workout_id, payload, db, current_user, occurrence, session, exercise, command_id, digest)
     except IntegrityError:
         db.rollback()
@@ -475,6 +531,10 @@ def _apply_log_set(
     kind = (payload.set_kind or "work").strip().lower() or "work"
     ordinal = (payload.technique or {}).get("ordinal") if payload.parent_set_index is not None or kind != "work" else None
     for entry in existing_slots:
+        if (is_authored_occurrence(occurrence) and entry.parent_set_index is None and payload.parent_set_index is None
+                and (entry.set_kind or "work").strip().lower() in {"work", "top", "backoff"}
+                and kind in {"work", "top", "backoff"}):
+            raise HTTPException(409, "Logical working set already logged; undo before starting a new attempt")
         if ((entry.set_kind or "work").strip().lower() or "work") == kind and entry.parent_set_index == payload.parent_set_index and ((entry.technique or {}).get("ordinal") if entry.parent_set_index is not None or kind != "work" else None) == ordinal:
             raise HTTPException(409, "Logical set already logged; undo before starting a new attempt")
     context_runtime = prepare_workout_log_set_context_route_runtime(
@@ -494,6 +554,14 @@ def _apply_log_set(
     )
     context_runtime["planned_exercise"] = exercise
     primary_exercise_id = str(context_runtime["primary_exercise_id"])
+
+    if is_authored_occurrence(occurrence):
+        _validate_authored_load_permission(current_user, occurrence, exercise)
+        return log_authored_set(db, current_user=current_user, occurrence=occurrence, exercise=exercise,
+            payload=payload, command_id=command_id, digest=digest, context=context_runtime)
+
+    db.add(occurrence)
+    db.flush()
 
     state = (
         db.query(ExerciseState)
@@ -603,17 +671,34 @@ def _void_set(db, record, *, reason, source, timestamp):
 
 def _reconstruct_history(db, record):
     db.flush()
+    if record.replay_context["version"] == 2:
+        user = db.query(User).filter_by(id=record.user_id).one()
+        occurrence = db.query(WorkoutOccurrence).filter_by(id=record.workout_occurrence_id, user_id=record.user_id).one()
+        exercise = resolve_exercise(occurrence.payload, record.exercise_id, record.exercise_occurrence_id)
+        rebuild_authored_load_state(db, user=user)
+        return authored_feedback_projection(db, user=user, occurrence=occurrence, exercise=exercise)
     if requires_receipt_tracking(record.replay_context["planned_exercise"]):
-        return typed_projection(db, record)
-    progression = rebuild_exercise_state(db, user_id=record.user_id, primary_exercise_id=record.primary_exercise_id)
-    session = rebuild_session_state(db, user_id=record.user_id, occurrence_id=record.workout_occurrence_id,
-        exercise_occurrence_id=record.exercise_occurrence_id, session_inputs=progression["session_inputs"])
-    return {**session, "exercise_state": progression["exercise_state"], "decision_trace": progression["decision_trace"]}
+        legacy = typed_projection(db, record)
+    else:
+        progression = rebuild_exercise_state(db, user_id=record.user_id, primary_exercise_id=record.primary_exercise_id)
+        session = rebuild_session_state(db, user_id=record.user_id, occurrence_id=record.workout_occurrence_id,
+            exercise_occurrence_id=record.exercise_occurrence_id, session_inputs=progression["session_inputs"])
+        legacy = {**session, "exercise_state": progression["exercise_state"], "decision_trace": progression["decision_trace"]}
+    occurrence = db.query(WorkoutOccurrence).filter_by(id=record.workout_occurrence_id, user_id=record.user_id).one()
+    if is_authored_occurrence(occurrence):
+        user = db.query(User).filter_by(id=record.user_id).one()
+        exercise = resolve_exercise(occurrence.payload, record.exercise_id, record.exercise_occurrence_id)
+        rebuild_authored_load_state(db, user=user)
+        projection = authored_feedback_projection(db, user=user, occurrence=occurrence, exercise=exercise)
+        projection["decision_trace"]["legacy_replay"] = legacy["decision_trace"]
+        return {**legacy, **projection}
+    return legacy
 
 
 @router.post("/workout/{workout_id}/undo-last-set")
 def undo_last_set(workout_id: str, payload: WorkoutUndoLastSetRequest, db: DbSession, current_user: CurrentUser) -> dict:
     _lock_history_user(db, current_user.id)
+    db.refresh(current_user)
     digest = _history_digest("undo", workout_id, payload.model_dump(mode="json", exclude={"command_id"}))
     replay = _replay_history_action(db, current_user.id, payload.command_id, digest)
     if replay is not None:
@@ -636,6 +721,7 @@ def undo_last_set(workout_id: str, payload: WorkoutUndoLastSetRequest, db: DbSes
 @router.post("/workout/set/{set_id}/correct")
 def correct_set(set_id: str, payload: WorkoutSetCorrectionRequest, db: DbSession, current_user: CurrentUser) -> dict:
     _lock_history_user(db, current_user.id)
+    db.refresh(current_user)
     digest = _history_digest("correct", set_id, payload.model_dump(mode="json", exclude={"command_id"}) | {"rpe_supplied": "rpe" in payload.model_fields_set})
     replay = _replay_history_action(db, current_user.id, payload.command_id, digest)
     if replay is not None:
@@ -658,6 +744,12 @@ def correct_set(set_id: str, payload: WorkoutSetCorrectionRequest, db: DbSession
         set_kind=original.set_kind, parent_set_index=original.parent_set_index, technique=deepcopy(original.technique),
         created_at=original.created_at, amended_at=now, supersedes_id=original.id,
         replay_context=deepcopy(context), command_id=payload.command_id, request_digest=digest)
+    if context["version"] == 2:
+        # Retain the original command's offered advice/choice verbatim. Amendment
+        # performance is the new row; this metadata explains its distinct origin.
+        replacement.replay_context["amendment"] = {"supersedes_id": original.id,
+            "effective_chosen_weight": replacement.weight, "actual_rpe": replacement.rpe,
+            "rpe_supplied": "rpe" in payload.model_fields_set, "reason": payload.reason}
     db.add(replacement)
     result = {"status": "corrected", "original_set_id": original.id, "effective_set_id": replacement.id,
         **_reconstruct_history(db, replacement)}
@@ -727,6 +819,7 @@ def workout_progress(
         planned_total=response_payload.get("planned_total"),
     )
     response_payload["workout_occurrence_id"] = occurrence.id
+    _attach_authored_load_feedback(db, current_user, occurrence, session_snapshot, response_payload)
     return response_payload
 
 
@@ -778,7 +871,9 @@ def workout_summary(
         progression_states=progression_states,
         rule_set=cast(dict | None, route_runtime["rule_set"]),
     )
-    return WorkoutSummaryResponse(**cast(dict, response_runtime["response_payload"]), workout_occurrence_id=occurrence.id)
+    response_payload = cast(dict, response_runtime["response_payload"])
+    _attach_authored_load_feedback(db, current_user, occurrence, session, response_payload)
+    return WorkoutSummaryResponse(**response_payload, workout_occurrence_id=occurrence.id)
 
 
 @router.post("/workout/{workout_id}/authored-substitution")

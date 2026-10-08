@@ -9,7 +9,7 @@ from ..database import get_db
 from ..config import settings
 from ..emailer import is_smtp_configured, send_password_reset_email
 from ..models import PasswordResetToken, User
-from ..models import BodyMeasurementEntry, CoachingRecommendation, ExerciseState, SorenessEntry, WeeklyCheckin, WeeklyReviewCycle
+from ..models import AuthoredLoadState, BodyMeasurementEntry, CoachingRecommendation, ExerciseState, SorenessEntry, WeeklyCheckin, WeeklyReviewCycle
 from ..models import WorkoutLogCommand, WorkoutOccurrence, WorkoutPlan, WorkoutSessionState, WorkoutSetLog
 from ..observability import log_event
 from ..schemas import (
@@ -82,6 +82,7 @@ def dev_wipe_user(payload: DevWipeUserRequest, db: DbSession) -> StatusResponse:
     db.query(WorkoutSetLog).filter(WorkoutSetLog.user_id == user_id).delete(synchronize_session=False)
     db.query(WorkoutOccurrence).filter(WorkoutOccurrence.user_id == user_id).delete(synchronize_session=False)
     db.query(ExerciseState).filter(ExerciseState.user_id == user_id).delete(synchronize_session=False)
+    db.query(AuthoredLoadState).filter(AuthoredLoadState.user_id == user_id).delete(synchronize_session=False)
     db.query(WorkoutPlan).filter(WorkoutPlan.user_id == user_id).delete(synchronize_session=False)
     db.query(WeeklyReviewCycle).filter(WeeklyReviewCycle.user_id == user_id).delete(synchronize_session=False)
     db.query(WeeklyCheckin).filter(WeeklyCheckin.user_id == user_id).delete(synchronize_session=False)

@@ -10,7 +10,7 @@ from app.database import Base, engine
 from app.database import SessionLocal
 from app.main import app
 from authored_test_helpers import source_equipment
-from app.models import ExerciseState, User, WorkoutPlan
+from app.models import AuthoredLoadState, ExerciseState, User, WorkoutPlan
 
 
 def _reset_db() -> None:
@@ -33,7 +33,7 @@ def _onboard_profile(
     token: str,
     *,
     split_preference: str = "full_body",
-    selected_program_id: str = "pure_bodybuilding_phase_1_full_body",
+    selected_program_id: str = "full_body_v1",
     days_available: int = 3,
 ) -> None:
     response = client.post(
@@ -136,13 +136,13 @@ def test_log_set_returns_planned_vs_actual_feedback() -> None:
     assert payload["live_recommendation"]["decision_trace"]["interpreter"] == "recommend_live_workout_adjustment"
 
 
-def test_log_set_holds_next_weight_on_first_underperformance_when_canonical_rules_apply() -> None:
+def test_authored_partial_underperformance_without_effort_does_not_qualify_next_load() -> None:
     _reset_db()
     client = TestClient(app)
     token = _register_token(client)
     headers = {"Authorization": f"Bearer {token}"}
 
-    _onboard_profile(client, token)
+    _onboard_profile(client, token, selected_program_id="pure_bodybuilding_phase_1_full_body")
 
     generated = client.post("/plan/generate-week", headers=headers, json={})
     assert generated.status_code == 200
@@ -166,18 +166,21 @@ def test_log_set_holds_next_weight_on_first_underperformance_when_canonical_rule
 
     assert response.status_code == 200
     payload = response.json()
-    assert payload["next_working_weight"] == planned_weight
-    assert payload["guidance_rationale"].startswith("Performance fell below the target range.")
-    assert payload["decision_trace"]["interpreter"] == "interpret_workout_set_feedback"
+    assert payload["next_working_weight"] is None
+    decision = payload["load_intelligence"]["next_exposure"]
+    assert decision["action"] == "monitor"
+    assert decision["evidence"]["completed_exposure_count"] == 0
+    assert not decision["evidence"]["actual_rpe_sufficient"]
+    assert payload["exercise_state"]["exposure_count"] == 0
 
 
-def test_log_set_applies_rules_runtime_starting_load_for_first_exposure() -> None:
+def test_authored_first_set_does_not_promote_estimated_starting_load_to_performed_evidence() -> None:
     _reset_db()
     client = TestClient(app)
     token = _register_token(client)
     headers = {"Authorization": f"Bearer {token}"}
 
-    _onboard_profile(client, token)
+    _onboard_profile(client, token, selected_program_id="pure_bodybuilding_phase_1_full_body")
 
     generated = client.post("/plan/generate-week", headers=headers, json={})
     assert generated.status_code == 200
@@ -186,7 +189,6 @@ def test_log_set_applies_rules_runtime_starting_load_for_first_exposure() -> Non
 
     planned_weight = float(first_exercise["recommended_working_weight"])
     estimated_1rm = (planned_weight / 0.72) + 25.0
-    expected_start_weight = round(round(((estimated_1rm * 72.0) / 100.0) / 0.5) * 0.5, 2)
 
     _inject_estimated_1rm_into_latest_plan(
         workout_id=first_session["session_id"],
@@ -208,23 +210,17 @@ def test_log_set_applies_rules_runtime_starting_load_for_first_exposure() -> Non
 
     assert response.status_code == 200
     payload = response.json()
-    assert payload["starting_load_decision_trace"]["interpreter"] == "resolve_starting_load"
-    assert payload["starting_load_decision_trace"]["outcome"] == {
-        "working_weight": expected_start_weight,
-        "source": "estimated_1rm_fallback_percent",
-    }
-    assert payload["next_working_weight"] == expected_start_weight
-
+    assert payload["starting_load_decision_trace"] is None
+    assert payload["weight"] == planned_weight
+    assert payload["next_working_weight"] is None
+    assert payload["load_intelligence"]["next_exposure"]["action"] == "monitor"
     with SessionLocal() as db:
-        state = (
-            db.query(ExerciseState)
-            .filter(ExerciseState.exercise_id == (first_exercise.get("primary_exercise_id") or first_exercise["id"]))
-            .first()
-        )
+        assert db.query(ExerciseState).count() == 0
+        state = db.query(AuthoredLoadState).one()
+        assert state.state["completed_exposure_count"] == 0
+        assert state.state["qualified_exposure_count"] == 0
+        assert state.state["current_working_weight"] is None
 
-    assert state is not None
-    assert state.current_working_weight == expected_start_weight
-    assert state.exposure_count == 1
 
 
 def test_log_set_non_work_set_does_not_advance_progression_state() -> None:

@@ -85,7 +85,15 @@ def test_week_isolation_today_resume_progress_and_undo(scenario, program):
     assert client.post(f"/workout/{second['workout_occurrence_id']}/undo-last-set", headers=headers,
         json={"exercise_id": "same-catalog", "exercise_occurrence_id": second["exercises"][0]["exercise_occurrence_id"]}).status_code == 200
     assert client.get(f"/workout/{first['workout_occurrence_id']}/progress", headers=headers).json()["completed_total"] == 1
-    assert counts(user) == (1, 2, 2)
+    if program == "full_body_v1":
+        assert counts(user) == (1, 2, 2)
+    else:
+        # Explicit Authored legacy slots lack typed source context. Track receipts
+        # while abstaining from the Generated per-set progression projection.
+        assert counts(user) == (1, 0, 2)
+        assert original.json()["load_intelligence"]["next_exposure"]["action"] == "monitor"
+        with SessionLocal() as db:
+            assert db.query(ExerciseState).filter_by(user_id=user).count() == 0
     # Returning to a previous explicit occurrence retains its original result.
     assert log(client, headers, first, payload).json() == original.json()
 

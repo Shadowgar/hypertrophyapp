@@ -2,6 +2,10 @@
 
 [M1-C deployment / M2B-1 actual-date scheduling](2026-10-06-m2b-actual-date-scheduling.md) records the 2026-10-06 owner-authorized manual-date candidate, isolated migration/races, source-preserving conversion/revision fixes, desktop/mobile qualification, baseline failures and managed-security retention gap. PR #76 remains the source of exact-head CI/review status; this record grants no M2B merge, migration, deployment or release acceptance.
 
+[M2B-1 live activation](2026-10-06-m2b-activation.md) records the later, separately owner-authorized PR #76 merge, readable backup, live nullable migration 0021, preserved history fingerprints and API/web activation. M2B-1 is LIVE; remaining scheduling work and authenticated-browser qualification limits are explicit.
+
+[M2A-1 load-intelligence candidate](2026-10-06-m2a-load-intelligence.md) records the separately owner-authorized completed-exposure owner, optional actual RPE, load-only advice, effective-history reconstruction and isolated qualification. M2A has no merge or live migration/deployment authorization.
+
 Status: **Proposed policy**. This file is a portable provenance registry and migration plan, not a completed test run or managed security export. The source audit date is 2026-09-28; application revision is `df9965232ce731f8234d222acc526a90bc6be620`. This registry is not evidence that any new application test, live probe, migration, build or deployment was performed.
 
 ## Evidence and acceptance
