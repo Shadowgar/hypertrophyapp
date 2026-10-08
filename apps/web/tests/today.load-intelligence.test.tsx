@@ -392,3 +392,20 @@ test("definitive correction validation rejection releases its command so revised
   expect(after.body.command_id).not.toBe(before.body.command_id);
   expect(after.body.reps).toBe(10);
 });
+
+
+test("acknowledged manual first-set edits release the next-set remaining-load prefill", async () => {
+  await open();
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Weight (lb)" }), { target: { value: "60" } });
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Reps" }), { target: { value: "7" } });
+  fireEvent.change(screen.getByRole("spinbutton", { name: /Actual RPE/ }), { target: { value: "10" } });
+  envelope.remaining_sets = decision(20, "remaining_sets", "decrease");
+  fireEvent.click(screen.getByRole("button", { name: "Complete Set" }));
+  await waitFor(() => expect(screen.getByRole("spinbutton", { name: "Weight (lb)" })).toHaveValue(44.1));
+  expect(screen.getByRole("spinbutton", { name: "Reps" })).toHaveValue(8);
+  expect(writes.find(w => w.path.endsWith("/log-set"))!.body).toMatchObject({ weight: 27.2, reps: 7, rpe: 10 });
+  fireEvent.change(screen.getByRole("spinbutton", { name: /Actual RPE/ }), { target: { value: "9" } });
+  fireEvent.click(screen.getByRole("button", { name: "Complete Set" }));
+  await waitFor(() => expect(writes.filter(w => w.path.endsWith("/log-set"))).toHaveLength(2));
+  expect(writes.filter(w => w.path.endsWith("/log-set"))[1].body).toMatchObject({ weight: 20, reps: 8, rpe: 9 });
+});

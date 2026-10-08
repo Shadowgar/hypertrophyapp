@@ -72,7 +72,7 @@ export function useExerciseControl({
     if (userHasEditedRepsRef.current) return;
     if (repRange) setActualReps(repRange[0]);
     else if (repRange === null) setActualReps(0);
-  }, [repRange]);
+  }, [repRange, submitting]);
 
   useEffect(() => {
     return () => {
@@ -150,6 +150,10 @@ export function useExerciseControl({
     try {
       if (onSetComplete) await onSetComplete(exerciseId, next, performed);
       pendingPerformed.current = null;
+      // The acknowledged receipt closes this draft. The next logical set can
+      // adopt its own source target and rebuilt advice; retries keep the guards.
+      userHasEditedWeightRef.current = false;
+      userHasEditedRepsRef.current = false;
       setActualRpeInput("");
       setCompletedSets(next);
       setLoggedSets((logs) => [...logs, { setIndex: next, reps: performed.reps, weight: performed.weight }]);
