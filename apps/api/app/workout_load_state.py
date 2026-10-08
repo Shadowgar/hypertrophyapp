@@ -5,6 +5,7 @@ effective-history selection, content-bound advice and the reconstructible cache.
 """
 from collections import defaultdict
 from copy import deepcopy
+from datetime import datetime, timezone
 from types import SimpleNamespace
 import hashlib
 import json
@@ -141,8 +142,10 @@ def _projection_key(exposure):
         "workout_occurrence_id": exposure["workout_occurrence_id"], "exercise_occurrence_id": exposure["exercise_occurrence_id"]})
 
 
-def _wrap(decision, *, user_id, occurrence_id, exercise_id, context, exposures, scope):
-    evidence_revision = _digest({"version": VERSION, "context": context,
+def _wrap(decision, *, user_id, occurrence_id, exercise_id, context, exposures, scope, history_scope):
+    decision = deepcopy(decision)
+    decision["decision_trace"]["history_scope"] = deepcopy(history_scope)
+    evidence_revision = _digest({"version": VERSION, "context": context, "history_scope": history_scope,
         "exposures": [{"workout_occurrence_id": item["workout_occurrence_id"],
             "exercise_occurrence_id": item["exercise_occurrence_id"], "evidence_digest": item["evidence_digest"]}
             for item in exposures]})
@@ -158,6 +161,22 @@ def project_authored_load_feedback(db, *, user, occurrence, exercise, supplied_c
     current = next((group for group in groups if group[2].id == occurrence.id
         and group[3]["exercise_occurrence_id"] == exercise["exercise_occurrence_id"]), None)
     records = current[4] if current else []
+    # Occurrence advice is bounded by its performed date, even when missed work
+    # is entered after later completed exposures. Undated work uses the original
+    # working receipt's UTC audit date, or today's pending-receipt date before
+    # any work exists; legacy plan dates and warm-ups cannot invent that date.
+    has_working_root = any(row.parent_set_index is None
+        and (row.set_kind or "work").strip().lower() in {"work", "top", "backoff"} for row in records)
+    if occurrence.scheduled_date is not None:
+        cutoff_date, cutoff_source = occurrence.scheduled_date, "owner_occurrence_scheduled_date"
+    elif current and has_working_root:
+        cutoff_date, cutoff_source = current[0][0], "original_working_receipt_audit_date"
+    else:
+        cutoff_date, cutoff_source = datetime.now(timezone.utc).date(), "pending_working_receipt_utc_date"
+    history_scope = {"owner": OWNER, "policy": "occurrence-performed-date-v1",
+        "cutoff_date": cutoff_date.isoformat(), "cutoff_source": cutoff_source,
+        "inclusive": True}
+    groups = [group for group in groups if group[0][0] <= cutoff_date]
     context = resolve_load_context(user=user, supplied=supplied_context, records=records)
     # A new declaration never reinterprets already recorded or legacy set context.
     has_work = any(row.voided_at is None and row.parent_set_index is None
@@ -176,7 +195,7 @@ def project_authored_load_feedback(db, *, user, occurrence, exercise, supplied_c
         if not (item["workout_occurrence_id"] == occurrence.id and item["exercise_occurrence_id"] == exercise["exercise_occurrence_id"])]
     next_decision = decide_next_working_load(exposures=decision_exposures, rule_set=rule_set, load_context=context)
     wrapper = dict(user_id=user.id, occurrence_id=occurrence.id, exercise_id=exercise["exercise_occurrence_id"],
-        context=context, exposures=exposures)
+        context=context, exposures=exposures, history_scope=history_scope)
     remaining = None
     if not exposure["complete"] and exposure["completed_working_set_count"] > 0:
         remaining = _wrap(decide_remaining_working_load(exposure=exposure, rule_set=rule_set, load_context=context),

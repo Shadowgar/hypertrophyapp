@@ -61,7 +61,7 @@ def scenario():
     return user_id, {"Authorization": f"Bearer {create_access_token(user_id)}"}, TestClient(app)
 
 
-def plan(user, week=None, *, program=PROGRAM, variant=None, slot=1):
+def plan(user, week=None, *, program=PROGRAM, variant=None, slot=1, performed_date=None):
     week = week or date.today() - timedelta(days=date.today().weekday())
     prescription = preserve_prescription({"reps": "8-12", "working_sets": "2", "early_set_rpe": "8-9",
         "last_set_rpe": "8-9", "rest": "120"}, 2)
@@ -81,6 +81,9 @@ def plan(user, week=None, *, program=PROGRAM, variant=None, slot=1):
         row = WorkoutPlan(user_id=user, week_start=week, split="full_body", phase="maintenance",
             created_at=datetime.combine(week, datetime.min.time()), payload={"program_template_id": program,
                 "sessions": [{"session_id": "synthetic-load", "title": "Synthetic", "date": week.isoformat(), "exercises": [exercise]}]})
+        if performed_date is not None:
+            row.payload["sessions"][0].update(scheduled_date=performed_date.isoformat(),
+                schedule_timezone="UTC", placement_revision=1)
         db.add(row)
         db.commit()
         return identified_sessions(row)[0]
@@ -139,12 +142,13 @@ def test_out_of_order_exposures_use_owner_performed_date_with_legacy_audit_fallb
         final = log(client, headers, session, submit(session, 2, weight=weight, reps=reps, rpe=rpe))
         assert final.status_code == 200, final.text
         receipts.append(first.json()["id"])
-    expected = ("increase", 51.5, 0) if dated else ("hold", 40, 1)
+    cache_expected = ("increase", 51.5, 0) if dated else ("hold", 40, 1)
+    expected = ("hold", 40, 1)
     def assert_decision(feedback):
         decision = feedback["next_exposure"]
         assert (decision["action"], decision["recommended_weight"],
             decision["evidence"]["consecutive_underperformance_count"]) == expected
-        assert decision["evidence"]["completed_exposure_count"] == 2
+        assert decision["evidence"]["completed_exposure_count"] == (1 if dated else 2)
     assert_decision(final.json()["load_intelligence"])
     changed = correct(client, headers, receipts[1], reps=6)
     assert changed.status_code == 200, changed.text
@@ -152,7 +156,8 @@ def test_out_of_order_exposures_use_owner_performed_date_with_legacy_audit_fallb
     with SessionLocal() as db:
         state = db.query(models.AuthoredLoadState).filter_by(user_id=user).one().state
         assert (state["last_progression_action"], state["current_working_weight"],
-            state["consecutive_under_target_exposures"]) == expected
+            state["consecutive_under_target_exposures"]) == cache_expected
+        assert state["completed_exposure_count"] == 2
     removed = undo(client, headers, newer)
     assert removed.status_code == 200, removed.text
     remaining = removed.json()["load_intelligence"]["next_exposure"]
@@ -160,6 +165,89 @@ def test_out_of_order_exposures_use_owner_performed_date_with_legacy_audit_fallb
     # A partially undone latest performed occurrence stays incomplete/monitor;
     # legacy audit order still places the older completed receipt last.
     assert (remaining["action"], remaining["recommended_weight"]) == (("monitor", None) if dated else ("hold", 40))
+
+
+@pytest.mark.parametrize("prior_completed", [False, True])
+def test_historical_preview_and_receipts_exclude_later_dates_but_cache_retains_them(scenario, prior_completed):
+    user, headers, client = scenario
+    week = date.today() - timedelta(days=date.today().weekday())
+    if prior_completed:
+        prior = plan(user, week - timedelta(days=14), performed_date=week - timedelta(days=14))
+        for index in (1, 2):
+            assert log(client, headers, prior, submit(prior, index)).status_code == 200
+    later = plan(user, week, performed_date=week)
+    later_ids = []
+    for index in (1, 2):
+        response = log(client, headers, later, submit(later, index, weight=50))
+        assert response.status_code == 200, response.text
+        later_ids.append(response.json()["id"])
+    historical = plan(user, week - timedelta(days=7), performed_date=week - timedelta(days=7))
+    before = counts(user)
+    preview = guidance(client, headers, historical)
+    assert preview.status_code == 200, preview.text
+    assert counts(user) == before  # Preview does not persist even a new occurrence.
+    advice = preview.json()["next_exposure"]
+    assert (advice["action"], advice["recommended_weight"]) == (("increase", 41) if prior_completed else ("monitor", None))
+    assert advice["evidence"]["completed_exposure_count"] == int(prior_completed)
+    assert later["workout_occurrence_id"] not in json.dumps(advice)
+    assert advice["decision_trace"]["history_scope"]["cutoff_date"] == (week - timedelta(days=7)).isoformat()
+    # Future amendments cannot invalidate the historical offered recommendation.
+    assert correct(client, headers, later_ids[0], weight=50, reps=10).status_code == 200
+    assert guidance(client, headers, historical).json()["next_exposure"] == advice
+    first_payload = submit(historical, weight=35, reps=10, load_recommendation_id=advice["id"])
+    first = log(client, headers, historical, first_payload)
+    assert first.status_code == 200, first.text
+    with SessionLocal() as db:
+        captured = db.get(WorkoutSetLog, first.json()["id"]).replay_context["load_intelligence"]["offered_recommendation"]
+        assert captured == advice
+    final = log(client, headers, historical, submit(historical, 2, weight=35, reps=10))
+    assert final.status_code == 200, final.text
+    decision = final.json()["load_intelligence"]["next_exposure"]
+    assert (decision["action"], decision["recommended_weight"]) == ("hold", 35)
+    assert decision["evidence"]["completed_exposure_count"] == int(prior_completed) + 1
+    assert later["workout_occurrence_id"] not in json.dumps(decision)
+    changed = correct(client, headers, first.json()["id"], weight=35, reps=9)
+    assert changed.status_code == 200, changed.text
+    assert changed.json()["load_intelligence"]["next_exposure"]["evidence"]["completed_exposure_count"] == int(prior_completed) + 1
+    with SessionLocal() as db:
+        state = db.query(models.AuthoredLoadState).filter_by(user_id=user).one().state
+        assert (state["last_progression_action"], state["current_working_weight"]) == ("hold", 50)
+        assert state["completed_exposure_count"] == int(prior_completed) + 2
+    before = counts(user)
+    retry = log(client, headers, historical, first_payload)
+    assert retry.status_code == 200 and retry.json() == first.json()
+    assert counts(user) == before
+
+
+@pytest.mark.parametrize("warmup", [False, True])
+def test_undated_preview_uses_pending_utc_date_not_plan_or_warmup_date(scenario, warmup):
+    user, headers, client = scenario
+    week = date.today() - timedelta(days=date.today().weekday())
+    prior = plan(user, week - timedelta(days=14), performed_date=date.today() - timedelta(days=1))
+    later = plan(user, week + timedelta(days=7), performed_date=date.today() + timedelta(days=7))
+    for session, weight in ((prior, 40), (later, 50)):
+        for index in (1, 2):
+            assert log(client, headers, session, submit(session, index, weight=weight)).status_code == 200
+    legacy = plan(user, week - timedelta(days=7))
+    if warmup:
+        response = log(client, headers, legacy, submit(legacy, set_kind="warmup"))
+        assert response.status_code == 200, response.text
+        with SessionLocal() as db:
+            # Explicit old synthetic audit evidence, before the prior work.
+            db.get(WorkoutSetLog, response.json()["id"]).created_at = datetime.combine(week - timedelta(days=21), datetime.min.time())
+            db.commit()
+    before = counts(user)
+    preview = guidance(client, headers, legacy)
+    assert preview.status_code == 200, preview.text
+    assert counts(user) == before
+    decision = preview.json()["next_exposure"]
+    assert (decision["action"], decision["recommended_weight"]) == ("increase", 41)
+    assert decision["evidence"]["completed_exposure_count"] == 1
+    assert later["workout_occurrence_id"] not in json.dumps(decision)
+    assert decision["decision_trace"]["history_scope"]["cutoff_source"] == "pending_working_receipt_utc_date"
+    with SessionLocal() as db:
+        occurrence = db.get(WorkoutOccurrence, legacy["workout_occurrence_id"])
+        assert occurrence is None or occurrence.scheduled_date is None
 
 
 def test_low_effort_completed_work_monitors_and_corrected_effort_rebuilds_failure_streak(scenario):
