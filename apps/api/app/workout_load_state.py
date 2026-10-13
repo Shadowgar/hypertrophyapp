@@ -4,9 +4,11 @@ Core owns qualification and dose decisions. This adapter owns receipt provenance
 effective-history selection, content-bound advice and the reconstructible cache.
 """
 from collections import defaultdict
+from collections.abc import Mapping
 from copy import deepcopy
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from types import SimpleNamespace
+from types import SimpleNamespace, MappingProxyType
 import hashlib
 import json
 
@@ -196,6 +198,28 @@ def _projection_key(exposure):
         "workout_occurrence_id": exposure["workout_occurrence_id"], "exercise_occurrence_id": exposure["exercise_occurrence_id"]})
 
 
+@dataclass(frozen=True)
+class AuthoredHistorySnapshot:
+    """Read history shared only by projections in one response/session.
+
+    Keep the existing grouped receipts, chronology and exposure summaries intact.
+    Never retain this object in a session cache, global or command/retry state.
+    """
+    user_id: str
+    groups: tuple
+    cohorts: Mapping[str, tuple]
+    session: object = field(repr=False, compare=False)
+
+
+def load_authored_history_snapshot(db, *, user):
+    groups = tuple(_all_groups(db, user))
+    cohorts = defaultdict(list)
+    for group in groups:
+        cohorts[_projection_key(group[5])].append(group)
+    return AuthoredHistorySnapshot(user_id=user.id, groups=groups,
+        cohorts=MappingProxyType({key: tuple(rows) for key, rows in cohorts.items()}), session=db)
+
+
 def _wrap(decision, *, user_id, occurrence_id, exercise_id, context, exposures, scope, history_scope):
     decision = deepcopy(decision)
     decision["decision_trace"]["history_scope"] = deepcopy(history_scope)
@@ -210,13 +234,18 @@ def _wrap(decision, *, user_id, occurrence_id, exercise_id, context, exposures, 
 
 
 def project_authored_load_feedback(db, *, user, occurrence, exercise, supplied_context=None,
-        restore_warmup_context=True):
+        restore_warmup_context=True, history_snapshot=None):
     """Pure reads with optional current warmup presentation-context restoration.
 
     Working-command capture disables restoration so an omitted declaration
     cannot turn a warmup's UI settings into actual working load evidence.
     """
-    groups = _all_groups(db, user)
+    if history_snapshot is None:
+        history_snapshot = load_authored_history_snapshot(db, user=user)
+    if (history_snapshot.user_id != user.id or history_snapshot.session is not db
+            or occurrence.user_id != user.id):
+        raise HTTPException(409, "History snapshot does not belong to this projection")
+    groups = history_snapshot.groups
     current = next((group for group in groups if group[2].id == occurrence.id
         and group[3]["exercise_occurrence_id"] == exercise["exercise_occurrence_id"]), None)
     records = current[4] if current else []
@@ -244,7 +273,7 @@ def project_authored_load_feedback(db, *, user, occurrence, exercise, supplied_c
     recorded_context = resolve_load_context(user=user, records=records) if has_work else context
     exposure = _summarize(occurrence, exercise, records, recorded_context)
     key = _projection_key(exposure)
-    exposures = [group[5] for group in groups if _projection_key(group[5]) == key
+    exposures = [group[5] for group in history_snapshot.cohorts.get(key, ()) if group[0][0] <= cutoff_date
         and not (group[2].id == occurrence.id and group[3]["exercise_occurrence_id"] == exercise["exercise_occurrence_id"])]
     exposures.append(exposure)
     if current:

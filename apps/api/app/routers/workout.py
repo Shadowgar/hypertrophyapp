@@ -28,7 +28,8 @@ from core_engine import (
 from ..database import get_db
 from core_engine.authored_constraints import requires_receipt_tracking, is_bodyweight_authored, annotate_constraints, refresh_constraints, project_variant_load, restriction_conflicts, equipment_conflicts
 from ..workout_authored import log_typed_set, typed_projection, log_authored_set, authored_feedback_projection
-from ..workout_load_state import is_authored_occurrence, project_authored_load_feedback, rebuild_authored_load_state
+from ..workout_load_state import (is_authored_occurrence, project_authored_load_feedback,
+    rebuild_authored_load_state, load_authored_history_snapshot)
 from ..deps import get_current_user
 from ..models import ExerciseState, User, WorkoutPlan, WorkoutSessionState, WorkoutSetLog, WorkoutOccurrence, WorkoutLogCommand
 from ..workout_identity import identified_plans, resolve_occurrence, resolve_exercise, occurrence_plan
@@ -130,11 +131,15 @@ def _attach_authored_load_feedback(db, user, occurrence, session, response):
     if not is_authored_occurrence(occurrence):
         return
     snapshots = {exercise["exercise_occurrence_id"]: exercise for exercise in session.get("exercises") or []}
+    history_snapshot = None
     for projected in response.get("exercises") or []:
         exercise = snapshots.get(projected.get("exercise_occurrence_id"))
         if exercise is None:
             continue
-        projection = authored_feedback_projection(db, user=user, occurrence=occurrence, exercise=exercise)
+        if history_snapshot is None:
+            history_snapshot = load_authored_history_snapshot(db, user=user)
+        projection = authored_feedback_projection(db, user=user, occurrence=occurrence, exercise=exercise,
+            history_snapshot=history_snapshot)
         projected["load_intelligence"] = projection["load_intelligence"]
         projected["exercise_state"] = projection["exercise_state"]
         offered = projection["load_intelligence"]["remaining_sets"] or projection["load_intelligence"]["next_exposure"]
