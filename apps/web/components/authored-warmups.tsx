@@ -21,6 +21,7 @@ function WarmupInput({ set, unit, suggested, disabled, restored, onLog }: {
   const [reps, setReps] = useState(restored ? String(restored.reps) : set.reps_min == null ? "" : String(set.reps_min));
   const [rpe, setRpe] = useState(restored?.rpe == null ? "" : String(restored.rpe));
   const [saving, setSaving] = useState(false);
+  const [retryPending, setRetryPending] = useState(Boolean(restored));
   const [status, setStatus] = useState(restored ? "Warm-up was not confirmed. Retry the same warm-up before continuing." : "");
   const edited = useRef(false);
   // Keep the exact canonical origin of an edited/restored rounded display.
@@ -53,20 +54,20 @@ function WarmupInput({ set, unit, suggested, disabled, restored, onLog }: {
       <input className="ui-input min-h-[48px] w-full" type="number" min={0} max={10} step={0.5} value={rpe}
         onChange={event => { edited.current = true; setRpe(event.target.value); }} />
     </label>
-    <Button className="min-h-[48px] w-full" disabled={saving || disabled || (!pending.current && !valid)} onClick={async () => {
+    <Button className="min-h-[48px] w-full" disabled={saving || disabled || (!retryPending && !valid)} onClick={async () => {
       if (inFlight.current || (!pending.current && !valid)) return;
       inFlight.current = true; setSaving(true); setStatus("");
       const performed = pending.current ?? { reps: Number(reps),
         weight: origin.current.canonical != null && Number(weight) === Number(origin.current.displayed)
           ? origin.current.canonical : draftUnit === "kg" ? Number(weight) : lbsToKg(Number(weight)),
         rpe: rpe.trim() === "" ? null : Number(rpe) };
-      pending.current = performed;
+      pending.current = performed; setRetryPending(true);
       try {
         await onLog(set.set_index, performed);
-        pending.current = null; edited.current = false; setRpe("");
+        pending.current = null; setRetryPending(false); edited.current = false; setRpe("");
       } catch (error) {
         if (error instanceof ApiError && (error.status === 422 || (error.status === 409 && error.code === "stale_load_recommendation"))) {
-          pending.current = null; setStatus(error.message);
+          pending.current = null; setRetryPending(false); setStatus(error.message);
         } else setStatus("Warm-up was not confirmed. Retry the same warm-up before continuing.");
       } finally { inFlight.current = false; setSaving(false); }
     }}>{saving ? "Saving warm-up…" : `Log warm-up ${set.set_index}`}</Button>
@@ -81,9 +82,9 @@ export function AuthoredWarmups({ guidance, sourceCount, receipts, loadContext, 
   onLog: (ordinal: number, performed: PerformedWarmup) => Promise<void>;
 }) {
   // A temporary context invalidation clears advice while keeping existing actual drafts.
-  const lastProjection = useRef(guidance);
-  if (guidance) lastProjection.current = guidance;
-  const projection = guidance ?? lastProjection.current;
+  const [lastProjection, setLastProjection] = useState(guidance);
+  useEffect(() => { if (guidance) setLastProjection(guidance); }, [guidance]);
+  const projection = guidance ?? lastProjection;
   const warmups = receipts.filter(receipt => receipt.set_kind === "warmup");
   const recorded = new Set(warmups.map(receipt => receipt.set_index));
   const countText = projection?.source_count ?? sourceCount;
