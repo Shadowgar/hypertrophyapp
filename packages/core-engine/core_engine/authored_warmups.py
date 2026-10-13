@@ -6,7 +6,7 @@ and attainable-grid rounding remain owned by M2A-1 load intelligence. This
 owner neither falls back to a planned load nor invents equipment inventory.
 """
 from copy import deepcopy
-from decimal import Decimal
+from decimal import Decimal, DecimalException
 import re
 
 from .load_intelligence import _attainable_weight, _context_reasons, _digest, _finite, _numeric_target, _safe_json
@@ -25,7 +25,9 @@ _EXTERNAL_SEMANTICS = {None, "external_load", "external", "total_external", "per
 
 def _source_count(exercise):
     raw = (exercise.get("authored_prescription") or {}).get("raw") or {}
-    value = raw["warm_up_sets"] if "warm_up_sets" in raw else exercise.get("warm_up_sets")
+    # A missing raw source cell stays absent; flat compatibility fields cannot
+    # establish an authored warmup prescription.
+    value = raw.get("warm_up_sets")
     text = None if value is None else str(value)
     if text is None or not text.strip():
         return text, None
@@ -126,10 +128,21 @@ def build_authored_warmup_guidance(*, exercise, working_decision, load_context, 
             reasons.append("declared_increment_unavailable")
         if not reasons:
             proposals = []
-            for row in rows:
-                raw_weight = Decimal(str(weight)) * Decimal(row["percent"]) / Decimal("100")
-                proposed, feasibility = _attainable_weight(raw_weight, weight, "decrease", context)
-                proposals.append(proposed)
+            try:
+                for row in rows:
+                    raw_weight = Decimal(str(weight)) * Decimal(row["percent"]) / Decimal("100")
+                    proposed, feasibility = _attainable_weight(raw_weight, weight, "decrease", context)
+                    proposals.append(proposed)
+            except DecimalException as error:
+                # Accepted finite declarations can exceed the shared grid
+                # owner's decimal precision. Preserve its rounding authority
+                # and abstain rather than invent a minimum increment/grid.
+                proposals = [None]
+                reasons.append("warmup_grid_arithmetic_unresolved")
+                feasibility = {"status": "unknown", "increment": increment,
+                    "increment_unit": context.get("increment_unit"), "grid_anchor_weight": weight,
+                    "arithmetic_error": type(error).__name__,
+                    "limitations": ["Declared grid arithmetic cannot be resolved at the supported decimal precision."]}
             if any(value is None for value in proposals):
                 reasons.append("attainable_warmup_load_unresolved")
             else:

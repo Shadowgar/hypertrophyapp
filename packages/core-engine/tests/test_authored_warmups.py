@@ -296,3 +296,49 @@ def test_absent_source_raw_cell_does_not_inherit_compatibility_warmup_count():
     assert result["status"] == "none"
     assert result["source_count"] is None
     assert result["sets"] == []
+
+
+@pytest.mark.parametrize("raw_state", ["missing_count", "empty_raw", "missing_raw", "null_raw"])
+def test_missing_authoritative_raw_count_never_uses_stale_flat_warmup_count(raw_state):
+    ex = exercise()
+    ex["warm_up_sets"] = "3"
+    rx = ex["authored_prescription"]
+    if raw_state == "missing_count":
+        rx["raw"].pop("warm_up_sets")
+    elif raw_state == "empty_raw":
+        rx["raw"] = {}
+    elif raw_state == "missing_raw":
+        rx.pop("raw")
+    else:
+        rx["raw"] = None
+    original = deepcopy(ex)
+    result = build(ex=ex)
+    assert result["status"] == "none"
+    assert result["source_count"] is None
+    assert result["count"] is None
+    assert result["sets"] == []
+    assert "source_warmup_absent_or_zero" in result["reason_codes"]
+    assert ex == original
+
+
+@pytest.mark.parametrize("increment", [1e-30, 5e-324])
+@pytest.mark.parametrize("increment_unit", ["kg", "lb"])
+def test_tiny_positive_finite_increment_abstains_when_shared_grid_arithmetic_is_unresolved(increment, increment_unit):
+    load = context(increment=increment, increment_unit=increment_unit)
+    original = deepcopy(load)
+    result = build(load=load)
+    assert result["status"] == "manual"
+    assert result["count"] == 3
+    assert len(result["sets"]) == 3
+    assert [(row["reps_min"], row["reps_max"], row["percent"]) for row in result["sets"]] == [
+        (6, 10, 45), (4, 6, 65), (3, 4, 85)]
+    assert all(row["suggested_weight"] is None for row in result["sets"])
+    assert "warmup_grid_arithmetic_unresolved" in result["reason_codes"]
+    assert "attainable_warmup_load_unresolved" in result["reason_codes"]
+    assert result["equipment_feasibility"]["status"] == "unknown"
+    assert result["equipment_feasibility"]["increment"] == increment
+    assert result["equipment_feasibility"]["increment_unit"] == increment_unit
+    assert result["equipment_feasibility"]["arithmetic_error"] == "InvalidOperation"
+    assert result["decision_trace"]["reason_codes"] == result["reason_codes"]
+    assert load == original
+    json.dumps(result, allow_nan=False)
