@@ -897,9 +897,14 @@ def authored_substitution(workout_id: str, payload: AuthoredSubstitutionRequest,
     old = deepcopy(exercise.get("authored_constraint") or {})
     if payload.expected_revision != int(old.get("revision") or 0):
         raise HTTPException(409, "Substitution decision changed; refresh the occurrence")
-    if payload.action != "report" and effective_set_logs(db).filter_by(user_id=current_user.id,
-            workout_occurrence_id=occurrence.id, exercise_occurrence_id=exercise["exercise_occurrence_id"]).first():
-        raise HTTPException(409, "Started occurrence retains its performed variant and consent")
+    if payload.action != "report":
+        receipts = effective_set_logs(db).filter_by(user_id=current_user.id,
+            workout_occurrence_id=occurrence.id, exercise_occurrence_id=exercise["exercise_occurrence_id"]).all()
+        if receipts:
+            if not exercise.get("performed_variant") and all(row.parent_set_index is None
+                    and (row.set_kind or "work").strip().lower() == "warmup" for row in receipts):
+                raise HTTPException(409, "Recorded warm-ups belong to the original exercise. Undo them before choosing or declining an alternative.")
+            raise HTTPException(409, "Started occurrence retains its performed variant and consent")
     refreshed = refresh_constraints(exercise, equipment=current_user.equipment_profile,
         restrictions=current_user.movement_restrictions)
     reasons = deepcopy(refreshed["reasons"])
@@ -944,8 +949,11 @@ def authored_substitution(workout_id: str, payload: AuthoredSubstitutionRequest,
         "timestamp": now, "user_id": current_user.id, "revision": constraint["revision"],
         "reasons": deepcopy(reasons), "option_id": payload.option_id if payload.action == "confirm" else None})
     occurrence.payload = deepcopy(session)
+    projected_exercise = project_variant_load(exercise)
+    projected_exercise["load_intelligence"] = project_authored_load_feedback(db,
+        user=current_user, occurrence=occurrence, exercise=exercise)
     result = {"workout_occurrence_id": occurrence.id, "exercise_occurrence_id": exercise["exercise_occurrence_id"],
-        "exercise": project_variant_load(exercise)}
+        "exercise": projected_exercise}
     _save_history_action(db, user_id=current_user.id, command_id=payload.command_id, digest=digest,
         operation="authored_substitution", occurrence=occurrence,
         exercise_occurrence_id=exercise["exercise_occurrence_id"], result=result)

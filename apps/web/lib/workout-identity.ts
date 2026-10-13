@@ -28,6 +28,13 @@ export function pendingCommandKey(workout: string, exercise: string, slot: strin
 const memoryCommands = new Map<string, string>();
 const memoryPayloads = new Map<string, unknown>();
 
+/** Read an attempted receipt without creating a new command. */
+export function pendingLogPayload<T extends object>(key: string): T | null {
+  let payload = memoryPayloads.get(key);
+  try { const stored = localStorage.getItem(`${key}:payload`); if (stored) payload = JSON.parse(stored); } catch { /* memory fallback */ }
+  return (payload as T | undefined) ?? null;
+}
+
 /** Keep the complete attempted command immutable until acknowledged, including after remount. */
 export function retainLogPayload<T extends object>(key: string, proposed: T): T {
   let payload = memoryPayloads.get(key);

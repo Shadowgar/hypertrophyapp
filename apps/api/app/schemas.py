@@ -668,9 +668,9 @@ class WorkoutSetLogResponse(BaseModel):
     technique: dict[str, Any] | None = None
     planned_reps_min: int | None
     planned_reps_max: int | None
-    planned_weight: float
+    planned_weight: float | None
     rep_delta: int | None
-    weight_delta: float
+    weight_delta: float | None
     next_working_weight: float | None
     guidance: str
     guidance_rationale: str

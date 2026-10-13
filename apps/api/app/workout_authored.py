@@ -99,7 +99,15 @@ def log_authored_set(db, *, current_user, occurrence, exercise, payload, command
     if prescribed and kind != "warmup" and index not in {row["set_index"] for row in prescribed}:
         raise HTTPException(409, "Set does not match the authored working-set prescription")
     before = project_authored_load_feedback(db, user=current_user, occurrence=occurrence,
-        exercise=exercise, supplied_context=payload.load_context)
+        exercise=exercise, supplied_context=payload.load_context, restore_warmup_context=kind == "warmup")
+    if kind == "warmup":
+        if payload.parent_set_index is not None or payload.technique is not None:
+            raise HTTPException(409, "Warmup sets require an independent ordinal with no parent or technique")
+        warmup = before["warmup_guidance"]
+        if warmup["status"] == "none":
+            raise HTTPException(409, "Source prescription does not specify warmup sets")
+        if warmup["count"] is not None and payload.set_index > warmup["count"]:
+            raise HTTPException(409, "Set does not match the authored warmup-set count")
     captured = capture_authored_context(exercise=exercise, context=context, feedback=before, payload=payload)
     # Advice validation precedes the first INSERT, including occurrence creation.
     db.add(occurrence)
@@ -116,13 +124,23 @@ def log_authored_set(db, *, current_user, occurrence, exercise, payload, command
         exercise=exercise, supplied_context=payload.load_context)
     live = projection["live_recommendation"]
     planned_weight = float(exercise.get("recommended_working_weight") or 0)
+    planned_reps_min, planned_reps_max = live["recommended_reps_min"], live["recommended_reps_max"]
+    receipt_trace = deepcopy(projection["decision_trace"])
+    receipt_guidance, receipt_reason = live["guidance"], live["guidance_rationale"]
+    if kind == "warmup":
+        offered_set = captured["load_intelligence"]["offered_warmup_set"] or {}
+        planned_weight = offered_set.get("suggested_weight")
+        planned_reps_min, planned_reps_max = offered_set.get("reps_min"), offered_set.get("reps_max")
+        receipt_trace = deepcopy(captured["load_intelligence"]["offered_warmup_guidance"]["decision_trace"])
+        receipt_guidance = before["warmup_guidance"]["explanation"]
+        receipt_reason = next(iter(before["warmup_guidance"]["reason_codes"]), "source_warmup_guidance")
     response = WorkoutSetLogResponse(id=record.id, primary_exercise_id=record.primary_exercise_id,
         exercise_id=record.exercise_id, set_index=record.set_index, reps=record.reps, weight=record.weight, rpe=record.rpe,
         set_kind=record.set_kind, parent_set_index=record.parent_set_index, technique=record.technique,
-        planned_reps_min=live["recommended_reps_min"], planned_reps_max=live["recommended_reps_max"], planned_weight=planned_weight,
-        rep_delta=None, weight_delta=record.weight - planned_weight,
+        planned_reps_min=planned_reps_min, planned_reps_max=planned_reps_max, planned_weight=planned_weight,
+        rep_delta=None, weight_delta=record.weight - planned_weight if planned_weight is not None else None,
         next_working_weight=projection["load_intelligence"]["next_exposure"]["recommended_weight"],
-        guidance=live["guidance"], guidance_rationale=live["guidance_rationale"], decision_trace=projection["decision_trace"],
+        guidance=receipt_guidance, guidance_rationale=receipt_reason, decision_trace=receipt_trace,
         live_recommendation=live, load_intelligence=projection["load_intelligence"], exercise_state=projection["exercise_state"],
         created_at=record.created_at, workout_occurrence_id=occurrence.id,
         exercise_occurrence_id=record.exercise_occurrence_id, command_id=command_id)

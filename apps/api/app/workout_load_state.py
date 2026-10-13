@@ -13,13 +13,14 @@ import json
 from fastapi import HTTPException
 from sqlalchemy import and_
 
+from core_engine.authored_warmups import build_authored_warmup_guidance
 from core_engine.load_intelligence import (
     summarize_completed_exercise_exposure, comparison_key_for_exposure,
     decide_next_working_load, decide_remaining_working_load,
 )
 from .models import AuthoredLoadState, WorkoutOccurrence, WorkoutSetLog
 from .schemas import WorkoutLoadContext
-from .program_loader import load_program_rule_set, resolve_rule_program_id
+from .program_loader import load_program_rule_set, resolve_rule_program_id, load_program_onboarding_package
 
 AUTHORED_PROGRAMS = {"pure_bodybuilding_phase_1_full_body", "pure_bodybuilding_phase_2_full_body"}
 OWNER = "api.workout_load_state"
@@ -38,6 +39,37 @@ def _digest(value):
 def _rules(occurrence):
     linked = resolve_rule_program_id(occurrence.program_id)
     return load_program_rule_set(linked) if linked else {}
+
+
+def _source_warmup_protocol(program_id):
+    """Read only the existing validated compiled onboarding artifact."""
+    try:
+        package = load_program_onboarding_package(program_id)
+    except (OSError, ValueError):
+        return {}, {"owner": "api.program_loader", "program_id": program_id,
+            "status": "compiled_source_protocol_unavailable"}
+    return deepcopy(package.get("warm_up_protocol") or {}), {
+        "owner": "api.program_loader", "program_id": package["program_id"],
+        "version": package.get("version"), "status": "compiled_source_protocol",
+        "source_provenance": deepcopy(package.get("source_provenance") or {})}
+
+
+def _warmup_guidance(*, occurrence, exercise, next_decision, context, user_id):
+    protocol, provenance = _source_warmup_protocol(occurrence.program_id)
+    guidance = build_authored_warmup_guidance(exercise=exercise,
+        working_decision=next_decision, load_context=context,
+        program_id=occurrence.program_id, source_protocol=protocol)
+    guidance["decision_trace"].update(source_protocol_provenance=provenance,
+        working_recommendation_id=next_decision["id"],
+        working_evidence_revision=next_decision["evidence_revision"])
+    evidence_revision = _digest({"working_evidence_revision": next_decision["evidence_revision"],
+        "source_lineage": exercise.get("source_lineage"), "guidance": guidance})
+    identity = _digest({"owner": OWNER, "scope": "warmup", "user_id": user_id,
+        "workout_occurrence_id": occurrence.id,
+        "exercise_occurrence_id": exercise["exercise_occurrence_id"],
+        "working_recommendation_id": next_decision["id"],
+        "evidence_revision": evidence_revision, "guidance": guidance})
+    return {**guidance, "id": identity, "evidence_revision": evidence_revision, "scope": "warmup"}
 
 
 def _variant(exercise):
@@ -61,8 +93,30 @@ def resolve_load_context(*, user, supplied=None, records=()):
         "equipment_tags": sorted(user.equipment_profile or []), "equipment_provenance": "profile_tags_not_inventory"}
 
 
+def resolve_current_load_context(*, user, supplied=None, records=()):
+    """Restore only the current occurrence's effective warmup UI declaration.
+
+    Historical grouping and working-command capture use resolve_load_context.
+    Any retained working root, including unknown or voided work, keeps that
+    resolver authoritative. A warmup declaration supplies no working evidence.
+    """
+    context = resolve_load_context(user=user, supplied=supplied, records=records)
+    if supplied is not None or any(record.parent_set_index is None
+            and (record.set_kind or "work").strip().lower() in {"work", "top", "backoff"}
+            for record in records):
+        return context
+    for record in reversed(records):
+        if (record.voided_at is not None or record.parent_set_index is not None
+                or record.technique is not None or (record.set_kind or "work").strip().lower() != "warmup"):
+            continue
+        captured = (record.replay_context or {}).get("load_intelligence") or {}
+        if (record.replay_context or {}).get("version") == 2 and captured.get("load_context"):
+            return deepcopy(captured["load_context"])
+    return context
+
+
 def effective_receipts(records):
-    return [{"id": row.id, "set_index": row.set_index, "reps": row.reps, "weight": row.weight,
+    return [{"id": row.id, "command_id": row.command_id, "set_index": row.set_index, "reps": row.reps, "weight": row.weight,
         "rpe": row.rpe, "set_kind": row.set_kind, "parent_set_index": row.parent_set_index,
         "technique": deepcopy(row.technique), "created_at": row.created_at.isoformat(),
         "amended_at": row.amended_at.isoformat() if row.amended_at else None,
@@ -155,8 +209,13 @@ def _wrap(decision, *, user_id, occurrence_id, exercise_id, context, exposures, 
     return {**deepcopy(decision), "id": identity, "evidence_revision": evidence_revision, "scope": scope}
 
 
-def project_authored_load_feedback(db, *, user, occurrence, exercise, supplied_context=None):
-    """Pure database reads; even a not-yet-started occurrence stays transient."""
+def project_authored_load_feedback(db, *, user, occurrence, exercise, supplied_context=None,
+        restore_warmup_context=True):
+    """Pure reads with optional current warmup presentation-context restoration.
+
+    Working-command capture disables restoration so an omitted declaration
+    cannot turn a warmup's UI settings into actual working load evidence.
+    """
     groups = _all_groups(db, user)
     current = next((group for group in groups if group[2].id == occurrence.id
         and group[3]["exercise_occurrence_id"] == exercise["exercise_occurrence_id"]), None)
@@ -177,7 +236,8 @@ def project_authored_load_feedback(db, *, user, occurrence, exercise, supplied_c
         "cutoff_date": cutoff_date.isoformat(), "cutoff_source": cutoff_source,
         "inclusive": True}
     groups = [group for group in groups if group[0][0] <= cutoff_date]
-    context = resolve_load_context(user=user, supplied=supplied_context, records=records)
+    context_resolver = resolve_current_load_context if restore_warmup_context else resolve_load_context
+    context = context_resolver(user=user, supplied=supplied_context, records=records)
     # A new declaration never reinterprets already recorded or legacy set context.
     has_work = any(row.voided_at is None and row.parent_set_index is None
         and (row.set_kind or "work").strip().lower() in {"work", "top", "backoff"} for row in records)
@@ -200,7 +260,10 @@ def project_authored_load_feedback(db, *, user, occurrence, exercise, supplied_c
     if not exposure["complete"] and exposure["completed_working_set_count"] > 0:
         remaining = _wrap(decide_remaining_working_load(exposure=exposure, rule_set=rule_set, load_context=context),
             scope="remaining_sets", **wrapper)
-    return {"next_exposure": _wrap(next_decision, scope="next_exposure", **wrapper),
+    next_offered = _wrap(next_decision, scope="next_exposure", **wrapper)
+    warmup = _warmup_guidance(occurrence=occurrence, exercise=exercise,
+        next_decision=next_offered, context=context, user_id=user.id)
+    return {"next_exposure": next_offered, "warmup_guidance": warmup,
         "remaining_sets": remaining, "load_context": context, "effective_sets": effective_receipts(records)}
 
 
@@ -255,15 +318,26 @@ def _state_values(decision, *, context, program_id, evidence_revision):
 
 
 def capture_authored_context(*, exercise, context, feedback, payload):
-    offered = feedback["remaining_sets"] or feedback["next_exposure"]
+    warmup = (payload.set_kind or "work").strip().lower() == "warmup"
+    offered = feedback["warmup_guidance"] if warmup else feedback["remaining_sets"] or feedback["next_exposure"]
     if payload.load_recommendation_id is not None and payload.load_recommendation_id != offered["id"]:
         raise HTTPException(409, {"code": "stale_load_recommendation",
             "message": "Load advice changed; refresh and review the current recommendation"})
-    prior = feedback["effective_sets"]
+    prior = [row for row in feedback["effective_sets"] if
+        (row["set_kind"] or "work").strip().lower() == "warmup"] if warmup else [
+        row for row in feedback["effective_sets"] if row["parent_set_index"] is None
+        and (row["set_kind"] or "work").strip().lower() in {"work", "top", "backoff"}]
+    captured = {"snapshot_scope": "original_log_command", "load_context": deepcopy(feedback["load_context"]),
+        "chosen_weight": payload.weight, "prior_chosen_weight": prior[-1]["weight"] if prior else None,
+        "override_reason": payload.load_override_reason,
+        "provided_recommendation_id": payload.load_recommendation_id}
+    if warmup:
+        captured.update(advice_scope="warmup",
+            offered_advice_origin="client_acknowledged_guidance" if payload.load_recommendation_id else "server_command_preview",
+            offered_warmup_guidance=deepcopy(offered),
+            offered_warmup_set=deepcopy(next((row for row in offered["sets"]
+                if row["set_index"] == payload.set_index), None)))
+    else:
+        captured["offered_recommendation"] = deepcopy(offered)
     return {"version": 2, "owner": OWNER, "planned_exercise": deepcopy(exercise),
-        "rule_set": deepcopy(context["rule_set"]),
-        "load_intelligence": {"snapshot_scope": "original_log_command", "load_context": deepcopy(feedback["load_context"]),
-            "offered_recommendation": deepcopy(offered), "chosen_weight": payload.weight,
-            "prior_chosen_weight": prior[-1]["weight"] if prior else None,
-            "override_reason": payload.load_override_reason,
-            "provided_recommendation_id": payload.load_recommendation_id}}
+        "rule_set": deepcopy(context["rule_set"]), "load_intelligence": captured}

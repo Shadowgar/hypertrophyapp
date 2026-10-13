@@ -1,4 +1,5 @@
 "use client";
+import { AuthoredWarmups, type PerformedWarmup } from "@/components/authored-warmups";
 import AuthoredConstraintCard, { type AuthoredDecision } from "@/components/AuthoredConstraintCard";
 
 import { authoredRepLabel, authoredSetRepRange, authoredSetDetails, authoredWarmupLabel, isBodyweightAuthored, authoredSetTechnique } from "@/lib/authored-prescription";
@@ -581,6 +582,9 @@ function ExerciseDetailOverlay({
   overrideReason,
   onOverrideReason,
   onCorrectSet,
+  onWarmupComplete,
+  warmupCommandScope,
+  effectiveSets,
 }: Readonly<{
   exercise: WorkoutExercise;
   selectedName: string;
@@ -620,6 +624,9 @@ function ExerciseDetailOverlay({
   onPreviewLoad: (context: LoadContext) => Promise<void>;
   overrideReason: string;
   onOverrideReason: (reason: string) => void;
+  effectiveSets: EffectiveLoadSet[];
+  warmupCommandScope: string;
+  onWarmupComplete: (ordinal: number, performed: PerformedWarmup) => Promise<void>;
   onCorrectSet: (receipt: EffectiveLoadSet, values: { reps: number; weight: number; rpe?: number | null; reason: string }) => Promise<void>;
 }>) {
   const defaultRestSeconds = parseRestToSeconds(exercise.rest) ?? 90;
@@ -703,7 +710,7 @@ function ExerciseDetailOverlay({
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 pb-[max(7rem,env(safe-area-inset-bottom))] space-y-4 overscroll-contain">
 
         {/* == ZONE 1: Baseline calculator (expanded when no baseline) == */}
-        {exercise.rep_range && !bodyweight && !exercise.performed_variant ? <Disclosure title="Baseline Calculator" badge={baseline ? `1RM: ${Math.round(baseline.estimated1RM)} lb` : null} defaultOpen={!baseline}>
+        {!exercise.authored_prescription && exercise.rep_range && !bodyweight && !exercise.performed_variant ? <Disclosure title="Baseline Calculator" badge={baseline ? `1RM: ${Math.round(baseline.estimated1RM)} lb` : null} defaultOpen={!baseline}>
           <BaselineBlock
             exerciseId={exerciseKey(exercise)}
             repRange={exercise.rep_range}
@@ -715,7 +722,12 @@ function ExerciseDetailOverlay({
         {/* == ZONE 2: Warm-up sets (expanded when warm-ups exist) == */}
         {exercise.authored_prescription ? (
           <Disclosure title="Warm-up Sets" badge={sourceWarmups ? `${sourceWarmups} sets` : null} defaultOpen>
-            <p className="text-sm text-zinc-200">{sourceWarmups != null ? `${sourceWarmups} warm-up sets` : "Warm-up prescription unspecified"}</p>
+            <AuthoredWarmups guidance={loadIntelligence?.warmup_guidance} sourceCount={sourceWarmups}
+              receipts={effectiveSets} loadContext={loadContext}
+              commandScope={warmupCommandScope} exerciseId={exerciseKey(exercise)}
+              performedVariant={Boolean(exercise.performed_variant)} bodyweight={bodyweight}
+              disabled={invalidKnownIncrement || ["unresolved", "infeasible", "declined"].includes(exercise.authored_constraint?.execution_status ?? exercise.authored_constraint?.status ?? "")}
+              onLog={onWarmupComplete} />
           </Disclosure>
         ) : hasWarmup && (
           <Disclosure title="Warm-up Sets" badge={`${warmupLbs.length} sets`} defaultOpen>
@@ -821,11 +833,11 @@ function ExerciseDetailOverlay({
           </Disclosure>
         )}
 
-        {exercise.authored_prescription || exercise.authored_constraint ? <AuthoredConstraintCard exercise={exercise} onDecision={onAuthoredDecision} /> : null}
+        {exercise.authored_prescription || exercise.authored_constraint ? <AuthoredConstraintCard exercise={exercise} onDecision={onAuthoredDecision} effectiveSets={effectiveSets} onUndoLastSet={onUndoLastSet} /> : null}
         {/* == ZONE 4: Primary action (log set) == */}
         {intelligenceActive ? <LoadIntelligencePanel guidance={loadIntelligence ?? null} completed={completed} total={exercise.sets}
           loadContext={loadContext} onContextChange={onLoadContextChange} onPreview={onPreviewLoad}
-          overrideReason={overrideReason} onOverrideReason={onOverrideReason} onCorrect={onCorrectSet} requireExternalWeight={!bodyweight} /> : null}
+          overrideReason={overrideReason} onOverrideReason={onOverrideReason} onCorrect={onCorrectSet} effectiveSets={effectiveSets} requireExternalWeight={!bodyweight} /> : null}
         <SetInputCard
           exerciseId={exerciseKey(exercise)}
           guidanceLine={doThisSetLine}
@@ -836,7 +848,9 @@ function ExerciseDetailOverlay({
         />
 
         {/* == ZONE 5: Set log (per-set logged values) == */}
-        <SetLogDisplay ctrl={ctrl} onUndoLastSet={onUndoLastSet} hideLocalReceipts={intelligenceActive} />
+        <SetLogDisplay ctrl={ctrl} onUndoLastSet={onUndoLastSet} hideLocalReceipts={intelligenceActive}
+          hasEffectiveReceipts={effectiveSets.length > 0}
+          undoLabel={effectiveSets.at(-1)?.set_kind === "warmup" ? "Undo Last Warm-up" : undefined} />
 
         {/* == ZONE 6: Set progress == */}
         <SetProgressTimeline exerciseId={exerciseKey(exercise)} ctrl={ctrl} />
@@ -952,11 +966,15 @@ export default function TodayPage() {
   const [workoutProgress, setWorkoutProgress] = useState<{ completed: number; planned: number; percent: number } | null>(null);
   const [setFeedbackByExercise, setSetFeedbackByExercise] = useState<Record<string, WorkoutSetFeedback>>({});
   const [loadIntelligenceByExercise, setLoadIntelligenceByExercise] = useState<Record<string, LoadIntelligence | null>>({});
+  const [effectiveSetsByExercise, setEffectiveSetsByExercise] = useState<Record<string, EffectiveLoadSet[]>>({});
   const [loadContextByExercise, setLoadContextByExercise] = useState<Record<string, LoadContext>>({});
   const [loadOverrideByExercise, setLoadOverrideByExercise] = useState<Record<string, string>>({});
   const loadPreviewVersions = useRef<Record<string, number>>({});
   const { reset: resetSelectedLoadContext, select: selectLoadContext, matches: matchesSelectedLoadContext, forget: forgetSelectedLoadContext, capture: captureLoadGeneration, isCurrent: isCurrentLoadGeneration, advance: advanceLoadGeneration } = useDeclaredLoadContextGuard();
   const updateLoadIntelligence = useCallback((key: string, guidance: LoadIntelligence | null) => {
+    // Actual receipts remain authoritative across a declared-context edit;
+    // only advice is constrained by the selected context signature.
+    if (guidance) setEffectiveSetsByExercise(previous => ({ ...previous, [key]: guidance.effective_sets }));
     if (matchesSelectedLoadContext(key, guidance)) setLoadIntelligenceByExercise(previous => ({ ...previous, [key]: guidance }));
   }, [matchesSelectedLoadContext]);
 
@@ -965,7 +983,13 @@ export default function TodayPage() {
     return Object.prototype.hasOwnProperty.call(loadIntelligenceByExercise, key) ? loadIntelligenceByExercise[key] : exercise.load_intelligence;
   }
   const applyProgressLoad = useCallback((exercises: Array<{ exercise_occurrence_id?: string; exercise_id: string; load_intelligence?: LoadIntelligence | null }>, generation?: LoadProjectionGeneration) => {
-    const accepted = exercises.filter(item => item.load_intelligence !== undefined && isCurrentLoadGeneration(item.exercise_occurrence_id ?? item.exercise_id, generation) && matchesSelectedLoadContext(item.exercise_occurrence_id ?? item.exercise_id, item.load_intelligence));
+    const current = exercises.filter(item => item.load_intelligence !== undefined && isCurrentLoadGeneration(item.exercise_occurrence_id ?? item.exercise_id, generation));
+    const accepted = current.filter(item => matchesSelectedLoadContext(item.exercise_occurrence_id ?? item.exercise_id, item.load_intelligence));
+    setEffectiveSetsByExercise(previous => {
+      const next = { ...previous };
+      for (const item of current) if (item.load_intelligence) next[item.exercise_occurrence_id ?? item.exercise_id] = item.load_intelligence.effective_sets;
+      return next;
+    });
     setLoadIntelligenceByExercise(previous => {
       const next = { ...previous };
       for (const item of accepted) next[item.exercise_occurrence_id ?? item.exercise_id] = item.load_intelligence ?? null;
@@ -1091,6 +1115,7 @@ export default function TodayPage() {
       setWorkoutSummary(null);
       setSetFeedbackByExercise({});
       setLoadIntelligenceByExercise({});
+      setEffectiveSetsByExercise(Object.fromEntries(data.exercises.filter(item => item.load_intelligence).map(item => [exerciseKey(item), item.load_intelligence!.effective_sets])));
       setLoadContextByExercise({});
       resetSelectedLoadContext();
       setLoadOverrideByExercise({});
@@ -1577,9 +1602,10 @@ export default function TodayPage() {
         const feedback = setFeedbackByExercise[exerciseKey(exercise)];
         const mediaUrl = resolveExerciseMediaUrl(exercise);
         const substitutions = resolveSubstitutionCandidates(exercise, weakAreas);
-        const warmUpCount = Math.max(0, parseInt(String(exercise.warm_up_sets ?? "0"), 10) || 0);
+        const warmUpCount = exercise.authored_prescription ? 0 : Math.max(0, parseInt(String(exercise.warm_up_sets ?? "0"), 10) || 0);
         const baseline = exercise.performed_variant ? undefined : baselineByExercise[exerciseKey(exercise)];
         const loadIntelligence = intelligenceFor(exercise);
+        const effectiveSets = effectiveSetsByExercise[exerciseKey(exercise)] ?? loadIntelligence?.effective_sets ?? [];
         const loadContext = loadContextByExercise[exerciseKey(exercise)] ?? loadIntelligence?.load_context ?? { unit: "kg", display_unit: "lb", basis: "unknown" } as LoadContext;
         const lastSet = lastSetByExercise[exerciseKey(exercise)];
         const plannedWorkingLb = exercise.recommended_working_weight == null ? 0 : kgToLbs(exercise.recommended_working_weight);
@@ -1624,7 +1650,7 @@ export default function TodayPage() {
         const currentSwapIndex = swapIndexByExercise[exerciseKey(exercise)] ?? 0;
         const altCandidates = resolveSubstitutionCandidates(exercise, weakAreas);
         const warmupLbs =
-          exercise.performed_variant ? [] : baseline != null && baseline.warmupLbs.length > 0
+          exercise.authored_prescription || exercise.performed_variant ? [] : baseline != null && baseline.warmupLbs.length > 0
             ? baseline.warmupLbs.slice(0, warmUpCount)
             : (exercise.warmups ?? []).slice(0, warmUpCount).map((kg) => kgToLbs(kg));
         const hasWarmup = warmUpCount > 0 && warmupLbs.length > 0;
@@ -1636,7 +1662,7 @@ export default function TodayPage() {
           || (typeof exercise.notes === "string" && exercise.notes.trim().length > 0)
         );
 
-        const handleUndoLastSet = completed > 0 ? async (): Promise<number | false> => {
+        const handleUndoLastSet = completed > 0 || effectiveSets.length > 0 ? async (): Promise<number | false> => {
           if (undoInFlight.current) return false;
           undoInFlight.current = true;
           const commandKey = pendingCommandKey(occurrenceStorageKey("attempt", workout), exerciseKey(exercise), "undo");
@@ -1680,7 +1706,7 @@ export default function TodayPage() {
             if (progressResult.status === "fulfilled") {
               return Number(progressResult.value.progress.exercises?.find((item) => (item.exercise_occurrence_id ?? item.exercise_id) === exerciseKey(exercise))?.completed_sets) || 0;
             }
-            return result.live_recommendation?.completed_sets ?? Math.max(0, completed - 1);
+            return result.live_recommendation?.completed_sets ?? (effectiveSets.at(-1)?.set_kind === "warmup" ? completed : Math.max(0, completed - 1));
           } catch {
             setMessage("Undo was not confirmed. Retry to confirm the same action.");
             return false;
@@ -1697,6 +1723,7 @@ export default function TodayPage() {
             doThisSetLine={doThisSetLine}
             derivedWorkingLb={derivedWorkingLb}
             loadIntelligence={loadIntelligence}
+            effectiveSets={effectiveSets}
             loadContext={loadContext}
             onLoadContextChange={context => {
               const key = exerciseKey(exercise);
@@ -1717,6 +1744,37 @@ export default function TodayPage() {
             }}
             overrideReason={loadOverrideByExercise[exerciseKey(exercise)] ?? ""}
             onOverrideReason={reason => setLoadOverrideByExercise(previous => ({ ...previous, [exerciseKey(exercise)]: reason }))}
+            warmupCommandScope={occurrenceStorageKey("attempt", workout)}
+            onWarmupComplete={async (ordinal, performed) => {
+              const key = exerciseKey(exercise);
+              const commandKey = pendingCommandKey(occurrenceStorageKey("attempt", workout), key, `warmup:${ordinal}`);
+              const payload = retainLogPayload(commandKey, { exercise_id: exercise.id,
+                primary_exercise_id: exercise.primary_exercise_id ?? null, exercise_occurrence_id: exercise.exercise_occurrence_id,
+                command_id: getLogCommand(commandKey), set_index: ordinal, reps: performed.reps, weight: performed.weight, rpe: performed.rpe,
+                set_kind: "warmup", parent_set_index: null, technique: null, load_context: loadContext,
+                ...(loadIntelligence?.warmup_guidance?.id ? { load_recommendation_id: loadIntelligence.warmup_guidance.id } : {}) });
+              try {
+                const feedback = await api.logSet(workoutReference(workout), payload);
+                acknowledgeLogCommand(commandKey);
+                if (currentOccurrence.current !== workoutReference(workout)) return;
+                advanceLoadGeneration(key);
+                updateLoadIntelligence(key, feedback.load_intelligence ?? null);
+                setMessage("");
+                try { const { progress, generation } = await getScopedWorkoutProgress(workoutReference(workout));
+                  if (currentOccurrence.current === workoutReference(workout)) applyProgressLoad(progress.exercises ?? [], generation);
+                } catch { /* confirmed warm-up receipt owns current evidence */ }
+              } catch (error) {
+                if (error instanceof ApiError && (error.status === 422 || (error.status === 409 && error.code === "stale_load_recommendation"))) {
+                  acknowledgeLogCommand(commandKey);
+                  if (error.status === 409 && exercise.exercise_occurrence_id) {
+                    try { const refreshed = await api.previewLoadGuidance(workoutReference(workout), exercise.exercise_occurrence_id, loadContext);
+                      if (currentOccurrence.current === workoutReference(workout)) updateLoadIntelligence(key, refreshed);
+                    } catch { /* the draft remains reviewable without new advice */ }
+                  }
+                }
+                throw error;
+              }
+            }}
             onCorrectSet={async (receipt, values) => {
               const commandKey = pendingCommandKey(occurrenceStorageKey("attempt", workout), exerciseKey(exercise), `correct:${receipt.id}`);
               const payload = retainLogPayload(commandKey, { ...values, command_id: getLogCommand(commandKey) });
@@ -1767,6 +1825,7 @@ export default function TodayPage() {
               const key = exerciseKey(exercise);
               loadPreviewVersions.current[key] = (loadPreviewVersions.current[key] ?? 0) + 1;
               forgetSelectedLoadContext(key);
+              if (result.exercise.load_intelligence) setEffectiveSetsByExercise(previous => ({ ...previous, [key]: result.exercise.load_intelligence!.effective_sets }));
               setLoadIntelligenceByExercise(previous => {
                 const next = { ...previous };
                 if (loadIntelligence !== undefined || result.exercise.load_intelligence !== undefined) next[key] = result.exercise.load_intelligence ?? null;
