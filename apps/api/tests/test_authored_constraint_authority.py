@@ -288,4 +288,5 @@ def test_external_variant_response_clears_source_load_but_retains_frozen_source(
         frozen = db.get(WorkoutOccurrence, session['workout_occurrence_id']).payload['exercises'][0]
         assert frozen['recommended_working_weight'] == source['recommended_working_weight']
     today = client.get('/workout/today', headers=headers).json()['exercises'][0]
-    assert today['recommended_working_weight'] == 0 and not today['warmups']
+    assert today['recommended_working_weight'] is None and not today['warmups']
+    assert today['load_intelligence']['next_exposure']['action'] == 'monitor'

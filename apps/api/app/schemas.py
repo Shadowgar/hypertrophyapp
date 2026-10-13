@@ -596,6 +596,22 @@ class ProgramExerciseGuideResponse(BaseModel):
     exercise: GuideExerciseSummary
 
 
+class WorkoutLoadContext(BaseModel):
+    """Caller-declared performed load dimensions; canonical stored weight is kg."""
+    model_config = {"extra": "forbid"}
+    unit: Literal["kg"] = "kg"
+    display_unit: Literal["kg", "lb"] = "kg"
+    basis: Literal["unknown", "total_external", "per_hand", "machine_stack", "bodyweight", "added_bodyweight", "assistance"] = "unknown"
+    increment: float | None = Field(default=None, gt=0, allow_inf_nan=False)
+    increment_unit: Literal["kg", "lb"] = "kg"
+    equipment_key: str | None = Field(default=None, min_length=1, max_length=128)
+
+
+class WorkoutLoadGuidanceRequest(BaseModel):
+    exercise_occurrence_id: str = Field(min_length=1, max_length=128)
+    load_context: WorkoutLoadContext | None = None
+
+
 class WorkoutSetLogRequest(BaseModel):
     command_id: str | None = Field(default=None, min_length=1, max_length=128)
     exercise_occurrence_id: str | None = None
@@ -604,10 +620,13 @@ class WorkoutSetLogRequest(BaseModel):
     set_index: int = Field(ge=1)
     reps: int = Field(ge=1)
     weight: float = Field(ge=0, allow_inf_nan=False)
-    rpe: float | None = Field(default=None, allow_inf_nan=False)
+    rpe: float | None = Field(default=None, ge=0, le=10, allow_inf_nan=False)
     set_kind: str | None = None
     parent_set_index: int | None = Field(default=None, ge=1)
     technique: dict[str, Any] | None = None
+    load_context: WorkoutLoadContext | None = None
+    load_recommendation_id: str | None = Field(default=None, min_length=1, max_length=128)
+    load_override_reason: str | None = Field(default=None, min_length=1, max_length=500)
 
 
 class WorkoutSubstitutionRecommendationResponse(BaseModel):
@@ -624,7 +643,7 @@ class WorkoutLiveRecommendationResponse(BaseModel):
     remaining_sets: int
     recommended_reps_min: int | None
     recommended_reps_max: int | None
-    recommended_weight: float
+    recommended_weight: float | None
     guidance: str
     guidance_rationale: str
     decision_trace: dict[str, Any]
@@ -641,6 +660,9 @@ class WorkoutSetLogResponse(BaseModel):
     set_index: int
     reps: int
     weight: float
+    rpe: float | None = None
+    load_intelligence: dict[str, Any] | None = None
+    exercise_state: dict[str, Any] | None = None
     set_kind: str | None = None
     parent_set_index: int | None = None
     technique: dict[str, Any] | None = None
@@ -649,7 +671,7 @@ class WorkoutSetLogResponse(BaseModel):
     planned_weight: float
     rep_delta: int | None
     weight_delta: float
-    next_working_weight: float
+    next_working_weight: float | None
     guidance: str
     guidance_rationale: str
     decision_trace: dict[str, Any]
@@ -659,6 +681,7 @@ class WorkoutSetLogResponse(BaseModel):
 
 
 class WorkoutExerciseSummaryResponse(BaseModel):
+    load_intelligence: dict[str, Any] | None = None
     performed_variant: dict | None = None
     substitution_consent: dict | None = None
     load_recommendation_available: bool = True
@@ -677,7 +700,7 @@ class WorkoutExerciseSummaryResponse(BaseModel):
     completion_pct: int
     rep_delta: float | None
     weight_delta: float
-    next_working_weight: float
+    next_working_weight: float | None
     guidance: str
     guidance_rationale: str
     decision_trace: dict[str, Any]
@@ -699,7 +722,7 @@ class WorkoutSetCorrectionRequest(BaseModel):
     command_id: str = Field(min_length=1, max_length=128)
     reps: int = Field(ge=1)
     weight: float = Field(ge=0, allow_inf_nan=False)
-    rpe: float | None = Field(default=None, allow_inf_nan=False)
+    rpe: float | None = Field(default=None, ge=0, le=10, allow_inf_nan=False)
     reason: str = Field(min_length=1, max_length=500)
 
 

@@ -12,7 +12,8 @@ One forward roadmap: [M0–M6 milestones](../roadmap/milestones.md). A plan desc
 | [M1-B constraint authority](m1-authored-constraint-authority.md) | AUTH-FID-002/004 slot conflicts and explicit source-approved variant consent. | PR #42 merged / separately owner-authorized API/web activation; [activation evidence](../evidence/2026-09-29-m1-authored-constraints-activation.md). No whole-M1 acceptance. |
 | [M0 security dependency remediation](m0-security-dependency-remediation.md) | BLOCK NOW Caddy/Go HTTP transport/parser findings; one pinned image. | Owner-authorized implementation / locally qualified candidate; unmerged review PR and no Caddy deployment. M1-C paused. |
 | [Deferred security hardening](security-hardening.md) | Cross-release security follow-ups outside urgent closure. | **Proposed**; scope/owners and individual package approval pending. |
-| [M2B-1 actual-date scheduling](m2b-actual-date-scheduling.md) | Manual current-week dates, lossless placement, occurrence revisions and Today/Week routing. | Owner-authorized implementation in the 2026-10-06 task; qualification and PR review in progress. M2B migration, merge and deployment are excluded. |
+| [M2B-1 actual-date scheduling](m2b-actual-date-scheduling.md) | Manual current-week dates, lossless placement, occurrence revisions and Today/Week routing. | PR #76 merged / separately owner-authorized live 0021 and API/web activation completed; [activation evidence](../evidence/2026-10-06-m2b-activation.md). M2B-1 LIVE; remaining M2B stays separate. |
+| [M2A-1 completed-exposure load intelligence](m2a-load-intelligence.md) | Authored completed-exposure load-only decisions, optional actual RPE, prefill/override and effective-history reconstruction. | Owner-authorized implementation in the 2026-10-06 merge/deploy-M2B and implement-M2A task; isolated qualification and unmerged PR required. No M2A migration/deployment or merge authorization. |
 
 | Status | Required meaning |
 |---|---|

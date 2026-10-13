@@ -137,7 +137,8 @@ def test_bodyweight_receipts_do_not_invent_external_load(scenario, raw):
     response = log(client, headers, session, payload)
     assert response.status_code == 200, response.text
     assert response.json()["planned_weight"] == 0
-    assert response.json()["next_working_weight"] == 0
+    assert response.json()["next_working_weight"] is None
+    assert response.json()["load_intelligence"]["next_exposure"]["action"] == "monitor"
     if raw == "8-12":
         assert response.json()["planned_reps_min"] == 8 and response.json()["planned_reps_max"] == 12
     with SessionLocal() as db:
@@ -146,11 +147,12 @@ def test_bodyweight_receipts_do_not_invent_external_load(scenario, raw):
     summary = client.get(f"/workout/{session['workout_occurrence_id']}/summary", headers=headers)
     assert summary.status_code == 200, summary.text
     item = summary.json()["exercises"][0]
-    assert item["next_working_weight"] == 0 and item["planned_weight"] == 0
+    assert item["next_working_weight"] is None and item["planned_weight"] == 0
     assert item["planned_reps_min"] == (8 if raw == "8-12" else None)
     assert item["planned_reps_max"] == (12 if raw == "8-12" else None)
     today = client.get("/workout/today", headers=headers).json()
-    assert today["exercises"][0]["recommended_working_weight"] == 0
+    assert today["exercises"][0]["recommended_working_weight"] is None
+    assert today["exercises"][0]["load_recommendation_available"] is False
     correction = client.post(f"/workout/set/{response.json()['id']}/correct", headers=headers,
         json={"command_id": str(uuid4()), "reps": 12, "weight": 0, "reason": "Synthetic correction"})
     assert correction.status_code == 200, correction.text

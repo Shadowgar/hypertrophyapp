@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 
 from fastapi.testclient import TestClient
+import pytest
 
 from test_db import configure_test_database
 
@@ -28,7 +29,7 @@ def _register_token(client: TestClient) -> str:
     return response.json()["access_token"]
 
 
-def _onboard_profile(client: TestClient, token: str) -> None:
+def _onboard_profile(client: TestClient, token: str, *, program_id="pure_bodybuilding_phase_1_full_body") -> None:
     response = client.post(
         "/profile",
         headers={"Authorization": f"Bearer {token}"},
@@ -39,7 +40,8 @@ def _onboard_profile(client: TestClient, token: str) -> None:
             "gender": "male",
             "split_preference": "full_body",
             "training_location": "home",
-            "equipment_profile": source_equipment(),
+            "equipment_profile": source_equipment(program_id),
+            "selected_program_id": program_id,
             "days_available": 3,
             "nutrition_phase": "maintenance",
             "calories": 2500,
@@ -157,12 +159,13 @@ def test_workout_today_and_progress_agree_when_logged_sets_exist() -> None:
     assert sum(today_completed.values()) == int(progress_payload["completed_total"] or 0)
 
 
-def test_workout_today_prefers_logs_when_session_state_completed_sets_is_higher() -> None:
+@pytest.mark.parametrize("program_id", ["pure_bodybuilding_phase_1_full_body", "full_body_v1"])
+def test_workout_today_prefers_logs_when_session_state_completed_sets_is_higher(program_id) -> None:
     _reset_db()
     client = TestClient(app)
     token = _register_token(client)
     headers = {"Authorization": f"Bearer {token}"}
-    _onboard_profile(client, token)
+    _onboard_profile(client, token, program_id=program_id)
 
     generate = client.post("/plan/generate-week", headers=headers, json={})
     assert generate.status_code == 200
@@ -195,7 +198,16 @@ def test_workout_today_prefers_logs_when_session_state_completed_sets_is_higher(
             )
             .first()
         )
-        assert state is not None
+        if state is None:
+            assert program_id == "pure_bodybuilding_phase_1_full_body"
+            state = WorkoutSessionState(user_id=user.id, workout_id=first_session["session_id"],
+                workout_occurrence_id=first_session["workout_occurrence_id"],
+                exercise_occurrence_id=exercise["exercise_occurrence_id"],
+                primary_exercise_id=exercise["primary_exercise_id"], exercise_id=exercise["id"],
+                planned_sets=exercise["sets"], planned_reps_min=exercise["rep_range"][0],
+                planned_reps_max=exercise["rep_range"][1], planned_weight=20.0,
+                recommended_reps_min=exercise["rep_range"][0], recommended_reps_max=exercise["rep_range"][1],
+                recommended_weight=20.0, remaining_sets=0, last_guidance="stale synthetic cache")
         state.completed_sets = 4
         db.add(state)
         db.commit()
@@ -209,14 +221,16 @@ def test_workout_today_prefers_logs_when_session_state_completed_sets_is_higher(
     today_map = {item["id"]: int(item.get("completed_sets") or 0) for item in today_payload["exercises"]}
     progress_map = {item["exercise_id"]: int(item.get("completed_sets") or 0) for item in progress_payload["exercises"]}
     assert today_map == progress_map
+    assert today_map[exercise["id"]] == 1
 
 
-def test_workout_today_prefers_logs_when_session_state_completed_sets_is_lower() -> None:
+@pytest.mark.parametrize("program_id", ["pure_bodybuilding_phase_1_full_body", "full_body_v1"])
+def test_workout_today_prefers_logs_when_session_state_completed_sets_is_lower(program_id) -> None:
     _reset_db()
     client = TestClient(app)
     token = _register_token(client)
     headers = {"Authorization": f"Bearer {token}"}
-    _onboard_profile(client, token)
+    _onboard_profile(client, token, program_id=program_id)
 
     generate = client.post("/plan/generate-week", headers=headers, json={})
     assert generate.status_code == 200
@@ -250,7 +264,16 @@ def test_workout_today_prefers_logs_when_session_state_completed_sets_is_lower()
             )
             .first()
         )
-        assert state is not None
+        if state is None:
+            assert program_id == "pure_bodybuilding_phase_1_full_body"
+            state = WorkoutSessionState(user_id=user.id, workout_id=first_session["session_id"],
+                workout_occurrence_id=first_session["workout_occurrence_id"],
+                exercise_occurrence_id=exercise["exercise_occurrence_id"],
+                primary_exercise_id=exercise["primary_exercise_id"], exercise_id=exercise["id"],
+                planned_sets=exercise["sets"], planned_reps_min=exercise["rep_range"][0],
+                planned_reps_max=exercise["rep_range"][1], planned_weight=20.0,
+                recommended_reps_min=exercise["rep_range"][0], recommended_reps_max=exercise["rep_range"][1],
+                recommended_weight=20.0, remaining_sets=0, last_guidance="stale synthetic cache")
         state.completed_sets = 0
         db.add(state)
         db.commit()
@@ -264,6 +287,7 @@ def test_workout_today_prefers_logs_when_session_state_completed_sets_is_lower()
     today_map = {item["id"]: int(item.get("completed_sets") or 0) for item in today_payload["exercises"]}
     progress_map = {item["exercise_id"]: int(item.get("completed_sets") or 0) for item in progress_payload["exercises"]}
     assert today_map == progress_map
+    assert today_map[exercise["id"]] == 2
 
 
 def test_workout_today_keeps_live_recommendation_but_zero_completion_without_logs() -> None:

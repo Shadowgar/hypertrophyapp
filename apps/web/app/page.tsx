@@ -51,7 +51,8 @@ function humanizeTokenLabel(value: string): string {
 }
 
 function formatExercisePrescription(exercise: WorkoutExercise): string {
-  return `${exercise.sets} x ${authoredRepLabel(exercise)} @ ${isBodyweightAuthored(exercise) ? "Bodyweight" : `${isBodyweightAuthored(exercise) ? "Bodyweight" : `${kgToLbs(exercise.recommended_working_weight)} lbs`}`}`;
+  const load = isBodyweightAuthored(exercise) ? "Bodyweight" : exercise.recommended_working_weight == null ? "Record actual load" : `${kgToLbs(exercise.recommended_working_weight)} lbs`;
+  return `${exercise.sets} x ${authoredRepLabel(exercise)} @ ${load}`;
 }
 
 function formatLeadExercise(workout: WorkoutSession | null): string {

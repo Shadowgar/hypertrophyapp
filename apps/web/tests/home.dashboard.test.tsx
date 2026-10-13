@@ -191,3 +191,15 @@ test("home page loads authenticated dashboard metrics", async () => {
   expect(screen.getByText(/Momentum Radar/i)).toBeInTheDocument();
   expect(screen.getAllByText(/Bench Press/i).length).toBeGreaterThan(0);
 });
+
+
+test("home monitor load remains unknown instead of presenting zero pounds", async () => {
+  localStorage.setItem("hypertrophy_token", "synthetic-token");
+  vi.mocked(globalThis.fetch).mockImplementation(async input => {
+    if (resolveUrl(input).endsWith("/workout/today")) return Response.json({ title: "Synthetic authored", exercises: [{ id: "press", name: "Monitor Press", sets: 2, rep_range: [8, 12], recommended_working_weight: null }] });
+    return Response.json({ detail: "Synthetic optional dashboard data unavailable" }, { status: 503 });
+  });
+  render(<HomePage />);
+  await waitFor(() => expect(screen.getAllByText(/Monitor Press.*Record actual load/).length).toBeGreaterThan(0));
+  expect(screen.queryByText(/Monitor Press.*@ 0 lbs/)).toBeNull();
+});

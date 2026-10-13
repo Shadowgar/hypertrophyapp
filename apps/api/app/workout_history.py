@@ -31,7 +31,10 @@ def capture_replay_context(*, state, context, nutrition_phase, equipment_profile
 
 def require_replay_context(record):
     context = record.replay_context
-    if not record.workout_occurrence_id or not isinstance(context, dict) or context.get("version") != 1:
+    valid = isinstance(context, dict) and (context.get("version") == 1 or
+        (context.get("version") == 2 and context.get("owner") == "api.workout_load_state"
+            and isinstance(context.get("load_intelligence"), dict)))
+    if not record.workout_occurrence_id or not valid:
         raise HTTPException(409, "Historical replay context unavailable; original record retained without changes")
     return context
 
@@ -48,7 +51,8 @@ def rebuild_exercise_state(db, *, user_id, primary_exercise_id):
             seen.add(row.id)
             row = by_id[row.supersedes_id]
         return row
-    replayable = sorted([row for row in records if row.replay_context is not None and not requires_receipt_tracking(row.replay_context.get("planned_exercise"))], key=lambda row: (root(row).created_at, root(row).id))
+    replayable = sorted([row for row in records if row.replay_context is not None and row.replay_context.get("version") == 1
+        and not requires_receipt_tracking(row.replay_context.get("planned_exercise"))], key=lambda row: (root(row).created_at, root(row).id))
     if not replayable:
         raise HTTPException(409, "No captured progression replay context")
     first = require_replay_context(replayable[0])

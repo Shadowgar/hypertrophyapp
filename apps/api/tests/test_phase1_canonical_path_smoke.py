@@ -92,6 +92,8 @@ def test_phase1_canonical_smoke_path_preserves_identity_and_session_continuity()
     ):
         assert required_field in first_exercise
 
+    assert first_exercise["recommended_working_weight"] is None
+    assert first_exercise["load_intelligence"]["next_exposure"]["action"] == "monitor"
     log_set = client.post(
         f"/workout/{today_payload['session_id']}/log-set",
         headers=headers,
@@ -100,7 +102,7 @@ def test_phase1_canonical_smoke_path_preserves_identity_and_session_continuity()
             "exercise_id": first_exercise["id"],
             "set_index": 1,
             "reps": int(first_exercise["rep_range"][0]),
-            "weight": float(first_exercise["recommended_working_weight"]),
+            "weight": 20.0,  # Explicit synthetic performed load; no inferred planned weight.
         },
     )
     assert log_set.status_code == 200
