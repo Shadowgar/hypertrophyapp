@@ -58,9 +58,10 @@ def log_typed_set(db, *, current_user, occurrence, exercise, payload, command_id
     return response
 
 
-def authored_feedback_projection(db, *, user, occurrence, exercise, supplied_context=None):
+def authored_feedback_projection(db, *, user, occurrence, exercise, supplied_context=None,
+        history_snapshot=None):
     feedback = project_authored_load_feedback(db, user=user, occurrence=occurrence,
-        exercise=exercise, supplied_context=supplied_context)
+        exercise=exercise, supplied_context=supplied_context, history_snapshot=history_snapshot)
     effective = feedback["effective_sets"]
     working = [row for row in effective if row["parent_set_index"] is None
         and (row["set_kind"] or "work").strip().lower() in {"work", "top", "backoff"}]
