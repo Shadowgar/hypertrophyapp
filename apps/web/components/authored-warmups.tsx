@@ -3,11 +3,18 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ApiError, type AuthoredWarmupGuidance, type EffectiveLoadSet, type LoadContext } from "@/lib/api";
-import { pendingCommandKey, pendingLogPayload } from "@/lib/workout-identity";
+import { acknowledgeLogCommand, pendingCommandKey, pendingLogPayload } from "@/lib/workout-identity";
 import { kgToLbs, lbsToKg } from "@/lib/weight";
 
 export type PerformedWarmup = { reps: number; weight: number; rpe: number | null };
 type WarmupSet = AuthoredWarmupGuidance["sets"][number];
+type PendingWarmupIdentity = {
+  command_id?: string;
+  set_kind?: string;
+  set_index?: number;
+  exercise_occurrence_id?: string;
+  exercise_id?: string;
+};
 
 function WarmupInput({ set, unit, suggested, disabled, restored, bodyweight, onLog }: {
   restored: PerformedWarmup | null;
@@ -84,6 +91,18 @@ export function AuthoredWarmups({ guidance, sourceCount, receipts, loadContext, 
   // A temporary context invalidation clears advice while keeping existing actual drafts.
   const [lastProjection, setLastProjection] = useState(guidance);
   useEffect(() => { if (guidance) setLastProjection(guidance); }, [guidance]);
+  useEffect(() => {
+    // An observed receipt acknowledges a lost response only for the exact
+    // attempted command in this exercise/occurrence's warmup slot.
+    for (const receipt of receipts) {
+      if (receipt.set_kind !== "warmup" || !receipt.command_id) continue;
+      const key = pendingCommandKey(commandScope, exerciseId, `warmup:${receipt.set_index}`);
+      const attempted = pendingLogPayload<PendingWarmupIdentity>(key);
+      if (attempted?.command_id === receipt.command_id && attempted.set_kind === "warmup" &&
+          attempted.set_index === receipt.set_index &&
+          (attempted.exercise_occurrence_id ?? attempted.exercise_id) === exerciseId) acknowledgeLogCommand(key);
+    }
+  }, [receipts, commandScope, exerciseId]);
   const projection = guidance ?? lastProjection;
   const warmups = receipts.filter(receipt => receipt.set_kind === "warmup");
   const recorded = new Set(warmups.map(receipt => receipt.set_index));

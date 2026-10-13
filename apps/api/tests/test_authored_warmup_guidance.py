@@ -377,3 +377,87 @@ def test_working_receipt_context_wins_over_warmup_presentation_declaration(scena
     assert restored["load_context"]["basis"] == expected_basis
     assert restored["load_context"]["display_unit"] == "kg"
     assert restored["warmup_guidance"]["status"] == "manual"
+
+
+def _substitution_command(session, action, **extra):
+    from uuid import uuid4
+    exercise = session["exercises"][0]
+    return {"command_id": str(uuid4()), "exercise_id": exercise["id"],
+        "exercise_occurrence_id": exercise["exercise_occurrence_id"],
+        "expected_revision": exercise.get("authored_constraint", {}).get("revision", 0),
+        "expected_source_lineage": exercise["source_lineage"], "action": action, **extra}
+
+
+@pytest.mark.parametrize("reason", ["equipment", "pain", "safety"])
+def test_warmup_report_pauses_then_explicit_undo_allows_consent(scenario, reason):
+    from app.models import WorkoutPlan
+    user, headers, client = scenario
+    session = plan(user, warm_up_sets="2")
+    source = session["exercises"][0]
+    source["source_approved_alternatives"] = [{"option_id": "substitution_option_1", "id": "source-variant",
+        "name": "Approved variant", "movement_pattern": "hinge", "equipment_tags": [],
+        "load_semantics": "external_load", "permission": {**source["source_lineage"],
+            "source_option": "substitution_option_1", "source_option_value": "Approved variant"}}]
+    with SessionLocal() as db:
+        row = db.get(WorkoutPlan, session["plan_id"])
+        payload = deepcopy(row.payload)
+        payload["sessions"][0]["exercises"][0] = deepcopy(source)
+        row.payload = payload
+        db.commit()
+    logged_payload = submit(session, set_kind="warmup", weight=12.345)
+    logged = log(client, headers, session, logged_payload)
+    assert logged.status_code == 200, logged.text
+    with SessionLocal() as db:
+        original_capture = deepcopy(db.get(WorkoutSetLog, logged.json()["id"]).replay_context)
+    before = counts(user)
+    route = f"/workout/{session['workout_occurrence_id']}/authored-substitution"
+    report_payload = _substitution_command(session, "report", reason=reason)
+    reported = client.post(route, headers=headers, json=report_payload)
+    assert reported.status_code == 200, reported.text
+    session["exercises"][0] = reported.json()["exercise"]
+    assert session["exercises"][0]["authored_constraint"]["execution_status"] == "unresolved"
+    assert session["exercises"][0]["authored_constraint"]["reasons"] == [{"kind": reason, "details": ["user_reported"]}]
+    paused = deepcopy(session["exercises"][0])
+    before = counts(user)  # The accepted safety report has its own immutable command receipt.
+    for action in ("confirm", "decline"):
+        rejected = client.post(route, headers=headers, json=_substitution_command(session, action,
+            **({"option_id": "substitution_option_1"} if action == "confirm" else {})))
+        assert rejected.status_code == 409, rejected.text
+        assert "undo" in str(rejected.json()["detail"]).lower()
+    assert counts(user) == before
+    with SessionLocal() as db:
+        assert db.get(WorkoutOccurrence, session["workout_occurrence_id"]).payload["exercises"][0] == paused
+        receipt = db.get(WorkoutSetLog, logged.json()["id"])
+        assert receipt.voided_at is None and receipt.weight == 12.345
+        assert receipt.replay_context == original_capture
+    assert log(client, headers, session, submit(session)).status_code == 409
+    assert undo(client, headers, session).status_code == 200
+    confirmed = client.post(route, headers=headers,
+        json=_substitution_command(session, "confirm", option_id="substitution_option_1"))
+    assert confirmed.status_code == 200, confirmed.text
+    exercise = confirmed.json()["exercise"]
+    assert exercise["performed_variant"]["id"] == "source-variant"
+    assert exercise["authored_prescription"] == source["authored_prescription"]
+    assert exercise["source_lineage"] == source["source_lineage"]
+    assert log(client, headers, session, logged_payload).json() == logged.json()
+    with SessionLocal() as db:
+        assert db.get(WorkoutSetLog, logged.json()["id"]).replay_context == original_capture
+
+
+def test_effective_warmup_command_id_identifies_current_receipt_after_correction_and_original_retry(scenario):
+    user, headers, client = scenario
+    session = plan(user, warm_up_sets="2")
+    payload = submit(session, set_kind="warmup", weight=12.345)
+    result = log(client, headers, session, payload)
+    assert result.status_code == 200, result.text
+    row = result.json()["load_intelligence"]["effective_sets"][0]
+    assert row["command_id"] == payload["command_id"]
+    changed = correct(client, headers, result.json()["id"], weight=11.111)
+    assert changed.status_code == 200, changed.text
+    effective = changed.json()["load_intelligence"]["effective_sets"][0]
+    assert effective["id"] == changed.json()["effective_set_id"]
+    assert effective["command_id"] and effective["command_id"] != payload["command_id"]
+    with SessionLocal() as db:
+        assert effective["command_id"] == db.get(WorkoutSetLog, effective["id"]).command_id
+    assert log(client, headers, session, payload).json() == result.json()
+    assert guidance(client, headers, session).json()["effective_sets"][0]["command_id"] == effective["command_id"]

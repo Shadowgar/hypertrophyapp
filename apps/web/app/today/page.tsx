@@ -833,7 +833,7 @@ function ExerciseDetailOverlay({
           </Disclosure>
         )}
 
-        {exercise.authored_prescription || exercise.authored_constraint ? <AuthoredConstraintCard exercise={exercise} onDecision={onAuthoredDecision} /> : null}
+        {exercise.authored_prescription || exercise.authored_constraint ? <AuthoredConstraintCard exercise={exercise} onDecision={onAuthoredDecision} effectiveSets={effectiveSets} onUndoLastSet={onUndoLastSet} /> : null}
         {/* == ZONE 4: Primary action (log set) == */}
         {intelligenceActive ? <LoadIntelligencePanel guidance={loadIntelligence ?? null} completed={completed} total={exercise.sets}
           loadContext={loadContext} onContextChange={onLoadContextChange} onPreview={onPreviewLoad}

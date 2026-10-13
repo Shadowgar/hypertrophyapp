@@ -46,6 +46,7 @@ export type LoadDecision = {
   decision_trace: Record<string, unknown>;
 };
 export type EffectiveLoadSet = {
+  command_id?: string | null;
   id: string; set_index: number; reps: number; weight: number; rpe: number | null;
   set_kind: string | null; parent_set_index: number | null; technique: Record<string, unknown> | null; created_at: string;
 };

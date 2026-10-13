@@ -101,3 +101,36 @@ for (const video of [undefined, 'https://example.com/variant-video']) {
     open.mockRestore();
   });
 }
+
+
+test("unresolved warmups expose explicit undo and prevent alternative decisions until all receipts are gone", async () => {
+  function Recovery() {
+    const [receipts, setReceipts] = React.useState([
+      { id: "warmup-1", set_index: 1, set_kind: "warmup", parent_set_index: null, reps: 8, weight: 10, rpe: null, technique: null, created_at: "2026-10-13T12:00:00Z" },
+      { id: "warmup-2", set_index: 2, set_kind: "warmup", parent_set_index: null, reps: 5, weight: 15, rpe: null, technique: null, created_at: "2026-10-13T12:01:00Z" },
+    ]);
+    const [exercise, setExercise] = React.useState(source);
+    return <AuthoredConstraintCard exercise={exercise} effectiveSets={receipts} onUndoLastSet={async () => {
+      setReceipts(previous => previous.slice(0, -1)); return 0;
+    }} onDecision={async decision => {
+      if (decision.action === "confirm") setExercise(previous => ({ ...previous,
+        performed_variant: previous.authored_constraint!.allowed_alternatives[0],
+        authored_constraint: { ...previous.authored_constraint!, status: "confirmed", execution_status: "ready" } }));
+    }} />;
+  }
+  render(<Recovery />);
+  expect(screen.getByText(/Recorded warm-ups belong to the original exercise/)).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Decline alternatives" })).toBeDisabled();
+  expect(screen.getByLabelText("Source-approved alternative")).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Confirm this alternative" })).toBeDisabled();
+  fireEvent.click(screen.getByRole("button", { name: "Undo last warm-up to resolve" }));
+  await waitFor(() => expect(screen.getByRole("button", { name: "Undo last warm-up to resolve" })).toBeEnabled());
+  expect(screen.getByRole("button", { name: "Decline alternatives" })).toBeDisabled();
+  fireEvent.click(screen.getByRole("button", { name: "Undo last warm-up to resolve" }));
+  await waitFor(() => expect(screen.queryByRole("button", { name: "Undo last warm-up to resolve" })).not.toBeInTheDocument());
+  expect(screen.getByRole("button", { name: "Decline alternatives" })).toBeEnabled();
+  fireEvent.change(screen.getByLabelText("Source-approved alternative"), { target: { value: "source-option" } });
+  fireEvent.click(screen.getByRole("button", { name: "Confirm this alternative" }));
+  await waitFor(() => expect(screen.getByText("Confirmed performed variant: Approved hinge")).toBeInTheDocument());
+  expect(screen.getByText("Original authored exercise: Original squat")).toBeInTheDocument();
+});

@@ -116,7 +116,7 @@ def resolve_current_load_context(*, user, supplied=None, records=()):
 
 
 def effective_receipts(records):
-    return [{"id": row.id, "set_index": row.set_index, "reps": row.reps, "weight": row.weight,
+    return [{"id": row.id, "command_id": row.command_id, "set_index": row.set_index, "reps": row.reps, "weight": row.weight,
         "rpe": row.rpe, "set_kind": row.set_kind, "parent_set_index": row.parent_set_index,
         "technique": deepcopy(row.technique), "created_at": row.created_at.isoformat(),
         "amended_at": row.amended_at.isoformat() if row.amended_at else None,

@@ -897,9 +897,14 @@ def authored_substitution(workout_id: str, payload: AuthoredSubstitutionRequest,
     old = deepcopy(exercise.get("authored_constraint") or {})
     if payload.expected_revision != int(old.get("revision") or 0):
         raise HTTPException(409, "Substitution decision changed; refresh the occurrence")
-    if payload.action != "report" and effective_set_logs(db).filter_by(user_id=current_user.id,
-            workout_occurrence_id=occurrence.id, exercise_occurrence_id=exercise["exercise_occurrence_id"]).first():
-        raise HTTPException(409, "Started occurrence retains its performed variant and consent")
+    if payload.action != "report":
+        receipts = effective_set_logs(db).filter_by(user_id=current_user.id,
+            workout_occurrence_id=occurrence.id, exercise_occurrence_id=exercise["exercise_occurrence_id"]).all()
+        if receipts:
+            if not exercise.get("performed_variant") and all(row.parent_set_index is None
+                    and (row.set_kind or "work").strip().lower() == "warmup" for row in receipts):
+                raise HTTPException(409, "Recorded warm-ups belong to the original exercise. Undo them before choosing or declining an alternative.")
+            raise HTTPException(409, "Started occurrence retains its performed variant and consent")
     refreshed = refresh_constraints(exercise, equipment=current_user.equipment_profile,
         restrictions=current_user.movement_restrictions)
     reasons = deepcopy(refreshed["reasons"])

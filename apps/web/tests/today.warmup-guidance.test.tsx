@@ -10,6 +10,8 @@ let receipts: Array<Record<string, any>>;
 let completed: number;
 let writes: Array<{ path: string; body: Record<string, any> }>;
 let failFirst: boolean;
+let loseAfterCommitFirst: boolean;
+let committedReplies: Map<string, Record<string, any>>;
 let staleFirst: boolean;
 let failUndoProgress: boolean;
 let deferLog: boolean;
@@ -36,7 +38,7 @@ beforeEach(() => {
   context = { unit: "kg", display_unit: "lb", basis: "total_external", increment: 0.5, increment_unit: "kg" };
   guidance = { version: "authored-warmup-v1", id: digest, evidence_revision: digest, source_count: "2", count: 2, status: "suggested", source_instructions: sourceInstructions,
     sets: [{ set_index: 1, suggested_weight: 25.25, reps_min: 5, reps_max: 8, percent: 50 }, { set_index: 2, suggested_weight: 35.25, reps_min: 3, reps_max: 4, percent: 70 }], reason_codes: [], explanation: "Source qualified warm-ups", equipment_feasibility: {}, decision_trace: {} };
-  receipts = []; completed = 0; writes = []; failFirst = false; staleFirst = false; failUndoProgress = false; deferLog = false; variant = false; constraint = "ready"; loadSemantics = "external_load"; variantLoadSemantics = "external_load";
+  receipts = []; completed = 0; writes = []; failFirst = false; loseAfterCommitFirst = false; committedReplies = new Map(); staleFirst = false; failUndoProgress = false; deferLog = false; variant = false; constraint = "ready"; loadSemantics = "external_load"; variantLoadSemantics = "external_load";
   vi.stubGlobal("fetch", vi.fn(async (input, init) => {
     const path = String(input);
     if (path.includes("/plan/scheduling-context?")) return Response.json({ timezone: "UTC", local_today: new Date().toISOString().slice(0, 10), selected_dates: [], placement_revision: 0, plan: null });
@@ -50,12 +52,17 @@ beforeEach(() => {
       if (path.endsWith("/authored-substitution")) { constraint = body.action === "confirm" ? "confirmed" : "unresolved"; variant = body.action === "confirm"; return Response.json({ exercise: exercise(), workout_occurrence_id: "warm-occurrence" }); }
       if (path.endsWith("/log-set")) {
         const n = writes.filter(w => w.path.endsWith("/log-set")).length;
+        const replay = committedReplies.get(body.command_id);
+        if (replay) return Response.json(replay);
         if (failFirst && n === 1) throw new Error("Response lost");
         if (staleFirst && n === 1) return Response.json({ detail: { code: "stale_load_recommendation", message: "Load advice changed; review current guidance" } }, { status: 409 });
         if (body.set_kind !== "warmup") completed = body.set_index;
         const receipt = { ...body, id: `receipt-${n}`, created_at: "2026-10-13T12:00:00", set_kind: body.set_kind ?? "work", parent_set_index: body.parent_set_index ?? null, technique: body.technique ?? null };
         receipts = [...receipts, receipt];
-        const response = Response.json({ ...receipt, load_intelligence: envelope(), live_recommendation: null });
+        const reply = { ...receipt, load_intelligence: envelope(), live_recommendation: null };
+        committedReplies.set(body.command_id, JSON.parse(JSON.stringify(reply)));
+        if (loseAfterCommitFirst && n === 1) throw new Error("Committed response lost");
+        const response = Response.json(reply);
         if (deferLog) await new Promise<void>(resolve => { releaseLog = resolve; });
         return response;
       }
@@ -70,8 +77,8 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 async function open() {
-  render(<TodayPage />); fireEvent.click(screen.getByRole("button", { name: /Load today's workout/ }));
-  fireEvent.click(await screen.findByRole("button", { name: /Warmup Press|Approved Variant/ })); await screen.findByRole("dialog");
+  const view = render(<TodayPage />); fireEvent.click(screen.getByRole("button", { name: /Load today's workout/ }));
+  fireEvent.click(await screen.findByRole("button", { name: /Warmup Press|Approved Variant/ })); await screen.findByRole("dialog"); return view;
 }
 function logs() { return writes.filter(w => w.path.endsWith("/log-set")); }
 
@@ -284,4 +291,45 @@ test("a confirmed external-load variant removes the source bodyweight zero-load 
   fireEvent.change(screen.getByRole("spinbutton", { name: "Warm-up 1 load (lb)" }), { target: { value: "0" } });
   expect(screen.getByRole("button", { name: "Log warm-up 1" })).toBeDisabled();
   expect(logs()).toHaveLength(0);
+});
+
+
+test("observing the exact committed warm-up command after reload retires its pending retry before undo and a new attempt", async () => {
+  loseAfterCommitFirst = true;
+  const firstView = await open();
+  fireEvent.click(screen.getByRole("button", { name: "Log warm-up 1" }));
+  await screen.findByText(/Warm-up was not confirmed/);
+  const original = logs()[0].body;
+  expect(receipts).toHaveLength(1);
+  firstView.unmount(); await open();
+  await screen.findByRole("button", { name: "Edit warm-up 1" });
+  expect(screen.queryByRole("button", { name: "Log warm-up 1" })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Undo Last Warm-up" }));
+  await screen.findByRole("button", { name: "Log warm-up 1" });
+  expect(receipts).toHaveLength(0);
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Warm-up 1 reps" }), { target: { value: "7" } });
+  fireEvent.click(screen.getByRole("button", { name: "Log warm-up 1" }));
+  await screen.findByRole("button", { name: "Edit warm-up 1" });
+  expect(logs()).toHaveLength(2);
+  expect(logs()[1].body.command_id).not.toBe(original.command_id);
+  expect(logs()[1].body).toMatchObject({ reps: 7, weight: 25.25, set_kind: "warmup" });
+  expect(receipts).toHaveLength(1);
+  expect(receipts[0]).toMatchObject({ reps: 7, command_id: logs()[1].body.command_id });
+  expect(screen.getByText("Set 1/3")).toBeInTheDocument();
+});
+
+test.each([null, "another-client-command"])("an observed warm-up receipt with command %s does not retire a different unconfirmed command", async observedCommand => {
+  failFirst = true;
+  const firstView = await open();
+  fireEvent.click(screen.getByRole("button", { name: "Log warm-up 1" }));
+  await screen.findByText(/Warm-up was not confirmed/);
+  const original = logs()[0].body;
+  receipts = [{ ...original, command_id: observedCommand, id: "another-receipt", set_kind: "warmup", parent_set_index: null, technique: null, created_at: "2026-10-13T12:00:00" }];
+  firstView.unmount(); await open();
+  fireEvent.click(await screen.findByRole("button", { name: "Undo Last Warm-up" }));
+  await screen.findByRole("button", { name: "Log warm-up 1" });
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Warm-up 1 reps" }), { target: { value: "9" } });
+  fireEvent.click(screen.getByRole("button", { name: "Log warm-up 1" }));
+  await waitFor(() => expect(logs()).toHaveLength(2));
+  expect(logs()[1].body).toEqual(original);
 });
