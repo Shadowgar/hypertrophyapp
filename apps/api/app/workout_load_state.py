@@ -13,13 +13,14 @@ import json
 from fastapi import HTTPException
 from sqlalchemy import and_
 
+from core_engine.authored_warmups import build_authored_warmup_guidance
 from core_engine.load_intelligence import (
     summarize_completed_exercise_exposure, comparison_key_for_exposure,
     decide_next_working_load, decide_remaining_working_load,
 )
 from .models import AuthoredLoadState, WorkoutOccurrence, WorkoutSetLog
 from .schemas import WorkoutLoadContext
-from .program_loader import load_program_rule_set, resolve_rule_program_id
+from .program_loader import load_program_rule_set, resolve_rule_program_id, load_program_onboarding_package
 
 AUTHORED_PROGRAMS = {"pure_bodybuilding_phase_1_full_body", "pure_bodybuilding_phase_2_full_body"}
 OWNER = "api.workout_load_state"
@@ -38,6 +39,37 @@ def _digest(value):
 def _rules(occurrence):
     linked = resolve_rule_program_id(occurrence.program_id)
     return load_program_rule_set(linked) if linked else {}
+
+
+def _source_warmup_protocol(program_id):
+    """Read only the existing validated compiled onboarding artifact."""
+    try:
+        package = load_program_onboarding_package(program_id)
+    except (OSError, ValueError):
+        return {}, {"owner": "api.program_loader", "program_id": program_id,
+            "status": "compiled_source_protocol_unavailable"}
+    return deepcopy(package.get("warm_up_protocol") or {}), {
+        "owner": "api.program_loader", "program_id": package["program_id"],
+        "version": package.get("version"), "status": "compiled_source_protocol",
+        "source_provenance": deepcopy(package.get("source_provenance") or {})}
+
+
+def _warmup_guidance(*, occurrence, exercise, next_decision, context, user_id):
+    protocol, provenance = _source_warmup_protocol(occurrence.program_id)
+    guidance = build_authored_warmup_guidance(exercise=exercise,
+        working_decision=next_decision, load_context=context,
+        program_id=occurrence.program_id, source_protocol=protocol)
+    guidance["decision_trace"].update(source_protocol_provenance=provenance,
+        working_recommendation_id=next_decision["id"],
+        working_evidence_revision=next_decision["evidence_revision"])
+    evidence_revision = _digest({"working_evidence_revision": next_decision["evidence_revision"],
+        "source_lineage": exercise.get("source_lineage"), "guidance": guidance})
+    identity = _digest({"owner": OWNER, "scope": "warmup", "user_id": user_id,
+        "workout_occurrence_id": occurrence.id,
+        "exercise_occurrence_id": exercise["exercise_occurrence_id"],
+        "working_recommendation_id": next_decision["id"],
+        "evidence_revision": evidence_revision, "guidance": guidance})
+    return {**guidance, "id": identity, "evidence_revision": evidence_revision, "scope": "warmup"}
 
 
 def _variant(exercise):
@@ -200,7 +232,10 @@ def project_authored_load_feedback(db, *, user, occurrence, exercise, supplied_c
     if not exposure["complete"] and exposure["completed_working_set_count"] > 0:
         remaining = _wrap(decide_remaining_working_load(exposure=exposure, rule_set=rule_set, load_context=context),
             scope="remaining_sets", **wrapper)
-    return {"next_exposure": _wrap(next_decision, scope="next_exposure", **wrapper),
+    next_offered = _wrap(next_decision, scope="next_exposure", **wrapper)
+    warmup = _warmup_guidance(occurrence=occurrence, exercise=exercise,
+        next_decision=next_offered, context=context, user_id=user.id)
+    return {"next_exposure": next_offered, "warmup_guidance": warmup,
         "remaining_sets": remaining, "load_context": context, "effective_sets": effective_receipts(records)}
 
 
@@ -255,15 +290,26 @@ def _state_values(decision, *, context, program_id, evidence_revision):
 
 
 def capture_authored_context(*, exercise, context, feedback, payload):
-    offered = feedback["remaining_sets"] or feedback["next_exposure"]
+    warmup = (payload.set_kind or "work").strip().lower() == "warmup"
+    offered = feedback["warmup_guidance"] if warmup else feedback["remaining_sets"] or feedback["next_exposure"]
     if payload.load_recommendation_id is not None and payload.load_recommendation_id != offered["id"]:
         raise HTTPException(409, {"code": "stale_load_recommendation",
             "message": "Load advice changed; refresh and review the current recommendation"})
-    prior = feedback["effective_sets"]
+    prior = [row for row in feedback["effective_sets"] if
+        (row["set_kind"] or "work").strip().lower() == "warmup"] if warmup else [
+        row for row in feedback["effective_sets"] if row["parent_set_index"] is None
+        and (row["set_kind"] or "work").strip().lower() in {"work", "top", "backoff"}]
+    captured = {"snapshot_scope": "original_log_command", "load_context": deepcopy(feedback["load_context"]),
+        "chosen_weight": payload.weight, "prior_chosen_weight": prior[-1]["weight"] if prior else None,
+        "override_reason": payload.load_override_reason,
+        "provided_recommendation_id": payload.load_recommendation_id}
+    if warmup:
+        captured.update(advice_scope="warmup",
+            offered_advice_origin="client_acknowledged_guidance" if payload.load_recommendation_id else "server_command_preview",
+            offered_warmup_guidance=deepcopy(offered),
+            offered_warmup_set=deepcopy(next((row for row in offered["sets"]
+                if row["set_index"] == payload.set_index), None)))
+    else:
+        captured["offered_recommendation"] = deepcopy(offered)
     return {"version": 2, "owner": OWNER, "planned_exercise": deepcopy(exercise),
-        "rule_set": deepcopy(context["rule_set"]),
-        "load_intelligence": {"snapshot_scope": "original_log_command", "load_context": deepcopy(feedback["load_context"]),
-            "offered_recommendation": deepcopy(offered), "chosen_weight": payload.weight,
-            "prior_chosen_weight": prior[-1]["weight"] if prior else None,
-            "override_reason": payload.load_override_reason,
-            "provided_recommendation_id": payload.load_recommendation_id}}
+        "rule_set": deepcopy(context["rule_set"]), "load_intelligence": captured}

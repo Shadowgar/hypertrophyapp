@@ -61,10 +61,10 @@ def scenario():
     return user_id, {"Authorization": f"Bearer {create_access_token(user_id)}"}, TestClient(app)
 
 
-def plan(user, week=None, *, program=PROGRAM, variant=None, slot=1, performed_date=None):
+def plan(user, week=None, *, program=PROGRAM, variant=None, slot=1, performed_date=None, warm_up_sets=None):
     week = week or date.today() - timedelta(days=date.today().weekday())
     prescription = preserve_prescription({"reps": "8-12", "working_sets": "2", "early_set_rpe": "8-9",
-        "last_set_rpe": "8-9", "rest": "120"}, 2)
+        "last_set_rpe": "8-9", "rest": "120", "warm_up_sets": warm_up_sets}, 2)
     lineage = {"source_program_id": PROGRAM, "source_sha256": "0" * 64, "importer_sha256": "1" * 64,
         "artifact_sha256": "2" * 64, "artifact_version": "test1", "importer_version": "test1",
         "source_week": week.isocalendar().week, "source_session": 1, "source_slot": slot,
@@ -228,7 +228,7 @@ def test_undated_preview_uses_pending_utc_date_not_plan_or_warmup_date(scenario,
     for session, weight in ((prior, 40), (later, 50)):
         for index in (1, 2):
             assert log(client, headers, session, submit(session, index, weight=weight)).status_code == 200
-    legacy = plan(user, week - timedelta(days=7))
+    legacy = plan(user, week - timedelta(days=7), warm_up_sets="2" if warmup else None)
     if warmup:
         response = log(client, headers, legacy, submit(legacy, set_kind="warmup"))
         assert response.status_code == 200, response.text
@@ -398,7 +398,7 @@ def test_correction_of_earlier_week_rebuilds_later_comparable_advice(scenario):
 @pytest.mark.parametrize("extra", [{"set_kind": "warmup"}, {"parent_set_index": 1, "set_kind": "drop", "technique": {"ordinal": 1}}])
 def test_warmup_and_children_do_not_complete_exposure(scenario, extra):
     user, headers, client = scenario
-    session = plan(user)
+    session = plan(user, warm_up_sets="2" if extra.get("set_kind") == "warmup" else None)
     assert log(client, headers, session, submit(session, 1)).status_code == 200
     receipt = log(client, headers, session, submit(session, 2, **extra))
     assert receipt.status_code == 200, receipt.text
@@ -541,7 +541,7 @@ def test_changed_load_basis_never_reuses_remaining_set_advice(scenario):
 
 def test_unknown_warmup_and_child_context_cannot_anchor_working_exposure(scenario):
     user, headers, client = scenario
-    session = plan(user)
+    session = plan(user, warm_up_sets="2")
     for extra in ({"set_kind": "warmup"}, {"set_kind": "drop", "parent_set_index": 1, "technique": {"ordinal": 1}}):
         response = log(client, headers, session, submit(session, load_context=None, **extra))
         assert response.status_code == 200, response.text
@@ -650,7 +650,7 @@ def test_fresh_attempt_after_full_undo_uses_effective_working_context(scenario):
 
 def test_warmup_time_cannot_reorder_later_working_exposure_baseline(scenario):
     user, headers, client = scenario
-    warmed = plan(user, date(2026, 9, 7))
+    warmed = plan(user, date(2026, 9, 7), warm_up_sets="2")
     other = plan(user, date(2026, 9, 14))
     assert log(client, headers, warmed, submit(warmed, set_kind="warmup")).status_code == 200
     for index in (1, 2):
@@ -671,7 +671,7 @@ def test_warmup_time_cannot_reorder_later_working_exposure_baseline(scenario):
 
 def test_changed_effective_cohort_resets_orphan_cache_without_deleting_receipts(scenario):
     user, headers, client = scenario
-    session = plan(user)
+    session = plan(user, warm_up_sets="2")
     first = log(client, headers, session, submit(session)).json()
     second = log(client, headers, session, submit(session, 2, load_context={**CONTEXT, "basis": "per_hand"})).json()
     with SessionLocal() as db:
