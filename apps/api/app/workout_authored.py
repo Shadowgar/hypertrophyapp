@@ -99,7 +99,7 @@ def log_authored_set(db, *, current_user, occurrence, exercise, payload, command
     if prescribed and kind != "warmup" and index not in {row["set_index"] for row in prescribed}:
         raise HTTPException(409, "Set does not match the authored working-set prescription")
     before = project_authored_load_feedback(db, user=current_user, occurrence=occurrence,
-        exercise=exercise, supplied_context=payload.load_context)
+        exercise=exercise, supplied_context=payload.load_context, restore_warmup_context=kind == "warmup")
     if kind == "warmup":
         if payload.parent_set_index is not None or payload.technique is not None:
             raise HTTPException(409, "Warmup sets require an independent ordinal with no parent or technique")

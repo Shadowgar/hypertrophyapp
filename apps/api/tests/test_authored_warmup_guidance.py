@@ -285,3 +285,95 @@ def test_postgres_warmup_correction_reconstruction_keeps_working_evidence_and_or
         assert replacement.replay_context["load_intelligence"] == original.replay_context["load_intelligence"]
     assert log(client, headers, session, payload).json() == warmup.json()
     assert guidance(client, headers, session).json()["next_exposure"] == decision
+
+
+@pytest.mark.parametrize("context", [
+    {**CONTEXT, "display_unit": "lb", "basis": "per_hand", "increment": 2.5, "increment_unit": "lb"},
+    {**CONTEXT, "basis": "machine_stack", "equipment_key": "synthetic-machine"},
+])
+def test_warmup_only_reload_restores_current_declaration_without_historical_exposure_context(scenario, context):
+    from app.workout_load_state import _all_groups
+    user, headers, client = scenario
+    week = date.today() - timedelta(days=date.today().weekday())
+    prior = plan(user, week - timedelta(days=7), performed_date=date.today() - timedelta(days=7))
+    current = plan(user, week, performed_date=date.today(), warm_up_sets="2")
+    for index in (1, 2):
+        result = log(client, headers, prior, submit(prior, index, load_context=context))
+        assert result.status_code == 200, result.text
+    result = log(client, headers, current, submit(current, set_kind="warmup", weight=12.345, load_context=context))
+    assert result.status_code == 200, result.text
+    expected = result.json()["load_intelligence"]
+    assert expected["warmup_guidance"]["status"] == "suggested"
+    before = counts(user)
+    today = client.get("/workout/today", headers=headers)
+    assert today.status_code == 200, today.text
+    assert today.json()["workout_occurrence_id"] == current["workout_occurrence_id"]
+    responses = [today] + [client.get(f"/workout/{current['workout_occurrence_id']}/{route}", headers=headers)
+        for route in ("progress", "summary")]
+    for response in responses:
+        assert response.status_code == 200, response.text
+        restored = response.json()["exercises"][0]["load_intelligence"]
+        assert restored["load_context"] == expected["load_context"]
+        assert restored["warmup_guidance"] == expected["warmup_guidance"]
+        assert restored["next_exposure"] == expected["next_exposure"]
+    omitted_preview = guidance(client, headers, current, None)
+    assert omitted_preview.status_code == 200, omitted_preview.text
+    assert omitted_preview.json()["load_context"] == expected["load_context"]
+    assert counts(user) == before
+    later = plan(user, week + timedelta(days=7), performed_date=date.today() + timedelta(days=7))
+    later_before = guidance(client, headers, later, context).json()["next_exposure"]
+    assert later_before["prefill_available"] is True
+    assert later_before["evidence"]["completed_exposure_count"] == 1
+    assert current["workout_occurrence_id"] not in str(later_before["evidence"])
+    with SessionLocal() as db:
+        group = next(group for group in _all_groups(db, db.get(models.User, user)) if group[2].id == current["workout_occurrence_id"])
+        assert group[5]["load_context"]["basis"] == "unknown"
+        assert group[5]["comparison_key"] is None
+    changed = correct(client, headers, result.json()["id"], weight=11.111)
+    assert changed.status_code == 200, changed.text
+    assert changed.json()["load_intelligence"]["load_context"] == expected["load_context"]
+    assert log(client, headers, current, submit(current, set_kind="warmup", weight=12.345,
+        command_id=result.json()["command_id"], load_context=context)).json() == result.json()
+    assert guidance(client, headers, later, context).json()["next_exposure"] == later_before
+
+
+@pytest.mark.parametrize("nonworking", ["voided_warmup", "child_only"])
+def test_voided_warmup_and_technique_child_do_not_restore_current_context(scenario, nonworking):
+    user, headers, client = scenario
+    session = plan(user, warm_up_sets="2")
+    extra = {"set_kind": "warmup"} if nonworking == "voided_warmup" else {
+        "set_kind": "drop", "parent_set_index": 1, "technique": {"ordinal": 1}}
+    result = log(client, headers, session, submit(session, weight=12.345,
+        load_context={**CONTEXT, "display_unit": "lb", "basis": "per_hand"}, **extra))
+    assert result.status_code == 200, result.text
+    if nonworking == "voided_warmup":
+        assert undo(client, headers, session).status_code == 200
+    restored = guidance(client, headers, session, None).json()
+    assert restored["load_context"]["basis"] == "unknown"
+    assert restored["load_context"]["display_unit"] == "kg"
+    assert restored["load_context"]["increment"] is None
+    assert restored["warmup_guidance"]["status"] == "manual"
+
+
+@pytest.mark.parametrize("working_context, void_working", [(CONTEXT, False), (None, False), (CONTEXT, True), (None, True)])
+def test_working_receipt_context_wins_over_warmup_presentation_declaration(scenario, working_context, void_working):
+    user, headers, client = scenario
+    session = plan(user, warm_up_sets="2")
+    warmup_context = {**CONTEXT, "display_unit": "lb", "basis": "per_hand", "increment": 2.5, "increment_unit": "lb"}
+    warmup = log(client, headers, session, submit(session, set_kind="warmup", weight=12.345, load_context=warmup_context))
+    assert warmup.status_code == 200, warmup.text
+    working = log(client, headers, session, submit(session, load_context=working_context))
+    assert working.status_code == 200, working.text
+    # Omitting a declaration on an actual working command must not implicitly
+    # turn a warmup's UI declaration into performed working evidence.
+    expected_basis = "total_external" if working_context else "unknown"
+    with SessionLocal() as db:
+        captured = db.get(WorkoutSetLog, working.json()["id"]).replay_context["load_intelligence"]["load_context"]
+        assert captured["basis"] == expected_basis
+        assert captured["display_unit"] == "kg"
+    if void_working:
+        assert undo(client, headers, session).status_code == 200
+    restored = guidance(client, headers, session, None).json()
+    assert restored["load_context"]["basis"] == expected_basis
+    assert restored["load_context"]["display_unit"] == "kg"
+    assert restored["warmup_guidance"]["status"] == "manual"

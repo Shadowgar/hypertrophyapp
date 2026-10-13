@@ -725,7 +725,7 @@ function ExerciseDetailOverlay({
             <AuthoredWarmups guidance={loadIntelligence?.warmup_guidance} sourceCount={sourceWarmups}
               receipts={effectiveSets} loadContext={loadContext}
               commandScope={warmupCommandScope} exerciseId={exerciseKey(exercise)}
-              performedVariant={Boolean(exercise.performed_variant)}
+              performedVariant={Boolean(exercise.performed_variant)} bodyweight={bodyweight}
               disabled={invalidKnownIncrement || ["unresolved", "infeasible", "declined"].includes(exercise.authored_constraint?.execution_status ?? exercise.authored_constraint?.status ?? "")}
               onLog={onWarmupComplete} />
           </Disclosure>

@@ -9,9 +9,9 @@ import { kgToLbs, lbsToKg } from "@/lib/weight";
 export type PerformedWarmup = { reps: number; weight: number; rpe: number | null };
 type WarmupSet = AuthoredWarmupGuidance["sets"][number];
 
-function WarmupInput({ set, unit, suggested, disabled, restored, onLog }: {
+function WarmupInput({ set, unit, suggested, disabled, restored, bodyweight, onLog }: {
   restored: PerformedWarmup | null;
-  set: WarmupSet; unit: LoadContext["display_unit"]; suggested: boolean; disabled: boolean;
+  set: WarmupSet; unit: LoadContext["display_unit"]; suggested: boolean; disabled: boolean; bodyweight: boolean;
   onLog: (ordinal: number, performed: PerformedWarmup) => Promise<void>;
 }) {
   const canonical = suggested && set.suggested_weight != null && set.suggested_weight > 0 ? set.suggested_weight : null;
@@ -35,7 +35,7 @@ function WarmupInput({ set, unit, suggested, disabled, restored, onLog }: {
     setWeight(initialWeight);
     setReps(set.reps_min == null ? "" : String(set.reps_min));
   }, [canonical, initialWeight, set.reps_min, unit, saving]);
-  const valid = weight.trim() !== "" && Number.isFinite(Number(weight)) && Number(weight) >= 0 &&
+  const valid = weight.trim() !== "" && Number.isFinite(Number(weight)) && (bodyweight ? Number(weight) >= 0 : Number(weight) > 0) &&
     reps.trim() !== "" && Number.isInteger(Number(reps)) && Number(reps) > 0 &&
     (rpe.trim() === "" || (Number.isFinite(Number(rpe)) && Number(rpe) >= 0 && Number(rpe) <= 10));
   return <div className="space-y-2 rounded-lg border border-zinc-700 p-3">
@@ -75,10 +75,10 @@ function WarmupInput({ set, unit, suggested, disabled, restored, onLog }: {
   </div>;
 }
 
-export function AuthoredWarmups({ guidance, sourceCount, receipts, loadContext, performedVariant, disabled, commandScope, exerciseId, onLog }: {
+export function AuthoredWarmups({ guidance, sourceCount, receipts, loadContext, performedVariant, bodyweight = false, disabled, commandScope, exerciseId, onLog }: {
   guidance: AuthoredWarmupGuidance | null | undefined; sourceCount: string | null;
   commandScope: string; exerciseId: string;
-  receipts: EffectiveLoadSet[]; loadContext: LoadContext; performedVariant: boolean; disabled: boolean;
+  receipts: EffectiveLoadSet[]; loadContext: LoadContext; performedVariant: boolean; bodyweight?: boolean; disabled: boolean;
   onLog: (ordinal: number, performed: PerformedWarmup) => Promise<void>;
 }) {
   // A temporary context invalidation clears advice while keeping existing actual drafts.
@@ -102,6 +102,6 @@ export function AuthoredWarmups({ guidance, sourceCount, receipts, loadContext, 
     {canLog ? <p className="text-xs text-zinc-400">Warm-up load basis: {({ unknown: "Unknown", total_external: "Total external load", per_hand: "Per hand", machine_stack: "Machine stack", bodyweight: "Bodyweight", added_bodyweight: "Added bodyweight load", assistance: "Assistance" })[loadContext.basis]}</p> : null}
     {canLog && Array.isArray(guidance?.equipment_feasibility.limitations) ? guidance.equipment_feasibility.limitations.filter((limit): limit is string => typeof limit === "string").map((limit, index) => <p className="text-xs text-zinc-400" key={index}>{limit}</p>) : null}
     {sets.map(set => <WarmupInput key={set.set_index} set={set} unit={loadContext.display_unit}
-      suggested={guidance?.status === "suggested" && !performedVariant} disabled={disabled} restored={pendingLogPayload<PerformedWarmup>(pendingCommandKey(commandScope, exerciseId, `warmup:${set.set_index}`))} onLog={onLog} />)}
+      suggested={guidance?.status === "suggested" && !performedVariant} bodyweight={bodyweight} disabled={disabled} restored={pendingLogPayload<PerformedWarmup>(pendingCommandKey(commandScope, exerciseId, `warmup:${set.set_index}`))} onLog={onLog} />)}
   </section>;
 }

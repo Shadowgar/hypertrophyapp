@@ -20,12 +20,12 @@ Browser accounts, prescriptions and historical receipts are explicitly synthetic
 
 ## Measured results
 
-Local qualification checkpoint for implementation `cc5c36e7fb82b2c4107fcaeb4b35b251326d5f6d`. Final broader API and GitHub results are recorded in the review PR; this document does not convert a running check into a pass.
+Local qualification checkpoint for implementation `cc5c36e7fb82b2c4107fcaeb4b35b251326d5f6d`. The broader local and exact-head GitHub results at `b3c42bf` finished with the same baseline failures: core 594 passed / 4 failed, API 750 passed / 8 failed / 25 skipped, web 160 passed / 1 failed. Final review-fix CI results are recorded in PR #81.
 
 - Core focused: 95 passed. Independent review caught missing-raw-count fallback and Decimal precision failure; both have red/green regressions and were approved on re-review.
 - Core broader: 594 passed, 4 failures matching the existing baseline exactly.
 - API focused SQLite: 54 passed, 9 PostgreSQL-only skips. PostgreSQL warm-up file: 22 passed; 41 existing M2A PostgreSQL cases passed. Persistence, same-command retries, concurrent ordinal collision, work/warm-up ordinal overlap, correction/undo and cache reconstruction were exercised.
-- Broader API: running at this checkpoint. An initial attempt was stopped after setup errors: the private runner omitted `HIST_TEST_ROOT`. It was corrected to the same explicit disposable root required by CI before the valid broader run. No repository or application change was made for this environment error.
+- Broader API: subsequently completed locally and on GitHub with 750 passed, the same 8 baseline failures and 25 skips. An initial attempt was stopped after setup errors: the private runner omitted `HIST_TEST_ROOT`. It was corrected to the same explicit disposable root required by CI before the valid broader run. No repository or application change was made for this environment error.
 - Web focused: 19 warm-up cases and 33 existing load-intelligence cases passed. The single broader run produced 154 passes and four failures: the known history-calendar failure, two timeouts and a following authored-prescription assertion failure. Targeted reruns of the two existing failing files produced 14 passes and only the known history-calendar failure; the new warm-up file passed after final fixes. This supports a timing/cascade explanation for the other initial failures, not a claim that the original broad run was green.
 - Production web build and TypeScript passed. Full web lint passed with one existing Today effect-dependency warning. Documentation check: 28 retained active-link failures, zero new failures. Whitespace check passed.
 - Independent core, API and web task reviews, followed by a whole-branch integration review, found no unresolved actionable correctness/security blocker in this implementation revision. These source reviews are separate from managed scan completion and CI.
@@ -38,6 +38,18 @@ Desktop at 1440×900 and mobile at 390×844 used authenticated synthetic account
 - Mobile: the textual source instruction remained visible with blank actual reps/load. Logging 7 reps at 12.345 kg with unknown actual RPE created a warm-up receipt with null planned load, zero completed work sets and zero completed exposures for that exercise. Logging the first working set then advanced working completion to one, with warm-up/work receipts still distinct. Reload retained the warm-up as 7 reps at the rounded 27.2 lb display while canonical persistence remained 12.345 kg. Numeric-zero `0.0` stayed visible and exposed no warm-up logger.
 
 Screenshots and private synthetic receipts are retained only in the local qualification directory. Unit tests additionally exercise untouched/restored rounded lb canonical round-trip, pending/remounted retries, stale advice, context changes and substitutions; browser testing does not claim exhaustive device or concurrency coverage.
+
+## GitHub review follow-up
+
+The initial Codex claim that warm-up-only history suppresses the next qualified working recommendation did not reproduce in four isolated API cases. Historical warm-up-only groups retain unknown comparison context and cannot join a qualified working cohort; partial and voided actual working roots still affect that cohort. The evidence is recorded on PR #81.
+
+Two subsequent findings were confirmed and fixed. Current Today/progress/summary reads now restore a declared context from effective independent warm-up receipts, preserving unit, basis, increment and qualified suggestions across reload. Historical grouping remains working-only. Working command capture disables this restoration, so an older client omitting a working declaration does not silently inherit warm-up context. Any retained working root, including voided or unknown-context work, keeps working-context authority. Voided warm-ups and technique children do not restore settings.
+
+The warm-up logger now rejects zero external load before submission. It uses the existing authored/performed bodyweight classification for the zero-load exception; changing the declared load basis alone cannot permit zero.
+
+Eight new API regressions passed on disposable SQLite, and the full warm-up API file passed all 30 cases on isolated PostgreSQL. The original four history-isolation probes also passed after the fix. Web warm-up tests passed all 24 cases, including declared-basis and confirmed-substitution negatives. Production build, TypeScript, scoped lint and an independent fix review passed; lint retains the existing Today warning.
+
+Post-fix Playwright repeated real API logging and reload at 1440×900 and 390×844. Zero external load disabled submission in both viewports. After logging a 20.5 kg warm-up and reloading, both retained total-external basis, 0.5 kg increment and the remaining 28.5 kg source-qualified suggestion, with working completion still zero. Neither flow captured page/console errors or horizontal overflow. Synthetic accounts and disposable PostgreSQL only.
 
 ## Managed security qualification limitation
 

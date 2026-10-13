@@ -93,6 +93,28 @@ def resolve_load_context(*, user, supplied=None, records=()):
         "equipment_tags": sorted(user.equipment_profile or []), "equipment_provenance": "profile_tags_not_inventory"}
 
 
+def resolve_current_load_context(*, user, supplied=None, records=()):
+    """Restore only the current occurrence's effective warmup UI declaration.
+
+    Historical grouping and working-command capture use resolve_load_context.
+    Any retained working root, including unknown or voided work, keeps that
+    resolver authoritative. A warmup declaration supplies no working evidence.
+    """
+    context = resolve_load_context(user=user, supplied=supplied, records=records)
+    if supplied is not None or any(record.parent_set_index is None
+            and (record.set_kind or "work").strip().lower() in {"work", "top", "backoff"}
+            for record in records):
+        return context
+    for record in reversed(records):
+        if (record.voided_at is not None or record.parent_set_index is not None
+                or record.technique is not None or (record.set_kind or "work").strip().lower() != "warmup"):
+            continue
+        captured = (record.replay_context or {}).get("load_intelligence") or {}
+        if (record.replay_context or {}).get("version") == 2 and captured.get("load_context"):
+            return deepcopy(captured["load_context"])
+    return context
+
+
 def effective_receipts(records):
     return [{"id": row.id, "set_index": row.set_index, "reps": row.reps, "weight": row.weight,
         "rpe": row.rpe, "set_kind": row.set_kind, "parent_set_index": row.parent_set_index,
@@ -187,8 +209,13 @@ def _wrap(decision, *, user_id, occurrence_id, exercise_id, context, exposures, 
     return {**deepcopy(decision), "id": identity, "evidence_revision": evidence_revision, "scope": scope}
 
 
-def project_authored_load_feedback(db, *, user, occurrence, exercise, supplied_context=None):
-    """Pure database reads; even a not-yet-started occurrence stays transient."""
+def project_authored_load_feedback(db, *, user, occurrence, exercise, supplied_context=None,
+        restore_warmup_context=True):
+    """Pure reads with optional current warmup presentation-context restoration.
+
+    Working-command capture disables restoration so an omitted declaration
+    cannot turn a warmup's UI settings into actual working load evidence.
+    """
     groups = _all_groups(db, user)
     current = next((group for group in groups if group[2].id == occurrence.id
         and group[3]["exercise_occurrence_id"] == exercise["exercise_occurrence_id"]), None)
@@ -209,7 +236,8 @@ def project_authored_load_feedback(db, *, user, occurrence, exercise, supplied_c
         "cutoff_date": cutoff_date.isoformat(), "cutoff_source": cutoff_source,
         "inclusive": True}
     groups = [group for group in groups if group[0][0] <= cutoff_date]
-    context = resolve_load_context(user=user, supplied=supplied_context, records=records)
+    context_resolver = resolve_current_load_context if restore_warmup_context else resolve_load_context
+    context = context_resolver(user=user, supplied=supplied_context, records=records)
     # A new declaration never reinterprets already recorded or legacy set context.
     has_work = any(row.voided_at is None and row.parent_set_index is None
         and (row.set_kind or "work").strip().lower() in {"work", "top", "backoff"} for row in records)

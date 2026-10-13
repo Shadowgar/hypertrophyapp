@@ -16,6 +16,8 @@ let deferLog: boolean;
 let releaseLog: () => void;
 let variant: boolean;
 let constraint: string;
+let loadSemantics: string;
+let variantLoadSemantics: string;
 const sourceInstructions = "Perform the source warm-up protocol before working sets.";
 function envelope() {
   return { next_exposure: { id: digest, evidence_revision: digest, scope: "next_exposure", action: "hold", recommended_weight: 50,
@@ -24,17 +26,17 @@ function envelope() {
 }
 function exercise() {
   return { id: "press", exercise_occurrence_id: "warm-slot", name: "Warmup Press", sets: 3, completed_sets: completed,
-    warm_up_sets: guidance.source_count, rep_range: [8, 12], recommended_working_weight: 100, warmups: [90],
+    warm_up_sets: guidance.source_count, load_semantics: loadSemantics, rep_range: [8, 12], recommended_working_weight: 100, warmups: [90],
     source_lineage: { source_slot_id: "press-source" }, load_intelligence: envelope(),
     authored_prescription: { version: "authored-prescription-v1", raw: { warm_up_sets: guidance.source_count }, sets: [1, 2, 3].map(set_index => ({ set_index, set_type: "work", rep_target: { kind: "reps", raw: "8-12", min: 8, max: 12 }, effort_target: { kind: "rpe", raw: "8" }, rest: "90 sec", intensity_technique: null })) },
     authored_constraint: { status: constraint, revision: 0, reasons: constraint === "ready" ? [] : [{ kind: "pain", details: [] }], allowed_alternatives: [{ option_id: "option", id: "alternative", name: "Approved Variant", load_semantics: "external_load", permission: {} }] },
-    ...(variant ? { performed_variant: { option_id: "option", id: "alternative", name: "Approved Variant", load_semantics: "external_load", permission: {} } } : {}) };
+    ...(variant ? { performed_variant: { option_id: "option", id: "alternative", name: "Approved Variant", load_semantics: variantLoadSemantics, permission: {} } } : {}) };
 }
 beforeEach(() => {
   context = { unit: "kg", display_unit: "lb", basis: "total_external", increment: 0.5, increment_unit: "kg" };
   guidance = { version: "authored-warmup-v1", id: digest, evidence_revision: digest, source_count: "2", count: 2, status: "suggested", source_instructions: sourceInstructions,
     sets: [{ set_index: 1, suggested_weight: 25.25, reps_min: 5, reps_max: 8, percent: 50 }, { set_index: 2, suggested_weight: 35.25, reps_min: 3, reps_max: 4, percent: 70 }], reason_codes: [], explanation: "Source qualified warm-ups", equipment_feasibility: {}, decision_trace: {} };
-  receipts = []; completed = 0; writes = []; failFirst = false; staleFirst = false; failUndoProgress = false; deferLog = false; variant = false; constraint = "ready";
+  receipts = []; completed = 0; writes = []; failFirst = false; staleFirst = false; failUndoProgress = false; deferLog = false; variant = false; constraint = "ready"; loadSemantics = "external_load"; variantLoadSemantics = "external_load";
   vi.stubGlobal("fetch", vi.fn(async (input, init) => {
     const path = String(input);
     if (path.includes("/plan/scheduling-context?")) return Response.json({ timezone: "UTC", local_today: new Date().toISOString().slice(0, 10), selected_dates: [], placement_revision: 0, plan: null });
@@ -250,4 +252,36 @@ test("late confirmed warm-up retains actual receipt after a context edit while s
   expect(await screen.findByRole("button", { name: "Edit warm-up 1" })).toBeInTheDocument();
   expect(screen.getByRole("spinbutton", { name: "Warm-up 2 load (lb)" })).toHaveValue(null);
   expect(screen.queryByText("Source qualified warm-ups")).toBeNull();
+});
+
+
+test.each(["total_external", "bodyweight"])("external warm-up zero load is disabled even when the declared basis is %s", async basis => {
+  guidance = { ...guidance, status: "manual", sets: guidance.sets.map((set: any) => ({ ...set, suggested_weight: null })) };
+  context.basis = basis; await open();
+  const load = screen.getByRole("spinbutton", { name: "Warm-up 1 load (lb)" });
+  fireEvent.change(load, { target: { value: "0" } });
+  const log = screen.getByRole("button", { name: "Log warm-up 1" });
+  expect(log).toBeDisabled(); fireEvent.click(log); expect(logs()).toHaveLength(0);
+  fireEvent.change(load, { target: { value: "10" } }); expect(log).toBeEnabled();
+});
+
+test.each([false, true])("explicitly bodyweight authored warm-up accepts zero actual load (performed variant %s)", async performedVariant => {
+  guidance = { ...guidance, status: "manual", sets: guidance.sets.map((set: any) => ({ ...set, suggested_weight: null })) };
+  if (performedVariant) { variant = true; variantLoadSemantics = "bodyweight"; constraint = "confirmed"; }
+  else loadSemantics = "bodyweight";
+  // User-declared basis does not control the exercise's zero-load permission.
+  context.basis = "unknown"; await open();
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Warm-up 1 load (lb)" }), { target: { value: "0" } });
+  const log = screen.getByRole("button", { name: "Log warm-up 1" });
+  expect(log).toBeEnabled(); fireEvent.click(log);
+  await waitFor(() => expect(logs()).toHaveLength(1));
+  expect(logs()[0].body).toMatchObject({ weight: 0, set_kind: "warmup", reps: 5 });
+});
+
+test("a confirmed external-load variant removes the source bodyweight zero-load exception", async () => {
+  guidance = { ...guidance, status: "manual", sets: guidance.sets.map((set: any) => ({ ...set, suggested_weight: null })) };
+  loadSemantics = "bodyweight"; variant = true; constraint = "confirmed"; await open();
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Warm-up 1 load (lb)" }), { target: { value: "0" } });
+  expect(screen.getByRole("button", { name: "Log warm-up 1" })).toBeDisabled();
+  expect(logs()).toHaveLength(0);
 });
