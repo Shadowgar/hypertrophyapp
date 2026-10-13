@@ -949,8 +949,11 @@ def authored_substitution(workout_id: str, payload: AuthoredSubstitutionRequest,
         "timestamp": now, "user_id": current_user.id, "revision": constraint["revision"],
         "reasons": deepcopy(reasons), "option_id": payload.option_id if payload.action == "confirm" else None})
     occurrence.payload = deepcopy(session)
+    projected_exercise = project_variant_load(exercise)
+    projected_exercise["load_intelligence"] = project_authored_load_feedback(db,
+        user=current_user, occurrence=occurrence, exercise=exercise)
     result = {"workout_occurrence_id": occurrence.id, "exercise_occurrence_id": exercise["exercise_occurrence_id"],
-        "exercise": project_variant_load(exercise)}
+        "exercise": projected_exercise}
     _save_history_action(db, user_id=current_user.id, command_id=payload.command_id, digest=digest,
         operation="authored_substitution", occurrence=occurrence,
         exercise_occurrence_id=exercise["exercise_occurrence_id"], result=result)

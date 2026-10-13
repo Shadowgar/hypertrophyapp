@@ -13,10 +13,10 @@ from .load_intelligence import _attainable_weight, _context_reasons, _digest, _f
 
 VERSION = "authored-warmup-v1"
 _AUTHORED_PROGRAMS = {"pure_bodybuilding_phase_1_full_body", "pure_bodybuilding_phase_2_full_body"}
-# SHA-256 of the canonical JSON exercise_specific_warm_up rows in both compiled
-# programs/gold/*.onboarding.json artifacts. A source edit must be requalified;
-# matching a count alone never grants permission to interpret a new protocol.
-_SOURCE_RECIPE_DIGEST = "0fde24aa0701b7d4bbb813d392e5b77cc7853956e2b4b8104193e480fe5694c0"
+# SHA-256 of the canonical JSON exercise-specific intro and recipe rows in
+# both compiled programs/gold/*.onboarding.json artifacts. Every instruction
+# rendered for this protocol must be requalified after a source edit.
+_SOURCE_EXERCISE_PROTOCOL_DIGEST = "509169b9bc01c78c48d6485e7e7b71389e28538b5861266cc7afd0699efcb358"
 _SOURCE_RECIPES = {1: ((60, 6, 10),), 2: ((50, 6, 10), (70, 4, 6)),
     3: ((45, 6, 10), (65, 4, 6), (85, 3, 4))}
 _HARD_LOAD_KEYS = ("hard_load_instruction", "hard_load", "source_hard_load", "load_target")
@@ -89,7 +89,9 @@ def build_authored_warmup_guidance(*, exercise, working_decision, load_context, 
     exercise, working, context, protocol = (deepcopy(value or {}) for value in
         (exercise, working_decision, load_context, source_protocol))
     source_count, count = _source_count(exercise)
-    protocol_qualified = _digest(protocol.get("exercise_specific_warm_up")) == _SOURCE_RECIPE_DIGEST
+    exercise_protocol_digest = _digest({key: protocol.get(key) for key in
+        ("exercise_specific_warm_up_intro", "exercise_specific_warm_up")})
+    protocol_qualified = exercise_protocol_digest == _SOURCE_EXERCISE_PROTOCOL_DIGEST
     reasons, rows = [], []
     feasibility = {"status": "unknown", "increment": context.get("increment"),
         "increment_unit": context.get("increment_unit"), "limitations": ["No qualified warmup load proposal."]}
@@ -162,6 +164,7 @@ def build_authored_warmup_guidance(*, exercise, working_decision, load_context, 
             "performed_variant": deepcopy(exercise.get("performed_variant")),
             "source_prescription": deepcopy(exercise.get("authored_prescription")),
             "source_protocol": deepcopy(protocol), "source_protocol_digest": _digest(protocol),
+            "source_exercise_protocol_digest": exercise_protocol_digest,
             "source_recipe_digest": _digest(protocol.get("exercise_specific_warm_up")),
             "source_recipe_qualified": protocol_qualified and program_id in _AUTHORED_PROGRAMS,
             "working_recommendation_id": working.get("id"), "working_evidence_revision": working.get("evidence_revision"),

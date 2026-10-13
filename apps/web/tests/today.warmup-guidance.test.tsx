@@ -18,12 +18,13 @@ let deferLog: boolean;
 let releaseLog: () => void;
 let variant: boolean;
 let constraint: string;
+let constraintRevision: number;
 let loadSemantics: string;
 let variantLoadSemantics: string;
 const sourceInstructions = "Perform the source warm-up protocol before working sets.";
 function envelope() {
-  return { next_exposure: { id: digest, evidence_revision: digest, scope: "next_exposure", action: "hold", recommended_weight: 50,
-    known_baseline_weight: 50, prefill_available: true, reason_codes: [], explanation: "Working advice", evidence: { completed_exposure_count: 2, comparable_completed_exposure_count: 2, actual_rpe_count: 6 }, equipment_feasibility: { limitations: [] }, decision_trace: {} },
+  return { next_exposure: { id: variant ? "d".repeat(64) : digest, evidence_revision: variant ? "d".repeat(64) : digest, scope: "next_exposure", action: variant ? "monitor" : "hold", recommended_weight: variant ? null : 50,
+    known_baseline_weight: variant ? null : 50, prefill_available: !variant, reason_codes: [], explanation: "Working advice", evidence: { completed_exposure_count: 2, comparable_completed_exposure_count: 2, actual_rpe_count: 6 }, equipment_feasibility: { limitations: [] }, decision_trace: {} },
     remaining_sets: null, load_context: context, effective_sets: receipts, warmup_guidance: guidance };
 }
 function exercise() {
@@ -31,14 +32,14 @@ function exercise() {
     warm_up_sets: guidance.source_count, load_semantics: loadSemantics, rep_range: [8, 12], recommended_working_weight: 100, warmups: [90],
     source_lineage: { source_slot_id: "press-source" }, load_intelligence: envelope(),
     authored_prescription: { version: "authored-prescription-v1", raw: { warm_up_sets: guidance.source_count }, sets: [1, 2, 3].map(set_index => ({ set_index, set_type: "work", rep_target: { kind: "reps", raw: "8-12", min: 8, max: 12 }, effort_target: { kind: "rpe", raw: "8" }, rest: "90 sec", intensity_technique: null })) },
-    authored_constraint: { status: constraint, revision: 0, reasons: constraint === "ready" ? [] : [{ kind: "pain", details: [] }], allowed_alternatives: [{ option_id: "option", id: "alternative", name: "Approved Variant", load_semantics: "external_load", permission: {} }] },
+    authored_constraint: { status: constraint, revision: constraintRevision, reasons: constraint === "ready" ? [] : [{ kind: "pain", details: [] }], allowed_alternatives: [{ option_id: "option", id: "alternative", name: "Approved Variant", load_semantics: "external_load", permission: {} }] },
     ...(variant ? { performed_variant: { option_id: "option", id: "alternative", name: "Approved Variant", load_semantics: variantLoadSemantics, permission: {} } } : {}) };
 }
 beforeEach(() => {
   context = { unit: "kg", display_unit: "lb", basis: "total_external", increment: 0.5, increment_unit: "kg" };
   guidance = { version: "authored-warmup-v1", id: digest, evidence_revision: digest, source_count: "2", count: 2, status: "suggested", source_instructions: sourceInstructions,
     sets: [{ set_index: 1, suggested_weight: 25.25, reps_min: 5, reps_max: 8, percent: 50 }, { set_index: 2, suggested_weight: 35.25, reps_min: 3, reps_max: 4, percent: 70 }], reason_codes: [], explanation: "Source qualified warm-ups", equipment_feasibility: {}, decision_trace: {} };
-  receipts = []; completed = 0; writes = []; failFirst = false; loseAfterCommitFirst = false; committedReplies = new Map(); staleFirst = false; failUndoProgress = false; deferLog = false; variant = false; constraint = "ready"; loadSemantics = "external_load"; variantLoadSemantics = "external_load";
+  receipts = []; completed = 0; writes = []; failFirst = false; loseAfterCommitFirst = false; committedReplies = new Map(); staleFirst = false; failUndoProgress = false; deferLog = false; variant = false; constraint = "ready"; constraintRevision = 0; loadSemantics = "external_load"; variantLoadSemantics = "external_load";
   vi.stubGlobal("fetch", vi.fn(async (input, init) => {
     const path = String(input);
     if (path.includes("/plan/scheduling-context?")) return Response.json({ timezone: "UTC", local_today: new Date().toISOString().slice(0, 10), selected_dates: [], placement_revision: 0, plan: null });
@@ -49,7 +50,14 @@ beforeEach(() => {
     if (init?.method === "POST") {
       const body = JSON.parse(String(init.body)); writes.push({ path, body });
       if (path.endsWith("/load-guidance")) return Response.json(envelope());
-      if (path.endsWith("/authored-substitution")) { constraint = body.action === "confirm" ? "confirmed" : "unresolved"; variant = body.action === "confirm"; return Response.json({ exercise: exercise(), workout_occurrence_id: "warm-occurrence" }); }
+      if (path.endsWith("/authored-substitution")) {
+        constraintRevision += 1; constraint = body.action === "confirm" ? "confirmed" : "unresolved"; variant = body.action === "confirm";
+        if (variant) guidance = { ...guidance, id: "c".repeat(64), evidence_revision: "c".repeat(64), status: "manual",
+          sets: guidance.sets.map((set: any) => ({ ...set, suggested_weight: null })),
+          reason_codes: ["performed_variant_warmup_unqualified"],
+          explanation: "Source warmup targets are preserved; enter actual loads manually because load qualification is unresolved." };
+        return Response.json({ exercise: exercise(), workout_occurrence_id: "warm-occurrence" });
+      }
       if (path.endsWith("/log-set")) {
         const n = writes.filter(w => w.path.endsWith("/log-set")).length;
         const replay = committedReplies.get(body.command_id);
@@ -332,4 +340,37 @@ test.each([null, "another-client-command"])("an observed warm-up receipt with co
   fireEvent.click(screen.getByRole("button", { name: "Log warm-up 1" }));
   await waitFor(() => expect(logs()).toHaveLength(2));
   expect(logs()[1].body).toEqual(original);
+});
+
+
+test("reporting pain then explicitly undoing source warm-ups allows confirmation with immediate fresh manual variant guidance", async () => {
+  await open(); fireEvent.click(screen.getByRole("button", { name: "Log warm-up 1" }));
+  await screen.findByRole("button", { name: "Edit warm-up 1" });
+  fireEvent.click(screen.getByRole("button", { name: "Report pain for this slot" }));
+  const undo = await screen.findByRole("button", { name: "Undo last warm-up to resolve" });
+  expect(screen.getByRole("combobox", { name: "Source-approved alternative" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Resolve authored slot first" })).toBeDisabled();
+  fireEvent.click(undo);
+  await waitFor(() => expect(screen.getByRole("combobox", { name: "Source-approved alternative" })).toBeEnabled());
+  expect(screen.getByText(/This source slot remains unresolved/)).toBeInTheDocument();
+  fireEvent.change(screen.getByRole("combobox", { name: "Source-approved alternative" }), { target: { value: "option" } });
+  fireEvent.click(screen.getByRole("button", { name: "Confirm this alternative" }));
+  await screen.findByText("Confirmed performed variant: Approved Variant");
+  expect(screen.getByText(sourceInstructions)).toBeInTheDocument();
+  expect(screen.queryByText("Source qualified warm-ups")).toBeNull();
+  expect(screen.getByRole("spinbutton", { name: "Warm-up 1 load (lb)" })).toHaveValue(null);
+  expect(screen.getByRole("spinbutton", { name: "Warm-up 1 actual RPE (optional)" })).toHaveValue(null);
+  expect(screen.getByRole("spinbutton", { name: "Weight (lb)" })).toHaveValue(null);
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Warm-up 1 load (lb)" }), { target: { value: "40" } });
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Warm-up 1 reps" }), { target: { value: "6" } });
+  fireEvent.click(screen.getByRole("button", { name: "Log warm-up 1" }));
+  await screen.findByRole("button", { name: "Edit warm-up 1" });
+  expect(logs()).toHaveLength(2);
+  expect(logs()[1].body).toMatchObject({ set_kind: "warmup", weight: 18.1, reps: 6, rpe: null, parent_set_index: null, technique: null });
+  expect(logs()[1].body.load_recommendation_id).toBe("c".repeat(64));
+  expect(logs()[1].body.load_recommendation_id).not.toBe(logs()[0].body.load_recommendation_id);
+  expect(writes.filter(write => write.path.endsWith("/authored-substitution")).map(write => write.body)).toMatchObject([
+    { action: "report", reason: "pain", expected_revision: 0 }, { action: "confirm", option_id: "option", expected_revision: 1 },
+  ]);
+  expect(screen.getByText("Set 1/3")).toBeInTheDocument();
 });

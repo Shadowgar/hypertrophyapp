@@ -417,7 +417,11 @@ def test_warmup_report_pauses_then_explicit_undo_allows_consent(scenario, reason
     session["exercises"][0] = reported.json()["exercise"]
     assert session["exercises"][0]["authored_constraint"]["execution_status"] == "unresolved"
     assert session["exercises"][0]["authored_constraint"]["reasons"] == [{"kind": reason, "details": ["user_reported"]}]
+    reported_guidance = session["exercises"][0]["load_intelligence"]
+    assert "~50%" in reported_guidance["warmup_guidance"]["source_instructions"]
+    assert reported_guidance["effective_sets"][0]["command_id"] == logged_payload["command_id"]
     paused = deepcopy(session["exercises"][0])
+    paused.pop("load_intelligence")  # Presentation projection must not enter the frozen source snapshot.
     before = counts(user)  # The accepted safety report has its own immutable command receipt.
     for action in ("confirm", "decline"):
         rejected = client.post(route, headers=headers, json=_substitution_command(session, action,
@@ -432,16 +436,28 @@ def test_warmup_report_pauses_then_explicit_undo_allows_consent(scenario, reason
         assert receipt.replay_context == original_capture
     assert log(client, headers, session, submit(session)).status_code == 409
     assert undo(client, headers, session).status_code == 200
-    confirmed = client.post(route, headers=headers,
-        json=_substitution_command(session, "confirm", option_id="substitution_option_1"))
+    confirm_payload = _substitution_command(session, "confirm", option_id="substitution_option_1")
+    confirmed = client.post(route, headers=headers, json=confirm_payload)
     assert confirmed.status_code == 200, confirmed.text
     exercise = confirmed.json()["exercise"]
     assert exercise["performed_variant"]["id"] == "source-variant"
     assert exercise["authored_prescription"] == source["authored_prescription"]
     assert exercise["source_lineage"] == source["source_lineage"]
+    refreshed = exercise["load_intelligence"]
+    assert refreshed["warmup_guidance"]["status"] == "manual"
+    assert "~50%" in refreshed["warmup_guidance"]["source_instructions"]
+    assert "performed_variant_warmup_unqualified" in refreshed["warmup_guidance"]["reason_codes"]
+    assert len(refreshed["warmup_guidance"]["sets"]) == 2
+    assert all(row["suggested_weight"] is None for row in refreshed["warmup_guidance"]["sets"])
+    assert refreshed["next_exposure"]["recommended_weight"] is None
+    assert refreshed["next_exposure"]["prefill_available"] is False
+    assert refreshed["effective_sets"] == []
+    assert client.post(route, headers=headers, json=confirm_payload).json() == confirmed.json()
+    assert client.post(route, headers=headers, json=report_payload).json() == reported.json()
     assert log(client, headers, session, logged_payload).json() == logged.json()
     with SessionLocal() as db:
         assert db.get(WorkoutSetLog, logged.json()["id"]).replay_context == original_capture
+        assert "load_intelligence" not in db.get(WorkoutOccurrence, session["workout_occurrence_id"]).payload["exercises"][0]
 
 
 def test_effective_warmup_command_id_identifies_current_receipt_after_correction_and_original_retry(scenario):

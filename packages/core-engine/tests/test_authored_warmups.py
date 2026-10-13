@@ -128,6 +128,24 @@ def test_missing_protocol_and_generated_program_do_not_gain_authored_source_auth
     assert "authored_program_unqualified" in result["reason_codes"]
 
 
+@pytest.mark.parametrize("program_id", PROGRAMS)
+@pytest.mark.parametrize("intro", ["Changed source instruction: use manual warm-up loads.", None, 123])
+def test_changed_or_missing_protocol_intro_requires_requalification(program_id, intro):
+    source = protocol(program_id)
+    if intro is None:
+        source.pop("exercise_specific_warm_up_intro")
+    else:
+        source["exercise_specific_warm_up_intro"] = intro
+    result = build(source=source, program_id=program_id)
+    assert result["status"] == "manual"
+    assert result["sets"] == []
+    assert "source_protocol_unqualified" in result["reason_codes"]
+    assert result["decision_trace"]["source_recipe_qualified"] is False
+    if isinstance(intro, str):
+        assert intro in result["source_instructions"]
+    assert source["exercise_specific_warm_up"][0]["instruction"] in result["source_instructions"]
+
+
 @pytest.mark.parametrize("working", [
     {}, decision(prefill_available=False), decision(scope="remaining_sets"),
     decision(recommended_weight=None), decision(recommended_weight=0), decision(recommended_weight=-1),
