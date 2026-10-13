@@ -49,9 +49,24 @@ export type EffectiveLoadSet = {
   id: string; set_index: number; reps: number; weight: number; rpe: number | null;
   set_kind: string | null; parent_set_index: number | null; technique: Record<string, unknown> | null; created_at: string;
 };
+export type AuthoredWarmupGuidance = {
+  version: "authored-warmup-v1";
+  id?: string;
+  evidence_revision?: string;
+  source_count: string | null;
+  count: number | null;
+  status: "none" | "manual" | "suggested";
+  source_instructions: string;
+  sets: Array<{ set_index: number; suggested_weight: number | null; reps_min: number | null; reps_max: number | null; percent: number | null }>;
+  reason_codes: string[];
+  explanation: string;
+  equipment_feasibility: Record<string, unknown>;
+  decision_trace: Record<string, unknown>;
+};
 export type LoadIntelligence = {
   next_exposure: LoadDecision; remaining_sets: LoadDecision | null;
   load_context: LoadContext; effective_sets: EffectiveLoadSet[];
+  warmup_guidance?: AuthoredWarmupGuidance | null;
 };
 
 export type AuthoredTarget = {
@@ -628,9 +643,9 @@ export type WorkoutSetFeedback = {
   technique?: Record<string, unknown> | null;
   planned_reps_min: number | null;
   planned_reps_max: number | null;
-  planned_weight: number;
+  planned_weight: number | null;
   rep_delta: number | null;
-  weight_delta: number;
+  weight_delta: number | null;
   next_working_weight: number | null;
   guidance: string;
   guidance_rationale: string;

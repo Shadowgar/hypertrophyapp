@@ -207,7 +207,8 @@ export function useExerciseControl({
 
 export type ExerciseControlState = ReturnType<typeof useExerciseControl>;
 
-export function LoadIntelligencePanel({ guidance, completed, total, loadContext, onContextChange, onPreview, overrideReason, onOverrideReason, onCorrect, requireExternalWeight = false }: {
+export function LoadIntelligencePanel({ guidance, completed, total, loadContext, onContextChange, onPreview, overrideReason, onOverrideReason, onCorrect, requireExternalWeight = false, effectiveSets }: {
+  effectiveSets?: EffectiveLoadSet[];
   guidance: LoadIntelligence | null; completed: number; total: number; loadContext: LoadContext; requireExternalWeight?: boolean;
   onContextChange: (context: LoadContext) => void; onPreview: (context: LoadContext) => Promise<void>;
   overrideReason: string; onOverrideReason: (reason: string) => void;
@@ -217,6 +218,7 @@ export function LoadIntelligencePanel({ guidance, completed, total, loadContext,
   const [status, setStatus] = useState("");
   const [increment, setIncrement] = useState(loadContext.increment == null ? "" : String(loadContext.increment));
   const [editing, setEditing] = useState<EffectiveLoadSet | null>(null);
+  const [editingUnit, setEditingUnit] = useState<LoadContext["display_unit"]>("lb");
   const [reps, setReps] = useState("");
   const [weight, setWeight] = useState("");
   const [rpe, setRpe] = useState("");
@@ -267,22 +269,23 @@ export function LoadIntelligencePanel({ guidance, completed, total, loadContext,
     <label className="block text-xs">Load override reason (optional)
       <input className="ui-input min-h-[48px] w-full" value={overrideReason} maxLength={500} onChange={event => onOverrideReason(event.target.value)} />
     </label>
-    {guidance?.effective_sets.filter(entry => entry.parent_set_index == null && (["work", "working", "top", "backoff"].includes(entry.set_kind?.trim().toLowerCase() || "work"))).map(entry => <div className="rounded border border-white/10 p-2" key={entry.id}>
-      <p className="text-xs">Set {entry.set_index}: {entry.reps} reps @ {kgToLbs(entry.weight)} lb · Actual RPE {entry.rpe ?? "unknown"}</p>
+    {(effectiveSets ?? guidance?.effective_sets ?? []).filter(entry => entry.parent_set_index == null && (["warmup", "work", "working", "top", "backoff"].includes(entry.set_kind?.trim().toLowerCase() || "work"))).map(entry => <div className="rounded border border-white/10 p-2" key={entry.id}>
+      <p className="text-xs">{entry.set_kind === "warmup" ? "Warm-up" : "Set"} {entry.set_index}: {entry.reps} reps @ {kgToLbs(entry.weight)} lb · Actual RPE {entry.rpe ?? "unknown"}</p>
       <Button className="min-h-[44px] w-full" variant="secondary" disabled={pending} onClick={() => {
-        setEditing(entry); setReps(String(entry.reps)); setWeight(String(kgToLbs(entry.weight))); setRpe(entry.rpe == null ? "" : String(entry.rpe));
+        setEditing(entry); const unit = entry.set_kind === "warmup" ? loadContext.display_unit : "lb"; setEditingUnit(unit);
+        setReps(String(entry.reps)); setWeight(String(unit === "kg" ? entry.weight : kgToLbs(entry.weight))); setRpe(entry.rpe == null ? "" : String(entry.rpe));
         setRpeEdited(false); setReason(""); setStatus("");
-      }}>Edit set {entry.set_index}</Button>
+      }}>Edit {entry.set_kind === "warmup" ? "warm-up" : "set"} {entry.set_index}</Button>
     </div>)}
     {editing ? <div className="space-y-2 rounded border border-white/10 p-3">
       <label className="block text-xs">Corrected reps<input className="ui-input min-h-[48px] w-full" type="number" min={1} step={1} value={reps} onChange={e => setReps(e.target.value)} /></label>
-      <label className="block text-xs">Corrected load (lb)<input className="ui-input min-h-[48px] w-full" type="number" min={0} step="any" value={weight} onChange={e => setWeight(e.target.value)} /></label>
+      <label className="block text-xs">Corrected load ({editingUnit})<input className="ui-input min-h-[48px] w-full" type="number" min={0} step="any" value={weight} onChange={e => setWeight(e.target.value)} /></label>
       <label className="block text-xs">Corrected actual RPE<input className="ui-input min-h-[48px] w-full" type="number" min={0} max={10} step={0.5} value={rpe} onChange={e => { setRpeEdited(true); setRpe(e.target.value); }} /></label>
       <p className="text-xs text-zinc-400">Leave RPE unchanged to preserve it; clear the field to record unknown.</p>
       <label className="block text-xs">Correction reason<input className="ui-input min-h-[48px] w-full" value={reason} maxLength={500} onChange={e => setReason(e.target.value)} /></label>
       <Button className="min-h-[48px] w-full" disabled={pending || !Number.isInteger(Number(reps)) || Number(reps) < 1 || weight.trim() === "" || !Number.isFinite(Number(weight)) || (requireExternalWeight ? Number(weight) <= 0 : Number(weight) < 0) || (rpe.trim() !== "" && (!Number.isFinite(Number(rpe)) || Number(rpe) < 0 || Number(rpe) > 10))} onClick={async () => {
         if (pendingAction.current) return; pendingAction.current = true; setPending(true); setStatus("");
-        try { await onCorrect(editing, { reps: Number(reps), weight: Number(weight) === kgToLbs(editing.weight) ? editing.weight : lbsToKg(Number(weight)),
+        try { await onCorrect(editing, { reps: Number(reps), weight: editingUnit === "kg" ? Number(weight) : Number(weight) === kgToLbs(editing.weight) ? editing.weight : lbsToKg(Number(weight)),
           ...(rpeEdited ? { rpe: rpe.trim() === "" ? null : Number(rpe) } : {}), reason: reason.trim() || "User corrected set" }); setEditing(null); }
         catch { setStatus("Correction was not confirmed. Retry the same correction."); }
         finally { pendingAction.current = false; setPending(false); }
@@ -485,12 +488,14 @@ type SetLogDisplayProps = Readonly<{
   ctrl: ExerciseControlState;
   onUndoLastSet?: () => Promise<number | false> | void;
   hideLocalReceipts?: boolean;
+  hasEffectiveReceipts?: boolean;
+  undoLabel?: string;
 }>;
 
-export function SetLogDisplay({ ctrl, onUndoLastSet, hideLocalReceipts }: SetLogDisplayProps) {
+export function SetLogDisplay({ ctrl, onUndoLastSet, hideLocalReceipts, hasEffectiveReceipts, undoLabel }: SetLogDisplayProps) {
   const pending = useRef(false);
   const [undoing, setUndoing] = useState(false);
-  if (ctrl.loggedSets.length === 0 && ctrl.completedSets === 0) {
+  if (ctrl.loggedSets.length === 0 && ctrl.completedSets === 0 && !hasEffectiveReceipts) {
     return null;
   }
 
@@ -498,7 +503,7 @@ export function SetLogDisplay({ ctrl, onUndoLastSet, hideLocalReceipts }: SetLog
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
         <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Set Log</p>
-        {onUndoLastSet && ctrl.completedSets > 0 ? (
+        {onUndoLastSet && (ctrl.completedSets > 0 || hasEffectiveReceipts) ? (
           <Button
             type="button"
             variant="ghost"
@@ -514,7 +519,7 @@ export function SetLogDisplay({ ctrl, onUndoLastSet, hideLocalReceipts }: SetLog
               } finally { pending.current = false; setUndoing(false); }
             }}
           >
-            Undo Last Set
+            {undoLabel ?? "Undo Last Set"}
           </Button>
         ) : null}
       </div>
