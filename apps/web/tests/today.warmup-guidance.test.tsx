@@ -6,6 +6,7 @@ import TodayPage from "@/app/today/page";
 const digest = "a".repeat(64);
 let guidance: Record<string, any>;
 let context: Record<string, any>;
+let returnedUndoContext: Record<string, any> | null;
 let receipts: Array<Record<string, any>>;
 let completed: number;
 let writes: Array<{ path: string; body: Record<string, any> }>;
@@ -23,8 +24,9 @@ let loadSemantics: string;
 let variantLoadSemantics: string;
 const sourceInstructions = "Perform the source warm-up protocol before working sets.";
 function envelope() {
-  return { next_exposure: { id: variant ? "d".repeat(64) : digest, evidence_revision: variant ? "d".repeat(64) : digest, scope: "next_exposure", action: variant ? "monitor" : "hold", recommended_weight: variant ? null : 50,
-    known_baseline_weight: variant ? null : 50, prefill_available: !variant, reason_codes: [], explanation: "Working advice", evidence: { completed_exposure_count: 2, comparable_completed_exposure_count: 2, actual_rpe_count: 6 }, equipment_feasibility: { limitations: [] }, decision_trace: {} },
+  const unqualified = variant || context.basis === "unknown";
+  return { next_exposure: { id: unqualified ? "d".repeat(64) : digest, evidence_revision: unqualified ? "d".repeat(64) : digest, scope: "next_exposure", action: unqualified ? "monitor" : "hold", recommended_weight: unqualified ? null : 50,
+    known_baseline_weight: unqualified ? null : 50, prefill_available: !unqualified, reason_codes: [], explanation: "Working advice", evidence: { completed_exposure_count: 2, comparable_completed_exposure_count: 2, actual_rpe_count: 6 }, equipment_feasibility: { limitations: [] }, decision_trace: {} },
     remaining_sets: null, load_context: context, effective_sets: receipts, warmup_guidance: guidance };
 }
 function exercise() {
@@ -36,6 +38,7 @@ function exercise() {
     ...(variant ? { performed_variant: { option_id: "option", id: "alternative", name: "Approved Variant", load_semantics: variantLoadSemantics, permission: {} } } : {}) };
 }
 beforeEach(() => {
+  returnedUndoContext = null;
   context = { unit: "kg", display_unit: "lb", basis: "total_external", increment: 0.5, increment_unit: "kg" };
   guidance = { version: "authored-warmup-v1", id: digest, evidence_revision: digest, source_count: "2", count: 2, status: "suggested", source_instructions: sourceInstructions,
     sets: [{ set_index: 1, suggested_weight: 25.25, reps_min: 5, reps_max: 8, percent: 50 }, { set_index: 2, suggested_weight: 35.25, reps_min: 3, reps_max: 4, percent: 70 }], reason_codes: [], explanation: "Source qualified warm-ups", equipment_feasibility: {}, decision_trace: {} };
@@ -78,7 +81,7 @@ beforeEach(() => {
         receipts = receipts.map(r => ({ ...r, ...body, id: "corrected-receipt" }));
         return Response.json({ status: "ok", original_set_id: "receipt-1", effective_set_id: "corrected-receipt", load_intelligence: envelope() });
       }
-      if (path.endsWith("/undo-last-set")) { receipts = receipts.slice(0, -1); return Response.json({ status: "ok", load_intelligence: envelope() }); }
+      if (path.endsWith("/undo-last-set")) { receipts = receipts.slice(0, -1); if (returnedUndoContext) context = returnedUndoContext; return Response.json({ status: "ok", load_intelligence: envelope() }); }
     }
     return Response.json({});
   }));
@@ -373,4 +376,47 @@ test("reporting pain then explicitly undoing source warm-ups allows confirmation
     { action: "report", reason: "pain", expected_revision: 0 }, { action: "confirm", option_id: "option", expected_revision: 1 },
   ]);
   expect(screen.getByText("Set 1/3")).toBeInTheDocument();
+});
+
+
+test.each(["kg", "lb"])("warm-up-only reload then undo synchronizes a restored .5 %s increment to the returned unknown context without remounting drafts", async restoredUnit => {
+  context.increment_unit = restoredUnit;
+  receipts = [
+    { id: "unknown-warmup", set_index: 1, set_kind: "warmup", parent_set_index: null, technique: null, reps: 5, weight: 25.25, rpe: null, created_at: "2026-10-13T12:00:00" },
+    { id: "declared-warmup", set_index: 2, set_kind: "warmup", parent_set_index: null, technique: null, reps: 3, weight: 35.25, rpe: null, created_at: "2026-10-13T12:01:00" },
+  ];
+  const firstView = await open(); firstView.unmount(); await open();
+  expect(screen.getByRole("spinbutton", { name: "Known increment (optional)" })).toHaveValue(0.5);
+  expect(screen.getByRole("combobox", { name: "Increment unit" })).toHaveValue(restoredUnit);
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Weight (lb)" }), { target: { value: "60" } });
+  fireEvent.click(screen.getByRole("button", { name: "Edit warm-up 1" }));
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Corrected reps" }), { target: { value: "7" } });
+  returnedUndoContext = { unit: "kg", display_unit: "lb", basis: "unknown", increment: null, increment_unit: "kg", equipment_key: null };
+  guidance = { ...guidance, status: "manual", sets: guidance.sets.map((set: any) => ({ ...set, suggested_weight: null })) };
+  fireEvent.click(screen.getByRole("button", { name: "Undo Last Warm-up" }));
+  await waitFor(() => expect(screen.queryByRole("button", { name: "Edit warm-up 2" })).toBeNull());
+  expect(screen.getByRole("spinbutton", { name: "Known increment (optional)" })).toHaveValue(null);
+  expect(screen.getByRole("combobox", { name: "Increment unit" })).toHaveValue("kg");
+  expect(screen.getByRole("spinbutton", { name: "Weight (lb)" })).toHaveValue(60);
+  expect(screen.getByRole("spinbutton", { name: "Corrected reps" })).toHaveValue(7);
+  fireEvent.click(screen.getByRole("button", { name: "Preview load guidance" }));
+  await waitFor(() => expect(writes.some(write => write.path.endsWith("/load-guidance"))).toBe(true));
+  expect(writes.find(write => write.path.endsWith("/load-guidance"))!.body.load_context).toEqual(returnedUndoContext);
+});
+
+test("increment synchronization preserves edited numeric text and unit changes while preview sends the declared value", async () => {
+  await open();
+  const increment = screen.getByRole("spinbutton", { name: "Known increment (optional)" }) as HTMLInputElement;
+  fireEvent.change(increment, { target: { value: "1.50" } });
+  expect(increment.value).toBe("1.50");
+  fireEvent.change(screen.getByRole("combobox", { name: "Increment unit" }), { target: { value: "lb" } });
+  expect(increment.value).toBe("1.50");
+  fireEvent.click(screen.getByRole("button", { name: "Preview load guidance" }));
+  await waitFor(() => expect(writes.some(write => write.path.endsWith("/load-guidance"))).toBe(true));
+  expect(writes.find(write => write.path.endsWith("/load-guidance"))!.body.load_context).toMatchObject({ increment: 1.5, increment_unit: "lb" });
+  fireEvent.change(increment, { target: { value: "0" } });
+  expect(screen.getByRole("button", { name: "Preview load guidance" })).toBeDisabled();
+  fireEvent.change(increment, { target: { value: "" } });
+  expect(screen.getByRole("button", { name: "Preview load guidance" })).toBeEnabled();
+  expect(increment.value).toBe("");
 });

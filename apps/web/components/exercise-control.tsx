@@ -217,6 +217,14 @@ export function LoadIntelligencePanel({ guidance, completed, total, loadContext,
   const [pending, setPending] = useState(false);
   const [status, setStatus] = useState("");
   const [increment, setIncrement] = useState(loadContext.increment == null ? "" : String(loadContext.increment));
+  useEffect(() => {
+    setIncrement(current => {
+      const declared = loadContext.increment ?? null;
+      const entered = current.trim() === "" ? null : Number(current);
+      // Keep edited text such as 1.50 when it already represents the declared value.
+      return Object.is(entered, declared) ? current : declared == null ? "" : String(declared);
+    });
+  }, [loadContext.increment, loadContext.increment_unit]);
   const [editing, setEditing] = useState<EffectiveLoadSet | null>(null);
   const [editingUnit, setEditingUnit] = useState<LoadContext["display_unit"]>("lb");
   const [reps, setReps] = useState("");
