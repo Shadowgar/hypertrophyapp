@@ -67,4 +67,3 @@ def legacy_project_authored_load_feedback(db, *, user, occurrence, exercise, sup
         next_decision=next_offered, context=context, user_id=user.id)
     return {"next_exposure": next_offered, "warmup_guidance": warmup,
         "remaining_sets": remaining, "load_context": context, "effective_sets": effective_receipts(records)}
-
