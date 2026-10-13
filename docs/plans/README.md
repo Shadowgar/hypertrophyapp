@@ -14,6 +14,7 @@ One forward roadmap: [M0–M6 milestones](../roadmap/milestones.md). A plan desc
 | [Deferred security hardening](security-hardening.md) | Cross-release security follow-ups outside urgent closure. | **Proposed**; scope/owners and individual package approval pending. |
 | [M2B-1 actual-date scheduling](m2b-actual-date-scheduling.md) | Manual current-week dates, lossless placement, occurrence revisions and Today/Week routing. | PR #76 merged / separately owner-authorized live 0021 and API/web activation completed; [activation evidence](../evidence/2026-10-06-m2b-activation.md). M2B-1 LIVE; remaining M2B stays separate. |
 | [M2A-1 completed-exposure load intelligence](m2a-load-intelligence.md) | Authored completed-exposure load-only decisions, optional actual RPE, prefill/override and effective-history reconstruction. | Owner-authorized implementation in the 2026-10-06 merge/deploy-M2B and implement-M2A task; isolated qualification and unmerged PR required. No M2A migration/deployment or merge authorization. |
+| [M2A-2 authored warm-up guidance](m2a-authored-warmup-guidance.md) | LOAD-008 source-preserving guidance and distinct warm-up receipts in Today. | Owner-authorized implementation on the deployed M2A-1 base; isolated qualification and PR review required. No merge, deployment or live data changes authorized. |
 
 | Status | Required meaning |
 |---|---|
