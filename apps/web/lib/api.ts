@@ -380,6 +380,7 @@ export type SelectedDatePlanRequest = {
 export type SchedulingContext = {
   timezone: string;
   local_today: string;
+  current_week_start?: string;
   week_start: string;
   selected_dates: string[];
   placement_revision: number;
@@ -1070,7 +1071,7 @@ export const api = {
       }),
     }),
   getLatestWeekPlan: () => request<GeneratedWeekPlan>("/plan/latest-week"),
-  getSchedulingContext: (timezone: string) => request<SchedulingContext>(`/plan/scheduling-context?timezone=${encodeURIComponent(timezone)}`),
+  getSchedulingContext: (timezone: string, weekOffset = 0) => request<SchedulingContext>(`/plan/scheduling-context?timezone=${encodeURIComponent(timezone)}${weekOffset ? `&week_offset=${weekOffset}` : ""}`),
   previewSelectedDates: (payload: SelectedDatePlanRequest) => request<GeneratedWeekPlan>("/plan/selected-dates/preview", {
     method: "POST", body: JSON.stringify(payload),
   }),

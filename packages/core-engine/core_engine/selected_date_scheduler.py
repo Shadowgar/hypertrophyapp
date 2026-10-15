@@ -11,7 +11,7 @@ from .authored_redistribution import AuthoredAllocationInfeasible, redistribute_
 
 
 class SelectedDateError(ValueError):
-    """The requested local dates cannot be used as a current-week schedule."""
+    """The requested local dates cannot be used as a current- or next-week schedule."""
 
 
 @dataclass(frozen=True)
@@ -35,8 +35,8 @@ def validate_selected_week(
     except (ZoneInfoNotFoundError, ValueError, KeyError) as exc:
         raise SelectedDateError("Select a valid IANA timezone") from exc
     current_monday = local_today - timedelta(days=local_today.weekday())
-    if type(week_start) is not date or week_start != current_monday:
-        raise SelectedDateError("Select dates in the current local Monday–Sunday week")
+    if type(week_start) is not date or week_start not in (current_monday, current_monday + timedelta(days=7)):
+        raise SelectedDateError("Select dates in the current or next local Monday–Sunday week")
     if not 2 <= len(selected_dates) <= 5:
         raise SelectedDateError("Select 2–5 workout dates")
     if any(type(value) is not date for value in selected_dates):

@@ -960,6 +960,7 @@ def _prepare_plan_generation_runtime(
     prior_plans_override: list[WorkoutPlan] | None = None,
     latest_plan_override: WorkoutPlan | None = None,
     reference_date: date | None = None,
+    capture_input_digest: bool = False,
 ) -> dict[str, Any]:
     planning_date = reference_date or date.today()
     history_rows = (
@@ -1016,6 +1017,26 @@ def _prepare_plan_generation_runtime(
         prior_plans=prior_plans,
         build_plan_decision_training_state=build_plan_decision_training_state,
     )
+    if capture_input_digest:
+        # Bind the actual persisted evidence consumed above, including effective
+        # corrections/undo, without publishing performed or private values.
+        from hashlib import sha256
+        import json
+
+        def evidence(row):
+            return {column.key: getattr(row, column.key) for column in row.__table__.columns} if row is not None else None
+
+        inputs = {
+            "version": "selected-date-generation-inputs-v1",
+            "history": [evidence(row) for row in history_rows],
+            "exercise_states": [evidence(row) for row in sorted(exercise_states, key=lambda row: row.id)],
+            "soreness": evidence(latest_soreness), "checkin": evidence(latest_checkin),
+            "reviews": [evidence(row) for row in recent_review_cycles],
+            "latest_plan": evidence(latest_plan),
+            "prior_plans": sorted((row.id, row.week_start.isoformat(), row.payload.get("program_template_id")) for row in prior_plans),
+        }
+        runtime["generation_input_digest"] = sha256(json.dumps(inputs, sort_keys=True,
+            separators=(",", ":"), default=str, allow_nan=False).encode()).hexdigest()
     return runtime
 
 
@@ -1668,6 +1689,7 @@ def _build_week_plan_runtime_for_user(
     generation_mode: GenerationMode = "current_week_regenerate",
     reference_date: date | None = None,
     persist_profile_changes: bool = True,
+    selected_authored_week_index: int | None = None,
 ) -> dict[str, Any]:
     effective_days_available = _resolve_effective_days_available(
         current_days_available=current_user.days_available,
@@ -1871,6 +1893,7 @@ def _build_week_plan_runtime_for_user(
         prior_plans_override=filtered_prior_plans,
         latest_plan_override=latest_plan,
         reference_date=reference_date,
+        capture_input_digest=generation_mode == "selected_date_current",
     )
     if (
         generation_mode == "current_week_regenerate"
@@ -1883,6 +1906,16 @@ def _build_week_plan_runtime_for_user(
             pinned_week_index=regenerate_week_index_pin,
             pinned_authored_week_index=regenerate_authored_week_index_pin,
         )
+    if selected_authored_week_index is not None:
+        # Scheduling supplies a source-validated ordinal, never inferred from a
+        # future calendar offset or a count of completed workouts.
+        authored_week_index_override = selected_authored_week_index
+        _apply_current_regenerate_generation_overrides(
+            generation_context=generation_context, selected_template_id=selected_template_id,
+            pinned_week_index=selected_authored_week_index,
+            pinned_authored_week_index=selected_authored_week_index,
+        )
+        generation_context["generation_runtime"]["decision_trace"]["outcome"]["prior_generation_source"] = "selected_date_source_successor"
     generation_runtime = cast(dict[str, Any], generation_context["generation_runtime"])
     runtime_template = template
     generated_full_body_adaptive_loop_policy = None
@@ -2137,6 +2170,7 @@ def _build_week_plan_runtime_for_user(
         "selected_template_id": selected_template_id,
         "response_payload": response_payload,
         "record_values": record_values,
+        "generation_input_digest": generation_context.get("generation_input_digest"),
         "adaptation_persistence_payload": cast(dict[str, Any], finalize_runtime["adaptation_persistence_payload"]),
         "replace_current_week": generation_mode == "current_week_regenerate",
     }
@@ -2386,9 +2420,9 @@ def _reject_legacy_selected_week_mutation(db: Session, current_user: User) -> No
 
 
 @router.get("/plan/scheduling-context")
-def plan_scheduling_context(db: DbSession, current_user: CurrentUser, timezone: str | None = None) -> dict:
+def plan_scheduling_context(db: DbSession, current_user: CurrentUser, timezone: str | None = None, week_start: date | None = None, week_offset: int = 0) -> dict:
     from ..selected_date_plans import scheduling_context
-    return scheduling_context(db, current_user, timezone, datetime.now(UTC))
+    return scheduling_context(db, current_user, timezone, datetime.now(UTC), week_start=week_start, week_offset=week_offset)
 
 
 @router.post("/plan/selected-dates/preview")

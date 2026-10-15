@@ -1,5 +1,5 @@
 import React from "react";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import WeekPage from "@/app/week/page";
 
 const selected = ["2026-10-06", "2026-10-09", "2026-10-11"];
@@ -202,4 +202,50 @@ test("an activation rejected after lock-wait rollover clears previous-week dates
   expect(screen.getAllByRole("checkbox").every((el) => !(el as HTMLInputElement).checked)).toBe(true);
   expect(screen.queryByRole("button", { name: "Activate selected dates" })).not.toBeInTheDocument();
   expect(screen.queryByText(/Selected dates activated/)).not.toBeInTheDocument();
+});
+
+test("switching weeks reloads saved dates and drops the other week's preview", async () => {
+  const originalFetch = globalThis.fetch;
+  const futureDates = ["2026-10-12", "2026-10-15", "2026-10-17"];
+  const futurePlan = { ...plan, week_start: "2026-10-12", sessions: plan.sessions.map((s, i) => ({ ...s, date: futureDates[i] })) };
+  globalThis.fetch = vi.fn(async (input, init) => {
+    if (String(input).includes("/plan/scheduling-context?") && String(input).includes("week_offset=1")) {
+      return Response.json({ ...context, current_week_start: "2026-10-05", week_start: "2026-10-12", selected_dates: futureDates, placement_revision: 2, plan: futurePlan });
+    }
+    return originalFetch(input, init);
+  });
+  render(<WeekPage />);
+  await chooseDates();
+  fireEvent.click(screen.getByRole("button", { name: "Preview selected dates" }));
+  await screen.findByRole("button", { name: "Activate selected dates" });
+  fireEvent.click(screen.getByRole("button", { name: "Next week" }));
+  expect(await screen.findByRole("checkbox", { name: "Mon, Oct 12" })).toBeChecked();
+  expect(screen.getByRole("checkbox", { name: "Thu, Oct 15" })).toBeChecked();
+  expect(screen.queryByRole("button", { name: "Activate selected dates" })).not.toBeInTheDocument();
+  expect(screen.getByText(/Next week:.*Oct 12.*Oct 18/)).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Current week" }));
+  expect(await screen.findByRole("checkbox", { name: "Tue, Oct 6" })).not.toBeChecked();
+  expect(writes.filter((w) => w.path.endsWith("/plan/generate-week"))).toHaveLength(0);
+});
+
+test("a late response from the other week preserves the newer valid preview", async () => {
+  const originalFetch = globalThis.fetch;
+  let releaseOld: (response: Response) => void = () => undefined;
+  let calls = 0;
+  globalThis.fetch = vi.fn(async (input, init) => {
+    if (String(input).includes("/plan/scheduling-context?")) {
+      if (++calls === 2) return new Promise<Response>((resolve) => { releaseOld = resolve; });
+      return Response.json(context);
+    }
+    return originalFetch(input, init);
+  });
+  render(<WeekPage />);
+  await screen.findByRole("checkbox", { name: "Tue, Oct 6" });
+  fireEvent(window, new Event("focus"));
+  fireEvent.click(screen.getByRole("button", { name: "Next week" }));
+  await chooseDates();
+  fireEvent.click(screen.getByRole("button", { name: "Preview selected dates" }));
+  await screen.findByRole("button", { name: "Activate selected dates" });
+  await act(async () => { releaseOld(Response.json(context)); });
+  expect(screen.getByRole("button", { name: "Activate selected dates" })).toBeInTheDocument();
 });
