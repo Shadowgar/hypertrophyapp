@@ -14,11 +14,13 @@ We retrieved original raw bytes (not only connector-rendered text) from five own
 | Comeback Bridge Program.pdf | 2,686,817 bytes, 43 physical pages; PDF p.6 examined/rendered | Re-entry instruction varies by extent/type of prior training |
 | Essentials 4x.xlsx | 163,243 bytes; raw workbook cell values/types and number formats checked | 232 numeric cells have the custom Excel `m\-d` format |
 | Pure Bodybuilding Phase 2 Full Body.xlsx | 167,265 bytes; raw cell/style inspection | 460 numeric cells have the same custom format |
-| Pure Bodybuilding Phase 1 Full Body.xlsx | 145,847 bytes; raw cell/style inspection | 110 numeric cells have the same custom format |
+| Pure Bodybuilding Phase 1 Full Body.xlsx | **143,246 bytes (corrected exact archive version)**; raw cell/style inspection | 110 numeric cells have the same custom format |
 
 **802** custom `m\-d`-formatted numeric cells were found across these three tested workbooks. This count records formatting, **not 802 proven incorrect prescriptions or 802 distinct semantic mistakes**. Many encode displayed *ranges*, but each needs context-specific interpretation.
 
-The historical `docs/guides/asset_catalog.json` metadata SHA-256 exactly matched raw bytes of the two Pure Bodybuilding full-body XLSX files and Comeback Bridge PDF. This verifies their byte identity to three catalog entries, **not** that the prior metadata-only extraction ever interpreted their data properly. The retrieved Fundamentals and Essentials 4x raw hashes did not match entries in that earlier catalog; a similarly titled edition must not be assumed identical.
+**Source-identity correction (2026-10-16):** An earlier local same-basename workbook mount supplied a **145,847-byte historical Phase 1 Full Body XLSX** rather than the **143,246-byte copy in the exact user-supplied archive folder**. The Drive listing-versus-raw-size discrepancy exposed the problem; the exact archive file was refetched and rehashed (**SHA-256 prefix `9d67b025`**, not historical `9a4021f5`). The prior historical catalog now matches **two** of these inspected assets (Phase 2 Full Body XLSX and Comeback Bridge PDF), not three. The two Phase 1 files have **different byte identities** and cannot be silently interchanged. Re-auditing all 21 archived workbooks changed the total numeric-cell count to **22,587** (previously 22,790) and the raw XLSX sum to **2,304,242** (previously 2,306,843). It **did not change** the **3,771** custom range-formatted cells or **460** formulas across the collection. No deployed Authored plan modification has been made.
+
+The retrieved Fundamentals and Essentials 4x raw hashes also did not match an asset in the older catalog; different editions and similarly named materials must remain separately versioned.
 
 ### Critical workbook finding: training ranges masquerading as dates
 
