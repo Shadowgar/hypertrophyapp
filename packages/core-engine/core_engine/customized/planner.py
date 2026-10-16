@@ -31,8 +31,9 @@ RULES_HASH = content_hash({"version": VERSION, "groups": GROUP_ACTIONS, "emphase
     "policy_gate": "bound_approval_or_explicit_nonprescriptive_simulation"})
 
 
-def _validation(profile, catalog, policy, context):
+def _validation(profile, catalog, policy, context, *, allowed_actions=None):
     reasons = []
+    allowed_actions = {a for _, actions in GROUP_ACTIONS for a in actions} if allowed_actions is None else allowed_actions
     if (profile.version != "c1-profile-v1" or context.version != "c1-context-v1"
             or not catalog.version):
         reasons.append("unsupported_input_version")
@@ -93,7 +94,7 @@ def _validation(profile, catalog, policy, context):
         if len(actions) != len(set(actions)):
             reasons.append("invalid_science_policy")
         for d in policy.doses:
-            if (d.action not in {a for _, actions in GROUP_ACTIONS for a in actions}
+            if (d.action not in allowed_actions
                     or any(type(v) is not int or v < 1 for v in (d.sets, d.emphasis_sets, d.reps_min, d.reps_max))
                     or d.reps_min > d.reps_max or d.effort_kind not in {"rir", "rpe10"}
                     or not finite(d.effort_min) or not finite(d.effort_max)
