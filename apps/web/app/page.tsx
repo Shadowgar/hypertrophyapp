@@ -225,7 +225,7 @@ function BlockRadarCard({
           <p className="telemetry-kicker">Block Radar</p>
           <p className="telemetry-value">{formatProgramName(profile)}</p>
         </div>
-        <p className="telemetry-meta">{profile ? `${profile.days_available} training days` : "Profile not set"}</p>
+        <p className="telemetry-meta">{profile ? `${profile.effective_days_available ?? profile.days_available} training days` : "Profile not set"}</p>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
@@ -279,7 +279,7 @@ function MomentumRadarCard({ analytics }: Readonly<{ analytics: HistoryAnalytics
 }
 
 function formatProgramName(profile: Profile | null): string {
-  const selectedProgramId = profile?.selected_program_id?.trim();
+  const selectedProgramId = (profile?.effective_program_id ?? profile?.selected_program_id)?.trim();
   if (!selectedProgramId) {
     return "Choose a program";
   }
@@ -325,7 +325,7 @@ function formatWeekMeta(profile: Profile | null): string {
   if (!profile) {
     return "Set your profile and preferred split";
   }
-  return `${profile.days_available} training days · ${formatProgramName(profile)}`;
+  return `${profile.effective_days_available ?? profile.days_available} training days · ${formatProgramName(profile)}`;
 }
 
 function resolveStatsLabel(analytics: HistoryAnalyticsResponse | null): string {

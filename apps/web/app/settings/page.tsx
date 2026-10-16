@@ -79,8 +79,9 @@ export default function SettingsPage() {
       .then((data) => {
         if (!mounted) return;
         setProfile(data);
-        setPreviewFromDays(Math.max(MIN_TRAINING_DAYS, Math.min(MAX_TRAINING_DAYS, data.days_available || 5)));
-        setPreviewToDays(Math.max(MIN_TRAINING_DAYS, Math.min(MAX_TRAINING_DAYS, Math.min(data.days_available || 5, 3))));
+        const currentDays = (data.effective_days_available ?? data.days_available) || 5;
+        setPreviewFromDays(Math.max(MIN_TRAINING_DAYS, Math.min(MAX_TRAINING_DAYS, currentDays)));
+        setPreviewToDays(Math.max(MIN_TRAINING_DAYS, Math.min(MAX_TRAINING_DAYS, Math.min(currentDays, 3))));
         setEditTrainingLocation(data.training_location ?? "gym");
         setEditEquipment(Array.isArray(data.equipment_profile) ? data.equipment_profile : []);
       })
@@ -108,7 +109,7 @@ export default function SettingsPage() {
     };
   }, []);
 
-  const selectedProgramId = profile?.selected_program_id ?? "pure_bodybuilding_phase_1_full_body";
+  const selectedProgramId = profile?.effective_program_id ?? profile?.selected_program_id ?? "pure_bodybuilding_phase_1_full_body";
   const selectedProgramName = getProgramDisplayName({ id: selectedProgramId });
   const temporaryDurationValidationMessage = validateTemporaryDurationInput(previewDurationWeeksInput);
 

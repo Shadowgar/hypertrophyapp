@@ -26,17 +26,20 @@ if target.get_backend_name() != "postgresql":
 assert os.environ.get("DATABASE_URL") == explicit_url
 assert target.drivername == "postgresql+psycopg"
 assert (target.host, target.port, target.database, target.username) == (
-    "127.0.0.1", 25461, "m2b_qualification", "m2b_test")
+    ("127.0.0.1", 25463, "m2b2_qualification", "m2b2_test")
+    if os.environ.get("M2B2_POSTGRES_ISOLATED") == "1" else
+    ("127.0.0.1", 25461, "m2b_qualification", "m2b_test"))
 # Verify the target before importing the application or binding its engine.
 probe_engine = create_engine(target)
 with probe_engine.connect() as connection:
     identity = connection.execute(text(
         "SELECT current_database(),current_user,inet_server_addr()::text,inet_server_port()"
     )).one()
-    assert tuple(identity[:2]) == ("m2b_qualification", "m2b_test")
+    assert tuple(identity[:2]) == (target.database, target.username)
     assert identity[2] is not None and identity[3] == 5432
     assert connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == (
-        "0021_selected_workout_dates")
+        "0022_authored_load_states" if os.environ.get("M2B2_POSTGRES_ISOLATED") == "1"
+        else "0021_selected_workout_dates")
 probe_engine.dispose()
 
 from fastapi.testclient import TestClient
