@@ -48,8 +48,8 @@ export default function CoachingIntelligencePanel({
         if (!mounted) {
           return;
         }
-        setProfileTemplateId(data.selected_program_id ?? null);
-        const daysAvailable = Number(data.days_available) || 5;
+        setProfileTemplateId(data.effective_program_id ?? data.selected_program_id ?? null);
+        const daysAvailable = Number(data.effective_days_available ?? data.days_available) || 5;
         setPreviewFromDays(Math.max(2, Math.min(7, daysAvailable)));
         setPreviewToDays(Math.max(2, Math.min(7, Math.min(daysAvailable, 3))));
       })

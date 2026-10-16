@@ -1411,18 +1411,19 @@ def coach_intelligence_preview(
     db: DbSession,
     current_user: CurrentUser,
 ) -> IntelligenceCoachPreviewResponse:
-    from ..selected_date_plans import current_scheduled_days
+    from ..selected_date_plans import current_scheduling_profile
     lock_history_user(db, current_user.id)
     if not current_user.split_preference:
         raise HTTPException(status_code=400, detail=PROFILE_INCOMPLETE_DETAIL)
 
+    effective = current_scheduling_profile(db, current_user, datetime.now(UTC))
     preview_runtime = prepare_coach_preview_runtime_inputs(
         preview_request=payload.model_dump(mode="json"),
-        profile_days_available=current_scheduled_days(db, current_user, datetime.now(UTC)),
+        profile_days_available=effective.days_available,
     )
     preview_request = cast(dict[str, Any], preview_runtime["preview_request"])
     explicit_template_id = resolve_selected_program_binding_id(payload.template_id) if payload.template_id else None
-    profile_template_id = resolve_selected_program_binding_id(current_user.selected_program_id)
+    profile_template_id = effective.program_id
 
     try:
         template_runtime = prepare_generation_template_runtime(
@@ -1530,8 +1531,9 @@ def preview_frequency_adaptation(
     db: DbSession,
     current_user: CurrentUser,
 ) -> FrequencyAdaptationResult:
-    from ..selected_date_plans import current_scheduled_days
-    days_available = current_scheduled_days(db, current_user, datetime.now(UTC))
+    from ..selected_date_plans import current_scheduling_profile
+    effective = current_scheduling_profile(db, current_user, datetime.now(UTC))
+    days_available = effective.days_available
     if not days_available or not current_user.split_preference:
         raise HTTPException(status_code=400, detail=PROFILE_INCOMPLETE_DETAIL)
     log_event(
@@ -1539,7 +1541,7 @@ def preview_frequency_adaptation(
         route="/plan/adaptation/preview",
         action="preview_frequency_adaptation",
         user_id=current_user.id,
-        selected_program_id=resolve_selected_program_binding_id(current_user.selected_program_id),
+        selected_program_id=effective.program_id,
         template_id=resolve_selected_program_binding_id(payload.program_id),
         target_days=payload.target_days,
         days_available=days_available,
@@ -1559,7 +1561,7 @@ def preview_frequency_adaptation(
     )
     adaptation_decision_runtime = prepare_frequency_adaptation_decision_runtime(
         requested_program_id=resolve_selected_program_binding_id(payload.program_id),
-        selected_program_id=resolve_selected_program_binding_id(current_user.selected_program_id),
+        selected_program_id=effective.program_id,
         latest_plan=latest_plan,
         latest_soreness_entry=latest_soreness,
         current_days_available=days_available,
@@ -1591,7 +1593,7 @@ def preview_frequency_adaptation(
         route="/plan/adaptation/preview",
         action="preview_frequency_adaptation",
         user_id=current_user.id,
-        selected_program_id=resolve_selected_program_binding_id(current_user.selected_program_id),
+        selected_program_id=effective.program_id,
         template_id=str(adaptation_runtime["program_id"]),
         path_family="generated" if is_generated_full_body_binding_id(str(adaptation_runtime["program_id"])) else "authored",
         target_days=payload.target_days,

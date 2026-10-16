@@ -20,7 +20,10 @@ beforeEach(() => {
   globalThis.fetch = vi.fn();
 });
 
-test("Check-in page renders coaching panel and preview result", async () => {
+test.each([
+  { effectiveDays: undefined, effectiveProgram: undefined, count: 5, program: "pure_bodybuilding_phase_1_full_body" },
+  { effectiveDays: 2, effectiveProgram: "pure_bodybuilding_phase_2_full_body", count: 2, program: "pure_bodybuilding_phase_2_full_body" },
+])("Check-in coaching preview uses active count $count and binding", async ({ effectiveDays, effectiveProgram, count, program }) => {
   // @ts-ignore
   globalThis.fetch.mockImplementation((input, init) => {
     const url = requestUrl(input);
@@ -44,6 +47,8 @@ test("Check-in page renders coaching panel and preview result", async () => {
           JSON.stringify({
             selected_program_id: "pure_bodybuilding_phase_1_full_body",
             days_available: 5,
+            effective_days_available: effectiveDays,
+            effective_program_id: effectiveProgram,
             weight: 84,
             calories: 2700,
             protein: 180,
@@ -112,12 +117,15 @@ test("Check-in page renders coaching panel and preview result", async () => {
   await waitFor(() => {
     expect(screen.getByRole("button", { name: /Generate coaching preview/i })).toBeInTheDocument();
   });
+  await waitFor(() => expect(screen.getByLabelText("From Days")).toHaveValue(count));
 
   fireEvent.click(screen.getByRole("button", { name: /Generate coaching preview/i }));
 
   await waitFor(() => {
     expect(screen.getAllByText(/Recommendation ID: rec_checkin_1/i).length).toBeGreaterThan(0);
   });
+  const calls = vi.mocked(globalThis.fetch).mock.calls.filter(([input]) => requestUrl(input).endsWith("/plan/intelligence/coach-preview"));
+  expect(JSON.parse(String(calls.at(-1)?.[1]?.body))).toMatchObject({ template_id: program, from_days: count, to_days: Math.min(count, 3) });
 });
 
 test("Today page shows load workout button and does not show coaching panel", async () => {

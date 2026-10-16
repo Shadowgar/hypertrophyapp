@@ -28,7 +28,7 @@ from sqlalchemy.orm.attributes import flag_modified
 
 from ..config import settings
 from ..database import get_db
-from ..selected_date_plans import current_scheduled_days, local_week
+from ..selected_date_plans import current_scheduling_profile, local_week
 from ..history_dates import performed_log_rows
 from ..workout_history import effective_set_logs, valid_weekly_reviews, lock_history_user
 from ..deps import get_current_user
@@ -212,9 +212,10 @@ def _build_program_recommendation_training_state(
         .limit(4)
         .all()
     )
+    effective = current_scheduling_profile(db, current_user, datetime.now(UTC))
     return build_plan_decision_training_state(
-        selected_program_id=current_user.selected_program_id,
-        days_available=current_scheduled_days(db, current_user, datetime.now(UTC)),
+        selected_program_id=effective.program_id,
+        days_available=effective.days_available,
         split_preference=current_user.split_preference,
         training_location=current_user.training_location,
         equipment_profile=current_user.equipment_profile,
@@ -267,7 +268,10 @@ def _collect_previous_week_performance_summary(
 @router.get("/profile")
 def get_profile(current_user: CurrentUser, db: DbSession) -> ProfileResponse:
     selected_program_id = resolve_selected_program_binding_id(current_user.selected_program_id)
+    effective = current_scheduling_profile(db, current_user, datetime.now(UTC))
     return ProfileResponse(
+        effective_days_available=effective.days_available,
+        effective_program_id=effective.program_id,
         **build_profile_response_payload(
             email=current_user.email,
             name=current_user.name,
@@ -283,7 +287,7 @@ def get_profile(current_user: CurrentUser, db: DbSession) -> ProfileResponse:
             equipment_profile=current_user.equipment_profile,
             weak_areas=current_user.weak_areas,
             onboarding_answers=current_user.onboarding_answers,
-            days_available=current_scheduled_days(db, current_user, datetime.now(UTC)),
+            days_available=current_user.days_available,
             session_time_budget_minutes=current_user.session_time_budget_minutes,
             movement_restrictions=current_user.movement_restrictions,
             near_failure_tolerance=current_user.near_failure_tolerance,
@@ -337,10 +341,11 @@ def get_training_state(
         .all()
     )
 
-    selected_program_id = resolve_selected_program_binding_id(current_user.selected_program_id)
+    effective = current_scheduling_profile(db, current_user, datetime.now(UTC))
+    selected_program_id = effective.program_id
     payload = build_user_training_state(
         selected_program_id=selected_program_id,
-        days_available=current_scheduled_days(db, current_user, datetime.now(UTC)),
+        days_available=effective.days_available,
         split_preference=current_user.split_preference,
         training_location=current_user.training_location,
         equipment_profile=current_user.equipment_profile,
@@ -471,7 +476,8 @@ def program_recommendation(
     db: DbSession,
     current_user: CurrentUser,
 ) -> ProgramRecommendationResponse:
-    selected_program_id = resolve_selected_program_binding_id(current_user.selected_program_id)
+    effective = current_scheduling_profile(db, current_user, datetime.now(UTC))
+    selected_program_id = effective.program_id
     latest_plan = _latest_plan(db, current_user.id)
     training_state = _build_program_recommendation_training_state(
         db,
@@ -480,7 +486,7 @@ def program_recommendation(
     )
     route_runtime = prepare_profile_program_recommendation_route_runtime(
         selected_program_id=selected_program_id,
-        days_available=current_scheduled_days(db, current_user, datetime.now(UTC)),
+        days_available=effective.days_available,
         split_preference=current_user.split_preference,
         latest_plan=latest_plan,
         available_program_summaries=list_program_templates(),
@@ -499,7 +505,8 @@ def switch_program(
     db: DbSession,
     current_user: CurrentUser,
 ) -> ProgramSwitchResponse:
-    selected_program_id = resolve_selected_program_binding_id(current_user.selected_program_id)
+    effective = current_scheduling_profile(db, current_user, datetime.now(UTC))
+    selected_program_id = effective.program_id
     target_program_id = resolve_selected_program_binding_id(payload.target_program_id) or payload.target_program_id
     latest_plan = _latest_plan(db, current_user.id)
     training_state = _build_program_recommendation_training_state(
@@ -509,7 +516,7 @@ def switch_program(
     )
     route_runtime = prepare_profile_program_recommendation_route_runtime(
         selected_program_id=selected_program_id,
-        days_available=current_scheduled_days(db, current_user, datetime.now(UTC)),
+        days_available=effective.days_available,
         split_preference=current_user.split_preference,
         latest_plan=latest_plan,
         available_program_summaries=list_program_templates(),

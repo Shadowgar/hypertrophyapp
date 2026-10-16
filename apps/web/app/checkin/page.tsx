@@ -70,7 +70,7 @@ export default function CheckinPage() {
         setProtein(String(profile.protein || 0));
         setFat(String(profile.fat || 0));
         setCarbs(String(profile.carbs || 0));
-        setSessionsNextWeek(String(Math.max(2, Math.min(5, profile.days_available || 3))));
+        setSessionsNextWeek(String(Math.max(2, Math.min(5, (profile.effective_days_available ?? profile.days_available) || 3))));
         setStatus(weeklyStatus.review_required ? "Sunday review required" : "Weekly review ready");
       })
       .catch(() => {

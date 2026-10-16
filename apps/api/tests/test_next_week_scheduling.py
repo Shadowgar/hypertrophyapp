@@ -292,7 +292,13 @@ def test_rollover_derives_current_day_count_without_mutating_preferences_or_plan
     monkeypatch.setattr(profile, 'datetime', selected_date_plans.datetime)
     response = client.get('/profile', headers=headers)
     assert response.status_code == 200, response.text
-    assert response.json()['days_available'] == 2
+    assert response.json()['effective_days_available'] == 2
+    assert response.json()['days_available'] == 3
+    # Settings round-trips writable preferences when changing unrelated setup.
+    updated = client.post('/profile', headers=headers, json={**response.json(), 'training_location':'home'})
+    assert updated.status_code == 200, updated.text
+    assert updated.json()['days_available'] == 3
+    assert updated.json()['effective_days_available'] == 2
     observed = []
     owner = plan.prepare_frequency_adaptation_decision_runtime
     def capture(**kwargs):
@@ -314,3 +320,39 @@ def test_rollover_derives_current_day_count_without_mutating_preferences_or_plan
     with SessionLocal() as db:
         assert db.get(User, user_id).days_available == 3
         assert {p.id:p.payload for p in db.query(WorkoutPlan).filter_by(user_id=user_id)} == saved_plans
+
+
+def test_auto_phase_two_rollover_uses_active_binding_without_overwriting_preference(week, monkeypatch):
+    from app import selected_date_plans
+    from app.routers import profile
+    user_id, headers, client = week
+    phase = 'pure_bodybuilding_phase_2_full_body'
+    assert activate(client, headers, request_dates(MONDAY, phase=phase)).status_code == 200
+    with SessionLocal() as db:
+        user = db.get(User, user_id)
+        user.selected_program_id, user.program_selection_mode = None, 'auto'
+        db.commit()
+    request = request_dates(MONDAY + timedelta(days=7), phase=phase)
+    request.pop('template_id')
+    assert activate(client, headers, request).status_code == 200
+    fixed_clock(monkeypatch, datetime(2026,10,12,4,1,tzinfo=UTC))
+    monkeypatch.setattr(profile, 'datetime', selected_date_plans.datetime)
+    response = client.get('/profile', headers=headers)
+    assert response.status_code == 200, response.text
+    assert response.json()['selected_program_id'] is None
+    assert response.json()['effective_program_id'] == phase
+    saved = client.post('/profile', headers=headers, json={**response.json(), 'training_location':'home'})
+    assert saved.status_code == 200, saved.text
+    assert saved.json()['selected_program_id'] is None
+    assert saved.json()['effective_program_id'] == phase
+    recommendation = client.get('/profile/program-recommendation', headers=headers)
+    assert recommendation.status_code == 200, recommendation.text
+    assert recommendation.json()['current_program_id'] == phase
+    switch = client.post('/profile/program-switch', headers=headers, json={'target_program_id':phase})
+    assert switch.status_code == 200, switch.text
+    assert switch.json()['current_program_id'] == phase
+    assert switch.json()['applied'] is False
+    with SessionLocal() as db:
+        assert db.get(User,user_id).selected_program_id is None
+        assert db.get(User,user_id).program_selection_mode == 'auto'
+        assert db.query(WorkoutPlan).filter_by(user_id=user_id).count() == 2

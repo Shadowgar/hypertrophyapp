@@ -19,7 +19,7 @@ beforeEach(() => {
   globalThis.fetch = vi.fn();
 });
 
-test("check-in page surfaces review command center and adaptive output", async () => {
+test.each([{ effectiveDays: undefined, expectedDays: 4 }, { effectiveDays: 2, expectedDays: 2 }])("check-in page uses current count $expectedDays for review defaults", async ({ effectiveDays, expectedDays }) => {
   // @ts-ignore
   globalThis.fetch.mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
     const url = resolveUrl(input);
@@ -83,6 +83,7 @@ test("check-in page surfaces review command center and adaptive output", async (
             weak_areas: ["chest"],
             onboarding_answers: {},
             days_available: 4,
+            effective_days_available: effectiveDays,
             nutrition_phase: "maintenance",
             calories: 2800,
             protein: 220,
@@ -191,7 +192,7 @@ test("check-in page surfaces review command center and adaptive output", async (
     const last = reviewCalls[reviewCalls.length - 1];
     const init = last[1] as RequestInit | undefined;
     const payload = JSON.parse(String(init?.body || "{}"));
-    expect(payload.sessions_next_week).toBe(4);
+    expect(payload.sessions_next_week).toBe(expectedDays);
     expect(payload.week_start).toBe("2026-03-09");
   });
 
@@ -228,5 +229,5 @@ test("check-in page surfaces review command center and adaptive output", async (
   const nextWeekCalls = globalThis.fetch.mock.calls.filter((entry) => resolveUrl(entry[0]).includes("/plan/next-week"));
   const lastNextWeekInit = nextWeekCalls[nextWeekCalls.length - 1][1] as RequestInit | undefined;
   const nextWeekPayload = JSON.parse(String(lastNextWeekInit?.body || "{}"));
-  expect(nextWeekPayload.target_days).toBe(4);
+  expect(nextWeekPayload.target_days).toBe(expectedDays);
 });

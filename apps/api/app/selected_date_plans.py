@@ -4,6 +4,7 @@ Execution/consent snapshots freeze the whole week's placement in this slice.
 Preview uses a transient profile and never flushes or commits a planning change.
 """
 from copy import deepcopy
+from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from hashlib import sha256
 import json
@@ -77,24 +78,34 @@ def active_selected_plans(plans: list[WorkoutPlan], week_start: date) -> list[Wo
     return [p for p in plans if p.week_start == week_start and (p.payload.get('schedule') or {}).get('mode') == SELECTED_MODE]
 
 
-def current_scheduled_days(db: Session, user: User, planning_instant: datetime) -> int | None:
-    """Read the current dated plan's count without rewriting profile preferences.
+@dataclass(frozen=True)
+class CurrentSchedulingProfile:
+    days_available: int | None
+    program_id: str | None
+
+
+def current_scheduling_profile(db: Session, user: User, planning_instant: datetime) -> CurrentSchedulingProfile:
+    """Read effective count/binding without rewriting editable preferences.
 
     A future activation takes effect here only on its local Monday. Legacy
     profiles and weeks without a dated plan keep the stored availability.
     """
+    fallback = CurrentSchedulingProfile(user.days_available, resolve_selected_program_binding_id(user.selected_program_id))
     if not user.scheduling_timezone:
-        return user.days_available
+        return fallback
     _, monday = local_week(user.scheduling_timezone, planning_instant)
     rows = active_selected_plans(db.query(WorkoutPlan).filter_by(user_id=user.id, week_start=monday).all(), monday)
     if not rows:
-        return user.days_available
+        return fallback
     if len(rows) != 1 or rows[0].schedule_timezone != user.scheduling_timezone:
         raise HTTPException(409, 'Current dated schedule requires reconciliation')
     dates = (rows[0].payload.get('schedule') or {}).get('selected_dates') or []
     if not 2 <= len(dates) <= 5 or len(set(dates)) != len(dates):
         raise HTTPException(409, 'Current dated schedule count requires reconciliation')
-    return len(dates)
+    binding = resolve_selected_program_binding_id(rows[0].payload.get('program_template_id'))
+    if not binding:
+        raise HTTPException(409, 'Current dated program requires reconciliation')
+    return CurrentSchedulingProfile(len(dates), binding)
 
 
 def validate_request(payload, planning_instant: datetime) -> SelectedWeek:
