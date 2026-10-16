@@ -39,7 +39,7 @@ Currier et al., 2023, *Resistance training prescription for muscle strength and 
 
 ### E05-C — 2024 split-versus-Full-Body meta-analysis, **publisher full text/methods inspected**
 
-Ramos-Campo et al., 2024, [PMID 38595233](https://pubmed.ncbi.nlm.nih.gov/38595233/), DOI `10.1519/JSC.0000000000004774` ([journal article](https://journals.lww.com/nsca-jscr/fulltext/2024/07000/efficacy_of_split_versus_full_body_resistance.19.aspx)).
+Ramos-Campo et al., 2024, [PMID 38595233](https://pubmed.ncbi.nlm.nih.gov/38595233/), DOI `10.1519/JSC.0000000000004774` ([publisher DOI](https://doi.org/10.1519/JSC.0000000000004774)).
 
 - Fourteen studies, **392 participants**, split routines compared against Full Body, with volume-equated analyses. Search through **June 23, 2023**; eligibility constrained to **adults 18–39**, with only two women-only samples and one mixed-sex sample among 14 studies. Reported mean age approximately 25 years. The review was PROSPERO registered and its authors classified **10/14 included RCTs low overall risk of bias, four some concerns**.
 - No statistically significant pooled differences in assessed elbow-flexor/extensor or vastus lateralis size or lean-body-mass proxies; several outcome comparisons use only **four to six trials**, with wide intervals. The authors' review evidence is not a head-to-head test of *every* Upper/Lower, PPL, hybrid, twice-per-week or rolling calendar arrangement.
