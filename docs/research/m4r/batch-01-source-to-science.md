@@ -69,7 +69,7 @@ Source anchors above were identified from the program PDFs' extracted text and v
 
 **Source observed.** Pure Bodybuilding highlights lengthened partials; Phase 2 uses them both as exercise variations and sometimes as beyond-failure extensions. These are distinct training operations (S02, S03, Intensity Techniques near printed pp.12–14).
 
-**Independent evidence.** A multisite 2025 RCT (n=297 completing pre-randomization assignment, with actual outcome retention requiring full-text check) found small group-level contrasts between lengthened partials and full ROM in the tested arm/thigh outcomes; the pre-specified strict equivalence threshold was **not conclusively met**. A smaller 2026 trained-men study found no detectable difference for vastus lateralis over 8 weeks. A 2026 systematic review suggests longer versus shorter muscle-length training may have benefits but notes mixed, methodologically constrained evidence; longer-muscle-length exposure is not identical to lengthened-only partials (P07, P08, P09).
+**Independent evidence.** A multisite 2025 RCT (n=297 allocated across the reported trial groups; outcome attrition requires full-text verification) found small group-level contrasts between lengthened partials and full ROM in the tested arm/thigh outcomes; the pre-specified strict equivalence threshold was **not conclusively met**. A smaller 2026 trained-men study found no detectable difference for vastus lateralis over 8 weeks. A 2026 systematic review suggests longer versus shorter muscle-length training may have benefits but notes mixed, methodologically constrained evidence; longer-muscle-length exposure is not identical to lengthened-only partials (P07, P08, P09).
 
 **Preliminary reconciliation.** Do not collapse "lengthened training", "lengthened-only partial repetitions" and "partials after failure" into one scientific claim. Effects may differ by muscle, movement and full vs partial loading.
 
@@ -141,7 +141,7 @@ Source anchors above were identified from the program PDFs' extracted text and v
 | P04 | 2024 proximity-to-failure meta-regressions, PMID [38970765](https://pubmed.ncbi.nlm.nih.gov/38970765/) | Exploratory estimates of RIR; correlation is not a precise per-set failure mandate |
 | P05 | 2025 single-set failure versus 2-RIR RCT, PMID [40249908](https://pubmed.ncbi.nlm.nih.gov/40249908/) | n=42; short duration, specific single-set design |
 | P06 | 2024 rest interval Bayesian review, PMID [39205815](https://pubmed.ncbi.nlm.nih.gov/39205815/) | Nine studies; heterogeneous and imprecise |
-| P07 | 2025 multisite lengthened partials/full ROM RCT, PMID [41055237](https://pubmed.ncbi.nlm.nih.gov/41055237/) | 15 centers, n=297 allocated; strict equivalence not definitively established |
+| P07 | 2025 multisite lengthened partials/full ROM RCT, PMID [41055237](https://pubmed.ncbi.nlm.nih.gov/41055237/) | 15 sites, n=297 assigned across reported groups; strict equivalence not definitively established |
 | P08 | 2026 lengthened partials/full ROM trained-men study, PMID [42841600](https://pubmed.ncbi.nlm.nih.gov/42841600/) | n=16 in chronic arm, 8 weeks, vastus lateralis outcome |
 | P09 | 2026 longer-versus-shorter muscle-length review, PMID [41646176](https://pubmed.ncbi.nlm.nih.gov/41646176/) | Eight studies, n=120; mixed indirect architectural evidence, not identical to partial-ROM comparison |
 | P10 | 2022 periodization meta-analysis, PMID [35044672](https://pubmed.ncbi.nlm.nih.gov/35044672/) | 35 studies; strength benefit, no general volume-equated hypertrophy difference |
