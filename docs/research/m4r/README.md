@@ -32,6 +32,8 @@ Seven high-priority manuals were read at selected sections through Google Drive'
 ## Research artifacts
 
 - [Batch 01: source-to-science comparison](batch-01-source-to-science.md): individual hypotheses, Nippard source anchors, independent scientific findings, limitations and *nonbinding* programming implications.
+- [Batch 02: raw-file fidelity and full-text methods review](batch-02-source-fidelity-and-fulltext.md): original PDFs/pages, OOXML cell formatting traps, historical citation validation and four full-text scientific assessments.
+- [Batch 02 raw-source register](source-audit-batch-02.csv): verified source SHA-256/byte identity and field-format counts, not source document content.
 - [Research protocol](protocol.md): appraisal workflow, evidence hierarchy, source licensing, scope and approval gates.
 - [Claim register](claims.csv): machine-readable status for research tasks; **never consume this CSV as runtime prescription rules.**
 
@@ -45,7 +47,7 @@ The prior `docs/guides/asset_catalog.json` records 46 metadata-only assets from 
 - **Appraised:** verified full text, design, bias, applicability, overlapping evidence and uncertainty.
 - **Approved:** the owner has separately accepted a bounded versioned policy and tests.
 
-All current Batch 01 claims are *preliminary reconciliation* at most. No review has been registered or independently double-screened. In particular, PubMed abstracts alone do not justify confident GRADE ratings.
+Batch 01 claims remain provisional. Batch 02 verified original pages in two PDFs and raw cell/style data in three XLSX workbooks, plus obtained and selectively critically read four full PubMed Central research articles. **This does not certify all 78 documents, all cited studies, complete supplemental tables, independent review or any numerical programming recommendation.** No review has been registered or independently double-screened; neither abstracts nor limited full-text examinations justify confident GRADE ratings.
 
 ## Non-goals and prohibitions
 
