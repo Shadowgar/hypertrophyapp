@@ -91,3 +91,37 @@ env -i PATH=/usr/bin:/bin PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=packages/core-eng
 ```
 
 `plan_pilot` requires explicit candidate standard/design/catalog injection and `simulate=True`. Hashes of those inputs plus context and evidence support deterministic replay. Neither a content hash nor omission acceptance can activate a prescription. [Verification evidence](../../evidence/2026-10-16-m4-c2-full-body-pilot.md) records tests and the inherited red CI baseline.
+
+## Review correction: shorter original gym comparator
+
+**CANDIDATE FOR EXPERT REVIEW / NONPRESCRIPTIVE.** `shorter_gym_standard()` explicitly injects a second current-user dose policy into the same original action/order design. It has **33 working sets/week, 11/day**, versus 45 and 15/day above. It removes the three emphasis bonus sets and reduces nine accessory sets. It retains the same seven setups/day, 1–3 RIR targets, rest ranges, warmup, work duration, transitions and margin. There are no assumed superset savings or faster station changes.
+
+| Day | Full shorter candidate, working sets × reps | Full modeled duration |
+|---|---|---:|
+| A | Leg press 2×8–12; chest press 2×8–12; supported machine row 2×8–12; seated leg curl 2×10–15; lateral raise 1×12–20; machine calf raise 1×12–20; crunch 1×12–20 | 35.75–57.5 min |
+| B | DB RDL 2×8–12; pulldown 2×8–12; DB shoulder press 2×8–12; leg press 2×8–12; hammer curl 1×10–15; overhead extension 1×10–15; rear lateral raise 1×12–20 | 36.75–59 min |
+| C | Chest press 2×8–12; leg press 2×8–12; supported machine row 2×8–12; seated leg curl 2×10–15; lateral raise 1×12–20; machine calf raise 1×12–20; crunch 1×12–20 | 35.75–57.5 min |
+
+The upper bounds fit a hard 60 **under the same synthetic timing assumptions**. Hard 45 still fails. First-time teaching, crowding or longer preparation can exceed those estimates, so this is not a measured guarantee. A/C components are warmup 8–12, work 8.25–11, rest 7–10.5, setup 3.5–7, transitions 6–12 and margin 3–5 minutes; B rest is 8–12.
+
+| Direct primary region | Longer / shorter weekly sets | Original current band | Consequence |
+|---|---:|---:|---|
+| Quadriceps | 7 / 6 | 6–9 | Lower, within candidate band |
+| Glutes | 10 / 8 | 6–12 | Lower, within candidate band |
+| Hamstrings | 7 / 6 | 5–9 | Lower, within candidate band |
+| Chest | 5 / 4 | 4–8 | Lower, within candidate band |
+| Upper back | 4 / 4 | 4–8 | Same nominal primary count |
+| Lats | 2 / 2 | 2–6 | Same nominal primary count |
+| Anterior deltoid | 2 / 2 | 2–4 | Same nominal primary count |
+| Lateral deltoid | 4 / 2 | 4–6 | Below original floor |
+| Posterior deltoid | 2 / 1 | 2–4 | Below original floor |
+| Elbow flexors | 2 / 1 | 2–4 | Below original floor |
+| Triceps | 2 / 1 | 2–4 | Below original floor |
+| Calves | 4 / 2 | 4–6 | Below original floor |
+| Trunk | 4 / 2 | 4–6 | Below original floor |
+
+All 13 desired actions and regions remain nominally present; **six dose floors fail**. Without explicit acceptance the result is `infeasible` / coverage `incomplete`. Each of those six `dose` omissions needs its own reason and confirmation reference; accepting them yields `accepted_limited_candidate`, never `complete_candidate`, still `policy_not_approved`, `can_activate=False`. Original bands are deliberately preserved rather than lowered to manufacture success. Secondary and unknown ledgers stay separate.
+
+This offers less direct work, especially for arms, deltoids, calves and trunk, in exchange for fitting the modeled budget. It may sacrifice hypertrophy opportunity; the magnitude is unknown. Neither nominal completeness nor expected hypertrophy per minute is a validated optimization score. The longer candidate itself has only 5 direct chest, 2 lat and 4 upper-back sets; whether its 21 setups/week and accessory emphasis are a good use of a particular person's time is unresolved. Neither design is proven equal, optimal or the fastest route to gains.
+
+Uniform RIR targets are fallible self-reports, not validated fatigue/injury protection. The exact thresholds, evidence ages and review-only deload proposal remain professional/owner decisions. Leg-press glute/hamstring involvement varies with ROM and setup; the supported-row regional split and adapted floor/dumbbell variants also require specific professional verification. Source hashes bind local descriptions, not verified remote bytes. This fixed-skeleton comparison is not adaptive topology or training-response optimization.

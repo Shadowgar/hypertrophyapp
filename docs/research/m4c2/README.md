@@ -26,7 +26,7 @@ It reuses C1 selection, validation, time accounting and M2A-compatible completed
 - Assign a verifiable qualified strength/conditioning reviewer and accept/revise the bounded population and supervision exclusions.
 - Accept/revise the exact three starting tiers, direct-region bands, RIR/rest/spacing/warmup choices and the deliberately modest trained-user starting volume. Decide whether another candidate with more volume and longer sessions is needed; do not call this the proven maximum-growth plan.
 - Qualify each variant, regional mapping, adapted ROM, skill and restriction description. Decide which limited dumbbell gaps are acceptable; a hinge is not a knee curl and a row is not a vertical pull.
-- Choose the time contract: the current-user gym candidate needs approximately 44–71 minutes in the synthetic model; a hard 60-minute requirement needs an explicitly revised design or dose.
+- Choose the time contract: the current-user gym candidate needs approximately 44–71 minutes in the synthetic model; the shorter 33-set comparator fits the synthetic hard-60 upper estimate only with six explicit direct-dose tradeoffs; choose or revise that comparison.
 - Review evidence admission and rapid working-load calibration, including thresholds/ages, incomplete and one-set calibration occurrences, unknown effort, pain and verified attainable loads. Approve no automatic max conversion.
 - Decide the separate future progression/deload rules; C2 proposes review triggers, does not implement C4 adaptation. Owner then records explicit numerical-policy acceptance; release remains a separate decision.
 

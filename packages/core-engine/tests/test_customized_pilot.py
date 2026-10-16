@@ -215,3 +215,39 @@ def test_missing_standard_and_authored_profile_cannot_generate_and_c1_stays_sepa
     result = plan_full_body(profile=synthetic_profile(), catalog=review_catalog(), policy=candidate_standard("current").science,
         context=explicit_context(), allow_provisional_preview=True)
     assert result.status == "invalid_input" and not result.sessions
+
+
+def test_shorter_gym_candidate_fits_60_only_as_explicit_limited_dose_tradeoff():
+    from research.m4c2.science import shorter_gym_standard
+    standard = shorter_gym_standard()
+    p = synthetic_profile(cap=60, cap_kind="hard")
+    result = plan(profile=p, standard=standard)
+    assert result.plan.status == "infeasible"
+    assert result.missing_actions == result.missing_regions == ()
+    assert set(result.dose_conflicts) == {"lateral_deltoid", "posterior_deltoid", "elbow_flexors", "triceps", "calves", "trunk"}
+    assert [sum(e.sets for e in s.exercises) for s in result.plan.sessions] == [11, 11, 11]
+    assert [s.duration.total_seconds.high / 60 for s in result.plan.sessions] == [57.5, 59, 57.5]
+    assert all(e.effort_min == 1 and e.effort_max == 3 for s in result.plan.sessions for e in s.exercises)
+    acceptance = tuple(CoverageOmission("dose", r, "Explicit synthetic time/dose tradeoff", "test-short-review") for r in result.dose_conflicts)
+    limited = plan(profile=p, standard=standard, accepted_omissions=acceptance)
+    assert limited.coverage_status == "accepted_limited_candidate" and limited.plan.status == "policy_not_approved"
+    assert not limited.plan.can_activate and not limited.plan.prescriptive
+    hard45 = plan(profile=replace(p, session_cap_minutes=45), standard=standard, accepted_omissions=acceptance)
+    assert hard45.plan.status == "infeasible"
+    assert "hard_session_cap_exceeded" in hard45.plan.reasons
+    assert [sum(e.sets for e in s.exercises) for s in plan().plan.sessions] == [15, 15, 15]
+
+
+def test_shorter_candidate_preserves_rest_and_time_inputs_and_exposes_actual_primary_loss():
+    from research.m4c2.science import shorter_gym_standard
+    original, short = candidate_standard("current"), shorter_gym_standard()
+    assert short.science.warmup_seconds == original.science.warmup_seconds
+    assert short.science.transition_seconds == original.science.transition_seconds
+    assert short.science.margin_seconds == original.science.margin_seconds
+    assert short.direct_region_bands == original.direct_region_bands
+    assert [(d.action,d.rest_seconds) for d in short.science.doses] == [(d.action,d.rest_seconds) for d in original.science.doses]
+    result = plan(standard=short)
+    counts = {r.region:r.primary_sets for r in result.region_totals}
+    assert counts == {"quadriceps":6,"glutes":8,"hamstrings":6,"chest":4,"upper_back":4,"lats":2,
+        "anterior_deltoid":2,"lateral_deltoid":2,"posterior_deltoid":1,"elbow_flexors":1,"triceps":1,
+        "calves":2,"trunk":2,"regional_distribution_unquantified":0}

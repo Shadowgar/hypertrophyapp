@@ -80,3 +80,20 @@ def dumbbell_design():
             slots.append(slot)
         sessions.append(replace(session, slots=tuple(slots)))
     return replace(design, version="original-db-limited-option-v1", sessions=tuple(sessions))
+
+
+def shorter_gym_standard():
+    """Explicit time/dose comparator, not an equally effective optimization.
+
+    Preserve bands so six reduced accessory doses fail their original floors.
+    Callers must explicitly accept each visible dose tradeoff for a limited
+    candidate; no acceptance, human qualification or activation is implicit.
+    """
+    from dataclasses import replace
+    original = candidate_standard("current")
+    two_set_actions = {"knee_extension", "hip_extension", "knee_flexion", "horizontal_press",
+                       "horizontal_pull", "vertical_press", "vertical_pull"}
+    doses = tuple(replace(d, sets=2 if d.action in two_set_actions else 1,
+        emphasis_sets=2 if d.action in two_set_actions else 1) for d in original.science.doses)
+    return replace(original, version="training-science-standard-v1-current-short-gym-review-required",
+        science=replace(original.science, version="tss-v1-current-short-gym-candidate-2026-10-16", doses=doses))

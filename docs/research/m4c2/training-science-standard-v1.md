@@ -79,3 +79,7 @@ These modest direct amounts, particularly lats/arms/deltoids, are **not** repres
 | Release owner | No release requested/approved | Separate decision after actual integration and outcome/acceptance evidence |
 
 No more broad research is required to review this finite candidate. A reviewer can accept/revise/reject individual rows now; unresolved rows remain `review_required` with the stated abstention alternative. Passing tests establishes deterministic modeling, not physiological efficacy or permission to prescribe.
+
+## Shorter gym comparator added after PR review
+
+[PR #88 owner review](https://github.com/Shadowgar/hypertrophyapp/pull/88) requests an honest hard-60 option. `shorter_gym_standard()` is a separately versioned provisional comparator: compounds and knee flexion two sets/slot, other accessories one, no emphasis bonus; all other policy/timing values and original region bands unchanged. [The complete comparison](example-week.md#review-correction-shorter-original-gym-comparator) shows 33 vs 45 sets/week, upper estimates 57.5/59/57.5 minutes and six unmet direct-dose floors. This is a time/workload tradeoff, not equivalent-gain evidence, an accepted new standard or a scientific response-per-minute function. The original matrix, reviewer/owner pending statuses and value-free alternatives still apply.
