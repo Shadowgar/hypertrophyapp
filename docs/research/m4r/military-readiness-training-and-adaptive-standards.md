@@ -73,7 +73,7 @@ No fixed number of weeks, mile percentage progression, universal ruck starting w
 | Case | Required program behavior; no code yet |
 | --- | --- |
 | **Army noncombat** | User selects verified 2026 AFT general; 3RM deadlift, pushups, SDC, plank, 2mi; 300 aggregate and every 60 required. A large composite cannot hide a pushup failure. |
-| **Army CFT combat** | AFT 350 in 21 designated MOS and **additional** CFT where in 24 approved occupational set; continuous <=30min 7 tasks; future Apr 2027 record date; don't merge 1RM, 3RM or CFT times. |
+| **Army CFT combat** | AFT combat 350 applies to **24 designated specialties after the April 17 2026 Army Directive expanded the former 21 by 12D, 89D and 89E**; additionally CFT is required for its official 24-role list. Continuous <=30min 7 tasks; future Apr 2027 record date; don't merge 1RM, 3RM or CFT times. |
 | **Marine combat** | Adult Marine gets specific combat PMOS male-age-normed PFT ≥210 and separate Marine CFT. A noncombat Marine uses different chart; OCS induction is a separate standard. |
 | **Navy general vs Navy combat** | PRT age/sex modality; Navy combat CFT 800m fins, weighted calisthenics/run, each pass; candidate PST not interchangeable. Swimming practice requires supervision when inexperienced. |
 | **Air Force** | New July 2026 2mi/HAMR and 50/20/15/15 distribution; strength/core/cardio conditions plus scored WHtR; reserve annual differs from active biannual and Special Warfare charts differ. |
