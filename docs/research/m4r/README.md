@@ -33,7 +33,8 @@ Seven high-priority manuals were read at selected sections through Google Drive'
 
 - [Batch 01: source-to-science comparison](batch-01-source-to-science.md): individual hypotheses, Nippard source anchors, independent scientific findings, limitations and *nonbinding* programming implications.
 - [Batch 02: raw-file fidelity and full-text methods review](batch-02-source-fidelity-and-fulltext.md): original PDFs/pages, OOXML cell formatting traps, historical citation validation and four full-text scientific assessments.
-- [Batch 02 raw-source register](source-audit-batch-02.csv): verified source SHA-256/byte identity and field-format counts, not source document content.
+- [Batch 02 raw-source register](source-audit-batch-02.csv): verified source SHA-256/byte identity and page anchors for the first five files.
+- [All 21 workbooks: structural audit](workbook-audit-all-21.md) and [metadata CSV](workbook-audit-21.csv): original file hashes, worksheet counts, 3,771 range-format cells and 460 formulas. **Not** full source-semantic qualification.
 - [Research protocol](protocol.md): appraisal workflow, evidence hierarchy, source licensing, scope and approval gates.
 - [Claim register](claims.csv): machine-readable status for research tasks; **never consume this CSV as runtime prescription rules.**
 
@@ -47,7 +48,7 @@ The prior `docs/guides/asset_catalog.json` records 46 metadata-only assets from 
 - **Appraised:** verified full text, design, bias, applicability, overlapping evidence and uncertainty.
 - **Approved:** the owner has separately accepted a bounded versioned policy and tests.
 
-Batch 01 claims remain provisional. Batch 02 verified original pages in two PDFs and raw cell/style data in three XLSX workbooks, plus obtained and selectively critically read four full PubMed Central research articles. **This does not certify all 78 documents, all cited studies, complete supplemental tables, independent review or any numerical programming recommendation.** No review has been registered or independently double-screened; neither abstracts nor limited full-text examinations justify confident GRADE ratings.
+Batch 01 claims remain provisional. Batch 02 verified original pages in two PDFs, raw cell/style/formula *structure* in **all 21 XLSX workbooks**, and obtained and selectively critically read four complete PubMed Central research articles. **This does not certify every source cell's prescription semantics, all 57 PDFs, all cited studies, supplemental tables, independent review or any numerical programming recommendation.** No review has been registered or independently double-screened; neither abstracts nor limited full-text examinations justify confident GRADE ratings.
 
 ## Non-goals and prohibitions
 
