@@ -40,6 +40,8 @@ Seven high-priority manuals were read at selected sections through Google Drive'
 - [Batch 03 PDF verification](pdf-source-audit-all-57.md) and [57-PDF source fingerprint register](pdf-audit-57.csv): all original PDF hashes, duplicate editions and shortened-view mapping.
 - [Batch 03 exercise-selection science](batch-03-exercise-selection.md): head-/muscle-specific comparisons, exercise variation, source preferences versus comparative outcomes and unresolved evidence.
 - [Batch 04: original Customized program design standard](batch-04-customized-program-design-standard.md): source-versus-evidence boundaries, hard constraints, and acceptance scenarios for Full Body, Upper/Lower, PPL and rolling schedules; **not an approved prescription**.
+- [Batch 05: dose, frequency and short-session evidence appraisal](batch-05-volume-frequency-low-time-appraisal.md): two newly sampled Essentials 2x/3x explanatory manuals plus independently traced human trials/reviews; includes attrition, outcome-method, study-overlap and external-validity cautions.
+- [Batch 05: original exercise-exposure and feasibility standard (candidate v0.2)](batch-05-original-exposure-and-feasibility-standard.md): distinct direct/indirect/unknown exposure, actual versus planned work, rolling splits and hard session caps; no fractional-set coefficient or numeric policy approved.
 - [Research protocol](protocol.md): appraisal workflow, evidence hierarchy, source licensing, scope and approval gates.
 - [Claim register](claims.csv): machine-readable status for research tasks; **never consume this CSV as runtime prescription rules.**
 
