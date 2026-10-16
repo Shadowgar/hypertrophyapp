@@ -2,6 +2,12 @@
 
 **Date:** 2026-10-16. **Status:** all-workbook **structural** checks completed; content-level exercise prescription interpretation, formula evaluation and source-authority approval **not completed**. All originals remain private. Machine-readable register: [workbook-audit-21.csv](workbook-audit-21.csv). [Core Batch 02 report](batch-02-source-fidelity-and-fulltext.md).
 
+### Source identity correction (2026-10-16)
+
+A same-basename local attachment originally led the audit to count a historical `Pure_Bodybuilding_-_Full_Body.xlsx` reference of **145,847 bytes** (SHA-256 prefix `9a4021f5`) in place of the **143,246-byte** file actually present in the user-supplied `JN` folder (SHA-256 prefix `9d67b025`). The mismatch was discovered by reconciling the Google Drive folder's 21 declared file sizes against the raw working-copy totals and was resolved by fetching the *exact Drive file ID* again. The re-run preserved the same **110** `m\-d` range-formatted cells and **0** formula cells for that workbook but counted **721**, rather than **924**, numeric cells. The resulting all-21 totals are corrected above. The historic workbook and archive workbook are **different source identities**; no equivalence of their exercise content has been established, and the deployed Authored importer/source must not be rewritten as if the files were interchangeable.
+
+The 21-file raw-size sum now matches the exact archive metadata: **2,140,188,036 PDF bytes + 2,304,242 XLSX bytes = 2,142,492,278 bytes**.
+
 ## Scope and results
 
 The 21 archived XLSX files were retrieved by their original authorized Drive identities and inspected **locally as original ZIP/Office Open XML source**, not through lossy CSV projections. No third-party OCR and no assumption that a text converter displays training-range cells correctly. SHA-256 calculated for each original byte sequence; `xl/workbook.xml`, `xl/styles.xml`, and every `xl/worksheets/sheetN.xml` were parsed.
@@ -10,8 +16,8 @@ The 21 archived XLSX files were retrieved by their original authorized Drive ide
 | --- | ---: |
 | Raw XLSX files located and opened | **21 of 21** |
 | XML worksheets present | **30** |
-| Total original bytes | **2,306,843** |
-| Numeric-format cells in worksheet XML | **22,790** |
+| Total original bytes (corrected exact archive) | **2,304,242** |
+| Numeric-format cells in worksheet XML (corrected) | **22,587** |
 | Numeric cells formatted custom `m\-d` | **3,771** |
 | Formula cells | **460** |
 | Error-type cells stored in source XML | **0** |
