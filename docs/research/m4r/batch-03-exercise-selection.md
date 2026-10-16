@@ -2,6 +2,10 @@
 
 **Date:** 2026-10-16. **Status:** targeted evidence reconnaissance and selected eligible full-text appraisal, *not* a systematic review, universally optimal exercise ranking, verified outcome causality, or permission to implement Customized program rules. See [research protocol](protocol.md) and [PDF source audit](pdf-source-audit-all-57.md).
 
+### Source cross-reference additions
+
+Batch 01 defined `S01`–`S07` and `W01`–`W02`. This batch additionally uses: `S08` = *Arm Hypertrophy Program*; `S09` = *Back Hypertrophy Program*; `S10` = *My Favorite Exercise for Each Body Part* (visual-only PDF); `S11` = *Women's Specialization Program*; `S12` = [57-PDF source-hash manifest](pdf-audit-57.csv). Other directly cited specialized manuals are identified by full title and page in the table below, not assigned extra source IDs.
+
 ## 1. Claims that the private Nippard source manuals actually support
 
 These are **private-source observations** based on reading identified PDF sections. Source programs are not randomized comparisons, and their exercise tables must not be reproduced publicly.
