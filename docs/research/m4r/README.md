@@ -25,6 +25,8 @@ A user-supplied private Google Drive archive named `JN` was enumerated on 2026-1
 
 Collections include Pure Bodybuilding Phase 1/2, Ultimate PPL and other PPL, Powerbuilding, Fundamentals, Essentials, high-frequency Full Body, Upper/Lower, body-part specialization, strength, return-to-training and other manuals. **A complete listing is not a complete raw-file/hash or full-text validation.** Some editions and trimmed PDFs may be duplicates. One nested PPL folder was empty when enumerated.
 
+**Update through Batch 03 (2026-10-16):** All **57 PDF byte streams have been SHA-256 verified and opened**, comprising **50 unique PDF hashes**, five exact duplicate groups and 4,557 page references. Eight trimmed/routine-only pairings were verified as full-text-page subsets of the corresponding complete manuals. All **21 XLSX workbooks** have been separately byte-hashed and structurally inspected. **Neither verification amounts to a complete scientific interpretation of every source page/cell.**
+
 Seven high-priority manuals were read at selected sections through Google Drive's text extraction in the pilot: Fundamentals, Pure Bodybuilding handbooks Phase 1 and Phase 2, Comeback Bridge, Upper/Lower, Ultimate PPL 4X, and Essentials 4x. Program workbooks were sampled but **not** admitted as exact raw-cell evidence: one connector text projection rendered numeric load/RPE-like fields as dates. Their original types/formats must be checked before any quantitative source extraction.
 
 **Private-source boundary:** No purchased PDF/XLSX source bytes, substantial excerpts, user Drive credentials/IDs, or private download links belong in this public repository. File names and short original paraphrases are for provenance only. The private archive remains in the owner's Drive.
@@ -35,6 +37,8 @@ Seven high-priority manuals were read at selected sections through Google Drive'
 - [Batch 02: raw-file fidelity and full-text methods review](batch-02-source-fidelity-and-fulltext.md): original PDFs/pages, OOXML cell formatting traps, historical citation validation and four full-text scientific assessments.
 - [Batch 02 raw-source register](source-audit-batch-02.csv): verified source SHA-256/byte identity and page anchors for the first five files.
 - [All 21 workbooks: structural audit](workbook-audit-all-21.md) and [metadata CSV](workbook-audit-21.csv): original file hashes, worksheet counts, 3,771 range-format cells and 460 formulas. **Not** full source-semantic qualification.
+- [Batch 03 PDF verification](pdf-source-audit-all-57.md) and [57-PDF source fingerprint register](pdf-audit-57.csv): all original PDF hashes, duplicate editions and shortened-view mapping.
+- [Batch 03 exercise-selection science](batch-03-exercise-selection.md): head-/muscle-specific comparisons, exercise variation, source preferences versus comparative outcomes and unresolved evidence.
 - [Research protocol](protocol.md): appraisal workflow, evidence hierarchy, source licensing, scope and approval gates.
 - [Claim register](claims.csv): machine-readable status for research tasks; **never consume this CSV as runtime prescription rules.**
 
@@ -48,7 +52,7 @@ The prior `docs/guides/asset_catalog.json` records 46 metadata-only assets from 
 - **Appraised:** verified full text, design, bias, applicability, overlapping evidence and uncertainty.
 - **Approved:** the owner has separately accepted a bounded versioned policy and tests.
 
-Batch 01 claims remain provisional. Batch 02 verified original pages in two PDFs, raw cell/style/formula *structure* in **all 21 XLSX workbooks**, and obtained and selectively critically read four complete PubMed Central research articles. **This does not certify every source cell's prescription semantics, all 57 PDFs, all cited studies, supplemental tables, independent review or any numerical programming recommendation.** No review has been registered or independently double-screened; neither abstracts nor limited full-text examinations justify confident GRADE ratings.
+Batch 01–03 claims remain provisional. Raw byte identity/page counts for **all 57 PDFs** and original OOXML structural features of **all 21 XLSX workbooks** are verified. Selected program sections and eligible scientific full texts have been examined, including exercise-specific comparisons. **This does not certify every source page/cell's intended programming semantics, all cited scientific studies, full supplemental tables, independent review or any numerical recommendation.** No review has been registered or independently double-screened; neither abstracts nor limited full-text examinations justify confident GRADE ratings.
 
 ## Non-goals and prohibitions
 
