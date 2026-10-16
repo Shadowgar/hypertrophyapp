@@ -39,6 +39,7 @@ Seven high-priority manuals were read at selected sections through Google Drive'
 - [All 21 workbooks: structural audit](workbook-audit-all-21.md) and [metadata CSV](workbook-audit-21.csv): original file hashes, worksheet counts, 3,771 range-format cells and 460 formulas. **Not** full source-semantic qualification.
 - [Batch 03 PDF verification](pdf-source-audit-all-57.md) and [57-PDF source fingerprint register](pdf-audit-57.csv): all original PDF hashes, duplicate editions and shortened-view mapping.
 - [Batch 03 exercise-selection science](batch-03-exercise-selection.md): head-/muscle-specific comparisons, exercise variation, source preferences versus comparative outcomes and unresolved evidence.
+- [Batch 04: original Customized program design standard](batch-04-customized-program-design-standard.md): source-versus-evidence boundaries, hard constraints, and acceptance scenarios for Full Body, Upper/Lower, PPL and rolling schedules; **not an approved prescription**.
 - [Research protocol](protocol.md): appraisal workflow, evidence hierarchy, source licensing, scope and approval gates.
 - [Claim register](claims.csv): machine-readable status for research tasks; **never consume this CSV as runtime prescription rules.**
 
