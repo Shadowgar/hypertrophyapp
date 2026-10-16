@@ -36,7 +36,6 @@ Seven high-priority manuals were read at selected sections through Google Drive'
 - [Batch 01: source-to-science comparison](batch-01-source-to-science.md): individual hypotheses, Nippard source anchors, independent scientific findings, limitations and *nonbinding* programming implications.
 - [Batch 02: raw-file fidelity and full-text methods review](batch-02-source-fidelity-and-fulltext.md): original PDFs/pages, OOXML cell formatting traps, historical citation validation and four full-text scientific assessments.
 - [Batch 02 raw-source register](source-audit-batch-02.csv): verified source SHA-256/byte identity and page anchors for the first five files.
-- [Batch 03: all 57 PDF file fingerprints, edition duplication and exercise-selection evidence](batch-03-pdf-audit-and-exercise-selection.md): 57 files opened, 50 byte-distinct sources; identifies eight short/full text subset relations and new muscle-specific exercise science.
 - [All 21 workbooks: structural audit](workbook-audit-all-21.md) and [metadata CSV](workbook-audit-21.csv): original file hashes, worksheet counts, 3,771 range-format cells and 460 formulas. **Not** full source-semantic qualification.
 - [Batch 03 PDF verification](pdf-source-audit-all-57.md) and [57-PDF source fingerprint register](pdf-audit-57.csv): all original PDF hashes, duplicate editions and shortened-view mapping.
 - [Batch 03 exercise-selection science](batch-03-exercise-selection.md): head-/muscle-specific comparisons, exercise variation, source preferences versus comparative outcomes and unresolved evidence.
