@@ -27,6 +27,8 @@ Read-side plan refresh and program auto-selection cannot silently reinterpret pe
 
 ## M2B-2 candidate: next-week scheduling
 
+`app.selected_date_plans.current_scheduled_days` derives the current dated plan's count at an explicit planning instant in the configured timezone. Profile presentation, training-state/recommendation inputs and frequency-adaptation preview consume it without mutating stored preferences or saved plans. Next-week activation requires a reviewed preview digest, including direct API calls.
+
 The M2B-2 candidate assigns source-successor validation to `app.selected_date_plans.resolve_source_successor`: saved predecessor identity, admitted source/artifact lineage and sequence produce an explicit next authored ordinal or reconciliation conflict. The existing plan builder and core scheduler consume that ordinal; placement does not invent another prescription builder. `app.routers.plan._prepare_plan_generation_runtime` records an opaque digest of the persisted history/state/review inputs it actually loads for new selected-date plans. Activation rechecks that dependency and adjacent plan content under the existing user lock. Saved unstarted re-placement retains its original source content; started or consented snapshots remain frozen. See the [bounded plan](../plans/m2b-next-week-scheduling.md); qualification is separate from release acceptance.
 
 ## M2A-2 candidate: authored warm-ups

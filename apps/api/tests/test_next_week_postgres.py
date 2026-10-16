@@ -7,7 +7,7 @@ from threading import Barrier
 from test_selected_date_postgres import pg_scenario, _dates, _post, _monday, target
 from app import selected_date_plans
 from app.database import SessionLocal
-from app.models import WorkoutPlan, WorkoutOccurrence, WorkoutSetLog
+from app.models import AuthoredLoadState, WorkoutLogCommand, WorkoutPlan, WorkoutOccurrence, WorkoutSetLog
 
 
 def _next_dates(offsets=(0,3,5), revision=0):
@@ -25,10 +25,15 @@ def test_future_same_revision_has_one_winner_and_leaves_current_history(pg_scena
         'command_id':uuid4().hex, 'exercise_id':exercise['id'],
         'exercise_occurrence_id':exercise['exercise_occurrence_id'],'set_index':1,'reps':8,'weight':25})
     assert log.status_code == 200, log.text
+    def records(db, model):
+        return {r.id:{c.key:deepcopy(getattr(r,c.key)) for c in model.__table__.columns}
+            for r in db.query(model).filter_by(user_id=user_id)}
     with SessionLocal() as db:
         before = deepcopy(db.query(WorkoutPlan).filter_by(user_id=user_id).one().payload)
         frozen = deepcopy(db.query(WorkoutOccurrence).filter_by(user_id=user_id).one().payload)
         evidence = [(r.id,r.created_at,r.weight) for r in db.query(WorkoutSetLog).filter_by(user_id=user_id)]
+        retained = {model:records(db,model) for model in (WorkoutSetLog,WorkoutLogCommand,AuthoredLoadState)}
+        assert retained[WorkoutSetLog] and retained[WorkoutLogCommand]
     request = _next_dates()
     preview = _post(headers, '/plan/selected-dates/preview', request)
     assert preview.status_code == 200, preview.text
@@ -49,3 +54,4 @@ def test_future_same_revision_has_one_winner_and_leaves_current_history(pg_scena
         assert db.query(WorkoutPlan).filter_by(user_id=user_id,week_start=_monday()).one().payload==before
         assert db.query(WorkoutOccurrence).filter_by(user_id=user_id).one().payload==frozen
         assert [(r.id,r.created_at,r.weight) for r in db.query(WorkoutSetLog).filter_by(user_id=user_id)]==evidence
+        assert {model:records(db,model) for model in retained} == retained

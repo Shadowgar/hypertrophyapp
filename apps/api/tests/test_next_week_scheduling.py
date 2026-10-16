@@ -129,8 +129,11 @@ def test_future_snapshot_is_immutable_and_current_logging_keeps_future_plan(week
     with SessionLocal() as db:
         snapshots = {r.id:deepcopy(r.payload) for r in db.query(WorkoutOccurrence).filter_by(user_id=user_id)}
         logs = [(r.id,r.workout_occurrence_id,r.created_at,r.weight) for r in db.query(WorkoutSetLog).filter_by(user_id=user_id)]
-    blocked = client.post('/plan/generate-week', headers=headers, json=request_dates(MONDAY+timedelta(days=7), (0,3,5), revision=1))
+    blocked = client.post('/plan/generate-week', headers=headers, json={
+        **request_dates(MONDAY+timedelta(days=7), (0,3,5), revision=1),
+        'expected_preview_digest':future['schedule']['preview_digest']})
     assert blocked.status_code == 409
+    assert 'snapshot' in blocked.json()['detail']
     with SessionLocal() as db:
         assert {r.id:r.payload for r in db.query(WorkoutOccurrence).filter_by(user_id=user_id)} == snapshots
         assert [(r.id,r.workout_occurrence_id,r.created_at,r.weight) for r in db.query(WorkoutSetLog).filter_by(user_id=user_id)] == logs
@@ -256,3 +259,58 @@ def test_changed_profile_input_invalidates_the_recorded_generation_dependency(we
     stale = client.post('/plan/generate-week', headers=headers, json={
         **request, 'expected_preview_digest': preview.json()['schedule']['preview_digest']})
     assert stale.status_code == 409, stale.text
+
+
+def test_next_week_activation_requires_a_preview_digest(week):
+    user_id, headers, client = week
+    assert activate(client, headers, request_dates(MONDAY)).status_code == 200
+    request = request_dates(MONDAY + timedelta(days=7))
+    direct = client.post('/plan/generate-week', headers=headers, json=request)
+    assert direct.status_code == 409, direct.text
+    assert 'preview' in direct.json()['detail'].lower()
+    with SessionLocal() as db:
+        assert db.query(WorkoutPlan).filter_by(user_id=user_id).count() == 1
+    assert activate(client, headers, request).status_code == 200
+
+
+def test_rollover_derives_current_day_count_without_mutating_preferences_or_plans(week, monkeypatch):
+    from app import selected_date_plans
+    from app.routers import plan, profile
+    user_id, headers, client = week
+    assert activate(client, headers, request_dates(MONDAY)).status_code == 200
+    future = activate(client, headers, request_dates(MONDAY + timedelta(days=7), (0,3)))
+    assert future.status_code == 200, future.text
+    monkeypatch.setattr(profile, 'datetime', selected_date_plans.datetime)
+    assert client.get('/profile', headers=headers).json()['days_available'] == 3
+    with SessionLocal() as db:
+        saved_plans = {p.id: deepcopy(p.payload) for p in db.query(WorkoutPlan).filter_by(user_id=user_id)}
+    # At 00:01 Monday UTC it is still Sunday in New York.
+    fixed_clock(monkeypatch, datetime(2026,10,12,0,1,tzinfo=UTC))
+    monkeypatch.setattr(profile, 'datetime', selected_date_plans.datetime)
+    assert client.get('/profile', headers=headers).json()['days_available'] == 3
+    fixed_clock(monkeypatch, datetime(2026,10,12,4,1,tzinfo=UTC))
+    monkeypatch.setattr(profile, 'datetime', selected_date_plans.datetime)
+    response = client.get('/profile', headers=headers)
+    assert response.status_code == 200, response.text
+    assert response.json()['days_available'] == 2
+    observed = []
+    owner = plan.prepare_frequency_adaptation_decision_runtime
+    def capture(**kwargs):
+        observed.append(kwargs['current_days_available'])
+        return owner(**kwargs)
+    monkeypatch.setattr(plan, 'prepare_frequency_adaptation_decision_runtime', capture)
+    preview = client.post('/plan/adaptation/preview', headers=headers, json={'target_days':3})
+    assert preview.status_code == 200, preview.text
+    assert observed == [2]
+    coach_days = []
+    coach_owner = plan.prepare_coach_preview_runtime_inputs
+    def capture_coach(**kwargs):
+        coach_days.append(kwargs['profile_days_available'])
+        return coach_owner(**kwargs)
+    monkeypatch.setattr(plan, 'prepare_coach_preview_runtime_inputs', capture_coach)
+    coach = client.post('/plan/intelligence/coach-preview', headers=headers, json={'from_days':2,'to_days':2})
+    assert coach.status_code == 200, coach.text
+    assert coach_days == [2]
+    with SessionLocal() as db:
+        assert db.get(User, user_id).days_available == 3
+        assert {p.id:p.payload for p in db.query(WorkoutPlan).filter_by(user_id=user_id)} == saved_plans

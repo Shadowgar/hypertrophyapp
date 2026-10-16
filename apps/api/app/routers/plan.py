@@ -1411,13 +1411,14 @@ def coach_intelligence_preview(
     db: DbSession,
     current_user: CurrentUser,
 ) -> IntelligenceCoachPreviewResponse:
+    from ..selected_date_plans import current_scheduled_days
     lock_history_user(db, current_user.id)
     if not current_user.split_preference:
         raise HTTPException(status_code=400, detail=PROFILE_INCOMPLETE_DETAIL)
 
     preview_runtime = prepare_coach_preview_runtime_inputs(
         preview_request=payload.model_dump(mode="json"),
-        profile_days_available=current_user.days_available,
+        profile_days_available=current_scheduled_days(db, current_user, datetime.now(UTC)),
     )
     preview_request = cast(dict[str, Any], preview_runtime["preview_request"])
     explicit_template_id = resolve_selected_program_binding_id(payload.template_id) if payload.template_id else None
@@ -1529,7 +1530,9 @@ def preview_frequency_adaptation(
     db: DbSession,
     current_user: CurrentUser,
 ) -> FrequencyAdaptationResult:
-    if not current_user.days_available or not current_user.split_preference:
+    from ..selected_date_plans import current_scheduled_days
+    days_available = current_scheduled_days(db, current_user, datetime.now(UTC))
+    if not days_available or not current_user.split_preference:
         raise HTTPException(status_code=400, detail=PROFILE_INCOMPLETE_DETAIL)
     log_event(
         "frequency_adaptation_preview_requested",
@@ -1539,7 +1542,7 @@ def preview_frequency_adaptation(
         selected_program_id=resolve_selected_program_binding_id(current_user.selected_program_id),
         template_id=resolve_selected_program_binding_id(payload.program_id),
         target_days=payload.target_days,
-        days_available=current_user.days_available,
+        days_available=days_available,
     )
 
     latest_plan = (
@@ -1559,7 +1562,7 @@ def preview_frequency_adaptation(
         selected_program_id=resolve_selected_program_binding_id(current_user.selected_program_id),
         latest_plan=latest_plan,
         latest_soreness_entry=latest_soreness,
-        current_days_available=current_user.days_available,
+        current_days_available=days_available,
         target_days=payload.target_days,
         duration_weeks=payload.duration_weeks,
         explicit_weak_areas=payload.weak_areas,
@@ -1592,7 +1595,7 @@ def preview_frequency_adaptation(
         template_id=str(adaptation_runtime["program_id"]),
         path_family="generated" if is_generated_full_body_binding_id(str(adaptation_runtime["program_id"])) else "authored",
         target_days=payload.target_days,
-        days_available=current_user.days_available,
+        days_available=days_available,
     )
     return FrequencyAdaptationResult.model_validate(raw_result)
 

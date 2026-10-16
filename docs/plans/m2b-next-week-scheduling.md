@@ -12,4 +12,4 @@ Extend existing selected-date scheduling to current/next Monday–Sunday weeks i
 
 Review focus: future activation before a current plan exists; predecessor changed after preview; changed current activity after future activation; final source week; Sunday rollover with pending browser responses. Ambiguity produces an explicit reconciliation conflict, never guessed progression.
 
-Local qualification and its exact limits are recorded in [the evidence report](../evidence/2026-10-16-m2b-next-week-scheduling.md). Qualification remains open for final-head hosted CI and review; delivery and owner acceptance remain pending.
+Local qualification and its exact limits are recorded in [the evidence report](../evidence/2026-10-16-m2b-next-week-scheduling.md). [PR #83](https://github.com/Shadowgar/hypertrophyapp/pull/83) records final-head CI, review fixes, thread status and mergeability. The source checklist above does not grant release acceptance; final-head delivery evidence and owner review remain separate.

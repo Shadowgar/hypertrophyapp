@@ -77,6 +77,26 @@ def active_selected_plans(plans: list[WorkoutPlan], week_start: date) -> list[Wo
     return [p for p in plans if p.week_start == week_start and (p.payload.get('schedule') or {}).get('mode') == SELECTED_MODE]
 
 
+def current_scheduled_days(db: Session, user: User, planning_instant: datetime) -> int | None:
+    """Read the current dated plan's count without rewriting profile preferences.
+
+    A future activation takes effect here only on its local Monday. Legacy
+    profiles and weeks without a dated plan keep the stored availability.
+    """
+    if not user.scheduling_timezone:
+        return user.days_available
+    _, monday = local_week(user.scheduling_timezone, planning_instant)
+    rows = active_selected_plans(db.query(WorkoutPlan).filter_by(user_id=user.id, week_start=monday).all(), monday)
+    if not rows:
+        return user.days_available
+    if len(rows) != 1 or rows[0].schedule_timezone != user.scheduling_timezone:
+        raise HTTPException(409, 'Current dated schedule requires reconciliation')
+    dates = (rows[0].payload.get('schedule') or {}).get('selected_dates') or []
+    if not 2 <= len(dates) <= 5 or len(set(dates)) != len(dates):
+        raise HTTPException(409, 'Current dated schedule count requires reconciliation')
+    return len(dates)
+
+
 def validate_request(payload, planning_instant: datetime) -> SelectedWeek:
     if payload.selected_dates is None or payload.week_start is None or payload.timezone is None:
         raise HTTPException(422, 'Selected dates require a week start and IANA timezone')
@@ -232,6 +252,9 @@ def selected_week_command(*, db: Session, user: User, explicit_template_id: str 
                 planning_instant=datetime.now(UTC))
         except SelectedDateError as exc:
             raise HTTPException(409, 'The current local week changed; review this week again before activating') from exc
+        current_monday = selected_week.local_today - timedelta(days=selected_week.local_today.weekday())
+        if selected_week.week_start > current_monday and not expected_preview_digest:
+            raise HTTPException(409, 'Preview next week and supply its content digest before activating')
     selected_id = resolve_selected_program_binding_id(explicit_template_id or user.selected_program_id)
     plans = _list_user_workout_plans(db, user_id=user.id)
     current_plans = [p for p in plans if p.week_start == selected_week.week_start
