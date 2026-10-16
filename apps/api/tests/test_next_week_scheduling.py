@@ -30,6 +30,8 @@ def test_preview_activate_and_revisit_correct_successor_without_consuming_twice(
         before = deepcopy(db.query(WorkoutPlan).filter_by(user_id=user_id).one().payload)
     preview = client.post('/plan/selected-dates/preview', headers=headers, json=future_request)
     assert preview.status_code == 200, preview.text
+    assert preview.json()['schedule']['spacing']['previous_date'] == '2026-10-11'
+    assert preview.json()['schedule']['spacing']['gap_days'][0] == 1
     assert preview.json()['mesocycle']['authored_week_index'] == 2
     assert {e['source_lineage']['source_week'] for s in preview.json()['sessions'] for e in s['exercises']} == {2}
     with SessionLocal() as db:
@@ -184,3 +186,73 @@ def test_current_history_dependency_is_recorded_and_stale_future_activation_reje
     assert stale.status_code==409,stale.text
     with SessionLocal() as db:
         assert db.query(WorkoutPlan).filter_by(user_id=user_id).count()==1
+
+
+def test_activated_future_becomes_current_on_local_monday_without_regeneration(week, monkeypatch):
+    user_id, headers, client = week
+    fixed_clock(monkeypatch, datetime(2026,10,11,16,tzinfo=UTC))
+    assert activate(client, headers, request_dates(MONDAY)).status_code == 200
+    next_monday = MONDAY + timedelta(days=7)
+    future = activate(client, headers, request_dates(next_monday, (0,3,5)))
+    assert future.status_code == 200, future.text
+    saved = future.json()
+    fixed_clock(monkeypatch, datetime(2026,10,12,4,1,tzinfo=UTC))
+    context = client.get('/plan/scheduling-context?timezone=America/New_York', headers=headers)
+    assert context.status_code == 200, context.text
+    assert context.json()['plan'] == saved
+    assert context.json()['week_start'] == next_monday.isoformat()
+    today = client.get('/workout/today', headers=headers)
+    assert today.status_code == 200, today.text
+    assert today.json()['workout_occurrence_id'] == saved['sessions'][0]['workout_occurrence_id']
+    assert today.json()['scheduled_date'] == next_monday.isoformat()
+    with SessionLocal() as db:
+        assert db.query(WorkoutPlan).filter_by(user_id=user_id).count() == 2
+
+
+def test_preview_digest_for_current_week_cannot_activate_next_week(week):
+    user_id, headers, client = week
+    current = activate(client, headers, request_dates(MONDAY))
+    assert current.status_code == 200, current.text
+    result = client.post('/plan/generate-week', headers=headers, json={
+        **request_dates(MONDAY+timedelta(days=7)),
+        'expected_preview_digest': current.json()['schedule']['preview_digest']})
+    assert result.status_code == 409, result.text
+    with SessionLocal() as db:
+        assert db.query(WorkoutPlan).filter_by(user_id=user_id).count() == 1
+
+
+def test_unbound_auto_future_retains_the_saved_predecessor_program(week):
+    user_id, headers, client = week
+    assert activate(client, headers, request_dates(MONDAY)).status_code == 200
+    with SessionLocal() as db:
+        user = db.get(User, user_id)
+        user.selected_program_id = None
+        user.program_selection_mode = 'auto'
+        db.commit()
+    request = request_dates(MONDAY + timedelta(days=7))
+    request['template_id'] = None
+    future = activate(client, headers, request)
+    assert future.status_code == 200, future.text
+    assert future.json()['program_template_id'] == 'pure_bodybuilding_phase_1_full_body'
+    assert future.json()['mesocycle']['authored_week_index'] == 2
+    with SessionLocal() as db:
+        assert db.get(User, user_id).selected_program_id is None
+        assert db.get(User, user_id).program_selection_mode == 'auto'
+
+
+def test_changed_profile_input_invalidates_the_recorded_generation_dependency(week):
+    user_id, headers, client = week
+    assert activate(client, headers, request_dates(MONDAY)).status_code == 200
+    request = request_dates(MONDAY + timedelta(days=7))
+    preview = client.post('/plan/selected-dates/preview', headers=headers, json=request)
+    assert preview.status_code == 200, preview.text
+    with SessionLocal() as db:
+        db.get(User, user_id).session_time_budget_minutes = 45
+        db.commit()
+    fresh = client.post('/plan/selected-dates/preview', headers=headers, json=request)
+    assert fresh.status_code == 200, fresh.text
+    assert fresh.json()['schedule']['activation_dependencies']['generation_input_digest'] != (
+        preview.json()['schedule']['activation_dependencies']['generation_input_digest'])
+    stale = client.post('/plan/generate-week', headers=headers, json={
+        **request, 'expected_preview_digest': preview.json()['schedule']['preview_digest']})
+    assert stale.status_code == 409, stale.text

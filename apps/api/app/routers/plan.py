@@ -1027,7 +1027,15 @@ def _prepare_plan_generation_runtime(
             return {column.key: getattr(row, column.key) for column in row.__table__.columns} if row is not None else None
 
         inputs = {
-            "version": "selected-date-generation-inputs-v1",
+            "version": "selected-date-generation-inputs-v2",
+            "selected_template_id": selected_template_id,
+            "effective_days_available": effective_days_available,
+            "active_frequency_adaptation": active_frequency_adaptation,
+            "profile": {key: getattr(current_user, key) for key in (
+                "selected_program_id", "split_preference", "training_location",
+                "equipment_profile", "weak_areas", "nutrition_phase",
+                "session_time_budget_minutes", "movement_restrictions", "near_failure_tolerance",
+            )},
             "history": [evidence(row) for row in history_rows],
             "exercise_states": [evidence(row) for row in sorted(exercise_states, key=lambda row: row.id)],
             "soreness": evidence(latest_soreness), "checkin": evidence(latest_checkin),

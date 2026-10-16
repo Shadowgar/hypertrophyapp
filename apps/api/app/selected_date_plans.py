@@ -210,7 +210,7 @@ def activation_dependencies(plans, week, progression, generation_input_digest):
     predecessor = [p for p in plans if progression and p.id == progression['predecessor_plan_id']]
     neighbors = [p for p in plans if p.week_start in (week.week_start-timedelta(days=7), week.week_start+timedelta(days=7))
         and (p.payload.get('schedule') or {}).get('mode') == SELECTED_MODE]
-    return {'version': 'selected-date-dependencies-v1', 'source_progression': progression,
+    return {'version': 'selected-date-dependencies-v2', 'source_progression': progression,
         'generation_input_digest': generation_input_digest,
         'predecessor': [summary(p) for p in predecessor],
         'neighbors': [summary(p) for p in sorted(neighbors, key=lambda p: (p.week_start, p.id))]}
@@ -236,6 +236,12 @@ def selected_week_command(*, db: Session, user: User, explicit_template_id: str 
     plans = _list_user_workout_plans(db, user_id=user.id)
     current_plans = [p for p in plans if p.week_start == selected_week.week_start
         and not (p.payload.get('schedule') or {}).get('mode', '').startswith('selected_dates_superseded')]
+    if not selected_id and not current_plans and selected_week.week_start > selected_week.local_today:
+        # Auto retains the sole saved predecessor; it must not select a new
+        # program while placing the next week of that existing program.
+        predecessors = live_week_plans(plans, selected_week.week_start - timedelta(days=7))
+        if len(predecessors) == 1:
+            selected_id = resolve_selected_program_binding_id(predecessors[0].payload.get('program_template_id'))
     if not selected_id and current_plans:
         if len(current_plans) != 1:
             raise HTTPException(409, 'Multiple current-week plans require manual reconciliation')

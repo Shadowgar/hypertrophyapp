@@ -25,6 +25,10 @@ Material router-owned policy includes `_prepare_authored_frequency_adapted_templ
 
 Read-side plan refresh and program auto-selection cannot silently reinterpret performed history or customization consent. Apply commands verify mode, source/profile/rules and expected revision again before commit. Use source-slot/occurrence identity rather than catalog ID for repeated work. Acceptance/negative matrices are linked through the [catalog](../requirements/catalog.md) and [traceability](../requirements/traceability.md).
 
+## M2B-2 candidate: next-week scheduling
+
+The M2B-2 candidate assigns source-successor validation to `app.selected_date_plans.resolve_source_successor`: saved predecessor identity, admitted source/artifact lineage and sequence produce an explicit next authored ordinal or reconciliation conflict. The existing plan builder and core scheduler consume that ordinal; placement does not invent another prescription builder. `app.routers.plan._prepare_plan_generation_runtime` records an opaque digest of the persisted history/state/review inputs it actually loads for new selected-date plans. Activation rechecks that dependency and adjacent plan content under the existing user lock. Saved unstarted re-placement retains its original source content; started or consented snapshots remain frozen. See the [bounded plan](../plans/m2b-next-week-scheduling.md); qualification is separate from release acceptance.
+
 ## M2A-2 candidate: authored warm-ups
 
 The bounded [warm-up plan](../plans/m2a-authored-warmup-guidance.md) gives Authored warm-up guidance one runtime owner: `core_engine.authored_warmups.build_authored_warmup_guidance`. It consumes the immutable source count/instructions, the compiled Phase 1/2 warm-up protocol, the M2A-1 qualified working-load decision and declared load context. The API resolves source provenance and captures scoped advice; Today displays the server result and records editable actual values. Neither adapter owns a second authored percentage ladder.
