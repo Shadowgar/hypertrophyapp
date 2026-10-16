@@ -19,7 +19,11 @@ beforeEach(() => {
   globalThis.fetch = vi.fn();
 });
 
-test.each([{ effectiveDays: undefined, expectedDays: 4 }, { effectiveDays: 2, expectedDays: 2 }])("check-in page uses current count $expectedDays for review defaults", async ({ effectiveDays, expectedDays }) => {
+test.each([
+  { effectiveDays: undefined, expectedDays: 4, timezone: undefined },
+  { effectiveDays: 2, expectedDays: 2, timezone: undefined },
+  { effectiveDays: 2, expectedDays: 2, timezone: "America/New_York" },
+])("check-in page uses current count $expectedDays with scheduling timezone $timezone", async ({ effectiveDays, expectedDays, timezone }) => {
   // @ts-ignore
   globalThis.fetch.mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
     const url = resolveUrl(input);
@@ -84,6 +88,7 @@ test.each([{ effectiveDays: undefined, expectedDays: 4 }, { effectiveDays: 2, ex
             onboarding_answers: {},
             days_available: 4,
             effective_days_available: effectiveDays,
+            scheduling_timezone: timezone,
             nutrition_phase: "maintenance",
             calories: 2800,
             protein: 220,
@@ -214,6 +219,12 @@ test.each([{ effectiveDays: undefined, expectedDays: 4 }, { effectiveDays: 2, ex
   expect(screen.getByText(/Adaptation Results/i)).toBeInTheDocument();
   expect(screen.getByText(/Load Scale/i)).toBeInTheDocument();
 
+  if (timezone) {
+    expect(screen.getByRole("link", { name: /Schedule next week in Week/i })).toHaveAttribute("href", "/week");
+    expect(screen.queryByRole("button", { name: /Generate Next Week Now/i })).not.toBeInTheDocument();
+    expect(vi.mocked(globalThis.fetch).mock.calls.some(([input]) => resolveUrl(input).includes("/plan/next-week"))).toBe(false);
+    return;
+  }
   const generateNextWeekButton = screen.getByRole("button", { name: /Generate Next Week Now/i });
   fireEvent.click(generateNextWeekButton);
 

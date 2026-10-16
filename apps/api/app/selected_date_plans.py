@@ -82,6 +82,8 @@ def active_selected_plans(plans: list[WorkoutPlan], week_start: date) -> list[Wo
 class CurrentSchedulingProfile:
     days_available: int | None
     program_id: str | None
+    plan: WorkoutPlan | None = None
+    week_start: date | None = None
 
 
 def current_scheduling_profile(db: Session, user: User, planning_instant: datetime) -> CurrentSchedulingProfile:
@@ -96,7 +98,7 @@ def current_scheduling_profile(db: Session, user: User, planning_instant: dateti
     _, monday = local_week(user.scheduling_timezone, planning_instant)
     rows = active_selected_plans(db.query(WorkoutPlan).filter_by(user_id=user.id, week_start=monday).all(), monday)
     if not rows:
-        return fallback
+        return CurrentSchedulingProfile(fallback.days_available, fallback.program_id, week_start=monday)
     if len(rows) != 1 or rows[0].schedule_timezone != user.scheduling_timezone:
         raise HTTPException(409, 'Current dated schedule requires reconciliation')
     dates = (rows[0].payload.get('schedule') or {}).get('selected_dates') or []
@@ -105,7 +107,7 @@ def current_scheduling_profile(db: Session, user: User, planning_instant: dateti
     binding = resolve_selected_program_binding_id(rows[0].payload.get('program_template_id'))
     if not binding:
         raise HTTPException(409, 'Current dated program requires reconciliation')
-    return CurrentSchedulingProfile(len(dates), binding)
+    return CurrentSchedulingProfile(len(dates), binding, plan=rows[0], week_start=monday)
 
 
 def validate_request(payload, planning_instant: datetime) -> SelectedWeek:
@@ -175,6 +177,12 @@ def live_week_plans(plans: list[WorkoutPlan], monday: date) -> list[WorkoutPlan]
         and not (p.payload.get('schedule') or {}).get('mode', '').startswith('selected_dates_superseded')]
 
 
+def authored_source_slots(payload: dict) -> list[tuple[str, ...]]:
+    keys = ('source_slot_id', 'source_sha256', 'artifact_sha256')
+    return sorted(tuple(str((exercise.get('source_lineage') or {}).get(key) or '') for key in keys)
+        for session in payload.get('sessions') or [] for exercise in session.get('exercises') or [])
+
+
 def resolve_source_successor(plans: list[WorkoutPlan], week: SelectedWeek, selected_id: str | None):
     """Reserve the next authored ordinal from saved source identity, without writes.
 
@@ -182,6 +190,9 @@ def resolve_source_successor(plans: list[WorkoutPlan], week: SelectedWeek, selec
     programs, unknown source ordinals and sequence exhaustion require review.
     """
     from .program_loader import load_program_template
+    if any(p.week_start > week.week_start
+        and not (p.payload.get('schedule') or {}).get('mode', '').startswith('selected_dates_superseded') for p in plans):
+        raise HTTPException(409, 'Later saved program reservations require progression reconciliation')
     current_monday = week.local_today - timedelta(days=week.local_today.weekday())
     previous = live_week_plans(plans, week.week_start - timedelta(days=7))
     if week.week_start > current_monday and len(previous) != 1:
@@ -208,13 +219,8 @@ def resolve_source_successor(plans: list[WorkoutPlan], week: SelectedWeek, selec
     source_weeks = template.get('authored_weeks') or []
     if type(ordinal) is not int or not 1 <= ordinal < len(source_weeks):
         raise HTTPException(409, 'Authored source week is unknown or exhausted; reconciliation required')
-    expected_lineage = [e.get('source_lineage') or {}
-        for session in source_weeks[ordinal-1].get('sessions') or [] for e in session.get('exercises') or []]
-    saved_lineage = [e.get('source_lineage') or {}
-        for session in predecessor.payload.get('sessions') or [] for e in session.get('exercises') or []]
-    keys = ('source_slot_id', 'source_sha256', 'artifact_sha256')
-    expected = sorted(tuple(str(e.get(key) or '') for key in keys) for e in expected_lineage)
-    saved = sorted(tuple(str(e.get(key) or '') for key in keys) for e in saved_lineage)
+    expected = authored_source_slots(source_weeks[ordinal-1])
+    saved = authored_source_slots(predecessor.payload)
     if not expected or expected != saved:
         raise HTTPException(409, 'Saved authored week lineage does not match the admitted source; reconciliation required')
     # Reject inconsistent or duplicate reservations, rather than counting rows.
@@ -314,7 +320,16 @@ def selected_week_command(*, db: Session, user: User, explicit_template_id: str 
 
     same_count = bool(existing and len(existing.payload.get('sessions') or []) == len(selected_week.dates))
     generation_input_digest = None
+    progression_dependency = None
     if existing:
+        if selected_week.week_start > selected_week.local_today and (existing.payload.get('schedule') or {}).get('mode') != SELECTED_MODE:
+            from .program_loader import load_program_template
+            source_week_index, progression_dependency = resolve_source_successor(plans, selected_week, selected_id)
+            saved_ordinal = (existing.payload.get('mesocycle') or {}).get('authored_week_index')
+            source_weeks = load_program_template(selected_id).get('authored_weeks') or []
+            if (type(saved_ordinal) is not int or saved_ordinal != source_week_index
+                or authored_source_slots(existing.payload) != authored_source_slots(source_weeks[source_week_index-1])):
+                raise HTTPException(409, 'Legacy future plan does not match the source successor; reconciliation required')
         # Adding dates to legacy work is also placement-only. Preserve its
         # authored source week, working loads and source-scoped variants.
         base = deepcopy(existing.payload)
@@ -355,11 +370,11 @@ def selected_week_command(*, db: Session, user: User, explicit_template_id: str 
     if selected_week.dates[0] < selected_week.local_today:
         placed['schedule']['spacing']['warnings'].append('Elapsed selected dates are placements only; no performed history is created.')
     placed['schedule']['activation_dependencies'] = activation_dependencies(
-        plans, selected_week, progression_dependency if not existing else None, generation_input_digest)
-    if existing and existing.payload.get('schedule', {}).get('source_progression'):
-        placed['schedule']['source_progression'] = deepcopy(existing.payload['schedule']['source_progression'])
-    elif not existing and progression_dependency:
+        plans, selected_week, progression_dependency, generation_input_digest)
+    if progression_dependency:
         placed['schedule']['source_progression'] = progression_dependency
+    elif existing and existing.payload.get('schedule', {}).get('source_progression'):
+        placed['schedule']['source_progression'] = deepcopy(existing.payload['schedule']['source_progression'])
     placed['schedule']['revision_policy'] = 'unstarted-placement-v1; execution/consent freezes the week'
     if existing and not same_count:
         placed['schedule']['replaces_plan_id'] = existing.id

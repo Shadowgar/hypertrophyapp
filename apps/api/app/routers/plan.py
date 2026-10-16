@@ -1444,12 +1444,14 @@ def coach_intelligence_preview(
 
     selected_template_id = cast(str, template_runtime["selected_template_id"])
     template = cast(dict[str, Any], template_runtime["selected_template"])
-    latest_plan = (
-        db.query(WorkoutPlan)
-        .filter(WorkoutPlan.user_id == current_user.id)
-        .order_by(WorkoutPlan.created_at.desc())
-        .first()
-    )
+    latest_plan = effective.plan
+    if not current_user.scheduling_timezone:
+        latest_plan = (
+            db.query(WorkoutPlan)
+            .filter(WorkoutPlan.user_id == current_user.id)
+            .order_by(WorkoutPlan.created_at.desc())
+            .first()
+        )
 
     history_rows = (
         effective_set_logs(db)
@@ -1547,12 +1549,14 @@ def preview_frequency_adaptation(
         days_available=days_available,
     )
 
-    latest_plan = (
-        db.query(WorkoutPlan)
-        .filter(WorkoutPlan.user_id == current_user.id)
-        .order_by(WorkoutPlan.created_at.desc())
-        .first()
-    )
+    latest_plan = effective.plan
+    if not current_user.scheduling_timezone:
+        latest_plan = (
+            db.query(WorkoutPlan)
+            .filter(WorkoutPlan.user_id == current_user.id)
+            .order_by(WorkoutPlan.created_at.desc())
+            .first()
+        )
     latest_soreness = (
         db.query(SorenessEntry)
         .filter(SorenessEntry.user_id == current_user.id, SorenessEntry.entry_date <= date.today())
@@ -2464,15 +2468,14 @@ def _generate_week_for_user(
         db.refresh(current_user)
     if selected_week is not None:
         if generation_mode != "current_week_regenerate":
-            raise HTTPException(422, "Date selection is currently limited to this week")
+            raise HTTPException(422, "Use the selected-date preview and activation workflow")
         from ..selected_date_plans import selected_week_command
         return selected_week_command(
             db=db, user=current_user, explicit_template_id=explicit_template_id,
             selected_week=selected_week, expected_revision=expected_placement_revision,
             expected_preview_digest=expected_preview_digest,
         )
-    if generation_mode == "current_week_regenerate":
-        _reject_legacy_selected_week_mutation(db, current_user)
+    _reject_legacy_selected_week_mutation(db, current_user)
     route = "/plan/generate-week" if generation_mode == "current_week_regenerate" else "/plan/next-week"
     user_id = str(current_user.id)
     normalized_explicit_template_id = resolve_selected_program_binding_id(explicit_template_id) if explicit_template_id else None

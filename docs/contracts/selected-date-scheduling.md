@@ -14,6 +14,8 @@ Proposed local-week convention is Monday–Sunday in the selected timezone, matc
 
 Output: selected-date placements, stable occurrence/placement revision identities, ordered source units/relationships, duration range, spacing/conflict results, infeasibility or feasible plan and deterministic trace.
 
+Current intelligence uses that same current plan and excludes later reservations from its prior-plan count. Once dated scheduling is enabled, legacy generation endpoints cannot advance or replace reservations; Check-in directs the user to Week after saving the review. Converting an existing legacy future row requires its ordinal and source lineage to match the established successor. A later live reservation blocks new source generation for an earlier week pending reconciliation, including when it appears between preview and activation.
+
 ## Allocation and relationships
 
 Authored allocation is lossless: all required slots/sets and meaningful order/pairs/primers survive. Treat inseparable relationships as units; do not deduplicate distinct occurrences sharing an exercise ID. Selected dates equal output dates. Overlong sessions are shown with uncertainty and workload, never shortened by unapproved pruning. Source mandatory rest/sequence constraints are hard where explicit; inferred recovery spacing is labeled policy/advisory with a version, not source authority.

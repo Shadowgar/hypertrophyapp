@@ -101,6 +101,7 @@ class ProfileUpsert(BaseModel):
 
 class ProfileResponse(ProfileUpsert):
     email: EmailStr
+    scheduling_timezone: str | None = Field(default=None, json_schema_extra={"readOnly": True})
     effective_days_available: int | None = Field(default=None, json_schema_extra={"readOnly": True})
     effective_program_id: str | None = Field(default=None, json_schema_extra={"readOnly": True})
 

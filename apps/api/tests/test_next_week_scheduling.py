@@ -295,10 +295,13 @@ def test_rollover_derives_current_day_count_without_mutating_preferences_or_plan
     assert response.json()['effective_days_available'] == 2
     assert response.json()['days_available'] == 3
     # Settings round-trips writable preferences when changing unrelated setup.
-    updated = client.post('/profile', headers=headers, json={**response.json(), 'training_location':'home'})
+    updated = client.post('/profile', headers=headers, json={**response.json(), 'training_location':'home',
+        'effective_days_available':5,'effective_program_id':'unqualified','scheduling_timezone':'Pacific/Honolulu'})
     assert updated.status_code == 200, updated.text
     assert updated.json()['days_available'] == 3
     assert updated.json()['effective_days_available'] == 2
+    assert updated.json()['effective_program_id'] == 'pure_bodybuilding_phase_1_full_body'
+    assert updated.json()['scheduling_timezone'] == 'America/New_York'
     observed = []
     owner = plan.prepare_frequency_adaptation_decision_runtime
     def capture(**kwargs):
@@ -356,3 +359,114 @@ def test_auto_phase_two_rollover_uses_active_binding_without_overwriting_prefere
         assert db.get(User,user_id).selected_program_id is None
         assert db.get(User,user_id).program_selection_mode == 'auto'
         assert db.query(WorkoutPlan).filter_by(user_id=user_id).count() == 2
+
+
+def test_current_intelligence_excludes_future_plan_until_local_rollover(week, monkeypatch):
+    from app import selected_date_plans
+    from app.routers import plan, profile
+    user_id, headers, client = week
+    phase = 'pure_bodybuilding_phase_2_full_body'
+    assert activate(client, headers, request_dates(MONDAY, phase=phase)).status_code == 200
+    assert activate(client, headers, request_dates(MONDAY+timedelta(days=7), (0,3), phase=phase)).status_code == 200
+    with SessionLocal() as db:
+        saved = {p.id:deepcopy(p.payload) for p in db.query(WorkoutPlan).filter_by(user_id=user_id)}
+    fixed_clock(monkeypatch, datetime(2026,10,12,0,1,tzinfo=UTC))
+    monkeypatch.setattr(profile, 'datetime', selected_date_plans.datetime)
+    state = client.get('/profile/training-state', headers=headers)
+    assert state.status_code == 200, state.text
+    assert state.json()['user_program_state']['last_generated_week_start'] == MONDAY.isoformat()
+    assert state.json()['generation_state']['latest_mesocycle']['authored_week_index'] == 1
+    assert state.json()['generation_state']['prior_generated_weeks_by_program'][phase] == 1
+    observed = []
+    def capture(owner):
+        def wrapper(**kwargs):
+            observed.append(kwargs['latest_plan'].week_start)
+            return owner(**kwargs)
+        return wrapper
+    monkeypatch.setattr(profile,'prepare_profile_program_recommendation_route_runtime',capture(profile.prepare_profile_program_recommendation_route_runtime))
+    monkeypatch.setattr(plan,'prepare_frequency_adaptation_decision_runtime',capture(plan.prepare_frequency_adaptation_decision_runtime))
+    monkeypatch.setattr(plan,'prepare_coach_preview_decision_context',capture(plan.prepare_coach_preview_decision_context))
+    requests = [
+        client.get('/profile/program-recommendation',headers=headers),
+        client.post('/profile/program-switch',headers=headers,json={'target_program_id':phase}),
+        client.post('/plan/adaptation/preview',headers=headers,json={'target_days':2}),
+        client.post('/plan/intelligence/coach-preview',headers=headers,json={'from_days':3,'to_days':2}),
+    ]
+    assert all(r.status_code==200 for r in requests), [r.status_code for r in requests]
+    assert observed == [MONDAY]*4
+    fixed_clock(monkeypatch, datetime(2026,10,12,4,1,tzinfo=UTC))
+    monkeypatch.setattr(profile, 'datetime', selected_date_plans.datetime)
+    state = client.get('/profile/training-state',headers=headers)
+    assert state.status_code == 200, state.text
+    assert state.json()['user_program_state']['last_generated_week_start'] == (MONDAY+timedelta(days=7)).isoformat()
+    assert state.json()['generation_state']['latest_mesocycle']['authored_week_index'] == 2
+    assert state.json()['generation_state']['prior_generated_weeks_by_program'][phase] == 2
+    with SessionLocal() as db:
+        assert {p.id:p.payload for p in db.query(WorkoutPlan).filter_by(user_id=user_id)} == saved
+
+
+def test_legacy_next_week_cannot_bypass_dated_reservations_or_change_preferences(week):
+    user_id, headers, client = week
+    assert activate(client, headers, request_dates(MONDAY)).status_code == 200
+    assert activate(client, headers, request_dates(MONDAY+timedelta(days=7))).status_code == 200
+    with SessionLocal() as db:
+        saved = {p.id:deepcopy(p.payload) for p in db.query(WorkoutPlan).filter_by(user_id=user_id)}
+        user = db.get(User,user_id)
+        preferences = (user.selected_program_id,user.days_available,user.scheduling_timezone)
+    response = client.post('/plan/next-week',headers=headers,json={'target_days':2})
+    assert response.status_code == 409, response.text
+    assert 'Week' in response.json()['detail']
+    with SessionLocal() as db:
+        user = db.get(User,user_id)
+        assert (user.selected_program_id,user.days_available,user.scheduling_timezone) == preferences
+        assert {p.id:p.payload for p in db.query(WorkoutPlan).filter_by(user_id=user_id)} == saved
+
+
+@pytest.mark.parametrize('problem',['valid','missing','repeated','lineage'])
+def test_legacy_future_conversion_requires_the_real_source_successor(week, problem):
+    user_id, headers, client = week
+    assert activate(client,headers,request_dates(MONDAY)).status_code == 200
+    request = request_dates(MONDAY+timedelta(days=7))
+    original = activate(client,headers,request)
+    assert original.status_code == 200
+    with SessionLocal() as db:
+        row = db.query(WorkoutPlan).filter_by(user_id=user_id,week_start=MONDAY+timedelta(days=7)).one()
+        payload = deepcopy(row.payload)
+        payload.pop('schedule')
+        if problem == 'missing': payload['mesocycle'].pop('authored_week_index')
+        if problem == 'repeated': payload['mesocycle']['authored_week_index'] = 1
+        if problem == 'lineage': payload['sessions'][0]['exercises'][0]['source_lineage']['source_sha256'] = 'unqualified'
+        row.payload, row.schedule_timezone, row.placement_revision = payload, None, None
+        db.commit()
+        saved = {p.id:deepcopy(p.payload) for p in db.query(WorkoutPlan).filter_by(user_id=user_id)}
+    preview = client.post('/plan/selected-dates/preview',headers=headers,json=request)
+    if problem == 'valid':
+        assert preview.status_code == 200
+        placed = client.post('/plan/generate-week',headers=headers,json={**request,'expected_preview_digest':preview.json()['schedule']['preview_digest']})
+        assert placed.status_code == 200
+        assert placed.json()['schedule']['source_progression']['authored_week_index'] == 2
+        assert [s['exercises'] for s in placed.json()['sessions']] == [s['exercises'] for s in original.json()['sessions']]
+    else:
+        assert preview.status_code == 409, preview.status_code
+        assert 'reconcil' in preview.json()['detail'].lower()
+        with SessionLocal() as db:
+            assert {p.id:p.payload for p in db.query(WorkoutPlan).filter_by(user_id=user_id)} == saved
+
+
+def test_later_legacy_reservation_invalidates_new_current_preview_without_consuming_twice(week):
+    user_id, headers, client = week
+    request = request_dates(MONDAY)
+    preview = client.post('/plan/selected-dates/preview',headers=headers,json=request)
+    assert preview.status_code == 200
+    legacy = client.post('/plan/next-week',headers=headers,json={})
+    assert legacy.status_code == 200
+    # The legacy route uses its own server-date clock; any later reservation
+    # must invalidate this explicitly dated current-week preview.
+    assert date.fromisoformat(legacy.json()['week_start']) > MONDAY
+    assert legacy.json()['mesocycle']['authored_week_index'] == 1
+    response = client.post('/plan/generate-week',headers=headers,json={**request,'expected_preview_digest':preview.json()['schedule']['preview_digest']})
+    assert response.status_code == 409, response.status_code
+    assert 'reconcil' in response.json()['detail'].lower()
+    with SessionLocal() as db:
+        assert db.get(User,user_id).scheduling_timezone is None
+        assert db.query(WorkoutPlan).filter_by(user_id=user_id).count() == 1

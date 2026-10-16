@@ -8,6 +8,9 @@ from test_selected_date_postgres import pg_scenario, _dates, _post, _monday, tar
 from app import selected_date_plans
 from app.database import SessionLocal
 from app.models import AuthoredLoadState, WorkoutLogCommand, WorkoutPlan, WorkoutOccurrence, WorkoutSetLog
+from app.models import User
+from app.security import create_access_token
+from app.routers import plan as plan_router
 
 
 def _next_dates(offsets=(0,3,5), revision=0):
@@ -55,3 +58,36 @@ def test_future_same_revision_has_one_winner_and_leaves_current_history(pg_scena
         assert db.query(WorkoutOccurrence).filter_by(user_id=user_id).one().payload==frozen
         assert [(r.id,r.created_at,r.weight) for r in db.query(WorkoutSetLog).filter_by(user_id=user_id)]==evidence
         assert {model:records(db,model) for model in retained} == retained
+
+
+def test_legacy_advance_and_first_dated_activation_serialize_mode_boundary(monkeypatch):
+    user_id = uuid4().hex
+    with SessionLocal() as db:
+        db.add(User(id=user_id,email=f'{uuid4().hex}@example.invalid',name='Synthetic mode race',
+            password_hash='not-a-login',split_preference='full_body',days_available=5,
+            selected_program_id='pure_bodybuilding_phase_1_full_body',
+            equipment_profile=['dumbbell','barbell','bench','cable','machine'],nutrition_phase='maintenance'))
+        db.commit()
+    headers = {'Authorization':f'Bearer {create_access_token(user_id)}'}
+    request = _dates()
+    preview = _post(headers,'/plan/selected-dates/preview',request)
+    assert preview.status_code == 200
+    barrier = Barrier(2)
+    lock = selected_date_plans.lock_history_user
+    def simultaneous(db,uid):
+        barrier.wait(timeout=20)
+        return lock(db,uid)
+    monkeypatch.setattr(selected_date_plans,'lock_history_user',simultaneous)
+    monkeypatch.setattr(plan_router,'lock_history_user',simultaneous)
+    commands = [('/plan/generate-week',{**request,'expected_preview_digest':preview.json()['schedule']['preview_digest']}),
+        ('/plan/next-week',{'target_days':3})]
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(lambda command:_post(headers,*command),commands))
+    assert sorted(r.status_code for r in results) == [200,409]
+    with SessionLocal() as db:
+        row = db.query(WorkoutPlan).filter_by(user_id=user_id).one()
+        assert row.payload['mesocycle']['authored_week_index'] == 1
+        assert row.week_start in (_monday(),_monday()+timedelta(days=7))
+        assert bool(db.get(User,user_id).scheduling_timezone) == (row.week_start == _monday())
+        assert db.query(WorkoutOccurrence).filter_by(user_id=user_id).count() == 0
+        assert db.query(WorkoutSetLog).filter_by(user_id=user_id).count() == 0

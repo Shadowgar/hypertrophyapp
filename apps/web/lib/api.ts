@@ -204,6 +204,7 @@ export type Profile = {
   days_available: number;
   effective_days_available?: number | null;
   effective_program_id?: string | null;
+  scheduling_timezone?: string | null;
   nutrition_phase: string;
   calories: number;
   protein: number;
@@ -1136,7 +1137,7 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  updateProfile: (payload: Partial<Omit<Profile, "effective_days_available" | "effective_program_id">>) => request<Profile>("/profile", { method: "POST", body: JSON.stringify(payload) }),
+  updateProfile: (payload: Partial<Omit<Profile, "effective_days_available" | "effective_program_id" | "scheduling_timezone">>) => request<Profile>("/profile", { method: "POST", body: JSON.stringify(payload) }),
   updateProgramSelection: (payload: { selected_program_id: string | null; program_selection_mode: "manual" | "auto" }) =>
     request<Profile>("/profile/program-selection", {
       method: "POST",

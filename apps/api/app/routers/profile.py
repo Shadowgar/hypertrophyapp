@@ -28,7 +28,7 @@ from sqlalchemy.orm.attributes import flag_modified
 
 from ..config import settings
 from ..database import get_db
-from ..selected_date_plans import current_scheduling_profile, local_week
+from ..selected_date_plans import CurrentSchedulingProfile, current_scheduling_profile, local_week
 from ..history_dates import performed_log_rows
 from ..workout_history import effective_set_logs, valid_weekly_reviews, lock_history_user
 from ..deps import get_current_user
@@ -130,10 +130,13 @@ def _has_user_workout_activity(db: Session, *, user_id: str) -> bool:
     )
 
 
-def _latest_plan(db: Session, user_id: str) -> WorkoutPlan | None:
+def _latest_plan(db: Session, user: User, effective: CurrentSchedulingProfile | None = None) -> WorkoutPlan | None:
+    if user.scheduling_timezone:
+        context = effective or current_scheduling_profile(db, user, datetime.now(UTC))
+        return context.plan
     return (
         db.query(WorkoutPlan)
-        .filter(WorkoutPlan.user_id == user_id)
+        .filter(WorkoutPlan.user_id == user.id)
         .order_by(WorkoutPlan.created_at.desc())
         .first()
     )
@@ -270,6 +273,7 @@ def get_profile(current_user: CurrentUser, db: DbSession) -> ProfileResponse:
     selected_program_id = resolve_selected_program_binding_id(current_user.selected_program_id)
     effective = current_scheduling_profile(db, current_user, datetime.now(UTC))
     return ProfileResponse(
+        scheduling_timezone=current_user.scheduling_timezone,
         effective_days_available=effective.days_available,
         effective_program_id=effective.program_id,
         **build_profile_response_payload(
@@ -305,8 +309,13 @@ def get_training_state(
     db: DbSession,
     current_user: CurrentUser,
 ) -> UserTrainingStateResponse:
-    latest_plan = _latest_plan(db, current_user.id)
-    prior_plans = db.query(WorkoutPlan).filter(WorkoutPlan.user_id == current_user.id).all()
+    effective = current_scheduling_profile(db, current_user, datetime.now(UTC))
+    latest_plan = _latest_plan(db, current_user, effective)
+    prior_query = db.query(WorkoutPlan).filter(WorkoutPlan.user_id == current_user.id)
+    if effective.week_start is not None:
+        prior_query = prior_query.filter(WorkoutPlan.week_start <= effective.week_start,
+            func.coalesce(WorkoutPlan.payload['schedule']['mode'].as_string(), '') != 'selected_dates_superseded_v1')
+    prior_plans = prior_query.all()
     latest_soreness = (
         db.query(SorenessEntry)
         .filter(SorenessEntry.user_id == current_user.id)
@@ -341,7 +350,6 @@ def get_training_state(
         .all()
     )
 
-    effective = current_scheduling_profile(db, current_user, datetime.now(UTC))
     selected_program_id = effective.program_id
     payload = build_user_training_state(
         selected_program_id=selected_program_id,
@@ -478,7 +486,7 @@ def program_recommendation(
 ) -> ProgramRecommendationResponse:
     effective = current_scheduling_profile(db, current_user, datetime.now(UTC))
     selected_program_id = effective.program_id
-    latest_plan = _latest_plan(db, current_user.id)
+    latest_plan = _latest_plan(db, current_user, effective)
     training_state = _build_program_recommendation_training_state(
         db,
         current_user=current_user,
@@ -508,7 +516,7 @@ def switch_program(
     effective = current_scheduling_profile(db, current_user, datetime.now(UTC))
     selected_program_id = effective.program_id
     target_program_id = resolve_selected_program_binding_id(payload.target_program_id) or payload.target_program_id
-    latest_plan = _latest_plan(db, current_user.id)
+    latest_plan = _latest_plan(db, current_user, effective)
     training_state = _build_program_recommendation_training_state(
         db,
         current_user=current_user,
@@ -752,7 +760,7 @@ def submit_weekly_review(
     training_state = _build_program_recommendation_training_state(
         db,
         current_user=current_user,
-        latest_plan=_latest_plan(db, current_user.id),
+        latest_plan=_latest_plan(db, current_user),
     )
     route_runtime = prepare_weekly_review_submit_route_runtime(
         user_id=current_user.id,
