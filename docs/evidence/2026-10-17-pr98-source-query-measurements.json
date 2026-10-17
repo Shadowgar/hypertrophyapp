@@ -1,0 +1,95 @@
+{
+  "synthetic_old_plans": 500,
+  "synthetic_old_occurrences": 1500,
+  "synthetic_bound_sets": 30000,
+  "synthetic_unbound_old_sets": 3000,
+  "synthetic_old_commands": 3000,
+  "synthetic_old_states": 3000,
+  "source_queries": 7,
+  "rows_returned": 10,
+  "small_median_ms": 23.102159990230575,
+  "large_median_ms": 23.936466008308344,
+  "captured_account_read_ms": 47.759448003489524,
+  "query_plans": [
+    {
+      "returned_rows": 1,
+      "examined_scan_rows": 4,
+      "planning_ms": 0.522,
+      "execution_ms": 0.193,
+      "index_names": [
+        "ix_c3b2b_occ_user_date",
+        "ix_c3b2b_occ_user_week",
+        "workout_occurrences_pkey"
+      ]
+    },
+    {
+      "returned_rows": 3,
+      "examined_scan_rows": 6,
+      "planning_ms": 0.101,
+      "execution_ms": 0.073,
+      "index_names": [
+        "ix_c3b2b_plan_user_week_id"
+      ]
+    },
+    {
+      "returned_rows": 3,
+      "examined_scan_rows": 3,
+      "planning_ms": 0.097,
+      "execution_ms": 0.07,
+      "index_names": [
+        "workout_plans_pkey"
+      ]
+    },
+    {
+      "returned_rows": 2,
+      "examined_scan_rows": 11,
+      "planning_ms": 1.085,
+      "execution_ms": 0.626,
+      "index_names": [
+        "ix_c3b2b_occ_user_date",
+        "ix_c3b2b_occ_user_week",
+        "ix_workout_set_logs_workout_occurrence_id",
+        "uq_set_log_supersedes",
+        "workout_set_logs_pkey"
+      ]
+    },
+    {
+      "returned_rows": 0,
+      "examined_scan_rows": 3,
+      "planning_ms": 0.437,
+      "execution_ms": 0.147,
+      "index_names": [
+        "ix_c3b2b_command_user_occ",
+        "ix_c3b2b_occ_user_date",
+        "ix_c3b2b_occ_user_week"
+      ]
+    },
+    {
+      "returned_rows": 0,
+      "examined_scan_rows": 3,
+      "planning_ms": 0.754,
+      "execution_ms": 0.177,
+      "index_names": [
+        "ix_c3b2b_occ_user_date",
+        "ix_c3b2b_occ_user_week",
+        "uq_workout_session_occurrence"
+      ]
+    },
+    {
+      "returned_rows": 1,
+      "examined_scan_rows": 0,
+      "planning_ms": 0.312,
+      "execution_ms": 0.217,
+      "index_names": [
+        "ix_c3b2b_legacy_log_amended",
+        "ix_c3b2b_legacy_log_receipt",
+        "ix_c3b2b_legacy_log_reference",
+        "ix_c3b2b_legacy_log_void",
+        "ix_c3b2b_legacy_state_updated"
+      ]
+    }
+  ],
+  "source_verified": false,
+  "complete": true,
+  "postgres_only": true
+}

@@ -38,6 +38,7 @@ def bootstrap(path):
                 model.__table__.create(conn)
             migration=Path(__file__).with_name('001_candidate_integration.sql').read_text()
             conn.exec_driver_sql(migration)
+            conn.exec_driver_sql(Path(__file__).with_name('002_source_read_indexes.sql').read_text())
         print(json.dumps(dict(database=m['database'],user=m['user'],host=m['host'],port=m['port'],
             PostgreSQL='16.13',existing_source_table_copies=6,additive_candidate_tables=5,production=False)))
     finally:verified.dispose()
