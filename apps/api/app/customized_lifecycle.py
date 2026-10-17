@@ -16,11 +16,13 @@ from core_engine.customized.audit import canonical, content_hash
 from core_engine.customized.admission import AdmissionAudience, admit_policy, record_digest
 from .customized_preview_models import PreviewPrincipal, PreviewRequest
 from .customized_preview_service import evaluate_preview
-from .customized_lifecycle_models import (AccountActor, AcceptCommand, LifecycleError,
+from .customized_lifecycle_models import (AccountActor, AcceptCommand, CompactAcceptCommand, LifecycleError,
     ProposalRequest, ProposalStore)
 from .customized_lifecycle_schedule import SchedulePort, ScheduleSnapshot
 
-RULES = "customized-account-lifecycle-c3b1-v1"
+from .customized_consent_summary import COMPACT_PROTOCOL, LEGACY_PROTOCOL, compact_terms
+
+RULES = "customized-account-lifecycle-c3b2a-v2"
 CONSENT_TEXT = ("I choose Customized and accept this exact inactive candidate revision for review only. "
     "It cannot start a workout. Numerical rules, exercise metadata, load inventories and time estimates "
     "remain unapproved. Acknowledging omitted work is not scientific or medical approval; equal or optimal results are not established.")
@@ -32,9 +34,10 @@ def _json(value):
 
 class LifecycleService:
     def __init__(self, *, server, store: ProposalStore, schedule: SchedulePort, clock,
-                 comparison_pairs: tuple[tuple[str,str], ...] = ()):
+                 comparison_pairs: tuple[tuple[str,str], ...] = (), authorize_actor=None):
         self.server, self.store, self.schedule, self.clock = server, store, schedule, clock
         self.comparison_pairs = comparison_pairs
+        self.authorize_actor = authorize_actor
 
     def _guard(self, actor):
         if self.server.enabled is not True or self.server.environment not in {"test","staging"}:
@@ -44,6 +47,8 @@ class LifecycleService:
         if (actor.subject not in self.server.allowed_subjects
                 or not {"customized:preview","customized:proposal"}<=set(actor.scopes)):
             raise LifecycleError("capability_required",403)
+        if self.authorize_actor is not None:
+            self.authorize_actor(actor)
         now=self.clock()
         if now.tzinfo is None:
             raise LifecycleError("invalid_server_clock",503)
@@ -58,8 +63,10 @@ class LifecycleService:
             if retry:
                 if retry[0]!=digest:
                     raise LifecycleError("idempotency_conflict")
+                self._guard(actor)
                 return retry[1]
             response=execute(tx)
+            self._guard(actor)
             tx.remember(actor.subject,key,digest,response)
             return response
 
@@ -137,17 +144,20 @@ class LifecycleService:
         response,evidence=evaluate_preview(request,server=self.server,principal=principal,context=schedule.planning_context())
         comparisons=[]
         comparison_complete=False
+        reference_preview=None
         references=[reference for candidate,reference in self.comparison_pairs if candidate==request.bundle_id]
         if len(references)==1:
             reference=references[0]
             original,_=evaluate_preview(request.model_copy(update={"bundle_id":reference}),
                 server=self.server,principal=principal,context=schedule.planning_context())
             if len(original.sessions)==len(response.sessions)==3:
+                reference_preview=original.model_dump(mode="json")
                 comparison_complete=True
                 for old,new in zip(original.sessions,response.sessions):
                     if (old.local_date!=new.local_date
                             or tuple(e.variant_id for e in old.exercises)!=tuple(e.variant_id for e in new.exercises)):
                         comparison_complete=False
+                        reference_preview=None
                         break
                     for old_e,new_e in zip(old.exercises,new.exercises):
                         # Set differences cannot establish equivalence when other
@@ -161,12 +171,14 @@ class LifecycleService:
                                 reference_sets=old_e.sets,candidate_sets=new_e.sets,removed_sets=old_e.sets-new_e.sets,
                                 reference_bundle=reference,reference_preview_hash=content_hash(original.model_dump(mode="json"))))
                 comparison_complete=comparison_complete and bool(comparisons)
+        if comparison_complete:
+            reference_preview=original.model_dump(mode="json")
         if not comparison_complete:
             comparisons=[]
         snapshot=dict(schema_version=RULES,request=request.model_dump(mode="json",exclude={"consent","consent_reference","omissions"}),
             preview=response.model_dump(mode="json"),evidence=canonical(evidence) if evidence else None,
             schedule=schedule.document(),schedule_freshness=schedule.freshness_hash(),
-            content_stamp=self._content_stamp(request),workload_changes=comparisons,comparison_complete=comparison_complete,
+            content_stamp=self._content_stamp(request),workload_changes=comparisons,comparison_complete=comparison_complete,comparison_reference=reference_preview,
             authority=dict(policy="review_required",metadata="unqualified",inventory="synthetic",
                 professional_approval="missing",owner_release_decision="missing",scheduling=schedule.source_kind))
         return _json(snapshot)
@@ -255,7 +267,8 @@ class LifecycleService:
             plan_version=document["plan_version"],snapshot_hash=document["snapshot_hash"],acknowledgements=acknowledgements)
         return terms,content_hash(terms)
 
-    def challenge(self,actor,proposal_id,*,expected_revision,snapshot_hash,idempotency_key):
+    def challenge(self,actor,proposal_id,*,expected_revision,snapshot_hash,idempotency_key,protocol=LEGACY_PROTOCOL):
+        if protocol not in {LEGACY_PROTOCOL,COMPACT_PROTOCOL}:raise LifecycleError("invalid_consent_protocol",422)
         def execute(tx):
             document=self._owned(tx,actor,proposal_id)
             self._expected(document,expected_revision)
@@ -266,16 +279,23 @@ class LifecycleService:
             self._fresh(actor,document);self._candidate(document)
             token=secrets.token_urlsafe(32)
             terms,digest=self._terms(document)
+            if protocol==COMPACT_PROTOCOL:
+                terms,digest=compact_terms(document,terms["acknowledgements"])
             document["pending_challenge"]=dict(token_hash=hashlib.sha256(token.encode()).hexdigest(),session_id=actor.session_id,
-                terms_hash=digest,expires_at=(self.clock()+timedelta(minutes=10)).isoformat())
+                terms_hash=digest,protocol=protocol,expires_at=(self.clock()+timedelta(minutes=10)).isoformat())
             result=self._append(tx,actor,document,document["state"])
-            result.update(challenge=token,terms=terms,terms_hash=digest,required_acknowledgements=terms["acknowledgements"])
+            result.update(challenge=token,terms=terms,terms_hash=digest)
+            if protocol==COMPACT_PROTOCOL:
+                result.update(consent_protocol=protocol,summary=terms["summary"],summary_hash=terms["summary_hash"],audit_acknowledgements=terms["audit_acknowledgements"])
+            else:
+                result.update(required_acknowledgements=terms["acknowledgements"])
             return result
-        return self._command(actor,idempotency_key,("challenge",proposal_id,expected_revision,snapshot_hash),execute)
+        return self._command(actor,idempotency_key,("challenge",proposal_id,expected_revision,snapshot_hash,protocol),execute)
 
     def accept(self,actor,proposal_id,data,*,idempotency_key):
         try:
-            command=AcceptCommand.model_validate(data)
+            compact=isinstance(data,dict) and data.get("protocol")==COMPACT_PROTOCOL
+            command=(CompactAcceptCommand if compact else AcceptCommand).model_validate(data)
         except ValidationError:
             raise LifecycleError("invalid_request",422) from None
         def execute(tx):
@@ -283,6 +303,9 @@ class LifecycleService:
             pending=document.get("pending_challenge")
             if not pending or command.expected_revision!=document["revision"]:
                 raise LifecycleError("challenge_consumed_or_stale")
+            protocol=COMPACT_PROTOCOL if compact else LEGACY_PROTOCOL
+            if pending.get("protocol",LEGACY_PROTOCOL)!=protocol:
+                raise LifecycleError("invalid_consent_protocol",403)
             if pending["session_id"]!=actor.session_id:
                 raise LifecycleError("challenge_session_mismatch",403)
             if (not secrets.compare_digest(hashlib.sha256(command.challenge.encode()).hexdigest(),pending["token_hash"])
@@ -291,14 +314,21 @@ class LifecycleService:
             if self.clock()>=datetime.fromisoformat(pending["expires_at"]):
                 raise LifecycleError("consent_challenge_expired")
             terms,digest=self._terms(document)
+            audit_acknowledgements=terms["acknowledgements"]
+            if compact:
+                terms,digest=compact_terms(document,audit_acknowledgements)
+                if command.summary_hash!=terms["summary_hash"]:
+                    raise LifecycleError("invalid_summary_binding",403)
             if (command.agree is not True or digest!=command.terms_hash
-                or sorted(command.acknowledgements)!=sorted(terms["acknowledgements"])):
+                or (not compact and sorted(command.acknowledgements)!=sorted(audit_acknowledgements))):
                 raise LifecycleError("acknowledgement_mismatch")
             self._fresh(actor,document);self._candidate(document)
             document["consent_receipt"]=dict(receipt_id=str(uuid4()),subject=actor.subject,session_binding=content_hash(actor.session_id),
                 mode="customized",proposal_id=proposal_id,plan_version=document["plan_version"],snapshot_hash=document["snapshot_hash"],
-                terms_hash=digest,acknowledgements=list(command.acknowledgements),at=self.clock().isoformat(),
+                terms_hash=digest,acknowledgements=list(audit_acknowledgements),protocol=protocol,authorization_revision=actor.authorization_revision,at=self.clock().isoformat(),
                 authority="server_verified_account_action_candidate_only")
+            if compact:
+                document["consent_receipt"].update(summary_hash=terms["summary_hash"],audit_summary=terms["summary"])
             document["pending_challenge"]=None
             return self._append(tx,actor,document,"accepted_candidate")
         return self._command(actor,idempotency_key,("accept",proposal_id,command.model_dump(mode="json")),execute)

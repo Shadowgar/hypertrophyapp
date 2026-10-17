@@ -46,7 +46,7 @@ def existing_account_dependency():
 
 
 def create_lifecycle_app(*, service=None, account_dependency=None, trusted_origin: str | None=None,
-                         initial_request: dict | None=None) -> FastAPI:
+                         initial_request: dict | None=None, consent_protocol="granular-candidate-consent-v1") -> FastAPI:
     server=service.server if service else PreviewServer()
     if trusted_origin is not None:
         parsed=urlsplit(trusted_origin)
@@ -88,7 +88,7 @@ def create_lifecycle_app(*, service=None, account_dependency=None, trusted_origi
     @app.get("/customized/lifecycle",response_class=HTMLResponse)
     def shell():
         # No account or proposal data in this shell. Token stays in memory.
-        return HTMLResponse(render_shell(server,initial_request))
+        return HTMLResponse(render_shell(server,initial_request,consent_protocol=consent_protocol))
 
     @app.get("/customized/lifecycle.js")
     def script(): return Response(SCRIPT,media_type="text/javascript")
@@ -111,10 +111,12 @@ def create_lifecycle_app(*, service=None, account_dependency=None, trusted_origi
 
     @app.post("/customized/proposals/{proposal_id}/challenge")
     def challenge(proposal_id: str,body: ChallengeCommand,request: Request,account=Depends(actor)):
-        return service.challenge(account,proposal_id,**body.model_dump(),idempotency_key=key(request))
+        return service.challenge(account,proposal_id,**body.model_dump(),idempotency_key=key(request),protocol=consent_protocol)
 
     @app.post("/customized/proposals/{proposal_id}/accept")
     def accept(proposal_id: str,body: dict,request: Request,account=Depends(actor)):
+        if consent_protocol=="compact-candidate-consent-v2" and body.get("protocol")!=consent_protocol:
+            raise LifecycleError("invalid_consent_protocol",422)
         return service.accept(account,proposal_id,body,idempotency_key=key(request))
 
     @app.post("/customized/proposals/{proposal_id}/revisions")
