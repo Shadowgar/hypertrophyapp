@@ -26,11 +26,23 @@ class AcceptCommand(StrictPreviewModel):
     agree: StrictBool
 
 
+class CompactAcceptCommand(StrictPreviewModel):
+    protocol: Literal["compact-candidate-consent-v2"]
+    expected_revision: StrictInt = Field(ge=1)
+    snapshot_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    challenge: str = Field(min_length=20, max_length=128)
+    terms_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    summary_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    mode: Literal["customized"]
+    agree: StrictBool
+
+
 @dataclass(frozen=True)
 class AccountActor:
     subject: str
     session_id: str
     scopes: tuple[str, ...]
+    authorization_revision: str | None = None
 
 
 class LifecycleError(Exception):

@@ -35,6 +35,7 @@ class ScheduleSnapshot:
     source_kind: Literal["synthetic", "unverified", "source_verified"]
     source_reference: str
     contract_version: str = "customized-schedule-port-c3b1-v1"
+    source_evidence: str | None = None
 
     def document(self) -> dict:
         try:

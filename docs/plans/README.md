@@ -16,6 +16,8 @@ One forward roadmap: [M0–M6 milestones](../roadmap/milestones.md). A plan desc
 | [M2A-1 completed-exposure load intelligence](m2a-load-intelligence.md) | Authored completed-exposure load-only decisions, optional actual RPE, prefill/override and effective-history reconstruction. | Owner-authorized implementation in the 2026-10-06 merge/deploy-M2B and implement-M2A task; isolated qualification and unmerged PR required. No M2A migration/deployment or merge authorization. |
 | [M2A-2 authored warm-up guidance](m2a-authored-warmup-guidance.md) | LOAD-008 source-preserving guidance and distinct warm-up receipts in Today. | Owner-authorized implementation on the deployed M2A-1 base; isolated qualification and PR review required. No merge, deployment or live data changes authorized. |
 
+| [M4-C3B2A staging integration](m4-c3b2a-staging-integration.md) | Explicit account/session candidate admission, compact versioned consent/comparison and read-only #83-shaped calendar port. | Issue #94 / owner-authorized isolated implementation and stacked draft; synthetic qualification only. No live activation, migration, merge or deployment approval. |
+
 | Status | Required meaning |
 |---|---|
 | Proposed | Reviewable intent; no execution authorization. |
