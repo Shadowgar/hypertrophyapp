@@ -37,7 +37,18 @@ class LifecycleService:
                  comparison_pairs: tuple[tuple[str,str], ...] = (), authorize_actor=None):
         self.server, self.store, self.schedule, self.clock = server, store, schedule, clock
         self.comparison_pairs = comparison_pairs
-        self.authorize_actor = authorize_actor
+        self._authorize_actor = authorize_actor
+
+    @property
+    def authorize_actor(self):
+        """Constructor-owned authority; factories cannot replace a host's gate."""
+        return self._authorize_actor
+
+    def _transaction(self, actor):
+        # PostgreSQL owns an account lock shared with auth/history/calendar.
+        # Legacy disposable ports retain their existing transaction contract.
+        bound=getattr(self.store,"authorized_transaction",None)
+        return bound(actor) if bound is not None else self.store.transaction()
 
     def _guard(self, actor):
         if self.server.enabled is not True or self.server.environment not in {"test","staging"}:
@@ -58,7 +69,7 @@ class LifecycleService:
         if not isinstance(key,str) or not 1<=len(key)<=96 or not all(33<=ord(c)<=126 for c in key):
             raise LifecycleError("invalid_idempotency_key",422)
         digest=content_hash((RULES,actor.subject,actor.session_id,payload))
-        with self.store.transaction() as tx:
+        with self._transaction(actor) as tx:
             retry=tx.retry(actor.subject,key)
             if retry:
                 if retry[0]!=digest:
@@ -97,12 +108,12 @@ class LifecycleService:
 
     def get(self,actor,proposal_id):
         self._guard(actor)
-        with self.store.transaction() as tx:
+        with self._transaction(actor) as tx:
             return self._public(self._owned(tx,actor,proposal_id))
 
     def history(self,actor,proposal_id):
         self._guard(actor)
-        with self.store.transaction() as tx:
+        with self._transaction(actor) as tx:
             self._owned(tx,actor,proposal_id)
             return [self._public(d) for d in tx.history(actor.subject,proposal_id)]
 

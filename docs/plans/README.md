@@ -18,6 +18,8 @@ One forward roadmap: [M0–M6 milestones](../roadmap/milestones.md). A plan desc
 
 | [M4-C3B2A staging integration](m4-c3b2a-staging-integration.md) | Explicit account/session candidate admission, compact versioned consent/comparison and read-only #83-shaped calendar port. | Issue #94 / owner-authorized isolated implementation and stacked draft; synthetic qualification only. No live activation, migration, merge or deployment approval. |
 
+| [M4-C3B2B PostgreSQL/source integration](m4-c3b2b-postgres-integration.md) | Existing candidate persistence/replay, server sessions, User-lock races and exact source reads. | Issue #97 / authorized isolated implementation and stacked draft; no production migration, merge, deployment or workout activation. Science #96 stays separate. |
+
 | Status | Required meaning |
 |---|---|
 | Proposed | Reviewable intent; no execution authorization. |
