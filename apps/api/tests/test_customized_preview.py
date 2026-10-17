@@ -175,7 +175,9 @@ sys.addaudithook(deny)
 assert preview_program(request,**args)==first
 assert repr((request,args))==before
 '''
-    result=subprocess.run([sys.executable,"-c",code],env=dict(os.environ),capture_output=True,text=True,timeout=20)
+    root=Path(__file__).resolve().parents[3]
+    child_env={**os.environ,"PYTHONPATH":os.pathsep.join(str(p) for p in (root/"apps/api",root/"packages/core-engine",root))}
+    result=subprocess.run([sys.executable,"-c",code],env=child_env,cwd=root,capture_output=True,text=True,timeout=20)
     assert result.returncode==0,result.stderr
 
 

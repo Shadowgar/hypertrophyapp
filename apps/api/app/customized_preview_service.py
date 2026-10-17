@@ -6,17 +6,17 @@ its numerical defaults remain trace-only. The explicit CustomizedProfile is the
 only planning input. Production routing/activation and real inventory admission
 are intentionally absent, rather than inferred from this staging demonstration.
 """
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 
 from core_engine.customized.admission import AdmissionAudience, admit_policy
 from core_engine.customized.audit import content_hash
 from core_engine.customized.models import CustomizedProfile, PlanningContext
 from core_engine.customized.pilot import ACTIONS, plan_pilot
-from core_engine.customized.pilot_models import CoverageOmission
+from core_engine.customized.pilot_models import CoverageOmission, PilotPreview
 
 from .generated_training_profile import build_generated_training_profile
 from .customized_preview_models import (PreviewRequest, PreviewPrincipal, PreviewServer,
-    PreviewResponse, ExercisePreview, SessionPreview, RegionPreview)
+    PreviewResponse, ExercisePreview, SessionPreview, RegionPreview, SyntheticReviewBundle)
 
 ACTIVE = ("goal","training_context","selected_dates","timezone","cap_minutes","cap_kind","equipment","skill",
     "restrictions","preferred_variants","excluded_variants","preferred_stability","omissions","mode","consent")
@@ -29,8 +29,29 @@ LIMITATIONS = ("candidate_for_expert_review_nonprescriptive","fixed_design_not_p
     "cross_week_persistence_and_carryover_deferred","no_growth_or_injury_probability_estimated")
 
 
+@dataclass(frozen=True)
+class PreviewEvidence:
+    """Internal decision evidence, never accepted from an HTTP caller."""
+    profile: CustomizedProfile
+    bundle: SyntheticReviewBundle
+    context: PlanningContext
+    result: PilotPreview
+
+
 def preview_program(request: PreviewRequest, *, server: PreviewServer, principal: PreviewPrincipal | None,
                     context: PlanningContext | None) -> PreviewResponse:
+    return evaluate_preview(request, server=server, principal=principal, context=context)[0]
+
+
+def evaluate_preview(request: PreviewRequest, *, server: PreviewServer, principal: PreviewPrincipal | None,
+                     context: PlanningContext | None) -> tuple[PreviewResponse, PreviewEvidence | None]:
+    evidence = []
+    response = _preview_program(request, server=server, principal=principal, context=context, evidence=evidence)
+    return response, evidence[0] if evidence else None
+
+
+def _preview_program(request: PreviewRequest, *, server: PreviewServer, principal: PreviewPrincipal | None,
+                    context: PlanningContext | None, evidence: list) -> PreviewResponse:
     """A host supplies registry, authorization and exact context; never the client."""
     if not isinstance(request,PreviewRequest) or not isinstance(server,PreviewServer):
         raise TypeError("Typed preview request and server context required")
@@ -94,6 +115,7 @@ def preview_program(request: PreviewRequest, *, server: PreviewServer, principal
     result=plan_pilot(profile=profile,catalog=bundle.catalog,standard=bundle.standard,design=bundle.design,context=context,
         simulate=True,accepted_omissions=tuple(CoverageOmission(o.kind,o.name,o.reason,o.confirmation_reference) for o in request.omissions),
         exposures=bundle.exposures,strength_reports=bundle.strength_reports)
+    evidence.append(PreviewEvidence(profile, bundle, context, result))
     sessions=[]
     for s in result.plan.sessions:
         exercises=[]
