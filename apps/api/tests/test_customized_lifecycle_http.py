@@ -1,5 +1,4 @@
 """Guarded lifecycle integration, with real app bearer auth + disposable lookup."""
-from types import SimpleNamespace
 import pytest
 from fastapi.testclient import TestClient
 
@@ -75,34 +74,23 @@ def test_validation_and_size_errors_do_not_echo_private_input(harness):
     assert response.status_code==422 and "never-echo" not in response.text
 
 
-def test_real_app_jwt_current_user_dependency_maps_account_without_production_db(harness):
-    from app.customized_lifecycle_http import create_lifecycle_app, existing_account_dependency
-    from app.deps import get_db
-    from app.models import User
-    from app.security import create_access_token
-    # No connection or DDL: execute the actual SQLAlchemy ownership predicate on
-    # a synthetic account lookup via a disposable lookup, retaining real JWT auth.
-    class Lookup:
-        def __init__(self,ids): self.ids=ids
-        def filter(self,predicate):
-            self.subject=predicate.right.value
-            return self
-        def first(self): return User(id=self.subject) if self.subject in self.ids else None
-    def disposable_lookup():
-        yield SimpleNamespace(query=lambda model: Lookup({"alice","bob"}))
-    s,*_=harness
-    app=create_lifecycle_app(service=s,account_dependency=existing_account_dependency(),trusted_origin="http://testserver")
-    app.dependency_overrides[get_db]=disposable_lookup
-    client=TestClient(app)
-    alice=create_access_token("alice");bob=create_access_token("bob")
-    p=post(client,"/customized/proposals",request(),headers={"Authorization":f"Bearer {alice}"}).json()
-    assert p["subject"]=="alice"
-    for id in (p["proposal_id"],"unknown"):
-        response=client.get(f"/customized/proposals/{id}",headers={"Authorization":f"Bearer {bob}"})
-        assert response.status_code==404 and response.json()=={"status":"not_found"}
-    assert post(client,"/customized/proposals",request(),headers={"Authorization":"Bearer forged.invalid.token"}).status_code==401
-    assert post(client,"/customized/proposals",request(),headers={"Authorization":f"Bearer {create_access_token('absent')}"}).status_code==401
-    # Test adapter does not import main/startup or open the unused configured DB.
-    import sys,os
-    assert "app.main" not in sys.modules
-    assert not os.path.exists('/tmp/hypertrophy-c3b1-unused.sqlite')
+def test_real_app_jwt_current_user_dependency_maps_account_without_production_db(tmp_path):
+    # The hosted worker may already have imported app.main while collecting other
+    # tests. This child proves this path never imports it or connects to any DB.
+    import json, os, subprocess, sys
+    from pathlib import Path
+    root=Path(__file__).resolve().parents[3]
+    target=tmp_path/'unused-auth-probe.sqlite'
+    assert not target.exists() and not (root/'.env').exists()
+    env={"PATH":str(Path(sys.executable).parent)+os.pathsep+"/usr/bin:/bin",
+        "PYTHONPATH":os.pathsep.join(str(p) for p in (root/'apps/api',root/'packages/core-engine',root)),
+        "PYTHONDONTWRITEBYTECODE":"1","DATABASE_URL":"sqlite:///"+str(target),
+        "TEST_DATABASE_URL":"sqlite:///"+str(target),"CI_TEST_ROOT":str(tmp_path),
+        "LOG_FILE_PATH":str(tmp_path/'unused.log'),
+        "JWT_SECRET":"isolated-api-test-signing-key-not-for-deployment-000"}
+    result=subprocess.run([sys.executable,'-m','research.m4c3b1.auth_probe'],cwd=root,env=env,
+        capture_output=True,text=True,timeout=30)
+    assert result.returncode==0,result.stderr
+    assert json.loads(result.stdout)==dict(authenticated_owner=True,cross_account_http=404,
+        invalid_or_absent_user_http=401,production_main_imported=False,database_connections=0,connection_guard_verified=True)
+    assert not target.exists()
