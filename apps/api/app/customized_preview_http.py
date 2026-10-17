@@ -21,15 +21,16 @@ HEADERS={"Cache-Control":"no-store","Content-Security-Policy":CSP,"X-Content-Typ
 
 
 class _BoundedIsolatedRequests:
-    def __init__(self,app,server):
+    def __init__(self,app,server,headers=None):
         self.app,self.server=app,server
+        self.headers=HEADERS if headers is None else headers
 
     async def __call__(self,scope,receive,send):
         if scope["type"]!="http":
             await self.app(scope,receive,send)
             return
         if self.server.enabled is not True or self.server.environment not in {"staging","test"}:
-            await JSONResponse({"status":"feature_disabled","message":"Experimental preview unavailable; no approved production policy is admitted."},status_code=404,headers=HEADERS)(scope,receive,send)
+            await JSONResponse({"status":"feature_disabled","message":"Experimental preview unavailable; no approved production policy is admitted."},status_code=404,headers=self.headers)(scope,receive,send)
             return
         chunks=[]; size=0
         while True:
@@ -38,7 +39,7 @@ class _BoundedIsolatedRequests:
                 return
             chunk=message.get("body",b"");size+=len(chunk)
             if size>16384:
-                await JSONResponse({"status":"request_too_large"},status_code=413,headers=HEADERS)(scope,receive,send)
+                await JSONResponse({"status":"request_too_large"},status_code=413,headers=self.headers)(scope,receive,send)
                 return
             chunks.append(chunk)
             if not message.get("more_body",False):
@@ -52,7 +53,7 @@ class _BoundedIsolatedRequests:
             return {"type":"http.request","body":b"".join(chunks),"more_body":False}
         async def secure_send(message):
             if message["type"]=="http.response.start":
-                message={**message,"headers":[*message.get("headers",[]),*((k.lower().encode(),v.encode()) for k,v in HEADERS.items())]}
+                message={**message,"headers":[*message.get("headers",[]),*((k.lower().encode(),v.encode()) for k,v in self.headers.items())]}
             await send(message)
         await self.app(scope,bounded_receive,secure_send)
 
