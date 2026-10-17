@@ -107,12 +107,20 @@ def test_account_grant_is_rechecked_before_commit(staged):
         nonlocal calls
         calls+=1
         gate.authorize(actor)
-        if calls==2:
+        if calls==1:
             key=next(k for k in staged.access.grants if k[0]=='alice')
             staged.access.grants[key]=replace(staged.access.grants[key],enabled=False)
-    staged.service.authorize_actor=revoke_during_command
-    response=staged.post('/customized/proposals',proposed_request())
-    assert response.status_code==401
+    from app.customized_lifecycle import LifecycleService
+    existing=staged.service
+    # New owned service, not reassignment of a shared host's authority.
+    staged.service=LifecycleService(server=existing.server,store=existing.store,schedule=existing.schedule,
+        clock=existing.clock,comparison_pairs=existing.comparison_pairs,authorize_actor=revoke_during_command)
+    # This test exercises the command owner's final authorization directly.
+    from app.customized_lifecycle_models import AccountActor,LifecycleError
+    user=staged.users['alice'];actor=gate.bind(user,'Bearer '+staged.tokens['alice'])
+    with pytest.raises(LifecycleError) as denied:
+        staged.service.create(actor,proposed_request(),idempotency_key='create')
+    assert denied.value.status==401
     with staged.service.store.transaction() as tx:
         assert tx.retry('alice','create') is None
 

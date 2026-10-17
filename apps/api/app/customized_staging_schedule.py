@@ -35,6 +35,15 @@ class CalendarOccurrence:
 
 
 @dataclass(frozen=True)
+class WeekCoverage:
+    week_start: date
+    state: Literal['dated','observed_empty','unknown']
+    reasons: tuple[str,...]
+    # #83 has no authoritative negative-coverage record/contract yet.
+    authoritative: Literal[False] = False
+
+
+@dataclass(frozen=True)
 class CalendarWindow:
     subject: str
     timezone: str
@@ -44,6 +53,7 @@ class CalendarWindow:
     source_contract: str
     occurrences: tuple[CalendarOccurrence,...]
     complete: bool
+    coverage: tuple[WeekCoverage,...] = ()
 
 
 class CalendarReadPort(Protocol):
