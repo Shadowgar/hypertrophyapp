@@ -60,6 +60,17 @@ exports[`visual snapshot: week route 1`] = `
 <div
   class="space-y-4"
 >
+  <p
+    class="text-sm"
+  >
+    <a
+      class="underline"
+      href="/customize"
+    >
+      Customize My Workout
+    </a>
+     — preview and accept an original three-day Full Body program. Accepted Customized dates stay bound to their consent.
+  </p>
   <h1
     class="ui-title-page"
   >

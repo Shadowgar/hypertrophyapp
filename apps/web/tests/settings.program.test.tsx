@@ -90,9 +90,11 @@ test("Settings page shows active program and config in one-program-first mode", 
   render(<SettingsPage />);
 
   await waitFor(() => {
-    expect(screen.getByText(/Make me a plan/i)).toBeInTheDocument();
+    expect(screen.getByText("Customize My Workout")).toBeInTheDocument();
   });
-  expect(screen.getByRole("link", { name: /Update generated plan preferences/i })).toHaveAttribute("href", "/generated-onboarding");
+  expect(screen.getByRole("link", { name: /Update generated plan preferences/i })).toHaveAttribute("href", "/customize");
+  // Opening preferences must not create or accept a Customized plan.
+  expect(vi.mocked(globalThis.fetch).mock.calls.filter(([, init]) => (init?.method ?? "GET") !== "GET")).toHaveLength(0);
   expect(screen.getByRole("button", { name: /Get Recommendation/i })).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: /Wipe Current User Data/i })).not.toBeInTheDocument();
 });
@@ -136,7 +138,7 @@ test("Settings page shows wipe action when dev capability is enabled", async () 
 
   render(<SettingsPage />);
   await waitFor(() => {
-    expect(screen.getByText(/Make me a plan/i)).toBeInTheDocument();
+    expect(screen.getByText("Customize My Workout")).toBeInTheDocument();
   });
   expect(screen.getByRole("button", { name: /Wipe Current User Data/i })).toBeInTheDocument();
 });

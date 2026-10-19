@@ -69,8 +69,10 @@ test("visual snapshot: week route", async () => {
     return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
   });
 
-  const { container, findByRole } = render(<WeekPage />);
+  const { container, findByRole, getByRole, getByText } = render(<WeekPage />);
   await findByRole("checkbox", { name: "Tue, Mar 10" });
+  expect(getByRole("link", { name: "Customize My Workout" })).toHaveAttribute("href", "/customize");
+  expect(getByText(/Accepted Customized dates stay bound to their consent\./)).toBeInTheDocument();
   expect(container.firstChild).toMatchSnapshot();
 });
 
