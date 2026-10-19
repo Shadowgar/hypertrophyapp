@@ -53,6 +53,26 @@ def _onboard_profile(client: TestClient, token: str, *, program_id="pure_bodybui
     assert response.status_code == 200
 
 
+def _stored_legacy_progress_plan() -> dict:
+    """Synthetic legacy execution history; no new Customized generation/consent."""
+    today = date.today()
+    monday = today - timedelta(days=today.weekday())
+    plan = {'program_template_id': 'full_body_v1', 'split': 'full_body', 'phase': 'maintenance',
+        'week_start': monday.isoformat(), 'historical_fixture': True,
+        'sessions': [{'session_id': 'full_body_v1-historical-progress', 'title': 'Stored legacy workout',
+            'date': today.isoformat(), 'exercises': [{'id': 'bench_press_barbell',
+                'primary_exercise_id': 'bench_press_barbell', 'name': 'Barbell bench press',
+                'sets': 4, 'rep_range': [8, 12], 'recommended_working_weight': 20.0,
+                'start_weight': 20.0, 'movement_pattern': 'horizontal_press',
+                'primary_muscles': ['chest'], 'equipment_tags': ['barbell', 'bench'],
+                'substitution_candidates': []}]}]}
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == 'progress@example.com').one()
+        db.add(WorkoutPlan(user_id=user.id, week_start=monday, split='full_body', phase='maintenance', payload=plan))
+        db.commit()
+    return plan
+
+
 def test_workout_progress_endpoint_reports_completed_sets() -> None:
     _reset_db()
     client = TestClient(app)
@@ -167,9 +187,12 @@ def test_workout_today_prefers_logs_when_session_state_completed_sets_is_higher(
     headers = {"Authorization": f"Bearer {token}"}
     _onboard_profile(client, token, program_id=program_id)
 
-    generate = client.post("/plan/generate-week", headers=headers, json={})
-    assert generate.status_code == 200
-    plan = generate.json()
+    if program_id == "full_body_v1":
+        plan = _stored_legacy_progress_plan()
+    else:
+        generate = client.post("/plan/generate-week", headers=headers, json={})
+        assert generate.status_code == 200
+        plan = generate.json()
     first_session = plan["sessions"][0]
     exercise = first_session["exercises"][0]
 
@@ -232,9 +255,12 @@ def test_workout_today_prefers_logs_when_session_state_completed_sets_is_lower(p
     headers = {"Authorization": f"Bearer {token}"}
     _onboard_profile(client, token, program_id=program_id)
 
-    generate = client.post("/plan/generate-week", headers=headers, json={})
-    assert generate.status_code == 200
-    plan = generate.json()
+    if program_id == "full_body_v1":
+        plan = _stored_legacy_progress_plan()
+    else:
+        generate = client.post("/plan/generate-week", headers=headers, json={})
+        assert generate.status_code == 200
+        plan = generate.json()
     first_session = plan["sessions"][0]
     exercise = first_session["exercises"][0]
 

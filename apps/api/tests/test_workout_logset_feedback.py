@@ -85,6 +85,26 @@ def _inject_estimated_1rm_into_latest_plan(
         db.commit()
 
 
+def _retained_plan(client: TestClient, headers: dict[str, str]) -> dict:
+    """Exercise execution against synthetic stored legacy history, never a new prescription."""
+    from datetime import date, timedelta
+    profile = client.get('/profile', headers=headers)
+    assert profile.status_code == 200
+    program = profile.json()['selected_program_id']
+    monday = date.today() - timedelta(days=date.today().weekday())
+    payload = dict(program_template_id=program, split=profile.json()['split_preference'],
+        phase='maintenance', historical_fixture=True, week_start=monday.isoformat(),
+        sessions=[dict(session_id=program+'-retained-feedback', date=date.today().isoformat(), title='Retained history',
+            exercises=[dict(id='legacy_press', primary_exercise_id='legacy_press', name='Retained press',
+                movement_pattern='horizontal_press',primary_muscles=['chest'],equipment_tags=['dumbbell'],
+                sets=3,rep_range=[8,12],recommended_working_weight=20.0,start_weight=20.0,substitution_candidates=[])])])
+    with SessionLocal() as db:
+        user=db.query(User).filter_by(email=profile.json()['email']).one()
+        db.add(WorkoutPlan(user_id=user.id,week_start=monday,split=payload['split'],phase='maintenance',payload=copy.deepcopy(payload)))
+        db.commit()
+    return payload
+
+
 def test_log_set_returns_planned_vs_actual_feedback() -> None:
     _reset_db()
     client = TestClient(app)
@@ -93,9 +113,8 @@ def test_log_set_returns_planned_vs_actual_feedback() -> None:
 
     _onboard_profile(client, token)
 
-    generated = client.post("/plan/generate-week", headers=headers, json={})
-    assert generated.status_code == 200
-    first_session = generated.json()["sessions"][0]
+    retained = _retained_plan(client, headers)
+    first_session = retained["sessions"][0]
     first_exercise = first_session["exercises"][0]
 
     planned_min, planned_max = first_exercise["rep_range"]
@@ -230,9 +249,8 @@ def test_log_set_non_work_set_does_not_advance_progression_state() -> None:
     headers = {"Authorization": f"Bearer {token}"}
 
     _onboard_profile(client, token)
-    generated = client.post("/plan/generate-week", headers=headers, json={})
-    assert generated.status_code == 200
-    first_session = generated.json()["sessions"][0]
+    retained = _retained_plan(client, headers)
+    first_session = retained["sessions"][0]
     first_exercise = first_session["exercises"][0]
     primary_id = first_exercise.get("primary_exercise_id") or first_exercise["id"]
 
@@ -283,9 +301,8 @@ def test_log_set_child_set_does_not_advance_progression_state() -> None:
     headers = {"Authorization": f"Bearer {token}"}
 
     _onboard_profile(client, token)
-    generated = client.post("/plan/generate-week", headers=headers, json={})
-    assert generated.status_code == 200
-    first_session = generated.json()["sessions"][0]
+    retained = _retained_plan(client, headers)
+    first_session = retained["sessions"][0]
     first_exercise = first_session["exercises"][0]
     primary_id = first_exercise.get("primary_exercise_id") or first_exercise["id"]
 
@@ -337,7 +354,7 @@ def test_log_set_child_set_does_not_advance_progression_state() -> None:
         ("upper_lower", "upper_lower_v1", 4),
     ],
 )
-def test_log_set_holds_next_weight_for_phase_2_linked_programs_on_first_underperformance(
+def test_retained_split_receipts_preserve_first_miss_guidance(
     split_preference: str,
     selected_program_id: str,
     days_available: int,
@@ -355,9 +372,8 @@ def test_log_set_holds_next_weight_for_phase_2_linked_programs_on_first_underper
         days_available=days_available,
     )
 
-    generated = client.post("/plan/generate-week", headers=headers, json={})
-    assert generated.status_code == 200
-    first_session = generated.json()["sessions"][0]
+    retained = _retained_plan(client, headers)
+    first_session = retained["sessions"][0]
     first_exercise = first_session["exercises"][0]
 
     planned_min, _planned_max = first_exercise["rep_range"]
