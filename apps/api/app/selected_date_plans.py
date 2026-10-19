@@ -307,6 +307,8 @@ def selected_week_command(*, db: Session, user: User, explicit_template_id: str 
     if len(matching) > 1:
         raise HTTPException(409, 'Multiple current-week plans require manual reconciliation')
     existing = matching[0] if matching else None
+    if existing and existing.payload.get("customized"):
+        raise HTTPException(409,"Customized dates are consent-bound; review a new Customized revision instead of changing them here")
     prior_revision = int(existing.placement_revision or 0) if existing else 0
     if (prior_revision and expected_revision is None) or (expected_revision is not None and expected_revision != prior_revision):
         raise HTTPException(409, 'Schedule changed; reload the current placement revision')

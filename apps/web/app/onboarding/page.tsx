@@ -25,7 +25,7 @@ const FALLBACK_PROGRAMS: ProgramTemplateOption[] = [
   },
   {
     id: "full_body_v1",
-    name: "Make me a plan",
+    name: "Customize My Workout",
     split: "full_body",
     days_supported: [2, 3, 4, 5],
     description: "Deterministic generated full body path built from your constraints.",
@@ -941,6 +941,13 @@ export default function OnboardingPage() {
 
       const profileSaved = await saveOnboardingProfile(accessToken, resolvedName);
       if (!profileSaved) {
+        return;
+      }
+
+      if (selectedProgramId === "full_body_v1") {
+        localStorage.removeItem(ONBOARDING_DRAFT_KEY);
+        setHasSavedDraft(false);
+        router.push("/customize");
         return;
       }
 

@@ -448,7 +448,7 @@ function WorkoutSummaryCard({ summary }: Readonly<{ summary: WorkoutSummary | nu
             <p className="font-semibold text-zinc-100">{item.performed_variant?.name ?? item.name}</p>
             {item.performed_variant ? <p>Original authored exercise: {item.name} · confirmed source-approved variant</p> : null}
             <p>
-              Planned: {item.planned_sets} sets · {item.planned_reps_min != null ? `${item.planned_reps_min}-${item.planned_reps_max}` : "authored target"} reps · {item.load_semantics === "bodyweight" ? "Bodyweight" : item.load_recommendation_available === false ? "Record actual variant load" : `${kgToLbs(item.planned_weight)} lbs`}
+              Planned: {item.planned_sets} sets · {item.planned_reps_min != null ? `${item.planned_reps_min}-${item.planned_reps_max}` : "authored target"} reps · {item.load_semantics === "bodyweight" ? "Bodyweight" : item.load_recommendation_available === false ? "Record actual variant load" : item.planned_weight == null ? "Load unknown" : `${kgToLbs(item.planned_weight)} lbs`}
             </p>
             <p>
               Performed: {item.performed_sets} sets · avg {item.average_performed_reps} reps · {item.load_semantics === "bodyweight" ? (item.average_performed_weight > 0 ? `Bodyweight + ${kgToLbs(item.average_performed_weight)} lb added` : "Bodyweight (no added load)") : `${kgToLbs(item.average_performed_weight)} lbs`}
@@ -629,8 +629,8 @@ function ExerciseDetailOverlay({
   onWarmupComplete: (ordinal: number, performed: PerformedWarmup) => Promise<void>;
   onCorrectSet: (receipt: EffectiveLoadSet, values: { reps: number; weight: number; rpe?: number | null; reason: string }) => Promise<void>;
 }>) {
-  const defaultRestSeconds = parseRestToSeconds(exercise.rest) ?? 90;
-  const bodyweight = isBodyweightAuthored(exercise);
+  const defaultRestSeconds = exercise.customized?.rest_seconds.high ?? parseRestToSeconds(exercise.rest) ?? 90;
+  const bodyweight = isBodyweightAuthored(exercise) || Boolean(exercise.customized && exercise.load_semantics === "bodyweight");
   const sourceWarmups = authoredWarmupLabel(exercise);
   const currentRepRange = useMemo(() => authoredSetRepRange(exercise, Math.min(completed + 1, exercise.sets)), [exercise, completed]);
   const intelligenceActive = loadIntelligence !== undefined;
@@ -642,10 +642,10 @@ function ExerciseDetailOverlay({
     exerciseId: exerciseKey(exercise),
     totalSets: exercise.sets,
     defaultRestSeconds,
-    recommendedWorkingWeight: intelligenceActive ? (canonicalLoad === undefined ? undefined : kgToLbs(canonicalLoad))
+    recommendedWorkingWeight: exercise.customized ? (bodyweight ? 0 : undefined) : intelligenceActive ? (canonicalLoad === undefined ? undefined : kgToLbs(canonicalLoad))
       : bodyweight ? 0 : exercise.performed_variant ? undefined : snapToHalfLb(derivedWorkingLb),
     recommendedWeightCanonicalKg: canonicalLoad,
-    requireWeight: intelligenceActive && !bodyweight,
+    requireWeight: (intelligenceActive || Boolean(exercise.customized)) && !bodyweight,
     repRange: currentRepRange,
     initialCompletedSets: completed,
     skipTimerOnComplete: true,
@@ -709,8 +709,9 @@ function ExerciseDetailOverlay({
       {/* ---- Scrollable body ---- */}
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 pb-[max(7rem,env(safe-area-inset-bottom))] space-y-4 overscroll-contain">
 
+        {exercise.customized && <div className="rounded border border-amber-700 p-3"><p>Target {exercise.customized.target_min}–{exercise.customized.target_max} {exercise.customized.target_kind.toUpperCase()} · Rest {exercise.customized.rest_seconds.low}–{exercise.customized.rest_seconds.high} seconds.</p><p>Calibrate this exercise on your actual equipment. Enter a comfortable load; no maximal test is required. Stop for pain or technique deterioration. Actual RPE is optional and is not inferred from the target RIR.</p><p>Load basis: {exercise.load_semantics?.replaceAll('_',' ')}. Numerical rules remain provisional.</p></div>}
         {/* == ZONE 1: Baseline calculator (expanded when no baseline) == */}
-        {!exercise.authored_prescription && exercise.rep_range && !bodyweight && !exercise.performed_variant ? <Disclosure title="Baseline Calculator" badge={baseline ? `1RM: ${Math.round(baseline.estimated1RM)} lb` : null} defaultOpen={!baseline}>
+        {!exercise.customized && !exercise.authored_prescription && exercise.rep_range && !bodyweight && !exercise.performed_variant ? <Disclosure title="Baseline Calculator" badge={baseline ? `1RM: ${Math.round(baseline.estimated1RM)} lb` : null} defaultOpen={!baseline}>
           <BaselineBlock
             exerciseId={exerciseKey(exercise)}
             repRange={exercise.rep_range}
@@ -835,7 +836,7 @@ function ExerciseDetailOverlay({
 
         {exercise.authored_prescription || exercise.authored_constraint ? <AuthoredConstraintCard exercise={exercise} onDecision={onAuthoredDecision} effectiveSets={effectiveSets} onUndoLastSet={onUndoLastSet} /> : null}
         {/* == ZONE 4: Primary action (log set) == */}
-        {intelligenceActive ? <LoadIntelligencePanel guidance={loadIntelligence ?? null} completed={completed} total={exercise.sets}
+        {intelligenceActive || exercise.customized ? <LoadIntelligencePanel receiptOnly={Boolean(exercise.customized)} guidance={loadIntelligence ?? null} completed={completed} total={exercise.sets}
           loadContext={loadContext} onContextChange={onLoadContextChange} onPreview={onPreviewLoad}
           overrideReason={overrideReason} onOverrideReason={onOverrideReason} onCorrect={onCorrectSet} effectiveSets={effectiveSets} requireExternalWeight={!bodyweight} /> : null}
         <SetInputCard
@@ -979,6 +980,7 @@ export default function TodayPage() {
   }, [matchesSelectedLoadContext]);
 
   function intelligenceFor(exercise: WorkoutExercise): LoadIntelligence | null | undefined {
+    if (exercise.customized) return undefined;
     const key = exerciseKey(exercise);
     return Object.prototype.hasOwnProperty.call(loadIntelligenceByExercise, key) ? loadIntelligenceByExercise[key] : exercise.load_intelligence;
   }
@@ -1115,7 +1117,7 @@ export default function TodayPage() {
       setWorkoutSummary(null);
       setSetFeedbackByExercise({});
       setLoadIntelligenceByExercise({});
-      setEffectiveSetsByExercise(Object.fromEntries(data.exercises.filter(item => item.load_intelligence).map(item => [exerciseKey(item), item.load_intelligence!.effective_sets])));
+      setEffectiveSetsByExercise(Object.fromEntries(data.exercises.filter(item => item.load_intelligence || item.customized_receipts).map(item => [exerciseKey(item), item.customized_receipts ?? item.load_intelligence!.effective_sets])));
       setLoadContextByExercise({});
       resetSelectedLoadContext();
       setLoadOverrideByExercise({});
@@ -1357,13 +1359,14 @@ export default function TodayPage() {
       advanceLoadGeneration(exerciseId);
       setMessage("");
       setSetFeedbackByExercise((prev) => ({ ...prev, [exerciseId]: feedback }));
+      if (feedback.customized_receipts) setEffectiveSetsByExercise(previous=>({...previous,[exerciseId]:feedback.customized_receipts!}));
       if (feedback.load_intelligence !== undefined) updateLoadIntelligence(exerciseId, feedback.load_intelligence ?? null);
       setLiveRecommendationByExercise((prev) => ({
         ...prev,
         [exerciseId]: feedback.live_recommendation,
       }));
 
-      const restCycle = parseRestToSeconds(exercise.rest) ?? 90;
+      const restCycle = exercise.customized?.rest_seconds.high ?? parseRestToSeconds(exercise.rest) ?? 90;
       setGlobalRestTimer({
         exerciseId,
         exerciseName: resolveExerciseName(exercise, swapIndexByExercise),
@@ -1570,7 +1573,7 @@ export default function TodayPage() {
                       <span>{authoredRepLabel(exercise)} reps</span>
                       <span className="text-zinc-700">·</span>
                       <span>{intelligence !== undefined ? (ownedRowLoad === undefined ? "Record actual load" : `${kgToLbs(ownedRowLoad)} lb`)
-                        : isBodyweightAuthored(exercise) ? "Bodyweight" : exercise.performed_variant ? "Record actual load" : `~${rowWorkingLb} lb`}</span>
+                        : exercise.customized ? (exercise.load_semantics === "bodyweight" ? "Bodyweight" : "Record actual load") : isBodyweightAuthored(exercise) ? "Bodyweight" : exercise.performed_variant ? "Record actual load" : `~${rowWorkingLb} lb`}</span>
                     </div>
                     {authoredRelationshipLabels(exercise).map((label) => (
                       <span key={label} className="mt-1 mr-2 inline-block text-xs text-amber-300">{label}</span>
@@ -1605,7 +1608,7 @@ export default function TodayPage() {
         const warmUpCount = exercise.authored_prescription ? 0 : Math.max(0, parseInt(String(exercise.warm_up_sets ?? "0"), 10) || 0);
         const baseline = exercise.performed_variant ? undefined : baselineByExercise[exerciseKey(exercise)];
         const loadIntelligence = intelligenceFor(exercise);
-        const effectiveSets = effectiveSetsByExercise[exerciseKey(exercise)] ?? loadIntelligence?.effective_sets ?? [];
+        const effectiveSets = effectiveSetsByExercise[exerciseKey(exercise)] ?? exercise.customized_receipts ?? loadIntelligence?.effective_sets ?? [];
         const loadContext = loadContextByExercise[exerciseKey(exercise)] ?? loadIntelligence?.load_context ?? { unit: "kg", display_unit: "lb", basis: "unknown" } as LoadContext;
         const lastSet = lastSetByExercise[exerciseKey(exercise)];
         const plannedWorkingLb = exercise.recommended_working_weight == null ? 0 : kgToLbs(exercise.recommended_working_weight);
@@ -1632,7 +1635,9 @@ export default function TodayPage() {
               ? kgToLbs(recommendation!.recommended_weight!)
               : plannedWorkingLb;
         let doThisSetLine: string;
-        if (exercise.authored_prescription) {
+        if (exercise.customized) {
+          doThisSetLine = `${authoredRepLabel(exercise)} reps · ${exercise.customized.target_min}–${exercise.customized.target_max} ${exercise.customized.target_kind.toUpperCase()} · record actual load`;
+        } else if (exercise.authored_prescription) {
           const index = Math.min(completed + 1, exercise.sets);
           doThisSetLine = `${isBodyweightAuthored(exercise) ? "Bodyweight · " : ""}${authoredRepLabel(exercise, index)} reps · ${authoredSetDetails(exercise, index)}`;
         } else if (recommendation) {
@@ -1687,6 +1692,8 @@ export default function TodayPage() {
             if (currentOccurrence.current !== workoutReference(workout)) return false;
             if (todayResult.status === "fulfilled" && workoutReference(todayResult.value) === workoutReference(workout)) {
               setWorkout(todayResult.value);
+              const receipts=todayResult.value.exercises.find(e=>exerciseKey(e)===exerciseKey(exercise))?.customized_receipts;
+              if(receipts)setEffectiveSetsByExercise(previous=>({...previous,[exerciseKey(exercise)]:receipts}));
               applyProgressLoad(todayResult.value.exercises.map(item => ({ ...item, exercise_id: item.id })), todayGeneration);
               setLiveRecommendationByExercise(Object.fromEntries((todayResult.value.exercises ?? [])
                 .filter((item) => item.live_recommendation).map((item) => [exerciseKey(item), item.live_recommendation as WorkoutLiveRecommendation])));
@@ -1784,6 +1791,7 @@ export default function TodayPage() {
               acknowledgeLogCommand(commandKey);
               if (currentOccurrence.current !== workoutReference(workout)) return;
               advanceLoadGeneration(exerciseKey(exercise));
+              if (result.customized_receipts) setEffectiveSetsByExercise(previous=>({...previous,[exerciseKey(exercise)]:result.customized_receipts!}));
               updateLoadIntelligence(exerciseKey(exercise), result.load_intelligence ?? null);
               setSetFeedbackByExercise(previous => { const next = { ...previous }; delete next[exerciseKey(exercise)]; return next; });
               setLiveRecommendationByExercise(previous => { const next = { ...previous }; delete next[exerciseKey(exercise)]; return next; });

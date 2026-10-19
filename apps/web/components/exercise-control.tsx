@@ -207,8 +207,8 @@ export function useExerciseControl({
 
 export type ExerciseControlState = ReturnType<typeof useExerciseControl>;
 
-export function LoadIntelligencePanel({ guidance, completed, total, loadContext, onContextChange, onPreview, overrideReason, onOverrideReason, onCorrect, requireExternalWeight = false, effectiveSets }: {
-  effectiveSets?: EffectiveLoadSet[];
+export function LoadIntelligencePanel({ guidance, completed, total, loadContext, onContextChange, onPreview, overrideReason, onOverrideReason, onCorrect, requireExternalWeight = false, effectiveSets, receiptOnly = false }: {
+  effectiveSets?: EffectiveLoadSet[]; receiptOnly?: boolean;
   guidance: LoadIntelligence | null; completed: number; total: number; loadContext: LoadContext; requireExternalWeight?: boolean;
   onContextChange: (context: LoadContext) => void; onPreview: (context: LoadContext) => Promise<void>;
   overrideReason: string; onOverrideReason: (reason: string) => void;
@@ -235,7 +235,8 @@ export function LoadIntelligencePanel({ guidance, completed, total, loadContext,
   const pendingAction = useRef(false);
   const validIncrement = increment.trim() === "" || (Number.isFinite(Number(increment)) && Number(increment) > 0);
   const shown = completed > 0 && completed < total ? guidance?.remaining_sets : guidance?.next_exposure;
-  return <section className="space-y-3 rounded-xl border border-white/10 p-3" aria-label="Load guidance">
+  return <section className="space-y-3 rounded-xl border border-white/10 p-3" aria-label={receiptOnly ? "Recorded sets" : "Load guidance"}>
+    {receiptOnly ? <p className="text-sm font-medium">Recorded sets · correct actual performance</p> : <>
     <p className="text-sm font-medium">{completed > 0 && completed < total ? "Remaining sets" : "Next exposure"} load guidance</p>
     {shown ? <>
       <p className="text-sm">{shown.action}{shown.recommended_weight != null ? ` · ${kgToLbs(shown.recommended_weight)} lb` : " · no new load inferred"}</p>
@@ -277,6 +278,7 @@ export function LoadIntelligencePanel({ guidance, completed, total, loadContext,
     <label className="block text-xs">Load override reason (optional)
       <input className="ui-input min-h-[48px] w-full" value={overrideReason} maxLength={500} onChange={event => onOverrideReason(event.target.value)} />
     </label>
+    </>}
     {(effectiveSets ?? guidance?.effective_sets ?? []).filter(entry => entry.parent_set_index == null && (["warmup", "work", "working", "top", "backoff"].includes(entry.set_kind?.trim().toLowerCase() || "work"))).map(entry => <div className="rounded border border-white/10 p-2" key={entry.id}>
       <p className="text-xs">{entry.set_kind === "warmup" ? "Warm-up" : "Set"} {entry.set_index}: {entry.reps} reps @ {kgToLbs(entry.weight)} lb · Actual RPE {entry.rpe ?? "unknown"}</p>
       <Button className="min-h-[44px] w-full" variant="secondary" disabled={pending} onClick={() => {

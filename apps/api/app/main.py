@@ -1,5 +1,5 @@
 import os
-from datetime import date
+from datetime import UTC, date, datetime
 from contextlib import asynccontextmanager
 from uuid import uuid4
 from typing import Any
@@ -23,7 +23,11 @@ from .observability import (
     validation_failure_event_name,
     sanitize_auth_validation_errors,
 )
-from .routers import auth, history, plan, profile, workout
+from .routers import auth, history, plan, profile, workout, customized
+
+def customized_clock():
+    return datetime.now(UTC)
+
 
 APP_VERSION = os.environ.get("APP_VERSION", "dev")
 
@@ -122,3 +126,4 @@ app.include_router(profile.router, tags=["profile"])
 app.include_router(plan.router, tags=["plan"])
 app.include_router(workout.router, tags=["workout"])
 app.include_router(history.router, tags=["history"])
+app.include_router(customized.router, tags=["customized"])

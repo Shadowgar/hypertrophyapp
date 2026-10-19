@@ -10,7 +10,7 @@ from .customized_preview_models import PreviewRequest, StrictPreviewModel
 class ProposalRequest(PreviewRequest):
     # These inherited fields are internal compatibility values only. The lifecycle
     # rejects their presence at its public boundary and supplies server references.
-    audience: Literal["synthetic_review_preview"] = "synthetic_review_preview"
+    audience: Literal["synthetic_review_preview", "customized_program"] = "synthetic_review_preview"
     mode: Literal["customized"]
     consent: StrictBool = True
     consent_reference: str = "server_preview_permission_only"

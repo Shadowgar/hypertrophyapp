@@ -94,7 +94,7 @@ test("Onboarding wizard reaches account step with program catalog and password t
 
   expect(screen.getByText("Full Body Phase 1")).toBeInTheDocument();
   expect(screen.getByText("Full Body Phase 2")).toBeInTheDocument();
-  expect(screen.getByText("Make me a plan")).toBeInTheDocument();
+  expect(screen.getByText("Customize My Workout")).toBeInTheDocument();
 
   const password = screen.getByLabelText(/Password/i);
   expect(password).toHaveAttribute("type", "password");

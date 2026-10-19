@@ -23,7 +23,7 @@ class OmissionRequest(StrictPreviewModel):
 
 
 class PreviewRequest(StrictPreviewModel):
-    audience: Literal["synthetic_review_preview", "approved_prescription"]
+    audience: Literal["synthetic_review_preview", "approved_prescription", "customized_program"]
     bundle_id: str = Field(min_length=1, max_length=96)
     mode: Literal["customized", "authored", "manual", "auto"]
     consent: StrictBool
@@ -70,7 +70,7 @@ class PreviewPrincipal:
 
 
 @dataclass(frozen=True)
-class SyntheticReviewBundle:
+class ProgramBundle:
     bundle_id: str
     standard: PilotStandard
     catalog: ExerciseCatalog
@@ -80,13 +80,17 @@ class SyntheticReviewBundle:
     display_name: str = "Original candidate"
 
 
+# Historical C3A import compatibility; runtime hosts supply their own library.
+SyntheticReviewBundle = ProgramBundle
+
+
 @dataclass(frozen=True)
 class PreviewServer:
     enabled: bool = False
-    environment: Literal["production", "staging", "test"] = "production"
+    environment: Literal["production", "staging", "test", "application"] = "production"
     synthetic_enabled: bool = False
     allowed_subjects: tuple[str, ...] = ()
-    bundles: tuple[SyntheticReviewBundle, ...] = ()
+    bundles: tuple[ProgramBundle, ...] = ()
     registry: TrustedPolicyRegistry = TrustedPolicyRegistry()
 
 
@@ -127,7 +131,7 @@ class RegionPreview(StrictPreviewModel):
 
 class PreviewResponse(StrictPreviewModel):
     schema_version: Literal["customized-preview-c3a-v1"] = "customized-preview-c3a-v1"
-    audience: Literal["synthetic_review_preview", "approved_prescription"]
+    audience: Literal["synthetic_review_preview", "approved_prescription", "customized_program"]
     status: str
     message: str
     candidate_name: str = "Policy unavailable"

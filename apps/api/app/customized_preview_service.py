@@ -44,14 +44,14 @@ def preview_program(request: PreviewRequest, *, server: PreviewServer, principal
 
 
 def evaluate_preview(request: PreviewRequest, *, server: PreviewServer, principal: PreviewPrincipal | None,
-                     context: PlanningContext | None) -> tuple[PreviewResponse, PreviewEvidence | None]:
+                     context: PlanningContext | None, application: bool = False) -> tuple[PreviewResponse, PreviewEvidence | None]:
     evidence = []
-    response = _preview_program(request, server=server, principal=principal, context=context, evidence=evidence)
+    response = _preview_program(request, server=server, principal=principal, context=context, evidence=evidence, application=application)
     return response, evidence[0] if evidence else None
 
 
 def _preview_program(request: PreviewRequest, *, server: PreviewServer, principal: PreviewPrincipal | None,
-                    context: PlanningContext | None, evidence: list) -> PreviewResponse:
+                    context: PlanningContext | None, evidence: list, application: bool = False) -> PreviewResponse:
     """A host supplies registry, authorization and exact context; never the client."""
     if not isinstance(request,PreviewRequest) or not isinstance(server,PreviewServer):
         raise TypeError("Typed preview request and server context required")
@@ -59,7 +59,7 @@ def _preview_program(request: PreviewRequest, *, server: PreviewServer, principa
         return PreviewResponse(audience=request.audience,status=status,reasons=(reason,),message=message)
     if server.enabled is not True:
         return blocked("feature_disabled","preview_disabled","Experimental preview is disabled.")
-    if server.environment not in {"staging","test"}:
+    if server.environment not in ({"application"} if application else {"staging","test"}):
         return blocked("feature_disabled","production_preview_disabled","Experimental preview is unavailable in production; no approved policy is admitted here.")
     if principal is None or not principal.subject:
         return blocked("unauthorized","authenticated_principal_required","Sign in to the isolated preview environment.")
@@ -83,13 +83,15 @@ def _preview_program(request: PreviewRequest, *, server: PreviewServer, principa
         return blocked("unsupported_profile","restriction_not_supported","This movement or health restriction has no qualified mapping. Obtain a reviewed alternative; no medical clearance is inferred.")
     if not isinstance(context,PlanningContext):
         return blocked("needs_information","schedule_context_required","Exact planning/week context is unavailable; no schedule or carryover is inferred.")
+    if (application and request.audience != "customized_program") or (not application and request.audience == "customized_program"):
+        return blocked("invalid_input","invalid_audience","Use the matching application context.")
     if request.audience == "approved_prescription":
         admission=admit_policy(request.bundle_id,registry=server.registry,
             audience=AdmissionAudience(request.goal,request.training_context,request.population),as_of=context.planning_instant)
         return PreviewResponse(audience=request.audience,status="activation_disabled" if admission.status=="admitted_for_future_use" else "policy_not_approved",
             message="No real workout can be activated through C3A. An approved policy, qualified inventory and separate activation integration are required.",
             reasons=admission.reasons,trace={"admission_rules":admission.rules_version,"record_digest":admission.record_digest or "none"})
-    if server.synthetic_enabled is not True:
+    if not application and server.synthetic_enabled is not True:
         return blocked("feature_disabled","synthetic_preview_disabled","Synthetic review preview is disabled.")
     bundles=tuple(b for b in server.bundles if b.bundle_id==request.bundle_id)
     if len(bundles)!=1:
@@ -135,12 +137,12 @@ def _preview_program(request: PreviewRequest, *, server: PreviewServer, principa
         if choice.selected_variant_id is None for rejected in choice.rejected for reason in rejected.reasons
         if reason != "different_action_group")
     return PreviewResponse(audience=request.audience,status=result.plan.status,
-        message="Synthetic review only. No approved training policy; this preview cannot start or log a workout.",
+        message=("Provisional Full Body program. Review workload, dates and uncertainty before accepting." if application else "Synthetic review only. No approved training policy; this preview cannot start or log a workout."),
         candidate_name=bundle.display_name,timezone=request.timezone,cap_minutes=request.cap_minutes,cap_kind=request.cap_kind,
         sessions=tuple(sessions),coverage_status=result.coverage_status,regions=tuple(RegionPreview(**asdict(r)) for r in result.region_totals),
         missing_actions=result.missing_actions,missing_regions=result.missing_regions,dose_conflicts=result.dose_conflicts,
         accepted_omissions=request.omissions,reasons=result.plan.reasons,issues=issues,tradeoffs=result.plan.tradeoffs,
-        limitations=LIMITATIONS,active_fields=ACTIVE,trace_only_fields=TRACE_ONLY,
+        limitations=(("provisional_training_policy_no_optimality_or_growth_guarantee", "descriptive_exercise_metadata_no_scoring", "no_assumed_load_inventory_or_historical_effort", "working_load_requires_exercise_specific_calibration", "timing_estimates_not_measured_guarantees", "unknown_adjacent_schedule_disclosed") if application else LIMITATIONS),active_fields=ACTIVE,trace_only_fields=TRACE_ONLY,
         trace={"bundle_id":bundle.bundle_id,"normalizer":"build_generated_training_profile","legacy_path_family":legacy.path_family,
             "core_profile_version":profile.version,"field_origins":tuple(f"{name}:{origin}" for name,origin in origins),"ignored_legacy_defaults":tuple(legacy.decision_trace.defaults_applied),
             "rules_version":result.plan.trace.owner,"rules_hash":result.plan.trace.rules_hash,

@@ -33,6 +33,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:-}
       JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
       JWT_EXPIRE_MINUTES: ${JWT_EXPIRE_MINUTES:-1440}
+      CUSTOMIZED_ENABLED: ${CUSTOMIZED_ENABLED:-false}
       PROGRAMS_DIR: /app/programs
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       LOG_FILE_PATH: ${LOG_FILE_PATH:-/app/logs/app-debug.log}

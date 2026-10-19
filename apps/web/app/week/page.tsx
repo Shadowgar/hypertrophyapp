@@ -469,6 +469,7 @@ export default function WeekPage() {
   const visiblePlan = preview?.plan ?? plan;
   const plannedSets = visiblePlan?.sessions.reduce((sum, session) => sum + session.exercises.reduce((total, exercise) => total + exercise.sets, 0), 0);
   return <div className="space-y-4">
+    <p className="text-sm"><a className="underline" href="/customize">Customize My Workout</a> — preview and accept an original three-day Full Body program. Accepted Customized dates stay bound to their consent.</p>
     <h1 className="ui-title-page">Week Plan</h1>
     <section className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-3" aria-label="Week scheduling">
       <div className="flex flex-wrap gap-2" aria-label="Select planning week">
@@ -509,7 +510,7 @@ export default function WeekPage() {
         </select>
         <Button aria-label="Save program preference" className="min-h-[44px] px-3 text-xs font-semibold" onClick={saveProgramPreference} disabled={isGenerating || isSavingProgramSelection || !preferenceDirty}>{isSavingProgramSelection ? "Saving..." : "Save Preferences"}</Button>
         <p className="text-xs text-zinc-500">Save program preference separately. Activate dates after reviewing the preview.</p>
-        {generatedOnboardingPrompt ? <div className="rounded-md border border-zinc-700 p-2 text-xs"><p>{generatedOnboardingPrompt}</p><a className="underline" href="/generated-onboarding">Update generated plan preferences</a></div> : null}
+        {generatedOnboardingPrompt ? <div className="rounded-md border border-zinc-700 p-2 text-xs"><p>{generatedOnboardingPrompt}</p><a className="underline" href="/customize">Update generated plan preferences</a></div> : null}
       </div>
     </Disclosure>
     <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3" role="status">

@@ -34,9 +34,10 @@ def _json(value):
 
 class LifecycleService:
     def __init__(self, *, server, store: ProposalStore, schedule: SchedulePort, clock,
-                 comparison_pairs: tuple[tuple[str,str], ...] = (), authorize_actor=None):
+                 comparison_pairs: tuple[tuple[str,str], ...] = (), authorize_actor=None, evaluator=evaluate_preview):
         self.server, self.store, self.schedule, self.clock = server, store, schedule, clock
         self.comparison_pairs = comparison_pairs
+        self.evaluator = evaluator
         self._authorize_actor = authorize_actor
 
     @property
@@ -152,14 +153,14 @@ class LifecycleService:
         request=self._request(data)
         schedule=self._schedule(actor,request.timezone)
         principal=PreviewPrincipal(actor.subject,actor.scopes)
-        response,evidence=evaluate_preview(request,server=self.server,principal=principal,context=schedule.planning_context())
+        response,evidence=self.evaluator(request,server=self.server,principal=principal,context=schedule.planning_context())
         comparisons=[]
         comparison_complete=False
         reference_preview=None
         references=[reference for candidate,reference in self.comparison_pairs if candidate==request.bundle_id]
         if len(references)==1:
             reference=references[0]
-            original,_=evaluate_preview(request.model_copy(update={"bundle_id":reference}),
+            original,_=self.evaluator(request.model_copy(update={"bundle_id":reference}),
                 server=self.server,principal=principal,context=schedule.planning_context())
             if len(original.sessions)==len(response.sessions)==3:
                 reference_preview=original.model_dump(mode="json")
@@ -278,6 +279,9 @@ class LifecycleService:
             plan_version=document["plan_version"],snapshot_hash=document["snapshot_hash"],acknowledgements=acknowledgements)
         return terms,content_hash(terms)
 
+    def _compact_terms(self, document, audit_acknowledgements):
+        return compact_terms(document, audit_acknowledgements)
+
     def challenge(self,actor,proposal_id,*,expected_revision,snapshot_hash,idempotency_key,protocol=LEGACY_PROTOCOL):
         if protocol not in {LEGACY_PROTOCOL,COMPACT_PROTOCOL}:raise LifecycleError("invalid_consent_protocol",422)
         def execute(tx):
@@ -291,7 +295,7 @@ class LifecycleService:
             token=secrets.token_urlsafe(32)
             terms,digest=self._terms(document)
             if protocol==COMPACT_PROTOCOL:
-                terms,digest=compact_terms(document,terms["acknowledgements"])
+                terms,digest=self._compact_terms(document,terms["acknowledgements"])
             document["pending_challenge"]=dict(token_hash=hashlib.sha256(token.encode()).hexdigest(),session_id=actor.session_id,
                 terms_hash=digest,protocol=protocol,expires_at=(self.clock()+timedelta(minutes=10)).isoformat())
             result=self._append(tx,actor,document,document["state"])
@@ -327,7 +331,7 @@ class LifecycleService:
             terms,digest=self._terms(document)
             audit_acknowledgements=terms["acknowledgements"]
             if compact:
-                terms,digest=compact_terms(document,audit_acknowledgements)
+                terms,digest=self._compact_terms(document,audit_acknowledgements)
                 if command.summary_hash!=terms["summary_hash"]:
                     raise LifecycleError("invalid_summary_binding",403)
             if (command.agree is not True or digest!=command.terms_hash

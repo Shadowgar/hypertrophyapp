@@ -299,6 +299,10 @@ def workout_today(
     if not selected:
         raise HTTPException(status_code=404, detail="No workouts available")
 
+    if selected.get("customized"):
+        from ..workout_customized import today
+        return today(db,current_user,selected)
+
     authored_selected = any(plan.payload.get("program_template_id") in
         {"pure_bodybuilding_phase_1_full_body", "pure_bodybuilding_phase_2_full_body"} and
         any(session.get("workout_occurrence_id") == selected.get("workout_occurrence_id")
@@ -494,7 +498,7 @@ def log_set(workout_id: str, payload: WorkoutSetLogRequest, db: DbSession, curre
         exercise["authored_constraint"] = constraint
     if constraint.get("execution_status", constraint.get("status")) in {"unresolved", "infeasible", "declined"}:
         raise HTTPException(409, "Authored slot is unresolved; confirm a source-approved alternative before logging")
-    if payload.weight == 0 and not is_bodyweight_authored(exercise):
+    if payload.weight == 0 and not (is_bodyweight_authored(exercise) or (exercise.get("customized") and exercise.get("load_semantics")=="bodyweight")):
         raise HTTPException(422, "Zero external load requires an explicitly bodyweight authored exercise")
     primary = str(exercise.get("primary_exercise_id") or exercise["id"])
     if normalized["primary_exercise_id"] != primary:
@@ -528,6 +532,9 @@ def _apply_log_set(
     command_id: str,
     digest: str,
 ) -> WorkoutSetLogResponse:
+    if exercise.get("customized"):
+        from ..workout_customized import log_set as log_customized_set
+        return log_customized_set(db,user=current_user,occurrence=occurrence,exercise=exercise,payload=payload,command_id=command_id,digest=digest)
     # User lock held by log_set: distinct commands cannot both claim one slot.
     existing_slots = effective_set_logs(db).filter_by(
         user_id=current_user.id, workout_occurrence_id=occurrence.id,
@@ -676,6 +683,9 @@ def _void_set(db, record, *, reason, source, timestamp):
 
 def _reconstruct_history(db, record):
     db.flush()
+    if record.replay_context["version"] == 3:
+        from ..workout_customized import feedback
+        return feedback(db,record)
     if record.replay_context["version"] == 2:
         user = db.query(User).filter_by(id=record.user_id).one()
         occurrence = db.query(WorkoutOccurrence).filter_by(id=record.workout_occurrence_id, user_id=record.user_id).one()
@@ -735,7 +745,8 @@ def correct_set(set_id: str, payload: WorkoutSetCorrectionRequest, db: DbSession
     if original is None:
         raise HTTPException(404, "Set not found")
     context = require_replay_context(original)
-    if payload.weight == 0 and not is_bodyweight_authored(context["planned_exercise"]):
+    if payload.weight == 0 and not (is_bodyweight_authored(context["planned_exercise"]) or
+        (context["version"]==3 and context["planned_exercise"].get("load_semantics")=="bodyweight")):
         raise HTTPException(422, "Zero external load requires an explicitly bodyweight authored exercise")
     if original.voided_at:
         raise HTTPException(409, "Set already voided or superseded; correct its effective replacement")
@@ -838,6 +849,9 @@ def workout_summary(
     current_user: CurrentUser,
 ) -> WorkoutSummaryResponse:
     occurrence, session_snapshot = resolve_occurrence(db, current_user.id, workout_id, _list_workout_plans(db, current_user.id))
+    if session_snapshot.get("customized"):
+        from ..workout_customized import summary
+        return WorkoutSummaryResponse(**summary(db,current_user,occurrence,session_snapshot))
     route_runtime = prepare_workout_summary_route_runtime(
         workout_id=occurrence.workout_id,
         plan_rows=occurrence_plan(occurrence, session_snapshot),

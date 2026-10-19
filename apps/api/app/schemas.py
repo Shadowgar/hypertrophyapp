@@ -654,6 +654,7 @@ class WorkoutLiveRecommendationResponse(BaseModel):
 
 
 class WorkoutSetLogResponse(BaseModel):
+    customized_receipts: list[dict[str, Any]] | None = None
     workout_occurrence_id: str
     exercise_occurrence_id: str
     command_id: str
@@ -696,7 +697,7 @@ class WorkoutExerciseSummaryResponse(BaseModel):
     planned_sets: int
     planned_reps_min: int | None
     planned_reps_max: int | None
-    planned_weight: float
+    planned_weight: float | None
     performed_sets: int
     average_performed_reps: float
     average_performed_weight: float

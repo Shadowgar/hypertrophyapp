@@ -43,7 +43,7 @@ class ScheduleSnapshot:
             week = self.context.week_start
             if (not self.subject or not self.revision or not self.source_reference or week.weekday()!=0
                     or self.context.planning_instant.tzinfo is None
-                    or (self.context.planning_instant.astimezone(zone).date()-week).days not in range(7)):
+                    or (self.context.planning_instant.astimezone(zone).date()-week).days not in range(-7,7)):
                 raise ValueError("Invalid schedule context")
             start, end = week-timedelta(days=7), week+timedelta(days=13)
             ids = [o.occurrence_id for o in self.occurrences]
