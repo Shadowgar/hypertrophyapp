@@ -77,3 +77,29 @@ test('editing context while account options load retains available equipment',as
   expect(await screen.findByLabelText('bench')).toBeInTheDocument();
   expect(screen.getByLabelText('Training context')).toHaveValue('current');
 });
+
+test('saving inventory invalidates an in-flight preview without leaving Generate busy',async()=>{
+  const {act}=await import('@testing-library/react');
+  const inventory={version:'customized-location-profile-v1',revision:1,profile:{location_id:'gym',location_name:'Actual gym',equipment:['dumbbell'],unavailable_variants:[],setups:[],assignments:{},strength_reports:[]}};
+  let resolveOld!:(value:Response)=>void;
+  vi.stubGlobal('fetch',vi.fn(async(input:string,init?:RequestInit)=>{
+    if(String(input).endsWith('/customized/options'))return Response.json({equipment:['dumbbell'],restrictions:[],variants:[],inventory});
+    if(init?.method==='PUT')return Response.json({...inventory,revision:2});
+    return new Promise<Response>(resolve=>{resolveOld=resolve;});
+  }));
+  render(<CustomizedPage/>);
+  await screen.findByLabelText('dumbbell');
+  fireEvent.change(screen.getByLabelText('Training context'),{target:{value:'current'}});
+  fireEvent.change(screen.getByLabelText('Exercise skill'),{target:{value:'intermediate'}});
+  fireEvent.click(screen.getByLabelText('No movement restrictions'));
+  for(let i=1;i<=3;i++)fireEvent.change(screen.getByLabelText(`Workout date ${i}`),{target:{value:`2026-10-${17+i*2}`}});
+  fireEvent.click(screen.getByRole('button',{name:'Generate preview'}));
+  expect(screen.getByRole('button',{name:'Generate preview'})).toBeDisabled();
+  fireEvent.click(screen.getByText('Equipment inventory and calibration'));
+  fireEvent.click(screen.getByRole('button',{name:'Save inventory'}));
+  await screen.findByText('Inventory saved. Generate a new preview before accepting availability changes.');
+  expect(screen.getByRole('button',{name:'Generate preview'})).toBeEnabled();
+  await act(async()=>resolveOld(Response.json({proposal_id:'stale',state:'review_required'})));
+  expect(window.location.search).not.toContain('stale');
+  expect(screen.queryByRole('button',{name:'Review acceptance'})).not.toBeInTheDocument();
+});

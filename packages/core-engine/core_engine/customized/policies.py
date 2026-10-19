@@ -1,7 +1,7 @@
-"""CANDIDATE FOR EXPERT REVIEW / NONPRESCRIPTIVE. No runtime default policy.
+"""PROVISIONAL versioned policies for the original Customized pilot.
 
-Values are explicit operating proposals and engineering fixtures. Their exact
-choices are not physiological optima or accepted scientific/owner decisions.
+Runtime admission is controlled by the application host. These exact
+choices are not physiological optima or evidence of professional approval.
 See docs/research/m4c2/training-science-standard-v1.md for every decision.
 """
 from core_engine.customized.audit import content_hash

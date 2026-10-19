@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from .auth import DbSession
 from ..config import settings
 from ..deps import get_current_user
-from ..customized_application import build_service
+from ..customized_application import build_service,application_catalog
 from core_engine.customized.pilot import ACTIONS
 from ..customized_lifecycle_models import LifecycleError
 from ..customized_consent_summary import COMPACT_PROTOCOL
@@ -74,9 +74,11 @@ def key(request):return request.headers.get('idempotency-key','')
 @router.get('/customized/options')
 def options(ctx=Depends(context)):
     service,_,_=ctx
-    return dict(program='Customized Full Body',policy_status='provisional',
+    from ..customized_inventory import inventory_issues
+    return dict(inventory_issues=inventory_issues(application_catalog(),service.inventory),program='Customized Full Body',policy_status='provisional',
         bundles=[dict(id=b.bundle_id,name=b.display_name,training_status=b.standard.science.training_status) for b in service.server.bundles],
-        equipment=sorted({tag for e in service.server.bundles[0].catalog.exercises for tag in e.required_equipment}),
+        equipment=sorted({tag for e in application_catalog().exercises for tag in e.required_equipment}|{'barbell','rack'}),
+        inventory=service.inventory,variants=[dict(id=e.variant_id,name=e.name,implement=e.load_identity.implement,basis=e.load_identity.basis) for e in application_catalog().exercises],
         restrictions=[f'avoid_{a}' for a in ACTIONS])
 
 
@@ -134,3 +136,37 @@ def transition(proposal_id:str,action:str,body:RevisionCommand,request:Request,c
     service,actor,_=ctx
     if action not in {'decline','withdraw'}:raise HTTPException(404,'Not found')
     return run(lambda:service.transition(actor,proposal_id,action,expected_revision=body.expected_revision,idempotency_key=key(request)))
+
+
+@router.get('/customized/profile')
+def equipment_profile(ctx=Depends(context)):
+    from sqlalchemy.orm import Session
+    from ..customized_inventory import read_profile
+    service,actor,gate=ctx
+    with gate.unit.account(actor.subject) as conn:
+        run(lambda:gate.authorize(actor))
+        with Session(bind=conn,join_transaction_mode='rollback_only') as db:
+            return read_profile(db,actor.subject)
+
+
+from ..customized_inventory import ProfileCommand
+
+@router.put('/customized/profile')
+def save_equipment_profile(body:ProfileCommand,ctx=Depends(context)):
+    from sqlalchemy.orm import Session
+    from ..models import TrainingEquipmentProfile
+    from ..customized_inventory import read_profile,bind_report_setups
+    from datetime import datetime,UTC
+    _,actor,gate=ctx
+    with gate.unit.account(actor.subject) as conn:
+        run(lambda:gate.authorize(actor))
+        with Session(bind=conn,join_transaction_mode='rollback_only') as db:
+            current=read_profile(db,actor.subject);data=bind_report_setups(current,body.profile.model_dump(mode='json'))
+            if current['revision']!=body.expected_revision:
+                if current['profile']==data and current['revision']==body.expected_revision+1:return current
+                raise HTTPException(409,'Inventory changed; reload before editing')
+            row=db.get(TrainingEquipmentProfile,actor.subject)
+            if row is None:row=TrainingEquipmentProfile(user_id=actor.subject);db.add(row)
+            row.revision=current['revision']+1;row.data=data;row.updated_at=datetime.now(UTC).replace(tzinfo=None)
+            db.flush()
+            return read_profile(db,actor.subject)

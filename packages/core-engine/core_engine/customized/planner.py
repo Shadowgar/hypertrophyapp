@@ -229,7 +229,7 @@ def plan_full_body(*, profile: CustomizedProfile, catalog: ExerciseCatalog,
             target = ExposureTarget(e.reps_min, e.reps_max, e.effort_kind, e.effort_min, e.effort_max)
             calibrated.append(replace(e, calibration=calibrate_working_load(exercise=e.exercise, target=target,
                 policy=policy, as_of=as_of, exposures=exposures, strength_reports=strength_reports,
-                allow_provisional_preview=allow_provisional_preview)))
+                allow_provisional_preview=allow_provisional_preview,required_set_indices=tuple(range(1,e.sets+1)))))
         budget = _time_budget(tuple(exercises), policy, profile)
         session_id = "c1-" + content_hash((VERSION, local_date, emphasis, exercises, profile.timezone, policy_content_hash(policy)))[:24]
         sessions.append(DraftSession(session_id, local_date, emphasis, tuple(calibrated), budget))

@@ -44,6 +44,7 @@ class PreviewRequest(StrictPreviewModel):
     omissions: tuple[OmissionRequest, ...] = Field(default=(), max_length=39)
     weakpoints: tuple[str, ...] = Field(default=(), max_length=8)
     recovery: str | None = Field(default=None, max_length=32)
+    inventory_revision: StrictInt | None = Field(default=None,ge=0)
 
     @field_validator("selected_dates", mode="before")
     @classmethod

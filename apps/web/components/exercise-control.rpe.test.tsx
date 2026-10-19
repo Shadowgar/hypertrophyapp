@@ -103,3 +103,31 @@ test.each([false, true])("next-set drafts adopt refreshed targets only after ack
   await waitFor(() => expect(calls).toHaveLength(lost ? 3 : 2));
   expect(calls.at(-1)).toEqual({ reps: 6, weight: 44.1, rpe: 8, canonicalWeight: 20 });
 });
+
+test('Customized records explicit RIR, technique and pain without rounding real pound loads',async()=>{
+  const calls:unknown[]=[];
+  function Customized(){const ctrl=useExerciseControl({exerciseId:'customized',customizedEvidence:true,weightUnit:'lb',totalSets:2,requireWeight:true,onSetComplete:(_id,_i,values)=>{calls.push(values);}});
+    return <SetInputCard exerciseId="customized" ctrl={ctrl} guidanceLine="Actual setup"/>;}
+  render(<Customized/>);
+  expect(screen.getByLabelText('Actual RIR (optional)')).toHaveValue(null);
+  fireEvent.change(screen.getByLabelText('Weight (lb)'),{target:{value:'11'}});
+  fireEvent.change(screen.getByLabelText('Actual RIR (optional)'),{target:{value:'5'}});
+  fireEvent.change(screen.getByLabelText('Technique quality'),{target:{value:'acceptable'}});
+  fireEvent.change(screen.getByLabelText('Pain during this set'),{target:{value:'no'}});
+  fireEvent.click(screen.getByRole('button',{name:'Complete Set'}));
+  await waitFor(()=>expect(calls).toHaveLength(1));
+  expect(calls[0]).toMatchObject({actual_rir:5,technique_quality:'acceptable',pain:false});
+  expect((calls[0] as {canonicalWeight:number}).canonicalWeight).toBeCloseTo(4.98951607,10);
+  expect(screen.getByLabelText('Actual RIR (optional)')).toHaveValue(null);
+});
+
+test('Customized correction can explicitly clear recorded RIR while preserving receipt identity',async()=>{
+  const {LoadIntelligencePanel}=await import('./exercise-control');const correct=vi.fn(async(_receipt:unknown,_values:unknown)=>{});
+  render(<LoadIntelligencePanel receiptOnly guidance={null} completed={1} total={2} loadContext={{unit:'kg',display_unit:'kg',basis:'per_hand'}} onContextChange={()=>{}} onPreview={async()=>{}} overrideReason="" onOverrideReason={()=>{}} onCorrect={correct} effectiveSets={[{id:'actual-receipt',set_index:1,reps:12,weight:10,rpe:null,actual_rir:5,set_kind:'work',parent_set_index:null,technique:null,created_at:'2026-10-19'}]}/>);
+  fireEvent.click(screen.getByRole('button',{name:'Edit set 1'}));
+  fireEvent.change(screen.getByLabelText('Corrected actual RIR'),{target:{value:''}});
+  fireEvent.click(screen.getByRole('button',{name:'Save correction'}));
+  await waitFor(()=>expect(correct).toHaveBeenCalled());
+  expect(correct.mock.calls[0][0]).toMatchObject({id:'actual-receipt'});
+  expect(correct.mock.calls[0][1]).toMatchObject({actual_rir:null,reps:12,weight:10});
+});

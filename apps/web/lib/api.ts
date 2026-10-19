@@ -1,3 +1,4 @@
+import type {InventoryDocument,InventoryVariant,LocationProfile} from "./customized-inventory";
 import { API_BASE_URL } from "@/lib/env";
 const AUTH_TOKEN_KEY = "hypertrophy_token";
 const AUTH_TOKEN_EVENT = "hypertrophy:auth-token-changed";
@@ -48,6 +49,7 @@ export type LoadDecision = {
 };
 export type EffectiveLoadSet = {
   command_id?: string | null;
+  actual_rir?:number|null;technique_quality?:"acceptable"|"poor"|"unknown"|null;pain?:boolean|null;
   id: string; set_index: number; reps: number; weight: number; rpe: number | null;
   set_kind: string | null; parent_set_index: number | null; technique: Record<string, unknown> | null; created_at: string;
 };
@@ -116,7 +118,8 @@ type AuthoredExecutionFields = {
 
 export type WorkoutExercise = AuthoredExecutionFields & {
   customized_receipts?: EffectiveLoadSet[];
-  customized?: { target_kind: string; target_min: number; target_max: number; rest_seconds: {low:number;high:number}; identity: Record<string,unknown> };
+  customized_load_decision?: CustomizedLoadDecision;
+  customized?: { target_kind: string; target_min: number; target_max: number; rest_seconds: {low:number;high:number}; identity: {basis:LoadContext["basis"];equipment_key:string;setup:string;unit:string} };
   load_intelligence?: LoadIntelligence | null;
   exercise_occurrence_id?: string;
   id: string;
@@ -1219,7 +1222,8 @@ export const api = {
       set_kind?: string | null;
       parent_set_index?: number | null;
       technique?: Record<string, unknown> | null;
-      load_context?: LoadContext;
+      actual_rir?:number|null;technique_quality?:"acceptable"|"poor"|"unknown"|null;pain?:boolean|null;
+    load_context?: LoadContext;
       load_recommendation_id?: string;
       load_override_reason?: string | null;
     },
@@ -1228,8 +1232,8 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ ...payload, ...(payload.load_context ? { load_context: declaredLoadContext(payload.load_context) } : {}) }),
     }),
-  correctSet: (setId: string, payload: { command_id: string; reps: number; weight: number; rpe?: number | null; reason: string }) =>
-    request<{ status: string; original_set_id: string; effective_set_id: string; customized_receipts?: EffectiveLoadSet[]; load_intelligence?: LoadIntelligence | null }>(`/workout/set/${encodeURIComponent(setId)}/correct`, {
+  correctSet: (setId: string, payload: { command_id: string; reps: number; weight: number; rpe?: number | null; actual_rir?:number|null;technique_quality?:"acceptable"|"poor"|"unknown"|null;pain?:boolean|null; reason: string }) =>
+    request<{ status: string; original_set_id: string; effective_set_id: string; live_recommendation?: WorkoutLiveRecommendation | null; customized_receipts?: EffectiveLoadSet[]; load_intelligence?: LoadIntelligence | null }>(`/workout/set/${encodeURIComponent(setId)}/correct`, {
       method: "POST", body: JSON.stringify(payload),
     }),
   undoLastSet: (workoutId: string, exerciseId: string, exerciseOccurrenceId?: string, commandId?: string) =>
@@ -1243,9 +1247,9 @@ export const api = {
     }),
 };
 
-export type CustomizedExercise = {variant_id:string;name:string;sets:number;reps_min:number;reps_max:number;target_scale:string;target_min:number;target_max:number;load_basis:string;calibration_status:string};
+export type CustomizedExercise = {variant_id:string;name:string;sets:number;reps_min:number;reps_max:number;target_scale:string;target_min:number;target_max:number;load_basis:string;calibration_status:string;calibration_reasons?:string[];working_load?:number|null;load_unit?:string};
 export type CustomizedPreview = {candidate_name:string;reasons:string[];limitations:string[];missing_actions:string[];missing_regions:string[];dose_conflicts:string[];sessions:Array<{local_date:string;maximum_minutes:number;minimum_minutes:number;cap_status:string;exercises:CustomizedExercise[]}>};
-export type CustomizedRequest = {mode:"customized";bundle_id:string;goal:"hypertrophy";population:"broadly_healthy_adult";training_context:string;selected_dates:string[];timezone:string;cap_minutes:number;cap_kind:"hard"|"flexible";equipment:string[];skill:string|null;restrictions:string[]|null};
+export type CustomizedRequest = {mode:"customized";bundle_id:string;goal:"hypertrophy";population:"broadly_healthy_adult";training_context:string;selected_dates:string[];timezone:string;cap_minutes:number;cap_kind:"hard"|"flexible";equipment:string[];skill:string|null;restrictions:string[]|null;inventory_revision?:number};
 export type CustomizedWorkload = {name:string;weekly_sets:number;dates:string[];timezone:string;daily_sets:number[];minimum_minutes:number[];upper_minutes:number[];cap_minutes:number;cap_kind:string;cap_status:string[]};
 export type CustomizedRangeConflict = {region:string;primary_sets:number;proposed_minimum:number;proposed_maximum:number;interpretation:string};
 export type CustomizedConsentSummary = {
@@ -1257,8 +1261,11 @@ export type CustomizedConsentSummary = {
 };
 export type CustomizedProposal = {proposal_id:string;revision:number;plan_version:number;snapshot_hash:string;state:string;blocking_reasons:string[];snapshot:{request:CustomizedRequest;preview:CustomizedPreview;comparison_reference:CustomizedPreview|null;workload_changes:Array<{local_date:string;variant_id:string;reference_sets:number;candidate_sets:number}>};challenge?:string;terms_hash?:string;summary_hash?:string;terms?:{text:string;summary:CustomizedConsentSummary};active_plan_id?:string};
 function customizedCommand<T>(path:string,body:unknown,key:string) {return request<T>(path,{method:"POST",headers:{"Idempotency-Key":key},body:JSON.stringify(body)});}
+export type CustomizedLoadDecision = {version:string;action:'monitor'|'hold'|'increase';recommended_weight:number|null;unit:'kg';policy_status:string;reason_codes:string[];attainable_loads?:number[];calibration:{origin:string;known_baseline:number|null;evidence_ids:string[];strength_information:Array<{kind:string;load:number;unit:string;observed_on:string}>}|null};
 export const customizedApi={
-  options:()=>request<{equipment:string[];restrictions:string[]}>("/customized/options"),
+  readProfile:()=>request<InventoryDocument>("/customized/profile"),
+  saveProfile:(revision:number,profile:LocationProfile)=>request<InventoryDocument>("/customized/profile",{method:"PUT",body:JSON.stringify({expected_revision:revision,profile})}),
+  options:()=>request<{equipment:string[];restrictions:string[];inventory?:InventoryDocument;inventory_issues?:string[];variants?:InventoryVariant[]}>("/customized/options"),
   read:(id:string)=>request<CustomizedProposal>(`/customized/proposals/${encodeURIComponent(id)}`),
   create:(body:CustomizedRequest,key:string)=>customizedCommand<CustomizedProposal>("/customized/proposals",body,key),
   revise:(p:CustomizedProposal,body:CustomizedRequest,key:string)=>customizedCommand<CustomizedProposal>(`/customized/proposals/${p.proposal_id}/revisions`,{expected_revision:p.revision,request:body},key),

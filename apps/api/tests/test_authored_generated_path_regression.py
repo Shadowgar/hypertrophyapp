@@ -93,6 +93,37 @@ def _generate_week(
     return response.json()
 
 
+def _historical_prescriptions(payload: dict) -> list:
+    return [[(e['id'], e['primary_exercise_id'], e['sets'], tuple(e['rep_range']), e['recommended_working_weight'])
+        for e in session['exercises']] for session in payload['sessions']]
+
+
+def _seed_historical_generated_plan(client: TestClient, headers: dict[str, str], *, empty: bool = False) -> dict:
+    """Explicit synthetic stored history; never constructs a new Customized program."""
+    profile = client.get('/profile', headers=headers)
+    assert profile.status_code == 200
+    monday = date.today() - timedelta(days=date.today().weekday())
+    exercises = [dict(id=id, primary_exercise_id=id, name=name, sets=3, rep_range=[8, 12],
+        recommended_working_weight=20.0, start_weight=20.0, movement_pattern=pattern,
+        primary_muscles=[muscle], equipment_tags=['machine'], substitution_candidates=[])
+        for id, name, pattern, muscle in [('hack_squat', 'Hack squat', 'squat', 'quads'),
+            ('chest_supported_machine_row', 'Machine row', 'horizontal_pull', 'back')]]
+    payload = {'program_template_id': 'full_body_v1', 'split': 'full_body', 'phase': 'maintenance',
+        'week_start': monday.isoformat(), 'historical_fixture': True,
+        'mesocycle': {'week_index': 1, 'authored_week_index': 1},
+        'weekly_volume_by_muscle': {'quads': 3, 'back': 3},
+        'muscle_coverage': {'minimum_sets_per_muscle': 1, 'covered_muscles': ['quads', 'back'],
+            'under_target_muscles': [], 'untracked_exercise_count': 0},
+        'sessions': [] if empty else [{'session_id': 'full_body_v1-historical-day1',
+            'title': 'Historical day 1', 'date': date.today().isoformat(), 'exercises': exercises}]}
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == profile.json()['email']).one()
+        db.add(WorkoutPlan(user_id=user.id, week_start=monday, split='full_body',
+            phase='maintenance', payload=deepcopy(payload)))
+        db.commit()
+    return payload
+
+
 def _log_first_set_for_today(client: TestClient, *, headers: dict[str, str]) -> dict[str, Any]:
     today = client.get("/workout/today", headers=headers)
     assert today.status_code == 200
@@ -520,7 +551,7 @@ def test_authored_phase2_regenerate_with_target_days_three_preserves_workbook_pa
     )
 
 
-def test_fresh_onboarding_generated_path_resolves_to_generated_family() -> None:
+def test_generated_program_selection_requires_original_preview_and_explicit_consent() -> None:
     _reset_db()
     client = TestClient(app)
     headers = _register(client, email="generated-routing@example.com")
@@ -533,13 +564,13 @@ def test_fresh_onboarding_generated_path_resolves_to_generated_family() -> None:
     )
     assert profile["selected_program_id"] == "full_body_v1"
 
-    payload = _generate_week(client, headers=headers)
-    runtime_trace = payload["template_selection_trace"]["generated_full_body_runtime_trace"]
-
-    assert payload["program_template_id"] == "full_body_v1"
-    assert payload["template_selection_trace"]["selected_template_id"] == "full_body_v1"
-    assert runtime_trace["activation_guard_matched"] is True
-    assert runtime_trace["compatibility_selected_template_id"] == "full_body_v1"
+    response = client.post('/plan/generate-week', headers=headers, json={})
+    assert response.status_code == 409
+    assert response.json()['detail']['code'] == 'customized_preview_required'
+    assert response.json()['detail']['path'] == '/customize'
+    with SessionLocal() as db:
+        assert db.query(WorkoutPlan).count() == 0
+    assert client.get('/profile', headers=headers).json()['selected_program_id'] == 'full_body_v1'
 
 
 def test_authored_phase_histories_are_isolated_from_each_other_and_generated_history() -> None:
@@ -554,7 +585,7 @@ def test_authored_phase_histories_are_isolated_from_each_other_and_generated_his
         selected_program_id="full_body_v1",
         days_available=3,
     )
-    generated_payload = _generate_week(client, headers=headers)
+    generated_payload = _seed_historical_generated_plan(client, headers)
     assert generated_payload["program_template_id"] == "full_body_v1"
     headers = _login(client, email=email)
 
@@ -664,13 +695,15 @@ def test_passthrough_marker_is_scoped_to_workbook_derived_authored_5_to_3_path_o
             selected_program_id="full_body_v1",
             days_available=3,
         )
-        generated_payload = _generate_week(client, headers=headers)
+        rejected = client.post('/plan/generate-week', headers=headers, json={})
     finally:
         plan_router.generate_week_plan = original_generate_week_plan
 
-    assert captured_flags == [True, False]
+    assert captured_flags == [True]
     assert "generated_full_body_runtime_trace" not in authored_payload["template_selection_trace"]
-    assert generated_payload["template_selection_trace"]["generated_full_body_runtime_trace"]["activation_guard_matched"] is True
+    assert rejected.status_code == 409
+    assert rejected.json()['detail']['code'] == 'customized_preview_required'
+    assert rejected.json()['detail']['path'] == '/customize'
 
 
 def test_authoritative_passthrough_marker_never_appears_in_api_or_persisted_payloads() -> None:
@@ -916,7 +949,6 @@ def test_today_total_sets_matches_progress_planned_total(
     [
         "pure_bodybuilding_phase_1_full_body",
         "pure_bodybuilding_phase_2_full_body",
-        "full_body_v1",
     ],
 )
 def test_generate_and_latest_week_volume_by_muscle_non_zero_when_planned_sets_exist(
@@ -942,87 +974,30 @@ def test_generate_and_latest_week_volume_by_muscle_non_zero_when_planned_sets_ex
     _assert_non_zero_weekly_volume_payload(latest_payload)
 
 
-def test_generated_week_visible_grouped_volume_is_balanced_and_latest_matches_generate() -> None:
+def test_historical_generated_latest_read_preserves_stored_volume_and_slots() -> None:
     _reset_db()
     client = TestClient(app)
-    headers = _register(client, email="generated-visible-volume-balance@example.com")
-
-    _upsert_profile(
-        client,
-        headers=headers,
-        selected_program_id="full_body_v1",
-        days_available=3,
-        session_time_budget_minutes=60,
-        weak_areas=["chest", "hamstrings"],
-    )
-
-    generated_payload = _generate_week(client, headers=headers)
-    latest_week = client.get("/plan/latest-week", headers=headers)
-    assert latest_week.status_code == 200
-    latest_payload = latest_week.json()
-
-    generated_grouped = _visible_grouped_week_volume(generated_payload)
-    latest_grouped = _visible_grouped_week_volume(latest_payload)
-    assert generated_grouped == latest_grouped
-
-    exercises = [
-        exercise
-        for session in generated_payload.get("sessions") or []
-        for exercise in session.get("exercises") or []
-        if isinstance(exercise, dict)
-    ]
-    planned_sets = sum(int(exercise.get("sets") or 0) for exercise in exercises)
-    assert planned_sets >= 30
-
-    assert generated_grouped["chest"] >= 6, generated_grouped
-    assert generated_grouped["back"] >= 5, generated_grouped
-    assert generated_grouped["quads"] >= 4, generated_grouped
-    assert generated_grouped["hamstrings"] >= 6, generated_grouped
-    assert generated_grouped["arms"] <= 28, generated_grouped
-    assert generated_grouped["delts"] <= 18, generated_grouped
-    total_visible = sum(generated_grouped.values())
-    assert (generated_grouped["arms"] + generated_grouped["delts"]) / max(1, total_visible) <= 0.48, generated_grouped
+    headers = _register(client, email='historical-volume@example.com')
+    _upsert_profile(client, headers=headers, selected_program_id='full_body_v1', days_available=3)
+    stored = _seed_historical_generated_plan(client, headers)
+    latest = client.get('/plan/latest-week', headers=headers)
+    assert latest.status_code == 200
+    assert latest.json()['weekly_volume_by_muscle'] == stored['weekly_volume_by_muscle']
+    assert _visible_grouped_week_volume(latest.json()) == _visible_grouped_week_volume(stored)
+    assert _historical_prescriptions(latest.json()) == _historical_prescriptions(stored)
 
 
-def test_generated_week_visible_weak_point_arm_delt_bias_is_preserved_but_bounded() -> None:
+def test_profile_weakpoint_changes_do_not_rewrite_historical_generated_plan() -> None:
     _reset_db()
     client = TestClient(app)
-    headers = _register(client, email="generated-visible-volume-weakpoint@example.com")
-
-    _upsert_profile(
-        client,
-        headers=headers,
-        selected_program_id="full_body_v1",
-        days_available=3,
-        session_time_budget_minutes=60,
-        weak_areas=["chest", "hamstrings"],
-    )
-    baseline_payload = _generate_week(client, headers=headers)
-    baseline_grouped = _visible_grouped_week_volume(baseline_payload)
-
-    _upsert_profile(
-        client,
-        headers=headers,
-        selected_program_id="full_body_v1",
-        days_available=3,
-        session_time_budget_minutes=60,
-        weak_areas=["biceps", "side_delts"],
-    )
-    weak_payload = _generate_week(client, headers=headers)
-    weak_grouped = _visible_grouped_week_volume(weak_payload)
-
-    latest_week = client.get("/plan/latest-week", headers=headers)
-    assert latest_week.status_code == 200
-    assert _visible_grouped_week_volume(latest_week.json()) == weak_grouped
-
-    assert weak_grouped["arms"] >= baseline_grouped["arms"], (baseline_grouped, weak_grouped)
-    assert weak_grouped["delts"] >= baseline_grouped["delts"], (baseline_grouped, weak_grouped)
-    assert weak_grouped["arms"] <= 32, weak_grouped
-    assert weak_grouped["delts"] <= 20, weak_grouped
-    assert weak_grouped["chest"] >= 2, weak_grouped
-    assert weak_grouped["back"] >= 8, weak_grouped
-    assert weak_grouped["quads"] >= 5, weak_grouped
-    assert weak_grouped["hamstrings"] >= 6, weak_grouped
+    headers = _register(client, email='historical-weakpoints@example.com')
+    _upsert_profile(client, headers=headers, selected_program_id='full_body_v1', days_available=3, weak_areas=['chest'])
+    stored = _seed_historical_generated_plan(client, headers)
+    _upsert_profile(client, headers=headers, selected_program_id='full_body_v1', days_available=3, weak_areas=['biceps', 'side_delts'])
+    latest = client.get('/plan/latest-week', headers=headers)
+    assert latest.status_code == 200
+    assert _visible_grouped_week_volume(latest.json()) == _visible_grouped_week_volume(stored)
+    assert _historical_prescriptions(latest.json()) == _historical_prescriptions(stored)
 
 
 @pytest.mark.parametrize(
@@ -1030,7 +1005,6 @@ def test_generated_week_visible_weak_point_arm_delt_bias_is_preserved_but_bounde
     [
         "pure_bodybuilding_phase_1_full_body",
         "pure_bodybuilding_phase_2_full_body",
-        "full_body_v1",
     ],
 )
 def test_current_week_regenerate_keeps_displayed_and_authored_week_indices(selected_program_id: str) -> None:
@@ -1061,7 +1035,6 @@ def test_current_week_regenerate_keeps_displayed_and_authored_week_indices(selec
     [
         "pure_bodybuilding_phase_1_full_body",
         "pure_bodybuilding_phase_2_full_body",
-        "full_body_v1",
     ],
 )
 def test_current_week_regenerate_with_progress_is_blocked(selected_program_id: str) -> None:
@@ -1090,7 +1063,6 @@ def test_current_week_regenerate_with_progress_is_blocked(selected_program_id: s
     [
         "pure_bodybuilding_phase_1_full_body",
         "pure_bodybuilding_phase_2_full_body",
-        "full_body_v1",
     ],
 )
 def test_blocked_regenerate_preserves_progress_artifacts_and_plan_payload(selected_program_id: str) -> None:
@@ -1204,80 +1176,15 @@ def test_program_selection_update_is_non_destructive_even_with_logged_progress_a
     assert after_states == before_states
     assert after_plans == before_plans
 
-def test_current_week_regenerate_handles_replace_target_without_sessions() -> None:
-    _reset_db()
-    client = TestClient(app)
-    email = "regenerate-empty-sessions@example.com"
-    headers = _register(client, email=email)
-    _upsert_profile(
-        client,
-        headers=headers,
-        selected_program_id="full_body_v1",
-        days_available=3,
-    )
 
-    first = _generate_week(client, headers=headers)
-    monday = date.today() - timedelta(days=date.today().weekday())
+    rejected = client.post('/plan/generate-week', headers=headers, json={})
+    assert rejected.status_code == 409
+    assert rejected.json()['detail']['code'] == 'customized_preview_required'
+    assert rejected.json()['detail']['path'] == '/customize'
     with SessionLocal() as db:
-        user = db.query(User).filter(User.email == email).first()
-        assert user is not None
-        row = (
-            db.query(WorkoutPlan)
-            .filter(WorkoutPlan.user_id == user.id, WorkoutPlan.week_start == monday)
-            .order_by(WorkoutPlan.created_at.desc())
-            .first()
-        )
-        assert row is not None
-        payload = deepcopy(row.payload if isinstance(row.payload, dict) else {})
-        payload["sessions"] = []
-        row.payload = payload
-        db.add(row)
-        db.commit()
-
-    regenerated = client.post("/plan/generate-week", headers=headers, json={})
-    assert regenerated.status_code == 200
-    latest = client.get("/plan/latest-week", headers=headers)
-    assert latest.status_code == 200
-    assert latest.json()["mesocycle"]["week_index"] == first["mesocycle"]["week_index"]
-
-
-def test_current_week_regenerate_ignores_stale_exercise_state_outside_target_week() -> None:
-    _reset_db()
-    client = TestClient(app)
-    email = "regenerate-stale-exposure@example.com"
-    headers = _register(client, email=email)
-    _upsert_profile(
-        client,
-        headers=headers,
-        selected_program_id="full_body_v1",
-        days_available=3,
-    )
-    first = _generate_week(client, headers=headers)
-    first_exercise = first["sessions"][0]["exercises"][0]
-    primary_exercise_id = first_exercise.get("primary_exercise_id") or first_exercise["id"]
-    stale_timestamp = datetime.now().replace(tzinfo=None) - timedelta(days=10)
-
-    with SessionLocal() as db:
-        user = db.query(User).filter(User.email == email).first()
-        assert user is not None
-        db.add(
-            ExerciseState(
-                user_id=user.id,
-                exercise_id=primary_exercise_id,
-                current_working_weight=20.0,
-                exposure_count=2,
-                consecutive_under_target_exposures=0,
-                last_progression_action="hold",
-                fatigue_score=0.0,
-                last_updated_at=stale_timestamp,
-            )
-        )
-        db.commit()
-
-    regenerated = client.post("/plan/generate-week", headers=headers, json={})
-    assert regenerated.status_code == 200
-    assert regenerated.json()["mesocycle"]["week_index"] == first["mesocycle"]["week_index"]
-
+        assert db.query(WorkoutSetLog).count() == before_logs
+        assert db.query(WorkoutSessionState).count() == before_states
+        assert db.query(WorkoutPlan).count() == before_plans
 
 def test_current_week_regenerate_does_not_block_for_progress_on_different_binding() -> None:
     _reset_db()
@@ -1292,7 +1199,7 @@ def test_current_week_regenerate_does_not_block_for_progress_on_different_bindin
     )
 
     _generate_week(client, headers=headers)
-    switched_generation = _generate_week(client, headers=headers, json_body={"template_id": "full_body_v1"})
+    switched_generation = _seed_historical_generated_plan(client, headers)
     assert switched_generation["program_template_id"] == "full_body_v1"
     switched_session = switched_generation["sessions"][0]
     switched_exercise = switched_session["exercises"][0]
@@ -1323,7 +1230,6 @@ def test_current_week_regenerate_does_not_block_for_progress_on_different_bindin
     [
         "pure_bodybuilding_phase_1_full_body",
         "pure_bodybuilding_phase_2_full_body",
-        "full_body_v1",
     ],
 )
 def test_current_week_regenerate_ignores_stale_prior_rows_for_week_progression(selected_program_id: str) -> None:
@@ -1374,7 +1280,6 @@ def test_current_week_regenerate_ignores_stale_prior_rows_for_week_progression(s
     [
         "pure_bodybuilding_phase_1_full_body",
         "pure_bodybuilding_phase_2_full_body",
-        "full_body_v1",
     ],
 )
 def test_next_week_advance_increments_week_index(selected_program_id: str) -> None:
@@ -1398,7 +1303,7 @@ def test_next_week_advance_increments_week_index(selected_program_id: str) -> No
 
 @pytest.mark.parametrize(
     "switch_template_id",
-    ["pure_bodybuilding_phase_2_full_body", "full_body_v1"],
+    ["pure_bodybuilding_phase_2_full_body"],
 )
 def test_template_override_switch_persists_selected_program_consistently(switch_template_id: str) -> None:
     _reset_db()
@@ -1511,3 +1416,51 @@ def test_same_binding_onboarding_refresh_ignores_checkins_and_reviews_without_wo
         expected_total_sets=67,
         max_session_spread=2,
     )
+
+
+@pytest.mark.parametrize('scenario', ['unstarted', 'logged-progress', 'empty-sessions', 'stale-exercise-state'])
+def test_retired_generated_regeneration_preserves_existing_history_and_profile(scenario: str) -> None:
+    """Generated branches formerly shared by the Authored regeneration matrix."""
+    _reset_db()
+    client = TestClient(app)
+    headers = _register(client, email='retained-generated-history@example.com')
+    _upsert_profile(client, headers=headers, selected_program_id='full_body_v1', days_available=3)
+    _seed_historical_generated_plan(client, headers, empty=scenario == 'empty-sessions')
+    if scenario == 'logged-progress':
+        _log_first_set_for_today(client, headers=headers)
+    if scenario == 'stale-exercise-state':
+        with SessionLocal() as db:
+            user = db.query(User).one()
+            db.add(ExerciseState(user_id=user.id, exercise_id='hack_squat', current_working_weight=20.0,
+                exposure_count=2, consecutive_under_target_exposures=0, last_progression_action='hold',
+                fatigue_score=0.0, last_updated_at=datetime.now().replace(tzinfo=None) - timedelta(days=10)))
+            db.commit()
+
+    def snapshot() -> dict:
+        with SessionLocal() as db:
+            return {model.__tablename__: [dict(row) for row in db.execute(model.__table__.select()).mappings()]
+                for model in (User, WorkoutPlan, WorkoutSetLog, WorkoutSessionState, ExerciseState)}
+    before = snapshot()
+    for route in ('/plan/generate-week', '/plan/next-week'):
+        rejected = client.post(route, headers=headers, json={'target_days': 4})
+        assert rejected.status_code == 409
+        assert rejected.json()['detail']['code'] == 'customized_preview_required'
+        assert rejected.json()['detail']['path'] == '/customize'
+        assert snapshot() == before
+
+
+@pytest.mark.parametrize('program_id', ['full_body_v1', 'adaptive_full_body_gold_v0_1'])
+def test_authored_profile_cannot_silently_switch_to_generated_via_template_override(program_id: str) -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers = _register(client, email='authored-no-implicit-customized@example.com')
+    _upsert_profile(client, headers=headers, selected_program_id='pure_bodybuilding_phase_1_full_body', days_available=3)
+    before = client.get('/profile', headers=headers).json()
+    rejected = client.post('/plan/generate-week', headers=headers, json={'template_id': program_id, 'target_days': 4})
+    assert rejected.status_code == 409
+    assert rejected.json()['detail']['code'] == 'customized_preview_required'
+    assert rejected.json()['detail']['path'] == '/customize'
+    assert client.get('/profile', headers=headers).json() == before
+    with SessionLocal() as db:
+        assert db.query(WorkoutPlan).count() == 0
+        assert db.query(WorkoutSetLog).count() == 0

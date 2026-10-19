@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import {useEffect,useRef,useState} from 'react';
+import {CustomizedInventoryEditor} from '@/components/customized-inventory';
+import type {InventoryDocument,InventoryVariant} from '@/lib/customized-inventory';
 import {Button} from '@/components/ui/button';
 import {customizedApi,type CustomizedProposal,type CustomizedRequest,type CustomizedPreview,type CustomizedConsentSummary,type CustomizedWorkload} from '@/lib/api';
 
@@ -13,7 +15,7 @@ function Preview({preview}:{preview:CustomizedPreview}) {
     <p>{preview.sessions.reduce((n,s)=>n+s.exercises.reduce((m,e)=>m+e.sets,0),0)} weekly working sets</p>
     {preview.sessions.map((s,i)=><section key={s.local_date} className="rounded border border-zinc-700 p-3">
       <h3>Day {i+1} · {s.local_date}</h3><p>Estimated {s.minimum_minutes.toFixed(1)}–{s.maximum_minutes.toFixed(1)} minutes · {s.cap_status==='within_estimated_cap'?'Within estimated cap':'Exceeds or may exceed your cap'}</p>
-      <ul>{s.exercises.map(e=><li className="mt-2" key={e.variant_id}><strong>{e.name}</strong> · {e.sets} × {e.reps_min}–{e.reps_max} · target {e.target_min}–{e.target_max} {e.target_scale.toUpperCase()}<br/><span className="text-sm text-zinc-400">Load basis: {e.load_basis.replaceAll('_',' ')}. Calibrate this exercise and actual setup; no starting weight is invented.</span></li>)}</ul>
+      <ul>{s.exercises.map(e=><li className="mt-2" key={e.variant_id}><strong>{e.name}</strong> · {e.sets} × {e.reps_min}–{e.reps_max} · target {e.target_min}–{e.target_max} {e.target_scale.toUpperCase()}<br/><span className="text-sm text-zinc-400">Load basis: {e.load_basis.replaceAll('_',' ')}. Calibrate this exercise and actual setup; no starting weight is invented. {e.working_load!=null?`Qualified recorded baseline: ${e.working_load} ${e.load_unit}. `:''}{e.calibration_reasons?.join(', ').replaceAll('_',' ')}</span></li>)}</ul>
     </section>)}
     {preview.missing_actions.length>0&&<p>Unavailable movement coverage: {preview.missing_actions.join(', ')}</p>}
     {preview.dose_conflicts.length>0&&<p>Below provisional direct-work ranges: {preview.dose_conflicts.join(', ')}. These ranges are not proven biological minimums.</p>}
@@ -49,7 +51,8 @@ function ConsentSummary({summary}:{summary:CustomizedConsentSummary}) {
 
 export default function CustomizedPage() {
   const [draft,setDraft]=useState(initial);
-  const [options,setOptions]=useState<{equipment:string[];restrictions:string[]}>({equipment:[],restrictions:[]});
+  const [options,setOptions]=useState<{equipment:string[];restrictions:string[];inventory_issues?:string[];variants?:InventoryVariant[]}>({equipment:[],restrictions:[]});
+  const [inventory,setInventory]=useState<InventoryDocument|null>(null);
   const [proposal,setProposal]=useState<CustomizedProposal|null>(null);
   const [status,setStatus]=useState('');const [busy,setBusy]=useState(false);const [agree,setAgree]=useState(false);
   const [dirty,setDirty]=useState(false);const epoch=useRef(0);const accountEpoch=useRef(0);
@@ -59,12 +62,12 @@ export default function CustomizedPage() {
     const attempt=epoch.current;
     const timezone=Intl.DateTimeFormat().resolvedOptions().timeZone;
     setDraft(p=>({...p,timezone}));
-    const loadOptions=(version:number)=>customizedApi.options().then(o=>{if(mounted&&version===accountEpoch.current)setOptions(o);}).catch(e=>{if(mounted&&version===accountEpoch.current)setStatus(e.message);});
+    const loadOptions=(version:number)=>customizedApi.options().then(o=>{if(mounted&&version===accountEpoch.current){setOptions(o);setInventory(o.inventory??{version:'customized-location-profile-v1',revision:0,profile:null});if(o.inventory?.profile&&!new URL(window.location.href).searchParams.has('proposal'))setDraft(d=>({...d,equipment:o.inventory!.profile!.equipment,inventory_revision:o.inventory!.revision}));}}).catch(e=>{if(mounted&&version===accountEpoch.current)setStatus(e.message);});
     void loadOptions(accountEpoch.current);
     const id=new URL(window.location.href).searchParams.get('proposal');
     if(id)customizedApi.read(id).then(p=>{if(mounted&&attempt===epoch.current){setProposal(p);setDraft(p.snapshot.request);}}).catch(e=>{if(mounted&&attempt===epoch.current)setStatus(e.message);});
     const reset=()=>{
-      epoch.current++;accountEpoch.current++;retries.current.clear();setProposal(null);setDraft({...initial,timezone});setOptions({equipment:[],restrictions:[]});
+      epoch.current++;accountEpoch.current++;retries.current.clear();setProposal(null);setDraft({...initial,timezone});setOptions({equipment:[],restrictions:[]});setInventory(null);
       setAgree(false);setDirty(false);setBusy(false);setStatus('Account changed. Sign in and generate a new preview.');
       const url=new URL(window.location.href);url.searchParams.delete('proposal');window.history.replaceState(null,'',url);
       void loadOptions(accountEpoch.current);
@@ -72,7 +75,7 @@ export default function CustomizedPage() {
     window.addEventListener('hypertrophy:auth-token-changed',reset);
     return()=>{mounted=false;window.removeEventListener('hypertrophy:auth-token-changed',reset);};
   },[]);
-  function edit(change:Partial<CustomizedRequest>){epoch.current++;setDraft(p=>({...p,...change}));setAgree(false);setDirty(true);}
+  function edit(change:Partial<CustomizedRequest>){epoch.current++;setBusy(false);setDraft(p=>({...p,...change}));setAgree(false);setDirty(true);}
   async function action(name:string,fn:(key:string)=>Promise<CustomizedProposal>){
     const attempt=epoch.current;setBusy(true);setStatus('');
     // A lost response reuses exactly this operation/content retry key.
@@ -92,6 +95,8 @@ export default function CustomizedPage() {
     <p>Equipment, skill, restrictions, dates, time cap and training context control this program. Body measurements, weak-point priorities and recovery modifiers do not change this bounded design. No exercise scoring or personal-response optimization is enabled.</p>
     <p className="text-amber-200">Training rules remain provisional. Session times are estimates; equal or optimal results are not established. This option covers broadly healthy adults. Missing equipment, movement restrictions or skill may make it infeasible.</p>
     <p><Link href="/onboarding" className="underline">Sign in or finish onboarding</Link> · <Link href="/week" className="underline">Week</Link> · <Link href="/today" className="underline">Today</Link></p>
+    {options.inventory_issues&&<details><summary className="min-h-11 cursor-pointer py-2">Saved inventory limitations</summary><ul>{options.inventory_issues.map((issue,i)=><li key={i}>{issue}</li>)}</ul></details>}
+    <CustomizedInventoryEditor document={inventory} equipment={draft.equipment} variants={options.variants??[]} onSaved={document=>{setInventory(document);setOptions(o=>({...o,inventory_issues:undefined}));const version=accountEpoch.current;void customizedApi.options().then(o=>{if(version===accountEpoch.current)setOptions(o);}).catch(()=>{});edit({equipment:document.profile?.equipment??[],inventory_revision:document.revision});setStatus('Inventory saved. Generate a new preview before accepting availability changes.');}}/>
     <fieldset disabled={busy||frozen} className="space-y-4">
       <label className="block">Training context<select aria-label="Training context" className="ui-input block w-full" value={draft.training_context} onChange={e=>{const training_context=e.target.value;edit({training_context,bundle_id:training_context==='current'?'shorter-current':`longer-${training_context}`});}}>
         <option value="unknown">Choose your current context</option><option value="new">New to consistent resistance training</option><option value="returning">Returning after a break</option><option value="current">Currently training consistently</option></select></label>
@@ -117,6 +122,7 @@ export default function CustomizedPage() {
       {proposal.challenge&&!dirty&&<div className="space-y-3 rounded border border-amber-700 p-3"><p>{proposal.terms?.text}</p>{proposal.terms?.summary&&<ConsentSummary summary={proposal.terms.summary}/>}<label className="flex items-start gap-3"><input aria-label="I accept this exact program version" type="checkbox" checked={agree} disabled={busy} onChange={e=>setAgree(e.target.checked)}/>I accept this exact program version and the complete workload comparison.</label><Button disabled={!agree||busy||!proposal.terms?.summary} onClick={()=>action('accept',key=>customizedApi.accept(proposal,key))}>Accept program</Button></div>}
       {proposal.state==='accepted_candidate'&&!dirty&&<Button disabled={busy} onClick={()=>action('activate',key=>customizedApi.activate(proposal,key))}>Activate selected dates</Button>}
       {!frozen&&<Button variant="ghost" disabled={busy||dirty} onClick={()=>action('decline',key=>customizedApi.decline(proposal,key))}>Decline</Button>}
+      {frozen&&<Button onClick={()=>{epoch.current++;setProposal(null);setAgree(false);setDirty(false);setDraft(d=>({...d,selected_dates:['','',''],equipment:inventory?.profile?.equipment??d.equipment,inventory_revision:inventory?.revision}));const url=new URL(window.location.href);url.searchParams.delete('proposal');window.history.replaceState(null,'',url);setStatus('Choose new dates and review a new program version. Existing workouts and history are retained.');}}>Create another program preview</Button>}
       {frozen&&<p><Link className="underline" href="/today">Open Today&apos;s Workout</Link>. Your program snapshot and consent remain in history. On rest days Today shows no scheduled workout.</p>}
     </>}
   </section>;

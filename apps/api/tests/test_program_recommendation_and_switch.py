@@ -277,7 +277,7 @@ def test_program_recommendation_rotates_when_adaptive_gold_authored_sequence_is_
     assert payload["reason"] == "mesocycle_complete_rotate"
 
 
-def test_plan_generate_week_auto_selection_updates_program_before_template_choice() -> None:
+def test_auto_selection_does_not_grant_customized_consent_or_replace_history() -> None:
     _reset_db()
     client = TestClient(app)
 
@@ -347,16 +347,17 @@ def test_plan_generate_week_auto_selection_updates_program_before_template_choic
     recommendation_payload = recommendation.json()
     recommended_program_id = recommendation_payload["recommended_program_id"]
 
-    generate = client.post("/plan/generate-week", headers=headers, json={})
-    assert generate.status_code == 200
-    plan = generate.json()
-
-    assert plan["program_template_id"] == recommended_program_id
-    assert plan["template_selection_trace"]["program_recommendation_trace"]["outcome"]["recommended_program_id"] == recommended_program_id
-
-    updated_profile = client.get("/profile", headers=headers)
-    assert updated_profile.status_code == 200
-    assert updated_profile.json()["selected_program_id"] == recommended_program_id
+    assert recommended_program_id
+    before_profile = client.get('/profile', headers=headers).json()
+    with SessionLocal() as db:
+        before_plans = [(row.id, row.payload) for row in db.query(WorkoutPlan).all()]
+    generate = client.post('/plan/generate-week', headers=headers, json={})
+    assert generate.status_code == 409
+    assert generate.json()['detail']['code'] == 'customized_preview_required'
+    assert generate.json()['detail']['path'] == '/customize'
+    assert client.get('/profile', headers=headers).json() == before_profile
+    with SessionLocal() as db:
+        assert [(row.id, row.payload) for row in db.query(WorkoutPlan).all()] == before_plans
 
 
 def test_plan_generate_week_choose_for_me_family_prefers_family_template() -> None:

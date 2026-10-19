@@ -110,7 +110,7 @@ def plan_pilot(*, profile: CustomizedProfile, catalog: ExerciseCatalog, standard
             sets = dose.emphasis_sets if slot.emphasized else dose.sets
             target = ExposureTarget(dose.reps_min, dose.reps_max, dose.effort_kind, dose.effort_min, dose.effort_max)
             calibration = calibrate_working_load(exercise=e, target=target, policy=simulation_policy, as_of=as_of,
-                exposures=exposures, strength_reports=strength_reports, allow_provisional_preview=True)
+                exposures=exposures, strength_reports=strength_reports, allow_provisional_preview=True,required_set_indices=tuple(range(1,sets+1)))
             planned.append(PlannedExercise(e, sets, dose.reps_min, dose.reps_max, dose.effort_kind,
                 dose.effort_min, dose.effort_max, dose.rest_seconds,
                 ("original_candidate_action_slot", "stable_variant_identity", "emphasis_dose" if slot.emphasized else "anchor_dose"), calibration))

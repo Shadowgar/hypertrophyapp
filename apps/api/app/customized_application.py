@@ -29,22 +29,24 @@ PROGRAM = 'customized_full_body_v1'
 HOST_VERSION = 'customized-application-v1'
 
 
-def application_catalog():
+def application_catalog(profile=None):
     """Source-described variants, with no synthetic attainable-load inventory.
 
     Metadata is descriptive/provisional; metadata-v2 scoring stays disabled.
     Equipment identity is unresolved until the user calibrates that actual setup.
     """
     catalog = review_catalog()
-    return replace(catalog, version='customized-descriptive-library-v1', exercises=tuple(
+    catalog=replace(catalog, version='customized-descriptive-library-v1', exercises=tuple(
         replace(e, attainable_loads=(), load_identity=replace(e.load_identity,
             equipment_key='unconfirmed-setup:'+e.variant_id)) for e in catalog.exercises))
+    from .customized_inventory import catalog_for_profile
+    return catalog_for_profile(catalog,profile)
 
 
-def bundles():
-    catalog=application_catalog()
+def bundles(profile=None,exposures=(),reports=()):
+    catalog=application_catalog(profile)
     return tuple(ProgramBundle(f'{kind}-{status}',
-        shorter_gym_standard() if kind=='shorter' else candidate_standard(status), catalog, gym_design(),
+        shorter_gym_standard() if kind=='shorter' else candidate_standard(status), catalog, gym_design(),exposures=exposures,strength_reports=reports,
         display_name=f'{"Shorter" if kind=="shorter" else "Full"} Full Body · {status}')
         for status in ('new','returning','current') for kind in ('longer','shorter')
         if kind!='shorter' or status=='current')
@@ -75,7 +77,7 @@ class ApplicationLifecycle(LifecycleService):
         return super()._command(actor,key,payload,guarded)
 
     def _content_stamp(self, request):
-        return content_hash((HOST_VERSION,super()._content_stamp(request)))
+        return content_hash((HOST_VERSION,getattr(self,"inventory",None),super()._content_stamp(request)))
 
     def _guard(self, actor):
         if not self.server.enabled:
@@ -106,9 +108,20 @@ class ApplicationLifecycle(LifecycleService):
 
     def _snapshot(self, actor, data):
         self._set_week(data)
+        if getattr(self,'inventory',None):
+            from .customized_inventory import read_profile
+            with Session(bind=self.store.unit.connection(actor.subject),join_transaction_mode='rollback_only') as db:
+                current=read_profile(db,actor.subject)
+            if current!=self.inventory or data.get('inventory_revision',current['revision'])!=current['revision']:
+                raise LifecycleError('stale_inventory',409)
+            if current['profile'] and set(data.get('equipment',[]))!=set(current['profile']['equipment']):
+                raise LifecycleError('equipment_differs_from_saved_location',422)
         snapshot=super()._snapshot(actor,{**data,'audience':'customized_program'})
+        snapshot['inventory']=getattr(self,'inventory',None)
+        from .customized_inventory import inventory_issues
+        snapshot['inventory_issues']=inventory_issues(application_catalog(),snapshot['inventory'])
         snapshot['authority']=dict(policy='provisional',metadata='descriptive_provisional_no_scoring',
-            inventory='unknown_no_seed_loads',source_verified=False,scheduling='pr83_shared_date_contract',
+            inventory='account_declared_no_synthetic_loads',source_verified=False,scheduling='pr83_shared_date_contract',
             execution_authorization='owner_requested_m4_application_integration')
         return snapshot
 
@@ -125,6 +138,9 @@ class ApplicationLifecycle(LifecycleService):
         return reasons
 
     def _fresh(self, actor, document):
+        from .customized_inventory import read_profile
+        with Session(bind=self.store.unit.connection(actor.subject),join_transaction_mode='rollback_only') as db:
+            if read_profile(db,actor.subject)!=self.inventory:raise LifecycleError('stale_inventory')
         self._set_week(document['snapshot']['request'])
         super()._fresh(actor,document)
 
@@ -215,7 +231,8 @@ def execution_payload(document):
                 primary_muscles=e['primary_regions'],notes='Calibrate this exercise and setup; record actual kg. No automatic increase from unknown evidence.',
                 load_semantics=e['load_identity']['basis'],customized=dict(version=HOST_VERSION,target_kind=p['effort_kind'],
                     target_min=p['effort_min'],target_max=p['effort_max'],rest_seconds=p['rest_seconds'],
-                    identity=e['load_identity'],calibration=p['calibration'],rationale=p['reasons']),
+                    identity=e['load_identity'],calibration=p['calibration'],rationale=p['reasons'],
+                    training_status=snapshot['request']['training_context'],inventory=snapshot.get('inventory')),
                 progression_authority='customized_calibration_only'))
         sessions.append(dict(session_id=s['session_id'],title='Customized Full Body '+s['emphasis'][0],
             name=s['emphasis'],date=s['local_date'],exercises=exercises,customized=True,
@@ -228,8 +245,19 @@ def execution_payload(document):
 
 def build_service(engine, subject, clock, *, enabled):
     unit=PostgresUnit(engine);gate=PostgresSessionGate(unit,clock=clock)
-    server=PreviewServer(enabled=enabled,environment='application',synthetic_enabled=False,allowed_subjects=(subject,),bundles=bundles())
+    from .customized_inventory import read_profile,strength_reports
+    from .customized_load_evidence import completed_exposures
+    with Session(engine) as db:
+        from zoneinfo import ZoneInfo
+        as_of=clock().astimezone(ZoneInfo(db.get(User,subject).scheduling_timezone or 'UTC')).date()
+        inventory=read_profile(db,subject)
+        catalog=application_catalog(inventory)
+        exposures=completed_exposures(db,subject,as_of,[e.variant_id for e in catalog.exercises],
+            max_age_days=max(b.standard.science.calibration.history_max_age_days for b in bundles()))
+    reports=strength_reports(inventory,catalog,as_of)
+    server=PreviewServer(enabled=enabled,environment='application',synthetic_enabled=False,allowed_subjects=(subject,),bundles=bundles(inventory,exposures,reports))
     service=ApplicationLifecycle(server=server,store=PostgresProposalStore(unit,gate),schedule=ApplicationSchedule(unit,clock),clock=clock,
         comparison_pairs=(('shorter-current','longer-current'),),authorize_actor=gate.authorize,
         evaluator=partial(evaluate_preview,application=True))
+    service.inventory=inventory
     return service,gate

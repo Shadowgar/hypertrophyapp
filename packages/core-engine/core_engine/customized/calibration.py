@@ -3,19 +3,20 @@
 Reuses M2A's exact-cohort, required-completed-coverage, performed-load and unknown
 actual-effort semantics. The M2A authored progression owner is deliberately not
 called: it requires source slots and source-specific percentages. Here all
-thresholds are injected, no working weight is inferred from a 1RM, and possible
-underchallenge is a request to recalibrate, not automatic progression.
+evidence thresholds are injected, and no working weight is inferred from a 1RM.
+The versioned application wrapper below admits a bounded real inventory step;
+standalone C1 underchallenge remains a request to recalibrate.
 """
 from datetime import date
 from decimal import Decimal
 
-from .audit import content_hash, policy_content_hash, policy_is_approved
+from .audit import canonical, content_hash, policy_content_hash, policy_is_approved
 from .models import (
     Exercise, ExposureTarget, SciencePolicy, CompletedExposure, StrengthReport,
     CompletedSet, EvidenceAssessment, CalibrationDecision, finite,
 )
 
-VERSION = "customized-calibration-c1-v1"
+VERSION = "customized-calibration-c1-v2"
 _NEXT_STEPS = ("observe_comfortable_technique_and_actual_effort", "record_actual_load_reps_and_load_basis",
                "stop_on_pain_or_technique_deterioration", "no_maximal_or_failure_test_required")
 
@@ -81,12 +82,14 @@ def _effective_records(exposure):
     return tuple(effective), tuple(sorted(excluded)), reasons
 
 
-def _assess(exposure, identity, target, policy, as_of):
+def _assess(exposure, identity, target, policy, as_of, required_set_indices=None):
     records, excluded, reasons = _effective_records(exposure)
     if (exposure.version != "c1-exposure-v1" or not exposure.workout_occurrence_id
             or not exposure.exercise_occurrence_id or not exposure.provenance_reference):
         reasons.append("exposure_identity_or_provenance_missing")
     required = exposure.required_set_indices
+    if required_set_indices is not None and required!=required_set_indices:
+        reasons.append("prescribed_workload_incomparable")
     if (not required or any(type(i) is not int or i < 1 for i in required) or len(set(required)) != len(required)):
         reasons.append("required_set_identity_invalid")
     if set(r.set_index for r in records) != set(required):
@@ -127,7 +130,7 @@ def _assess(exposure, identity, target, policy, as_of):
 
 def calibrate_working_load(*, exercise: Exercise, target: ExposureTarget, policy: SciencePolicy | None,
         as_of: date, exposures: tuple[CompletedExposure, ...] = (), strength_reports: tuple[StrengthReport, ...] = (),
-        allow_provisional_preview: bool = False) -> CalibrationDecision:
+        allow_provisional_preview: bool = False, required_set_indices: tuple[int,...] | None = None) -> CalibrationDecision:
     """History first, optional strength information second, coached calibration last.
 
     Attainable loads are an explicitly supplied finite inventory in exactly the
@@ -143,7 +146,7 @@ def calibrate_working_load(*, exercise: Exercise, target: ExposureTarget, policy
         raise TypeError("C1 calibration requires typed normalized inputs and an explicit date")
     identity = exercise.load_identity
     evidence_hash = content_hash((exposures, strength_reports, as_of))
-    comparison_key = content_hash((VERSION, identity, target))
+    comparison_key = content_hash((VERSION, identity, target, required_set_indices))
     assessments = []
     def result(status, reasons, *, working=None, baseline=None, origin="none", under=False,
                next_load=None, records=(), excluded=(), information=()):
@@ -179,7 +182,7 @@ def calibrate_working_load(*, exercise: Exercise, target: ExposureTarget, policy
         key=lambda e: (e.performed_on, e.workout_occurrence_id, e.exercise_occurrence_id))
     # Assess all relevant evidence, but never bypass the newest uncertain/painful
     # exposure with an older good one. Date-only ties cannot establish recency.
-    assessments.extend(_assess(e, identity, target, policy, as_of) for e in relevant)
+    assessments.extend(_assess(e, identity, target, policy, as_of, required_set_indices) for e in relevant)
     reasons = []
     if relevant:
         latest = assessments[-1]
@@ -233,3 +236,46 @@ def calibrate_working_load(*, exercise: Exercise, target: ExposureTarget, policy
             origin="credible_recent_self_report", information=credible)
     return result("insufficient_history" if relevant else "requires_calibration", reasons,
         excluded=assessments[-1].excluded_ids if assessments else ())
+
+
+# Owner-authorized provisional application admission, distinct from C1 science
+# policy approval and Authored M2A. This cap is a conservative software bound,
+# not a scientific guarantee or a change to the injected C1/C2 policy numbers.
+BOUNDED_CALIBRATION_VERSION = "customized-bounded-calibration-v1"
+PROVISIONAL_CALIBRATION_INCREASE_CEILING = Decimal("0.10")
+
+
+def recommend_calibrated_load(*, exercise: Exercise, target: ExposureTarget, policy: SciencePolicy | None,
+        as_of: date, exposures: tuple[CompletedExposure, ...] = (),
+        strength_reports: tuple[StrengthReport, ...] = (), required_set_indices:tuple[int,...]|None=None) -> dict:
+    """Admit C1's qualified baseline or one real bounded next load, in kg.
+
+    C1 remains the evidence/comparability owner. Missing effort, incomplete work,
+    changed identities, pain, technique ambiguity and stale evidence keep its
+    abstention reasons. Self-reported strength remains information only.
+    """
+    from .inventory import KG_PER_LB
+
+    decision = calibrate_working_load(exercise=exercise, target=target, policy=policy, as_of=as_of,
+        exposures=exposures, strength_reports=strength_reports, allow_provisional_preview=True,required_set_indices=required_set_indices)
+    action, recommended = "monitor", None
+    reasons = list(decision.reasons)
+    if decision.status == "known_working_load" and decision.working_load is not None:
+        action, recommended = "hold", decision.working_load
+    elif (decision.status == "requires_calibration" and decision.possibly_underchallenging
+            and decision.origin == "comparable_completed_exposure" and decision.known_baseline is not None):
+        higher = decision.attainable_next_load
+        baseline = Decimal(str(decision.known_baseline))
+        if higher is not None:
+            if baseline < Decimal(str(higher)) <= baseline * (1 + PROVISIONAL_CALIBRATION_INCREASE_CEILING):
+                action, recommended = "increase", higher
+                reasons.append("bounded_attainable_increase")
+            else:
+                reasons.append("higher_attainable_outside_bound")
+    if recommended is not None and decision.unit == "lb":
+        recommended = float(Decimal(str(recommended)) * KG_PER_LB)
+    return dict(version=BOUNDED_CALIBRATION_VERSION, policy_status="provisional",
+        maximum_relative_increase=float(PROVISIONAL_CALIBRATION_INCREASE_CEILING),
+        policy_hash=content_hash((BOUNDED_CALIBRATION_VERSION, float(PROVISIONAL_CALIBRATION_INCREASE_CEILING), decision.policy_hash)), action=action,
+        recommended_weight=recommended, unit="kg", reason_codes=tuple(dict.fromkeys(reasons)),
+        calibration=canonical(decision))

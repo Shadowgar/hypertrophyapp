@@ -631,6 +631,10 @@ class WorkoutSetLogRequest(BaseModel):
     load_recommendation_id: str | None = Field(default=None, min_length=1, max_length=128)
     load_override_reason: str | None = Field(default=None, min_length=1, max_length=500)
 
+    actual_rir: float | None = Field(default=None,ge=0,le=10,allow_inf_nan=False,strict=True)
+    technique_quality: Literal['acceptable','poor','unknown'] | None = None
+    pain: bool | None = Field(default=None,strict=True)
+
 
 class WorkoutSubstitutionRecommendationResponse(BaseModel):
     recommended_name: str
@@ -728,6 +732,10 @@ class WorkoutSetCorrectionRequest(BaseModel):
     weight: float = Field(ge=0, allow_inf_nan=False)
     rpe: float | None = Field(default=None, ge=0, le=10, allow_inf_nan=False)
     reason: str = Field(min_length=1, max_length=500)
+
+    actual_rir: float | None = Field(default=None,ge=0,le=10,allow_inf_nan=False,strict=True)
+    technique_quality: Literal['acceptable','poor','unknown'] | None = None
+    pain: bool | None = Field(default=None,strict=True)
 
 
 class AuthoredSubstitutionRequest(BaseModel):

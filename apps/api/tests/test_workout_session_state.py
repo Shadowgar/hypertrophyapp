@@ -1,4 +1,5 @@
-from datetime import date
+from copy import deepcopy
+from datetime import date, timedelta
 
 from fastapi.testclient import TestClient
 
@@ -55,20 +56,51 @@ def _onboard_profile(
 
 
 def _setup_first_exercise(client: TestClient, headers: dict[str, str]) -> tuple[dict, dict]:
-    generated = client.post("/plan/generate-week", headers=headers, json={})
-    assert generated.status_code == 200
-    first_session = generated.json()["sessions"][0]
+    profile = client.get('/profile', headers=headers)
+    assert profile.status_code == 200
+    if profile.json()['selected_program_id'] == 'full_body_v1':
+        stored = _seed_historical_generated_plan(client, headers)
+    else:
+        generated = client.post('/plan/generate-week', headers=headers, json={})
+        assert generated.status_code == 200
+        stored = generated.json()
+    first_session = stored['sessions'][0]
     first_exercise = first_session["exercises"][0]
     return first_session, first_exercise
 
 
-def _assert_generated_runtime_trace(payload: dict) -> dict:
-    runtime_trace = payload["template_selection_trace"]["generated_full_body_runtime_trace"]
-    assert runtime_trace["compatibility_selected_template_id"] == "full_body_v1"
-    assert runtime_trace["compatibility_program_template_id"] == "full_body_v1"
-    assert runtime_trace["content_origin"] == "generated_constructor_applied"
-    assert runtime_trace["generated_constructor_applied"] is True
-    return runtime_trace
+def _seed_historical_generated_plan(client: TestClient, headers: dict[str, str]) -> dict:
+    """Synthetic persisted history, not a new plan or source-layout replay."""
+    profile = client.get('/profile', headers=headers)
+    assert profile.status_code == 200
+    monday = date.today() - timedelta(days=date.today().weekday())
+    definitions = [
+        ('hack_squat', 'Hack squat', 'hack_squat', 'squat', ['quads'], ['machine']),
+        ('chest_supported_machine_row', 'Machine row', 'chest_supported_machine_row', 'horizontal_pull', ['back'], ['machine']),
+        ('dumbbell_rdl', 'Dumbbell RDL', 'barbell_rdl', 'hinge', ['hamstrings'], ['dumbbell']),
+        ('cable_crunch', 'Cable crunch', 'cable_crunch', 'core', ['abs'], ['cable']),
+    ]
+    exercises = [dict(id=id, name=name, primary_exercise_id=primary, movement_pattern=pattern,
+        primary_muscles=muscles, equipment_tags=equipment, sets=3, rep_range=[8, 12],
+        recommended_working_weight=20.0, start_weight=20.0, substitution_candidates=[])
+        for id, name, primary, pattern, muscles, equipment in definitions]
+    payload = {'program_template_id': 'full_body_v1', 'split': 'full_body', 'phase': 'maintenance',
+        'week_start': monday.isoformat(), 'historical_fixture': True,
+        'mesocycle': {'week_index': 1, 'authored_week_index': 1},
+        'sessions': [{'session_id': 'full_body_v1-historical-day1', 'title': 'Historical day 1',
+            'date': date.today().isoformat(), 'exercises': exercises},
+            {'session_id': 'full_body_v1-historical-day2', 'title': 'Historical day 2',
+             'date': (date.today() + timedelta(days=1)).isoformat(), 'exercises': [
+                dict(id=id, name=id, primary_exercise_id=id, movement_pattern='isolation',
+                    primary_muscles=['biceps'], equipment_tags=['cable'], sets=2, rep_range=[10, 15],
+                    recommended_working_weight=10.0, substitution_candidates=[])
+                for id in ['dumbbell_curl_incline', 'triceps_pushdown_rope', 'weak_chest_cable_fly', 'weak_ham_leg_curl']]}]}
+    with SessionLocal() as db:
+        user = db.query(User).filter(User.email == profile.json()['email']).one()
+        db.add(WorkoutPlan(user_id=user.id, week_start=monday, split='full_body',
+            phase='maintenance', payload=deepcopy(payload)))
+        db.commit()
+    return payload
 
 
 def test_workout_session_state_persists_set_level_tracking() -> None:
@@ -296,7 +328,7 @@ def test_authored_repeat_failure_does_not_offer_generic_substitution() -> None:
     assert matching["authored_prescription"] == first_exercise["authored_prescription"]
 
 
-def test_adaptive_gold_workout_today_reflects_generated_repeat_failure_substitution() -> None:
+def test_historical_generated_workout_today_preserves_performed_variant_after_logging() -> None:
     _reset_db()
     client = TestClient(app)
     email = "gold-today-repeat@example.com"
@@ -341,10 +373,7 @@ def test_adaptive_gold_workout_today_reflects_generated_repeat_failure_substitut
         )
         db.commit()
 
-    generated = client.post("/plan/generate-week", headers=headers, json={})
-    assert generated.status_code == 200
-    generated_payload = generated.json()
-    _assert_generated_runtime_trace(generated_payload)
+    generated_payload = _seed_historical_generated_plan(client, headers)
     selected_session = generated_payload["sessions"][0]
     plan_exercise = selected_session["exercises"][0]
 
@@ -373,7 +402,7 @@ def test_adaptive_gold_workout_today_reflects_generated_repeat_failure_substitut
     assert first_exercise["movement_pattern"] == plan_exercise["movement_pattern"]
 
 
-def test_adaptive_gold_today_includes_core_slot_when_equipment_available() -> None:
+def test_historical_generated_today_retains_stored_equipment_slots() -> None:
     _reset_db()
     client = TestClient(app)
     email = "gold-core-today@example.com"
@@ -402,10 +431,7 @@ def test_adaptive_gold_today_includes_core_slot_when_equipment_available() -> No
     )
     assert response.status_code == 200
 
-    generated = client.post("/plan/generate-week", headers=headers, json={})
-    assert generated.status_code == 200
-    generated_payload = generated.json()
-    _assert_generated_runtime_trace(generated_payload)
+    generated_payload = _seed_historical_generated_plan(client, headers)
     first_session = generated_payload["sessions"][0]
     first_exercise = first_session["exercises"][0]
 
@@ -434,7 +460,7 @@ def test_adaptive_gold_today_includes_core_slot_when_equipment_available() -> No
     )
 
 
-def test_adaptive_gold_today_matches_selected_generated_session() -> None:
+def test_historical_generated_today_matches_selected_stored_session() -> None:
     _reset_db()
     client = TestClient(app)
     email = "gold-hinge-today@example.com"
@@ -463,10 +489,7 @@ def test_adaptive_gold_today_matches_selected_generated_session() -> None:
     )
     assert response.status_code == 200
 
-    generated = client.post("/plan/generate-week", headers=headers, json={})
-    assert generated.status_code == 200
-    generated_payload = generated.json()
-    _assert_generated_runtime_trace(generated_payload)
+    generated_payload = _seed_historical_generated_plan(client, headers)
     generated_sessions = generated_payload["sessions"]
     today_iso = date.today().isoformat()
     selected_session = next(
@@ -489,7 +512,7 @@ def test_adaptive_gold_today_matches_selected_generated_session() -> None:
     assert matching["recommended_working_weight"] >= 0
 
 
-def test_adaptive_gold_today_only_includes_weak_point_slots_from_selected_session() -> None:
+def test_historical_generated_today_does_not_add_later_weakpoint_slots() -> None:
     _reset_db()
     client = TestClient(app)
     email = "gold-weak-today@example.com"
@@ -518,9 +541,7 @@ def test_adaptive_gold_today_only_includes_weak_point_slots_from_selected_sessio
     )
     assert response.status_code == 200
 
-    generated = client.post("/plan/generate-week", headers=headers, json={})
-    assert generated.status_code == 200
-    first_session = generated.json()["sessions"][0]
+    first_session = _seed_historical_generated_plan(client, headers)['sessions'][0]
     first_exercise = first_session["exercises"][0]
 
     log_response = client.post(
@@ -544,7 +565,7 @@ def test_adaptive_gold_today_only_includes_weak_point_slots_from_selected_sessio
     assert "weak_ham_leg_curl" not in exercise_ids
 
 
-def test_adaptive_gold_today_excludes_later_day_arm_isolation_slots() -> None:
+def test_historical_generated_today_excludes_later_day_arm_isolation_slots() -> None:
     _reset_db()
     client = TestClient(app)
     email = "gold-arm-today@example.com"
@@ -573,8 +594,7 @@ def test_adaptive_gold_today_excludes_later_day_arm_isolation_slots() -> None:
     )
     assert response.status_code == 200
 
-    generated = client.post("/plan/generate-week", headers=headers, json={})
-    assert generated.status_code == 200
+    _seed_historical_generated_plan(client, headers)
 
     today = client.get("/workout/today", headers=headers)
     assert today.status_code == 200
@@ -584,7 +604,7 @@ def test_adaptive_gold_today_excludes_later_day_arm_isolation_slots() -> None:
     assert "triceps_pushdown_rope" not in exercise_ids
 
 
-def test_adaptive_gold_log_set_and_today_preserve_substitution_guidance_continuity() -> None:
+def test_historical_generated_log_set_and_today_preserve_substitution_guidance_continuity() -> None:
     _reset_db()
     client = TestClient(app)
     email = "gold-today-guidance@example.com"
@@ -613,10 +633,7 @@ def test_adaptive_gold_log_set_and_today_preserve_substitution_guidance_continui
     )
     assert response.status_code == 200
 
-    generated = client.post("/plan/generate-week", headers=headers, json={})
-    assert generated.status_code == 200
-    generated_payload = generated.json()
-    _assert_generated_runtime_trace(generated_payload)
+    generated_payload = _seed_historical_generated_plan(client, headers)
     selected_session = generated_payload["sessions"][0]
     first_exercise = selected_session["exercises"][0]
 
@@ -665,7 +682,7 @@ def test_adaptive_gold_log_set_and_today_preserve_substitution_guidance_continui
     assert matching["live_recommendation"]["guidance"] == payload["live_recommendation"]["guidance"]
 
 
-def test_adaptive_gold_second_exercise_today_and_log_set_preserve_substitution_guidance() -> None:
+def test_historical_generated_second_exercise_today_and_log_set_preserve_substitution_guidance() -> None:
     _reset_db()
     client = TestClient(app)
     email = "gold-second-guidance@example.com"
@@ -694,10 +711,7 @@ def test_adaptive_gold_second_exercise_today_and_log_set_preserve_substitution_g
     )
     assert response.status_code == 200
 
-    generated = client.post("/plan/generate-week", headers=headers, json={})
-    assert generated.status_code == 200
-    generated_payload = generated.json()
-    _assert_generated_runtime_trace(generated_payload)
+    generated_payload = _seed_historical_generated_plan(client, headers)
     selected_session = next(
         session
         for session in generated_payload["sessions"]
@@ -756,7 +770,7 @@ def test_adaptive_gold_second_exercise_today_and_log_set_preserve_substitution_g
     assert matching["live_recommendation"]["guidance"] == payload["live_recommendation"]["guidance"]
 
 
-def test_adaptive_gold_third_exercise_today_and_log_set_preserve_substitution_guidance() -> None:
+def test_historical_generated_third_exercise_today_and_log_set_preserve_substitution_guidance() -> None:
     _reset_db()
     client = TestClient(app)
     email = "gold-third-guidance@example.com"
@@ -785,9 +799,7 @@ def test_adaptive_gold_third_exercise_today_and_log_set_preserve_substitution_gu
     )
     assert response.status_code == 200
 
-    generated = client.post("/plan/generate-week", headers=headers, json={})
-    assert generated.status_code == 200
-    generated_sessions = generated.json()["sessions"]
+    generated_sessions = _seed_historical_generated_plan(client, headers)['sessions']
     selected_session = next(
         session
         for session in generated_sessions
@@ -843,7 +855,7 @@ def test_adaptive_gold_third_exercise_today_and_log_set_preserve_substitution_gu
     assert matching["live_recommendation"]["guidance"] == payload["live_recommendation"]["guidance"]
 
 
-def test_adaptive_gold_fourth_exercise_today_and_log_set_preserve_substitution_guidance() -> None:
+def test_historical_generated_fourth_exercise_today_and_log_set_preserve_substitution_guidance() -> None:
     _reset_db()
     client = TestClient(app)
     email = "gold-fourth-guidance@example.com"
@@ -872,10 +884,7 @@ def test_adaptive_gold_fourth_exercise_today_and_log_set_preserve_substitution_g
     )
     assert response.status_code == 200
 
-    generated = client.post("/plan/generate-week", headers=headers, json={})
-    assert generated.status_code == 200
-    generated_payload = generated.json()
-    _assert_generated_runtime_trace(generated_payload)
+    generated_payload = _seed_historical_generated_plan(client, headers)
     generated_sessions = generated_payload["sessions"]
     selected_session = next(
         session

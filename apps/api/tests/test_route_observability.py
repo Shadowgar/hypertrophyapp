@@ -11,7 +11,8 @@ from test_db import configure_test_database
 
 configure_test_database("test_route_observability")
 
-from app.database import Base, engine
+from app.database import Base, SessionLocal, engine
+from app.models import WorkoutPlan
 from app.main import app
 
 TEST_CREDENTIAL = f"T{uuid.uuid4().hex[:15]}"
@@ -64,14 +65,14 @@ def _register_and_profile(client: TestClient, *, email: str, selected_program_id
     return headers
 
 
-def test_logging_captures_regenerate_current_and_next_week_advance(caplog) -> None:
+def test_logging_captures_authored_regeneration_and_next_week_advance(caplog) -> None:
     _reset_db()
     client = TestClient(app)
     caplog.set_level(logging.INFO, logger="hypertrophy.app")
-    headers = _register_and_profile(client, email="logging-generate@example.com", selected_program_id="full_body_v1")
+    headers = _register_and_profile(client, email="logging-generate@example.com", selected_program_id="pure_bodybuilding_phase_1_full_body")
 
     caplog.clear()
-    first_response = client.post("/plan/generate-week", headers=headers, json={"template_id": "full_body_v1"})
+    first_response = client.post("/plan/generate-week", headers=headers, json={"template_id": "pure_bodybuilding_phase_1_full_body"})
     assert first_response.status_code == 200
     first_payload = first_response.json()
     first_logs = _json_logs(caplog)
@@ -83,13 +84,13 @@ def test_logging_captures_regenerate_current_and_next_week_advance(caplog) -> No
     )
     assert any(
         entry.get("event") == "generation_path_selected"
-        and entry.get("path_family") == "generated"
+        and entry.get("path_family") == "authored"
         and entry.get("generation_mode") == "current_week_regenerate"
         for entry in first_logs
     )
 
     caplog.clear()
-    next_response = client.post("/plan/next-week", headers=headers, json={"template_id": "full_body_v1"})
+    next_response = client.post("/plan/next-week", headers=headers, json={"template_id": "pure_bodybuilding_phase_1_full_body"})
     assert next_response.status_code == 200
     next_payload = next_response.json()
     next_logs = _json_logs(caplog)
@@ -149,3 +150,21 @@ def test_logging_captures_adaptation_preview_validation_failure(caplog) -> None:
         and "Temporary duration must be between 1 and 8 weeks." in str(entry.get("error_message"))
         for entry in logs
     )
+
+
+def test_retired_generated_writers_never_emit_success_logs(caplog) -> None:
+    _reset_db()
+    client = TestClient(app)
+    caplog.set_level(logging.INFO, logger='hypertrophy.app')
+    headers = _register_and_profile(client, email='logging-retired-generated@example.com', selected_program_id='full_body_v1')
+    before_profile = client.get('/profile', headers=headers).json()
+    caplog.clear()
+    for route in ('/plan/generate-week', '/plan/next-week'):
+        response = client.post(route, headers=headers, json={'template_id': 'full_body_v1'})
+        assert response.status_code == 409
+        assert response.json()['detail']['code'] == 'customized_preview_required'
+        assert response.json()['detail']['path'] == '/customize'
+    assert not any(entry.get('event') in {'week_regenerated_current', 'week_advanced_next', 'generation_path_selected'} for entry in _json_logs(caplog))
+    assert client.get('/profile', headers=headers).json() == before_profile
+    with SessionLocal() as db:
+        assert db.query(WorkoutPlan).count() == 0

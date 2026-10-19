@@ -102,13 +102,15 @@ def _preview_program(request: PreviewRequest, *, server: PreviewServer, principa
         return blocked("policy_not_approved","review_bundle_not_provisional","This review bundle cannot be treated as an approved policy.")
     # Reuse the established normalization boundary, never the legacy constructor,
     # authored scaffold, defaults, starting RIR, volume bands or physiology rules.
-    legacy=build_generated_training_profile(selected_program_id="full_body_v1",program_selection_mode="generated",
-        days_available=len(request.selected_dates),session_time_budget_minutes=request.cap_minutes,
-        temporary_duration_minutes=None,near_failure_tolerance=request.recovery,weak_areas=list(request.weakpoints),
-        movement_restrictions=list(request.restrictions),equipment_profile=list(request.equipment),
-        onboarding_answers={"goal_mode":request.goal,"training_status":request.training_context},training_state={})
-    if legacy.path_family != "generated" or legacy.runtime_active.target_days != 3 or legacy.decision_profile.goal_mode != "lean_gain":
-        return blocked("invalid_input","normalization_inconsistent","The normalized profile is inconsistent; no preview was constructed.")
+    legacy=None
+    if not application:
+        legacy=build_generated_training_profile(selected_program_id="full_body_v1",program_selection_mode="generated",
+            days_available=len(request.selected_dates),session_time_budget_minutes=request.cap_minutes,
+            temporary_duration_minutes=None,near_failure_tolerance=request.recovery,weak_areas=list(request.weakpoints),
+            movement_restrictions=list(request.restrictions),equipment_profile=list(request.equipment),
+            onboarding_answers={"goal_mode":request.goal,"training_status":request.training_context},training_state={})
+        if legacy.path_family != "generated" or legacy.runtime_active.target_days != 3 or legacy.decision_profile.goal_mode != "lean_gain":
+            return blocked("invalid_input","normalization_inconsistent","The normalized profile is inconsistent; no preview was constructed.")
     origins=tuple((name,"explicit_preview_request" if name in request.model_fields_set else "missing_input") for name in ACTIVE)
     profile=CustomizedProfile("c1-profile-v1","customized",request.consent_reference,request.goal,request.training_context,
         request.selected_dates,request.timezone,request.cap_minutes,request.cap_kind,request.equipment,request.skill,
@@ -143,8 +145,8 @@ def _preview_program(request: PreviewRequest, *, server: PreviewServer, principa
         missing_actions=result.missing_actions,missing_regions=result.missing_regions,dose_conflicts=result.dose_conflicts,
         accepted_omissions=request.omissions,reasons=result.plan.reasons,issues=issues,tradeoffs=result.plan.tradeoffs,
         limitations=(("provisional_training_policy_no_optimality_or_growth_guarantee", "descriptive_exercise_metadata_no_scoring", "no_assumed_load_inventory_or_historical_effort", "working_load_requires_exercise_specific_calibration", "timing_estimates_not_measured_guarantees", "unknown_adjacent_schedule_disclosed") if application else LIMITATIONS),active_fields=ACTIVE,trace_only_fields=TRACE_ONLY,
-        trace={"bundle_id":bundle.bundle_id,"normalizer":"build_generated_training_profile","legacy_path_family":legacy.path_family,
-            "core_profile_version":profile.version,"field_origins":tuple(f"{name}:{origin}" for name,origin in origins),"ignored_legacy_defaults":tuple(legacy.decision_trace.defaults_applied),
+        trace={"bundle_id":bundle.bundle_id,"normalizer":"core_engine.customized.models.CustomizedProfile" if application else "build_generated_training_profile","legacy_path_family":"generated" if application else legacy.path_family,
+            "core_profile_version":profile.version,"field_origins":tuple(f"{name}:{origin}" for name,origin in origins),"ignored_legacy_defaults":() if application else tuple(legacy.decision_trace.defaults_applied),
             "rules_version":result.plan.trace.owner,"rules_hash":result.plan.trace.rules_hash,
             "input_hash":result.plan.trace.input_hash,"normalized_profile_hash":content_hash(profile),
             "standard_hash":result.standard_hash,"design_hash":result.design_hash,"context_hash":content_hash(context)})

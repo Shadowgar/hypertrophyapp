@@ -57,7 +57,6 @@ from ..generated_decision_profile import GeneratedDecisionProfile
 from ..generated_training_profile import GeneratedTrainingProfile, build_generated_training_profile
 from ..generated_full_body_runtime_adapter import (
     GENERATED_FULL_BODY_COMPATIBILITY_TEMPLATE_ID,
-    prepare_generated_full_body_runtime_template,
 )
 from ..workout_identity import identified_plans, identified_sessions
 from ..models import (
@@ -1278,6 +1277,7 @@ def _resolve_preview_recommendation(db: Session, *, user_id: str, recommendation
     )
     if recommendation is None:
         raise HTTPException(status_code=404, detail="Recommendation not found")
+    _require_original_customized_flow(recommendation.template_id)
     if recommendation.status == "invalidated_history":
         raise HTTPException(409, "History changed; request a fresh recommendation")
     return recommendation
@@ -1417,6 +1417,7 @@ def coach_intelligence_preview(
         raise HTTPException(status_code=400, detail=PROFILE_INCOMPLETE_DETAIL)
 
     effective = current_scheduling_profile(db, current_user, datetime.now(UTC))
+    _require_original_customized_flow(payload.template_id or effective.program_id)
     preview_runtime = prepare_coach_preview_runtime_inputs(
         preview_request=payload.model_dump(mode="json"),
         profile_days_available=effective.days_available,
@@ -1443,6 +1444,7 @@ def coach_intelligence_preview(
         raise HTTPException(status_code=422, detail=INVALID_TEMPLATE_DETAIL) from exc
 
     selected_template_id = cast(str, template_runtime["selected_template_id"])
+    _require_original_customized_flow(selected_template_id)
     template = cast(dict[str, Any], template_runtime["selected_template"])
     latest_plan = effective.plan
     if not current_user.scheduling_timezone:
@@ -1535,6 +1537,7 @@ def preview_frequency_adaptation(
 ) -> FrequencyAdaptationResult:
     from ..selected_date_plans import current_scheduling_profile
     effective = current_scheduling_profile(db, current_user, datetime.now(UTC))
+    _require_original_customized_flow(payload.program_id or effective.program_id)
     days_available = effective.days_available
     if not days_available or not current_user.split_preference:
         raise HTTPException(status_code=400, detail=PROFILE_INCOMPLETE_DETAIL)
@@ -1697,6 +1700,13 @@ def apply_frequency_adaptation(
     return response_model
 
 
+def _require_original_customized_flow(program_id):
+    """Legacy IDs remain readable; only the original consent-bound owner writes Customized plans."""
+    if is_generated_full_body_binding_id(str(program_id or '')) or program_id=='customized_full_body_v1':
+        raise HTTPException(409,dict(code='customized_preview_required',path='/customize',
+            message='Use Customize My Workout to review original programming, select dates and accept this version. Existing history is retained.'))
+
+
 def _build_week_plan_runtime_for_user(
     *,
     db: Session,
@@ -1843,6 +1853,7 @@ def _build_week_plan_runtime_for_user(
     )
 
     selected_template_id = cast(str, template_runtime["selected_template_id"])
+    _require_original_customized_flow(selected_template_id)
     template = cast(dict[str, Any], template_runtime["selected_template"])
     template_selection_trace = cast(dict[str, Any], template_runtime["decision_trace"])
     if program_recommendation_trace is not None:
@@ -1935,140 +1946,36 @@ def _build_week_plan_runtime_for_user(
         generation_context["generation_runtime"]["decision_trace"]["outcome"]["prior_generation_source"] = "selected_date_source_successor"
     generation_runtime = cast(dict[str, Any], generation_context["generation_runtime"])
     runtime_template = template
-    generated_full_body_adaptive_loop_policy = None
-    generated_full_body_block_review_policy = None
-    apply_generated_normal_density_floor = False
-    generated_volume_stage_trace: dict[str, Any] | None = None
-    if is_generated_full_body_binding_id(selected_template_id):
-        training_profile = _build_generated_training_profile(
-            current_user=current_user,
-            effective_days_available=effective_days_available,
-            training_state=cast(dict[str, Any], generation_context["training_state"]),
-        )
-        decision_profile = training_profile.decision_profile
-        generated_runtime_hints = {
-            "generated_mode": decision_profile.generated_mode,
-            "target_days": int(decision_profile.target_days),
-            "session_time_band": decision_profile.session_time_band,
-            "recovery_modifier": decision_profile.recovery_modifier,
-        }
-        generated_training_state = deepcopy(cast(dict[str, Any], generation_context["training_state"]))
-        generated_training_state["generated_runtime_hints"] = generated_runtime_hints
-        apply_generated_normal_density_floor = bool(
-            decision_profile.generated_mode == "normal_full_body"
-            and int(decision_profile.target_days) == 3
-            and decision_profile.session_time_band == "standard"
-            and decision_profile.recovery_modifier == "standard"
-        )
-        # Phase 3A precedence: GeneratedTrainingProfile owns upstream normalization and control tracing.
-        # Assessment builder remains authoritative for downstream coaching-assessment internals.
-        generated_runtime = prepare_generated_full_body_runtime_template(
-            selected_template_id=selected_template_id,
-            selected_template=template,
-            profile_input=ProfileAssessmentInput(
-                days_available=int(training_profile.runtime_active.target_days),
-                split_preference=current_user.split_preference,
-                training_location=current_user.training_location,
-                equipment_profile=list(current_user.equipment_profile or []),
-                weak_areas=list(training_profile.runtime_active.weakpoint_targets),
-                session_time_budget_minutes=current_user.session_time_budget_minutes,
-                movement_restrictions=list(training_profile.runtime_active.movement_restriction_flags),
-                near_failure_tolerance=current_user.near_failure_tolerance,
-            ),
-            training_state=generated_training_state,
-        )
-        runtime_template = cast(dict[str, Any], generated_runtime["program_template"])
-        generated_full_body_adaptive_loop_policy = generated_runtime.get("generated_full_body_adaptive_loop_policy")
-        generated_full_body_block_review_policy = generated_runtime.get("generated_full_body_block_review_policy")
-        template_selection_trace["generated_full_body_runtime_trace"] = cast(
-            dict[str, Any], generated_runtime["generated_full_body_runtime_trace"]
-        )
-        generated_volume_stage_trace = {
-            "constructor_planned_sets": int(
-                cast(dict[str, Any], generated_runtime["generated_full_body_runtime_trace"]).get("constructor_planned_sets")
-                or 0
-            ),
-            "runtime_adapter_planned_sets": _planned_sets_from_template(runtime_template),
-            "generated_mode": decision_profile.generated_mode,
-            "target_days": int(decision_profile.target_days),
-            "session_time_band": decision_profile.session_time_band,
-            "recovery_modifier": decision_profile.recovery_modifier,
-        }
-        log_event(
-            "generation_path_selected",
-            route="/plan/generate-week" if generation_mode != "next_week_advance" else "/plan/next-week",
-            action="build_week_plan_runtime",
-            user_id=current_user.id,
-            selected_program_id=resolve_selected_program_binding_id(current_user.selected_program_id),
-            template_id=selected_template_id,
-            runtime_template_id=selected_template_id,
-            path_family="generated",
-            generation_mode=generation_mode,
-            week_index=cast(dict[str, Any], generated_runtime["generated_full_body_runtime_trace"]).get("week_index"),
-            authored_week_index=cast(dict[str, Any], generated_runtime["generated_full_body_runtime_trace"]).get("authored_week_index"),
-            days_available=current_user.days_available,
-            target_days=effective_days_available,
-        )
-        log_event(
-            "generated_decision_profile_resolved",
-            route="/plan/generate-week" if generation_mode != "next_week_advance" else "/plan/next-week",
-            action="build_generated_decision_profile",
-            user_id=current_user.id,
-            selected_program_id=decision_profile.selected_program_id,
-            path_family=decision_profile.path_family,
-            generated_mode=decision_profile.generated_mode,
-            target_days=decision_profile.target_days,
-            session_time_band=decision_profile.session_time_band,
-            recovery_modifier=decision_profile.recovery_modifier,
-            training_status=decision_profile.training_status,
-            detraining_status=decision_profile.detraining_status,
-            goal_mode=decision_profile.goal_mode,
-            equipment_scope=decision_profile.equipment_scope,
-            weakpoint_count=len(decision_profile.weakpoint_targets),
-            movement_restriction_count=len(decision_profile.movement_restriction_flags),
-            defaults_applied=list(decision_profile.decision_trace.defaults_applied),
-            missing_fields=list(decision_profile.decision_trace.missing_fields),
-            reentry_required=decision_profile.reentry_required,
-            insufficient_data_avoided=decision_profile.decision_trace.insufficient_data_avoided,
-        )
-        _log_generated_training_profile_event(
-            event="generated_training_profile_resolved",
-            route="/plan/generate-week" if generation_mode != "next_week_advance" else "/plan/next-week",
-            action="build_generated_training_profile",
-            user_id=current_user.id,
-            training_profile=training_profile,
-        )
-    else:
-        runtime_template, authored_adaptation_trace = _prepare_authored_frequency_adapted_template(
-            selected_template_id=selected_template_id,
-            program_template=template,
-            current_days_available=effective_days_available,
-            active_frequency_adaptation=active_frequency_adaptation,
-            training_state=cast(dict[str, Any], generation_context["training_state"]),
-            stored_weak_areas=list(current_user.weak_areas or []),
-            equipment_profile=list(current_user.equipment_profile or []),
-            session_time_budget_minutes=current_user.session_time_budget_minutes,
-            movement_restrictions=list(current_user.movement_restrictions or []),
-            prior_generated_weeks=int(generation_runtime.get("prior_generated_weeks") or 0),
-            authored_week_index_override=authored_week_index_override,
-        )
-        if authored_adaptation_trace is not None:
-            template_selection_trace["authored_frequency_adaptation_trace"] = authored_adaptation_trace
-        log_event(
-            "generation_path_selected",
-            route="/plan/generate-week" if generation_mode != "next_week_advance" else "/plan/next-week",
-            action="build_week_plan_runtime",
-            user_id=current_user.id,
-            selected_program_id=resolve_selected_program_binding_id(current_user.selected_program_id),
-            template_id=selected_template_id,
-            runtime_template_id=resolve_linked_program_id(selected_template_id),
-            path_family="authored",
-            generation_mode=generation_mode,
-            days_available=current_user.days_available,
-            target_days=effective_days_available,
-            week_index=cast(dict[str, Any], template_selection_trace.get("authored_frequency_adaptation_trace") or {}).get("week_index"),
-            authored_week_index=cast(dict[str, Any], template_selection_trace.get("authored_frequency_adaptation_trace") or {}).get("authored_week_index"),
-        )
+    runtime_template, authored_adaptation_trace = _prepare_authored_frequency_adapted_template(
+        selected_template_id=selected_template_id,
+        program_template=template,
+        current_days_available=effective_days_available,
+        active_frequency_adaptation=active_frequency_adaptation,
+        training_state=cast(dict[str, Any], generation_context["training_state"]),
+        stored_weak_areas=list(current_user.weak_areas or []),
+        equipment_profile=list(current_user.equipment_profile or []),
+        session_time_budget_minutes=current_user.session_time_budget_minutes,
+        movement_restrictions=list(current_user.movement_restrictions or []),
+        prior_generated_weeks=int(generation_runtime.get("prior_generated_weeks") or 0),
+        authored_week_index_override=authored_week_index_override,
+    )
+    if authored_adaptation_trace is not None:
+        template_selection_trace["authored_frequency_adaptation_trace"] = authored_adaptation_trace
+    log_event(
+        "generation_path_selected",
+        route="/plan/generate-week" if generation_mode != "next_week_advance" else "/plan/next-week",
+        action="build_week_plan_runtime",
+        user_id=current_user.id,
+        selected_program_id=resolve_selected_program_binding_id(current_user.selected_program_id),
+        template_id=selected_template_id,
+        runtime_template_id=resolve_linked_program_id(selected_template_id),
+        path_family="authored",
+        generation_mode=generation_mode,
+        days_available=current_user.days_available,
+        target_days=effective_days_available,
+        week_index=cast(dict[str, Any], template_selection_trace.get("authored_frequency_adaptation_trace") or {}).get("week_index"),
+        authored_week_index=cast(dict[str, Any], template_selection_trace.get("authored_frequency_adaptation_trace") or {}).get("authored_week_index"),
+    )
     scheduler_runtime = prepare_generate_week_scheduler_runtime(
         user_name=current_user.name,
         split_preference=current_user.split_preference,
@@ -2079,46 +1986,9 @@ def _build_week_plan_runtime_for_user(
         rule_set=rule_set,
     )
 
-    if generated_volume_stage_trace is not None:
-        scheduler_input_template = cast(dict[str, Any], scheduler_runtime["scheduler_kwargs"]).get("program_template")
-        generated_volume_stage_trace["scheduler_input_planned_sets"] = _planned_sets_from_template(
-            cast(dict[str, Any], scheduler_input_template) if isinstance(scheduler_input_template, dict) else {}
-        )
-
     base_plan = generate_week_plan(
         **cast(dict[str, Any], scheduler_runtime["scheduler_kwargs"]), planning_date=reference_date,
     )
-    if generated_volume_stage_trace is not None:
-        generated_volume_stage_trace["scheduler_output_planned_sets"] = _planned_sets_from_sessions(
-            cast(list[dict[str, Any]], base_plan.get("sessions") or [])
-        )
-
-    generated_floor_trace: dict[str, Any] = {
-        "generated_volume_floor_applied": False,
-        "generated_volume_floor_bypass_reason": "not_normal_three_day_standard",
-    }
-    if apply_generated_normal_density_floor:
-        floor_runtime = _enforce_generated_three_day_runtime_set_floor(
-            plan_payload=base_plan,
-            minimum_weekly_sets=75,
-            minimum_session_sets=24,
-        )
-        generated_floor_trace = {
-            "generated_volume_floor_applied": bool(floor_runtime.get("applied")),
-            "generated_volume_floor_bypass_reason": None
-            if bool(floor_runtime.get("applied"))
-            else str(floor_runtime.get("reason") or "floor_not_applied"),
-            "floor_before_planned_sets": int(floor_runtime.get("before_planned_sets") or 0),
-            "floor_after_planned_sets": int(floor_runtime.get("after_planned_sets") or 0),
-        }
-
-    generated_mode_band_trace: dict[str, Any] | None = None
-    if generated_volume_stage_trace is not None:
-        generated_mode_band_trace = _enforce_generated_mode_set_band(
-            plan_payload=base_plan,
-            generated_mode=str(generated_volume_stage_trace.get("generated_mode") or ""),
-            target_days=int(generated_volume_stage_trace.get("target_days") or 0),
-        )
     base_plan["weekly_volume_by_muscle"] = _recompute_weekly_volume_by_muscle_from_sessions(
         cast(list[dict[str, Any]], base_plan.get("sessions") or []),
     )
@@ -2139,33 +2009,13 @@ def _build_week_plan_runtime_for_user(
         base_plan=base_plan,
         template_selection_trace=template_selection_trace,
         generation_runtime_trace=cast(dict[str, Any], generation_runtime["decision_trace"]),
-        generated_adaptive_runtime={
-            "training_state": cast(dict[str, Any], generation_context["training_state"]),
-            "generation_runtime": generation_runtime,
-            "adaptive_policy": cast(dict[str, Any] | None, generated_full_body_adaptive_loop_policy),
-            "block_review_policy": cast(dict[str, Any] | None, generated_full_body_block_review_policy),
-        }
-        if generated_full_body_adaptive_loop_policy is not None
-        else None,
+        generated_adaptive_runtime=None,
         selected_template_id=selected_template_id,
         active_frequency_adaptation=active_frequency_adaptation,
         review_cycle=review_cycle,
     )
     response_payload = cast(dict[str, Any], finalize_runtime["response_payload"])
     record_values = cast(dict[str, Any], finalize_runtime["record_values"])
-    if generated_volume_stage_trace is not None:
-        generated_volume_stage_trace["final_payload_planned_sets"] = _planned_sets_from_sessions(
-            cast(list[dict[str, Any]], response_payload.get("sessions") or [])
-        )
-        generated_volume_stage_trace.update(generated_floor_trace)
-        if generated_mode_band_trace is not None:
-            generated_volume_stage_trace.update(generated_mode_band_trace)
-        response_payload["generated_volume_stage_trace"] = deepcopy(generated_volume_stage_trace)
-
-        record_payload = cast(dict[str, Any], record_values.get("payload") or {})
-        record_payload["generated_volume_stage_trace"] = deepcopy(generated_volume_stage_trace)
-        record_values["payload"] = record_payload
-
     if (
         generation_mode == "current_week_regenerate"
         and regenerate_week_index_pin is not None
@@ -2430,6 +2280,7 @@ def ensure_current_workout_plans_for_user(
 
 
 def _reject_legacy_selected_week_mutation(db: Session, current_user: User) -> None:
+    _require_original_customized_flow(current_user.selected_program_id)
     if current_user.scheduling_timezone:
         # A local week can differ from the server week even when no plan exists
         # locally yet. Never let server-clock regeneration replace dated history.

@@ -180,16 +180,16 @@ def test_catalog_variants_are_not_ranked_as_universal_best_and_preference_change
     assert all(not e.metadata_qualified for e in review_catalog().exercises)
 
 
-def test_one_qualified_completed_calibration_set_can_flag_easy_load_without_failure_test():
+def test_single_set_calibration_does_not_qualify_a_larger_prescribed_workload():
     from research.m4c2.examples import synthetic_exposure
     exp = synthetic_exposure()
     one = replace(exp, exercise_occurrence_id="explicit-completed-calibration", required_set_indices=(1,),
         records=(replace(exp.records[0], actual_effort=6),))
     result = plan(exposures=(one,))
     press = next(e for s in result.plan.sessions for e in s.exercises if e.exercise.variant_id == exp.identity.variant_id)
-    assert press.calibration.possibly_underchallenging
-    assert press.calibration.completed_sets == 1 and press.calibration.working_load is None
-    assert "no_maximal_or_failure_test_required" in press.calibration.next_steps
+    assert not press.calibration.possibly_underchallenging
+    assert press.calibration.working_load is None
+    assert "prescribed_workload_incomparable" in press.calibration.reasons
 
 
 def test_blank_or_irrelevant_tradeoff_confirmation_cannot_authorize_omission():
