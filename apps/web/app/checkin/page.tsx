@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import Link from "next/link";
 
 import CoachingIntelligencePanel from "@/components/coaching-intelligence-panel";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,7 @@ export default function CheckinPage() {
   const [adherenceScore, setAdherenceScore] = useState("4");
   const [notes, setNotes] = useState("");
   const [sessionsNextWeek, setSessionsNextWeek] = useState("3");
+  const [usesSelectedDates, setUsesSelectedDates] = useState(false);
   const [status, setStatus] = useState("Loading weekly review...");
   const [reviewResult, setReviewResult] = useState<WeeklyReviewResponse | null>(null);
   const [isGeneratingNextWeek, setIsGeneratingNextWeek] = useState(false);
@@ -70,7 +72,8 @@ export default function CheckinPage() {
         setProtein(String(profile.protein || 0));
         setFat(String(profile.fat || 0));
         setCarbs(String(profile.carbs || 0));
-        setSessionsNextWeek(String(Math.max(2, Math.min(5, profile.days_available || 3))));
+        setSessionsNextWeek(String(Math.max(2, Math.min(5, (profile.effective_days_available ?? profile.days_available) || 3))));
+        setUsesSelectedDates(Boolean(profile.scheduling_timezone));
         setStatus(weeklyStatus.review_required ? "Sunday review required" : "Weekly review ready");
       })
       .catch(() => {
@@ -106,7 +109,7 @@ export default function CheckinPage() {
       setStatus("Weekly review saved");
       const refreshedStatus = await api.getWeeklyReviewStatus();
       setReviewStatus(refreshedStatus);
-      await handleGenerateNextWeek();
+      if (!usesSelectedDates) await handleGenerateNextWeek();
     } catch {
       setStatus("Weekly review failed. Verify your inputs and retry.");
     }
@@ -267,12 +270,12 @@ export default function CheckinPage() {
                 {item.rationale ? <p>{item.rationale}</p> : null}
               </div>
             ))}
-            <Button className="w-full" disabled={isGeneratingNextWeek} onClick={handleGenerateNextWeek} type="button">
+            {usesSelectedDates ? <Link href="/week" className="inline-flex min-h-[48px] w-full items-center justify-center rounded-md border border-zinc-700 text-sm">Schedule next week in Week</Link> : <Button className="w-full" disabled={isGeneratingNextWeek} onClick={handleGenerateNextWeek} type="button">
               <span className="inline-flex items-center gap-2">
                 <UiIcon name="plan" className="ui-icon--action" />
                 {isGeneratingNextWeek ? "Generating Next Week..." : "Generate Next Week Now"}
               </span>
-            </Button>
+            </Button>}
             {nextWeekGenerationStatus ? <p className="text-xs text-zinc-400">{nextWeekGenerationStatus}</p> : null}
           </div>
         </Disclosure>

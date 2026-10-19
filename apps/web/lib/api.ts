@@ -202,6 +202,9 @@ export type Profile = {
   weak_areas?: string[];
   onboarding_answers?: Record<string, unknown>;
   days_available: number;
+  effective_days_available?: number | null;
+  effective_program_id?: string | null;
+  scheduling_timezone?: string | null;
   nutrition_phase: string;
   calories: number;
   protein: number;
@@ -380,6 +383,7 @@ export type SelectedDatePlanRequest = {
 export type SchedulingContext = {
   timezone: string;
   local_today: string;
+  current_week_start?: string;
   week_start: string;
   selected_dates: string[];
   placement_revision: number;
@@ -1070,7 +1074,7 @@ export const api = {
       }),
     }),
   getLatestWeekPlan: () => request<GeneratedWeekPlan>("/plan/latest-week"),
-  getSchedulingContext: (timezone: string) => request<SchedulingContext>(`/plan/scheduling-context?timezone=${encodeURIComponent(timezone)}`),
+  getSchedulingContext: (timezone: string, weekOffset = 0) => request<SchedulingContext>(`/plan/scheduling-context?timezone=${encodeURIComponent(timezone)}${weekOffset ? `&week_offset=${weekOffset}` : ""}`),
   previewSelectedDates: (payload: SelectedDatePlanRequest) => request<GeneratedWeekPlan>("/plan/selected-dates/preview", {
     method: "POST", body: JSON.stringify(payload),
   }),
@@ -1133,7 +1137,7 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  updateProfile: (payload: Partial<Profile>) => request<Profile>("/profile", { method: "POST", body: JSON.stringify(payload) }),
+  updateProfile: (payload: Partial<Omit<Profile, "effective_days_available" | "effective_program_id" | "scheduling_timezone">>) => request<Profile>("/profile", { method: "POST", body: JSON.stringify(payload) }),
   updateProgramSelection: (payload: { selected_program_id: string | null; program_selection_mode: "manual" | "auto" }) =>
     request<Profile>("/profile/program-selection", {
       method: "POST",

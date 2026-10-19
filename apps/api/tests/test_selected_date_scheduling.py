@@ -346,8 +346,10 @@ def test_completed_today_and_next_local_week_leave_frozen_history_intact(scenari
     assert client.get('/workout/today', headers=headers).json()['detail'] == 'No workout scheduled today'
     generated = client.post('/plan/generate-week', headers=headers,
         json=request_dates(date(2026,10,12), phase='pure_bodybuilding_phase_2_full_body'))
-    assert generated.status_code == 200, generated.text
-    assert session['workout_occurrence_id'] not in {s['workout_occurrence_id'] for s in generated.json()['sessions']}
+    # This intentionally partial synthetic source has no admitted source ordinal.
+    # Next-source progression must require reconciliation rather than guess.
+    assert generated.status_code == 409, generated.text
+    assert 'reconciliation' in generated.json()['detail']
     with SessionLocal() as db:
         frozen = db.get(WorkoutOccurrence, session['workout_occurrence_id'])
         assert frozen.scheduled_date == date(2026,10,6)

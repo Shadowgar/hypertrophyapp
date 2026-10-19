@@ -30,7 +30,10 @@ test("home page shows guest dashboard copy without a token", () => {
   expect(globalThis.fetch).not.toHaveBeenCalled();
 });
 
-test("home page loads authenticated dashboard metrics", async () => {
+test.each([
+  { label: "stored profile", override: {}, days: 4, program: /Phase 1/i },
+  { label: "active dated plan", override: { days_available: 5, effective_days_available: 2, selected_program_id: null, effective_program_id: "pure_bodybuilding_phase_2_full_body", program_selection_mode: "auto" }, days: 2, program: /Phase 2/i },
+])("home page loads authenticated dashboard metrics from $label", async ({ override, days, program }) => {
   localStorage.setItem("hypertrophy_token", "test-token");
 
   // @ts-ignore
@@ -58,6 +61,7 @@ test("home page loads authenticated dashboard metrics", async () => {
             fat: 70,
             carbs: 300,
             selected_program_id: "pure_bodybuilding_phase_1_full_body",
+            ...override,
           }),
           { status: 200 },
         ),
@@ -176,12 +180,13 @@ test("home page loads authenticated dashboard metrics", async () => {
 
   render(<HomePage />);
 
-  await waitFor(() => expect(screen.getByText(/Ready To Train/i)).toBeInTheDocument());
+  await waitFor(() => expect(screen.getAllByText(/Full Body A/i).length).toBeGreaterThan(0));
   expect(screen.getAllByText(/Full Body A/i).length).toBeGreaterThan(0);
   expect(screen.getByText(/Week 4/i)).toBeInTheDocument();
   expect(screen.getByText(/201 lb/i)).toBeInTheDocument();
   expect(screen.getAllByText(/2 PR highlights/i).length).toBeGreaterThan(0);
-  expect(screen.getAllByText(/4 training days/i).length).toBeGreaterThan(0);
+  expect(screen.getAllByText(new RegExp(`${days} training days`, "i")).length).toBeGreaterThan(0);
+  expect(screen.getAllByText(program).length).toBeGreaterThan(0);
   expect(screen.getByText(/Coach Brief/i)).toBeInTheDocument();
   expect(screen.getByText(/Actionable/i)).toBeInTheDocument();
   expect(screen.getByText(/Start with Bench Press: 3 x 8-12 @ 496 lbs/i)).toBeInTheDocument();

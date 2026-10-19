@@ -960,6 +960,7 @@ def _prepare_plan_generation_runtime(
     prior_plans_override: list[WorkoutPlan] | None = None,
     latest_plan_override: WorkoutPlan | None = None,
     reference_date: date | None = None,
+    capture_input_digest: bool = False,
 ) -> dict[str, Any]:
     planning_date = reference_date or date.today()
     history_rows = (
@@ -1016,6 +1017,34 @@ def _prepare_plan_generation_runtime(
         prior_plans=prior_plans,
         build_plan_decision_training_state=build_plan_decision_training_state,
     )
+    if capture_input_digest:
+        # Bind the actual persisted evidence consumed above, including effective
+        # corrections/undo, without publishing performed or private values.
+        from hashlib import sha256
+        import json
+
+        def evidence(row):
+            return {column.key: getattr(row, column.key) for column in row.__table__.columns} if row is not None else None
+
+        inputs = {
+            "version": "selected-date-generation-inputs-v2",
+            "selected_template_id": selected_template_id,
+            "effective_days_available": effective_days_available,
+            "active_frequency_adaptation": active_frequency_adaptation,
+            "profile": {key: getattr(current_user, key) for key in (
+                "selected_program_id", "split_preference", "training_location",
+                "equipment_profile", "weak_areas", "nutrition_phase",
+                "session_time_budget_minutes", "movement_restrictions", "near_failure_tolerance",
+            )},
+            "history": [evidence(row) for row in history_rows],
+            "exercise_states": [evidence(row) for row in sorted(exercise_states, key=lambda row: row.id)],
+            "soreness": evidence(latest_soreness), "checkin": evidence(latest_checkin),
+            "reviews": [evidence(row) for row in recent_review_cycles],
+            "latest_plan": evidence(latest_plan),
+            "prior_plans": sorted((row.id, row.week_start.isoformat(), row.payload.get("program_template_id")) for row in prior_plans),
+        }
+        runtime["generation_input_digest"] = sha256(json.dumps(inputs, sort_keys=True,
+            separators=(",", ":"), default=str, allow_nan=False).encode()).hexdigest()
     return runtime
 
 
@@ -1382,17 +1411,19 @@ def coach_intelligence_preview(
     db: DbSession,
     current_user: CurrentUser,
 ) -> IntelligenceCoachPreviewResponse:
+    from ..selected_date_plans import current_scheduling_profile
     lock_history_user(db, current_user.id)
     if not current_user.split_preference:
         raise HTTPException(status_code=400, detail=PROFILE_INCOMPLETE_DETAIL)
 
+    effective = current_scheduling_profile(db, current_user, datetime.now(UTC))
     preview_runtime = prepare_coach_preview_runtime_inputs(
         preview_request=payload.model_dump(mode="json"),
-        profile_days_available=current_user.days_available,
+        profile_days_available=effective.days_available,
     )
     preview_request = cast(dict[str, Any], preview_runtime["preview_request"])
     explicit_template_id = resolve_selected_program_binding_id(payload.template_id) if payload.template_id else None
-    profile_template_id = resolve_selected_program_binding_id(current_user.selected_program_id)
+    profile_template_id = effective.program_id
 
     try:
         template_runtime = prepare_generation_template_runtime(
@@ -1413,12 +1444,14 @@ def coach_intelligence_preview(
 
     selected_template_id = cast(str, template_runtime["selected_template_id"])
     template = cast(dict[str, Any], template_runtime["selected_template"])
-    latest_plan = (
-        db.query(WorkoutPlan)
-        .filter(WorkoutPlan.user_id == current_user.id)
-        .order_by(WorkoutPlan.created_at.desc())
-        .first()
-    )
+    latest_plan = effective.plan
+    if not current_user.scheduling_timezone:
+        latest_plan = (
+            db.query(WorkoutPlan)
+            .filter(WorkoutPlan.user_id == current_user.id)
+            .order_by(WorkoutPlan.created_at.desc())
+            .first()
+        )
 
     history_rows = (
         effective_set_logs(db)
@@ -1500,25 +1533,30 @@ def preview_frequency_adaptation(
     db: DbSession,
     current_user: CurrentUser,
 ) -> FrequencyAdaptationResult:
-    if not current_user.days_available or not current_user.split_preference:
+    from ..selected_date_plans import current_scheduling_profile
+    effective = current_scheduling_profile(db, current_user, datetime.now(UTC))
+    days_available = effective.days_available
+    if not days_available or not current_user.split_preference:
         raise HTTPException(status_code=400, detail=PROFILE_INCOMPLETE_DETAIL)
     log_event(
         "frequency_adaptation_preview_requested",
         route="/plan/adaptation/preview",
         action="preview_frequency_adaptation",
         user_id=current_user.id,
-        selected_program_id=resolve_selected_program_binding_id(current_user.selected_program_id),
+        selected_program_id=effective.program_id,
         template_id=resolve_selected_program_binding_id(payload.program_id),
         target_days=payload.target_days,
-        days_available=current_user.days_available,
+        days_available=days_available,
     )
 
-    latest_plan = (
-        db.query(WorkoutPlan)
-        .filter(WorkoutPlan.user_id == current_user.id)
-        .order_by(WorkoutPlan.created_at.desc())
-        .first()
-    )
+    latest_plan = effective.plan
+    if not current_user.scheduling_timezone:
+        latest_plan = (
+            db.query(WorkoutPlan)
+            .filter(WorkoutPlan.user_id == current_user.id)
+            .order_by(WorkoutPlan.created_at.desc())
+            .first()
+        )
     latest_soreness = (
         db.query(SorenessEntry)
         .filter(SorenessEntry.user_id == current_user.id, SorenessEntry.entry_date <= date.today())
@@ -1527,10 +1565,10 @@ def preview_frequency_adaptation(
     )
     adaptation_decision_runtime = prepare_frequency_adaptation_decision_runtime(
         requested_program_id=resolve_selected_program_binding_id(payload.program_id),
-        selected_program_id=resolve_selected_program_binding_id(current_user.selected_program_id),
+        selected_program_id=effective.program_id,
         latest_plan=latest_plan,
         latest_soreness_entry=latest_soreness,
-        current_days_available=current_user.days_available,
+        current_days_available=days_available,
         target_days=payload.target_days,
         duration_weeks=payload.duration_weeks,
         explicit_weak_areas=payload.weak_areas,
@@ -1559,11 +1597,11 @@ def preview_frequency_adaptation(
         route="/plan/adaptation/preview",
         action="preview_frequency_adaptation",
         user_id=current_user.id,
-        selected_program_id=resolve_selected_program_binding_id(current_user.selected_program_id),
+        selected_program_id=effective.program_id,
         template_id=str(adaptation_runtime["program_id"]),
         path_family="generated" if is_generated_full_body_binding_id(str(adaptation_runtime["program_id"])) else "authored",
         target_days=payload.target_days,
-        days_available=current_user.days_available,
+        days_available=days_available,
     )
     return FrequencyAdaptationResult.model_validate(raw_result)
 
@@ -1668,6 +1706,7 @@ def _build_week_plan_runtime_for_user(
     generation_mode: GenerationMode = "current_week_regenerate",
     reference_date: date | None = None,
     persist_profile_changes: bool = True,
+    selected_authored_week_index: int | None = None,
 ) -> dict[str, Any]:
     effective_days_available = _resolve_effective_days_available(
         current_days_available=current_user.days_available,
@@ -1871,6 +1910,7 @@ def _build_week_plan_runtime_for_user(
         prior_plans_override=filtered_prior_plans,
         latest_plan_override=latest_plan,
         reference_date=reference_date,
+        capture_input_digest=generation_mode == "selected_date_current",
     )
     if (
         generation_mode == "current_week_regenerate"
@@ -1883,6 +1923,16 @@ def _build_week_plan_runtime_for_user(
             pinned_week_index=regenerate_week_index_pin,
             pinned_authored_week_index=regenerate_authored_week_index_pin,
         )
+    if selected_authored_week_index is not None:
+        # Scheduling supplies a source-validated ordinal, never inferred from a
+        # future calendar offset or a count of completed workouts.
+        authored_week_index_override = selected_authored_week_index
+        _apply_current_regenerate_generation_overrides(
+            generation_context=generation_context, selected_template_id=selected_template_id,
+            pinned_week_index=selected_authored_week_index,
+            pinned_authored_week_index=selected_authored_week_index,
+        )
+        generation_context["generation_runtime"]["decision_trace"]["outcome"]["prior_generation_source"] = "selected_date_source_successor"
     generation_runtime = cast(dict[str, Any], generation_context["generation_runtime"])
     runtime_template = template
     generated_full_body_adaptive_loop_policy = None
@@ -2137,6 +2187,7 @@ def _build_week_plan_runtime_for_user(
         "selected_template_id": selected_template_id,
         "response_payload": response_payload,
         "record_values": record_values,
+        "generation_input_digest": generation_context.get("generation_input_digest"),
         "adaptation_persistence_payload": cast(dict[str, Any], finalize_runtime["adaptation_persistence_payload"]),
         "replace_current_week": generation_mode == "current_week_regenerate",
     }
@@ -2386,9 +2437,9 @@ def _reject_legacy_selected_week_mutation(db: Session, current_user: User) -> No
 
 
 @router.get("/plan/scheduling-context")
-def plan_scheduling_context(db: DbSession, current_user: CurrentUser, timezone: str | None = None) -> dict:
+def plan_scheduling_context(db: DbSession, current_user: CurrentUser, timezone: str | None = None, week_start: date | None = None, week_offset: int = 0) -> dict:
     from ..selected_date_plans import scheduling_context
-    return scheduling_context(db, current_user, timezone, datetime.now(UTC))
+    return scheduling_context(db, current_user, timezone, datetime.now(UTC), week_start=week_start, week_offset=week_offset)
 
 
 @router.post("/plan/selected-dates/preview")
@@ -2417,15 +2468,14 @@ def _generate_week_for_user(
         db.refresh(current_user)
     if selected_week is not None:
         if generation_mode != "current_week_regenerate":
-            raise HTTPException(422, "Date selection is currently limited to this week")
+            raise HTTPException(422, "Use the selected-date preview and activation workflow")
         from ..selected_date_plans import selected_week_command
         return selected_week_command(
             db=db, user=current_user, explicit_template_id=explicit_template_id,
             selected_week=selected_week, expected_revision=expected_placement_revision,
             expected_preview_digest=expected_preview_digest,
         )
-    if generation_mode == "current_week_regenerate":
-        _reject_legacy_selected_week_mutation(db, current_user)
+    _reject_legacy_selected_week_mutation(db, current_user)
     route = "/plan/generate-week" if generation_mode == "current_week_regenerate" else "/plan/next-week"
     user_id = str(current_user.id)
     normalized_explicit_template_id = resolve_selected_program_binding_id(explicit_template_id) if explicit_template_id else None
