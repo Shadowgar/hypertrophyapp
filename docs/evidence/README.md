@@ -129,3 +129,7 @@ complete security/secret-history coverage is claimed.
 
 - [2026-10-20 M4 active lifecycle](2026-10-20-m4-active-lifecycle.md): consent-bound rescheduling/replacement, actual application qualification and remaining release scope.
 - [2026-10-20 disposable migration/restore rehearsal](2026-10-20-m4-release-rehearsal.md): additive Alembic merge compatibility, exact restored table digests and real restored-account smoke checks.
+
+- [2026-10-20 M4 integrated release candidate](2026-10-20-m4-integrated-release.md): dependency-preserving integration, actual-main comparisons and production boundary.
+- [2026-10-20 full integrated migration/recovery](2026-10-20-m4-integrated-migrations.md): both Alembic branches, retained data, PostgreSQL concurrency/scale and feature-disabled recovery.
+- [2026-10-20 completed release security qualification](2026-10-20-m4-release-security.md): sealed source-diff scans and safe private artifact storage.
