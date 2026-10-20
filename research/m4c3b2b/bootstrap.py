@@ -5,7 +5,7 @@ from sqlalchemy import create_engine,text
 from sqlalchemy.engine import URL
 
 
-def bootstrap(path):
+def bootstrap(path, *, marker_only=False):
     path=Path(path)
     if path.is_symlink() or not path.resolve().is_relative_to(Path('/tmp')):raise ValueError('Explicit /tmp manifest required')
     m=json.loads(path.read_text())
@@ -30,6 +30,12 @@ def bootstrap(path):
     from .target import open_target
     verified=open_target(path)
     try:
+        if marker_only:
+            # Full-chain rehearsal uses actual Alembic from an empty schema,
+            # rather than the selected table copies used by older probes.
+            print(json.dumps(dict(database=m['database'],user=m['user'],
+                marker_only=True,production=False)))
+            return
         # Config already has an explicit unused ordinary import target. Create only
         # these named existing table copies, never Base.metadata.create_all/reset.
         from app.models import User,WorkoutPlan,WorkoutOccurrence,WorkoutSetLog,WorkoutLogCommand,WorkoutSessionState
@@ -45,4 +51,6 @@ def bootstrap(path):
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('--manifest',required=True);args=p.parse_args();bootstrap(args.manifest)
+    p=argparse.ArgumentParser();p.add_argument('--manifest',required=True)
+    p.add_argument('--marker-only',action='store_true')
+    args=p.parse_args();bootstrap(args.manifest,marker_only=args.marker_only)
