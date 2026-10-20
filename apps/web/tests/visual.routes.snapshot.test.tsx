@@ -72,7 +72,7 @@ test("visual snapshot: week route", async () => {
   const { container, findByRole, getByRole, getByText } = render(<WeekPage />);
   await findByRole("checkbox", { name: "Tue, Mar 10" });
   expect(getByRole("link", { name: "Customize My Workout" })).toHaveAttribute("href", "/customize");
-  expect(getByText(/Accepted Customized dates stay bound to their consent\./)).toBeInTheDocument();
+  expect(getByText(/Review explicit date changes and program replacement\./)).toBeInTheDocument();
   expect(container.firstChild).toMatchSnapshot();
 });
 

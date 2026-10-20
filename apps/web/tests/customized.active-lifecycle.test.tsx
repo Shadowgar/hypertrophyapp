@@ -63,3 +63,18 @@ test.each(['replacement','revision'])('generation binds inventory revision zero 
  await waitFor(()=>expect(fetcher.mock.calls.some(([,init])=>init?.method==='POST')).toBe(true));
  const command=fetcher.mock.calls.find(([,init])=>init?.method==='POST');expect(JSON.parse(String(command![1]?.body)).request.inventory_revision).toBe(0);
 });
+test('started-week replacement conflict explains the next-week alternative and clears the pending request',async()=>{
+ const fetcher=mockFetch();fetcher.mockImplementation(async(input:string,init?:RequestInit)=>{
+  if(String(input).endsWith('/customized/options'))return Response.json({equipment:['dumbbell'],restrictions:[]});
+  if(init?.method==='POST')return Response.json({detail:'started_plan_requires_future_week_replacement'},{status:409});
+  if(String(input).endsWith('/customized/active'))return Response.json({plans:[active]});return Response.json(active);
+ });render(<CustomizedPage/>);fireEvent.click(await screen.findByRole('button',{name:'Replace active program'}));fireEvent.click(screen.getByRole('button',{name:'Generate replacement preview'}));
+ await screen.findByText('This week has recorded workout history. Keep the current program and choose next-week dates for a replacement.');
+ expect(await screen.findByRole('button',{name:'Replace active program'})).toBeEnabled();expect(screen.queryByRole('button',{name:'Accept program'})).not.toBeInTheDocument();expect(screen.queryByRole('button',{name:'Generate replacement preview'})).not.toBeInTheDocument();
+});
+test('a fresh replacement after decline uses a fresh key while preserving active plan',async()=>{
+ const candidate={...active,proposal_id:'candidate',state:'review_required',active_placement:undefined,snapshot:{...active.snapshot,replacement:{proposal_id:'active',plan_id:'plan',plan_digest:'digest',placement_revision:1,week_start:dates[0],sessions,kind:'future_week',preserved_work:[]}}};
+ const fetcher=mockFetch(path=>path.endsWith('/replacement')?candidate:{...candidate,state:'declined'});render(<CustomizedPage/>);
+ for(let attempt=0;attempt<2;attempt++){fireEvent.click(await screen.findByRole('button',{name:'Replace active program'}));fireEvent.click(screen.getByRole('button',{name:'Generate replacement preview'}));await screen.findByRole('button',{name:'Review acceptance'});fireEvent.click(screen.getByRole('button',{name:'Decline'}));await screen.findByRole('button',{name:'Replace active program'});}
+ const commands=fetcher.mock.calls.filter(([path])=>String(path).endsWith('/replacement'));expect(commands).toHaveLength(2);expect(new Headers(commands[0][1]?.headers).get('Idempotency-Key')).not.toBe(new Headers(commands[1][1]?.headers).get('Idempotency-Key'));
+});

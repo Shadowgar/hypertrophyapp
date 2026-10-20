@@ -34,7 +34,7 @@ function Prescriptions({label,sessions}:{label:string;sessions:CustomizedExecuti
 function ReplacementComparison({replacement}:{replacement:CustomizedReplacement}) {
   return <div className="space-y-3 rounded border border-amber-700 p-3"><Prescriptions label="Program being replaced" sessions={replacement.sessions}/>
     <p>{replacement.kind==='future_week'?'Future-week replacement: the current week and performed work remain in history.':'Same-week replacement: the wholly unstarted current program will be superseded only after acceptance and activation.'}</p>
-    <h3>Preserved work</h3>{replacement.preserved_work.length?<ul>{replacement.preserved_work.map((work,i)=><li key={work.occurrence_id??work.workout_occurrence_id??i}>{work.scheduled_date??work.date??work.local_date??'Recorded date retained'} · {work.status??'Existing workout and its history retained'}</li>)}</ul>:<p>No started work is listed for this replacement.</p>}
+    <h3>Preserved work</h3>{replacement.preserved_work.length?<ul>{replacement.preserved_work.map((work,i)=><li key={work.occurrence_id??work.workout_occurrence_id??i}>{work.scheduled_date??work.date??work.local_date??'Recorded date retained'} · {work.status==='immutable_execution_snapshot'?'Recorded workout retained on this date':work.status??'Existing workout and its history retained'}</li>)}</ul>:<p>No started work is listed for this replacement.</p>}
   </div>;
 }
 
@@ -103,12 +103,12 @@ export default function CustomizedPage() {
     // A lost response reuses exactly this operation/content retry key.
     const identity=JSON.stringify([name,proposal?.proposal_id,proposal?.revision,replacementTarget?.proposal_id,replacementTarget?.revision,draft,inventory?.revision,rescheduleDates,rescheduleTimezone]);
     const key=retries.current.get(identity)??crypto.randomUUID();retries.current.set(identity,key);
-    try{const p=await fn(key);if(attempt!==epoch.current)return;setProposal(p);setAgree(false);setDirty(false);setConfirmDates(false);
+    try{const p=await fn(key);if(attempt!==epoch.current)return;retries.current.delete(identity);setProposal(p);setAgree(false);setDirty(false);setConfirmDates(false);
       if(name==='reschedule-confirm')setRescheduling(false);
       if(p.state==='active'){setReplacementTarget(null);setDraft(p.snapshot.request);setActivePlans(plans=>[...plans.filter(old=>old.proposal_id!==p.proposal_id&&!(p.snapshot.replacement?.kind==='same_week_unstarted'&&old.proposal_id===p.snapshot.replacement.proposal_id)),p]);}
       const url=new URL(window.location.href);url.searchParams.set('proposal',p.proposal_id);window.history.replaceState(null,'',url);
       setStatus(p.state==='active'?(name==='reschedule-confirm'?'Dates updated. Week and Today now use the new placement.':'Active program loaded. Your current dates route to Today.'):`Program version ${p.plan_version} · ${p.state.replaceAll('_',' ')}`);
-     }catch(e){if(attempt===epoch.current){setStatus(e instanceof Error?e.message:'Request failed. Retry safely.');
+     }catch(e){if(attempt===epoch.current){setStatus(e instanceof Error?(e.message==='started_plan_requires_future_week_replacement'?'This week has recorded workout history. Keep the current program and choose next-week dates for a replacement.':e.message==='stale_revision'||e.message==='stale_placement_revision'||e.message==='stale_replacement_target'?'This program changed in another session. Review the current program and create a fresh preview before confirming.':e.message):'Request failed. Retry safely.');
       if(e instanceof ApiError&&(e.status===409||e.status===403)){setAgree(false);setConfirmDates(false);setRescheduling(false);setReplacementTarget(null);setProposal(p=>p?{...p,challenge:undefined,terms:undefined,pending_reschedule:undefined}:null);retries.current.clear();
         const refresh=proposal?.snapshot.replacement?.proposal_id??proposal?.proposal_id??replacementTarget?.proposal_id;
         if(refresh)try{const current=await customizedApi.read(refresh);if(attempt===epoch.current){setProposal(current);setDraft(current.snapshot.request);setDirty(false);}}catch{/* Keep conflict visible and require a fresh read. */}

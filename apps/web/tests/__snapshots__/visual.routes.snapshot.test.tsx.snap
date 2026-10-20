@@ -12,6 +12,12 @@ exports[`visual snapshot: today route initial state 1`] = `
     >
       Today
     </h1>
+    <a
+      class="inline-flex min-h-11 items-center underline"
+      href="/customize"
+    >
+      Manage Customized dates or replace program
+    </a>
     <p
       class="ui-meta text-zinc-400"
     >
@@ -69,7 +75,7 @@ exports[`visual snapshot: week route 1`] = `
     >
       Customize My Workout
     </a>
-     — preview and accept an original three-day Full Body program. Accepted Customized dates stay bound to their consent.
+     · Review explicit date changes and program replacement.
   </p>
   <h1
     class="ui-title-page"
