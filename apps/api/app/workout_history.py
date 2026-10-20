@@ -32,6 +32,7 @@ def capture_replay_context(*, state, context, nutrition_phase, equipment_profile
 def require_replay_context(record):
     context = record.replay_context
     valid = isinstance(context, dict) and (context.get("version") == 1 or
+        (context.get("version") == 3 and context.get("owner")=="api.workout_customized-v1" and isinstance(context.get("planned_exercise"),dict)) or
         (context.get("version") == 2 and context.get("owner") == "api.workout_load_state"
             and isinstance(context.get("load_intelligence"), dict)))
     if not record.workout_occurrence_id or not valid:

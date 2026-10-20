@@ -199,7 +199,7 @@ def test_generated_onboarding_invalid_values_are_rejected() -> None:
     assert "Invalid equipment_pool tag" in response.json()["detail"]
 
 
-def test_sparse_generated_user_still_generates_with_defaults() -> None:
+def test_sparse_generated_defaults_do_not_grant_customized_consent() -> None:
     _reset_db()
     client = TestClient(app)
     headers = _register_user(client, email="generated-onboarding-sparse-generate@example.com", name="Generated Onboarding Sparse")
@@ -210,8 +210,15 @@ def test_sparse_generated_user_still_generates_with_defaults() -> None:
         split_preference="full_body",
         days_available=3,
     )
+    before = client.get('/profile', headers=headers).json()
     response = client.post("/plan/generate-week", headers=headers, json={})
-    assert response.status_code == 200
+    assert response.status_code == 409
+    assert response.json()['detail']['code'] == 'customized_preview_required'
+    assert response.json()['detail']['path'] == '/customize'
+    assert client.get('/profile', headers=headers).json() == before
+    with SessionLocal() as db:
+        assert db.query(WorkoutPlan).count() == 0
+        assert db.query(WorkoutSetLog).count() == 0
 
 
 def test_generated_training_profile_prefers_generated_onboarding_payload_when_present() -> None:

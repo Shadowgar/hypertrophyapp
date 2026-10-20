@@ -56,11 +56,20 @@ function formatSignedPercent(scale: number): string {
   return `${delta >= 0 ? "+" : ""}${delta}%`;
 }
 
+function formatExerciseLoad(exercise:GeneratedWeekExercise):string {
+  if(exercise.customized){
+    return typeof exercise.recommended_working_weight==='number'&&Number.isFinite(exercise.recommended_working_weight)
+      ? `${exercise.recommended_working_weight} kg`
+      : 'Exercise-specific calibration pending';
+  }
+  return isBodyweightAuthored(exercise)?'Bodyweight':`${kgToLbs(exercise.recommended_working_weight)} lbs`;
+}
+
 function formatLeadExercise(exercise: GeneratedWeekExercise | undefined): string {
   if (!exercise) {
     return "No exercises planned.";
   }
-  return `${exercise.name} · ${exercise.sets} sets · ${authoredRepLabel(exercise)} reps @ ${isBodyweightAuthored(exercise) ? "Bodyweight" : `${isBodyweightAuthored(exercise) ? "Bodyweight" : `${kgToLbs(exercise.recommended_working_weight)} lbs`}`}`;
+  return `${exercise.name} · ${exercise.sets} sets · ${authoredRepLabel(exercise)} reps @ ${formatExerciseLoad(exercise)}`;
 }
 
 function resolveExerciseMediaUrl(exercise: GeneratedWeekExercise): string | null {
@@ -94,7 +103,7 @@ function ExerciseExecutionDetails({ exercise }: Readonly<{ exercise: GeneratedWe
         <span key={label} className="mr-2 inline-block text-amber-300">{label}</span>
       ))}
       <p className="telemetry-meta">
-        {exercise.sets} sets · {authoredRepLabel(exercise)} reps · {isBodyweightAuthored(exercise) ? "Bodyweight" : `${kgToLbs(exercise.recommended_working_weight)} lbs`}
+        {exercise.sets} sets · {authoredRepLabel(exercise)} reps · {formatExerciseLoad(exercise)}
       </p>
       {hasPrescription ? (
         <p className="mt-1">
@@ -139,7 +148,9 @@ function stringListFromUnknown(value: unknown): string[] {
 }
 
 function WeekOverviewCards({ plan, selectedProgramId }: Readonly<{ plan: GeneratedWeekPlan; selectedProgramId: string | null }>) {
+  const customized=Boolean(plan.customized)||plan.program_template_id==='customized_full_body_v1';
   const muscleCoverage = plan.muscle_coverage ?? {};
+  const hasCoverage=typeof muscleCoverage.minimum_sets_per_muscle==='number'&&Array.isArray(muscleCoverage.covered_muscles)&&Array.isArray(muscleCoverage.under_target_muscles);
   const programName = typeof plan.program_template_id === "string" && plan.program_template_id.trim().length > 0
     ? getProgramDisplayName({ id: plan.program_template_id })
     : "Generated Week";
@@ -168,14 +179,14 @@ function WeekOverviewCards({ plan, selectedProgramId }: Readonly<{ plan: Generat
         <p className="telemetry-kicker">Week Overview</p>
         <p className="telemetry-value">{programName}</p>
         <p className="text-sm text-zinc-300">
-          Week {weekIndex} · {sessionCount} sessions · {splitLabel} split
+          {!customized&&<>Week {weekIndex} · </>}{sessionCount} sessions · {splitLabel} split
         </p>
         {authoredBlockLabel ? <p className="text-sm text-zinc-400">{authoredBlockLabel}</p> : null}
         {weakPointScheduled ? <p className="text-sm text-zinc-200">Arms & Weak Points emphasis is scheduled this week.</p> : null}
       </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <Disclosure title="Mesocycle Posture" badge={deloadActive ? "deload" : "standard"} defaultOpen={false}>
+        {!customized&&<Disclosure title="Mesocycle Posture" badge={deloadActive ? "deload" : "standard"} defaultOpen={false}>
           <div className="space-y-1 text-sm text-zinc-200">
             <p>Week {weekIndex}/{triggerWeeks}</p>
             <p>Deload reason: {deloadReason}</p>
@@ -183,9 +194,9 @@ function WeekOverviewCards({ plan, selectedProgramId }: Readonly<{ plan: Generat
               <p>Set reduction: {deloadSetPct}% · Load reduction: {deloadLoadPct}%</p>
             ) : null}
           </div>
-        </Disclosure>
+        </Disclosure>}
 
-        <Disclosure title="Coverage Radar" badge={`${visibleCoveredMuscles.length} covered · ${underTarget.length} gaps`} defaultOpen={false}>
+        {(!customized||hasCoverage)&&<Disclosure title="Coverage Radar" badge={`${visibleCoveredMuscles.length} covered · ${underTarget.length} gaps`} defaultOpen={false}>
           <div className="space-y-2 text-sm text-zinc-200">
             <p>Minimum {muscleCoverage.minimum_sets_per_muscle ?? 0} sets per muscle</p>
             {visibleCoveredMuscles.length !== coveredMuscles.length ? (
@@ -203,7 +214,7 @@ function WeekOverviewCards({ plan, selectedProgramId }: Readonly<{ plan: Generat
               ))}
             </div>
           </div>
-        </Disclosure>
+        </Disclosure>}
       </div>
     </div>
   );
@@ -319,6 +330,8 @@ function SchedulingWarnings({ plan }: { plan: GeneratedWeekPlan }) {
   </div>;
 }
 
+class StaleSchedulingContext extends Error {}
+
 export default function WeekPage() {
   const [planStatus, setPlanStatus] = useState("Choose 2–5 dates, then preview your week.");
   const [plan, setPlan] = useState<GeneratedWeekPlan | null>(null);
@@ -332,6 +345,8 @@ export default function WeekPage() {
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [preview, setPreview] = useState<{ plan: GeneratedWeekPlan; request: SelectedDatePlanRequest; digest: string } | null>(null);
   const contextRequest = useRef(0);
+  const weekOffsetRef = useRef(0);
+  const [weekOffset, setWeekOffset] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSavingProgramSelection, setIsSavingProgramSelection] = useState(false);
   const [generatedOnboardingPrompt, setGeneratedOnboardingPrompt] = useState<string | null>(null);
@@ -358,8 +373,8 @@ export default function WeekPage() {
 
   async function refreshContext(suggestedTimezone: string, force = false): Promise<SchedulingContext> {
     const requestNumber = ++contextRequest.current;
-    const loaded = await api.getSchedulingContext(suggestedTimezone);
-    if (requestNumber !== contextRequest.current) throw new Error("Scheduling context changed. Try again.");
+    const loaded = await api.getSchedulingContext(suggestedTimezone, weekOffsetRef.current);
+    if (requestNumber !== contextRequest.current) throw new StaleSchedulingContext("Scheduling context changed. Try again.");
     const previous = contextRef.current;
     const changed = !previous || loaded.week_start !== previous.week_start || loaded.timezone !== previous.timezone || loaded.placement_revision !== previous.placement_revision;
     contextRef.current = loaded;
@@ -376,6 +391,26 @@ export default function WeekPage() {
     return loaded;
   }
 
+  async function switchWeek(offset: number) {
+    if (offset === weekOffsetRef.current) return;
+    weekOffsetRef.current = offset;
+    setWeekOffset(offset);
+    ++contextRequest.current;
+    contextRef.current = null;
+    setContext(null);
+    setPlan(null);
+    setPreview(null);
+    setSelectedDates([]);
+    setPlanStatus("Loading selected week...");
+    try {
+      await refreshContext(timezoneRef.current, true);
+      setPlanStatus("Choose 2–5 dates, then preview your week.");
+    } catch (error) {
+      if (error instanceof StaleSchedulingContext) return;
+      setPlanStatus(`Could not load selected week: ${error instanceof Error ? error.message : "Unknown error"}`);
+    }
+  }
+
   function makeRequest(): SelectedDatePlanRequest | null {
     if (!context || selectedDates.length < 2 || selectedDates.length > 5 || !timezone.trim()) return null;
     return { template_id: selectedProgramId ?? plan?.program_template_id ?? null, week_start: context.week_start,
@@ -390,6 +425,7 @@ export default function WeekPage() {
       setPlanStatus("Your inputs changed. Preview your selected dates again.");
       return;
     }
+    const targetOffset = weekOffsetRef.current;
     setIsGenerating(true);
     try {
       const fresh = await refreshContext(request.timezone);
@@ -404,7 +440,9 @@ export default function WeekPage() {
         await refreshContext(request.timezone, true);
         setPlanStatus("Selected dates activated. Today follows your local calendar dates.");
       } else {
+        const previewRequest = contextRequest.current;
         const data = await api.previewSelectedDates(request);
+        if (previewRequest !== contextRequest.current || targetOffset !== weekOffsetRef.current) return;
         if (contextRef.current?.week_start !== request.week_start || contextRef.current?.placement_revision !== request.expected_placement_revision) return;
         const digest = data.schedule?.preview_digest;
         if (!digest || !/^[a-f0-9]{64}$/.test(digest)) throw new Error("Unable to verify this preview. Try previewing your dates again.");
@@ -412,6 +450,7 @@ export default function WeekPage() {
         setPlanStatus("Preview only. Review workload and spacing, then activate these dates.");
       }
     } catch (error) {
+      if (error instanceof StaleSchedulingContext) return;
       setPreview(null);
       if (activate) await refreshContext(request.timezone).catch(() => undefined);
       setPlanStatus(`Failed to ${activate ? "activate" : "preview"} selected dates: ${error instanceof Error ? error.message : "Unknown error"}`);
@@ -429,7 +468,7 @@ export default function WeekPage() {
         setPrograms(list); setProfile(loadedProfile); setSelectedProgramId(loadedProfile?.selected_program_id ?? null);
       });
     const refresh = () => refreshContext(timezoneRef.current || browserTimezone).catch((error) => {
-      if (mounted) { setPreview(null); setPlanStatus(`Could not load current local week: ${error instanceof Error ? error.message : "Unknown error"}`); }
+      if (mounted && !(error instanceof StaleSchedulingContext)) { setPreview(null); setPlanStatus(`Could not load current local week: ${error instanceof Error ? error.message : "Unknown error"}`); }
     });
     void refresh();
     window.addEventListener("focus", refresh);
@@ -441,19 +480,25 @@ export default function WeekPage() {
   const visiblePlan = preview?.plan ?? plan;
   const plannedSets = visiblePlan?.sessions.reduce((sum, session) => sum + session.exercises.reduce((total, exercise) => total + exercise.sets, 0), 0);
   return <div className="space-y-4">
+    <p className="text-sm"><a className="underline" href={plan?.customized?.proposal_id?`/customize?proposal=${encodeURIComponent(plan.customized.proposal_id)}`:"/customize"}>{plan?.customized?"Manage Customized dates or replace program":"Customize My Workout"}</a> · Review explicit date changes and program replacement.</p>
     <h1 className="ui-title-page">Week Plan</h1>
-    <section className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-3" aria-label="Current week scheduling">
+    <section className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-3" aria-label="Week scheduling">
+      <div className="flex flex-wrap gap-2" aria-label="Select planning week">
+        <Button aria-pressed={weekOffset === 0} disabled={isGenerating} onClick={() => void switchWeek(0)}>Current week</Button>
+        <Button aria-pressed={weekOffset === 1} disabled={isGenerating} onClick={() => void switchWeek(1)}>Next week</Button>
+      </div>
       <label htmlFor="scheduling-timezone" className="block space-y-2 text-sm">
         <span>Scheduling timezone</span>
         <input id="scheduling-timezone" className="ui-input w-full min-h-[44px]" value={timezone} disabled={isGenerating} placeholder="America/New_York"
           onChange={(event) => { timezoneRef.current = event.target.value; setTimezone(event.target.value); setPreview(null); }}
           onBlur={() => { if (timezone.trim() && timezone.trim() !== context?.timezone) void refreshContext(timezone.trim()).catch((error) => {
+            if (error instanceof StaleSchedulingContext) return;
             setPreview(null); setPlanStatus(`Could not load timezone: ${error instanceof Error ? error.message : "Unknown error"}`);
           }); }} />
       </label>
       <p className="text-xs text-zinc-400">Confirm this IANA timezone when activating your dates. Dates use your local Monday–Sunday week.</p>
       {context ? <fieldset disabled={isGenerating}>
-        <legend className="mb-2 text-sm">{`Current week: ${formatCalendarDate(context.week_start)} · Today: ${formatCalendarDate(context.local_today)}`}</legend>
+        <legend className="mb-2 text-sm">{`${weekOffset === 1 ? "Next week" : "Current week"}: ${formatCalendarDate(context.week_start)} – ${formatCalendarDate(datesInWeek(context.week_start)[6])} (${context.week_start} – ${datesInWeek(context.week_start)[6]}) · Today: ${formatCalendarDate(context.local_today)}`}</legend>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {datesInWeek(context.week_start).map((date) => <label key={date} className="flex min-h-[48px] items-center gap-3 rounded-md border border-zinc-700 px-3 py-2 text-sm">
             <input type="checkbox" className="h-5 w-5" checked={selectedDates.includes(date)} onChange={() => {
@@ -476,7 +521,7 @@ export default function WeekPage() {
         </select>
         <Button aria-label="Save program preference" className="min-h-[44px] px-3 text-xs font-semibold" onClick={saveProgramPreference} disabled={isGenerating || isSavingProgramSelection || !preferenceDirty}>{isSavingProgramSelection ? "Saving..." : "Save Preferences"}</Button>
         <p className="text-xs text-zinc-500">Save program preference separately. Activate dates after reviewing the preview.</p>
-        {generatedOnboardingPrompt ? <div className="rounded-md border border-zinc-700 p-2 text-xs"><p>{generatedOnboardingPrompt}</p><a className="underline" href="/generated-onboarding">Update generated plan preferences</a></div> : null}
+        {generatedOnboardingPrompt ? <div className="rounded-md border border-zinc-700 p-2 text-xs"><p>{generatedOnboardingPrompt}</p><a className="underline" href="/customize">Update generated plan preferences</a></div> : null}
       </div>
     </Disclosure>
     <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3" role="status">

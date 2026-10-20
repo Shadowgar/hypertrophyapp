@@ -12,6 +12,12 @@ exports[`visual snapshot: today route initial state 1`] = `
     >
       Today
     </h1>
+    <a
+      class="inline-flex min-h-11 items-center underline"
+      href="/customize"
+    >
+      Manage Customized dates or replace program
+    </a>
     <p
       class="ui-meta text-zinc-400"
     >
@@ -60,15 +66,43 @@ exports[`visual snapshot: week route 1`] = `
 <div
   class="space-y-4"
 >
+  <p
+    class="text-sm"
+  >
+    <a
+      class="underline"
+      href="/customize"
+    >
+      Customize My Workout
+    </a>
+     · Review explicit date changes and program replacement.
+  </p>
   <h1
     class="ui-title-page"
   >
     Week Plan
   </h1>
   <section
-    aria-label="Current week scheduling"
+    aria-label="Week scheduling"
     class="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-3"
   >
+    <div
+      aria-label="Select planning week"
+      class="flex flex-wrap gap-2"
+    >
+      <button
+        aria-pressed="true"
+        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 border border-[var(--ui-edge-active)] bg-[var(--ui-accent-active)] text-white shadow-[var(--ui-depth-shadow-2)] hover:bg-[rgba(220,38,38,0.25)] hover:shadow-[var(--ui-glow-active),var(--ui-depth-shadow-3)] h-10 px-4 py-2"
+      >
+        Current week
+      </button>
+      <button
+        aria-pressed="false"
+        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 border border-[var(--ui-edge-active)] bg-[var(--ui-accent-active)] text-white shadow-[var(--ui-depth-shadow-2)] hover:bg-[rgba(220,38,38,0.25)] hover:shadow-[var(--ui-glow-active),var(--ui-depth-shadow-3)] h-10 px-4 py-2"
+      >
+        Next week
+      </button>
+    </div>
     <label
       class="block space-y-2 text-sm"
       for="scheduling-timezone"
@@ -92,7 +126,7 @@ exports[`visual snapshot: week route 1`] = `
       <legend
         class="mb-2 text-sm"
       >
-        Current week: Mon, Mar 9 · Today: Tue, Mar 10
+        Current week: Mon, Mar 9 – Sun, Mar 15 (2026-03-09 – 2026-03-15) · Today: Tue, Mar 10
       </legend>
       <div
         class="grid grid-cols-1 gap-2 sm:grid-cols-2"

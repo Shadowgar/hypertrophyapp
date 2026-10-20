@@ -453,10 +453,10 @@ test("Week page saves program preference without calling generate-week", async (
   fireEvent.click(screen.getByRole("button", { name: /Save program preference/i }));
 
   await waitFor(() => {
-    expect(screen.getByText(/Program preference saved: Make me a plan\./i)).toBeInTheDocument();
+    expect(screen.getByText(/Program preference saved: Customize My Workout\./i)).toBeInTheDocument();
   });
   expect(screen.getByText(/Generated onboarding recommended to improve plan fit/i)).toBeInTheDocument();
-  expect(screen.getByRole("link", { name: /Update generated plan preferences/i })).toHaveAttribute("href", "/generated-onboarding");
+  expect(screen.getByRole("link", { name: /Update generated plan preferences/i })).toHaveAttribute("href", "/customize");
 
   // @ts-ignore
   const generateCalls = globalThis.fetch.mock.calls.filter((entry) => {
@@ -473,4 +473,8 @@ test("Week page saves program preference without calling generate-week", async (
     return url.endsWith("/profile/program-selection") && method === "POST";
   });
   expect(selectionCalls.length).toBe(1);
+  expect(JSON.parse(String(selectionCalls[0][1].body))).toEqual({ selected_program_id: "full_body_v1", program_selection_mode: "manual" });
+  // Selection convenience grants no plan-generation, activation or consent authority.
+  const mutationCalls = vi.mocked(globalThis.fetch).mock.calls.filter(([, init]) => (init?.method ?? "GET") !== "GET");
+  expect(mutationCalls).toEqual(selectionCalls);
 });

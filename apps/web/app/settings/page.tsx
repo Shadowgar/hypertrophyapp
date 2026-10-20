@@ -79,8 +79,9 @@ export default function SettingsPage() {
       .then((data) => {
         if (!mounted) return;
         setProfile(data);
-        setPreviewFromDays(Math.max(MIN_TRAINING_DAYS, Math.min(MAX_TRAINING_DAYS, data.days_available || 5)));
-        setPreviewToDays(Math.max(MIN_TRAINING_DAYS, Math.min(MAX_TRAINING_DAYS, Math.min(data.days_available || 5, 3))));
+        const currentDays = (data.effective_days_available ?? data.days_available) || 5;
+        setPreviewFromDays(Math.max(MIN_TRAINING_DAYS, Math.min(MAX_TRAINING_DAYS, currentDays)));
+        setPreviewToDays(Math.max(MIN_TRAINING_DAYS, Math.min(MAX_TRAINING_DAYS, Math.min(currentDays, 3))));
         setEditTrainingLocation(data.training_location ?? "gym");
         setEditEquipment(Array.isArray(data.equipment_profile) ? data.equipment_profile : []);
       })
@@ -108,7 +109,7 @@ export default function SettingsPage() {
     };
   }, []);
 
-  const selectedProgramId = profile?.selected_program_id ?? "pure_bodybuilding_phase_1_full_body";
+  const selectedProgramId = profile?.effective_program_id ?? profile?.selected_program_id ?? "pure_bodybuilding_phase_1_full_body";
   const selectedProgramName = getProgramDisplayName({ id: selectedProgramId });
   const temporaryDurationValidationMessage = validateTemporaryDurationInput(previewDurationWeeksInput);
 
@@ -378,9 +379,9 @@ export default function SettingsPage() {
       <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-2">
         <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Generated Plan Preferences</p>
         <p className="text-xs text-zinc-400">
-          Update generated onboarding inputs to improve fit for Make me a plan.
+          Choose an original Customized Full Body program, review dates and accept its exact version.
         </p>
-        <Link href="/generated-onboarding" className="inline-flex text-sm text-zinc-100 underline decoration-zinc-500 underline-offset-2">
+        <Link href="/customize" className="inline-flex text-sm text-zinc-100 underline decoration-zinc-500 underline-offset-2">
           Update generated plan preferences
         </Link>
       </div>

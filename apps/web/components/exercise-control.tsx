@@ -6,7 +6,7 @@ import type { EffectiveLoadSet, LoadContext, LoadIntelligence } from "@/lib/api"
 import { ApiError } from "@/lib/api";
 import { kgToLbs, lbsToKg } from "@/lib/weight";
 
-export type PerformedSet = { reps: number; weight: number; rpe: number | null; canonicalWeight?: number };
+export type PerformedSet = { reps: number; weight: number; rpe: number | null; canonicalWeight?: number;actual_rir?:number|null;technique_quality?:"acceptable"|"poor"|"unknown";pain?:boolean|null;display_unit?:"kg"|"lb" };
 
 /* ------------------------------------------------------------------ */
 /*  Hook: useExerciseControl                                          */
@@ -20,6 +20,8 @@ type UseExerciseControlProps = {
   recommendedWorkingWeight?: number;
   recommendedWeightCanonicalKg?: number;
   requireWeight?: boolean;
+  customizedEvidence?: boolean;
+  weightUnit?: "kg"|"lb";
   repRange?: [number, number] | null;
   /** When true, completeSet does not start the rest timer (e.g. parent owns global timer). */
   skipTimerOnComplete?: boolean;
@@ -38,6 +40,8 @@ export function useExerciseControl({
   recommendedWorkingWeight,
   recommendedWeightCanonicalKg,
   requireWeight = false,
+  customizedEvidence = false,
+  weightUnit: initialWeightUnit = "kg",
   repRange,
   skipTimerOnComplete = false,
   onSetComplete,
@@ -48,8 +52,14 @@ export function useExerciseControl({
   const [completedSets, setCompletedSets] = useState(initialCompletedSets ?? 0);
   const [actualReps, setActualReps] = useState(repRange === null ? 0 : repRange?.[0] ?? 8);
   const [actualRpeInput, setActualRpeInput] = useState("");
+  const [actualRirInput,setActualRirInput]=useState("");
+  const [techniqueQuality,setTechniqueQuality]=useState<"acceptable"|"poor"|"unknown">("unknown");
+  const [painInput,setPainInput]=useState("unknown");
+  const [weightUnit,setWeightUnitState]=useState(initialWeightUnit);
+  const displayRecommended=customizedEvidence&&recommendedWeightCanonicalKg!==undefined
+    ? (weightUnit==='lb'?recommendedWeightCanonicalKg/0.45359237:recommendedWeightCanonicalKg):recommendedWorkingWeight;
   const [actualWeightInput, setActualWeightInput] = useState(
-    recommendedWorkingWeight !== undefined ? String(recommendedWorkingWeight) : "",
+    displayRecommended !== undefined ? String(displayRecommended) : "",
   );
   const intervalRef = useRef<ReturnType<typeof globalThis.setInterval> | null>(null);
   const userHasEditedWeightRef = useRef(false);
@@ -64,9 +74,9 @@ export function useExerciseControl({
 
   useEffect(() => {
     if (!userHasEditedWeightRef.current && !pendingPerformed.current) {
-      setActualWeightInput(recommendedWorkingWeight === undefined ? "" : String(recommendedWorkingWeight));
+      setActualWeightInput(displayRecommended === undefined ? "" : String(displayRecommended));
     }
-  }, [recommendedWorkingWeight, submitting]);
+  }, [displayRecommended, submitting]);
 
   useEffect(() => {
     if (userHasEditedRepsRef.current) return;
@@ -126,7 +136,8 @@ export function useExerciseControl({
   const [loggedSets, setLoggedSets] = useState<{ setIndex: number; reps: number; weight: number }[]>([]);
 
   const submissionPending = useRef(false);
-  const validRpe = actualRpeInput.trim() === "" || (Number.isFinite(Number(actualRpeInput)) && Number(actualRpeInput) >= 0 && Number(actualRpeInput) <= 10);
+  const validRir=!customizedEvidence||actualRirInput.trim()===""||(Number.isFinite(Number(actualRirInput))&&Number(actualRirInput)>=0&&Number(actualRirInput)<=10);
+  const validRpe = validRir && (actualRpeInput.trim() === "" || (Number.isFinite(Number(actualRpeInput)) && Number(actualRpeInput) >= 0 && Number(actualRpeInput) <= 10));
   const validWeight = !requireWeight || (actualWeightInput.trim() !== "" && Number.isFinite(Number(actualWeightInput)) && Number(actualWeightInput) > 0);
   const completeSet = useCallback(async () => {
     if (submissionPending.current || completedSets >= totalSets) return;
@@ -138,12 +149,13 @@ export function useExerciseControl({
     const hasValidWeight = actualWeightInput.trim() !== "" && Number.isFinite(parsedWeight) && parsedWeight >= 0;
     const safeReps = Number.isFinite(actualReps) ? Math.max(1, Math.round(actualReps)) : repRange?.[0] ?? 8;
     const safeWeight = hasValidWeight
-      ? Math.max(0, Math.round(parsedWeight * 100) / 100)
-      : recommendedWorkingWeight ?? 0;
+      ? Math.max(0, customizedEvidence?parsedWeight:Math.round(parsedWeight * 100) / 100)
+      : displayRecommended ?? 0;
 
     const performed = pendingPerformed.current ?? {
       reps: safeReps, weight: safeWeight, rpe: actualRpeInput.trim() === "" ? null : Number(actualRpeInput),
-      ...(safeWeight === recommendedWorkingWeight && recommendedWeightCanonicalKg !== undefined ? { canonicalWeight: recommendedWeightCanonicalKg } : {}),
+      ...(customizedEvidence?{actual_rir:actualRirInput.trim()===""?null:Number(actualRirInput),technique_quality:techniqueQuality,pain:painInput==='unknown'?null:painInput==='yes',display_unit:weightUnit,canonicalWeight:weightUnit==='lb'?safeWeight*0.45359237:safeWeight}:{}),
+      ...(safeWeight === displayRecommended && recommendedWeightCanonicalKg !== undefined ? { canonicalWeight: recommendedWeightCanonicalKg } : {}),
     };
     pendingPerformed.current = performed;
     const next = Math.min(completedSets + 1, totalSets);
@@ -154,7 +166,7 @@ export function useExerciseControl({
       // adopt its own source target and rebuilt advice; retries keep the guards.
       userHasEditedWeightRef.current = false;
       userHasEditedRepsRef.current = false;
-      setActualRpeInput("");
+      setActualRpeInput("");setActualRirInput("");setTechniqueQuality("unknown");setPainInput("unknown");
       setCompletedSets(next);
       setLoggedSets((logs) => [...logs, { setIndex: next, reps: performed.reps, weight: performed.weight }]);
     } catch (error) {
@@ -169,7 +181,7 @@ export function useExerciseControl({
       resetTimer();
       startTimer();
     }
-  }, [completedSets, actualWeightInput, actualReps, actualRpeInput, validRpe, validWeight, repRange, recommendedWorkingWeight, recommendedWeightCanonicalKg, totalSets, skipTimerOnComplete, onSetComplete, exerciseId, resetTimer, startTimer]);
+  }, [customizedEvidence,weightUnit,actualRirInput,techniqueQuality,painInput,completedSets, actualWeightInput, actualReps, actualRpeInput, validRpe, validWeight, repRange, displayRecommended, recommendedWeightCanonicalKg, totalSets, skipTimerOnComplete, onSetComplete, exerciseId, resetTimer, startTimer]);
 
   const undoLastLoggedSet = useCallback((confirmedCompletedSets?: number) => {
     setLoggedSets((logs) => {
@@ -190,6 +202,8 @@ export function useExerciseControl({
     actualReps,
     actualRpeInput,
     setActualRpeInput,
+    customizedEvidence,actualRirInput,setActualRirInput,techniqueQuality,setTechniqueQuality,painInput,setPainInput,weightUnit,
+    setWeightUnit:(unit:"kg"|"lb")=>{setWeightUnitState(unit);setActualWeightInput("");userHasEditedWeightRef.current=true;},
     validRpe,
     validWeight,
     setActualReps: changeActualReps,
@@ -207,12 +221,12 @@ export function useExerciseControl({
 
 export type ExerciseControlState = ReturnType<typeof useExerciseControl>;
 
-export function LoadIntelligencePanel({ guidance, completed, total, loadContext, onContextChange, onPreview, overrideReason, onOverrideReason, onCorrect, requireExternalWeight = false, effectiveSets }: {
-  effectiveSets?: EffectiveLoadSet[];
+export function LoadIntelligencePanel({ guidance, completed, total, loadContext, onContextChange, onPreview, overrideReason, onOverrideReason, onCorrect, requireExternalWeight = false, effectiveSets, receiptOnly = false }: {
+  effectiveSets?: EffectiveLoadSet[]; receiptOnly?: boolean;
   guidance: LoadIntelligence | null; completed: number; total: number; loadContext: LoadContext; requireExternalWeight?: boolean;
   onContextChange: (context: LoadContext) => void; onPreview: (context: LoadContext) => Promise<void>;
   overrideReason: string; onOverrideReason: (reason: string) => void;
-  onCorrect: (receipt: EffectiveLoadSet, values: { reps: number; weight: number; rpe?: number | null; reason: string }) => Promise<void>;
+  onCorrect: (receipt: EffectiveLoadSet, values: { reps: number; weight: number; rpe?: number | null;actual_rir?:number|null;technique_quality?:"acceptable"|"poor"|"unknown"|null;pain?:boolean|null; reason: string }) => Promise<void>;
 }) {
   const [pending, setPending] = useState(false);
   const [status, setStatus] = useState("");
@@ -231,11 +245,15 @@ export function LoadIntelligencePanel({ guidance, completed, total, loadContext,
   const [weight, setWeight] = useState("");
   const [rpe, setRpe] = useState("");
   const [rpeEdited, setRpeEdited] = useState(false);
+  const [rir,setRir]=useState("");const [rirEdited,setRirEdited]=useState(false);
+  const [quality,setQuality]=useState("unknown");const [qualityEdited,setQualityEdited]=useState(false);
+  const [pain,setPain]=useState("unknown");const [painEdited,setPainEdited]=useState(false);
   const [reason, setReason] = useState("");
   const pendingAction = useRef(false);
   const validIncrement = increment.trim() === "" || (Number.isFinite(Number(increment)) && Number(increment) > 0);
   const shown = completed > 0 && completed < total ? guidance?.remaining_sets : guidance?.next_exposure;
-  return <section className="space-y-3 rounded-xl border border-white/10 p-3" aria-label="Load guidance">
+  return <section className="space-y-3 rounded-xl border border-white/10 p-3" aria-label={receiptOnly ? "Recorded sets" : "Load guidance"}>
+    {receiptOnly ? <p className="text-sm font-medium">Recorded sets · correct actual performance</p> : <>
     <p className="text-sm font-medium">{completed > 0 && completed < total ? "Remaining sets" : "Next exposure"} load guidance</p>
     {shown ? <>
       <p className="text-sm">{shown.action}{shown.recommended_weight != null ? ` · ${kgToLbs(shown.recommended_weight)} lb` : " · no new load inferred"}</p>
@@ -277,11 +295,12 @@ export function LoadIntelligencePanel({ guidance, completed, total, loadContext,
     <label className="block text-xs">Load override reason (optional)
       <input className="ui-input min-h-[48px] w-full" value={overrideReason} maxLength={500} onChange={event => onOverrideReason(event.target.value)} />
     </label>
+    </>}
     {(effectiveSets ?? guidance?.effective_sets ?? []).filter(entry => entry.parent_set_index == null && (["warmup", "work", "working", "top", "backoff"].includes(entry.set_kind?.trim().toLowerCase() || "work"))).map(entry => <div className="rounded border border-white/10 p-2" key={entry.id}>
-      <p className="text-xs">{entry.set_kind === "warmup" ? "Warm-up" : "Set"} {entry.set_index}: {entry.reps} reps @ {kgToLbs(entry.weight)} lb · Actual RPE {entry.rpe ?? "unknown"}</p>
+      <p className="text-xs">{entry.set_kind === "warmup" ? "Warm-up" : "Set"} {entry.set_index}: {entry.reps} reps @ {receiptOnly ? entry.weight : kgToLbs(entry.weight)} {receiptOnly ? "kg" : "lb"} · Actual {receiptOnly && entry.actual_rir != null ? `RIR ${entry.actual_rir}` : `RPE ${entry.rpe ?? "unknown"}`}</p>
       <Button className="min-h-[44px] w-full" variant="secondary" disabled={pending} onClick={() => {
-        setEditing(entry); const unit = entry.set_kind === "warmup" ? loadContext.display_unit : "lb"; setEditingUnit(unit);
-        setReps(String(entry.reps)); setWeight(String(unit === "kg" ? entry.weight : kgToLbs(entry.weight))); setRpe(entry.rpe == null ? "" : String(entry.rpe));
+        setEditing(entry); const unit = receiptOnly || entry.set_kind === "warmup" ? loadContext.display_unit : "lb"; setEditingUnit(unit);
+        setReps(String(entry.reps)); setWeight(String(unit === "kg" ? entry.weight : receiptOnly?entry.weight/0.45359237:kgToLbs(entry.weight)));setRir(entry.actual_rir==null?"":String(entry.actual_rir));setRirEdited(false);setQuality(entry.technique_quality??"unknown");setQualityEdited(false);setPain(entry.pain==null?"unknown":entry.pain?"yes":"no");setPainEdited(false); setRpe(entry.rpe == null ? "" : String(entry.rpe));
         setRpeEdited(false); setReason(""); setStatus("");
       }}>Edit {entry.set_kind === "warmup" ? "warm-up" : "set"} {entry.set_index}</Button>
     </div>)}
@@ -290,11 +309,20 @@ export function LoadIntelligencePanel({ guidance, completed, total, loadContext,
       <label className="block text-xs">Corrected load ({editingUnit})<input className="ui-input min-h-[48px] w-full" type="number" min={0} step="any" value={weight} onChange={e => setWeight(e.target.value)} /></label>
       <label className="block text-xs">Corrected actual RPE<input className="ui-input min-h-[48px] w-full" type="number" min={0} max={10} step={0.5} value={rpe} onChange={e => { setRpeEdited(true); setRpe(e.target.value); }} /></label>
       <p className="text-xs text-zinc-400">Leave RPE unchanged to preserve it; clear the field to record unknown.</p>
+      {receiptOnly&&<div className="space-y-2">
+        <label className="block text-xs">Corrected actual RIR<input className="ui-input min-h-11 w-full" type="number" min={0} max={10} step={0.5} value={rir} onChange={e=>{setRirEdited(true);setRir(e.target.value);}}/></label>
+        <p className="text-xs">Clear RIR to record unknown. RIR and RPE are separate; record one effort scale.</p>
+        <label className="block text-xs">Corrected technique quality<select className="ui-select min-h-11 w-full" value={quality} onChange={e=>{setQualityEdited(true);setQuality(e.target.value);}}><option value="unknown">Unknown</option><option value="acceptable">Acceptable</option><option value="poor">Poor or deteriorated</option></select></label>
+        <label className="block text-xs">Corrected pain report<select className="ui-select min-h-11 w-full" value={pain} onChange={e=>{setPainEdited(true);setPain(e.target.value);}}><option value="unknown">Unknown</option><option value="no">No pain reported</option><option value="yes">Pain reported</option></select></label>
+      </div>}
       <label className="block text-xs">Correction reason<input className="ui-input min-h-[48px] w-full" value={reason} maxLength={500} onChange={e => setReason(e.target.value)} /></label>
-      <Button className="min-h-[48px] w-full" disabled={pending || !Number.isInteger(Number(reps)) || Number(reps) < 1 || weight.trim() === "" || !Number.isFinite(Number(weight)) || (requireExternalWeight ? Number(weight) <= 0 : Number(weight) < 0) || (rpe.trim() !== "" && (!Number.isFinite(Number(rpe)) || Number(rpe) < 0 || Number(rpe) > 10))} onClick={async () => {
+      <Button className="min-h-[48px] w-full" disabled={pending || (rir.trim()!==""&&(!Number.isFinite(Number(rir))||Number(rir)<0||Number(rir)>10)) || !Number.isInteger(Number(reps)) || Number(reps) < 1 || weight.trim() === "" || !Number.isFinite(Number(weight)) || (requireExternalWeight ? Number(weight) <= 0 : Number(weight) < 0) || (rpe.trim() !== "" && (!Number.isFinite(Number(rpe)) || Number(rpe) < 0 || Number(rpe) > 10))} onClick={async () => {
         if (pendingAction.current) return; pendingAction.current = true; setPending(true); setStatus("");
-        try { await onCorrect(editing, { reps: Number(reps), weight: editingUnit === "kg" ? Number(weight) : Number(weight) === kgToLbs(editing.weight) ? editing.weight : lbsToKg(Number(weight)),
-          ...(rpeEdited ? { rpe: rpe.trim() === "" ? null : Number(rpe) } : {}), reason: reason.trim() || "User corrected set" }); setEditing(null); }
+        try { await onCorrect(editing, { reps: Number(reps), weight: editingUnit === "kg" ? Number(weight) : receiptOnly ? Number(weight)*0.45359237 : Number(weight) === kgToLbs(editing.weight) ? editing.weight : lbsToKg(Number(weight)),
+          ...(rpeEdited ? { rpe: rpe.trim() === "" ? null : Number(rpe) } : {}),
+          ...(receiptOnly&&rirEdited?{actual_rir:rir.trim()===""?null:Number(rir)}:{}),
+          ...(receiptOnly&&qualityEdited?{technique_quality:quality as 'acceptable'|'poor'|'unknown'}:{}),
+          ...(receiptOnly&&painEdited?{pain:pain==='unknown'?null:pain==='yes'}:{}),reason: reason.trim() || "User corrected set" }); setEditing(null); }
         catch { setStatus("Correction was not confirmed. Retry the same correction."); }
         finally { pendingAction.current = false; setPending(false); }
       }}>Save correction</Button>
@@ -350,7 +378,7 @@ export function SetInputCard({ exerciseId, guidanceLine, ctrl, weightLabel, disa
           />
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className="text-[11px] uppercase tracking-wide text-zinc-500">{weightLabel ?? "Weight (lb)"}</span>
+          <span className="text-[11px] uppercase tracking-wide text-zinc-500">{ctrl.customizedEvidence?`Weight (${ctrl.weightUnit})`:weightLabel ?? "Weight (lb)"}</span>
           <input
             id={`${exerciseId}-weight`}
             className="ui-input h-12 w-full rounded-lg px-3 text-center text-lg font-semibold tabular-nums"
@@ -367,12 +395,19 @@ export function SetInputCard({ exerciseId, guidanceLine, ctrl, weightLabel, disa
         </label>
       </div>
 
-      <label className="flex flex-col gap-1.5">
+      {!ctrl.customizedEvidence&&<label className="flex flex-col gap-1.5">
         <span className="text-[11px] uppercase tracking-wide text-zinc-500">Actual RPE (optional,0–10)</span>
         <input className="ui-input min-h-[48px] w-full" type="number" min={0} max={10} step={0.5}
           value={ctrl.actualRpeInput} onChange={event => ctrl.setActualRpeInput(event.target.value)} />
         <span className="text-xs text-zinc-500">Your effort on this set. Leave blank when unknown; source targets stay unchanged.</span>
-      </label>
+      </label>}
+      {ctrl.customizedEvidence&&<div className="space-y-3">
+        <label className="block">Load unit<select className="ui-select min-h-11 w-full" value={ctrl.weightUnit} onChange={e=>ctrl.setWeightUnit(e.target.value as 'kg'|'lb')}><option value="kg">kg</option><option value="lb">lb</option></select></label>
+        <label className="block">Actual RIR (optional)<input className="ui-input min-h-11 w-full" type="number" min={0} max={10} step={0.5} value={ctrl.actualRirInput} onChange={e=>ctrl.setActualRirInput(e.target.value)}/></label>
+        <p className="text-sm">Your estimate of repetitions left. Leave blank when unknown; no conversion from the target or RPE is assumed.</p>
+        <label className="block">Technique quality<select className="ui-select min-h-11 w-full" value={ctrl.techniqueQuality} onChange={e=>ctrl.setTechniqueQuality(e.target.value as 'acceptable'|'poor'|'unknown')}><option value="unknown">Unknown</option><option value="acceptable">Acceptable for this recorded setup</option><option value="poor">Deteriorated or uncertain execution</option></select></label>
+        <label className="block">Pain during this set<select className="ui-select min-h-11 w-full" value={ctrl.painInput} onChange={e=>ctrl.setPainInput(e.target.value)}><option value="unknown">Unknown</option><option value="no">No pain reported</option><option value="yes">Pain reported — stop and reassess</option></select></label>
+      </div>}
       {!ctrl.validRpe ? <p role="alert" className="text-xs text-red-300">Actual RPE must be between0 and10.</p> : null}
 
       <Button

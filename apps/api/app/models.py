@@ -47,6 +47,16 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive)
 
 
+class TrainingEquipmentProfile(Base):
+    """Current user-owned inventory; accepted plans and receipts keep prior snapshots."""
+    __tablename__ = "customized_equipment_profiles"
+    user_id: Mapped[str] = mapped_column(String, ForeignKey(USER_FK), primary_key=True)
+    revision: Mapped[int] = mapped_column(Integer, nullable=False)
+    data: Mapped[dict] = mapped_column(JSON, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive)
+    __table_args__ = (CheckConstraint("revision > 0", name="ck_customized_inventory_revision"),)
+
+
 class PasswordResetToken(Base):
     __tablename__ = "password_reset_tokens"
 
@@ -280,3 +290,6 @@ class WorkoutSessionState(Base):
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive, onupdate=_utcnow_naive)
+
+# Register the additive Customized lifecycle tables for normal schema tooling.
+from . import customized_tables  # noqa: E402,F401

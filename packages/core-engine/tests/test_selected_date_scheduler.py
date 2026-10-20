@@ -80,7 +80,7 @@ def test_reschedule_retains_old_dates_in_placement_history():
     ([], "America/New_York", MONDAY),
     ([date(2026, 9, 29)], "America/New_York", MONDAY),
     ([date(2026, 9, 29), date(2026, 10, 2)], "Mars/Olympus", MONDAY),
-    ([date(2026, 9, 29), date(2026, 10, 2)], "America/New_York", date(2026, 10, 5)),
+    ([date(2026, 9, 29), date(2026, 10, 2)], "America/New_York", date(2026, 10, 12)),
 ])
 def test_invalid_current_week_input_rejects(dates, timezone, week_start):
     with pytest.raises(SelectedDateError):
@@ -97,8 +97,7 @@ def test_timezone_and_dst_change_local_week_without_shifting_date_only_values():
     result = place_on_selected_dates({"sessions": deepcopy(source_plan()["sessions"][:2])},
         local, placement_revision=1)
     assert [s["scheduled_date"] for s in result["sessions"]] == ["2026-10-27", "2026-11-01"]
-    with pytest.raises(SelectedDateError):
-        validate_selected_week(week_start=date(2026, 11, 2),
+    validate_selected_week(week_start=date(2026, 11, 2),
             selected_dates=[date(2026, 11, 3), date(2026, 11, 6)],
             timezone="America/New_York", planning_instant=instant)
 
@@ -239,3 +238,17 @@ def test_neighbor_trace_uses_relevant_workload_summary_without_duplicated_prescr
     assert "recommended_working_weight" not in emitted
     assert "sensitive-neighbor-note" not in emitted
     assert "neighbor-set" not in emitted
+
+
+@pytest.mark.parametrize('instant,zone,monday', [
+    (datetime(2026, 11, 2, 3, 30, tzinfo=UTC), 'America/New_York', date(2026,11,2)),
+    (datetime(2026, 3, 8, 7, 30, tzinfo=UTC), 'America/New_York', date(2026,3,9)),
+    (datetime(2026, 12, 30, 16, tzinfo=UTC), 'America/New_York', date(2027,1,4)),
+    (datetime(2026, 9, 30, 16, tzinfo=UTC), 'Pacific/Auckland', date(2026,10,5)),
+])
+def test_next_week_dates_survive_dst_month_and_year_boundaries(instant, zone, monday):
+    from datetime import timedelta
+    days = [monday, monday+timedelta(days=3), monday+timedelta(days=5)]
+    week = validate_selected_week(week_start=monday, selected_dates=days, timezone=zone, planning_instant=instant)
+    result = place_on_selected_dates(source_plan(), week, placement_revision=1)
+    assert [s['scheduled_date'] for s in result['sessions']] == [d.isoformat() for d in days]

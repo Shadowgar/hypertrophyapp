@@ -28,7 +28,7 @@ from sqlalchemy.orm.attributes import flag_modified
 
 from ..config import settings
 from ..database import get_db
-from ..selected_date_plans import local_week
+from ..selected_date_plans import CurrentSchedulingProfile, current_scheduling_profile, local_week
 from ..history_dates import performed_log_rows
 from ..workout_history import effective_set_logs, valid_weekly_reviews, lock_history_user
 from ..deps import get_current_user
@@ -130,10 +130,13 @@ def _has_user_workout_activity(db: Session, *, user_id: str) -> bool:
     )
 
 
-def _latest_plan(db: Session, user_id: str) -> WorkoutPlan | None:
+def _latest_plan(db: Session, user: User, effective: CurrentSchedulingProfile | None = None) -> WorkoutPlan | None:
+    if user.scheduling_timezone:
+        context = effective or current_scheduling_profile(db, user, datetime.now(UTC))
+        return context.plan
     return (
         db.query(WorkoutPlan)
-        .filter(WorkoutPlan.user_id == user_id)
+        .filter(WorkoutPlan.user_id == user.id)
         .order_by(WorkoutPlan.created_at.desc())
         .first()
     )
@@ -212,9 +215,10 @@ def _build_program_recommendation_training_state(
         .limit(4)
         .all()
     )
+    effective = current_scheduling_profile(db, current_user, datetime.now(UTC))
     return build_plan_decision_training_state(
-        selected_program_id=current_user.selected_program_id,
-        days_available=current_user.days_available,
+        selected_program_id=effective.program_id,
+        days_available=effective.days_available,
         split_preference=current_user.split_preference,
         training_location=current_user.training_location,
         equipment_profile=current_user.equipment_profile,
@@ -265,9 +269,13 @@ def _collect_previous_week_performance_summary(
 
 
 @router.get("/profile")
-def get_profile(current_user: CurrentUser) -> ProfileResponse:
+def get_profile(current_user: CurrentUser, db: DbSession) -> ProfileResponse:
     selected_program_id = resolve_selected_program_binding_id(current_user.selected_program_id)
+    effective = current_scheduling_profile(db, current_user, datetime.now(UTC))
     return ProfileResponse(
+        scheduling_timezone=current_user.scheduling_timezone,
+        effective_days_available=effective.days_available,
+        effective_program_id=effective.program_id,
         **build_profile_response_payload(
             email=current_user.email,
             name=current_user.name,
@@ -301,8 +309,13 @@ def get_training_state(
     db: DbSession,
     current_user: CurrentUser,
 ) -> UserTrainingStateResponse:
-    latest_plan = _latest_plan(db, current_user.id)
-    prior_plans = db.query(WorkoutPlan).filter(WorkoutPlan.user_id == current_user.id).all()
+    effective = current_scheduling_profile(db, current_user, datetime.now(UTC))
+    latest_plan = _latest_plan(db, current_user, effective)
+    prior_query = db.query(WorkoutPlan).filter(WorkoutPlan.user_id == current_user.id)
+    if effective.week_start is not None:
+        prior_query = prior_query.filter(WorkoutPlan.week_start <= effective.week_start,
+            func.coalesce(WorkoutPlan.payload['schedule']['mode'].as_string(), '') != 'selected_dates_superseded_v1')
+    prior_plans = prior_query.all()
     latest_soreness = (
         db.query(SorenessEntry)
         .filter(SorenessEntry.user_id == current_user.id)
@@ -337,10 +350,10 @@ def get_training_state(
         .all()
     )
 
-    selected_program_id = resolve_selected_program_binding_id(current_user.selected_program_id)
+    selected_program_id = effective.program_id
     payload = build_user_training_state(
         selected_program_id=selected_program_id,
-        days_available=current_user.days_available,
+        days_available=effective.days_available,
         split_preference=current_user.split_preference,
         training_location=current_user.training_location,
         equipment_profile=current_user.equipment_profile,
@@ -463,7 +476,7 @@ def upsert_profile(
         target_days=current_user.days_available,
     )
 
-    return get_profile(current_user)
+    return get_profile(current_user, db)
 
 
 @router.get("/profile/program-recommendation")
@@ -471,8 +484,9 @@ def program_recommendation(
     db: DbSession,
     current_user: CurrentUser,
 ) -> ProgramRecommendationResponse:
-    selected_program_id = resolve_selected_program_binding_id(current_user.selected_program_id)
-    latest_plan = _latest_plan(db, current_user.id)
+    effective = current_scheduling_profile(db, current_user, datetime.now(UTC))
+    selected_program_id = effective.program_id
+    latest_plan = _latest_plan(db, current_user, effective)
     training_state = _build_program_recommendation_training_state(
         db,
         current_user=current_user,
@@ -480,7 +494,7 @@ def program_recommendation(
     )
     route_runtime = prepare_profile_program_recommendation_route_runtime(
         selected_program_id=selected_program_id,
-        days_available=current_user.days_available,
+        days_available=effective.days_available,
         split_preference=current_user.split_preference,
         latest_plan=latest_plan,
         available_program_summaries=list_program_templates(),
@@ -499,9 +513,10 @@ def switch_program(
     db: DbSession,
     current_user: CurrentUser,
 ) -> ProgramSwitchResponse:
-    selected_program_id = resolve_selected_program_binding_id(current_user.selected_program_id)
+    effective = current_scheduling_profile(db, current_user, datetime.now(UTC))
+    selected_program_id = effective.program_id
     target_program_id = resolve_selected_program_binding_id(payload.target_program_id) or payload.target_program_id
-    latest_plan = _latest_plan(db, current_user.id)
+    latest_plan = _latest_plan(db, current_user, effective)
     training_state = _build_program_recommendation_training_state(
         db,
         current_user=current_user,
@@ -509,7 +524,7 @@ def switch_program(
     )
     route_runtime = prepare_profile_program_recommendation_route_runtime(
         selected_program_id=selected_program_id,
-        days_available=current_user.days_available,
+        days_available=effective.days_available,
         split_preference=current_user.split_preference,
         latest_plan=latest_plan,
         available_program_summaries=list_program_templates(),
@@ -564,7 +579,7 @@ def update_program_selection(
         user_id=current_user.id,
         selected_program_id=next_binding_id,
     )
-    return get_profile(current_user)
+    return get_profile(current_user, db)
 
 
 @router.get("/profile/generated-onboarding")
@@ -745,7 +760,7 @@ def submit_weekly_review(
     training_state = _build_program_recommendation_training_state(
         db,
         current_user=current_user,
-        latest_plan=_latest_plan(db, current_user.id),
+        latest_plan=_latest_plan(db, current_user),
     )
     route_runtime = prepare_weekly_review_submit_route_runtime(
         user_id=current_user.id,

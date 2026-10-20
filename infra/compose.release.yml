@@ -1,0 +1,17 @@
+# Add to the existing Compose file; never deploy a mixed API/web source pair.
+# RELEASE_ID is the reviewed full Git SHA. This file starts no services itself.
+services:
+  api:
+    image: hypertrophyapp-api:${RELEASE_ID:?Set RELEASE_ID to the reviewed commit}
+    build:
+      args:
+        APP_VERSION: ${RELEASE_ID:?Set RELEASE_ID to the reviewed commit}
+      labels:
+        org.opencontainers.image.revision: ${RELEASE_ID:?Set RELEASE_ID to the reviewed commit}
+  web:
+    image: hypertrophyapp-web:${RELEASE_ID:?Set RELEASE_ID to the reviewed commit}
+    build:
+      args:
+        NEXT_PUBLIC_APP_VERSION: ${RELEASE_ID:?Set RELEASE_ID to the reviewed commit}
+      labels:
+        org.opencontainers.image.revision: ${RELEASE_ID:?Set RELEASE_ID to the reviewed commit}

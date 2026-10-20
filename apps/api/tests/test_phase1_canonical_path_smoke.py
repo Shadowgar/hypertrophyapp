@@ -197,17 +197,18 @@ def test_phase1_canonical_smoke_path_preserves_identity_and_session_continuity()
 
 
 @pytest.mark.parametrize("legacy_program_id", ["full_body_v1", "adaptive_full_body_gold_v0_1"])
-def test_phase1_legacy_aliases_still_resolve_safely(legacy_program_id: str) -> None:
+def test_retired_generated_aliases_require_original_customized_consent(legacy_program_id: str) -> None:
     _reset_db()
     client = TestClient(app)
     headers = _register_and_onboard(client, selected_program_id=legacy_program_id)
 
     generated_week = client.post("/plan/generate-week", headers=headers, json={})
-    assert generated_week.status_code == 200
-
-    payload = generated_week.json()
-    assert payload["program_template_id"] == "full_body_v1"
-    assert payload["template_selection_trace"]["selected_template_id"] == "full_body_v1"
-    runtime_trace = payload["template_selection_trace"]["generated_full_body_runtime_trace"]
-    assert runtime_trace["generated_constructor_applied"] is True
-    assert runtime_trace["content_origin"] == "generated_constructor_applied"
+    assert generated_week.status_code == 409
+    assert generated_week.json()['detail']['code'] == 'customized_preview_required'
+    assert generated_week.json()['detail']['path'] == '/customize'
+    from app.database import SessionLocal
+    from app.models import WorkoutPlan, WorkoutOccurrence, CoachingRecommendation
+    with SessionLocal() as db:
+        assert db.query(WorkoutPlan).count() == 0
+        assert db.query(WorkoutOccurrence).count() == 0
+        assert db.query(CoachingRecommendation).count() == 0

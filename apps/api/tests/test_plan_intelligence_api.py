@@ -9,7 +9,7 @@ configure_test_database("test_plan_intelligence_api")
 
 from app.database import Base, SessionLocal, engine
 from app.main import app
-from app.models import CoachingRecommendation, WorkoutPlan
+from app.models import CoachingRecommendation, User, WorkoutPlan
 
 TEST_CREDENTIAL = f"T{uuid.uuid4().hex[:15]}"
 
@@ -438,10 +438,8 @@ def test_recommendation_timeline_humanizes_legacy_reason_codes_without_stored_ra
     )
 
 
-def test_coach_preview_surfaces_authored_sequence_completion_for_adaptive_gold() -> None:
-    _reset_db()
-    client = TestClient(app)
-
+def _stored_sequence_fixture(client: TestClient, program_id: str) -> tuple[dict[str, str], dict]:
+    """Synthetic persisted sequence metadata; never invokes a plan writer."""
     register = client.post(
         "/auth/register",
         json={"email": "intelligence-gold@example.com", "password": TEST_CREDENTIAL, "name": "Gold Coach User"},
@@ -459,7 +457,7 @@ def test_coach_preview_surfaces_authored_sequence_completion_for_adaptive_gold()
             "weight": 84,
             "gender": "male",
             "split_preference": "full_body",
-            "selected_program_id": "adaptive_full_body_gold_v0_1",
+            "selected_program_id": program_id,
             "training_location": "gym",
             "equipment_profile": ["barbell", "dumbbell", "bench", "machine", "cable"],
             "days_available": 3,
@@ -488,7 +486,7 @@ def test_coach_preview_surfaces_authored_sequence_completion_for_adaptive_gold()
                 split="full_body",
                 phase="intensification",
                 payload={
-                    "program_template_id": "adaptive_full_body_gold_v0_1",
+                    "program_template_id": program_id,
                     "phase": "intensification",
                     "mesocycle": {
                         "week_index": 10,
@@ -507,26 +505,45 @@ def test_coach_preview_surfaces_authored_sequence_completion_for_adaptive_gold()
         )
         db.commit()
 
-    response = client.post(
-        "/plan/intelligence/coach-preview",
-        headers=headers,
-        json={
-            "template_id": "adaptive_full_body_gold_v0_1",
-            "from_days": 3,
-            "to_days": 3,
-            "completion_pct": 92,
-            "adherence_score": 4,
-            "soreness_level": "mild",
-            "average_rpe": 8.5,
-            "current_phase": "intensification",
-            "weeks_in_phase": 4,
-            "stagnation_weeks": 0,
-        },
-    )
+    return headers, {'template_id': program_id, 'from_days': 3, 'to_days': 3, 'completion_pct': 92, 'adherence_score': 4, 'soreness_level': 'mild', 'average_rpe': 8.5, 'current_phase': 'intensification', 'weeks_in_phase': 4, 'stagnation_weeks': 0}
 
+
+def test_legacy_coach_preview_requires_original_customized_flow_without_mutation() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers, request = _stored_sequence_fixture(client, 'adaptive_full_body_gold_v0_1')
+
+    def snapshot() -> dict:
+        with SessionLocal() as db:
+            return {
+                'plans': [dict(row) for row in db.execute(WorkoutPlan.__table__.select()).mappings()],
+                'profile': [dict(row) for row in db.execute(User.__table__.select()).mappings()],
+                'recommendations': [dict(row) for row in db.execute(CoachingRecommendation.__table__.select()).mappings()],
+                'customized': {table.name: [dict(row) for row in db.execute(table.select()).mappings()]
+                    for table in Base.metadata.sorted_tables if table.name.startswith('customized_')},
+            }
+    before = snapshot()
+    response = client.post('/plan/intelligence/coach-preview', headers=headers, json=request)
+    assert response.status_code == 409
+    assert response.json()['detail']['code'] == 'customized_preview_required'
+    assert response.json()['detail']['path'] == '/customize'
+    assert snapshot() == before
+    with SessionLocal() as db:
+        assert db.query(CoachingRecommendation).count() == 0
+
+
+def test_coach_preview_reports_stored_authored_sequence_completion() -> None:
+    _reset_db()
+    client = TestClient(app)
+    headers, request = _stored_sequence_fixture(client, 'pure_bodybuilding_phase_1_full_body')
+    with SessionLocal() as db:
+        before_plans = [(row.id, row.payload) for row in db.query(WorkoutPlan).all()]
+    response = client.post('/plan/intelligence/coach-preview', headers=headers, json=request)
     assert response.status_code == 200
     payload = response.json()
-    assert payload["phase_transition"]["reason"] == "authored_sequence_complete"
-    assert payload["phase_transition"]["transition_pending"] is True
-    assert payload["phase_transition"]["recommended_action"] == "rotate_program"
-    assert payload["phase_transition"]["post_authored_behavior"] == "hold_last_authored_week"
+    assert payload['phase_transition']['reason'] == 'authored_sequence_complete'
+    assert payload['phase_transition']['transition_pending'] is True
+    assert payload['phase_transition']['recommended_action'] == 'rotate_program'
+    assert payload['phase_transition']['post_authored_behavior'] == 'hold_last_authored_week'
+    with SessionLocal() as db:
+        assert [(row.id, row.payload) for row in db.query(WorkoutPlan).all()] == before_plans

@@ -101,6 +101,9 @@ class ProfileUpsert(BaseModel):
 
 class ProfileResponse(ProfileUpsert):
     email: EmailStr
+    scheduling_timezone: str | None = Field(default=None, json_schema_extra={"readOnly": True})
+    effective_days_available: int | None = Field(default=None, json_schema_extra={"readOnly": True})
+    effective_program_id: str | None = Field(default=None, json_schema_extra={"readOnly": True})
 
 
 class ProgramSelectionUpdateRequest(BaseModel):
@@ -628,6 +631,10 @@ class WorkoutSetLogRequest(BaseModel):
     load_recommendation_id: str | None = Field(default=None, min_length=1, max_length=128)
     load_override_reason: str | None = Field(default=None, min_length=1, max_length=500)
 
+    actual_rir: float | None = Field(default=None,ge=0,le=10,allow_inf_nan=False,strict=True)
+    technique_quality: Literal['acceptable','poor','unknown'] | None = None
+    pain: bool | None = Field(default=None,strict=True)
+
 
 class WorkoutSubstitutionRecommendationResponse(BaseModel):
     recommended_name: str
@@ -651,6 +658,7 @@ class WorkoutLiveRecommendationResponse(BaseModel):
 
 
 class WorkoutSetLogResponse(BaseModel):
+    customized_receipts: list[dict[str, Any]] | None = None
     workout_occurrence_id: str
     exercise_occurrence_id: str
     command_id: str
@@ -693,7 +701,7 @@ class WorkoutExerciseSummaryResponse(BaseModel):
     planned_sets: int
     planned_reps_min: int | None
     planned_reps_max: int | None
-    planned_weight: float
+    planned_weight: float | None
     performed_sets: int
     average_performed_reps: float
     average_performed_weight: float
@@ -724,6 +732,10 @@ class WorkoutSetCorrectionRequest(BaseModel):
     weight: float = Field(ge=0, allow_inf_nan=False)
     rpe: float | None = Field(default=None, ge=0, le=10, allow_inf_nan=False)
     reason: str = Field(min_length=1, max_length=500)
+
+    actual_rir: float | None = Field(default=None,ge=0,le=10,allow_inf_nan=False,strict=True)
+    technique_quality: Literal['acceptable','poor','unknown'] | None = None
+    pain: bool | None = Field(default=None,strict=True)
 
 
 class AuthoredSubstitutionRequest(BaseModel):

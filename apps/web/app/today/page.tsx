@@ -145,6 +145,7 @@ function resolveExerciseStatus(completed: number, totalSets: number, resumed: bo
 }
 
 function resolveExerciseName(exercise: WorkoutExercise, swapIndexByExercise: SwapState): string {
+  if (exercise.customized) return exercise.name;
   if (exercise.authored_prescription || exercise.authored_constraint) return exercise.performed_variant?.name ?? exercise.name;
   const substitutions = exercise.substitution_candidates ?? [];
   const selectedIndex = swapIndexByExercise[exerciseKey(exercise)] ?? 0;
@@ -179,7 +180,7 @@ function resolveWeakPointTargetsLabel(weakAreas: string[]): string {
 }
 
 function resolveWeakPointFallbackCandidates(exercise: WorkoutExercise, weakAreas: string[]): string[] {
-  if (!isWeakPointExercise(exercise)) {
+  if (exercise.customized || !isWeakPointExercise(exercise)) {
     return [];
   }
   const options: string[] = [];
@@ -199,7 +200,7 @@ function resolveWeakPointFallbackCandidates(exercise: WorkoutExercise, weakAreas
 }
 
 function resolveSubstitutionCandidates(exercise: WorkoutExercise, weakAreas: string[]): string[] {
-  if (exercise.authored_prescription || exercise.authored_constraint) return [];
+  if (exercise.customized || exercise.authored_prescription || exercise.authored_constraint) return [];
   const explicit = (exercise.substitution_candidates ?? []).filter((item) => item.trim().length > 0);
   if (explicit.length > 0) {
     return explicit;
@@ -208,7 +209,7 @@ function resolveSubstitutionCandidates(exercise: WorkoutExercise, weakAreas: str
 }
 
 function resolveDisplayExerciseName(exercise: WorkoutExercise, selectedName: string, weakAreas: string[]): string {
-  if (!isWeakPointExercise(exercise)) {
+  if (exercise.customized || !isWeakPointExercise(exercise)) {
     return selectedName;
   }
   if (!WEAK_POINT_PLACEHOLDER_RE.test(selectedName.trim())) {
@@ -220,7 +221,7 @@ function resolveDisplayExerciseName(exercise: WorkoutExercise, selectedName: str
 }
 
 function resolveWeakPointInstruction(exercise: WorkoutExercise, weakAreas: string[]): string | null {
-  if (!isWeakPointExercise(exercise)) {
+  if (exercise.customized || !isWeakPointExercise(exercise)) {
     return null;
   }
   const targetLabel = resolveWeakPointTargetsLabel(weakAreas);
@@ -443,26 +444,28 @@ function WorkoutSummaryCard({ summary }: Readonly<{ summary: WorkoutSummary | nu
       </div>
       <p className="telemetry-meta">Overall guidance: {resolveGuidanceText(summary.overall_rationale, summary.overall_guidance)}</p>
       <div className="space-y-2">
-        {exercises.map((item) => (
+        {exercises.map((item) => {
+          const customized = item.decision_trace?.owner === "api.workout_customized-v1";
+          return (
           <div key={item.exercise_occurrence_id ?? item.exercise_id} className="rounded-md border border-zinc-800 bg-zinc-900/40 p-2 text-xs text-zinc-300">
             <p className="font-semibold text-zinc-100">{item.performed_variant?.name ?? item.name}</p>
             {item.performed_variant ? <p>Original authored exercise: {item.name} · confirmed source-approved variant</p> : null}
             <p>
-              Planned: {item.planned_sets} sets · {item.planned_reps_min != null ? `${item.planned_reps_min}-${item.planned_reps_max}` : "authored target"} reps · {item.load_semantics === "bodyweight" ? "Bodyweight" : item.load_recommendation_available === false ? "Record actual variant load" : `${kgToLbs(item.planned_weight)} lbs`}
+              Planned: {item.planned_sets} sets · {item.planned_reps_min != null ? `${item.planned_reps_min}-${item.planned_reps_max}` : "authored target"} reps · {item.load_semantics === "bodyweight" ? "Bodyweight" : item.load_recommendation_available === false ? "Record actual variant load" : item.planned_weight == null ? "Load unknown" : `${kgToLbs(item.planned_weight)} lbs`}
             </p>
             <p>
-              Performed: {item.performed_sets} sets · avg {item.average_performed_reps} reps · {item.load_semantics === "bodyweight" ? (item.average_performed_weight > 0 ? `Bodyweight + ${kgToLbs(item.average_performed_weight)} lb added` : "Bodyweight (no added load)") : `${kgToLbs(item.average_performed_weight)} lbs`}
+              Performed: {item.performed_sets} sets · avg {item.average_performed_reps} reps · {item.load_semantics === "bodyweight" ? (item.average_performed_weight > 0 ? `Bodyweight + ${kgToLbs(item.average_performed_weight)} lb added` : "Bodyweight (no added load)") : customized ? `${item.average_performed_weight} kg` : `${kgToLbs(item.average_performed_weight)} lbs`}
             </p>
             {item.load_intelligence ? <>
               <p>Next exposure: {item.load_intelligence.next_exposure.action}{item.load_intelligence.next_exposure.recommended_weight != null ? ` · ${kgToLbs(item.load_intelligence.next_exposure.recommended_weight)} lb` : " · no new load inferred"}</p>
               <p>{item.load_intelligence.next_exposure.explanation}</p>
               {item.load_intelligence.next_exposure.known_baseline_weight != null ? <p>Known baseline: {kgToLbs(item.load_intelligence.next_exposure.known_baseline_weight)} lb</p> : null}
             </> : <>
-              <p>Next: {item.load_semantics === "bodyweight" ? "Bodyweight" : item.load_recommendation_available === false || item.next_working_weight == null ? "Load advice pending comparable evidence" : `${kgToLbs(item.next_working_weight)} lbs`}</p>
-              <p>{resolveGuidanceText(item.guidance_rationale, item.guidance)}</p>
+              <p>Next: {item.load_semantics === "bodyweight" ? "Bodyweight" : item.load_recommendation_available === false || item.next_working_weight == null ? "Load advice pending comparable evidence" : customized ? `${item.next_working_weight} kg` : `${kgToLbs(item.next_working_weight)} lbs`}</p>
+              <p>{customized ? item.guidance : resolveGuidanceText(item.guidance_rationale, item.guidance)}</p>
             </>}
           </div>
-        ))}
+        );})}
       </div>
     </div>
   );
@@ -627,25 +630,26 @@ function ExerciseDetailOverlay({
   effectiveSets: EffectiveLoadSet[];
   warmupCommandScope: string;
   onWarmupComplete: (ordinal: number, performed: PerformedWarmup) => Promise<void>;
-  onCorrectSet: (receipt: EffectiveLoadSet, values: { reps: number; weight: number; rpe?: number | null; reason: string }) => Promise<void>;
+  onCorrectSet: (receipt: EffectiveLoadSet, values: { reps: number; weight: number; rpe?: number | null;actual_rir?:number|null;technique_quality?:"acceptable"|"poor"|"unknown"|null;pain?:boolean|null; reason: string }) => Promise<void>;
 }>) {
-  const defaultRestSeconds = parseRestToSeconds(exercise.rest) ?? 90;
-  const bodyweight = isBodyweightAuthored(exercise);
+  const defaultRestSeconds = exercise.customized?.rest_seconds.high ?? parseRestToSeconds(exercise.rest) ?? 90;
+  const bodyweight = isBodyweightAuthored(exercise) || Boolean(exercise.customized && exercise.load_semantics === "bodyweight");
   const sourceWarmups = authoredWarmupLabel(exercise);
   const currentRepRange = useMemo(() => authoredSetRepRange(exercise, Math.min(completed + 1, exercise.sets)), [exercise, completed]);
   const intelligenceActive = loadIntelligence !== undefined;
   const currentDecision = currentLoadDecision(loadIntelligence, completed, exercise.sets);
-  const canonicalLoad = prefillLoadKg(currentDecision);
+  const canonicalLoad = exercise.customized ? exercise.customized_load_decision?.recommended_weight??undefined : prefillLoadKg(currentDecision);
   const invalidKnownIncrement = intelligenceActive && loadContext.increment != null &&
     (!Number.isFinite(loadContext.increment) || loadContext.increment <= 0);
   const ctrl = useExerciseControl({
     exerciseId: exerciseKey(exercise),
     totalSets: exercise.sets,
     defaultRestSeconds,
-    recommendedWorkingWeight: intelligenceActive ? (canonicalLoad === undefined ? undefined : kgToLbs(canonicalLoad))
+    recommendedWorkingWeight: exercise.customized ? (bodyweight ? 0 : canonicalLoad) : intelligenceActive ? (canonicalLoad === undefined ? undefined : kgToLbs(canonicalLoad))
       : bodyweight ? 0 : exercise.performed_variant ? undefined : snapToHalfLb(derivedWorkingLb),
     recommendedWeightCanonicalKg: canonicalLoad,
-    requireWeight: intelligenceActive && !bodyweight,
+    customizedEvidence:Boolean(exercise.customized),weightUnit:"kg",
+    requireWeight: (intelligenceActive || Boolean(exercise.customized)) && !bodyweight,
     repRange: currentRepRange,
     initialCompletedSets: completed,
     skipTimerOnComplete: true,
@@ -709,8 +713,18 @@ function ExerciseDetailOverlay({
       {/* ---- Scrollable body ---- */}
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 pb-[max(7rem,env(safe-area-inset-bottom))] space-y-4 overscroll-contain">
 
+        {exercise.customized && <div className="rounded border border-amber-700 p-3"><p>Target {exercise.customized.target_min}–{exercise.customized.target_max} {exercise.customized.target_kind.toUpperCase()} · Rest {exercise.customized.rest_seconds.low}–{exercise.customized.rest_seconds.high} seconds.</p><p>Calibrate this exercise on your actual equipment. Enter a comfortable load; no maximal test is required. Stop for pain or technique deterioration. Actual RIR is optional; leave it unknown when uncertain. Targets never become performed evidence.</p><p>Load basis: {exercise.load_semantics?.replaceAll('_',' ')}. Recorded setup: {exercise.customized.identity.setup}. Numerical rules remain provisional.</p>
+          {exercise.customized_load_decision&&<div className="mt-3 space-y-2" aria-label="Exercise-specific load calibration">
+            <p>{exercise.customized_load_decision.recommended_weight!=null?`Next comparable exposure: ${exercise.customized_load_decision.action} to ${exercise.customized_load_decision.recommended_weight} kg.`:'No qualified working load yet. Use comfortable exercise-specific calibration.'}</p>
+            <p>{exercise.customized_load_decision.reason_codes.join(', ').replaceAll('_',' ')}.</p>
+            {exercise.customized_load_decision.attainable_loads&&<p>Available loads (kg, {exercise.load_semantics?.replaceAll('_',' ')}): {exercise.customized_load_decision.attainable_loads.join(', ')}</p>}
+            <p>A bounded suggestion is not a guarantee. No maximal or failure test is required. Stop for pain or deteriorating technique.</p>
+            {exercise.customized_load_decision.calibration?.strength_information.map((r,i)=><p key={i}>Optional {r.kind} report: {r.load} {r.unit} · {r.observed_on}. Information only; no percentage is converted to a working weight.</p>)}
+          </div>}
+          <label className="mt-3 block">Actual-load override reason (if inventory differs)<input className="ui-input min-h-11 w-full" value={overrideReason} onChange={e=>onOverrideReason(e.target.value)}/></label>
+        </div>}
         {/* == ZONE 1: Baseline calculator (expanded when no baseline) == */}
-        {!exercise.authored_prescription && exercise.rep_range && !bodyweight && !exercise.performed_variant ? <Disclosure title="Baseline Calculator" badge={baseline ? `1RM: ${Math.round(baseline.estimated1RM)} lb` : null} defaultOpen={!baseline}>
+        {!exercise.customized && !exercise.authored_prescription && exercise.rep_range && !bodyweight && !exercise.performed_variant ? <Disclosure title="Baseline Calculator" badge={baseline ? `1RM: ${Math.round(baseline.estimated1RM)} lb` : null} defaultOpen={!baseline}>
           <BaselineBlock
             exerciseId={exerciseKey(exercise)}
             repRange={exercise.rep_range}
@@ -835,7 +849,7 @@ function ExerciseDetailOverlay({
 
         {exercise.authored_prescription || exercise.authored_constraint ? <AuthoredConstraintCard exercise={exercise} onDecision={onAuthoredDecision} effectiveSets={effectiveSets} onUndoLastSet={onUndoLastSet} /> : null}
         {/* == ZONE 4: Primary action (log set) == */}
-        {intelligenceActive ? <LoadIntelligencePanel guidance={loadIntelligence ?? null} completed={completed} total={exercise.sets}
+        {intelligenceActive || exercise.customized ? <LoadIntelligencePanel receiptOnly={Boolean(exercise.customized)} guidance={loadIntelligence ?? null} completed={completed} total={exercise.sets}
           loadContext={loadContext} onContextChange={onLoadContextChange} onPreview={onPreviewLoad}
           overrideReason={overrideReason} onOverrideReason={onOverrideReason} onCorrect={onCorrectSet} effectiveSets={effectiveSets} requireExternalWeight={!bodyweight} /> : null}
         <SetInputCard
@@ -848,7 +862,7 @@ function ExerciseDetailOverlay({
         />
 
         {/* == ZONE 5: Set log (per-set logged values) == */}
-        <SetLogDisplay ctrl={ctrl} onUndoLastSet={onUndoLastSet} hideLocalReceipts={intelligenceActive}
+        <SetLogDisplay ctrl={ctrl} onUndoLastSet={onUndoLastSet} hideLocalReceipts={intelligenceActive || Boolean(exercise.customized)}
           hasEffectiveReceipts={effectiveSets.length > 0}
           undoLabel={effectiveSets.at(-1)?.set_kind === "warmup" ? "Undo Last Warm-up" : undefined} />
 
@@ -979,6 +993,7 @@ export default function TodayPage() {
   }, [matchesSelectedLoadContext]);
 
   function intelligenceFor(exercise: WorkoutExercise): LoadIntelligence | null | undefined {
+    if (exercise.customized) return undefined;
     const key = exerciseKey(exercise);
     return Object.prototype.hasOwnProperty.call(loadIntelligenceByExercise, key) ? loadIntelligenceByExercise[key] : exercise.load_intelligence;
   }
@@ -1115,7 +1130,7 @@ export default function TodayPage() {
       setWorkoutSummary(null);
       setSetFeedbackByExercise({});
       setLoadIntelligenceByExercise({});
-      setEffectiveSetsByExercise(Object.fromEntries(data.exercises.filter(item => item.load_intelligence).map(item => [exerciseKey(item), item.load_intelligence!.effective_sets])));
+      setEffectiveSetsByExercise(Object.fromEntries(data.exercises.filter(item => item.load_intelligence || item.customized_receipts).map(item => [exerciseKey(item), item.customized_receipts ?? item.load_intelligence!.effective_sets])));
       setLoadContextByExercise({});
       resetSelectedLoadContext();
       setLoadOverrideByExercise({});
@@ -1331,7 +1346,8 @@ export default function TodayPage() {
       reps: performed.reps,
       weight: performed.canonicalWeight ?? lbsToKg(performed.weight),
       rpe: performed.rpe,
-      ...(context ? { load_context: context } : {}),
+      ...(exercise.customized?{actual_rir:performed.actual_rir,technique_quality:performed.technique_quality,pain:performed.pain,load_context:{unit:"kg" as const,display_unit:performed.display_unit??"kg",basis:exercise.customized.identity.basis,equipment_key:exercise.customized.identity.equipment_key}}:{}),
+      ...(!exercise.customized&&context ? { load_context: context } : {}),
       ...(offeredDecision ? { load_recommendation_id: offeredDecision.id } : {}),
       ...(loadOverrideByExercise[exerciseId]?.trim() ? { load_override_reason: loadOverrideByExercise[exerciseId].trim() } : {}),
     } as const;
@@ -1357,13 +1373,14 @@ export default function TodayPage() {
       advanceLoadGeneration(exerciseId);
       setMessage("");
       setSetFeedbackByExercise((prev) => ({ ...prev, [exerciseId]: feedback }));
+      if (feedback.customized_receipts) setEffectiveSetsByExercise(previous=>({...previous,[exerciseId]:feedback.customized_receipts!}));
       if (feedback.load_intelligence !== undefined) updateLoadIntelligence(exerciseId, feedback.load_intelligence ?? null);
       setLiveRecommendationByExercise((prev) => ({
         ...prev,
         [exerciseId]: feedback.live_recommendation,
       }));
 
-      const restCycle = parseRestToSeconds(exercise.rest) ?? 90;
+      const restCycle = exercise.customized?.rest_seconds.high ?? parseRestToSeconds(exercise.rest) ?? 90;
       setGlobalRestTimer({
         exerciseId,
         exerciseName: resolveExerciseName(exercise, swapIndexByExercise),
@@ -1471,6 +1488,7 @@ export default function TodayPage() {
     <div className="space-y-4 pb-[max(7rem,env(safe-area-inset-bottom))]">
       <div className="flex items-baseline justify-between gap-2">
         <h1 className="ui-title-page">Today</h1>
+        <Link className="inline-flex min-h-11 items-center underline" href={workout?.customized?.proposal_id?`/customize?proposal=${encodeURIComponent(workout.customized.proposal_id)}`:"/customize"}>Manage Customized dates or replace program</Link>
         <p className="ui-meta text-zinc-400">{todayDate}</p>
       </div>
       <div className="main-card main-card--module main-card--accent spacing-grid spacing-grid--tight">
@@ -1570,7 +1588,7 @@ export default function TodayPage() {
                       <span>{authoredRepLabel(exercise)} reps</span>
                       <span className="text-zinc-700">·</span>
                       <span>{intelligence !== undefined ? (ownedRowLoad === undefined ? "Record actual load" : `${kgToLbs(ownedRowLoad)} lb`)
-                        : isBodyweightAuthored(exercise) ? "Bodyweight" : exercise.performed_variant ? "Record actual load" : `~${rowWorkingLb} lb`}</span>
+                        : exercise.customized ? (exercise.load_semantics === "bodyweight" ? "Bodyweight" : "Record actual load") : isBodyweightAuthored(exercise) ? "Bodyweight" : exercise.performed_variant ? "Record actual load" : `~${rowWorkingLb} lb`}</span>
                     </div>
                     {authoredRelationshipLabels(exercise).map((label) => (
                       <span key={label} className="mt-1 mr-2 inline-block text-xs text-amber-300">{label}</span>
@@ -1605,8 +1623,8 @@ export default function TodayPage() {
         const warmUpCount = exercise.authored_prescription ? 0 : Math.max(0, parseInt(String(exercise.warm_up_sets ?? "0"), 10) || 0);
         const baseline = exercise.performed_variant ? undefined : baselineByExercise[exerciseKey(exercise)];
         const loadIntelligence = intelligenceFor(exercise);
-        const effectiveSets = effectiveSetsByExercise[exerciseKey(exercise)] ?? loadIntelligence?.effective_sets ?? [];
-        const loadContext = loadContextByExercise[exerciseKey(exercise)] ?? loadIntelligence?.load_context ?? { unit: "kg", display_unit: "lb", basis: "unknown" } as LoadContext;
+        const effectiveSets = effectiveSetsByExercise[exerciseKey(exercise)] ?? exercise.customized_receipts ?? loadIntelligence?.effective_sets ?? [];
+        const loadContext = loadContextByExercise[exerciseKey(exercise)] ?? loadIntelligence?.load_context ?? (exercise.customized?{unit:"kg",display_unit:"kg",basis:exercise.customized.identity.basis,equipment_key:exercise.customized.identity.equipment_key}:null) ?? { unit: "kg", display_unit: "lb", basis: "unknown" } as LoadContext;
         const lastSet = lastSetByExercise[exerciseKey(exercise)];
         const plannedWorkingLb = exercise.recommended_working_weight == null ? 0 : kgToLbs(exercise.recommended_working_weight);
         const baselineWorkingLb =
@@ -1632,7 +1650,9 @@ export default function TodayPage() {
               ? kgToLbs(recommendation!.recommended_weight!)
               : plannedWorkingLb;
         let doThisSetLine: string;
-        if (exercise.authored_prescription) {
+        if (exercise.customized) {
+          doThisSetLine = `${authoredRepLabel(exercise)} reps · ${exercise.customized.target_min}–${exercise.customized.target_max} ${exercise.customized.target_kind.toUpperCase()} · record actual load`;
+        } else if (exercise.authored_prescription) {
           const index = Math.min(completed + 1, exercise.sets);
           doThisSetLine = `${isBodyweightAuthored(exercise) ? "Bodyweight · " : ""}${authoredRepLabel(exercise, index)} reps · ${authoredSetDetails(exercise, index)}`;
         } else if (recommendation) {
@@ -1687,6 +1707,8 @@ export default function TodayPage() {
             if (currentOccurrence.current !== workoutReference(workout)) return false;
             if (todayResult.status === "fulfilled" && workoutReference(todayResult.value) === workoutReference(workout)) {
               setWorkout(todayResult.value);
+              const receipts=todayResult.value.exercises.find(e=>exerciseKey(e)===exerciseKey(exercise))?.customized_receipts;
+              if(receipts)setEffectiveSetsByExercise(previous=>({...previous,[exerciseKey(exercise)]:receipts}));
               applyProgressLoad(todayResult.value.exercises.map(item => ({ ...item, exercise_id: item.id })), todayGeneration);
               setLiveRecommendationByExercise(Object.fromEntries((todayResult.value.exercises ?? [])
                 .filter((item) => item.live_recommendation).map((item) => [exerciseKey(item), item.live_recommendation as WorkoutLiveRecommendation])));
@@ -1716,7 +1738,7 @@ export default function TodayPage() {
         return (
           <ExerciseDetailOverlay
             key={`${exerciseKey(exercise)}/${exercise.performed_variant?.option_id ?? "source"}`}
-            exercise={exercise}
+            exercise={exercise.customized?{...exercise,customized_load_decision:(recommendation?.decision_trace?.load_decision as typeof exercise.customized_load_decision)??exercise.customized_load_decision}:exercise}
             selectedName={displayName}
             guideHref={guideHref}
             completed={completed}
@@ -1784,9 +1806,10 @@ export default function TodayPage() {
               acknowledgeLogCommand(commandKey);
               if (currentOccurrence.current !== workoutReference(workout)) return;
               advanceLoadGeneration(exerciseKey(exercise));
+              if (result.customized_receipts) setEffectiveSetsByExercise(previous=>({...previous,[exerciseKey(exercise)]:result.customized_receipts!}));
               updateLoadIntelligence(exerciseKey(exercise), result.load_intelligence ?? null);
               setSetFeedbackByExercise(previous => { const next = { ...previous }; delete next[exerciseKey(exercise)]; return next; });
-              setLiveRecommendationByExercise(previous => { const next = { ...previous }; delete next[exerciseKey(exercise)]; return next; });
+              setLiveRecommendationByExercise(previous => { const next = { ...previous }; delete next[exerciseKey(exercise)]; if(exercise.customized && result.live_recommendation) next[exerciseKey(exercise)] = result.live_recommendation; return next; });
               setWorkoutSummary(null);
               try { const { progress, generation } = await getScopedWorkoutProgress(workoutReference(workout));
                 if (currentOccurrence.current === workoutReference(workout)) applyProgressLoad(progress.exercises ?? [], generation);

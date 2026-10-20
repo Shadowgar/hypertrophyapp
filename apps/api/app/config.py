@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     programs_dir: str = "/app/programs"
     compiled_knowledge_dir: str = "/app/knowledge/compiled"
     allow_dev_wipe_endpoints: bool = False
+    customized_enabled: bool = False
     log_level: str = "INFO"
     log_file_path: str = "logs/app-debug.log"
     log_max_bytes: int = 5_000_000

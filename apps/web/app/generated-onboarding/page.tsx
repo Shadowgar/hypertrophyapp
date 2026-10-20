@@ -149,8 +149,9 @@ export default function GeneratedOnboardingPage() {
   return (
     <div className="space-y-4">
       <h1 className="ui-title-page">Generated Plan Preferences</h1>
+      <p><Link href="/customize" className="underline">Customize My Workout</Link> is the current programming workflow: confirm actual equipment, preview dates and workload, then accept the exact version.</p>
       <p className="text-sm text-zinc-400">
-        Recommended to improve plan fit. You can still generate with defaults.
+        Legacy preferences are retained for reference. Weak-point and recovery fields here do not change the current original Full Body pilot.
       </p>
 
       <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-4">

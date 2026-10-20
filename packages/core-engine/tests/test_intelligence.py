@@ -852,7 +852,8 @@ def test_prepare_profile_date_window_runtime_preserves_optional_bounds() -> None
     assert runtime["decision_trace"]["interpreter"] == "prepare_profile_date_window_runtime"
 
 
-def test_build_profile_upsert_persistence_payload_defaults_selected_program() -> None:
+@pytest.mark.parametrize('mode', [None, 'manual', 'auto'])
+def test_build_profile_upsert_persistence_payload_defaults_selected_program(mode) -> None:
     payload = build_profile_upsert_persistence_payload(
         name="Test User",
         age=30,
@@ -860,7 +861,7 @@ def test_build_profile_upsert_persistence_payload_defaults_selected_program() ->
         gender="male",
         split_preference="full_body",
         selected_program_id=None,
-        program_selection_mode=None,
+        program_selection_mode=mode,
         choose_for_me_family="upper_lower",
         choose_for_me_diagnostics={"readiness_band": "moderate"},
         training_location="home",
@@ -877,8 +878,8 @@ def test_build_profile_upsert_persistence_payload_defaults_selected_program() ->
         movement_restrictions=["deep_knee_flexion"],
         near_failure_tolerance="moderate",
     )
-    assert payload["selected_program_id"] == "pure_bodybuilding_phase_1_full_body"
-    assert payload["program_selection_mode"] == "manual"
+    assert payload["selected_program_id"] == (None if mode == 'auto' else "pure_bodybuilding_phase_1_full_body")
+    assert payload["program_selection_mode"] == (mode or "manual")
     assert payload["choose_for_me_family"] == "upper_lower"
     assert payload["choose_for_me_diagnostics"] == {"readiness_band": "moderate"}
     assert payload["onboarding_answers"] == {"primary_goal": "build_muscle"}
@@ -887,7 +888,8 @@ def test_build_profile_upsert_persistence_payload_defaults_selected_program() ->
     assert payload["near_failure_tolerance"] == "moderate"
 
 
-def test_build_profile_response_payload_applies_profile_defaults() -> None:
+@pytest.mark.parametrize('mode', [None, 'manual', 'auto'])
+def test_build_profile_response_payload_applies_profile_defaults(mode) -> None:
     payload = build_profile_response_payload(
         email="coach@example.com",
         name="Coach",
@@ -896,7 +898,7 @@ def test_build_profile_response_payload_applies_profile_defaults() -> None:
         gender=None,
         split_preference=None,
         selected_program_id=None,
-        program_selection_mode=None,
+        program_selection_mode=mode,
         choose_for_me_family=None,
         choose_for_me_diagnostics=None,
         training_location="home",
@@ -914,8 +916,8 @@ def test_build_profile_response_payload_applies_profile_defaults() -> None:
         near_failure_tolerance=None,
     )
     assert payload["email"] == "coach@example.com"
-    assert payload["selected_program_id"] == "pure_bodybuilding_phase_1_full_body"
-    assert payload["program_selection_mode"] == "manual"
+    assert payload["selected_program_id"] == (None if mode == 'auto' else "pure_bodybuilding_phase_1_full_body")
+    assert payload["program_selection_mode"] == (mode or "manual")
     assert payload["choose_for_me_family"] is None
     assert payload["choose_for_me_diagnostics"] == {}
     assert payload["days_available"] == 2

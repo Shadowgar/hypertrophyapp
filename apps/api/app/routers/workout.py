@@ -162,6 +162,12 @@ def workout_load_guidance(workout_id: str, payload: WorkoutLoadGuidanceRequest, 
     if len(matches) != 1:
         raise HTTPException(404, "Exercise occurrence not found")
     exercise = matches[0]
+    if exercise.get('customized'):
+        from ..workout_customized import decision_for
+        if payload.load_context and (payload.load_context.basis!=exercise['customized']['identity']['basis'] or
+                payload.load_context.equipment_key not in (None,exercise['customized']['identity']['equipment_key'])):
+            raise HTTPException(422,'Actual setup does not match this calibration cohort')
+        return decision_for(db,current_user.id,exercise)
     _validate_authored_load_permission(current_user, occurrence, exercise)
     return project_authored_load_feedback(db, user=current_user, occurrence=occurrence,
         exercise=exercise, supplied_context=payload.load_context)
@@ -298,6 +304,10 @@ def workout_today(
 
     if not selected:
         raise HTTPException(status_code=404, detail="No workouts available")
+
+    if selected.get("customized"):
+        from ..workout_customized import today
+        return today(db,current_user,selected)
 
     authored_selected = any(plan.payload.get("program_template_id") in
         {"pure_bodybuilding_phase_1_full_body", "pure_bodybuilding_phase_2_full_body"} and
@@ -469,7 +479,7 @@ def _replay_command(db: Session, user_id: str, command_id: str, digest: str):
 def log_set(workout_id: str, payload: WorkoutSetLogRequest, db: DbSession, current_user: CurrentUser) -> WorkoutSetLogResponse:
     normalized = payload.model_dump(mode="json", exclude={"command_id"})
     # New absent fields must not change the digest of a pre-M2A command.
-    for field in ("load_context", "load_recommendation_id", "load_override_reason"):
+    for field in ("load_context", "load_recommendation_id", "load_override_reason", "actual_rir", "technique_quality", "pain"):
         if normalized[field] is None:
             normalized.pop(field)
     normalized["set_kind"] = (payload.set_kind or "work").strip().lower() or "work"
@@ -487,6 +497,8 @@ def log_set(workout_id: str, payload: WorkoutSetLogRequest, db: DbSession, curre
             return replay
     occurrence, session = resolve_occurrence(db, current_user.id, workout_id, _list_workout_plans(db, current_user.id))
     exercise = resolve_exercise(session, payload.exercise_id, payload.exercise_occurrence_id)
+    if not exercise.get('customized') and any(getattr(payload,k) is not None for k in ('actual_rir','technique_quality','pain')):
+        raise HTTPException(422,'These evidence fields apply only to Customized workouts')
     constraint = exercise.get("authored_constraint") or {}
     if occurrence.program_id in {"pure_bodybuilding_phase_1_full_body", "pure_bodybuilding_phase_2_full_body"}:
         constraint = refresh_constraints(exercise, equipment=current_user.equipment_profile,
@@ -494,7 +506,7 @@ def log_set(workout_id: str, payload: WorkoutSetLogRequest, db: DbSession, curre
         exercise["authored_constraint"] = constraint
     if constraint.get("execution_status", constraint.get("status")) in {"unresolved", "infeasible", "declined"}:
         raise HTTPException(409, "Authored slot is unresolved; confirm a source-approved alternative before logging")
-    if payload.weight == 0 and not is_bodyweight_authored(exercise):
+    if payload.weight == 0 and not (is_bodyweight_authored(exercise) or (exercise.get("customized") and exercise.get("load_semantics")=="bodyweight")):
         raise HTTPException(422, "Zero external load requires an explicitly bodyweight authored exercise")
     primary = str(exercise.get("primary_exercise_id") or exercise["id"])
     if normalized["primary_exercise_id"] != primary:
@@ -528,6 +540,9 @@ def _apply_log_set(
     command_id: str,
     digest: str,
 ) -> WorkoutSetLogResponse:
+    if exercise.get("customized"):
+        from ..workout_customized import log_set as log_customized_set
+        return log_customized_set(db,user=current_user,occurrence=occurrence,exercise=exercise,payload=payload,command_id=command_id,digest=digest)
     # User lock held by log_set: distinct commands cannot both claim one slot.
     existing_slots = effective_set_logs(db).filter_by(
         user_id=current_user.id, workout_occurrence_id=occurrence.id,
@@ -676,6 +691,9 @@ def _void_set(db, record, *, reason, source, timestamp):
 
 def _reconstruct_history(db, record):
     db.flush()
+    if record.replay_context["version"] == 3:
+        from ..workout_customized import feedback
+        return feedback(db,record)
     if record.replay_context["version"] == 2:
         user = db.query(User).filter_by(id=record.user_id).one()
         occurrence = db.query(WorkoutOccurrence).filter_by(id=record.workout_occurrence_id, user_id=record.user_id).one()
@@ -727,7 +745,10 @@ def undo_last_set(workout_id: str, payload: WorkoutUndoLastSetRequest, db: DbSes
 def correct_set(set_id: str, payload: WorkoutSetCorrectionRequest, db: DbSession, current_user: CurrentUser) -> dict:
     _lock_history_user(db, current_user.id)
     db.refresh(current_user)
-    digest = _history_digest("correct", set_id, payload.model_dump(mode="json", exclude={"command_id"}) | {"rpe_supplied": "rpe" in payload.model_fields_set})
+    correction=payload.model_dump(mode="json",exclude={"command_id"})
+    for name in ('actual_rir','technique_quality','pain'):
+        if name not in payload.model_fields_set:correction.pop(name)
+    digest = _history_digest("correct", set_id, correction | {"rpe_supplied": "rpe" in payload.model_fields_set})
     replay = _replay_history_action(db, current_user.id, payload.command_id, digest)
     if replay is not None:
         return replay
@@ -735,8 +756,15 @@ def correct_set(set_id: str, payload: WorkoutSetCorrectionRequest, db: DbSession
     if original is None:
         raise HTTPException(404, "Set not found")
     context = require_replay_context(original)
-    if payload.weight == 0 and not is_bodyweight_authored(context["planned_exercise"]):
+    if payload.weight == 0 and not (is_bodyweight_authored(context["planned_exercise"]) or
+        (context["version"]==3 and context["planned_exercise"].get("load_semantics")=="bodyweight")):
         raise HTTPException(422, "Zero external load requires an explicitly bodyweight authored exercise")
+    if context['version']!=3 and any(k in payload.model_fields_set for k in ('actual_rir','technique_quality','pain')):
+        raise HTTPException(422,'Customized evidence cannot reinterpret Authored or legacy sets')
+    if context['version']==3:
+        actual_rir=payload.actual_rir if 'actual_rir' in payload.model_fields_set else context.get('actual_rir')
+        actual_rpe=payload.rpe if 'rpe' in payload.model_fields_set else original.rpe
+        if actual_rir is not None and actual_rpe is not None:raise HTTPException(422,'Record one actual effort scale')
     if original.voided_at:
         raise HTTPException(409, "Set already voided or superseded; correct its effective replacement")
     now = datetime.now(UTC).replace(tzinfo=None)
@@ -749,6 +777,9 @@ def correct_set(set_id: str, payload: WorkoutSetCorrectionRequest, db: DbSession
         set_kind=original.set_kind, parent_set_index=original.parent_set_index, technique=deepcopy(original.technique),
         created_at=original.created_at, amended_at=now, supersedes_id=original.id,
         replay_context=deepcopy(context), command_id=payload.command_id, request_digest=digest)
+    if context['version']==3:
+        for name in ('actual_rir','technique_quality','pain'):
+            if name in payload.model_fields_set:replacement.replay_context[name]=getattr(payload,name)
     if context["version"] == 2:
         # Retain the original command's offered advice/choice verbatim. Amendment
         # performance is the new row; this metadata explains its distinct origin.
@@ -838,6 +869,9 @@ def workout_summary(
     current_user: CurrentUser,
 ) -> WorkoutSummaryResponse:
     occurrence, session_snapshot = resolve_occurrence(db, current_user.id, workout_id, _list_workout_plans(db, current_user.id))
+    if session_snapshot.get("customized"):
+        from ..workout_customized import summary
+        return WorkoutSummaryResponse(**summary(db,current_user,occurrence,session_snapshot))
     route_runtime = prepare_workout_summary_route_runtime(
         workout_id=occurrence.workout_id,
         plan_rows=occurrence_plan(occurrence, session_snapshot),

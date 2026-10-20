@@ -11,8 +11,9 @@ configure_test_database("test_generated_decision_profile_debug")
 from app.database import Base, engine
 from app.database import SessionLocal
 from app.main import app
-from app.models import User
+from app.models import User, WorkoutPlan
 from app.routers import plan as plan_router
+from app import generated_full_body_runtime_adapter as runtime_adapter
 
 
 TEST_CREDENTIAL = f"T{uuid.uuid4().hex[:15]}"
@@ -144,7 +145,7 @@ def test_authored_selected_user_reports_authored_path_and_does_not_call_generate
     def _unexpected_constructor(*args, **kwargs):
         raise AssertionError("Generated constructor should not run for debug decision profile endpoint.")
 
-    monkeypatch.setattr(plan_router, "prepare_generated_full_body_runtime_template", _unexpected_constructor)
+    monkeypatch.setattr(runtime_adapter, "prepare_generated_full_body_runtime_template", _unexpected_constructor)
     headers = _register_user(client, email="generated-debug-authored@example.com", name="Generated Debug Authored")
     _post_profile(
         client,
@@ -243,7 +244,7 @@ def test_sensitive_free_text_restrictions_do_not_appear_in_debug_or_logs(monkeyp
     assert int(debug_log["fields"]["movement_restriction_count"]) == 1
 
 
-def test_generated_decision_profile_resolved_log_contains_expected_structured_fields(monkeypatch) -> None:
+def test_read_only_generated_decision_debug_log_preserves_structured_fields(monkeypatch) -> None:
     _reset_db()
     client = TestClient(app)
     captured: list[dict] = []
@@ -262,10 +263,10 @@ def test_generated_decision_profile_resolved_log_contains_expected_structured_fi
         days_available=3,
         movement_restrictions=["Overhead pressing"],
     )
-    response = client.post("/plan/generate-week", headers=headers, json={})
+    response = client.get("/plan/generated-decision-profile/debug", headers=headers)
     assert response.status_code == 200
 
-    resolved_log = next(item for item in captured if item["event"] == "generated_decision_profile_resolved")
+    resolved_log = next(item for item in captured if item["event"] == "generated_decision_profile_debug_viewed")
     fields = resolved_log["fields"]
     expected_keys = {
         "user_id",
@@ -288,3 +289,6 @@ def test_generated_decision_profile_resolved_log_contains_expected_structured_fi
     }
     assert expected_keys <= set(fields.keys())
     assert "movement_restriction_flags" not in fields
+
+    with SessionLocal() as db:
+        assert db.query(WorkoutPlan).count() == 0

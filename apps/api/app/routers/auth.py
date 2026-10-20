@@ -51,7 +51,7 @@ def register(payload: RegisterRequest, db: DbSession) -> TokenResponse:
     db.commit()
     db.refresh(user)
 
-    return TokenResponse(access_token=create_access_token(user.id))
+    return TokenResponse(access_token=create_access_token(user.id, user.password_hash))
 
 
 @router.post("/login")
@@ -61,7 +61,7 @@ def login(payload: LoginRequest, db: DbSession) -> TokenResponse:
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
-    return TokenResponse(access_token=create_access_token(user.id))
+    return TokenResponse(access_token=create_access_token(user.id, user.password_hash))
 
 
 @router.post("/dev/wipe-user")

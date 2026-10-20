@@ -1,0 +1,59 @@
+{
+  "base": "b4e3a3fbd4a3e1f3ed4e7689582d818b40d263c8",
+  "stack": [
+    {
+      "reference": "main",
+      "revision": "27231cfe98631de7eaebf21e13b60c6d145aeeba",
+      "owner": "deployed baseline; no edits"
+    },
+    {
+      "reference": "#84",
+      "revision": "f3ffc2e5aa5283ec050d1ade7e7b4620fb3daaa6",
+      "owner": "research provenance; no repeat audits"
+    },
+    {
+      "reference": "#86",
+      "revision": "a4b88df90f6a9c1a6cad8f7a33c29dd6954b25d2",
+      "owner": "C1 deterministic planning/calibration"
+    },
+    {
+      "reference": "#88",
+      "revision": "cce0d811e6025a226e120a44cb742c8dd7a47ed5",
+      "owner": "C2 original long/short programming"
+    },
+    {
+      "reference": "#90",
+      "revision": "3fe4ef381fee730ea13e0957201dd9bfe57ae9dc",
+      "owner": "C3A science admission; approvals absent"
+    },
+    {
+      "reference": "#93",
+      "revision": "a7fc5f4f5b6fda4e81b6870a74c9c37f1d7af037",
+      "owner": "C3B1 account-owned candidate lifecycle + child import probe"
+    },
+    {
+      "reference": "#95",
+      "revision": "b4e3a3fbd4a3e1f3ed4e7689582d818b40d263c8",
+      "owner": "C3B2A compact consent and session/source seams"
+    },
+    {
+      "reference": "#83",
+      "revision": "3f4927b3cdcca1e8655337b30b93894741bfca9c",
+      "owner": "separate unmerged authoritative date path; no edits"
+    }
+  ],
+  "protected": [
+    {
+      "path": "programs",
+      "tree": "af29da17a4aec7b9e6d506f0880efa9fb7c26a84"
+    },
+    {
+      "path": "knowledge",
+      "tree": "3b67bc0be6e3ef285ad8b2dce8d73534e2b14499"
+    },
+    {
+      "path": "docs/rules",
+      "tree": "91f9d529603e679ff9875af00a3aa992a2c98dd4"
+    }
+  ]
+}
