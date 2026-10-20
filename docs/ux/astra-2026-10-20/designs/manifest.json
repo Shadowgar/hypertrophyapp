@@ -1,0 +1,518 @@
+{
+  "status": "PROPOSED static designs, not application evidence",
+  "date": "2026-10-20",
+  "frames": [
+    {
+      "svg": "designs/direction-a/01-welcome-mobile.svg",
+      "png": "designs/direction-a/01-welcome-mobile.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "64347c0d9588afbc5a60eb0d25da8ae0c032e0e586088ba2b2bbe65821f341a2",
+      "png_sha256": "97f89d10a7f58ebd9e3c909582f32fb6bb9452cda29852e51f780d1f25144317"
+    },
+    {
+      "svg": "designs/direction-a/02-sign-in-mobile.svg",
+      "png": "designs/direction-a/02-sign-in-mobile.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "366cd0228e01895c1f0837143ea581276fc0d13f3005487808403022db502405",
+      "png_sha256": "02891867679e6d20e5ffbc8d16072c34fea918a3532d7b1af60efb977cafa4cd"
+    },
+    {
+      "svg": "designs/direction-a/03-program-path-mobile.svg",
+      "png": "designs/direction-a/03-program-path-mobile.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "843803dbd64a9d3ecc9fac8de3a29864d6ee947843db6ea035f24f6ff5012db0",
+      "png_sha256": "4efac005d15916bef5a22a0bbd61a553666c674e5da41ad06be73c1eaf33d657"
+    },
+    {
+      "svg": "designs/direction-a/04-setup-mobile.svg",
+      "png": "designs/direction-a/04-setup-mobile.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "669da14f5e60263051806d7a1be3dd83adb313a8176693a7455ad59f4fedd604",
+      "png_sha256": "45d4426428d603aa79e0b14372c0b85acac503ef385a94fcb0a0bd660b0dfcf1"
+    },
+    {
+      "svg": "designs/direction-a/05-home-mobile.svg",
+      "png": "designs/direction-a/05-home-mobile.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "e446b47ea451198fe682d012c316f2d740c56534476e2ba72df7e31891b127d4",
+      "png_sha256": "9684c44685116d3d3c5b95175a93748909a2def2e198faaf8203bf82f667c0c5"
+    },
+    {
+      "svg": "designs/direction-a/06-week-review-mobile.svg",
+      "png": "designs/direction-a/06-week-review-mobile.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "80a98d9f10b5bec3f91290d5529bd58483887de658d3e48df5af9523c1e66f92",
+      "png_sha256": "03a5f7444d4db8c659e2a5227412f5590a64c21ed43ea867ac162702589a934a"
+    },
+    {
+      "svg": "designs/direction-a/07-customized-consent-mobile.svg",
+      "png": "designs/direction-a/07-customized-consent-mobile.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "b56532560269b050dc5793a0e5d6c839270a863c023c640e361143b2a3e9407f",
+      "png_sha256": "bd561c0606cf775aecb8756d213142767ee6e9d6058481657a4952d9216046ff"
+    },
+    {
+      "svg": "designs/direction-a/08-first-load-mobile.svg",
+      "png": "designs/direction-a/08-first-load-mobile.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "0bb1b52506290340b87dcfd460a4ec71f7264244462f4316c45f321b73bf7901",
+      "png_sha256": "0e4b502483b859e30a6a38fa364da1bfa062f552943c1d8f7738160b438ad904"
+    },
+    {
+      "svg": "designs/direction-a/09-source-warmup-mobile.svg",
+      "png": "designs/direction-a/09-source-warmup-mobile.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "6e91b927770a0a7b37254f5c3cf09965cc4a56ed44dc3a48875c8ba18a6f7bc5",
+      "png_sha256": "f11dd3bead07613798a30d029a34f6d2d84d78a2ed74ec65bfc1ab6fbf1da759"
+    },
+    {
+      "svg": "designs/direction-a/10-working-before-mobile.svg",
+      "png": "designs/direction-a/10-working-before-mobile.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "da68c423ee5aeb887fa6bc9b877f655d6a6603f6d99309f6ed09d1eae87d1b23",
+      "png_sha256": "0aa1a78fce8df9ed549dc6206d40c42e5cbed314d5474eef42402f05c4f6a8f4"
+    },
+    {
+      "svg": "designs/direction-a/11-working-after-mobile.svg",
+      "png": "designs/direction-a/11-working-after-mobile.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "5b5ccc8bb91de6250129af94a699382c7da0a52ba02304709b5a3b51bf3cf724",
+      "png_sha256": "7cd94c54c4e70ccd47e2ef4781ef10ddebb73761327345c2d35f34ae7fcdcee5"
+    },
+    {
+      "svg": "designs/direction-a/12-rest-mobile.svg",
+      "png": "designs/direction-a/12-rest-mobile.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "d7e14fbac7df06dce807ddedab3e47fbb597593a13e0e5a616e16772dd44e990",
+      "png_sha256": "9cf12664d39986db917dd759cfe2be3c4ff99d6be06d5bfc77f3a08521521d17"
+    },
+    {
+      "svg": "designs/direction-a/13-correction-mobile.svg",
+      "png": "designs/direction-a/13-correction-mobile.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "1d554af1c913cad43a51466d35e67f9fc83ed97fa0057073d04fb999ca6bf678",
+      "png_sha256": "54d85ed117fb9521b1f786d4c2d7402cf59f74616d96e5b639534a5c748d81d6"
+    },
+    {
+      "svg": "designs/direction-a/14-unconfirmed-save-mobile.svg",
+      "png": "designs/direction-a/14-unconfirmed-save-mobile.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "8a45350de497574d705d7cd4866d5c6fabb07fbf371926f4cf1aa3d434fdb9fe",
+      "png_sha256": "f9ef2acbb280e86f58d6615ba7885d1b21383ac637cae1af0e4df1eff96f00a2"
+    },
+    {
+      "svg": "designs/direction-a/15-complete-history-mobile.svg",
+      "png": "designs/direction-a/15-complete-history-mobile.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "d86801c31de18d5a146d4e883f233d97aafd598549df3eaa75e13821dcda096b",
+      "png_sha256": "8629f0e5cc5130634dd15f9f9f3334a019eba00fc76488c715ebda6b1b6365b4"
+    },
+    {
+      "svg": "designs/direction-a/16-check-in-mobile.svg",
+      "png": "designs/direction-a/16-check-in-mobile.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "aa08ea4114d831e1abae5c4b8d7f5b88de02aff5c826ef7cd2f5789a0fb025f5",
+      "png_sha256": "bdc9a4aa8280517dd41c7ff40d0dbd9e672ffb6eeb129ca759de2c4791eede2f"
+    },
+    {
+      "svg": "designs/direction-a/17-settings-mobile.svg",
+      "png": "designs/direction-a/17-settings-mobile.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "b541b00d52c1cf1df0da44850c3bb84e994b6106eb7566b24858aa8dea54f5e6",
+      "png_sha256": "ac6f1352ed2130d7232574e5cb82cea4dddd851ec7ebf4a59f64879116a7f329"
+    },
+    {
+      "svg": "designs/direction-a/18-library-mobile.svg",
+      "png": "designs/direction-a/18-library-mobile.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "eb392d3a1fb9540f2d085366aaf7df2deca827fb561a3172b2a230664fe61a4f",
+      "png_sha256": "6ec2b9f7ea3a5a6d041352cee7a30ae065ab9897242045d425161db1b5718ae6"
+    },
+    {
+      "svg": "designs/direction-a/19-known-1rm-entry-mobile.svg",
+      "png": "designs/direction-a/19-known-1rm-entry-mobile.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "81d2cb5dc38c95dfdb0762cf540fb8c07a0c3b93333f30d8ee7445ad58c52221",
+      "png_sha256": "a69b08ff6bee308126b52b63ce7da7e9c15d97f7cad4597e0b8f6fbc330511f4"
+    },
+    {
+      "svg": "designs/direction-a/20-recent-set-entry-mobile.svg",
+      "png": "designs/direction-a/20-recent-set-entry-mobile.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "46f8fc12f6a7688abf42786e6b7d0c04c7610bce693b1c0c487ec1951472b870",
+      "png_sha256": "23d3405c43a2c9e9f875e52d40f2af552824df602206b0eb3ffe5105b14166da"
+    },
+    {
+      "svg": "designs/direction-a/21-manual-calibration-mobile.svg",
+      "png": "designs/direction-a/21-manual-calibration-mobile.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "417f3849cb14f748f77458deda0f96a367baaae515e34f80bc346a3b2ee406eb",
+      "png_sha256": "0be78413f3430857b830d12e5f0ae966853aa70dd4e721869f63fdb681d5b91c"
+    },
+    {
+      "svg": "designs/direction-a/22-home-loading-mobile.svg",
+      "png": "designs/direction-a/22-home-loading-mobile.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "ec1e29072589177ab28b538fc32e40869c19982709e110aad98526e63782e8c3",
+      "png_sha256": "359e6348c034a3237902f0cbbc74cfca516f784faf8824d1438d891c78dd9226"
+    },
+    {
+      "svg": "designs/direction-a/23-home-rest-mobile.svg",
+      "png": "designs/direction-a/23-home-rest-mobile.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "a5da5cae9293cf59cc455c29a5c803e8c64987202274d3f691b8f162fff2a2c1",
+      "png_sha256": "06a78568f4b0e9e1e9f9d5777e9b59b92073909ddb884c09e0d73befae22dd95"
+    },
+    {
+      "svg": "designs/direction-a/24-home-error-mobile.svg",
+      "png": "designs/direction-a/24-home-error-mobile.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "43c541a4f576d510e756342d0cb5b426b34a9053433cbe2d01e087c9b91de510",
+      "png_sha256": "070740eb9946d0d8a3edefb2baad2a7ad0c9129ef11c7408b310edfc439b32aa"
+    },
+    {
+      "svg": "designs/direction-a/desktop-01-start-program.svg",
+      "png": "designs/direction-a/desktop-01-start-program.png",
+      "width": 1440,
+      "height": 900,
+      "svg_sha256": "33138bac43e280ef6e1c98de8a40dc202f3f1d4c8e3128724ec4aa1d5e42ae77",
+      "png_sha256": "7a11ad2a4751ac3e0d693576d5f1ca953c953059e2e717ff1a15b8eb101edf66"
+    },
+    {
+      "svg": "designs/direction-a/desktop-02-home.svg",
+      "png": "designs/direction-a/desktop-02-home.png",
+      "width": 1440,
+      "height": 900,
+      "svg_sha256": "d6370606c2e993f1d582ad01f3cc1ad4ae9acc21dbed0198575d3c4378749bc1",
+      "png_sha256": "71b985837d09b51ce2dc5eddb699916378bb301bc9ed72052a57801e94ff207f"
+    },
+    {
+      "svg": "designs/direction-a/desktop-03-week.svg",
+      "png": "designs/direction-a/desktop-03-week.png",
+      "width": 1440,
+      "height": 900,
+      "svg_sha256": "e28e258d907b5ea21833ae9494328c07ab4f9386f07157ba511ebc44582d32c1",
+      "png_sha256": "53f3b864bb1638c0c208454b29b339bcedea5e852cb72eaaeec2626c31c6c765"
+    },
+    {
+      "svg": "designs/direction-a/desktop-04-execution.svg",
+      "png": "designs/direction-a/desktop-04-execution.png",
+      "width": 1440,
+      "height": 900,
+      "svg_sha256": "96204bd8fc43f88f05ef0f789ad3f82bb77ad5924e94e38ec7cfb9acfa018ff1",
+      "png_sha256": "22bda73984b9ce7cd11b41ddb21587c9bd8dbfe1f20b6f54a4c165f74c4c1270"
+    },
+    {
+      "svg": "designs/direction-a/desktop-05-history-review.svg",
+      "png": "designs/direction-a/desktop-05-history-review.png",
+      "width": 1440,
+      "height": 900,
+      "svg_sha256": "467fa116e758470b4481d02dece2d218fa93ba46953de5ce92c7f92732d5709c",
+      "png_sha256": "242d71b840cc6c50b4bc6dedd5a887c4aa4769515a8dd5e5a260cffc1e164f84"
+    },
+    {
+      "svg": "designs/direction-a/desktop-06-settings-library.svg",
+      "png": "designs/direction-a/desktop-06-settings-library.png",
+      "width": 1440,
+      "height": 900,
+      "svg_sha256": "891ff6811a18fccefc49fbf65a8dbd12d69b98dd3aa92ae3dff8dbbc5b9e2da2",
+      "png_sha256": "780795532e43c398a36c266ffc7aaccc8f27e620974dc7d09277ce830d399b86"
+    },
+    {
+      "svg": "designs/direction-a/desktop-07-execution-before.svg",
+      "png": "designs/direction-a/desktop-07-execution-before.png",
+      "width": 1440,
+      "height": 900,
+      "svg_sha256": "a2ced00ba569ca467d96c2bdf8769b95459fd078b434ad56f9e95ee2ee9d4358",
+      "png_sha256": "1a6e8dd8d002a7fc2d3d7fe63a3ee53c8cf81f05fdefbfde6d38f67dd17d634b"
+    },
+    {
+      "svg": "designs/direction-a/desktop-08-execution-after.svg",
+      "png": "designs/direction-a/desktop-08-execution-after.png",
+      "width": 1440,
+      "height": 900,
+      "svg_sha256": "5d8c176ad62dea8810dec4dd80e30a2e93f2f062b8e7ac643882b54b033cb10f",
+      "png_sha256": "c56bd9db4aecd48923e5c23154e6fbd229adad588c15b1998dca9eb98289a7d9"
+    },
+    {
+      "svg": "designs/direction-b/d01-home-workspace.svg",
+      "png": "designs/direction-b/d01-home-workspace.png",
+      "width": 1440,
+      "height": 900,
+      "svg_sha256": "29a590a8b4ffd5e14117240355e7c9ca7621260e36c6e97a946e9b5d90aefb1f",
+      "png_sha256": "5c2e99a94be9fae8d0b823665cedf490c5ee1afaf54182e3fca0e4d4961d3629"
+    },
+    {
+      "svg": "designs/direction-b/d02-week-workspace.svg",
+      "png": "designs/direction-b/d02-week-workspace.png",
+      "width": 1440,
+      "height": 900,
+      "svg_sha256": "f1c7aaac3d31cd228ee5e579d389732e42acf220402d84c7736cb491d962fbc6",
+      "png_sha256": "80d562e835dc85a4fb8fa8416ad19449eda2af47788155fb30658ef7454c753c"
+    },
+    {
+      "svg": "designs/direction-b/d03-workout-before-save.svg",
+      "png": "designs/direction-b/d03-workout-before-save.png",
+      "width": 1440,
+      "height": 900,
+      "svg_sha256": "3be4f6b42cec4fa40c1eeb50246faee027b59cec0c8b34573bcc13274746316d",
+      "png_sha256": "fd058fe85d818091d17082fc4610ec0c98e62ab900324a3211d27380d6b0fcf6"
+    },
+    {
+      "svg": "designs/direction-b/d04-workout-after-ack.svg",
+      "png": "designs/direction-b/d04-workout-after-ack.png",
+      "width": 1440,
+      "height": 900,
+      "svg_sha256": "cdc542e5379fb89223e17d112b7dc14da5a4626c9ac83eae3ecd182a322aeb30",
+      "png_sha256": "3c81948f65c1b5b1c70f807445c1c36dc6a7dcd69f62996a98b2e2fe72ae87f2"
+    },
+    {
+      "svg": "designs/direction-b/d05-customized-workspace.svg",
+      "png": "designs/direction-b/d05-customized-workspace.png",
+      "width": 1440,
+      "height": 900,
+      "svg_sha256": "ee74aab5ef3942f7b6867d66db68b402b2d2f581dfa3eeff0e04543dd1ea7631",
+      "png_sha256": "4ab5c819095b07373a3cd2d66cf6f67a7e75c135d2a49ae5b937b3bcd3483edd"
+    },
+    {
+      "svg": "designs/direction-b/d06-history-workspace.svg",
+      "png": "designs/direction-b/d06-history-workspace.png",
+      "width": 1440,
+      "height": 900,
+      "svg_sha256": "1432596511bb77edbff8090a38b6ceb323f5f9fc70d49042223ea2813cab0468",
+      "png_sha256": "6637772b41ee122692e1f65a5d3cda762f7499719f059f7eda7152d7123af919"
+    },
+    {
+      "svg": "designs/direction-b/m01-welcome-sign-in.svg",
+      "png": "designs/direction-b/m01-welcome-sign-in.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "c6ebc7c319fc87abaf9fc3d5b7d6e7b382e27d553433e176a385924a5d9353d4",
+      "png_sha256": "30ee2fc4156808702417eb7c1e86e322043f35c186843f7ff9f50b54e4dde470"
+    },
+    {
+      "svg": "designs/direction-b/m02-program-authority.svg",
+      "png": "designs/direction-b/m02-program-authority.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "45b2829f9874cec92a75b63e74ba8eaf6350024256ce6e6d2dc613b03ba48592",
+      "png_sha256": "c41648dce2e01dc1a0bbf9175c5741856ef259e13beb327d25a2e3691bddf1ba"
+    },
+    {
+      "svg": "designs/direction-b/m03-equipment-units.svg",
+      "png": "designs/direction-b/m03-equipment-units.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "64f896e2b2c8314df2426cff3642299d89d55cf687a99396b164033a959d722f",
+      "png_sha256": "75b99d0667c9a5bcc1a3b9237b292a0eb26707a1ca80a4788c5f39cc122a9ca5"
+    },
+    {
+      "svg": "designs/direction-b/m04-home.svg",
+      "png": "designs/direction-b/m04-home.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "3055209d36ee9727dc01031b696e2ebbbffbbc7064ae24e181861aa4e2e39a76",
+      "png_sha256": "cd18cf145becaab1d36bc1379db4a3ff1391f03748982986f4d8d2ea10bc9162"
+    },
+    {
+      "svg": "designs/direction-b/m05-week-compression.svg",
+      "png": "designs/direction-b/m05-week-compression.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "f47bca17c818e2aa6309755cbb11fc8a7d5dca2924b6583d07f60f59a62824c7",
+      "png_sha256": "e78dc9c81a5b62eb028a41da0fd1881548294b15f0bb1731578f83a0d200bed8"
+    },
+    {
+      "svg": "designs/direction-b/m06-customized-consent.svg",
+      "png": "designs/direction-b/m06-customized-consent.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "5489c52ed2f949ec9905ecc0c897617208175ac0a2a7766e690ffc56ffda4b85",
+      "png_sha256": "485023a41e6842837704f9c5613e7ef54caee744e5743606207a9421d28f3184"
+    },
+    {
+      "svg": "designs/direction-b/m07-active-dates-replacement.svg",
+      "png": "designs/direction-b/m07-active-dates-replacement.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "299b3f3d17df55b2c3228548e0aba9a79299a1d308b4f2a26c6087a7b8348a94",
+      "png_sha256": "d61d38e9c6f04c2d1962341d106b0281ad7d1c052a7095956d545e7550868484"
+    },
+    {
+      "svg": "designs/direction-b/m08-first-load-proposed.svg",
+      "png": "designs/direction-b/m08-first-load-proposed.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "60e2e4659e0e39145f0f28911dabc0b3e0f0d3a3eef98f568c44ca8fd14a1140",
+      "png_sha256": "b69a7bce878840454ae69ed9cfe9100116132f11c8b9fad6b641e782c5ef6f93"
+    },
+    {
+      "svg": "designs/direction-b/m09-warmup.svg",
+      "png": "designs/direction-b/m09-warmup.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "9c99b842aacd859f60714c86c9062c5edf9417ef9282a9e892bd1f7ad930ff4f",
+      "png_sha256": "ab6e826860f73be39efa5126b5e326c735593da7537ba3142faa8efedd664a2c"
+    },
+    {
+      "svg": "designs/direction-b/m10-set-before-save.svg",
+      "png": "designs/direction-b/m10-set-before-save.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "0d64a7ae0d07dea10008a49f34e0dddfe2a18a136d4a9442859fb98c5dabf48c",
+      "png_sha256": "409eb26a03dcb69af76bf369f14c7650b219da6da4279cfb9f9653b1214ddfab"
+    },
+    {
+      "svg": "designs/direction-b/m11-set-after-ack-rest.svg",
+      "png": "designs/direction-b/m11-set-after-ack-rest.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "bfd268bb02f08f82dc60283770e7262f5fd04322f1750ec00b3e84176fadd937",
+      "png_sha256": "ed8f035551cfd09c88d874c5ae3bf1b1f2f360377dd956398b95aa4b1b255935"
+    },
+    {
+      "svg": "designs/direction-b/m12-set-pending.svg",
+      "png": "designs/direction-b/m12-set-pending.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "7d12e73ed9cbab1b75359a692a7324ba4cd948984c6918625f0bb8c8dec1d282",
+      "png_sha256": "bb3b3619c4085c041954c37b7aa6ae085f21e5e0b01dfc553003f54c8b66c026"
+    },
+    {
+      "svg": "designs/direction-b/m13-set-error-retry.svg",
+      "png": "designs/direction-b/m13-set-error-retry.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "113f7a613c825d760b2186734f300ec63883a4b5352296fb89b1ae4479e742c5",
+      "png_sha256": "893e297d6c9fe491db76b8c4699983ea85e1a2d5911e29b66871e2a876770929"
+    },
+    {
+      "svg": "designs/direction-b/m14-correction-undo.svg",
+      "png": "designs/direction-b/m14-correction-undo.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "1ea3ec28361f9f6faeeb80a1b55e356da7ad6e0c81c835fd7abc866690b133b8",
+      "png_sha256": "68fd9576cc137f981ed21bd13673e82e01daff011bd631901b3b8bcd31815183"
+    },
+    {
+      "svg": "designs/direction-b/m15-completion-history-analytics.svg",
+      "png": "designs/direction-b/m15-completion-history-analytics.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "dbd08713222165bac02ca806c7aedfaa7b33d7b5a068b66812678161eb83643e",
+      "png_sha256": "b4eeaf59721d2f51e5a71786ef1319cdc829db5d9d3b2a905bfff342efdd935a"
+    },
+    {
+      "svg": "designs/direction-b/m16-checkin.svg",
+      "png": "designs/direction-b/m16-checkin.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "ccc321776f18810488f6e09f0e242f748388d0de366c5010d251584eee6d48c6",
+      "png_sha256": "f419d0f944ea9e9e0bc16a6fd281589f55054def4373a0b0a9e6a12b4cd01a9e"
+    },
+    {
+      "svg": "designs/direction-b/m17-settings.svg",
+      "png": "designs/direction-b/m17-settings.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "c08edbc69303bac17ccda5300688c7110a862bda31a4378f7cb91e73b465591f",
+      "png_sha256": "8e588c697f0dc4f23e78871eebc3e5956435d189dbd959c4694ce1907b63585f"
+    },
+    {
+      "svg": "designs/direction-b/m18-guides.svg",
+      "png": "designs/direction-b/m18-guides.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "b32a509f8977220075ab8277e4b7a40f76598d367198ad153b78ad29ea2a3d4c",
+      "png_sha256": "13ff1167d65eb48cdf09cc3d11491f3a1a2084d2979c70498cbb967d619d2908"
+    },
+    {
+      "svg": "designs/direction-b/m19-known-1rm-form-proposed.svg",
+      "png": "designs/direction-b/m19-known-1rm-form-proposed.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "eecbd12beb20ab0dd31302a759c418a6209dea3db7f0136a1ff57cb7222b59bd",
+      "png_sha256": "bcebd619fbae1b9c08edd24667619d4af8c1df643982ebe9b141e18aaf710b85"
+    },
+    {
+      "svg": "designs/direction-b/m20-recent-set-form-proposed.svg",
+      "png": "designs/direction-b/m20-recent-set-form-proposed.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "f4f523cc558356c2de0c68c69407599e8617db93fb3648cf98b52d0800180d9d",
+      "png_sha256": "851b9416e38b9140436e9011a66233daba4d43e1acddfa4a7655f2b708732172"
+    },
+    {
+      "svg": "designs/direction-b/m21-manual-starting-load.svg",
+      "png": "designs/direction-b/m21-manual-starting-load.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "b56220b7a0607815bac713c57f6045c2cc78f81cb939a114e8a05ec9e27eb8fd",
+      "png_sha256": "3a44ef6927f58478576ad5645c0113d793a01495783e0187a0d32fec919b82ed"
+    },
+    {
+      "svg": "designs/direction-b/m22-session-loading.svg",
+      "png": "designs/direction-b/m22-session-loading.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "3191d5a86a4beae2d194c8dbaf0f1722c9ef3e9279303fe3fabe7a57e9845286",
+      "png_sha256": "96980e49ff459096d19c4ebc4243248f6c66567e9e3eca1a08c5f3f7b45d3eff"
+    },
+    {
+      "svg": "designs/direction-b/m23-planned-rest-day.svg",
+      "png": "designs/direction-b/m23-planned-rest-day.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "5d4c4450a863731c8c1e9c33a10f3215f6ac535d94ae2bf8c5eb83c61ea3d28f",
+      "png_sha256": "e43d09c6868f73c5e9aec4ea3aaab6318e07e7fe4bde9d4331c4bfc6ba09ef1d"
+    },
+    {
+      "svg": "designs/direction-b/m24-session-unavailable.svg",
+      "png": "designs/direction-b/m24-session-unavailable.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "acf88f8e1c7af3b32999c0eab87c8e426d2c2aa67f9fa91d25b66622195a01e1",
+      "png_sha256": "7b2fb609e9d9dc4516fff07e57c745194e84b95640c4103666b1747f798cb592"
+    },
+    {
+      "svg": "designs/direction-b/m25-account-recovery.svg",
+      "png": "designs/direction-b/m25-account-recovery.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "131ed7f3f57f954d3816fea7af43bafe53d6856ae9a2a8cfd00e522618e812da",
+      "png_sha256": "1d959f651f449c6b3e1f25480897779cf9e2eb55ac925b325706e6968437aa13"
+    },
+    {
+      "svg": "designs/direction-b/m26-authored-pair-variant.svg",
+      "png": "designs/direction-b/m26-authored-pair-variant.png",
+      "width": 390,
+      "height": 844,
+      "svg_sha256": "c437d91bf4665a494e748993ca6a6b1ef890e0b881fa3bcad780473ab26e9856",
+      "png_sha256": "b7968136b2b467ad1c80f0c04e018c5dcbbac4dd732306425cf540efd8ca08a9"
+    }
+  ]
+}

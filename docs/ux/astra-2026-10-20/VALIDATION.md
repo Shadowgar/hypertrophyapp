@@ -1,0 +1,16 @@
+# Review artifact validation
+
+**Scope: documentation and static design assets.** This is not qualification of a redesign implementation or production backend.
+
+- Source audit baseline: `fc3bd0c7b93c9d3232e6aec758e16efcca6ac583`. Deployed footer: `d60d9ed413329f575947568c05888546f8d3e6d5`; the `apps/web` trees were compared and matched. Backend deployment was not independently verified.
+- Inventory: **64 native SVG + 64 PNG** design frames: 50 mobile at 390×844 and 14 desktop at 1440×900. Each SVG parses, has title/description metadata, and has a matching current PNG with the declared dimensions. No SVG scripting or event handlers. [Checksums and dimensions](designs/manifest.json).
+- Rendering: Chromium rendered all 64 assets; text bounding boxes stayed within each root viewport. Revised files were rerendered and checked again. This detects viewport escape, not every possible overlap or accessibility problem. Parent and an independent Astra agent inspected representative final images, including logging, consent, load intake, recovery and failure states.
+- Before/after controls: the mobile field/action rectangle attributes are identical in each direction's paired before/after SVGs. Desktop pairs retain their composer/field positions. These are drawing measurements, not an implemented scroll/focus guarantee.
+- Accessibility of the review package: GitHub Markdown galleries contain alt text, frame descriptions and expandable visible-text transcripts. SVG source contains native text/title/description. Product keyboard, focus, large-text, safe-area and announcement obligations are described in the direction specifications; no WCAG conformance is claimed from images.
+- Figma: eight additional editable comparison frames; **392 native text nodes, zero image fills**. Mobile comparison and representative desktop composition were screenshot-inspected after copy corrections. Figma fonts differ slightly from browser fallback fonts. The full record remains the GitHub galleries.
+- Browser evidence: **35 captures**, separately indexed as 4 LIVE guest and 31 SYNTHETIC frontend. [Manifest](evidence/manifest.json) and [methods/limits](EVIDENCE.md). No real authenticated persistence, latency, screen reader or physical-device result is implied.
+- Publication scope: only `docs/ux/astra-2026-10-20/**`. Text documents, SVG/PNG assets, JSON manifests and static HTML galleries. Asset-generation scripts were kept outside the branch. No application, migration, deployment, dependency or workflow changes.
+
+The repository's offline documentation checker passed: 325 Markdown files checked, **zero new active link failures**; 28 pre-existing active-link failures were retained as baseline exceptions. Those exceptions are not claimed fixed. A separate local check verified 148 unique revision-pinned source links across 31 files, including line bounds. Git whitespace and publication-scope checks passed. Application/API tests, builds, services, migrations and database commands are unnecessary for these artifacts and were not run. No live account data, private logs, credentials or source-licensed guide content are included.
+
+This package requires owner review. Design selection and implementation remain unapproved.

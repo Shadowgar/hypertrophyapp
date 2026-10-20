@@ -1,0 +1,217 @@
+{
+  "source_revision": "fc3bd0c7b93c9d3232e6aec758e16efcca6ac583",
+  "deployed_web_footer": "d60d9ed413329f575947568c05888546f8d3e6d5",
+  "web_diff_between_revisions": "empty",
+  "assets": [
+    {
+      "file": "astra-fixture-checkin-desktop.png",
+      "width": 1440,
+      "height": 1077,
+      "evidence_class": "SYNTHETIC frontend"
+    },
+    {
+      "file": "astra-fixture-checkin-mobile.png",
+      "width": 390,
+      "height": 1077,
+      "evidence_class": "SYNTHETIC frontend"
+    },
+    {
+      "file": "astra-fixture-correction-reload-mobile.png",
+      "width": 390,
+      "height": 844,
+      "evidence_class": "SYNTHETIC frontend"
+    },
+    {
+      "file": "astra-fixture-customize-desktop.png",
+      "width": 1440,
+      "height": 1740,
+      "evidence_class": "SYNTHETIC frontend"
+    },
+    {
+      "file": "astra-fixture-customize-mobile.png",
+      "width": 390,
+      "height": 2040,
+      "evidence_class": "SYNTHETIC frontend"
+    },
+    {
+      "file": "astra-fixture-customized-consent-mobile.png",
+      "width": 390,
+      "height": 3959,
+      "evidence_class": "SYNTHETIC frontend"
+    },
+    {
+      "file": "astra-fixture-customized-exercise-mobile.png",
+      "width": 390,
+      "height": 860,
+      "evidence_class": "SYNTHETIC frontend"
+    },
+    {
+      "file": "astra-fixture-exercise-desktop.png",
+      "width": 1440,
+      "height": 900,
+      "evidence_class": "SYNTHETIC frontend"
+    },
+    {
+      "file": "astra-fixture-exercise-top-mobile.png",
+      "width": 390,
+      "height": 860,
+      "evidence_class": "SYNTHETIC frontend"
+    },
+    {
+      "file": "astra-fixture-guide-1-mobile.png",
+      "width": 390,
+      "height": 844,
+      "evidence_class": "SYNTHETIC frontend"
+    },
+    {
+      "file": "astra-fixture-guide-2-mobile.png",
+      "width": 390,
+      "height": 844,
+      "evidence_class": "SYNTHETIC frontend"
+    },
+    {
+      "file": "astra-fixture-guide-3-mobile.png",
+      "width": 390,
+      "height": 844,
+      "evidence_class": "SYNTHETIC frontend"
+    },
+    {
+      "file": "astra-fixture-guide-4-mobile.png",
+      "width": 390,
+      "height": 844,
+      "evidence_class": "SYNTHETIC frontend"
+    },
+    {
+      "file": "astra-fixture-guide-5-mobile.png",
+      "width": 390,
+      "height": 844,
+      "evidence_class": "SYNTHETIC frontend"
+    },
+    {
+      "file": "astra-fixture-guide-6-mobile.png",
+      "width": 390,
+      "height": 844,
+      "evidence_class": "SYNTHETIC frontend"
+    },
+    {
+      "file": "astra-fixture-guide-7-mobile.png",
+      "width": 390,
+      "height": 844,
+      "evidence_class": "SYNTHETIC frontend"
+    },
+    {
+      "file": "astra-fixture-history-desktop.png",
+      "width": 1440,
+      "height": 1341,
+      "evidence_class": "SYNTHETIC frontend"
+    },
+    {
+      "file": "astra-fixture-history-mobile.png",
+      "width": 390,
+      "height": 1865,
+      "evidence_class": "SYNTHETIC frontend"
+    },
+    {
+      "file": "astra-fixture-home-desktop.png",
+      "width": 1440,
+      "height": 1683,
+      "evidence_class": "SYNTHETIC frontend"
+    },
+    {
+      "file": "astra-fixture-home-mobile.png",
+      "width": 390,
+      "height": 1881,
+      "evidence_class": "SYNTHETIC frontend"
+    },
+    {
+      "file": "astra-fixture-onboarding-mobile.png",
+      "width": 390,
+      "height": 966,
+      "evidence_class": "SYNTHETIC frontend"
+    },
+    {
+      "file": "astra-fixture-set-after-mobile.png",
+      "width": 390,
+      "height": 844,
+      "evidence_class": "SYNTHETIC frontend"
+    },
+    {
+      "file": "astra-fixture-set-before-mobile.png",
+      "width": 390,
+      "height": 844,
+      "evidence_class": "SYNTHETIC frontend"
+    },
+    {
+      "file": "astra-fixture-set-error-mobile.png",
+      "width": 390,
+      "height": 844,
+      "evidence_class": "SYNTHETIC frontend"
+    },
+    {
+      "file": "astra-fixture-settings-desktop.png",
+      "width": 1440,
+      "height": 1156,
+      "evidence_class": "SYNTHETIC frontend"
+    },
+    {
+      "file": "astra-fixture-settings-mobile.png",
+      "width": 390,
+      "height": 1220,
+      "evidence_class": "SYNTHETIC frontend"
+    },
+    {
+      "file": "astra-fixture-settings-save-error-mobile.png",
+      "width": 390,
+      "height": 1220,
+      "evidence_class": "SYNTHETIC frontend"
+    },
+    {
+      "file": "astra-fixture-three-sets-mobile.png",
+      "width": 390,
+      "height": 844,
+      "evidence_class": "SYNTHETIC frontend"
+    },
+    {
+      "file": "astra-fixture-today-loading-mobile.png",
+      "width": 390,
+      "height": 844,
+      "evidence_class": "SYNTHETIC frontend"
+    },
+    {
+      "file": "astra-fixture-week-desktop.png",
+      "width": 1440,
+      "height": 1289,
+      "evidence_class": "SYNTHETIC frontend"
+    },
+    {
+      "file": "astra-fixture-week-mobile.png",
+      "width": 390,
+      "height": 1553,
+      "evidence_class": "SYNTHETIC frontend"
+    },
+    {
+      "file": "astra-live-home-mobile.png",
+      "width": 390,
+      "height": 1861,
+      "evidence_class": "LIVE guest"
+    },
+    {
+      "file": "astra-live-login-mobile.png",
+      "width": 390,
+      "height": 844,
+      "evidence_class": "LIVE guest"
+    },
+    {
+      "file": "astra-live-onboarding-mobile.png",
+      "width": 390,
+      "height": 893,
+      "evidence_class": "LIVE guest"
+    },
+    {
+      "file": "astra-live-reset-password-mobile.png",
+      "width": 390,
+      "height": 844,
+      "evidence_class": "LIVE guest"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844" role="img" aria-labelledby="title desc"><title id="title">Enter your starting load</title><desc id="desc">Enter your starting load. Training Atlas conceptual mockup. Synthetic data. Not implemented.</desc><rect width="390" height="844" fill="#F1F4EF"/>
+<rect x="0" y="0" width="390" height="24" rx="0" fill="#15382E"/>
+<text x="195" y="16" fill="#FFFFFF" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="10" font-weight="600" text-anchor="middle">DIRECTION B  ·  SYNTHETIC DESIGN SAMPLE</text>
+<text x="20" y="58" fill="#15382E" font-family="Libre Baskerville,Georgia,serif" font-size="28" font-weight="600" text-anchor="start">atlas</text>
+<text x="114" y="57" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="10" font-weight="600" text-anchor="start">TRAINING</text>
+<circle cx="350" cy="47" r="17" fill="#DDEBDD"/>
+<text x="350" y="52" fill="#15382E" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="13" font-weight="600" text-anchor="middle">A</text>
+<text x="20" y="91" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="600" text-anchor="start">FIRST LOAD · MANUAL</text>
+<text x="20" y="125" fill="#15382E" font-family="Libre Baskerville,Georgia,serif" font-size="28" font-weight="400" text-anchor="start">Enter your starting load</text>
+<rect x="0" y="776" width="390" height="68" rx="0" fill="#FFFFFF"/>
+<path d="M0 776 L390 776" stroke="#D6DFD5" stroke-width="1" fill="none"/>
+<text x="39" y="803" fill="#15382E" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="20" font-weight="500" text-anchor="middle">⌂</text>
+<text x="39" y="823" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="10" font-weight="600" text-anchor="middle">Home</text>
+<rect x="86" y="784" width="62" height="48" rx="12" fill="#DDEBDD"/>
+<text x="117" y="803" fill="#15382E" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="20" font-weight="500" text-anchor="middle">○</text>
+<text x="117" y="823" fill="#15382E" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="10" font-weight="600" text-anchor="middle">Train</text>
+<text x="195" y="803" fill="#15382E" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="20" font-weight="500" text-anchor="middle">▦</text>
+<text x="195" y="823" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="10" font-weight="600" text-anchor="middle">Week</text>
+<text x="273" y="803" fill="#15382E" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="20" font-weight="500" text-anchor="middle">↗</text>
+<text x="273" y="823" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="10" font-weight="600" text-anchor="middle">History</text>
+<text x="351" y="803" fill="#15382E" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="20" font-weight="500" text-anchor="middle">•••</text>
+<text x="351" y="823" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="10" font-weight="600" text-anchor="middle">More</text>
+<rect x="20" y="148" width="82.0" height="25" rx="12" fill="#DDEBDD"/>
+<text x="30" y="165" fill="#15382E" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="600" text-anchor="start">Your entry</text>
+<rect x="20" y="194" width="350" height="110" rx="16" fill="#FFFFFF" stroke="#D6DFD5"/>
+<text x="36" y="222" fill="#15382E" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="16" font-weight="600" text-anchor="start">No suggested load available</text>
+<text x="36" y="244" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="13" font-weight="400" text-anchor="start">Choose the working load you intend to use. You</text>
+<text x="36" y="264" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="13" font-weight="400" text-anchor="start">can change it before recording a set.</text>
+<rect x="20" y="327" width="350" height="89" rx="16" fill="#FFFFFF" stroke="#D6DFD5"/>
+<text x="36" y="355" fill="#15382E" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="16" font-weight="600" text-anchor="start">Dumbbell bench press</text>
+<text x="36" y="377" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="13" font-weight="400" text-anchor="start">Load means one dumbbell, for one hand.</text>
+<text x="20" y="461" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="12" font-weight="600" text-anchor="start">Your chosen working load</text>
+<rect x="20" y="469" width="350" height="52" rx="10" fill="#FFFFFF" stroke="#D6DFD5"/>
+<text x="34" y="503" fill="#15382E" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="22" font-weight="600" text-anchor="start">30</text>
+<text x="358" y="503" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="12" font-weight="400" text-anchor="end">lb</text>
+<text x="20" y="568" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="400" text-anchor="start">This is a manual entry, not a calculated</text>
+<text x="20" y="590" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="400" text-anchor="start">estimate or a confirmed performed set.</text>
+<rect x="20" y="668" width="350" height="48" rx="12" fill="#15382E"/>
+<text x="195.0" y="697.0" fill="#FFFFFF" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="600" text-anchor="middle">Use 30 lb for the next draft</text>
+<text x="195" y="744" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="400" text-anchor="middle">A set is recorded only after you save actual work.</text>
+</svg>
