@@ -126,3 +126,6 @@ records the subsequent owner-authorized PR #42 cutover.
 records the private-alert access gap, imported-advisory dispositions and isolated
 qualification for a separate unmerged dependency PR. No Caddy activation or
 complete security/secret-history coverage is claimed.
+
+- [2026-10-20 M4 active lifecycle](2026-10-20-m4-active-lifecycle.md): consent-bound rescheduling/replacement, actual application qualification and remaining release scope.
+- [2026-10-20 disposable migration/restore rehearsal](2026-10-20-m4-release-rehearsal.md): additive Alembic merge compatibility, exact restored table digests and real restored-account smoke checks.

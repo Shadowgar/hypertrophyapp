@@ -56,11 +56,20 @@ function formatSignedPercent(scale: number): string {
   return `${delta >= 0 ? "+" : ""}${delta}%`;
 }
 
+function formatExerciseLoad(exercise:GeneratedWeekExercise):string {
+  if(exercise.customized){
+    return typeof exercise.recommended_working_weight==='number'&&Number.isFinite(exercise.recommended_working_weight)
+      ? `${exercise.recommended_working_weight} kg`
+      : 'Exercise-specific calibration pending';
+  }
+  return isBodyweightAuthored(exercise)?'Bodyweight':`${kgToLbs(exercise.recommended_working_weight)} lbs`;
+}
+
 function formatLeadExercise(exercise: GeneratedWeekExercise | undefined): string {
   if (!exercise) {
     return "No exercises planned.";
   }
-  return `${exercise.name} · ${exercise.sets} sets · ${authoredRepLabel(exercise)} reps @ ${isBodyweightAuthored(exercise) ? "Bodyweight" : `${isBodyweightAuthored(exercise) ? "Bodyweight" : `${kgToLbs(exercise.recommended_working_weight)} lbs`}`}`;
+  return `${exercise.name} · ${exercise.sets} sets · ${authoredRepLabel(exercise)} reps @ ${formatExerciseLoad(exercise)}`;
 }
 
 function resolveExerciseMediaUrl(exercise: GeneratedWeekExercise): string | null {
@@ -94,7 +103,7 @@ function ExerciseExecutionDetails({ exercise }: Readonly<{ exercise: GeneratedWe
         <span key={label} className="mr-2 inline-block text-amber-300">{label}</span>
       ))}
       <p className="telemetry-meta">
-        {exercise.sets} sets · {authoredRepLabel(exercise)} reps · {isBodyweightAuthored(exercise) ? "Bodyweight" : `${kgToLbs(exercise.recommended_working_weight)} lbs`}
+        {exercise.sets} sets · {authoredRepLabel(exercise)} reps · {formatExerciseLoad(exercise)}
       </p>
       {hasPrescription ? (
         <p className="mt-1">
@@ -139,7 +148,9 @@ function stringListFromUnknown(value: unknown): string[] {
 }
 
 function WeekOverviewCards({ plan, selectedProgramId }: Readonly<{ plan: GeneratedWeekPlan; selectedProgramId: string | null }>) {
+  const customized=Boolean(plan.customized)||plan.program_template_id==='customized_full_body_v1';
   const muscleCoverage = plan.muscle_coverage ?? {};
+  const hasCoverage=typeof muscleCoverage.minimum_sets_per_muscle==='number'&&Array.isArray(muscleCoverage.covered_muscles)&&Array.isArray(muscleCoverage.under_target_muscles);
   const programName = typeof plan.program_template_id === "string" && plan.program_template_id.trim().length > 0
     ? getProgramDisplayName({ id: plan.program_template_id })
     : "Generated Week";
@@ -168,14 +179,14 @@ function WeekOverviewCards({ plan, selectedProgramId }: Readonly<{ plan: Generat
         <p className="telemetry-kicker">Week Overview</p>
         <p className="telemetry-value">{programName}</p>
         <p className="text-sm text-zinc-300">
-          Week {weekIndex} · {sessionCount} sessions · {splitLabel} split
+          {!customized&&<>Week {weekIndex} · </>}{sessionCount} sessions · {splitLabel} split
         </p>
         {authoredBlockLabel ? <p className="text-sm text-zinc-400">{authoredBlockLabel}</p> : null}
         {weakPointScheduled ? <p className="text-sm text-zinc-200">Arms & Weak Points emphasis is scheduled this week.</p> : null}
       </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <Disclosure title="Mesocycle Posture" badge={deloadActive ? "deload" : "standard"} defaultOpen={false}>
+        {!customized&&<Disclosure title="Mesocycle Posture" badge={deloadActive ? "deload" : "standard"} defaultOpen={false}>
           <div className="space-y-1 text-sm text-zinc-200">
             <p>Week {weekIndex}/{triggerWeeks}</p>
             <p>Deload reason: {deloadReason}</p>
@@ -183,9 +194,9 @@ function WeekOverviewCards({ plan, selectedProgramId }: Readonly<{ plan: Generat
               <p>Set reduction: {deloadSetPct}% · Load reduction: {deloadLoadPct}%</p>
             ) : null}
           </div>
-        </Disclosure>
+        </Disclosure>}
 
-        <Disclosure title="Coverage Radar" badge={`${visibleCoveredMuscles.length} covered · ${underTarget.length} gaps`} defaultOpen={false}>
+        {(!customized||hasCoverage)&&<Disclosure title="Coverage Radar" badge={`${visibleCoveredMuscles.length} covered · ${underTarget.length} gaps`} defaultOpen={false}>
           <div className="space-y-2 text-sm text-zinc-200">
             <p>Minimum {muscleCoverage.minimum_sets_per_muscle ?? 0} sets per muscle</p>
             {visibleCoveredMuscles.length !== coveredMuscles.length ? (
@@ -203,7 +214,7 @@ function WeekOverviewCards({ plan, selectedProgramId }: Readonly<{ plan: Generat
               ))}
             </div>
           </div>
-        </Disclosure>
+        </Disclosure>}
       </div>
     </div>
   );
@@ -469,7 +480,7 @@ export default function WeekPage() {
   const visiblePlan = preview?.plan ?? plan;
   const plannedSets = visiblePlan?.sessions.reduce((sum, session) => sum + session.exercises.reduce((total, exercise) => total + exercise.sets, 0), 0);
   return <div className="space-y-4">
-    <p className="text-sm"><a className="underline" href="/customize">Customize My Workout</a> — preview and accept an original three-day Full Body program. Accepted Customized dates stay bound to their consent.</p>
+    <p className="text-sm"><a className="underline" href={plan?.customized?.proposal_id?`/customize?proposal=${encodeURIComponent(plan.customized.proposal_id)}`:"/customize"}>{plan?.customized?"Manage Customized dates or replace program":"Customize My Workout"}</a> · Review explicit date changes and program replacement.</p>
     <h1 className="ui-title-page">Week Plan</h1>
     <section className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-3" aria-label="Week scheduling">
       <div className="flex flex-wrap gap-2" aria-label="Select planning week">

@@ -13,7 +13,7 @@ from ..customized_lifecycle_models import LifecycleError
 from ..customized_consent_summary import COMPACT_PROTOCOL
 from ..customized_preview_models import StrictPreviewModel
 from ..customized_lifecycle_http import ChallengeCommand, RevisionCommand, ReviseCommand
-from pydantic import Field, StrictInt
+from pydantic import Field, StrictInt, StrictBool
 
 router=APIRouter()
 
@@ -129,6 +129,45 @@ def activate(proposal_id:str,body:ActivateCommand,request:Request,ctx=Depends(co
 def revise(proposal_id:str,body:ReviseCommand,request:Request,ctx=Depends(context)):
     service,actor,_=ctx
     return run(lambda:service.revise(actor,proposal_id,body.request,expected_revision=body.expected_revision,idempotency_key=key(request)))
+
+
+class ReschedulePreviewCommand(StrictPreviewModel):
+    expected_revision: StrictInt=Field(ge=1)
+    expected_placement_revision: StrictInt=Field(ge=1)
+    selected_dates: list[str]=Field(min_length=3,max_length=3)
+    timezone: str=Field(min_length=1,max_length=64)
+
+
+class RescheduleConfirmCommand(StrictPreviewModel):
+    expected_revision: StrictInt=Field(ge=1)
+    expected_placement_revision: StrictInt=Field(ge=1)
+    digest: str=Field(pattern=r'^[0-9a-f]{64}$')
+    agree: StrictBool
+
+
+@router.get('/customized/active')
+def active_plans(ctx=Depends(context)):
+    service,actor,_=ctx
+    return run(lambda:service.active(actor))
+
+
+@router.post('/customized/proposals/{proposal_id}/replacement')
+def replacement(proposal_id:str,body:ReviseCommand,request:Request,ctx=Depends(context)):
+    service,actor,_=ctx
+    return run(lambda:service.create_replacement(actor,proposal_id,body.request,expected_revision=body.expected_revision,idempotency_key=key(request)))
+
+
+@router.post('/customized/proposals/{proposal_id}/reschedule/preview')
+def reschedule_preview(proposal_id:str,body:ReschedulePreviewCommand,request:Request,ctx=Depends(context)):
+    service,actor,_=ctx
+    return run(lambda:service.preview_reschedule(actor,proposal_id,dict(selected_dates=body.selected_dates,timezone=body.timezone),
+        expected_revision=body.expected_revision,expected_placement_revision=body.expected_placement_revision,idempotency_key=key(request)))
+
+
+@router.post('/customized/proposals/{proposal_id}/reschedule/confirm')
+def reschedule_confirm(proposal_id:str,body:RescheduleConfirmCommand,request:Request,ctx=Depends(context)):
+    service,actor,_=ctx
+    return run(lambda:service.confirm_reschedule(actor,proposal_id,**body.model_dump(),idempotency_key=key(request)))
 
 
 @router.post('/customized/proposals/{proposal_id}/{action}')

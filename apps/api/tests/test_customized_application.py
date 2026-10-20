@@ -30,6 +30,17 @@ def application(monkeypatch):
     monkeypatch.setattr(settings, 'customized_enabled', True)
     import app.main as main
     monkeypatch.setattr(main, 'customized_clock', lambda: datetime(2026, 10, 19, 12, tzinfo=UTC), raising=False)
+    # Today and #83 own their explicit server instant too; keep this synthetic
+    # journey coherent as the host calendar advances (including DST boundaries).
+    class FixedDatetime(datetime):
+        @classmethod
+        def now(cls,tz=None):
+            instant=main.customized_clock()
+            return instant.astimezone(tz) if tz else instant.replace(tzinfo=None)
+    import app.routers.workout as workout
+    import app.routers.plan as plan
+    monkeypatch.setattr(workout,'datetime',FixedDatetime)
+    monkeypatch.setattr(plan,'datetime',FixedDatetime)
     client = TestClient(app)
     account = {'email': f'{uuid4().hex}@example.com', 'name': 'Synthetic M4', 'password': 'Synthetic-only-safe-123!'}
     r = client.post('/auth/register', json=account)

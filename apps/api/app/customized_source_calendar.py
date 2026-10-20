@@ -18,6 +18,51 @@ from .customized_lifecycle_models import LifecycleError
 AUTHORED=frozenset(('pure_bodybuilding_phase_1_full_body','pure_bodybuilding_phase_2_full_body'))
 
 
+_PROJECTION_FIELDS=frozenset(('workout_occurrence_id','plan_id','week_start','session_slot',
+    'exercise_occurrence_id','execution_slot','placement_revision','date','scheduled_date','schedule_timezone'))
+
+
+def _frozen_placement_matches(row,snapshot):
+    """An old frozen revision is valid only with retained placement and dose proof.
+
+    The current raw slot must still contain the identical prescription and date.
+    Historical placement identifies the snapshot's own revision; it never grants
+    permission to move a performed occurrence or edit its frozen prescription.
+    """
+    def prescription(value):
+        if isinstance(value,dict):
+            return {k:prescription(v) for k,v in value.items() if k not in _PROJECTION_FIELDS}
+        if isinstance(value,list):return [prescription(v) for v in value]
+        return value
+    try:
+        slot=snapshot['session_slot'];revision=snapshot['placement_revision']
+        if type(slot) is not int or slot<0 or type(revision) is not int or revision<1:return False
+        current=row['payload']['sessions'][slot];frozen=snapshot['payload']
+        if (row['week_start']!=snapshot['week_start'] or row['schedule_timezone']!=snapshot['schedule_timezone']
+                or row['payload']['program_template_id']!=snapshot['program_id']
+                or current['session_id']!=snapshot['workout_id']
+                or current['scheduled_date']!=snapshot['scheduled_date'].isoformat()
+                or current.get('schedule_timezone')!=snapshot['schedule_timezone']):
+            return False
+        # Authored occurrence receipts (constraints, confirmed substitutions and
+        # load state) are owned by their existing execution path. Preserve #83's
+        # same-placement admission; this Customized amendment adds no new
+        # Authored prescription comparison or mixed-revision permission.
+        if row['payload']['program_template_id'] in AUTHORED:
+            return revision==row['placement_revision']
+        if prescription(current)!=prescription(frozen):return False
+        if revision==row['placement_revision']:return True
+        if revision>row['placement_revision']:return False
+        # Only the specifically authorized Customized date path creates these
+        # qualified mixed revisions. Authored placement remains week-frozen.
+        if row['payload'].get('mode')!='customized' or not row['payload'].get('customized'):return False
+        history=(row['payload'].get('schedule') or {}).get('placement_history') or []
+        matching=[h for h in history if h.get('placement_revision')==revision]
+        return (len(matching)==1 and matching[0]['timezone']==snapshot['schedule_timezone']
+            and matching[0]['selected_dates'][slot]==snapshot['scheduled_date'].isoformat())
+    except (KeyError,IndexError,TypeError,ValueError):return False
+
+
 class SourceCalendarPort:
     source_verified=False
     def __init__(self,unit):self.unit=unit
@@ -126,9 +171,11 @@ class SourceCalendarPort:
                 # A frozen snapshot must not disagree with stored date/revision identity.
                 if snapshot['scheduled_date'] is None or session.get('scheduled_date')!=snapshot['scheduled_date'].isoformat():
                     raise LifecycleError('frozen_occurrence_changed')
-                if (snapshot['schedule_timezone']!=timezone or row['placement_revision']!=snapshot['placement_revision']):
+                if (snapshot['schedule_timezone']!=timezone
+                        or (snapshot['plan_id'] in plan_by_id and not _frozen_placement_matches(row,snapshot))):
                     raise LifecycleError('frozen_occurrence_changed')
-                sessions[snapshot['id']]=(row,session)
+                # Preserve the frozen occurrence's own placement revision.
+                sessions[snapshot['id']]=({**row,'placement_revision':snapshot['placement_revision']},session)
             coverage=[]
             for week in (start,start+timedelta(days=7),start+timedelta(days=14)):
                 reasons=list(ambiguity)

@@ -24,6 +24,8 @@ from .customized_postgres import PostgresUnit, PostgresSessionGate, PostgresProp
 from .customized_source_calendar import SourceCalendarPort
 from .customized_staging_schedule import ReadOnlyCalendarAdapter
 from .models import User, WorkoutPlan
+from .customized_replacement import CustomizedReplacement, plan_digest
+from .customized_rescheduling import CustomizedRescheduling
 
 PROGRAM = 'customized_full_body_v1'
 HOST_VERSION = 'customized-application-v1'
@@ -55,6 +57,7 @@ def bundles(profile=None,exposures=(),reports=()):
 class ApplicationSchedule:
     def __init__(self, unit, clock):
         self.unit,self.clock,self.week=unit,clock,None
+        self.exclude_plan=None
 
     def resolve(self, subject, timezone):
         from .selected_date_plans import local_week
@@ -62,10 +65,14 @@ class ApplicationSchedule:
         week=self.week or monday
         context=PlanningContext("c1-context-v1",self.clock(),week,None,None)
         result=ReadOnlyCalendarAdapter(SourceCalendarPort(self.unit),context=context).resolve(subject,timezone)
+        if self.exclude_plan:
+            evidence=json.loads(result.source_evidence)
+            excluded={o['occurrence_id'] for o in evidence['occurrences'] if o['plan_id']==self.exclude_plan}
+            result=replace(result,occurrences=tuple(o for o in result.occurrences if o.occurrence_id not in excluded))
         return replace(result,source_kind='unverified')
 
 
-class ApplicationLifecycle(LifecycleService):
+class ApplicationLifecycle(CustomizedRescheduling, CustomizedReplacement, LifecycleService):
     """Real account lifecycle; inherits immutable revisions and consent replay."""
     def _command(self, actor, key, payload, execute):
         def guarded(tx):
@@ -73,8 +80,22 @@ class ApplicationLifecycle(LifecycleService):
                 previous=tx.read(actor.subject,payload[1])
                 if previous and previous["state"]=="active":
                     raise LifecycleError("active_program_immutable")
+            if payload[0]=='revise':
+                previous=tx.read(actor.subject,payload[1])
+                binding=(previous or {}).get('snapshot',{}).get('replacement')
+                if binding:
+                    self._set_week(payload[3])
+                    self._configure_replacement(tx,actor,binding,self.schedule.week)
             return execute(tx)
-        return super()._command(actor,key,payload,guarded)
+        # Replacement exclusions are command-local authority, never mutable
+        # permission inherited by a subsequent request on a reused service.
+        self.schedule.exclude_plan=None
+        self.replacement=None
+        try:
+            return super()._command(actor,key,payload,guarded)
+        finally:
+            self.schedule.exclude_plan=None
+            self.replacement=None
 
     def _content_stamp(self, request):
         return content_hash((HOST_VERSION,getattr(self,"inventory",None),super()._content_stamp(request)))
@@ -112,12 +133,18 @@ class ApplicationLifecycle(LifecycleService):
             from .customized_inventory import read_profile
             with Session(bind=self.store.unit.connection(actor.subject),join_transaction_mode='rollback_only') as db:
                 current=read_profile(db,actor.subject)
-            if current!=self.inventory or data.get('inventory_revision',current['revision'])!=current['revision']:
+            requested_revision=data.get('inventory_revision',current['revision'])
+            # A pre-inventory account's normalized request serializes the optional
+            # revision as null. It cannot conceal an existing saved inventory.
+            if requested_revision is None and current['revision']==0 and current['profile'] is None:
+                requested_revision=0
+            if current!=self.inventory or requested_revision!=current['revision']:
                 raise LifecycleError('stale_inventory',409)
             if current['profile'] and set(data.get('equipment',[]))!=set(current['profile']['equipment']):
                 raise LifecycleError('equipment_differs_from_saved_location',422)
         snapshot=super()._snapshot(actor,{**data,'audience':'customized_program'})
         snapshot['inventory']=getattr(self,'inventory',None)
+        if getattr(self,'replacement',None):snapshot['replacement']=self.replacement
         from .customized_inventory import inventory_issues
         snapshot['inventory_issues']=inventory_issues(application_catalog(),snapshot['inventory'])
         snapshot['authority']=dict(policy='provisional',metadata='descriptive_provisional_no_scoring',
@@ -142,6 +169,10 @@ class ApplicationLifecycle(LifecycleService):
         with Session(bind=self.store.unit.connection(actor.subject),join_transaction_mode='rollback_only') as db:
             if read_profile(db,actor.subject)!=self.inventory:raise LifecycleError('stale_inventory')
         self._set_week(document['snapshot']['request'])
+        binding=document['snapshot'].get('replacement')
+        if binding:
+            with self._transaction(actor) as tx:
+                self._configure_replacement(tx,actor,binding,self.schedule.week)
         super()._fresh(actor,document)
 
     def _candidate(self, document):
@@ -162,6 +193,9 @@ class ApplicationLifecycle(LifecycleService):
         terms['text']='I choose this exact Customized program version and its dates. The training rules remain provisional; no optimality, equal-results or measured-time guarantee is established.'
         terms['acknowledgements']=[x for x in terms['acknowledgements'] if x!='inactive_candidate_unapproved_science']
         terms['acknowledgements'].append('provisional_policy_no_professional_approval_claim')
+        if document['snapshot'].get('replacement'):
+            binding=document['snapshot']['replacement']
+            terms['acknowledgements'].append(f"explicit_replacement:{binding['plan_id']}:{binding['plan_digest']}:{binding['kind']}")
         return terms,content_hash(terms)
 
     def _compact_terms(self, document, audit_acknowledgements):
@@ -170,6 +204,10 @@ class ApplicationLifecycle(LifecycleService):
         terms['summary']['schema_version']='customized-program-informed-summary-v1'
         terms['summary']['scientific_status']='provisional'
         terms['summary']['explanation']='Less scheduled work may mean less hypertrophy opportunity. Rules and time estimates are provisional. No synthetic load inventory or fabricated training history is used. Unknown neighboring weeks are disclosed; unknown is not verified rest.'
+        if document['snapshot'].get('replacement'):
+            terms['summary']['replacement']={**document['snapshot']['replacement'],
+                'proposed_sessions':document['snapshot']['preview']['sessions']}
+            terms['text']='I explicitly replace the identified Customized plan with this exact program version and dates, preserving recorded work. '+terms['text']
         terms['summary_hash']=content_hash(terms['summary'])
         return terms,content_hash(terms)
 
@@ -179,7 +217,12 @@ class ApplicationLifecycle(LifecycleService):
         if state=='accepted_candidate':
             document['can_activate']=True
             document['consent_receipt']['authority']='server_verified_account_program_choice_provisional_policy'
-        return super()._append(tx,actor,document,state)
+        result=super()._append(tx,actor,document,state)
+        if state=='active' and document.get('active_plan_id'):
+            from .customized_replacement import active_placement
+            with Session(bind=tx.connection,join_transaction_mode='rollback_only') as db:
+                result['active_placement']=active_placement(db,db.get(WorkoutPlan,document['active_plan_id']))
+        return result
 
     def activate(self, actor, proposal_id, *, expected_revision, snapshot_hash, idempotency_key):
         def execute(tx):
@@ -198,8 +241,18 @@ class ApplicationLifecycle(LifecycleService):
                     raise LifecycleError('schedule_timezone_change_requires_resolution')
                 # Every existing row is preserved. Occupied/ambiguous weeks cannot
                 # be replaced merely because this is a Customized request.
-                if db.query(WorkoutPlan).filter_by(user_id=actor.subject,week_start=self.schedule.week).first():
+                binding=snapshot.get('replacement')
+                occupied=[r for r in db.query(WorkoutPlan).filter_by(user_id=actor.subject,week_start=self.schedule.week).all()
+                    if not r.payload.get('schedule',{}).get('mode','').startswith('selected_dates_superseded')]
+                replacing=binding and binding['kind']=='same_week_unstarted'
+                if occupied and (not replacing or len(occupied)!=1 or occupied[0].id!=binding['plan_id']):
                     raise LifecycleError('existing_week_requires_resolution')
+                old_document=None
+                if replacing:
+                    old_document=self._owned(tx,actor,binding['proposal_id'])
+                    previous=occupied[0]
+                    if plan_digest(previous)!=binding['plan_digest']:
+                        raise LifecycleError('stale_replacement_target')
                 plan=execution_payload(document)
                 selected=validate_selected_week(week_start=self.schedule.week,selected_dates=list(request.selected_dates),
                     timezone=request.timezone,planning_instant=self.clock())
@@ -209,6 +262,16 @@ class ApplicationLifecycle(LifecycleService):
                 record=WorkoutPlan(id=str(uuid4()),user_id=actor.subject,week_start=selected.week_start,
                     split='full_body',phase='customized',payload=plan,placement_revision=1,schedule_timezone=request.timezone)
                 db.add(record)
+                if replacing:
+                    from copy import deepcopy
+                    retained=deepcopy(previous.payload)
+                    retained['schedule'].update(mode='selected_dates_superseded_v1',superseded_by_plan_id=record.id,
+                        replacement_proposal_id=proposal_id)
+                    previous.payload=retained
+                    old_document['superseded_by_proposal_id']=proposal_id
+                    old_document['superseded_by_plan_id']=record.id
+                    old_document['prescriptive']=False
+                    self._append(tx,actor,old_document,'superseded')
                 user.scheduling_timezone=request.timezone
                 # Future plans do not overwrite current program preferences.
                 db.flush()
@@ -237,10 +300,12 @@ def execution_payload(document):
         sessions.append(dict(session_id=s['session_id'],title='Customized Full Body '+s['emphasis'][0],
             name=s['emphasis'],date=s['local_date'],exercises=exercises,customized=True,
             estimated_duration=s['duration']['total_seconds'],program_template_id=PROGRAM))
-    return dict(program_template_id=PROGRAM,program_name='Customized Full Body',mode='customized',split='full_body',phase='customized',
+    result=dict(program_template_id=PROGRAM,program_name='Customized Full Body',mode='customized',split='full_body',phase='customized',
         sessions=sessions,customized=dict(version=HOST_VERSION,proposal_id=document['proposal_id'],
             plan_version=document['plan_version'],snapshot_hash=document['snapshot_hash'],
             consent_receipt=document['consent_receipt'],authority=snapshot['authority'],trace=preview['trace']))
+    if snapshot.get('replacement'):result['customized']['replacement']=snapshot['replacement']
+    return result
 
 
 def build_service(engine, subject, clock, *, enabled):

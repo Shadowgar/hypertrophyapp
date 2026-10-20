@@ -1488,6 +1488,7 @@ export default function TodayPage() {
     <div className="space-y-4 pb-[max(7rem,env(safe-area-inset-bottom))]">
       <div className="flex items-baseline justify-between gap-2">
         <h1 className="ui-title-page">Today</h1>
+        <Link className="inline-flex min-h-11 items-center underline" href={workout?.customized?.proposal_id?`/customize?proposal=${encodeURIComponent(workout.customized.proposal_id)}`:"/customize"}>Manage Customized dates or replace program</Link>
         <p className="ui-meta text-zinc-400">{todayDate}</p>
       </div>
       <div className="main-card main-card--module main-card--accent spacing-grid spacing-grid--tight">

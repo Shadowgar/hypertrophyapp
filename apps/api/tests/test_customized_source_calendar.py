@@ -107,3 +107,24 @@ def test_empty_or_mismatched_dated_plan_is_not_complete_source_coverage(system):
             payload=deepcopy(row['payload']);payload['sessions']=[];payload['schedule']['selected_dates']=[]
             conn.execute(WorkoutPlan.__table__.update().where(WorkoutPlan.id==row['id']).values(payload=payload))
     assert window(s).complete is False
+
+
+def test_authored_substitution_receipts_preserve_source_calendar_contract(system):
+    """Authored owns occurrence overlays; source placement must remain unchanged."""
+    from datetime import date
+    from app.models import WorkoutOccurrence
+    from app.workout_identity import identified_sessions
+    s=system;row=seed_calendar(s)[0];session=identified_sessions(SimpleNamespace(**row))[0]
+    frozen=deepcopy(session)
+    frozen['exercises'][0].update(authored_constraint={'revision':2,'status':'confirmed'},
+        substitution_decisions=[{'action':'confirm','user_id':row['user_id']}],
+        performed_variant={'option_id':'source-approved-test-option'},
+        substitution_consent={'confirmed':True,'user_id':row['user_id']})
+    with s.unit.account(row['user_id']) as conn:
+        conn.execute(WorkoutOccurrence.__table__.insert().values(id=session['workout_occurrence_id'],user_id=row['user_id'],plan_id=row['id'],
+            week_start=row['week_start'],scheduled_date=date.fromisoformat(session['scheduled_date']),
+            schedule_timezone='America/New_York',placement_revision=1,session_slot=0,workout_id=session['session_id'],
+            program_id=row['payload']['program_template_id'],payload=frozen))
+    actual=next(o for o in window(s).occurrences if o.occurrence_id==session['workout_occurrence_id'])
+    assert actual.status=='started' and actual.placement_revision==1
+    assert actual.scheduled_date==date.fromisoformat(session['scheduled_date'])
