@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844" role="img" aria-labelledby="title desc"><title id="title">Your workspace settings</title><desc id="desc">Your workspace settings. Training Atlas conceptual mockup. Synthetic data. Not implemented.</desc><rect width="390" height="844" fill="#111111" />
+<rect x="0" y="0" width="390" height="24" rx="0" fill="#242424" />
+<text x="195" y="16" fill="#F0F0F0" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="10" font-weight="600" text-anchor="middle">DIRECTION B  ·  SYNTHETIC DESIGN SAMPLE</text>
+<text x="20" y="58" fill="#F0F0F0" font-family="Libre Baskerville,Georgia,serif" font-size="28" font-weight="600" text-anchor="start">atlas</text>
+<text x="114" y="57" fill="#BDBDBD" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="10" font-weight="600" text-anchor="start">TRAINING</text>
+<circle cx="350" cy="47" r="17" fill="#2D2D2D" />
+<text x="350" y="52" fill="#F0F0F0" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="13" font-weight="600" text-anchor="middle">A</text>
+<text x="20" y="91" fill="#BDBDBD" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="600" text-anchor="start">SETTINGS</text>
+<text x="20" y="125" fill="#F0F0F0" font-family="Libre Baskerville,Georgia,serif" font-size="28" font-weight="400" text-anchor="start">Your workspace settings</text>
+<rect x="0" y="776" width="390" height="68" rx="0" fill="#191919" />
+<path d="M0 776 L390 776" stroke="#3D3D3D" stroke-width="1" fill="none" />
+<text x="39" y="803" fill="#F0F0F0" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="20" font-weight="500" text-anchor="middle">⌂</text>
+<text x="39" y="823" fill="#BDBDBD" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="10" font-weight="600" text-anchor="middle">Home</text>
+<text x="117" y="803" fill="#F0F0F0" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="20" font-weight="500" text-anchor="middle">○</text>
+<text x="117" y="823" fill="#BDBDBD" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="10" font-weight="600" text-anchor="middle">Train</text>
+<text x="195" y="803" fill="#F0F0F0" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="20" font-weight="500" text-anchor="middle">▦</text>
+<text x="195" y="823" fill="#BDBDBD" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="10" font-weight="600" text-anchor="middle">Week</text>
+<text x="273" y="803" fill="#F0F0F0" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="20" font-weight="500" text-anchor="middle">↗</text>
+<text x="273" y="823" fill="#BDBDBD" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="10" font-weight="600" text-anchor="middle">History</text>
+<rect x="320" y="784" width="62" height="48" rx="12" fill="#2D2D2D" />
+<text x="351" y="803" fill="#F0F0F0" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="20" font-weight="500" text-anchor="middle">•••</text>
+<text x="351" y="823" fill="#F0F0F0" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="10" font-weight="600" text-anchor="middle">More</text>
+<rect x="20" y="151" width="350" height="84" rx="16" fill="#191919" stroke="#3D3D3D" />
+<text x="36" y="179" fill="#F0F0F0" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="16" font-weight="600" text-anchor="start">Account</text>
+<text x="36" y="201" fill="#BDBDBD" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="13" font-weight="400" text-anchor="start">athlete@example.com</text>
+<text x="350" y="183" fill="#F0F0F0" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="20" font-weight="400" text-anchor="end">→</text>
+<text x="20" y="260" fill="#F0F0F0" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="600" text-anchor="start">Weight display</text>
+<text x="20" y="283" fill="#BDBDBD" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="12" font-weight="400" text-anchor="start">Pounds (lb) · proposed preference</text>
+<text x="365" y="268" fill="#F0F0F0" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="19" font-weight="400" text-anchor="end">→</text>
+<path d="M20 302 L370 302" stroke="#3D3D3D" stroke-width="1" fill="none" />
+<text x="20" y="336" fill="#F0F0F0" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="600" text-anchor="start">Equipment &amp; locations</text>
+<text x="20" y="359" fill="#BDBDBD" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="12" font-weight="400" text-anchor="start">Home gym · 1 saved setup</text>
+<text x="365" y="344" fill="#F0F0F0" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="19" font-weight="400" text-anchor="end">→</text>
+<path d="M20 378 L370 378" stroke="#3D3D3D" stroke-width="1" fill="none" />
+<text x="20" y="412" fill="#F0F0F0" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="600" text-anchor="start">Training program</text>
+<text x="20" y="435" fill="#BDBDBD" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="12" font-weight="400" text-anchor="start">Authored Phase 1 · source preserved</text>
+<text x="365" y="420" fill="#F0F0F0" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="19" font-weight="400" text-anchor="end">→</text>
+<path d="M20 454 L370 454" stroke="#3D3D3D" stroke-width="1" fill="none" />
+<text x="20" y="488" fill="#F0F0F0" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="600" text-anchor="start">Movement constraints</text>
+<text x="20" y="511" fill="#BDBDBD" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="12" font-weight="400" text-anchor="start">Review saved limits</text>
+<text x="365" y="496" fill="#F0F0F0" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="19" font-weight="400" text-anchor="end">→</text>
+<path d="M20 530 L370 530" stroke="#3D3D3D" stroke-width="1" fill="none" />
+<text x="20" y="564" fill="#F0F0F0" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="600" text-anchor="start">Accessibility</text>
+<text x="20" y="587" fill="#BDBDBD" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="12" font-weight="400" text-anchor="start">Large text · reduced motion</text>
+<text x="365" y="572" fill="#F0F0F0" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="19" font-weight="400" text-anchor="end">→</text>
+<path d="M20 606 L370 606" stroke="#3D3D3D" stroke-width="1" fill="none" />
+<rect x="20" y="636" width="350" height="44" rx="10" fill="#2D2D2D" />
+<text x="195" y="663" fill="#8ED6A2" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="13" font-weight="600" text-anchor="middle">✓ Preferences saved</text>
+<rect x="20" y="699" width="350" height="48" rx="12" fill="#191919" stroke="#3D3D3D" />
+<text x="195.0" y="728.0" fill="#F0F0F0" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="600" text-anchor="middle">Sign out</text>
+<text x="20" y="763" fill="#BDBDBD" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="10" font-weight="400" text-anchor="start">Separate editors preserve unrelated profile fields.</text>
+</svg>

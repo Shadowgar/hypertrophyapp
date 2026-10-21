@@ -1,0 +1,335 @@
+{
+  "baseline": "dacfd67000fd71bf9ba8b0bba03aaa086f34248d",
+  "frames": [
+    {
+      "source": "docs/ux/astra-2026-10-20/designs/direction-a/05-home-mobile.svg",
+      "slug": "a-home",
+      "direction": "a",
+      "label": "Home",
+      "width": 390,
+      "height": 844,
+      "source_sha256": "ff734cec4a7539ae14a23d47e28f4c27720cf3ebef4bee0157efb606d36c1264"
+    },
+    {
+      "source": "docs/ux/astra-2026-10-20/designs/direction-a/06-week-review-mobile.svg",
+      "slug": "a-week",
+      "direction": "a",
+      "label": "Week / scheduling",
+      "width": 390,
+      "height": 844,
+      "source_sha256": "69224f332893dea10b5cecc804dadd6ee91e4fce639e02ede4d91721b9d7502f"
+    },
+    {
+      "source": "docs/ux/astra-2026-10-20/designs/direction-a/10-working-before-mobile.svg",
+      "slug": "a-before-save",
+      "direction": "a",
+      "label": "Before Save Set",
+      "width": 390,
+      "height": 844,
+      "source_sha256": "afbbf62e95a70c27509f069b11b0e57ebc725401fa2b7d5e5bbc217a3e60934f"
+    },
+    {
+      "source": "docs/ux/astra-2026-10-20/designs/direction-a/11-working-after-mobile.svg",
+      "slug": "a-after-save",
+      "direction": "a",
+      "label": "After Save Set",
+      "width": 390,
+      "height": 844,
+      "source_sha256": "1ed8921a7ac65afc4b7c6a044e4e0121a33a06b8ef806b0b5211b99195cd3d49"
+    },
+    {
+      "source": "docs/ux/astra-2026-10-20/designs/direction-a/17-settings-mobile.svg",
+      "slug": "a-settings",
+      "direction": "a",
+      "label": "Settings",
+      "width": 390,
+      "height": 844,
+      "source_sha256": "15f6ddf9aa817c76a845edbbc1f2b5b3ad36657893552443ff4f76703ddbc783"
+    },
+    {
+      "source": "docs/ux/astra-2026-10-20/designs/direction-a/desktop-07-execution-before.svg",
+      "slug": "a-desktop-workout",
+      "direction": "a",
+      "label": "Desktop workout",
+      "width": 1440,
+      "height": 900,
+      "source_sha256": "3024671a8b7a862da4b4740f7d6ac5f5001d424268d61d8a90399a154e9f3385"
+    },
+    {
+      "source": "docs/ux/astra-2026-10-20/designs/direction-b/m04-home.svg",
+      "slug": "b-home",
+      "direction": "b",
+      "label": "Home",
+      "width": 390,
+      "height": 844,
+      "source_sha256": "6f2ad6f82c9771c2564556c87b0b90922cea14cde1bdf78d32852c6d5353caa3"
+    },
+    {
+      "source": "docs/ux/astra-2026-10-20/designs/direction-b/m05-week-compression.svg",
+      "slug": "b-week",
+      "direction": "b",
+      "label": "Week / scheduling",
+      "width": 390,
+      "height": 844,
+      "source_sha256": "7c3febba4049d9b6ddc25e0a3c97744604450252aed5b09aee47788a90455b65"
+    },
+    {
+      "source": "docs/ux/astra-2026-10-20/designs/direction-b/m10-set-before-save.svg",
+      "slug": "b-before-save",
+      "direction": "b",
+      "label": "Before Save Set",
+      "width": 390,
+      "height": 844,
+      "source_sha256": "d837a45c15346071bcbcfdbd37babdff9ce36a7de707e94da2d73a20e42fd4e5"
+    },
+    {
+      "source": "docs/ux/astra-2026-10-20/designs/direction-b/m11-set-after-ack-rest.svg",
+      "slug": "b-after-save",
+      "direction": "b",
+      "label": "After Save Set",
+      "width": 390,
+      "height": 844,
+      "source_sha256": "20eb80f0412ff5e1ec00ba75633936e002e8bfccc34a2df0eb2d93305261bc6b"
+    },
+    {
+      "source": "docs/ux/astra-2026-10-20/designs/direction-b/m17-settings.svg",
+      "slug": "b-settings",
+      "direction": "b",
+      "label": "Settings",
+      "width": 390,
+      "height": 844,
+      "source_sha256": "58d88f83aea8a7a9331da13b853354635c92ad37b8c53e4ee533380c28f9dc0c"
+    },
+    {
+      "source": "docs/ux/astra-2026-10-20/designs/direction-b/d03-workout-before-save.svg",
+      "slug": "b-desktop-workout",
+      "direction": "b",
+      "label": "Desktop workout",
+      "width": 1440,
+      "height": 900,
+      "source_sha256": "93460527ea36c37afc0f59d3e028c8cf71168297725ec0e0f7f5d95ad40c0a84"
+    }
+  ],
+  "variants": [
+    {
+      "frame": "a-home",
+      "theme": "github-graphite",
+      "svg": "variants/a-home-option-1.svg",
+      "png": "variants/a-home-option-1.png"
+    },
+    {
+      "frame": "a-home",
+      "theme": "chatgpt-charcoal",
+      "svg": "variants/a-home-option-2.svg",
+      "png": "variants/a-home-option-2.png"
+    },
+    {
+      "frame": "a-home",
+      "theme": "original-black-red",
+      "svg": "variants/a-home-option-3.svg",
+      "png": "variants/a-home-option-3.png"
+    },
+    {
+      "frame": "a-week",
+      "theme": "github-graphite",
+      "svg": "variants/a-week-option-1.svg",
+      "png": "variants/a-week-option-1.png"
+    },
+    {
+      "frame": "a-week",
+      "theme": "chatgpt-charcoal",
+      "svg": "variants/a-week-option-2.svg",
+      "png": "variants/a-week-option-2.png"
+    },
+    {
+      "frame": "a-week",
+      "theme": "original-black-red",
+      "svg": "variants/a-week-option-3.svg",
+      "png": "variants/a-week-option-3.png"
+    },
+    {
+      "frame": "a-before-save",
+      "theme": "github-graphite",
+      "svg": "variants/a-before-save-option-1.svg",
+      "png": "variants/a-before-save-option-1.png"
+    },
+    {
+      "frame": "a-before-save",
+      "theme": "chatgpt-charcoal",
+      "svg": "variants/a-before-save-option-2.svg",
+      "png": "variants/a-before-save-option-2.png"
+    },
+    {
+      "frame": "a-before-save",
+      "theme": "original-black-red",
+      "svg": "variants/a-before-save-option-3.svg",
+      "png": "variants/a-before-save-option-3.png"
+    },
+    {
+      "frame": "a-after-save",
+      "theme": "github-graphite",
+      "svg": "variants/a-after-save-option-1.svg",
+      "png": "variants/a-after-save-option-1.png"
+    },
+    {
+      "frame": "a-after-save",
+      "theme": "chatgpt-charcoal",
+      "svg": "variants/a-after-save-option-2.svg",
+      "png": "variants/a-after-save-option-2.png"
+    },
+    {
+      "frame": "a-after-save",
+      "theme": "original-black-red",
+      "svg": "variants/a-after-save-option-3.svg",
+      "png": "variants/a-after-save-option-3.png"
+    },
+    {
+      "frame": "a-settings",
+      "theme": "github-graphite",
+      "svg": "variants/a-settings-option-1.svg",
+      "png": "variants/a-settings-option-1.png"
+    },
+    {
+      "frame": "a-settings",
+      "theme": "chatgpt-charcoal",
+      "svg": "variants/a-settings-option-2.svg",
+      "png": "variants/a-settings-option-2.png"
+    },
+    {
+      "frame": "a-settings",
+      "theme": "original-black-red",
+      "svg": "variants/a-settings-option-3.svg",
+      "png": "variants/a-settings-option-3.png"
+    },
+    {
+      "frame": "a-desktop-workout",
+      "theme": "github-graphite",
+      "svg": "variants/a-desktop-workout-option-1.svg",
+      "png": "variants/a-desktop-workout-option-1.png"
+    },
+    {
+      "frame": "a-desktop-workout",
+      "theme": "chatgpt-charcoal",
+      "svg": "variants/a-desktop-workout-option-2.svg",
+      "png": "variants/a-desktop-workout-option-2.png"
+    },
+    {
+      "frame": "a-desktop-workout",
+      "theme": "original-black-red",
+      "svg": "variants/a-desktop-workout-option-3.svg",
+      "png": "variants/a-desktop-workout-option-3.png"
+    },
+    {
+      "frame": "b-home",
+      "theme": "github-graphite",
+      "svg": "variants/b-home-option-1.svg",
+      "png": "variants/b-home-option-1.png"
+    },
+    {
+      "frame": "b-home",
+      "theme": "chatgpt-charcoal",
+      "svg": "variants/b-home-option-2.svg",
+      "png": "variants/b-home-option-2.png"
+    },
+    {
+      "frame": "b-home",
+      "theme": "original-black-red",
+      "svg": "variants/b-home-option-3.svg",
+      "png": "variants/b-home-option-3.png"
+    },
+    {
+      "frame": "b-week",
+      "theme": "github-graphite",
+      "svg": "variants/b-week-option-1.svg",
+      "png": "variants/b-week-option-1.png"
+    },
+    {
+      "frame": "b-week",
+      "theme": "chatgpt-charcoal",
+      "svg": "variants/b-week-option-2.svg",
+      "png": "variants/b-week-option-2.png"
+    },
+    {
+      "frame": "b-week",
+      "theme": "original-black-red",
+      "svg": "variants/b-week-option-3.svg",
+      "png": "variants/b-week-option-3.png"
+    },
+    {
+      "frame": "b-before-save",
+      "theme": "github-graphite",
+      "svg": "variants/b-before-save-option-1.svg",
+      "png": "variants/b-before-save-option-1.png"
+    },
+    {
+      "frame": "b-before-save",
+      "theme": "chatgpt-charcoal",
+      "svg": "variants/b-before-save-option-2.svg",
+      "png": "variants/b-before-save-option-2.png"
+    },
+    {
+      "frame": "b-before-save",
+      "theme": "original-black-red",
+      "svg": "variants/b-before-save-option-3.svg",
+      "png": "variants/b-before-save-option-3.png"
+    },
+    {
+      "frame": "b-after-save",
+      "theme": "github-graphite",
+      "svg": "variants/b-after-save-option-1.svg",
+      "png": "variants/b-after-save-option-1.png"
+    },
+    {
+      "frame": "b-after-save",
+      "theme": "chatgpt-charcoal",
+      "svg": "variants/b-after-save-option-2.svg",
+      "png": "variants/b-after-save-option-2.png"
+    },
+    {
+      "frame": "b-after-save",
+      "theme": "original-black-red",
+      "svg": "variants/b-after-save-option-3.svg",
+      "png": "variants/b-after-save-option-3.png"
+    },
+    {
+      "frame": "b-settings",
+      "theme": "github-graphite",
+      "svg": "variants/b-settings-option-1.svg",
+      "png": "variants/b-settings-option-1.png"
+    },
+    {
+      "frame": "b-settings",
+      "theme": "chatgpt-charcoal",
+      "svg": "variants/b-settings-option-2.svg",
+      "png": "variants/b-settings-option-2.png"
+    },
+    {
+      "frame": "b-settings",
+      "theme": "original-black-red",
+      "svg": "variants/b-settings-option-3.svg",
+      "png": "variants/b-settings-option-3.png"
+    },
+    {
+      "frame": "b-desktop-workout",
+      "theme": "github-graphite",
+      "svg": "variants/b-desktop-workout-option-1.svg",
+      "png": "variants/b-desktop-workout-option-1.png"
+    },
+    {
+      "frame": "b-desktop-workout",
+      "theme": "chatgpt-charcoal",
+      "svg": "variants/b-desktop-workout-option-2.svg",
+      "png": "variants/b-desktop-workout-option-2.png"
+    },
+    {
+      "frame": "b-desktop-workout",
+      "theme": "original-black-red",
+      "svg": "variants/b-desktop-workout-option-3.svg",
+      "png": "variants/b-desktop-workout-option-3.png"
+    }
+  ],
+  "theme_variants": 36,
+  "typography_variants": 4,
+  "comparison_boards": 15,
+  "status": "proposed; owner selection pending"
+}

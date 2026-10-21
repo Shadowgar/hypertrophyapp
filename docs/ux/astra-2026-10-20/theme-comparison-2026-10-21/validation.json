@@ -1,0 +1,1523 @@
+{
+  "date": "2026-10-21",
+  "scope": "Static review assets only; no application qualification",
+  "preserved_source_frames": 12,
+  "palette_geometry_and_text_checks": 36,
+  "typography_family_only_checks": 4,
+  "rendered_text_nodes": 1448,
+  "rendered_samples": [
+    {
+      "file": "a-home-option-1.svg",
+      "kind": "variant",
+      "texts": 22,
+      "minContrast": 6.63,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "a-home-option-2.svg",
+      "kind": "variant",
+      "texts": 22,
+      "minContrast": 6.94,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "a-home-option-3.svg",
+      "kind": "variant",
+      "texts": 22,
+      "minContrast": 7.41,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "a-week-option-1.svg",
+      "kind": "variant",
+      "texts": 23,
+      "minContrast": 6.63,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "a-week-option-2.svg",
+      "kind": "variant",
+      "texts": 23,
+      "minContrast": 6.16,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "a-week-option-3.svg",
+      "kind": "variant",
+      "texts": 23,
+      "minContrast": 5.1,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "a-before-save-option-1.svg",
+      "kind": "variant",
+      "texts": 25,
+      "minContrast": 8.47,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "a-before-save-option-2.svg",
+      "kind": "variant",
+      "texts": 25,
+      "minContrast": 8,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "a-before-save-option-3.svg",
+      "kind": "variant",
+      "texts": 25,
+      "minContrast": 5.1,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "a-after-save-option-1.svg",
+      "kind": "variant",
+      "texts": 26,
+      "minContrast": 6.63,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "a-after-save-option-2.svg",
+      "kind": "variant",
+      "texts": 26,
+      "minContrast": 6.56,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "a-after-save-option-3.svg",
+      "kind": "variant",
+      "texts": 26,
+      "minContrast": 5.1,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "a-settings-option-1.svg",
+      "kind": "variant",
+      "texts": 25,
+      "minContrast": 6.63,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "a-settings-option-2.svg",
+      "kind": "variant",
+      "texts": 25,
+      "minContrast": 6.56,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "a-settings-option-3.svg",
+      "kind": "variant",
+      "texts": 25,
+      "minContrast": 7.41,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "a-desktop-workout-option-1.svg",
+      "kind": "variant",
+      "texts": 46,
+      "minContrast": 6.63,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "a-desktop-workout-option-2.svg",
+      "kind": "variant",
+      "texts": 46,
+      "minContrast": 6.16,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "a-desktop-workout-option-3.svg",
+      "kind": "variant",
+      "texts": 46,
+      "minContrast": 5.1,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "b-home-option-1.svg",
+      "kind": "variant",
+      "texts": 44,
+      "minContrast": 7.33,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "b-home-option-2.svg",
+      "kind": "variant",
+      "texts": 44,
+      "minContrast": 6.16,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "b-home-option-3.svg",
+      "kind": "variant",
+      "texts": 44,
+      "minContrast": 5.1,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "b-week-option-1.svg",
+      "kind": "variant",
+      "texts": 35,
+      "minContrast": 8.26,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "b-week-option-2.svg",
+      "kind": "variant",
+      "texts": 35,
+      "minContrast": 6.94,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "b-week-option-3.svg",
+      "kind": "variant",
+      "texts": 35,
+      "minContrast": 5.1,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "b-before-save-option-1.svg",
+      "kind": "variant",
+      "texts": 40,
+      "minContrast": 8.26,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "b-before-save-option-2.svg",
+      "kind": "variant",
+      "texts": 40,
+      "minContrast": 6.94,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "b-before-save-option-3.svg",
+      "kind": "variant",
+      "texts": 40,
+      "minContrast": 5.1,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "b-after-save-option-1.svg",
+      "kind": "variant",
+      "texts": 40,
+      "minContrast": 7.33,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "b-after-save-option-2.svg",
+      "kind": "variant",
+      "texts": 40,
+      "minContrast": 6.16,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "b-after-save-option-3.svg",
+      "kind": "variant",
+      "texts": 40,
+      "minContrast": 5.1,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "b-settings-option-1.svg",
+      "kind": "variant",
+      "texts": 37,
+      "minContrast": 8.06,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "b-settings-option-2.svg",
+      "kind": "variant",
+      "texts": 37,
+      "minContrast": 6.56,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "b-settings-option-3.svg",
+      "kind": "variant",
+      "texts": 37,
+      "minContrast": 7.72,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "b-desktop-workout-option-1.svg",
+      "kind": "variant",
+      "texts": 76,
+      "minContrast": 7.33,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "b-desktop-workout-option-2.svg",
+      "kind": "variant",
+      "texts": 76,
+      "minContrast": 6.16,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "b-desktop-workout-option-3.svg",
+      "kind": "variant",
+      "texts": 76,
+      "minContrast": 5.1,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "a-home-sans.svg",
+      "kind": "typography",
+      "texts": 22,
+      "minContrast": 6.94,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "a-before-save-sans.svg",
+      "kind": "typography",
+      "texts": 25,
+      "minContrast": 8,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "b-home-sans.svg",
+      "kind": "typography",
+      "texts": 44,
+      "minContrast": 6.16,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "b-before-save-sans.svg",
+      "kind": "typography",
+      "texts": 40,
+      "minContrast": 6.94,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    }
+  ],
+  "semantic_contrast": [
+    {
+      "theme": "github-graphite",
+      "input_border_vs_inside": 4.76,
+      "input_border_vs_outside": 4.21,
+      "chart_vs_track": 4.76,
+      "focus_vs_adjacent": 9.52,
+      "min_status_text": 7.46
+    },
+    {
+      "theme": "chatgpt-charcoal",
+      "input_border_vs_inside": 4.92,
+      "input_border_vs_outside": 4.27,
+      "chart_vs_track": 4.92,
+      "focus_vs_adjacent": 12.63,
+      "min_status_text": 6.07
+    },
+    {
+      "theme": "original-black-red",
+      "input_border_vs_inside": 4.76,
+      "input_border_vs_outside": 4.26,
+      "chart_vs_track": 4.76,
+      "focus_vs_adjacent": 8.76,
+      "min_status_text": 7.55
+    }
+  ],
+  "font_sha256": {
+    "DMSans[opsz,wght].ttf": "8cd08d97e89c24d0aa92edd2f0f4c8ee6195eee9b7c9f154865a58b02f0c1c0d",
+    "IBMPlexSans[wdth,wght].ttf": "3b031aa4216174205bd8471f88a49b91f093169e9e87bd5262242bc5967fe2e3",
+    "LibreBaskerville[wght].ttf": "05a95421961341c5b2556285e8415df9db27dab4f4abe22b446b3c6a8b916c5d"
+  },
+  "artifacts": [
+    {
+      "path": "boards/a-after-save.png",
+      "sha256": "c71b93882a0a1586ff40d2ec8614ea61b7b604b1b486ed54142b0b660a55e552",
+      "dimensions": [
+        1274,
+        1100
+      ]
+    },
+    {
+      "path": "boards/a-before-save.png",
+      "sha256": "8e7bda5e2580ed4208af46632e3503c13f6d09945aa509bdea7cf6ab0a7424a2",
+      "dimensions": [
+        1274,
+        1100
+      ]
+    },
+    {
+      "path": "boards/a-desktop-workout.png",
+      "sha256": "d78a66d02acd065c83d14f70cf9da0d49b111fd87a0a957c4cbe34d9e76fe2c9",
+      "dimensions": [
+        4424,
+        1134
+      ]
+    },
+    {
+      "path": "boards/a-home.png",
+      "sha256": "5a2f635e3320d15bd3f796611cb9a3c1f2ee67cf7b5f21ddf1fbdd6142c4e610",
+      "dimensions": [
+        1274,
+        1100
+      ]
+    },
+    {
+      "path": "boards/a-settings.png",
+      "sha256": "05c7474055c5e1e47315ec087acfbe566764d77722f0949fbb888b827c0e4ffa",
+      "dimensions": [
+        1274,
+        1100
+      ]
+    },
+    {
+      "path": "boards/a-week.png",
+      "sha256": "a1265b88f7965eb24a4f26b188b3b9e65693cc328bd3c0b37e67d5fc9bfc6c54",
+      "dimensions": [
+        1274,
+        1100
+      ]
+    },
+    {
+      "path": "boards/b-after-save.png",
+      "sha256": "a9997114c87c7703c357311d274f66b3571ee313650f81cc9cd772b4149f8f2f",
+      "dimensions": [
+        1274,
+        1100
+      ]
+    },
+    {
+      "path": "boards/b-before-save.png",
+      "sha256": "64a8bc60f13622e9004f9958aec5299b697971a1d6c47408b99231fb9185a89d",
+      "dimensions": [
+        1274,
+        1100
+      ]
+    },
+    {
+      "path": "boards/b-desktop-workout.png",
+      "sha256": "7002a36d7892d56c97a4fef17da54ea4d332d7bd3bef969ec887e4c20eb5e567",
+      "dimensions": [
+        4424,
+        1134
+      ]
+    },
+    {
+      "path": "boards/b-home.png",
+      "sha256": "b5c026b80efa97b062d63c0bb3f7b96ec8795621a9920dbf0a5585372895894d",
+      "dimensions": [
+        1274,
+        1100
+      ]
+    },
+    {
+      "path": "boards/b-settings.png",
+      "sha256": "bdc937a93e08ded828883d6c10012387ec2502ebbb336c5b9b3c0a5d82e4f336",
+      "dimensions": [
+        1274,
+        1100
+      ]
+    },
+    {
+      "path": "boards/b-week.png",
+      "sha256": "0ed2ef39e4a310505cca3ea8992d71836f3799365e3cb67e9d8162b98d7c9fec",
+      "dimensions": [
+        1274,
+        1100
+      ]
+    },
+    {
+      "path": "boards/palettes.png",
+      "sha256": "2fd50d11a594da48692506d45c02184be367682fdc4bd5759325643797bb1c4a",
+      "dimensions": [
+        1274,
+        1116
+      ]
+    },
+    {
+      "path": "boards/typography-a.png",
+      "sha256": "2efce40ebafa1ad44f9893e5eb3cd2beca86d84b43e76bdc890cdf30429a3b5b",
+      "dimensions": [
+        860,
+        2083
+      ]
+    },
+    {
+      "path": "boards/typography-b.png",
+      "sha256": "40c2b83e236e8f53ede3c1088b44180fb5848aa425da4553d458d3b59b70c319",
+      "dimensions": [
+        860,
+        2083
+      ]
+    },
+    {
+      "path": "variants/a-after-save-option-1.png",
+      "sha256": "eed7fbdf75c11827ce1a244c2cb3620ff0886f5acd27a5919edf1f2e15b85456",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/a-after-save-option-1.svg",
+      "sha256": "436106cdefabfcb7d6a99e2ed337c9c4b811ac3afd86d062d34299e1169cdd5e"
+    },
+    {
+      "path": "variants/a-after-save-option-2.png",
+      "sha256": "689222a1e591ae6232ab8e84cae45bf38a21558231d2f727d8b97c444d2172e9",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/a-after-save-option-2.svg",
+      "sha256": "ca1bd891f052f8c52190bcbb835dde9deb7fabe8c0bdb03df5de68b63b182091"
+    },
+    {
+      "path": "variants/a-after-save-option-3.png",
+      "sha256": "d48b64b02169f6e663953550a622df7ea7825212f3347155f2d57be0a727f0d9",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/a-after-save-option-3.svg",
+      "sha256": "a5515ea2b5dd4dec31245ae061dd56b06d711df178b34084d4dcf4910fa5b223"
+    },
+    {
+      "path": "variants/a-before-save-option-1.png",
+      "sha256": "79ed3e00b9b2e7e9dcd3f979f1bacaf984220c2ca1622dd47d005d69c4d9e94a",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/a-before-save-option-1.svg",
+      "sha256": "b8e83048e538b15f3b0031432394ac10d718f9799a1e24b566b7e4138f7a2f98"
+    },
+    {
+      "path": "variants/a-before-save-option-2.png",
+      "sha256": "738e5bc6bf20b9d59905865f8b274c8828cbda242858a412b8da55b108d3af6f",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/a-before-save-option-2.svg",
+      "sha256": "5bea9ea18e322f66fb46592cb6359110c7e15f7e4fbd4c8b148a614974b1e15b"
+    },
+    {
+      "path": "variants/a-before-save-option-3.png",
+      "sha256": "e00fbdb3e54e2e74bd32e4fd77c4571ce3026fd9c474939e682cb3882ada9c60",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/a-before-save-option-3.svg",
+      "sha256": "0fb4fe94dbecc48768868f21b81b9272e6174b05f1eba07310b1b1f57bb9181c"
+    },
+    {
+      "path": "variants/a-before-save-sans.png",
+      "sha256": "ce84fafa121358c84c11f469e91ad6e4d2048eb2714b1450edfb46744701460e",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/a-before-save-sans.svg",
+      "sha256": "24798b86f7a0b44f9457c97aa1865bb9ce0625f1abb50988e81d795cd5529600"
+    },
+    {
+      "path": "variants/a-desktop-workout-option-1.png",
+      "sha256": "586e4a23aef09ddc657f0d310ba1526a2dec15d5eceabe2ccf2c953658f443ee",
+      "dimensions": [
+        1440,
+        900
+      ]
+    },
+    {
+      "path": "variants/a-desktop-workout-option-1.svg",
+      "sha256": "a18e910c09a680b00511f09571ce05934e0689b8df11808e012a54bcbc90d614"
+    },
+    {
+      "path": "variants/a-desktop-workout-option-2.png",
+      "sha256": "3b5175eb177dbf782c2b60ef96e0f5ce0c141dcdae28d90683fc0905c9fae208",
+      "dimensions": [
+        1440,
+        900
+      ]
+    },
+    {
+      "path": "variants/a-desktop-workout-option-2.svg",
+      "sha256": "6258e6afd41bb038721e7f612d3216b0add23c64daab0c19ada2a96ba1a22cff"
+    },
+    {
+      "path": "variants/a-desktop-workout-option-3.png",
+      "sha256": "5aa6dfd89b489e43e19f18eddceaa57fe6941bf29676f63d145c7264af927bbc",
+      "dimensions": [
+        1440,
+        900
+      ]
+    },
+    {
+      "path": "variants/a-desktop-workout-option-3.svg",
+      "sha256": "7cb83e3c8980d034670e693bc26724f3ec388020beaa0c75c55adaef719023c3"
+    },
+    {
+      "path": "variants/a-home-option-1.png",
+      "sha256": "7ee9220b0f4afae9a3568326ed8236f52e682cff6e588e8dcc196aa6ff6b22c0",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/a-home-option-1.svg",
+      "sha256": "7c941f4258ca7c7edf4f2a88d597723223f536247fc058a10e6e636002c4a699"
+    },
+    {
+      "path": "variants/a-home-option-2.png",
+      "sha256": "953150abd76ca459dd0d82b07d85ef93fbfddb4d31825cd6bd757ac3edec0796",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/a-home-option-2.svg",
+      "sha256": "66f78586dcf5265b930005a69cffdb1e34d46836adfc7135d315887ea85cfd5a"
+    },
+    {
+      "path": "variants/a-home-option-3.png",
+      "sha256": "338ce32bdfeab95951607dfbe9cf046e492879f264d3814d436b721e67b40d96",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/a-home-option-3.svg",
+      "sha256": "b9d9d462272bec8a22e824ad33a6dfd2281f9c8a34f11db454c37776b1095081"
+    },
+    {
+      "path": "variants/a-home-sans.png",
+      "sha256": "87f6f5c6591d29c4b4ede8b106cb5ce24af87ca1393b48dd5554c508436cdd35",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/a-home-sans.svg",
+      "sha256": "cd9fdf1fe0c07f2d8c8c6582d50a95933ce82aebcb9c3082b296b71b2db0fba4"
+    },
+    {
+      "path": "variants/a-settings-option-1.png",
+      "sha256": "507baed3acc832078bfacc28e694450c639eebdbb052ed8c69ac72f88132b5ae",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/a-settings-option-1.svg",
+      "sha256": "f255517a85d703eee1fa1853a981f8860658c302f49666bb5418a8ef6617ba1a"
+    },
+    {
+      "path": "variants/a-settings-option-2.png",
+      "sha256": "fe55b924dccfd14b97eb41bbc77411057669df1019181113682163b7d1814bcd",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/a-settings-option-2.svg",
+      "sha256": "a70960ebbd2ead6e19ff1951f10066c67525890a18d575e0e4f18d99c8ffca0d"
+    },
+    {
+      "path": "variants/a-settings-option-3.png",
+      "sha256": "78f6917d48f31e4605cd3f0c4be68ed8a951f05d009d3adcce0970945d0ec02f",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/a-settings-option-3.svg",
+      "sha256": "0152de144c30ad0b75f84c2a21b183729fc345d12b63653fb5caa7329b68e7a1"
+    },
+    {
+      "path": "variants/a-week-option-1.png",
+      "sha256": "c611d8500c38013435246ffabf40f867f37e42239ddde3f34b61ed6de8077565",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/a-week-option-1.svg",
+      "sha256": "cf7df392f0b2ef1365e67107c6e4055e8b2f6de17b3d009ba5f5b56cacf7d401"
+    },
+    {
+      "path": "variants/a-week-option-2.png",
+      "sha256": "325cc8e5db921205d1dcef9d84742fa5fc33f5d5a7f56abcaae558c8bbc9aa50",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/a-week-option-2.svg",
+      "sha256": "d3b0e09a903661e52a33496342bea3a1477855c657eadb7b4e1f5c3f19cc12c1"
+    },
+    {
+      "path": "variants/a-week-option-3.png",
+      "sha256": "77cde08ce52f3dbf965ede2c34dae1337db7fa885782a4e23495aa412fdc920b",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/a-week-option-3.svg",
+      "sha256": "4e7e4b5322378b09e1860f8673ae22af0571dce67740d5c42b38b803aacfde5b"
+    },
+    {
+      "path": "variants/b-after-save-option-1.png",
+      "sha256": "40664bae41a4dad8f02fc8ec87559df2ed374bec13b60bcd41e8f28c5b4ba91c",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/b-after-save-option-1.svg",
+      "sha256": "c29b81d013d9cb67b7d8ba1cc32a7f598a7b4546d2fd6a27d847753880617b55"
+    },
+    {
+      "path": "variants/b-after-save-option-2.png",
+      "sha256": "68a9454ba393626a72ce8f70f0626ce1d59ca6da774d565611c2ac5bdbde7ccf",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/b-after-save-option-2.svg",
+      "sha256": "04c5b6e1777e455b850ec9700ae45ffe0ba9efed4c3ccb92d6704470823e77d9"
+    },
+    {
+      "path": "variants/b-after-save-option-3.png",
+      "sha256": "cf1fba4fa3badd0d675bf72fe16d8b8e7054caf3eec61d938d2ad5d43ca7df3e",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/b-after-save-option-3.svg",
+      "sha256": "ff71069eb6614faff745d2c04b38a8568d977ac96a16811ba3e8306cbd23d79f"
+    },
+    {
+      "path": "variants/b-before-save-option-1.png",
+      "sha256": "e500cb24d31477d766cbf5fa83cb2bdbc6caff3f1c1e3167248ee5e3b874065e",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/b-before-save-option-1.svg",
+      "sha256": "ecb846f91686fff64fd924f44f7adadba224a16c95a737a10b86c8e9546744cc"
+    },
+    {
+      "path": "variants/b-before-save-option-2.png",
+      "sha256": "10224f94a74d8ded87d165037e70f73e7aa57b2ead3f1b0de8f79d99709a8d28",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/b-before-save-option-2.svg",
+      "sha256": "f106099b7083a3b66093b6e084f47f40e12deff27ccf4caf4c942f36e044f59e"
+    },
+    {
+      "path": "variants/b-before-save-option-3.png",
+      "sha256": "7773ec3b305773149027f64ba964d6fd522ecea254ce6612bbebaa2b3bbf9193",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/b-before-save-option-3.svg",
+      "sha256": "b428cfc8da34222c9205c0352f6e2ec80bd5e3f7d03275a9d4e1fa0c8263c873"
+    },
+    {
+      "path": "variants/b-before-save-sans.png",
+      "sha256": "040f62596af574e4b2e53da2876ba9cb0ab2605b4828caca1ffc0adc2caf20a0",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/b-before-save-sans.svg",
+      "sha256": "d03e8d627f963b42218f323a10344774bbbcc2852615f26ea5d3bcb8d57cd449"
+    },
+    {
+      "path": "variants/b-desktop-workout-option-1.png",
+      "sha256": "f2fc86a6d75f3fb434278bdd9d367419155940697ec456f0f4bbbbf0032b39cd",
+      "dimensions": [
+        1440,
+        900
+      ]
+    },
+    {
+      "path": "variants/b-desktop-workout-option-1.svg",
+      "sha256": "8fe0f81138140752dcd5f3050a01a1d3f3ef72e5cd7887227598302cd94835d1"
+    },
+    {
+      "path": "variants/b-desktop-workout-option-2.png",
+      "sha256": "ecf7eb01459281abcd8fc81f19a2532f832fa0ee032de633b805ab6124ec406e",
+      "dimensions": [
+        1440,
+        900
+      ]
+    },
+    {
+      "path": "variants/b-desktop-workout-option-2.svg",
+      "sha256": "985b8286727298ca1db4106b10c999b189e8019a85ff4005d4ecf685b70ac178"
+    },
+    {
+      "path": "variants/b-desktop-workout-option-3.png",
+      "sha256": "24b796436efc752a9dee53af3ed1b68c23028aa569a031d6e6e1f827c4e7541c",
+      "dimensions": [
+        1440,
+        900
+      ]
+    },
+    {
+      "path": "variants/b-desktop-workout-option-3.svg",
+      "sha256": "5a4a519168974607bf1714f3afec0845147d7e2e8dae1e399b6cc433433d06d1"
+    },
+    {
+      "path": "variants/b-home-option-1.png",
+      "sha256": "7ecbd5e8731d72cd3be434862187f9256e040073e2a7504ef3c75b7ef3995eba",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/b-home-option-1.svg",
+      "sha256": "55d0f7a6594f4484af201f86fde714b9cab6b8a4b6c4ffbd8ffb0bef68ef1e16"
+    },
+    {
+      "path": "variants/b-home-option-2.png",
+      "sha256": "131ffef22f58fa62eb6b1eded937326e97bcee8523dd5a5d722dc142ccd9e355",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/b-home-option-2.svg",
+      "sha256": "12ebd5fc6d0eba279c2f210fe38310f55f94d91f6866993f6804e6fb0a027cdd"
+    },
+    {
+      "path": "variants/b-home-option-3.png",
+      "sha256": "742a370b725c7e5d390d516b4004149a2246e8d1504963c3d2e9d2cd18adf715",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/b-home-option-3.svg",
+      "sha256": "00fc0e60b593a5f9773ef9c0e8cbdc2b5c5c62b31ba1291c074d1a4927fbd5fc"
+    },
+    {
+      "path": "variants/b-home-sans.png",
+      "sha256": "5a05b65149c77fd65aac370e73ccde16638dc81dffadfde2912dc604b49cbf9b",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/b-home-sans.svg",
+      "sha256": "ed4446baaf225b1641f7fd482d6661287ab21905f0c7b93f931404b0bf2a9084"
+    },
+    {
+      "path": "variants/b-settings-option-1.png",
+      "sha256": "5274da2e47728662b4da861128066e7b6c6f74ea384e85e95d4c3edc4532400e",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/b-settings-option-1.svg",
+      "sha256": "86ec42752a088261caa80fb99db32f5c03f9b6817732f62ec92efb48ee9aaf14"
+    },
+    {
+      "path": "variants/b-settings-option-2.png",
+      "sha256": "1d0adc55adf2d3516be8957e145f268941a8392c203be1f966a08d863a4f1fa9",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/b-settings-option-2.svg",
+      "sha256": "8ed42119769071df96db109e4894e7da3be25993ca73b2d9438fe1ce3d1723b7"
+    },
+    {
+      "path": "variants/b-settings-option-3.png",
+      "sha256": "f2878fb6ad1cda303cf85ffffcbfd65c49fd8d6fa0467393363ad9cd0c75e125",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/b-settings-option-3.svg",
+      "sha256": "e0596de5d3f5658effa1e44d4ea804c6f120d74ee7d2cee0cf35fcef61c0934b"
+    },
+    {
+      "path": "variants/b-week-option-1.png",
+      "sha256": "4d5722d8cf877c79696a3fed3665f6bcce5ed37d915229e0f32e59845dac6acd",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/b-week-option-1.svg",
+      "sha256": "330c53ecf6a90362b162976a4b942314258085befeecc68543f5b5c6a4399af5"
+    },
+    {
+      "path": "variants/b-week-option-2.png",
+      "sha256": "c77189d0c898dd9310a0110675c4ef4b7e997767b2161a622ab7942446da3f24",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/b-week-option-2.svg",
+      "sha256": "662ece62f0aa9c1408832eee2c1b0b96b43637ac6f3c97c407e88f84a7ab7dae"
+    },
+    {
+      "path": "variants/b-week-option-3.png",
+      "sha256": "7663d635f521321ec2044e4ef10984b72ebf89158101bcbab599c9e8bc0911af",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "variants/b-week-option-3.svg",
+      "sha256": "beb0d975be5a908dd6d928520b2cd7f280a99dd94c677d3350776c30dfac984d"
+    }
+  ]
+}

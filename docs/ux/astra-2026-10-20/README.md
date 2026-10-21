@@ -1,5 +1,7 @@
 # WorkoutApp — independent Astra UX review
 
+> **Current visual review — neutral theme comparison (21 October):** The earthy dark palettes below are not approved. [Compare three neutral themes](theme-comparison-2026-10-21/README.md) on a fixed subset, with a separate typography comparison. The original 64 mockups and workflows remain unchanged pending owner selection.
+
 **Audit: 20 October 2026 · Dark-mode revision: 21 October 2026 · AUDIT → SKETCH → PRESENT → STOP. Owner decision pending.**
 
 This package contains a fresh independent Astra audit and two original full-application design directions. Both alternatives now use dark mode throughout, following the owner's requested revision. It addresses [#103](https://github.com/Shadowgar/hypertrophyapp/issues/103) and [#105](https://github.com/Shadowgar/hypertrophyapp/issues/105). It does not implement fixes or authorize a redesign, merge, migration or deployment. Prior GPT-6.1 Medium findings and Focus/Training Ledger designs were not consulted or reused.
