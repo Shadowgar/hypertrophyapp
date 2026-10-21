@@ -1,3 +1,4 @@
+export type InterfacePreferences = {theme_family: "graphite" | "charcoal" | "classic"; appearance: "light" | "dark" | "system"; weight_unit: "kg" | "lb"; revision: number};
 import type {InventoryDocument,InventoryVariant,LocationProfile} from "./customized-inventory";
 import { API_BASE_URL } from "@/lib/env";
 const AUTH_TOKEN_KEY = "hypertrophy_token";
@@ -1092,6 +1093,9 @@ export const api = {
     method: "POST", body: JSON.stringify(payload),
   }),
   getProfile: () => request<Profile>("/profile"),
+  updateEquipment: (payload: {training_location: "home" | "gym"; equipment_profile: string[]}) => request<Profile>("/profile/equipment", {method: "PATCH", body: JSON.stringify(payload)}),
+  getInterfacePreferences: () => request<InterfacePreferences>("/profile/preferences"),
+  saveInterfacePreferences: (payload: Omit<InterfacePreferences, "revision"> & {expected_revision: number}) => request<InterfacePreferences>("/profile/preferences", {method:"PUT", body:JSON.stringify(payload)}),
   listPrograms: () => request<ProgramTemplateOption[]>("/plan/programs"),
   listGuidePrograms: () => request<GuideProgram[]>("/plan/guides/programs"),
   getProgramGuide: (programId: string) =>
