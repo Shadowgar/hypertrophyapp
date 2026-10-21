@@ -1,0 +1,1292 @@
+{
+  "date": "2026-10-21",
+  "scope": "Static design checks only; no preference persistence or app qualification",
+  "light_geometry_only": 18,
+  "dark_source_pairs_unchanged": 18,
+  "shared_keys": 23,
+  "settings_frames": 12,
+  "boards": 26,
+  "text_nodes": 999,
+  "rendered_samples": [
+    {
+      "file": "graphite-a-home-light.svg",
+      "kind": "light",
+      "texts": 22,
+      "minContrast": 5.4,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "graphite-a-before-save-light.svg",
+      "kind": "light",
+      "texts": 25,
+      "minContrast": 6.02,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "graphite-a-after-save-light.svg",
+      "kind": "light",
+      "texts": 26,
+      "minContrast": 5.24,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "graphite-b-before-save-light.svg",
+      "kind": "light",
+      "texts": 40,
+      "minContrast": 6.68,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "graphite-b-after-save-light.svg",
+      "kind": "light",
+      "texts": 40,
+      "minContrast": 5.24,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "graphite-b-desktop-workout-light.svg",
+      "kind": "light",
+      "texts": 76,
+      "minContrast": 6.68,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "charcoal-a-home-light.svg",
+      "kind": "light",
+      "texts": 22,
+      "minContrast": 8.1,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "charcoal-a-before-save-light.svg",
+      "kind": "light",
+      "texts": 25,
+      "minContrast": 8.76,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "charcoal-a-after-save-light.svg",
+      "kind": "light",
+      "texts": 26,
+      "minContrast": 5.1,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "charcoal-b-before-save-light.svg",
+      "kind": "light",
+      "texts": 40,
+      "minContrast": 8.1,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "charcoal-b-after-save-light.svg",
+      "kind": "light",
+      "texts": 40,
+      "minContrast": 5.1,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "charcoal-b-desktop-workout-light.svg",
+      "kind": "light",
+      "texts": 76,
+      "minContrast": 7.19,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "classic-workoutapp-a-home-light.svg",
+      "kind": "light",
+      "texts": 22,
+      "minContrast": 6.52,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "classic-workoutapp-a-before-save-light.svg",
+      "kind": "light",
+      "texts": 25,
+      "minContrast": 5.78,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "classic-workoutapp-a-after-save-light.svg",
+      "kind": "light",
+      "texts": 26,
+      "minContrast": 5.19,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "classic-workoutapp-b-before-save-light.svg",
+      "kind": "light",
+      "texts": 40,
+      "minContrast": 6.52,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "classic-workoutapp-b-after-save-light.svg",
+      "kind": "light",
+      "texts": 40,
+      "minContrast": 5.19,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "classic-workoutapp-b-desktop-workout-light.svg",
+      "kind": "light",
+      "texts": 76,
+      "minContrast": 6.52,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "settings-charcoal-dark-desktop.svg",
+      "kind": "settings",
+      "texts": 30,
+      "minContrast": 6.16,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "settings-charcoal-dark-mobile.svg",
+      "kind": "settings",
+      "texts": 22,
+      "minContrast": 6.16,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "settings-charcoal-light-desktop.svg",
+      "kind": "settings",
+      "texts": 30,
+      "minContrast": 7.19,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "settings-charcoal-light-mobile.svg",
+      "kind": "settings",
+      "texts": 22,
+      "minContrast": 7.19,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "settings-classic-workoutapp-dark-desktop.svg",
+      "kind": "settings",
+      "texts": 30,
+      "minContrast": 5.1,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "settings-classic-workoutapp-dark-mobile.svg",
+      "kind": "settings",
+      "texts": 22,
+      "minContrast": 5.1,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "settings-classic-workoutapp-light-desktop.svg",
+      "kind": "settings",
+      "texts": 30,
+      "minContrast": 6.52,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "settings-classic-workoutapp-light-mobile.svg",
+      "kind": "settings",
+      "texts": 22,
+      "minContrast": 6.52,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "settings-graphite-dark-desktop.svg",
+      "kind": "settings",
+      "texts": 30,
+      "minContrast": 7.33,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "settings-graphite-dark-mobile.svg",
+      "kind": "settings",
+      "texts": 22,
+      "minContrast": 7.33,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "settings-graphite-light-desktop.svg",
+      "kind": "settings",
+      "texts": 30,
+      "minContrast": 6.68,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    },
+    {
+      "file": "settings-graphite-light-mobile.svg",
+      "kind": "settings",
+      "texts": 22,
+      "minContrast": 6.68,
+      "low": [],
+      "clips": [],
+      "fonts": [
+        {
+          "family": "Libre Baskerville",
+          "loaded": true
+        },
+        {
+          "family": "DM Sans",
+          "loaded": true
+        },
+        {
+          "family": "IBM Plex Sans",
+          "loaded": true
+        }
+      ]
+    }
+  ],
+  "semantic_contrast": [
+    {
+      "family": "graphite",
+      "appearance": "light",
+      "action_label": 6.68,
+      "control_min": 3.83,
+      "focus_min": 5.4,
+      "status_min": 6.1
+    },
+    {
+      "family": "graphite",
+      "appearance": "dark",
+      "action_label": 9.09,
+      "control_min": 3.73,
+      "focus_min": 8.44,
+      "status_min": 7.46
+    },
+    {
+      "family": "charcoal",
+      "appearance": "light",
+      "action_label": 15.52,
+      "control_min": 3.73,
+      "focus_min": 12.21,
+      "status_min": 5.74
+    },
+    {
+      "family": "charcoal",
+      "appearance": "dark",
+      "action_label": 13.63,
+      "control_min": 3.79,
+      "focus_min": 11.2,
+      "status_min": 6.07
+    },
+    {
+      "family": "classic-workoutapp",
+      "appearance": "light",
+      "action_label": 6.52,
+      "control_min": 3.8,
+      "focus_min": 5.23,
+      "status_min": 6.05
+    },
+    {
+      "family": "classic-workoutapp",
+      "appearance": "dark",
+      "action_label": 5.1,
+      "control_min": 3.58,
+      "focus_min": 7.36,
+      "status_min": 7.55
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "boards/charcoal-a-after-save.png",
+      "sha256": "58292e4dfdbcf4b75f79befdaaa92275cb1e1fe483e15a6d632478b8adc0e418",
+      "dimensions": [
+        860,
+        1101
+      ]
+    },
+    {
+      "path": "boards/charcoal-a-before-save.png",
+      "sha256": "ede2abc481f0eaa6d21fa521e778000755f1697d96a4cb99f42c5fa2a69f1cb0",
+      "dimensions": [
+        860,
+        1101
+      ]
+    },
+    {
+      "path": "boards/charcoal-a-home.png",
+      "sha256": "27e2d9813fe45f094fba05ca8f9c90ddfb77864f9136f17ed73baa44b28ab909",
+      "dimensions": [
+        860,
+        1101
+      ]
+    },
+    {
+      "path": "boards/charcoal-b-after-save.png",
+      "sha256": "e7d0717f79cabd589d66b3422e78be8a06ea63604a6140ddfb7a5dc58139d0c9",
+      "dimensions": [
+        860,
+        1101
+      ]
+    },
+    {
+      "path": "boards/charcoal-b-before-save.png",
+      "sha256": "fa77a3ff59fe3ccba20513ebf1654bbfa4c9d06cb52a0bc100a8dd6233cf62c4",
+      "dimensions": [
+        860,
+        1101
+      ]
+    },
+    {
+      "path": "boards/charcoal-b-desktop-workout.png",
+      "sha256": "416eebb71eedd6afbda6e8fa6f0b0ef68dcaf0fcf7b095ed2d949e445837043f",
+      "dimensions": [
+        2960,
+        1157
+      ]
+    },
+    {
+      "path": "boards/classic-workoutapp-a-after-save.png",
+      "sha256": "e9dea4a89182ccd42f80975fd825042bc78920e83ed44d5453fe8bcf2140236d",
+      "dimensions": [
+        860,
+        1101
+      ]
+    },
+    {
+      "path": "boards/classic-workoutapp-a-before-save.png",
+      "sha256": "e9c023861f992a007c8cd2d96f57f2be3ab1095892a2f9477f6300c938ee30e5",
+      "dimensions": [
+        860,
+        1101
+      ]
+    },
+    {
+      "path": "boards/classic-workoutapp-a-home.png",
+      "sha256": "6b74fcd47a2ae78d65cd35da93ac29af1220102949684ad8060e179a9d094ae9",
+      "dimensions": [
+        860,
+        1101
+      ]
+    },
+    {
+      "path": "boards/classic-workoutapp-b-after-save.png",
+      "sha256": "fdc861bc0536844520aa9e3dcd31b387ae215de5e0cc0c915599511e5543460a",
+      "dimensions": [
+        860,
+        1101
+      ]
+    },
+    {
+      "path": "boards/classic-workoutapp-b-before-save.png",
+      "sha256": "5e45555ba57afdce3050e7b18ade6852651533796c964044908ea8bd09f8175d",
+      "dimensions": [
+        860,
+        1101
+      ]
+    },
+    {
+      "path": "boards/classic-workoutapp-b-desktop-workout.png",
+      "sha256": "c2cf2fe30fbcd03dfe446f0d3fe33c7ed9cca92b3e3fa3f3d1da7a07a01c7875",
+      "dimensions": [
+        2960,
+        1157
+      ]
+    },
+    {
+      "path": "boards/graphite-a-after-save.png",
+      "sha256": "38dce52dccd2aa756746f1c2ce15a35c66e75a6966f4a5bd0785ae6e2e2d07b7",
+      "dimensions": [
+        860,
+        1101
+      ]
+    },
+    {
+      "path": "boards/graphite-a-before-save.png",
+      "sha256": "a948365535ca901e143e6218bd524123fe84b19e28942b056d52a2b36bbce4d6",
+      "dimensions": [
+        860,
+        1101
+      ]
+    },
+    {
+      "path": "boards/graphite-a-home.png",
+      "sha256": "54afb338fb19b71863a8ccad1be8813a745a4cef7ad732ae5cba8f9f5255da5c",
+      "dimensions": [
+        860,
+        1101
+      ]
+    },
+    {
+      "path": "boards/graphite-b-after-save.png",
+      "sha256": "cbc8a301b059154415e2bb45b59e52d87a21ec12ec0b1fc3e444fa5dbc737f68",
+      "dimensions": [
+        860,
+        1101
+      ]
+    },
+    {
+      "path": "boards/graphite-b-before-save.png",
+      "sha256": "a6df5a237d6a06b3a46e494cd5422d82b7a1ac3f155b65b9d9b11ff34ba48a2c",
+      "dimensions": [
+        860,
+        1101
+      ]
+    },
+    {
+      "path": "boards/graphite-b-desktop-workout.png",
+      "sha256": "77423090b566a2d6482a150dc38a5785b7e413617268936fa829a8ddd6928767",
+      "dimensions": [
+        2960,
+        1157
+      ]
+    },
+    {
+      "path": "boards/light-palettes.png",
+      "sha256": "4b9f12260fbc1e37403b3d41ba989ec066215952e3ff1de0f28727d5fc628f21",
+      "dimensions": [
+        1274,
+        1100
+      ]
+    },
+    {
+      "path": "boards/settings-charcoal-desktop.png",
+      "sha256": "843a9218ca4663963c32c33d03813afa83458088eeeafe74e23831d85a4c77de",
+      "dimensions": [
+        2960,
+        1157
+      ]
+    },
+    {
+      "path": "boards/settings-charcoal-mobile.png",
+      "sha256": "86d5b11d289065968ce6c7f608f6af32f77452704f4534cbd2cb2640a1d9793c",
+      "dimensions": [
+        860,
+        1121
+      ]
+    },
+    {
+      "path": "boards/settings-classic-workoutapp-desktop.png",
+      "sha256": "ab7ee9720483f8450f8c77b3e631f71a575bb9c43e9e8120496efd89d7644937",
+      "dimensions": [
+        2960,
+        1157
+      ]
+    },
+    {
+      "path": "boards/settings-classic-workoutapp-mobile.png",
+      "sha256": "be9d613c07175c5de3543a724b903a8ce6b85d125a65c4ed1145ca56ca7ea502",
+      "dimensions": [
+        860,
+        1121
+      ]
+    },
+    {
+      "path": "boards/settings-graphite-desktop.png",
+      "sha256": "bf49cabebfc64ee03aa4a23cf7a852863d835eafc9038701a807eb17bb81d393",
+      "dimensions": [
+        2960,
+        1157
+      ]
+    },
+    {
+      "path": "boards/settings-graphite-mobile.png",
+      "sha256": "dd785e44086f82c2dd24bec63ffbf01abebd692b903b01f43f92a5c0e0cb631f",
+      "dimensions": [
+        860,
+        1121
+      ]
+    },
+    {
+      "path": "boards/six-appearance-states.png",
+      "sha256": "6d6ffe0866a9d42d65e1edd9e20a28c5f2dfc0ee49f686ef9f8297077863bcb4",
+      "dimensions": [
+        1274,
+        1265
+      ]
+    },
+    {
+      "path": "screens/charcoal-a-after-save-light.png",
+      "sha256": "d25fff91a788496b2ec8fef0edf227c49501dcb7002e229f124475416ae6e762",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "screens/charcoal-a-after-save-light.svg",
+      "sha256": "b7a1ec48691c45199630a87cc09011cfe2a3d616ba459f86d20583c8306a0230"
+    },
+    {
+      "path": "screens/charcoal-a-before-save-light.png",
+      "sha256": "ecf9c92a3393e4d2572b2dd96682e3bae5f98b91c638443715ae04df49f3f474",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "screens/charcoal-a-before-save-light.svg",
+      "sha256": "bcfa6ad1e345b60029c08c3fa01de1592c311edb42658566f4ac45e8df2c056f"
+    },
+    {
+      "path": "screens/charcoal-a-home-light.png",
+      "sha256": "3222293550fd5afeec29eca7bb53ace86127ef2112f2866c4fb3d24ae678cf89",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "screens/charcoal-a-home-light.svg",
+      "sha256": "423e957f6e4d904a123ef0ad179525eec0403529d6ec94725e91d76d76305640"
+    },
+    {
+      "path": "screens/charcoal-b-after-save-light.png",
+      "sha256": "81166b5bfa10613a0a624612c4494890f39092f7f3f3585142123c413df79803",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "screens/charcoal-b-after-save-light.svg",
+      "sha256": "a96fd1e43025ecbe451391398ae7268b8d848981c28154517b54fb879d50167b"
+    },
+    {
+      "path": "screens/charcoal-b-before-save-light.png",
+      "sha256": "a716f29c8abc44c3b2376d461e4cd5dbcbf15df9d226d8f498b134eb23940e15",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "screens/charcoal-b-before-save-light.svg",
+      "sha256": "05094d133bcd85c40f4912c39f439538c83a66db1be8a135a08f56c979ae395a"
+    },
+    {
+      "path": "screens/charcoal-b-desktop-workout-light.png",
+      "sha256": "f2e52d6b7f11562dac5ca309388be70eba8c28605d70a25c7c833730ac7fad8d",
+      "dimensions": [
+        1440,
+        900
+      ]
+    },
+    {
+      "path": "screens/charcoal-b-desktop-workout-light.svg",
+      "sha256": "ed15c0b847fcbcaebd2f34ad2edd0d5b3142dbfcbfc117ed5224c4d84403a4d9"
+    },
+    {
+      "path": "screens/classic-workoutapp-a-after-save-light.png",
+      "sha256": "80221d3fd5a094d8a10b6c8d2bd7d83396f4c9bdfa65d12c0bce6d554d502f1b",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "screens/classic-workoutapp-a-after-save-light.svg",
+      "sha256": "95e68730ebd85d1626258e2020cec404d803213a5c2749cbc9677e72b7cf89f7"
+    },
+    {
+      "path": "screens/classic-workoutapp-a-before-save-light.png",
+      "sha256": "25c63085851ee3d1f7f1fe2741f73655059f9fb15d51fb70e73bca54654404e6",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "screens/classic-workoutapp-a-before-save-light.svg",
+      "sha256": "5c70404f7e47ecc576d69598fb07e9d54785d8db7d880397760d6e0fb398de28"
+    },
+    {
+      "path": "screens/classic-workoutapp-a-home-light.png",
+      "sha256": "7b961031d78343a5f0a59a7be567522c53f64da2d48cc46b9a4bdf89e67b7b39",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "screens/classic-workoutapp-a-home-light.svg",
+      "sha256": "cd69716c7e055c425fce6ee289359aab3d90b0155baadb099fb055d1a26aff77"
+    },
+    {
+      "path": "screens/classic-workoutapp-b-after-save-light.png",
+      "sha256": "4b5dbf7a71def3c982d2266258aad1c2ddcbda8e737d0eaed82bfb341da73986",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "screens/classic-workoutapp-b-after-save-light.svg",
+      "sha256": "9082ce449b551d64276e180e32a3fcc64463a54390824eb0704c1a1d1665e0c9"
+    },
+    {
+      "path": "screens/classic-workoutapp-b-before-save-light.png",
+      "sha256": "72eb13804d09e190e6eff5703cd01c92e7e8018eef2e8f9c1ed0d0697b9c7079",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "screens/classic-workoutapp-b-before-save-light.svg",
+      "sha256": "4eebbcce0d235e7c9bb47890ef3a9c9655e4d25f58060137abea62cc0a10d20d"
+    },
+    {
+      "path": "screens/classic-workoutapp-b-desktop-workout-light.png",
+      "sha256": "95dc4d385a664991ca116b16d5302a91c5bfa40de88e6c8259554a375f61ad33",
+      "dimensions": [
+        1440,
+        900
+      ]
+    },
+    {
+      "path": "screens/classic-workoutapp-b-desktop-workout-light.svg",
+      "sha256": "a421baddd8b6ff3f020bbe7c9a28d370a1bed4fc6668e144617d4d0a4a20a4a7"
+    },
+    {
+      "path": "screens/graphite-a-after-save-light.png",
+      "sha256": "e45a622d2fc01210efa41612e279c2c168923d26b8357306a9d98b15d6d49222",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "screens/graphite-a-after-save-light.svg",
+      "sha256": "b30617076b81f82138ae0ce4a9a233e7902b593c8017ef8780430fd77c1e13f6"
+    },
+    {
+      "path": "screens/graphite-a-before-save-light.png",
+      "sha256": "e4aa0abbbc2c8dda295c145bfd0f1b344fbd54b010a8abdd74bf0b1158ea31c2",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "screens/graphite-a-before-save-light.svg",
+      "sha256": "4cb6d3bb40af8bdc3e7af2d56dc712d41bfbc5dff7784c0823bea4f96949acec"
+    },
+    {
+      "path": "screens/graphite-a-home-light.png",
+      "sha256": "5ba1315f5dcd9662e380ad62c7efb066107f9a83382eb73c665f5b21d61ae9d2",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "screens/graphite-a-home-light.svg",
+      "sha256": "1d414d4e0116094ee072780cef297b0c4c34376d6c244d1ce8d6a786a2a80a0a"
+    },
+    {
+      "path": "screens/graphite-b-after-save-light.png",
+      "sha256": "11f021f6dfe796c90fcddd721ff2af3d38900d3d92e5879a2ebe272a3ac0c424",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "screens/graphite-b-after-save-light.svg",
+      "sha256": "85cac255f60572e3e61f479576622eded0ca3bae56af2248b281ca0fece8ccc8"
+    },
+    {
+      "path": "screens/graphite-b-before-save-light.png",
+      "sha256": "5cf94fff1e66ecef947c457bf6f0a0a52e4a69fa535bcfce5d5cbb6de77e9bfa",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "screens/graphite-b-before-save-light.svg",
+      "sha256": "96baceb72f6b59095f117d0e8f0dcc1fcb9d85a6f0c4ab71823f8019b4328e45"
+    },
+    {
+      "path": "screens/graphite-b-desktop-workout-light.png",
+      "sha256": "ac94e207ab79a5493eef5ef6afbf1fb658b9faca674ba54148507b4dc0d0d159",
+      "dimensions": [
+        1440,
+        900
+      ]
+    },
+    {
+      "path": "screens/graphite-b-desktop-workout-light.svg",
+      "sha256": "c2d1a71597e072c8fa14dd933a7482c7163db0f07415dded25c0be29080da927"
+    },
+    {
+      "path": "settings/settings-charcoal-dark-desktop.png",
+      "sha256": "478761a54449b15c6da161d7368a0a392bd2f825ae857e234b75926b660f9e43",
+      "dimensions": [
+        1440,
+        900
+      ]
+    },
+    {
+      "path": "settings/settings-charcoal-dark-desktop.svg",
+      "sha256": "682fd48967fd6214d6973c04592a5a518058280ece85d4e827838dd5e85895a8"
+    },
+    {
+      "path": "settings/settings-charcoal-dark-mobile.png",
+      "sha256": "1be66e66aed3b08cdf292819fb5182e7deffe03a1af42c5dc9e5031e73acc543",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "settings/settings-charcoal-dark-mobile.svg",
+      "sha256": "49416cfbb6ab7a6bf1d08b17d5e3d46894a3873fdc04fc33855e3e76c816de6a"
+    },
+    {
+      "path": "settings/settings-charcoal-light-desktop.png",
+      "sha256": "6b49c781e75cd2ae00978ad4a601537c842e3029b066417a2adfe6f3c588e8d3",
+      "dimensions": [
+        1440,
+        900
+      ]
+    },
+    {
+      "path": "settings/settings-charcoal-light-desktop.svg",
+      "sha256": "9d77a448ecdf97969ce63456df97209bd68d479fd422540fef30109694e9f355"
+    },
+    {
+      "path": "settings/settings-charcoal-light-mobile.png",
+      "sha256": "21b07d396bbd37dde18bf34522174654f2c517177ff9e49608d310b17ee1d9c5",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "settings/settings-charcoal-light-mobile.svg",
+      "sha256": "fa6774423124749bb56f94122926b8021841fe41ba4d9ec2f4679eb6fc76f4bb"
+    },
+    {
+      "path": "settings/settings-classic-workoutapp-dark-desktop.png",
+      "sha256": "4fd7752403a7681a1478e9c96e442ccc5843832c70aa723d1a48ef5edbfa1bd1",
+      "dimensions": [
+        1440,
+        900
+      ]
+    },
+    {
+      "path": "settings/settings-classic-workoutapp-dark-desktop.svg",
+      "sha256": "8e8c2af877f4255eab1c426500081f86fafd4851d2c78a666e1877b4cf542189"
+    },
+    {
+      "path": "settings/settings-classic-workoutapp-dark-mobile.png",
+      "sha256": "3963667f4e7f83fa0a1e6b1093c8a6f6cacba80cef1c39cd29bd9cc6848c4228",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "settings/settings-classic-workoutapp-dark-mobile.svg",
+      "sha256": "a02b44dc310983600a17669b8d9857098e52cbc921381c4a4352edda2d8a11c9"
+    },
+    {
+      "path": "settings/settings-classic-workoutapp-light-desktop.png",
+      "sha256": "4b05d727fa2f5fbba71e87ef6fc04888de46934a164b39e729d094fff11ee7f4",
+      "dimensions": [
+        1440,
+        900
+      ]
+    },
+    {
+      "path": "settings/settings-classic-workoutapp-light-desktop.svg",
+      "sha256": "d3688d1f444ac41beea2b3a99bdc9398910e48494e48f84c803fd99a5d9bf1b2"
+    },
+    {
+      "path": "settings/settings-classic-workoutapp-light-mobile.png",
+      "sha256": "59c5ff55df48c8560ecf2e44e01b885c7a5921ea98c53a04a7eea08d5c5fa07f",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "settings/settings-classic-workoutapp-light-mobile.svg",
+      "sha256": "c44cba01a5f4bde6cb9b58115fa7c21fa2127b9e9c45157a44195e99d76ba7cd"
+    },
+    {
+      "path": "settings/settings-graphite-dark-desktop.png",
+      "sha256": "d58c7d7c8ed1adedae9bb7843025d8e78daf22d7d0c2db08ef191eeca8b1b36f",
+      "dimensions": [
+        1440,
+        900
+      ]
+    },
+    {
+      "path": "settings/settings-graphite-dark-desktop.svg",
+      "sha256": "71d6dbccf34c233cbc20e2b82f3ce77705029c5b6d3422c943f7503c3dfcca45"
+    },
+    {
+      "path": "settings/settings-graphite-dark-mobile.png",
+      "sha256": "53bbcc2e125c769e6d95b3c195b9e764d9c10721f1d413d52b4857a9b3d561b4",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "settings/settings-graphite-dark-mobile.svg",
+      "sha256": "8b6ac074af1cad4a5021545ede87d7418a24f67683ff82dd72b1b34bbe2a524b"
+    },
+    {
+      "path": "settings/settings-graphite-light-desktop.png",
+      "sha256": "203250321bab01900cbd88721ba4ee98f2f4514639a53a627f82f18b423661eb",
+      "dimensions": [
+        1440,
+        900
+      ]
+    },
+    {
+      "path": "settings/settings-graphite-light-desktop.svg",
+      "sha256": "3a4e71fe50a0405eaa1de406f5afa6c4f40de51ed6698dbd941a4fcc6cf0165b"
+    },
+    {
+      "path": "settings/settings-graphite-light-mobile.png",
+      "sha256": "1858a34d226dc6744cbfb2775880498cd363166873d068740f4a072eae450169",
+      "dimensions": [
+        390,
+        844
+      ]
+    },
+    {
+      "path": "settings/settings-graphite-light-mobile.svg",
+      "sha256": "7ced828728a32ec8c45f375ae522d0ae3ab8df3dfdfa6a1b27f3bb8d3f0382f7"
+    }
+  ]
+}

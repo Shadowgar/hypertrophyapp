@@ -1,5 +1,7 @@
 # Astra — three neutral dark themes
 
+> **Next review:** The owner has directed that all three families be retained as Graphite, Charcoal and Classic WorkoutApp. [Review their Light/Dark appearances and Settings selector](../appearances-2026-10-21/README.md). This earlier comparison remains unchanged as visual history; its recommendation to choose one family is superseded.
+
 **21 October 2026 · Visual comparison only · None approved.** The earlier earthy dark palettes are not approved. This small comparison keeps the existing Next Step and Training Atlas workflows fixed. The audit was not repeated and the complete 64-frame package was not regenerated.
 
 Choose the **palette** separately from **typography** and from the still-unapproved layout directions. GitHub-inspired and ChatGPT-inspired describe the visual inspiration; these are original WorkoutApp palettes, not claims of exact product tokens or copied interfaces.

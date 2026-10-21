@@ -1,6 +1,6 @@
 # WorkoutApp — independent Astra UX review
 
-> **Current visual review — neutral theme comparison (21 October):** The earthy dark palettes below are not approved. [Compare three neutral themes](theme-comparison-2026-10-21/README.md) on a fixed subset, with a separate typography comparison. The original 64 mockups and workflows remain unchanged pending owner selection.
+> **Current appearance-system review (21 October):** Keep Graphite, Charcoal and Classic WorkoutApp, each in Light and Dark. [Review the six appearances and independent Settings choices](appearances-2026-10-21/README.md). Existing dark assets are retained; overall layout and typography remain unapproved.
 
 **Audit: 20 October 2026 · Dark-mode revision: 21 October 2026 · AUDIT → SKETCH → PRESENT → STOP. Owner decision pending.**
 
