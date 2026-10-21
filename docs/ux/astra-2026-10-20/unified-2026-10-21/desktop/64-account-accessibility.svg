@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" role="img" aria-labelledby="title desc"><title id="title">Account &amp; accessibility</title><desc id="desc">WorkoutApp unified design proposal. Synthetic example. Visible sign-out clears account-scoped cached preferences/drafts after resolving active work. Support device text size, reduced motion and keyboard focus. Account deletion/developer resets do not appear as ordinary recovery actions.</desc><style>text{font-family:"DM Sans",Arial,sans-serif;font-variant-numeric:tabular-nums} @font-face{font-family:"DM Sans";src:url("../fonts/DM-Sans.ttf")}</style>
+<rect x="0" y="0" width="1440" height="900" rx="0" fill="#101010" data-fill-token="canvas"/>
+<rect x="0" y="0" width="224" height="900" rx="0" fill="#191919" data-fill-token="surface"/>
+<path d="M224 0 L224 900" fill="none" stroke="#3B3B3B" stroke-width="1"/>
+<rect x="26" y="31" width="6" height="23" rx="2" fill="#C9383F" data-fill-token="action_fill"/>
+<rect x="36" y="37" width="6" height="17" rx="2" fill="#C9383F" data-fill-token="action_fill"/>
+<text x="53" y="50" fill="#F5F5F5" data-fill-token="text_primary" font-size="22" font-weight="700" text-anchor="start">WorkoutApp</text>
+<path d="M2 10 L10 3 L18 10 M4 9 V18 H16 V9 M8 18 V12 H12 V18" transform="translate(32 121) scale(1.0)" fill="none" stroke="#C2C2C2" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="65" y="138" fill="#C2C2C2" data-fill-token="text_secondary" font-size="16" font-weight="400" text-anchor="start">Home</text>
+<path d="M3 6 V14 M6 4 V16 M6 10 H14 M14 4 V16 M17 6 V14" transform="translate(32 178) scale(1.0)" fill="none" stroke="#C2C2C2" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="65" y="195" fill="#C2C2C2" data-fill-token="text_secondary" font-size="16" font-weight="400" text-anchor="start">Today</text>
+<path d="M3 5 H17 V18 H3 Z M3 9 H17 M6 2 V7 M14 2 V7" transform="translate(32 235) scale(1.0)" fill="none" stroke="#C2C2C2" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="65" y="252" fill="#C2C2C2" data-fill-token="text_secondary" font-size="16" font-weight="400" text-anchor="start">Week</text>
+<path d="M3 10 A7 7 0 1 0 5 5 M3 2 V7 H8 M10 6 V11 L14 13" transform="translate(32 292) scale(1.0)" fill="none" stroke="#C2C2C2" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="65" y="309" fill="#C2C2C2" data-fill-token="text_secondary" font-size="16" font-weight="400" text-anchor="start">History</text>
+<path d="M3 3 V18 H18 M6 14 L10 10 L13 12 L17 5" transform="translate(32 349) scale(1.0)" fill="none" stroke="#C2C2C2" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="65" y="366" fill="#C2C2C2" data-fill-token="text_secondary" font-size="16" font-weight="400" text-anchor="start">Analytics</text>
+<path d="M3 4 H9 V17 H3 Z M11 4 H17 V17 H11 Z" transform="translate(32 406) scale(1.0)" fill="none" stroke="#C2C2C2" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="65" y="423" fill="#C2C2C2" data-fill-token="text_secondary" font-size="16" font-weight="400" text-anchor="start">Programs</text>
+<path d="M3 4 H17 V18 H3 Z M6 2 H14 V6 H6 Z M6 11 L9 14 L14 9" transform="translate(32 463) scale(1.0)" fill="none" stroke="#C2C2C2" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="65" y="480" fill="#C2C2C2" data-fill-token="text_secondary" font-size="16" font-weight="400" text-anchor="start">Check-In</text>
+<path d="M3 3 H8 V17 H3 Z M10 4 L15 3 L18 17 L13 18 Z" transform="translate(32 520) scale(1.0)" fill="none" stroke="#C2C2C2" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="65" y="537" fill="#C2C2C2" data-fill-token="text_secondary" font-size="16" font-weight="400" text-anchor="start">Library</text>
+<rect x="16" y="564" width="192" height="48" rx="10" fill="#303030" data-fill-token="surface_selected"/>
+<rect x="16" y="576" width="3" height="24" rx="1" fill="#FF858B" data-fill-token="accent_text"/>
+<path d="M4 5 H17 M4 10 H17 M4 15 H17 M8 3 V7 M13 8 V12 M7 13 V17" transform="translate(32 577) scale(1.0)" fill="none" stroke="#F5F5F5" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="65" y="594" fill="#F5F5F5" data-fill-token="text_primary" font-size="16" font-weight="600" text-anchor="start">Settings</text>
+<path d="M24 782 L200 782" fill="none" stroke="#3B3B3B" stroke-width="1"/>
+<text x="28" y="818" fill="#F5F5F5" data-fill-token="text_primary" font-size="15" font-weight="400" text-anchor="start">Account &amp; sign out</text>
+<text x="28" y="851" fill="#A3A3A3" data-fill-token="text_muted" font-size="13" font-weight="400" text-anchor="start">Your preferences</text>
+<text x="260" y="48" fill="#C2C2C2" data-fill-token="text_secondary" font-size="15" font-weight="600" text-anchor="start">Settings</text>
+<text x="1404" y="48" fill="#C2C2C2" data-fill-token="text_secondary" font-size="15" font-weight="500" text-anchor="end">Alex  ·  lb</text>
+<path d="M224 74 L1440 74" fill="none" stroke="#3B3B3B" stroke-width="1"/>
+<text x="260" y="116" fill="#FF858B" data-fill-token="accent_text" font-size="13" font-weight="700" text-anchor="start">SETTINGS</text>
+<text x="260" y="156" fill="#F5F5F5" data-fill-token="text_primary" font-size="30" font-weight="700" text-anchor="start">Account &amp; accessibility</text>
+<text x="260" y="183" fill="#C2C2C2" data-fill-token="text_secondary" font-size="16" font-weight="400" text-anchor="start">Keep control of your experience.</text>
+<rect x="260" y="222" width="670" height="92" rx="12" fill="#191919" data-fill-token="surface" stroke="#858585" stroke-width="1" data-stroke-token="border_control"/>
+<text x="276" y="251" fill="#F5F5F5" data-fill-token="text_primary" font-size="18" font-weight="600" text-anchor="start">Account</text>
+<text x="276" y="281" fill="#C2C2C2" data-fill-token="text_secondary" font-size="15" font-weight="400" text-anchor="start">alex@example.com · manage account</text>
+<text x="914" y="251" fill="#FF858B" data-fill-token="accent_text" font-size="20" font-weight="400" text-anchor="end">›</text>
+<rect x="260" y="326" width="670" height="92" rx="12" fill="#191919" data-fill-token="surface" stroke="#858585" stroke-width="1" data-stroke-token="border_control"/>
+<text x="276" y="355" fill="#F5F5F5" data-fill-token="text_primary" font-size="18" font-weight="600" text-anchor="start">Reduce motion</text>
+<text x="276" y="385" fill="#C2C2C2" data-fill-token="text_secondary" font-size="15" font-weight="400" text-anchor="start">Follow device preference</text>
+<text x="914" y="355" fill="#FF858B" data-fill-token="accent_text" font-size="20" font-weight="400" text-anchor="end">›</text>
+<rect x="260" y="430" width="670" height="92" rx="12" fill="#191919" data-fill-token="surface" stroke="#3B3B3B" stroke-width="1" data-stroke-token="border_subtle"/>
+<text x="276" y="459" fill="#F5F5F5" data-fill-token="text_primary" font-size="18" font-weight="600" text-anchor="start">Text and controls</text>
+<text x="276" y="489" fill="#C2C2C2" data-fill-token="text_secondary" font-size="15" font-weight="400" text-anchor="start">Respect device text size and visible keyboard focus.</text>
+<rect x="260" y="534" width="670" height="48" rx="12" fill="#191919" data-fill-token="surface" stroke="#858585" stroke-width="1" data-stroke-token="border_control"/>
+<text x="595.0" y="563.0" fill="#F5F5F5" data-fill-token="text_primary" font-size="15" font-weight="600" text-anchor="middle">Sign out</text>
+<rect x="968" y="104" width="436" height="96" rx="16" fill="#232323" data-fill-token="surface_raised"/>
+<text x="988" y="138" fill="#F5F5F5" data-fill-token="text_primary" font-size="18" font-weight="600" text-anchor="start">WorkoutApp</text>
+<text x="988" y="171" fill="#C2C2C2" data-fill-token="text_secondary" font-size="16" font-weight="400" text-anchor="start">Your training, in view</text>
+<rect x="968" y="220" width="436" height="226" rx="12" fill="#191919" data-fill-token="surface" stroke="#3B3B3B" stroke-width="1" data-stroke-token="border_subtle"/>
+<text x="984" y="250" fill="#F5F5F5" data-fill-token="text_primary" font-size="17" font-weight="600" text-anchor="start">Preference sections</text>
+<text x="984" y="283" fill="#F5F5F5" data-fill-token="text_primary" font-size="15" font-weight="600" text-anchor="start">Appearance</text>
+<text x="984" y="306" fill="#C2C2C2" data-fill-token="text_secondary" font-size="14" font-weight="400" text-anchor="start">Theme family and device mode</text>
+<path d="M984 321 L1388 321" fill="none" stroke="#3B3B3B" stroke-width="1"/>
+<text x="984" y="341" fill="#F5F5F5" data-fill-token="text_primary" font-size="15" font-weight="600" text-anchor="start">Weight display</text>
+<text x="984" y="364" fill="#C2C2C2" data-fill-token="text_secondary" font-size="14" font-weight="400" text-anchor="start">Pounds or kilograms</text>
+<path d="M984 379 L1388 379" fill="none" stroke="#3B3B3B" stroke-width="1"/>
+<text x="984" y="399" fill="#F5F5F5" data-fill-token="text_primary" font-size="15" font-weight="600" text-anchor="start">Equipment</text>
+<text x="984" y="422" fill="#C2C2C2" data-fill-token="text_secondary" font-size="14" font-weight="400" text-anchor="start">Locations and available loads</text>
+<rect x="968" y="458" width="436" height="92" rx="12" fill="#191919" data-fill-token="surface" stroke="#858585" stroke-width="1" data-stroke-token="border_control"/>
+<text x="984" y="487" fill="#F5F5F5" data-fill-token="text_primary" font-size="18" font-weight="600" text-anchor="start">Account &amp; accessibility</text>
+<text x="984" y="517" fill="#C2C2C2" data-fill-token="text_secondary" font-size="15" font-weight="400" text-anchor="start">Manage your account or sign out.</text>
+<text x="1388" y="487" fill="#FF858B" data-fill-token="accent_text" font-size="20" font-weight="400" text-anchor="end">›</text>
+<text x="972" y="852" fill="#A3A3A3" data-fill-token="text_muted" font-size="14" font-weight="400" text-anchor="start">WorkoutApp  /  Settings</text></svg>

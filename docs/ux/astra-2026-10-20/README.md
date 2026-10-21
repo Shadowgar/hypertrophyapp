@@ -1,8 +1,8 @@
 # WorkoutApp — independent Astra UX review
 
-> **Current appearance-system review (21 October):** Keep Graphite, Charcoal and Classic WorkoutApp, each in Light and Dark. [Review the six appearances and independent Settings choices](appearances-2026-10-21/README.md). Existing dark assets are retained; overall layout and typography remain unapproved.
+> **Current review — unified final sketches (21 October):** The owner approved A's Home/onboarding, B's training/planning/review workspace, DM Sans and all six appearances in [Issue #105](https://github.com/Shadowgar/hypertrophyapp/issues/105). [Open the unified WorkoutApp package](unified-2026-10-21/README.md): [mobile](unified-2026-10-21/MOBILE.md), [desktop](unified-2026-10-21/DESKTOP.md), [working-set flow](unified-2026-10-21/WORKING-SET-FLOW.md), [appearances](unified-2026-10-21/APPEARANCES.md). **Final visual acceptance and implementation approval remain pending.**
 
-**Audit: 20 October 2026 · Dark-mode revision: 21 October 2026 · AUDIT → SKETCH → PRESENT → STOP. Owner decision pending.**
+**Audit: 20 October 2026 · Dark-mode revision: 21 October 2026 · Unified final sketches: 21 October 2026 · AUDIT → SKETCH → PRESENT → STOP.** The material below records the earlier alternatives and their then-pending decisions; the unified package above is the current design review.
 
 This package contains a fresh independent Astra audit and two original full-application design directions. Both alternatives now use dark mode throughout, following the owner's requested revision. It addresses [#103](https://github.com/Shadowgar/hypertrophyapp/issues/103) and [#105](https://github.com/Shadowgar/hypertrophyapp/issues/105). It does not implement fixes or authorize a redesign, merge, migration or deployment. Prior GPT-6.1 Medium findings and Focus/Training Ledger designs were not consulted or reused.
 
@@ -38,6 +38,6 @@ The reported real two-minute Today delay, literal duplicated receipt values and 
 
 All proposed directions preserve separate Authored Phase 1/2 and Customized authority, exact source prescriptions, deterministic load intelligence, explicit consent, occurrence identities and effective historical records. New historical-strength intake and saved unit preferences are labeled proposed capabilities; sketches do not activate calculations or grant backend mutation authority.
 
-## Owner review
+## Historical alternative review
 
-Choose A, B, a specific combination, or request revised sketches. Any selection should identify the accepted version and flow choices. This package stops here: **no production UI changes, deployment, migration, live-data modification or implementation follows without explicit approval.**
+The owner has now chosen a combination for refinement, recorded in Issue #105. Review the [unified final sketches](unified-2026-10-21/README.md) for the current proposal. This review stops before application implementation: **no production UI changes, deployment, migration, live-data modification or implementation follows without explicit approval.**

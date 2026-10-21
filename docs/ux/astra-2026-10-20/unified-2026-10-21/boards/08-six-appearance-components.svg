@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1030" viewBox="0 0 1500 1030" role="img" aria-labelledby="title desc"><title id="title">Six appearances · semantic component system</title><desc id="desc">All six use the same control, focus, status and text roles.</desc><style>text{font-family:"DM Sans",Arial,sans-serif;font-variant-numeric:tabular-nums} @font-face{font-family:"DM Sans";src:url("../fonts/DM-Sans.ttf")}</style>
+<rect x="0" y="0" width="1500" height="1030" rx="0" fill="#FAFAFA" data-fill-token="canvas"/>
+<text x="28" y="46" fill="#242424" data-fill-token="text_primary" font-size="29" font-weight="700" text-anchor="start">Six appearances. One visual language.</text>
+<text x="28" y="79" fill="#484848" data-fill-token="text_secondary" font-size="16" font-weight="400" text-anchor="start">Neutral surfaces · explicit states · consistent controls · shared semantic tokens</text>
+<rect x="24" y="108" width="470" height="432" rx="16" fill="#F3F3F3" data-fill-token="canvas" stroke="#737373" stroke-width="1" data-stroke-token="border_control"/>
+<text x="46" y="146" fill="#1B1B1B" data-fill-token="text_primary" font-size="22" font-weight="700" text-anchor="start">Graphite · Light</text>
+<rect x="44" y="166" width="430" height="65" rx="12" fill="#FFFFFF" data-fill-token="surface" stroke="#CDCDCD" stroke-width="1" data-stroke-token="border_subtle"/>
+<text x="60" y="193" fill="#1B1B1B" data-fill-token="text_primary" font-size="17" font-weight="600" text-anchor="start">Readable surface hierarchy</text>
+<text x="60" y="217" fill="#606060" data-fill-token="text_muted" font-size="14" font-weight="400" text-anchor="start">Primary, secondary and muted text</text>
+<rect x="44" y="249" width="203" height="56" rx="15" fill="#F3F3F3" data-fill-token="canvas" stroke="#1559B7" stroke-width="2" data-stroke-token="focus"/>
+<rect x="48" y="253" width="195" height="48" rx="12" fill="#1559B7" data-fill-token="action_fill"/>
+<text x="145.5" y="282.0" fill="#FFFFFF" data-fill-token="action_text" font-size="15" font-weight="600" text-anchor="middle">Save set</text>
+<rect x="259" y="253" width="211" height="48" rx="12" fill="#E7E7E7" data-fill-token="disabled_fill"/>
+<text x="364.5" y="282.0" fill="#606060" data-fill-token="disabled_text" font-size="15" font-weight="600" text-anchor="middle">Saving…</text>
+<rect x="44" y="305" width="430" height="36" rx="6" fill="#F8F8F8" data-fill-token="status_surface"/>
+<text x="60" y="327" fill="#236B3C" data-fill-token="success_text" font-size="16" font-weight="600" text-anchor="start">✓ Saved · confirmed</text>
+<rect x="44" y="348" width="430" height="36" rx="6" fill="#F8F8F8" data-fill-token="status_surface"/>
+<text x="60" y="370" fill="#805400" data-fill-token="warning_text" font-size="16" font-weight="600" text-anchor="start">! Warning · review needed</text>
+<rect x="44" y="391" width="430" height="36" rx="6" fill="#F8F8F8" data-fill-token="status_surface"/>
+<text x="60" y="413" fill="#AF2431" data-fill-token="error_text" font-size="16" font-weight="600" text-anchor="start">× Error · action failed</text>
+<rect x="44" y="434" width="430" height="36" rx="6" fill="#F8F8F8" data-fill-token="status_surface"/>
+<text x="60" y="456" fill="#245DA0" data-fill-token="info_text" font-size="16" font-weight="600" text-anchor="start">? Pending · not confirmed</text>
+<text x="46" y="521" fill="#454545" data-fill-token="text_secondary" font-size="13" font-weight="400" text-anchor="start">Status always includes a word and symbol.</text>
+<rect x="24" y="560" width="470" height="432" rx="16" fill="#111111" data-fill-token="canvas" stroke="#858585" stroke-width="1" data-stroke-token="border_control"/>
+<text x="46" y="598" fill="#F0F0F0" data-fill-token="text_primary" font-size="22" font-weight="700" text-anchor="start">Graphite · Dark</text>
+<rect x="44" y="618" width="430" height="65" rx="12" fill="#191919" data-fill-token="surface" stroke="#3D3D3D" stroke-width="1" data-stroke-token="border_subtle"/>
+<text x="60" y="645" fill="#F0F0F0" data-fill-token="text_primary" font-size="17" font-weight="600" text-anchor="start">Readable surface hierarchy</text>
+<text x="60" y="669" fill="#A0A0A0" data-fill-token="text_muted" font-size="14" font-weight="400" text-anchor="start">Primary, secondary and muted text</text>
+<rect x="44" y="701" width="203" height="56" rx="15" fill="#111111" data-fill-token="canvas" stroke="#A5CEFF" stroke-width="2" data-stroke-token="focus"/>
+<rect x="48" y="705" width="195" height="48" rx="12" fill="#79B8FF" data-fill-token="action_fill"/>
+<text x="145.5" y="734.0" fill="#111111" data-fill-token="action_text" font-size="15" font-weight="600" text-anchor="middle">Save set</text>
+<rect x="259" y="705" width="211" height="48" rx="12" fill="#2D2D2D" data-fill-token="disabled_fill"/>
+<text x="364.5" y="734.0" fill="#A0A0A0" data-fill-token="disabled_text" font-size="15" font-weight="600" text-anchor="middle">Saving…</text>
+<rect x="44" y="757" width="430" height="36" rx="6" fill="#242424" data-fill-token="status_surface"/>
+<text x="60" y="779" fill="#8ED6A2" data-fill-token="success_text" font-size="16" font-weight="600" text-anchor="start">✓ Saved · confirmed</text>
+<rect x="44" y="800" width="430" height="36" rx="6" fill="#242424" data-fill-token="status_surface"/>
+<text x="60" y="822" fill="#EBC17A" data-fill-token="warning_text" font-size="16" font-weight="600" text-anchor="start">! Warning · review needed</text>
+<rect x="44" y="843" width="430" height="36" rx="6" fill="#242424" data-fill-token="status_surface"/>
+<text x="60" y="865" fill="#FF969B" data-fill-token="error_text" font-size="16" font-weight="600" text-anchor="start">× Error · action failed</text>
+<rect x="44" y="886" width="430" height="36" rx="6" fill="#242424" data-fill-token="status_surface"/>
+<text x="60" y="908" fill="#A6CAFF" data-fill-token="info_text" font-size="16" font-weight="600" text-anchor="start">? Pending · not confirmed</text>
+<text x="46" y="973" fill="#BDBDBD" data-fill-token="text_secondary" font-size="13" font-weight="400" text-anchor="start">Status always includes a word and symbol.</text>
+<rect x="518" y="108" width="470" height="432" rx="16" fill="#FAFAFA" data-fill-token="canvas" stroke="#737373" stroke-width="1" data-stroke-token="border_control"/>
+<text x="540" y="146" fill="#242424" data-fill-token="text_primary" font-size="22" font-weight="700" text-anchor="start">Charcoal · Light</text>
+<rect x="538" y="166" width="430" height="65" rx="12" fill="#FFFFFF" data-fill-token="surface" stroke="#CDCDCD" stroke-width="1" data-stroke-token="border_subtle"/>
+<text x="554" y="193" fill="#242424" data-fill-token="text_primary" font-size="17" font-weight="600" text-anchor="start">Readable surface hierarchy</text>
+<text x="554" y="217" fill="#5E5E5E" data-fill-token="text_muted" font-size="14" font-weight="400" text-anchor="start">Primary, secondary and muted text</text>
+<rect x="538" y="249" width="203" height="56" rx="15" fill="#FAFAFA" data-fill-token="canvas" stroke="#242424" stroke-width="2" data-stroke-token="focus"/>
+<rect x="542" y="253" width="195" height="48" rx="12" fill="#242424" data-fill-token="action_fill"/>
+<text x="639.5" y="282.0" fill="#FFFFFF" data-fill-token="action_text" font-size="15" font-weight="600" text-anchor="middle">Save set</text>
+<rect x="753" y="253" width="211" height="48" rx="12" fill="#E4E4E4" data-fill-token="disabled_fill"/>
+<text x="858.5" y="282.0" fill="#5E5E5E" data-fill-token="disabled_text" font-size="15" font-weight="600" text-anchor="middle">Saving…</text>
+<rect x="538" y="305" width="430" height="36" rx="6" fill="#F1F1F1" data-fill-token="status_surface"/>
+<text x="554" y="327" fill="#236B3C" data-fill-token="success_text" font-size="16" font-weight="600" text-anchor="start">✓ Saved · confirmed</text>
+<rect x="538" y="348" width="430" height="36" rx="6" fill="#F1F1F1" data-fill-token="status_surface"/>
+<text x="554" y="370" fill="#805400" data-fill-token="warning_text" font-size="16" font-weight="600" text-anchor="start">! Warning · review needed</text>
+<rect x="538" y="391" width="430" height="36" rx="6" fill="#F1F1F1" data-fill-token="status_surface"/>
+<text x="554" y="413" fill="#AF2431" data-fill-token="error_text" font-size="16" font-weight="600" text-anchor="start">× Error · action failed</text>
+<rect x="538" y="434" width="430" height="36" rx="6" fill="#F1F1F1" data-fill-token="status_surface"/>
+<text x="554" y="456" fill="#245DA0" data-fill-token="info_text" font-size="16" font-weight="600" text-anchor="start">? Pending · not confirmed</text>
+<text x="540" y="521" fill="#484848" data-fill-token="text_secondary" font-size="13" font-weight="400" text-anchor="start">Status always includes a word and symbol.</text>
+<rect x="518" y="560" width="470" height="432" rx="16" fill="#212121" data-fill-token="canvas" stroke="#969696" stroke-width="1" data-stroke-token="border_control"/>
+<text x="540" y="598" fill="#ECECEC" data-fill-token="text_primary" font-size="22" font-weight="700" text-anchor="start">Charcoal · Dark</text>
+<rect x="538" y="618" width="430" height="65" rx="12" fill="#292929" data-fill-token="surface" stroke="#454545" stroke-width="1" data-stroke-token="border_subtle"/>
+<text x="554" y="645" fill="#ECECEC" data-fill-token="text_primary" font-size="17" font-weight="600" text-anchor="start">Readable surface hierarchy</text>
+<text x="554" y="669" fill="#AAAAAA" data-fill-token="text_muted" font-size="14" font-weight="400" text-anchor="start">Primary, secondary and muted text</text>
+<rect x="538" y="701" width="203" height="56" rx="15" fill="#212121" data-fill-token="canvas" stroke="#FFFFFF" stroke-width="2" data-stroke-token="focus"/>
+<rect x="542" y="705" width="195" height="48" rx="12" fill="#ECECEC" data-fill-token="action_fill"/>
+<text x="639.5" y="734.0" fill="#212121" data-fill-token="action_text" font-size="15" font-weight="600" text-anchor="middle">Save set</text>
+<rect x="753" y="705" width="211" height="48" rx="12" fill="#3B3B3B" data-fill-token="disabled_fill"/>
+<text x="858.5" y="734.0" fill="#AAAAAA" data-fill-token="disabled_text" font-size="15" font-weight="600" text-anchor="middle">Saving…</text>
+<rect x="538" y="757" width="430" height="36" rx="6" fill="#333333" data-fill-token="status_surface"/>
+<text x="554" y="779" fill="#8ED6A2" data-fill-token="success_text" font-size="16" font-weight="600" text-anchor="start">✓ Saved · confirmed</text>
+<rect x="538" y="800" width="430" height="36" rx="6" fill="#333333" data-fill-token="status_surface"/>
+<text x="554" y="822" fill="#EBC17A" data-fill-token="warning_text" font-size="16" font-weight="600" text-anchor="start">! Warning · review needed</text>
+<rect x="538" y="843" width="430" height="36" rx="6" fill="#333333" data-fill-token="status_surface"/>
+<text x="554" y="865" fill="#FF969B" data-fill-token="error_text" font-size="16" font-weight="600" text-anchor="start">× Error · action failed</text>
+<rect x="538" y="886" width="430" height="36" rx="6" fill="#333333" data-fill-token="status_surface"/>
+<text x="554" y="908" fill="#A6CAFF" data-fill-token="info_text" font-size="16" font-weight="600" text-anchor="start">? Pending · not confirmed</text>
+<text x="540" y="973" fill="#C0C0C0" data-fill-token="text_secondary" font-size="13" font-weight="400" text-anchor="start">Status always includes a word and symbol.</text>
+<rect x="1012" y="108" width="470" height="432" rx="16" fill="#F1F1F1" data-fill-token="canvas" stroke="#737373" stroke-width="1" data-stroke-token="border_control"/>
+<text x="1034" y="146" fill="#171717" data-fill-token="text_primary" font-size="22" font-weight="700" text-anchor="start">Classic WorkoutApp · Light</text>
+<rect x="1032" y="166" width="430" height="65" rx="12" fill="#FFFFFF" data-fill-token="surface" stroke="#CDCDCD" stroke-width="1" data-stroke-token="border_subtle"/>
+<text x="1048" y="193" fill="#171717" data-fill-token="text_primary" font-size="17" font-weight="600" text-anchor="start">Readable surface hierarchy</text>
+<text x="1048" y="217" fill="#5E5E5E" data-fill-token="text_muted" font-size="14" font-weight="400" text-anchor="start">Primary, secondary and muted text</text>
+<rect x="1032" y="249" width="203" height="56" rx="15" fill="#F1F1F1" data-fill-token="canvas" stroke="#B4232D" stroke-width="2" data-stroke-token="focus"/>
+<rect x="1036" y="253" width="195" height="48" rx="12" fill="#B4232D" data-fill-token="action_fill"/>
+<text x="1133.5" y="282.0" fill="#FFFFFF" data-fill-token="action_text" font-size="15" font-weight="600" text-anchor="middle">Save set</text>
+<rect x="1247" y="253" width="211" height="48" rx="12" fill="#E6E6E6" data-fill-token="disabled_fill"/>
+<text x="1352.5" y="282.0" fill="#5E5E5E" data-fill-token="disabled_text" font-size="15" font-weight="600" text-anchor="middle">Saving…</text>
+<rect x="1032" y="305" width="430" height="36" rx="6" fill="#F7F7F7" data-fill-token="status_surface"/>
+<text x="1048" y="327" fill="#236B3C" data-fill-token="success_text" font-size="16" font-weight="600" text-anchor="start">✓ Saved · confirmed</text>
+<rect x="1032" y="348" width="430" height="36" rx="6" fill="#F7F7F7" data-fill-token="status_surface"/>
+<text x="1048" y="370" fill="#805400" data-fill-token="warning_text" font-size="16" font-weight="600" text-anchor="start">! Warning · review needed</text>
+<rect x="1032" y="391" width="430" height="36" rx="6" fill="#F7F7F7" data-fill-token="status_surface"/>
+<text x="1048" y="413" fill="#AF2431" data-fill-token="error_text" font-size="16" font-weight="600" text-anchor="start">× Error · action failed</text>
+<rect x="1032" y="434" width="430" height="36" rx="6" fill="#F7F7F7" data-fill-token="status_surface"/>
+<text x="1048" y="456" fill="#245DA0" data-fill-token="info_text" font-size="16" font-weight="600" text-anchor="start">? Pending · not confirmed</text>
+<text x="1034" y="521" fill="#444444" data-fill-token="text_secondary" font-size="13" font-weight="400" text-anchor="start">Status always includes a word and symbol.</text>
+<rect x="1012" y="560" width="470" height="432" rx="16" fill="#101010" data-fill-token="canvas" stroke="#858585" stroke-width="1" data-stroke-token="border_control"/>
+<text x="1034" y="598" fill="#F5F5F5" data-fill-token="text_primary" font-size="22" font-weight="700" text-anchor="start">Classic WorkoutApp · Dark</text>
+<rect x="1032" y="618" width="430" height="65" rx="12" fill="#191919" data-fill-token="surface" stroke="#3B3B3B" stroke-width="1" data-stroke-token="border_subtle"/>
+<text x="1048" y="645" fill="#F5F5F5" data-fill-token="text_primary" font-size="17" font-weight="600" text-anchor="start">Readable surface hierarchy</text>
+<text x="1048" y="669" fill="#A3A3A3" data-fill-token="text_muted" font-size="14" font-weight="400" text-anchor="start">Primary, secondary and muted text</text>
+<rect x="1032" y="701" width="203" height="56" rx="15" fill="#101010" data-fill-token="canvas" stroke="#FFABB0" stroke-width="2" data-stroke-token="focus"/>
+<rect x="1036" y="705" width="195" height="48" rx="12" fill="#C9383F" data-fill-token="action_fill"/>
+<text x="1133.5" y="734.0" fill="#FFFFFF" data-fill-token="action_text" font-size="15" font-weight="600" text-anchor="middle">Save set</text>
+<rect x="1247" y="705" width="211" height="48" rx="12" fill="#303030" data-fill-token="disabled_fill"/>
+<text x="1352.5" y="734.0" fill="#A3A3A3" data-fill-token="disabled_text" font-size="15" font-weight="600" text-anchor="middle">Saving…</text>
+<rect x="1032" y="757" width="430" height="36" rx="6" fill="#232323" data-fill-token="status_surface"/>
+<text x="1048" y="779" fill="#8ED6A2" data-fill-token="success_text" font-size="16" font-weight="600" text-anchor="start">✓ Saved · confirmed</text>
+<rect x="1032" y="800" width="430" height="36" rx="6" fill="#232323" data-fill-token="status_surface"/>
+<text x="1048" y="822" fill="#EBC17A" data-fill-token="warning_text" font-size="16" font-weight="600" text-anchor="start">! Warning · review needed</text>
+<rect x="1032" y="843" width="430" height="36" rx="6" fill="#232323" data-fill-token="status_surface"/>
+<text x="1048" y="865" fill="#FF969B" data-fill-token="error_text" font-size="16" font-weight="600" text-anchor="start">× Error · action failed</text>
+<rect x="1032" y="886" width="430" height="36" rx="6" fill="#232323" data-fill-token="status_surface"/>
+<text x="1048" y="908" fill="#A6CAFF" data-fill-token="info_text" font-size="16" font-weight="600" text-anchor="start">? Pending · not confirmed</text>
+<text x="1034" y="973" fill="#C2C2C2" data-fill-token="text_secondary" font-size="13" font-weight="400" text-anchor="start">Status always includes a word and symbol.</text></svg>

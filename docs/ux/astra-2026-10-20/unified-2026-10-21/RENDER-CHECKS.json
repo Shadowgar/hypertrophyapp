@@ -1,0 +1,3978 @@
+[
+  {
+    "file": "mobile/01-welcome.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 14,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/01-welcome.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 20,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/02-sign-in.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 11,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/02-sign-in.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 19,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/03-account-recovery.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 11,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/03-account-recovery.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 19,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/04-new-account.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 15,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/04-new-account.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 23,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/05-choose-program.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 25,
+    "minContrast": 7.52,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/05-choose-program.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 36,
+    "minContrast": 6.97,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/06-authored-program.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 22,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/06-authored-program.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 35,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/07-setup-basics.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 21,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/07-setup-basics.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 35,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/08-equipment.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 26,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/08-equipment.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 40,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/09-setup-review.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 24,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/09-setup-review.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 38,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/10-home.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 35,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/10-home.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 52,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/11-home-no-schedule.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 22,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/11-home-no-schedule.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 33,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/12-programs.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 22,
+    "minContrast": 7.52,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/12-programs.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 38,
+    "minContrast": 6.97,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/13-customized-consent.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 27,
+    "minContrast": 5.23,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/13-customized-consent.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 38,
+    "minContrast": 5.23,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/14-customized-inputs.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 26,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/14-customized-inputs.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 41,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/15-customized-preview.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 26,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/15-customized-preview.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 42,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/16-week.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 36,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/16-week.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 54,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/17-select-dates.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 35,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/17-select-dates.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 52,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/18-schedule-preview.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 25,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/18-schedule-preview.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 40,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/19-schedule-conflict.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 24,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/19-schedule-conflict.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 36,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/20-today-loading.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 19,
+    "minContrast": 8.14,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/20-today-loading.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 32,
+    "minContrast": 6.97,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/21-today-rest.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 23,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/21-today-rest.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 33,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/22-today-unavailable.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 21,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/22-today-unavailable.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 32,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/23-today-session.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 26,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/23-today-session.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 45,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/24-starting-load.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 24,
+    "minContrast": 7.52,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/24-starting-load.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 41,
+    "minContrast": 6.97,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/25-known-max.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 23,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/25-known-max.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 42,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/26-recent-set.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 26,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/26-recent-set.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 45,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/27-manual-calibration.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 24,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/27-manual-calibration.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 41,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/28-load-unavailable.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 23,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/28-load-unavailable.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 39,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/29-warmup.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 32,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 16,
+        "y": 366,
+        "width": 358,
+        "height": 64
+      },
+      "composer": {
+        "x": 16,
+        "y": 444,
+        "width": 358,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 32,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 203,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 32,
+        "y": 574,
+        "width": 326,
+        "height": 48
+      },
+      "save-set": {
+        "x": 32,
+        "y": 636,
+        "width": 326,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/29-warmup.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 59,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 534,
+        "y": 348,
+        "width": 496,
+        "height": 64
+      },
+      "composer": {
+        "x": 534,
+        "y": 430,
+        "width": 496,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 550,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 790,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 550,
+        "y": 560,
+        "width": 464,
+        "height": 48
+      },
+      "save-set": {
+        "x": 550,
+        "y": 622,
+        "width": 464,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/30-warmup-saved.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 32,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 16,
+        "y": 366,
+        "width": 358,
+        "height": 64
+      },
+      "composer": {
+        "x": 16,
+        "y": 444,
+        "width": 358,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 32,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 203,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 32,
+        "y": 574,
+        "width": 326,
+        "height": 48
+      },
+      "save-set": {
+        "x": 32,
+        "y": 636,
+        "width": 326,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/30-warmup-saved.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 59,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 534,
+        "y": 348,
+        "width": 496,
+        "height": 64
+      },
+      "composer": {
+        "x": 534,
+        "y": 430,
+        "width": 496,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 550,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 790,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 550,
+        "y": 560,
+        "width": 464,
+        "height": 48
+      },
+      "save-set": {
+        "x": 550,
+        "y": 622,
+        "width": 464,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/31-working-ready.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 32,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 16,
+        "y": 366,
+        "width": 358,
+        "height": 64
+      },
+      "composer": {
+        "x": 16,
+        "y": 444,
+        "width": 358,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 32,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 203,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 32,
+        "y": 574,
+        "width": 326,
+        "height": 48
+      },
+      "save-set": {
+        "x": 32,
+        "y": 636,
+        "width": 326,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/31-working-ready.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 59,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 534,
+        "y": 348,
+        "width": 496,
+        "height": 64
+      },
+      "composer": {
+        "x": 534,
+        "y": 430,
+        "width": 496,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 550,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 790,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 550,
+        "y": 560,
+        "width": 464,
+        "height": 48
+      },
+      "save-set": {
+        "x": 550,
+        "y": 622,
+        "width": 464,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/32-working-pending.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 32,
+    "minContrast": 5.23,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 16,
+        "y": 366,
+        "width": 358,
+        "height": 64
+      },
+      "composer": {
+        "x": 16,
+        "y": 444,
+        "width": 358,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 32,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 203,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 32,
+        "y": 574,
+        "width": 326,
+        "height": 48
+      },
+      "save-set": {
+        "x": 32,
+        "y": 636,
+        "width": 326,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/32-working-pending.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 59,
+    "minContrast": 5.23,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 534,
+        "y": 348,
+        "width": 496,
+        "height": 64
+      },
+      "composer": {
+        "x": 534,
+        "y": 430,
+        "width": 496,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 550,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 790,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 550,
+        "y": 560,
+        "width": 464,
+        "height": 48
+      },
+      "save-set": {
+        "x": 550,
+        "y": 622,
+        "width": 464,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/33-working-saved.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 33,
+    "minContrast": 5.23,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 16,
+        "y": 366,
+        "width": 358,
+        "height": 64
+      },
+      "composer": {
+        "x": 16,
+        "y": 444,
+        "width": 358,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 32,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 203,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 32,
+        "y": 574,
+        "width": 326,
+        "height": 48
+      },
+      "save-set": {
+        "x": 32,
+        "y": 636,
+        "width": 326,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/33-working-saved.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 63,
+    "minContrast": 5.23,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 534,
+        "y": 348,
+        "width": 496,
+        "height": 64
+      },
+      "composer": {
+        "x": 534,
+        "y": 430,
+        "width": 496,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 550,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 790,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 550,
+        "y": 560,
+        "width": 464,
+        "height": 48
+      },
+      "save-set": {
+        "x": 550,
+        "y": 622,
+        "width": 464,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/34-working-next.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 32,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 16,
+        "y": 366,
+        "width": 358,
+        "height": 64
+      },
+      "composer": {
+        "x": 16,
+        "y": 444,
+        "width": 358,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 32,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 203,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 32,
+        "y": 574,
+        "width": 326,
+        "height": 48
+      },
+      "save-set": {
+        "x": 32,
+        "y": 636,
+        "width": 326,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/34-working-next.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 62,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 534,
+        "y": 348,
+        "width": 496,
+        "height": 64
+      },
+      "composer": {
+        "x": 534,
+        "y": 430,
+        "width": 496,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 550,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 790,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 550,
+        "y": 560,
+        "width": 464,
+        "height": 48
+      },
+      "save-set": {
+        "x": 550,
+        "y": 622,
+        "width": 464,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/35-working-failed.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 32,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 16,
+        "y": 366,
+        "width": 358,
+        "height": 64
+      },
+      "composer": {
+        "x": 16,
+        "y": 444,
+        "width": 358,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 32,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 203,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 32,
+        "y": 574,
+        "width": 326,
+        "height": 48
+      },
+      "save-set": {
+        "x": 32,
+        "y": 636,
+        "width": 326,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/35-working-failed.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 59,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 534,
+        "y": 348,
+        "width": 496,
+        "height": 64
+      },
+      "composer": {
+        "x": 534,
+        "y": 430,
+        "width": 496,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 550,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 790,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 550,
+        "y": 560,
+        "width": 464,
+        "height": 48
+      },
+      "save-set": {
+        "x": 550,
+        "y": 622,
+        "width": 464,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/36-working-unconfirmed.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 32,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 16,
+        "y": 366,
+        "width": 358,
+        "height": 64
+      },
+      "composer": {
+        "x": 16,
+        "y": 444,
+        "width": 358,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 32,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 203,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 32,
+        "y": 574,
+        "width": 326,
+        "height": 48
+      },
+      "save-set": {
+        "x": 32,
+        "y": 636,
+        "width": 326,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/36-working-unconfirmed.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 59,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 534,
+        "y": 348,
+        "width": 496,
+        "height": 64
+      },
+      "composer": {
+        "x": 534,
+        "y": 430,
+        "width": 496,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 550,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 790,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 550,
+        "y": 560,
+        "width": 464,
+        "height": 48
+      },
+      "save-set": {
+        "x": 550,
+        "y": 622,
+        "width": 464,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/37-working-resume.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 32,
+    "minContrast": 5.23,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 16,
+        "y": 366,
+        "width": 358,
+        "height": 64
+      },
+      "composer": {
+        "x": 16,
+        "y": 444,
+        "width": 358,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 32,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 203,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 32,
+        "y": 574,
+        "width": 326,
+        "height": 48
+      },
+      "save-set": {
+        "x": 32,
+        "y": 636,
+        "width": 326,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/37-working-resume.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 59,
+    "minContrast": 5.23,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 534,
+        "y": 348,
+        "width": 496,
+        "height": 64
+      },
+      "composer": {
+        "x": 534,
+        "y": 430,
+        "width": 496,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 550,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 790,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 550,
+        "y": 560,
+        "width": 464,
+        "height": 48
+      },
+      "save-set": {
+        "x": 550,
+        "y": 622,
+        "width": 464,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/38-effort.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 25,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/38-effort.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 43,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/39-load-details.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 24,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/39-load-details.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 42,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/40-recorded-sets.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 24,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/40-recorded-sets.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 43,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/41-correct-set.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 25,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/41-correct-set.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 44,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/42-correction-pending.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 20,
+    "minContrast": 8.14,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/42-correction-pending.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 38,
+    "minContrast": 6.97,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/43-correction-confirmed.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 18,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/43-correction-confirmed.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 38,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/44-undo-confirm.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 23,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/44-undo-confirm.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 40,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/45-undo-pending.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 17,
+    "minContrast": 8.14,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/45-undo-pending.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 36,
+    "minContrast": 6.97,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/46-undo-confirmed.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 20,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/46-undo-confirmed.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 40,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/47-pair-technique.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 26,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/47-pair-technique.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 43,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/48-substitution.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 23,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/48-substitution.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 40,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/49-finish-review.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 19,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/49-finish-review.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 34,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/50-workout-complete.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 22,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/50-workout-complete.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 36,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/51-history.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 35,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/51-history.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 52,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/52-history-detail.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 25,
+    "minContrast": 7.52,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/52-history-detail.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 40,
+    "minContrast": 6.97,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/53-history-loading.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 18,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/53-history-loading.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 31,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/54-analytics.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 24,
+    "minContrast": 8.14,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/54-analytics.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 42,
+    "minContrast": 6.97,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/55-analytics-empty.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 20,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/55-analytics-empty.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 32,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/56-check-in.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 26,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/56-check-in.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 41,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/57-check-in-saved.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 24,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/57-check-in-saved.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 38,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/58-settings.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 25,
+    "minContrast": 7.52,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/58-settings.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 42,
+    "minContrast": 6.97,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/59-appearance.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 26,
+    "minContrast": 5.23,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/59-appearance.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 43,
+    "minContrast": 5.23,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/60-appearance-preview.svg",
+    "appearance": "graphite-dark",
+    "viewport": "mobile",
+    "texts": 26,
+    "minContrast": 7.33,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/60-appearance-preview.svg",
+    "appearance": "graphite-dark",
+    "viewport": "desktop",
+    "texts": 43,
+    "minContrast": 6.72,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/61-appearance-pending.svg",
+    "appearance": "graphite-dark",
+    "viewport": "mobile",
+    "texts": 26,
+    "minContrast": 5.27,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/61-appearance-pending.svg",
+    "appearance": "graphite-dark",
+    "viewport": "desktop",
+    "texts": 43,
+    "minContrast": 5.27,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/62-appearance-failed.svg",
+    "appearance": "graphite-dark",
+    "viewport": "mobile",
+    "texts": 26,
+    "minContrast": 7.33,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/62-appearance-failed.svg",
+    "appearance": "graphite-dark",
+    "viewport": "desktop",
+    "texts": 43,
+    "minContrast": 6.72,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/63-appearance-saved.svg",
+    "appearance": "graphite-dark",
+    "viewport": "mobile",
+    "texts": 26,
+    "minContrast": 5.27,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/63-appearance-saved.svg",
+    "appearance": "graphite-dark",
+    "viewport": "desktop",
+    "texts": 43,
+    "minContrast": 5.27,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/64-account-accessibility.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 22,
+    "minContrast": 7.52,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/64-account-accessibility.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 39,
+    "minContrast": 6.97,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/65-library.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 21,
+    "minContrast": 7.52,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/65-library.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 39,
+    "minContrast": 6.97,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/66-exercise-guide.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 27,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/66-exercise-guide.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 44,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/67-more-navigation.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 25,
+    "minContrast": 7.52,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/67-more-navigation.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 37,
+    "minContrast": 6.97,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/68-recovered-draft.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 23,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/68-recovered-draft.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 40,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/69-working-validation.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 32,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 16,
+        "y": 366,
+        "width": 358,
+        "height": 64
+      },
+      "composer": {
+        "x": 16,
+        "y": 444,
+        "width": 358,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 32,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 203,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 32,
+        "y": 574,
+        "width": 326,
+        "height": 48
+      },
+      "save-set": {
+        "x": 32,
+        "y": 636,
+        "width": 326,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/69-working-validation.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 59,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 534,
+        "y": 348,
+        "width": 496,
+        "height": 64
+      },
+      "composer": {
+        "x": 534,
+        "y": 430,
+        "width": 496,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 550,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 790,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 550,
+        "y": 560,
+        "width": 464,
+        "height": 48
+      },
+      "save-set": {
+        "x": 550,
+        "y": 622,
+        "width": 464,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/70-preference-conflict.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 22,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/70-preference-conflict.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 38,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/71-session-expired.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 10,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/71-session-expired.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 18,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/72-program-change.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 24,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/72-program-change.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 38,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/73-weight-display.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 24,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/73-weight-display.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 40,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/74-rir-effort.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 22,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/74-rir-effort.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 40,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/75-appearance-unconfirmed.svg",
+    "appearance": "graphite-dark",
+    "viewport": "mobile",
+    "texts": 22,
+    "minContrast": 8.26,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/75-appearance-unconfirmed.svg",
+    "appearance": "graphite-dark",
+    "viewport": "desktop",
+    "texts": 37,
+    "minContrast": 6.72,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/76-analytics-table.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 26,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "desktop/76-analytics-table.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 43,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/77-keyboard-before.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 38,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 16,
+        "y": 198,
+        "width": 358,
+        "height": 62
+      },
+      "composer": {
+        "x": 16,
+        "y": 274,
+        "width": 358,
+        "height": 240
+      },
+      "working-weight": {
+        "x": 32,
+        "y": 330,
+        "width": 155,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 203,
+        "y": 330,
+        "width": 155,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 32,
+        "y": 400,
+        "width": 326,
+        "height": 44
+      },
+      "save-set": {
+        "x": 32,
+        "y": 456,
+        "width": 326,
+        "height": 48
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "mobile/78-keyboard-after.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 39,
+    "minContrast": 5.23,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 16,
+        "y": 198,
+        "width": 358,
+        "height": 62
+      },
+      "composer": {
+        "x": 16,
+        "y": 274,
+        "width": 358,
+        "height": 240
+      },
+      "working-weight": {
+        "x": 32,
+        "y": 330,
+        "width": 155,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 203,
+        "y": 330,
+        "width": 155,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 32,
+        "y": 400,
+        "width": 326,
+        "height": 44
+      },
+      "save-set": {
+        "x": 32,
+        "y": 456,
+        "width": 326,
+        "height": 48
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "appearances/graphite-light/10-home-mobile.svg",
+    "appearance": "graphite-light",
+    "viewport": "mobile",
+    "texts": 35,
+    "minContrast": 6.02,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "appearances/graphite-light/31-working-ready-mobile.svg",
+    "appearance": "graphite-light",
+    "viewport": "mobile",
+    "texts": 32,
+    "minContrast": 6.02,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 16,
+        "y": 366,
+        "width": 358,
+        "height": 64
+      },
+      "composer": {
+        "x": 16,
+        "y": 444,
+        "width": 358,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 32,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 203,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 32,
+        "y": 574,
+        "width": 326,
+        "height": 48
+      },
+      "save-set": {
+        "x": 32,
+        "y": 636,
+        "width": 326,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "appearances/graphite-light/33-working-saved-mobile.svg",
+    "appearance": "graphite-light",
+    "viewport": "mobile",
+    "texts": 33,
+    "minContrast": 5.09,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 16,
+        "y": 366,
+        "width": 358,
+        "height": 64
+      },
+      "composer": {
+        "x": 16,
+        "y": 444,
+        "width": 358,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 32,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 203,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 32,
+        "y": 574,
+        "width": 326,
+        "height": 48
+      },
+      "save-set": {
+        "x": 32,
+        "y": 636,
+        "width": 326,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "appearances/graphite-light/59-appearance-mobile.svg",
+    "appearance": "graphite-light",
+    "viewport": "mobile",
+    "texts": 26,
+    "minContrast": 5.94,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "appearances/graphite-light/33-working-saved-desktop.svg",
+    "appearance": "graphite-light",
+    "viewport": "desktop",
+    "texts": 63,
+    "minContrast": 5.09,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 534,
+        "y": 348,
+        "width": 496,
+        "height": 64
+      },
+      "composer": {
+        "x": 534,
+        "y": 430,
+        "width": 496,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 550,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 790,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 550,
+        "y": 560,
+        "width": 464,
+        "height": 48
+      },
+      "save-set": {
+        "x": 550,
+        "y": 622,
+        "width": 464,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "appearances/graphite-dark/10-home-mobile.svg",
+    "appearance": "graphite-dark",
+    "viewport": "mobile",
+    "texts": 35,
+    "minContrast": 8.47,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "appearances/graphite-dark/31-working-ready-mobile.svg",
+    "appearance": "graphite-dark",
+    "viewport": "mobile",
+    "texts": 32,
+    "minContrast": 8.26,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 16,
+        "y": 366,
+        "width": 358,
+        "height": 64
+      },
+      "composer": {
+        "x": 16,
+        "y": 444,
+        "width": 358,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 32,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 203,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 32,
+        "y": 574,
+        "width": 326,
+        "height": 48
+      },
+      "save-set": {
+        "x": 32,
+        "y": 636,
+        "width": 326,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "appearances/graphite-dark/33-working-saved-mobile.svg",
+    "appearance": "graphite-dark",
+    "viewport": "mobile",
+    "texts": 33,
+    "minContrast": 5.27,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 16,
+        "y": 366,
+        "width": 358,
+        "height": 64
+      },
+      "composer": {
+        "x": 16,
+        "y": 444,
+        "width": 358,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 32,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 203,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 32,
+        "y": 574,
+        "width": 326,
+        "height": 48
+      },
+      "save-set": {
+        "x": 32,
+        "y": 636,
+        "width": 326,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "appearances/graphite-dark/59-appearance-mobile.svg",
+    "appearance": "graphite-dark",
+    "viewport": "mobile",
+    "texts": 26,
+    "minContrast": 7.33,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "appearances/graphite-dark/33-working-saved-desktop.svg",
+    "appearance": "graphite-dark",
+    "viewport": "desktop",
+    "texts": 63,
+    "minContrast": 5.27,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 534,
+        "y": 348,
+        "width": 496,
+        "height": 64
+      },
+      "composer": {
+        "x": 534,
+        "y": 430,
+        "width": 496,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 550,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 790,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 550,
+        "y": 560,
+        "width": 464,
+        "height": 48
+      },
+      "save-set": {
+        "x": 550,
+        "y": 622,
+        "width": 464,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "appearances/charcoal-light/10-home-mobile.svg",
+    "appearance": "charcoal-light",
+    "viewport": "mobile",
+    "texts": 35,
+    "minContrast": 8.76,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "appearances/charcoal-light/31-working-ready-mobile.svg",
+    "appearance": "charcoal-light",
+    "viewport": "mobile",
+    "texts": 32,
+    "minContrast": 8.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 16,
+        "y": 366,
+        "width": 358,
+        "height": 64
+      },
+      "composer": {
+        "x": 16,
+        "y": 444,
+        "width": 358,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 32,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 203,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 32,
+        "y": 574,
+        "width": 326,
+        "height": 48
+      },
+      "save-set": {
+        "x": 32,
+        "y": 636,
+        "width": 326,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "appearances/charcoal-light/33-working-saved-mobile.svg",
+    "appearance": "charcoal-light",
+    "viewport": "mobile",
+    "texts": 33,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 16,
+        "y": 366,
+        "width": 358,
+        "height": 64
+      },
+      "composer": {
+        "x": 16,
+        "y": 444,
+        "width": 358,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 32,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 203,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 32,
+        "y": 574,
+        "width": 326,
+        "height": 48
+      },
+      "save-set": {
+        "x": 32,
+        "y": 636,
+        "width": 326,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "appearances/charcoal-light/59-appearance-mobile.svg",
+    "appearance": "charcoal-light",
+    "viewport": "mobile",
+    "texts": 26,
+    "minContrast": 6.32,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "appearances/charcoal-light/33-working-saved-desktop.svg",
+    "appearance": "charcoal-light",
+    "viewport": "desktop",
+    "texts": 63,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 534,
+        "y": 348,
+        "width": 496,
+        "height": 64
+      },
+      "composer": {
+        "x": 534,
+        "y": 430,
+        "width": 496,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 550,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 790,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 550,
+        "y": 560,
+        "width": 464,
+        "height": 48
+      },
+      "save-set": {
+        "x": 550,
+        "y": 622,
+        "width": 464,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "appearances/charcoal-dark/10-home-mobile.svg",
+    "appearance": "charcoal-dark",
+    "viewport": "mobile",
+    "texts": 35,
+    "minContrast": 8,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "appearances/charcoal-dark/31-working-ready-mobile.svg",
+    "appearance": "charcoal-dark",
+    "viewport": "mobile",
+    "texts": 32,
+    "minContrast": 6.94,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 16,
+        "y": 366,
+        "width": 358,
+        "height": 64
+      },
+      "composer": {
+        "x": 16,
+        "y": 444,
+        "width": 358,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 32,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 203,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 32,
+        "y": 574,
+        "width": 326,
+        "height": 48
+      },
+      "save-set": {
+        "x": 32,
+        "y": 636,
+        "width": 326,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "appearances/charcoal-dark/33-working-saved-mobile.svg",
+    "appearance": "charcoal-dark",
+    "viewport": "mobile",
+    "texts": 33,
+    "minContrast": 4.82,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 16,
+        "y": 366,
+        "width": 358,
+        "height": 64
+      },
+      "composer": {
+        "x": 16,
+        "y": 444,
+        "width": 358,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 32,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 203,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 32,
+        "y": 574,
+        "width": 326,
+        "height": 48
+      },
+      "save-set": {
+        "x": 32,
+        "y": 636,
+        "width": 326,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "appearances/charcoal-dark/59-appearance-mobile.svg",
+    "appearance": "charcoal-dark",
+    "viewport": "mobile",
+    "texts": 26,
+    "minContrast": 6.16,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "appearances/charcoal-dark/33-working-saved-desktop.svg",
+    "appearance": "charcoal-dark",
+    "viewport": "desktop",
+    "texts": 63,
+    "minContrast": 4.82,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 534,
+        "y": 348,
+        "width": 496,
+        "height": 64
+      },
+      "composer": {
+        "x": 534,
+        "y": 430,
+        "width": 496,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 550,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 790,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 550,
+        "y": 560,
+        "width": 464,
+        "height": 48
+      },
+      "save-set": {
+        "x": 550,
+        "y": 622,
+        "width": 464,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "appearances/classic-workoutapp-light/10-home-mobile.svg",
+    "appearance": "classic-workoutapp-light",
+    "viewport": "mobile",
+    "texts": 35,
+    "minContrast": 5.78,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "appearances/classic-workoutapp-light/31-working-ready-mobile.svg",
+    "appearance": "classic-workoutapp-light",
+    "viewport": "mobile",
+    "texts": 32,
+    "minContrast": 5.78,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 16,
+        "y": 366,
+        "width": 358,
+        "height": 64
+      },
+      "composer": {
+        "x": 16,
+        "y": 444,
+        "width": 358,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 32,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 203,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 32,
+        "y": 574,
+        "width": 326,
+        "height": 48
+      },
+      "save-set": {
+        "x": 32,
+        "y": 636,
+        "width": 326,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "appearances/classic-workoutapp-light/33-working-saved-mobile.svg",
+    "appearance": "classic-workoutapp-light",
+    "viewport": "mobile",
+    "texts": 33,
+    "minContrast": 5.2,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 16,
+        "y": 366,
+        "width": 358,
+        "height": 64
+      },
+      "composer": {
+        "x": 16,
+        "y": 444,
+        "width": 358,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 32,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 203,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 32,
+        "y": 574,
+        "width": 326,
+        "height": 48
+      },
+      "save-set": {
+        "x": 32,
+        "y": 636,
+        "width": 326,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "appearances/classic-workoutapp-light/59-appearance-mobile.svg",
+    "appearance": "classic-workoutapp-light",
+    "viewport": "mobile",
+    "texts": 26,
+    "minContrast": 5.78,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "appearances/classic-workoutapp-light/33-working-saved-desktop.svg",
+    "appearance": "classic-workoutapp-light",
+    "viewport": "desktop",
+    "texts": 63,
+    "minContrast": 5.2,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 534,
+        "y": 348,
+        "width": 496,
+        "height": 64
+      },
+      "composer": {
+        "x": 534,
+        "y": 430,
+        "width": 496,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 550,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 790,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 550,
+        "y": 560,
+        "width": 464,
+        "height": 48
+      },
+      "save-set": {
+        "x": 550,
+        "y": 622,
+        "width": 464,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "appearances/classic-workoutapp-dark/10-home-mobile.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 35,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "appearances/classic-workoutapp-dark/31-working-ready-mobile.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 32,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 16,
+        "y": 366,
+        "width": 358,
+        "height": 64
+      },
+      "composer": {
+        "x": 16,
+        "y": 444,
+        "width": 358,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 32,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 203,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 32,
+        "y": 574,
+        "width": 326,
+        "height": 48
+      },
+      "save-set": {
+        "x": 32,
+        "y": 636,
+        "width": 326,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "appearances/classic-workoutapp-dark/33-working-saved-mobile.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 33,
+    "minContrast": 5.23,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 16,
+        "y": 366,
+        "width": 358,
+        "height": 64
+      },
+      "composer": {
+        "x": 16,
+        "y": 444,
+        "width": 358,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 32,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 203,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 32,
+        "y": 574,
+        "width": 326,
+        "height": 48
+      },
+      "save-set": {
+        "x": 32,
+        "y": 636,
+        "width": 326,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "appearances/classic-workoutapp-dark/59-appearance-mobile.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "mobile",
+    "texts": 26,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "appearances/classic-workoutapp-dark/33-working-saved-desktop.svg",
+    "appearance": "classic-workoutapp-dark",
+    "viewport": "desktop",
+    "texts": 63,
+    "minContrast": 5.23,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {
+      "reserved-status": {
+        "x": 534,
+        "y": 348,
+        "width": 496,
+        "height": 64
+      },
+      "composer": {
+        "x": 534,
+        "y": 430,
+        "width": 496,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 550,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 790,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 550,
+        "y": 560,
+        "width": 464,
+        "height": 48
+      },
+      "save-set": {
+        "x": 550,
+        "y": 622,
+        "width": 464,
+        "height": 52
+      }
+    },
+    "fontLoaded": true
+  },
+  {
+    "file": "boards/01-working-mobile.svg",
+    "appearance": "review-board",
+    "viewport": "board",
+    "texts": 102,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "boards/02-recovery-mobile.svg",
+    "appearance": "review-board",
+    "viewport": "board",
+    "texts": 101,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "boards/03-keyboard-mobile.svg",
+    "appearance": "review-board",
+    "viewport": "board",
+    "texts": 81,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "boards/04-working-desktop.svg",
+    "appearance": "review-board",
+    "viewport": "board",
+    "texts": 126,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "boards/05-unified-journey.svg",
+    "appearance": "review-board",
+    "viewport": "board",
+    "texts": 145,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "boards/06-correction.svg",
+    "appearance": "review-board",
+    "viewport": "board",
+    "texts": 72,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "boards/07-starting-load.svg",
+    "appearance": "review-board",
+    "viewport": "board",
+    "texts": 78,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "boards/graphite-10-home.svg",
+    "appearance": "review-board",
+    "viewport": "board",
+    "texts": 74,
+    "minContrast": 6.02,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "boards/graphite-31-working-ready.svg",
+    "appearance": "review-board",
+    "viewport": "board",
+    "texts": 68,
+    "minContrast": 6.02,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "boards/graphite-33-working-saved.svg",
+    "appearance": "review-board",
+    "viewport": "board",
+    "texts": 70,
+    "minContrast": 5.09,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "boards/graphite-59-appearance.svg",
+    "appearance": "review-board",
+    "viewport": "board",
+    "texts": 56,
+    "minContrast": 5.94,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "boards/graphite-desktop.svg",
+    "appearance": "review-board",
+    "viewport": "board",
+    "texts": 129,
+    "minContrast": 5.09,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "boards/charcoal-10-home.svg",
+    "appearance": "review-board",
+    "viewport": "board",
+    "texts": 74,
+    "minContrast": 8,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "boards/charcoal-31-working-ready.svg",
+    "appearance": "review-board",
+    "viewport": "board",
+    "texts": 68,
+    "minContrast": 6.94,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "boards/charcoal-33-working-saved.svg",
+    "appearance": "review-board",
+    "viewport": "board",
+    "texts": 70,
+    "minContrast": 4.82,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "boards/charcoal-59-appearance.svg",
+    "appearance": "review-board",
+    "viewport": "board",
+    "texts": 56,
+    "minContrast": 6.16,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "boards/charcoal-desktop.svg",
+    "appearance": "review-board",
+    "viewport": "board",
+    "texts": 129,
+    "minContrast": 4.82,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "boards/classic-workoutapp-10-home.svg",
+    "appearance": "review-board",
+    "viewport": "board",
+    "texts": 74,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "boards/classic-workoutapp-31-working-ready.svg",
+    "appearance": "review-board",
+    "viewport": "board",
+    "texts": 68,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "boards/classic-workoutapp-33-working-saved.svg",
+    "appearance": "review-board",
+    "viewport": "board",
+    "texts": 70,
+    "minContrast": 5.2,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "boards/classic-workoutapp-59-appearance.svg",
+    "appearance": "review-board",
+    "viewport": "board",
+    "texts": 56,
+    "minContrast": 5.1,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "boards/classic-workoutapp-desktop.svg",
+    "appearance": "review-board",
+    "viewport": "board",
+    "texts": 129,
+    "minContrast": 5.2,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "boards/08-six-appearance-components.svg",
+    "appearance": "review-board",
+    "viewport": "board",
+    "texts": 62,
+    "minContrast": 4.82,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  },
+  {
+    "file": "boards/09-typography.svg",
+    "appearance": "review-board",
+    "viewport": "board",
+    "texts": 35,
+    "minContrast": 8.76,
+    "low": [],
+    "clips": [],
+    "overlaps": [],
+    "geometry": {},
+    "fontLoaded": true
+  }
+]

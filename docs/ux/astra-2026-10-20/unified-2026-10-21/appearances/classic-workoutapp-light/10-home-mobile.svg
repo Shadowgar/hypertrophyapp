@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844" role="img" aria-labelledby="title desc"><title id="title">Your next session</title><desc id="desc">WorkoutApp unified design proposal. Synthetic example. Home prioritizes the next scheduled or in-progress occurrence and a single action. It links to Week and optional Check-In; signed-in users see no login or start-onboarding calls to action. No token-based Synced claim.</desc><style>text{font-family:"DM Sans",Arial,sans-serif;font-variant-numeric:tabular-nums} @font-face{font-family:"DM Sans";src:url("../../fonts/DM-Sans.ttf")}</style>
+<rect x="0" y="0" width="390" height="844" rx="0" fill="#F1F1F1" data-fill-token="canvas"/>
+<text x="20" y="21" fill="#171717" data-fill-token="text_primary" font-size="13" font-weight="600" text-anchor="start">9:41</text>
+<text x="370" y="21" fill="#444444" data-fill-token="text_secondary" font-size="13" font-weight="400" text-anchor="end">●  ▰</text>
+<rect x="20" y="43" width="5" height="20" rx="2" fill="#B4232D" data-fill-token="action_fill"/>
+<rect x="29" y="48" width="5" height="15" rx="2" fill="#B4232D" data-fill-token="action_fill"/>
+<text x="44" y="61" fill="#171717" data-fill-token="text_primary" font-size="21" font-weight="700" text-anchor="start">WorkoutApp</text>
+<rect x="318" y="31" width="52" height="44" rx="12" fill="#FFFFFF" data-fill-token="surface" stroke="#737373" stroke-width="1" data-stroke-token="border_control"/>
+<text x="344.0" y="58.0" fill="#171717" data-fill-token="text_primary" font-size="15" font-weight="600" text-anchor="middle">•••</text>
+<rect x="0" y="772" width="390" height="72" rx="0" fill="#FFFFFF" data-fill-token="surface"/>
+<path d="M0 772 L390 772" fill="none" stroke="#CDCDCD" stroke-width="1"/>
+<rect x="5" y="779" width="68" height="54" rx="10" fill="#E6E6E6" data-fill-token="surface_selected"/>
+<path d="M2 10 L10 3 L18 10 M4 9 V18 H16 V9 M8 18 V12 H12 V18" transform="translate(29 785) scale(1.0)" fill="none" stroke="#171717" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="39" y="823" fill="#171717" data-fill-token="text_primary" font-size="12" font-weight="600" text-anchor="middle">Home</text>
+<path d="M3 6 V14 M6 4 V16 M6 10 H14 M14 4 V16 M17 6 V14" transform="translate(107 785) scale(1.0)" fill="none" stroke="#444444" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="117" y="823" fill="#444444" data-fill-token="text_secondary" font-size="12" font-weight="400" text-anchor="middle">Today</text>
+<path d="M3 5 H17 V18 H3 Z M3 9 H17 M6 2 V7 M14 2 V7" transform="translate(185 785) scale(1.0)" fill="none" stroke="#444444" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="195" y="823" fill="#444444" data-fill-token="text_secondary" font-size="12" font-weight="400" text-anchor="middle">Week</text>
+<path d="M3 10 A7 7 0 1 0 5 5 M3 2 V7 H8 M10 6 V11 L14 13" transform="translate(263 785) scale(1.0)" fill="none" stroke="#444444" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="273" y="823" fill="#444444" data-fill-token="text_secondary" font-size="12" font-weight="400" text-anchor="middle">History</text>
+<path d="M4 10 H5 M9 10 H10 M14 10 H15" transform="translate(341 785) scale(1.0)" fill="none" stroke="#444444" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="351" y="823" fill="#444444" data-fill-token="text_secondary" font-size="12" font-weight="400" text-anchor="middle">More</text>
+<rect x="146" y="838" width="98" height="3" rx="2" fill="#5E5E5E" data-fill-token="text_muted"/>
+<text x="20" y="103" fill="#B4232D" data-fill-token="accent_text" font-size="13" font-weight="700" text-anchor="start">HOME</text>
+<text x="20" y="140" fill="#171717" data-fill-token="text_primary" font-size="27" font-weight="700" text-anchor="start">Your next session</text>
+<text x="20" y="167" fill="#444444" data-fill-token="text_secondary" font-size="16" font-weight="400" text-anchor="start">Wednesday 21 October</text>
+<rect x="20" y="206" width="350" height="122" rx="12" fill="#FFFFFF" data-fill-token="surface" stroke="#CDCDCD" stroke-width="1" data-stroke-token="border_subtle"/>
+<text x="38" y="233" fill="#444444" data-fill-token="text_secondary" font-size="14" font-weight="500" text-anchor="start">FULL BODY PHASE 1 · AUTHORED</text>
+<text x="38" y="276" fill="#171717" data-fill-token="text_primary" font-size="34" font-weight="600" text-anchor="start">Workout B</text>
+<text x="38" y="306" fill="#444444" data-fill-token="text_secondary" font-size="14" font-weight="400" text-anchor="start">Scheduled today · 4 exercises</text>
+<rect x="20" y="340" width="350" height="134" rx="12" fill="#FFFFFF" data-fill-token="surface" stroke="#CDCDCD" stroke-width="1" data-stroke-token="border_subtle"/>
+<text x="36" y="368" fill="#171717" data-fill-token="text_primary" font-size="16" font-weight="600" text-anchor="start">This week</text>
+<text x="55.285714285714285" y="395" fill="#444444" data-fill-token="text_secondary" font-size="13" font-weight="400" text-anchor="middle">M</text>
+<rect x="35.285714285714285" y="405" width="40" height="44" rx="10" fill="#B4232D" data-fill-token="selection_fill"/>
+<text x="55.285714285714285" y="433" fill="#FFFFFF" data-fill-token="selection_text" font-size="16" font-weight="600" text-anchor="middle">19</text>
+<text x="101.85714285714286" y="395" fill="#444444" data-fill-token="text_secondary" font-size="13" font-weight="400" text-anchor="middle">T</text>
+<rect x="81.85714285714286" y="405" width="40" height="44" rx="10" fill="#FFFFFF" data-fill-token="surface" stroke="#737373" stroke-width="1" data-stroke-token="border_control"/>
+<text x="101.85714285714286" y="433" fill="#171717" data-fill-token="text_primary" font-size="16" font-weight="600" text-anchor="middle">20</text>
+<text x="148.42857142857142" y="395" fill="#444444" data-fill-token="text_secondary" font-size="13" font-weight="400" text-anchor="middle">W</text>
+<rect x="128.42857142857142" y="405" width="40" height="44" rx="10" fill="#B4232D" data-fill-token="selection_fill"/>
+<text x="148.42857142857142" y="433" fill="#FFFFFF" data-fill-token="selection_text" font-size="16" font-weight="600" text-anchor="middle">21</text>
+<text x="195.0" y="395" fill="#444444" data-fill-token="text_secondary" font-size="13" font-weight="400" text-anchor="middle">T</text>
+<rect x="175.0" y="405" width="40" height="44" rx="10" fill="#FFFFFF" data-fill-token="surface" stroke="#737373" stroke-width="1" data-stroke-token="border_control"/>
+<text x="195.0" y="433" fill="#171717" data-fill-token="text_primary" font-size="16" font-weight="600" text-anchor="middle">22</text>
+<text x="241.57142857142856" y="395" fill="#444444" data-fill-token="text_secondary" font-size="13" font-weight="400" text-anchor="middle">F</text>
+<rect x="221.57142857142856" y="405" width="40" height="44" rx="10" fill="#B4232D" data-fill-token="selection_fill"/>
+<text x="241.57142857142856" y="433" fill="#FFFFFF" data-fill-token="selection_text" font-size="16" font-weight="600" text-anchor="middle">23</text>
+<text x="288.1428571428571" y="395" fill="#444444" data-fill-token="text_secondary" font-size="13" font-weight="400" text-anchor="middle">S</text>
+<rect x="268.1428571428571" y="405" width="40" height="44" rx="10" fill="#FFFFFF" data-fill-token="surface" stroke="#737373" stroke-width="1" data-stroke-token="border_control"/>
+<text x="288.1428571428571" y="433" fill="#171717" data-fill-token="text_primary" font-size="16" font-weight="600" text-anchor="middle">24</text>
+<text x="334.7142857142857" y="395" fill="#444444" data-fill-token="text_secondary" font-size="13" font-weight="400" text-anchor="middle">S</text>
+<rect x="314.7142857142857" y="405" width="40" height="44" rx="10" fill="#FFFFFF" data-fill-token="surface" stroke="#737373" stroke-width="1" data-stroke-token="border_control"/>
+<text x="334.7142857142857" y="433" fill="#171717" data-fill-token="text_primary" font-size="16" font-weight="600" text-anchor="middle">25</text>
+<rect x="20" y="486" width="350" height="114" rx="12" fill="#FFFFFF" data-fill-token="surface" stroke="#737373" stroke-width="1" data-stroke-token="border_control"/>
+<text x="36" y="515" fill="#171717" data-fill-token="text_primary" font-size="18" font-weight="600" text-anchor="start">A quick check-in?</text>
+<text x="36" y="545" fill="#444444" data-fill-token="text_secondary" font-size="15" font-weight="400" text-anchor="start">Optional. You can do it after</text>
+<text x="36" y="567" fill="#444444" data-fill-token="text_secondary" font-size="15" font-weight="400" text-anchor="start">training.</text>
+<text x="354" y="515" fill="#B4232D" data-fill-token="accent_text" font-size="20" font-weight="400" text-anchor="end">›</text>
+<rect x="20" y="682" width="350" height="48" rx="12" fill="#B4232D" data-fill-token="action_fill"/>
+<text x="195.0" y="711.0" fill="#FFFFFF" data-fill-token="action_text" font-size="15" font-weight="600" text-anchor="middle">Open today’s workout</text></svg>

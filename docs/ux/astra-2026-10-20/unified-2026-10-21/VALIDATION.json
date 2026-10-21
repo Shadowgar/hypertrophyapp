@@ -1,0 +1,186 @@
+{
+  "screenStates": 78,
+  "canonicalMobileFrames": 78,
+  "canonicalDesktopFrames": 76,
+  "appearanceVariants": 30,
+  "comparisonBoards": 24,
+  "totalSvgPngPairs": 208,
+  "renderedTextNodes": 8203,
+  "renderedTextContrastMin": 4.82,
+  "renderedTextContrastFailures": 0,
+  "viewportClippingFailures": 0,
+  "pairwiseTextOverlapFailures": 0,
+  "unchangedPreviousTokenMaps": true,
+  "sameGeometryAcrossSixAppearances": [
+    "Home",
+    "working-ready",
+    "working-saved",
+    "desktop-working-saved"
+  ],
+  "stableSetGeometry": {
+    "mobile": {
+      "reserved-status": {
+        "x": 16,
+        "y": 366,
+        "width": 358,
+        "height": 64
+      },
+      "composer": {
+        "x": 16,
+        "y": 444,
+        "width": 358,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 32,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 203,
+        "y": 504,
+        "width": 155,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 32,
+        "y": 574,
+        "width": 326,
+        "height": 48
+      },
+      "save-set": {
+        "x": 32,
+        "y": 636,
+        "width": 326,
+        "height": 52
+      }
+    },
+    "desktop": {
+      "reserved-status": {
+        "x": 534,
+        "y": 348,
+        "width": 496,
+        "height": 64
+      },
+      "composer": {
+        "x": 534,
+        "y": 430,
+        "width": 496,
+        "height": 254
+      },
+      "working-weight": {
+        "x": 550,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 790,
+        "y": 490,
+        "width": 224,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 550,
+        "y": 560,
+        "width": 464,
+        "height": 48
+      },
+      "save-set": {
+        "x": 550,
+        "y": 622,
+        "width": 464,
+        "height": 52
+      }
+    },
+    "keyboard": {
+      "reserved-status": {
+        "x": 16,
+        "y": 198,
+        "width": 358,
+        "height": 62
+      },
+      "composer": {
+        "x": 16,
+        "y": 274,
+        "width": 358,
+        "height": 240
+      },
+      "working-weight": {
+        "x": 32,
+        "y": 330,
+        "width": 155,
+        "height": 56
+      },
+      "working-reps": {
+        "x": 203,
+        "y": 330,
+        "width": 155,
+        "height": 56
+      },
+      "effort-control": {
+        "x": 32,
+        "y": 400,
+        "width": 326,
+        "height": 44
+      },
+      "save-set": {
+        "x": 32,
+        "y": 456,
+        "width": 326,
+        "height": 48
+      }
+    }
+  },
+  "contrastByAppearance": [
+    {
+      "appearance": "graphite-light",
+      "primaryAction": 6.68,
+      "controlOutlineMin": 3.83,
+      "focusMin": 5.4,
+      "statusTextMin": 6.1
+    },
+    {
+      "appearance": "graphite-dark",
+      "primaryAction": 9.09,
+      "controlOutlineMin": 3.73,
+      "focusMin": 8.44,
+      "statusTextMin": 7.46
+    },
+    {
+      "appearance": "charcoal-light",
+      "primaryAction": 15.52,
+      "controlOutlineMin": 3.73,
+      "focusMin": 12.21,
+      "statusTextMin": 5.74
+    },
+    {
+      "appearance": "charcoal-dark",
+      "primaryAction": 13.63,
+      "controlOutlineMin": 3.79,
+      "focusMin": 11.2,
+      "statusTextMin": 6.07
+    },
+    {
+      "appearance": "classic-workoutapp-light",
+      "primaryAction": 6.52,
+      "controlOutlineMin": 3.8,
+      "focusMin": 5.23,
+      "statusTextMin": 6.05
+    },
+    {
+      "appearance": "classic-workoutapp-dark",
+      "primaryAction": 5.1,
+      "controlOutlineMin": 3.58,
+      "focusMin": 7.36,
+      "statusTextMin": 7.55
+    }
+  ],
+  "limits": [
+    "Static browser rendering, not application behavior",
+    "No real account or backend writes",
+    "No physical iOS keyboard or screen reader qualification",
+    "No latency, durable timer, offline or concurrency qualification"
+  ]
+}

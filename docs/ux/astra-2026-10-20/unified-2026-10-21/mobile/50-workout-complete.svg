@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844" role="img" aria-labelledby="title desc"><title id="title">Workout complete</title><desc id="desc">WorkoutApp unified design proposal. Synthetic example. Completion is explicit and acknowledged. No new week, program replacement or generation is triggered by finishing. Unknown timing/energy/calorie metrics are not fabricated.</desc><style>text{font-family:"DM Sans",Arial,sans-serif;font-variant-numeric:tabular-nums} @font-face{font-family:"DM Sans";src:url("../fonts/DM-Sans.ttf")}</style>
+<rect x="0" y="0" width="390" height="844" rx="0" fill="#101010" data-fill-token="canvas"/>
+<text x="20" y="21" fill="#F5F5F5" data-fill-token="text_primary" font-size="13" font-weight="600" text-anchor="start">9:41</text>
+<text x="370" y="21" fill="#C2C2C2" data-fill-token="text_secondary" font-size="13" font-weight="400" text-anchor="end">●  ▰</text>
+<rect x="20" y="43" width="5" height="20" rx="2" fill="#C9383F" data-fill-token="action_fill"/>
+<rect x="29" y="48" width="5" height="15" rx="2" fill="#C9383F" data-fill-token="action_fill"/>
+<text x="44" y="61" fill="#F5F5F5" data-fill-token="text_primary" font-size="21" font-weight="700" text-anchor="start">WorkoutApp</text>
+<rect x="318" y="31" width="52" height="44" rx="12" fill="#191919" data-fill-token="surface" stroke="#858585" stroke-width="1" data-stroke-token="border_control"/>
+<text x="344.0" y="58.0" fill="#F5F5F5" data-fill-token="text_primary" font-size="15" font-weight="600" text-anchor="middle">•••</text>
+<rect x="0" y="772" width="390" height="72" rx="0" fill="#191919" data-fill-token="surface"/>
+<path d="M0 772 L390 772" fill="none" stroke="#3B3B3B" stroke-width="1"/>
+<path d="M2 10 L10 3 L18 10 M4 9 V18 H16 V9 M8 18 V12 H12 V18" transform="translate(29 785) scale(1.0)" fill="none" stroke="#C2C2C2" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="39" y="823" fill="#C2C2C2" data-fill-token="text_secondary" font-size="12" font-weight="400" text-anchor="middle">Home</text>
+<rect x="83" y="779" width="68" height="54" rx="10" fill="#303030" data-fill-token="surface_selected"/>
+<path d="M3 6 V14 M6 4 V16 M6 10 H14 M14 4 V16 M17 6 V14" transform="translate(107 785) scale(1.0)" fill="none" stroke="#F5F5F5" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="117" y="823" fill="#F5F5F5" data-fill-token="text_primary" font-size="12" font-weight="600" text-anchor="middle">Today</text>
+<path d="M3 5 H17 V18 H3 Z M3 9 H17 M6 2 V7 M14 2 V7" transform="translate(185 785) scale(1.0)" fill="none" stroke="#C2C2C2" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="195" y="823" fill="#C2C2C2" data-fill-token="text_secondary" font-size="12" font-weight="400" text-anchor="middle">Week</text>
+<path d="M3 10 A7 7 0 1 0 5 5 M3 2 V7 H8 M10 6 V11 L14 13" transform="translate(263 785) scale(1.0)" fill="none" stroke="#C2C2C2" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="273" y="823" fill="#C2C2C2" data-fill-token="text_secondary" font-size="12" font-weight="400" text-anchor="middle">History</text>
+<path d="M4 10 H5 M9 10 H10 M14 10 H15" transform="translate(341 785) scale(1.0)" fill="none" stroke="#C2C2C2" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="351" y="823" fill="#C2C2C2" data-fill-token="text_secondary" font-size="12" font-weight="400" text-anchor="middle">More</text>
+<rect x="146" y="838" width="98" height="3" rx="2" fill="#A3A3A3" data-fill-token="text_muted"/>
+<text x="20" y="103" fill="#FF858B" data-fill-token="accent_text" font-size="13" font-weight="700" text-anchor="start">TODAY</text>
+<text x="20" y="140" fill="#F5F5F5" data-fill-token="text_primary" font-size="27" font-weight="700" text-anchor="start">Workout complete</text>
+<text x="20" y="167" fill="#C2C2C2" data-fill-token="text_secondary" font-size="16" font-weight="400" text-anchor="start">Wednesday 21 October · Workout B</text>
+<rect x="20" y="206" width="350" height="94" rx="12" fill="#232323" data-fill-token="status_surface" stroke="#858585" stroke-width="1" data-stroke-token="border_control"/>
+<text x="36" y="234" fill="#8ED6A2" data-fill-token="success_text" font-size="16" font-weight="600" text-anchor="start">✓ Completion confirmed</text>
+<text x="36" y="258" fill="#C2C2C2" data-fill-token="text_secondary" font-size="14" font-weight="400" text-anchor="start">12 of 12 prescribed working sets</text>
+<text x="36" y="279" fill="#C2C2C2" data-fill-token="text_secondary" font-size="14" font-weight="400" text-anchor="start">recorded.</text>
+<rect x="20" y="312" width="350" height="122" rx="12" fill="#191919" data-fill-token="surface" stroke="#3B3B3B" stroke-width="1" data-stroke-token="border_subtle"/>
+<text x="38" y="339" fill="#C2C2C2" data-fill-token="text_secondary" font-size="14" font-weight="500" text-anchor="start">Your session</text>
+<text x="38" y="382" fill="#F5F5F5" data-fill-token="text_primary" font-size="34" font-weight="600" text-anchor="start">4 exercises</text>
+<text x="38" y="412" fill="#C2C2C2" data-fill-token="text_secondary" font-size="14" font-weight="400" text-anchor="start">Warm-ups recorded separately</text>
+<rect x="20" y="446" width="350" height="92" rx="12" fill="#191919" data-fill-token="surface" stroke="#858585" stroke-width="1" data-stroke-token="border_control"/>
+<text x="36" y="475" fill="#F5F5F5" data-fill-token="text_primary" font-size="18" font-weight="600" text-anchor="start">Next: Friday 23 October</text>
+<text x="36" y="505" fill="#C2C2C2" data-fill-token="text_secondary" font-size="15" font-weight="400" text-anchor="start">Workout C · view your week</text>
+<text x="354" y="475" fill="#FF858B" data-fill-token="accent_text" font-size="20" font-weight="400" text-anchor="end">›</text>
+<rect x="20" y="682" width="350" height="48" rx="12" fill="#C9383F" data-fill-token="action_fill"/>
+<text x="195.0" y="711.0" fill="#FFFFFF" data-fill-token="action_text" font-size="15" font-weight="600" text-anchor="middle">Review in History</text></svg>

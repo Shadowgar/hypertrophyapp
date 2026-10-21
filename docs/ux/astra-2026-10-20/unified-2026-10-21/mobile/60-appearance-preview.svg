@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844" role="img" aria-labelledby="title desc"><title id="title">Unsaved appearance preview</title><desc id="desc">WorkoutApp unified design proposal. Synthetic example. Two independent account preferences: Theme family and Appearance (Light, Dark, Follow Device Settings). Family changes retain appearance. Preview is local, Save requires acknowledgement, Restore saved discards the local preview. Existing unconfigured accounts retain Classic WorkoutApp Dark. The mockup shows a dirty preview; Back offers keep editing or discard. It is not persisted on selection.</desc><style>text{font-family:"DM Sans",Arial,sans-serif;font-variant-numeric:tabular-nums} @font-face{font-family:"DM Sans";src:url("../fonts/DM-Sans.ttf")}</style>
+<rect x="0" y="0" width="390" height="844" rx="0" fill="#111111" data-fill-token="canvas"/>
+<text x="20" y="21" fill="#F0F0F0" data-fill-token="text_primary" font-size="13" font-weight="600" text-anchor="start">9:41</text>
+<text x="370" y="21" fill="#BDBDBD" data-fill-token="text_secondary" font-size="13" font-weight="400" text-anchor="end">●  ▰</text>
+<rect x="20" y="43" width="5" height="20" rx="2" fill="#79B8FF" data-fill-token="action_fill"/>
+<rect x="29" y="48" width="5" height="15" rx="2" fill="#79B8FF" data-fill-token="action_fill"/>
+<text x="44" y="61" fill="#F0F0F0" data-fill-token="text_primary" font-size="21" font-weight="700" text-anchor="start">WorkoutApp</text>
+<rect x="318" y="31" width="52" height="44" rx="12" fill="#191919" data-fill-token="surface" stroke="#858585" stroke-width="1" data-stroke-token="border_control"/>
+<text x="344.0" y="58.0" fill="#F0F0F0" data-fill-token="text_primary" font-size="15" font-weight="600" text-anchor="middle">•••</text>
+<rect x="0" y="772" width="390" height="72" rx="0" fill="#191919" data-fill-token="surface"/>
+<path d="M0 772 L390 772" fill="none" stroke="#3D3D3D" stroke-width="1"/>
+<path d="M2 10 L10 3 L18 10 M4 9 V18 H16 V9 M8 18 V12 H12 V18" transform="translate(29 785) scale(1.0)" fill="none" stroke="#BDBDBD" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="39" y="823" fill="#BDBDBD" data-fill-token="text_secondary" font-size="12" font-weight="400" text-anchor="middle">Home</text>
+<path d="M3 6 V14 M6 4 V16 M6 10 H14 M14 4 V16 M17 6 V14" transform="translate(107 785) scale(1.0)" fill="none" stroke="#BDBDBD" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="117" y="823" fill="#BDBDBD" data-fill-token="text_secondary" font-size="12" font-weight="400" text-anchor="middle">Today</text>
+<path d="M3 5 H17 V18 H3 Z M3 9 H17 M6 2 V7 M14 2 V7" transform="translate(185 785) scale(1.0)" fill="none" stroke="#BDBDBD" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="195" y="823" fill="#BDBDBD" data-fill-token="text_secondary" font-size="12" font-weight="400" text-anchor="middle">Week</text>
+<path d="M3 10 A7 7 0 1 0 5 5 M3 2 V7 H8 M10 6 V11 L14 13" transform="translate(263 785) scale(1.0)" fill="none" stroke="#BDBDBD" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="273" y="823" fill="#BDBDBD" data-fill-token="text_secondary" font-size="12" font-weight="400" text-anchor="middle">History</text>
+<rect x="317" y="779" width="68" height="54" rx="10" fill="#2D2D2D" data-fill-token="surface_selected"/>
+<path d="M4 10 H5 M9 10 H10 M14 10 H15" transform="translate(341 785) scale(1.0)" fill="none" stroke="#F0F0F0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="351" y="823" fill="#F0F0F0" data-fill-token="text_primary" font-size="12" font-weight="600" text-anchor="middle">More</text>
+<rect x="146" y="838" width="98" height="3" rx="2" fill="#A0A0A0" data-fill-token="text_muted"/>
+<text x="20" y="105" fill="#79B8FF" data-fill-token="accent_text" font-size="13" font-weight="700" text-anchor="start">SETTINGS</text>
+<text x="20" y="142" fill="#F0F0F0" data-fill-token="text_primary" font-size="26" font-weight="700" text-anchor="start">Theme &amp; appearance</text>
+<text x="20" y="173" fill="#F0F0F0" data-fill-token="text_primary" font-size="17" font-weight="600" text-anchor="start">Theme</text>
+<rect x="20" y="189" width="350" height="64" rx="12" fill="#2D2D2D" data-fill-token="surface_selected" stroke="#858585" stroke-width="1" data-stroke-token="border_control"/>
+<circle cx="43" cy="221" r="10" fill="#191919" stroke="#858585" stroke-width="2"/>
+<circle cx="43" cy="221" r="5" fill="#79B8FF"/>
+<text x="64" y="216" fill="#F0F0F0" data-fill-token="text_primary" font-size="16" font-weight="600" text-anchor="start">Graphite</text>
+<text x="64" y="238" fill="#BDBDBD" data-fill-token="text_secondary" font-size="13" font-weight="400" text-anchor="start">Selected</text>
+<rect x="292" y="208" width="26" height="26" rx="6" fill="#F3F3F3" data-fill-token="#F3F3F3" stroke="#858585" stroke-width="1" data-stroke-token="border_control"/>
+<rect x="299" y="215" width="12" height="12" rx="3" fill="#1559B7" data-fill-token="#1559B7"/>
+<rect x="324" y="208" width="26" height="26" rx="6" fill="#111111" data-fill-token="#111111" stroke="#858585" stroke-width="1" data-stroke-token="border_control"/>
+<rect x="331" y="215" width="12" height="12" rx="3" fill="#79B8FF" data-fill-token="#79B8FF"/>
+<rect x="20" y="264" width="350" height="64" rx="12" fill="#191919" data-fill-token="surface" stroke="#858585" stroke-width="1" data-stroke-token="border_control"/>
+<circle cx="43" cy="296" r="10" fill="#191919" stroke="#858585" stroke-width="2"/>
+<text x="64" y="291" fill="#F0F0F0" data-fill-token="text_primary" font-size="16" font-weight="600" text-anchor="start">Charcoal</text>
+<text x="64" y="313" fill="#BDBDBD" data-fill-token="text_secondary" font-size="13" font-weight="400" text-anchor="start">Light and Dark</text>
+<rect x="292" y="283" width="26" height="26" rx="6" fill="#FAFAFA" data-fill-token="#FAFAFA" stroke="#858585" stroke-width="1" data-stroke-token="border_control"/>
+<rect x="299" y="290" width="12" height="12" rx="3" fill="#242424" data-fill-token="#242424"/>
+<rect x="324" y="283" width="26" height="26" rx="6" fill="#212121" data-fill-token="#212121" stroke="#858585" stroke-width="1" data-stroke-token="border_control"/>
+<rect x="331" y="290" width="12" height="12" rx="3" fill="#ECECEC" data-fill-token="#ECECEC"/>
+<rect x="20" y="339" width="350" height="64" rx="12" fill="#191919" data-fill-token="surface" stroke="#858585" stroke-width="1" data-stroke-token="border_control"/>
+<circle cx="43" cy="371" r="10" fill="#191919" stroke="#858585" stroke-width="2"/>
+<text x="64" y="366" fill="#F0F0F0" data-fill-token="text_primary" font-size="16" font-weight="600" text-anchor="start">Classic WorkoutApp</text>
+<text x="64" y="388" fill="#BDBDBD" data-fill-token="text_secondary" font-size="13" font-weight="400" text-anchor="start">Light and Dark</text>
+<rect x="292" y="358" width="26" height="26" rx="6" fill="#F1F1F1" data-fill-token="#F1F1F1" stroke="#858585" stroke-width="1" data-stroke-token="border_control"/>
+<rect x="299" y="365" width="12" height="12" rx="3" fill="#B4232D" data-fill-token="#B4232D"/>
+<rect x="324" y="358" width="26" height="26" rx="6" fill="#101010" data-fill-token="#101010" stroke="#858585" stroke-width="1" data-stroke-token="border_control"/>
+<rect x="331" y="365" width="12" height="12" rx="3" fill="#C9383F" data-fill-token="#C9383F"/>
+<text x="20" y="430" fill="#F0F0F0" data-fill-token="text_primary" font-size="17" font-weight="600" text-anchor="start">Appearance</text>
+<rect x="20" y="446" width="350" height="48" rx="12" fill="#191919" data-fill-token="surface" stroke="#858585" stroke-width="1" data-stroke-token="border_control"/>
+<circle cx="43" cy="470" r="9" fill="#191919" stroke="#858585" stroke-width="2"/>
+<text x="64" y="476" fill="#F0F0F0" data-fill-token="text_primary" font-size="15" font-weight="400" text-anchor="start">Light</text>
+<rect x="20" y="502" width="350" height="48" rx="12" fill="#2D2D2D" data-fill-token="surface_selected" stroke="#858585" stroke-width="1" data-stroke-token="border_control"/>
+<circle cx="43" cy="526" r="9" fill="#191919" stroke="#858585" stroke-width="2"/>
+<circle cx="43" cy="526" r="4" fill="#79B8FF"/>
+<text x="64" y="532" fill="#F0F0F0" data-fill-token="text_primary" font-size="15" font-weight="600" text-anchor="start">Dark</text>
+<rect x="20" y="558" width="350" height="48" rx="12" fill="#191919" data-fill-token="surface" stroke="#858585" stroke-width="1" data-stroke-token="border_control"/>
+<circle cx="43" cy="582" r="9" fill="#191919" stroke="#858585" stroke-width="2"/>
+<text x="64" y="588" fill="#F0F0F0" data-fill-token="text_primary" font-size="15" font-weight="400" text-anchor="start">Follow Device Settings</text>
+<text x="20" y="632" fill="#EBC17A" data-fill-token="warning_text" font-size="15" font-weight="600" text-anchor="start">Preview · not saved</text>
+<text x="20" y="654" fill="#BDBDBD" data-fill-token="text_secondary" font-size="14" font-weight="400" text-anchor="start">Only this preview has changed</text>
+<rect x="20" y="671" width="220" height="48" rx="12" fill="#79B8FF" data-fill-token="action_fill"/>
+<text x="130.0" y="700.0" fill="#111111" data-fill-token="action_text" font-size="15" font-weight="600" text-anchor="middle">Save preferences</text>
+<rect x="250" y="671" width="120" height="48" rx="12" fill="#191919" data-fill-token="surface" stroke="#858585" stroke-width="1" data-stroke-token="border_control"/>
+<text x="310.0" y="700.0" fill="#F0F0F0" data-fill-token="text_primary" font-size="15" font-weight="600" text-anchor="middle">Restore saved</text></svg>

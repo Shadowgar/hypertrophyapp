@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844" role="img" aria-labelledby="title desc"><title id="title">Welcome back</title><desc id="desc">WorkoutApp unified design proposal. Synthetic example. Use persistent email/password labels, a 48px Show password control and one submit. Pending disables duplicate sign-in. Successful authentication preserves the full safe return path and query without onboarding writes; inline failure retains email.</desc><style>text{font-family:"DM Sans",Arial,sans-serif;font-variant-numeric:tabular-nums} @font-face{font-family:"DM Sans";src:url("../fonts/DM-Sans.ttf")}</style>
+<rect x="0" y="0" width="390" height="844" rx="0" fill="#101010" data-fill-token="canvas"/>
+<rect x="26" y="31" width="6" height="23" rx="2" fill="#C9383F" data-fill-token="action_fill"/>
+<rect x="36" y="37" width="6" height="17" rx="2" fill="#C9383F" data-fill-token="action_fill"/>
+<text x="53" y="50" fill="#F5F5F5" data-fill-token="text_primary" font-size="22" font-weight="700" text-anchor="start">WorkoutApp</text>
+<path d="M20 74 L370 74" fill="none" stroke="#3B3B3B" stroke-width="1"/>
+<text x="20" y="103" fill="#FF858B" data-fill-token="accent_text" font-size="13" font-weight="700" text-anchor="start">ACCOUNT</text>
+<text x="20" y="140" fill="#F5F5F5" data-fill-token="text_primary" font-size="27" font-weight="700" text-anchor="start">Welcome back</text>
+<text x="20" y="167" fill="#C2C2C2" data-fill-token="text_secondary" font-size="16" font-weight="400" text-anchor="start">Sign in to continue where you left off.</text>
+<text x="20" y="217" fill="#C2C2C2" data-fill-token="text_secondary" font-size="14" font-weight="500" text-anchor="start">Email</text>
+<rect x="20" y="227" width="350" height="52" rx="10" fill="#191919" data-fill-token="input_fill" stroke="#858585" stroke-width="1" data-stroke-token="border_control"/>
+<text x="34" y="261.0" fill="#F5F5F5" data-fill-token="text_primary" font-size="16" font-weight="600" text-anchor="start">alex@example.com</text>
+<text x="20" y="305" fill="#C2C2C2" data-fill-token="text_secondary" font-size="14" font-weight="500" text-anchor="start">Password</text>
+<rect x="20" y="315" width="350" height="52" rx="10" fill="#191919" data-fill-token="input_fill" stroke="#858585" stroke-width="1" data-stroke-token="border_control"/>
+<text x="34" y="349.0" fill="#F5F5F5" data-fill-token="text_primary" font-size="16" font-weight="600" text-anchor="start">••••••••••••</text>
+<rect x="20" y="382" width="350" height="48" rx="12" fill="#191919" data-fill-token="surface" stroke="#858585" stroke-width="1" data-stroke-token="border_control"/>
+<text x="195.0" y="411.0" fill="#F5F5F5" data-fill-token="text_primary" font-size="15" font-weight="600" text-anchor="middle">Show password</text>
+<rect x="20" y="442" width="350" height="48" rx="12" fill="#191919" data-fill-token="surface" stroke="#858585" stroke-width="1" data-stroke-token="border_control"/>
+<text x="195.0" y="471.0" fill="#F5F5F5" data-fill-token="text_primary" font-size="15" font-weight="600" text-anchor="middle">Forgot password?</text>
+<rect x="20" y="682" width="350" height="48" rx="12" fill="#C9383F" data-fill-token="action_fill"/>
+<text x="195.0" y="711.0" fill="#FFFFFF" data-fill-token="action_text" font-size="15" font-weight="600" text-anchor="middle">Sign in</text></svg>

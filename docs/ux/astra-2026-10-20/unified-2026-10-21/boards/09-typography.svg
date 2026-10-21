@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1010" viewBox="0 0 1200 1010" role="img" aria-labelledby="title desc"><title id="title">WorkoutApp typography and component specification</title><desc id="desc">DM Sans is the approved heading family; the same family unifies body and controls.</desc><style>text{font-family:"DM Sans",Arial,sans-serif;font-variant-numeric:tabular-nums} @font-face{font-family:"DM Sans";src:url("../fonts/DM-Sans.ttf")}</style>
+<rect x="0" y="0" width="1200" height="1010" rx="0" fill="#FAFAFA" data-fill-token="canvas"/>
+<text x="32" y="48" fill="#242424" data-fill-token="text_primary" font-size="29" font-weight="700" text-anchor="start">DM Sans · the final typography treatment</text>
+<text x="32" y="82" fill="#484848" data-fill-token="text_secondary" font-size="17" font-weight="400" text-anchor="start">No editorial serif · tabular numerals · comfortable line spacing</text>
+<text x="32" y="132" fill="#484848" data-fill-token="text_secondary" font-size="14" font-weight="400" text-anchor="start">Display / desktop · 30/38 · 700</text>
+<text x="32" y="169" fill="#242424" data-fill-token="text_primary" font-size="30" font-weight="700" text-anchor="start">Your next session</text>
+<text x="32" y="217" fill="#484848" data-fill-token="text_secondary" font-size="14" font-weight="400" text-anchor="start">Page / mobile · 27/35 · 700</text>
+<text x="32" y="254" fill="#242424" data-fill-token="text_primary" font-size="27" font-weight="700" text-anchor="start">Your training week</text>
+<text x="32" y="302" fill="#484848" data-fill-token="text_secondary" font-size="14" font-weight="400" text-anchor="start">Exercise / mobile · 24/32 · 700</text>
+<text x="32" y="339" fill="#242424" data-fill-token="text_primary" font-size="24" font-weight="700" text-anchor="start">Cross-Body Lat Pull-Around</text>
+<text x="32" y="387" fill="#484848" data-fill-token="text_secondary" font-size="14" font-weight="400" text-anchor="start">Section · 18/24 · 600</text>
+<text x="32" y="424" fill="#242424" data-fill-token="text_primary" font-size="18" font-weight="600" text-anchor="start">Recorded working sets</text>
+<text x="32" y="472" fill="#484848" data-fill-token="text_secondary" font-size="14" font-weight="400" text-anchor="start">Body · 16/23 · 400</text>
+<text x="32" y="509" fill="#242424" data-fill-token="text_primary" font-size="16" font-weight="400" text-anchor="start">Your next set stays in the same place.</text>
+<text x="32" y="557" fill="#484848" data-fill-token="text_secondary" font-size="14" font-weight="400" text-anchor="start">Control · 15/20 · 600</text>
+<text x="32" y="594" fill="#242424" data-fill-token="text_primary" font-size="15" font-weight="600" text-anchor="start">Save set 2</text>
+<text x="32" y="642" fill="#484848" data-fill-token="text_secondary" font-size="14" font-weight="400" text-anchor="start">Supporting · 14/21 · 400</text>
+<text x="32" y="679" fill="#242424" data-fill-token="text_primary" font-size="14" font-weight="400" text-anchor="start">Actual effort is optional.</text>
+<text x="32" y="727" fill="#484848" data-fill-token="text_secondary" font-size="14" font-weight="400" text-anchor="start">Numeric entry · 26/34 · 600</text>
+<text x="32" y="764" fill="#242424" data-fill-token="text_primary" font-size="26" font-weight="600" text-anchor="start">40 lb   ×   12 reps</text>
+<path d="M720 112 L720 930" fill="none" stroke="#CDCDCD" stroke-width="1"/>
+<text x="760" y="149" fill="#242424" data-fill-token="text_primary" font-size="23" font-weight="700" text-anchor="start">Shared geometry</text>
+<text x="760" y="188" fill="#484848" data-fill-token="text_secondary" font-size="17" font-weight="400" text-anchor="start">12–16 px corner radius; 8 px spacing</text>
+<text x="760" y="214" fill="#484848" data-fill-token="text_secondary" font-size="17" font-weight="400" text-anchor="start">rhythm; 16–20 px mobile margins; 48–56 px</text>
+<text x="760" y="240" fill="#484848" data-fill-token="text_secondary" font-size="17" font-weight="400" text-anchor="start">primary controls.</text>
+<text x="760" y="338" fill="#484848" data-fill-token="text_secondary" font-size="14" font-weight="500" text-anchor="start">Weight · lb</text>
+<rect x="760" y="348" width="180" height="56" rx="10" fill="#FFFFFF" data-fill-token="input_fill" stroke="#737373" stroke-width="1" data-stroke-token="border_control"/>
+<text x="774" y="384.0" fill="#242424" data-fill-token="text_primary" font-size="26" font-weight="600" text-anchor="start">40</text>
+<text x="960" y="338" fill="#484848" data-fill-token="text_secondary" font-size="14" font-weight="500" text-anchor="start">Repetitions</text>
+<rect x="960" y="348" width="180" height="56" rx="10" fill="#FFFFFF" data-fill-token="input_fill" stroke="#737373" stroke-width="1" data-stroke-token="border_control"/>
+<text x="974" y="384.0" fill="#242424" data-fill-token="text_primary" font-size="26" font-weight="600" text-anchor="start">12</text>
+<rect x="756" y="428" width="388" height="56" rx="15" fill="#FAFAFA" data-fill-token="canvas" stroke="#242424" stroke-width="2" data-stroke-token="focus"/>
+<rect x="760" y="432" width="380" height="48" rx="12" fill="#242424" data-fill-token="action_fill"/>
+<text x="950.0" y="461.0" fill="#FFFFFF" data-fill-token="action_text" font-size="15" font-weight="600" text-anchor="middle">Save set</text>
+<text x="760" y="547" fill="#484848" data-fill-token="text_secondary" font-size="16" font-weight="400" text-anchor="start">Keyboard focus uses a 2 px high-contrast</text>
+<text x="760" y="572" fill="#484848" data-fill-token="text_secondary" font-size="16" font-weight="400" text-anchor="start">ring with an offset. Fine card borders are</text>
+<text x="760" y="597" fill="#484848" data-fill-token="text_secondary" font-size="16" font-weight="400" text-anchor="start">decorative; essential controls use the</text>
+<text x="760" y="622" fill="#484848" data-fill-token="text_secondary" font-size="16" font-weight="400" text-anchor="start">stronger border token.</text>
+<text x="760" y="730" fill="#484848" data-fill-token="text_secondary" font-size="16" font-weight="400" text-anchor="start">Support text scaling and reflow. At smaller</text>
+<text x="760" y="755" fill="#484848" data-fill-token="text_secondary" font-size="16" font-weight="400" text-anchor="start">visual heights, context condenses before the</text>
+<text x="760" y="780" fill="#484848" data-fill-token="text_secondary" font-size="16" font-weight="400" text-anchor="start">composer; save feedback never inserts a new</text>
+<text x="760" y="805" fill="#484848" data-fill-token="text_secondary" font-size="16" font-weight="400" text-anchor="start">region.</text></svg>

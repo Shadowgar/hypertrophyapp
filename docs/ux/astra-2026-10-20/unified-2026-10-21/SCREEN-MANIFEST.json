@@ -1,0 +1,4355 @@
+[
+  {
+    "id": "01-welcome",
+    "title": "Ready for your next session?",
+    "section": "Home",
+    "kind": "standard",
+    "intro": "A clear plan. Your actual progress.",
+    "blocks": [
+      {
+        "title": "Train with your program",
+        "body": "Follow an Authored program or choose to build a Customized one.",
+        "kind": "card"
+      },
+      {
+        "title": "Already training here?",
+        "body": "Sign in to return to your workouts and history.",
+        "kind": "choice"
+      }
+    ],
+    "action": "Create an account",
+    "secondary": "Sign in",
+    "behavior": "Create account starts a new draft setup. Sign in opens the dedicated account flow without writing profile or training preferences.",
+    "findings": [
+      "F01",
+      "F12",
+      "F18",
+      "F24"
+    ],
+    "context": [
+      {
+        "title": "WorkoutApp",
+        "body": "Your programs, scheduled workouts and recorded sets stay together.",
+        "kind": "card"
+      },
+      {
+        "title": "Keep your account",
+        "body": "Returning members sign in directly. There is no setup reset.",
+        "kind": "card"
+      }
+    ]
+  },
+  {
+    "id": "02-sign-in",
+    "title": "Welcome back",
+    "section": "Account",
+    "kind": "standard",
+    "intro": "Sign in to continue where you left off.",
+    "blocks": [
+      {
+        "title": "Email",
+        "body": "alex@example.com",
+        "kind": "field"
+      },
+      {
+        "title": "Password",
+        "body": "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",
+        "kind": "field"
+      },
+      {
+        "title": "Show password",
+        "body": "",
+        "kind": "button"
+      },
+      {
+        "title": "Forgot password?",
+        "body": "",
+        "kind": "button"
+      }
+    ],
+    "action": "Sign in",
+    "secondary": null,
+    "behavior": "Use persistent email/password labels, a 48px Show password control and one submit. Pending disables duplicate sign-in. Successful authentication preserves the full safe return path and query without onboarding writes; inline failure retains email.",
+    "findings": [
+      "F01",
+      "F17",
+      "F18"
+    ],
+    "context": [
+      {
+        "title": "Back to your workout",
+        "body": "After sign-in, return to the workout you opened.",
+        "kind": "card"
+      },
+      {
+        "title": "Your setup stays yours",
+        "body": "Signing in does not recreate a plan or change your program.",
+        "kind": "card"
+      }
+    ]
+  },
+  {
+    "id": "03-account-recovery",
+    "title": "Reset your password",
+    "section": "Account",
+    "kind": "standard",
+    "intro": "We\u2019ll send a link to your email.",
+    "blocks": [
+      {
+        "title": "Email",
+        "body": "alex@example.com",
+        "kind": "field"
+      },
+      {
+        "title": "Check your email",
+        "body": "If an account matches, a reset link will arrive shortly.",
+        "kind": "status"
+      }
+    ],
+    "action": "Send reset link",
+    "secondary": "Back to sign in",
+    "behavior": "Request and token confirmation are separate stages. Use the same neutral email result for matching/nonmatching addresses; a used or expired link offers a fresh request. No wipe or developer operation appears here.",
+    "findings": [
+      "F12",
+      "F17"
+    ],
+    "context": [
+      {
+        "title": "Open the email link",
+        "body": "The next screen asks for a new password and confirmation.",
+        "kind": "card"
+      },
+      {
+        "title": "Link expired?",
+        "body": "Request another link. Existing training data is unaffected.",
+        "kind": "card"
+      }
+    ]
+  },
+  {
+    "id": "04-new-account",
+    "title": "Make it yours",
+    "section": "Account",
+    "kind": "standard",
+    "intro": "Create your account, then choose a program.",
+    "blocks": [
+      {
+        "title": "Email",
+        "body": "alex@example.com",
+        "kind": "field"
+      },
+      {
+        "title": "Password",
+        "body": "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",
+        "kind": "field"
+      },
+      {
+        "title": "Show password",
+        "body": "",
+        "kind": "button"
+      },
+      {
+        "title": "Your choice comes next",
+        "body": "You can review your setup before starting training.",
+        "kind": "card"
+      }
+    ],
+    "action": "Create account",
+    "secondary": "I already have an account",
+    "behavior": "Create only a new account after explicit submit; do not choose a program or run generation as a hidden authentication side effect. Existing accounts route to sign-in.",
+    "findings": [
+      "F01",
+      "F17",
+      "F24"
+    ],
+    "context": [
+      {
+        "title": "Your setup",
+        "body": "Account \u2192 Program \u2192 Equipment \u2192 Review",
+        "kind": "card"
+      },
+      {
+        "title": "Keep your choices clear",
+        "body": "Review each step before saving. Optional answers can stay unknown.",
+        "kind": "card"
+      },
+      {
+        "title": "Already have an account?",
+        "body": "Use Sign in to return to your saved training.",
+        "kind": "card"
+      }
+    ]
+  },
+  {
+    "id": "05-choose-program",
+    "title": "How would you like to train?",
+    "section": "Programs",
+    "kind": "standard",
+    "intro": "Start with a clear choice. You can review it next.",
+    "blocks": [
+      {
+        "title": "Follow an Authored program",
+        "body": "Keep the original exercises, sets and training instructions.",
+        "kind": "choice"
+      },
+      {
+        "title": "Create a Customized program",
+        "body": "Give permission to create a separate program around your needs.",
+        "kind": "choice"
+      },
+      {
+        "title": "Help me choose",
+        "body": "Compare the options before deciding.",
+        "kind": "choice"
+      }
+    ],
+    "action": null,
+    "secondary": null,
+    "behavior": "Explain Authored versus Customized before mode-dependent questions. Help me choose can recommend but cannot supply Customized consent or overwrite an Authored template.",
+    "findings": [
+      "F13",
+      "F24"
+    ],
+    "context": [
+      {
+        "title": "Two distinct paths",
+        "body": "Authored follows a source program. Customized creates an original program only with your permission.",
+        "kind": "card"
+      },
+      {
+        "title": "No choice yet",
+        "body": "Nothing is activated until you review and confirm.",
+        "kind": "card"
+      }
+    ]
+  },
+  {
+    "id": "06-authored-program",
+    "title": "Full Body Phase 1",
+    "section": "Programs",
+    "kind": "standard",
+    "intro": "Authored program",
+    "blocks": [
+      {
+        "title": "Follow the original plan",
+        "body": "Exercises, set targets and techniques stay as authored. Working loads can adapt.",
+        "kind": "card"
+      },
+      {
+        "title": "Choose actual training dates",
+        "body": "Review each session\u2019s workload before activating a schedule.",
+        "kind": "card"
+      },
+      {
+        "title": "Read the program guide",
+        "body": "",
+        "kind": "button"
+      }
+    ],
+    "action": "Use Phase 1",
+    "secondary": "Compare Phase 2",
+    "behavior": "Selecting Phase 1 does not merge it with Phase 2 or generate an original plan. Source guide and provenance remain accessible. Selection leads to setup and dated preview, not silent activation.",
+    "findings": [
+      "F13",
+      "F24",
+      "F28"
+    ],
+    "context": [
+      {
+        "title": "Your setup",
+        "body": "Account \u2192 Program \u2192 Equipment \u2192 Review",
+        "kind": "card"
+      },
+      {
+        "title": "Keep your choices clear",
+        "body": "Review each step before saving. Optional answers can stay unknown.",
+        "kind": "card"
+      },
+      {
+        "title": "Already have an account?",
+        "body": "Use Sign in to return to your saved training.",
+        "kind": "card"
+      }
+    ]
+  },
+  {
+    "id": "07-setup-basics",
+    "title": "A few essentials",
+    "section": "Programs",
+    "kind": "standard",
+    "intro": "Setup \u00b7 1 of 3",
+    "blocks": [
+      {
+        "title": "Weight display",
+        "body": "Pounds \u00b7 lb",
+        "kind": "field"
+      },
+      {
+        "title": "Training location",
+        "body": "New York \u00b7 local dates",
+        "kind": "field"
+      },
+      {
+        "title": "Only what this plan needs",
+        "body": "We\u2019ll explain why an answer matters. Optional answers can stay unknown.",
+        "kind": "card"
+      }
+    ],
+    "action": "Continue to equipment",
+    "secondary": "Back",
+    "behavior": "Collect required mode-relevant fields with explanations. Unit display is explicit (lb for an account with no prior choice); store canonical measurements unchanged. Skipped optional data remains unknown, not fabricated.",
+    "findings": [
+      "F07",
+      "F24",
+      "F28"
+    ],
+    "context": [
+      {
+        "title": "Your setup",
+        "body": "Account \u2192 Program \u2192 Equipment \u2192 Review",
+        "kind": "card"
+      },
+      {
+        "title": "Keep your choices clear",
+        "body": "Review each step before saving. Optional answers can stay unknown.",
+        "kind": "card"
+      },
+      {
+        "title": "Already have an account?",
+        "body": "Use Sign in to return to your saved training.",
+        "kind": "card"
+      }
+    ]
+  },
+  {
+    "id": "08-equipment",
+    "title": "Your equipment",
+    "section": "Settings",
+    "kind": "standard",
+    "intro": "Main gym \u00b7 setup 2 of 3",
+    "blocks": [
+      {
+        "title": "Cable station",
+        "body": "Selected \u00b7 pin-loaded stack",
+        "kind": "check",
+        "selected": true
+      },
+      {
+        "title": "Dumbbells",
+        "body": "Selected \u00b7 pairs available",
+        "kind": "check",
+        "selected": true
+      },
+      {
+        "title": "Cable stack increments",
+        "body": "5 lb \u00b7 Edit available loads",
+        "kind": "choice"
+      },
+      {
+        "title": "What this changes",
+        "body": "Equipment informs supported load choices. It does not rewrite an Authored exercise.",
+        "kind": "card"
+      }
+    ],
+    "action": "Save equipment",
+    "secondary": null,
+    "behavior": "Use named locations, accessible selected states and precise setup when needed. A scoped equipment change preserves all unrelated constraints and profile fields. Customized inventory changes require a new reviewed preview before replacing a plan.",
+    "findings": [
+      "F02",
+      "F15",
+      "F26"
+    ],
+    "context": [
+      {
+        "title": "Your setup",
+        "body": "Account \u2192 Program \u2192 Equipment \u2192 Review",
+        "kind": "card"
+      },
+      {
+        "title": "Keep your choices clear",
+        "body": "Review each step before saving. Optional answers can stay unknown.",
+        "kind": "card"
+      },
+      {
+        "title": "Already have an account?",
+        "body": "Use Sign in to return to your saved training.",
+        "kind": "card"
+      }
+    ]
+  },
+  {
+    "id": "09-setup-review",
+    "title": "Review your setup",
+    "section": "Programs",
+    "kind": "standard",
+    "intro": "Setup \u00b7 3 of 3",
+    "blocks": [
+      {
+        "title": "Your choices",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "Program",
+            "Authored \u00b7 Full Body Phase 1"
+          ],
+          [
+            "Weight display",
+            "Pounds \u00b7 lb"
+          ],
+          [
+            "Equipment",
+            "Main gym \u00b7 cable station, dumbbells"
+          ]
+        ]
+      },
+      {
+        "title": "Ready to choose dates",
+        "body": "Your setup is saved separately from your schedule.",
+        "kind": "card"
+      }
+    ],
+    "action": "Save setup & choose dates",
+    "secondary": "Edit setup",
+    "behavior": "Show explicit answers and omissions before the scoped profile save. A failed save preserves the setup draft and cannot show initialization success. Scheduling remains a separate preview and activation.",
+    "findings": [
+      "F01",
+      "F02",
+      "F11",
+      "F24"
+    ],
+    "context": [
+      {
+        "title": "Your setup",
+        "body": "Account \u2192 Program \u2192 Equipment \u2192 Review",
+        "kind": "card"
+      },
+      {
+        "title": "Keep your choices clear",
+        "body": "Review each step before saving. Optional answers can stay unknown.",
+        "kind": "card"
+      },
+      {
+        "title": "Already have an account?",
+        "body": "Use Sign in to return to your saved training.",
+        "kind": "card"
+      }
+    ]
+  },
+  {
+    "id": "10-home",
+    "title": "Your next session",
+    "section": "Home",
+    "kind": "standard",
+    "intro": "Wednesday 21 October",
+    "blocks": [
+      {
+        "title": "FULL BODY PHASE 1 \u00b7 AUTHORED",
+        "body": "Workout B",
+        "kind": "metric",
+        "note": "Scheduled today \u00b7 4 exercises"
+      },
+      {
+        "title": "This week",
+        "body": "",
+        "kind": "calendar"
+      },
+      {
+        "title": "A quick check-in?",
+        "body": "Optional. You can do it after training.",
+        "kind": "choice"
+      }
+    ],
+    "action": "Open today\u2019s workout",
+    "secondary": null,
+    "behavior": "Home prioritizes the next scheduled or in-progress occurrence and a single action. It links to Week and optional Check-In; signed-in users see no login or start-onboarding calls to action. No token-based Synced claim.",
+    "findings": [
+      "F11",
+      "F18",
+      "F24"
+    ],
+    "context": [
+      {
+        "title": "Your week",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "Mon 19 \u00b7 Workout A",
+            "Completed"
+          ],
+          [
+            "Wed 21 \u00b7 Workout B",
+            "Scheduled today"
+          ],
+          [
+            "Fri 23 \u00b7 Workout C",
+            "Scheduled"
+          ]
+        ]
+      },
+      {
+        "title": "Recent training",
+        "body": "View your last completed session.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "11-home-no-schedule",
+    "title": "Your week is open",
+    "section": "Home",
+    "kind": "standard",
+    "intro": "No workouts scheduled for this week.",
+    "blocks": [
+      {
+        "title": "Choose your training dates",
+        "body": "Preview the work on each day before you commit.",
+        "kind": "card"
+      },
+      {
+        "title": "Your program is ready",
+        "body": "Authored \u00b7 Full Body Phase 1",
+        "kind": "card"
+      },
+      {
+        "title": "Recent training",
+        "body": "Your previous workouts are still in History.",
+        "kind": "choice"
+      }
+    ],
+    "action": "Choose dates",
+    "secondary": null,
+    "behavior": "Show this empty state only after an acknowledged absence of a schedule. It never substitutes for loading, auth expiry or a failed fetch. Existing history and chosen program remain available.",
+    "findings": [
+      "F08",
+      "F11",
+      "F18"
+    ],
+    "context": [
+      {
+        "title": "Your current program",
+        "body": "Full Body Phase 1 \u00b7 Authored",
+        "kind": "card"
+      },
+      {
+        "title": "Keep your history",
+        "body": "Previous sessions remain in History.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "12-programs",
+    "title": "Your programs",
+    "section": "Programs",
+    "kind": "standard",
+    "intro": "Choose with confidence.",
+    "blocks": [
+      {
+        "title": "Full Body Phase 1",
+        "body": "Authored \u00b7 your current program",
+        "kind": "choice"
+      },
+      {
+        "title": "Full Body Phase 2",
+        "body": "Authored \u00b7 separate source program",
+        "kind": "choice"
+      },
+      {
+        "title": "Customized",
+        "body": "Create an original program with explicit permission.",
+        "kind": "choice"
+      }
+    ],
+    "action": null,
+    "secondary": null,
+    "behavior": "Each Authored phase retains a distinct name and identity. Choosing another program enters a replacement review; it does not overwrite started occurrences or history. Auto recommendation remains separate from mode consent.",
+    "findings": [
+      "F13",
+      "F24"
+    ],
+    "context": [
+      {
+        "title": "Program library",
+        "body": "Read the original Phase 1 and Phase 2 guides.",
+        "kind": "choice"
+      },
+      {
+        "title": "Your recorded training",
+        "body": "Previous workouts remain available in History.",
+        "kind": "choice"
+      },
+      {
+        "title": "Review before activation",
+        "body": "Dates and workload stay visible before you commit.",
+        "kind": "card"
+      }
+    ]
+  },
+  {
+    "id": "13-customized-consent",
+    "title": "Build a Customized program",
+    "section": "Programs",
+    "kind": "standard",
+    "intro": "A separate program, built around your inputs.",
+    "blocks": [
+      {
+        "title": "What you are choosing",
+        "body": "Customized creates an original program. Your Authored templates and history stay intact.",
+        "kind": "card"
+      },
+      {
+        "title": "I choose Customized",
+        "body": "Allow WorkoutApp to create an original program from the inputs I review.",
+        "kind": "check",
+        "selected": false
+      },
+      {
+        "title": "Review before activation",
+        "body": "You will see the proposed program, dates and workload first.",
+        "kind": "card"
+      }
+    ],
+    "action": "Agree & continue",
+    "secondary": "Back to Authored programs",
+    "behavior": "The consent checkbox starts unchecked; Agree & continue is disabled until checked. Record the reviewed consent/version under the existing authority. No inferred consent from equipment, recommendation or a preference.",
+    "findings": [
+      "F13",
+      "F24"
+    ],
+    "context": [
+      {
+        "title": "Program library",
+        "body": "Read the original Phase 1 and Phase 2 guides.",
+        "kind": "choice"
+      },
+      {
+        "title": "Your recorded training",
+        "body": "Previous workouts remain available in History.",
+        "kind": "choice"
+      },
+      {
+        "title": "Review before activation",
+        "body": "Dates and workload stay visible before you commit.",
+        "kind": "card"
+      }
+    ]
+  },
+  {
+    "id": "14-customized-inputs",
+    "title": "Shape your program",
+    "section": "Programs",
+    "kind": "standard",
+    "intro": "Customized \u00b7 your choices",
+    "blocks": [
+      {
+        "title": "Training experience",
+        "body": "Comfortable with the basics",
+        "kind": "field"
+      },
+      {
+        "title": "Equipment",
+        "body": "Main gym \u00b7 review inventory",
+        "kind": "choice"
+      },
+      {
+        "title": "Time and training dates",
+        "body": "3 selected days \u00b7 review available time",
+        "kind": "choice"
+      },
+      {
+        "title": "Review other preferences",
+        "body": "Optional inputs explain whether they affect this preview.",
+        "kind": "choice"
+      }
+    ],
+    "action": "Preview my program",
+    "secondary": null,
+    "behavior": "Raw answers map through the existing normalized GenerationProfile before generation. Display active/informational fields honestly. No generation within the visual asset; no new deterministic rule or scoring authority.",
+    "findings": [
+      "F13",
+      "F15",
+      "F24",
+      "F28"
+    ],
+    "context": [
+      {
+        "title": "Program library",
+        "body": "Read the original Phase 1 and Phase 2 guides.",
+        "kind": "choice"
+      },
+      {
+        "title": "Your recorded training",
+        "body": "Previous workouts remain available in History.",
+        "kind": "choice"
+      },
+      {
+        "title": "Review before activation",
+        "body": "Dates and workload stay visible before you commit.",
+        "kind": "card"
+      }
+    ]
+  },
+  {
+    "id": "15-customized-preview",
+    "title": "Review your program",
+    "section": "Programs",
+    "kind": "standard",
+    "intro": "Customized \u00b7 preview only",
+    "blocks": [
+      {
+        "title": "Three scheduled sessions",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "Mon 26 Oct",
+            "Workout A \u00b7 15 working sets"
+          ],
+          [
+            "Wed 28 Oct",
+            "Workout B \u00b7 16 working sets"
+          ],
+          [
+            "Fri 30 Oct",
+            "Workout C \u00b7 15 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Before you activate",
+        "body": "Check exercises, equipment and workload. This preview has not replaced your plan.",
+        "kind": "card"
+      },
+      {
+        "title": "Review exercises & targets",
+        "body": "",
+        "kind": "button"
+      }
+    ],
+    "action": "Activate this preview",
+    "secondary": "Change inputs",
+    "behavior": "Activation binds to the exact reviewed preview and consent version. Any changed input invalidates the old preview. Started/completed occurrences are preserved and replacement conflicts must be resolved explicitly.",
+    "findings": [
+      "F13",
+      "F14",
+      "F15"
+    ],
+    "context": [
+      {
+        "title": "Program library",
+        "body": "Read the original Phase 1 and Phase 2 guides.",
+        "kind": "choice"
+      },
+      {
+        "title": "Your recorded training",
+        "body": "Previous workouts remain available in History.",
+        "kind": "choice"
+      },
+      {
+        "title": "Review before activation",
+        "body": "Dates and workload stay visible before you commit.",
+        "kind": "card"
+      }
+    ]
+  },
+  {
+    "id": "16-week",
+    "title": "Your training week",
+    "section": "Week",
+    "kind": "standard",
+    "intro": "19\u201325 October \u00b7 New York",
+    "blocks": [
+      {
+        "title": "Selected dates",
+        "body": "",
+        "kind": "calendar"
+      },
+      {
+        "title": "Your sessions",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "Mon 19 \u00b7 Workout A",
+            "Completed \u00b7 15 working sets"
+          ],
+          [
+            "Wed 21 \u00b7 Workout B",
+            "Scheduled \u00b7 12 working sets"
+          ],
+          [
+            "Fri 23 \u00b7 Workout C",
+            "Scheduled \u00b7 15 working sets"
+          ]
+        ]
+      }
+    ],
+    "action": "Open Wednesday",
+    "secondary": "Plan next week",
+    "behavior": "Use local dates with weekday-aligned columns. Scheduled, started, completed and rest days use words/icons, not just color. Persistent occurrence identity survives navigation; no date compaction when filtered.",
+    "findings": [
+      "F08",
+      "F09",
+      "F14",
+      "F28"
+    ],
+    "context": [
+      {
+        "title": "Wednesday \u00b7 Workout B",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "Dumbbell bench press",
+            "3 working sets"
+          ],
+          [
+            "Cross-Body Lat Pull-Around",
+            "3 working sets"
+          ],
+          [
+            "Leg press + leg curl",
+            "6 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Program guide",
+        "body": "Full Body Phase 1 \u00b7 source instructions",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "17-select-dates",
+    "title": "Choose actual dates",
+    "section": "Week",
+    "kind": "standard",
+    "intro": "19\u201325 October \u00b7 New York",
+    "blocks": [
+      {
+        "title": "Tap your training days",
+        "body": "",
+        "kind": "calendar",
+        "selected": [
+          0,
+          2,
+          4
+        ]
+      },
+      {
+        "title": "3 days selected",
+        "body": "Mon 19 \u00b7 Wed 21 \u00b7 Fri 23",
+        "kind": "card"
+      },
+      {
+        "title": "Dates are local to New York",
+        "body": "Change location before previewing if needed.",
+        "kind": "choice"
+      }
+    ],
+    "action": "Preview this schedule",
+    "secondary": "Cancel",
+    "behavior": "Choose actual date values rather than merely a day count. A new selection invalidates any prior preview; timezone/local-day semantics are visible and consistent through DST. Preview does not activate.",
+    "findings": [
+      "F09",
+      "F14",
+      "F28"
+    ],
+    "context": [
+      {
+        "title": "Wednesday \u00b7 Workout B",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "Dumbbell bench press",
+            "3 working sets"
+          ],
+          [
+            "Cross-Body Lat Pull-Around",
+            "3 working sets"
+          ],
+          [
+            "Leg press + leg curl",
+            "6 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Program guide",
+        "body": "Full Body Phase 1 \u00b7 source instructions",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "18-schedule-preview",
+    "title": "Review the workload",
+    "section": "Week",
+    "kind": "standard",
+    "intro": "Authored \u00b7 preview only",
+    "blocks": [
+      {
+        "title": "Wednesday 21 October",
+        "body": "29 working sets",
+        "kind": "metric",
+        "note": "Two source sessions on this date"
+      },
+      {
+        "title": "How the work is grouped",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "Source session B",
+            "14 working sets \u00b7 original order"
+          ],
+          [
+            "Source session C",
+            "15 working sets \u00b7 original order"
+          ]
+        ]
+      },
+      {
+        "title": "This could be a longer session",
+        "body": "Duration is not available. Choose more dates to spread the work.",
+        "kind": "status",
+        "role": "warning_text"
+      }
+    ],
+    "action": "Activate reviewed schedule",
+    "secondary": "Choose more dates",
+    "behavior": "Synthetic 29-set illustration is not a reproduction of the owner incident. Show source groups and totals before activation, preserve every prescribed set, do not invent duration or silently delete/reassign work.",
+    "findings": [
+      "F14",
+      "F28"
+    ],
+    "context": [
+      {
+        "title": "Preview only",
+        "body": "Your active schedule has not been replaced.",
+        "kind": "card"
+      },
+      {
+        "title": "Source instructions",
+        "body": "Read the original session groups and targets.",
+        "kind": "choice"
+      },
+      {
+        "title": "Choose dates again",
+        "body": "Review another distribution before activation.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "19-schedule-conflict",
+    "title": "Review the updated week",
+    "section": "Week",
+    "kind": "standard",
+    "intro": "This preview can no longer be activated.",
+    "blocks": [
+      {
+        "title": "A workout has started",
+        "body": "Wednesday\u2019s workout changed after this preview was created.",
+        "kind": "status",
+        "role": "warning_text"
+      },
+      {
+        "title": "Your training is safe",
+        "body": "Started workouts and recorded sets keep their original identities.",
+        "kind": "card"
+      },
+      {
+        "title": "Choose what happens next",
+        "body": "Refresh the week, then review a new preview.",
+        "kind": "card"
+      }
+    ],
+    "action": "Refresh week",
+    "secondary": "Back to Week",
+    "behavior": "Detect stale revision/preview conflicts before committing. No automatic merge or replacement of started/completed history. Keep the selected dates as a draft until the user reviews a fresh owned preview.",
+    "findings": [
+      "F11",
+      "F14"
+    ],
+    "context": [
+      {
+        "title": "Preview only",
+        "body": "Your active schedule has not been replaced.",
+        "kind": "card"
+      },
+      {
+        "title": "Source instructions",
+        "body": "Read the original session groups and targets.",
+        "kind": "choice"
+      },
+      {
+        "title": "Choose dates again",
+        "body": "Review another distribution before activation.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "20-today-loading",
+    "title": "Opening your workout",
+    "section": "Today",
+    "kind": "standard",
+    "intro": "Wednesday 21 October",
+    "blocks": [
+      {
+        "title": "Loading workout\u2026",
+        "body": "Getting the schedule and saved sets.",
+        "kind": "status"
+      },
+      {
+        "title": "Taking longer than usual",
+        "body": "Keep this screen open or return to Week. We haven\u2019t confirmed the workout yet.",
+        "kind": "card"
+      },
+      {
+        "title": "Back to Week",
+        "body": "",
+        "kind": "button"
+      }
+    ],
+    "action": null,
+    "secondary": null,
+    "behavior": "Render a meaningful loading state immediately. Delayed loading is not No workout or a rest day; offer a visible status/retry path after failure without fabricated percentages or a performance claim.",
+    "findings": [
+      "F11",
+      "F18"
+    ],
+    "context": [
+      {
+        "title": "Waiting for confirmed information",
+        "body": "No new completed workout or trend is inferred here.",
+        "kind": "card"
+      },
+      {
+        "title": "Return to the overview",
+        "body": "Keep the same selected date and try again.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "21-today-rest",
+    "title": "A day between sessions",
+    "section": "Today",
+    "kind": "standard",
+    "intro": "Tuesday 20 October \u00b7 no workout scheduled",
+    "blocks": [
+      {
+        "title": "Next: Wednesday 21 Oct",
+        "body": "Workout B \u00b7 Full Body Phase 1",
+        "kind": "card"
+      },
+      {
+        "title": "Your history stays accurate",
+        "body": "A planned rest day is not a missed workout.",
+        "kind": "card"
+      },
+      {
+        "title": "Optional check-in",
+        "body": "Record how you feel, whenever it suits you.",
+        "kind": "choice"
+      }
+    ],
+    "action": "View Week",
+    "secondary": null,
+    "behavior": "Rest day requires a successful dated response. It has no completion penalty and does not offer misleading generation/reset actions.",
+    "findings": [
+      "F08",
+      "F11",
+      "F16"
+    ],
+    "context": [
+      {
+        "title": "Next scheduled session",
+        "body": "Wednesday 21 October \u00b7 Workout B",
+        "kind": "card"
+      },
+      {
+        "title": "Your training week",
+        "body": "View all selected dates.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "22-today-unavailable",
+    "title": "We couldn\u2019t open this workout",
+    "section": "Today",
+    "kind": "standard",
+    "intro": "Your schedule has not been changed.",
+    "blocks": [
+      {
+        "title": "Connection unavailable",
+        "body": "We can\u2019t confirm the latest workout or saved sets.",
+        "kind": "status",
+        "role": "error_text"
+      },
+      {
+        "title": "Try again when connected",
+        "body": "No completed sets have been inferred from this screen.",
+        "kind": "card"
+      }
+    ],
+    "action": "Try again",
+    "secondary": "Back to Week",
+    "behavior": "A failed fetch remains an error, never a rest/empty state. Any cached information is labeled with freshness; no Online or Synced claim from a token. Retry is read-only.",
+    "findings": [
+      "F05",
+      "F11"
+    ],
+    "context": [
+      {
+        "title": "Waiting for confirmed information",
+        "body": "No new completed workout or trend is inferred here.",
+        "kind": "card"
+      },
+      {
+        "title": "Return to the overview",
+        "body": "Keep the same selected date and try again.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "23-today-session",
+    "title": "Workout B",
+    "section": "Today",
+    "kind": "standard",
+    "intro": "Wed 21 October \u00b7 Full Body Phase 1",
+    "blocks": [
+      {
+        "title": "Choose an exercise",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 working sets \u00b7 complete"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "3 working sets \u00b7 not started"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets \u00b7 not started"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets \u00b7 not started"
+          ]
+        ]
+      },
+      {
+        "title": "Keep the original order",
+        "body": "Any prescribed pair or technique stays attached to its exercise.",
+        "kind": "card"
+      }
+    ],
+    "action": "Open exercise 2",
+    "secondary": "Review workout",
+    "behavior": "Persistent exercise map opens a specific source slot/occurrence. Repeated names retain source grouping; selecting a slot does not silently substitute, advance or merge it. Warm-ups are counted separately.",
+    "findings": [
+      "F03",
+      "F13",
+      "F14",
+      "F27"
+    ],
+    "context": [
+      {
+        "title": "Workout B \u00b7 exercise map",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 / 3 working sets"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "Selected exercise"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Back to your exercise",
+        "body": "Return to the current set.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "24-starting-load",
+    "title": "Find a starting weight",
+    "section": "Today",
+    "kind": "standard",
+    "intro": "Cross-Body Lat Pull-Around",
+    "blocks": [
+      {
+        "title": "I know my 1-rep max",
+        "body": "Use a known value for this exercise and setup.",
+        "kind": "choice"
+      },
+      {
+        "title": "I know a recent set",
+        "body": "Enter the actual weight and reps you performed.",
+        "kind": "choice"
+      },
+      {
+        "title": "Help me choose manually",
+        "body": "Start without a max test or an estimate.",
+        "kind": "choice"
+      }
+    ],
+    "action": null,
+    "secondary": null,
+    "behavior": "Three optional intake paths are distinct and discoverable. A self-report never displaces better comparable effective performance. Known max support is a proposed capability requiring approved engine admission; no browser formula.",
+    "findings": [
+      "F03",
+      "F23",
+      "F28"
+    ],
+    "context": [
+      {
+        "title": "Workout B \u00b7 exercise map",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 / 3 working sets"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "Selected exercise"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Back to your exercise",
+        "body": "Return to the current set.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "25-known-max",
+    "title": "Your known 1-rep max",
+    "section": "Today",
+    "kind": "standard",
+    "intro": "Cross-Body Lat Pull-Around",
+    "blocks": [
+      {
+        "title": "Known 1RM \u00b7 lb",
+        "body": "70",
+        "kind": "field"
+      },
+      {
+        "title": "Equipment and setup",
+        "body": "Main gym \u00b7 same cable station",
+        "kind": "choice"
+      },
+      {
+        "title": "A starting estimate only",
+        "body": "Only use a supported estimate for this setup. You can enter your own working weight.",
+        "kind": "card"
+      }
+    ],
+    "action": "Review starting guidance",
+    "secondary": "Use manual setup",
+    "behavior": "Explicitly label reported known 1RM, unit and exact setup. Qualify evidence through the existing owned engine, not local percentage math. No max test, no invented equipment equivalence, and no estimate if unsupported.",
+    "findings": [
+      "F07",
+      "F23"
+    ],
+    "context": [
+      {
+        "title": "Workout B \u00b7 exercise map",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 / 3 working sets"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "Selected exercise"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Back to your exercise",
+        "body": "Return to the current set.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "26-recent-set",
+    "title": "Use a recent set",
+    "section": "Today",
+    "kind": "standard",
+    "intro": "Cross-Body Lat Pull-Around",
+    "blocks": [
+      {
+        "title": "",
+        "body": "",
+        "kind": "fields",
+        "values": [
+          [
+            "Weight \u00b7 lb",
+            "40"
+          ],
+          [
+            "Repetitions",
+            "12"
+          ]
+        ]
+      },
+      {
+        "title": "When did you do this?",
+        "body": "14 October 2026",
+        "kind": "field"
+      },
+      {
+        "title": "Effort, if you remember",
+        "body": "Not recorded \u00b7 Add effort",
+        "kind": "choice"
+      },
+      {
+        "title": "This is reported performance",
+        "body": "It is not a new completed workout in History.",
+        "kind": "card"
+      }
+    ],
+    "action": "Review starting guidance",
+    "secondary": "Use manual setup",
+    "behavior": "Keep historical self-report separate from verified effective receipts and from a known 1RM. Unknown effort remains unknown. Derived e1RM is identified as an estimate with owned basis only if supported.",
+    "findings": [
+      "F07",
+      "F23"
+    ],
+    "context": [
+      {
+        "title": "Workout B \u00b7 exercise map",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 / 3 working sets"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "Selected exercise"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Back to your exercise",
+        "body": "Return to the current set.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "27-manual-calibration",
+    "title": "Start with your own weight",
+    "section": "Today",
+    "kind": "standard",
+    "intro": "Cross-Body Lat Pull-Around",
+    "blocks": [
+      {
+        "title": "Working weight \u00b7 lb",
+        "body": "30",
+        "kind": "field"
+      },
+      {
+        "title": "Use the prescribed warm-up",
+        "body": "Follow the program\u2019s warm-up before working sets.",
+        "kind": "card"
+      },
+      {
+        "title": "Adjust to what you actually use",
+        "body": "Your next suggestion can use eligible saved performance. No explanation is required to edit the actual weight.",
+        "kind": "card"
+      }
+    ],
+    "action": "Continue to warm-up",
+    "secondary": "Back to starting options",
+    "behavior": "Manual calibration accepts the user\u2019s actual attainable load without invented formulas or mandatory override reasons. It does not change authored set/rep/effort targets or claim a completed calibration before evidence exists.",
+    "findings": [
+      "F03",
+      "F23",
+      "F27"
+    ],
+    "context": [
+      {
+        "title": "Workout B \u00b7 exercise map",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 / 3 working sets"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "Selected exercise"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Back to your exercise",
+        "body": "Return to the current set.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "28-load-unavailable",
+    "title": "Choose a weight manually",
+    "section": "Today",
+    "kind": "standard",
+    "intro": "Cross-Body Lat Pull-Around",
+    "blocks": [
+      {
+        "title": "This setup is not confirmed",
+        "body": "Check the equipment details or enter the weight you will actually use.",
+        "kind": "status",
+        "role": "warning_text"
+      },
+      {
+        "title": "No estimate is better than a guess",
+        "body": "Your program\u2019s sets, reps and warm-up still apply.",
+        "kind": "card"
+      },
+      {
+        "title": "Review equipment details",
+        "body": "",
+        "kind": "button"
+      }
+    ],
+    "action": "Enter my working weight",
+    "secondary": "Back",
+    "behavior": "When evidence, setup, source target or attainable increments are insufficient, show a supported inability state. Do not fabricate Smith counterweight, load basis, metadata scoring or an explanatory cause.",
+    "findings": [
+      "F23",
+      "F28"
+    ],
+    "context": [
+      {
+        "title": "Workout B \u00b7 exercise map",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 / 3 working sets"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "Selected exercise"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Back to your exercise",
+        "body": "Return to the current set.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "29-warmup",
+    "title": "Prescribed warm-up",
+    "section": "Today",
+    "kind": "workout",
+    "intro": "",
+    "blocks": [],
+    "action": null,
+    "secondary": null,
+    "behavior": "Show exact source warm-up separately, with actual load/reps and optional effort. The illustrative 20 lb \u00d7 8 is entered work, not a new warm-up prescription. Warm-ups never advance the working-set counter.",
+    "findings": [
+      "F03",
+      "F04",
+      "F05",
+      "F06",
+      "F07",
+      "F11",
+      "F22",
+      "F25",
+      "F27"
+    ],
+    "context": [
+      {
+        "title": "Workout B \u00b7 exercise map",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 / 3 working sets"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "Selected exercise"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Back to your exercise",
+        "body": "Return to the current set.",
+        "kind": "choice"
+      }
+    ],
+    "state": "warmup"
+  },
+  {
+    "id": "30-warmup-saved",
+    "title": "Warm-up saved",
+    "section": "Today",
+    "kind": "workout",
+    "intro": "",
+    "blocks": [],
+    "action": null,
+    "secondary": null,
+    "behavior": "Only an acknowledged warm-up gets saved status. Start working sets switches task in place; it cannot submit the warm-up again. Source warm-up details remain accessible.",
+    "findings": [
+      "F03",
+      "F04",
+      "F05",
+      "F06",
+      "F07",
+      "F11",
+      "F22",
+      "F25",
+      "F27"
+    ],
+    "context": [
+      {
+        "title": "Workout B \u00b7 exercise map",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 / 3 working sets"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "Selected exercise"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Back to your exercise",
+        "body": "Return to the current set.",
+        "kind": "choice"
+      }
+    ],
+    "state": "warmupsaved"
+  },
+  {
+    "id": "31-working-ready",
+    "title": "Before Save set",
+    "section": "Today",
+    "kind": "workout",
+    "intro": "",
+    "blocks": [],
+    "action": null,
+    "secondary": null,
+    "behavior": "Persistent source exercise and program, exact target, concise owned suggestion and editable actuals. Weight and reps fields are fixed; advanced guidance is one step away. The actual effort is unknown by default.",
+    "findings": [
+      "F03",
+      "F04",
+      "F05",
+      "F06",
+      "F07",
+      "F11",
+      "F22",
+      "F25",
+      "F27"
+    ],
+    "context": [
+      {
+        "title": "Workout B \u00b7 exercise map",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 / 3 working sets"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "Selected exercise"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Back to your exercise",
+        "body": "Return to the current set.",
+        "kind": "choice"
+      }
+    ],
+    "state": "ready"
+  },
+  {
+    "id": "32-working-pending",
+    "title": "Save pending",
+    "section": "Today",
+    "kind": "workout",
+    "intro": "",
+    "blocks": [],
+    "action": null,
+    "secondary": null,
+    "behavior": "Freeze the immutable attempted payload and disable duplicate submit; preserve focus/scroll. Reserved status changes without inserting a new block. Pending never increases confirmed count or starts a confirmed rest.",
+    "findings": [
+      "F03",
+      "F04",
+      "F05",
+      "F06",
+      "F07",
+      "F11",
+      "F22",
+      "F25",
+      "F27"
+    ],
+    "context": [
+      {
+        "title": "Workout B \u00b7 exercise map",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 / 3 working sets"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "Selected exercise"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Back to your exercise",
+        "body": "Return to the current set.",
+        "kind": "choice"
+      }
+    ],
+    "state": "pending"
+  },
+  {
+    "id": "33-working-saved",
+    "title": "Set saved and rest",
+    "section": "Today",
+    "kind": "workout",
+    "intro": "",
+    "blocks": [],
+    "action": null,
+    "secondary": null,
+    "behavior": "After authoritative acknowledgement, the reserved region announces Set 1 saved and a rest timer once. Set 2 composer occupies exactly the same coordinates, with retained weight and blank reps. Its Save stays disabled until valid reps. Receipt actuals appear only in Recorded sets.",
+    "findings": [
+      "F03",
+      "F04",
+      "F05",
+      "F06",
+      "F07",
+      "F11",
+      "F22",
+      "F25",
+      "F27"
+    ],
+    "context": [
+      {
+        "title": "Workout B \u00b7 exercise map",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 / 3 working sets"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "Selected exercise"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Back to your exercise",
+        "body": "Return to the current set.",
+        "kind": "choice"
+      }
+    ],
+    "state": "saved"
+  },
+  {
+    "id": "34-working-next",
+    "title": "Continue to the next set",
+    "section": "Today",
+    "kind": "workout",
+    "intro": "",
+    "blocks": [],
+    "action": null,
+    "secondary": null,
+    "behavior": "After rest expires, keep the same fields and allow the next actual set. Timer is a deadline-based aid, not automatic work; expiry never resets itself or auto-saves. Any source sequence restriction is preserved.",
+    "findings": [
+      "F03",
+      "F04",
+      "F05",
+      "F06",
+      "F07",
+      "F11",
+      "F22",
+      "F25",
+      "F27"
+    ],
+    "context": [
+      {
+        "title": "Workout B \u00b7 exercise map",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 / 3 working sets"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "Selected exercise"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Back to your exercise",
+        "body": "Return to the current set.",
+        "kind": "choice"
+      }
+    ],
+    "state": "next"
+  },
+  {
+    "id": "35-working-failed",
+    "title": "Definite save failure",
+    "section": "Today",
+    "kind": "workout",
+    "intro": "",
+    "blocks": [],
+    "action": null,
+    "secondary": null,
+    "behavior": "This example is a definite failure before send, so retry may submit the retained attempt. Server validation rejection has a separate field-error state. Feedback remains within the current runner.",
+    "findings": [
+      "F03",
+      "F04",
+      "F05",
+      "F06",
+      "F07",
+      "F11",
+      "F22",
+      "F25",
+      "F27"
+    ],
+    "context": [
+      {
+        "title": "Workout B \u00b7 exercise map",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 / 3 working sets"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "Selected exercise"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Back to your exercise",
+        "body": "Return to the current set.",
+        "kind": "choice"
+      }
+    ],
+    "state": "failed"
+  },
+  {
+    "id": "36-working-unconfirmed",
+    "title": "Save outcome unknown",
+    "section": "Today",
+    "kind": "workout",
+    "intro": "",
+    "blocks": [],
+    "action": null,
+    "secondary": null,
+    "behavior": "Timeout after send is not a definite failure. Lock the attempted values, reconcile by command identity, and allow only same-payload retry when safe. Do not advance or label the set saved until confirmed.",
+    "findings": [
+      "F03",
+      "F04",
+      "F05",
+      "F06",
+      "F07",
+      "F11",
+      "F22",
+      "F25",
+      "F27"
+    ],
+    "context": [
+      {
+        "title": "Workout B \u00b7 exercise map",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 / 3 working sets"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "Selected exercise"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Back to your exercise",
+        "body": "Return to the current set.",
+        "kind": "choice"
+      }
+    ],
+    "state": "unknown"
+  },
+  {
+    "id": "37-working-resume",
+    "title": "Reconcile after returning",
+    "section": "Today",
+    "kind": "workout",
+    "intro": "",
+    "blocks": [],
+    "action": null,
+    "secondary": null,
+    "behavior": "Load effective occurrence receipts and reconcile a pending command before deciding the next set. Show held draft separately from confirmed evidence. Old account/occurrence responses cannot update this screen.",
+    "findings": [
+      "F03",
+      "F04",
+      "F05",
+      "F06",
+      "F07",
+      "F11",
+      "F22",
+      "F25",
+      "F27"
+    ],
+    "context": [
+      {
+        "title": "Workout B \u00b7 exercise map",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 / 3 working sets"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "Selected exercise"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Back to your exercise",
+        "body": "Return to the current set.",
+        "kind": "choice"
+      }
+    ],
+    "state": "resume"
+  },
+  {
+    "id": "38-effort",
+    "title": "How hard was that set?",
+    "section": "Today",
+    "kind": "standard",
+    "intro": "Working set 2 \u00b7 optional",
+    "blocks": [
+      {
+        "title": "RPE \u00b7 effort out of 10",
+        "body": "The program target is RPE 8. Your actual effort can be different.",
+        "kind": "card"
+      },
+      {
+        "title": "Actual RPE",
+        "body": "Not recorded",
+        "kind": "field"
+      },
+      {
+        "title": "If you are not sure",
+        "body": "Leave this unknown. The target is not your answer.",
+        "kind": "card"
+      },
+      {
+        "title": "Technique or discomfort",
+        "body": "Add a note about this set.",
+        "kind": "choice"
+      }
+    ],
+    "action": "Use this effort",
+    "secondary": "Keep unknown",
+    "behavior": "For Authored, retain native RPE with a plain explanation. For a native RIR target, ask How many more reps could you have done? and retain RIR. Do not silently convert or prefill effort. Before-save attaches to draft; after-save is an explicit receipt update.",
+    "findings": [
+      "F03",
+      "F20",
+      "F28"
+    ],
+    "context": [
+      {
+        "title": "Workout B \u00b7 exercise map",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 / 3 working sets"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "Selected exercise"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Back to your exercise",
+        "body": "Return to the current set.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "39-load-details",
+    "title": "Why this suggestion?",
+    "section": "Today",
+    "kind": "standard",
+    "intro": "Cross-Body Lat Pull-Around",
+    "blocks": [
+      {
+        "title": "Suggested working weight",
+        "body": "40 lb",
+        "kind": "metric",
+        "note": "Main gym \u00b7 same cable setup"
+      },
+      {
+        "title": "Evidence used",
+        "body": "Comparable effective saved work. Corrections and undone sets are accounted for.",
+        "kind": "card"
+      },
+      {
+        "title": "More load details",
+        "body": "Equipment increments, evidence dates and calculation trace.",
+        "kind": "choice"
+      }
+    ],
+    "action": "Back to this set",
+    "secondary": null,
+    "behavior": "Display only the responsible engine\u2019s actual inputs, basis and reason. When the engine supplies no reason, say reason unavailable instead of inventing a causal explanation. Suggestions never overwrite entered actuals.",
+    "findings": [
+      "F03",
+      "F06",
+      "F23",
+      "F28"
+    ],
+    "context": [
+      {
+        "title": "Workout B \u00b7 exercise map",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 / 3 working sets"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "Selected exercise"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Back to your exercise",
+        "body": "Return to the current set.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "40-recorded-sets",
+    "title": "Recorded sets",
+    "section": "Today",
+    "kind": "standard",
+    "intro": "Cross-Body Lat Pull-Around \u00b7 this workout",
+    "blocks": [
+      {
+        "title": "Working sets",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "Set 1 \u00b7 40 lb \u00d7 12",
+            "RPE not recorded \u00b7 saved",
+            "Edit"
+          ],
+          [
+            "Set 2 \u00b7 40 lb \u00d7 12",
+            "RPE 8 \u00b7 saved",
+            "Edit"
+          ]
+        ]
+      },
+      {
+        "title": "Warm-up \u00b7 20 lb \u00d7 8",
+        "body": "Saved separately \u00b7 not a working set",
+        "kind": "card"
+      },
+      {
+        "title": "Undo working set 2",
+        "body": "",
+        "kind": "button"
+      }
+    ],
+    "action": "Return to set 3",
+    "secondary": null,
+    "behavior": "The sole ordered effective receipt list includes units, kind, actual effort and explicit correction actions. On mobile it opens from the fixed composer; on desktop it occupies the evidence column. No duplicated value list above the composer.",
+    "findings": [
+      "F04",
+      "F07",
+      "F20"
+    ],
+    "context": [
+      {
+        "title": "Workout B \u00b7 exercise map",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 / 3 working sets"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "Selected exercise"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Back to your exercise",
+        "body": "Return to the current set.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "41-correct-set",
+    "title": "Correct working set 1",
+    "section": "Today",
+    "kind": "standard",
+    "intro": "Cross-Body Lat Pull-Around",
+    "blocks": [
+      {
+        "title": "Currently saved",
+        "body": "40 lb \u00d7 12 reps \u00b7 effort not recorded",
+        "kind": "card"
+      },
+      {
+        "title": "",
+        "body": "",
+        "kind": "fields",
+        "values": [
+          [
+            "Weight \u00b7 lb",
+            "40"
+          ],
+          [
+            "Repetitions",
+            "11"
+          ]
+        ]
+      },
+      {
+        "title": "Actual effort",
+        "body": "Not recorded",
+        "kind": "field"
+      },
+      {
+        "title": "This updates one recorded set",
+        "body": "The original entry remains in its correction history.",
+        "kind": "card"
+      }
+    ],
+    "action": "Save correction",
+    "secondary": "Cancel",
+    "behavior": "Name the exact effective receipt, original actuals and proposed replacements. Acknowledge before changing effective count/values and recomputing owned guidance. Preserve the correction chain and return focus to the invoking receipt.",
+    "findings": [
+      "F05",
+      "F06",
+      "F20",
+      "F25"
+    ],
+    "context": [
+      {
+        "title": "Workout B \u00b7 exercise map",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 / 3 working sets"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "Selected exercise"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Back to your exercise",
+        "body": "Return to the current set.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "42-correction-pending",
+    "title": "Saving your correction",
+    "section": "Today",
+    "kind": "standard",
+    "intro": "Cross-Body Lat Pull-Around",
+    "blocks": [
+      {
+        "title": "Saving correction\u2026",
+        "body": "40 lb \u00d7 12 \u2192 40 lb \u00d7 11",
+        "kind": "status"
+      },
+      {
+        "title": "Last confirmed value",
+        "body": "40 lb \u00d7 12 \u00b7 waiting for the updated record.",
+        "kind": "card"
+      },
+      {
+        "title": "Keep this attempt open",
+        "body": "We will check its status if the connection is interrupted.",
+        "kind": "card"
+      }
+    ],
+    "action": null,
+    "secondary": null,
+    "behavior": "Correction pending does not optimistically replace authoritative evidence. Same-command reconciliation applies to uncertain responses; duplicate correction submit stays disabled.",
+    "findings": [
+      "F05",
+      "F06",
+      "F20"
+    ],
+    "context": [
+      {
+        "title": "Workout B \u00b7 exercise map",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 / 3 working sets"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "Selected exercise"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Back to your exercise",
+        "body": "Return to the current set.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "43-correction-confirmed",
+    "title": "Correction saved",
+    "section": "Today",
+    "kind": "standard",
+    "intro": "Cross-Body Lat Pull-Around",
+    "blocks": [
+      {
+        "title": "\u2713 Correction saved",
+        "body": "Your recorded set has been updated.",
+        "kind": "status",
+        "role": "success_text"
+      },
+      {
+        "title": "Working set 1",
+        "body": "40 lb \u00d7 11 reps \u00b7 effort not recorded",
+        "kind": "card"
+      },
+      {
+        "title": "View correction history",
+        "body": "",
+        "kind": "button"
+      }
+    ],
+    "action": "Return to workout",
+    "secondary": null,
+    "behavior": "After acknowledgement, the effective receipt and dependent guidance refresh from authority. The original 12-rep record remains inspectable in history; no duplicate effective row is inserted.",
+    "findings": [
+      "F04",
+      "F20"
+    ],
+    "context": [
+      {
+        "title": "Workout B \u00b7 exercise map",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 / 3 working sets"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "Selected exercise"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Back to your exercise",
+        "body": "Return to the current set.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "44-undo-confirm",
+    "title": "Undo working set 2?",
+    "section": "Today",
+    "kind": "standard",
+    "intro": "Cross-Body Lat Pull-Around",
+    "blocks": [
+      {
+        "title": "This exact recorded set",
+        "body": "40 lb \u00d7 12 reps \u00b7 RPE 8",
+        "kind": "card"
+      },
+      {
+        "title": "What will change",
+        "body": "This set will no longer count toward completed work or future load guidance.",
+        "kind": "card"
+      },
+      {
+        "title": "History stays intact",
+        "body": "The undo remains visible in the record history.",
+        "kind": "card"
+      }
+    ],
+    "action": "Undo working set 2",
+    "secondary": "Keep this set",
+    "behavior": "Confirm exact set, kind and actuals. Undo is a void of the effective record, not physical deletion. Warm-up undo must be separately named; no blanket undo across a different occurrence.",
+    "findings": [
+      "F06",
+      "F20"
+    ],
+    "context": [
+      {
+        "title": "Workout B \u00b7 exercise map",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 / 3 working sets"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "Selected exercise"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Back to your exercise",
+        "body": "Return to the current set.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "45-undo-pending",
+    "title": "Undoing working set 2",
+    "section": "Today",
+    "kind": "standard",
+    "intro": "Cross-Body Lat Pull-Around",
+    "blocks": [
+      {
+        "title": "Undo pending\u2026",
+        "body": "Last confirmed: working set 2 counts.",
+        "kind": "status"
+      },
+      {
+        "title": "Connection interrupted?",
+        "body": "Check the outcome before trying another change.",
+        "kind": "card"
+      }
+    ],
+    "action": null,
+    "secondary": null,
+    "behavior": "Do not decrement effective count or discard history on a pending undo. Ambiguous outcome uses the same immutable request reconciliation and visible recovery region as logging.",
+    "findings": [
+      "F05",
+      "F06",
+      "F20"
+    ],
+    "context": [
+      {
+        "title": "Workout B \u00b7 exercise map",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 / 3 working sets"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "Selected exercise"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Back to your exercise",
+        "body": "Return to the current set.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "46-undo-confirmed",
+    "title": "Working set 2 undone",
+    "section": "Today",
+    "kind": "standard",
+    "intro": "Cross-Body Lat Pull-Around",
+    "blocks": [
+      {
+        "title": "\u2713 Undo confirmed",
+        "body": "1 of 3 working sets now counts.",
+        "kind": "status",
+        "role": "success_text"
+      },
+      {
+        "title": "Working set 1",
+        "body": "40 lb \u00d7 11 reps \u00b7 corrected",
+        "kind": "card"
+      },
+      {
+        "title": "Undone record",
+        "body": "Set 2 remains in record history.",
+        "kind": "choice"
+      }
+    ],
+    "action": "Return to set 2",
+    "secondary": null,
+    "behavior": "Rebuild current set and load guidance from effective acknowledged evidence. Preserve the voided record and command chain. No stale local counter can revive it on reload.",
+    "findings": [
+      "F06",
+      "F20"
+    ],
+    "context": [
+      {
+        "title": "Workout B \u00b7 exercise map",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 / 3 working sets"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "Selected exercise"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Back to your exercise",
+        "body": "Return to the current set.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "47-pair-technique",
+    "title": "Follow this exercise pair",
+    "section": "Today",
+    "kind": "standard",
+    "intro": "Illustrative pair and technique",
+    "blocks": [
+      {
+        "title": "Pair A \u00b7 3 rounds",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "A1 \u00b7 Cable lateral raise",
+            "12 reps \u00b7 then A2"
+          ],
+          [
+            "A2 \u00b7 Cable curl",
+            "10 reps \u00b7 then rest 1:30"
+          ]
+        ]
+      },
+      {
+        "title": "Last round \u00b7 A2 drop set",
+        "body": "Technique target: 6 extra reps at 15 lb.",
+        "kind": "card"
+      },
+      {
+        "title": "Technique work stays separate",
+        "body": "The extra reps belong to the last set. They do not count as another working set.",
+        "kind": "card"
+      }
+    ],
+    "action": "Return to exercise",
+    "secondary": null,
+    "behavior": "Entirely fictional pair/technique fixture, not an assertion about an Authored source. Actual rendering preserves the original paired exercise identities, order, exact set-specific effort/rest and technique targets; technique-child actuals remain attached to the parent working set and never add ordinary completion count.",
+    "findings": [
+      "F03",
+      "F14",
+      "F27",
+      "F28"
+    ],
+    "context": [
+      {
+        "title": "Workout B \u00b7 exercise map",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 / 3 working sets"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "Selected exercise"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Back to your exercise",
+        "body": "Return to the current set.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "48-substitution",
+    "title": "Review the exercise change",
+    "section": "Today",
+    "kind": "standard",
+    "intro": "Only a confirmed, permitted alternative",
+    "blocks": [
+      {
+        "title": "Original exercise",
+        "body": "Cross-Body Lat Pull-Around",
+        "kind": "card"
+      },
+      {
+        "title": "Available alternatives",
+        "body": "Show only source-approved options for this slot. If none are available, keep the original.",
+        "kind": "card"
+      },
+      {
+        "title": "Before you confirm",
+        "body": "History keeps the original slot and the exercise you actually perform.",
+        "kind": "card"
+      }
+    ],
+    "action": "Back to exercise",
+    "secondary": null,
+    "behavior": "No substitute is invented by the sketch. An available owned/source-approved option requires an explicit confirmation naming original and performed variant before use. Constraints alone grant no prescription mutation.",
+    "findings": [
+      "F13",
+      "F20",
+      "F28"
+    ],
+    "context": [
+      {
+        "title": "Workout B \u00b7 exercise map",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 / 3 working sets"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "Selected exercise"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Back to your exercise",
+        "body": "Return to the current set.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "49-finish-review",
+    "title": "Review before finishing",
+    "section": "Today",
+    "kind": "standard",
+    "intro": "Workout B \u00b7 Wednesday 21 October",
+    "blocks": [
+      {
+        "title": "Working sets",
+        "body": "11 of 12",
+        "kind": "metric",
+        "note": "1 prescribed working set remains"
+      },
+      {
+        "title": "One set is incomplete",
+        "body": "Leg curl \u00b7 set 3 has not been recorded.",
+        "kind": "status",
+        "role": "warning_text"
+      },
+      {
+        "title": "Finish as partial",
+        "body": "",
+        "kind": "button"
+      }
+    ],
+    "action": "Return to remaining set",
+    "secondary": null,
+    "behavior": "Only effective working-set evidence drives completion. A partial finish is explicitly labeled and confirmed; an unresolved save blocks finalization until reconciled. Warm-ups and technique children do not satisfy working completion.",
+    "findings": [
+      "F08",
+      "F11",
+      "F20"
+    ],
+    "context": [
+      {
+        "title": "Workout B",
+        "body": "Wednesday 21 October \u00b7 Full Body Phase 1",
+        "kind": "card"
+      },
+      {
+        "title": "Review the records",
+        "body": "Working sets and warm-ups are shown separately.",
+        "kind": "choice"
+      },
+      {
+        "title": "Next scheduled session",
+        "body": "Friday 23 October \u00b7 Workout C",
+        "kind": "card"
+      }
+    ]
+  },
+  {
+    "id": "50-workout-complete",
+    "title": "Workout complete",
+    "section": "Today",
+    "kind": "standard",
+    "intro": "Wednesday 21 October \u00b7 Workout B",
+    "blocks": [
+      {
+        "title": "\u2713 Completion confirmed",
+        "body": "12 of 12 prescribed working sets recorded.",
+        "kind": "status",
+        "role": "success_text"
+      },
+      {
+        "title": "Your session",
+        "body": "4 exercises",
+        "kind": "metric",
+        "note": "Warm-ups recorded separately"
+      },
+      {
+        "title": "Next: Friday 23 October",
+        "body": "Workout C \u00b7 view your week",
+        "kind": "choice"
+      }
+    ],
+    "action": "Review in History",
+    "secondary": null,
+    "behavior": "Completion is explicit and acknowledged. No new week, program replacement or generation is triggered by finishing. Unknown timing/energy/calorie metrics are not fabricated.",
+    "findings": [
+      "F08",
+      "F11",
+      "F20"
+    ],
+    "context": [
+      {
+        "title": "Workout B",
+        "body": "Wednesday 21 October \u00b7 Full Body Phase 1",
+        "kind": "card"
+      },
+      {
+        "title": "Review the records",
+        "body": "Working sets and warm-ups are shown separately.",
+        "kind": "choice"
+      },
+      {
+        "title": "Next scheduled session",
+        "body": "Friday 23 October \u00b7 Workout C",
+        "kind": "card"
+      }
+    ]
+  },
+  {
+    "id": "51-history",
+    "title": "Your training history",
+    "section": "History",
+    "kind": "standard",
+    "intro": "October 2026 \u00b7 all sessions",
+    "blocks": [
+      {
+        "title": "19\u201325 October",
+        "body": "",
+        "kind": "calendar",
+        "selected": [
+          0,
+          2
+        ]
+      },
+      {
+        "title": "Recent sessions",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "Wed 21 \u00b7 Workout B",
+            "Complete \u00b7 12 / 12 working sets"
+          ],
+          [
+            "Mon 19 \u00b7 Workout A",
+            "Complete \u00b7 15 / 15 working sets"
+          ],
+          [
+            "Fri 16 \u00b7 Workout C",
+            "Partial \u00b7 11 / 15 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Filters: all sessions",
+        "body": "",
+        "kind": "button"
+      }
+    ],
+    "action": null,
+    "secondary": null,
+    "behavior": "Calendar retains true weekday positions under filters. Distinguish scheduled-not-done, partial, complete, rest and unknown; no blanket Missed label for dates without data. Select date/occurrence before loading detail.",
+    "findings": [
+      "F08",
+      "F09",
+      "F20",
+      "F21"
+    ],
+    "context": [
+      {
+        "title": "Selected session",
+        "body": "Wednesday 21 October \u00b7 Workout B",
+        "kind": "card"
+      },
+      {
+        "title": "Workout record",
+        "body": "12 of 12 working sets \u00b7 complete",
+        "kind": "card"
+      },
+      {
+        "title": "Original program",
+        "body": "Full Body Phase 1 \u00b7 Authored",
+        "kind": "card"
+      },
+      {
+        "title": "Compare performance",
+        "body": "Open this exercise in Analytics.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "52-history-detail",
+    "title": "Wednesday 21 October",
+    "section": "History",
+    "kind": "standard",
+    "intro": "Workout B \u00b7 complete",
+    "blocks": [
+      {
+        "title": "Cross-Body Lat Pull-Around",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "Working set 1 \u00b7 40 lb \u00d7 11",
+            "Corrected \u00b7 effort not recorded"
+          ],
+          [
+            "Working set 2 \u00b7 40 lb \u00d7 12",
+            "RPE 8 \u00b7 saved"
+          ],
+          [
+            "Working set 3 \u00b7 40 lb \u00d7 12",
+            "Effort not recorded \u00b7 saved"
+          ]
+        ]
+      },
+      {
+        "title": "Original exercise retained",
+        "body": "Performed variant, warm-ups and correction history are available below.",
+        "kind": "choice"
+      },
+      {
+        "title": "View all exercise records",
+        "body": "",
+        "kind": "button"
+      }
+    ],
+    "action": null,
+    "secondary": null,
+    "behavior": "Every receipt has units, kind, effort, source identity and effective correction status. Historical write controls are shown only where current authority permits; audit/provenance remains readable regardless. No new historical editing permission is implied.",
+    "findings": [
+      "F07",
+      "F20",
+      "F21"
+    ],
+    "context": [
+      {
+        "title": "Selected session",
+        "body": "Wednesday 21 October \u00b7 Workout B",
+        "kind": "card"
+      },
+      {
+        "title": "Workout record",
+        "body": "12 of 12 working sets \u00b7 complete",
+        "kind": "card"
+      },
+      {
+        "title": "Original program",
+        "body": "Full Body Phase 1 \u00b7 Authored",
+        "kind": "card"
+      },
+      {
+        "title": "Compare performance",
+        "body": "Open this exercise in Analytics.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "53-history-loading",
+    "title": "Monday 19 October",
+    "section": "History",
+    "kind": "standard",
+    "intro": "Loading this session\u2019s records\u2026",
+    "blocks": [
+      {
+        "title": "Getting Monday\u2019s details",
+        "body": "The selected date is 19 October.",
+        "kind": "status"
+      },
+      {
+        "title": "Your selection stays in place",
+        "body": "A response for another date will not replace this view.",
+        "kind": "card"
+      }
+    ],
+    "action": "Back to History",
+    "secondary": null,
+    "behavior": "Key result application to account/date/occurrence and current request. Clear or explicitly label stale details during selection; a late response cannot silently show another day under the current header.",
+    "findings": [
+      "F11",
+      "F21"
+    ],
+    "context": [
+      {
+        "title": "Waiting for confirmed information",
+        "body": "No new completed workout or trend is inferred here.",
+        "kind": "card"
+      },
+      {
+        "title": "Return to the overview",
+        "body": "Keep the same selected date and try again.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "54-analytics",
+    "title": "See your progress",
+    "section": "Analytics",
+    "kind": "standard",
+    "intro": "Cross-Body Lat Pull-Around \u00b7 same setup",
+    "blocks": [
+      {
+        "title": "Working weight \u00b7 lb",
+        "body": "Saved performance, not a growth score",
+        "kind": "chart"
+      },
+      {
+        "title": "What this view includes",
+        "body": "Comparable effective working sets only. Corrected and undone records are reconciled.",
+        "kind": "card"
+      },
+      {
+        "title": "Change exercise or date range",
+        "body": "",
+        "kind": "button"
+      }
+    ],
+    "action": null,
+    "secondary": null,
+    "behavior": "Use user-facing exercise names, explicit units, date ranges and comparable setup filters. A weight trend is not proof of muscle growth or readiness. Tables provide the same values; uncertainty and missing evidence stay visible.",
+    "findings": [
+      "F07",
+      "F20",
+      "F21",
+      "F28"
+    ],
+    "context": [
+      {
+        "title": "Working weight \u00b7 lb",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "30 September",
+            "30 lb \u00d7 12"
+          ],
+          [
+            "7 October",
+            "35 lb \u00d7 12"
+          ],
+          [
+            "14 October",
+            "40 lb \u00d7 12"
+          ],
+          [
+            "21 October",
+            "45 lb \u00d7 12"
+          ]
+        ]
+      },
+      {
+        "title": "Same exercise and setup",
+        "body": "Cross-Body Lat Pull-Around \u00b7 cable station",
+        "kind": "card"
+      }
+    ]
+  },
+  {
+    "id": "55-analytics-empty",
+    "title": "More training will tell the story",
+    "section": "Analytics",
+    "kind": "standard",
+    "intro": "Not enough comparable records yet.",
+    "blocks": [
+      {
+        "title": "No trend available",
+        "body": "Keep recording working sets for this exercise and setup.",
+        "kind": "card"
+      },
+      {
+        "title": "You can still review each set",
+        "body": "Your saved History is available now.",
+        "kind": "choice"
+      }
+    ],
+    "action": "Open History",
+    "secondary": null,
+    "behavior": "No invented trend, score or adherence-as-readiness label with insufficient data. Distinguish empty evidence from loading/fetch failure and offer the factual record.",
+    "findings": [
+      "F08",
+      "F11",
+      "F21"
+    ],
+    "context": [
+      {
+        "title": "Waiting for confirmed information",
+        "body": "No new completed workout or trend is inferred here.",
+        "kind": "card"
+      },
+      {
+        "title": "Return to the overview",
+        "body": "Keep the same selected date and try again.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "56-check-in",
+    "title": "How are you feeling?",
+    "section": "Check-In",
+    "kind": "standard",
+    "intro": "Weekly review \u00b7 optional during training",
+    "blocks": [
+      {
+        "title": "Current bodyweight \u00b7 lb",
+        "body": "Not recorded",
+        "kind": "field"
+      },
+      {
+        "title": "Recovery this week",
+        "body": "Not answered",
+        "kind": "choice"
+      },
+      {
+        "title": "Discomfort or technique notes",
+        "body": "Optional \u00b7 stays with this review",
+        "kind": "choice"
+      },
+      {
+        "title": "This is a review",
+        "body": "Scheduling next week is a separate step.",
+        "kind": "card"
+      }
+    ],
+    "action": "Save check-in",
+    "secondary": "Skip for now",
+    "behavior": "Show units and unknown optional values. Explain review scope without invented causal claims or automatic Authored prescription changes. Separate saving the review from selected-date scheduling/any separately authorized planning action.",
+    "findings": [
+      "F07",
+      "F16",
+      "F28"
+    ],
+    "context": [
+      {
+        "title": "Your weekly review",
+        "body": "Record answers when it suits you. Unanswered fields stay unknown.",
+        "kind": "card"
+      },
+      {
+        "title": "Planning is separate",
+        "body": "Review next week\u2019s actual training dates.",
+        "kind": "choice"
+      },
+      {
+        "title": "Back to training",
+        "body": "Return to your selected workout.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "57-check-in-saved",
+    "title": "Your check-in is saved",
+    "section": "Check-In",
+    "kind": "standard",
+    "intro": "You can return to training.",
+    "blocks": [
+      {
+        "title": "\u2713 Review saved",
+        "body": "Your answers are recorded for this review.",
+        "kind": "status",
+        "role": "success_text"
+      },
+      {
+        "title": "Plan next week when ready",
+        "body": "Choose dates and review the workload before activation.",
+        "kind": "choice"
+      },
+      {
+        "title": "Review details",
+        "body": "See the supported result and what it affects.",
+        "kind": "choice"
+      }
+    ],
+    "action": "Return to workout",
+    "secondary": null,
+    "behavior": "Acknowledge review separately from plan activation. If owned review outputs are unavailable, say so; never translate Load Scale into an invented causal story or silently generate a week.",
+    "findings": [
+      "F11",
+      "F16",
+      "F28"
+    ],
+    "context": [
+      {
+        "title": "Your weekly review",
+        "body": "Record answers when it suits you. Unanswered fields stay unknown.",
+        "kind": "card"
+      },
+      {
+        "title": "Planning is separate",
+        "body": "Review next week\u2019s actual training dates.",
+        "kind": "choice"
+      },
+      {
+        "title": "Back to training",
+        "body": "Return to your selected workout.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "58-settings",
+    "title": "Settings",
+    "section": "Settings",
+    "kind": "standard",
+    "intro": "Your preferences, clearly separated.",
+    "blocks": [
+      {
+        "title": "Theme & appearance",
+        "body": "Classic WorkoutApp \u00b7 Dark",
+        "kind": "choice"
+      },
+      {
+        "title": "Weight display",
+        "body": "Pounds \u00b7 lb",
+        "kind": "choice"
+      },
+      {
+        "title": "Equipment & training preferences",
+        "body": "Main gym \u00b7 current program",
+        "kind": "choice"
+      },
+      {
+        "title": "Account & accessibility",
+        "body": "Sign out, text and motion preferences",
+        "kind": "choice"
+      }
+    ],
+    "action": null,
+    "secondary": null,
+    "behavior": "Put appearance and units in normal Settings, not Developer Tools. All saves show pending/success/failure beside the affected control. Separate equipment/profile/mode/preferences write scopes; no whole-profile overwrite.",
+    "findings": [
+      "F02",
+      "F07",
+      "F10",
+      "F15",
+      "F18",
+      "F26"
+    ],
+    "context": [
+      {
+        "title": "Preference sections",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "Appearance",
+            "Theme family and device mode"
+          ],
+          [
+            "Weight display",
+            "Pounds or kilograms"
+          ],
+          [
+            "Equipment",
+            "Locations and available loads"
+          ]
+        ]
+      },
+      {
+        "title": "Account & accessibility",
+        "body": "Manage your account or sign out.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "59-appearance",
+    "title": "Theme and appearance",
+    "section": "Settings",
+    "kind": "appearance",
+    "intro": "",
+    "blocks": [],
+    "action": null,
+    "secondary": null,
+    "behavior": "Two independent account preferences: Theme family and Appearance (Light, Dark, Follow Device Settings). Family changes retain appearance. Preview is local, Save requires acknowledgement, Restore saved discards the local preview. Existing unconfigured accounts retain Classic WorkoutApp Dark. This baseline preserves the familiar look without a forced introduction.",
+    "findings": [
+      "F10",
+      "F18",
+      "F19",
+      "F26"
+    ],
+    "context": [
+      {
+        "title": "Preference sections",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "Appearance",
+            "Theme family and device mode"
+          ],
+          [
+            "Weight display",
+            "Pounds or kilograms"
+          ],
+          [
+            "Equipment",
+            "Locations and available loads"
+          ]
+        ]
+      },
+      {
+        "title": "Account & accessibility",
+        "body": "Manage your account or sign out.",
+        "kind": "choice"
+      }
+    ],
+    "state": "default"
+  },
+  {
+    "id": "60-appearance-preview",
+    "title": "Unsaved appearance preview",
+    "section": "Settings",
+    "kind": "appearance",
+    "intro": "",
+    "blocks": [],
+    "action": null,
+    "secondary": null,
+    "behavior": "Two independent account preferences: Theme family and Appearance (Light, Dark, Follow Device Settings). Family changes retain appearance. Preview is local, Save requires acknowledgement, Restore saved discards the local preview. Existing unconfigured accounts retain Classic WorkoutApp Dark. The mockup shows a dirty preview; Back offers keep editing or discard. It is not persisted on selection.",
+    "findings": [
+      "F10",
+      "F18",
+      "F19",
+      "F26"
+    ],
+    "context": [
+      {
+        "title": "Preference sections",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "Appearance",
+            "Theme family and device mode"
+          ],
+          [
+            "Weight display",
+            "Pounds or kilograms"
+          ],
+          [
+            "Equipment",
+            "Locations and available loads"
+          ]
+        ]
+      },
+      {
+        "title": "Account & accessibility",
+        "body": "Manage your account or sign out.",
+        "kind": "choice"
+      }
+    ],
+    "state": "preview",
+    "selected_family": "graphite",
+    "render_family": "graphite"
+  },
+  {
+    "id": "61-appearance-pending",
+    "title": "Saving appearance",
+    "section": "Settings",
+    "kind": "appearance",
+    "intro": "",
+    "blocks": [],
+    "action": null,
+    "secondary": null,
+    "behavior": "Two independent account preferences: Theme family and Appearance (Light, Dark, Follow Device Settings). Family changes retain appearance. Preview is local, Save requires acknowledgement, Restore saved discards the local preview. Existing unconfigured accounts retain Classic WorkoutApp Dark. Freeze the intended pair and disable duplicate save. Follow Device Settings remains a stored choice, not the currently resolved mode.",
+    "findings": [
+      "F10",
+      "F18",
+      "F19",
+      "F26"
+    ],
+    "context": [
+      {
+        "title": "Preference sections",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "Appearance",
+            "Theme family and device mode"
+          ],
+          [
+            "Weight display",
+            "Pounds or kilograms"
+          ],
+          [
+            "Equipment",
+            "Locations and available loads"
+          ]
+        ]
+      },
+      {
+        "title": "Account & accessibility",
+        "body": "Manage your account or sign out.",
+        "kind": "choice"
+      }
+    ],
+    "state": "pending",
+    "selected_family": "graphite",
+    "render_family": "graphite"
+  },
+  {
+    "id": "62-appearance-failed",
+    "title": "Appearance save failed",
+    "section": "Settings",
+    "kind": "appearance",
+    "intro": "",
+    "blocks": [],
+    "action": null,
+    "secondary": null,
+    "behavior": "Two independent account preferences: Theme family and Appearance (Light, Dark, Follow Device Settings). Family changes retain appearance. Preview is local, Save requires acknowledgement, Restore saved discards the local preview. Existing unconfigured accounts retain Classic WorkoutApp Dark. Definite failure retains the local preview and permits retry. An uncertain write is reconciled before a new write; no false saved claim.",
+    "findings": [
+      "F10",
+      "F18",
+      "F19",
+      "F26"
+    ],
+    "context": [
+      {
+        "title": "Preference sections",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "Appearance",
+            "Theme family and device mode"
+          ],
+          [
+            "Weight display",
+            "Pounds or kilograms"
+          ],
+          [
+            "Equipment",
+            "Locations and available loads"
+          ]
+        ]
+      },
+      {
+        "title": "Account & accessibility",
+        "body": "Manage your account or sign out.",
+        "kind": "choice"
+      }
+    ],
+    "state": "failed",
+    "selected_family": "graphite",
+    "render_family": "graphite"
+  },
+  {
+    "id": "63-appearance-saved",
+    "title": "Appearance saved",
+    "section": "Settings",
+    "kind": "appearance",
+    "intro": "",
+    "blocks": [],
+    "action": null,
+    "secondary": null,
+    "behavior": "Two independent account preferences: Theme family and Appearance (Light, Dark, Follow Device Settings). Family changes retain appearance. Preview is local, Save requires acknowledgement, Restore saved discards the local preview. Existing unconfigured accounts retain Classic WorkoutApp Dark. Show one confirmation after acknowledgement. Other signed-in devices apply the account pair and resolve device-following appearance independently.",
+    "findings": [
+      "F10",
+      "F18",
+      "F19",
+      "F26"
+    ],
+    "context": [
+      {
+        "title": "Preference sections",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "Appearance",
+            "Theme family and device mode"
+          ],
+          [
+            "Weight display",
+            "Pounds or kilograms"
+          ],
+          [
+            "Equipment",
+            "Locations and available loads"
+          ]
+        ]
+      },
+      {
+        "title": "Account & accessibility",
+        "body": "Manage your account or sign out.",
+        "kind": "choice"
+      }
+    ],
+    "state": "saved",
+    "selected_family": "graphite",
+    "render_family": "graphite"
+  },
+  {
+    "id": "64-account-accessibility",
+    "title": "Account & accessibility",
+    "section": "Settings",
+    "kind": "standard",
+    "intro": "Keep control of your experience.",
+    "blocks": [
+      {
+        "title": "Account",
+        "body": "alex@example.com \u00b7 manage account",
+        "kind": "choice"
+      },
+      {
+        "title": "Reduce motion",
+        "body": "Follow device preference",
+        "kind": "choice"
+      },
+      {
+        "title": "Text and controls",
+        "body": "Respect device text size and visible keyboard focus.",
+        "kind": "card"
+      },
+      {
+        "title": "Sign out",
+        "body": "",
+        "kind": "button"
+      }
+    ],
+    "action": null,
+    "secondary": null,
+    "behavior": "Visible sign-out clears account-scoped cached preferences/drafts after resolving active work. Support device text size, reduced motion and keyboard focus. Account deletion/developer resets do not appear as ordinary recovery actions.",
+    "findings": [
+      "F12",
+      "F17",
+      "F18",
+      "F25",
+      "F26"
+    ],
+    "context": [
+      {
+        "title": "Preference sections",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "Appearance",
+            "Theme family and device mode"
+          ],
+          [
+            "Weight display",
+            "Pounds or kilograms"
+          ],
+          [
+            "Equipment",
+            "Locations and available loads"
+          ]
+        ]
+      },
+      {
+        "title": "Account & accessibility",
+        "body": "Manage your account or sign out.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "65-library",
+    "title": "Program library",
+    "section": "Library",
+    "kind": "standard",
+    "intro": "Find the original instructions.",
+    "blocks": [
+      {
+        "title": "Full Body Phase 1",
+        "body": "Authored \u00b7 program guide",
+        "kind": "choice"
+      },
+      {
+        "title": "Full Body Phase 2",
+        "body": "Authored \u00b7 program guide",
+        "kind": "choice"
+      },
+      {
+        "title": "Your Customized program",
+        "body": "Reviewed program instructions",
+        "kind": "choice"
+      }
+    ],
+    "action": null,
+    "secondary": null,
+    "behavior": "Library is reachable from More and the desktop rail, with program\u2192phase/day\u2192exercise breadcrumbs. Loading/error states are honest; guides do not claim Online from a token.",
+    "findings": [
+      "F11",
+      "F18",
+      "F28"
+    ],
+    "context": [
+      {
+        "title": "Browse the source",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "Program",
+            "Full Body Phase 1"
+          ],
+          [
+            "Session",
+            "Workout B"
+          ],
+          [
+            "Exercise",
+            "Cross-Body Lat Pull-Around"
+          ]
+        ]
+      },
+      {
+        "title": "Return to training",
+        "body": "Your exercise entry stays in place.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "66-exercise-guide",
+    "title": "Exercise guide",
+    "section": "Library",
+    "kind": "standard",
+    "intro": "Cross-Body Lat Pull-Around",
+    "blocks": [
+      {
+        "title": "Technique & setup",
+        "body": "Read the original program instructions.",
+        "kind": "choice"
+      },
+      {
+        "title": "This exercise",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "Warm-up",
+            "1 set \u00d7 8 reps"
+          ],
+          [
+            "Working sets",
+            "3 sets \u00d7 12 reps \u00b7 target RPE 8"
+          ],
+          [
+            "Rest",
+            "1:30 between working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Source & technical details",
+        "body": "Full Body Phase 1 \u00b7 exercise record",
+        "kind": "choice"
+      }
+    ],
+    "action": "Return to workout",
+    "secondary": null,
+    "behavior": "Preserve licensed source content and guide routing without republishing proprietary instructions in the synthetic sketch. No raw JSON in the main reading path; technical provenance stays accessible.",
+    "findings": [
+      "F18",
+      "F27",
+      "F28"
+    ],
+    "context": [
+      {
+        "title": "Browse the source",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "Program",
+            "Full Body Phase 1"
+          ],
+          [
+            "Session",
+            "Workout B"
+          ],
+          [
+            "Exercise",
+            "Cross-Body Lat Pull-Around"
+          ]
+        ]
+      },
+      {
+        "title": "Return to training",
+        "body": "Your exercise entry stays in place.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "67-more-navigation",
+    "title": "More",
+    "section": "More",
+    "kind": "standard",
+    "intro": "Everything else, within reach.",
+    "blocks": [
+      {
+        "title": "Programs & library",
+        "body": "Choose a program or read its guide.",
+        "kind": "choice"
+      },
+      {
+        "title": "Analytics",
+        "body": "Review comparable saved performance.",
+        "kind": "choice"
+      },
+      {
+        "title": "Check-In",
+        "body": "Record a review when it suits you.",
+        "kind": "choice"
+      },
+      {
+        "title": "Settings & account",
+        "body": "Appearance, units, equipment and sign out.",
+        "kind": "choice"
+      }
+    ],
+    "action": null,
+    "secondary": null,
+    "behavior": "Mobile Home/Today/Week/History remain persistent; More provides the same destinations as desktop rail. Return to the active workout without losing its occurrence or draft context.",
+    "findings": [
+      "F18",
+      "F19"
+    ],
+    "context": [
+      {
+        "title": "Your active program",
+        "body": "Full Body Phase 1 \u00b7 Authored",
+        "kind": "card"
+      },
+      {
+        "title": "Back to Today",
+        "body": "Open the selected workout.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "68-recovered-draft",
+    "title": "You have an unfinished entry",
+    "section": "Today",
+    "kind": "standard",
+    "intro": "Workout B \u00b7 working set 2",
+    "blocks": [
+      {
+        "title": "Draft on this device",
+        "body": "40 lb \u00d7 12 reps \u00b7 not saved",
+        "kind": "card"
+      },
+      {
+        "title": "Saved records checked",
+        "body": "Working set 1 is confirmed. No set 2 is confirmed.",
+        "kind": "status"
+      },
+      {
+        "title": "Review before using it",
+        "body": "A draft is not part of completed workout history.",
+        "kind": "card"
+      }
+    ],
+    "action": "Review this draft",
+    "secondary": "Discard draft",
+    "behavior": "Offer account/occurrence-scoped draft recovery only when durable local storage was actually successful and server reconciliation confirms its state. Do not promise offline saving or cross-device draft sync. Discard affects only that local draft.",
+    "findings": [
+      "F06",
+      "F11",
+      "F20"
+    ],
+    "context": [
+      {
+        "title": "Workout B \u00b7 exercise map",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 / 3 working sets"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "Selected exercise"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Back to your exercise",
+        "body": "Return to the current set.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "69-working-validation",
+    "title": "Correct an invalid entry",
+    "section": "Today",
+    "kind": "workout",
+    "intro": "",
+    "blocks": [],
+    "action": null,
+    "secondary": null,
+    "behavior": "A definite field rejection preserves draft and marks the invalid field. Editing creates a valid new command only after the rejected attempt is resolved; it is not an uncertain transport retry.",
+    "findings": [
+      "F03",
+      "F04",
+      "F05",
+      "F06",
+      "F07",
+      "F11",
+      "F22",
+      "F25",
+      "F27"
+    ],
+    "context": [
+      {
+        "title": "Workout B \u00b7 exercise map",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 / 3 working sets"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "Selected exercise"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Back to your exercise",
+        "body": "Return to the current set.",
+        "kind": "choice"
+      }
+    ],
+    "state": "validation"
+  },
+  {
+    "id": "70-preference-conflict",
+    "title": "Your preferences changed",
+    "section": "Settings",
+    "kind": "standard",
+    "intro": "A newer choice was saved elsewhere.",
+    "blocks": [
+      {
+        "title": "Current saved choice",
+        "body": "Graphite \u00b7 Follow Device Settings",
+        "kind": "card"
+      },
+      {
+        "title": "Your local preview",
+        "body": "Classic WorkoutApp \u00b7 Dark",
+        "kind": "card"
+      },
+      {
+        "title": "Review before replacing",
+        "body": "Keep the latest saved choice or explicitly replace it with this preview.",
+        "kind": "status",
+        "role": "warning_text"
+      }
+    ],
+    "action": "Use latest saved choice",
+    "secondary": "Review my preview",
+    "behavior": "A stale preference revision cannot silently overwrite a newer account choice. Re-read, show both pairs, then require an explicit replacement action. Existing account look is not reset by device resolution.",
+    "findings": [
+      "F10",
+      "F18"
+    ],
+    "context": [
+      {
+        "title": "Preference sections",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "Appearance",
+            "Theme family and device mode"
+          ],
+          [
+            "Weight display",
+            "Pounds or kilograms"
+          ],
+          [
+            "Equipment",
+            "Locations and available loads"
+          ]
+        ]
+      },
+      {
+        "title": "Account & accessibility",
+        "body": "Manage your account or sign out.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "71-session-expired",
+    "title": "Sign in to continue",
+    "section": "Account",
+    "kind": "standard",
+    "intro": "Your session has expired.",
+    "blocks": [
+      {
+        "title": "Working-set entry held here",
+        "body": "40 lb \u00d7 12 reps \u00b7 save not confirmed",
+        "kind": "status",
+        "role": "warning_text"
+      },
+      {
+        "title": "Check the save after signing in",
+        "body": "We will reconcile this attempt before you enter another set.",
+        "kind": "card"
+      }
+    ],
+    "action": "Sign in",
+    "secondary": null,
+    "behavior": "Auth expiry pauses writes and preserves only a securely account-scoped local attempt where supported. Reauthenticate to the same account, then reconcile. Switching account never adopts or exposes the previous account draft.",
+    "findings": [
+      "F01",
+      "F06",
+      "F11",
+      "F18"
+    ],
+    "context": [
+      {
+        "title": "Return safely",
+        "body": "Sign in to the same account to continue this workout.",
+        "kind": "card"
+      },
+      {
+        "title": "Check the saved state",
+        "body": "The pending attempt must be checked before another set is sent.",
+        "kind": "card"
+      }
+    ]
+  },
+  {
+    "id": "72-program-change",
+    "title": "Review a program change",
+    "section": "Programs",
+    "kind": "standard",
+    "intro": "From Authored Phase 1 to Phase 2",
+    "blocks": [
+      {
+        "title": "Your current training",
+        "body": "Started and completed workouts stay in History.",
+        "kind": "card"
+      },
+      {
+        "title": "Only eligible future work",
+        "body": "Review the affected dates before replacing anything.",
+        "kind": "card"
+      },
+      {
+        "title": "Choose the replacement dates",
+        "body": "A new preview will show exactly what changes.",
+        "kind": "choice"
+      }
+    ],
+    "action": "Review replacement preview",
+    "secondary": "Keep current program",
+    "behavior": "Program selection and replacement are distinct. Preview exact eligible future occurrence changes, preserve all started/completed work, reject stale revisions, and require explicit activation. Never merge Phase 1/2 or reinterpret Authored as Customized.",
+    "findings": [
+      "F13",
+      "F14",
+      "F20"
+    ],
+    "context": [
+      {
+        "title": "Program library",
+        "body": "Read the original Phase 1 and Phase 2 guides.",
+        "kind": "choice"
+      },
+      {
+        "title": "Your recorded training",
+        "body": "Previous workouts remain available in History.",
+        "kind": "choice"
+      },
+      {
+        "title": "Review before activation",
+        "body": "Dates and workload stay visible before you commit.",
+        "kind": "card"
+      }
+    ]
+  },
+  {
+    "id": "73-weight-display",
+    "title": "Weight display",
+    "section": "Settings",
+    "kind": "standard",
+    "intro": "Use the same units everywhere.",
+    "blocks": [
+      {
+        "title": "Pounds \u00b7 lb",
+        "body": "Selected \u00b7 current preference",
+        "kind": "check",
+        "selected": true
+      },
+      {
+        "title": "Kilograms \u00b7 kg",
+        "body": "Show loads and bodyweight in kilograms.",
+        "kind": "check"
+      },
+      {
+        "title": "Your records keep their meaning",
+        "body": "For example, 40 lb displays as 18.14 kg. Previous weights are converted, never relabeled.",
+        "kind": "card"
+      }
+    ],
+    "action": "Save weight preference",
+    "secondary": "Cancel",
+    "behavior": "Persist the account preference and convert all inputs/outputs consistently, including 1RM, warm-up, guidance, actuals, corrections, bodyweight and charts. Preserve canonical precision. Resolve active attempt/draft before changing entry units; no silent reinterpretation.",
+    "findings": [
+      "F07",
+      "F10",
+      "F20"
+    ],
+    "context": [
+      {
+        "title": "Preference sections",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "Appearance",
+            "Theme family and device mode"
+          ],
+          [
+            "Weight display",
+            "Pounds or kilograms"
+          ],
+          [
+            "Equipment",
+            "Locations and available loads"
+          ]
+        ]
+      },
+      {
+        "title": "Account & accessibility",
+        "body": "Manage your account or sign out.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "74-rir-effort",
+    "title": "How many more reps?",
+    "section": "Today",
+    "kind": "standard",
+    "intro": "Customized \u00b7 optional actual effort",
+    "blocks": [
+      {
+        "title": "Reps in reserve \u00b7 RIR",
+        "body": "How many more repetitions could you have done with the same technique?",
+        "kind": "card"
+      },
+      {
+        "title": "Actual RIR",
+        "body": "Not recorded",
+        "kind": "field"
+      },
+      {
+        "title": "Leave unknown if unsure",
+        "body": "This is your performed effort, not the program\u2019s target.",
+        "kind": "card"
+      }
+    ],
+    "action": "Use this effort",
+    "secondary": "Keep unknown",
+    "behavior": "Native RIR feedback remains distinct from native RPE. An optional answer belongs to the draft or an explicitly acknowledged receipt update; never derive it silently from a target or invent a cross-scale equivalence.",
+    "findings": [
+      "F20",
+      "F28"
+    ],
+    "context": [
+      {
+        "title": "Workout B \u00b7 exercise map",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 / 3 working sets"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "Selected exercise"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Back to your exercise",
+        "body": "Return to the current set.",
+        "kind": "choice"
+      }
+    ]
+  },
+  {
+    "id": "75-appearance-unconfirmed",
+    "title": "Preference save not confirmed",
+    "section": "Settings",
+    "kind": "standard",
+    "intro": "The connection ended before confirmation.",
+    "blocks": [
+      {
+        "title": "Requested choice",
+        "body": "Graphite \u00b7 Dark",
+        "kind": "card"
+      },
+      {
+        "title": "Previous saved choice",
+        "body": "Classic WorkoutApp \u00b7 Dark",
+        "kind": "card"
+      },
+      {
+        "title": "Check the result first",
+        "body": "The server may have saved your choice. Keep this preview while we check.",
+        "kind": "status",
+        "role": "warning_text"
+      }
+    ],
+    "action": "Check save status",
+    "secondary": null,
+    "behavior": "An uncertain preference write cannot be described as definitely unsaved or rolled back. Reconcile the exact account/revision/pair before allowing another write or claiming confirmed cross-device persistence.",
+    "findings": [
+      "F10",
+      "F11"
+    ],
+    "context": [
+      {
+        "title": "Preference sections",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "Appearance",
+            "Theme family and device mode"
+          ],
+          [
+            "Weight display",
+            "Pounds or kilograms"
+          ],
+          [
+            "Equipment",
+            "Locations and available loads"
+          ]
+        ]
+      },
+      {
+        "title": "Account & accessibility",
+        "body": "Manage your account or sign out.",
+        "kind": "choice"
+      }
+    ],
+    "render_family": "graphite"
+  },
+  {
+    "id": "76-analytics-table",
+    "title": "The values behind the chart",
+    "section": "Analytics",
+    "kind": "standard",
+    "intro": "Same exercise and equipment \u00b7 lb",
+    "blocks": [
+      {
+        "title": "Comparable working sets",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "30 Sep \u00b7 30 lb \u00d7 12",
+            "RPE not recorded"
+          ],
+          [
+            "7 Oct \u00b7 35 lb \u00d7 12",
+            "RPE 8"
+          ],
+          [
+            "14 Oct \u00b7 40 lb \u00d7 12",
+            "RPE 8"
+          ],
+          [
+            "21 Oct \u00b7 45 lb \u00d7 12",
+            "RPE not recorded"
+          ]
+        ]
+      },
+      {
+        "title": "Chart sample",
+        "body": "These example values demonstrate the chart and its accessible table.",
+        "kind": "card"
+      }
+    ],
+    "action": "Back to chart",
+    "secondary": null,
+    "behavior": "Offer a text table with the same sampled values, range, units and series labels as the chart. This separate synthetic analytics scenario is not the illustrated 40 lb gym session. Color is not the only means of reading values.",
+    "findings": [
+      "F07",
+      "F21"
+    ],
+    "context": [
+      {
+        "title": "Working weight \u00b7 lb",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "30 September",
+            "30 lb \u00d7 12"
+          ],
+          [
+            "7 October",
+            "35 lb \u00d7 12"
+          ],
+          [
+            "14 October",
+            "40 lb \u00d7 12"
+          ],
+          [
+            "21 October",
+            "45 lb \u00d7 12"
+          ]
+        ]
+      },
+      {
+        "title": "Same exercise and setup",
+        "body": "Cross-Body Lat Pull-Around \u00b7 cable station",
+        "kind": "card"
+      }
+    ]
+  },
+  {
+    "id": "77-keyboard-before",
+    "title": "Set entry with keyboard open",
+    "section": "Today",
+    "kind": "keyboard",
+    "intro": "",
+    "blocks": [],
+    "action": null,
+    "secondary": null,
+    "behavior": "Illustrated reduced visual viewport with a numeric keyboard. Context condenses when the keyboard opens; fields, Save and reserved status remain reachable. A save itself does not change their coordinates or remount the inputs. Physical iOS keyboard behavior remains unqualified.",
+    "findings": [
+      "F03",
+      "F04",
+      "F25"
+    ],
+    "context": [
+      {
+        "title": "Workout B \u00b7 exercise map",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 / 3 working sets"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "Selected exercise"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Back to your exercise",
+        "body": "Return to the current set.",
+        "kind": "choice"
+      }
+    ],
+    "state": "ready"
+  },
+  {
+    "id": "78-keyboard-after",
+    "title": "Saved with keyboard still open",
+    "section": "Today",
+    "kind": "keyboard",
+    "intro": "",
+    "blocks": [],
+    "action": null,
+    "secondary": null,
+    "behavior": "Same reduced-viewport geometry after acknowledgement. Focus stays at the reps field, next-set reps reset to blank, and Save is disabled until valid. The keyboard is not dismissed by save. This is an illustrative design requirement, not a Safari measurement.",
+    "findings": [
+      "F04",
+      "F22",
+      "F25"
+    ],
+    "context": [
+      {
+        "title": "Workout B \u00b7 exercise map",
+        "body": "",
+        "kind": "list",
+        "rows": [
+          [
+            "1 \u00b7 Dumbbell bench press",
+            "3 / 3 working sets"
+          ],
+          [
+            "2 \u00b7 Cross-Body Lat Pull-Around",
+            "Selected exercise"
+          ],
+          [
+            "3 \u00b7 Leg press",
+            "3 working sets"
+          ],
+          [
+            "4 \u00b7 Leg curl",
+            "3 working sets"
+          ]
+        ]
+      },
+      {
+        "title": "Back to your exercise",
+        "body": "Return to the current set.",
+        "kind": "choice"
+      }
+    ],
+    "state": "saved"
+  }
+]

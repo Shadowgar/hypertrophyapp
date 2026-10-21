@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" role="img" aria-labelledby="title desc"><title id="title">Set saved and rest</title><desc id="desc">WorkoutApp unified design proposal. Synthetic example. After authoritative acknowledgement, the reserved region announces Set 1 saved and a rest timer once. Set 2 composer occupies exactly the same coordinates, with retained weight and blank reps. Its Save stays disabled until valid reps. Receipt actuals appear only in Recorded sets.</desc><style>text{font-family:"DM Sans",Arial,sans-serif;font-variant-numeric:tabular-nums} @font-face{font-family:"DM Sans";src:url("../../fonts/DM-Sans.ttf")}</style>
+<rect x="0" y="0" width="1440" height="900" rx="0" fill="#FAFAFA" data-fill-token="canvas"/>
+<rect x="0" y="0" width="224" height="900" rx="0" fill="#FFFFFF" data-fill-token="surface"/>
+<path d="M224 0 L224 900" fill="none" stroke="#CDCDCD" stroke-width="1"/>
+<rect x="26" y="31" width="6" height="23" rx="2" fill="#242424" data-fill-token="action_fill"/>
+<rect x="36" y="37" width="6" height="17" rx="2" fill="#242424" data-fill-token="action_fill"/>
+<text x="53" y="50" fill="#242424" data-fill-token="text_primary" font-size="22" font-weight="700" text-anchor="start">WorkoutApp</text>
+<path d="M2 10 L10 3 L18 10 M4 9 V18 H16 V9 M8 18 V12 H12 V18" transform="translate(32 121) scale(1.0)" fill="none" stroke="#484848" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="65" y="138" fill="#484848" data-fill-token="text_secondary" font-size="16" font-weight="400" text-anchor="start">Home</text>
+<rect x="16" y="165" width="192" height="48" rx="10" fill="#E4E4E4" data-fill-token="surface_selected"/>
+<rect x="16" y="177" width="3" height="24" rx="1" fill="#242424" data-fill-token="accent_text"/>
+<path d="M3 6 V14 M6 4 V16 M6 10 H14 M14 4 V16 M17 6 V14" transform="translate(32 178) scale(1.0)" fill="none" stroke="#242424" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="65" y="195" fill="#242424" data-fill-token="text_primary" font-size="16" font-weight="600" text-anchor="start">Today</text>
+<path d="M3 5 H17 V18 H3 Z M3 9 H17 M6 2 V7 M14 2 V7" transform="translate(32 235) scale(1.0)" fill="none" stroke="#484848" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="65" y="252" fill="#484848" data-fill-token="text_secondary" font-size="16" font-weight="400" text-anchor="start">Week</text>
+<path d="M3 10 A7 7 0 1 0 5 5 M3 2 V7 H8 M10 6 V11 L14 13" transform="translate(32 292) scale(1.0)" fill="none" stroke="#484848" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="65" y="309" fill="#484848" data-fill-token="text_secondary" font-size="16" font-weight="400" text-anchor="start">History</text>
+<path d="M3 3 V18 H18 M6 14 L10 10 L13 12 L17 5" transform="translate(32 349) scale(1.0)" fill="none" stroke="#484848" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="65" y="366" fill="#484848" data-fill-token="text_secondary" font-size="16" font-weight="400" text-anchor="start">Analytics</text>
+<path d="M3 4 H9 V17 H3 Z M11 4 H17 V17 H11 Z" transform="translate(32 406) scale(1.0)" fill="none" stroke="#484848" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="65" y="423" fill="#484848" data-fill-token="text_secondary" font-size="16" font-weight="400" text-anchor="start">Programs</text>
+<path d="M3 4 H17 V18 H3 Z M6 2 H14 V6 H6 Z M6 11 L9 14 L14 9" transform="translate(32 463) scale(1.0)" fill="none" stroke="#484848" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="65" y="480" fill="#484848" data-fill-token="text_secondary" font-size="16" font-weight="400" text-anchor="start">Check-In</text>
+<path d="M3 3 H8 V17 H3 Z M10 4 L15 3 L18 17 L13 18 Z" transform="translate(32 520) scale(1.0)" fill="none" stroke="#484848" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="65" y="537" fill="#484848" data-fill-token="text_secondary" font-size="16" font-weight="400" text-anchor="start">Library</text>
+<path d="M4 5 H17 M4 10 H17 M4 15 H17 M8 3 V7 M13 8 V12 M7 13 V17" transform="translate(32 577) scale(1.0)" fill="none" stroke="#484848" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="65" y="594" fill="#484848" data-fill-token="text_secondary" font-size="16" font-weight="400" text-anchor="start">Settings</text>
+<path d="M24 782 L200 782" fill="none" stroke="#CDCDCD" stroke-width="1"/>
+<text x="28" y="818" fill="#242424" data-fill-token="text_primary" font-size="15" font-weight="400" text-anchor="start">Account &amp; sign out</text>
+<text x="28" y="851" fill="#5E5E5E" data-fill-token="text_muted" font-size="13" font-weight="400" text-anchor="start">Your preferences</text>
+<text x="260" y="48" fill="#484848" data-fill-token="text_secondary" font-size="15" font-weight="600" text-anchor="start">Today</text>
+<text x="1404" y="48" fill="#484848" data-fill-token="text_secondary" font-size="15" font-weight="500" text-anchor="end">Alex  ·  lb</text>
+<path d="M224 74 L1440 74" fill="none" stroke="#CDCDCD" stroke-width="1"/>
+<rect x="240" y="94" width="270" height="784" rx="16" fill="#FFFFFF" data-fill-token="surface"/>
+<text x="260" y="127" fill="#242424" data-fill-token="accent_text" font-size="14" font-weight="700" text-anchor="start">WORKOUT B</text>
+<text x="260" y="159" fill="#242424" data-fill-token="text_primary" font-size="20" font-weight="600" text-anchor="start">Wed 21 October</text>
+<text x="260" y="186" fill="#484848" data-fill-token="text_secondary" font-size="15" font-weight="400" text-anchor="start">Full Body Phase 1</text>
+<text x="266" y="245" fill="#242424" data-fill-token="accent_text" font-size="14" font-weight="700" text-anchor="start">01</text>
+<text x="302" y="245" fill="#242424" data-fill-token="text_primary" font-size="15" font-weight="600" text-anchor="start">Dumbbell bench press</text>
+<text x="266" y="276" fill="#484848" data-fill-token="text_secondary" font-size="14" font-weight="400" text-anchor="start">3 / 3 working sets</text>
+<rect x="252" y="316" width="246" height="88" rx="12" fill="#E4E4E4" data-fill-token="surface_selected" stroke="#737373" stroke-width="1" data-stroke-token="border_control"/>
+<text x="266" y="345" fill="#242424" data-fill-token="accent_text" font-size="14" font-weight="700" text-anchor="start">02</text>
+<text x="302" y="345" fill="#242424" data-fill-token="text_primary" font-size="15" font-weight="600" text-anchor="start">Cross-Body Lat</text>
+<text x="266" y="376" fill="#484848" data-fill-token="text_secondary" font-size="14" font-weight="400" text-anchor="start">Pull-Around · in progress</text>
+<text x="266" y="445" fill="#242424" data-fill-token="accent_text" font-size="14" font-weight="700" text-anchor="start">03</text>
+<text x="302" y="445" fill="#242424" data-fill-token="text_primary" font-size="15" font-weight="600" text-anchor="start">Leg press</text>
+<text x="266" y="476" fill="#484848" data-fill-token="text_secondary" font-size="14" font-weight="400" text-anchor="start">Not started</text>
+<text x="266" y="545" fill="#242424" data-fill-token="accent_text" font-size="14" font-weight="700" text-anchor="start">04</text>
+<text x="302" y="545" fill="#242424" data-fill-token="text_primary" font-size="15" font-weight="600" text-anchor="start">Leg curl</text>
+<text x="266" y="576" fill="#484848" data-fill-token="text_secondary" font-size="14" font-weight="400" text-anchor="start">Not started</text>
+<rect x="260" y="700" width="230" height="48" rx="12" fill="#FFFFFF" data-fill-token="surface" stroke="#737373" stroke-width="1" data-stroke-token="border_control"/>
+<text x="375.0" y="729.0" fill="#242424" data-fill-token="text_primary" font-size="15" font-weight="600" text-anchor="middle">Review workout</text>
+<rect x="260" y="760" width="230" height="48" rx="12" fill="#FFFFFF" data-fill-token="surface" stroke="#737373" stroke-width="1" data-stroke-token="border_control"/>
+<text x="375.0" y="789.0" fill="#242424" data-fill-token="text_primary" font-size="15" font-weight="600" text-anchor="middle">Back to Week</text>
+<text x="534" y="123" fill="#242424" data-fill-token="accent_text" font-size="13" font-weight="700" text-anchor="start">AUTHORED  ·  WORKOUT B</text>
+<text x="534" y="165" fill="#242424" data-fill-token="text_primary" font-size="28" font-weight="700" text-anchor="start">Cross-Body Lat Pull-Around</text>
+<rect x="534" y="190" width="496" height="68" rx="12" fill="#FFFFFF" data-fill-token="surface" stroke="#CDCDCD" stroke-width="1" data-stroke-token="border_subtle"/>
+<text x="550" y="217" fill="#242424" data-fill-token="text_primary" font-size="17" font-weight="600" text-anchor="start">3 working sets × 12 reps</text>
+<text x="550" y="241" fill="#484848" data-fill-token="text_secondary" font-size="15" font-weight="400" text-anchor="start">Target RPE 8  ·  Rest 1:30</text>
+<text x="538" y="278" fill="#242424" data-fill-token="text_primary" font-size="17" font-weight="600" text-anchor="start">Suggested 40 lb</text>
+<text x="538" y="301" fill="#484848" data-fill-token="text_secondary" font-size="14" font-weight="400" text-anchor="start">Based on comparable saved work</text>
+<rect x="966" y="261" width="60" height="48" rx="12" fill="#FFFFFF" data-fill-token="surface" stroke="#737373" stroke-width="1" data-stroke-token="border_control"/>
+<text x="996.0" y="290.0" fill="#242424" data-fill-token="text_primary" font-size="15" font-weight="600" text-anchor="middle">Why?</text>
+<rect x="534" y="348" width="496" height="64" rx="12" fill="#F1F1F1" data-fill-token="status_surface" stroke="#737373" stroke-width="1" data-stroke-token="border_control" id="reserved-status"/>
+<text x="550" y="375" fill="#236B3C" data-fill-token="success_text" font-size="17" font-weight="600" text-anchor="start">✓ Set 1 saved</text>
+<text x="550" y="398" fill="#484848" data-fill-token="text_secondary" font-size="14" font-weight="400" text-anchor="start">Rest 1:30</text>
+<rect x="924" y="356" width="94" height="48" rx="12" fill="#FFFFFF" data-fill-token="surface" stroke="#737373" stroke-width="1" data-stroke-token="border_control"/>
+<text x="971.0" y="385.0" fill="#242424" data-fill-token="text_primary" font-size="15" font-weight="600" text-anchor="middle">End rest</text>
+<rect x="534" y="430" width="496" height="254" rx="16" fill="#FFFFFF" data-fill-token="surface" stroke="#CDCDCD" stroke-width="1" data-stroke-token="border_subtle" id="composer"/>
+<text x="550" y="458" fill="#242424" data-fill-token="text_primary" font-size="14" font-weight="700" text-anchor="start">SET 2 OF 3 · ACTUAL WORK</text>
+<text x="550" y="480" fill="#484848" data-fill-token="text_secondary" font-size="14" font-weight="500" text-anchor="start">Weight · lb</text>
+<rect x="550" y="490" width="224.0" height="56" rx="10" fill="#FFFFFF" data-fill-token="input_fill" stroke="#737373" stroke-width="1" data-stroke-token="border_control" id="working-weight"/>
+<text x="564" y="526.0" fill="#242424" data-fill-token="text_primary" font-size="26" font-weight="600" text-anchor="start">40</text>
+<text x="790.0" y="480" fill="#484848" data-fill-token="text_secondary" font-size="14" font-weight="500" text-anchor="start">Repetitions</text>
+<rect x="790.0" y="490" width="224.0" height="56" rx="10" fill="#FFFFFF" data-fill-token="input_fill" stroke="#737373" stroke-width="1" data-stroke-token="border_control" id="working-reps"/>
+<text x="804.0" y="526.0" fill="#242424" data-fill-token="text_primary" font-size="26" font-weight="600" text-anchor="start">—</text>
+<rect x="550" y="560" width="464" height="48" rx="12" fill="#FFFFFF" data-fill-token="surface" stroke="#737373" stroke-width="1" data-stroke-token="border_control" id="effort-control"/>
+<text x="782.0" y="589.0" fill="#242424" data-fill-token="text_primary" font-size="15" font-weight="600" text-anchor="middle">Effort: not recorded  ·  Add RPE</text>
+<rect x="550" y="622" width="464" height="52" rx="12" fill="#E4E4E4" data-fill-token="disabled_fill" id="save-set"/>
+<text x="782.0" y="653.0" fill="#5E5E5E" data-fill-token="disabled_text" font-size="15" font-weight="600" text-anchor="middle">Save set 2</text>
+<rect x="534" y="700" width="240.0" height="48" rx="12" fill="#FFFFFF" data-fill-token="surface" stroke="#737373" stroke-width="1" data-stroke-token="border_control"/>
+<text x="654.0" y="729.0" fill="#242424" data-fill-token="text_primary" font-size="15" font-weight="600" text-anchor="middle">Recorded sets · 1</text>
+<rect x="790.0" y="700" width="240.0" height="48" rx="12" fill="#FFFFFF" data-fill-token="surface" stroke="#737373" stroke-width="1" data-stroke-token="border_control"/>
+<text x="910.0" y="729.0" fill="#242424" data-fill-token="text_primary" font-size="15" font-weight="600" text-anchor="middle">Guide &amp; setup</text>
+<rect x="1054" y="94" width="350" height="92" rx="12" fill="#FFFFFF" data-fill-token="surface" stroke="#CDCDCD" stroke-width="1" data-stroke-token="border_subtle"/>
+<text x="1070" y="123" fill="#242424" data-fill-token="text_primary" font-size="18" font-weight="600" text-anchor="start">Recorded sets</text>
+<text x="1070" y="153" fill="#484848" data-fill-token="text_secondary" font-size="15" font-weight="400" text-anchor="start">One list for this exercise.</text>
+<rect x="1054" y="218" width="350" height="114" rx="12" fill="#FFFFFF" data-fill-token="surface" stroke="#CDCDCD" stroke-width="1" data-stroke-token="border_subtle"/>
+<text x="1070" y="247" fill="#242424" data-fill-token="text_primary" font-size="18" font-weight="600" text-anchor="start">Working set 1</text>
+<text x="1070" y="277" fill="#484848" data-fill-token="text_secondary" font-size="15" font-weight="400" text-anchor="start">40 lb × 12 reps</text>
+<text x="1070" y="299" fill="#484848" data-fill-token="text_secondary" font-size="15" font-weight="400" text-anchor="start">Effort not recorded</text>
+<rect x="1070" y="342" width="145" height="48" rx="12" fill="#FFFFFF" data-fill-token="surface" stroke="#737373" stroke-width="1" data-stroke-token="border_control"/>
+<text x="1142.5" y="371.0" fill="#242424" data-fill-token="text_primary" font-size="15" font-weight="600" text-anchor="middle">Edit set 1</text>
+<rect x="1231" y="342" width="157" height="48" rx="12" fill="#FFFFFF" data-fill-token="surface" stroke="#737373" stroke-width="1" data-stroke-token="border_control"/>
+<text x="1309.5" y="371.0" fill="#242424" data-fill-token="text_primary" font-size="15" font-weight="600" text-anchor="middle">Undo set 1</text>
+<rect x="1054" y="430" width="350" height="92" rx="12" fill="#FFFFFF" data-fill-token="surface" stroke="#CDCDCD" stroke-width="1" data-stroke-token="border_subtle"/>
+<text x="1070" y="459" fill="#242424" data-fill-token="text_primary" font-size="18" font-weight="600" text-anchor="start">Warm-up</text>
+<text x="1070" y="489" fill="#484848" data-fill-token="text_secondary" font-size="15" font-weight="400" text-anchor="start">1 warm-up recorded</text>
+<rect x="1054" y="572" width="350" height="48" rx="12" fill="#FFFFFF" data-fill-token="surface" stroke="#737373" stroke-width="1" data-stroke-token="border_control"/>
+<text x="1229.0" y="601.0" fill="#242424" data-fill-token="text_primary" font-size="15" font-weight="600" text-anchor="middle">Exercise instructions</text>
+<rect x="1054" y="632" width="350" height="48" rx="12" fill="#FFFFFF" data-fill-token="surface" stroke="#737373" stroke-width="1" data-stroke-token="border_control"/>
+<text x="1229.0" y="661.0" fill="#242424" data-fill-token="text_primary" font-size="15" font-weight="600" text-anchor="middle">Equipment &amp; load details</text>
+<text x="1058" y="734" fill="#484848" data-fill-token="text_secondary" font-size="15" font-weight="400" text-anchor="start">Original exercise identity stays attached</text>
+<text x="1058" y="757" fill="#484848" data-fill-token="text_secondary" font-size="15" font-weight="400" text-anchor="start">to every set.</text></svg>
