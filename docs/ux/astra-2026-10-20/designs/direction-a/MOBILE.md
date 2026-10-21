@@ -1,5 +1,7 @@
 # Next Step — Mobile gallery
 
+**Revision 2 — dark mode, 21 October 2026, requested by the owner.** All mobile and desktop frames in this gallery use the revised dark palette.
+
 **24 original proposed frames.** Fictional accounts, training and history. These are static design illustrations, not implemented application pages.
 
 [Review overview](../../README.md) · [Direction comparison](../../COMPARISON.md) · [Gallery index](GALLERY.md) · [Interaction specification](direction.md) · [Logging flow](../../FLOW-REVIEW.md)

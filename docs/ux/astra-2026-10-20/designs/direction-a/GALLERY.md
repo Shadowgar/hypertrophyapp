@@ -1,5 +1,7 @@
 # Next Step — visual gallery
 
+**Revision 2 — dark mode, 21 October 2026, requested by the owner.** All mobile and desktop frames in this gallery use the revised dark palette.
+
 **Original Astra alternative · proposed · owner review required.** All records are fictional. No application implementation.
 
 [Full mobile gallery — 24 frames](MOBILE.md) · [Full desktop gallery — 8 frames](DESKTOP.md) · [Interaction specification](direction.md) · [Compare directions](../../COMPARISON.md)

@@ -8,13 +8,31 @@ The distinction from a task-sequenced alternative is structural. The user can re
 
 ## Visual language
 
-- **Background:** soft mineral `#F1F4EF`; cards white; boundaries `#D6DFD5`.
-- **Primary ink:** pine `#15382E`. This is also the desktop navigation rail and primary action surface.
-- **Working area:** pale clay `#FBE8DC`; copper `#C76138` marks the current exercise and selected emphasis. Copper is not the sole status signal.
-- **Confirmed work:** green `#DDEBDD` plus a check and plain-language receipt text. **Pending:** blue `#E5EEF5`; **not confirmed:** red `#FBE7E2` with `#A23A31` text.
+- **Revision 2 dark background:** deep forest `#101A16`; card/input surfaces `#1C2B24`; boundaries `#526B5B`. The gallery uses this same dark foundation.
+- **Primary ink:** light mineral `#EDF3EC`; secondary copy `#B1C2B7`. Desktop navigation, session maps and feature panels use deep pine `#142E25` with light text and sage secondary labels `#B9CDBD`.
+- **Working area:** dark clay `#392C25` with warm boundaries `#92715C`. Terracotta `#DFA383` marks the current exercise; sage `#ACC6A6` marks primary actions and selected controls. Both carry deep-forest `#102219` labels, never low-contrast white text. Terracotta is not the sole status signal.
+- **Confirmed work:** forest `#293F32` plus a check and plain-language receipt text. **Pending:** blue-charcoal `#223744`; **not confirmed:** red-charcoal `#432A29` with salmon `#F0AAA0` error text. Disabled actions use muted forest `#34483D` and legible secondary copy, keeping their existing disabled wording. Destructive/retry emphasis `#E5A090` uses dark labels.
 - **Typography:** IBM Plex Sans for UI and values; Libre Baskerville for restrained page headings. Standalone SVGs declare Arial/Georgia fallbacks and use native text. Figma can use the intended installed fonts. Font fallback metrics are a visual review limit, not a guarantee of pixel identity.
 - 16–18 px main action text at desktop, 14–16 px mobile copy, large numeric inputs; compact secondary annotations remain secondary. The small synthetic/proposal banner is documentation metadata, not proposed product chrome.
 - No glass, glows, nested telemetry cards or decorative gradients. The graphical session track and calendar carry navigation meaning.
+
+### Dark palette contrast measurements
+
+Computed from the exact opaque sRGB foreground/background values using WCAG relative luminance; these are token-pair measurements, not full accessibility qualification. Color does not replace status wording, receipts or source identity.
+
+| Foreground / background | Use | Contrast |
+|---|---|---|
+| `#EDF3EC` / `#101A16` | Main text / page | 15.77:1 |
+| `#EDF3EC` / `#1C2B24` | Main text / card | 13.12:1 |
+| `#B1C2B7` / `#1C2B24` | Secondary text / card | 7.93:1 |
+| `#B1C2B7` / `#392C25` | Secondary text / composer | 7.22:1 |
+| `#102219` / `#ACC6A6` | Primary action label / sage | 9.00:1 |
+| `#102219` / `#DFA383` | Current-position label / terracotta | 7.67:1 |
+| `#F0AAA0` / `#432A29` | Error message / error panel | 6.84:1 |
+| `#AFCFE5` / `#223744` | Pending message / pending panel | 7.59:1 |
+| `#B9CDBD` / `#142E25` | Secondary rail text / pine | 8.66:1 |
+
+Revision 2 changes only SVG fill/stroke paints and gallery palette. Native wording, geometry, metadata, source distinctions, field positions and workflow remain intact. Large surfaces remain dark; light sage/terracotta is confined to action/selection emphasis.
 
 ## Artifact inventory
 
@@ -135,7 +153,7 @@ Calendar placement uses actual weekday slots, preserving blank leading positions
 - Keyboard sequence from map → source details → composer → evidence remains stable. Saving does not remount fields. Correction changes restore focus to the receipt's Edit action after success/cancel, not the next set by surprise.
 - With the on-screen keyboard, pin the composer to the visual viewport and allow its surrounding context to compress/scroll; do not cover inputs with dock or rest card. Visual viewport geometry and physical-device behavior require qualification. The SVGs depict keyboard-closed review states.
 - At narrow screens the three desktop panes become a compact map, composer and separate evidence view. At zoom/large-text sizes, use a linear document layout rather than forcing fixed pixel heights; stable action position means stable within the usable viewport, not clipping content.
-- Reduced motion disables animated map movement and panel transitions. No essential status uses animation. Intended palettes need measured contrast checks in actual implementation; these artifacts do not claim WCAG qualification.
+- Reduced motion disables animated map movement and panel transitions. No essential status uses animation. The artifact palette has measured sRGB contrast pairs in the palette section above; actual implementation still needs accessibility qualification, including interaction, focus and browser rendering.
 
 ## Advantages, tradeoffs and scope
 

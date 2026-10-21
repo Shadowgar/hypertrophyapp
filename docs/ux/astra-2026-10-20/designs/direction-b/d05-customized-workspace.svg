@@ -1,96 +1,96 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" role="img" aria-labelledby="title desc"><title id="title">Compare, consent, activate</title><desc id="desc">Compare, consent, activate. Desktop Training Atlas design concept, synthetic data, not implemented.</desc><rect width="1440" height="900" fill="#F1F4EF"/>
-<rect x="0" y="0" width="1440" height="28" rx="0" fill="#15382E"/>
-<text x="720" y="19" fill="#FFFFFF" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="600" text-anchor="middle">DIRECTION B  /  TRAINING ATLAS  /  SYNTHETIC DESIGN SAMPLE — NOT IMPLEMENTED</text>
-<rect x="0" y="28" width="224" height="872" rx="0" fill="#15382E"/>
-<text x="30" y="89" fill="#FFFFFF" font-family="Libre Baskerville,Georgia,serif" font-size="44" font-weight="400" text-anchor="start">atlas</text>
-<text x="32" y="115" fill="#B5CDBB" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="10" font-weight="600" text-anchor="start">TRAINING WORKSPACE</text>
-<text x="32" y="161" fill="#B5CDBB" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="400" text-anchor="start">01</text>
-<text x="65" y="161" fill="#FFFFFF" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="400" text-anchor="start">Home</text>
-<text x="32" y="220" fill="#B5CDBB" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="400" text-anchor="start">02</text>
-<text x="65" y="220" fill="#FFFFFF" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="400" text-anchor="start">Train</text>
-<text x="32" y="279" fill="#B5CDBB" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="400" text-anchor="start">03</text>
-<text x="65" y="279" fill="#FFFFFF" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="400" text-anchor="start">Week</text>
-<text x="32" y="338" fill="#B5CDBB" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="400" text-anchor="start">04</text>
-<text x="65" y="338" fill="#FFFFFF" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="400" text-anchor="start">History</text>
-<text x="32" y="397" fill="#B5CDBB" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="400" text-anchor="start">05</text>
-<text x="65" y="397" fill="#FFFFFF" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="400" text-anchor="start">Check-in</text>
-<rect x="16" y="430" width="192" height="48" rx="12" fill="#355649"/>
-<text x="32" y="456" fill="#B5CDBB" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="400" text-anchor="start">06</text>
-<text x="65" y="456" fill="#FFFFFF" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="600" text-anchor="start">Programs</text>
-<text x="32" y="515" fill="#B5CDBB" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="400" text-anchor="start">07</text>
-<text x="65" y="515" fill="#FFFFFF" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="400" text-anchor="start">Equipment</text>
-<text x="32" y="574" fill="#B5CDBB" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="400" text-anchor="start">08</text>
-<text x="65" y="574" fill="#FFFFFF" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="400" text-anchor="start">Guides</text>
-<text x="32" y="633" fill="#B5CDBB" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="400" text-anchor="start">09</text>
-<text x="65" y="633" fill="#FFFFFF" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="400" text-anchor="start">Settings</text>
-<circle cx="42" cy="833" r="16" fill="#355649"/>
-<text x="42" y="838" fill="#FFFFFF" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="13" font-weight="600" text-anchor="middle">A</text>
-<text x="70" y="830" fill="#FFFFFF" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="13" font-weight="600" text-anchor="start">Your account</text>
-<text x="70" y="850" fill="#B5CDBB" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="400" text-anchor="start">Sign out</text>
-<text x="256" y="76" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="600" text-anchor="start">PROGRAMS</text>
-<text x="256" y="120" fill="#15382E" font-family="Libre Baskerville,Georgia,serif" font-size="36" font-weight="400" text-anchor="start">Compare, consent, activate</text>
-<rect x="1214" y="62" width="190" height="25" rx="12" fill="#DDEBDD"/>
-<text x="1224" y="79" fill="#15382E" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="600" text-anchor="start">Customized · preview</text>
-<rect x="256" y="146" width="218.4" height="25" rx="12" fill="#E5EEF5"/>
-<text x="266" y="163" fill="#15382E" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="600" text-anchor="start">Customized · version 3 · preview</text>
-<rect x="256" y="195" width="312" height="637" rx="16" fill="#FFFFFF" stroke="#D6DFD5"/>
-<text x="272" y="223" fill="#15382E" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="16" font-weight="600" text-anchor="start">Your declared setup</text>
-<text x="272" y="245" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="13" font-weight="400" text-anchor="start">Current training · intermediate skill</text>
-<text x="278" y="283" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="600" text-anchor="start">EQUIPMENT</text>
-<rect x="278" y="306" width="20" height="20" rx="5" fill="#15382E" stroke="#15382E"/>
-<text x="288" y="321" fill="#FFFFFF" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="600" text-anchor="middle">✓</text>
-<text x="308" y="321" fill="#15382E" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="400" text-anchor="start">Dumbbells</text>
-<rect x="278" y="348" width="20" height="20" rx="5" fill="#15382E" stroke="#15382E"/>
-<text x="288" y="363" fill="#FFFFFF" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="600" text-anchor="middle">✓</text>
-<text x="308" y="363" fill="#15382E" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="400" text-anchor="start">Machine stack</text>
-<rect x="278" y="390" width="20" height="20" rx="5" fill="#15382E" stroke="#15382E"/>
-<text x="288" y="405" fill="#FFFFFF" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="600" text-anchor="middle">✓</text>
-<text x="308" y="405" fill="#15382E" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="400" text-anchor="start">Bench</text>
-<text x="278" y="462" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="600" text-anchor="start">ACTUAL DATES</text>
-<text x="278" y="493" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="16" font-weight="400" text-anchor="start">Tue 20 · Thu 22 · Sat 24</text>
-<text x="278" y="558" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="600" text-anchor="start">TIME CAP</text>
-<text x="278" y="593" fill="#15382E" font-family="Libre Baskerville,Georgia,serif" font-size="20" font-weight="400" text-anchor="start">60 min · hard limit</text>
-<text x="278" y="647" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="400" text-anchor="start">Exact inventory and load basis are</text>
-<text x="278" y="667" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="400" text-anchor="start">kept with the setup. Unknown loads</text>
-<text x="278" y="687" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="400" text-anchor="start">need calibration.</text>
-<rect x="278" y="756" width="268" height="48" rx="12" fill="#FFFFFF" stroke="#D6DFD5"/>
-<text x="412.0" y="785.0" fill="#15382E" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="600" text-anchor="middle">Edit inputs</text>
-<rect x="592" y="195" width="478" height="637" rx="16" fill="#FFFFFF" stroke="#D6DFD5"/>
-<text x="608" y="223" fill="#15382E" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="16" font-weight="600" text-anchor="start">Full Body · selected program</text>
-<text x="608" y="245" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="13" font-weight="400" text-anchor="start">30 working sets across three dates</text>
-<rect x="614" y="272" width="187.4" height="25" rx="12" fill="#DDEBDD"/>
-<text x="624" y="289" fill="#15382E" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="600" text-anchor="start">Original Customized program</text>
-<text x="614" y="331" fill="#15382E" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="18" font-weight="600" text-anchor="start">Dumbbell press</text>
-<text x="614" y="360" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="400" text-anchor="start">3 × 8–12 · 2 RIR</text>
-<text x="614" y="386" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="13" font-weight="400" text-anchor="start">Working load: calibrate actual setup</text>
-<path d="M614 409 L1048 409" stroke="#D6DFD5" stroke-width="1" fill="none"/>
-<text x="614" y="439" fill="#15382E" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="18" font-weight="600" text-anchor="start">Supported row</text>
-<text x="614" y="468" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="400" text-anchor="start">3 × 8–12 · 2 RIR</text>
-<text x="614" y="494" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="13" font-weight="400" text-anchor="start">Working load: calibrate actual setup</text>
-<path d="M614 517 L1048 517" stroke="#D6DFD5" stroke-width="1" fill="none"/>
-<text x="614" y="547" fill="#15382E" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="18" font-weight="600" text-anchor="start">Leg press</text>
-<text x="614" y="576" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="400" text-anchor="start">3 × 10–15 · 2 RIR</text>
-<text x="614" y="602" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="13" font-weight="400" text-anchor="start">Working load: calibrate actual setup</text>
-<path d="M614 625 L1048 625" stroke="#D6DFD5" stroke-width="1" fill="none"/>
-<text x="614" y="699" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="400" text-anchor="start">Review each session’s exercises, effort targets and rest</text>
-<text x="614" y="719" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="400" text-anchor="start">before you accept.</text>
-<rect x="614" y="756" width="434" height="48" rx="12" fill="#FFFFFF" stroke="#D6DFD5"/>
-<text x="831.0" y="785.0" fill="#15382E" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="600" text-anchor="middle">Inspect full program map</text>
-<rect x="1094" y="195" width="310" height="637" rx="16" fill="#FBE8DC" stroke="#D6DFD5"/>
-<text x="1110" y="223" fill="#15382E" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="16" font-weight="600" text-anchor="start">Your decision</text>
-<text x="1110" y="245" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="13" font-weight="400" text-anchor="start">Version 3 · exact content</text>
-<text x="1116" y="297" fill="#15382E" font-family="Libre Baskerville,Georgia,serif" font-size="28" font-weight="400" text-anchor="start">30 vs 42 sets</text>
-<text x="1116" y="340" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="400" text-anchor="start">Selected and longer comparison.</text>
-<text x="1116" y="363" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="400" text-anchor="start">Less work may mean less growth</text>
-<text x="1116" y="386" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="400" text-anchor="start">opportunity.</text>
-<text x="1116" y="444" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="400" text-anchor="start">Rules and timing remain provisional.</text>
-<text x="1116" y="465" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="400" text-anchor="start">No equivalent or optimal-results</text>
-<text x="1116" y="486" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="400" text-anchor="start">claim.</text>
-<rect x="1116" y="560" width="20" height="20" rx="5" fill="#FFFFFF" stroke="#D6DFD5"/>
-<text x="1146" y="575" fill="#15382E" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="400" text-anchor="start">I accept version 3</text>
-<text x="1146" y="602" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="13" font-weight="400" text-anchor="start">Including the full workload</text>
-<text x="1146" y="622" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="13" font-weight="400" text-anchor="start">comparison and limitations.</text>
-<rect x="1116" y="679" width="266" height="48" rx="12" fill="#D6DFD5"/>
-<text x="1249.0" y="708.0" fill="#15382E" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="600" text-anchor="middle">Accept program</text>
-<text x="1116" y="758" fill="#5B6D63" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="12" font-weight="400" text-anchor="start">Next: activate selected dates</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" role="img" aria-labelledby="title desc"><title id="title">Compare, consent, activate</title><desc id="desc">Compare, consent, activate. Desktop Training Atlas design concept, synthetic data, not implemented.</desc><rect width="1440" height="900" fill="#101A16"/>
+<rect x="0" y="0" width="1440" height="28" rx="0" fill="#142E25"/>
+<text x="720" y="19" fill="#EDF3EC" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="600" text-anchor="middle">DIRECTION B  /  TRAINING ATLAS  /  SYNTHETIC DESIGN SAMPLE — NOT IMPLEMENTED</text>
+<rect x="0" y="28" width="224" height="872" rx="0" fill="#142E25"/>
+<text x="30" y="89" fill="#EDF3EC" font-family="Libre Baskerville,Georgia,serif" font-size="44" font-weight="400" text-anchor="start">atlas</text>
+<text x="32" y="115" fill="#B9CDBD" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="10" font-weight="600" text-anchor="start">TRAINING WORKSPACE</text>
+<text x="32" y="161" fill="#B9CDBD" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="400" text-anchor="start">01</text>
+<text x="65" y="161" fill="#EDF3EC" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="400" text-anchor="start">Home</text>
+<text x="32" y="220" fill="#B9CDBD" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="400" text-anchor="start">02</text>
+<text x="65" y="220" fill="#EDF3EC" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="400" text-anchor="start">Train</text>
+<text x="32" y="279" fill="#B9CDBD" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="400" text-anchor="start">03</text>
+<text x="65" y="279" fill="#EDF3EC" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="400" text-anchor="start">Week</text>
+<text x="32" y="338" fill="#B9CDBD" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="400" text-anchor="start">04</text>
+<text x="65" y="338" fill="#EDF3EC" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="400" text-anchor="start">History</text>
+<text x="32" y="397" fill="#B9CDBD" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="400" text-anchor="start">05</text>
+<text x="65" y="397" fill="#EDF3EC" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="400" text-anchor="start">Check-in</text>
+<rect x="16" y="430" width="192" height="48" rx="12" fill="#345543"/>
+<text x="32" y="456" fill="#B9CDBD" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="400" text-anchor="start">06</text>
+<text x="65" y="456" fill="#EDF3EC" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="600" text-anchor="start">Programs</text>
+<text x="32" y="515" fill="#B9CDBD" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="400" text-anchor="start">07</text>
+<text x="65" y="515" fill="#EDF3EC" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="400" text-anchor="start">Equipment</text>
+<text x="32" y="574" fill="#B9CDBD" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="400" text-anchor="start">08</text>
+<text x="65" y="574" fill="#EDF3EC" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="400" text-anchor="start">Guides</text>
+<text x="32" y="633" fill="#B9CDBD" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="400" text-anchor="start">09</text>
+<text x="65" y="633" fill="#EDF3EC" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="400" text-anchor="start">Settings</text>
+<circle cx="42" cy="833" r="16" fill="#345543"/>
+<text x="42" y="838" fill="#EDF3EC" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="13" font-weight="600" text-anchor="middle">A</text>
+<text x="70" y="830" fill="#EDF3EC" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="13" font-weight="600" text-anchor="start">Your account</text>
+<text x="70" y="850" fill="#B9CDBD" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="400" text-anchor="start">Sign out</text>
+<text x="256" y="76" fill="#B1C2B7" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="600" text-anchor="start">PROGRAMS</text>
+<text x="256" y="120" fill="#EDF3EC" font-family="Libre Baskerville,Georgia,serif" font-size="36" font-weight="400" text-anchor="start">Compare, consent, activate</text>
+<rect x="1214" y="62" width="190" height="25" rx="12" fill="#293F32"/>
+<text x="1224" y="79" fill="#EDF3EC" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="600" text-anchor="start">Customized · preview</text>
+<rect x="256" y="146" width="218.4" height="25" rx="12" fill="#223744"/>
+<text x="266" y="163" fill="#EDF3EC" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="600" text-anchor="start">Customized · version 3 · preview</text>
+<rect x="256" y="195" width="312" height="637" rx="16" fill="#1C2B24" stroke="#526B5B"/>
+<text x="272" y="223" fill="#EDF3EC" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="16" font-weight="600" text-anchor="start">Your declared setup</text>
+<text x="272" y="245" fill="#B1C2B7" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="13" font-weight="400" text-anchor="start">Current training · intermediate skill</text>
+<text x="278" y="283" fill="#B1C2B7" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="600" text-anchor="start">EQUIPMENT</text>
+<rect x="278" y="306" width="20" height="20" rx="5" fill="#ACC6A6" stroke="#ACC6A6"/>
+<text x="288" y="321" fill="#102219" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="600" text-anchor="middle">✓</text>
+<text x="308" y="321" fill="#EDF3EC" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="400" text-anchor="start">Dumbbells</text>
+<rect x="278" y="348" width="20" height="20" rx="5" fill="#ACC6A6" stroke="#ACC6A6"/>
+<text x="288" y="363" fill="#102219" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="600" text-anchor="middle">✓</text>
+<text x="308" y="363" fill="#EDF3EC" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="400" text-anchor="start">Machine stack</text>
+<rect x="278" y="390" width="20" height="20" rx="5" fill="#ACC6A6" stroke="#ACC6A6"/>
+<text x="288" y="405" fill="#102219" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="600" text-anchor="middle">✓</text>
+<text x="308" y="405" fill="#EDF3EC" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="400" text-anchor="start">Bench</text>
+<text x="278" y="462" fill="#B1C2B7" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="600" text-anchor="start">ACTUAL DATES</text>
+<text x="278" y="493" fill="#B1C2B7" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="16" font-weight="400" text-anchor="start">Tue 20 · Thu 22 · Sat 24</text>
+<text x="278" y="558" fill="#B1C2B7" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="600" text-anchor="start">TIME CAP</text>
+<text x="278" y="593" fill="#EDF3EC" font-family="Libre Baskerville,Georgia,serif" font-size="20" font-weight="400" text-anchor="start">60 min · hard limit</text>
+<text x="278" y="647" fill="#B1C2B7" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="400" text-anchor="start">Exact inventory and load basis are</text>
+<text x="278" y="667" fill="#B1C2B7" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="400" text-anchor="start">kept with the setup. Unknown loads</text>
+<text x="278" y="687" fill="#B1C2B7" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="400" text-anchor="start">need calibration.</text>
+<rect x="278" y="756" width="268" height="48" rx="12" fill="#1C2B24" stroke="#526B5B"/>
+<text x="412.0" y="785.0" fill="#EDF3EC" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="600" text-anchor="middle">Edit inputs</text>
+<rect x="592" y="195" width="478" height="637" rx="16" fill="#1C2B24" stroke="#526B5B"/>
+<text x="608" y="223" fill="#EDF3EC" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="16" font-weight="600" text-anchor="start">Full Body · selected program</text>
+<text x="608" y="245" fill="#B1C2B7" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="13" font-weight="400" text-anchor="start">30 working sets across three dates</text>
+<rect x="614" y="272" width="187.4" height="25" rx="12" fill="#293F32"/>
+<text x="624" y="289" fill="#EDF3EC" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="11" font-weight="600" text-anchor="start">Original Customized program</text>
+<text x="614" y="331" fill="#EDF3EC" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="18" font-weight="600" text-anchor="start">Dumbbell press</text>
+<text x="614" y="360" fill="#B1C2B7" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="400" text-anchor="start">3 × 8–12 · 2 RIR</text>
+<text x="614" y="386" fill="#B1C2B7" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="13" font-weight="400" text-anchor="start">Working load: calibrate actual setup</text>
+<path d="M614 409 L1048 409" stroke="#526B5B" stroke-width="1" fill="none"/>
+<text x="614" y="439" fill="#EDF3EC" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="18" font-weight="600" text-anchor="start">Supported row</text>
+<text x="614" y="468" fill="#B1C2B7" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="400" text-anchor="start">3 × 8–12 · 2 RIR</text>
+<text x="614" y="494" fill="#B1C2B7" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="13" font-weight="400" text-anchor="start">Working load: calibrate actual setup</text>
+<path d="M614 517 L1048 517" stroke="#526B5B" stroke-width="1" fill="none"/>
+<text x="614" y="547" fill="#EDF3EC" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="18" font-weight="600" text-anchor="start">Leg press</text>
+<text x="614" y="576" fill="#B1C2B7" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="400" text-anchor="start">3 × 10–15 · 2 RIR</text>
+<text x="614" y="602" fill="#B1C2B7" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="13" font-weight="400" text-anchor="start">Working load: calibrate actual setup</text>
+<path d="M614 625 L1048 625" stroke="#526B5B" stroke-width="1" fill="none"/>
+<text x="614" y="699" fill="#B1C2B7" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="400" text-anchor="start">Review each session’s exercises, effort targets and rest</text>
+<text x="614" y="719" fill="#B1C2B7" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="400" text-anchor="start">before you accept.</text>
+<rect x="614" y="756" width="434" height="48" rx="12" fill="#1C2B24" stroke="#526B5B"/>
+<text x="831.0" y="785.0" fill="#EDF3EC" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="600" text-anchor="middle">Inspect full program map</text>
+<rect x="1094" y="195" width="310" height="637" rx="16" fill="#392C25" stroke="#526B5B"/>
+<text x="1110" y="223" fill="#EDF3EC" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="16" font-weight="600" text-anchor="start">Your decision</text>
+<text x="1110" y="245" fill="#B1C2B7" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="13" font-weight="400" text-anchor="start">Version 3 · exact content</text>
+<text x="1116" y="297" fill="#EDF3EC" font-family="Libre Baskerville,Georgia,serif" font-size="28" font-weight="400" text-anchor="start">30 vs 42 sets</text>
+<text x="1116" y="340" fill="#B1C2B7" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="400" text-anchor="start">Selected and longer comparison.</text>
+<text x="1116" y="363" fill="#B1C2B7" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="400" text-anchor="start">Less work may mean less growth</text>
+<text x="1116" y="386" fill="#B1C2B7" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="15" font-weight="400" text-anchor="start">opportunity.</text>
+<text x="1116" y="444" fill="#B1C2B7" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="400" text-anchor="start">Rules and timing remain provisional.</text>
+<text x="1116" y="465" fill="#B1C2B7" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="400" text-anchor="start">No equivalent or optimal-results</text>
+<text x="1116" y="486" fill="#B1C2B7" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="400" text-anchor="start">claim.</text>
+<rect x="1116" y="560" width="20" height="20" rx="5" fill="#1C2B24" stroke="#526B5B"/>
+<text x="1146" y="575" fill="#EDF3EC" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="400" text-anchor="start">I accept version 3</text>
+<text x="1146" y="602" fill="#B1C2B7" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="13" font-weight="400" text-anchor="start">Including the full workload</text>
+<text x="1146" y="622" fill="#B1C2B7" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="13" font-weight="400" text-anchor="start">comparison and limitations.</text>
+<rect x="1116" y="679" width="266" height="48" rx="12" fill="#34483D"/>
+<text x="1249.0" y="708.0" fill="#EDF3EC" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="14" font-weight="600" text-anchor="middle">Accept program</text>
+<text x="1116" y="758" fill="#B1C2B7" font-family="IBM Plex Sans,Arial,Helvetica,sans-serif" font-size="12" font-weight="400" text-anchor="start">Next: activate selected dates</text>
 </svg>

@@ -23,7 +23,7 @@ A — Next Step is a credible alternative when the owner's priority is reducing 
 | Principal downside | Experienced users may dislike stage navigation or repeated overview trips | Novices may find the map/panes busy; mobile cannot expose all panes together |
 | Shared costs | Reserved status space uses room; truthful states and profile/unit/history changes need real behavior work | Same; responsive panes add their own focus/scroll complexity |
 
-The visual languages are related: light surfaces, dark green actions and serif headings. Their main difference is how the user moves through the application. Neither is merely a color restyle of the present phone-width screen.
+Both alternatives now use dark mode: A has warm charcoal surfaces and mint actions; B has deep forest surfaces with sage and terracotta accents. Both retain serif headings. Their main difference is how the user moves through the application. Neither is merely a color restyle of the present phone-width screen.
 
 ## Exercise logging comparison
 
@@ -50,6 +50,6 @@ The design has no prescription engine. Owned load suggestions and explanations a
 - Refine A's compact “Edit · undo latest” and timer text into separate focusable touch regions. The specification requires 44 px targets; static link text does not demonstrate them.
 - Review full program differences, input invalidation, expired-session and no-schedule states in a later detailed design. Current galleries show consent summary/disabled acceptance and loading/rest/unavailable; prose covers the additional branches.
 - Validate larger text, OS keyboard positioning, source-specific longer prescriptions and physical Safari behavior after authorized implementation. Static images cannot settle these.
-- If a dark theme is wanted, design and measure its palette separately. These original alternatives explore light themes; current theme contrast was not comprehensively qualified.
+- Dark mode is the owner-requested review baseline for both alternatives. The revised palette checks cover these static sketches; full application contrast, focus and device qualification still follow only after authorized implementation.
 
 Representative final images were visually reviewed, and all 64 were checked for text leaving the viewport. The review corrected consent appearance, first-load forms, real desktop execution, map counts, source-pair sequencing, guest recovery navigation and ambiguous sample dates. Remaining choices are design details and qualification limits, not owner approval.
