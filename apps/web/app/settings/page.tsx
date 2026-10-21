@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import {AppearanceSettings} from "@/components/appearance-settings";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -349,6 +350,8 @@ export default function SettingsPage() {
   return (
     <div className="space-y-4">
       <h1 className="ui-title-page">Settings</h1>
+      <AppearanceSettings />
+      {status ? <p role="status" className="ux-card">{status}</p> : null}
 
       <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-2">
         <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Program</p>

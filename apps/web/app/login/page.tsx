@@ -7,19 +7,23 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { UiIcon } from "@/components/ui/icons";
 import { setAuthToken } from "@/lib/api";
+import {safeReturnPath} from "@/lib/appearance";
 import { API_BASE_URL } from "@/lib/env";
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [email, setEmail] = useState("athlete@example.com");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [status, setStatus] = useState("Idle");
+  const [status, setStatus] = useState("");
+  const [pending,setPending]=useState(false);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    setStatus("Logging in...");
+    if(pending)return;
+    setPending(true);
+    setStatus("Signing in…");
 
     try {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -35,12 +39,12 @@ export default function LoginPage() {
 
       const payload = (await response.json()) as { access_token: string };
       setAuthToken(payload.access_token);
-      const nextPath = searchParams.get("next") || "/today";
+      const nextPath = safeReturnPath(searchParams.get("next"));
       setStatus("Logged in");
       router.push(nextPath);
     } catch {
-      setStatus("Network error");
-    }
+      setStatus("Unable to sign in. Check your connection and try again.");
+    } finally {setPending(false);}
   }
 
   return (
@@ -51,13 +55,13 @@ export default function LoginPage() {
           className="ui-input"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          placeholder="Email"
+          placeholder="Email" aria-label="Email" type="email" autoComplete="username" required
         />
         <input
           className="ui-input"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          placeholder="Password"
+          placeholder="Password" aria-label="Password" autoComplete="current-password" required
           type={showPassword ? "text" : "password"}
         />
         <button
