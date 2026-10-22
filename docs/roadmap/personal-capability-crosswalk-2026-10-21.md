@@ -56,6 +56,33 @@ A native WorkoutApp iOS companion is a **future separate package** after this pa
 
 Review predeclared hypotheses, comparable actual performance, time/adherence outcomes, contextual confounders and data sufficiency before changing a program. Suggestions have confidence and reversal path; an external LLM or SaaS coach never gains runtime prescription authority. Explanations must map to actual versioned engine evidence. A request for time-limited training returns bounded options, not hidden edits.
 
+## Complete supplemental-ID-to-milestone map
+
+Each approved supplemental requirement is listed explicitly so later packages can trace it without interpreting grouped ranges. This maps desired ownership and dependencies only; no row is evidence of implementation or release acceptance.
+
+| ID | Primary placement / dependencies | First acceptance focus |
+| --- | --- | --- |
+| PERS-001 | M0 governance, across M0–M6 | No third-party app/fitness/AI-coach API dependency |
+| PERS-002 | M0-HIST + M6; #103/#105 | Stable confirmed logging, latency and retry/correction checks |
+| PERS-003 | M2B / M4 | Actual dates and user-reported shift/daytime-sleep constraints |
+| PERS-004 | M2B / M4 | Empirical duration and explicit source-preserving tradeoffs |
+| PERS-005 | M2B / M4 / M6 | Interruption with remaining work and completed history intact |
+| PERS-006 | M2A / M3 | Variant/machine/load semantics and comparable cohort negatives |
+| PERS-007 | M1 / M6 | Accessible instruction/cues with source rights and no clutter |
+| PERS-008 | M2A; #103 | Known-1RM baseline versus completed exposure, explicit units |
+| PERS-009 | M2A / M3 | Optional effort and pain/technique missingness, no silent source change |
+| PERS-010 | M3 / M5 | Qualified recovery context, no per-muscle physiological certainty |
+| PERS-011 | M0-SAFE / M6 | Direct bounded Apple XML import with privacy/security/reconciliation |
+| PERS-012 | M6 after PERS-011 | First-party native HealthKit consent and eventual sync |
+| PERS-013 | M6 after PERS-012 | First-party Watch interaction; motion recognition separate exploratory scope |
+| PERS-014 | M3 / M4 / M5 | Goal-prioritized strength/conditioning/physical benchmarks |
+| PERS-015 | M3 / M5 | Optional physique/nutrition trends with measurement limitations |
+| PERS-016 | M5 after qualified M2A/M2B/M3 | Predeclared and reversible longitudinal comparisons |
+| PERS-017 | M3 / M5 / M6 | Evidence-linked first-party explanations without LLM prescription authority |
+| PERS-018 | M3 / M5 | Performance/adherence/benchmark analytics with evidence sufficiency |
+| PERS-019 | M0-SAFE / M6 | Account-scoped sensitive import, retention and deletion controls |
+| PERS-020 | M3–M5 governance | Versioned evidence with constrained, tested rule adoption |
+
 ## Release acceptance matrix
 
 | Capability family | Minimum evidence before acceptance |
