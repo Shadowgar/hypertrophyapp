@@ -162,3 +162,26 @@ test("late authoritative receipts reconcile an uncertain draft and clear per-set
   expect(result.current.phase).toBe("saved");
   expect(pendingLogPayload(key)).toBeNull();
 });
+
+test("a late rejected save cannot replace an authoritative acknowledgement", async () => {
+  let reject!: (e: Error) => void;
+  const submit = vi.fn(() => new Promise<void>((_, r) => (reject = r)));
+  const { result, rerender } = renderHook(
+    ({ receipts }: { receipts: any[] }) =>
+      useAtlasSet({ ...props, receipts, submit }),
+    { initialProps: { receipts: [] as any[] } },
+  );
+  let saving!: Promise<void>;
+  act(() => {
+    saving = result.current.save();
+  });
+  const command = result.current.draft.attempt!.command;
+  rerender({ receipts: [{ set_index: 1, command_id: command }] });
+  await waitFor(() => expect(result.current.phase).toBe("saved"));
+  await act(async () => {
+    reject(new Error("late timeout"));
+    await saving;
+  });
+  expect(result.current.phase).toBe("saved");
+  expect(result.current.locked).toBe(false);
+});

@@ -90,6 +90,7 @@ export function useAtlasSet(p: Props) {
   );
   const [confirmed, setConfirmed] = useState(p.completed);
   const busy = useRef(false);
+  const acknowledgedCommands = useRef(new Set<string>());
   const edited = useRef(draft.source !== "suggestion");
   const write = (value: Draft) => {
     try {
@@ -107,6 +108,7 @@ export function useAtlasSet(p: Props) {
       draft.attempt &&
       p.receipts.find((r) => r.command_id === draft.attempt!.command);
     if (confirmedAttempt) {
+      acknowledgedCommands.current.add(confirmedAttempt.command_id!);
       const next: Draft = {
         ...draft,
         reps: "",
@@ -262,6 +264,7 @@ export function useAtlasSet(p: Props) {
       setPhase("saved");
       setMessage(`✓ Set ${set} saved`);
     } catch (e) {
+      if (acknowledgedCommands.current.has(attempt.command)) return;
       if (
         e instanceof ApiError &&
         e.status === 409 &&
