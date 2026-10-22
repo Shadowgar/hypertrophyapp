@@ -262,6 +262,7 @@ test("Technique inline panel logs technique sub-sets with set_kind and parent_se
 
   const workout = {
     session_id: "sess-technique-inline",
+    workout_occurrence_id: "sess-technique-inline",
     title: "Pull",
     date: new Date().toISOString().slice(0, 10),
     resume: false,
@@ -348,7 +349,7 @@ test("Technique inline panel logs technique sub-sets with set_kind and parent_se
     return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
   });
 
-  render(<TodayPage />);
+  const mounted = render(<TodayPage />);
   fireEvent.click(screen.getByRole("button", { name: /Load today's workout/i }));
 
   await waitFor(() => expect(screen.getAllByText(/Cable Reverse Fly/i).length).toBeGreaterThan(0));
@@ -367,6 +368,11 @@ test("Technique inline panel logs technique sub-sets with set_kind and parent_se
 
   await screen.findByText(/Technique save not confirmed/);
   expect(nativeScreen.getByRole("spinbutton",{name:"Technique weight (lb)"})).toHaveAttribute('readonly');
+  mounted.unmount();
+  render(<TodayPage />);
+  fireEvent.click(screen.getByRole("button", { name: /Load today's workout/i }));
+  await screen.findByText(/Technique save not confirmed/);
+  expect(nativeScreen.getByRole("spinbutton", {name:"Technique weight (lb)"})).toHaveValue(40);
   fireEvent.click(screen.getByRole("button",{name:/Retry technique set #1/}));
   await screen.findByText(/Logged. Add another/);
   await waitFor(() => {

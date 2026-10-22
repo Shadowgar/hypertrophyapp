@@ -132,3 +132,33 @@ test("a definitive logical-set conflict retires the rejected attempt and require
   await act(() => result.current.save());
   expect(submit).toHaveBeenCalledTimes(1);
 });
+
+test("late authoritative receipts reconcile an uncertain draft and clear per-set observations", async () => {
+  const { pendingCommandKey, retainLogPayload, pendingLogPayload } =
+    await import("@/lib/workout-identity");
+  const submit = vi.fn().mockRejectedValue(new Error("reply lost"));
+  const { result, rerender } = renderHook(
+    ({ receipts }: { receipts: any[] }) =>
+      useAtlasSet({ ...props, receipts, submit }),
+    { initialProps: { receipts: [] as any[] } },
+  );
+  act(() => {
+    result.current.edit("quality", "poor");
+    result.current.edit("pain", "yes");
+  });
+  await act(() => result.current.save());
+  const attempt = result.current.draft.attempt!;
+  const key = pendingCommandKey(props.scope, props.exerciseId, "work:1");
+  retainLogPayload(key, { command_id: attempt.command });
+  rerender({ receipts: [{ set_index: 1, command_id: attempt.command }] });
+  await waitFor(() => expect(result.current.locked).toBe(false));
+  expect(result.current.draft).toMatchObject({
+    reps: "",
+    rpe: "",
+    rir: "",
+    quality: "unknown",
+    pain: "unknown",
+  });
+  expect(result.current.phase).toBe("saved");
+  expect(pendingLogPayload(key)).toBeNull();
+});

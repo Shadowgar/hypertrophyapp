@@ -71,6 +71,7 @@ function Sheet({
   return (
     <dialog
       ref={ref}
+      aria-label={name}
       className="atlas-sheet"
       onClose={close}
       onClick={(e) => {

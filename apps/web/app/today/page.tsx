@@ -41,7 +41,7 @@ import { formatCalendarDate } from "@/lib/calendar-date";
 import { resolveGuidanceText, currentLoadDecision, prefillLoadKg, useDeclaredLoadContextGuard, type LoadProjectionGeneration } from "@/lib/today-guidance";
 import { kgToLbs, lbsToKg, snapToHalfLb } from "@/lib/weight";
 
-import { exerciseKey, workoutReference, occurrenceStorageKey, pendingCommandKey, getLogCommand, acknowledgeLogCommand, retainLogPayload } from "@/lib/workout-identity";
+import { exerciseKey, workoutReference, occurrenceStorageKey, pendingCommandKey, getLogCommand, acknowledgeLogCommand, retainLogPayload, pendingLogPayload } from "@/lib/workout-identity";
 
 type SwapState = Record<string, number>;
 type NotesState = Record<string, boolean>;
@@ -317,20 +317,35 @@ function requiresLastSetChecklist(exercise: WorkoutExercise): string[] {
 function InlineTechniquePanel({
   state,
   onClose,
-  onLog,
+  onLog, scope, receipts,
 }: Readonly<{
   state: NonNullable<TechniqueModalState>;
+  scope: string; receipts: EffectiveLoadSet[];
   onClose: () => void;
   onLog: (performed: { reps: number; weight: number }, ordinal: number) => Promise<void>;
 }>) {
-  const [ordinal, setOrdinal] = useState(1);
-  const [reps, setReps] = useState("");
-  const [weight, setWeight] = useState(state.bodyweight ? "0" : "");
+  const draftKey = `${scope}:technique-draft:${state.exerciseId}:${state.kind}:${state.parentSetIndex}`;
+  const [restored] = useState(() => { try { return JSON.parse(localStorage.getItem(draftKey) ?? "null"); } catch { return null; } });
+  const [ordinal, setOrdinal] = useState<number>(restored?.ordinal ?? 1);
+  const [reps, setReps] = useState<string>(restored?.reps ?? "");
+  const [weight, setWeight] = useState<string>(restored?.weight ?? (state.bodyweight ? "0" : ""));
   const [pending, setPending] = useState(false);
-  const [uncertain, setUncertain] = useState(false);
+  const [uncertain, setUncertain] = useState(Boolean(restored?.attempt));
   const inFlight=useRef(false);
-  const attempted=useRef<{reps:number;weight:number}|null>(null);
-  const [status, setStatus] = useState<string | null>(null);
+  const attempted=useRef<{reps:number;weight:number}|null>(restored?.attempt ?? null);
+  const [status, setStatus] = useState<string | null>(restored?.attempt ? "Technique save not confirmed. Retry the same values." : null);
+  const persist = (attempt = attempted.current, nextOrdinal=ordinal, nextReps=reps) => {
+    try { localStorage.setItem(draftKey, JSON.stringify({ordinal:nextOrdinal,reps:nextReps,weight,attempt})); } catch { /* keep draft in memory */ }
+  };
+  useEffect(() => { persist(); }, [ordinal,reps,weight,uncertain]);
+  useEffect(() => {
+    const key = pendingCommandKey(scope,state.exerciseId,`${state.kind}:${state.parentSetIndex}:${ordinal}`);
+    const pending = pendingLogPayload<{command_id:string}>(key);
+    if(pending && receipts.some(r=>r.command_id===pending.command_id)) {
+      acknowledgeLogCommand(key);attempted.current=null;setUncertain(false);setReps("");setOrdinal(ordinal+1);
+      persist(null,ordinal+1,"");setStatus("Technique set confirmed. Add another or close.");
+    }
+  }, [receipts,ordinal,scope,state.exerciseId,state.kind,state.parentSetIndex]);
 
   const title =
     state.kind === "rest_pause_cluster"
@@ -351,7 +366,7 @@ function InlineTechniquePanel({
         return;
       }
       const values=attempted.current??{reps:actualReps,weight:actualWeight};
-      attempted.current=values;
+      attempted.current=values;persist(values);
       await onLog(values, ordinal);
       attempted.current=null;setUncertain(false);setReps("");
       setOrdinal((prev) => prev + 1);
@@ -549,7 +564,7 @@ function ExerciseDetailOverlay({
       performedVariant={Boolean(exercise.performed_variant)} bodyweight={bodyweight}
       disabled={["unresolved", "infeasible", "declined"].includes(exercise.authored_constraint?.execution_status ?? exercise.authored_constraint?.status ?? "")}
       onLog={onWarmupComplete}/> : <p>{exercise.warm_up_sets ? `Prescribed warm-up: ${exercise.warm_up_sets}. ${exercise.notes ?? ""}` : "No numeric warm-up prescription is provided for this exercise. Follow the program’s preparation instructions."}</p>}
-    technique={techniquePanelState ? <InlineTechniquePanel state={techniquePanelState} onClose={onCloseTechniquePanel} onLog={onLogTechniquePanel}/> : null}
+    technique={techniquePanelState ? <InlineTechniquePanel key={`${techniquePanelState.exerciseId}:${techniquePanelState.kind}:${techniquePanelState.parentSetIndex}`} scope={warmupCommandScope} receipts={effectiveSets} state={techniquePanelState} onClose={onCloseTechniquePanel} onLog={onLogTechniquePanel}/> : null}
     details={<div className="space-y-4">
       {authoredRelationshipLabels(exercise).map(label=><p key={label}>{label}</p>)}
       <p>{exercise.notes ?? "No additional instructions for this slot."}</p>
@@ -714,6 +729,12 @@ export default function TodayPage() {
     } catch { /* countdown remains available in memory */ }
   }, [globalRestTimer, workout]);
   useEffect(() => {
+    if(!workout)return;
+    try { const key=occurrenceStorageKey("technique",workout);
+      if(techniqueModal)localStorage.setItem(key,JSON.stringify(techniqueModal));else localStorage.removeItem(key);
+    } catch { /* in-memory technique remains usable */ }
+  }, [techniqueModal,workout]);
+  useEffect(() => {
     if (!workout || !selectedExerciseId) return;
     try { localStorage.setItem(occurrenceStorageKey("selected", workout), selectedExerciseId); } catch { /* in-memory selection */ }
   }, [selectedExerciseId, workout]);
@@ -764,16 +785,19 @@ export default function TodayPage() {
       setLoadOverrideByExercise({});
       setLastSetByExercise({});
       let selected: string | null = null;
+      let restoredTechnique: TechniqueModalState = null;
       let restoredRest: typeof globalRestTimer = null;
       try {
         selected = localStorage.getItem(occurrenceStorageKey("selected", data));
+        const savedTechnique = JSON.parse(localStorage.getItem(occurrenceStorageKey("technique",data)) ?? "null");
+        if (savedTechnique?.workoutId === workoutReference(data) && data.exercises.some(e=>exerciseKey(e)===savedTechnique.exerciseId)) restoredTechnique=savedTechnique;
         const savedRest = JSON.parse(localStorage.getItem(occurrenceStorageKey("rest", data)) ?? "null");
         if (savedRest && Number.isFinite(savedRest.deadline) && savedRest.deadline > Date.now() && data.exercises.some(e => exerciseKey(e) === savedRest.exerciseId)) {
           restoredRest = {...savedRest, secondsLeft: Math.ceil((savedRest.deadline-Date.now())/1000)};
         }
       } catch { /* storage is optional */ }
       setSelectedExerciseId(data.exercises.some(e => exerciseKey(e) === selected) ? selected : null);
-      setTechniqueModal(null);
+      setTechniqueModal(restoredTechnique);
       setGlobalRestTimer(restoredRest);
 
       const initialRecommendations = Object.fromEntries(

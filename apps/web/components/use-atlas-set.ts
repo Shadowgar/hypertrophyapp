@@ -54,7 +54,15 @@ export function useAtlasSet(p: Props) {
         previous.attempt &&
         p.receipts.some((r) => r.command_id === previous!.attempt!.command)
       )
-        return { ...previous, reps: "", rpe: "", rir: "", attempt: undefined };
+        return {
+          ...previous,
+          reps: "",
+          rpe: "",
+          rir: "",
+          quality: "unknown",
+          pain: "unknown",
+          attempt: undefined,
+        };
       return previous;
     }
     return {
@@ -95,6 +103,25 @@ export function useAtlasSet(p: Props) {
     write(draft);
   }, [draft, key]);
   useEffect(() => {
+    const confirmedAttempt =
+      draft.attempt &&
+      p.receipts.find((r) => r.command_id === draft.attempt!.command);
+    if (confirmedAttempt) {
+      const next: Draft = {
+        ...draft,
+        reps: "",
+        rpe: "",
+        rir: "",
+        quality: "unknown",
+        pain: "unknown",
+        attempt: undefined,
+      };
+      setDraft(next);
+      write(next);
+      setConfirmed((c) => Math.max(c, confirmedAttempt.set_index));
+      setPhase("saved");
+      setMessage(`✓ Set ${confirmedAttempt.set_index} saved`);
+    }
     for (const receipt of p.receipts) {
       if (
         !receipt.command_id ||
@@ -111,7 +138,7 @@ export function useAtlasSet(p: Props) {
       if (retained?.command_id === receipt.command_id)
         acknowledgeLogCommand(commandKey);
     }
-  }, [p.receipts, p.scope, p.exerciseId]);
+  }, [p.receipts, p.scope, p.exerciseId, draft.attempt]);
   useEffect(() => {
     if (draft.attempt || draft.unit === p.unit) return;
     setDraft((d) => {

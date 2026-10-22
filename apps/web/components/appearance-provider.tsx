@@ -70,7 +70,11 @@ export function AppearanceProvider({
     void reload();
     const sync = () => void reload();
     window.addEventListener("hypertrophy:auth-token-changed", sync);
-    window.addEventListener("storage", sync);
+    const storageSync = (event: StorageEvent) => {
+      if (event.key === "hypertrophy_token" || event.key === null)
+        void reload();
+    };
+    window.addEventListener("storage", storageSync);
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     const change = () => setDeviceDark(media.matches);
     change();
@@ -78,7 +82,7 @@ export function AppearanceProvider({
     return () => {
       ++generation.current;
       window.removeEventListener("hypertrophy:auth-token-changed", sync);
-      window.removeEventListener("storage", sync);
+      window.removeEventListener("storage", storageSync);
       media.removeEventListener("change", change);
     };
   }, []);
@@ -93,7 +97,9 @@ export function AppearanceProvider({
     const token = getToken();
     const version = generation.current;
     const result = await api.saveInterfacePreferences({
-      ...values,
+      theme_family: values.theme_family,
+      appearance: values.appearance,
+      weight_unit: values.weight_unit,
       expected_revision: revision,
     });
     if (version !== generation.current || token !== getToken())
