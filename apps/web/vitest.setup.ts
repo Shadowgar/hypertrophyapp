@@ -8,3 +8,8 @@ import { beforeEach } from "vitest";
 beforeEach(() => {
 	globalThis.localStorage?.clear();
 });
+
+// jsdom has no native dialog implementation. Disclosure tests exercise open/close;
+// the real-browser suite verifies modal focus, Escape and focus restoration.
+HTMLDialogElement.prototype.showModal = function () { this.setAttribute('open',''); };
+HTMLDialogElement.prototype.close = function () { this.removeAttribute('open'); this.dispatchEvent(new Event('close')); };

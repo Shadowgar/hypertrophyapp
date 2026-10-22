@@ -13,6 +13,8 @@ import {
   type HistoryCalendarResponse,
   type HistoryDayDetailResponse,
 } from "@/lib/api";
+import {useAppearance} from "@/components/appearance-provider";
+import {displayLoad} from "@/lib/appearance";
 import { kgToLbs } from "@/lib/weight";
 
 function formatTimestamp(iso: string): string {
@@ -196,6 +198,7 @@ function resolveCoachQueue(entries: CoachingRecommendationTimelineEntry[]): {
 }
 
 function HistoryCalendarPanel() {
+  const {preferences} = useAppearance();
   const [calendar, setCalendar] = useState<HistoryCalendarResponse | null>(null);
   const [calendarStatus, setCalendarStatus] = useState("Loading calendar history...");
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
@@ -448,8 +451,8 @@ function HistoryCalendarPanel() {
               })}
             </div>
             <div className="flex items-center gap-4 text-[10px] text-zinc-500">
-              <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded border border-red-500/40 bg-red-500/10" /> Completed</span>
-              <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded border border-white/10 bg-zinc-900/70" /> Missed</span>
+              <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded border border-red-500/40 bg-red-500/10" /> Logged activity</span>
+              <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded border border-white/10 bg-zinc-900/70" /> No logged activity</span>
               <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded border border-[var(--ui-edge-active)] bg-[var(--ui-accent-active)]" /> Selected</span>
             </div>
             {filteredDays.length === 0 ? <p className="text-xs text-zinc-500">No days match current filters.</p> : null}
@@ -550,7 +553,7 @@ function HistoryCalendarPanel() {
                         {` · ${exercise.total_volume} volume`}
                       </p>
                       <p className="telemetry-meta">
-                        {exercise.sets.map((entry) => `#${entry.set_index} ${entry.reps}x${entry.weight}${entry.performed_variant ? ` · ${entry.performed_variant.name} (confirmed variant; original ${entry.original_authored_name ?? exercise.planned_name ?? exercise.exercise_id})` : ""}`).join(" · ")}
+                        {exercise.sets.map((entry) => `${entry.set_kind === "warmup" ? "Warm-up" : entry.parent_set_index != null ? "Technique" : "Set"} ${entry.set_index}: ${entry.reps} × ${displayLoad(entry.weight,preferences.weight_unit)} ${preferences.weight_unit} · ${entry.actual_rir != null ? `Actual RIR ${entry.actual_rir}` : `Actual RPE ${entry.rpe ?? "unknown"}`}${entry.supersedes_id ? " · corrected" : ""}${entry.performed_variant ? ` · ${entry.performed_variant.name} (original ${entry.original_authored_name ?? exercise.planned_name ?? exercise.exercise_id})` : ""}`).join(" · ")}
                       </p>
                     </div>
                   ))}

@@ -1,6 +1,8 @@
+import {runnerScreen as screen} from "./helpers/runner-driver";
 import React from "react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen as nativeScreen, waitFor } from "@testing-library/react";
+vi.mock('@/components/appearance-provider',()=>({useAppearance:()=>({preferences:{theme_family:'classic',appearance:'dark',weight_unit:context.display_unit,revision:0},ready:true})}));
 import TodayPage from "@/app/today/page";
 
 const digest = "a".repeat(64);
@@ -104,7 +106,7 @@ test("server warm-up canonical kg survives restoring the rounded lb display", as
   fireEvent.click(screen.getByRole("button", { name: "Log warm-up 1" }));
   await waitFor(() => expect(logs()).toHaveLength(1));
   expect(logs()[0].body).toMatchObject({ weight: 25.25, reps: 5, rpe: 6.5, set_index: 1, set_kind: "warmup", parent_set_index: null, technique: null, load_context: context, load_recommendation_id: digest });
-  expect(screen.getByText("Set 1/3")).toBeInTheDocument();
+  expect(screen.getByText("SET 1 OF 3 · ACTUAL WORK")).toBeInTheDocument();
   expect(await screen.findByRole("button", { name: "Edit warm-up 1" })).toBeInTheDocument();
 });
 
@@ -128,7 +130,7 @@ test("ambiguous warm-up retry keeps its complete immutable command after edited 
   fireEvent.click(screen.getByRole("button", { name: "Preview load guidance" }));
   fireEvent.click(screen.getByRole("button", { name: "Log warm-up 1" }));
   await waitFor(() => expect(logs()).toHaveLength(2)); expect(logs()[1].body).toEqual(logs()[0].body);
-  expect(screen.getByText("Set 1/3")).toBeInTheDocument();
+  expect(screen.getByText("SET 1 OF 3 · ACTUAL WORK")).toBeInTheDocument();
   expect(screen.getByRole("spinbutton", { name: "Warm-up 2 actual RPE (optional)" })).toHaveValue(null);
 });
 
@@ -136,7 +138,7 @@ test.each([null, "0", "0.0"])("zero or absent source %s preserves text without i
   guidance = { ...guidance, source_count: source, count: source == null ? null : 0, status: "none", sets: [] };
   await open(); expect(screen.queryByText(sourceInstructions)).toBeNull();
   expect(screen.queryByRole("button", { name: /Log warm-up/ })).toBeNull();
-  expect(screen.getByText(source == null ? "Warm-up prescription unspecified" : `${source} warm-up sets`)).toBeInTheDocument();
+  expect(screen.getByText(source == null ? "Warm-up prescription unspecified" : `${Number(source)} warm-up sets`)).toBeInTheDocument();
 });
 
 test("textual counts expose blank manual actual fields and do not parse a numeric prefix", async () => {
@@ -176,7 +178,7 @@ test("warm-up receipt correction and undo remain separately labeled and preserve
   expect(writes.find(w => w.path.endsWith("/correct"))!.body).toMatchObject({ reps: 7, weight: 25.25 });
   fireEvent.click(screen.getByRole("button", { name: "Undo Last Warm-up" }));
   await waitFor(() => expect(screen.queryByRole("button", { name: "Edit warm-up 1" })).toBeNull());
-  expect(screen.getByText("Set 1/3")).toBeInTheDocument();
+  expect(screen.getByText("SET 1 OF 3 · ACTUAL WORK")).toBeInTheDocument();
 });
 
 test("confirmed performed variant cannot reuse source warm-up suggestions", async () => {
@@ -242,7 +244,7 @@ test("confirmed warm-up undo cannot decrement working count when progress refres
     { id: "warmup-receipt", set_index: 1, set_kind: "warmup", parent_set_index: null, technique: null, reps: 5, weight: 25.25, rpe: 6, created_at: "2026-10-13T12:01:00" }];
   await open(); fireEvent.click(screen.getByRole("button", { name: "Undo Last Warm-up" }));
   await waitFor(() => expect(screen.queryByRole("button", { name: "Edit warm-up 1" })).toBeNull());
-  expect(screen.getByText("Set 2/3")).toBeInTheDocument();
+  expect(screen.getByText("SET 2 OF 3 · ACTUAL WORK")).toBeInTheDocument();
 });
 
 test("context edits retain actual warm-up receipts and the next independent ordinal", async () => {
@@ -326,7 +328,7 @@ test("observing the exact committed warm-up command after reload retires its pen
   expect(logs()[1].body).toMatchObject({ reps: 7, weight: 25.25, set_kind: "warmup" });
   expect(receipts).toHaveLength(1);
   expect(receipts[0]).toMatchObject({ reps: 7, command_id: logs()[1].body.command_id });
-  expect(screen.getByText("Set 1/3")).toBeInTheDocument();
+  expect(screen.getByText("SET 1 OF 3 · ACTUAL WORK")).toBeInTheDocument();
 });
 
 test.each([null, "another-client-command"])("an observed warm-up receipt with command %s does not retire a different unconfirmed command", async observedCommand => {
@@ -352,7 +354,7 @@ test("reporting pain then explicitly undoing source warm-ups allows confirmation
   fireEvent.click(screen.getByRole("button", { name: "Report pain for this slot" }));
   const undo = await screen.findByRole("button", { name: "Undo last warm-up to resolve" });
   expect(screen.getByRole("combobox", { name: "Source-approved alternative" })).toBeDisabled();
-  expect(screen.getByRole("button", { name: "Resolve authored slot first" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Resolve authored slot first" })).toHaveAttribute("aria-disabled", "true");
   fireEvent.click(undo);
   await waitFor(() => expect(screen.getByRole("combobox", { name: "Source-approved alternative" })).toBeEnabled());
   expect(screen.getByText(/This source slot remains unresolved/)).toBeInTheDocument();
@@ -369,13 +371,13 @@ test("reporting pain then explicitly undoing source warm-ups allows confirmation
   fireEvent.click(screen.getByRole("button", { name: "Log warm-up 1" }));
   await screen.findByRole("button", { name: "Edit warm-up 1" });
   expect(logs()).toHaveLength(2);
-  expect(logs()[1].body).toMatchObject({ set_kind: "warmup", weight: 18.1, reps: 6, rpe: null, parent_set_index: null, technique: null });
+  expect(logs()[1].body).toMatchObject({ set_kind: "warmup", weight: 40 * 0.45359237, reps: 6, rpe: null, parent_set_index: null, technique: null });
   expect(logs()[1].body.load_recommendation_id).toBe("c".repeat(64));
   expect(logs()[1].body.load_recommendation_id).not.toBe(logs()[0].body.load_recommendation_id);
   expect(writes.filter(write => write.path.endsWith("/authored-substitution")).map(write => write.body)).toMatchObject([
     { action: "report", reason: "pain", expected_revision: 0 }, { action: "confirm", option_id: "option", expected_revision: 1 },
   ]);
-  expect(screen.getByText("Set 1/3")).toBeInTheDocument();
+  expect(screen.getByText("SET 1 OF 3 · ACTUAL WORK")).toBeInTheDocument();
 });
 
 

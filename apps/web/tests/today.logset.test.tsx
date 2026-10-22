@@ -1,5 +1,6 @@
+import {runnerScreen as screen} from "./helpers/runner-driver";
 import React from "react";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen as nativeScreen, waitFor, fireEvent } from "@testing-library/react";
 import TodayPage from "@/app/today/page";
 
 beforeEach(() => {
@@ -107,6 +108,7 @@ test("Completing a set calls log-set POST and persists completed sets", async ()
   fireEvent.click(screen.getByRole("button", { name: /Bench Press/ }));
   await waitFor(() => expect(screen.getByRole("dialog")).toBeInTheDocument());
 
+  fireEvent.change(screen.getByRole("spinbutton", {name:"Weight (lb)"}),{target:{value:"40"}});
   const completeBtn = screen.getByRole("button", { name: /Complete Set/i });
   fireEvent.click(completeBtn);
 
@@ -127,15 +129,16 @@ test("Completing a set calls log-set POST and persists completed sets", async ()
   });
 
   // verify localStorage persisted completed sets for session
-  const key = `hypertrophy_occurrence_v2:completed:${workout.session_id}`;
+  const key = Object.keys(localStorage).find(key=>key.includes(":completed:"))!;
   const stored = JSON.parse(localStorage.getItem(key) || "{}");
   expect(stored["ex-1"]).toBe(1);
 
   await waitFor(() => {
-    expect(screen.getByText(/1\/3 sets/i)).toBeInTheDocument();
+    expect(screen.getByText(/1 \/ 3 working sets/i)).toBeInTheDocument();
   });
 
-  // Detail overlay shows live_recommendation guidance (rationale) after log-set; no raw codes
+  fireEvent.click(screen.getByRole("button",{name:"Guide & setup"}));
+  // Engine rationale remains accessible through the guide; no raw codes
   expect(
     screen.getByText(/Reps dropped below target\. Trim load slightly within the session so the remaining sets stay on target\./i),
   ).toBeInTheDocument();
@@ -234,26 +237,28 @@ test("Technique checklist auto-opens Coaching and gates last set completion", as
   fireEvent.click(screen.getByRole("button", { name: /Neutral Grip Lat Pulldown/i }));
   await waitFor(() => expect(screen.getByRole("dialog")).toBeInTheDocument());
 
-  // Coaching should be auto-open (technique present) and show the technique chip.
-  expect(screen.getByText(/Technique: Long-length Partials/i)).toBeInTheDocument();
+  // Technique acknowledgement applies to its prescribed set only.
+  expect(screen.queryByRole("checkbox",{name:/source technique/})).not.toBeInTheDocument();
+  fireEvent.change(screen.getByRole("spinbutton", {name:"Weight (lb)"}),{target:{value:"40"}});
 
   // Complete first set.
   fireEvent.click(screen.getByRole("button", { name: /Complete Set/i }));
 
   // On the last set, the checklist appears inside Coaching and the logger is gated.
-  await waitFor(() => expect(screen.getByText(/Technique \(last set\)/i)).toBeInTheDocument());
-  expect(screen.getByRole("button", { name: /Complete technique steps first/i })).toBeInTheDocument();
+  await waitFor(() => expect(screen.getByRole("checkbox",{name:/source technique/})).toBeInTheDocument());
+  expect(screen.getByRole("button", { name: /Complete technique steps first/i })).toHaveAttribute("aria-disabled","true");
 
   fireEvent.click(screen.getByRole("checkbox"));
+  fireEvent.change(screen.getByRole("spinbutton",{name:"Reps"}),{target:{value:"12"}});
   fireEvent.click(screen.getByRole("button", { name: /Complete Set/i }));
 
   await waitFor(() => {
-    expect(screen.getByText(/2\/2 sets/i)).toBeInTheDocument();
+    expect(screen.getByText(/2 \/ 2 working sets/i)).toBeInTheDocument();
   });
 });
 
 test("Technique inline panel logs technique sub-sets with set_kind and parent_set_index", async () => {
-  let completedSets = 0;
+  let completedSets = 0; let techniqueAttempts=0;
 
   const workout = {
     session_id: "sess-technique-inline",
@@ -308,6 +313,7 @@ test("Technique inline panel logs technique sub-sets with set_kind and parent_se
     }
     if (url.includes("/log-set") && init?.method === "POST") {
       const body = init.body ? JSON.parse(String(init.body)) : {};
+      if(body.parent_set_index && ++techniqueAttempts===1)return Promise.reject(new Error("lost technique acknowledgement"));
       // only advance completion for working sets (technique sub-sets shouldn't affect completion)
       if (!body.parent_set_index && !body.set_kind) {
         completedSets = 1;
@@ -349,19 +355,28 @@ test("Technique inline panel logs technique sub-sets with set_kind and parent_se
   fireEvent.click(screen.getByRole("button", { name: /Cable Reverse Fly/i }));
   await waitFor(() => expect(screen.getByRole("dialog")).toBeInTheDocument());
 
+  fireEvent.change(screen.getByRole("spinbutton", {name:"Weight (lb)"}),{target:{value:"40"}});
+  fireEvent.click(screen.getByRole("checkbox",{name:/source technique/}));
   fireEvent.click(screen.getByRole("button", { name: /Complete Set/i }));
 
   // Inline technique panel should appear inside Coaching.
   await waitFor(() => expect(screen.getByText(/Mechanical drop set/i)).toBeInTheDocument());
+  fireEvent.change(nativeScreen.getByRole("spinbutton", {name:"Reps"}),{target:{value:"6"}});
+  fireEvent.change(nativeScreen.getByRole("spinbutton", {name:"Technique weight (lb)"}),{target:{value:"40"}});
   fireEvent.click(screen.getByRole("button", { name: /Log technique set #1/i }));
 
+  await screen.findByText(/Technique save not confirmed/);
+  expect(nativeScreen.getByRole("spinbutton",{name:"Technique weight (lb)"})).toHaveAttribute('readonly');
+  fireEvent.click(screen.getByRole("button",{name:/Retry technique set #1/}));
+  await screen.findByText(/Logged. Add another/);
   await waitFor(() => {
     // @ts-ignore
     const postCalls = globalThis.fetch.mock.calls.filter((c) => {
       const url = typeof c[0] === "string" ? c[0] : c[0].url;
       return url.includes(`/workout/${encodeURIComponent(workout.session_id)}/log-set`);
     });
-    expect(postCalls.length).toBeGreaterThanOrEqual(2);
+    expect(postCalls.length).toBe(3);
+    expect(JSON.parse(postCalls[1][1].body)).toEqual(JSON.parse(postCalls[2][1].body));
     const lastCall = postCalls[postCalls.length - 1];
     const body = JSON.parse(lastCall[1]?.body);
     expect(body.set_kind).toBe("mechanical_drop");

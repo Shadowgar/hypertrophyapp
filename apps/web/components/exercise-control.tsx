@@ -4,6 +4,8 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { EffectiveLoadSet, LoadContext, LoadIntelligence } from "@/lib/api";
 import { ApiError } from "@/lib/api";
+import {pendingCommandKey,pendingLogPayload} from "@/lib/workout-identity";
+import {displayLoad,canonicalLoad} from "@/lib/appearance";
 import { kgToLbs, lbsToKg } from "@/lib/weight";
 
 export type PerformedSet = { reps: number; weight: number; rpe: number | null; canonicalWeight?: number;actual_rir?:number|null;technique_quality?:"acceptable"|"poor"|"unknown";pain?:boolean|null;display_unit?:"kg"|"lb" };
@@ -221,8 +223,8 @@ export function useExerciseControl({
 
 export type ExerciseControlState = ReturnType<typeof useExerciseControl>;
 
-export function LoadIntelligencePanel({ guidance, completed, total, loadContext, onContextChange, onPreview, overrideReason, onOverrideReason, onCorrect, requireExternalWeight = false, effectiveSets, receiptOnly = false }: {
-  effectiveSets?: EffectiveLoadSet[]; receiptOnly?: boolean;
+export function LoadIntelligencePanel({ guidance, completed, total, loadContext, onContextChange, onPreview, overrideReason, onOverrideReason, onCorrect, requireExternalWeight = false, effectiveSets, receiptOnly = false, hideReceipts = false, allowRir = receiptOnly, commandScope, exerciseIdentity }: {
+  effectiveSets?: EffectiveLoadSet[]; receiptOnly?: boolean; hideReceipts?: boolean; allowRir?: boolean; commandScope?: string; exerciseIdentity?: string;
   guidance: LoadIntelligence | null; completed: number; total: number; loadContext: LoadContext; requireExternalWeight?: boolean;
   onContextChange: (context: LoadContext) => void; onPreview: (context: LoadContext) => Promise<void>;
   overrideReason: string; onOverrideReason: (reason: string) => void;
@@ -239,6 +241,7 @@ export function LoadIntelligencePanel({ guidance, completed, total, loadContext,
       return Object.is(entered, declared) ? current : declared == null ? "" : String(declared);
     });
   }, [loadContext.increment, loadContext.increment_unit]);
+  const [correctionUncertain,setCorrectionUncertain]=useState(false);
   const [editing, setEditing] = useState<EffectiveLoadSet | null>(null);
   const [editingUnit, setEditingUnit] = useState<LoadContext["display_unit"]>("lb");
   const [reps, setReps] = useState("");
@@ -256,9 +259,9 @@ export function LoadIntelligencePanel({ guidance, completed, total, loadContext,
     {receiptOnly ? <p className="text-sm font-medium">Recorded sets · correct actual performance</p> : <>
     <p className="text-sm font-medium">{completed > 0 && completed < total ? "Remaining sets" : "Next exposure"} load guidance</p>
     {shown ? <>
-      <p className="text-sm">{shown.action}{shown.recommended_weight != null ? ` · ${kgToLbs(shown.recommended_weight)} lb` : " · no new load inferred"}</p>
+      <p className="text-sm">{shown.action}{shown.recommended_weight != null ? ` · ${displayLoad(shown.recommended_weight,loadContext.display_unit)} ${loadContext.display_unit}` : " · no new load inferred"}</p>
       <p className="text-sm text-zinc-300">{shown.explanation}</p>
-      {shown.known_baseline_weight != null ? <p className="text-xs text-zinc-400">Known baseline: {kgToLbs(shown.known_baseline_weight)} lb; separate from newly qualified advice.</p> : null}
+      {shown.known_baseline_weight != null ? <p className="text-xs text-zinc-400">Known baseline: {displayLoad(shown.known_baseline_weight,loadContext.display_unit)} {loadContext.display_unit}; separate from newly qualified advice.</p> : null}
       <details><summary className="min-h-[44px] cursor-pointer py-2">Why this load?</summary>
         <p className="text-xs">Completed exposures: {shown.evidence.completed_exposure_count}; comparable: {shown.evidence.comparable_completed_exposure_count}; recorded actual RPE: {shown.evidence.actual_rpe_count}.</p>
         {shown.equipment_feasibility.limitations.map((limitation, index) => <p className="text-xs text-zinc-400" key={index}>{limitation}</p>)}
@@ -296,37 +299,40 @@ export function LoadIntelligencePanel({ guidance, completed, total, loadContext,
       <input className="ui-input min-h-[48px] w-full" value={overrideReason} maxLength={500} onChange={event => onOverrideReason(event.target.value)} />
     </label>
     </>}
-    {(effectiveSets ?? guidance?.effective_sets ?? []).filter(entry => entry.parent_set_index == null && (["warmup", "work", "working", "top", "backoff"].includes(entry.set_kind?.trim().toLowerCase() || "work"))).map(entry => <div className="rounded border border-white/10 p-2" key={entry.id}>
-      <p className="text-xs">{entry.set_kind === "warmup" ? "Warm-up" : "Set"} {entry.set_index}: {entry.reps} reps @ {receiptOnly ? entry.weight : kgToLbs(entry.weight)} {receiptOnly ? "kg" : "lb"} · Actual {receiptOnly && entry.actual_rir != null ? `RIR ${entry.actual_rir}` : `RPE ${entry.rpe ?? "unknown"}`}</p>
+    {(hideReceipts ? [] : effectiveSets ?? guidance?.effective_sets ?? []).filter(entry => entry.parent_set_index == null && (["warmup", "work", "working", "top", "backoff"].includes(entry.set_kind?.trim().toLowerCase() || "work"))).map(entry => <div className="rounded border border-white/10 p-2" key={entry.id}>
+      <p className="text-xs">{entry.set_kind === "warmup" ? "Warm-up" : "Set"} {entry.set_index}: {entry.reps} reps @ {loadContext.display_unit === "kg" ? entry.weight : kgToLbs(entry.weight)} {loadContext.display_unit} · Actual {receiptOnly && entry.actual_rir != null ? `RIR ${entry.actual_rir}` : `RPE ${entry.rpe ?? "unknown"}`}</p>
       <Button className="min-h-[44px] w-full" variant="secondary" disabled={pending} onClick={() => {
-        setEditing(entry); const unit = receiptOnly || entry.set_kind === "warmup" ? loadContext.display_unit : "lb"; setEditingUnit(unit);
-        setReps(String(entry.reps)); setWeight(String(unit === "kg" ? entry.weight : receiptOnly?entry.weight/0.45359237:kgToLbs(entry.weight)));setRir(entry.actual_rir==null?"":String(entry.actual_rir));setRirEdited(false);setQuality(entry.technique_quality??"unknown");setQualityEdited(false);setPain(entry.pain==null?"unknown":entry.pain?"yes":"no");setPainEdited(false); setRpe(entry.rpe == null ? "" : String(entry.rpe));
-        setRpeEdited(false); setReason(""); setStatus("");
+        const retained = commandScope && exerciseIdentity ? pendingLogPayload<{reps:number;weight:number;rpe?:number|null;actual_rir?:number|null;reason:string}>(pendingCommandKey(commandScope,exerciseIdentity,`correct:${entry.id}`)) : null;
+        setCorrectionUncertain(Boolean(retained));
+        const original = entry; entry = retained ? {...entry,...retained} : entry;
+        setEditing(original); const unit = loadContext.display_unit; setEditingUnit(unit);
+        setReps(String(entry.reps)); setWeight(String(displayLoad(entry.weight,unit)));setRir(entry.actual_rir==null?"":String(entry.actual_rir));setRirEdited(Boolean(retained && "actual_rir" in retained));setQuality(entry.technique_quality??"unknown");setQualityEdited(false);setPain(entry.pain==null?"unknown":entry.pain?"yes":"no");setPainEdited(false); setRpe(entry.rpe == null ? "" : String(entry.rpe));
+        setRpeEdited(Boolean(retained && "rpe" in retained)); setReason(retained?.reason ?? ""); setStatus(retained ? "Correction not confirmed. Retry these exact values." : "");
       }}>Edit {entry.set_kind === "warmup" ? "warm-up" : "set"} {entry.set_index}</Button>
     </div>)}
     {editing ? <div className="space-y-2 rounded border border-white/10 p-3">
-      <label className="block text-xs">Corrected reps<input className="ui-input min-h-[48px] w-full" type="number" min={1} step={1} value={reps} onChange={e => setReps(e.target.value)} /></label>
-      <label className="block text-xs">Corrected load ({editingUnit})<input className="ui-input min-h-[48px] w-full" type="number" min={0} step="any" value={weight} onChange={e => setWeight(e.target.value)} /></label>
-      <label className="block text-xs">Corrected actual RPE<input className="ui-input min-h-[48px] w-full" type="number" min={0} max={10} step={0.5} value={rpe} onChange={e => { setRpeEdited(true); setRpe(e.target.value); }} /></label>
+      <label className="block text-xs">Corrected reps<input readOnly={pending || correctionUncertain} className="ui-input min-h-[48px] w-full" type="number" min={1} step={1} value={reps} onChange={e => setReps(e.target.value)} /></label>
+      <label className="block text-xs">Corrected load ({editingUnit})<input readOnly={pending || correctionUncertain} className="ui-input min-h-[48px] w-full" type="number" min={0} step="any" value={weight} onChange={e => setWeight(e.target.value)} /></label>
+      <label className="block text-xs">Corrected actual RPE<input readOnly={pending || correctionUncertain} className="ui-input min-h-[48px] w-full" type="number" min={0} max={10} step={0.5} value={rpe} onChange={e => { setRpeEdited(true); setRpe(e.target.value); }} /></label>
       <p className="text-xs text-zinc-400">Leave RPE unchanged to preserve it; clear the field to record unknown.</p>
-      {receiptOnly&&<div className="space-y-2">
-        <label className="block text-xs">Corrected actual RIR<input className="ui-input min-h-11 w-full" type="number" min={0} max={10} step={0.5} value={rir} onChange={e=>{setRirEdited(true);setRir(e.target.value);}}/></label>
+      {allowRir&&<div className="space-y-2">
+        <label className="block text-xs">Corrected actual RIR<input readOnly={pending || correctionUncertain} className="ui-input min-h-11 w-full" type="number" min={0} max={10} step={0.5} value={rir} onChange={e=>{setRirEdited(true);setRir(e.target.value);}}/></label>
         <p className="text-xs">Clear RIR to record unknown. RIR and RPE are separate; record one effort scale.</p>
-        <label className="block text-xs">Corrected technique quality<select className="ui-select min-h-11 w-full" value={quality} onChange={e=>{setQualityEdited(true);setQuality(e.target.value);}}><option value="unknown">Unknown</option><option value="acceptable">Acceptable</option><option value="poor">Poor or deteriorated</option></select></label>
-        <label className="block text-xs">Corrected pain report<select className="ui-select min-h-11 w-full" value={pain} onChange={e=>{setPainEdited(true);setPain(e.target.value);}}><option value="unknown">Unknown</option><option value="no">No pain reported</option><option value="yes">Pain reported</option></select></label>
+        <label className="block text-xs">Corrected technique quality<select disabled={pending || correctionUncertain} className="ui-select min-h-11 w-full" value={quality} onChange={e=>{setQualityEdited(true);setQuality(e.target.value);}}><option value="unknown">Unknown</option><option value="acceptable">Acceptable</option><option value="poor">Poor or deteriorated</option></select></label>
+        <label className="block text-xs">Corrected pain report<select disabled={pending || correctionUncertain} className="ui-select min-h-11 w-full" value={pain} onChange={e=>{setPainEdited(true);setPain(e.target.value);}}><option value="unknown">Unknown</option><option value="no">No pain reported</option><option value="yes">Pain reported</option></select></label>
       </div>}
-      <label className="block text-xs">Correction reason<input className="ui-input min-h-[48px] w-full" value={reason} maxLength={500} onChange={e => setReason(e.target.value)} /></label>
+      <label className="block text-xs">Correction reason<input readOnly={pending || correctionUncertain} className="ui-input min-h-[48px] w-full" value={reason} maxLength={500} onChange={e => setReason(e.target.value)} /></label>
       <Button className="min-h-[48px] w-full" disabled={pending || (rir.trim()!==""&&(!Number.isFinite(Number(rir))||Number(rir)<0||Number(rir)>10)) || !Number.isInteger(Number(reps)) || Number(reps) < 1 || weight.trim() === "" || !Number.isFinite(Number(weight)) || (requireExternalWeight ? Number(weight) <= 0 : Number(weight) < 0) || (rpe.trim() !== "" && (!Number.isFinite(Number(rpe)) || Number(rpe) < 0 || Number(rpe) > 10))} onClick={async () => {
         if (pendingAction.current) return; pendingAction.current = true; setPending(true); setStatus("");
-        try { await onCorrect(editing, { reps: Number(reps), weight: editingUnit === "kg" ? Number(weight) : receiptOnly ? Number(weight)*0.45359237 : Number(weight) === kgToLbs(editing.weight) ? editing.weight : lbsToKg(Number(weight)),
+        try { await onCorrect(editing, { reps: Number(reps), weight: Number(weight) === displayLoad(editing.weight,editingUnit) ? editing.weight : canonicalLoad(Number(weight),editingUnit),
           ...(rpeEdited ? { rpe: rpe.trim() === "" ? null : Number(rpe) } : {}),
-          ...(receiptOnly&&rirEdited?{actual_rir:rir.trim()===""?null:Number(rir)}:{}),
-          ...(receiptOnly&&qualityEdited?{technique_quality:quality as 'acceptable'|'poor'|'unknown'}:{}),
-          ...(receiptOnly&&painEdited?{pain:pain==='unknown'?null:pain==='yes'}:{}),reason: reason.trim() || "User corrected set" }); setEditing(null); }
-        catch { setStatus("Correction was not confirmed. Retry the same correction."); }
+          ...(allowRir&&rirEdited?{actual_rir:rir.trim()===""?null:Number(rir)}:{}),
+          ...(allowRir&&qualityEdited?{technique_quality:quality as 'acceptable'|'poor'|'unknown'}:{}),
+          ...(allowRir&&painEdited?{pain:pain==='unknown'?null:pain==='yes'}:{}),reason: reason.trim() || "User corrected set" }); setEditing(null); setCorrectionUncertain(false); }
+        catch (error) { const rejected = error instanceof ApiError && error.status === 422; setCorrectionUncertain(!rejected); setStatus(rejected ? error.message : "Correction was not confirmed. Retry the same correction."); }
         finally { pendingAction.current = false; setPending(false); }
       }}>Save correction</Button>
-      <Button variant="ghost" className="min-h-[44px] w-full" disabled={pending} onClick={() => setEditing(null)}>Cancel correction</Button>
+      <Button variant="ghost" className="min-h-[44px] w-full" disabled={pending || correctionUncertain} onClick={() => setEditing(null)}>Cancel correction</Button>
     </div> : null}
     {status ? <p role="status" className="text-xs text-zinc-400">{status}</p> : null}
   </section>;

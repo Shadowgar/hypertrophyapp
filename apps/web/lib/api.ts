@@ -824,6 +824,7 @@ export type HistoryCalendarResponse = {
 };
 
 export type HistoryDaySet = {
+  id?: string; set_kind?: string|null; parent_set_index?: number|null; supersedes_id?: string|null; actual_rir?: number|null;
   original_authored_name?: string | null;
   workout_occurrence_id?: string | null;
   exercise_occurrence_id?: string | null;

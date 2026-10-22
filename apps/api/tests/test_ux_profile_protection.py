@@ -58,3 +58,25 @@ def test_appearance_default_revision_retry_and_account_isolation():
     assert client.get('/profile/preferences', headers={"Authorization":f"Bearer {second['access_token']}"}).json() == default.json()
     assert client.get('/profile', headers=headers).json() == before
     assert client.put('/profile/preferences', headers=headers, json={**update, "theme_family":"forest"}).status_code == 422
+
+
+def test_postgres_concurrent_appearance_saves_do_not_overwrite_another_revision():
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Barrier
+    import pytest
+    from app.database import engine
+    if engine.dialect.name != 'postgresql':
+        pytest.skip('PostgreSQL row-lock qualification')
+    client, headers = seeded()
+    before = client.get('/profile', headers=headers).json()
+    barrier = Barrier(2)
+    def save(family):
+        barrier.wait(timeout=10)
+        return TestClient(app).put('/profile/preferences', headers=headers, json={
+            'theme_family': family, 'appearance':'light', 'weight_unit':'kg', 'expected_revision':0})
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(save, ['graphite','charcoal']))
+    assert sorted(result.status_code for result in results) == [200,409]
+    winner = next(result.json() for result in results if result.status_code == 200)
+    assert client.get('/profile/preferences', headers=headers).json() == winner
+    assert client.get('/profile', headers=headers).json() == before

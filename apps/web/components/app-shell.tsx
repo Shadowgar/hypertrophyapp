@@ -4,11 +4,26 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import Link from "next/link";
-import {accountScope} from "@/lib/appearance";
-import {clearAuthToken} from "@/lib/api";
-const links = [["/","Home"],["/today","Today"],["/week","Week"],["/history","History"],["/history#analytics","Analytics"],["/programs","Programs"],["/checkin","Check-In"],["/guides","Library"],["/settings","Settings"]];
+import { accountScope } from "@/lib/appearance";
+import { clearAuthToken } from "@/lib/api";
+const links = [
+  ["/", "Home"],
+  ["/today", "Today"],
+  ["/week", "Week"],
+  ["/history", "History"],
+  ["/history#analytics", "Analytics"],
+  ["/programs", "Programs"],
+  ["/checkin", "Check-In"],
+  ["/guides", "Library"],
+  ["/settings", "Settings"],
+];
 
-const PUBLIC_ROUTES = new Set(["/", "/login", "/onboarding", "/reset-password"]);
+const PUBLIC_ROUTES = new Set([
+  "/",
+  "/login",
+  "/onboarding",
+  "/reset-password",
+]);
 const AUTH_TOKEN_EVENT = "hypertrophy:auth-token-changed";
 
 function isPublicRoute(pathname: string): boolean {
@@ -18,7 +33,9 @@ function isPublicRoute(pathname: string): boolean {
   return false;
 }
 
-export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) {
+export function AppShell({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -70,12 +87,18 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
       return;
     }
     if (!publicRoute && !token) {
-      router.replace(`/login?next=${encodeURIComponent(`${pathname}${window.location.search}${window.location.hash}`)}`);
+      router.replace(
+        `/login?next=${encodeURIComponent(`${pathname}${window.location.search}${window.location.hash}`)}`,
+      );
     }
   }, [hydrated, pathname, publicRoute, router, token]);
 
   if (!hydrated) {
-    return <main className="ux-main" role="status">Loading WorkoutApp…</main>;
+    return (
+      <main className="ux-main" role="status">
+        Loading WorkoutApp…
+      </main>
+    );
   }
 
   if (!publicRoute && !token) {
@@ -91,17 +114,70 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
 
   return (
     <div className={token ? "ux-shell-auth" : "ux-shell-public"}>
-      <a className="ux-skip" href="#main-content">Skip to content</a>
-      {token ? <nav className="ux-sidebar" aria-label="Main navigation">
-        <Link className="ux-brand" href="/">WorkoutApp</Link>
-        {links.map(([href,label])=><Link key={href} href={href} aria-current={pathname===href?'page':undefined}>{label}</Link>)}
-        <button className="ux-button ux-button-ghost mt-auto" onClick={()=>{clearAuthToken();router.replace('/login');}}>Sign out</button>
-      </nav> : null}
-      <header className="ux-header"><Link href="/" className="ux-brand">WorkoutApp</Link>{token?<Link href="/settings">Account</Link>:<Link href="/login">Sign in</Link>}</header>
-      <main id="main-content" className="ux-main" key={accountScope(token)??'guest'}>{children}</main>
-      {token ? <nav className="ux-mobile-nav" aria-label="Main navigation">
-        {[["/","Home"],["/today","Today"],["/week","Week"],["/history","History"],["/more","More"]].map(([href,label])=><Link key={href} href={href} aria-current={pathname===href?'page':undefined}>{label}</Link>)}
-      </nav> : null}
+      <a className="ux-skip" href="#main-content">
+        Skip to content
+      </a>
+      {token ? (
+        <nav className="ux-sidebar" aria-label="Main navigation">
+          <Link className="ux-brand" href="/">
+            WorkoutApp
+          </Link>
+          {links.map(([href, label]) => (
+            <Link
+              key={href}
+              href={href}
+              aria-current={pathname === href ? "page" : undefined}
+            >
+              {label}
+            </Link>
+          ))}
+          <button
+            className="ux-button ux-button-ghost mt-auto"
+            onClick={() => {
+              clearAuthToken();
+              router.replace("/login");
+            }}
+          >
+            Sign out
+          </button>
+        </nav>
+      ) : null}
+      <header className="ux-header">
+        <Link href="/" className="ux-brand">
+          WorkoutApp
+        </Link>
+        {token ? (
+          <Link href="/settings">Account</Link>
+        ) : (
+          <Link href="/login">Sign in</Link>
+        )}
+      </header>
+      <main
+        id="main-content"
+        className="ux-main"
+        key={accountScope(token) ?? "guest"}
+      >
+        {children}
+      </main>
+      {token ? (
+        <nav className="ux-mobile-nav" aria-label="Main navigation">
+          {[
+            ["/", "Home"],
+            ["/today", "Today"],
+            ["/week", "Week"],
+            ["/history", "History"],
+            ["/more", "More"],
+          ].map(([href, label]) => (
+            <Link
+              key={href}
+              href={href}
+              aria-current={pathname === href ? "page" : undefined}
+            >
+              {label}
+            </Link>
+          ))}
+        </nav>
+      ) : null}
     </div>
   );
 }

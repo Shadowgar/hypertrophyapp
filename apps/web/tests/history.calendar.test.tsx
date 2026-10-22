@@ -113,7 +113,8 @@ test("history calendar lets user inspect prior day exercises", async () => {
   expect(screen.getAllByText(/Bench Press/i).length).toBeGreaterThan(0);
   expect(screen.getByText(/PR 1/i)).toBeInTheDocument();
   expect(screen.getAllByText(/2 sets \/ 3 planned \(-1\)/i).length).toBeGreaterThan(0);
-  expect(screen.getByText(/#1 8x80 · #2 7x82.5/i)).toBeInTheDocument();
+  expect(screen.getByText(/Set 1: 8 × 176.4 lb · Actual RPE unknown/)).toBeInTheDocument();
+  expect(screen.getByText(/Set 2: 7 × 181.9 lb · Actual RPE unknown/)).toBeInTheDocument();
 });
 
 test("history calendar supports view toggles, filters, and previous weekday jump", async () => {
@@ -517,7 +518,7 @@ test("history calendar shows planned detail on missed day with zero logged sets"
   await waitFor(() => {
     expect(screen.getByText(/Training Calendar/i)).toBeInTheDocument();
   });
-  expect(screen.getByRole("link", { name: /Open Today Workout/i })).toHaveAttribute("href", "/today");
+  expect(screen.getAllByRole("link", { name: /Open Today Workout/i })[0]).toHaveAttribute("href", "/today");
 
   fireEvent.click(screen.getByTitle(/2026-03-02: 0 sets/i));
 

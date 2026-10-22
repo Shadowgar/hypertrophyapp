@@ -1,4 +1,6 @@
 "use client";
+import { AtlasRunner } from "@/components/atlas-runner";
+import { useAppearance } from "@/components/appearance-provider";
 import { AuthoredWarmups, type PerformedWarmup } from "@/components/authored-warmups";
 import AuthoredConstraintCard, { type AuthoredDecision } from "@/components/AuthoredConstraintCard";
 
@@ -32,11 +34,7 @@ import {
   type LoadIntelligence,
   type EffectiveLoadSet,
 } from "@/lib/api";
-import {
-  epleyEstimate1RMLbs,
-  warmupsFromWorkingWeightLb,
-  workingWeightFrom1RMLb,
-} from "@/lib/oneRepMax";
+import { canonicalLoad, displayLoad } from "@/lib/appearance";
 import { parseRestToSeconds } from "@/lib/rest";
 import { authoredRelationshipLabels } from "@/lib/authored-relationships";
 import { formatCalendarDate } from "@/lib/calendar-date";
@@ -258,7 +256,8 @@ type TechniqueModalState =
       workoutId: string;
       parentSetIndex: number;
       kind: "dropset" | "mechanical_drop" | "rest_pause_cluster";
-      baseWeightLb: number;
+      baseWeight: number;
+      unit: "kg" | "lb";
       baseReps: number;
       authored?: boolean;
       bodyweight?: boolean;
@@ -325,10 +324,12 @@ function InlineTechniquePanel({
   onLog: (performed: { reps: number; weight: number }, ordinal: number) => Promise<void>;
 }>) {
   const [ordinal, setOrdinal] = useState(1);
-  const [reps, setReps] = useState(state.authored ? "" : String(Math.max(1, Math.round(state.baseReps / 2))));
-  const [weight, setWeight] = useState(
-    state.authored ? (state.bodyweight ? "0" : "") : String(state.kind === "dropset" ? Math.max(2.5, Math.round(state.baseWeightLb * 0.85 * 10) / 10) : state.baseWeightLb),
-  );
+  const [reps, setReps] = useState("");
+  const [weight, setWeight] = useState(state.bodyweight ? "0" : "");
+  const [pending, setPending] = useState(false);
+  const [uncertain, setUncertain] = useState(false);
+  const inFlight=useRef(false);
+  const attempted=useRef<{reps:number;weight:number}|null>(null);
   const [status, setStatus] = useState<string | null>(null);
 
   const title =
@@ -339,20 +340,26 @@ function InlineTechniquePanel({
         : "Drop set";
 
   async function handleLog() {
+    if(inFlight.current)return;
+    inFlight.current=true;setPending(true);
     setStatus("Logging technique set...");
     try {
       const actualReps = Number(reps);
       const actualWeight = Number(weight);
-      if (state.authored && (!Number.isInteger(actualReps) || actualReps < 1 || !Number.isFinite(actualWeight) || (state.bodyweight ? actualWeight < 0 : actualWeight <= 0))) {
+      if ((!Number.isInteger(actualReps) || actualReps < 1 || !Number.isFinite(actualWeight) || (state.bodyweight ? actualWeight < 0 : actualWeight <= 0))) {
         setStatus("Enter actual reps and external load for this technique set.");
         return;
       }
-      await onLog({ reps: state.authored ? actualReps : actualReps || 1, weight: state.authored ? actualWeight : actualWeight || state.baseWeightLb }, ordinal);
+      const values=attempted.current??{reps:actualReps,weight:actualWeight};
+      attempted.current=values;
+      await onLog(values, ordinal);
+      attempted.current=null;setUncertain(false);setReps("");
       setOrdinal((prev) => prev + 1);
       setStatus("Logged. Add another or close.");
-    } catch {
-      setStatus("Failed to log. Try again.");
-    }
+    } catch(error) {
+      if(error instanceof ApiError && error.status===422){attempted.current=null;setUncertain(false);setStatus(error.message);}
+      else {setUncertain(true);setStatus("Technique save not confirmed. Retry the same values.");}
+    } finally {inFlight.current=false;setPending(false);}
   }
 
   return (
@@ -364,7 +371,7 @@ function InlineTechniquePanel({
             {state.exerciseName} · after working set {state.parentSetIndex}
           </p>
         </div>
-        <Button type="button" variant="ghost" className="min-h-[32px] px-2 text-xs" onClick={onClose}>
+        <Button type="button" variant="ghost" className="min-h-[32px] px-2 text-xs" disabled={pending||uncertain} onClick={onClose}>
           Close
         </Button>
       </div>
@@ -389,18 +396,18 @@ function InlineTechniquePanel({
             className="ui-input h-12 w-full rounded-lg px-3 text-center text-lg font-semibold tabular-nums"
             type="number"
             min={1}
-            value={reps}
+            readOnly={pending||uncertain} value={reps}
             onChange={(e) => setReps(e.target.value)}
           />
         </label>
         <label className="flex flex-col gap-1.5">
-          <span className="text-[11px] uppercase tracking-wide text-zinc-500">{state.bodyweight ? "Added load (lb), optional" : "Weight (lb)"}</span>
+          <span className="text-[11px] uppercase tracking-wide text-zinc-500">{state.bodyweight ? `Technique added load (${state.unit}), optional` : `Technique weight (${state.unit})`}</span>
           <input
             className="ui-input h-12 w-full rounded-lg px-3 text-center text-lg font-semibold tabular-nums"
             type="number"
             min={0}
             step={0.5}
-            value={weight}
+            readOnly={pending||uncertain} value={weight}
             onChange={(e) => setWeight(e.target.value)}
           />
         </label>
@@ -408,8 +415,8 @@ function InlineTechniquePanel({
 
       {status ? <p className="text-xs text-zinc-400">{status}</p> : null}
 
-      <Button type="button" variant="secondary" className="min-h-[44px] w-full" onClick={handleLog}>
-        Log technique set #{ordinal}
+      <Button type="button" variant="secondary" className="min-h-[44px] w-full" disabled={pending} onClick={handleLog}>
+        {pending?"Saving technique…":`${uncertain?"Retry":"Log"} technique set #${ordinal}`}
       </Button>
     </div>
   );
@@ -471,111 +478,24 @@ function WorkoutSummaryCard({ summary }: Readonly<{ summary: WorkoutSummary | nu
   );
 }
 
-function BaselineBlock({
-  exerciseId,
-  repRange,
-  currentBaseline,
-  onCalculate,
-}: Readonly<{
-  exerciseId: string;
-  repRange: [number, number] | null;
-  currentBaseline: { weightLb: number; reps: number; estimated1RM: number; workingWeightLb: number; warmupLbs: number[] } | undefined;
-  onCalculate: (weightLb: number, reps: number) => void;
-}>) {
-  const [weightLb, setWeightLb] = useState<string>(() => (currentBaseline ? String(currentBaseline.weightLb) : ""));
-  const [reps, setReps] = useState<string>(() => (currentBaseline ? String(currentBaseline.reps) : String(repRange?.[0] ?? "")));
-  useEffect(() => {
-    if (currentBaseline) {
-      setWeightLb(String(currentBaseline.weightLb));
-      setReps(String(currentBaseline.reps));
-    }
-  }, [currentBaseline]);
-
-  function handleCalculate() {
-    const w = Number(weightLb);
-    const r = Number(reps);
-    if (Number.isFinite(w) && w > 0 && Number.isFinite(r) && r >= 1) {
-      onCalculate(w, Math.round(r));
-    }
-  }
-
-  return (
-    <div className="rounded-lg border border-zinc-700 bg-zinc-900/60 p-3 space-y-3">
-      <p className="text-sm font-medium text-zinc-200">Your baseline</p>
-      <p className="text-xs text-zinc-400">
-        Enter a recent set (e.g. &quot;I did 100 lb × 3 reps&quot;). We&apos;ll estimate your 1RM and suggest warm-up and working weights.
-      </p>
-      <div className="flex flex-wrap items-end gap-3">
-        <label className="flex flex-col gap-1">
-          <span className="text-xs uppercase tracking-wide text-zinc-500">Weight (lb)</span>
-          <input
-            className="ui-input h-9 w-20 px-2 text-base"
-            type="number"
-            min={1}
-            step={2.5}
-            value={weightLb}
-            onChange={(e) => setWeightLb(e.target.value)}
-            aria-label="Baseline weight in pounds"
-            style={{ fontSize: "16px" }}
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-xs uppercase tracking-wide text-zinc-500">Reps</span>
-          <input
-            className="ui-input h-9 w-16 px-2 text-base"
-            type="number"
-            min={1}
-            value={reps}
-            onChange={(e) => setReps(e.target.value)}
-            aria-label="Baseline reps"
-            style={{ fontSize: "16px" }}
-          />
-        </label>
-        <Button type="button" className="h-9" onClick={handleCalculate}>
-          Calculate
-        </Button>
-      </div>
-      {currentBaseline ? (
-        <div className="rounded border border-zinc-600 bg-zinc-800/40 px-3 py-2 text-xs text-zinc-200 space-y-1">
-          <p className="font-medium">Estimated 1RM: {Math.round(currentBaseline.estimated1RM)} lb</p>
-          <p>Suggested working weight: {currentBaseline.workingWeightLb} lb (for {repRange ? `${repRange[0]}-${repRange[1]}` : "authored target"} reps)</p>
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
 function ExerciseDetailOverlay({
   exercise,
+  navigation,
+  onSelectExercise,
   selectedName,
   guideHref,
   completed,
-  doThisSetLine,
-  derivedWorkingLb,
-  warmUpCount,
-  baseline,
-  warmupLbs,
-  hasWarmup,
-  hasCoachingDetails,
   techniquePanelState,
   onCloseTechniquePanel,
   onLogTechniquePanel,
-  currentSwapIndex,
-  altCandidates,
-  lastSet,
   mediaUrl,
-  substitutions,
   weakPointInstruction,
-  notesOpen,
-  isDeloadWeek,
+  liveGuidance,
   onUndoLastSet,
   onClose,
-  onSwap,
-  onToggleNotes,
   onSwapTarget,
   onSetComplete,
   onAuthoredDecision,
-  onCalculateBaseline,
   globalRestTimer,
   onClearGlobalRestTimer,
   loadIntelligence,
@@ -590,35 +510,22 @@ function ExerciseDetailOverlay({
   effectiveSets,
 }: Readonly<{
   exercise: WorkoutExercise;
+  navigation: Array<{id:string;name:string;completed:number;total:number}>;
+  onSelectExercise: (id:string)=>void;
   selectedName: string;
   guideHref: string | null;
   completed: number;
-  doThisSetLine: string;
-  derivedWorkingLb: number;
-  warmUpCount: number;
-  baseline: { weightLb: number; reps: number; estimated1RM: number; workingWeightLb: number; warmupLbs: number[] } | undefined;
-  warmupLbs: number[];
-  hasWarmup: boolean;
-  hasCoachingDetails: boolean;
   techniquePanelState: NonNullable<TechniqueModalState> | null;
   onCloseTechniquePanel: () => void;
   onLogTechniquePanel: (performed: { reps: number; weight: number }, ordinal: number) => Promise<void>;
-  currentSwapIndex: number;
-  altCandidates: string[];
-  lastSet: { reps: number; weight: number } | null;
   mediaUrl: string | null;
-  substitutions: string[];
   weakPointInstruction: string | null;
-  notesOpen: boolean;
+  liveGuidance: string;
   onUndoLastSet?: () => Promise<number | false> | void;
   onClose: () => void;
-  onSwap: (exerciseId: string, index: number) => void;
-  onToggleNotes: () => void;
   onSwapTarget: () => void;
-  isDeloadWeek: boolean;
   onSetComplete: (exerciseId: string, count: number, performed: PerformedSet) => Promise<void> | void;
   onAuthoredDecision: (decision: AuthoredDecision) => Promise<void>;
-  onCalculateBaseline: (weightLb: number, reps: number) => void;
   globalRestTimer: { exerciseId: string; exerciseName: string; secondsLeft: number; restCycle: number } | null;
   onClearGlobalRestTimer: () => void;
   loadIntelligence: LoadIntelligence | null | undefined;
@@ -632,295 +539,32 @@ function ExerciseDetailOverlay({
   onWarmupComplete: (ordinal: number, performed: PerformedWarmup) => Promise<void>;
   onCorrectSet: (receipt: EffectiveLoadSet, values: { reps: number; weight: number; rpe?: number | null;actual_rir?:number|null;technique_quality?:"acceptable"|"poor"|"unknown"|null;pain?:boolean|null; reason: string }) => Promise<void>;
 }>) {
-  const defaultRestSeconds = exercise.customized?.rest_seconds.high ?? parseRestToSeconds(exercise.rest) ?? 90;
+
   const bodyweight = isBodyweightAuthored(exercise) || Boolean(exercise.customized && exercise.load_semantics === "bodyweight");
-  const sourceWarmups = authoredWarmupLabel(exercise);
-  const currentRepRange = useMemo(() => authoredSetRepRange(exercise, Math.min(completed + 1, exercise.sets)), [exercise, completed]);
-  const intelligenceActive = loadIntelligence !== undefined;
-  const currentDecision = currentLoadDecision(loadIntelligence, completed, exercise.sets);
-  const canonicalLoad = exercise.customized ? exercise.customized_load_decision?.recommended_weight??undefined : prefillLoadKg(currentDecision);
-  const invalidKnownIncrement = intelligenceActive && loadContext.increment != null &&
-    (!Number.isFinite(loadContext.increment) || loadContext.increment <= 0);
-  const ctrl = useExerciseControl({
-    exerciseId: exerciseKey(exercise),
-    totalSets: exercise.sets,
-    defaultRestSeconds,
-    recommendedWorkingWeight: exercise.customized ? (bodyweight ? 0 : canonicalLoad) : intelligenceActive ? (canonicalLoad === undefined ? undefined : kgToLbs(canonicalLoad))
-      : bodyweight ? 0 : exercise.performed_variant ? undefined : snapToHalfLb(derivedWorkingLb),
-    recommendedWeightCanonicalKg: canonicalLoad,
-    customizedEvidence:Boolean(exercise.customized),weightUnit:"kg",
-    requireWeight: (intelligenceActive || Boolean(exercise.customized)) && !bodyweight,
-    repRange: currentRepRange,
-    initialCompletedSets: completed,
-    skipTimerOnComplete: true,
-    onSetComplete: onSetComplete,
-  });
-  const externalRest =
-    globalRestTimer?.exerciseId === exerciseKey(exercise)
-      ? {
-          secondsLeft: globalRestTimer.secondsLeft,
-          restCycle: globalRestTimer.restCycle,
-          onStop: onClearGlobalRestTimer,
-        }
-      : undefined;
-
-  const isAssistance = String(exercise.load_semantics ?? "").toLowerCase() === "assistance";
-  const currentTechnique = authoredSetTechnique(exercise, ctrl.completedSets + 1);
-  const techniqueExercise = exercise.authored_prescription ? { ...exercise, last_set_intensity_technique: currentTechnique } : exercise;
-  const checklistItems = exercise.authored_prescription ? (currentTechnique ? [currentTechnique] : []) : requiresLastSetChecklist(exercise);
-  const techniqueKind = resolveTechniqueKind(techniqueExercise);
-  const [checklistAccepted, setChecklistAccepted] = useState(false);
-  useEffect(() => {
-    // Reset checklist gate when changing exercise or moving off last set.
-    setChecklistAccepted(false);
-  }, [exerciseKey(exercise), ctrl.completedSets]);
-
-  const isLastSetNext = ctrl.completedSets === ctrl.totalSets - 1;
-  const techniqueApplies = exercise.authored_prescription ? Boolean(currentTechnique) : isLastSetNext;
-  const gateLastSet = checklistItems.length > 0 && techniqueApplies && !checklistAccepted;
-  const hasTechnique = checklistItems.length > 0 || techniqueKind != null || techniquePanelState != null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-zinc-950 min-h-[100dvh] max-h-[100dvh]" aria-modal="true" role="dialog">
-      {/* ---- Header: name + set counter ---- */}
-      <div className="sticky top-0 z-10 flex min-h-[48px] shrink-0 items-center gap-3 border-b border-zinc-800 bg-zinc-950/95 px-4 py-2 backdrop-blur">
-        <Button
-          type="button"
-          variant="ghost"
-          className="min-h-[44px] min-w-[44px]"
-          onClick={onClose}
-          aria-label="Back to list"
-        >
-          <UiIcon name="close" className="ui-icon--action" />
-        </Button>
-        <span className="flex-1 truncate text-sm font-semibold text-zinc-100">
-          {guideHref ? (
-            <Link href={guideHref} className="underline decoration-zinc-600 underline-offset-2">
-              {selectedName}
-            </Link>
-          ) : (
-            selectedName
-          )}
-        </span>
-        {isDeloadWeek ? (
-          <span className="rounded-full bg-yellow-500/15 px-2 py-0.5 text-[10px] font-medium text-yellow-300">Deload</span>
-        ) : null}
-        <span className="text-xs tabular-nums text-zinc-400">
-          Set {Math.min(ctrl.completedSets + 1, exercise.sets)}/{exercise.sets}
-        </span>
-      </div>
-
-      {/* ---- Scrollable body ---- */}
-      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 pb-[max(7rem,env(safe-area-inset-bottom))] space-y-4 overscroll-contain">
-
-        {exercise.customized && <div className="rounded border border-amber-700 p-3"><p>Target {exercise.customized.target_min}–{exercise.customized.target_max} {exercise.customized.target_kind.toUpperCase()} · Rest {exercise.customized.rest_seconds.low}–{exercise.customized.rest_seconds.high} seconds.</p><p>Calibrate this exercise on your actual equipment. Enter a comfortable load; no maximal test is required. Stop for pain or technique deterioration. Actual RIR is optional; leave it unknown when uncertain. Targets never become performed evidence.</p><p>Load basis: {exercise.load_semantics?.replaceAll('_',' ')}. Recorded setup: {exercise.customized.identity.setup}. Numerical rules remain provisional.</p>
-          {exercise.customized_load_decision&&<div className="mt-3 space-y-2" aria-label="Exercise-specific load calibration">
-            <p>{exercise.customized_load_decision.recommended_weight!=null?`Next comparable exposure: ${exercise.customized_load_decision.action} to ${exercise.customized_load_decision.recommended_weight} kg.`:'No qualified working load yet. Use comfortable exercise-specific calibration.'}</p>
-            <p>{exercise.customized_load_decision.reason_codes.join(', ').replaceAll('_',' ')}.</p>
-            {exercise.customized_load_decision.attainable_loads&&<p>Available loads (kg, {exercise.load_semantics?.replaceAll('_',' ')}): {exercise.customized_load_decision.attainable_loads.join(', ')}</p>}
-            <p>A bounded suggestion is not a guarantee. No maximal or failure test is required. Stop for pain or deteriorating technique.</p>
-            {exercise.customized_load_decision.calibration?.strength_information.map((r,i)=><p key={i}>Optional {r.kind} report: {r.load} {r.unit} · {r.observed_on}. Information only; no percentage is converted to a working weight.</p>)}
-          </div>}
-          <label className="mt-3 block">Actual-load override reason (if inventory differs)<input className="ui-input min-h-11 w-full" value={overrideReason} onChange={e=>onOverrideReason(e.target.value)}/></label>
-        </div>}
-        {/* == ZONE 1: Baseline calculator (expanded when no baseline) == */}
-        {!exercise.customized && !exercise.authored_prescription && exercise.rep_range && !bodyweight && !exercise.performed_variant ? <Disclosure title="Baseline Calculator" badge={baseline ? `1RM: ${Math.round(baseline.estimated1RM)} lb` : null} defaultOpen={!baseline}>
-          <BaselineBlock
-            exerciseId={exerciseKey(exercise)}
-            repRange={exercise.rep_range}
-            currentBaseline={baseline}
-            onCalculate={onCalculateBaseline}
-          />
-        </Disclosure> : null}
-
-        {/* == ZONE 2: Warm-up sets (expanded when warm-ups exist) == */}
-        {exercise.authored_prescription ? (
-          <Disclosure title="Warm-up Sets" badge={sourceWarmups ? `${sourceWarmups} sets` : null} defaultOpen>
-            <AuthoredWarmups guidance={loadIntelligence?.warmup_guidance} sourceCount={sourceWarmups}
-              receipts={effectiveSets} loadContext={loadContext}
-              commandScope={warmupCommandScope} exerciseId={exerciseKey(exercise)}
-              performedVariant={Boolean(exercise.performed_variant)} bodyweight={bodyweight}
-              disabled={invalidKnownIncrement || ["unresolved", "infeasible", "declined"].includes(exercise.authored_constraint?.execution_status ?? exercise.authored_constraint?.status ?? "")}
-              onLog={onWarmupComplete} />
-          </Disclosure>
-        ) : hasWarmup && (
-          <Disclosure title="Warm-up Sets" badge={`${warmupLbs.length} sets`} defaultOpen>
-            <div className="space-y-2">
-              <p className="text-xs text-zinc-400">
-                {baseline != null
-                  ? "From your baseline. Do these before working sets."
-                  : "Based on your working weight. Do these before working sets."}
-              </p>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                {warmupLbs.map((lb, i) => (
-                  <div key={i} className="flex items-center justify-between rounded-md border border-zinc-700 bg-zinc-800/40 px-3 py-2">
-                    <span className="text-xs text-zinc-400">Set {i + 1}</span>
-                    <span className="text-sm font-medium tabular-nums text-zinc-200">{lb} lb</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Disclosure>
-        )}
-
-        {/* == ZONE 3: Coaching details (collapsible) == */}
-        {hasCoachingDetails && (
-          <Disclosure title="Coaching" defaultOpen={hasTechnique}>
-            <div className="space-y-3">
-              {techniquePanelState ? (
-                <InlineTechniquePanel
-                  state={techniquePanelState}
-                  onClose={onCloseTechniquePanel}
-                  onLog={onLogTechniquePanel}
-                />
-              ) : null}
-
-              <div className="flex flex-wrap gap-2">
-                {exercise.last_set_intensity_technique ? (
-                  <span className="rounded-full border border-zinc-700 bg-zinc-800/60 px-2.5 py-1 text-[11px] text-zinc-300">
-                    Technique: {exercise.last_set_intensity_technique}
-                  </span>
-                ) : null}
-                {exercise.rest ? (
-                  <span className="rounded-full border border-zinc-700 bg-zinc-800/60 px-2.5 py-1 text-[11px] text-zinc-300">
-                    Rest: {exercise.rest}
-                  </span>
-                ) : null}
-                {exercise.early_set_rpe ? (
-                  <span className="rounded-full border border-zinc-700 bg-zinc-800/60 px-2.5 py-1 text-[11px] text-zinc-300">
-                    Early RPE: {exercise.early_set_rpe}
-                  </span>
-                ) : null}
-                {exercise.last_set_rpe ? (
-                  <span className="rounded-full border border-zinc-700 bg-zinc-800/60 px-2.5 py-1 text-[11px] text-zinc-300">
-                    Last RPE: {exercise.last_set_rpe}
-                  </span>
-                ) : null}
-              </div>
-              {lastSet != null ? (
-                <p className="text-xs text-zinc-400">
-                  Suggestion updated from your last set ({lastSet.weight} lb x {lastSet.reps} reps).
-                </p>
-              ) : null}
-              {/* Substitution buttons */}
-              {(currentSwapIndex > 0 || altCandidates.length > 0) && (
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {currentSwapIndex > 0 ? (
-                    <Button type="button" variant="secondary" className="min-h-[32px] px-2 text-xs" onClick={() => onSwap(exerciseKey(exercise), 0)}>
-                      Use original exercise
-                    </Button>
-                  ) : null}
-                  {altCandidates.map((name, index) => (
-                    <Button
-                      key={`${exercise.id}-alt-${index}`}
-                      type="button"
-                      variant="secondary"
-                      className="min-h-[32px] px-2 text-xs"
-                      onClick={() => onSwap(exerciseKey(exercise), index + 1)}
-                    >
-                      Use {name}
-                    </Button>
-                  ))}
-                </div>
-              )}
-
-              {/* Technique (last set) checklist at bottom so user can confirm before Complete Set */}
-              {checklistItems.length > 0 && techniqueApplies ? (
-                <div className="rounded-xl border border-amber-500/50 bg-amber-950/30 p-3 space-y-2">
-                  <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">{exercise.authored_prescription ? "Technique (this set)" : "Technique (last set)"}</p>
-                  <ul className="list-disc pl-5 text-xs text-zinc-200 space-y-1">
-                    {checklistItems.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                  <label className="flex items-center gap-2 text-xs text-zinc-200">
-                    <input
-                      type="checkbox"
-                      checked={checklistAccepted}
-                      onChange={(e) => setChecklistAccepted(e.target.checked)}
-                    />
-                    I will execute these technique cues on this set.
-                  </label>
-                </div>
-              ) : null}
-            </div>
-          </Disclosure>
-        )}
-
-        {exercise.authored_prescription || exercise.authored_constraint ? <AuthoredConstraintCard exercise={exercise} onDecision={onAuthoredDecision} effectiveSets={effectiveSets} onUndoLastSet={onUndoLastSet} /> : null}
-        {/* == ZONE 4: Primary action (log set) == */}
-        {intelligenceActive || exercise.customized ? <LoadIntelligencePanel receiptOnly={Boolean(exercise.customized)} guidance={loadIntelligence ?? null} completed={completed} total={exercise.sets}
-          loadContext={loadContext} onContextChange={onLoadContextChange} onPreview={onPreviewLoad}
-          overrideReason={overrideReason} onOverrideReason={onOverrideReason} onCorrect={onCorrectSet} effectiveSets={effectiveSets} requireExternalWeight={!bodyweight} /> : null}
-        <SetInputCard
-          exerciseId={exerciseKey(exercise)}
-          guidanceLine={doThisSetLine}
-          ctrl={ctrl}
-          weightLabel={bodyweight ? "Added load (lb), optional" : isAssistance ? "Assistance (lb) — lower is harder" : "Weight (lb)"}
-          disabledReason={["unresolved", "infeasible", "declined"].includes(exercise.authored_constraint?.execution_status ?? exercise.authored_constraint?.status ?? "") ? "Resolve authored slot first" : invalidKnownIncrement ? "Enter a positive increment or leave it blank" : undefined}
-          disableComplete={invalidKnownIncrement || gateLastSet || ["unresolved", "infeasible", "declined"].includes(exercise.authored_constraint?.execution_status ?? exercise.authored_constraint?.status ?? "")}
-        />
-
-        {/* == ZONE 5: Set log (per-set logged values) == */}
-        <SetLogDisplay ctrl={ctrl} onUndoLastSet={onUndoLastSet} hideLocalReceipts={intelligenceActive || Boolean(exercise.customized)}
-          hasEffectiveReceipts={effectiveSets.length > 0}
-          undoLabel={effectiveSets.at(-1)?.set_kind === "warmup" ? "Undo Last Warm-up" : undefined} />
-
-        {/* == ZONE 6: Set progress == */}
-        <SetProgressTimeline exerciseId={exerciseKey(exercise)} ctrl={ctrl} />
-
-        {/* == ZONE 7: Rest timer == */}
-        <RestTimerCard ctrl={ctrl} externalRest={externalRest} />
-
-        {/* == ZONE 8: Quick actions toolbar == */}
-        <div className="grid grid-cols-4 gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            className="min-h-[44px] flex-col gap-1 px-2 py-2 text-center"
-            disabled={!mediaUrl}
-            onClick={() => mediaUrl && window.open(mediaUrl, "_blank", "noopener,noreferrer")}
-          >
-            <UiIcon name="video" className="ui-icon--action" />
-            <span className="text-[10px]">Video</span>
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            className="min-h-[44px] flex-col gap-1 px-2 py-2 text-center"
-            disabled={substitutions.length === 0}
-            onClick={onSwapTarget}
-          >
-            <UiIcon name="swap" className="ui-icon--action" />
-            <span className="text-[10px]">Swap</span>
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            className="min-h-[44px] flex-col gap-1 px-2 py-2 text-center"
-            onClick={onToggleNotes}
-          >
-            <UiIcon name="notes" className="ui-icon--action" />
-            <span className="text-[10px]">Notes</span>
-          </Button>
-          <Link
-            href="/checkin"
-            className="inline-flex min-h-[44px] flex-col items-center justify-center gap-1 rounded-md border border-[var(--ui-edge-idle)] bg-[var(--ui-surface-1)] px-2 py-2 text-center text-[10px] text-zinc-100 hover:border-[var(--ui-edge-active)]"
-          >
-            <UiIcon name="body" className="ui-icon--action" />
-            <span>Check-In</span>
-          </Link>
-        </div>
-
-        {notesOpen && (
-          <div className="rounded-md border border-zinc-800 bg-zinc-900/40 p-3 text-xs text-zinc-300">
-            {weakPointInstruction ? <p className="mb-2 text-zinc-200">{weakPointInstruction}</p> : null}
-            {exercise.notes ?? "No notes for this slot."}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  return <AtlasRunner exercise={exercise} name={selectedName} completed={completed} scope={warmupCommandScope}
+    guidance={loadIntelligence} context={loadContext} receipts={effectiveSets} navigation={navigation} onSelect={onSelectExercise}
+    onClose={onClose} submit={onSetComplete} onUndo={onUndoLastSet} onCorrect={onCorrectSet} rest={globalRestTimer} endRest={onClearGlobalRestTimer}
+    warmups={exercise.authored_prescription ? <AuthoredWarmups guidance={loadIntelligence?.warmup_guidance} sourceCount={authoredWarmupLabel(exercise)}
+      receipts={effectiveSets} loadContext={loadContext} commandScope={warmupCommandScope} exerciseId={exerciseKey(exercise)}
+      performedVariant={Boolean(exercise.performed_variant)} bodyweight={bodyweight}
+      disabled={["unresolved", "infeasible", "declined"].includes(exercise.authored_constraint?.execution_status ?? exercise.authored_constraint?.status ?? "")}
+      onLog={onWarmupComplete}/> : <p>{exercise.warm_up_sets ? `Prescribed warm-up: ${exercise.warm_up_sets}. ${exercise.notes ?? ""}` : "No numeric warm-up prescription is provided for this exercise. Follow the program’s preparation instructions."}</p>}
+    technique={techniquePanelState ? <InlineTechniquePanel state={techniquePanelState} onClose={onCloseTechniquePanel} onLog={onLogTechniquePanel}/> : null}
+    details={<div className="space-y-4">
+      {authoredRelationshipLabels(exercise).map(label=><p key={label}>{label}</p>)}
+      <p>{exercise.notes ?? "No additional instructions for this slot."}</p>
+      {exercise.last_set_intensity_technique ? <p>Source technique: {exercise.last_set_intensity_technique}</p> : null}
+      {liveGuidance ? <p>{liveGuidance}</p> : null}
+      {weakPointInstruction ? <p>{weakPointInstruction}</p> : null}
+      {!exercise.customized && !exercise.authored_prescription && !exercise.authored_constraint ? <Button variant="secondary" onClick={() => { document.querySelectorAll<HTMLDialogElement>("dialog[open]").forEach(dialog=>dialog.close()); onSwapTarget(); }}>Swap</Button> : null}
+      {guideHref ? <Link className="ux-button ux-button-secondary" href={guideHref}>Exercise guide</Link> : null}
+      {mediaUrl ? <a className="ux-button ux-button-secondary" href={mediaUrl} target="_blank" rel="noreferrer">Watch demonstration</a> : null}
+      {exercise.authored_prescription || exercise.authored_constraint ? <AuthoredConstraintCard exercise={exercise} onDecision={onAuthoredDecision} effectiveSets={effectiveSets} onUndoLastSet={onUndoLastSet}/> : null}
+      <LoadIntelligencePanel hideReceipts guidance={loadIntelligence ?? null} completed={completed} total={exercise.sets} loadContext={loadContext}
+        onContextChange={onLoadContextChange} onPreview={onPreviewLoad} overrideReason={overrideReason} onOverrideReason={onOverrideReason}
+        onCorrect={onCorrectSet} effectiveSets={effectiveSets} requireExternalWeight={!bodyweight}/>
+      {exercise.customized ? <><p>Recorded setup: {exercise.customized.identity.setup}. Load basis: {exercise.load_semantics?.replaceAll("_"," ")}.</p><p>{exercise.customized_load_decision?.reason_codes.map(reason=>reason.replaceAll("_"," ")).join("; ")}{exercise.customized_load_decision?.reason_codes.length ? "." : ""}</p></> : null}
+    </div>}/>
 }
 
 function WorkoutHeaderCard({
@@ -965,9 +609,10 @@ function WorkoutHeaderCard({
 }
 
 export default function TodayPage() {
+  const {preferences} = useAppearance();
   const [health, setHealth] = useState("loading");
   const [workout, setWorkout] = useState<WorkoutSession | null>(null);
-  const [message, setMessage] = useState("No workout loaded");
+  const [message, setMessage] = useState("Loading your scheduled workout…");
   const [swapIndexByExercise, setSwapIndexByExercise] = useState<SwapState>({});
   const [notesOpenByExercise, setNotesOpenByExercise] = useState<NotesState>({});
   const [swapTargetExerciseId, setSwapTargetExerciseId] = useState<string | null>(null);
@@ -1020,10 +665,6 @@ export default function TodayPage() {
   const [workoutSummary, setWorkoutSummary] = useState<WorkoutSummary | null>(null);
   const [localToday, setLocalToday] = useState<{ date: string; timezone: string } | null>(null);
   const [selectedExerciseId, setSelectedExerciseId] = useState<string | null>(null);
-  /** User-entered baseline: "I did X lb × Y reps" → 1RM, working weight, warmups. Keyed by exercise id. */
-  const [baselineByExercise, setBaselineByExercise] = useState<
-    Record<string, { weightLb: number; reps: number; estimated1RM: number; workingWeightLb: number; warmupLbs: number[] }>
-  >({});
   /** Last logged set per exercise (reps, weight) to suggest next set. Keyed by exercise id. */
   const [lastSetByExercise, setLastSetByExercise] = useState<Record<string, { reps: number; weight: number }>>({});
   const [techniqueModal, setTechniqueModal] = useState<TechniqueModalState>(null);
@@ -1033,6 +674,7 @@ export default function TodayPage() {
     exerciseName: string;
     secondsLeft: number;
     restCycle: number;
+    deadline: number;
   } | null>(null);
   const currentOccurrence = useRef<string | null>(null);
   const undoInFlight = useRef(false);
@@ -1050,45 +692,31 @@ export default function TodayPage() {
     }
   }, []);
 
-  // When an exercise is opened, pin the page to the top and lock background
-  // scrolling so the overlay is stable regardless of where the row sits in
-  // the list. Restore scroll behavior when the overlay is closed.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const body = window.document.body;
-    if (selectedExerciseId) {
-      const userAgent = window.navigator?.userAgent ?? "";
-      if (!userAgent.toLowerCase().includes("jsdom")) {
-        window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
-      }
-      const previousOverflow = body.style.overflow;
-      body.dataset.hypertrophyPrevOverflow = previousOverflow;
-      body.style.overflow = "hidden";
-      body.dataset.todayOverlayOpen = "true";
-      window.dispatchEvent(new Event("hypertrophy:today-overlay-changed"));
-      return () => {
-        body.style.overflow = body.dataset.hypertrophyPrevOverflow || "";
-        delete body.dataset.hypertrophyPrevOverflow;
-        delete body.dataset.todayOverlayOpen;
-        window.dispatchEvent(new Event("hypertrophy:today-overlay-changed"));
-      };
-    }
-    delete body.dataset.todayOverlayOpen;
-    window.dispatchEvent(new Event("hypertrophy:today-overlay-changed"));
-    return undefined;
-  }, [selectedExerciseId]);
-
   // Global rest timer countdown
   useEffect(() => {
     if (!globalRestTimer) return;
     const id = setInterval(() => {
       setGlobalRestTimer((prev) => {
-        if (!prev || prev.secondsLeft <= 1) return null;
-        return { ...prev, secondsLeft: prev.secondsLeft - 1 };
+        if (!prev) return null;
+        const secondsLeft = Math.max(0, Math.ceil((prev.deadline - Date.now()) / 1000));
+        return secondsLeft > 0 ? { ...prev, secondsLeft } : null;
       });
     }, 1000);
     return () => clearInterval(id);
   }, [globalRestTimer]);
+
+  useEffect(() => {
+    if (!workout) return;
+    try {
+      const key = occurrenceStorageKey("rest", workout);
+      if (globalRestTimer) localStorage.setItem(key, JSON.stringify(globalRestTimer));
+      else localStorage.removeItem(key);
+    } catch { /* countdown remains available in memory */ }
+  }, [globalRestTimer, workout]);
+  useEffect(() => {
+    if (!workout || !selectedExerciseId) return;
+    try { localStorage.setItem(occurrenceStorageKey("selected", workout), selectedExerciseId); } catch { /* in-memory selection */ }
+  }, [selectedExerciseId, workout]);
 
   useEffect(() => {
     api.health()
@@ -1123,7 +751,7 @@ export default function TodayPage() {
         setSwapIndexByExercise({});
       }
       setWorkout(data);
-      setCompletedSetsByExercise({});
+      setCompletedSetsByExercise(Object.fromEntries(data.exercises.map(item => [exerciseKey(item), item.completed_sets ?? 0])));
       setWorkoutProgress(null);
       setMessage("");
       setNotesOpenByExercise({});
@@ -1135,10 +763,18 @@ export default function TodayPage() {
       resetSelectedLoadContext();
       setLoadOverrideByExercise({});
       setLastSetByExercise({});
-      setBaselineByExercise({});
-      setSelectedExerciseId(null);
+      let selected: string | null = null;
+      let restoredRest: typeof globalRestTimer = null;
+      try {
+        selected = localStorage.getItem(occurrenceStorageKey("selected", data));
+        const savedRest = JSON.parse(localStorage.getItem(occurrenceStorageKey("rest", data)) ?? "null");
+        if (savedRest && Number.isFinite(savedRest.deadline) && savedRest.deadline > Date.now() && data.exercises.some(e => exerciseKey(e) === savedRest.exerciseId)) {
+          restoredRest = {...savedRest, secondsLeft: Math.ceil((savedRest.deadline-Date.now())/1000)};
+        }
+      } catch { /* storage is optional */ }
+      setSelectedExerciseId(data.exercises.some(e => exerciseKey(e) === selected) ? selected : null);
       setTechniqueModal(null);
-      setGlobalRestTimer(null);
+      setGlobalRestTimer(restoredRest);
 
       const initialRecommendations = Object.fromEntries(
         (data.exercises ?? [])
@@ -1157,25 +793,15 @@ export default function TodayPage() {
         setWeakAreas([]);
       }
 
-      // restore completed sets for this session if present
-      let localCompleted: Record<string, number> = {};
-      try {
-        const completedKey = occurrenceStorageKey("completed", data);
-        const savedCompleted = localStorage.getItem(completedKey);
-        if (savedCompleted) {
-          const parsed = JSON.parse(savedCompleted) as Record<string, number>;
-          localCompleted = parsed;
-        } else {
-          localCompleted = {};
-        }
-      } catch {
-        localCompleted = {};
-      }
+      // Confirmed server state is authoritative; local caches are never receipts.
+      const localCompleted: Record<string,number> = Object.fromEntries(data.exercises.map(exercise=>[exerciseKey(exercise),exercise.completed_sets??0]));
+      const initialProgressGeneration = captureLoadGeneration();
 
       // prefer server-side progress when available
       try {
         const { progress, generation } = await getScopedWorkoutProgress(workoutReference(data));
         applyProgressLoad(progress.exercises ?? [], generation);
+        if ((progress.exercises ?? []).some(item => !isCurrentLoadGeneration(item.exercise_occurrence_id ?? item.exercise_id, generation))) return data;
         const serverCompleted = Object.fromEntries(
           (progress.exercises ?? []).map((item) => [item.exercise_occurrence_id ?? item.exercise_id, Number(item.completed_sets) || 0]),
         ) as Record<string, number>;
@@ -1192,15 +818,19 @@ export default function TodayPage() {
           await loadWorkoutSummary(workoutReference(data));
         }
       } catch {
-        setCompletedSetsByExercise(localCompleted);
-        setWorkoutProgress(null);
+        if(currentOccurrence.current===workoutReference(data) && data.exercises.every(exercise=>isCurrentLoadGeneration(exerciseKey(exercise),initialProgressGeneration))){
+          setCompletedSetsByExercise(localCompleted);
+          setWorkoutProgress(null);
+        }
       }
       return data;
     } catch (error) {
       setWorkout(null);
       setMessage(error instanceof Error && error.message === "No workout scheduled today"
         ? "Rest day — no workout is scheduled for your local date. Check Week for your selected dates."
-        : "No workout available. Choose dates in Week first.");
+        : error instanceof ApiError && error.status === 404
+        ? "No workout available. Open Week to review your schedule."
+        : "Workout could not be loaded. Retry loading your workout. Your saved history is unchanged.");
       return null;
     }
   }, [loadWorkoutSummary, applyProgressLoad, resetSelectedLoadContext, getScopedWorkoutProgress]);
@@ -1347,8 +977,8 @@ export default function TodayPage() {
       weight: performed.canonicalWeight ?? lbsToKg(performed.weight),
       rpe: performed.rpe,
       ...(exercise.customized?{actual_rir:performed.actual_rir,technique_quality:performed.technique_quality,pain:performed.pain,load_context:{unit:"kg" as const,display_unit:performed.display_unit??"kg",basis:exercise.customized.identity.basis,equipment_key:exercise.customized.identity.equipment_key}}:{}),
-      ...(!exercise.customized&&context ? { load_context: context } : {}),
-      ...(offeredDecision ? { load_recommendation_id: offeredDecision.id } : {}),
+      ...(!exercise.customized&&context ? { load_context: {...context, display_unit: performed.display_unit ?? context.display_unit} } : {}),
+      ...(offeredDecision && intelligence?.load_context.display_unit === (performed.display_unit ?? context?.display_unit) ? { load_recommendation_id: offeredDecision.id } : {}),
       ...(loadOverrideByExercise[exerciseId]?.trim() ? { load_override_reason: loadOverrideByExercise[exerciseId].trim() } : {}),
     } as const;
 
@@ -1386,6 +1016,7 @@ export default function TodayPage() {
         exerciseName: resolveExerciseName(exercise, swapIndexByExercise),
         secondsLeft: restCycle,
         restCycle,
+        deadline: Date.now() + restCycle * 1000,
       });
 
       const prescribedTechnique = authoredSetTechnique(exercise, completedCount);
@@ -1397,7 +1028,8 @@ export default function TodayPage() {
           workoutId: workoutReference(workout),
           parentSetIndex: completedCount,
           kind: techniqueKind,
-          baseWeightLb: performed.weight,
+          baseWeight: performed.weight,
+          unit: performed.display_unit ?? "lb",
           baseReps: performed.reps,
           instruction: prescribedTechnique,
           authored: Boolean(exercise.authored_prescription),
@@ -1406,10 +1038,11 @@ export default function TodayPage() {
       }
 
       // refresh from server-side progress to keep client in sync
-      try {
+      void (async () => { try {
         const { progress, generation } = await getScopedWorkoutProgress(workoutReference(workout));
         if (currentOccurrence.current !== workoutReference(workout)) return;
         applyProgressLoad(progress.exercises ?? [], generation);
+        if ((progress.exercises ?? []).some(item => !isCurrentLoadGeneration(item.exercise_occurrence_id ?? item.exercise_id, generation))) return;
         const serverCompleted = Object.fromEntries(
           (progress.exercises ?? []).map((item) => [item.exercise_occurrence_id ?? item.exercise_id, Number(item.completed_sets) || 0]),
         ) as Record<string, number>;
@@ -1429,7 +1062,8 @@ export default function TodayPage() {
         }
       } catch {
         // keep optimistic state when progress refresh fails
-      }
+      } })();
+
     } catch (e) {
       if (e instanceof ApiError && e.status === 422) {
         acknowledgeLogCommand(commandKey);
@@ -1460,19 +1094,22 @@ export default function TodayPage() {
     const exercise = (workout?.exercises ?? []).find((entry) => exerciseKey(entry) === state.exerciseId);
     if (!exercise) throw new Error("Exercise occurrence is unavailable");
     const commandKey = pendingCommandKey(workout ? occurrenceStorageKey("attempt", workout) : state.workoutId, state.exerciseId, `${state.kind}:${state.parentSetIndex}:${ordinal}`);
-    await api.logSet(state.workoutId, {
+    const payload = retainLogPayload(commandKey, {
       command_id: getLogCommand(commandKey),
       primary_exercise_id: exercise.primary_exercise_id,
       exercise_id: exercise.id,
       exercise_occurrence_id: exercise.exercise_occurrence_id,
       set_index: state.parentSetIndex,
       reps: performed.reps,
-      weight: lbsToKg(performed.weight),
+      weight: canonicalLoad(performed.weight,state.unit),
       rpe: null,
       set_kind: state.kind,
       parent_set_index: state.parentSetIndex,
       technique: { type: state.kind, ordinal },
     });
+    try {const feedback=await api.logSet(state.workoutId,payload);
+      if(currentOccurrence.current===state.workoutId && feedback.load_intelligence!==undefined)updateLoadIntelligence(state.exerciseId,feedback.load_intelligence??null);
+    } catch(error){if(error instanceof ApiError&&error.status===422)acknowledgeLogCommand(commandKey);throw error;}
     acknowledgeLogCommand(commandKey);
   }
 
@@ -1485,13 +1122,13 @@ export default function TodayPage() {
     : `${new Date().toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} · browser local date`;
 
   return (
-    <div className="space-y-4 pb-[max(7rem,env(safe-area-inset-bottom))]">
-      <div className="flex items-baseline justify-between gap-2">
+    <div className={selectedExerciseId ? "atlas-page" : "space-y-4 pb-8"}>
+      <div className={selectedExerciseId ? "hidden" : "flex flex-wrap items-baseline justify-between gap-2"}>
         <h1 className="ui-title-page">Today</h1>
         <Link className="inline-flex min-h-11 items-center underline" href={workout?.customized?.proposal_id?`/customize?proposal=${encodeURIComponent(workout.customized.proposal_id)}`:"/customize"}>Manage Customized dates or replace program</Link>
         <p className="ui-meta text-zinc-400">{todayDate}</p>
       </div>
-      <div className="main-card main-card--module main-card--accent spacing-grid spacing-grid--tight">
+      <div className={selectedExerciseId ? "hidden" : "main-card main-card--module main-card--accent spacing-grid spacing-grid--tight"}>
         <Button className="min-h-[44px] w-full" onClick={beginWorkoutLoad}>
           <span className="inline-flex items-center gap-2">
             <UiIcon name="workout" className="ui-icon--action" />
@@ -1500,7 +1137,7 @@ export default function TodayPage() {
         </Button>
       </div>
 
-      {message ? (
+      {message && !selectedExerciseId ? (
         <div className="main-card main-card--shell space-y-2 ui-body-sm" role="status">
           {message.startsWith("Rest day") ? <h2 className="text-base font-semibold">No workout scheduled today</h2> : null}
           <p>{message}</p>
@@ -1523,7 +1160,7 @@ export default function TodayPage() {
       ) : null}
 
       {workout ? (
-        <div className="space-y-3">
+        <div className={selectedExerciseId ? "hidden" : "space-y-3"}>
           <p className="ui-body-sm text-zinc-200">
             {workout.title} · {workoutProgress?.completed ?? 0}/{workoutProgress?.planned ?? 0} sets
           </p>
@@ -1534,31 +1171,6 @@ export default function TodayPage() {
               const displayName = resolveDisplayExerciseName(exercise, selectedName, weakAreas);
               const completed = completedSetsByExercise[exerciseKey(exercise)] ?? 0;
               const done = completed >= exercise.sets;
-              const baseline = exercise.performed_variant ? undefined : baselineByExercise[exerciseKey(exercise)];
-              const lastSet = lastSetByExercise[exerciseKey(exercise)];
-              const live = liveRecommendationByExercise[exerciseKey(exercise)];
-              const plannedWorkingLb = exercise.recommended_working_weight == null ? 0 : kgToLbs(exercise.recommended_working_weight);
-              const baselineWorkingLb =
-                baseline != null ? baseline.workingWeightLb : plannedWorkingLb;
-              const hasLive = live && typeof live.recommended_weight === "number";
-              // Authoritative row working weight:
-              // Before first working set:
-              //   1) baseline estimate (if present)
-              //   2) backend live recommendation (if any)
-              //   3) planned working weight
-              // After working sets have started:
-              //   1) backend live recommendation
-              //   2) planned working weight
-              const rowWorkingLb =
-                completed === 0
-                  ? (baseline != null
-                      ? baselineWorkingLb
-                      : hasLive
-                        ? kgToLbs(live!.recommended_weight!)
-                        : plannedWorkingLb)
-                  : hasLive
-                    ? kgToLbs(live!.recommended_weight!)
-                    : plannedWorkingLb;
               const intelligence = intelligenceFor(exercise);
               const ownedRowLoad = prefillLoadKg(currentLoadDecision(intelligence, completed, exercise.sets));
               return (
@@ -1587,8 +1199,8 @@ export default function TodayPage() {
                     <div className="mt-1 flex items-center gap-2 text-xs text-zinc-500">
                       <span>{authoredRepLabel(exercise)} reps</span>
                       <span className="text-zinc-700">·</span>
-                      <span>{intelligence !== undefined ? (ownedRowLoad === undefined ? "Record actual load" : `${kgToLbs(ownedRowLoad)} lb`)
-                        : exercise.customized ? (exercise.load_semantics === "bodyweight" ? "Bodyweight" : "Record actual load") : isBodyweightAuthored(exercise) ? "Bodyweight" : exercise.performed_variant ? "Record actual load" : `~${rowWorkingLb} lb`}</span>
+                      <span>{intelligence !== undefined ? (ownedRowLoad === undefined ? "Record actual load" : `${displayLoad(ownedRowLoad,preferences.weight_unit)} ${preferences.weight_unit}`)
+                        : exercise.customized ? (exercise.load_semantics === "bodyweight" ? "Bodyweight" : "Record actual load") : isBodyweightAuthored(exercise) ? "Bodyweight" : exercise.performed_variant ? "Record actual load" : "Record actual load"}</span>
                     </div>
                     {authoredRelationshipLabels(exercise).map((label) => (
                       <span key={label} className="mt-1 mr-2 inline-block text-xs text-amber-300">{label}</span>
@@ -1619,69 +1231,9 @@ export default function TodayPage() {
         const recommendation = liveRecommendationByExercise[exerciseKey(exercise)];
         const feedback = setFeedbackByExercise[exerciseKey(exercise)];
         const mediaUrl = resolveExerciseMediaUrl(exercise);
-        const substitutions = resolveSubstitutionCandidates(exercise, weakAreas);
-        const warmUpCount = exercise.authored_prescription ? 0 : Math.max(0, parseInt(String(exercise.warm_up_sets ?? "0"), 10) || 0);
-        const baseline = exercise.performed_variant ? undefined : baselineByExercise[exerciseKey(exercise)];
         const loadIntelligence = intelligenceFor(exercise);
         const effectiveSets = effectiveSetsByExercise[exerciseKey(exercise)] ?? exercise.customized_receipts ?? loadIntelligence?.effective_sets ?? [];
-        const loadContext = loadContextByExercise[exerciseKey(exercise)] ?? loadIntelligence?.load_context ?? (exercise.customized?{unit:"kg",display_unit:"kg",basis:exercise.customized.identity.basis,equipment_key:exercise.customized.identity.equipment_key}:null) ?? { unit: "kg", display_unit: "lb", basis: "unknown" } as LoadContext;
-        const lastSet = lastSetByExercise[exerciseKey(exercise)];
-        const plannedWorkingLb = exercise.recommended_working_weight == null ? 0 : kgToLbs(exercise.recommended_working_weight);
-        const baselineWorkingLb =
-          baseline != null ? baseline.workingWeightLb : plannedWorkingLb;
-        const hasRecommendation =
-          recommendation && typeof recommendation.recommended_weight === "number";
-        // Authoritative working weight for this set:
-        // Before first working set:
-        //   1) baseline estimate (if present)
-        //   2) backend live recommendation (if any)
-        //   3) planned working weight
-        // After working sets have started:
-        //   1) backend live recommendation
-        //   2) planned working weight
-        const derivedWorkingLb =
-          exercise.performed_variant || isBodyweightAuthored(exercise) ? 0 : completed === 0
-            ? (baseline != null
-                ? baselineWorkingLb
-                : hasRecommendation
-                  ? kgToLbs(recommendation!.recommended_weight!)
-                  : plannedWorkingLb)
-            : hasRecommendation
-              ? kgToLbs(recommendation!.recommended_weight!)
-              : plannedWorkingLb;
-        let doThisSetLine: string;
-        if (exercise.customized) {
-          doThisSetLine = `${authoredRepLabel(exercise)} reps · ${exercise.customized.target_min}–${exercise.customized.target_max} ${exercise.customized.target_kind.toUpperCase()} · record actual load`;
-        } else if (exercise.authored_prescription) {
-          const index = Math.min(completed + 1, exercise.sets);
-          doThisSetLine = `${isBodyweightAuthored(exercise) ? "Bodyweight · " : ""}${authoredRepLabel(exercise, index)} reps · ${authoredSetDetails(exercise, index)}`;
-        } else if (recommendation) {
-          const guidance = resolveGuidanceText(recommendation.guidance_rationale, recommendation.guidance);
-          doThisSetLine = guidance.trim()
-            || `Next set: ${recommendation.recommended_reps_min}-${recommendation.recommended_reps_max} reps @ ${recommendation.recommended_weight == null ? "record actual load" : kgToLbs(recommendation.recommended_weight)} lbs`;
-        } else if (feedback) {
-          const guidance = resolveGuidanceText(feedback.guidance_rationale, feedback.guidance);
-          doThisSetLine = guidance.trim()
-            || `${authoredRepLabel(exercise)} reps @ ${Math.round(derivedWorkingLb)} lbs this set`;
-        } else {
-          doThisSetLine = `Do ${authoredRepLabel(exercise)} reps @ ${Math.round(derivedWorkingLb)} lbs this set`;
-        }
-
-        const currentSwapIndex = swapIndexByExercise[exerciseKey(exercise)] ?? 0;
-        const altCandidates = resolveSubstitutionCandidates(exercise, weakAreas);
-        const warmupLbs =
-          exercise.authored_prescription || exercise.performed_variant ? [] : baseline != null && baseline.warmupLbs.length > 0
-            ? baseline.warmupLbs.slice(0, warmUpCount)
-            : (exercise.warmups ?? []).slice(0, warmUpCount).map((kg) => kgToLbs(kg));
-        const hasWarmup = warmUpCount > 0 && warmupLbs.length > 0;
-        const hasCoachingDetails = !!(
-          exercise.last_set_intensity_technique
-          || exercise.rest
-          || exercise.early_set_rpe
-          || exercise.last_set_rpe
-          || (typeof exercise.notes === "string" && exercise.notes.trim().length > 0)
-        );
-
+        const loadContext: LoadContext = {...(loadContextByExercise[exerciseKey(exercise)] ?? loadIntelligence?.load_context ?? (exercise.customized?{unit:"kg",display_unit:"kg",basis:exercise.customized.identity.basis,equipment_key:exercise.customized.identity.equipment_key}:null) ?? { unit: "kg", display_unit: "lb", basis: "unknown" } as LoadContext), display_unit: preferences.weight_unit};
         const handleUndoLastSet = completed > 0 || effectiveSets.length > 0 ? async (): Promise<number | false> => {
           if (undoInFlight.current) return false;
           undoInFlight.current = true;
@@ -1691,6 +1243,7 @@ export default function TodayPage() {
             acknowledgeLogCommand(commandKey);
             if (currentOccurrence.current !== workoutReference(workout)) return false;
             advanceLoadGeneration(exerciseKey(exercise));
+            setGlobalRestTimer(timer => timer?.exerciseId === exerciseKey(exercise) ? null : timer);
             setLastSetByExercise((prev) => { const next = { ...prev }; delete next[exerciseKey(exercise)]; return next; });
             if (loadIntelligence !== undefined) updateLoadIntelligence(exerciseKey(exercise), result.load_intelligence ?? null);
             setSetFeedbackByExercise((prev) => { const next = { ...prev }; delete next[exerciseKey(exercise)]; return next; });
@@ -1739,11 +1292,11 @@ export default function TodayPage() {
           <ExerciseDetailOverlay
             key={`${exerciseKey(exercise)}/${exercise.performed_variant?.option_id ?? "source"}`}
             exercise={exercise.customized?{...exercise,customized_load_decision:(recommendation?.decision_trace?.load_decision as typeof exercise.customized_load_decision)??exercise.customized_load_decision}:exercise}
+            navigation={workout.exercises.map(item=>({id:exerciseKey(item),name:resolveDisplayExerciseName(item,resolveExerciseName(item,swapIndexByExercise),weakAreas),completed:completedSetsByExercise[exerciseKey(item)]??0,total:item.sets}))}
+            onSelectExercise={setSelectedExerciseId}
             selectedName={displayName}
             guideHref={guideHref}
             completed={completed}
-            doThisSetLine={doThisSetLine}
-            derivedWorkingLb={derivedWorkingLb}
             loadIntelligence={loadIntelligence}
             effectiveSets={effectiveSets}
             loadContext={loadContext}
@@ -1774,7 +1327,7 @@ export default function TodayPage() {
                 primary_exercise_id: exercise.primary_exercise_id ?? null, exercise_occurrence_id: exercise.exercise_occurrence_id,
                 command_id: getLogCommand(commandKey), set_index: ordinal, reps: performed.reps, weight: performed.weight, rpe: performed.rpe,
                 set_kind: "warmup", parent_set_index: null, technique: null, load_context: loadContext,
-                ...(loadIntelligence?.warmup_guidance?.id ? { load_recommendation_id: loadIntelligence.warmup_guidance.id } : {}) });
+                ...(loadIntelligence?.warmup_guidance?.id && loadIntelligence.load_context.display_unit === loadContext.display_unit ? { load_recommendation_id: loadIntelligence.warmup_guidance.id } : {}) });
               try {
                 const feedback = await api.logSet(workoutReference(workout), payload);
                 acknowledgeLogCommand(commandKey);
@@ -1815,11 +1368,6 @@ export default function TodayPage() {
                 if (currentOccurrence.current === workoutReference(workout)) applyProgressLoad(progress.exercises ?? [], generation);
               } catch { /* confirmed receipt already invalidated old advice */ }
             }}
-            warmUpCount={warmUpCount}
-            baseline={baseline}
-            warmupLbs={warmupLbs}
-            hasWarmup={hasWarmup}
-            hasCoachingDetails={hasCoachingDetails}
             techniquePanelState={techniqueModal && techniqueModal.exerciseId === exerciseKey(exercise) ? techniqueModal : null}
             onCloseTechniquePanel={() => setTechniqueModal(null)}
             onLogTechniquePanel={async (performed, ordinal) => {
@@ -1828,14 +1376,9 @@ export default function TodayPage() {
               }
               await handleLogTechniqueSubSet(techniqueModal, performed, ordinal);
             }}
-            currentSwapIndex={currentSwapIndex}
-            altCandidates={altCandidates}
-            lastSet={lastSet ?? null}
             mediaUrl={mediaUrl}
-            substitutions={substitutions}
             weakPointInstruction={weakPointInstruction}
-            notesOpen={notesOpenByExercise[exerciseKey(exercise)] ?? false}
-            isDeloadWeek={workout.deload?.active === true}
+            liveGuidance={!loadIntelligence && !exercise.customized ? resolveGuidanceText(recommendation?.guidance_rationale ?? feedback?.guidance_rationale, recommendation?.guidance ?? feedback?.guidance) : ""}
             onUndoLastSet={handleUndoLastSet}
             onAuthoredDecision={async (decision) => {
               if (!exercise.exercise_occurrence_id) throw new Error("Occurrence unavailable");
@@ -1857,7 +1400,6 @@ export default function TodayPage() {
               });
               setLoadContextByExercise(previous => { const next = { ...previous }; delete next[key]; return next; });
               setLoadOverrideByExercise(previous => { const next = { ...previous }; delete next[key]; return next; });
-              setBaselineByExercise(previous => { const next = { ...previous }; delete next[key]; return next; });
               setLastSetByExercise(previous => { const next = { ...previous }; delete next[key]; return next; });
               setLiveRecommendationByExercise(previous => { const next = { ...previous }; delete next[key]; return next; });
               setSetFeedbackByExercise(previous => { const next = { ...previous }; delete next[key]; return next; });
@@ -1866,19 +1408,8 @@ export default function TodayPage() {
               setWorkoutSummary(null);
             }}
             onClose={() => setSelectedExerciseId(null)}
-            onSwap={selectSwap}
-            onToggleNotes={() => toggleNotes(exerciseKey(exercise))}
             onSwapTarget={() => setSwapTargetExerciseId(exerciseKey(exercise))}
             onSetComplete={handleSetComplete}
-            onCalculateBaseline={(weightLb, reps) => {
-              const estimated1RM = epleyEstimate1RMLbs(weightLb, reps);
-              const workingWeightLb = workingWeightFrom1RMLb(estimated1RM);
-              const warmupLbsCalc = warmupsFromWorkingWeightLb(workingWeightLb, warmUpCount || 3);
-              setBaselineByExercise((prev) => ({
-                ...prev,
-                [exerciseKey(exercise)]: { weightLb, reps, estimated1RM, workingWeightLb, warmupLbs: warmupLbsCalc },
-              }));
-            }}
             globalRestTimer={globalRestTimer}
             onClearGlobalRestTimer={() => setGlobalRestTimer(null)}
           />
