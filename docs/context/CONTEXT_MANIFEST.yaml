@@ -1,5 +1,5 @@
 version: 2
-last_updated: '2026-09-28'
+last_updated: '2026-10-21'
 owner: documentation-governance
 purpose: Ordered area-scoped context under the owner-approved documentation authority baseline. Common group plus
   every affected area; no blanket historical reads.
@@ -286,6 +286,24 @@ mandatory_read_groups:
     role: Read in listed order for the affected area; Proposed status does not authorize implementation.
   - path: docs/plans/README.md
     role: Read in listed order for the affected area; Proposed status does not authorize implementation.
+- group: personal_capability_extensions
+  required_for:
+  - first-party WorkoutApp integrations
+  - Apple Health import
+  - HealthKit or Watch work
+  - shift-aware training or personal time constraints
+  - personal-response learning
+  - recovery, conditioning or body-composition personalization
+  - conversational coaching
+  requirement_families:
+  - PERS
+  docs:
+  - path: docs/requirements/personal-workoutapp-2026-10-21.md
+    role: Owner-approved product outcomes, not implementation or release authorization.
+  - path: docs/roadmap/personal-capability-crosswalk-2026-10-21.md
+    role: Cross-cutting placement into existing M0-M6 with dependency and gating direction.
+  - path: docs/operations/next-coder-handoff-2026-10-21.md
+    role: Read-only first-slice planning handoff; do not treat as authorization for code, live data or deployment.
 historical_snapshot: docs/archive/governance/context-manifest-2026-04-28.yaml
 authority_notes:
 - Owner product outcomes are distinct from Proposed mechanisms, implementation, verification and release acceptance.
