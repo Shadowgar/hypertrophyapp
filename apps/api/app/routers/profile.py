@@ -1084,6 +1084,7 @@ def wipe_current_user_data(
 
     _clear_user_training_state(db, user_id=user_id)
     db.query(PasswordResetToken).filter(PasswordResetToken.user_id == user_id).delete(synchronize_session=False)
+    db.query(UserInterfacePreference).filter(UserInterfacePreference.user_id == user_id).delete(synchronize_session=False)
     db.query(User).filter(User.id == user_id).delete(synchronize_session=False)
     db.commit()
 
