@@ -1,0 +1,36 @@
+{
+  "attempts": [
+    {
+      "url": "/api/workout/set/1e6a1c7e-98e7-48c0-a0d1-e4973a8fb110/correct",
+      "payload": {
+        "reps": 13,
+        "weight": 18.143694800000002,
+        "reason": "User corrected set",
+        "command_id": "f1b14b0b-ae71-4252-9f6c-4d9bd4534fac"
+      }
+    },
+    {
+      "url": "/api/workout/set/4af66d76-3fa4-4cca-af45-53d99865f05d/correct",
+      "payload": {
+        "reps": 13,
+        "weight": 18.143694800000002,
+        "reason": "User corrected set",
+        "command_id": "1c2c2abe-bf1a-42e1-8285-252548030dbf"
+      }
+    },
+    {
+      "url": "/api/workout/set/4af66d76-3fa4-4cca-af45-53d99865f05d/correct",
+      "payload": {
+        "reps": 13,
+        "weight": 18.143694800000002,
+        "reason": "User corrected set",
+        "command_id": "1c2c2abe-bf1a-42e1-8285-252548030dbf"
+      }
+    }
+  ],
+  "otherDeviceCorrectionCommitted": true,
+  "definitiveOldTargetRejected": true,
+  "newEffectiveReceiptLoaded": true,
+  "lostResponseExactRetryOnNewReceipt": true,
+  "errors": []
+}
