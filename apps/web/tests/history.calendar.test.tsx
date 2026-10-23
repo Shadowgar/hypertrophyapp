@@ -277,7 +277,7 @@ test("history calendar supports view toggles, filters, and previous weekday jump
 
   expect(screen.getByText(/Same-Weekday Comparison/i)).toBeInTheDocument();
   expect(screen.getByText(/Sets \+1/i)).toBeInTheDocument();
-  expect(screen.getByText(/Volume \+400/i)).toBeInTheDocument();
+  expect(screen.getByText(/Volume \+881\.8 lb/i)).toBeInTheDocument();
   expect(screen.getByText(/PR Days \+0/i)).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole("button", { name: /jump to previous same weekday/i }));
@@ -370,8 +370,8 @@ test("history page summarizes progression signals and coach queue", async () => 
 
   expect(screen.getByText(/Latest rationale: Momentum is high\./i)).toBeInTheDocument();
   expect(screen.getAllByText(/bench_press/i).length).toBeGreaterThan(0);
-  expect(screen.getAllByText(/PR 231\.5 lbs \(\+11 lbs\)/i).length).toBeGreaterThan(0);
-  expect(screen.getAllByText(/\+3\.3 lbs/i).length).toBeGreaterThan(0);
+  expect(screen.getAllByText(/PR 231\.5 lb \(\+11 lb\)/i).length).toBeGreaterThan(0);
+  expect(screen.getAllByText(/\+3\.3 lb/i).length).toBeGreaterThan(0);
   expect(screen.getByText(/Upcoming Changes/i)).toBeInTheDocument();
   expect(screen.getAllByText(/1 pending/i).length).toBeGreaterThan(0);
   expect(screen.getByText(/Latest type: coach_preview/i)).toBeInTheDocument();

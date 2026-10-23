@@ -54,7 +54,7 @@ test.each([
   render(<HistoryPage />);
 
   expect(await screen.findByText(new RegExp(`Window ${monthStart} to ${today}`))).toBeInTheDocument();
-  expect(screen.getByTitle(`${today}: 1 sets, 1 exercises, 100 volume, 0 PRs`)).toBeInTheDocument();
+  expect(screen.getByTitle(`${today}: 1 sets, 1 exercises, 220.5 lb × reps volume, 0 PRs`)).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Week" }));
   expect(await screen.findByText(new RegExp(`Window ${weekStart} to ${today}`))).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Previous Window" }));
