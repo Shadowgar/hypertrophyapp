@@ -570,3 +570,33 @@ input[type="radio"] {
     display: none;
   }
 }
+
+/* The overview rest bar must clear both shared navigation layouts. */
+.ux-rest-bar {
+  position: fixed;
+  z-index: 40;
+  bottom: calc(57px + max(8px, env(safe-area-inset-bottom)));
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--surface);
+}
+.ux-rest-bar > span { min-width: 0; overflow-wrap: anywhere; }
+.ux-rest-bar > div { flex-shrink: 0; }
+.ux-main:has(.ux-rest-bar) { padding-bottom: 200px; }
+@media (min-width: 1000px) {
+  .ux-rest-bar { left: 224px; bottom: 0; }
+  .ux-main:has(.ux-rest-bar) { padding-bottom: 120px; }
+}
+
+/* Legacy summary typography participates in the same appearance contract. */
+.telemetry-kicker { color: var(--text-secondary); }
+.telemetry-status { color: var(--text-primary); }
+.status-dot--green { background: var(--success-text); box-shadow: none; }
+.status-dot--yellow { background: var(--warning-text); box-shadow: none; }
+.status-dot--red { background: var(--error-text); box-shadow: none; }

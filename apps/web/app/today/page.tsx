@@ -40,7 +40,7 @@ import { parseRestToSeconds } from "@/lib/rest";
 import { authoredRelationshipLabels } from "@/lib/authored-relationships";
 import { formatCalendarDate } from "@/lib/calendar-date";
 import { resolveGuidanceText, currentLoadDecision, prefillLoadKg, useDeclaredLoadContextGuard, type LoadProjectionGeneration } from "@/lib/today-guidance";
-import { kgToLbs, lbsToKg, snapToHalfLb } from "@/lib/weight";
+import { lbsToKg } from "@/lib/weight";
 
 import { exerciseKey, workoutReference, occurrenceStorageKey, pendingCommandKey, getLogCommand, acknowledgeLogCommand, retainLogPayload } from "@/lib/workout-identity";
 
@@ -312,6 +312,8 @@ function resolveHealthStatus(health: string): "green" | "yellow" | "red" {
 }
 
 function WorkoutSummaryCard({ summary }: Readonly<{ summary: WorkoutSummary | null }>) {
+  const {preferences} = useAppearance();
+  const load = (kg: number) => `${displayLoad(kg, preferences.weight_unit)} ${preferences.weight_unit}`;
   if (!summary) {
     return null;
   }
@@ -328,7 +330,7 @@ function WorkoutSummaryCard({ summary }: Readonly<{ summary: WorkoutSummary | nu
           <span className="status-dot status-dot--green" /> {summary.percent_complete}% complete
         </p>
       </div>
-      <p className="telemetry-meta">Overall guidance: {resolveGuidanceText(summary.overall_rationale, summary.overall_guidance)}</p>
+      <p className="telemetry-meta">Review load guidance for each exercise below.</p>
       <div className="space-y-2">
         {exercises.map((item) => {
           const customized = item.decision_trace?.owner === "api.workout_customized-v1";
@@ -337,17 +339,17 @@ function WorkoutSummaryCard({ summary }: Readonly<{ summary: WorkoutSummary | nu
             <p className="font-semibold text-zinc-100">{item.performed_variant?.name ?? item.name}</p>
             {item.performed_variant ? <p>Original authored exercise: {item.name} · confirmed source-approved variant</p> : null}
             <p>
-              Planned: {item.planned_sets} sets · {item.planned_reps_min != null ? `${item.planned_reps_min}-${item.planned_reps_max}` : "authored target"} reps · {item.load_semantics === "bodyweight" ? "Bodyweight" : item.load_recommendation_available === false ? "Record actual variant load" : item.planned_weight == null ? "Load unknown" : `${kgToLbs(item.planned_weight)} lbs`}
+              Planned: {item.planned_sets} sets · {item.planned_reps_min != null ? `${item.planned_reps_min}-${item.planned_reps_max}` : "authored target"} reps · {item.load_semantics === "bodyweight" ? "Bodyweight" : item.load_recommendation_available === false ? "Record actual load" : item.planned_weight == null ? "Load unknown" : load(item.planned_weight)}
             </p>
             <p>
-              Performed: {item.performed_sets} sets · avg {item.average_performed_reps} reps · {item.load_semantics === "bodyweight" ? (item.average_performed_weight > 0 ? `Bodyweight + ${kgToLbs(item.average_performed_weight)} lb added` : "Bodyweight (no added load)") : customized ? `${item.average_performed_weight} kg` : `${kgToLbs(item.average_performed_weight)} lbs`}
+              Performed: {item.performed_sets} sets · avg {item.average_performed_reps} reps · {item.load_semantics === "bodyweight" ? (item.average_performed_weight > 0 ? `Bodyweight + ${load(item.average_performed_weight)} added` : "Bodyweight (no added load)") : load(item.average_performed_weight)}
             </p>
             {item.load_intelligence ? <>
-              <p>Next exposure: {item.load_intelligence.next_exposure.action}{item.load_intelligence.next_exposure.recommended_weight != null ? ` · ${kgToLbs(item.load_intelligence.next_exposure.recommended_weight)} lb` : " · no new load inferred"}</p>
+              <p>Next exposure: {item.load_intelligence.next_exposure.action}{item.load_intelligence.next_exposure.recommended_weight != null ? ` · ${load(item.load_intelligence.next_exposure.recommended_weight)}` : " · no new load inferred"}</p>
               <p>{item.load_intelligence.next_exposure.explanation}</p>
-              {item.load_intelligence.next_exposure.known_baseline_weight != null ? <p>Known baseline: {kgToLbs(item.load_intelligence.next_exposure.known_baseline_weight)} lb</p> : null}
+              {item.load_intelligence.next_exposure.known_baseline_weight != null ? <p>Known baseline: {load(item.load_intelligence.next_exposure.known_baseline_weight)}</p> : null}
             </> : <>
-              <p>Next: {item.load_semantics === "bodyweight" ? "Bodyweight" : item.load_recommendation_available === false || item.next_working_weight == null ? "Load advice pending comparable evidence" : customized ? `${item.next_working_weight} kg` : `${kgToLbs(item.next_working_weight)} lbs`}</p>
+              <p>Next: {item.load_semantics === "bodyweight" ? "Bodyweight" : item.load_recommendation_available === false || item.next_working_weight == null ? "Load advice pending comparable evidence" : load(item.next_working_weight)}</p>
               <p>{customized ? item.guidance : resolveGuidanceText(item.guidance_rationale, item.guidance)}</p>
             </>}
           </div>
@@ -1306,7 +1308,7 @@ export default function TodayPage() {
 
       {/* Global rest bar when overlay is closed (timer persists) */}
       {globalRestTimer != null && selectedExerciseId !== globalRestTimer.exerciseId ? (
-        <div className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-between gap-3 border-t border-zinc-800 bg-zinc-900/95 px-4 py-3 backdrop-blur safe-area-pb">
+        <div className="ux-rest-bar">
           <span className="text-sm font-medium tabular-nums text-zinc-200">
             Rest: {Math.floor(globalRestTimer.secondsLeft / 60)}:{(globalRestTimer.secondsLeft % 60).toString().padStart(2, "0")} — {globalRestTimer.exerciseName}
           </span>
