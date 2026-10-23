@@ -78,9 +78,9 @@ Physical iOS/Android keyboards and screen readers were not tested. Chromium focu
 
 ## Regression qualification
 
-Final application source: `895789061a67106461e493bd0453f947e3c33a03`. The before/after logging and appearance journeys ran at `400a646`; the final overview captures and regression/build checks include the subsequent overview fixes. See the [manifest](manifest.json) for artifact hashes and exact scope.
+Current application source: `d0cdaf95880e5f04794ea2f4bf5ea37e1021309d`. The before/after logging and appearance journeys ran at `400a646`; final overview captures include the overview fixes at `8957890`. The subsequent technique-persistence and snapshot-test fixes have fresh unit/build verification and do not change the captured layout. See the [manifest](manifest.json) for artifact hashes and exact scope.
 
-- 236 web tests across 43 files, including immutable retry, account changes, unit conversion, late responses, source prescriptions, corrections, undo, warm-up and technique reloads.
+- 237 web tests across 43 files, including immutable retry, account changes, unit conversion, late responses, source prescriptions, corrections, undo, warm-up and technique reloads.
 - 4 PostgreSQL profile tests, including preservation, strict field boundaries, account isolation and concurrent preference updates.
 - 76 authored load/warm-up API tests, including consuming the exact guidance returned by the first warm-up.
 - 38 History/occurrence/core receipt tests.
@@ -90,11 +90,15 @@ Final application source: `895789061a67106461e493bd0453f947e3c33a03`. The before
 
 Python 3.12, Node 22, Chromium 145, PostgreSQL 16. API tests use explicit isolated targets; browser data uses an additive-migrated database in a dedicated tmpfs container on loopback port 55418. Production services and persistence were not used.
 
-The initial full suite run during a concurrent build exceeded one interaction test’s 5000 ms timeout (235 passed, one timed out). The final 236-test suite passes on frozen application revision `8957890` without a concurrent build; the timeout is retained as a host-load limitation, not reclassified as a passing run. Initial preservation-copy attempts also rejected a duplicate migration-seeded schema marker and out-of-order self-referencing corrections; the copy harness was corrected to verify seed rows and insert parent receipts first, with transaction rollback preserving the disposable source.
+The initial full suite run during a concurrent build exceeded one interaction test’s 5000 ms timeout (235 passed, one timed out). The 236-test suite passed on frozen application revision `8957890`; the follow-up suite passes 237 tests across 43 files in 142.91 s without a concurrent build. The final loading-mock refinement additionally passes all four visual-route tests; the timeout is retained as a host-load limitation, not reclassified as a passing run. Initial preservation-copy attempts also rejected a duplicate migration-seeded schema marker and out-of-order self-referencing corrections; the copy harness was corrected to verify seed rows and insert parent receipts first, with transaction rollback preserving the disposable source.
+
+## Global CI status
+
+The first global CI run found four core-engine and five API failures, all independently reproduced on unchanged base `fc3bd0c`. Two API failures require a licensed source workbook absent from both checkouts. It also exposed a loading snapshot race and source-text technique persistence warning; both are corrected in the follow-up. Global CI is **not** reported green. See [CI evidence and limits](CI.md).
 
 ## Review and limits
 
-A fresh Astra reviewer examined the complete application diff, then verified fixes for appearance request shape, cross-tab draft resets, per-set observation carryover, late receipt reconciliation and interrupted technique entries. The final targeted reviews found the acknowledgement races resolved and no material regression in the overview unit, guidance and navigation corrections. This source review does not substitute for runtime tests above.
+A fresh Astra reviewer examined the complete application diff, then verified fixes for appearance request shape, cross-tab draft resets, per-set observation carryover, late receipt reconciliation and interrupted technique entries. The final targeted reviews found the acknowledgement races resolved and no material regression in the overview unit, guidance and navigation corrections or reference-only technique recovery. The reviewer also caught a scheduling-context request missing from the loading snapshot mock; that mock now holds all initial reads pending. This source review does not substitute for runtime tests above.
 
 Codex Security preflight passed; its 25-file diff inventory and source review found no validated new cross-account vulnerability. **Canonical scan export remains incomplete:** the host artifact writer rejected existing group-writable Codex state ancestors. Scan `4dd811ac-78b3-4cd8-b36b-2c583ed97644` is retained; no host configuration or permission changes were made. This is not reported as a completed sealed security scan.
 

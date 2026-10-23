@@ -1,0 +1,27 @@
+{
+  "baseRevision": "fc3bd0c7b93c9d3232e6aec758e16efcca6ac583",
+  "initialCandidateRevision": "52292a30de722d30d19ae878b788544c93322e2d",
+  "initialCiRun": 39879138922,
+  "baseSourceModified": false,
+  "productionAccess": false,
+  "core": {
+    "ciPassed": 770,
+    "ciFailed": 4,
+    "baselineSelected": 4,
+    "baselineFailed": 4,
+    "sameAssertions": true,
+    "durationSeconds": 0.83,
+    "logSha256": "fb4b0410fbbd475293b265d394c259426f64ec87bf604a418bca0366eee2ef05"
+  },
+  "api": {
+    "ciPassed": 872,
+    "ciSkipped": 118,
+    "ciFailed": 5,
+    "baselineSelected": 5,
+    "baselineFailed": 5,
+    "sameAssertions": true,
+    "durationSeconds": 47.37,
+    "logSha256": "e054c58207ce9cb37078cb45861522451a3ba5da48e7cc54ff42583016fa4105"
+  },
+  "releaseAcceptance": false
+}

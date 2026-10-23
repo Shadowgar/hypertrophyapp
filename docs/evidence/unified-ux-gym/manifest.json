@@ -3,7 +3,7 @@
   "designRevision": "33598c3fb35328cc2d2b6310865f716380b6c81e",
   "sourceBase": "fc3bd0c7b93c9d3232e6aec758e16efcca6ac583",
   "coreBrowserRevision": "400a64686b433117a8e831f6e2b773dbc5bfd2b7",
-  "finalApplicationRevision": "895789061a67106461e493bd0453f947e3c33a03",
+  "finalApplicationRevision": "d0cdaf95880e5f04794ea2f4bf5ea37e1021309d",
   "environment": {
     "node": "22.22",
     "python": "3.12.3",
@@ -90,15 +90,16 @@
     "mobile-full.json": "36447ce50efccb8a7f48630d063bf5bff637565b1942fe3ec4df6687198d46a7",
     "mobile-recovery.json": "17700153f189281309964c6493e2a0edf68546cb677f8fe7da4f022784cc6b91",
     "overview-layout.json": "18962ad27ad678e8a65f79e4c3e13b06c996b2a61d1545d3022a815f83837852",
-    "receipt-preservation.json": "095f318758845b1cce8fa3710d07d0002078136ebeb7af2e74f1ca575c15328f"
+    "receipt-preservation.json": "095f318758845b1cce8fa3710d07d0002078136ebeb7af2e74f1ca575c15328f",
+    "baseline-ci-proof.json": "f332cc72f695b1ff15e75cbf0959768a685193c83feb83dfc2082dc2e7cb82e4"
   },
   "checks": {
     "web": {
       "command": "npm --prefix apps/web test -- --maxWorkers=1",
       "filesPassed": 43,
-      "testsPassed": 236,
+      "testsPassed": 237,
       "exitCode": 0,
-      "logSha256": "47b9001444d4dfb516c605d28cd3b3640ddc24ece1259a7fe3f04d4471aab790"
+      "logSha256": "049c8808ae7909924fff7954d16d0b96772b119b001135c919ddcbe38f230e95"
     },
     "focusedApiCore": {
       "passed": 135,
@@ -120,6 +121,20 @@
       "newActiveLinkFailures": 0,
       "retainedBaselineFailures": 28
     },
-    "finalOverviewSourceReview": "No material regressions; source review only"
-  }
+    "finalOverviewSourceReview": "No material regressions; source review only",
+    "finalSnapshotFollowup": {
+      "filesPassed": 1,
+      "testsPassed": 4,
+      "exitCode": 0
+    },
+    "initialGlobalCi": {
+      "run": 39879138922,
+      "passed": false,
+      "baselineCoreFailures": 4,
+      "baselineApiFailures": 5,
+      "newWebSnapshotFailure": "fixed; follow-up local tests pass",
+      "newCodeQlTechniquePersistenceAlert": "source narrowed; follow-up analysis pending"
+    }
+  },
+  "finalBrowserOverviewRevision": "895789061a67106461e493bd0453f947e3c33a03"
 }
