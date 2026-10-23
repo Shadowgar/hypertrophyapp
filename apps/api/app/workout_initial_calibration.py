@@ -34,7 +34,18 @@ def setup_scope(context):
     return digest({key: context.get(key) for key in ("unit", "basis", "equipment_key")})
 
 
-def find_calibration(db, *, user_id, occurrence, exercise, supplied_context=None):
+def find_calibration(db, *, user_id, occurrence, exercise, supplied_context=None, calibration_rows=None):
+    if calibration_rows is not None:
+        # The response snapshot supplies account-filtered rows in revision order.
+        # Keep occurrence-local precedence even when another report is newer.
+        rows = calibration_rows.get(source_scope(exercise), ())
+        if supplied_context is not None:
+            context = supplied_context.model_dump(mode="json") if hasattr(supplied_context, "model_dump") else supplied_context
+            setup = setup_scope(context)
+            rows = [row for row in rows if row.setup_scope == setup]
+        current = next((row for row in rows if row.workout_occurrence_id == occurrence.id
+            and row.exercise_occurrence_id == exercise["exercise_occurrence_id"]), None)
+        return current or next(iter(rows), None)
     query = db.query(AuthoredInitialCalibration).filter_by(user_id=user_id, source_scope=source_scope(exercise))
     if supplied_context is not None:
         context = supplied_context.model_dump(mode="json") if hasattr(supplied_context, "model_dump") else supplied_context

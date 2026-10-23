@@ -16,6 +16,7 @@ from app import workout_load_state as load_state
 from app.workout_identity import resolve_occurrence
 from fastapi import HTTPException
 from authored_history_baseline import legacy_project_authored_load_feedback
+from authored_calibration_baseline import pre_perf_calibration_projection
 
 
 def multi_plan(user, week=None, *, performed_date=None, exercises=3):
@@ -75,7 +76,7 @@ def test_multi_exercise_response_reconstructs_history_once(scenario, monkeypatch
     session = multi_plan(user, performed_date=date.today())
     add_history(user, session, 2)
     original = load_state._all_groups
-    scans, queries, keys = [], [], []
+    scans, queries, keys, calibration_queries = [], [], [], []
     original_key = load_state._projection_key
     def measured(db, owner):
         result = original(db, owner)
@@ -83,6 +84,8 @@ def test_multi_exercise_response_reconstructs_history_once(scenario, monkeypatch
         return result
     def query(_conn, _cursor, sql, *_args):
         compact = " ".join(sql.lower().split())
+        if "from authored_initial_calibrations" in compact:
+            calibration_queries.append(compact)
         if "from workout_set_logs join workout_occurrences" in compact or (
                 "from workout_occurrences" in compact and "program_id in" in compact):
             queries.append(compact)
@@ -102,6 +105,79 @@ def test_multi_exercise_response_reconstructs_history_once(scenario, monkeypatch
     assert len(scans) == 1
     assert len(queries) == 2
     assert len(keys) == 9  # Six historical groups once, plus three current projections.
+    assert len(calibration_queries) == 1  # Reports are shared only within this response.
+
+
+def test_multi_exercise_response_normalizes_initial_history_once(scenario, monkeypatch):
+    uid, headers, client = scenario
+    session = multi_plan(uid, performed_date=date.today(), exercises=6)
+    add_history(uid, session, 4)
+    calls = []
+    original = load_state.source_scope
+
+    def measured(exercise):
+        calls.append(exercise["exercise_occurrence_id"])
+        return original(exercise)
+
+    monkeypatch.setattr(load_state, "source_scope", measured)
+    response = client.get("/workout/today", headers=headers)
+    assert response.status_code == 200, response.text
+    assert len(response.json()["exercises"]) == 6
+    # Twenty-four historical source scopes plus each current source scope;
+    # adding projected slots must not rehash every retained prescription.
+    assert len(calls) <= 30
+
+
+def test_multi_exercise_response_loads_current_warmup_protocol_once(scenario, monkeypatch):
+    uid, headers, client = scenario
+    session = multi_plan(uid, performed_date=date.today())
+    add_history(uid, session, 1)
+    calls = []
+    original = load_state._source_warmup_protocol
+
+    def measured(program_id):
+        calls.append(program_id)
+        return original(program_id)
+
+    monkeypatch.setattr(load_state, "_source_warmup_protocol", measured)
+    first = client.get("/workout/today", headers=headers)
+    assert first.status_code == 200, first.text
+    assert calls == ["pure_bodybuilding_phase_1_full_body"]
+    second = client.get("/workout/today", headers=headers)
+    assert second.status_code == 200, second.text
+    assert calls == ["pure_bodybuilding_phase_1_full_body"] * 2
+    assert first.json() == second.json()
+
+
+def test_response_warmup_protocol_and_provenance_cannot_mutate_sibling_projection(scenario, monkeypatch):
+    uid, _headers, _client = scenario
+    session = multi_plan(uid, performed_date=date.today())
+    original = load_state._source_warmup_protocol
+    captured = []
+
+    def measured(program_id):
+        value = original(program_id)
+        captured.append((value, deepcopy(value)))
+        return value
+
+    monkeypatch.setattr(load_state, "_source_warmup_protocol", measured)
+    with SessionLocal() as db:
+        user = db.get(User, uid)
+        occurrence, frozen = resolve_occurrence(db, uid, session["workout_occurrence_id"],
+            db.query(WorkoutPlan).filter_by(user_id=uid).all())
+        snapshot = load_state.load_authored_history_snapshot(db, user=user)
+        first = load_state.project_authored_load_feedback(db, user=user, occurrence=occurrence,
+            exercise=frozen["exercises"][0], supplied_context=CONTEXT, history_snapshot=snapshot)
+        trace = first["warmup_guidance"]["decision_trace"]
+        trace["source_protocol"].clear()
+        trace["source_protocol_provenance"].clear()
+        sibling = load_state.project_authored_load_feedback(db, user=user, occurrence=occurrence,
+            exercise=frozen["exercises"][1], supplied_context=CONTEXT, history_snapshot=snapshot)
+        sibling_trace = sibling["warmup_guidance"]["decision_trace"]
+        assert sibling_trace["source_protocol"]
+        assert sibling_trace["source_protocol_provenance"]["status"] == "compiled_source_protocol"
+        assert len(captured) == 1
+        assert captured[0][0] == captured[0][1]
 
 
 @pytest.mark.parametrize("case,completed", [
@@ -160,9 +236,12 @@ def test_snapshot_matches_pre_optimization_decisions_and_traces(scenario, case, 
         snapshot = load_state.load_authored_history_snapshot(db, user=user)
         shared = [load_state.project_authored_load_feedback(db, user=user, occurrence=occurrence,
             exercise=exercise, supplied_context=CONTEXT, history_snapshot=snapshot) for exercise in frozen["exercises"]]
+        original = [pre_perf_calibration_projection(db, user=user, occurrence=occurrence,
+            exercise=exercise, supplied_context=CONTEXT) for exercise in frozen["exercises"]]
         # Snapshot reuse must preserve the entire current response, including
         # calibration advice IDs and traces, not only the pre-amendment fields.
         assert shared == fresh
+        assert shared == original
         for current, legacy in zip(shared, baseline, strict=True):
             assert set(current) == set(legacy) | {"calibration", "initial_estimate"}
             # Keep every legacy field, ID, revision, reason and warm-up trace
@@ -186,6 +265,88 @@ def test_snapshot_matches_pre_optimization_decisions_and_traces(scenario, case, 
         assert frozen == preserved
         # A sibling source slot never inherits the modified first slot's evidence.
         assert shared[1]["next_exposure"]["evidence"]["completed_exposure_count"] == (1 if case in {"later_date","older_target"} else 2)
+
+
+def test_initial_history_presence_keeps_inclusive_performed_date_cutoff(scenario):
+    uid, _headers, _client = scenario
+    session = multi_plan(uid, performed_date=date.today(), exercises=1)
+    add_history(uid, session, 1)
+    with SessionLocal() as db:
+        historical = db.query(WorkoutOccurrence).filter_by(user_id=uid).one()
+        user = db.get(User, uid)
+        occurrence, frozen = resolve_occurrence(db, uid, session["workout_occurrence_id"],
+            db.query(WorkoutPlan).filter_by(user_id=uid).all())
+        for offset, present in ((1, False), (0, True), (-1, True)):
+            historical.scheduled_date = date.today() + timedelta(days=offset)
+            db.flush()
+            baseline = pre_perf_calibration_projection(db, user=user, occurrence=occurrence,
+                exercise=frozen["exercises"][0], supplied_context=CONTEXT)
+            snapshot = load_state.load_authored_history_snapshot(db, user=user)
+            projected = load_state.project_authored_load_feedback(db, user=user, occurrence=occurrence,
+                exercise=frozen["exercises"][0], supplied_context=CONTEXT, history_snapshot=snapshot)
+            assert projected == baseline
+            assert projected["initial_estimate"]["decision_trace"]["has_effective_history"] is present
+
+
+def test_batched_calibrations_preserve_account_setup_and_occurrence_precedence(scenario):
+    from app.models import AuthoredInitialCalibration
+    from app.workout_initial_calibration import source_scope, setup_scope
+    from test_authored_initial_calibration import calibration_payload
+
+    uid, _headers, _client = scenario
+    session = multi_plan(uid, performed_date=date.today(), exercises=1)
+    context_b = {**CONTEXT, "equipment_key": "another-synthetic-setup"}
+    with SessionLocal() as db:
+        user = db.get(User, uid)
+        other = User(id=str(uuid4()), email=f"{uuid4()}@example.com", name="Synthetic other user",
+            password_hash="unused", equipment_profile=[])
+        db.add(other)
+        db.flush()
+        occurrence, frozen = resolve_occurrence(db, uid, session["workout_occurrence_id"],
+            db.query(WorkoutPlan).filter_by(user_id=uid).all())
+        exercise = frozen["exercises"][0]
+        scope = source_scope(exercise)
+        rows = []
+        for owner, revision, local, context, source in (
+            (uid, 1, True, CONTEXT, scope),
+            (uid, 2, False, CONTEXT, scope),
+            (uid, 3, True, context_b, scope),
+            (uid, 4, True, CONTEXT, "different-source-scope"),
+            (other.id, 99, True, CONTEXT, scope),
+        ):
+            data = calibration_payload(session, variant_id=exercise["id"], load=100 - revision)["calibration"]
+            row = AuthoredInitialCalibration(user_id=owner, revision=revision, command_id=str(uuid4()),
+                command_digest="0" * 64, source_scope=source, setup_scope=setup_scope(context),
+                workout_occurrence_id=occurrence.id if local else "other-occurrence",
+                exercise_occurrence_id=exercise["exercise_occurrence_id"],
+                data=data, load_context=deepcopy(context))
+            db.add(row)
+            rows.append(row)
+        db.commit()
+        snapshot = load_state.load_authored_history_snapshot(db, user=user)
+        for supplied, expected in ((None, rows[2]), (CONTEXT, rows[0]), (context_b, rows[2]),
+                ({**CONTEXT, "equipment_key": "missing-synthetic-setup"}, None)):
+            baseline = pre_perf_calibration_projection(db, user=user, occurrence=occurrence,
+                exercise=exercise, supplied_context=supplied)
+            projected = load_state.project_authored_load_feedback(db, user=user, occurrence=occurrence,
+                exercise=exercise, supplied_context=supplied, history_snapshot=snapshot)
+            assert projected == baseline
+            assert (projected["calibration"]["id"] if projected["calibration"] else None) == (
+                expected.id if expected else None)
+        # A subsequent request sees the new report; the earlier response retains
+        # its own selected report instead of becoming a process/session cache.
+        latest = AuthoredInitialCalibration(user_id=uid, revision=5, command_id=str(uuid4()),
+            command_digest="1" * 64, source_scope=scope, setup_scope=setup_scope(CONTEXT),
+            workout_occurrence_id=occurrence.id, exercise_occurrence_id=exercise["exercise_occurrence_id"],
+            data=deepcopy(rows[0].data), load_context=deepcopy(CONTEXT))
+        db.add(latest)
+        db.commit()
+        old = load_state.project_authored_load_feedback(db, user=user, occurrence=occurrence,
+            exercise=exercise, supplied_context=CONTEXT, history_snapshot=snapshot)
+        fresh = load_state.project_authored_load_feedback(db, user=user, occurrence=occurrence,
+            exercise=exercise, supplied_context=CONTEXT)
+        assert old["calibration"]["id"] == rows[0].id
+        assert fresh["calibration"]["id"] == latest.id
 
 
 def test_snapshot_cannot_cross_users_or_database_sessions(scenario):

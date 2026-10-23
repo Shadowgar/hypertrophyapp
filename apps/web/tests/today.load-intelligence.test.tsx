@@ -461,3 +461,44 @@ test.each([
   expect(commands[1].path).toMatch(/\/set\/effective-replacement\/correct$/);
   expect(commands[1].body.command_id).not.toBe(commands[0].body.command_id);
 });
+
+
+test("same-occurrence reload keeps the edited actual draft and override reason", async () => {
+  await open();
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Weight (lb)" }), { target: { value: "60" } });
+  fireEvent.change(screen.getByRole("textbox", { name: "Load override reason (optional)" }), { target: { value: "equipment" } });
+  fireEvent.click(screen.getByRole("button", { name: "Back to list" }));
+  const reload = screen.getByRole("button", { name: "Reload" });
+  await waitFor(() => expect(reload).toBeEnabled());
+  fireEvent.click(reload);
+  await waitFor(() => expect(reload).toBeEnabled());
+  fireEvent.click(screen.getByRole("button", { name: /Intelligence Press/ }));
+  expect(screen.getByRole("spinbutton", { name: "Weight (lb)" })).toHaveValue(60);
+  expect(screen.getByRole("textbox", { name: "Load override reason (optional)" })).toHaveValue("equipment");
+});
+
+test.each(["success", "failure"])("a late Today refresh %s begun before a confirmed set cannot roll back actual progress", async outcome => {
+  await open();
+  const base = vi.mocked(fetch).getMockImplementation()!;
+  const staleReply = await base("/workout/today");
+  deferMutation = true;
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Weight (lb)" }), { target: { value: "60" } });
+  fireEvent.click(screen.getByRole("button", { name: "Complete Set" }));
+  await waitFor(() => expect(releaseMutation).toBeDefined());
+  fireEvent.click(screen.getByRole("button", { name: "Back to list" }));
+  const reload = screen.getByRole("button", { name: "Reload" });
+  await waitFor(() => expect(reload).toBeEnabled());
+  let release!: (reply: Response) => void;
+  vi.stubGlobal("fetch", vi.fn(async (input, init) => String(input).endsWith("/workout/today")
+    ? new Promise<Response>(resolve => { release = resolve; }) : base(input, init)));
+  fireEvent.click(reload);
+  await waitFor(() => expect(release).toBeDefined());
+  await act(async () => releaseMutation());
+  await act(async () => release(outcome === "success" ? staleReply : Response.json({ detail: "unavailable" }, { status: 503 })));
+  await nativeScreen.findByText("Workout changed while loading. Reload to verify the current workout. Your saved history is unchanged.");
+  expect(nativeScreen.queryByRole("region", { name: "Workout execution" })).not.toBeInTheDocument();
+  expect(writes.filter(write => write.path.endsWith("/log-set"))).toHaveLength(1);
+  vi.stubGlobal("fetch", vi.fn(base));
+  fireEvent.click(nativeScreen.getByRole("button", { name: "Reload" }));
+  await waitFor(() => expect(screen.getByRole("button", { name: /Intelligence Press/ })).toHaveTextContent(/1\s*\/\s*3/));
+});
