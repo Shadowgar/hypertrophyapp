@@ -1,6 +1,6 @@
 # Unified UX: account protection, foundations and gym execution
 
-Status: **In progress / owner approved for implementation, 2026-10-21**. No merge, deployment or production migration authorized.
+Status: **First application slice implemented and qualified in isolation, 2026-10-22; application PR prepared for review.** No merge, deployment or production migration authorized.
 
 Spec: [approved design PR #108 at 33598c3](https://github.com/Shadowgar/hypertrophyapp/tree/33598c3fb35328cc2d2b6310865f716380b6c81e/docs/ux/astra-2026-10-20/unified-2026-10-21). Source base fc3bd0c. First implementation PR; later focused PRs complete the remaining page layouts.
 
@@ -42,3 +42,7 @@ Interfaces: current Today command callbacks, effective receipts, source-preservi
 ## Review Focus
 
 Account changes during outstanding requests; concurrent appearance saves; pending commands after refresh; duplicate prevention; warmup/technique children and original/performed identity; unknown effort; unit conversion; confirmed receipts versus local draft; composer geometry and keyboard focus. No browser cache transfers data between accounts.
+
+## Delivery evidence
+
+[Runtime galleries, preservation proof, measurements and qualification limits](../evidence/unified-ux-gym/README.md). [All 28 audit finding statuses](../evidence/unified-ux-gym/TRACEABILITY.md) distinguish this slice from the remaining approved layouts. Production acceptance remains separate.

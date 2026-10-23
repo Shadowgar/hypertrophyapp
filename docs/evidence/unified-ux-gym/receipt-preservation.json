@@ -1,0 +1,26 @@
+[
+  {
+    "account": "mobile_final",
+    "crossBodyRowsIncludingAmendments": 6,
+    "effectiveWorkingRows": 3,
+    "effectiveWarmupRows": 1,
+    "correctionRetainsOriginal": true,
+    "undoRetainsVoidedRow": true,
+    "canonical40lbKg": 18.143694800000002,
+    "correctedReps": 12,
+    "actualRPE": 8.5,
+    "duplicateCommands": false
+  },
+  {
+    "account": "desktop_final",
+    "crossBodyRowsIncludingAmendments": 6,
+    "effectiveWorkingRows": 3,
+    "effectiveWarmupRows": 1,
+    "correctionRetainsOriginal": true,
+    "undoRetainsVoidedRow": true,
+    "canonical40lbKg": 18.143694800000002,
+    "correctedReps": 12,
+    "actualRPE": 8.5,
+    "duplicateCommands": false
+  }
+]

@@ -1,0 +1,77 @@
+{
+  "sixSaves": true,
+  "followDevice": true,
+  "crossDevicePersistence": true,
+  "otherAccountClassicDark": true,
+  "profileSha256Before": "866ed41ce5a3440dc9eb05ace28f28dc5490e25e34f62ede4b68dc537e098c67",
+  "profileSha256After": "866ed41ce5a3440dc9eb05ace28f28dc5490e25e34f62ede4b68dc537e098c67",
+  "themes": [
+    {
+      "surface": "#ffffff",
+      "text-primary": "#1b1b1b",
+      "text-secondary": "#454545",
+      "focus": "#1559b7",
+      "success-text": "#236b3c",
+      "warning-text": "#805400",
+      "error-text": "#af2431",
+      "family": "graphite",
+      "appearance": "light"
+    },
+    {
+      "surface": "#191919",
+      "text-primary": "#f0f0f0",
+      "text-secondary": "#bdbdbd",
+      "focus": "#a5ceff",
+      "success-text": "#8ed6a2",
+      "warning-text": "#ebc17a",
+      "error-text": "#ff969b",
+      "family": "graphite",
+      "appearance": "dark"
+    },
+    {
+      "surface": "#ffffff",
+      "text-primary": "#242424",
+      "text-secondary": "#484848",
+      "focus": "#242424",
+      "success-text": "#236b3c",
+      "warning-text": "#805400",
+      "error-text": "#af2431",
+      "family": "charcoal",
+      "appearance": "light"
+    },
+    {
+      "surface": "#292929",
+      "text-primary": "#ececec",
+      "text-secondary": "#c0c0c0",
+      "focus": "#ffffff",
+      "success-text": "#8ed6a2",
+      "warning-text": "#ebc17a",
+      "error-text": "#ff969b",
+      "family": "charcoal",
+      "appearance": "dark"
+    },
+    {
+      "surface": "#ffffff",
+      "text-primary": "#171717",
+      "text-secondary": "#444444",
+      "focus": "#b4232d",
+      "success-text": "#236b3c",
+      "warning-text": "#805400",
+      "error-text": "#af2431",
+      "family": "classic",
+      "appearance": "light"
+    },
+    {
+      "surface": "#191919",
+      "text-primary": "#f5f5f5",
+      "text-secondary": "#c2c2c2",
+      "focus": "#ffabb0",
+      "success-text": "#8ed6a2",
+      "warning-text": "#ebc17a",
+      "error-text": "#ff969b",
+      "family": "classic",
+      "appearance": "dark"
+    }
+  ],
+  "errors": []
+}

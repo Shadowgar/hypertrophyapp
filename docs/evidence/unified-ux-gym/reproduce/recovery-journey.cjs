@@ -1,0 +1,26 @@
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'playwright');const fs=require('fs'),assert=require('assert');
+(async()=>{const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_EXECUTABLE || undefined,args:['--no-sandbox']});try{
+const label=process.argv[2]||'mobile_final',root=process.env.UX_OUTPUT_DIR || __dirname,fixture=JSON.parse(fs.readFileSync(root+'/fixtures.json'))[label];
+const page=await browser.newPage({viewport:label.startsWith('desktop')?{width:1440,height:1000}:{width:390,height:844}});page.setDefaultTimeout(30000);
+const commands=[],errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>{if(r.url().includes('/log-set'))commands.push(JSON.parse(r.postData()));});
+await page.goto('http://127.0.0.1:3018/login');await page.evaluate(t=>localStorage.setItem('hypertrophy_token',t),fixture.token);await page.goto('http://127.0.0.1:3018/today');
+if(!await page.getByRole('region',{name:'Workout execution'}).isVisible())await page.getByRole('button',{name:/Cross-Body Lat Pull-Around/}).first().click();
+await page.getByRole('button',{name:'Save set 2',exact:true}).waitFor();
+await page.getByRole('spinbutton',{name:'Working weight (lb)'}).fill('40');await page.getByRole('spinbutton',{name:'Working repetitions'}).fill('11');
+let lost=false;await page.route('**/api/workout/*/log-set',async route=>{if(lost)return route.continue();lost=true;const r=await route.fetch();assert.equal(r.status(),200);await route.abort('connectionreset');});
+await page.getByRole('button',{name:'Save set 2',exact:true}).click();await page.getByText('Save not confirmed. Retry the same set.',{exact:true}).waitFor();
+assert(await page.getByRole('spinbutton',{name:'Working weight (lb)'}).getAttribute('readonly')!==null);await page.screenshot({path:root+`/${label}-uncertain.png`});
+await page.getByRole('button',{name:'Retry same set',exact:true}).click();await page.getByText('✓ Set 2 saved',{exact:true}).waitFor();assert.deepStrictEqual(commands[0],commands[1]);await page.unroute('**/api/workout/*/log-set');
+await page.reload();await page.getByRole('spinbutton',{name:'Working repetitions'}).waitFor();await page.getByRole('spinbutton',{name:'Working repetitions'}).fill('10');
+const acknowledge=page.getByRole('checkbox',{name:/source technique/});if(await acknowledge.count())await acknowledge.check();
+let offline=true;await page.route('**/api/workout/*/log-set',async route=>offline?route.abort('failed'):route.continue());
+await page.getByRole('button',{name:'Save set 3',exact:true}).click();await page.getByText('Save not confirmed. Retry the same set.',{exact:true}).waitFor();await page.reload();
+await page.getByText('Previous save is unconfirmed. Retry these exact values.',{exact:true}).waitFor();offline=false;await page.getByRole('button',{name:'Retry same set',exact:true}).click();await page.getByText('✓ Set 3 saved',{exact:true}).waitFor();assert.deepStrictEqual(commands[2],commands[3]);await page.unroute('**/api/workout/*/log-set');
+await page.getByRole('button',{name:/^Recorded sets|^Correct or undo$/}).first().click();const sheet=page.getByRole('dialog',{name:'Recorded sets',exact:true});await sheet.getByRole('button',{name:'Edit set 2',exact:true}).click();await sheet.getByRole('spinbutton',{name:'Corrected reps',exact:true}).fill('12');await sheet.getByRole('spinbutton',{name:'Corrected actual RPE',exact:true}).fill('8.5');await sheet.getByRole('textbox',{name:'Correction reason',exact:true}).fill('Synthetic test: correcting a mistyped rep count');await sheet.getByRole('button',{name:'Save correction',exact:true}).click();await sheet.getByRole('button',{name:'Save correction',exact:true}).waitFor({state:'hidden'});
+await page.screenshot({path:root+`/${label}-corrected.png`});
+await sheet.getByRole('button',{name:/Undo/}).click();await sheet.getByRole('button',{name:'Edit set 3',exact:true}).waitFor({state:'hidden'});await page.getByRole('button',{name:'Close Recorded sets'}).click();await page.reload();
+await page.getByRole('spinbutton',{name:'Working repetitions'}).fill('10');if(await acknowledge.count())await acknowledge.check();await page.getByRole('button',{name:'Save set 3',exact:true}).click();await page.getByText('✓ Set 3 saved',{exact:true}).waitFor();assert.notEqual(commands[4].command_id,commands[3].command_id);
+await page.screenshot({path:root+`/${label}-recovered.png`});
+await page.goto('http://127.0.0.1:3018/history');await page.getByRole('heading',{name:'History',exact:true}).waitFor();await page.screenshot({path:root+`/${label}-history.png`});
+fs.writeFileSync(root+`/${label}-recovery.json`,JSON.stringify({steps:['resume confirmed set1','set2 response lost after server commit','exact retry','reload','set3 network failure before request','reload pending','exact retry','correct set2 reps and actual RPE','undo set3','reload','new command for replacement set3','History'],attempts:commands.map(x=>({command_id:x.command_id,set_index:x.set_index,reps:x.reps,weight:x.weight})),errors},null,2));console.log('Recovery journey passed',label,commands.length,'attempts',errors.length,'runtime errors');
+}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1});
