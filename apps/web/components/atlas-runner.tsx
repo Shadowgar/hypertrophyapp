@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { ApiError } from "@/lib/api";
 import type {
   EffectiveLoadSet,
   LoadContext,
@@ -44,6 +45,7 @@ type Props = {
     value: PerformedSet,
   ) => Promise<void> | void;
   onUndo?: () => Promise<number | false> | void;
+  undoRecovery?: boolean;
   onCorrect: React.ComponentProps<typeof LoadIntelligencePanel>["onCorrect"];
   warmups: React.ReactNode;
   details: React.ReactNode;
@@ -132,6 +134,16 @@ export function AtlasRunner(p: Props) {
   const [actionStatus, setActionStatus] = useState("");
   const [undoBusy, setUndoBusy] = useState(false);
   const undoPending = useRef(false);
+  const undoLocked = undoBusy || Boolean(p.undoRecovery);
+  async function runUndo() {
+    if (undoPending.current || !p.onUndo) return;
+    undoPending.current = true; setUndoBusy(true); setActionStatus("Undoing last set…");
+    try {
+      const count = await p.onUndo();
+      setActionStatus(count === false ? "Undo not confirmed. Retry the same action." : "Last set undone. The original record remains in History.");
+    } catch (error) { setActionStatus(error instanceof ApiError ? error.message : "Undo not confirmed. Retry the same action."); }
+    finally { undoPending.current = false; setUndoBusy(false); }
+  }
   const currentIndex = p.navigation.findIndex((e) => e.id === key);
   const setIndex = Math.min(
     ctrl.draft.attempt?.set ?? ctrl.confirmed + 1,
@@ -155,7 +167,7 @@ export function AtlasRunner(p: Props) {
   const saving = ctrl.phase === "pending";
   const done = ctrl.confirmed >= p.exercise.sets && !ctrl.draft.attempt;
   const disabled =
-    done ||
+    undoLocked || done ||
     ctrl.phase === "conflict" ||
     (!ctrl.draft.attempt &&
       (!ctrl.valid ||
@@ -174,6 +186,7 @@ export function AtlasRunner(p: Props) {
       <p className="ux-muted">
         Saved performance for this exercise. Warm-ups stay separate.
       </p>
+      <fieldset disabled={undoLocked}>
       <LoadIntelligencePanel
         commandScope={p.scope}
         exerciseIdentity={key}
@@ -191,29 +204,12 @@ export function AtlasRunner(p: Props) {
         effectiveSets={p.receipts}
         requireExternalWeight={!bodyweight}
       />
+      </fieldset>
       {p.receipts.length === 0 ? <p>No saved sets yet.</p> : null}
       <Button
         variant="secondary"
         disabled={!p.onUndo || undoBusy || ctrl.locked}
-        onClick={async () => {
-          if (undoPending.current) return;
-          undoPending.current = true;
-          setUndoBusy(true);
-          setActionStatus("Undoing last set…");
-          try {
-            const count = await p.onUndo?.();
-            setActionStatus(
-              count === false
-                ? "Undo not confirmed. Retry the same action."
-                : "Last set undone. The original record remains in History.",
-            );
-          } catch {
-            setActionStatus("Undo not confirmed. Retry the same action.");
-          } finally {
-            undoPending.current = false;
-            setUndoBusy(false);
-          }
-        }}
+        onClick={runUndo}
       >
         Undo last {p.receipts.at(-1)?.set_kind === "warmup" ? "warm-up" : "set"}
       </Button>
@@ -228,7 +224,8 @@ export function AtlasRunner(p: Props) {
           <button
             key={e.id}
             aria-current={e.id === key ? "step" : undefined}
-            onClick={() => p.onSelect(e.id)}
+            disabled={undoLocked}
+            onClick={() => { if (!undoPending.current && !p.undoRecovery) p.onSelect(e.id); }}
           >
             <span>
               {String(i + 1).padStart(2, "0")} · {e.name}
@@ -238,23 +235,23 @@ export function AtlasRunner(p: Props) {
             </small>
           </button>
         ))}
-        <Button variant="secondary" onClick={p.onClose}>
+        <Button variant="secondary" disabled={undoLocked} onClick={p.onClose}>
           Review workout
         </Button>
-        <Link href="/week">Back to Week</Link>
+        {undoLocked ? <span aria-disabled="true">Back to Week</span> : <Link href="/week">Back to Week</Link>}
       </nav>
       <div className="atlas-center">
         <nav className="atlas-switcher" aria-label="Exercise navigation">
           <button
             aria-label="Previous exercise"
-            disabled={currentIndex <= 0}
+            disabled={undoLocked || currentIndex <= 0}
             onClick={() => p.onSelect(p.navigation[currentIndex - 1].id)}
           >
             ‹
           </button>
           <label>
             <span className="sr-only">Select exercise</span>
-            <select value={key} onChange={(e) => p.onSelect(e.target.value)}>
+            <select disabled={undoLocked} value={key} onChange={(e) => p.onSelect(e.target.value)}>
               {p.navigation.map((e, i) => (
                 <option key={e.id} value={e.id}>
                   Exercise {i + 1} of {p.navigation.length} · {e.name}
@@ -264,12 +261,17 @@ export function AtlasRunner(p: Props) {
           </label>
           <button
             aria-label="Next exercise"
-            disabled={currentIndex >= p.navigation.length - 1}
+            disabled={undoLocked || currentIndex >= p.navigation.length - 1}
             onClick={() => p.onSelect(p.navigation[currentIndex + 1].id)}
           >
             ›
           </button>
         </nav>
+        {undoLocked ? <div className="ux-card" role="status">
+          <p>{actionStatus || "Undo not confirmed. Retry the original undo before continuing."}</p>
+          <p>Set entry, corrections, warm-ups and exercise navigation are paused until the original undo is confirmed.</p>
+          <Button disabled={undoBusy || !p.onUndo} onClick={runUndo}>Retry original undo</Button>
+        </div> : null}
         <p className="atlas-mode">
           {p.exercise.customized ? "Customized" : "Authored"} · Today
         </p>
@@ -362,7 +364,7 @@ export function AtlasRunner(p: Props) {
                 type="number"
                 min="0"
                 step="any"
-                readOnly={ctrl.locked || done}
+                readOnly={ctrl.locked || undoLocked || done}
                 value={ctrl.draft.weight}
                 onChange={(e) => ctrl.edit("weight", e.target.value)}
               />
@@ -375,7 +377,7 @@ export function AtlasRunner(p: Props) {
                 type="number"
                 min="1"
                 step="1"
-                readOnly={ctrl.locked || done}
+                readOnly={ctrl.locked || undoLocked || done}
                 placeholder="—"
                 value={ctrl.draft.reps}
                 onChange={(e) => ctrl.edit("reps", e.target.value)}
@@ -441,6 +443,7 @@ export function AtlasRunner(p: Props) {
             <label className="flex gap-3 items-center">
               <input
                 type="checkbox"
+                disabled={undoLocked}
                 checked={accepted}
                 onChange={(e) => setAccepted(e.target.checked)}
               />
@@ -448,10 +451,11 @@ export function AtlasRunner(p: Props) {
             </label>
           </div>
         ) : null}
-        {p.technique}
+        <fieldset disabled={undoLocked}>{p.technique}</fieldset>
         <Button
           className="w-full atlas-mobile-review"
           variant="secondary"
+          disabled={undoLocked}
           onClick={p.onClose}
         >
           Review workout
@@ -504,14 +508,14 @@ export function AtlasRunner(p: Props) {
         open={panel === "warmup"}
         close={() => setPanel(null)}
       >
-        {p.warmups}
+        <fieldset disabled={undoLocked}>{p.warmups}</fieldset>
       </Sheet>
       <Sheet
         name="Guide & setup"
         open={panel === "guide"}
         close={() => setPanel(null)}
       >
-        <fieldset disabled={ctrl.locked}>{p.details}</fieldset>
+        <fieldset disabled={ctrl.locked || undoLocked}>{p.details}</fieldset>
       </Sheet>
       <Sheet
         name="Recorded sets"
@@ -537,7 +541,7 @@ export function AtlasRunner(p: Props) {
               min="0"
               max="10"
               step="0.5"
-              readOnly={ctrl.locked}
+              readOnly={ctrl.locked || undoLocked}
               value={ctrl.draft.rpe}
               onChange={(e) => {
                 ctrl.edit("rir", "");
@@ -554,7 +558,7 @@ export function AtlasRunner(p: Props) {
                   min="0"
                   max="10"
                   step="0.5"
-                  readOnly={ctrl.locked}
+                  readOnly={ctrl.locked || undoLocked}
                   value={ctrl.draft.rir}
                   onChange={(e) => {
                     ctrl.edit("rpe", "");
@@ -569,7 +573,7 @@ export function AtlasRunner(p: Props) {
               <label className="ux-field">
                 Technique quality
                 <select
-                  disabled={ctrl.locked}
+                  disabled={ctrl.locked || undoLocked}
                   value={ctrl.draft.quality}
                   onChange={(e) =>
                     ctrl.edit(
@@ -586,7 +590,7 @@ export function AtlasRunner(p: Props) {
               <label className="ux-field">
                 Pain during this set
                 <select
-                  disabled={ctrl.locked}
+                  disabled={ctrl.locked || undoLocked}
                   value={ctrl.draft.pain}
                   onChange={(e) =>
                     ctrl.edit(
@@ -618,6 +622,7 @@ export function AtlasRunner(p: Props) {
           <label className="ux-field">
             Starting-load path
             <select
+              disabled={undoLocked}
               value={calibration}
               onChange={(e) => setCalibration(e.target.value)}
             >
@@ -634,6 +639,7 @@ export function AtlasRunner(p: Props) {
                   type="number"
                   min="0"
                   step="any"
+                  readOnly={undoLocked}
                   value={knownMax}
                   onChange={(e) => setKnownMax(e.target.value)}
                 />
@@ -643,7 +649,7 @@ export function AtlasRunner(p: Props) {
                 result. No supported 1RM-to-working-load calculation is
                 available here. Enter your actual starting load below.
               </p>
-              {p.exercise.customized ? (
+              {p.exercise.customized && !undoLocked ? (
                 <Link href="/customize">
                   Manage confirmed strength information with your equipment
                 </Link>
@@ -663,7 +669,7 @@ export function AtlasRunner(p: Props) {
               type="number"
               min="0"
               step="any"
-              readOnly={ctrl.locked}
+              readOnly={ctrl.locked || undoLocked}
               value={ctrl.draft.weight}
               onChange={(e) => ctrl.edit("weight", e.target.value)}
             />

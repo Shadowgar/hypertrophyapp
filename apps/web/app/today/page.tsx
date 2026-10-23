@@ -24,6 +24,7 @@ import {
 } from "@/components/exercise-control";
 import {
   api,
+  getToken,
   ApiError,
   type SorenessSeverity,
   type WorkoutExercise,
@@ -35,14 +36,22 @@ import {
   type LoadIntelligence,
   type EffectiveLoadSet,
 } from "@/lib/api";
-import { canonicalLoad, displayLoad } from "@/lib/appearance";
+import { accountScope, canonicalLoad, displayLoad } from "@/lib/appearance";
 import { parseRestToSeconds } from "@/lib/rest";
 import { authoredRelationshipLabels } from "@/lib/authored-relationships";
 import { formatCalendarDate } from "@/lib/calendar-date";
 import { resolveGuidanceText, currentLoadDecision, prefillLoadKg, useDeclaredLoadContextGuard, type LoadProjectionGeneration } from "@/lib/today-guidance";
 import { lbsToKg } from "@/lib/weight";
 
-import { exerciseKey, workoutReference, occurrenceStorageKey, pendingCommandKey, getLogCommand, acknowledgeLogCommand, retainLogPayload } from "@/lib/workout-identity";
+import { exerciseKey, workoutReference, occurrenceStorageKey, pendingCommandKey, getLogCommand, acknowledgeLogCommand, retainLogPayload, pendingLogPayload } from "@/lib/workout-identity";
+
+type UndoAttempt = { scope: string; workoutId: string; exerciseId: string; exerciseIdentity: string; exerciseOccurrenceId?: string; command: string };
+function isDefinitiveUndoRejection(error: unknown): error is ApiError {
+  return error instanceof ApiError && error.status === 409 && error.message === "Historical replay context unavailable; original record retained without changes";
+}
+function undoRecoveryStorageKey() {
+  return `hypertrophy_undo_recovery_v1:${accountScope(getToken()) ?? "guest"}`;
+}
 
 type SwapState = Record<string, number>;
 type NotesState = Record<string, boolean>;
@@ -373,6 +382,7 @@ function ExerciseDetailOverlay({
   weakPointInstruction,
   liveGuidance,
   onUndoLastSet,
+  undoRecovery,
   onClose,
   onSwapTarget,
   onSetComplete,
@@ -403,6 +413,7 @@ function ExerciseDetailOverlay({
   weakPointInstruction: string | null;
   liveGuidance: string;
   onUndoLastSet?: () => Promise<number | false> | void;
+  undoRecovery: boolean;
   onClose: () => void;
   onSwapTarget: () => void;
   onSetComplete: (exerciseId: string, count: number, performed: PerformedSet) => Promise<void> | void;
@@ -424,7 +435,7 @@ function ExerciseDetailOverlay({
   const bodyweight = isBodyweightAuthored(exercise) || Boolean(exercise.customized && exercise.load_semantics === "bodyweight");
   return <AtlasRunner exercise={exercise} name={selectedName} completed={completed} scope={warmupCommandScope}
     guidance={loadIntelligence} context={loadContext} receipts={effectiveSets} navigation={navigation} onSelect={onSelectExercise}
-    onClose={onClose} submit={onSetComplete} onUndo={onUndoLastSet} onCorrect={onCorrectSet} rest={globalRestTimer} endRest={onClearGlobalRestTimer}
+    onClose={onClose} submit={onSetComplete} onUndo={onUndoLastSet} undoRecovery={undoRecovery} onCorrect={onCorrectSet} rest={globalRestTimer} endRest={onClearGlobalRestTimer}
     warmups={exercise.authored_prescription ? <AuthoredWarmups guidance={loadIntelligence?.warmup_guidance} sourceCount={authoredWarmupLabel(exercise)}
       receipts={effectiveSets} loadContext={loadContext} commandScope={warmupCommandScope} exerciseId={exerciseKey(exercise)}
       performedVariant={Boolean(exercise.performed_variant)} bodyweight={bodyweight}
@@ -559,6 +570,9 @@ export default function TodayPage() {
   } | null>(null);
   const currentOccurrence = useRef<string | null>(null);
   const undoInFlight = useRef(false);
+  const [undoRecovery, setUndoRecovery] = useState<UndoAttempt | null>(() => pendingLogPayload<UndoAttempt>(undoRecoveryStorageKey()));
+  const undoRecoveryRef = useRef(undoRecovery);
+  const [priorUndoBusy, setPriorUndoBusy] = useState(false);
   const hasAutoLoadStarted = useRef(false);
   const isBeginWorkoutLoadInProgress = useRef(false);
   const sorenessDismissedDate = useRef<string | null>(null);
@@ -640,6 +654,8 @@ export default function TodayPage() {
       } else {
         setSwapIndexByExercise({});
       }
+      const savedUndo = pendingLogPayload<UndoAttempt>(undoRecoveryStorageKey());
+      undoRecoveryRef.current = savedUndo; setUndoRecovery(savedUndo);
       setWorkout(data);
       setCompletedSetsByExercise(Object.fromEntries(data.exercises.map(item => [exerciseKey(item), item.completed_sets ?? 0])));
       setWorkoutProgress(null);
@@ -679,6 +695,7 @@ export default function TodayPage() {
           restoredRest = {...savedRest, secondsLeft: Math.ceil((savedRest.deadline-Date.now())/1000)};
         }
       } catch { /* storage is optional */ }
+      if (savedUndo) selected = savedUndo.scope === occurrenceStorageKey("attempt", data) ? savedUndo.exerciseIdentity : null;
       setSelectedExerciseId(data.exercises.some(e => exerciseKey(e) === selected) ? selected : null);
       setTechniqueModal(restoredTechnique);
       setGlobalRestTimer(restoredRest);
@@ -741,6 +758,28 @@ export default function TodayPage() {
       return null;
     }
   }, [loadWorkoutSummary, applyProgressLoad, resetSelectedLoadContext, getScopedWorkoutProgress]);
+
+  async function recoverPriorUndo() {
+    const attempt = undoRecoveryRef.current;
+    if (!attempt || undoInFlight.current) return;
+    undoInFlight.current = true; setPriorUndoBusy(true);
+    const recoveryKey = undoRecoveryStorageKey();
+    try {
+      const reply = await api.undoLastSet(attempt.workoutId, attempt.exerciseId, attempt.exerciseOccurrenceId, attempt.command);
+      const progress = await api.getWorkoutProgress(attempt.workoutId);
+      if (undoRecoveryStorageKey() !== recoveryKey) return;
+      const count = progress.exercises?.find(item => (item.exercise_occurrence_id ?? item.exercise_id) === attempt.exerciseIdentity)?.completed_sets ?? reply.live_recommendation?.completed_sets;
+      if (count == null || !Number.isInteger(count) || count < 0) throw new Error("Saved sets unavailable");
+      acknowledgeLogCommand(pendingCommandKey(attempt.scope, attempt.exerciseIdentity, "undo"));
+      acknowledgeLogCommand(recoveryKey); undoRecoveryRef.current = null; setUndoRecovery(null);
+      await loadToday();
+    } catch (error) {
+      if (isDefinitiveUndoRejection(error) && undoRecoveryStorageKey() === recoveryKey) {
+        acknowledgeLogCommand(pendingCommandKey(attempt.scope, attempt.exerciseIdentity, "undo"));
+        acknowledgeLogCommand(recoveryKey); undoRecoveryRef.current = null; setUndoRecovery(null); setMessage(error.message);
+      } else setMessage("Undo not confirmed. Retry the original undo; workout changes remain paused.");
+    } finally { undoInFlight.current = false; setPriorUndoBusy(false); }
+  }
 
   const resetSorenessForm = useCallback(() => {
     setSorenessByMuscle(createInitialSorenessState());
@@ -856,6 +895,7 @@ export default function TodayPage() {
   }
 
   function selectSwap(exerciseId: string, selectedIndex: number) {
+    if (undoRecoveryRef.current) return;
     setSwapIndexByExercise((prev) => {
       return { ...prev, [exerciseId]: selectedIndex };
     });
@@ -867,6 +907,7 @@ export default function TodayPage() {
     completedCount: number,
     performed: PerformedSet,
   ) {
+    if (undoRecoveryRef.current) throw new Error("Confirm the original undo before recording more work.");
     if (!workout) return;
     // find exercise info for payload
     const exercise = (workout.exercises ?? []).find((e) => exerciseKey(e) === exerciseId);
@@ -996,6 +1037,7 @@ export default function TodayPage() {
     performed: { reps: number; weight: number },
     ordinal: number,
   ) {
+    if (undoRecoveryRef.current) throw new Error("Confirm the original undo before recording technique work.");
     const exercise = (workout?.exercises ?? []).find((entry) => exerciseKey(entry) === state.exerciseId);
     if (!exercise) throw new Error("Exercise occurrence is unavailable");
     const commandKey = pendingCommandKey(workout ? occurrenceStorageKey("attempt", workout) : state.workoutId, state.exerciseId, `${state.kind}:${state.parentSetIndex}:${ordinal}`);
@@ -1023,6 +1065,83 @@ export default function TodayPage() {
     if (techniqueModal) await handleLogTechniqueSubSet(techniqueModal, performed, ordinal);
   };
 
+  async function handleUndoLastSet(exercise: WorkoutExercise): Promise<number | false> {
+    if (!workout) return false;
+    const loadIntelligence = intelligenceFor(exercise);
+    if (undoInFlight.current) return false;
+    undoInFlight.current = true;
+    const scope = occurrenceStorageKey("attempt", workout);
+    const recoveryKey = undoRecoveryStorageKey();
+    const commandKey = pendingCommandKey(scope, exerciseKey(exercise), "undo");
+    const attempt = retainLogPayload<UndoAttempt>(recoveryKey, undoRecovery ?? {
+      scope, workoutId: workoutReference(workout), exerciseId: exercise.id, exerciseIdentity: exerciseKey(exercise),
+      exerciseOccurrenceId: exercise.exercise_occurrence_id, command: getLogCommand(commandKey),
+    });
+    undoRecoveryRef.current = attempt; setUndoRecovery(attempt);
+    try {
+      if (attempt.scope !== scope || attempt.exerciseIdentity !== exerciseKey(exercise)) return false;
+      const result = await api.undoLastSet(attempt.workoutId, attempt.exerciseId, attempt.exerciseOccurrenceId, attempt.command);
+      if (undoRecoveryStorageKey() !== recoveryKey || currentOccurrence.current !== attempt.workoutId) return false;
+      advanceLoadGeneration(exerciseKey(exercise));
+      setGlobalRestTimer(timer => timer?.exerciseId === exerciseKey(exercise) ? null : timer);
+      setLastSetByExercise((prev) => { const next = { ...prev }; delete next[exerciseKey(exercise)]; return next; });
+      if (loadIntelligence !== undefined) updateLoadIntelligence(exerciseKey(exercise), result.load_intelligence ?? null);
+      setSetFeedbackByExercise((prev) => { const next = { ...prev }; delete next[exerciseKey(exercise)]; return next; });
+      setLiveRecommendationByExercise((prev) => {
+        const next = { ...prev }; delete next[exerciseKey(exercise)];
+        if (result.live_recommendation) next[exerciseKey(exercise)] = result.live_recommendation;
+        return next;
+      });
+      setWorkoutSummary(null);
+      const todayGeneration = captureLoadGeneration();
+      const [progressResult, todayResult] = await Promise.allSettled([
+        getScopedWorkoutProgress(workoutReference(workout)), api.getTodayWorkout(),
+      ]);
+      if (currentOccurrence.current !== workoutReference(workout)) return false;
+      if (todayResult.status === "fulfilled" && workoutReference(todayResult.value) === workoutReference(workout)) {
+        setWorkout(todayResult.value);
+        const receipts=todayResult.value.exercises.find(e=>exerciseKey(e)===exerciseKey(exercise))?.customized_receipts;
+        if(receipts)setEffectiveSetsByExercise(previous=>({...previous,[exerciseKey(exercise)]:receipts}));
+        applyProgressLoad(todayResult.value.exercises.map(item => ({ ...item, exercise_id: item.id })), todayGeneration);
+        setLiveRecommendationByExercise(Object.fromEntries((todayResult.value.exercises ?? [])
+          .filter((item) => item.live_recommendation).map((item) => [exerciseKey(item), item.live_recommendation as WorkoutLiveRecommendation])));
+      }
+      if (progressResult.status === "fulfilled") {
+        const { progress, generation } = progressResult.value;
+        applyProgressLoad(progress.exercises ?? [], generation);
+        const serverCompleted = Object.fromEntries((progress.exercises ?? []).map((item) =>
+          [item.exercise_occurrence_id ?? item.exercise_id, Number(item.completed_sets) || 0])) as Record<string, number>;
+        setCompletedSetsByExercise(serverCompleted);
+        setWorkoutProgress({ completed: Number(progress.completed_total) || 0, planned: Number(progress.planned_total) || 0, percent: Number(progress.percent_complete) || 0 });
+        try { localStorage.setItem(occurrenceStorageKey("completed", workout), JSON.stringify(serverCompleted)); } catch { /* server still confirmed */ }
+      } else if (result.live_recommendation) {
+        setCompletedSetsByExercise((prev) => ({ ...prev, [exerciseKey(exercise)]: result.live_recommendation!.completed_sets }));
+      }
+      const progressCount = progressResult.status === "fulfilled" ? progressResult.value.progress.exercises?.find(item => (item.exercise_occurrence_id ?? item.exercise_id) === attempt.exerciseIdentity)?.completed_sets : undefined;
+      const todayCount = todayResult.status === "fulfilled" && workoutReference(todayResult.value) === attempt.workoutId ? todayResult.value.exercises.find(item => exerciseKey(item) === attempt.exerciseIdentity)?.completed_sets : undefined;
+      const confirmedCount = progressCount ?? todayCount ?? result.live_recommendation?.completed_sets ?? (result.load_intelligence ? result.load_intelligence.effective_sets.filter(item => item.parent_set_index == null && item.set_kind !== "warmup").length : undefined);
+      if (confirmedCount == null || !Number.isInteger(confirmedCount) || confirmedCount < 0) {
+        setMessage("Undo confirmed, but saved sets could not be refreshed. Retry the original undo to reconcile.");
+        return false;
+      }
+      setCompletedSetsByExercise(previous => ({ ...previous, [attempt.exerciseIdentity]: confirmedCount }));
+      // Keep the original command until both its reply and the resulting
+      // count are confirmed. Reload never turns an uncertain undo into a
+      // new request against the latest set.
+      acknowledgeLogCommand(commandKey); acknowledgeLogCommand(recoveryKey);
+      undoRecoveryRef.current = null; setUndoRecovery(null); setMessage("");
+      return confirmedCount;
+    } catch (error) {
+      if (isDefinitiveUndoRejection(error) && undoRecoveryStorageKey() === recoveryKey) {
+        acknowledgeLogCommand(commandKey); acknowledgeLogCommand(recoveryKey);
+        undoRecoveryRef.current = null; setUndoRecovery(null); setMessage(error.message);
+        throw error;
+      }
+      setMessage("Undo was not confirmed. Retry to confirm the same action.");
+      return false;
+    } finally { undoInFlight.current = false; }
+  }
+
   const swapTarget = (workout?.exercises ?? []).find((exercise) => exerciseKey(exercise) === swapTargetExerciseId) ?? null;
   const swapTargetCurrentIndex = swapTarget ? (swapIndexByExercise[exerciseKey(swapTarget)] ?? 0) : 0;
   const activeProgramId = workout ? extractProgramId(workout.session_id) : null;
@@ -1035,7 +1154,7 @@ export default function TodayPage() {
     <div className={selectedExerciseId ? "atlas-page" : "space-y-4 pb-8"}>
       <div className={selectedExerciseId ? "hidden" : "flex flex-wrap items-baseline justify-between gap-2"}>
         <h1 className="ui-title-page">Today</h1>
-        <Link className="inline-flex min-h-11 items-center underline" href={workout?.customized?.proposal_id?`/customize?proposal=${encodeURIComponent(workout.customized.proposal_id)}`:"/customize"}>Manage Customized dates or replace program</Link>
+        {!undoRecovery ? <Link className="inline-flex min-h-11 items-center underline" href={workout?.customized?.proposal_id?`/customize?proposal=${encodeURIComponent(workout.customized.proposal_id)}`:"/customize"}>Manage Customized dates or replace program</Link> : null}
         <p className="ui-meta text-zinc-400">{todayDate}</p>
       </div>
       <div className={selectedExerciseId ? "hidden" : "main-card main-card--module main-card--accent spacing-grid spacing-grid--tight"}>
@@ -1069,6 +1188,7 @@ export default function TodayPage() {
         </div>
       ) : null}
 
+      {undoRecovery && (!workout || undoRecovery.scope !== occurrenceStorageKey("attempt", workout) || !workout.exercises.some(item => exerciseKey(item) === undoRecovery.exerciseIdentity)) ? <div role="alert"><p>An undo for a previous workout is unconfirmed. This workout is read-only until the original undo is reconciled.</p><Button disabled={priorUndoBusy} onClick={recoverPriorUndo}>Retry original undo</Button></div> : null}
       {workout ? (
         <div className={selectedExerciseId ? "hidden" : "space-y-3"}>
           <p className="ui-body-sm text-zinc-200">
@@ -1092,7 +1212,8 @@ export default function TodayPage() {
                         ? "border-red-500/30 bg-red-500/5"
                         : "border-zinc-800 bg-zinc-900/50"
                     }`}
-                    onClick={() => setSelectedExerciseId(exerciseKey(exercise))}
+                    disabled={Boolean(undoRecovery)}
+                    onClick={() => { if (!undoRecoveryRef.current) setSelectedExerciseId(exerciseKey(exercise)); }}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-sm font-semibold leading-tight text-zinc-100">{displayName}</span>
@@ -1144,66 +1265,15 @@ export default function TodayPage() {
         const loadIntelligence = intelligenceFor(exercise);
         const effectiveSets = effectiveSetsByExercise[exerciseKey(exercise)] ?? exercise.customized_receipts ?? loadIntelligence?.effective_sets ?? [];
         const loadContext: LoadContext = {...(loadContextByExercise[exerciseKey(exercise)] ?? loadIntelligence?.load_context ?? (exercise.customized?{unit:"kg",display_unit:"kg",basis:exercise.customized.identity.basis,equipment_key:exercise.customized.identity.equipment_key}:null) ?? { unit: "kg", display_unit: "lb", basis: "unknown" } as LoadContext), display_unit: preferences.weight_unit};
-        const handleUndoLastSet = completed > 0 || effectiveSets.length > 0 ? async (): Promise<number | false> => {
-          if (undoInFlight.current) return false;
-          undoInFlight.current = true;
-          const commandKey = pendingCommandKey(occurrenceStorageKey("attempt", workout), exerciseKey(exercise), "undo");
-          try {
-            const result = await api.undoLastSet(workoutReference(workout), exercise.id, exercise.exercise_occurrence_id, getLogCommand(commandKey));
-            acknowledgeLogCommand(commandKey);
-            if (currentOccurrence.current !== workoutReference(workout)) return false;
-            advanceLoadGeneration(exerciseKey(exercise));
-            setGlobalRestTimer(timer => timer?.exerciseId === exerciseKey(exercise) ? null : timer);
-            setLastSetByExercise((prev) => { const next = { ...prev }; delete next[exerciseKey(exercise)]; return next; });
-            if (loadIntelligence !== undefined) updateLoadIntelligence(exerciseKey(exercise), result.load_intelligence ?? null);
-            setSetFeedbackByExercise((prev) => { const next = { ...prev }; delete next[exerciseKey(exercise)]; return next; });
-            setLiveRecommendationByExercise((prev) => {
-              const next = { ...prev }; delete next[exerciseKey(exercise)];
-              if (result.live_recommendation) next[exerciseKey(exercise)] = result.live_recommendation;
-              return next;
-            });
-            setWorkoutSummary(null);
-            const todayGeneration = captureLoadGeneration();
-            const [progressResult, todayResult] = await Promise.allSettled([
-              getScopedWorkoutProgress(workoutReference(workout)), api.getTodayWorkout(),
-            ]);
-            if (currentOccurrence.current !== workoutReference(workout)) return false;
-            if (todayResult.status === "fulfilled" && workoutReference(todayResult.value) === workoutReference(workout)) {
-              setWorkout(todayResult.value);
-              const receipts=todayResult.value.exercises.find(e=>exerciseKey(e)===exerciseKey(exercise))?.customized_receipts;
-              if(receipts)setEffectiveSetsByExercise(previous=>({...previous,[exerciseKey(exercise)]:receipts}));
-              applyProgressLoad(todayResult.value.exercises.map(item => ({ ...item, exercise_id: item.id })), todayGeneration);
-              setLiveRecommendationByExercise(Object.fromEntries((todayResult.value.exercises ?? [])
-                .filter((item) => item.live_recommendation).map((item) => [exerciseKey(item), item.live_recommendation as WorkoutLiveRecommendation])));
-            }
-            if (progressResult.status === "fulfilled") {
-              const { progress, generation } = progressResult.value;
-              applyProgressLoad(progress.exercises ?? [], generation);
-              const serverCompleted = Object.fromEntries((progress.exercises ?? []).map((item) =>
-                [item.exercise_occurrence_id ?? item.exercise_id, Number(item.completed_sets) || 0])) as Record<string, number>;
-              setCompletedSetsByExercise(serverCompleted);
-              setWorkoutProgress({ completed: Number(progress.completed_total) || 0, planned: Number(progress.planned_total) || 0, percent: Number(progress.percent_complete) || 0 });
-              try { localStorage.setItem(occurrenceStorageKey("completed", workout), JSON.stringify(serverCompleted)); } catch { /* server still confirmed */ }
-            } else if (result.live_recommendation) {
-              setCompletedSetsByExercise((prev) => ({ ...prev, [exerciseKey(exercise)]: result.live_recommendation!.completed_sets }));
-            }
-            setMessage("");
-            if (progressResult.status === "fulfilled") {
-              return Number(progressResult.value.progress.exercises?.find((item) => (item.exercise_occurrence_id ?? item.exercise_id) === exerciseKey(exercise))?.completed_sets) || 0;
-            }
-            return result.live_recommendation?.completed_sets ?? (effectiveSets.at(-1)?.set_kind === "warmup" ? completed : Math.max(0, completed - 1));
-          } catch {
-            setMessage("Undo was not confirmed. Retry to confirm the same action.");
-            return false;
-          } finally { undoInFlight.current = false; }
-        } : undefined;
+        const canUndo = completed > 0 || effectiveSets.length > 0 || undoRecovery?.exerciseIdentity === exerciseKey(exercise);
 
         return (
           <ExerciseDetailOverlay
             key={`${exerciseKey(exercise)}/${exercise.performed_variant?.option_id ?? "source"}`}
             exercise={exercise.customized?{...exercise,customized_load_decision:(recommendation?.decision_trace?.load_decision as typeof exercise.customized_load_decision)??exercise.customized_load_decision}:exercise}
             navigation={workout.exercises.map(item=>({id:exerciseKey(item),name:resolveDisplayExerciseName(item,resolveExerciseName(item,swapIndexByExercise),weakAreas),completed:completedSetsByExercise[exerciseKey(item)]??0,total:item.sets}))}
-            onSelectExercise={setSelectedExerciseId}
+            onSelectExercise={id => { if (!undoRecoveryRef.current) setSelectedExerciseId(id); }}
+            undoRecovery={Boolean(undoRecovery)}
             selectedName={displayName}
             guideHref={guideHref}
             completed={completed}
@@ -1211,6 +1281,7 @@ export default function TodayPage() {
             effectiveSets={effectiveSets}
             loadContext={loadContext}
             onLoadContextChange={context => {
+              if (undoRecoveryRef.current) return;
               const key = exerciseKey(exercise);
               loadPreviewVersions.current[key] = (loadPreviewVersions.current[key] ?? 0) + 1;
               selectLoadContext(key, context);
@@ -1231,6 +1302,7 @@ export default function TodayPage() {
             onOverrideReason={reason => setLoadOverrideByExercise(previous => ({ ...previous, [exerciseKey(exercise)]: reason }))}
             warmupCommandScope={occurrenceStorageKey("attempt", workout)}
             onWarmupComplete={async (ordinal, performed) => {
+              if (undoRecoveryRef.current) throw new Error("Confirm the original undo before recording warm-ups.");
               const key = exerciseKey(exercise);
               const commandKey = pendingCommandKey(occurrenceStorageKey("attempt", workout), key, `warmup:${ordinal}`);
               const payload = retainLogPayload(commandKey, { exercise_id: exercise.id,
@@ -1261,6 +1333,7 @@ export default function TodayPage() {
               }
             }}
             onCorrectSet={async (receipt, values) => {
+              if (undoRecoveryRef.current) throw new Error("Confirm the original undo before correcting sets.");
               const commandKey = pendingCommandKey(occurrenceStorageKey("attempt", workout), exerciseKey(exercise), `correct:${receipt.id}`);
               const payload = retainLogPayload(commandKey, { ...values, command_id: getLogCommand(commandKey) });
               let result;
@@ -1284,8 +1357,9 @@ export default function TodayPage() {
             mediaUrl={mediaUrl}
             weakPointInstruction={weakPointInstruction}
             liveGuidance={!loadIntelligence && !exercise.customized ? resolveGuidanceText(recommendation?.guidance_rationale ?? feedback?.guidance_rationale, recommendation?.guidance ?? feedback?.guidance) : ""}
-            onUndoLastSet={handleUndoLastSet}
+            onUndoLastSet={canUndo ? () => handleUndoLastSet(exercise) : undefined}
             onAuthoredDecision={async (decision) => {
+              if (undoRecoveryRef.current) throw new Error("Confirm the original undo before changing this exercise.");
               if (!exercise.exercise_occurrence_id) throw new Error("Occurrence unavailable");
               const input = { ...decision, exercise_id: exercise.id, exercise_occurrence_id: exercise.exercise_occurrence_id,
                 expected_revision: exercise.authored_constraint?.revision ?? 0, expected_source_lineage: exercise.source_lineage ?? {} };
@@ -1312,7 +1386,7 @@ export default function TodayPage() {
                 exerciseKey(item) === exerciseKey(exercise) ? result.exercise : item) } : previous);
               setWorkoutSummary(null);
             }}
-            onClose={() => setSelectedExerciseId(null)}
+            onClose={() => { if (!undoRecoveryRef.current) setSelectedExerciseId(null); }}
             onSwapTarget={() => setSwapTargetExerciseId(exerciseKey(exercise))}
             onSetComplete={handleSetComplete}
             globalRestTimer={globalRestTimer}
@@ -1332,7 +1406,8 @@ export default function TodayPage() {
               type="button"
               variant="secondary"
               className="min-h-[36px] px-3 text-xs"
-              onClick={() => setSelectedExerciseId(globalRestTimer.exerciseId)}
+              disabled={Boolean(undoRecovery)}
+              onClick={() => { if (!undoRecoveryRef.current) setSelectedExerciseId(globalRestTimer.exerciseId); }}
             >
               Open
             </Button>
