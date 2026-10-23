@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { EffectiveLoadSet, LoadContext, LoadIntelligence } from "@/lib/api";
 import { ApiError } from "@/lib/api";
@@ -260,7 +260,7 @@ export function LoadIntelligencePanel({ guidance, completed, total, loadContext,
   const attemptedCorrection = useRef<CorrectionAttempt | null>(null);
   const recoveryKey = commandScope && exerciseIdentity ? pendingCommandKey(commandScope, exerciseIdentity, "correction-recovery") : null;
   const activeRecoveryKey = useRef(recoveryKey);
-  activeRecoveryKey.current = recoveryKey;
+  useLayoutEffect(() => { activeRecoveryKey.current = recoveryKey; }, [recoveryKey]);
   const restoreCorrection = useCallback((attempt: CorrectionAttempt) => {
     attemptedCorrection.current = attempt;
     setEditing(attempt.receipt); setEditingUnit(attempt.unit); setCorrectionUncertain(true);
