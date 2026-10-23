@@ -153,12 +153,35 @@ def test_snapshot_matches_pre_optimization_decisions_and_traces(scenario, case, 
             db.query(WorkoutPlan).filter_by(user_id=uid).all())
         if case == "older_target": occurrence.scheduled_date = date.today() - timedelta(days=2)
         preserved = deepcopy(frozen)
-        fresh = [legacy_project_authored_load_feedback(db, user=user, occurrence=occurrence,
+        baseline = [legacy_project_authored_load_feedback(db, user=user, occurrence=occurrence,
+            exercise=exercise, supplied_context=CONTEXT) for exercise in frozen["exercises"]]
+        fresh = [load_state.project_authored_load_feedback(db, user=user, occurrence=occurrence,
             exercise=exercise, supplied_context=CONTEXT) for exercise in frozen["exercises"]]
         snapshot = load_state.load_authored_history_snapshot(db, user=user)
         shared = [load_state.project_authored_load_feedback(db, user=user, occurrence=occurrence,
             exercise=exercise, supplied_context=CONTEXT, history_snapshot=snapshot) for exercise in frozen["exercises"]]
-        assert shared == fresh  # Includes advice IDs, evidence revisions, reasons and warm-up traces.
+        # Snapshot reuse must preserve the entire current response, including
+        # calibration advice IDs and traces, not only the pre-amendment fields.
+        assert shared == fresh
+        for current, legacy in zip(shared, baseline, strict=True):
+            assert set(current) == set(legacy) | {"calibration", "initial_estimate"}
+            # Keep every legacy field, ID, revision, reason and warm-up trace
+            # exactly equal. Only the two explicitly added fields are separate.
+            assert {key: current[key] for key in legacy} == legacy
+            assert current["calibration"] is None
+            initial = current["initial_estimate"]
+            assert initial["scope"] == "initial_calibration"
+            assert initial["status"] == "unavailable"
+            assert initial["reason_codes"] == ["effective_history_takes_precedence"]
+            assert initial["recommended_weight"] is None
+            assert initial["recommended_working_weight"] is None
+            assert initial["prefill_available"] is False
+            assert initial["reported_1rm"] is None
+            assert initial["estimated_1rm"] is None
+            assert initial["decision_trace"]["has_current_work"] is False
+            assert initial["decision_trace"]["has_effective_history"] is True
+            assert initial["decision_trace"]["calibration_id"] is None
+            assert initial["decision_trace"]["calibration_revision"] is None
         assert shared[0]["next_exposure"]["evidence"]["completed_exposure_count"] == completed
         assert frozen == preserved
         # A sibling source slot never inherits the modified first slot's evidence.

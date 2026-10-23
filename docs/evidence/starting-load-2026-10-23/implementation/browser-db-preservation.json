@@ -1,0 +1,111 @@
+{
+  "application_revision": "96ef19d43c88440b987d290844e4da7775a70912",
+  "target": "verified disposable initial_load_migration_1023",
+  "accounts": {
+    "eligible": {
+      "calibration_rows": 1,
+      "original_benchmark": {
+        "load": 100,
+        "unit": "lb",
+        "method": "known_1rm"
+      },
+      "unique_command_receipts": 5,
+      "source_fields_unchanged": true,
+      "workout_rows": [
+        {
+          "set": 1,
+          "kind": "warmup",
+          "reps": 8,
+          "weight_kg": 17.009713875,
+          "rpe": null,
+          "supersedes_prior_receipt": false,
+          "voided": false,
+          "void_source": null
+        },
+        {
+          "set": 1,
+          "kind": "work",
+          "reps": 11,
+          "weight_kg": 29.48350405,
+          "rpe": 7.5,
+          "supersedes_prior_receipt": false,
+          "voided": true,
+          "void_source": "user_correction"
+        },
+        {
+          "set": 1,
+          "kind": "work",
+          "reps": 12,
+          "weight_kg": 29.48350405,
+          "rpe": 7.5,
+          "supersedes_prior_receipt": true,
+          "voided": false,
+          "void_source": null
+        },
+        {
+          "set": 2,
+          "kind": "work",
+          "reps": 11,
+          "weight_kg": 29.48350405,
+          "rpe": 7.5,
+          "supersedes_prior_receipt": false,
+          "voided": true,
+          "void_source": "user_undo"
+        }
+      ]
+    },
+    "unsupported": {
+      "calibration_rows": 1,
+      "original_benchmark": {
+        "load": 100,
+        "unit": "lb",
+        "method": "known_1rm"
+      },
+      "unique_command_receipts": 0,
+      "source_fields_unchanged": true,
+      "workout_rows": []
+    },
+    "history": {
+      "calibration_rows": 1,
+      "original_benchmark": {
+        "load": 100,
+        "unit": "lb",
+        "method": "known_1rm"
+      },
+      "unique_command_receipts": 3,
+      "source_fields_unchanged": true,
+      "workout_rows": [
+        {
+          "set": 1,
+          "kind": "work",
+          "reps": 11,
+          "weight_kg": 40.0,
+          "rpe": 7.5,
+          "supersedes_prior_receipt": false,
+          "voided": false,
+          "void_source": null
+        },
+        {
+          "set": 2,
+          "kind": "work",
+          "reps": 11,
+          "weight_kg": 40.0,
+          "rpe": 7.5,
+          "supersedes_prior_receipt": false,
+          "voided": false,
+          "void_source": null
+        },
+        {
+          "set": 3,
+          "kind": "work",
+          "reps": 11,
+          "weight_kg": 40.0,
+          "rpe": 8.5,
+          "supersedes_prior_receipt": false,
+          "voided": false,
+          "void_source": null
+        }
+      ]
+    }
+  }
+}

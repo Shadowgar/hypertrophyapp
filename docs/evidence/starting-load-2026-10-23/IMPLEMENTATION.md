@@ -48,8 +48,24 @@ user subsequently changed. Customized remains on its independent policy.
   passed; lint retains eight existing hook warnings and no errors. One earlier
   full run had an existing warm-up test timeout during a concurrent build;
   that file passed unchanged, and the final entire suite passed.
-- Final-head CI and actual browser journey capture are still being completed;
-  pending results are not passes.
+- [Actual mobile/desktop A–D browser journeys](implementation/GALLERY.md) passed
+  on application revision `96ef19d43c88440b987d290844e4da7775a70912` with the
+  real API and disposable PostgreSQL. Benchmark, set and correction responses
+  were deliberately lost after commit; exact retries, close/reload, correction,
+  undo and History passed. Composer/input/Save displacement was **0 px**.
+- [Application CI run 39990595080](https://github.com/Shadowgar/hypertrophyapp/actions/runs/39990595080)
+  at that code revision confirms web **284 passed** plus build/typecheck/lint;
+  core **859 passed, 4 inherited failures**. API finished **935 passed,
+  17 failed, 120 skipped**: five inherited failures and twelve newly exposed
+  history-snapshot comparison failures. The old reference response lacked the
+  two intentionally added fields. The comparison now verifies the entire
+  current response with and without snapshot reuse, every legacy field exactly,
+  and the specific unavailable/history-precedence state of the added fields.
+  All **17 history-snapshot tests pass** on disposable PostgreSQL. No assertion
+  was skipped, timeout changed, or established field excluded from comparison.
+  A fresh CI run on the qualification commit is required; its final outcome
+  is recorded in the updated PR report. Application source remains `96ef19d`;
+  the follow-up changes only tests, documentation and synthetic evidence.
 - The initial full local API attempt stopped at collection because its isolated
   wrapper omitted `HIST_TEST_ROOT`. After fixing the wrapper, a serial attempt
   was interrupted after 112 passes, 4 failures and 2 skips to move full-suite
@@ -65,6 +81,14 @@ Core inherited failures reproduced with the unchanged approved-base owner files:
 `test_resolve_scheduler_muscle_coverage_runtime_uses_canonical_contract` /
 `test_resolve_scheduler_muscle_coverage_runtime_falls_back_to_canonical_contract_when_missing`
 (extra `core` muscle). These are unresolved failures, not accepted waivers.
+
+The five inherited API failures are the two Authored Today planned-set totals
+(Phase 1: 29 versus 30; Phase 2: 22 versus 23), the Authored weekly-review
+`adaptive_review` expectation, and two checks requiring the absent licensed
+Phase 1 companion workbook. No licensed fixture was fabricated. Baseline PR #110
+CI had the same five failures (875 passed, 5 failed, 118 skipped). These remain
+unresolved, not waivers. Two new concurrency cases require PostgreSQL and are
+skipped by SQLite CI; they pass in the explicitly verified PostgreSQL suite.
 
 ## Database rehearsal
 
@@ -86,6 +110,8 @@ All existing table hashes matched and the calibration table was empty;
 
 ## Review findings and disposition
 
+All nine implementation corrections below are in `96ef19d43c88440b987d290844e4da7775a70912`.
+
 | Finding | Correction | Regression/evidence |
 |---|---|---|
 | Setup details changed under the same equipment identity | Reject reassignment with 422; require a distinct setup identity | `test_declared_setup_identity_cannot_silently_change_meaning` |
@@ -96,10 +122,24 @@ All existing table hashes matched and the calibration table was empty;
 | Raw display text could hide already-qualified progression | Retain existing history gate as well as independent presence check | `test_existing_progression_history_cannot_be_hidden_by_raw_display_text` |
 | Resolved constraint still blocked provisional warm-up | Pass refreshed exercise to the existing warm-up owner | `test_resolved_frozen_constraint_uses_current_feasibility_for_warmups` |
 | Benchmark retry reselected a newer edited equipment context | Retry retains command body without reselecting its old context | Runner transport regression |
-| Long initial explanation overlapped mobile controls | Compact fixed slot and progressive disclosure; final source regression passed | Mobile/desktop geometry verified; complete journey capture pending |
+| Long initial explanation overlapped mobile controls | Compact fixed slot and progressive disclosure; final source regression passed | `starting-load.test.tsx`; [actual geometry and save journeys](implementation/browser-journeys.json) |
 
-PR #111 had no GitHub review threads at the pre-publication check. Internal
-findings above are implementation findings, not fabricated GitHub reviews.
+The new CI finding was the legacy snapshot envelope comparison described above.
+The qualification commit adds exact assertions for both new fields and retains
+all old-field comparisons; `test_authored_history_snapshot.py` passes 17/17.
+It makes no application-policy change. The final PR report identifies its commit.
+
+PR #111 had no GitHub review threads at the post-code-publication check.
+Internal findings above are implementation findings, not fabricated GitHub reviews.
+
+GitGuardian reported two occurrences in `full-migration-preservation.json`.
+Both are the **SHA-256 digest of empty content** under the table-name key
+`password_reset_tokens`, before and after migration. The preserved table was
+empty; this is not a reset token or credential. The snapshot implementation
+hashes sorted JSON rows for every table. No suppression, history rewrite or
+credential rotation was performed. The external check remains failed unless
+its provider disposition changes; this is a new evidence-check finding, distinct
+from inherited application test failures.
 
 ## Limits still open
 

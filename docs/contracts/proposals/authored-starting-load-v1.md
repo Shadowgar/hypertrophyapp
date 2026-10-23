@@ -18,7 +18,8 @@ or extend Authored policy to Customized.
 ## Why a numerical decision is needed
 
 [`core_engine.load_intelligence`](../../../packages/core-engine/core_engine/load_intelligence.py)
-owns Authored progression and has no initial 1RM calculation. Its reviewed
+owned Authored progression without an initial 1RM calculation at the approved
+pre-implementation revision `4041a558`. Its reviewed
 [M2A-1 design](../../plans/m2a-load-intelligence-design.md) covers actual completed
 exposures, not a rep-aware conversion of self-reported strength. The retained
 browser helper uses 70%; `rules_runtime.resolve_starting_load` can use 72%.
