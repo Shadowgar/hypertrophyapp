@@ -600,3 +600,9 @@ input[type="radio"] {
 .status-dot--green { background: var(--success-text); box-shadow: none; }
 .status-dot--yellow { background: var(--warning-text); box-shadow: none; }
 .status-dot--red { background: var(--error-text); box-shadow: none; }
+/* Legacy disclosure hover utilities must use the selected appearance too. */
+[class*="hover:bg-zinc-"]:hover,
+[class*="hover:bg-black"]:hover {
+  background-color: var(--surface-raised);
+  color: var(--text-primary);
+}
