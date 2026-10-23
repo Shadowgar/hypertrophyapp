@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { EffectiveLoadSet, LoadContext, LoadIntelligence } from "@/lib/api";
 import { ApiError } from "@/lib/api";
-import {pendingCommandKey,pendingLogPayload} from "@/lib/workout-identity";
+import {acknowledgeLogCommand,getLogCommand,pendingCommandKey,pendingLogPayload,retainLogPayload} from "@/lib/workout-identity";
 import {displayLoad,canonicalLoad} from "@/lib/appearance";
 import { kgToLbs, lbsToKg } from "@/lib/weight";
 
@@ -223,12 +223,16 @@ export function useExerciseControl({
 
 export type ExerciseControlState = ReturnType<typeof useExerciseControl>;
 
+type CorrectionValues = { reps: number; weight: number; rpe?: number | null; actual_rir?: number | null;
+  technique_quality?: "acceptable" | "poor" | "unknown" | null; pain?: boolean | null; reason: string };
+type CorrectionAttempt = { receipt: EffectiveLoadSet; values: CorrectionValues; unit: LoadContext["display_unit"] };
+
 export function LoadIntelligencePanel({ guidance, completed, total, loadContext, onContextChange, onPreview, overrideReason, onOverrideReason, onCorrect, requireExternalWeight = false, effectiveSets, receiptOnly = false, hideReceipts = false, allowRir = receiptOnly, commandScope, exerciseIdentity }: {
   effectiveSets?: EffectiveLoadSet[]; receiptOnly?: boolean; hideReceipts?: boolean; allowRir?: boolean; commandScope?: string; exerciseIdentity?: string;
   guidance: LoadIntelligence | null; completed: number; total: number; loadContext: LoadContext; requireExternalWeight?: boolean;
   onContextChange: (context: LoadContext) => void; onPreview: (context: LoadContext) => Promise<void>;
   overrideReason: string; onOverrideReason: (reason: string) => void;
-  onCorrect: (receipt: EffectiveLoadSet, values: { reps: number; weight: number; rpe?: number | null;actual_rir?:number|null;technique_quality?:"acceptable"|"poor"|"unknown"|null;pain?:boolean|null; reason: string }) => Promise<void>;
+  onCorrect: (receipt: EffectiveLoadSet, values: CorrectionValues) => Promise<void>;
 }) {
   const [pending, setPending] = useState(false);
   const [status, setStatus] = useState("");
@@ -253,6 +257,28 @@ export function LoadIntelligencePanel({ guidance, completed, total, loadContext,
   const [pain,setPain]=useState("unknown");const [painEdited,setPainEdited]=useState(false);
   const [reason, setReason] = useState("");
   const pendingAction = useRef(false);
+  const attemptedCorrection = useRef<CorrectionAttempt | null>(null);
+  const recoveryKey = commandScope && exerciseIdentity ? pendingCommandKey(commandScope, exerciseIdentity, "correction-recovery") : null;
+  const activeRecoveryKey = useRef(recoveryKey);
+  activeRecoveryKey.current = recoveryKey;
+  const restoreCorrection = useCallback((attempt: CorrectionAttempt) => {
+    attemptedCorrection.current = attempt;
+    setEditing(attempt.receipt); setEditingUnit(attempt.unit); setCorrectionUncertain(true);
+    const entry = { ...attempt.receipt, ...attempt.values };
+    setReps(String(entry.reps)); setWeight(String(displayLoad(entry.weight, attempt.unit)));
+    setRpe(entry.rpe == null ? "" : String(entry.rpe)); setRpeEdited("rpe" in attempt.values);
+    setRir(entry.actual_rir == null ? "" : String(entry.actual_rir)); setRirEdited("actual_rir" in attempt.values);
+    setQuality(entry.technique_quality ?? "unknown"); setQualityEdited("technique_quality" in attempt.values);
+    setPain(entry.pain == null ? "unknown" : entry.pain ? "yes" : "no"); setPainEdited("pain" in attempt.values);
+    setReason(attempt.values.reason); setStatus("Correction not confirmed. Retry these exact values.");
+  }, []);
+  useEffect(() => {
+    attemptedCorrection.current = null; setEditing(null); setCorrectionUncertain(false); setStatus("");
+    const retained = recoveryKey ? pendingLogPayload<CorrectionAttempt>(recoveryKey) : null;
+    // A committed correction can supersede its original effective receipt before
+    // its reply arrives. Recover from the attempted receipt, never the new row.
+    if (retained) restoreCorrection(retained);
+  }, [recoveryKey, restoreCorrection]);
   const validIncrement = increment.trim() === "" || (Number.isFinite(Number(increment)) && Number(increment) > 0);
   const shown = completed > 0 && completed < total ? guidance?.remaining_sets : guidance?.next_exposure;
   return <section className="space-y-3 rounded-xl border border-white/10 p-3" aria-label={receiptOnly ? "Recorded sets" : "Load guidance"}>
@@ -301,16 +327,22 @@ export function LoadIntelligencePanel({ guidance, completed, total, loadContext,
     </>}
     {(hideReceipts ? [] : effectiveSets ?? guidance?.effective_sets ?? []).filter(entry => entry.parent_set_index == null && (["warmup", "work", "working", "top", "backoff"].includes(entry.set_kind?.trim().toLowerCase() || "work"))).map(entry => <div className="rounded border border-white/10 p-2" key={entry.id}>
       <p className="text-xs">{entry.set_kind === "warmup" ? "Warm-up" : "Set"} {entry.set_index}: {entry.reps} reps @ {loadContext.display_unit === "kg" ? entry.weight : kgToLbs(entry.weight)} {loadContext.display_unit} · Actual {receiptOnly && entry.actual_rir != null ? `RIR ${entry.actual_rir}` : `RPE ${entry.rpe ?? "unknown"}`}</p>
-      <Button className="min-h-[44px] w-full" variant="secondary" disabled={pending} onClick={() => {
-        const retained = commandScope && exerciseIdentity ? pendingLogPayload<{reps:number;weight:number;rpe?:number|null;actual_rir?:number|null;reason:string}>(pendingCommandKey(commandScope,exerciseIdentity,`correct:${entry.id}`)) : null;
-        setCorrectionUncertain(Boolean(retained));
-        const original = entry; entry = retained ? {...entry,...retained} : entry;
-        setEditing(original); const unit = loadContext.display_unit; setEditingUnit(unit);
-        setReps(String(entry.reps)); setWeight(String(displayLoad(entry.weight,unit)));setRir(entry.actual_rir==null?"":String(entry.actual_rir));setRirEdited(Boolean(retained && "actual_rir" in retained));setQuality(entry.technique_quality??"unknown");setQualityEdited(false);setPain(entry.pain==null?"unknown":entry.pain?"yes":"no");setPainEdited(false); setRpe(entry.rpe == null ? "" : String(entry.rpe));
-        setRpeEdited(Boolean(retained && "rpe" in retained)); setReason(retained?.reason ?? ""); setStatus(retained ? "Correction not confirmed. Retry these exact values." : "");
+      <Button className="min-h-[44px] w-full" variant="secondary" disabled={pending || correctionUncertain} onClick={() => {
+        if (attemptedCorrection.current) return;
+        const retained = commandScope && exerciseIdentity ? pendingLogPayload<CorrectionValues>(pendingCommandKey(commandScope,exerciseIdentity,`correct:${entry.id}`)) : null;
+        if (retained) {
+          const attempt = { receipt: { ...entry }, values: retained, unit: loadContext.display_unit };
+          restoreCorrection(recoveryKey ? retainLogPayload(recoveryKey, attempt) : attempt);
+          return;
+        }
+        setCorrectionUncertain(false);
+        setEditing(entry); const unit = loadContext.display_unit; setEditingUnit(unit);
+        setReps(String(entry.reps)); setWeight(String(displayLoad(entry.weight,unit)));setRir(entry.actual_rir==null?"":String(entry.actual_rir));setRirEdited(false);setQuality(entry.technique_quality??"unknown");setQualityEdited(false);setPain(entry.pain==null?"unknown":entry.pain?"yes":"no");setPainEdited(false); setRpe(entry.rpe == null ? "" : String(entry.rpe));
+        setRpeEdited(false); setReason(""); setStatus("");
       }}>Edit {entry.set_kind === "warmup" ? "warm-up" : "set"} {entry.set_index}</Button>
     </div>)}
     {editing ? <div className="space-y-2 rounded border border-white/10 p-3">
+      {correctionUncertain ? <p className="text-xs">Unconfirmed correction for {editing.set_kind === "warmup" ? "warm-up" : "set"} {editing.set_index}. Retry the original attempt before editing another recorded set.</p> : null}
       <label className="block text-xs">Corrected reps<input readOnly={pending || correctionUncertain} className="ui-input min-h-[48px] w-full" type="number" min={1} step={1} value={reps} onChange={e => setReps(e.target.value)} /></label>
       <label className="block text-xs">Corrected load ({editingUnit})<input readOnly={pending || correctionUncertain} className="ui-input min-h-[48px] w-full" type="number" min={0} step="any" value={weight} onChange={e => setWeight(e.target.value)} /></label>
       <label className="block text-xs">Corrected actual RPE<input readOnly={pending || correctionUncertain} className="ui-input min-h-[48px] w-full" type="number" min={0} max={10} step={0.5} value={rpe} onChange={e => { setRpeEdited(true); setRpe(e.target.value); }} /></label>
@@ -324,14 +356,39 @@ export function LoadIntelligencePanel({ guidance, completed, total, loadContext,
       <label className="block text-xs">Correction reason<input readOnly={pending || correctionUncertain} className="ui-input min-h-[48px] w-full" value={reason} maxLength={500} onChange={e => setReason(e.target.value)} /></label>
       <Button className="min-h-[48px] w-full" disabled={pending || (rir.trim()!==""&&(!Number.isFinite(Number(rir))||Number(rir)<0||Number(rir)>10)) || !Number.isInteger(Number(reps)) || Number(reps) < 1 || weight.trim() === "" || !Number.isFinite(Number(weight)) || (requireExternalWeight ? Number(weight) <= 0 : Number(weight) < 0) || (rpe.trim() !== "" && (!Number.isFinite(Number(rpe)) || Number(rpe) < 0 || Number(rpe) > 10))} onClick={async () => {
         if (pendingAction.current) return; pendingAction.current = true; setPending(true); setStatus("");
-        try { await onCorrect(editing, { reps: Number(reps), weight: Number(weight) === displayLoad(editing.weight,editingUnit) ? editing.weight : canonicalLoad(Number(weight),editingUnit),
+        const submittedRecoveryKey = recoveryKey;
+        const commandKey = commandScope && exerciseIdentity ? pendingCommandKey(commandScope, exerciseIdentity, `correct:${editing.id}`) : null;
+        const values: CorrectionValues = { reps: Number(reps), weight: Number(weight) === displayLoad(editing.weight,editingUnit) ? editing.weight : canonicalLoad(Number(weight),editingUnit),
           ...(rpeEdited ? { rpe: rpe.trim() === "" ? null : Number(rpe) } : {}),
           ...(allowRir&&rirEdited?{actual_rir:rir.trim()===""?null:Number(rir)}:{}),
           ...(allowRir&&qualityEdited?{technique_quality:quality as 'acceptable'|'poor'|'unknown'}:{}),
-          ...(allowRir&&painEdited?{pain:pain==='unknown'?null:pain==='yes'}:{}),reason: reason.trim() || "User corrected set" }); setEditing(null); setCorrectionUncertain(false); }
-        catch (error) { const rejected = error instanceof ApiError && error.status === 422; setCorrectionUncertain(!rejected); setStatus(rejected ? error.message : "Correction was not confirmed. Retry the same correction."); }
-        finally { pendingAction.current = false; setPending(false); }
-      }}>Save correction</Button>
+          ...(allowRir&&painEdited?{pain:pain==='unknown'?null:pain==='yes'}:{}), reason: reason.trim() || "User corrected set" };
+        // Persist both the existing command and its original receipt before any
+        // transport call. Retrying bypasses display conversion and edited fields.
+        const proposed = attemptedCorrection.current ?? { receipt: { ...editing }, unit: editingUnit,
+          values: commandKey ? retainLogPayload(commandKey, { ...values, command_id: getLogCommand(commandKey) }) : values };
+        const attempt = recoveryKey ? retainLogPayload(recoveryKey, proposed) : proposed;
+        attemptedCorrection.current = attempt;
+        // A request from a closed panel may acknowledge while this recovery is
+        // open. Reinstall its frozen payload so the callback cannot mint a retry.
+        if (commandKey) retainLogPayload(commandKey, attempt.values);
+        try {
+          await onCorrect(attempt.receipt, attempt.values);
+          if (commandKey) acknowledgeLogCommand(commandKey);
+          if (submittedRecoveryKey) acknowledgeLogCommand(submittedRecoveryKey);
+          if (activeRecoveryKey.current !== submittedRecoveryKey) return;
+          attemptedCorrection.current = null; setEditing(null); setCorrectionUncertain(false);
+        } catch (error) {
+          const rejected = error instanceof ApiError && error.status === 422;
+          if (rejected) {
+            if (commandKey) acknowledgeLogCommand(commandKey);
+            if (submittedRecoveryKey) acknowledgeLogCommand(submittedRecoveryKey);
+          }
+          if (activeRecoveryKey.current !== submittedRecoveryKey) return;
+          if (rejected) attemptedCorrection.current = null;
+          setCorrectionUncertain(!rejected); setStatus(rejected ? error.message : "Correction was not confirmed. Retry the same correction.");
+        } finally { pendingAction.current = false; setPending(false); }
+      }}>{correctionUncertain ? "Retry exact correction" : "Save correction"}</Button>
       <Button variant="ghost" className="min-h-[44px] w-full" disabled={pending || correctionUncertain} onClick={() => setEditing(null)}>Cancel correction</Button>
     </div> : null}
     {status ? <p role="status" className="text-xs text-zinc-400">{status}</p> : null}
