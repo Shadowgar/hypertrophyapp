@@ -1,5 +1,7 @@
 # Unified UX implementation: account safety, appearances and gym execution
 
+[Latest bounded correction and qualification package](correction-pass/README.md) supersedes the relevant original limitations below; earlier screenshots retain their recorded revisions.
+
 First application-code slice of the [approved design, PR #108 at 33598c3](https://github.com/Shadowgar/hypertrophyapp/tree/33598c3fb35328cc2d2b6310865f716380b6c81e/docs/ux/astra-2026-10-20/unified-2026-10-21). Base: merged production source `fc3bd0c`. The design branch and its static asset collection are not merged into this branch.
 
 **Development qualification only. No merge, deployment, production migration or production-data access.** Screenshots below show the actual Next.js application and FastAPI API using disposable PostgreSQL and synthetic accounts. They are not design mockups or mocked network responses. Network interception is used only for named failure tests.
@@ -78,7 +80,7 @@ Physical iOS/Android keyboards and screen readers were not tested. Chromium focu
 
 ## Regression qualification
 
-Current application source: `d0cdaf95880e5f04794ea2f4bf5ea37e1021309d`. The before/after logging and appearance journeys ran at `400a646`; final overview captures include the overview fixes at `8957890`. The subsequent technique-persistence and snapshot-test fixes have fresh unit/build verification and do not change the captured layout. See the [manifest](manifest.json) for artifact hashes and exact scope.
+Original first-slice application source: `d0cdaf95880e5f04794ea2f4bf5ea37e1021309d`. The before/after logging and appearance journeys ran at `400a646`; final overview captures include the overview fixes at `8957890`. The subsequent technique-persistence and snapshot-test fixes have fresh unit/build verification and do not change the captured layout. See the [manifest](manifest.json) for artifact hashes and exact scope.
 
 - 237 web tests across 43 files, including immutable retry, account changes, unit conversion, late responses, source prescriptions, corrections, undo, warm-up and technique reloads.
 - 4 PostgreSQL profile tests, including preservation, strict field boundaries, account isolation and concurrent preference updates.

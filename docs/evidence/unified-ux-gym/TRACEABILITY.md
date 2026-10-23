@@ -33,4 +33,6 @@ Status refers to development code and the bounded qualification in [README](READ
 | F27 Raw warm-up count | Numeric display normalized; source count and warm-up identities preserved. | None declared fixed in production. |
 | F28 Internal vocabulary | Plain main task; advanced owner-provided context behind disclosure. | Week/Analytics/Check-In copy and structure. |
 
+**Issue #103 remains partial. Known-1RM is reference-only; qualified starting-working-load calibration, cold Today performance qualification and physical iPhone keyboard/background acceptance remain open.** See [smallest next load package and safe physical-device instructions](correction-pass/REMAINING.md).
+
 Issue #103's Cross-Body journey is exercised against the real API, including warm-up, actual weight/reps/effort, confirmed save, rest, next set, correction, undo, reload and History. The synthetic schedule retains the source's combined Full Body #1 + #2, 10 exercises and 29 working sets; this PR does not silently change that source grouping or claim it was a production diagnosis. No runtime LLM, shadow load formula or altered Authored prescription was added.
