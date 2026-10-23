@@ -1,0 +1,21 @@
+{
+  "applicationRevision": "1226fb307a953b70a0ffd8c1422e91cad18ed991",
+  "productionAccess": false,
+  "physicalIPhoneTested": false,
+  "artifactSha256": {
+    "mobile_correction-undo-recovery.json": "aa60a73fe51b244a51c689f50b2a33386eae023f54785bca9ec8b60d7e87f8d0",
+    "undo-database-proof.json": "9fe06e2027cb76b33d27ed739781b46d8cdab0b20c43432351a92f51eec8ce47",
+    "desktop_correction-undo-recovery.json": "9df4b88d15577e254724d5f5dbb204d2c000dc713d76b6e4271447d91002e3b8",
+    "README.md": "7dc5054cff8db321735111a289ec915ee6e06aaeb18761b2a6887d6ba22b3a85",
+    "focus-parent-check.json": "a8d19bec9b13fe97e0b9ab0b6fd6c5dbc6326f717b39544b8077b56f61e84831",
+    "reproduce/undo-recovery.cjs": "7f5cc63559edb702f066b9ea9d6abd18705885ddfebbc32f0ffbee77cacf173d",
+    "assets/mobile_correction-undo-reconciled.png": "b50cc18730ddf4af6bc6b696bc47f3766fc261593763514046ab3d8f78878f46",
+    "assets/desktop_correction-undo-rest-day-recovery.png": "5e81929e3b33a3761397060347051bf097ba907d349e61d7e34910d96787f5af",
+    "assets/desktop_correction-undo-before-unknown.png": "4370fcad4a86aeac3b2a4c2594818ceda64bc3efeb9f39e13cd61ff983be7971",
+    "assets/mobile_correction-undo-rest-day-recovery.png": "eb17d991a712941eb4aa7ade4c0baa0ca0368bc67f4d13a1ecf46a4d8ef0c9ce",
+    "assets/mobile_correction-undo-before-unknown.png": "c93f008ec38e675bbbdd2a32a94aacbd33e58e2360adc423aca97a0eb930bda8",
+    "assets/desktop_correction-undo-reconciled.png": "d59492484eba2fca3578669ba4d79a021db06a125b6773bc18528735d40432a9",
+    "assets/desktop_correction-undo-after-unknown.png": "a0560d5ffa76105462dea0b79698dd8ae36620ef94dd767d68bf1cab3686f302",
+    "assets/mobile_correction-undo-after-unknown.png": "15815c5d3bd9e0ffabd54ce318c32a62a9608589d6f69cb88e7266296f1d1e0c"
+  }
+}

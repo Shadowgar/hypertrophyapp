@@ -1,0 +1,58 @@
+{
+  "attempts": [
+    {
+      "url": "/api/workout/2151f2ae-102f-5fd5-b40a-d93d12a00487/undo-last-set",
+      "payload": {
+        "exercise_id": "cross_body_lat_pull_around",
+        "exercise_occurrence_id": "5db63e6f-9a98-5279-9e56-149d7fc83377",
+        "command_id": "5dec8c96-bf7f-48e7-8d0c-ed6fe3189b4c"
+      }
+    },
+    {
+      "url": "/api/workout/2151f2ae-102f-5fd5-b40a-d93d12a00487/undo-last-set",
+      "payload": {
+        "exercise_id": "cross_body_lat_pull_around",
+        "exercise_occurrence_id": "5db63e6f-9a98-5279-9e56-149d7fc83377",
+        "command_id": "5dec8c96-bf7f-48e7-8d0c-ed6fe3189b4c"
+      }
+    },
+    {
+      "url": "/api/workout/2151f2ae-102f-5fd5-b40a-d93d12a00487/undo-last-set",
+      "payload": {
+        "exercise_id": "cross_body_lat_pull_around",
+        "exercise_occurrence_id": "5db63e6f-9a98-5279-9e56-149d7fc83377",
+        "command_id": "1929740a-6060-46bb-bc31-9f9590825e3f"
+      }
+    },
+    {
+      "url": "/api/workout/2151f2ae-102f-5fd5-b40a-d93d12a00487/undo-last-set",
+      "payload": {
+        "exercise_id": "cross_body_lat_pull_around",
+        "exercise_occurrence_id": "5db63e6f-9a98-5279-9e56-149d7fc83377",
+        "command_id": "1929740a-6060-46bb-bc31-9f9590825e3f"
+      }
+    },
+    {
+      "url": "/api/workout/2151f2ae-102f-5fd5-b40a-d93d12a00487/undo-last-set",
+      "payload": {
+        "exercise_id": "cross_body_lat_pull_around",
+        "exercise_occurrence_id": "5db63e6f-9a98-5279-9e56-149d7fc83377",
+        "command_id": "1fa6960b-5a35-4ebc-a82e-ab66f449f3ca"
+      }
+    },
+    {
+      "url": "/api/workout/2151f2ae-102f-5fd5-b40a-d93d12a00487/undo-last-set",
+      "payload": {
+        "exercise_id": "cross_body_lat_pull_around",
+        "exercise_occurrence_id": "5db63e6f-9a98-5279-9e56-149d7fc83377",
+        "command_id": "1fa6960b-5a35-4ebc-a82e-ab66f449f3ca"
+      }
+    }
+  ],
+  "errors": [],
+  "beforeCommitReloadExactRetry": true,
+  "afterCommitReloadExactRetry": true,
+  "writeAndNavigationLocks": true,
+  "restDayReloadRecovery": true,
+  "zeroRemainingWorkingSetsReconciled": true
+}

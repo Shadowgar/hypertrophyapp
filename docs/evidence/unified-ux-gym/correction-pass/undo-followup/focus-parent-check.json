@@ -1,0 +1,92 @@
+[
+  {
+    "family": "graphite",
+    "appearance": "light",
+    "width": "3px",
+    "offset": "3px",
+    "outline": "rgb(21, 89, 183)",
+    "adjacentParentBackground": [
+      255,
+      255,
+      255
+    ],
+    "outlineContrast": 6.67807924220013,
+    "border": "rgb(115, 115, 115)",
+    "borderContrast": 4.741667181590045
+  },
+  {
+    "family": "graphite",
+    "appearance": "dark",
+    "width": "3px",
+    "offset": "3px",
+    "outline": "rgb(165, 206, 255)",
+    "adjacentParentBackground": [
+      25,
+      25,
+      25
+    ],
+    "outlineContrast": 10.777065332395637,
+    "border": "rgb(133, 133, 133)",
+    "borderContrast": 4.764648058581669
+  },
+  {
+    "family": "charcoal",
+    "appearance": "light",
+    "width": "3px",
+    "offset": "3px",
+    "outline": "rgb(36, 36, 36)",
+    "adjacentParentBackground": [
+      255,
+      255,
+      255
+    ],
+    "outlineContrast": 15.522910417680388,
+    "border": "rgb(115, 115, 115)",
+    "borderContrast": 4.741667181590045
+  },
+  {
+    "family": "charcoal",
+    "appearance": "dark",
+    "width": "3px",
+    "offset": "3px",
+    "outline": "rgb(255, 255, 255)",
+    "adjacentParentBackground": [
+      41,
+      41,
+      41
+    ],
+    "outlineContrast": 14.5481984654954,
+    "border": "rgb(150, 150, 150)",
+    "borderContrast": 4.91850085506843
+  },
+  {
+    "family": "classic",
+    "appearance": "light",
+    "width": "3px",
+    "offset": "3px",
+    "outline": "rgb(180, 35, 45)",
+    "adjacentParentBackground": [
+      255,
+      255,
+      255
+    ],
+    "outlineContrast": 6.523836690314784,
+    "border": "rgb(115, 115, 115)",
+    "borderContrast": 4.741667181590045
+  },
+  {
+    "family": "classic",
+    "appearance": "dark",
+    "width": "3px",
+    "offset": "3px",
+    "outline": "rgb(255, 171, 176)",
+    "adjacentParentBackground": [
+      25,
+      25,
+      25
+    ],
+    "outlineContrast": 9.79893107245203,
+    "border": "rgb(133, 133, 133)",
+    "borderContrast": 4.764648058581669
+  }
+]

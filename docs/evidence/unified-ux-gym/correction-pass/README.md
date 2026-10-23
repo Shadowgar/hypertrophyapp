@@ -1,6 +1,6 @@
 # Bounded correction and qualification pass
 
-This package corrects PR #110 from verified review target `a3f5760badfe2d5fbc76fcb12b026286a256e4f9`. Final application source is `aa43248` (the package commit may be later and documentation/assets only). No broader Home/onboarding slice, palette redesign, merge, deployment, production migration or live-data operation occurred.
+This package corrects PR #110 from verified review target `a3f5760badfe2d5fbc76fcb12b026286a256e4f9`. The original four-finding runtime source is `aa43248`. [Additional undo recovery and final application qualification](undo-followup/README.md) records later source `1226fb3`; earlier captures are not relabeled as that revision. No broader Home/onboarding slice, palette redesign, merge, deployment, production migration or live-data operation occurred.
 
 [Finding dispositions](REVIEW.md) · [Remaining Issue #103 requirements and physical iPhone procedure](REMAINING.md) · [Precise managed security limitation](SECURITY.md)
 
