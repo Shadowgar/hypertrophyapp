@@ -37,6 +37,7 @@ export function AppearanceSettings() {
         <label className="ux-field">
           Theme family
           <select
+            aria-label="Theme family"
             value={draft.theme_family}
             onChange={(e) =>
               change({
@@ -52,6 +53,7 @@ export function AppearanceSettings() {
         <label className="ux-field">
           Appearance
           <select
+            aria-label="Appearance"
             value={draft.appearance}
             onChange={(e) =>
               change({ appearance: e.target.value as typeof draft.appearance })
@@ -65,6 +67,7 @@ export function AppearanceSettings() {
         <label className="ux-field">
           Weight unit
           <select
+            aria-label="Weight unit"
             value={draft.weight_unit}
             onChange={(e) =>
               setDraft({ ...draft, weight_unit: e.target.value as "kg" | "lb" })

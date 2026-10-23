@@ -1001,6 +1001,11 @@ export default function TodayPage() {
     acknowledgeLogCommand(commandKey);
   }
 
+  // Invoked by the technique entry's event handler, never during rendering.
+  const handleTechniqueLog = async (performed: {reps:number;weight:number}, ordinal:number) => {
+    if (techniqueModal) await handleLogTechniqueSubSet(techniqueModal, performed, ordinal);
+  };
+
   const swapTarget = (workout?.exercises ?? []).find((exercise) => exerciseKey(exercise) === swapTargetExerciseId) ?? null;
   const swapTargetCurrentIndex = swapTarget ? (swapIndexByExercise[exerciseKey(swapTarget)] ?? 0) : 0;
   const activeProgramId = workout ? extractProgramId(workout.session_id) : null;
@@ -1258,12 +1263,7 @@ export default function TodayPage() {
             }}
             techniquePanelState={techniqueModal && techniqueModal.exerciseId === exerciseKey(exercise) ? techniqueModal : null}
             onCloseTechniquePanel={() => setTechniqueModal(null)}
-            onLogTechniquePanel={async (performed, ordinal) => {
-              if (!techniqueModal || techniqueModal.exerciseId !== exerciseKey(exercise)) {
-                return;
-              }
-              await handleLogTechniqueSubSet(techniqueModal, performed, ordinal);
-            }}
+            onLogTechniquePanel={handleTechniqueLog}
             mediaUrl={mediaUrl}
             weakPointInstruction={weakPointInstruction}
             liveGuidance={!loadIntelligence && !exercise.customized ? resolveGuidanceText(recommendation?.guidance_rationale ?? feedback?.guidance_rationale, recommendation?.guidance ?? feedback?.guidance) : ""}

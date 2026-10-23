@@ -454,11 +454,6 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-2">
-        <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Display</p>
-        <p className="text-sm text-zinc-400">Theme is locked to dark for MVP.</p>
-      </div>
-
       <Disclosure title="Coaching Preview" badge="power user" defaultOpen={false}>
         <div className="space-y-3 text-xs text-zinc-300">
           <p className="text-xs text-zinc-400">
