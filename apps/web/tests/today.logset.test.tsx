@@ -257,7 +257,7 @@ test("Technique checklist auto-opens Coaching and gates last set completion", as
   });
 });
 
-test("Technique inline panel logs technique sub-sets with set_kind and parent_set_index", async () => {
+test.each([false,true])("Technique retry restores source from API without persisting it (Authored %s)", async (authored) => {
   let completedSets = 0; let techniqueAttempts=0;
 
   const workout = {
@@ -269,6 +269,7 @@ test("Technique inline panel logs technique sub-sets with set_kind and parent_se
     exercises: [
       {
         id: "ex-mech",
+        ...(authored ? {authored_prescription:{version:"authored-prescription-v1",raw:{reps:"12–15"},sets:[{set_index:1,set_type:"work",rep_target:{kind:"reps",raw:"12–15",min:12,max:15},effort_target:{kind:"rpe",raw:"8"},rest:"2 min",intensity_technique:"Mechanical dropset"}]}} : {}),
         name: "Cable Reverse Fly",
         sets: 1,
         rep_range: [12, 15],
@@ -362,6 +363,11 @@ test("Technique inline panel logs technique sub-sets with set_kind and parent_se
 
   // Inline technique panel should appear inside Coaching.
   await waitFor(() => expect(screen.getByText(/Mechanical drop set/i)).toBeInTheDocument());
+  await waitFor(() => {
+    const key=Object.keys(localStorage).find(key=>key.includes(":technique:"));
+    expect(key).toBeTruthy();
+    expect(JSON.parse(localStorage.getItem(key!)!)).toEqual({exerciseId:"ex-mech",workoutId:"sess-technique-inline",parentSetIndex:1,kind:"mechanical_drop",unit:"lb"});
+  });
   fireEvent.change(nativeScreen.getByRole("spinbutton", {name:"Reps"}),{target:{value:"6"}});
   fireEvent.change(nativeScreen.getByRole("spinbutton", {name:"Technique weight (lb)"}),{target:{value:"40"}});
   fireEvent.click(screen.getByRole("button", { name: /Log technique set #1/i }));

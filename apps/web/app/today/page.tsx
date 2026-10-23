@@ -597,7 +597,10 @@ export default function TodayPage() {
   useEffect(() => {
     if(!workout)return;
     try { const key=occurrenceStorageKey("technique",workout);
-      if(techniqueModal)localStorage.setItem(key,JSON.stringify(techniqueModal));else localStorage.removeItem(key);
+      if(techniqueModal)localStorage.setItem(key,JSON.stringify({
+        workoutId:techniqueModal.workoutId, exerciseId:techniqueModal.exerciseId,
+        parentSetIndex:techniqueModal.parentSetIndex, kind:techniqueModal.kind, unit:techniqueModal.unit,
+      }));else localStorage.removeItem(key);
     } catch { /* in-memory technique remains usable */ }
   }, [techniqueModal,workout]);
   useEffect(() => {
@@ -656,7 +659,21 @@ export default function TodayPage() {
       try {
         selected = localStorage.getItem(occurrenceStorageKey("selected", data));
         const savedTechnique = JSON.parse(localStorage.getItem(occurrenceStorageKey("technique",data)) ?? "null");
-        if (savedTechnique?.workoutId === workoutReference(data) && data.exercises.some(e=>exerciseKey(e)===savedTechnique.exerciseId)) restoredTechnique=savedTechnique;
+        const techniqueExercise = data.exercises.find(e => exerciseKey(e) === savedTechnique?.exerciseId);
+        if (savedTechnique?.workoutId === workoutReference(data) && techniqueExercise
+            && Number.isInteger(savedTechnique.parentSetIndex) && savedTechnique.parentSetIndex > 0
+            && savedTechnique.parentSetIndex <= techniqueExercise.sets && ["kg","lb"].includes(savedTechnique.unit)) {
+          // Rehydrate source instructions from this occurrence, never browser storage.
+          const instruction = authoredSetTechnique(techniqueExercise, savedTechnique.parentSetIndex);
+          const kind = resolveTechniqueKind(techniqueExercise.authored_prescription
+            ? {...techniqueExercise,last_set_intensity_technique:instruction} : techniqueExercise);
+          if (kind && kind === savedTechnique.kind && (!techniqueExercise.authored_prescription || instruction)) {
+            restoredTechnique = {workoutId:workoutReference(data),exerciseId:exerciseKey(techniqueExercise),
+              exerciseName:resolveExerciseName(techniqueExercise,{}),parentSetIndex:savedTechnique.parentSetIndex,
+              kind,unit:savedTechnique.unit,instruction,authored:Boolean(techniqueExercise.authored_prescription),
+              bodyweight:isBodyweightAuthored(techniqueExercise)};
+          }
+        }
         const savedRest = JSON.parse(localStorage.getItem(occurrenceStorageKey("rest", data)) ?? "null");
         if (savedRest && Number.isFinite(savedRest.deadline) && savedRest.deadline > Date.now() && data.exercises.some(e => exerciseKey(e) === savedRest.exerciseId)) {
           restoredRest = {...savedRest, secondsLeft: Math.ceil((savedRest.deadline-Date.now())/1000)};
@@ -918,9 +935,7 @@ export default function TodayPage() {
           workoutId: workoutReference(workout),
           parentSetIndex: completedCount,
           kind: techniqueKind,
-          baseWeight: performed.weight,
           unit: performed.display_unit ?? "lb",
-          baseReps: performed.reps,
           instruction: prescribedTechnique,
           authored: Boolean(exercise.authored_prescription),
           bodyweight: isBodyweightAuthored(exercise),

@@ -145,6 +145,8 @@ test("visual snapshot: today route initial state", async () => {
   // @ts-ignore
   globalThis.fetch.mockImplementation((input: RequestInfo | URL) => {
     const url = resolveUrl(input);
+    // Hold the initial reads so this tests loading, not a race with error state.
+    if (url.includes("/plan/scheduling-context?") || url.endsWith("/workout/today") || url.includes("/soreness")) return new Promise<Response>(() => {});
     if (url.endsWith("/health")) {
       return Promise.resolve(new Response(JSON.stringify({ status: "ok", date: "2026-03-05" }), { status: 200 }));
     }
@@ -152,7 +154,7 @@ test("visual snapshot: today route initial state", async () => {
   });
 
   const { container, getByText } = render(<TodayPage />);
-  await waitFor(() => expect(getByText(/Load today's workout/i)).toBeInTheDocument());
+  await waitFor(() => expect(getByText("Loading your scheduled workout…")).toBeInTheDocument());
   expect(container.firstChild).toMatchSnapshot();
   dateSpy.mockRestore();
 });

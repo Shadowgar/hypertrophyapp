@@ -13,9 +13,7 @@ export type TechniqueModalState = {
   workoutId: string;
   parentSetIndex: number;
   kind: "dropset" | "mechanical_drop" | "rest_pause_cluster";
-  baseWeight: number;
   unit: "kg" | "lb";
-  baseReps: number;
   authored?: boolean;
   bodyweight?: boolean;
   instruction?: string | null;
