@@ -1,4 +1,5 @@
 "use client";
+import { currentLoadDecision } from "@/lib/today-guidance";
 
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -287,10 +288,10 @@ export function LoadIntelligencePanel({ guidance, completed, total, loadContext,
     if (retained) restoreCorrection(retained);
   }, [recoveryKey, restoreCorrection]);
   const validIncrement = increment.trim() === "" || (Number.isFinite(Number(increment)) && Number(increment) > 0);
-  const shown = completed > 0 && completed < total ? guidance?.remaining_sets : guidance?.next_exposure;
+  const shown = completed < total ? currentLoadDecision(guidance, completed, total) : guidance?.next_exposure;
   return <section className="space-y-3 rounded-xl border border-white/10 p-3" aria-label={receiptOnly ? "Recorded sets" : "Load guidance"}>
     {receiptOnly ? <p className="text-sm font-medium">Recorded sets · correct actual performance</p> : <>
-    <p className="text-sm font-medium">{completed > 0 && completed < total ? "Remaining sets" : "Next exposure"} load guidance</p>
+    <p className="text-sm font-medium">{shown?.scope === "initial_calibration" ? "Initial estimate" : completed > 0 && completed < total ? "Remaining sets" : "Next exposure"} load guidance</p>
     {shown ? <>
       <p className="text-sm">{shown.action}{shown.recommended_weight != null ? ` · ${displayLoad(shown.recommended_weight,loadContext.display_unit)} ${loadContext.display_unit}` : " · no new load inferred"}</p>
       <p className="text-sm text-zinc-300">{shown.explanation}</p>

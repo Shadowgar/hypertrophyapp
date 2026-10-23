@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 from app.config import Settings, settings
 from app.database import Base, SessionLocal, engine
 from app.main import app
-from app.models import User, UserInterfacePreference, WorkoutSetLog
+from app.models import User, UserInterfacePreference, WorkoutSetLog, AuthoredInitialCalibration
 
 
 @pytest.fixture
@@ -32,6 +32,10 @@ def accounts():
             user_id = db.query(User).filter_by(email=email).one().id
             db.add(WorkoutSetLog(user_id=user_id, workout_id="cleanup-fixture", primary_exercise_id="fixture",
                 exercise_id="fixture", set_index=1, reps=8, weight=20))
+            db.add(AuthoredInitialCalibration(user_id=user_id, revision=1, command_id=str(uuid4()),
+                command_digest="0" * 64, source_scope="1" * 64, setup_scope="2" * 64,
+                workout_occurrence_id="synthetic-retained-provenance", exercise_occurrence_id="synthetic-exercise",
+                data={"method": "known_1rm", "load": 30, "unit": "kg"}, load_context={"basis": "per_hand"}))
             db.commit()
         return user_id, email, headers, saved.json()
 
@@ -43,6 +47,7 @@ def assert_retained(client, account):
     assert client.get("/profile/preferences", headers=headers).json() == saved
     with SessionLocal() as db:
         assert db.get(User, user_id) is not None
+        assert db.query(AuthoredInitialCalibration).filter_by(user_id=user_id).count() == 1
         assert db.query(WorkoutSetLog).filter_by(user_id=user_id).count() == 1
 
 
@@ -76,6 +81,7 @@ def test_development_account_wipe_removes_preferences_only_for_the_target(accoun
     with SessionLocal() as db:
         assert db.get(UserInterfacePreference, user_id) is None
         assert db.get(User, user_id) is None
+        assert db.query(AuthoredInitialCalibration).filter_by(user_id=user_id).count() == 0
         assert db.query(WorkoutSetLog).filter_by(user_id=user_id).count() == 0
     assert client.get("/profile/preferences", headers=headers).status_code == 401
     assert_retained(client, other)
@@ -92,5 +98,6 @@ def test_development_training_reset_preserves_account_preferences(accounts, monk
     assert client.get("/profile/preferences", headers=headers).json() == saved
     with SessionLocal() as db:
         assert db.get(User, user_id) is not None
+        assert db.query(AuthoredInitialCalibration).filter_by(user_id=user_id).count() == 1
         assert db.query(WorkoutSetLog).filter_by(user_id=user_id).count() == 0
     assert_retained(client, other)

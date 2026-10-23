@@ -378,3 +378,217 @@ def decide_remaining_working_load(*, exposure, rule_set, load_context=None):
         explanation = "Keep the actual working load; this set does not meet both source-relative conditions for a temporary reduction."
     return _decision(action=action, weight=weight, baseline=baseline, reasons=reasons, explanation=explanation,
         exposures=[exposure], latest=exposure, rule_set=rule_set, context=context, scope="remaining_sets")
+
+
+INITIAL_VERSION = "authored-initial-load-v1"
+_INITIAL_PROGRAMS = {"pure_bodybuilding_phase_1_full_body", "pure_bodybuilding_phase_2_full_body"}
+_INITIAL_EXPLANATIONS = {
+    "current_working_sets_take_precedence": "Current working sets use the existing remaining-set guidance.",
+    "effective_history_takes_precedence": "Existing working history takes precedence, including incomplete or unqualified history; retain its baseline or manual guidance.",
+    "authored_program_unqualified": "Initial estimates are available only for Authored Phase 1 and Phase 2.",
+    "source_program_mismatch": "The source program does not match this Authored program.",
+    "initial_rep_target_unsupported": "The first source work set needs a numeric rep target with an upper bound from 6 to 12.",
+    "initial_effort_target_unsupported": "The first source work set needs an explicit source RPE range within 7 to 10.",
+    "first_working_set_not_ordinary": "The first source work set must be ordinary work without an intensity technique.",
+    "source_hard_load_instruction": "A source load directive prevents an initial estimate.",
+    "authored_constraint_unresolved": "Resolve the exercise constraint or substitution before estimating a load.",
+    "pain_or_unsafe_report": "A pain or unsafe-execution report prevents an initial estimate.",
+    "recorded_load_unit_unknown": "Canonical load context must use kg.",
+    "load_basis_unknown_or_unsupported": "Declare total external, per-hand, or same-machine stack load basis.",
+    "load_semantics_unsupported_or_contradictory": "The source and declared load meanings are unsupported or inconsistent.",
+    "equipment_identity_required": "Identify the exact equipment setup for this benchmark.",
+    "machine_equipment_identity_unknown": "Identify this exact machine setup.",
+    "equipment_unavailable": "Declare available equipment matching this performed exercise.",
+    "calibration_load_invalid": "Enter a positive finite benchmark load.",
+    "calibration_unit_unknown": "Declare the benchmark unit as lb or kg.",
+    "calibration_date_invalid": "Enter a valid observation date that is not in the future.",
+    "exact_setup_confirmation_required": "Confirm the report still represents this exact variant, side, range of motion and setup.",
+    "performed_variant_mismatch": "The benchmark must describe the current performed variant.",
+    "setup_details_required": "Describe the side, range of motion, grip, attachment and relevant settings.",
+    "calibration_method_unsupported": "Use a reported known 1RM or a recent set with explicit RIR.",
+    "recent_set_evidence_invalid": "A recent set needs 1–10 completed reps and explicit 0–3 RIR, with reps plus RIR at most 10.",
+    "attainable_loads_invalid": "Declare positive attainable loads or a positive minimum, step and maximum in lb or kg.",
+    "no_attainable_load_at_or_below_estimate": "No declared attainable load is at or below the estimate; enter a load manually.",
+    "initial_arithmetic_unresolved": "The declared load cannot be represented for an initial estimate; enter a load manually.",
+}
+
+
+def _initial_number(value):
+    """Input numbers must also fit the canonical finite-float transport."""
+    try:
+        return Decimal(str(value)) if _finite(value) else None
+    except (OverflowError, ValueError):
+        return None
+
+
+def _initial_attainable_weight(raw_weight, attainable):
+    """Floor on an explicitly declared original-unit inventory; no fallback grid.
+
+    Returns (Decimal kg or None, reason or None). The bounded list is input
+    validation; grids are computed arithmetically without materializing them.
+    """
+    from decimal import Context, ROUND_FLOOR, localcontext
+    invalid = (None, "attainable_loads_invalid")
+    if not isinstance(attainable, dict) or attainable.get("unit") not in {"lb", "kg"}:
+        return invalid
+    factor = _KG_PER_LB if attainable["unit"] == "lb" else Decimal("1")
+    with localcontext(Context(prec=800)):
+        if "values" in attainable:
+            values = attainable["values"]
+            if (any(key in attainable for key in ("min", "step", "max"))
+                    or not isinstance(values, list) or not 1 <= len(values) <= 1000):
+                return invalid
+            parsed = [_initial_number(value) for value in values]
+            if any(value is None or value <= 0 for value in parsed):
+                return invalid
+            selected = max((value * factor for value in parsed if value * factor <= raw_weight), default=None)
+        else:
+            minimum, step, maximum = (_initial_number(attainable.get(key)) for key in ("min", "step", "max"))
+            if any(value is None or value <= 0 for value in (minimum, step, maximum)) or minimum > maximum:
+                return invalid
+            limit = min(raw_weight, maximum * factor)
+            count = ((limit - minimum * factor) / (step * factor)).to_integral_value(rounding=ROUND_FLOOR)
+            selected = minimum * factor + count * step * factor if count >= 0 else None
+        return (selected, None) if selected is not None else (None, "no_attainable_load_at_or_below_estimate")
+
+
+def decide_initial_working_load(*, exercise, program_id, calibration, load_context,
+        has_current_work=False, has_effective_history=False, today=None):
+    """Provisional first-load estimate; never performed evidence or progression.
+
+    The caller supplies exact-cohort effective-history/current-work presence and
+    enforces account, occurrence, calibration revision and setup applicability.
+    This pure owner checks the source and calibration, with no source mutation.
+    """
+    from datetime import date
+    from decimal import Context, DecimalException, localcontext
+    from .equipment_profile import canonicalize_equipment_profile
+
+    ex, cal, context = (deepcopy(value) if isinstance(value, dict) else {} for value in
+        (exercise, calibration, load_context))
+    prescription = ex.get("authored_prescription") or {}
+    source = ex.get("source_lineage") or {}
+    sets = prescription.get("sets") or []
+    first = sets[0] if sets and isinstance(sets[0], dict) else {}
+    variant = ex.get("performed_variant") or {}
+    performed_id = (variant.get("exercise_id") or variant.get("id") or variant.get("variant_id")
+        or variant.get("option_id") or ex.get("id"))
+    reasons = []
+    calculations = {}
+    result = {"version": INITIAL_VERSION, "status": "unavailable", "unit": "kg",
+        "recommended_working_weight": None, "reported_1rm": None, "estimated_1rm": None}
+    evaluated_date = today if isinstance(today, date) else date.today()
+    trace = {"owner": "core_engine.load_intelligence", "version": INITIAL_VERSION,
+        "permission": "provisional_initial_working_load_only", "program_id": program_id,
+        "source_lineage": source, "source_prescription": prescription,
+        "performed_variant_id": performed_id, "load_context": context, "calibration": cal,
+        "has_current_work": bool(has_current_work), "has_effective_history": bool(has_effective_history),
+        "evaluated_date": evaluated_date.isoformat(), "calculations": calculations}
+
+    def finish():
+        codes = list(dict.fromkeys(reasons))
+        explanation = " ".join(_INITIAL_EXPLANATIONS[code] for code in codes) if codes else (
+            "Suggested starting weight — estimate. Uses your confirmed exact-setup report and the first source rep/RPE target, "
+            "rounded down to a declared attainable load. This is provisional, not performed evidence or a guarantee of effort; adjust the actual load as needed.")
+        if result["status"] == "provisional":
+            codes = ["provisional_initial_load_estimate"]
+        result.update(reason_codes=codes, explanation=explanation, decision_trace=trace)
+        trace.update(status=result["status"], reason_codes=codes)
+        return _safe_json(result)
+
+    if has_current_work:
+        reasons.append("current_working_sets_take_precedence")
+    elif has_effective_history:
+        reasons.append("effective_history_takes_precedence")
+    if reasons:
+        return finish()
+    if program_id not in _INITIAL_PROGRAMS:
+        reasons.append("authored_program_unqualified")
+    if source.get("source_program_id") != program_id:
+        reasons.append("source_program_mismatch")
+    reps = _numeric_target(first.get("rep_target") or {}, "reps")
+    effort = _numeric_target(first.get("effort_target") or {}, "rpe")
+    if reps is None or not 6 <= reps[1] <= 12:
+        reasons.append("initial_rep_target_unsupported")
+    if effort is None or not 7 <= effort[0] <= effort[1] <= 10:
+        reasons.append("initial_effort_target_unsupported")
+    if (first.get("set_type") != "work" or type(first.get("set_index")) is not int
+            or first["set_index"] != 1 or first.get("intensity_technique")):
+        reasons.append("first_working_set_not_ordinary")
+    containers = (ex, source, prescription, prescription.get("raw") or {}, *sets)
+    if any(isinstance(item, dict) and any(item.get(key) for key in
+            ("hard_load_instruction", "hard_load", "source_hard_load", "load_target")) for item in containers):
+        reasons.append("source_hard_load_instruction")
+    constraint = ex.get("authored_constraint") or {}
+    if (constraint.get("status") not in (None, "ready", "confirmed")
+            or constraint.get("execution_status") not in (None, "ready")):
+        reasons.append("authored_constraint_unresolved")
+    if any(container.get(key) for container in (ex, cal, context) for key in ("pain", "unsafe", "pain_reported", "unsafe_reported")):
+        reasons.append("pain_or_unsafe_report")
+    reasons.extend(_context_reasons(context))
+    semantics_allowed = {None, "external_load", "external", *_SUPPORTED_BASES}
+    for container in (ex, prescription, source, variant, context):
+        for key in ("load_semantics", "semantics"):
+            semantics = container.get(key)
+            if semantics not in semantics_allowed or semantics in _SUPPORTED_BASES and semantics != context.get("basis"):
+                reasons.append("load_semantics_unsupported_or_contradictory")
+    if not isinstance(context.get("equipment_key"), str) or not context["equipment_key"].strip():
+        reasons.append("equipment_identity_required")
+    required = (variant or ex).get("equipment_tags")
+    available = context.get("equipment_tags")
+    if (not isinstance(required, list) or not isinstance(available, list)
+            or not set(canonicalize_equipment_profile(required)) & set(canonicalize_equipment_profile(available))):
+        reasons.append("equipment_unavailable")
+    benchmark = _initial_number(cal.get("load"))
+    if benchmark is None or benchmark <= 0:
+        reasons.append("calibration_load_invalid")
+    if cal.get("unit") not in {"kg", "lb"}:
+        reasons.append("calibration_unit_unknown")
+    try:
+        observed = date.fromisoformat(cal.get("observed_date"))
+        if observed > evaluated_date:
+            raise ValueError("future observation")
+    except (TypeError, ValueError):
+        reasons.append("calibration_date_invalid")
+    if cal.get("confirmed") is not True:
+        reasons.append("exact_setup_confirmation_required")
+    if not performed_id or cal.get("variant_id") != performed_id:
+        reasons.append("performed_variant_mismatch")
+    if not isinstance(cal.get("setup_details"), str) or not cal["setup_details"].strip():
+        reasons.append("setup_details_required")
+    method = cal.get("method")
+    if method not in {"known_1rm", "recent_set"}:
+        reasons.append("calibration_method_unsupported")
+    recent_reps, recent_rir = cal.get("reps"), _initial_number(cal.get("rir"))
+    if method == "recent_set" and (type(recent_reps) is not int or not 1 <= recent_reps <= 10
+            or recent_rir is None or not 0 <= recent_rir <= 3 or recent_rir > 10 - recent_reps):
+        reasons.append("recent_set_evidence_invalid")
+    if reasons:
+        return finish()
+    try:
+        with localcontext(Context(prec=800)):
+            benchmark *= _KG_PER_LB if cal["unit"] == "lb" else Decimal("1")
+            target_reps = Decimal(str(reps[1]))
+            target_rir = Decimal("10") - Decimal(str(effort[0]))
+            strength_factor = (Decimal("30") + recent_reps + recent_rir
+                if method == "recent_set" and recent_reps + recent_rir != 1 else Decimal("30"))
+            strength = benchmark * strength_factor / Decimal("30")
+            # Cancel the common /30 before division to retain exact grid ties.
+            numerator = benchmark * strength_factor
+            denominator = Decimal("30") + target_reps + target_rir
+            raw = numerator / denominator
+            selected, reason = _initial_attainable_weight(raw, cal.get("attainable"))
+            calculations.update(benchmark_kg=str(benchmark.normalize()),
+                target_reps=str(target_reps.normalize()), provisional_target_rir=str(target_rir.normalize()),
+                strength_kg=str(strength.normalize()), raw_start_numerator=str(numerator.normalize()), raw_start_denominator=str(denominator.normalize()),
+                raw_start_kg=str(raw.normalize()), selected_kg=str(selected.normalize()) if selected is not None else None)
+            if reason:
+                reasons.append(reason)
+            elif not all(math.isfinite(float(value)) and float(value) > 0 for value in (strength, selected)):
+                reasons.append("initial_arithmetic_unresolved")
+            else:
+                result.update(status="provisional", recommended_working_weight=float(selected))
+                result["reported_1rm" if method == "known_1rm" else "estimated_1rm"] = float(strength)
+    except (DecimalException, OverflowError, ValueError):
+        reasons.append("initial_arithmetic_unresolved")
+    return finish()

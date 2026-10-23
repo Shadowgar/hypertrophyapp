@@ -29,7 +29,7 @@ from ..database import get_db
 from core_engine.authored_constraints import requires_receipt_tracking, is_bodyweight_authored, annotate_constraints, refresh_constraints, project_variant_load, restriction_conflicts, equipment_conflicts
 from ..workout_authored import log_typed_set, typed_projection, log_authored_set, authored_feedback_projection
 from ..workout_load_state import (is_authored_occurrence, project_authored_load_feedback,
-    rebuild_authored_load_state, load_authored_history_snapshot)
+    rebuild_authored_load_state, load_authored_history_snapshot, offered_working_decision)
 from ..deps import get_current_user
 from ..models import ExerciseState, User, WorkoutPlan, WorkoutSessionState, WorkoutSetLog, WorkoutOccurrence, WorkoutLogCommand
 from ..workout_identity import identified_plans, resolve_occurrence, resolve_exercise, occurrence_plan
@@ -50,6 +50,7 @@ from ..schemas import (
     WorkoutSetCorrectionRequest,
     AuthoredSubstitutionRequest,
     WorkoutLoadGuidanceRequest,
+    AuthoredCalibrationRequest,
 )
 from ..stoic_quotes import daily_stoic_quote
 
@@ -142,7 +143,7 @@ def _attach_authored_load_feedback(db, user, occurrence, session, response):
             history_snapshot=history_snapshot)
         projected["load_intelligence"] = projection["load_intelligence"]
         projected["exercise_state"] = projection["exercise_state"]
-        offered = projection["load_intelligence"]["remaining_sets"] or projection["load_intelligence"]["next_exposure"]
+        offered = offered_working_decision(projection["load_intelligence"])
         projected["load_recommendation_available"] = offered["prefill_available"]
         projected["live_recommendation"] = projection["live_recommendation"]
         if "completed_sets" in projected:
@@ -171,6 +172,32 @@ def workout_load_guidance(workout_id: str, payload: WorkoutLoadGuidanceRequest, 
     _validate_authored_load_permission(current_user, occurrence, exercise)
     return project_authored_load_feedback(db, user=current_user, occurrence=occurrence,
         exercise=exercise, supplied_context=payload.load_context)
+
+
+@router.post("/workout/{workout_id}/initial-calibration")
+def authored_initial_calibration(workout_id: str, payload: AuthoredCalibrationRequest,
+        db: DbSession, current_user: CurrentUser) -> dict:
+    from ..workout_initial_calibration import save_calibration
+    _lock_history_user(db, current_user.id)
+    occurrence, session = resolve_occurrence(db, current_user.id, workout_id, _list_workout_plans(db, current_user.id))
+    matches = [exercise for exercise in session.get("exercises") or []
+        if exercise.get("exercise_occurrence_id") == payload.exercise_occurrence_id]
+    if len(matches) != 1:
+        raise HTTPException(404, "Exercise occurrence not found")
+    exercise = matches[0]
+    if exercise.get("customized"):
+        raise HTTPException(409, "Customized keeps its separate calibration and consent policy")
+    _validate_authored_load_permission(current_user, occurrence, exercise)
+    variant = exercise.get("performed_variant") or {}
+    variant_id = (variant.get("exercise_id") or variant.get("id") or variant.get("variant_id")
+        or variant.get("option_id") or exercise.get("id"))
+    if not payload.calibration.confirmed or payload.calibration.variant_id != variant_id:
+        raise HTTPException(422, "Confirm the exact performed variant and setup before saving calibration")
+    save_calibration(db, user=current_user, occurrence=occurrence, exercise=exercise, payload=payload)
+    feedback = project_authored_load_feedback(db, user=current_user, occurrence=occurrence,
+        exercise=exercise, supplied_context=payload.load_context)
+    db.commit()
+    return feedback
 
 
 def _upsert_workout_session_state(

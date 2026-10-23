@@ -34,6 +34,7 @@ import {
   type WorkoutSetFeedback,
   type WorkoutSummary,
   type LoadContext,
+  type InitialCalibrationCommand,
   type LoadIntelligence,
   type EffectiveLoadSet,
 } from "@/lib/api";
@@ -394,6 +395,7 @@ function ExerciseDetailOverlay({
   loadContext,
   onLoadContextChange,
   onPreviewLoad,
+  onSaveCalibration,
   overrideReason,
   onOverrideReason,
   onCorrectSet,
@@ -425,6 +427,7 @@ function ExerciseDetailOverlay({
   loadContext: LoadContext;
   onLoadContextChange: (context: LoadContext) => void;
   onPreviewLoad: (context: LoadContext) => Promise<void>;
+  onSaveCalibration: (command: InitialCalibrationCommand, isRetry?: boolean) => Promise<void>;
   overrideReason: string;
   onOverrideReason: (reason: string) => void;
   effectiveSets: EffectiveLoadSet[];
@@ -436,6 +439,7 @@ function ExerciseDetailOverlay({
   const bodyweight = isBodyweightAuthored(exercise) || Boolean(exercise.customized && exercise.load_semantics === "bodyweight");
   return <AtlasRunner exercise={exercise} name={selectedName} completed={completed} scope={warmupCommandScope}
     guidance={loadIntelligence} context={loadContext} receipts={effectiveSets} navigation={navigation} onSelect={onSelectExercise}
+    onSaveCalibration={exercise.customized ? undefined : onSaveCalibration}
     onClose={onClose} submit={onSetComplete} onUndo={onUndoLastSet} undoRecovery={undoRecovery} onCorrect={onCorrectSet} rest={globalRestTimer} endRest={onClearGlobalRestTimer}
     warmups={exercise.authored_prescription ? <AuthoredWarmups guidance={loadIntelligence?.warmup_guidance} sourceCount={authoredWarmupLabel(exercise)}
       receipts={effectiveSets} loadContext={loadContext} commandScope={warmupCommandScope} exerciseId={exerciseKey(exercise)}
@@ -1288,6 +1292,22 @@ export default function TodayPage() {
               selectLoadContext(key, context);
               setLoadContextByExercise(previous => ({ ...previous, [exerciseKey(exercise)]: context }));
               setLoadIntelligenceByExercise(previous => ({ ...previous, [exerciseKey(exercise)]: null }));
+            }}
+            onSaveCalibration={async (command, isRetry = false) => {
+              if (undoRecoveryRef.current) throw new Error("Resolve the pending undo before saving a benchmark");
+              const key = exerciseKey(exercise);
+              const version = (loadPreviewVersions.current[key] ?? 0) + 1;
+              loadPreviewVersions.current[key] = version;
+              // Retry the original write without reselecting a setup the user has since changed.
+              if (!isRetry) {
+                selectLoadContext(key, command.load_context);
+                setLoadContextByExercise(previous => ({ ...previous, [key]: command.load_context }));
+                setLoadIntelligenceByExercise(previous => ({ ...previous, [key]: null }));
+              }
+              const generation = captureLoadGeneration();
+              const result = await api.saveInitialCalibration(workoutReference(workout), command);
+              if (currentOccurrence.current !== workoutReference(workout) || loadPreviewVersions.current[key] !== version || !isCurrentLoadGeneration(key, generation)) return;
+              updateLoadIntelligence(key, result);
             }}
             onPreviewLoad={async context => {
               if (!exercise.exercise_occurrence_id) throw new Error("Exercise occurrence unavailable");

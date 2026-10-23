@@ -4,6 +4,9 @@ import type { LoadContext, LoadDecision, LoadIntelligence } from "@/lib/api";
 /** Scope selection only: the core owns evidence qualification and load calculation. */
 export function currentLoadDecision(guidance: LoadIntelligence | null | undefined, completed: number, total: number): LoadDecision | null {
   if (!guidance || completed >= total) return null;
+  const initial = guidance.initial_estimate;
+  if (completed === 0 && !guidance.next_exposure?.prefill_available && initial?.scope === "initial_calibration" &&
+      initial.status === "provisional" && prefillLoadKg(initial) !== undefined) return initial;
   const decision = completed === 0 ? guidance.next_exposure : guidance.remaining_sets;
   return decision?.scope === (completed === 0 ? "next_exposure" : "remaining_sets") ? decision : null;
 }

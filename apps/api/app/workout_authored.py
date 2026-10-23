@@ -77,7 +77,8 @@ def authored_feedback_projection(db, *, user, occurrence, exercise, supplied_con
             "recommended_weight": 0.0, "guidance": "Source prescription is unavailable; record actual work without progression advice.",
             "guidance_rationale": "legacy_authored_source_unknown",
             "decision_trace": {"owner": "api.workout_load_state", "numeric_progression": "not_applicable", "source_context": "unknown"}}
-    offered = feedback["remaining_sets"] or feedback["next_exposure"]
+    from .workout_load_state import offered_working_decision
+    offered = offered_working_decision(feedback)
     live.update(recommended_weight=offered["recommended_weight"], guidance=offered["explanation"],
         guidance_rationale=offered["reason_codes"][0])
     live["decision_trace"]["load_intelligence"] = deepcopy(offered["decision_trace"])

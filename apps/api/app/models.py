@@ -63,6 +63,30 @@ class UserInterfacePreference(Base):
     )
 
 
+class AuthoredInitialCalibration(Base):
+    """Append-only reports, never performed work or progression state."""
+    __tablename__ = "authored_initial_calibrations"
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id: Mapped[str] = mapped_column(String, ForeignKey(USER_FK), nullable=False, index=True)
+    revision: Mapped[int] = mapped_column(Integer, nullable=False)
+    command_id: Mapped[str] = mapped_column(String(128), nullable=False)
+    command_digest: Mapped[str] = mapped_column(String(64), nullable=False)
+    source_scope: Mapped[str] = mapped_column(String(64), nullable=False)
+    setup_scope: Mapped[str] = mapped_column(String(64), nullable=False)
+    # Retain provenance when a development-only training reset removes a plan.
+    workout_occurrence_id: Mapped[str] = mapped_column(String, nullable=False)
+    exercise_occurrence_id: Mapped[str] = mapped_column(String, nullable=False)
+    data: Mapped[dict] = mapped_column(JSON, nullable=False)
+    load_context: Mapped[dict] = mapped_column(JSON, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive)
+    __table_args__ = (
+        UniqueConstraint("user_id", "command_id", name="uq_initial_calibration_command"),
+        UniqueConstraint("user_id", "revision", name="uq_initial_calibration_revision"),
+        CheckConstraint("revision > 0", name="ck_initial_calibration_revision"),
+        Index("ix_initial_calibration_scope", "user_id", "source_scope", "setup_scope"),
+    )
+
+
 class TrainingEquipmentProfile(Base):
     """Current user-owned inventory; accepted plans and receipts keep prior snapshots."""
     __tablename__ = "customized_equipment_profiles"

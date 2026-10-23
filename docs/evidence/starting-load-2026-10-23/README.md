@@ -1,4 +1,8 @@
-# Starting-load slice: current behavior and specific policy review
+# Starting-load slice: pre-implementation characterization
+
+This document and its observations describe the earlier review commit, not the
+implemented branch. The owner subsequently approved the amendment at `4041a558`.
+See [implementation qualification](IMPLEMENTATION.md) for new behavior and tests.
 
 Date: 2026-10-23. Application source: **PR #110
 `b3844398b50a64311f99ccf74411801bbd88225c`**, verified against GitHub before this

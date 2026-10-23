@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ApiError } from "@/lib/api";
 import type {
   EffectiveLoadSet,
+  InitialCalibrationCommand,
   LoadContext,
   LoadIntelligence,
   WorkoutExercise,
@@ -20,6 +21,7 @@ import { currentLoadDecision, prefillLoadKg } from "@/lib/today-guidance";
 import { exerciseKey } from "@/lib/workout-identity";
 import { useAppearance } from "./appearance-provider";
 import { useAtlasSet } from "./use-atlas-set";
+import { AuthoredCalibration } from "./authored-calibration";
 import { Button } from "./ui/button";
 import { LoadIntelligencePanel, type PerformedSet } from "./exercise-control";
 
@@ -44,6 +46,7 @@ type Props = {
     set: number,
     value: PerformedSet,
   ) => Promise<void> | void;
+  onSaveCalibration?: (command: InitialCalibrationCommand, isRetry?: boolean) => Promise<void>;
   onUndo?: () => Promise<number | false> | void;
   undoRecovery?: boolean;
   onCorrect: React.ComponentProps<typeof LoadIntelligencePanel>["onCorrect"];
@@ -110,6 +113,18 @@ export function AtlasRunner(p: Props) {
   const suggested = p.exercise.customized
     ? (p.exercise.customized_load_decision?.recommended_weight ?? undefined)
     : prefillLoadKg(decision);
+  const existingWorkTakesPrecedence = !p.exercise.customized && Boolean(
+    p.guidance?.initial_estimate?.reason_codes.some(reason =>
+      reason === "effective_history_takes_precedence" || reason === "current_working_sets_take_precedence"));
+  const initialExplanation = !p.exercise.customized && !existingWorkTakesPrecedence &&
+    (decision?.scope === "initial_calibration" || suggested == null)
+    ? p.guidance?.initial_estimate?.explanation : undefined;
+  const loadExplanation = initialExplanation ?? decision?.explanation;
+  const compactExplanation = initialExplanation ?? (existingWorkTakesPrecedence ? decision?.explanation : undefined);
+  const firstReason = compactExplanation?.match(/^.*?[.!?](?=\s|$)/)?.[0];
+  const compactLoadReason = initialExplanation && !p.guidance?.calibration
+    ? "Add a benchmark or choose a load."
+    : firstReason && firstReason.length <= 100 ? firstReason : "Review the load details.";
   const ctrl = useAtlasSet({
     draftIdentity: p.exercise.performed_variant?.option_id ?? "source",
     scope: p.scope,
@@ -293,17 +308,20 @@ export function AtlasRunner(p: Props) {
         <div className="atlas-suggestion">
           <div>
             <strong>
-              {suggested == null
+              {decision?.scope === "initial_calibration"
+                ? "Suggested starting weight — estimate"
+                : suggested == null
                 ? "Choose a starting load"
                 : `Suggested ${displayLoad(suggested, unit)} ${unit}`}
             </strong>
-            <p className="ux-muted">
-              {suggested == null
+            {decision?.scope === "initial_calibration" && suggested != null ? <p>{displayLoad(suggested, unit)} {unit}</p> : null}
+            {decision?.scope !== "initial_calibration" ? <p className="ux-muted">
+              {compactExplanation ? compactLoadReason : suggested == null
                 ? "No qualified load available yet."
                 : p.exercise.customized
                   ? "For your recorded equipment setup."
                   : "From the current training guidance."}
-            </p>
+            </p> : null}
           </div>
           <Button variant="secondary" onClick={() => setPanel("load")}>
             {suggested == null ? "Set up" : "Why?"}
@@ -616,9 +634,14 @@ export function AtlasRunner(p: Props) {
       >
         <div className="space-y-4">
           <p>
-            {decision?.explanation ??
+            {loadExplanation ??
               "Choose a comfortable starting load on this exact equipment. No maximum test is required."}
           </p>
+          {!p.exercise.customized && p.onSaveCalibration ? <AuthoredCalibration
+            key={`${p.scope}:${key}:${p.exercise.performed_variant?.id ?? p.exercise.id}`}
+            scope={p.scope} exercise={p.exercise} context={p.context} guidance={p.guidance}
+            disabled={ctrl.locked || undoLocked || p.completed > 0 || blocked}
+            onSave={p.onSaveCalibration} /> : <>
           <label className="ux-field">
             Starting-load path
             <select
@@ -663,6 +686,7 @@ export function AtlasRunner(p: Props) {
                 : "No qualified comparable baseline is available. Use manual calibration."}
             </p>
           ) : null}
+          </>}
           <label className="ux-field">
             Chosen starting load ({unit})
             <input
