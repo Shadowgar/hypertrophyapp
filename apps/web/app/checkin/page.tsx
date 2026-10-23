@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Disclosure } from "@/components/ui/disclosure";
 import { UiIcon } from "@/components/ui/icons";
 import { api, type WeeklyReviewResponse, type WeeklyReviewStatus } from "@/lib/api";
-import { kgToLbs } from "@/lib/weight";
+import { useAppearance } from "@/components/appearance-provider";
+import { displayLoad } from "@/lib/appearance";
 
 const ADHERENCE_LABELS: Record<string, string> = {
   "1": "Missed most sessions",
@@ -43,6 +44,8 @@ function resolveReadinessTone(score: number | null): "green" | "yellow" | "red" 
 }
 
 export default function CheckinPage() {
+  const { preferences } = useAppearance();
+  const unit = preferences.weight_unit;
   const [reviewStatus, setReviewStatus] = useState<WeeklyReviewStatus | null>(null);
   const [bodyWeight, setBodyWeight] = useState("0");
   const [calories, setCalories] = useState("0");
@@ -162,7 +165,7 @@ export default function CheckinPage() {
         <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-3">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Body Metrics</p>
           <label className="flex flex-col gap-1 text-sm text-zinc-300">
-            <span>Current Bodyweight</span>
+            <span>Current Bodyweight (kg)</span>
             <input className="ui-input" min="0.1" onChange={(event) => setBodyWeight(event.target.value)} step="0.1" type="number" value={bodyWeight} />
           </label>
         </div>
@@ -231,8 +234,8 @@ export default function CheckinPage() {
               <div key={fault.primary_exercise_id} className="rounded-md border border-zinc-800 bg-zinc-900/40 p-2 text-xs text-zinc-300">
                 <p className="font-semibold text-zinc-100">{fault.name}</p>
                 <p className="text-[11px] uppercase tracking-wide text-zinc-500">{fault.fault_level} fault</p>
-                <p>{fault.completed_sets}/{fault.planned_sets} sets · avg {fault.average_performed_reps} reps @ {kgToLbs(fault.average_performed_weight)} lbs</p>
-                <p>Target {fault.target_reps_min}-{fault.target_reps_max} reps @ {kgToLbs(fault.target_weight)} lbs</p>
+                <p>{fault.completed_sets}/{fault.planned_sets} sets · avg {fault.average_performed_reps} reps @ {displayLoad(fault.average_performed_weight, unit)} {unit}</p>
+                <p>Target {fault.target_reps_min}-{fault.target_reps_max} reps @ {displayLoad(fault.target_weight, unit)} {unit}</p>
                 {fault.guidance ? <p>{fault.guidance}</p> : null}
               </div>
             ))}
