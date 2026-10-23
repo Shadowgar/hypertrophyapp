@@ -44,3 +44,16 @@ The [evidence registry](../evidence/README.md#recorded-audit-baseline) preserves
 Unresolved owner decisions before affected implementation: recovery availability/legacy JWT cutover; licensed source-fixture retention and source-approved-option ambiguities; legacy mode/occurrence/unit mapping; correction storage/concurrency strategy; started-date/carryover policy and local-week default; progression/comparability/confidence/spacing rules; operational RPO/RTO/ownership and session/ingress strategy; longitudinal protocol; target devices/offline scope. Desired outcomes and parallel ordering are established, while numerical mechanisms and release acceptance remain pending.
 
 The completed, owner-reviewed documentation migration is recorded in the [authority migration report](../audits/2026-09-28-documentation-authority-migration.md). Select subsequent work through an explicitly authorized bounded package; documentation approval does not authorize runtime changes, deployment or database migration. Use the [single plan registry](../plans/README.md); historical next-task scripts and old roadmap checkmarks confer no authority. Remaining implementation detail requires separately bounded plans and approval.
+
+## Wave A gym reliability — bounded Today/resume slice, 2026-10-23
+
+The owner separately authorized measured Today/resume implementation on a
+focused PR stacked on PR #111, under the personal direction/crosswalk read
+directly from unmerged PR #109 `4ac9c49`. This supplements existing M0-HIST/M6
+qualification and PERS-002 / Issue #103; it creates no new milestone or training
+policy. [Performance evidence](../evidence/today-performance-2026-10-23/README.md)
+records the environment, datasets, samples, targets and measured limits.
+[Release readiness](../evidence/today-performance-2026-10-23/RELEASE-READINESS.md)
+retains physical-device, inherited-test, scanner and production boundaries.
+Issue #103 and release acceptance remain partial; implementation does not
+include merge, deployment, production migration or live-data changes.

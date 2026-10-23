@@ -1,0 +1,23 @@
+#!/bin/bash
+set -euo pipefail
+# Credentials must be supplied privately. No inherited DB/Compose defaults.
+: "${PERF_DATABASE_URL:?Explicit verified disposable URL required}"
+: "${PERF_JWT_SECRET:?Explicit synthetic signing key at least 32 bytes required}"
+: "${PERF_PYTHON:?Explicit qualification Python interpreter required}"
+today_source=${TODAY_SOURCE_ROOT:?Explicit isolated source worktree required}
+case "$today_source" in
+  /tmp/hypertrophy-starting-load|/tmp/hypertrophy-today-perf) ;;
+  *) exit 64 ;;
+esac
+[[ ${1:-} == pg ]] || exit 64
+shift
+exec env -i PATH=/usr/local/bin:/usr/bin:/bin \
+ PYTHONPATH="$today_source/packages/core-engine:$today_source/apps/api" \
+ DATABASE_URL="$PERF_DATABASE_URL" TEST_DATABASE_URL="$PERF_DATABASE_URL" \
+ JWT_SECRET="$PERF_JWT_SECRET" CUSTOMIZED_ENABLED=true \
+ PROGRAMS_DIR="$today_source/programs" COMPILED_KNOWLEDGE_DIR="$today_source/knowledge/compiled" \
+ M2A_POSTGRES_ISOLATED=1 TEST_DATABASE_PORT=55418 HIST_MIGRATED_DATABASE=1 M2A_MIGRATED_DATABASE=1 \
+ TODAY_PROCESS_MARKER="${TODAY_PROCESS_MARKER:-manual-probe}" \
+ TODAY_RUN_LABEL="${TODAY_RUN_LABEL:-baseline}" TODAY_FIRST_OFFSET="${TODAY_FIRST_OFFSET:-0}" \
+ LOG_FILE_PATH=/tmp/hypertrophy-today-perf/.qualification/isolated-api.log \
+ "$PERF_PYTHON" "$@"

@@ -1,0 +1,64 @@
+{
+  "application_revision": "912e7e928960069316e81f01a1df08001b0f2a53",
+  "stored_receipts": 3,
+  "effective_receipts": 1,
+  "unique_log_commands": 2,
+  "unique_history_commands": 2,
+  "total_retained_commands": 4,
+  "original_set_actuals_retained": true,
+  "correction_appended_once": true,
+  "second_set_undo_retained_record": true,
+  "canonical_weight_kg": 13.6077711,
+  "performed_snapshot_exactly_matches_identified_accepted_plan": true,
+  "effective_first_set_repetitions": 9,
+  "command_ledger": [
+    {
+      "command_id": "e73571f2-318e-4473-a8a1-5632110cd0e2",
+      "operation": "log_set"
+    },
+    {
+      "command_id": "696a490c-8a98-484a-9de1-5c6c1cca8943",
+      "operation": "log_set"
+    },
+    {
+      "command_id": "8708458d-4fd6-4ff1-86ca-bb014b0e394f",
+      "operation": "correct"
+    },
+    {
+      "command_id": "2f35f852-dd60-46ca-ba8f-9e09aa6e68fa",
+      "operation": "undo"
+    }
+  ],
+  "retained_receipt_lineage": [
+    {
+      "id": "ba72d8be-81e2-4196-b46a-876d9ff4f173",
+      "command_id": "e73571f2-318e-4473-a8a1-5632110cd0e2",
+      "set_index": 1,
+      "reps": 8,
+      "weight_kg": 13.6077711,
+      "voided": true,
+      "void_source": "user_correction",
+      "supersedes_id": null
+    },
+    {
+      "id": "72639752-3c25-4136-877b-b288cd301d2f",
+      "command_id": "8708458d-4fd6-4ff1-86ca-bb014b0e394f",
+      "set_index": 1,
+      "reps": 9,
+      "weight_kg": 13.6077711,
+      "voided": false,
+      "void_source": null,
+      "supersedes_id": "ba72d8be-81e2-4196-b46a-876d9ff4f173"
+    },
+    {
+      "id": "f9933839-3551-456b-86c4-605478b90290",
+      "command_id": "696a490c-8a98-484a-9de1-5c6c1cca8943",
+      "set_index": 2,
+      "reps": 8,
+      "weight_kg": 13.6077711,
+      "voided": true,
+      "void_source": "user_undo",
+      "supersedes_id": null
+    }
+  ]
+}

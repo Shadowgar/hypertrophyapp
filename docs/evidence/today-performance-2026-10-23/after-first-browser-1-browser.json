@@ -1,0 +1,326 @@
+[
+  {
+    "scenario": "authored-first-browser-after-1",
+    "trial": 1,
+    "browser": "fresh-context",
+    "server": "warm-process",
+    "visible_ms": 1704.7965189999998,
+    "usable_ms": 1979.035904,
+    "network": [
+      {
+        "path": "/today",
+        "method": "GET",
+        "start_ms": 1792783516521.076,
+        "request_ms": 3.318,
+        "response_start_ms": 11.246,
+        "response_end_ms": 142.442
+      },
+      {
+        "path": "/_next/static/css/070d6d92e1dcad24.css",
+        "method": "GET",
+        "start_ms": 1792783516751.168,
+        "request_ms": 9.893,
+        "response_start_ms": 131.144,
+        "response_end_ms": 193.186
+      },
+      {
+        "path": "/_next/static/chunks/webpack-dcf9f29cbe4f22b9.js",
+        "method": "GET",
+        "start_ms": 1792783516775.1619,
+        "request_ms": 1.181,
+        "response_start_ms": 111.142,
+        "response_end_ms": 193.06
+      },
+      {
+        "path": "/_next/static/chunks/main-app-788cfa2cd9370bd3.js",
+        "method": "GET",
+        "start_ms": 1792783516879.0378,
+        "request_ms": 16.882,
+        "response_start_ms": 77.365,
+        "response_end_ms": 270.504
+      },
+      {
+        "path": "/_next/static/media/65458149c0216615-s.p.ttf",
+        "method": "GET",
+        "start_ms": 1792783516749.3599,
+        "request_ms": 9.802,
+        "response_start_ms": 30.471,
+        "response_end_ms": 279.283
+      },
+      {
+        "path": "/_next/static/chunks/563-303959fbcbe6be33.js",
+        "method": "GET",
+        "start_ms": 1792783516890.1182,
+        "request_ms": 6.014,
+        "response_start_ms": 69.442,
+        "response_end_ms": 272.729
+      },
+      {
+        "path": "/_next/static/chunks/849-0afa1e39b043b742.js",
+        "method": "GET",
+        "start_ms": 1792783516895.125,
+        "request_ms": 65.666,
+        "response_start_ms": 71.231,
+        "response_end_ms": 273.811
+      },
+      {
+        "path": "/_next/static/chunks/app/layout-1b49c379a27d9133.js",
+        "method": "GET",
+        "start_ms": 1792783516971.256,
+        "request_ms": 1.831,
+        "response_start_ms": 10.56,
+        "response_end_ms": 287.703
+      },
+      {
+        "path": "/_next/static/chunks/685-ea19881611471d10.js",
+        "method": "GET",
+        "start_ms": 1792783516972.249,
+        "request_ms": 11.719,
+        "response_start_ms": 19.882,
+        "response_end_ms": 351.695
+      },
+      {
+        "path": "/_next/static/chunks/472-03c2ef6fe4f87bbd.js",
+        "method": "GET",
+        "start_ms": 1792783516877.676,
+        "request_ms": 18.05,
+        "response_start_ms": 79.906,
+        "response_end_ms": 288.69
+      },
+      {
+        "path": "/_next/static/chunks/5f604e6a-ea6e33cabfd17c92.js",
+        "method": "GET",
+        "start_ms": 1792783516876.7568,
+        "request_ms": 18.696,
+        "response_start_ms": 81.964,
+        "response_end_ms": 291.108
+      },
+      {
+        "path": "/_next/static/chunks/app/today/page-9a05eb7a1c779dc4.js",
+        "method": "GET",
+        "start_ms": 1792783516972.698,
+        "request_ms": 11.589,
+        "response_start_ms": 75.036,
+        "response_end_ms": 353.04
+      },
+      {
+        "path": "/api/profile/preferences",
+        "method": "GET",
+        "start_ms": 1792783517245.197,
+        "request_ms": 1.472,
+        "response_start_ms": 21.261,
+        "response_end_ms": 78.861
+      },
+      {
+        "path": "/api/health",
+        "method": "GET",
+        "start_ms": 1792783517359.169,
+        "request_ms": 0.309,
+        "response_start_ms": 6.257,
+        "response_end_ms": 61.622
+      },
+      {
+        "path": "/",
+        "method": "GET",
+        "start_ms": 1792783517454.131,
+        "request_ms": 7.263,
+        "response_start_ms": 12.99,
+        "response_end_ms": 69.654
+      },
+      {
+        "path": "/settings",
+        "method": "GET",
+        "start_ms": 1792783517457.554,
+        "request_ms": 4.05,
+        "response_start_ms": 52.853,
+        "response_end_ms": 69.633
+      },
+      {
+        "path": "/customize",
+        "method": "GET",
+        "start_ms": 1792783517460.604,
+        "request_ms": 1.167,
+        "response_start_ms": 50.483,
+        "response_end_ms": 69.691
+      },
+      {
+        "path": "/today",
+        "method": "GET",
+        "start_ms": 1792783517461.1167,
+        "request_ms": 0.839,
+        "response_start_ms": 50.992,
+        "response_end_ms": 75.917
+      },
+      {
+        "path": "/week",
+        "method": "GET",
+        "start_ms": 1792783517532.513,
+        "request_ms": 0.375,
+        "response_start_ms": 8.509,
+        "response_end_ms": 30.95
+      },
+      {
+        "path": "/history",
+        "method": "GET",
+        "start_ms": 1792783517535.855,
+        "request_ms": 0.35,
+        "response_start_ms": 19.395,
+        "response_end_ms": 45.19
+      },
+      {
+        "path": "/more",
+        "method": "GET",
+        "start_ms": 1792783517540.1409,
+        "request_ms": 2.908,
+        "response_start_ms": 32.021,
+        "response_end_ms": 52.475
+      },
+      {
+        "path": "/",
+        "method": "GET",
+        "start_ms": 1792783517563.1067,
+        "request_ms": 2.81,
+        "response_start_ms": 22.43,
+        "response_end_ms": 40.433
+      },
+      {
+        "path": "/settings",
+        "method": "GET",
+        "start_ms": 1792783517570.958,
+        "request_ms": 0.44,
+        "response_start_ms": 18.032,
+        "response_end_ms": 28.355
+      },
+      {
+        "path": "/customize",
+        "method": "GET",
+        "start_ms": 1792783517598.543,
+        "request_ms": 0.39,
+        "response_start_ms": 4.647,
+        "response_end_ms": 11.843
+      },
+      {
+        "path": "/today",
+        "method": "GET",
+        "start_ms": 1792783517613.7449,
+        "request_ms": 0.414,
+        "response_start_ms": 6.872,
+        "response_end_ms": 14.26
+      },
+      {
+        "path": "/_next/static/chunks/app/page-ce7022bac387f14f.js",
+        "method": "GET",
+        "start_ms": 1792783517628.644,
+        "request_ms": 1.52,
+        "response_start_ms": 24.337,
+        "response_end_ms": 33.517
+      },
+      {
+        "path": "/week",
+        "method": "GET",
+        "start_ms": 1792783517630.3079,
+        "request_ms": 15.548,
+        "response_start_ms": 26.358,
+        "response_end_ms": 36.483
+      },
+      {
+        "path": "/history",
+        "method": "GET",
+        "start_ms": 1792783517642.395,
+        "request_ms": 8.956,
+        "response_start_ms": 21.035,
+        "response_end_ms": 33.54
+      },
+      {
+        "path": "/_next/static/chunks/app/settings/page-07db22dddc2a3a6d.js",
+        "method": "GET",
+        "start_ms": 1792783517639.3362,
+        "request_ms": 10.604,
+        "response_start_ms": 27.588,
+        "response_end_ms": 39.39
+      },
+      {
+        "path": "/_next/static/chunks/app/week/page-b6a0d19908788212.js",
+        "method": "GET",
+        "start_ms": 1792783517674.019,
+        "request_ms": 1.172,
+        "response_start_ms": 9.011,
+        "response_end_ms": 17.814
+      },
+      {
+        "path": "/more",
+        "method": "GET",
+        "start_ms": 1792783517668.8518,
+        "request_ms": 2,
+        "response_start_ms": 7.072,
+        "response_end_ms": 42.096
+      },
+      {
+        "path": "/_next/static/chunks/app/customize/page-d14f2e030eac70a8.js",
+        "method": "GET",
+        "start_ms": 1792783517665.2332,
+        "request_ms": 3.446,
+        "response_start_ms": 24.125,
+        "response_end_ms": 63.149
+      },
+      {
+        "path": "/api/plan/scheduling-context",
+        "method": "GET",
+        "start_ms": 1792783517544.76,
+        "request_ms": 0.379,
+        "response_start_ms": 144.346,
+        "response_end_ms": 172.405
+      },
+      {
+        "path": "/api/weekly-review/status",
+        "method": "GET",
+        "start_ms": 1792783517552.0642,
+        "request_ms": 0.464,
+        "response_start_ms": 153.839,
+        "response_end_ms": 163.907
+      },
+      {
+        "path": "/_next/static/chunks/app/history/page-505a6253952149d7.js",
+        "method": "GET",
+        "start_ms": 1792783517688.376,
+        "request_ms": 1.523,
+        "response_start_ms": 23.782,
+        "response_end_ms": 31.804
+      },
+      {
+        "path": "/_next/static/chunks/app/more/page-c7ed8ce981e8af20.js",
+        "method": "GET",
+        "start_ms": 1792783517716.533,
+        "request_ms": 0.342,
+        "response_start_ms": 5.61,
+        "response_end_ms": 8.372
+      },
+      {
+        "path": "/api/workout/today",
+        "method": "GET",
+        "start_ms": 1792783517735.021,
+        "request_ms": 0.755,
+        "response_start_ms": 324.2,
+        "response_end_ms": 329.266
+      },
+      {
+        "path": "/api/profile",
+        "method": "GET",
+        "start_ms": 1792783518069.4758,
+        "request_ms": 0.25,
+        "response_start_ms": 33.999,
+        "response_end_ms": 35.478
+      },
+      {
+        "path": "/api/workout/7c153452-8a50-5c0e-a481-6e7d330522db/progress",
+        "method": "GET",
+        "start_ms": 1792783518073.386,
+        "request_ms": 0.259,
+        "response_start_ms": 272.866,
+        "response_end_ms": 288.665
+      }
+    ],
+    "errors": [],
+    "error": null
+  }
+]

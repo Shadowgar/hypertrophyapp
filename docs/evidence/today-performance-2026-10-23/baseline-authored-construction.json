@@ -1,0 +1,38 @@
+[
+  {
+    "trial": 1,
+    "phase": "/plan/selected-dates/preview",
+    "ms": 4464.14323800127,
+    "status": 200
+  },
+  {
+    "trial": 1,
+    "phase": "/plan/generate-week",
+    "ms": 4521.230168000329,
+    "status": 200
+  },
+  {
+    "trial": 2,
+    "phase": "/plan/selected-dates/preview",
+    "ms": 4035.8373729977757,
+    "status": 200
+  },
+  {
+    "trial": 2,
+    "phase": "/plan/generate-week",
+    "ms": 4222.94534399407,
+    "status": 200
+  },
+  {
+    "trial": 3,
+    "phase": "/plan/selected-dates/preview",
+    "ms": 4196.932436010684,
+    "status": 200
+  },
+  {
+    "trial": 3,
+    "phase": "/plan/generate-week",
+    "ms": 4660.230729001341,
+    "status": 200
+  }
+]

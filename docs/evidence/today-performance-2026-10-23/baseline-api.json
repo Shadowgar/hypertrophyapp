@@ -1,0 +1,322 @@
+[
+  {
+    "scenario": "authored-small-unstarted",
+    "trial": 1,
+    "ms": 999.9621449969709,
+    "status": 200,
+    "exercise_count": 6,
+    "resume": false
+  },
+  {
+    "scenario": "authored-small-unstarted",
+    "trial": 2,
+    "ms": 786.3059469964355,
+    "status": 200,
+    "exercise_count": 6,
+    "resume": false
+  },
+  {
+    "scenario": "authored-small-unstarted",
+    "trial": 3,
+    "ms": 746.1077089974424,
+    "status": 200,
+    "exercise_count": 6,
+    "resume": false
+  },
+  {
+    "scenario": "authored-small-unstarted",
+    "trial": 4,
+    "ms": 805.9946400026092,
+    "status": 200,
+    "exercise_count": 6,
+    "resume": false
+  },
+  {
+    "scenario": "authored-small-unstarted",
+    "trial": 5,
+    "ms": 723.437100998126,
+    "status": 200,
+    "exercise_count": 6,
+    "resume": false
+  },
+  {
+    "scenario": "authored-small-inprogress",
+    "trial": 1,
+    "ms": 825.0533809914486,
+    "status": 200,
+    "exercise_count": 6,
+    "resume": true
+  },
+  {
+    "scenario": "authored-small-inprogress",
+    "trial": 2,
+    "ms": 720.4971540049883,
+    "status": 200,
+    "exercise_count": 6,
+    "resume": true
+  },
+  {
+    "scenario": "authored-small-inprogress",
+    "trial": 3,
+    "ms": 862.9552509955829,
+    "status": 200,
+    "exercise_count": 6,
+    "resume": true
+  },
+  {
+    "scenario": "authored-small-inprogress",
+    "trial": 4,
+    "ms": 837.7218899986474,
+    "status": 200,
+    "exercise_count": 6,
+    "resume": true
+  },
+  {
+    "scenario": "authored-small-inprogress",
+    "trial": 5,
+    "ms": 755.4426139977295,
+    "status": 200,
+    "exercise_count": 6,
+    "resume": true
+  },
+  {
+    "scenario": "authored-large-unstarted",
+    "trial": 1,
+    "ms": 3136.7822650063317,
+    "status": 200,
+    "exercise_count": 6,
+    "resume": false
+  },
+  {
+    "scenario": "authored-large-unstarted",
+    "trial": 2,
+    "ms": 2924.512589001097,
+    "status": 200,
+    "exercise_count": 6,
+    "resume": false
+  },
+  {
+    "scenario": "authored-large-unstarted",
+    "trial": 3,
+    "ms": 2936.1936250061262,
+    "status": 200,
+    "exercise_count": 6,
+    "resume": false
+  },
+  {
+    "scenario": "authored-large-unstarted",
+    "trial": 4,
+    "ms": 3440.219012001762,
+    "status": 200,
+    "exercise_count": 6,
+    "resume": false
+  },
+  {
+    "scenario": "authored-large-unstarted",
+    "trial": 5,
+    "ms": 3059.725377999712,
+    "status": 200,
+    "exercise_count": 6,
+    "resume": false
+  },
+  {
+    "scenario": "authored-large-inprogress",
+    "trial": 1,
+    "ms": 2965.6065099989064,
+    "status": 200,
+    "exercise_count": 6,
+    "resume": true
+  },
+  {
+    "scenario": "authored-large-inprogress",
+    "trial": 2,
+    "ms": 2919.1248980059754,
+    "status": 200,
+    "exercise_count": 6,
+    "resume": true
+  },
+  {
+    "scenario": "authored-large-inprogress",
+    "trial": 3,
+    "ms": 2847.4234850000357,
+    "status": 200,
+    "exercise_count": 6,
+    "resume": true
+  },
+  {
+    "scenario": "authored-large-inprogress",
+    "trial": 4,
+    "ms": 2876.3678160030395,
+    "status": 200,
+    "exercise_count": 6,
+    "resume": true
+  },
+  {
+    "scenario": "authored-large-inprogress",
+    "trial": 5,
+    "ms": 2951.2759529898176,
+    "status": 200,
+    "exercise_count": 6,
+    "resume": true
+  },
+  {
+    "scenario": "customized-small-unstarted",
+    "trial": 1,
+    "ms": 122.14299599872902,
+    "status": 200,
+    "exercise_count": 7,
+    "resume": false
+  },
+  {
+    "scenario": "customized-small-unstarted",
+    "trial": 2,
+    "ms": 215.20628999860492,
+    "status": 200,
+    "exercise_count": 7,
+    "resume": false
+  },
+  {
+    "scenario": "customized-small-unstarted",
+    "trial": 3,
+    "ms": 110.26275300537236,
+    "status": 200,
+    "exercise_count": 7,
+    "resume": false
+  },
+  {
+    "scenario": "customized-small-unstarted",
+    "trial": 4,
+    "ms": 118.50344999402296,
+    "status": 200,
+    "exercise_count": 7,
+    "resume": false
+  },
+  {
+    "scenario": "customized-small-unstarted",
+    "trial": 5,
+    "ms": 144.5596330013359,
+    "status": 200,
+    "exercise_count": 7,
+    "resume": false
+  },
+  {
+    "scenario": "customized-small-inprogress",
+    "trial": 1,
+    "ms": 133.2019149995176,
+    "status": 200,
+    "exercise_count": 7,
+    "resume": true
+  },
+  {
+    "scenario": "customized-small-inprogress",
+    "trial": 2,
+    "ms": 136.19595199998002,
+    "status": 200,
+    "exercise_count": 7,
+    "resume": true
+  },
+  {
+    "scenario": "customized-small-inprogress",
+    "trial": 3,
+    "ms": 131.7129139933968,
+    "status": 200,
+    "exercise_count": 7,
+    "resume": true
+  },
+  {
+    "scenario": "customized-small-inprogress",
+    "trial": 4,
+    "ms": 132.2850139986258,
+    "status": 200,
+    "exercise_count": 7,
+    "resume": true
+  },
+  {
+    "scenario": "customized-small-inprogress",
+    "trial": 5,
+    "ms": 131.2708720070077,
+    "status": 200,
+    "exercise_count": 7,
+    "resume": true
+  },
+  {
+    "scenario": "customized-large-unstarted",
+    "trial": 1,
+    "ms": 212.83386999857612,
+    "status": 200,
+    "exercise_count": 7,
+    "resume": false
+  },
+  {
+    "scenario": "customized-large-unstarted",
+    "trial": 2,
+    "ms": 237.85170700284652,
+    "status": 200,
+    "exercise_count": 7,
+    "resume": false
+  },
+  {
+    "scenario": "customized-large-unstarted",
+    "trial": 3,
+    "ms": 407.45587900164537,
+    "status": 200,
+    "exercise_count": 7,
+    "resume": false
+  },
+  {
+    "scenario": "customized-large-unstarted",
+    "trial": 4,
+    "ms": 229.01413099316414,
+    "status": 200,
+    "exercise_count": 7,
+    "resume": false
+  },
+  {
+    "scenario": "customized-large-unstarted",
+    "trial": 5,
+    "ms": 214.28174000175204,
+    "status": 200,
+    "exercise_count": 7,
+    "resume": false
+  },
+  {
+    "scenario": "customized-large-inprogress",
+    "trial": 1,
+    "ms": 355.9461319964612,
+    "status": 200,
+    "exercise_count": 7,
+    "resume": true
+  },
+  {
+    "scenario": "customized-large-inprogress",
+    "trial": 2,
+    "ms": 228.2388799940236,
+    "status": 200,
+    "exercise_count": 7,
+    "resume": true
+  },
+  {
+    "scenario": "customized-large-inprogress",
+    "trial": 3,
+    "ms": 244.90442499518394,
+    "status": 200,
+    "exercise_count": 7,
+    "resume": true
+  },
+  {
+    "scenario": "customized-large-inprogress",
+    "trial": 4,
+    "ms": 336.79490600479767,
+    "status": 200,
+    "exercise_count": 7,
+    "resume": true
+  },
+  {
+    "scenario": "customized-large-inprogress",
+    "trial": 5,
+    "ms": 232.03239000577014,
+    "status": 200,
+    "exercise_count": 7,
+    "resume": true
+  }
+]

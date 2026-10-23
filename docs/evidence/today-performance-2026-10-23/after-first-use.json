@@ -1,0 +1,17 @@
+[
+  {
+    "trial": 1,
+    "error": "HTTP Error 404: Not Found",
+    "ms": 47.31910800910555
+  },
+  {
+    "trial": 2,
+    "error": "HTTP Error 404: Not Found",
+    "ms": 9.785539994481951
+  },
+  {
+    "trial": 3,
+    "error": "HTTP Error 404: Not Found",
+    "ms": 12.038029002724215
+  }
+]
