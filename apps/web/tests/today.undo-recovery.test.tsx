@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 const date = new Date().toISOString().slice(0, 10);
 function server(lost: "before" | "after", initial: number, identity: string) {
@@ -212,3 +212,53 @@ test.each([
   expect(simulated.count()).toBe(2);
   expect(simulated.removed()).toBe(0);
 }, 15000);
+
+
+test.each([["current", "success"], ["current", "failure"], ["prior", "success"], ["prior", "failure"]] as const)("retired account's %s undo %s cannot block or alter the new account's recovery", async (origin, outcome) => {
+  vi.resetModules();
+  const { default: TodayPage } = await import("@/app/today/page");
+  const { setAuthToken } = await import("@/lib/api");
+  const token = (sub: string) => `header.${btoa(JSON.stringify({ sub }))}.signature`;
+  const tokenA = token(`undo-live-a-${origin}`); const tokenB = token(`undo-live-b-${origin}`);
+  const recoveryKey = (account: string) => `hypertrophy_undo_recovery_v1:${account}:payload`;
+  const attempt = (account: string) => ({scope:`hypertrophy_occurrence_v3:${account}:attempt:prior-${account}`,workoutId:`prior-${account}`,exerciseId:"press",exerciseIdentity:"press-slot",exerciseOccurrenceId:"press-slot",command:`original-${account}`});
+  localStorage.setItem("hypertrophy_token", tokenA);
+  if(origin === "prior") localStorage.setItem(recoveryKey(`undo-live-a-${origin}`),JSON.stringify(attempt(`undo-live-a-${origin}`)));
+  localStorage.setItem(recoveryKey(`undo-live-b-${origin}`),JSON.stringify(attempt(`undo-live-b-${origin}`)));
+  let oldReply!: (reply: Response) => void;
+  let newReply!: (reply: Response) => void;
+  const requests: Array<{path:string;account:string}> = [];
+  vi.stubGlobal("fetch",vi.fn(async(input,init) => {
+    const path=String(input); const old=new Headers(init?.headers).get("Authorization") === `Bearer ${tokenA}`;
+    requests.push({path,account:old?"A":"B"});
+    if(path.endsWith("/health")) return Response.json({status:"ok"});
+    if(path.includes("/plan/scheduling-context?")) return Response.json({timezone:"UTC",local_today:date,selected_dates:[],placement_revision:0,plan:null});
+    if(path.endsWith("/workout/today")) return old && origin === "current" ? Response.json({session_id:"template",workout_occurrence_id:"account-a-workout",title:"Account A workout",date,exercises:[{id:"press",exercise_occurrence_id:"press-slot",name:"Recovery Press",sets:3,completed_sets:1,rep_range:[8,12]}]}) : Response.json({detail:"No workout scheduled today"},{status:404});
+    if(path.includes("/soreness")) return Response.json([{entry_date:date}]);
+    if(path.endsWith("/undo-last-set")) return new Promise<Response>(resolve => {if(old) oldReply=resolve; else newReply=resolve;});
+    if(path.endsWith("/progress")) return Response.json({completed_total:old?1:0,planned_total:3,percent_complete:0,exercises:[{exercise_id:"press",exercise_occurrence_id:"press-slot",completed_sets:old?1:0}]});
+    return Response.json({});
+  }));
+  render(<TodayPage/>);
+  if(origin === "current") {
+    await openPress();
+    fireEvent.click(screen.getByRole("button",{name:/Recorded sets ·/}));
+    fireEvent.click(screen.getByRole("button",{name:"Undo last set"}));
+  } else fireEvent.click(await screen.findByRole("button",{name:"Retry original undo"}));
+  await waitFor(() => expect(oldReply).toBeDefined());
+  act(() => setAuthToken(tokenB));
+  const retry = await screen.findByRole("button",{name:"Retry original undo"});
+  expect(retry).toBeEnabled();
+  fireEvent.click(retry);
+  await waitFor(() => expect(newReply).toBeDefined());
+  expect(retry).toBeDisabled();
+  await act(async () => oldReply(outcome === "success" ? Response.json({status:"ok"}) : Response.json({detail:"old account unavailable"},{status:503})));
+  expect(retry).toBeDisabled();
+  expect(screen.queryByText(/Undo (was )?not confirmed/)).not.toBeInTheDocument();
+  expect(requests.some(item => item.account === "B" && (item.path.includes("/account-a-workout/") || item.path.includes(`/prior-undo-live-a-${origin}/`)))).toBe(false);
+  await act(async () => newReply(Response.json({status:"ok"})));
+  await waitFor(() => expect(screen.queryByRole("button",{name:"Retry original undo"})).not.toBeInTheDocument());
+  expect(localStorage.getItem(recoveryKey(`undo-live-a-${origin}`))).not.toBeNull();
+  expect(localStorage.getItem(recoveryKey(`undo-live-b-${origin}`))).toBeNull();
+  vi.unstubAllGlobals();
+});

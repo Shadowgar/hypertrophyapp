@@ -48,6 +48,12 @@ import { lbsToKg } from "@/lib/weight";
 import { exerciseKey, workoutReference, occurrenceStorageKey, pendingCommandKey, getLogCommand, acknowledgeLogCommand, retainLogPayload, pendingLogPayload } from "@/lib/workout-identity";
 
 type PageReadScope = { token: string | null; epoch: number };
+function exerciseAuthorityIdentity(exercise: WorkoutExercise): string {
+  const variant = exercise.performed_variant;
+  return JSON.stringify([exercise.source_lineage ?? null, variant ? [variant.option_id, variant.id, variant.load_semantics] : null],
+    (_key, value) => value && typeof value === "object" && !Array.isArray(value)
+      ? Object.fromEntries(Object.entries(value).sort(([left], [right]) => left.localeCompare(right))) : value);
+}
 
 type UndoAttempt = { scope: string; workoutId: string; exerciseId: string; exerciseIdentity: string; exerciseOccurrenceId?: string; command: string };
 function isDefinitiveUndoRejection(error: unknown): error is ApiError {
@@ -521,6 +527,8 @@ export default function TodayPage() {
   const isCurrentPageRead = useCallback((scope: PageReadScope) =>
     mounted.current && scope.epoch === pageReadEpoch.current && scope.token === getToken(), []);
   const [workout, setWorkout] = useState<WorkoutSession | null>(null);
+  const currentWorkout = useRef(workout);
+  useEffect(() => { currentWorkout.current = workout; }, [workout]);
   const [message, setMessage] = useState("Loading your scheduled workout…");
   const [swapIndexByExercise, setSwapIndexByExercise] = useState<SwapState>({});
   const [notesOpenByExercise, setNotesOpenByExercise] = useState<NotesState>({});
@@ -595,6 +603,23 @@ export default function TodayPage() {
   const sorenessDismissedDate = useRef<string | null>(null);
   const sorenessPromptDate = useRef<string | null>(null);
 
+  const resetExerciseAuthority = useCallback((key: string, refreshed: WorkoutExercise, hadGuidance: boolean) => {
+    forgetSelectedLoadContext(key);
+    if (refreshed.load_intelligence) setEffectiveSetsByExercise(previous => ({ ...previous, [key]: refreshed.load_intelligence!.effective_sets }));
+    setLoadIntelligenceByExercise(previous => {
+      const next = { ...previous };
+      if (Object.prototype.hasOwnProperty.call(previous, key) || hadGuidance || refreshed.load_intelligence !== undefined) next[key] = refreshed.load_intelligence ?? null;
+      else delete next[key];
+      return next;
+    });
+    setLoadContextByExercise(previous => { const next = { ...previous }; delete next[key]; return next; });
+    setLoadOverrideByExercise(previous => { const next = { ...previous }; delete next[key]; return next; });
+    setLastSetByExercise(previous => { const next = { ...previous }; delete next[key]; return next; });
+    setLiveRecommendationByExercise(previous => { const next = { ...previous }; delete next[key]; return next; });
+    setSetFeedbackByExercise(previous => { const next = { ...previous }; delete next[key]; return next; });
+    setWorkoutSummary(null);
+  }, [forgetSelectedLoadContext]);
+
   const loadWorkoutSummary = useCallback(async (workoutId: string) => {
     const scope = capturePageRead();
     const generation = captureLoadGeneration();
@@ -618,6 +643,8 @@ export default function TodayPage() {
       currentOccurrence.current = null;
       hasAutoLoadStarted.current = false;
       isBeginWorkoutLoadInProgress.current = false;
+      undoInFlight.current = false;
+      setPriorUndoBusy(false);
       sorenessDismissedDate.current = null;
       sorenessPromptDate.current = null;
       setWorkout(null);
@@ -793,23 +820,31 @@ export default function TodayPage() {
         setTechniqueModal(restoredTechnique);
         setGlobalRestTimer(restoredRest);
 
-        const initialRecommendations = Object.fromEntries(
-          (data.exercises ?? [])
-            .filter((exercise) => Boolean(exercise.live_recommendation))
-            .map((exercise) => [exerciseKey(exercise), exercise.live_recommendation as WorkoutLiveRecommendation]),
-        ) as Record<string, WorkoutLiveRecommendation>;
-        setLiveRecommendationByExercise(initialRecommendations);
         setWeakAreas([]);
       } else {
-        // Keep edited drafts, declared contexts and pending commands in this occurrence.
+        // A confirmed source/variant change retires only that slot's old authority caches.
+        for (const exercise of data.exercises) {
+          const previous = currentWorkout.current?.exercises.find(item => exerciseKey(item) === exerciseKey(exercise));
+          if (previous && exerciseAuthorityIdentity(previous) !== exerciseAuthorityIdentity(exercise)) {
+            const key = exerciseKey(exercise);
+            loadPreviewVersions.current[key] = (loadPreviewVersions.current[key] ?? 0) + 1;
+            resetExerciseAuthority(key, exercise, previous.load_intelligence !== undefined);
+          }
+        }
+        const projectionGeneration = captureLoadGeneration();
+        // Keep unchanged edited drafts, declared contexts and pending commands.
         setWorkout(data);
         setCompletedSetsByExercise(Object.fromEntries(data.exercises.map(item => [exerciseKey(item), item.completed_sets ?? 0])));
         applyProgressLoad(data.exercises.map(item => ({ exercise_id: item.id,
-          exercise_occurrence_id: item.exercise_occurrence_id, load_intelligence: item.load_intelligence })), requestGeneration);
+          exercise_occurrence_id: item.exercise_occurrence_id, load_intelligence: item.load_intelligence })), projectionGeneration);
         setEffectiveSetsByExercise(previous => ({ ...previous, ...Object.fromEntries(
           data.exercises.filter(item => item.customized_receipts).map(item => [exerciseKey(item), item.customized_receipts!]),
         ) }));
       }
+
+      setLiveRecommendationByExercise(Object.fromEntries(data.exercises
+        .filter(exercise => exercise.live_recommendation)
+        .map(exercise => [exerciseKey(exercise), exercise.live_recommendation as WorkoutLiveRecommendation])));
 
       // Display-only profile context must not delay authoritative progress or soreness.
       void api.getProfile().then(profile => {
@@ -873,28 +908,31 @@ export default function TodayPage() {
         : "Workout could not be loaded. Retry loading your workout. Your saved history is unchanged.");
       return null;
     }
-  }, [loadWorkoutSummary, applyProgressLoad, resetSelectedLoadContext, getScopedWorkoutProgress, capturePageRead, isCurrentPageRead, captureLoadGeneration, isCurrentLoadGeneration]);
+  }, [loadWorkoutSummary, applyProgressLoad, resetSelectedLoadContext, getScopedWorkoutProgress, capturePageRead, isCurrentPageRead, captureLoadGeneration, isCurrentLoadGeneration, resetExerciseAuthority]);
 
   async function recoverPriorUndo() {
+    const pageScope = capturePageRead();
     const attempt = undoRecoveryRef.current;
     if (!attempt || undoInFlight.current) return;
     undoInFlight.current = true; setPriorUndoBusy(true);
     const recoveryKey = undoRecoveryStorageKey();
     try {
       const reply = await api.undoLastSet(attempt.workoutId, attempt.exerciseId, attempt.exerciseOccurrenceId, attempt.command);
+      if (!isCurrentPageRead(pageScope)) return;
       const progress = await api.getWorkoutProgress(attempt.workoutId);
-      if (undoRecoveryStorageKey() !== recoveryKey) return;
+      if (!isCurrentPageRead(pageScope) || undoRecoveryStorageKey() !== recoveryKey) return;
       const count = progress.exercises?.find(item => (item.exercise_occurrence_id ?? item.exercise_id) === attempt.exerciseIdentity)?.completed_sets ?? reply.live_recommendation?.completed_sets;
       if (count == null || !Number.isInteger(count) || count < 0) throw new Error("Saved sets unavailable");
       acknowledgeLogCommand(pendingCommandKey(attempt.scope, attempt.exerciseIdentity, "undo"));
       acknowledgeLogCommand(recoveryKey); undoRecoveryRef.current = null; setUndoRecovery(null);
       await loadToday();
     } catch (error) {
+      if (!isCurrentPageRead(pageScope)) return;
       if (isDefinitiveUndoRejection(error) && undoRecoveryStorageKey() === recoveryKey) {
         acknowledgeLogCommand(pendingCommandKey(attempt.scope, attempt.exerciseIdentity, "undo"));
         acknowledgeLogCommand(recoveryKey); undoRecoveryRef.current = null; setUndoRecovery(null); setMessage(error.message);
       } else setMessage("Undo not confirmed. Retry the original undo; workout changes remain paused.");
-    } finally { undoInFlight.current = false; setPriorUndoBusy(false); }
+    } finally { if (isCurrentPageRead(pageScope)) { undoInFlight.current = false; setPriorUndoBusy(false); } }
   }
 
   const resetSorenessForm = useCallback(() => {
@@ -1205,6 +1243,7 @@ export default function TodayPage() {
 
   async function handleUndoLastSet(exercise: WorkoutExercise): Promise<number | false> {
     if (!workout) return false;
+    const pageScope = capturePageRead();
     const loadIntelligence = intelligenceFor(exercise);
     if (undoInFlight.current) return false;
     undoInFlight.current = true;
@@ -1219,7 +1258,7 @@ export default function TodayPage() {
     try {
       if (attempt.scope !== scope || attempt.exerciseIdentity !== exerciseKey(exercise)) return false;
       const result = await api.undoLastSet(attempt.workoutId, attempt.exerciseId, attempt.exerciseOccurrenceId, attempt.command);
-      if (undoRecoveryStorageKey() !== recoveryKey || currentOccurrence.current !== attempt.workoutId) return false;
+      if (!isCurrentPageRead(pageScope) || undoRecoveryStorageKey() !== recoveryKey || currentOccurrence.current !== attempt.workoutId) return false;
       advanceLoadGeneration(exerciseKey(exercise));
       setGlobalRestTimer(timer => timer?.exerciseId === exerciseKey(exercise) ? null : timer);
       setLastSetByExercise((prev) => { const next = { ...prev }; delete next[exerciseKey(exercise)]; return next; });
@@ -1235,7 +1274,7 @@ export default function TodayPage() {
       const [progressResult, todayResult] = await Promise.allSettled([
         getScopedWorkoutProgress(workoutReference(workout)), api.getTodayWorkout(),
       ]);
-      if (currentOccurrence.current !== workoutReference(workout)) return false;
+      if (!isCurrentPageRead(pageScope) || currentOccurrence.current !== workoutReference(workout)) return false;
       if (todayResult.status === "fulfilled" && workoutReference(todayResult.value) === workoutReference(workout)) {
         setWorkout(todayResult.value);
         const receipts=todayResult.value.exercises.find(e=>exerciseKey(e)===exerciseKey(exercise))?.customized_receipts;
@@ -1270,6 +1309,7 @@ export default function TodayPage() {
       undoRecoveryRef.current = null; setUndoRecovery(null); setMessage("");
       return confirmedCount;
     } catch (error) {
+      if (!isCurrentPageRead(pageScope)) return false;
       if (isDefinitiveUndoRejection(error) && undoRecoveryStorageKey() === recoveryKey) {
         acknowledgeLogCommand(commandKey); acknowledgeLogCommand(recoveryKey);
         undoRecoveryRef.current = null; setUndoRecovery(null); setMessage(error.message);
@@ -1277,7 +1317,7 @@ export default function TodayPage() {
       }
       setMessage("Undo was not confirmed. Retry to confirm the same action.");
       return false;
-    } finally { undoInFlight.current = false; }
+    } finally { if (isCurrentPageRead(pageScope)) undoInFlight.current = false; }
   }
 
   const swapTarget = (workout?.exercises ?? []).find((exercise) => exerciseKey(exercise) === swapTargetExerciseId) ?? null;
@@ -1559,19 +1599,7 @@ export default function TodayPage() {
               if (currentOccurrence.current !== workoutReference(workout)) return;
               const key = exerciseKey(exercise);
               loadPreviewVersions.current[key] = (loadPreviewVersions.current[key] ?? 0) + 1;
-              forgetSelectedLoadContext(key);
-              if (result.exercise.load_intelligence) setEffectiveSetsByExercise(previous => ({ ...previous, [key]: result.exercise.load_intelligence!.effective_sets }));
-              setLoadIntelligenceByExercise(previous => {
-                const next = { ...previous };
-                if (loadIntelligence !== undefined || result.exercise.load_intelligence !== undefined) next[key] = result.exercise.load_intelligence ?? null;
-                else delete next[key];
-                return next;
-              });
-              setLoadContextByExercise(previous => { const next = { ...previous }; delete next[key]; return next; });
-              setLoadOverrideByExercise(previous => { const next = { ...previous }; delete next[key]; return next; });
-              setLastSetByExercise(previous => { const next = { ...previous }; delete next[key]; return next; });
-              setLiveRecommendationByExercise(previous => { const next = { ...previous }; delete next[key]; return next; });
-              setSetFeedbackByExercise(previous => { const next = { ...previous }; delete next[key]; return next; });
+              resetExerciseAuthority(key, result.exercise, loadIntelligence !== undefined);
               setWorkout(previous => previous ? { ...previous, exercises: previous.exercises.map(item =>
                 exerciseKey(item) === exerciseKey(exercise) ? result.exercise : item) } : previous);
               setWorkoutSummary(null);

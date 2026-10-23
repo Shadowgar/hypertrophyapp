@@ -103,4 +103,3 @@ def pre_perf_calibration_projection(db, *, user, occurrence, exercise, supplied_
         next_decision=next_offered, context=context, user_id=user.id, provisional_decision=initial_offered)
     return {"next_exposure": next_offered, "initial_estimate": initial_offered, "calibration": saved_view, "warmup_guidance": warmup,
         "remaining_sets": remaining, "load_context": context, "effective_sets": effective_receipts(records)}
-

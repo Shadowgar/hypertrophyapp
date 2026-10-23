@@ -1034,7 +1034,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (!res.ok) {
-    if (res.status === 401 && token) {
+    if (res.status === 401 && token && getToken() === token) {
       clearAuthToken();
     }
     const text = await res.text();
