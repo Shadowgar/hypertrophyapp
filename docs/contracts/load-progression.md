@@ -25,3 +25,14 @@ Bad-day protection distinguishes one anomalous context from repeated comparable 
 Persist recommendation/evidence/rule version and user chosen load/reason. Performed load controls later analysis; planned/prefilled load remains separate. Corrected/undone sets invalidate dependent exposure summaries, streaks and recommendations and rebuild the same effective state; historical evidence references remain auditable. Lost/inconsistent projections trigger rebuild/monitor rather than guess.
 
 Acceptance: planned 50 versus performed 45 uses the performed evidence; missing effort does not produce a same-RPE claim; assisted/bodyweight variants remain separate; a single bad day does not automatically prove regression; partial/duplicate/child sets do not count as extra completed exposures; correction removes its future effect; available increments produce feasible prefill; override preserves authored dose and trace. PostgreSQL concurrency and replay must qualify the supporting history contract.
+
+## Initial calibration review — 2026-10-23
+
+The current owner-authorized PERS-008 / Issue #103 slice permits implementation
+but requires a specific numerical amendment to be reviewed first if absent.
+[Provisional Authored initial-load v1](proposals/authored-starting-load-v1.md)
+is **Proposed, not implemented or accepted**. It does not activate retained
+70%/72% helpers or extend Authored policy into Customized. Existing
+[runtime characterization](../evidence/starting-load-2026-10-23/README.md)
+distinguishes missing history, incomplete work, incompatible setup and missing
+context/effort; the new initial-estimate requirement remains partial.

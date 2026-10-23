@@ -1,0 +1,220 @@
+{
+  "application_revision": "b3844398b50a64311f99ccf74411801bbd88225c",
+  "kind": "existing behavior characterization; proposed initial formula NOT implemented",
+  "target": {
+    "host": "127.0.0.1",
+    "port": 55418,
+    "database": "m2a_qualification",
+    "user": "m2a_test"
+  },
+  "cases": {
+    "no_history_explicit_setup": {
+      "action": "monitor",
+      "recommended_weight": null,
+      "prefill_available": false,
+      "reason_codes": [
+        "no_completed_exposure_evidence"
+      ],
+      "evidence": {
+        "completed_exposure_count": 0,
+        "comparable_completed_exposure_count": 0,
+        "consecutive_underperformance_count": 0,
+        "actual_rpe_count": 0,
+        "actual_rpe_sufficient": false,
+        "required_working_set_count": 0,
+        "effective_set_ids": [],
+        "exposure_ids": []
+      }
+    },
+    "two_of_three_working_sets": {
+      "action": "monitor",
+      "recommended_weight": null,
+      "prefill_available": false,
+      "reason_codes": [
+        "incomplete_exposure"
+      ],
+      "evidence": {
+        "completed_exposure_count": 0,
+        "comparable_completed_exposure_count": 0,
+        "consecutive_underperformance_count": 0,
+        "actual_rpe_count": 2,
+        "actual_rpe_sufficient": true,
+        "required_working_set_count": 3,
+        "effective_set_ids": [
+          "1f8aa1ce-8b3a-43b2-91de-07fac16610d5",
+          "9afc7add-8af2-4e7e-b0b6-0f8cd138df83"
+        ],
+        "exposure_ids": []
+      }
+    },
+    "partial_remaining_set_authority": {
+      "action": "hold",
+      "recommended_weight": 40,
+      "origin": "actual_current_sets_not_initial_calibration"
+    },
+    "completed_comparable_history": {
+      "action": "hold",
+      "recommended_weight": 40.0,
+      "prefill_available": true,
+      "reason_codes": [
+        "source_rep_range_met"
+      ],
+      "evidence": {
+        "completed_exposure_count": 1,
+        "comparable_completed_exposure_count": 1,
+        "consecutive_underperformance_count": 0,
+        "actual_rpe_count": 3,
+        "actual_rpe_sufficient": true,
+        "required_working_set_count": 3,
+        "effective_set_ids": [
+          "de20b070-b8ab-4768-bfd1-db6497d603a9",
+          "102b3583-50ca-4edb-b17e-d43d9af89deb",
+          "35b91c70-2d87-4a10-a7a2-8a8b94e9123b"
+        ],
+        "exposure_ids": [
+          {
+            "workout_occurrence_id": "98806f37-8ac8-54ce-bd07-fb4bdd7a5c2e",
+            "exercise_occurrence_id": "eefeb224-4fb1-5b13-bc37-7515dda0aadf"
+          }
+        ]
+      }
+    },
+    "display_unit_round_trip_and_repeat": "same canonical 40 kg and identical repeated decision",
+    "incompatible_machine": {
+      "action": "monitor",
+      "recommended_weight": null,
+      "prefill_available": false,
+      "reason_codes": [
+        "no_completed_exposure_evidence"
+      ],
+      "evidence": {
+        "completed_exposure_count": 0,
+        "comparable_completed_exposure_count": 0,
+        "consecutive_underperformance_count": 0,
+        "actual_rpe_count": 0,
+        "actual_rpe_sufficient": false,
+        "required_working_set_count": 0,
+        "effective_set_ids": [],
+        "exposure_ids": []
+      }
+    },
+    "missing_load_basis": {
+      "action": "monitor",
+      "recommended_weight": null,
+      "prefill_available": false,
+      "reason_codes": [
+        "no_completed_exposure_evidence",
+        "load_basis_unknown_or_unsupported"
+      ],
+      "evidence": {
+        "completed_exposure_count": 0,
+        "comparable_completed_exposure_count": 0,
+        "consecutive_underperformance_count": 0,
+        "actual_rpe_count": 0,
+        "actual_rpe_sufficient": false,
+        "required_working_set_count": 0,
+        "effective_set_ids": [],
+        "exposure_ids": []
+      }
+    },
+    "missing_machine_identity": {
+      "action": "monitor",
+      "recommended_weight": null,
+      "prefill_available": false,
+      "reason_codes": [
+        "no_completed_exposure_evidence",
+        "machine_equipment_identity_unknown"
+      ],
+      "evidence": {
+        "completed_exposure_count": 0,
+        "comparable_completed_exposure_count": 0,
+        "consecutive_underperformance_count": 0,
+        "actual_rpe_count": 0,
+        "actual_rpe_sufficient": false,
+        "required_working_set_count": 0,
+        "effective_set_ids": [],
+        "exposure_ids": []
+      }
+    },
+    "foreign_account": "404; no cross-account evidence returned",
+    "after_correction_and_exact_retry": {
+      "action": "monitor",
+      "recommended_weight": null,
+      "prefill_available": false,
+      "reason_codes": [
+        "mixed_working_loads"
+      ],
+      "evidence": {
+        "completed_exposure_count": 1,
+        "comparable_completed_exposure_count": 0,
+        "consecutive_underperformance_count": 0,
+        "actual_rpe_count": 3,
+        "actual_rpe_sufficient": true,
+        "required_working_set_count": 3,
+        "effective_set_ids": [
+          "eb16a0c6-fb9d-479a-aa85-b79743557055",
+          "102b3583-50ca-4edb-b17e-d43d9af89deb",
+          "35b91c70-2d87-4a10-a7a2-8a8b94e9123b"
+        ],
+        "exposure_ids": [
+          {
+            "workout_occurrence_id": "98806f37-8ac8-54ce-bd07-fb4bdd7a5c2e",
+            "exercise_occurrence_id": "eefeb224-4fb1-5b13-bc37-7515dda0aadf"
+          }
+        ]
+      }
+    },
+    "after_void": {
+      "action": "monitor",
+      "recommended_weight": null,
+      "prefill_available": false,
+      "reason_codes": [
+        "incomplete_exposure",
+        "mixed_working_loads"
+      ],
+      "evidence": {
+        "completed_exposure_count": 0,
+        "comparable_completed_exposure_count": 0,
+        "consecutive_underperformance_count": 0,
+        "actual_rpe_count": 2,
+        "actual_rpe_sufficient": true,
+        "required_working_set_count": 3,
+        "effective_set_ids": [
+          "eb16a0c6-fb9d-479a-aa85-b79743557055",
+          "102b3583-50ca-4edb-b17e-d43d9af89deb"
+        ],
+        "exposure_ids": []
+      }
+    },
+    "complete_but_missing_actual_effort": {
+      "action": "monitor",
+      "recommended_weight": null,
+      "prefill_available": false,
+      "reason_codes": [
+        "actual_rpe_missing"
+      ],
+      "evidence": {
+        "completed_exposure_count": 1,
+        "comparable_completed_exposure_count": 0,
+        "consecutive_underperformance_count": 0,
+        "actual_rpe_count": 0,
+        "actual_rpe_sufficient": false,
+        "required_working_set_count": 3,
+        "effective_set_ids": [
+          "56b7230f-11f4-4574-8799-352c40aa2e02",
+          "e6883183-bec0-4b01-8e29-f9d8927267b4",
+          "1d93b658-75dc-402a-a620-51075baf555e"
+        ],
+        "exposure_ids": [
+          {
+            "workout_occurrence_id": "a5cf6fcf-ade9-5983-95c9-261b68e30513",
+            "exercise_occurrence_id": "6f1eeaa4-cb11-5d35-9d9e-41fa944ae5f5"
+          }
+        ]
+      }
+    },
+    "source_prescription_unchanged": "1c01bfedc43dfb98abd9b56a66c3bd7b308eac09bef9a03e3ce86254dca402f6",
+    "all_created_frozen_prescriptions_unchanged": "7338c0a42e58e93ddccecd6ed871fc66b0a5a403d8123c99b455b523b29d7252",
+    "history_retention": "4 rows retained after one correction replayed twice and one undo; 2 effective"
+  }
+}
