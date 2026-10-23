@@ -157,3 +157,54 @@ test("an uncertain correction restores only within its account and occurrence sc
   await waitFor(() => expect(screen.getByRole("button", { name: "Retry exact correction" })).toBeEnabled());
   expect(scenario.requests).toHaveLength(1);
 });
+
+test.each([
+  [409, "Set already voided or superseded; correct its effective replacement", true],
+  [404, "Set not found", true],
+  [409, "Command payload conflicts with the recorded request", false],
+  [404, "Upstream route unavailable", false],
+] as const)("correction target rejection %s %s releases recovery only when definitive", async (status, message, obsolete) => {
+  const scope = `target-rejected-${status}-${obsolete}`;
+  const scenario = correctionScenario(scope, "before");
+  const correct = vi.fn(async () => { throw new ApiError(message, status); });
+  render(<LoadIntelligencePanel {...scenario.props} onCorrect={correct} />);
+  fireEvent.click(screen.getByRole("button", { name: "Edit set 1" }));
+  fireEvent.click(screen.getByRole("button", { name: "Save correction" }));
+  await waitFor(() => expect(correct).toHaveBeenCalledTimes(1));
+  const { pendingLogPayload } = await import("@/lib/workout-identity");
+  if (obsolete) {
+    await waitFor(() => expect(screen.queryByLabelText("Corrected reps")).not.toBeInTheDocument());
+    expect(screen.getByRole("status")).toHaveTextContent(message);
+    expect(screen.getByRole("button", { name: "Edit set 2" })).toBeEnabled();
+    expect(pendingLogPayload(pendingCommandKey(scope, "exercise-occurrence", "correct:original-receipt"))).toBeNull();
+    expect(pendingLogPayload(pendingCommandKey(scope, "exercise-occurrence", "correction-recovery"))).toBeNull();
+  } else {
+    await waitFor(() => expect(screen.getByRole("button", { name: "Retry exact correction" })).toBeEnabled());
+    expect(screen.getByLabelText("Corrected reps")).toHaveAttribute("readonly");
+    expect(screen.getByRole("button", { name: "Edit set 2" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Retry exact correction" }));
+    await waitFor(() => expect(correct).toHaveBeenCalledTimes(2));
+    expect(correct.mock.calls[1]).toEqual(correct.mock.calls[0]);
+  }
+});
+
+test.each(["RPE to RIR", "RIR to RPE"] as const)("Customized correction switches %s and retries the explicit counterpart clear after reload", async direction => {
+  const scenario = correctionScenario(`switch-effort-${direction}`, "after");
+  const original = { ...receipt, rpe: direction === "RPE to RIR" ? 8 : null, actual_rir: direction === "RIR to RPE" ? 3 : null };
+  const props = { ...scenario.props, effectiveSets: [original, secondReceipt] };
+  const view = render(<LoadIntelligencePanel {...props} />);
+  fireEvent.click(screen.getByRole("button", { name: "Edit set 1" }));
+  fireEvent.change(screen.getByLabelText(direction === "RPE to RIR" ? "Corrected actual RIR" : "Corrected actual RPE"), { target: { value: direction === "RPE to RIR" ? "2" : "8.5" } });
+  expect(screen.getByLabelText(direction === "RPE to RIR" ? "Corrected actual RPE" : "Corrected actual RIR")).toHaveValue(null);
+  fireEvent.click(screen.getByRole("button", { name: "Save correction" }));
+  await waitFor(() => expect(screen.getByRole("button", { name: "Retry exact correction" })).toBeEnabled());
+  expect(scenario.requests[0].payload).toMatchObject(direction === "RPE to RIR" ? { rpe: null, actual_rir: 2 } : { rpe: 8.5, actual_rir: null });
+  expect(scenario.requests[0].payload).not.toHaveProperty("technique_quality");
+  expect(scenario.requests[0].payload).not.toHaveProperty("pain");
+  view.unmount();
+  render(<LoadIntelligencePanel {...props} effectiveSets={[...scenario.committed.values(), secondReceipt]} />);
+  fireEvent.click(await screen.findByRole("button", { name: "Retry exact correction" }));
+  await waitFor(() => expect(screen.queryByLabelText("Corrected reps")).not.toBeInTheDocument());
+  expect(scenario.requests[1]).toEqual(scenario.requests[0]);
+  expect(scenario.writes()).toBe(1);
+});

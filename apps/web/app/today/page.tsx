@@ -20,6 +20,7 @@ import {
   SetProgressTimeline,
   SetLogDisplay,
   LoadIntelligencePanel,
+  isObsoleteCorrectionTarget,
   type PerformedSet,
 } from "@/components/exercise-control";
 import {
@@ -1338,7 +1339,42 @@ export default function TodayPage() {
               const payload = retainLogPayload(commandKey, { ...values, command_id: getLogCommand(commandKey) });
               let result;
               try { result = await api.correctSet(receipt.id, payload); }
-              catch (error) { if (error instanceof ApiError && error.status === 422) acknowledgeLogCommand(commandKey); throw error; }
+              catch (error) {
+                if (isObsoleteCorrectionTarget(error)) {
+                  acknowledgeLogCommand(commandKey);
+                  if (currentOccurrence.current !== workoutReference(workout)) throw error;
+                  const key = exerciseKey(exercise);
+                  const workoutId = workoutReference(workout);
+                  advanceLoadGeneration(key);
+                  const generation = captureLoadGeneration();
+                  const knownReceipts = effectiveSetsByExercise[key] ?? exercise.customized_receipts ?? intelligenceFor(exercise)?.effective_sets ?? [];
+                  setEffectiveSetsByExercise(previous => ({ ...previous, [key]: (previous[key] ?? knownReceipts).filter(item => item.id !== receipt.id) }));
+                  setLoadIntelligenceByExercise(previous => ({ ...previous, [key]: null }));
+                  setLiveRecommendationByExercise(previous => { const next = { ...previous }; delete next[key]; return next; });
+                  setSetFeedbackByExercise(previous => { const next = { ...previous }; delete next[key]; return next; });
+                  setWorkoutSummary(null);
+                  const [todayResult, progressResult] = await Promise.allSettled([api.getTodayWorkout(), getScopedWorkoutProgress(workoutId)]);
+                  if (currentOccurrence.current !== workoutId || !isCurrentLoadGeneration(key, generation)) throw error;
+                  if (todayResult.status === "fulfilled" && workoutReference(todayResult.value) === workoutId) {
+                    const refreshed = todayResult.value.exercises.find(item => exerciseKey(item) === key);
+                    if (refreshed) {
+                      setWorkout(previous => previous ? { ...previous, exercises: previous.exercises.map(item => exerciseKey(item) === key ? refreshed : item) } : previous);
+                      setEffectiveSetsByExercise(previous => ({ ...previous, [key]: refreshed.customized_receipts ?? refreshed.load_intelligence?.effective_sets ?? [] }));
+                      if (refreshed.load_intelligence !== undefined) updateLoadIntelligence(key, refreshed.load_intelligence);
+                      if (refreshed.completed_sets != null) setCompletedSetsByExercise(previous => ({ ...previous, [key]: refreshed.completed_sets! }));
+                      if (refreshed.live_recommendation) setLiveRecommendationByExercise(previous => ({ ...previous, [key]: refreshed.live_recommendation! }));
+                    }
+                  }
+                  if (progressResult.status === "fulfilled") {
+                    const { progress, generation: progressGeneration } = progressResult.value;
+                    applyProgressLoad(progress.exercises ?? [], progressGeneration);
+                    const count = progress.exercises?.find(item => (item.exercise_occurrence_id ?? item.exercise_id) === key)?.completed_sets;
+                    if (count != null) setCompletedSetsByExercise(previous => ({ ...previous, [key]: count }));
+                    setWorkoutProgress({ completed: Number(progress.completed_total) || 0, planned: Number(progress.planned_total) || 0, percent: Number(progress.percent_complete) || 0 });
+                  }
+                } else if (error instanceof ApiError && error.status === 422) acknowledgeLogCommand(commandKey);
+                throw error;
+              }
               acknowledgeLogCommand(commandKey);
               if (currentOccurrence.current !== workoutReference(workout)) return;
               advanceLoadGeneration(exerciseKey(exercise));

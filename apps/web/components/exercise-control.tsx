@@ -223,6 +223,13 @@ export function useExerciseControl({
 
 export type ExerciseControlState = ReturnType<typeof useExerciseControl>;
 
+export function isObsoleteCorrectionTarget(error: unknown): error is ApiError {
+  return error instanceof ApiError && (
+    (error.status === 409 && error.message === "Set already voided or superseded; correct its effective replacement") ||
+    (error.status === 404 && error.message === "Set not found")
+  );
+}
+
 type CorrectionValues = { reps: number; weight: number; rpe?: number | null; actual_rir?: number | null;
   technique_quality?: "acceptable" | "poor" | "unknown" | null; pain?: boolean | null; reason: string };
 type CorrectionAttempt = { receipt: EffectiveLoadSet; values: CorrectionValues; unit: LoadContext["display_unit"] };
@@ -345,10 +352,16 @@ export function LoadIntelligencePanel({ guidance, completed, total, loadContext,
       {correctionUncertain ? <p className="text-xs">Unconfirmed correction for {editing.set_kind === "warmup" ? "warm-up" : "set"} {editing.set_index}. Retry the original attempt before editing another recorded set.</p> : null}
       <label className="block text-xs">Corrected reps<input readOnly={pending || correctionUncertain} className="ui-input min-h-[48px] w-full" type="number" min={1} step={1} value={reps} onChange={e => setReps(e.target.value)} /></label>
       <label className="block text-xs">Corrected load ({editingUnit})<input readOnly={pending || correctionUncertain} className="ui-input min-h-[48px] w-full" type="number" min={0} step="any" value={weight} onChange={e => setWeight(e.target.value)} /></label>
-      <label className="block text-xs">Corrected actual RPE<input readOnly={pending || correctionUncertain} className="ui-input min-h-[48px] w-full" type="number" min={0} max={10} step={0.5} value={rpe} onChange={e => { setRpeEdited(true); setRpe(e.target.value); }} /></label>
+      <label className="block text-xs">Corrected actual RPE<input readOnly={pending || correctionUncertain} className="ui-input min-h-[48px] w-full" type="number" min={0} max={10} step={0.5} value={rpe} onChange={e => {
+        setRpeEdited(true); setRpe(e.target.value);
+        if (allowRir && e.target.value.trim() !== "") { setRir(""); setRirEdited(true); }
+      }} /></label>
       <p className="text-xs text-zinc-400">Leave RPE unchanged to preserve it; clear the field to record unknown.</p>
       {allowRir&&<div className="space-y-2">
-        <label className="block text-xs">Corrected actual RIR<input readOnly={pending || correctionUncertain} className="ui-input min-h-11 w-full" type="number" min={0} max={10} step={0.5} value={rir} onChange={e=>{setRirEdited(true);setRir(e.target.value);}}/></label>
+        <label className="block text-xs">Corrected actual RIR<input readOnly={pending || correctionUncertain} className="ui-input min-h-11 w-full" type="number" min={0} max={10} step={0.5} value={rir} onChange={e=>{
+          setRirEdited(true);setRir(e.target.value);
+          if (e.target.value.trim() !== "") { setRpe(""); setRpeEdited(true); }
+        }}/></label>
         <p className="text-xs">Clear RIR to record unknown. RIR and RPE are separate; record one effort scale.</p>
         <label className="block text-xs">Corrected technique quality<select disabled={pending || correctionUncertain} className="ui-select min-h-11 w-full" value={quality} onChange={e=>{setQualityEdited(true);setQuality(e.target.value);}}><option value="unknown">Unknown</option><option value="acceptable">Acceptable</option><option value="poor">Poor or deteriorated</option></select></label>
         <label className="block text-xs">Corrected pain report<select disabled={pending || correctionUncertain} className="ui-select min-h-11 w-full" value={pain} onChange={e=>{setPainEdited(true);setPain(e.target.value);}}><option value="unknown">Unknown</option><option value="no">No pain reported</option><option value="yes">Pain reported</option></select></label>
@@ -379,13 +392,15 @@ export function LoadIntelligencePanel({ guidance, completed, total, loadContext,
           if (activeRecoveryKey.current !== submittedRecoveryKey) return;
           attemptedCorrection.current = null; setEditing(null); setCorrectionUncertain(false);
         } catch (error) {
-          const rejected = error instanceof ApiError && error.status === 422;
+          const obsolete = isObsoleteCorrectionTarget(error);
+          const rejected = obsolete || (error instanceof ApiError && error.status === 422);
           if (rejected) {
             if (commandKey) acknowledgeLogCommand(commandKey);
             if (submittedRecoveryKey) acknowledgeLogCommand(submittedRecoveryKey);
           }
           if (activeRecoveryKey.current !== submittedRecoveryKey) return;
           if (rejected) attemptedCorrection.current = null;
+          if (obsolete) setEditing(null);
           setCorrectionUncertain(!rejected); setStatus(rejected ? error.message : "Correction was not confirmed. Retry the same correction.");
         } finally { pendingAction.current = false; setPending(false); }
       }}>{correctionUncertain ? "Retry exact correction" : "Save correction"}</Button>

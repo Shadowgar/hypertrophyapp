@@ -21,6 +21,7 @@ let failFirst: boolean;
 let staleFirst: boolean;
 let validationFirst: boolean;
 let correctionValidationFirst: boolean;
+let correctionTargetRejection: { status: number; message: string } | null;
 let variantFlow: boolean;
 let reported: boolean;
 let confirmed: boolean;
@@ -47,6 +48,7 @@ function fixtureExercise() {
   };
 }
 beforeEach(() => {
+  correctionTargetRejection = null;
   count = 0; envelope = guidance(); writes = []; failFirst = false; staleFirst = false; deferPreview = false; deferMutation = false; validationFirst = false; correctionValidationFirst = false; variantFlow = false; reported = false; confirmed = false; deferProgress = false;
   vi.stubGlobal("fetch", vi.fn(async (input, init) => {
     const url = String(input);
@@ -81,6 +83,12 @@ beforeEach(() => {
         return response;
       }
       if (url.includes("/correct")) {
+        if (correctionTargetRejection) {
+          const original = envelope.effective_sets[0];
+          envelope = guidance();
+          envelope.effective_sets = original ? [{ ...original, id: "effective-replacement", reps: 11 }] : [];
+          return Response.json({ detail: correctionTargetRejection.message }, { status: correctionTargetRejection.status });
+        }
         if (correctionValidationFirst && writes.filter(w => w.path.endsWith("/correct")).length === 1) return Response.json({ detail: "Correction rejected before writes" }, { status: 422 });
         const response = Response.json({ status: "ok", original_set_id: "receipt-1", effective_set_id: "receipt-2", load_intelligence: envelope });
         if (deferMutation) await new Promise<void>(resolve => { releaseMutation = resolve; });
@@ -427,4 +435,29 @@ test("a late initial progress failure cannot erase a newly confirmed working set
  await screen.findByText('✓ Set 1 saved');
  await act(async()=>rejectInitial(new Error('progress failed late')));
  expect(screen.getByRole('button',{name:/Intelligence Press/})).toHaveTextContent(/1\s*\/\s*3/);
+});
+
+
+test.each([
+  [409, "Set already voided or superseded; correct its effective replacement"],
+  [404, "Set not found"],
+] as const)("definitively obsolete correction %s refreshes effective receipts and retires the rejected attempt", async (status, message) => {
+  count = 1;
+  envelope.effective_sets = [{ id: "receipt-1", set_index: 1, reps: 8, weight: 25.25, rpe: 8.5, created_at: "2026-10-06T12:00:00", set_kind: "work", parent_set_index: null, technique: null }];
+  correctionTargetRejection = { status, message };
+  await open();
+  fireEvent.click(screen.getByRole("button", { name: "Edit set 1" }));
+  fireEvent.click(screen.getByRole("button", { name: "Save correction" }));
+  await screen.findByText(message);
+  expect(screen.queryByRole("button", { name: "Retry exact correction" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("spinbutton", { name: "Corrected reps" })).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Edit set 1" })).toBeEnabled();
+  fireEvent.click(screen.getByRole("button", { name: "Edit set 1" }));
+  expect(screen.getByRole("spinbutton", { name: "Corrected reps" })).toHaveValue(11);
+  correctionTargetRejection = null;
+  fireEvent.click(screen.getByRole("button", { name: "Save correction" }));
+  await waitFor(() => expect(writes.filter(write => write.path.endsWith("/correct"))).toHaveLength(2));
+  const commands = writes.filter(write => write.path.endsWith("/correct"));
+  expect(commands[1].path).toMatch(/\/set\/effective-replacement\/correct$/);
+  expect(commands[1].body.command_id).not.toBe(commands[0].body.command_id);
 });
