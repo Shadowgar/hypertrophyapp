@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -13,6 +15,7 @@ class Settings(BaseSettings):
     jwt_expire_minutes: int = 1440
     programs_dir: str = "/app/programs"
     compiled_knowledge_dir: str = "/app/knowledge/compiled"
+    schema_management_mode: Literal["bootstrap", "validate"] = "bootstrap"
     allow_dev_wipe_endpoints: bool = False
     customized_enabled: bool = False
     log_level: str = "INFO"

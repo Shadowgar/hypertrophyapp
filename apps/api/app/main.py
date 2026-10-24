@@ -40,7 +40,12 @@ async def lifespan(_app: FastAPI):
         log_max_bytes=settings.log_max_bytes,
         log_backup_count=settings.log_backup_count,
     )
-    Base.metadata.create_all(bind=engine)
+    from pathlib import Path
+    from alembic.script import ScriptDirectory
+    from app.schema_management import ensure_schema
+
+    expected = ScriptDirectory(str(Path(__file__).resolve().parents[1] / "alembic")).get_current_head()
+    ensure_schema(engine, Base.metadata, settings.schema_management_mode, expected)
     yield
 
 

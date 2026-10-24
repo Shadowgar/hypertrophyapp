@@ -84,8 +84,10 @@ class SelectionTests(unittest.TestCase):
             self.assertEqual(changed_paths("push", event), (event["before"], event["before"], ["README.md"]))
         git.assert_called_once_with("diff", "--name-only", "--no-renames", "-z", event["before"], event["after"])
 
-    def test_dispatch_and_initial_push_keep_full_coverage_without_a_baseline(self):
-        self.assertEqual(changed_paths("workflow_dispatch", {}), (None, None, None))
+    def test_dispatch_keeps_full_coverage_with_parent_and_initial_push_has_no_baseline(self):
+        with patch("changes.git", return_value=("a" * 40).encode()) as git:
+            self.assertEqual(changed_paths("workflow_dispatch", {}), ("a" * 40, "a" * 40, None))
+        git.assert_called_once_with("rev-parse", "--verify", "HEAD^")
         self.assertEqual(changed_paths("push", {"before": "0" * 40, "after": "b" * 40}),
                          (None, None, None))
 

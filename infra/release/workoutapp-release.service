@@ -1,0 +1,14 @@
+[Unit]
+Description=Deploy only qualified WorkoutApp main releases
+After=network-online.target
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 %h/.local/libexec/workoutapp-release/release.py poll
+UMask=0077
+TimeoutStartSec=5400
+Nice=10
+NoNewPrivileges=true
+LockPersonality=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+[Install]
+WantedBy=default.target
