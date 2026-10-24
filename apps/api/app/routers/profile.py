@@ -22,6 +22,8 @@ from core_engine import (
     prepare_program_switch_runtime,
     resolve_weekly_review_window,
 )
+from pydantic import BaseModel, ConfigDict, Field
+from typing import Literal
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
@@ -32,6 +34,7 @@ from ..selected_date_plans import CurrentSchedulingProfile, current_scheduling_p
 from ..history_dates import performed_log_rows
 from ..workout_history import effective_set_logs, valid_weekly_reviews, lock_history_user
 from ..deps import get_current_user
+from ..models import UserInterfacePreference
 from ..models import BodyMeasurementEntry, SorenessEntry, User, WeeklyCheckin, WeeklyReviewCycle, WorkoutSetLog
 from ..models import AuthoredLoadState, CoachingRecommendation, ExerciseState, PasswordResetToken, WorkoutLogCommand, WorkoutOccurrence, WorkoutPlan, WorkoutSessionState
 from ..observability import log_event
@@ -391,12 +394,85 @@ def get_training_state(
     return UserTrainingStateResponse.model_validate(payload)
 
 
+
+class EquipmentUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    training_location: Literal["home", "gym"]
+    equipment_profile: list[str] = Field(max_length=100)
+
+
+@router.patch("/profile/equipment")
+def update_equipment(payload: EquipmentUpdate, db: DbSession, current_user: CurrentUser) -> ProfileResponse:
+    lock_history_user(db, current_user.id)
+    db.refresh(current_user)
+    current_user.training_location = payload.training_location
+    current_user.equipment_profile = payload.equipment_profile
+    db.commit()
+    return get_profile(current_user, db)
+
+
+class InterfacePreferences(BaseModel):
+    model_config = ConfigDict(extra="forbid", from_attributes=True)
+    theme_family: Literal["graphite", "charcoal", "classic"] = "classic"
+    appearance: Literal["light", "dark", "system"] = "dark"
+    weight_unit: Literal["kg", "lb"] = "lb"
+    revision: int = 0
+
+
+class InterfacePreferenceUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    theme_family: Literal["graphite", "charcoal", "classic"]
+    appearance: Literal["light", "dark", "system"]
+    weight_unit: Literal["kg", "lb"]
+    expected_revision: int = Field(ge=0)
+
+
+@router.get("/profile/preferences")
+def read_interface_preferences(db: DbSession, current_user: CurrentUser) -> InterfacePreferences:
+    row = db.get(UserInterfacePreference, current_user.id)
+    return InterfacePreferences.model_validate(row) if row else InterfacePreferences()
+
+
+@router.put("/profile/preferences")
+def save_interface_preferences(payload: InterfacePreferenceUpdate, db: DbSession, current_user: CurrentUser) -> InterfacePreferences:
+    # Serialize both first insert and subsequent revisions under the existing account lock.
+    lock_history_user(db, current_user.id)
+    row = db.get(UserInterfacePreference, current_user.id, populate_existing=True)
+    current = InterfacePreferences.model_validate(row) if row else InterfacePreferences()
+    values = payload.model_dump(exclude={"expected_revision"})
+    if payload.expected_revision != current.revision:
+        # A lost response may retry exactly the immediately preceding update.
+        if current.revision == payload.expected_revision + 1 and all(getattr(current, k) == v for k, v in values.items()):
+            return current
+        raise HTTPException(status_code=409, detail="Appearance changed on another device. Reload saved preferences before trying again.")
+    if row is None:
+        row = UserInterfacePreference(user_id=current_user.id, **values, revision=1)
+        db.add(row)
+    else:
+        for key, value in values.items():
+            setattr(row, key, value)
+        row.revision += 1
+    db.commit()
+    db.refresh(row)
+    return InterfacePreferences.model_validate(row)
+
+
 @router.post("/profile")
 def upsert_profile(
     payload: ProfileUpsert,
     db: DbSession,
     current_user: CurrentUser,
 ) -> ProfileResponse:
+    lock_history_user(db, current_user.id)
+    db.refresh(current_user)
+    # Compatibility clients can omit optional fields. Omission never means clearing.
+    preserved = {
+        key: getattr(current_user, key)
+        for key, field in ProfileUpsert.model_fields.items()
+        if not field.is_required() and key not in payload.model_fields_set
+        and getattr(current_user, key, None) is not None
+    }
+    payload = payload.model_copy(update=preserved)
     existing_onboarding_answers = dict(cast(dict[str, Any], current_user.onboarding_answers or {}))
     incoming_onboarding_answers = dict(payload.onboarding_answers or {})
     if (
@@ -1008,6 +1084,7 @@ def wipe_current_user_data(
 
     _clear_user_training_state(db, user_id=user_id)
     db.query(PasswordResetToken).filter(PasswordResetToken.user_id == user_id).delete(synchronize_session=False)
+    db.query(UserInterfacePreference).filter(UserInterfacePreference.user_id == user_id).delete(synchronize_session=False)
     db.query(User).filter(User.id == user_id).delete(synchronize_session=False)
     db.commit()
 

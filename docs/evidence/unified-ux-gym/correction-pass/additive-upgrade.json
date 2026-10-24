@@ -1,0 +1,54 @@
+{
+  "scope": "Additive presentation-preference migration on a dedicated synthetic PostgreSQL database",
+  "source_base_revision": "a3f5760",
+  "cleanup_fix_revision": "b9adac1",
+  "target": {
+    "container": "workoutapp-ux-qualification-1022",
+    "image": "postgres:16-alpine",
+    "host": "127.0.0.1",
+    "port": 55418,
+    "database": "hist_disposable_ux_preferences_1022",
+    "user": "m2a_test",
+    "container_mounts": []
+  },
+  "migration": {
+    "from": "0024_merge_authored_customized",
+    "to": "0025_interface_preferences"
+  },
+  "fixture_before_upgrade": {
+    "users": 1,
+    "workout_plans": 1,
+    "workout_set_logs": 1,
+    "other_application_tables": "No additional fixture records inserted; migration-owned schema markers included in exact row comparison but not separately counted.",
+    "synthetic_only": true,
+    "included_boundaries": [
+      "raw onboarding JSON retained",
+      "plan prescription JSON retained",
+      "receipt replay JSON retained",
+      "unknown RPE retained as null"
+    ]
+  },
+  "procedure": {
+    "command": ".qualification/run-python hist /tmp/qualify-preference-cleanup.py preservation",
+    "script_sha256": "6db455d6b1d430543a1f8ea8669e560291d41d30d00ac9da91efd3da48aedebb",
+    "comparison": "Reflect all tables, excluding alembic_version and user_interface_preferences; select every row; compare sorted repr(dict(row)) snapshots for exact equality before and after Alembic upgrade head."
+  },
+  "observed_results": {
+    "all_existing_table_rows_exactly_equal": true,
+    "after_upgrade_counts_for_seeded_tables": {
+      "users": 1,
+      "workout_plans": 1,
+      "workout_set_logs": 1
+    },
+    "new_preference_table_rows": 0,
+    "subprocess_exit_code": 0,
+    "stdout": "PASS additive 0024 -> 0025: every existing table row unchanged; synthetic account, plan, receipt and unknown effort retained; zero preference backfill"
+  },
+  "evidence_limitations": [
+    "Artifact records results already observed during the completed rehearsal; it is not a new database probe.",
+    "Full row snapshots were compared in memory and were not persisted.",
+    "Before and after snapshot hashes were not captured; no retrospective hash equality is claimed.",
+    "Later cleanup tests created additional synthetic rows on this dedicated target; counts above describe the migration rehearsal, not current database counts.",
+    "This does not qualify production migration, deployment or release acceptance."
+  ]
+}

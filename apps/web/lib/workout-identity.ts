@@ -1,4 +1,6 @@
 import type { WorkoutExercise, WorkoutSession } from "@/lib/api";
+import {getToken} from "@/lib/api";
+import {accountScope} from "@/lib/appearance";
 
 export function exerciseKey(exercise: WorkoutExercise): string {
   return exercise.exercise_occurrence_id ?? exercise.id;
@@ -18,7 +20,7 @@ export function occurrenceStorageKey(kind: string, workout: WorkoutSession): str
     identity = unidentifiedViews.get(workout) ?? `unidentified-view-${crypto.randomUUID()}`;
     unidentifiedViews.set(workout, identity);
   }
-  return `hypertrophy_occurrence_v2:${kind}:${identity}`;
+  return `hypertrophy_occurrence_v3:${accountScope(getToken())??"guest"}:${kind}:${identity}`;
 }
 
 export function pendingCommandKey(workout: string, exercise: string, slot: string): string {

@@ -71,7 +71,7 @@ body {
   line-height: 1.95rem;
   font-weight: 700;
   letter-spacing: -0.012em;
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .ui-title-page {
@@ -79,26 +79,26 @@ body {
   line-height: 1.7rem;
   font-weight: 600;
   letter-spacing: -0.01em;
-  color: #f4f4f5;
+  color: var(--text-primary);
 }
 
 .ui-title-section {
   font-size: 0.95rem;
   line-height: 1.35rem;
   font-weight: 600;
-  color: #f4f4f5;
+  color: var(--text-primary);
 }
 
 .ui-body-sm {
   font-size: 0.875rem;
   line-height: 1.35rem;
-  color: #d4d4d8;
+  color: var(--text-secondary);
 }
 
 .ui-body-xs {
   font-size: 0.75rem;
   line-height: 1.15rem;
-  color: #a1a1aa;
+  color: var(--text-muted);
 }
 
 .ui-label {
@@ -106,7 +106,7 @@ body {
   line-height: 1rem;
   text-transform: uppercase;
   letter-spacing: 0.075em;
-  color: #a1a1aa;
+  color: var(--text-muted);
 }
 
 .ui-icon {
@@ -129,7 +129,7 @@ body {
 .ui-meta {
   font-size: 0.75rem;
   line-height: 1.1rem;
-  color: #a1a1aa;
+  color: var(--text-muted);
 }
 
 .hyperdrive-body {
@@ -292,7 +292,7 @@ body {
 
 .ui-input::placeholder,
 .ui-textarea::placeholder {
-  color: #a1a1aa;
+  color: var(--text-muted);
 }
 
 .ui-input:hover,
@@ -309,12 +309,12 @@ body {
 .ui-textarea:focus-visible {
   outline: none;
   border-color: var(--ui-edge-active);
-  box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.55), 0 0 14px rgba(220, 38, 38, 0.2), var(--ui-depth-shadow-1);
+  box-shadow: 0 0 0 1px var(--focus), var(--ui-depth-shadow-1);
 }
 
 .ui-select option {
-  background-color: #11131a;
-  color: #f4f4f5;
+  background-color: var(--input-fill);
+  color: var(--text-primary);
 }
 
 .ui-segmented {
@@ -453,13 +453,13 @@ body {
 }
 
 .dock-btn--idle {
-  color: #e4e4e7;
+  color: var(--text-secondary);
   background: #1f232b;
   border: 1px solid transparent;
 }
 
 .dock-btn--active {
-  color: #fff;
+  color: var(--text-primary);
   opacity: 1;
   background: var(--ui-accent-active);
   border: 1px solid var(--ui-edge-active);
@@ -493,20 +493,20 @@ body {
   line-height: 1rem;
   text-transform: uppercase;
   letter-spacing: 0.075em;
-  color: #a1a1aa;
+  color: var(--text-muted);
 }
 
 .telemetry-value {
   font-size: 0.95rem;
   line-height: 1.35rem;
   font-weight: 600;
-  color: #f4f4f5;
+  color: var(--text-primary);
 }
 
 .telemetry-meta {
   font-size: 0.75rem;
   line-height: 1.1rem;
-  color: #a1a1aa;
+  color: var(--text-muted);
 }
 
 .telemetry-status {
@@ -515,7 +515,7 @@ body {
   gap: 0.5rem;
   font-size: 0.75rem;
   line-height: 1.1rem;
-  color: #e4e4e7;
+  color: var(--text-secondary);
 }
 
 .telemetry-header {

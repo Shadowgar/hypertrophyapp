@@ -1,0 +1,14 @@
+{
+  "crossBodyRowsRetained": 10,
+  "effectiveSet1": 13,
+  "unaffectedSet2": 11,
+  "correctionChainNewestFirst": [
+    13,
+    14,
+    12
+  ],
+  "staleRejectedCommandRecorded": false,
+  "lostResponseCorrectionCommands": 1,
+  "lostResponseReplacementRows": 1,
+  "canonicalKgUnchanged": true
+}

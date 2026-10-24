@@ -1,0 +1,8 @@
+{
+  "onboardingExistingAccountSignIn": true,
+  "writes": [
+    "/api/auth/login"
+  ],
+  "profileBeforeSha256": "6ed80f613ed3017df515a99eb036368c9819550c8fda1a6936ed03b4188f7e0f",
+  "profileAfterSha256": "6ed80f613ed3017df515a99eb036368c9819550c8fda1a6936ed03b4188f7e0f"
+}

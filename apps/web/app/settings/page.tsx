@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import {AppearanceSettings} from "@/components/appearance-settings";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -126,29 +127,9 @@ export default function SettingsPage() {
         setStatus("Profile not loaded yet.");
         return;
       }
-      const updated = await api.updateProfile({
-        name: profile.name,
-        age: profile.age,
-        weight: profile.weight,
-        gender: profile.gender,
-        split_preference: profile.split_preference,
-        selected_program_id: profile.selected_program_id,
-        program_selection_mode: profile.program_selection_mode,
-        choose_for_me_family: profile.choose_for_me_family ?? null,
-        choose_for_me_diagnostics: profile.choose_for_me_diagnostics ?? {},
-        training_location: editTrainingLocation,
+      const updated = await api.updateEquipment({
+        training_location: editTrainingLocation as "home" | "gym",
         equipment_profile: editEquipment,
-        weak_areas: profile.weak_areas ?? [],
-        onboarding_answers: profile.onboarding_answers ?? {},
-        days_available: profile.days_available,
-        // The web Profile type does not currently surface session_time_budget_minutes
-        // or movement_restrictions/near_failure_tolerance; those are managed via
-        // onboarding and check-in flows, not this training-setup editor.
-        nutrition_phase: profile.nutrition_phase,
-        calories: profile.calories,
-        protein: profile.protein,
-        fat: profile.fat,
-        carbs: profile.carbs,
       });
       setProfile(updated);
       setStatus("Training settings saved.");
@@ -369,6 +350,8 @@ export default function SettingsPage() {
   return (
     <div className="space-y-4">
       <h1 className="ui-title-page">Settings</h1>
+      <AppearanceSettings />
+      {status ? <p role="status" className="ux-card">{status}</p> : null}
 
       <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-2">
         <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Program</p>
@@ -469,11 +452,6 @@ export default function SettingsPage() {
             Save training settings
           </Button>
         </div>
-      </div>
-
-      <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-2">
-        <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Display</p>
-        <p className="text-sm text-zinc-400">Theme is locked to dark for MVP.</p>
       </div>
 
       <Disclosure title="Coaching Preview" badge="power user" defaultOpen={false}>

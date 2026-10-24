@@ -1,0 +1,22 @@
+{
+  "applicationRevision": "d0685829d913c3a4db46293dce95dcd975c8fc4e",
+  "productionAccess": false,
+  "physicalIPhoneTested": false,
+  "artifactSha256": {
+    "conflict-database-proof.json": "c934d3a57c5b165bbad9f8028e8c22a68575daeae88008cb082c0bc522f338a4",
+    "units-routes.json": "161cd1d66a96ec1301d00fba1dfbfc49b6eb1e746391f8ad9a9ed53f8dacba65",
+    "README.md": "6063dd4132dbb5444d056aff6796b0cf2e68e7df759ec27d4898b6ae0e77b853",
+    "correction-conflict.json": "fa0ca14ff1cb65551af179ff59a9fc98d1fd58a2f3bd489402cab389301cbf5e",
+    "reproduce/correction-conflict.cjs": "5eead8f050004fe3d4797ec413b6888ada27dea41fd548b08167091b37067cc1",
+    "reproduce/units-routes.cjs": "025b514cc4e259daa0c339289a6841073d00190ac28f84515888b647f16bcfa1",
+    "reproduce/customized-effort-api.py": "845eb9918f2e87131ab61e59081228bf34667da7b05f227b0a641bfc52d02b09",
+    "assets/units-lb-checkin.png": "c0d521a15a3004a36391c21e4bdc9ffca1851ae913e37553c732110dffb32853",
+    "assets/units-lb-week.png": "4cd93778953cfab41ecf5e23b612de65f33ce0682518e9478572226fb3917ba5",
+    "assets/units-kg-week.png": "4cd93778953cfab41ecf5e23b612de65f33ce0682518e9478572226fb3917ba5",
+    "assets/units-kg-home.png": "0e57799583dcf18faaa22fb13c1d7d3a9543eb057d26d307dd5f4bf718589223",
+    "assets/units-lb-home.png": "5942b46b68e6e2e24feb53fb43d78f0c3259e990e48707cf8c44ebb41d627560",
+    "assets/correction-new-receipt-confirmed.png": "934182c0c6339f6cedd7debcf6f80d5f00107bced33dc09cf291c20d9c0a3dd0",
+    "assets/correction-definitive-conflict.png": "02177feaeb8ada62a02081fb0c7ecde71eda4e7ce077ae0f7fba4f0d10d320c2",
+    "assets/units-kg-checkin.png": "9430f8cee4cb0849ace420f0f1f1bacf7fc90226a52d8c647a80b4b3235b8b9d"
+  }
+}

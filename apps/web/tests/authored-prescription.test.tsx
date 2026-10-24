@@ -1,6 +1,7 @@
+import {runnerScreen as screen} from "./helpers/runner-driver";
 import React from "react";
 import { beforeEach, expect, test, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen as nativeScreen, waitFor } from "@testing-library/react";
 import TodayPage from "@/app/today/page";
 import { authoredRepLabel, authoredSetDetails, authoredSetRepRange, authoredSetTechnique } from "@/lib/authored-prescription";
 import type { WorkoutExercise } from "@/lib/api";
@@ -71,10 +72,11 @@ test.each(["Mechanical Dropset (on all sets)", "Integrated Partials (All Sets)",
   await waitFor(() => expect(screen.getByRole("dialog")).toBeInTheDocument());
   const complete = screen.getByRole("button", { name: /Complete (Set|technique steps first)/i });
   if (allSets) {
-    expect(complete).toBeDisabled();
-    fireEvent.click(screen.getByRole("checkbox", { name: /I will execute these technique cues/ }));
-  } else expect(screen.queryByRole("checkbox", { name: /I will execute these technique cues/ })).not.toBeInTheDocument();
+    expect(complete).toHaveAttribute('aria-disabled','true');
+    fireEvent.click(screen.getByRole("checkbox", { name: /I have read the source technique/ }));
+  } else expect(screen.queryByRole("checkbox", { name: /I have read the source technique/ })).not.toBeInTheDocument();
   fireEvent.change(screen.getByRole("spinbutton", { name: "Reps" }), { target: { value: "12" } });
+  fireEvent.change(screen.getByRole("spinbutton", {name: "Weight (lb)"}), {target:{value:"40"}});
   fireEvent.click(complete);
   await waitFor(() => expect(completed).toBe(1));
   if (allSets && instruction.startsWith("Mechanical")) {
@@ -107,8 +109,9 @@ test("runner renders AMRAP, requires actual reps and avoids the numeric baseline
   fireEvent.click(screen.getByRole("button", { name: /Synthetic Push-Up/i }));
   await waitFor(() => expect(screen.getByRole("dialog")).toBeInTheDocument());
   expect(screen.queryByText("Baseline Calculator")).not.toBeInTheDocument();
-  expect(screen.getByText(/AMRAP reps · RPE ~8-9/)).toBeInTheDocument();
-  expect(screen.getByLabelText("Reps")).toHaveValue(0);
+  expect(screen.getByText(/working sets × AMRAP reps/)).toBeInTheDocument();
+  expect(screen.getByText(/RPE ~8-9/)).toBeInTheDocument();
+  expect(screen.getByRole("spinbutton", {name: "Reps"})).toHaveValue(null);
   fireEvent.click(screen.getByRole("button", { name: "Complete Set" }));
   expect(fetchMock.mock.calls.some(([input]) => String(input).endsWith("/log-set"))).toBe(false);
 });
@@ -142,7 +145,7 @@ test.each(["2", "2-3"])("runner retains %s authored warm-up sets and logs bodywe
   expect(screen.queryByText("Baseline Calculator")).not.toBeInTheDocument();
   expect(screen.queryByText(/Based on your working weight/)).not.toBeInTheDocument();
   expect(screen.getByLabelText("Added load (lb), optional")).toHaveValue(0);
-  fireEvent.change(screen.getByLabelText("Reps"), { target: { value: "12" } });
+  fireEvent.change(screen.getByRole("spinbutton", {name: "Reps"}), { target: { value: "12" } });
   fireEvent.click(screen.getByRole("button", { name: "Complete Set" }));
   await waitFor(() => expect(fetchMock.mock.calls.some(([input]) => String(input).endsWith("/log-set"))).toBe(true));
   const request = fetchMock.mock.calls.find(([input]) => String(input).endsWith("/log-set"));

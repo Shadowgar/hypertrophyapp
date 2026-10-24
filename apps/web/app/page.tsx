@@ -17,7 +17,8 @@ import {
   type WorkoutExercise,
   type WorkoutSession,
 } from "@/lib/api";
-import { kgToLbs } from "@/lib/weight";
+import { useAppearance } from "@/components/appearance-provider";
+import { displayLoad } from "@/lib/appearance";
 
 type DashboardState = {
   profile: Profile | null;
@@ -50,17 +51,17 @@ function humanizeTokenLabel(value: string): string {
     .join(" ");
 }
 
-function formatExercisePrescription(exercise: WorkoutExercise): string {
-  const load = isBodyweightAuthored(exercise) ? "Bodyweight" : exercise.recommended_working_weight == null ? "Record actual load" : `${kgToLbs(exercise.recommended_working_weight)} lbs`;
+function formatExercisePrescription(exercise: WorkoutExercise, unit: "kg" | "lb"): string {
+  const load = isBodyweightAuthored(exercise) ? "Bodyweight" : exercise.recommended_working_weight == null ? "Record actual load" : `${displayLoad(exercise.recommended_working_weight, unit)} ${unit}`;
   return `${exercise.sets} x ${authoredRepLabel(exercise)} @ ${load}`;
 }
 
-function formatLeadExercise(workout: WorkoutSession | null): string {
+function formatLeadExercise(workout: WorkoutSession | null, unit: "kg" | "lb"): string {
   const firstExercise = workout?.exercises[0];
   if (!firstExercise) {
     return "No lead lift queued yet";
   }
-  return `${firstExercise.name} · ${formatExercisePrescription(firstExercise)}`;
+  return `${firstExercise.name} · ${formatExercisePrescription(firstExercise, unit)}`;
 }
 
 function resolveWeakAreasLabel(profile: Profile | null): string {
@@ -71,7 +72,7 @@ function resolveWeakAreasLabel(profile: Profile | null): string {
   return weakAreas.map(humanizeTokenLabel).join(", ");
 }
 
-function resolveCoachPriorities(hasToken: boolean, dashboard: DashboardState): string[] {
+function resolveCoachPriorities(hasToken: boolean, dashboard: DashboardState, unit: "kg" | "lb"): string[] {
   if (!hasToken) {
     return [
       "Finish onboarding to generate a personalized hypertrophy week.",
@@ -94,7 +95,7 @@ function resolveCoachPriorities(hasToken: boolean, dashboard: DashboardState): s
     );
   }
   if (firstExercise) {
-    priorities.push(`Start with ${firstExercise.name}: ${formatExercisePrescription(firstExercise)}.`);
+    priorities.push(`Start with ${firstExercise.name}: ${formatExercisePrescription(firstExercise, unit)}.`);
   }
 
   const weakAreas = dashboard.profile?.weak_areas?.filter((item) => item.trim().length > 0) ?? [];
@@ -115,7 +116,7 @@ function resolveCoachPriorities(hasToken: boolean, dashboard: DashboardState): s
   return priorities.slice(0, 3);
 }
 
-function resolveMomentumInsights(analytics: HistoryAnalyticsResponse | null): DashboardInsight[] {
+function resolveMomentumInsights(analytics: HistoryAnalyticsResponse | null, unit: "kg" | "lb"): DashboardInsight[] {
   const adherence = analytics?.adherence;
   const strengthTrend = analytics?.strength_trends[0];
   const prCount = analytics?.pr_highlights.length ?? 0;
@@ -137,7 +138,7 @@ function resolveMomentumInsights(analytics: HistoryAnalyticsResponse | null): Da
       title: "Strength Trend",
       value: strengthTrend ? humanizeTokenLabel(strengthTrend.exercise_id) : "No lift trend yet",
       meta: strengthTrend
-        ? `Latest ${strengthTrend.latest_weight} top set across ${strengthTrend.points.length} tracked sessions`
+        ? `Latest ${displayLoad(strengthTrend.latest_weight, unit)} ${unit} top set across ${strengthTrend.points.length} tracked sessions`
         : "Complete and log workouts to surface top moving lifts.",
     },
     {
@@ -155,7 +156,8 @@ function CoachBriefCard({
   hasToken: boolean;
   dashboard: DashboardState;
 }>) {
-  const priorities = resolveCoachPriorities(hasToken, dashboard);
+  const { preferences } = useAppearance();
+  const priorities = resolveCoachPriorities(hasToken, dashboard, preferences.weight_unit);
 
   return (
     <div className="main-card main-card--module spacing-grid">
@@ -181,6 +183,7 @@ function CoachBriefCard({
 }
 
 function SessionBlueprintCard({ workout }: Readonly<{ workout: WorkoutSession | null }>) {
+  const { preferences } = useAppearance();
   const previewExercises = workout?.exercises.slice(0, 3) ?? [];
 
   return (
@@ -197,7 +200,7 @@ function SessionBlueprintCard({ workout }: Readonly<{ workout: WorkoutSession | 
           {previewExercises.map((exercise) => (
             <div key={exercise.id} className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
               <p className="text-sm font-semibold text-zinc-100">{exercise.name}</p>
-              <p className="text-xs text-zinc-300">{formatExercisePrescription(exercise)}</p>
+              <p className="text-xs text-zinc-300">{formatExercisePrescription(exercise, preferences.weight_unit)}</p>
             </div>
           ))}
           {workout && workout.exercises.length > previewExercises.length ? (
@@ -218,6 +221,7 @@ function BlockRadarCard({
   profile: Profile | null;
   workout: WorkoutSession | null;
 }>) {
+  const { preferences } = useAppearance();
   return (
     <div className="main-card main-card--module spacing-grid">
       <div className="telemetry-header">
@@ -230,7 +234,7 @@ function BlockRadarCard({
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
           <p className="telemetry-kicker">Lead Lift</p>
-          <p className="text-sm text-zinc-100">{formatLeadExercise(workout)}</p>
+          <p className="text-sm text-zinc-100">{formatLeadExercise(workout, preferences.weight_unit)}</p>
         </div>
         <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
           <p className="telemetry-kicker">Nutrition Phase</p>
@@ -252,7 +256,8 @@ function BlockRadarCard({
 }
 
 function MomentumRadarCard({ analytics }: Readonly<{ analytics: HistoryAnalyticsResponse | null }>) {
-  const insights = resolveMomentumInsights(analytics);
+  const { preferences } = useAppearance();
+  const insights = resolveMomentumInsights(analytics, preferences.weight_unit);
 
   return (
     <div className="main-card main-card--module spacing-grid">
@@ -286,13 +291,13 @@ function formatProgramName(profile: Profile | null): string {
   return getProgramDisplayName({ id: selectedProgramId });
 }
 
-function formatBodyweight(analytics: HistoryAnalyticsResponse | null, profile: Profile | null): string {
+function formatBodyweight(analytics: HistoryAnalyticsResponse | null, profile: Profile | null, unit: "kg" | "lb"): string {
   const latest = analytics?.bodyweight_trend.at(-1);
   if (latest?.body_weight !== undefined && latest?.body_weight !== null) {
-    return `${latest.body_weight} lb`;
+    return `${displayLoad(latest.body_weight, unit)} ${unit}`;
   }
   if (profile?.weight !== undefined && profile?.weight !== null) {
-    return `${profile.weight} lb`;
+    return `${displayLoad(profile.weight, unit)} ${unit}`;
   }
   return "No bodyweight yet";
 }
@@ -373,6 +378,7 @@ function resolveDashboardPresentation(hasToken: boolean, dashboard: DashboardSta
 }
 
 export default function HomePage() {
+  const { preferences } = useAppearance();
   const [dashboard, setDashboard] = useState<DashboardState>({
     profile: null,
     workout: null,
@@ -437,7 +443,7 @@ export default function HomePage() {
   }, []);
 
   const presentation = useMemo(() => resolveDashboardPresentation(hasToken, dashboard), [dashboard, hasToken]);
-  const bodyweightLabel = formatBodyweight(dashboard.analytics, dashboard.profile);
+  const bodyweightLabel = formatBodyweight(dashboard.analytics, dashboard.profile, preferences.weight_unit);
 
   return (
     <div className="space-y-4">

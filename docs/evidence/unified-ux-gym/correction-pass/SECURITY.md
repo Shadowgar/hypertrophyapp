@@ -1,0 +1,7 @@
+# Security qualification limitation
+
+The existing managed scan `4dd811ac-78b3-4cd8-b36b-2c583ed97644` was reopened through `get_codex_security_scan_context`. Its immutable range is `fc3bd0c..7c05f9a`, predating both the review target and this correction pass. It is running/incomplete, has no sealed report and cannot qualify the final revision.
+
+Both managed persistent and temporary directory preparation succeed. A fresh supported `record_codex_security_scan_draft(complete:false, ...)` attempt still fails: **“Scan output parent must not be group- or world-writable without the sticky bit.”** The saved scan path has existing group-writable shared Codex state ancestors. Preparing temporary storage does not redirect that scan's canonical writer. The supported artifact policy requires preserving an existing scan's authoritative path and prohibits shell-authored canonical substitutes. No shared permissions, host configuration, scan identity or canonical files were changed. No new successful scan is claimed.
+
+CodeQL is an independent CI check; its results are reported separately. Focused API authorization/default-disable/confirmation/isolation tests and correction immutable-retry tests provide bounded regression evidence, not completion of this managed security scan. Canonical final-revision security qualification remains open until the host can write its managed artifacts through a supported configuration.

@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Disclosure } from "@/components/ui/disclosure";
 import { api, getProgramDisplayName, type GeneratedWeekExercise, type GeneratedWeekPlan, type ProgramTemplateOption, type Profile, type SchedulingContext, type SelectedDatePlanRequest } from "@/lib/api";
 import { datesInWeek, formatCalendarDate } from "@/lib/calendar-date";
-import { kgToLbs } from "@/lib/weight";
+import { useAppearance } from "@/components/appearance-provider";
+import { displayLoad } from "@/lib/appearance";
 
 function formatLabel(value: string): string {
   return value
@@ -56,20 +57,20 @@ function formatSignedPercent(scale: number): string {
   return `${delta >= 0 ? "+" : ""}${delta}%`;
 }
 
-function formatExerciseLoad(exercise:GeneratedWeekExercise):string {
-  if(exercise.customized){
-    return typeof exercise.recommended_working_weight==='number'&&Number.isFinite(exercise.recommended_working_weight)
-      ? `${exercise.recommended_working_weight} kg`
-      : 'Exercise-specific calibration pending';
+function formatExerciseLoad(exercise: GeneratedWeekExercise, unit: "kg" | "lb"): string {
+  if (!exercise.customized && isBodyweightAuthored(exercise)) return "Bodyweight";
+  const weight = exercise.recommended_working_weight;
+  if (typeof weight !== "number" || !Number.isFinite(weight)) {
+    return exercise.customized ? "Exercise-specific calibration pending" : "Record actual load";
   }
-  return isBodyweightAuthored(exercise)?'Bodyweight':`${kgToLbs(exercise.recommended_working_weight)} lbs`;
+  return `${displayLoad(weight, unit)} ${unit}`;
 }
 
-function formatLeadExercise(exercise: GeneratedWeekExercise | undefined): string {
+function formatLeadExercise(exercise: GeneratedWeekExercise | undefined, unit: "kg" | "lb"): string {
   if (!exercise) {
     return "No exercises planned.";
   }
-  return `${exercise.name} · ${exercise.sets} sets · ${authoredRepLabel(exercise)} reps @ ${formatExerciseLoad(exercise)}`;
+  return `${exercise.name} · ${exercise.sets} sets · ${authoredRepLabel(exercise)} reps @ ${formatExerciseLoad(exercise, unit)}`;
 }
 
 function resolveExerciseMediaUrl(exercise: GeneratedWeekExercise): string | null {
@@ -91,6 +92,7 @@ function resolveTrackingLoads(exercise: GeneratedWeekExercise): string[] {
 }
 
 function ExerciseExecutionDetails({ exercise }: Readonly<{ exercise: GeneratedWeekExercise }>) {
+  const { preferences } = useAppearance();
   const substitutions = resolveAuthoredSubstitutions(exercise);
   const trackingLoads = resolveTrackingLoads(exercise);
   const mediaUrl = resolveExerciseMediaUrl(exercise);
@@ -103,7 +105,7 @@ function ExerciseExecutionDetails({ exercise }: Readonly<{ exercise: GeneratedWe
         <span key={label} className="mr-2 inline-block text-amber-300">{label}</span>
       ))}
       <p className="telemetry-meta">
-        {exercise.sets} sets · {authoredRepLabel(exercise)} reps · {formatExerciseLoad(exercise)}
+        {exercise.sets} sets · {authoredRepLabel(exercise)} reps · {formatExerciseLoad(exercise, preferences.weight_unit)}
       </p>
       {hasPrescription ? (
         <p className="mt-1">
@@ -221,6 +223,7 @@ function WeekOverviewCards({ plan, selectedProgramId }: Readonly<{ plan: Generat
 }
 
 function WeekExecutionCards({ plan }: Readonly<{ plan: GeneratedWeekPlan }>) {
+  const { preferences } = useAppearance();
   const runtimeTrace = plan.generation_runtime_trace ?? {};
   const runtimeOutcome = (runtimeTrace.outcome ?? {}) as Record<string, unknown>;
   const effectiveDays = numberFromTrace(runtimeOutcome, "effective_days_available");
@@ -252,7 +255,7 @@ function WeekExecutionCards({ plan }: Readonly<{ plan: GeneratedWeekPlan }>) {
             >
               <div className="space-y-2 text-xs text-zinc-200">
                 <p className="telemetry-meta">{formatCalendarDate(session.date)}</p>
-                <p>Lead: {formatLeadExercise(exercises[0])}</p>
+                <p>Lead: {formatLeadExercise(exercises[0], preferences.weight_unit)}</p>
                 {dayRoleLabel ? <p className="telemetry-meta">Intent: {dayRoleLabel}</p> : null}
                 <p className="telemetry-meta">
                   Coverage: {uniqueMuscles(exercises).join(", ") || "Untracked"}

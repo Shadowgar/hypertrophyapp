@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ApiError, type AuthoredWarmupGuidance, type EffectiveLoadSet, type LoadContext } from "@/lib/api";
+import { canonicalLoad } from "@/lib/appearance";
 import { acknowledgeLogCommand, pendingCommandKey, pendingLogPayload } from "@/lib/workout-identity";
-import { kgToLbs, lbsToKg } from "@/lib/weight";
+import { kgToLbs } from "@/lib/weight";
 
 export type PerformedWarmup = { reps: number; weight: number; rpe: number | null };
 type WarmupSet = AuthoredWarmupGuidance["sets"][number];
@@ -49,16 +50,16 @@ function WarmupInput({ set, unit, suggested, disabled, restored, bodyweight, onL
     <p className="text-sm font-medium">Warm-up {set.set_index}{set.reps_min != null ? ` · ${set.reps_min}${set.reps_max != null && set.reps_max !== set.reps_min ? `–${set.reps_max}` : ""} reps` : " · record actual reps"}</p>
     <div className="grid grid-cols-2 gap-2">
       <label className="text-xs">Warm-up {set.set_index} reps
-        <input className="ui-input min-h-[48px] w-full min-w-0" type="number" min={1} step={1} value={reps}
+        <input className="ui-input min-h-[48px] w-full min-w-0" type="number" min={1} step={1} value={reps} readOnly={saving || retryPending}
           onChange={event => { edited.current = true; setReps(event.target.value); }} />
       </label>
       <label className="text-xs">Warm-up {set.set_index} load ({draftUnit})
-        <input className="ui-input min-h-[48px] w-full min-w-0" type="number" min={0} step="any" value={weight}
+        <input className="ui-input min-h-[48px] w-full min-w-0" type="number" min={0} step="any" value={weight} readOnly={saving || retryPending}
           onChange={event => { edited.current = true; setWeight(event.target.value); }} />
       </label>
     </div>
     <label className="block text-xs">Warm-up {set.set_index} actual RPE (optional)
-      <input className="ui-input min-h-[48px] w-full" type="number" min={0} max={10} step={0.5} value={rpe}
+      <input className="ui-input min-h-[48px] w-full" type="number" min={0} max={10} step={0.5} value={rpe} readOnly={saving || retryPending}
         onChange={event => { edited.current = true; setRpe(event.target.value); }} />
     </label>
     <Button className="min-h-[48px] w-full" disabled={saving || disabled || (!retryPending && !valid)} onClick={async () => {
@@ -66,7 +67,7 @@ function WarmupInput({ set, unit, suggested, disabled, restored, bodyweight, onL
       inFlight.current = true; setSaving(true); setStatus("");
       const performed = pending.current ?? { reps: Number(reps),
         weight: origin.current.canonical != null && Number(weight) === Number(origin.current.displayed)
-          ? origin.current.canonical : draftUnit === "kg" ? Number(weight) : lbsToKg(Number(weight)),
+          ? origin.current.canonical : draftUnit === "kg" ? Number(weight) : canonicalLoad(Number(weight),"lb"),
         rpe: rpe.trim() === "" ? null : Number(rpe) };
       pending.current = performed; setRetryPending(true);
       try {
@@ -77,7 +78,7 @@ function WarmupInput({ set, unit, suggested, disabled, restored, bodyweight, onL
           pending.current = null; setRetryPending(false); setStatus(error.message);
         } else setStatus("Warm-up was not confirmed. Retry the same warm-up before continuing.");
       } finally { inFlight.current = false; setSaving(false); }
-    }}>{saving ? "Saving warm-up…" : `Log warm-up ${set.set_index}`}</Button>
+    }}>{saving ? "Saving warm-up…" : retryPending ? `Retry warm-up ${set.set_index}` : `Log warm-up ${set.set_index}`}</Button>
     {status ? <p role="status" className="text-xs text-zinc-400">{status}</p> : null}
   </div>;
 }
@@ -114,7 +115,7 @@ export function AuthoredWarmups({ guidance, sourceCount, receipts, loadContext, 
     ? [{ set_index: nextOrdinal, suggested_weight: null, reps_min: null, reps_max: null, percent: null }]
     : projection!.sets.filter(set => !recorded.has(set.set_index));
   return <section className="space-y-3" aria-label="Authored warm-up guidance">
-    <p className="text-sm text-zinc-200">{countText != null ? `${countText} warm-up sets` : "Warm-up prescription unspecified"}</p>
+    <p className="text-sm text-zinc-200">{countText != null ? `${/^\d+(\.0+)?$/.test(countText) ? Number(countText) : countText} warm-up sets` : "Warm-up prescription unspecified"}</p>
     {projection?.status !== "none" && projection?.source_instructions ? <p className="whitespace-pre-line text-xs text-zinc-300">{projection.source_instructions}</p> : null}
     {guidance?.explanation ? <p className="text-xs text-zinc-400">{guidance.explanation}</p> : null}
     {canLog ? <p className="text-xs text-zinc-400">Record actual warm-ups separately from working sets.{projection?.count == null ? " The source does not specify an exact count." : ""}</p> : null}

@@ -1,0 +1,38 @@
+[
+  {
+    "fixture": "mobile_correction",
+    "rows": 5,
+    "supersededOriginalsPreserved": 2,
+    "effectiveWorkingSets": [
+      [
+        1,
+        13
+      ],
+      [
+        2,
+        14
+      ]
+    ],
+    "uniqueCommands": 5,
+    "duplicateCorrectionRows": 0,
+    "canonicalKgUnchanged": true
+  },
+  {
+    "fixture": "desktop_correction",
+    "rows": 5,
+    "supersededOriginalsPreserved": 2,
+    "effectiveWorkingSets": [
+      [
+        1,
+        13
+      ],
+      [
+        2,
+        14
+      ]
+    ],
+    "uniqueCommands": 5,
+    "duplicateCorrectionRows": 0,
+    "canonicalKgUnchanged": true
+  }
+]

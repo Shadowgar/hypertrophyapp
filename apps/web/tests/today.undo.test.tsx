@@ -1,6 +1,7 @@
+import {runnerScreen as screen} from "./helpers/runner-driver";
 import React from "react";
 import { test, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen as nativeScreen, fireEvent, waitFor } from "@testing-library/react";
 import TodayPage from "@/app/today/page";
 
 beforeEach(() => localStorage.clear());
@@ -34,13 +35,15 @@ test("lost undo acknowledgement retains command and state; confirmation clears s
   fireEvent.click(screen.getByRole("button", { name: /Load today's workout/i }));
   fireEvent.click(await screen.findByRole("button", { name: /Undo Bench/ }));
   fireEvent.click(screen.getByRole("button", { name: /Undo Last Set/ }));
-  await screen.findByText(/Undo was not confirmed/);
+  await screen.findAllByText(/Undo not confirmed/);
   expect(screen.getByRole("button", { name: /Undo Last Set/ })).toBeEnabled();
   fireEvent.click(screen.getByRole("button", { name: /Undo Last Set/ }));
   await waitFor(() => expect(bodies).toHaveLength(2));
   expect(bodies[0].command_id).toBe(bodies[1].command_id);
   expect(bodies[0].exercise_occurrence_id).toBe("bench-slot");
-  await waitFor(() => expect(screen.queryByRole("button", { name: /Undo Last Set/ })).toBeNull());
+  await waitFor(() => expect(screen.getByRole("button", { name: /Undo Last Set/ })).toBeDisabled());
+  fireEvent.click(screen.getByRole("button", { name: "Close Recorded sets" }));
+  fireEvent.click(screen.getByRole("button", { name: "Guide & setup" }));
   expect(screen.queryByText("Old higher load")).toBeNull();
   await screen.findByText("Rebuilt guidance");
   vi.unstubAllGlobals();

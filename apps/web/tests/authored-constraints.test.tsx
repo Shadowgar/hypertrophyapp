@@ -1,6 +1,7 @@
+import {runnerScreen as screen} from "./helpers/runner-driver";
 import React from "react";
 import { beforeEach, expect, test, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen as nativeScreen, waitFor } from "@testing-library/react";
 import AuthoredConstraintCard from "@/components/AuthoredConstraintCard";
 import TodayPage from "@/app/today/page";
 import type { WorkoutExercise } from "@/lib/api";
@@ -60,7 +61,7 @@ test("Today blocks unresolved logging and uses server confirmation while retaini
   fireEvent.click(screen.getByRole('button',{name:/Load today's workout/i}));
   await waitFor(() => expect(screen.getByRole('button',{name:/Original squat/i})).toBeInTheDocument());
   fireEvent.click(screen.getByRole('button',{name:/Original squat/i}));
-  expect(screen.getByRole('button',{name:'Resolve authored slot first'})).toBeDisabled();
+  expect(screen.getByRole('button',{name:'Resolve authored slot first'})).toHaveAttribute('aria-disabled','true');
   expect(screen.queryByRole('button',{name:/Use Forbidden generic/})).not.toBeInTheDocument();
   fireEvent.change(screen.getByLabelText('Source-approved alternative'),{target:{value:'source-option'}});
   expect(fetch.mock.calls.some(([input])=>String(input).endsWith('/authored-substitution'))).toBe(false);
@@ -95,9 +96,9 @@ for (const video of [undefined, 'https://example.com/variant-video']) {
     expect(screen.queryByRole('link',{name:'Approved hinge'})).not.toBeInTheDocument();
     expect(screen.queryByText('22 lb')).not.toBeInTheDocument();
     expect(screen.queryByText('44 lb')).not.toBeInTheDocument();
-    const media = screen.getByRole('button',{name:/Watch|Video|Demo/i});
-    if(video) { fireEvent.click(media); expect(open).toHaveBeenCalledWith(video,'_blank','noopener,noreferrer'); }
-    else expect(media).toBeDisabled();
+    fireEvent.click(screen.getByRole('button',{name:'Guide & setup'}));
+    if(video) expect(screen.getByRole('link',{name:'Watch demonstration'})).toHaveAttribute('href',video);
+    else expect(screen.queryByRole('link',{name:'Watch demonstration'})).not.toBeInTheDocument();
     open.mockRestore();
   });
 }

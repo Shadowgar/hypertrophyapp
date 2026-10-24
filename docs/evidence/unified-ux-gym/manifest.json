@@ -1,0 +1,140 @@
+{
+  "run": "unified-ux-gym-2026-10-22",
+  "designRevision": "33598c3fb35328cc2d2b6310865f716380b6c81e",
+  "sourceBase": "fc3bd0c7b93c9d3232e6aec758e16efcca6ac583",
+  "coreBrowserRevision": "400a64686b433117a8e831f6e2b773dbc5bfd2b7",
+  "finalApplicationRevision": "d0cdaf95880e5f04794ea2f4bf5ea37e1021309d",
+  "environment": {
+    "node": "22.22",
+    "python": "3.12.3",
+    "chromium": "145.0.7632.0",
+    "database": "PostgreSQL 16, dedicated tmpfs container, synthetic accounts",
+    "viewports": [
+      "390x844",
+      "1440x1000"
+    ],
+    "physicalMobile": false
+  },
+  "boundaries": {
+    "productionDataAccess": false,
+    "productionMigration": false,
+    "deployment": false,
+    "merge": false,
+    "designAssetsMerged": false
+  },
+  "migration": {
+    "from": "0024_merge_authored_customized",
+    "to": "0025_interface_preferences",
+    "existingTables": 20,
+    "existingRows": 234,
+    "allCanonicalRowHashesUnchanged": true,
+    "newPreferencesRows": 0,
+    "snapshot": "Before final overview re-captures"
+  },
+  "browser": {
+    "fullWorkingSetsPerAccount": 29,
+    "receiptCorrectionAndUndoPreserved": true,
+    "uncertainAfterCommitExactRetry": true,
+    "beforeCommitFailureRefreshRecovery": true,
+    "inputMovementPixels": {
+      "baselineMobile": 70,
+      "candidateMobile": 0,
+      "candidateDesktop": 0
+    },
+    "sixAppearancePersistence": true,
+    "existingAccountLoginOnlyAuthenticationWrite": true
+  },
+  "securityExport": {
+    "scan": "4dd811ac-78b3-4cd8-b36b-2c583ed97644",
+    "sealedCanonicalExport": "incomplete: host artifact writer rejects existing ancestor permissions",
+    "hostPermissionChanges": false
+  },
+  "artifactsSha256": {
+    "appearance-proof.json": "1a3eb0da01ab1d4bb7434e02d7f3037e6d8d4c1612c122b23b1b0a478915fa13",
+    "assets/baseline-after.png": "94c63941ffd650a4e9468acc42546e47f2d944b28b5ca4cd61e0ed054ba09dde",
+    "assets/baseline-before.png": "b6d27ad64cc15403458afdab5b00069a381a7983e1a5615b18a93a229582674c",
+    "assets/desktop-after-save.png": "9f638872d5655c69a8534cd3423b32208f012c1d5996e252ee6a45c7d4ceab71",
+    "assets/desktop-before-save.png": "7fdf74a2abebc956bace5304e6920760586c69d3f3cccee4bdabe8ff54819d02",
+    "assets/desktop-corrected.png": "c9dc13281c5e8b79f99312f1565a39727138ebcd51ce3b27d896121f968b4797",
+    "assets/desktop-history-receipts.png": "295f1cc12dc73fc3d3acd7c22b4d9611072a62fabbc1fe52d07bad73cf4a149a",
+    "assets/desktop-overview-rest.png": "014d1b7e6f2d9145aae5ff75e264099ecd03cfce34927dee58cb76d99c0a663b",
+    "assets/desktop-recovered.png": "f171275ba3e42a2fb90b026195f601411eb696871fc8a4263a7271586bee54b0",
+    "assets/desktop-uncertain.png": "b79dc88226c6ad4e48bef72e226379ce1887258a274796c15d1a7fc95747e65a",
+    "assets/desktop-warmup.png": "f2360999024b30bfc17ab1b8660ec963f96511992ce36ae76485c5b9878ff4b7",
+    "assets/desktop-workout-complete.png": "42199a914fa53c4220da37925d81104a32969e2b3ac361ba1978b3fda713127c",
+    "assets/mobile-after-save.png": "6883e8ee199fa817d1655909a7c783c52e1e918c77b6f37e76bd06f26ee3dafe",
+    "assets/mobile-before-save.png": "150fdbe1d174475a0787d25439f77e5e7c32b75826223a015154926b6043088e",
+    "assets/mobile-corrected.png": "bcc6bab1461bee0200c2141ee5751a7138dc19efc674a9cd463c81ac127b0f9f",
+    "assets/mobile-history-receipts.png": "2fbf4c8a3132c421e41cb971094bb29472cb5649e7a5a44ef201c27efb700090",
+    "assets/mobile-overview-rest.png": "dee218b692d3f46cbeecf2213ba797ff6d2382e2265df45998f4908e4345ae6f",
+    "assets/mobile-recovered.png": "bfc6b9ca4069bb2cfff49d1727a73ccf43d957a0f5b762d359b09af59f8c9a5c",
+    "assets/mobile-uncertain.png": "1b4b0bb01df7fc0c2d3e989c2b32b345e33928201751f1784238f2a5cdb45b35",
+    "assets/mobile-warmup.png": "04863e1041f5bb47c9893acf0512e79f6849d2fe12b0ccd23ff122a3e5ba6121",
+    "assets/mobile-workout-complete.png": "e9ff2bc4294a80bc8075edec12b43563917a363e037845f398fbc7337bfd117c",
+    "assets/settings-charcoal-dark.png": "2ea8175eec6330c64868af0fbecf8c25817b4f590fd1ac818c08562a648a834c",
+    "assets/settings-charcoal-light.png": "ffdb89b975b9cc06acf3e3a2ac724d32d9d9c25ceea6e45c7d93f3e4f271960a",
+    "assets/settings-classic-dark.png": "1b54dbf2693ccdbda413d4d4194a72df68d1e08ebe39aabefb691209112aa67b",
+    "assets/settings-classic-light.png": "252e037794ed3f0a960f0dc1935358540ef435521fecac22b12a786ea7dae041",
+    "assets/settings-desktop-system.png": "3822e283e9eb56fb8fa356c8cfbff3fcf87438a20713556e74e5b4fe7319e1d6",
+    "assets/settings-graphite-dark.png": "72e31d97a8bd6569897cd4e228a467651229b8f5c82d38fe295e1e18de613743",
+    "assets/settings-graphite-light.png": "dddee8f196c5bf687e5afda968977f475d5088ba9891a5f182bda2ec54d3e332",
+    "baseline-metrics.json": "064b18ec5d0934afe8e7eb6349cfc2f99db7a6d63a0135d4b5cb7ef01fb7a082",
+    "contrast.json": "b28efd62edd43818121738e030671993e1146646478def695fa49ef2dff1560b",
+    "desktop-completion.json": "c9206c2f7ccfe58490335745aa592079d3b2cc7f1f5ff1ee6a0bf44d2d056cee",
+    "desktop-full.json": "1a2cee382798c018aff15c861df963c36a53cb91845c78520fbb28318cc0552e",
+    "desktop-recovery.json": "b0f72e162502c11739fe5f46c12782cb974e37881a05039de9c1482993494904",
+    "login-preservation.json": "7ebd153a575586d02478a9970d5e2ca05a21070b53d01dc9bf24efbd3a86bfe6",
+    "migration-after.json": "28eff582a674f0444a3aff844ac8697c78e647a723789ca1517fb14e193a9de2",
+    "migration-before.json": "28eff582a674f0444a3aff844ac8697c78e647a723789ca1517fb14e193a9de2",
+    "mobile-completion.json": "c9206c2f7ccfe58490335745aa592079d3b2cc7f1f5ff1ee6a0bf44d2d056cee",
+    "mobile-full.json": "36447ce50efccb8a7f48630d063bf5bff637565b1942fe3ec4df6687198d46a7",
+    "mobile-recovery.json": "17700153f189281309964c6493e2a0edf68546cb677f8fe7da4f022784cc6b91",
+    "overview-layout.json": "18962ad27ad678e8a65f79e4c3e13b06c996b2a61d1545d3022a815f83837852",
+    "receipt-preservation.json": "095f318758845b1cce8fa3710d07d0002078136ebeb7af2e74f1ca575c15328f",
+    "baseline-ci-proof.json": "f332cc72f695b1ff15e75cbf0959768a685193c83feb83dfc2082dc2e7cb82e4"
+  },
+  "checks": {
+    "web": {
+      "command": "npm --prefix apps/web test -- --maxWorkers=1",
+      "filesPassed": 43,
+      "testsPassed": 237,
+      "exitCode": 0,
+      "logSha256": "049c8808ae7909924fff7954d16d0b96772b119b001135c919ddcbe38f230e95"
+    },
+    "focusedApiCore": {
+      "passed": 135,
+      "profilePostgreSQL": 4,
+      "authoredLoadWarmup": 76,
+      "historyOccurrenceCore": 38,
+      "customizedRegisteredTarget": 17
+    },
+    "buildTypeScript": {
+      "passed": true,
+      "isolatedApiRewrite": "http://127.0.0.1:8018"
+    },
+    "lint": {
+      "exitCode": 0,
+      "errors": 0,
+      "warnings": 8
+    },
+    "documentation": {
+      "newActiveLinkFailures": 0,
+      "retainedBaselineFailures": 28
+    },
+    "finalOverviewSourceReview": "No material regressions; source review only",
+    "finalSnapshotFollowup": {
+      "filesPassed": 1,
+      "testsPassed": 4,
+      "exitCode": 0
+    },
+    "initialGlobalCi": {
+      "run": 39879138922,
+      "passed": false,
+      "baselineCoreFailures": 4,
+      "baselineApiFailures": 5,
+      "newWebSnapshotFailure": "fixed; follow-up local tests pass",
+      "newCodeQlTechniquePersistenceAlert": "source narrowed; follow-up analysis pending"
+    }
+  },
+  "finalBrowserOverviewRevision": "895789061a67106461e493bd0453f947e3c33a03"
+}

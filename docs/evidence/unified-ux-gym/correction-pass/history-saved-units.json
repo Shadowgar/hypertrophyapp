@@ -1,0 +1,70 @@
+{
+  "results": [
+    {
+      "unit": "kg",
+      "labels": [
+        {
+          "aria": "Week 1 bodyweight 80 kg",
+          "title": "Week 1: 80 kg"
+        },
+        {
+          "aria": "Week 2 bodyweight 82.5 kg",
+          "title": "Week 2: 82.5 kg"
+        },
+        {
+          "aria": "2026-10-05 strength 80 kg",
+          "title": "2026-10-05: 80 kg"
+        },
+        {
+          "aria": "2026-10-12 strength 90 kg",
+          "title": "2026-10-12: 90 kg"
+        }
+      ]
+    },
+    {
+      "unit": "lb",
+      "labels": [
+        {
+          "aria": "Week 1 bodyweight 176.4 lb",
+          "title": "Week 1: 176.4 lb"
+        },
+        {
+          "aria": "Week 2 bodyweight 181.9 lb",
+          "title": "Week 2: 181.9 lb"
+        },
+        {
+          "aria": "2026-10-05 strength 176.4 lb",
+          "title": "2026-10-05: 176.4 lb"
+        },
+        {
+          "aria": "2026-10-12 strength 198.4 lb",
+          "title": "2026-10-12: 198.4 lb"
+        }
+      ]
+    },
+    {
+      "unit": "kg",
+      "labels": [
+        {
+          "aria": "Week 1 bodyweight 80 kg",
+          "title": "Week 1: 80 kg"
+        },
+        {
+          "aria": "Week 2 bodyweight 82.5 kg",
+          "title": "Week 2: 82.5 kg"
+        },
+        {
+          "aria": "2026-10-05 strength 80 kg",
+          "title": "2026-10-05: 80 kg"
+        },
+        {
+          "aria": "2026-10-12 strength 90 kg",
+          "title": "2026-10-12: 90 kg"
+        }
+      ]
+    }
+  ],
+  "canonicalAnalyticsHashBefore": "1c62000d3bc96c299680eaf2abb6ef5b0c4f80c171cdfaeebfdeee7b6eee8ada",
+  "canonicalAnalyticsHashAfter": "1c62000d3bc96c299680eaf2abb6ef5b0c4f80c171cdfaeebfdeee7b6eee8ada",
+  "preferencesOnlyWrites": true
+}

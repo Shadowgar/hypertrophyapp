@@ -1,5 +1,6 @@
+import {runnerScreen as screen} from "./helpers/runner-driver";
 import React from 'react';
-import {fireEvent,render,screen,waitFor} from '@testing-library/react';
+import {fireEvent,render,screen as nativeScreen,waitFor} from '@testing-library/react';
 import TodayPage from '@/app/today/page';
 
 test('Customized keeps original names and updated correction reasons without legacy swap policy',async()=>{
@@ -20,17 +21,20 @@ test('Customized keeps original names and updated correction reasons without leg
   render(<TodayPage/>);
   fireEvent.click(screen.getByRole('button',{name:/Load today's workout/}));
   fireEvent.click(await screen.findByRole('button',{name:/Original pilot press/}));
-  expect(await screen.findByText('Next comparable exposure: increase to 11 kg.')).toBeInTheDocument();
-  expect(screen.getByRole('button',{name:'Swap'})).toBeDisabled();
+  expect(await screen.findByText('Suggested 24.3 lb')).toBeInTheDocument();
+  expect(screen.queryByRole('button',{name:'Swap'})).not.toBeInTheDocument();
   expect(screen.queryByText(/Primary weak-point slot/)).not.toBeInTheDocument();
   expect(screen.queryByText('Legacy fallback')).not.toBeInTheDocument();
-  expect(screen.getByText('Set 1: 12 reps @ 10 kg · Actual RIR 5')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button',{name:/Recorded sets ·/}));
+  expect(screen.getAllByText('Set 1: 12 reps @ 22 lb · Actual RIR 5').length).toBeGreaterThan(0);
   fireEvent.click(screen.getByRole('button',{name:'Edit set 1'}));
   fireEvent.change(screen.getByRole('spinbutton',{name:'Corrected actual RIR'}),{target:{value:''}});
   fireEvent.change(screen.getByRole('textbox',{name:'Correction reason'}),{target:{value:'Effort unknown'}});
   fireEvent.click(screen.getByRole('button',{name:'Save correction'}));
   await waitFor(()=>expect(writes[0]).toMatchObject({actual_rir:null,weight:10}));
+  fireEvent.click(screen.getByRole('button',{name:'Close Recorded sets'}));
+  fireEvent.click(screen.getByRole('button',{name:'Guide & setup'}));
   expect(await screen.findByText('actual effort unknown or invalid.')).toBeInTheDocument();
-  expect(screen.queryByText('Next comparable exposure: increase to 11 kg.')).not.toBeInTheDocument();
+  expect(screen.queryByText('Suggested 24.3 lb')).not.toBeInTheDocument();
   vi.unstubAllGlobals();
 });

@@ -1,0 +1,49 @@
+{
+  "steps": [
+    "resume confirmed set1",
+    "set2 response lost after server commit",
+    "exact retry",
+    "reload",
+    "set3 network failure before request",
+    "reload pending",
+    "exact retry",
+    "correct set2 reps and actual RPE",
+    "undo set3",
+    "reload",
+    "new command for replacement set3",
+    "History"
+  ],
+  "attempts": [
+    {
+      "command_id": "8123d13f-b014-4cb7-a5f6-0eade7066637",
+      "set_index": 2,
+      "reps": 11,
+      "weight": 18.143694800000002
+    },
+    {
+      "command_id": "8123d13f-b014-4cb7-a5f6-0eade7066637",
+      "set_index": 2,
+      "reps": 11,
+      "weight": 18.143694800000002
+    },
+    {
+      "command_id": "1a7c36ac-a0b7-4450-8939-1d710122fd9e",
+      "set_index": 3,
+      "reps": 10,
+      "weight": 18.143694800000002
+    },
+    {
+      "command_id": "1a7c36ac-a0b7-4450-8939-1d710122fd9e",
+      "set_index": 3,
+      "reps": 10,
+      "weight": 18.143694800000002
+    },
+    {
+      "command_id": "410af70e-6f79-4f57-87d2-9056b9e13145",
+      "set_index": 3,
+      "reps": 10,
+      "weight": 18.143694800000002
+    }
+  ],
+  "errors": []
+}

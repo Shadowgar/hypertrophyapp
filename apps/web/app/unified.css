@@ -1,0 +1,608 @@
+/* One component system; the appearance palette supplies every semantic color. */
+html {
+  --ui-bg-matte: var(--canvas);
+  --ui-surface-1: var(--surface);
+  --ui-surface-2: var(--surface-raised);
+  --ui-foreground: var(--text-primary);
+  --ui-border-subtle: var(--border-subtle);
+  --ui-edge-idle: var(--border-subtle);
+  --ui-edge-hover: var(--border-control);
+  --ui-edge-active: var(--accent-text);
+  --ui-accent-active: var(--surface-selected);
+  --ui-accent-idle: var(--surface-raised);
+  --ui-state-green: var(--success-text);
+  --ui-state-yellow: var(--warning-text);
+  --ui-state-red: var(--error-text);
+}
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--text-primary);
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  line-height: 1.5;
+}
+* {
+  box-sizing: border-box;
+}
+::selection {
+  background: var(--selection-fill);
+  color: var(--selection-text);
+}
+:focus-visible {
+  outline: 3px solid var(--focus) !important;
+  outline-offset: 3px;
+}
+h1,
+h2,
+h3,
+.ui-title-hero,
+.ui-title-page {
+  color: var(--text-primary);
+  font-family: inherit;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+h1,
+.ui-title-page {
+  font-size: 1.65rem;
+  line-height: 1.2;
+}
+h2 {
+  font-size: 1.15rem;
+}
+a {
+  color: inherit;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea,
+.ui-input,
+.ui-select {
+  background: var(--input-fill);
+  color: var(--text-primary);
+  border: 1px solid var(--border-control);
+  border-radius: 10px;
+  min-height: 48px;
+  padding: 0.65rem 0.8rem;
+  max-width: 100%;
+}
+input[type="checkbox"],
+input[type="radio"] {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--action-fill);
+}
+.ux-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ux-card,
+.main-card,
+.glass-layer,
+.material-module {
+  background: var(--surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.ux-muted,
+.ui-meta,
+.telemetry-meta {
+  color: var(--text-secondary);
+}
+.ux-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  border-radius: 12px;
+  border: 1px solid var(--border-control);
+  font-weight: 600;
+  cursor: pointer;
+}
+.ux-button-primary {
+  background: var(--action-fill);
+  color: var(--action-text);
+  border-color: var(--action-fill);
+}
+.ux-button-secondary,
+.ux-button-segment {
+  background: var(--surface);
+  color: var(--text-primary);
+}
+.ux-button-ghost {
+  background: transparent;
+  color: var(--text-primary);
+  border-color: transparent;
+}
+.ux-button-segment[aria-pressed="true"] {
+  background: var(--surface-selected);
+  border-color: var(--accent-text);
+}
+.ux-button:disabled {
+  background: var(--disabled-fill);
+  color: var(--disabled-text);
+  border-color: var(--border-subtle);
+  cursor: default;
+}
+.ux-button:not(:disabled):hover {
+  filter: brightness(1.08);
+}
+.ux-header {
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.ux-brand {
+  font-size: 22px;
+  font-weight: 750;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ux-brand::before {
+  content: "▌▌";
+  color: var(--accent-text);
+  font-size: 24px;
+  letter-spacing: -6px;
+  margin-right: 5px;
+}
+.ux-main {
+  max-width: 1440px;
+  margin: auto;
+  padding: 24px;
+  padding-bottom: 96px;
+  min-width: 0;
+}
+.ux-sidebar {
+  display: none;
+}
+.ux-mobile-nav {
+  position: fixed;
+  z-index: 60;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  background: var(--surface);
+  border-top: 1px solid var(--border-subtle);
+  padding: 8px 8px max(8px, env(safe-area-inset-bottom));
+}
+.ux-mobile-nav a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  font-size: 13px;
+  border-radius: 10px;
+}
+.ux-mobile-nav a[aria-current="page"],
+.ux-sidebar a[aria-current="page"] {
+  background: var(--surface-selected);
+  font-weight: 700;
+}
+.ux-skip {
+  position: fixed;
+  top: -100px;
+  left: 16px;
+  z-index: 100;
+  background: var(--surface);
+  padding: 12px;
+}
+.ux-skip:focus {
+  top: 8px;
+}
+.ux-more {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.ux-more a {
+  padding: 16px;
+  border: 1px solid var(--border-control);
+  border-radius: 12px;
+}
+/* Compatibility surface for pages being moved into the shared layout in the next slice. */
+[class*="text-zinc-1"],
+[class*="text-zinc-2"],
+.text-white,
+.telemetry-value {
+  color: var(--text-primary);
+}
+[class*="text-zinc-3"],
+[class*="text-zinc-4"],
+[class*="text-zinc-5"],
+[class*="text-zinc-6"] {
+  color: var(--text-secondary);
+}
+[class*="bg-zinc-"],
+[class*="bg-black"],
+[class*="bg-amber-950"] {
+  background-color: var(--surface);
+}
+[class*="border-zinc-"],
+[class*="border-white/"] {
+  border-color: var(--border-subtle);
+}
+[class*="text-green-"],
+[class*="text-emerald-"] {
+  color: var(--success-text);
+}
+[class*="text-amber-"],
+[class*="text-yellow-"] {
+  color: var(--warning-text);
+}
+[class*="text-red-"] {
+  color: var(--error-text);
+}
+@media (min-width: 1000px) {
+  .ux-shell-auth {
+    padding-left: 224px;
+  }
+  .ux-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: 224px;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border-right: 1px solid var(--border-subtle);
+    padding: 24px 16px;
+    gap: 10px;
+    z-index: 55;
+  }
+  .ux-sidebar .ux-brand {
+    margin-bottom: 36px;
+  }
+  .ux-sidebar a:not(.ux-brand) {
+    min-height: 48px;
+    padding: 12px 16px;
+    border-radius: 10px;
+  }
+  .ux-mobile-nav {
+    display: none;
+  }
+}
+@media (max-width: 600px) {
+  .ux-main {
+    padding: 16px 16px 96px;
+  }
+  .ux-header {
+    padding: 12px 16px;
+    height: 64px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+.atlas-runner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  max-width: 1300px;
+  margin: auto;
+}
+.atlas-center {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.atlas-name {
+  min-height: 64px;
+  margin: 0;
+  font-size: 26px;
+  line-height: 1.22;
+}
+.atlas-mode {
+  font-size: 12px;
+  font-weight: 750;
+  color: var(--accent-text);
+  text-transform: uppercase;
+}
+.atlas-prescription {
+  height: 80px;
+  padding: 12px 16px;
+  overflow: auto;
+}
+.atlas-prescription p {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+.atlas-suggestion {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.atlas-suggestion p {
+  font-size: 13px;
+}
+.atlas-feedback {
+  height: 76px;
+  flex: none;
+  overflow: auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--status-surface);
+  border: 1px solid var(--border-control);
+  border-radius: 12px;
+}
+.atlas-feedback p {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.atlas-saved strong {
+  color: var(--success-text);
+}
+.atlas-conflict strong,
+.atlas-uncertain strong,
+.atlas-warning {
+  color: var(--warning-text);
+}
+.atlas-error strong {
+  color: var(--error-text);
+}
+.atlas-composer {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.atlas-set-label {
+  height: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.atlas-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.atlas-inputs label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+}
+.atlas-inputs input {
+  height: 58px;
+  width: 100%;
+  font-size: 26px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.atlas-save {
+  height: 52px;
+}
+.atlas-save[aria-disabled="true"] {
+  background: var(--disabled-fill);
+  color: var(--disabled-text);
+  border-color: var(--border-subtle);
+  cursor: default;
+}
+.atlas-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.atlas-switcher {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border-control);
+  border-radius: 14px;
+  height: 50px;
+}
+.atlas-switcher label {
+  min-width: 0;
+  flex: 1;
+}
+.atlas-switcher select {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 13px;
+}
+.atlas-switcher button {
+  min-width: 44px;
+  min-height: 44px;
+  font-size: 28px;
+}
+.atlas-switcher button:disabled {
+  color: var(--disabled-text);
+}
+.atlas-exercises,
+.atlas-evidence {
+  display: none;
+}
+.atlas-sheet {
+  color: var(--text-primary);
+  background: var(--canvas);
+  border: 1px solid var(--border-control);
+  border-radius: 16px;
+  padding: 20px;
+  width: min(640px, calc(100% - 24px));
+  max-height: 88dvh;
+  overflow: auto;
+}
+.atlas-sheet::backdrop {
+  background: #0009;
+}
+.atlas-sheet > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+@media (min-width: 1000px) {
+  .atlas-runner {
+    grid-template-columns: 230px minmax(320px, 1fr) minmax(260px, 0.75fr);
+    align-items: start;
+    gap: 20px;
+  }
+  .atlas-exercises {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--surface);
+    padding: 16px;
+    border-radius: 16px;
+    position: sticky;
+    top: 16px;
+  }
+  .atlas-exercises button:not(.ux-button) {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    text-align: left;
+    min-height: 90px;
+    padding: 14px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+  }
+  .atlas-exercises button[aria-current="step"] {
+    border-color: var(--border-control);
+    background: var(--surface-selected);
+  }
+  .atlas-exercises small {
+    color: var(--text-secondary);
+  }
+  .atlas-evidence {
+    display: block;
+    min-width: 0;
+  }
+  .atlas-switcher {
+    display: none;
+  }
+  .atlas-name {
+    height: 64px;
+  }
+  .atlas-center {
+    gap: 16px;
+  }
+  .atlas-prescription {
+    height: 88px;
+  }
+  .atlas-suggestion {
+    height: 72px;
+  }
+  .atlas-feedback {
+    margin-top: 20px;
+  }
+}
+@media (min-width: 1000px) and (max-width: 1250px) {
+  .atlas-runner {
+    grid-template-columns: 180px minmax(300px, 1fr);
+  }
+  .atlas-evidence {
+    grid-column: 2;
+  }
+}
+@media (max-width: 999px) {
+  .atlas-center {
+    gap: 8px;
+  }
+  .atlas-prescription {
+    height: 68px;
+  }
+  .atlas-feedback {
+    height: 64px;
+  }
+  .atlas-name {
+    max-width: 320px;
+  }
+  .atlas-composer {
+    gap: 12px;
+  }
+  .atlas-suggestion {
+    height: 56px;
+  }
+}
+@media (min-width: 1000px) {
+  .atlas-exercises {
+    max-height: calc(100dvh - 110px);
+    overflow: auto;
+  }
+  .ux-shell-auth > .ux-header > .ux-brand {
+    font-size: 16px;
+  }
+  .ux-shell-auth > .ux-header > .ux-brand::before {
+    display: none;
+  }
+}
+
+@media (min-width: 1000px) {
+  .atlas-mobile-review {
+    display: none;
+  }
+}
+
+/* The overview rest bar must clear both shared navigation layouts. */
+.ux-rest-bar {
+  position: fixed;
+  z-index: 40;
+  bottom: calc(57px + max(8px, env(safe-area-inset-bottom)));
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--surface);
+}
+.ux-rest-bar > span { min-width: 0; overflow-wrap: anywhere; }
+.ux-rest-bar > div { flex-shrink: 0; }
+.ux-main:has(.ux-rest-bar) { padding-bottom: 200px; }
+@media (min-width: 1000px) {
+  .ux-rest-bar { left: 224px; bottom: 0; }
+  .ux-main:has(.ux-rest-bar) { padding-bottom: 120px; }
+}
+
+/* Legacy summary typography participates in the same appearance contract. */
+.telemetry-kicker { color: var(--text-secondary); }
+.telemetry-status { color: var(--text-primary); }
+.status-dot--green { background: var(--success-text); box-shadow: none; }
+.status-dot--yellow { background: var(--warning-text); box-shadow: none; }
+.status-dot--red { background: var(--error-text); box-shadow: none; }
+/* Legacy disclosure hover utilities must use the selected appearance too. */
+[class*="hover:bg-zinc-"]:hover,
+[class*="hover:bg-black"]:hover {
+  background-color: var(--surface-raised);
+  color: var(--text-primary);
+}

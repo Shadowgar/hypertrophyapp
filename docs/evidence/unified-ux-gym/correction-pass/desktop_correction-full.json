@@ -1,0 +1,43 @@
+{
+  "openMs": 30604,
+  "saveMs": 10440,
+  "metrics": {
+    "before": {
+      "scrollY": 0,
+      "positions": [
+        {
+          "clientY": 590,
+          "documentY": 590
+        },
+        {
+          "clientY": 590,
+          "documentY": 590
+        },
+        {
+          "clientY": 720,
+          "documentY": 720
+        }
+      ],
+      "focus": "Working weight (lb)"
+    },
+    "after": {
+      "scrollY": 0,
+      "positions": [
+        {
+          "clientY": 590,
+          "documentY": 590
+        },
+        {
+          "clientY": 590,
+          "documentY": 590
+        },
+        {
+          "clientY": 720,
+          "documentY": 720
+        }
+      ],
+      "focus": "Working weight (lb)"
+    }
+  },
+  "errors": []
+}

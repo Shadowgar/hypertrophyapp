@@ -47,6 +47,22 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive)
 
 
+class UserInterfacePreference(Base):
+    """Presentation only. Missing row preserves the familiar Classic Dark appearance."""
+    __tablename__ = "user_interface_preferences"
+    user_id: Mapped[str] = mapped_column(String, ForeignKey(USER_FK), primary_key=True)
+    theme_family: Mapped[str] = mapped_column(String(16), nullable=False)
+    appearance: Mapped[str] = mapped_column(String(16), nullable=False)
+    weight_unit: Mapped[str] = mapped_column(String(2), nullable=False)
+    revision: Mapped[int] = mapped_column(Integer, nullable=False)
+    __table_args__ = (
+        CheckConstraint("revision > 0", name="ck_ui_preference_revision"),
+        CheckConstraint("theme_family IN ('graphite','charcoal','classic')", name="ck_ui_preference_theme"),
+        CheckConstraint("appearance IN ('light','dark','system')", name="ck_ui_preference_appearance"),
+        CheckConstraint("weight_unit IN ('kg','lb')", name="ck_ui_preference_unit"),
+    )
+
+
 class TrainingEquipmentProfile(Base):
     """Current user-owned inventory; accepted plans and receipts keep prior snapshots."""
     __tablename__ = "customized_equipment_profiles"
