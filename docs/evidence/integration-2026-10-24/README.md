@@ -1,5 +1,8 @@
 # Personal WorkoutApp integration rehearsal — 2026-10-24
 
+> Subsequent bounded follow-up: [final integration unblockers](unblock/README.md).
+> The historical results below retain their original revision and limitations.
+
 **Recommendation: BLOCKED for main integration under the existing release gate.**
 Two unchanged source-fidelity tests require the missing licensed Phase 1 companion
 workbook. Provider security findings remain open. The canonical security qualification is

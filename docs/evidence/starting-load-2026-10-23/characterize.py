@@ -83,7 +83,7 @@ def guidance(headers, session, supplied):
     response = client.post(f"/workout/{session['workout_occurrence_id']}/load-guidance", headers=headers,
         json={"exercise_occurrence_id": session["exercises"][0]["exercise_occurrence_id"],
               "load_context": supplied})
-    assert response.status_code == 200, response.text
+    assert response.status_code == 200, "Synthetic guidance request failed"
     return response.json()
 
 
@@ -93,7 +93,7 @@ def record(headers, session, index, supplied, effort=True):
         "exercise_occurrence_id": session["exercises"][0]["exercise_occurrence_id"],
         "set_index": index, "reps": 11, "weight": 40,
         "rpe": (7.5 if index < 3 else 8.5) if effort else None, "load_context": supplied})
-    assert response.status_code == 200, response.text
+    assert response.status_code == 200, "Synthetic set recording failed"
     return response.json()["id"]
 
 
@@ -142,14 +142,14 @@ for name, supplied in (
     results[name] = observed(result)
 foreign = client.post(f"/workout/{future['workout_occurrence_id']}/load-guidance", headers=headers,
     json={"exercise_occurrence_id": future["exercises"][0]["exercise_occurrence_id"], "load_context": context})
-assert foreign.status_code == 404, foreign.text
+assert foreign.status_code == 404, "Synthetic account-isolation check failed"
 results["foreign_account"] = "404; no cross-account evidence returned"
 
 correction = {"command_id": str(uuid4()), "reps": 11, "weight": 35, "rpe": 7.5,
               "reason": "Synthetic mixed-load characterization"}
 for _ in range(2):
     changed = client.post(f"/workout/set/{receipt_ids[0]}/correct", headers=h2, json=correction)
-    assert changed.status_code == 200, changed.text
+    assert changed.status_code == 200, "Synthetic correction request failed"
 mixed = guidance(h2, future, context)
 assert "mixed_working_loads" in mixed["next_exposure"]["reason_codes"]
 results["after_correction_and_exact_retry"] = observed(mixed)
@@ -160,7 +160,7 @@ with SessionLocal() as db:
 undone = client.post(f"/workout/{prior['workout_occurrence_id']}/undo-last-set", headers=h2,
     json={"command_id": str(uuid4()), "exercise_id": original["id"],
           "exercise_occurrence_id": prior["exercises"][0]["exercise_occurrence_id"]})
-assert undone.status_code == 200, undone.text
+assert undone.status_code == 200, "Synthetic undo request failed"
 after_void = guidance(h2, future, context)
 assert "incomplete_exposure" in after_void["next_exposure"]["reason_codes"]
 results["after_void"] = observed(after_void)
@@ -184,7 +184,5 @@ with SessionLocal() as db:
         assert snapshot.payload["exercises"][0]["authored_prescription"] == original["authored_prescription"]
 results["all_created_frozen_prescriptions_unchanged"] = prescription_digest
 results["history_retention"] = "4 rows retained after one correction replayed twice and one undo; 2 effective"
-print(json.dumps({"application_revision": "b3844398b50a64311f99ccf74411801bbd88225c",
-    "kind": "existing behavior characterization; proposed initial formula NOT implemented",
-    "target": {"host": "127.0.0.1", "port": 55418, "database": "m2a_qualification", "user": "m2a_test"},
-    "cases": results}, indent=2))
+# Keep response evidence in memory for assertions; never print bodies or identifiers.
+print("Synthetic Authored characterization passed; all behavior assertions retained.")

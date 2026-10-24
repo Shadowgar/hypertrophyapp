@@ -1,5 +1,10 @@
 # Starting-load slice: pre-implementation characterization
 
+> 2026-10-24 output-boundary correction: the executable now prints a fixed success
+> line and fixed request-failure messages, retaining every behavior assertion.
+> The observations below are historical and were not regenerated or rewritten.
+> [Bounded correction and qualification](../integration-2026-10-24/unblock/README.md).
+
 This document and its observations describe the earlier review commit, not the
 implemented branch. The owner subsequently approved the amendment at `4041a558`.
 See [implementation qualification](IMPLEMENTATION.md) for new behavior and tests.

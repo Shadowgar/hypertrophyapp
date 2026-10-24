@@ -178,6 +178,9 @@ class ConsolidatedWorkflowTests(unittest.TestCase):
         command = next(step["run"] for step in steps if step.get("name") == "API behavior with explicitly enabled synthetic dev routes")
         self.assertIn("-n 4 --dist=loadfile", command)
         self.assertNotIn("--ignore=tests/test_phase1_full_body_source_fidelity.py", command)
+        self.assertIn("licensed_phase1.py --", command)
+        self.assertEqual(workflow["jobs"]["api-tests"]["environment"], "licensed-phase1-fixture")
+        self.assertFalse(any("upload-artifact" in step.get("uses", "") for step in steps))
 
 
 class ConfigDefaultTests(unittest.TestCase):

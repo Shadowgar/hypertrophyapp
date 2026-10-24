@@ -5,3 +5,5 @@
 **/.pytest_cache
 .git
 infra/backups
+reference
+.qualification
