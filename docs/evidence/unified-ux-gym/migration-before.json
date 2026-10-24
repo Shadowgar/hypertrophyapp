@@ -1,0 +1,82 @@
+{
+  "authored_load_states": {
+    "rows": 27,
+    "sha256": "5bfa91a05f919f6404c850c92771aade48935483505cdabfa59a3eef2cf2a18b"
+  },
+  "body_measurement_entries": {
+    "rows": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "coaching_recommendations": {
+    "rows": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "customized_candidate_commands": {
+    "rows": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "customized_candidate_events": {
+    "rows": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "customized_candidate_heads": {
+    "rows": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "customized_candidate_schema": {
+    "rows": 1,
+    "sha256": "2430f1a2ad2982d0067885488a4c89e21ad1d7c83b115ba8f1b20acc88dfaea8"
+  },
+  "customized_candidate_sessions": {
+    "rows": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "customized_equipment_profiles": {
+    "rows": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "exercise_states": {
+    "rows": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "password_reset_tokens": {
+    "rows": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "soreness_entries": {
+    "rows": 9,
+    "sha256": "814c0991b821851f96a4b2b6d849aa456ccdf08444a21d8eb626afcafacc14f0"
+  },
+  "users": {
+    "rows": 9,
+    "sha256": "0899ff57b48eca324539abe04963061f68553fa7f300786cf04ce670d8532fac"
+  },
+  "weekly_checkins": {
+    "rows": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "weekly_review_cycles": {
+    "rows": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "workout_log_commands": {
+    "rows": 87,
+    "sha256": "cdfc2e08c548cea1e4ccf19c6eed525697505c283484534380489e41e792a3a9"
+  },
+  "workout_occurrences": {
+    "rows": 9,
+    "sha256": "d3392717dbf637f378077da9c36a14299794e92a94338e0e20ece907034a7b73"
+  },
+  "workout_plans": {
+    "rows": 9,
+    "sha256": "3f78609222806302a4c0f3d30c5940ed158be0b6608ad320f6f46d7e24ff7662"
+  },
+  "workout_session_states": {
+    "rows": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "workout_set_logs": {
+    "rows": 83,
+    "sha256": "3f89c13904736c8c0b261d8bcb6d482af7151481e1e7d077bdf2c2f7a8c8d30d"
+  }
+}

@@ -26,8 +26,8 @@ test("Settings displays the effective program while saving stored preferences", 
   let saved: Record<string, unknown> | undefined;
   vi.mocked(globalThis.fetch).mockImplementation(async (input, init) => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
-    if (url.endsWith("/profile")) {
-      if (init?.method === "POST") saved = JSON.parse(String(init.body));
+    if (url.endsWith("/profile") || url.endsWith("/profile/equipment")) {
+      if (init?.method === "PATCH") saved = JSON.parse(String(init.body));
       return Response.json(profile);
     }
     return Response.json({ detail: "Unavailable synthetic optional capability" }, { status: 403 });
@@ -36,7 +36,7 @@ test("Settings displays the effective program while saving stored preferences", 
   await screen.findByText("Full Body Phase 2");
   fireEvent.change(screen.getByLabelText("Training location"), { target: { value: "home" } });
   fireEvent.click(screen.getByRole("button", { name: /Save training settings/i }));
-  await waitFor(() => expect(saved).toMatchObject({ days_available: 5, selected_program_id: null, program_selection_mode: "auto", training_location: "home" }));
+  await waitFor(() => expect(saved).toEqual({ equipment_profile: ["dumbbell"], training_location: "home" }));
   expect(saved).not.toHaveProperty("effective_days_available");
   expect(saved).not.toHaveProperty("effective_program_id");
 });

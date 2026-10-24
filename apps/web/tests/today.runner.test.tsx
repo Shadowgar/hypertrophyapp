@@ -1,5 +1,6 @@
+import {runnerScreen as screen} from "./helpers/runner-driver";
 import React from "react";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen as nativeScreen, waitFor, fireEvent } from "@testing-library/react";
 import TodayPage from "@/app/today/page";
 
 beforeEach(() => {
@@ -85,7 +86,7 @@ test("Today page loads workout and shows exercises", async () => {
   expect(screen.getByRole("button", { name: /Bayesian Curl/i })).toBeInTheDocument();
   expect(screen.getByText(/8-12 reps/)).toBeInTheDocument();
   // Row shows derived working weight; without baseline or prior sets this falls back to recommended weight.
-  expect(screen.getByText(/~38\.6 lb/)).toBeInTheDocument();
+  expect(screen.getByText("Record actual load")).toBeInTheDocument();
 
   // No detail overlay when no exercise is selected
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -134,9 +135,9 @@ test("Today page opens detail overlay on row tap and closes on back", async () =
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: /Bayesian Curl/ }));
   await waitFor(() => expect(screen.getByRole("dialog")).toBeInTheDocument());
-  expect(document.body.dataset.todayOverlayOpen).toBe("true");
+  expect(document.body.dataset.todayOverlayOpen).toBeUndefined();
   expect(screen.getByRole("button", { name: /Back to list/i })).toBeInTheDocument();
-  expect(screen.getByRole("link", { name: /Check-In/i })).toBeInTheDocument();
+  expect(screen.getByRole("navigation", { name: "Exercise navigation" })).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole("button", { name: /Back to list/i }));
   await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());

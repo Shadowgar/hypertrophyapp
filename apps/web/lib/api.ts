@@ -1,3 +1,4 @@
+export type InterfacePreferences = {theme_family: "graphite" | "charcoal" | "classic"; appearance: "light" | "dark" | "system"; weight_unit: "kg" | "lb"; revision: number};
 import type {InventoryDocument,InventoryVariant,LocationProfile} from "./customized-inventory";
 import { API_BASE_URL } from "@/lib/env";
 const AUTH_TOKEN_KEY = "hypertrophy_token";
@@ -33,8 +34,8 @@ export function declaredLoadContext(context: LoadContext): LoadContext {
 export type LoadDecision = {
   id: string;
   evidence_revision: string;
-  scope: "next_exposure" | "remaining_sets";
-  action: "increase" | "hold" | "decrease" | "monitor";
+  scope: "next_exposure" | "remaining_sets" | "initial_calibration";
+  action: "increase" | "hold" | "decrease" | "monitor" | "estimate";
   recommended_weight: number | null;
   known_baseline_weight: number | null;
   prefill_available: boolean;
@@ -43,7 +44,7 @@ export type LoadDecision = {
   evidence: { completed_exposure_count: number; comparable_completed_exposure_count: number;
     consecutive_underperformance_count: number; actual_rpe_count: number; required_working_set_count: number;
     actual_rpe_sufficient: boolean; effective_set_ids: string[]; exposure_ids?: Array<{ workout_occurrence_id: string; exercise_occurrence_id: string }> };
-  equipment_feasibility: { status: "declared_increment" | "compatibility_increment_unverified" | "unknown";
+  equipment_feasibility: { status: "declared_increment" | "declared_inventory" | "compatibility_increment_unverified" | "unknown";
     increment?: number | null; increment_unit?: string | null; limitations: string[] };
   decision_trace: Record<string, unknown>;
 };
@@ -67,7 +68,19 @@ export type AuthoredWarmupGuidance = {
   equipment_feasibility: Record<string, unknown>;
   decision_trace: Record<string, unknown>;
 };
+export type AuthoredCalibrationInput = {
+  method: "known_1rm" | "recent_set"; load: number; unit: "lb" | "kg";
+  observed_date: string; reps?: number; rir?: number; confirmed: boolean;
+  variant_id: string; setup_details: string;
+  attainable: { unit: "lb" | "kg"; values: number[] } | { unit: "lb" | "kg"; min: number; step: number; max: number };
+};
+export type InitialCalibrationCommand = {
+  command_id: string; exercise_occurrence_id: string; load_context: LoadContext;
+  calibration: AuthoredCalibrationInput;
+};
 export type LoadIntelligence = {
+  initial_estimate?: (LoadDecision & {status: "provisional" | "unavailable"; reported_1rm?: number | null; estimated_1rm?: number | null}) | null;
+  calibration?: {id: string; revision: number; requires_confirmation: boolean; input: AuthoredCalibrationInput; load_context: LoadContext} | null;
   next_exposure: LoadDecision; remaining_sets: LoadDecision | null;
   load_context: LoadContext; effective_sets: EffectiveLoadSet[];
   warmup_guidance?: AuthoredWarmupGuidance | null;
@@ -823,6 +836,7 @@ export type HistoryCalendarResponse = {
 };
 
 export type HistoryDaySet = {
+  id?: string; set_kind?: string|null; parent_set_index?: number|null; supersedes_id?: string|null; actual_rir?: number|null;
   original_authored_name?: string | null;
   workout_occurrence_id?: string | null;
   exercise_occurrence_id?: string | null;
@@ -1020,7 +1034,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (!res.ok) {
-    if (res.status === 401 && token) {
+    if (res.status === 401 && token && getToken() === token) {
       clearAuthToken();
     }
     const text = await res.text();
@@ -1092,6 +1106,9 @@ export const api = {
     method: "POST", body: JSON.stringify(payload),
   }),
   getProfile: () => request<Profile>("/profile"),
+  updateEquipment: (payload: {training_location: "home" | "gym"; equipment_profile: string[]}) => request<Profile>("/profile/equipment", {method: "PATCH", body: JSON.stringify(payload)}),
+  getInterfacePreferences: () => request<InterfacePreferences>("/profile/preferences"),
+  saveInterfacePreferences: (payload: Omit<InterfacePreferences, "revision"> & {expected_revision: number}) => request<InterfacePreferences>("/profile/preferences", {method:"PUT", body:JSON.stringify(payload)}),
   listPrograms: () => request<ProgramTemplateOption[]>("/plan/programs"),
   listGuidePrograms: () => request<GuideProgram[]>("/plan/guides/programs"),
   getProgramGuide: (programId: string) =>
@@ -1243,6 +1260,10 @@ export const api = {
     request<{ status: string; load_intelligence?: LoadIntelligence | null; live_recommendation?: WorkoutLiveRecommendation | null; exercise_state?: { current_working_weight: number } | null }>(`/workout/${encodeURIComponent(workoutId)}/undo-last-set`, {
       method: "POST",
       body: JSON.stringify({ exercise_id: exerciseId, exercise_occurrence_id: exerciseOccurrenceId, command_id: commandId }),
+    }),
+  saveInitialCalibration: (workoutId: string, payload: InitialCalibrationCommand) =>
+    request<LoadIntelligence>(`/workout/${encodeURIComponent(workoutId)}/initial-calibration`, {
+      method: "POST", body: JSON.stringify({ ...payload, load_context: declaredLoadContext(payload.load_context) }),
     }),
   previewLoadGuidance: (workoutId: string, exerciseOccurrenceId: string, loadContext: LoadContext) =>
     request<LoadIntelligence>(`/workout/${encodeURIComponent(workoutId)}/load-guidance`, {

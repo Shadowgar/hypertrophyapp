@@ -1,0 +1,40 @@
+[
+  {
+    "viewport": "390x844",
+    "finalSyntheticSetUndoneViaAPIAndResavedThroughUI": true,
+    "realCompletionPercent": 100,
+    "bar": {
+      "x": 0,
+      "y": 706,
+      "width": 390,
+      "height": 73
+    },
+    "nav": {
+      "x": 0,
+      "y": 779,
+      "width": 390,
+      "height": 65
+    },
+    "overlap": false,
+    "errors": []
+  },
+  {
+    "viewport": "1440x1000",
+    "finalSyntheticSetUndoneViaAPIAndResavedThroughUI": true,
+    "realCompletionPercent": 100,
+    "bar": {
+      "x": 224,
+      "y": 927,
+      "width": 1216,
+      "height": 73
+    },
+    "nav": {
+      "x": 0,
+      "y": 0,
+      "width": 224,
+      "height": 1000
+    },
+    "overlap": false,
+    "errors": []
+  }
+]

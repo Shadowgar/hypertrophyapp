@@ -1,0 +1,92 @@
+{
+  "target": "verified disposable loopback PostgreSQL m2a_qualification",
+  "base": "pre-existing metadata-created synthetic fixture schema (no Alembic stamp)",
+  "head": "0026_initial_calibration",
+  "preserved": {
+    "authored_load_states": {
+      "count": 46,
+      "sha256": "5f294afedcc91f3d46c7709dd885c6d25790765914f31569c3afc08bd237bd69"
+    },
+    "body_measurement_entries": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "coaching_recommendations": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "customized_candidate_commands": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "customized_candidate_events": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "customized_candidate_heads": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "customized_candidate_schema": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "customized_candidate_sessions": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "customized_equipment_profiles": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "exercise_states": {
+      "count": 2,
+      "sha256": "51fbc1feb8c8be9d41a0406e9855555d010a166f2b2aa8f6e5191a8243b2ad9e"
+    },
+    "password_reset_tokens": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "soreness_entries": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "user_interface_preferences": {
+      "count": 1,
+      "sha256": "3fc90c043e7b44dea2126a34739efc960857ab9cf7edbe15c584a7054d96daf4"
+    },
+    "users": {
+      "count": 51,
+      "sha256": "6579f07e2dadd752142334def7bfde2ea4741bb9f9ead03d971cc5369b16a446"
+    },
+    "weekly_checkins": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "weekly_review_cycles": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "workout_log_commands": {
+      "count": 135,
+      "sha256": "e85005369cefdbc349f02789207be986cf79f9dcec20ec016134c232ee921bcb"
+    },
+    "workout_occurrences": {
+      "count": 54,
+      "sha256": "fd65b2bc1805ab6d3f265849fa97673d64ab95f96f14ee6ae4c53e7ac94e5ad8"
+    },
+    "workout_plans": {
+      "count": 68,
+      "sha256": "b73c866d5efdec578faaf18c8f0e6bc92b49d193c3879fa226aed0b4dbfc2ac3"
+    },
+    "workout_session_states": {
+      "count": 1,
+      "sha256": "e5299e88b3b4c797494e0e12dcd9677ea0ee96c30399648eca3cbe8ee67590a4"
+    },
+    "workout_set_logs": {
+      "count": 129,
+      "sha256": "05ba1ebbb13cd723fb4f37e2057a5916a57ed78ed7f43477a55e14faf86f0955"
+    }
+  },
+  "new_calibration_rows": 0
+}

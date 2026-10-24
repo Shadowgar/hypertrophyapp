@@ -81,6 +81,8 @@ jobs:
 
   api-tests:
     needs: changes
+    # Owner-reviewed private fixture access; no deployment is performed.
+    environment: licensed-phase1-fixture
     if: needs.changes.outputs.api == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -124,10 +126,17 @@ jobs:
         working-directory: apps/api
         env:
           ALLOW_DEV_WIPE_ENDPOINTS: 'true'
+          PHASE1_SOURCE_B64_1: ${{ secrets.PHASE1_SOURCE_B64_1 }}
+          PHASE1_SOURCE_B64_2: ${{ secrets.PHASE1_SOURCE_B64_2 }}
+          PHASE1_SOURCE_B64_3: ${{ secrets.PHASE1_SOURCE_B64_3 }}
         # The default assertion runs outside pytest above to avoid conftest's
         # dev-flag setup; its equivalent assertion remains mandatory.
         # Missing licensed source fixtures remain failures, not synthetic passes.
-        run: PYTHONPATH=. python -m pytest -q -n 4 --dist=loadfile --ignore=tests/test_config_defaults.py
+        run: PYTHONPATH=. python ../../scripts/ci/licensed_phase1.py -- -q -n 4 --dist=loadfile --ignore=tests/test_config_defaults.py
+
+      - name: Remove runner-only private fixture after interruption
+        if: always()
+        run: rm -f -- "reference/Pure Bodybuilding Phase 1 - Full Body Sheet.xlsx"
 
   core-tests:
     needs: changes

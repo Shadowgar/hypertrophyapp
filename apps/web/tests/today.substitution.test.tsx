@@ -1,5 +1,6 @@
+import {runnerScreen as screen} from "./helpers/runner-driver";
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen as nativeScreen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 import TodayPage from "@/app/today/page";
 
@@ -72,6 +73,7 @@ test("substitution modal applies choice, keeps notes visible, and persists selec
   fireEvent.click(screen.getByRole("button", { name: /Bench Press/ }));
   await waitFor(() => expect(screen.getByRole("dialog")).toBeInTheDocument());
 
+  fireEvent.click(screen.getByRole("button", { name: "Guide & setup" }));
   fireEvent.click(screen.getByRole("button", { name: /Swap/i }));
   await waitFor(() => expect(screen.getByText(/Choose a substitute/i)).toBeInTheDocument());
 
@@ -79,12 +81,12 @@ test("substitution modal applies choice, keeps notes visible, and persists selec
 
   await waitFor(() => expect(screen.getAllByText(/^Push-Up$/i).length).toBeGreaterThan(0));
 
-  fireEvent.click(screen.getByRole("button", { name: /Notes/i }));
+  fireEvent.click(screen.getByRole("button", { name: "Guide & setup" }));
   await waitFor(() => {
     expect(screen.getAllByText(/Keep elbows tucked/i).length).toBeGreaterThanOrEqual(1);
   });
 
-  const key = `hypertrophy_occurrence_v2:swaps:${workout.session_id}`;
+  const key = Object.keys(localStorage).find(key=>key.includes(":swaps:"))!;
   const saved = JSON.parse(localStorage.getItem(key) || "{}");
   expect(saved["ex-1"]).toBe(1);
 });

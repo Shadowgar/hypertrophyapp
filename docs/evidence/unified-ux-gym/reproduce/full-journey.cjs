@@ -1,0 +1,23 @@
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+const fs=require('fs'),assert=require('assert');
+const root=process.env.UX_OUTPUT_DIR || __dirname;const fixtures=JSON.parse(fs.readFileSync(root+'/fixtures.json'));
+(async()=>{const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_EXECUTABLE || undefined,args:['--no-sandbox']});
+try {
+const label=process.argv[2]||'mobile_final';const page=await browser.newPage({viewport:label.startsWith('desktop')?{width:1440,height:1000}:{width:390,height:844}});page.setDefaultTimeout(60000);
+const errors=[],commands=[];page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>{if(r.url().includes('/log-set')){commands.push(JSON.parse(r.postData()));console.log('request',r.postData());}});page.on('response',async r=>{if(r.url().includes('/log-set'))console.log('reply',r.status(),(await r.text()).slice(0,180));});
+await page.goto('http://127.0.0.1:3018/login');await page.evaluate(t=>localStorage.setItem('hypertrophy_token',t),fixtures[label].token);
+const open=Date.now();await page.goto('http://127.0.0.1:3018/today');await page.getByRole('button',{name:/Cross-Body Lat Pull-Around/}).first().click();await page.getByRole('spinbutton',{name:'Working weight (lb)'}).waitFor();const openMs=Date.now()-open;
+await page.getByRole('button',{name:/^Warm-up ·/}).click();
+const warm=page.getByRole('dialog',{name:'Warm-up',exact:true});
+await warm.getByRole('spinbutton',{name:'Warm-up 1 load (lb)'}).fill('20');await warm.getByRole('spinbutton',{name:'Warm-up 1 reps'}).fill('8');await warm.getByRole('button',{name:'Log warm-up 1'}).click();await warm.getByRole('button',{name:'Log warm-up 1'}).waitFor({state:'hidden'});
+await page.screenshot({path:root+`/${label}-warmup.png`});
+await page.getByRole('button',{name:'Close Warm-up'}).click();
+await page.getByRole('spinbutton',{name:'Working weight (lb)'}).fill('40');await page.getByRole('spinbutton',{name:'Working repetitions'}).fill('12');
+await page.getByRole('button',{name:/Effort: not recorded/}).click();await page.getByRole('spinbutton',{name:/Actual RPE/}).fill('8');await page.getByRole('button',{name:'Done',exact:true}).click();
+const save=page.getByRole('button',{name:'Save set 1',exact:true});await save.scrollIntoViewIfNeeded();await page.getByRole('spinbutton',{name:'Working weight (lb)'}).focus();
+await page.evaluate(()=>{window.measure=()=>{const names=['Working weight (lb)','Working repetitions'];const nodes=names.map(n=>document.querySelector(`[aria-label="${n}"]`));nodes.push(document.querySelector('.atlas-save'));return {scrollY:scrollY,positions:nodes.map(el=>({clientY:el.getBoundingClientRect().y,documentY:el.getBoundingClientRect().y+scrollY})),focus:document.activeElement?.getAttribute('aria-label')};};document.querySelector('.atlas-save').addEventListener('pointerdown',()=>window.pointerBefore=window.measure(),{once:true});});
+await page.screenshot({path:root+`/${label}-before-save.png`});const t=Date.now();await save.click();
+await page.getByText('✓ Set 1 saved',{exact:true}).waitFor();const saveMs=Date.now()-t;const metrics=await page.evaluate(()=>({before:window.pointerBefore,after:window.measure()}));
+await page.screenshot({path:root+`/${label}-after-save.png`});
+fs.writeFileSync(root+`/${label}-full.json`,JSON.stringify({openMs,saveMs,metrics,errors},null,2));console.log('metrics',JSON.stringify({openMs,saveMs,metrics,errors}));
+}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1});

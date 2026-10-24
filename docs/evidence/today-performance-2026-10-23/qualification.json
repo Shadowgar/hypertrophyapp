@@ -1,0 +1,73 @@
+{
+  "application_revision": "912e7e928960069316e81f01a1df08001b0f2a53",
+  "focused_backend": {
+    "scope": "Today/resume backend response-local projection reuse",
+    "base": "c656988c2133e5a655c83a9ba87c5f6c47c9308e",
+    "database": "verified disposable m2a_qualification",
+    "identity_verified_before_app_import": true,
+    "required_schema_tables_verified": true,
+    "suites": [
+      "test_authored_history_snapshot.py",
+      "test_authored_initial_calibration.py",
+      "test_authored_load_intelligence.py",
+      "test_authored_warmup_guidance.py"
+    ],
+    "postgresql_result": {
+      "passed": 172,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 121.46,
+      "warnings": 113
+    },
+    "sqlite_initial_result": {
+      "passed": 92,
+      "failed": 0,
+      "skipped": 2,
+      "seconds": 83.5
+    },
+    "red_regressions": {
+      "calibration_queries_per_three_exercise_response": 6,
+      "source_scope_calls_24_groups_six_exercises": 288,
+      "warmup_protocol_loads_three_exercise_response": 3
+    },
+    "green_budgets": {
+      "calibration_queries_per_response": 1,
+      "source_scope_calls_24_groups_six_exercises_max": 30,
+      "warmup_protocol_loads_per_actual_program_per_response": 1
+    },
+    "full_projection_reference": "apps/api/tests/authored_calibration_baseline.py frozen c656988 projection traversal",
+    "warnings": "Existing Starlette TestClient httpx deprecation and observability datetime.utcnow deprecation",
+    "runtime_files": [
+      "apps/api/app/workout_initial_calibration.py",
+      "apps/api/app/workout_load_state.py"
+    ],
+    "source_stable": true,
+    "no_tests_running": true
+  },
+  "application_ci": {
+    "head": "912e7e928960069316e81f01a1df08001b0f2a53",
+    "run": 40010366351,
+    "api_job": 120608950118,
+    "api_summary": [
+      "5 failed, 952 passed, 120 skipped, 1319 warnings in 543.17s (0:09:03)"
+    ],
+    "failures": [
+      "tests/test_authored_generated_path_regression.py::test_today_total_sets_matches_progress_planned_total[pure_bodybuilding_phase_1_full_body-30]",
+      "tests/test_authored_generated_path_regression.py::test_today_total_sets_matches_progress_planned_total[pure_bodybuilding_phase_2_full_body-23]",
+      "tests/test_phase1_full_body_source_fidelity.py::test_phase1_full_body_onboarding_matches_companion_workbook_table_exactly",
+      "tests/test_phase1_full_body_source_fidelity.py::test_phase1_full_body_source_paths_point_to_real_companion_workbook",
+      "tests/test_weekly_review.py::test_generate_week_uses_saved_weekly_review_adjustments"
+    ],
+    "base_failure_names_match": true,
+    "web_job": 120608950208,
+    "web_summary": [
+      "Test Files  49 passed (49)",
+      "Tests  313 passed (313)"
+    ],
+    "web_lint_typecheck_build": "passed",
+    "core": "Not selected; prior PR111 859 passed / 4 failures is historical evidence only, no new core coverage",
+    "verification": "Read-only completed GitHub job logs; no local tests/builds"
+  },
+  "ci_url": "https://github.com/Shadowgar/hypertrophyapp/actions/runs/40010366351",
+  "status": "Overall workflow failed; inherited failures unresolved; not a waiver"
+}

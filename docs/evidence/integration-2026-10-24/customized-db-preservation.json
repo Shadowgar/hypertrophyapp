@@ -1,0 +1,66 @@
+{
+  "application_revision": "912e7e928960069316e81f01a1df08001b0f2a53",
+  "stored_receipts": 3,
+  "effective_receipts": 1,
+  "unique_log_commands": 2,
+  "unique_history_commands": 2,
+  "total_retained_commands": 4,
+  "original_set_actuals_retained": true,
+  "correction_appended_once": true,
+  "second_set_undo_retained_record": true,
+  "canonical_weight_kg": 13.6077711,
+  "performed_snapshot_exactly_matches_identified_accepted_plan": true,
+  "effective_first_set_repetitions": 9,
+  "command_ledger": [
+    {
+      "command_id": "9ab1bb04-ff53-4d9a-96e7-e0c110649428",
+      "operation": "log_set"
+    },
+    {
+      "command_id": "39fbdf61-b1a1-428c-8e9e-0a360054bfe5",
+      "operation": "log_set"
+    },
+    {
+      "command_id": "7df2d1d1-20f1-4284-98ef-c633576a97d7",
+      "operation": "correct"
+    },
+    {
+      "command_id": "d74c401b-d2c4-487a-b35c-eaf43a091379",
+      "operation": "undo"
+    }
+  ],
+  "retained_receipt_lineage": [
+    {
+      "id": "457485ba-add4-403a-b8e9-9ae6fc505ee5",
+      "command_id": "9ab1bb04-ff53-4d9a-96e7-e0c110649428",
+      "set_index": 1,
+      "reps": 8,
+      "weight_kg": 13.6077711,
+      "voided": true,
+      "void_source": "user_correction",
+      "supersedes_id": null
+    },
+    {
+      "id": "782cc047-39cb-4e98-b8f1-21356926dbc9",
+      "command_id": "7df2d1d1-20f1-4284-98ef-c633576a97d7",
+      "set_index": 1,
+      "reps": 9,
+      "weight_kg": 13.6077711,
+      "voided": false,
+      "void_source": null,
+      "supersedes_id": "457485ba-add4-403a-b8e9-9ae6fc505ee5"
+    },
+    {
+      "id": "187b5aeb-008d-48db-8d74-6fc5083324f9",
+      "command_id": "39fbdf61-b1a1-428c-8e9e-0a360054bfe5",
+      "set_index": 2,
+      "reps": 8,
+      "weight_kg": 13.6077711,
+      "voided": true,
+      "void_source": "user_undo",
+      "supersedes_id": null
+    }
+  ],
+  "qualification_source": "188a45d68eb06b66b655ffeac251cb2453cd02a5",
+  "runtime_unchanged_from_pr112": true
+}

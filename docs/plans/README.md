@@ -4,6 +4,7 @@ One forward roadmap: [M0–M6 milestones](../roadmap/milestones.md). A plan desc
 
 | Plan | Scope / milestone | Current status / authorization |
 |---|---|---|
+| [Unified UX first implementation](unified-ux-gym.md) | Account protection, shared appearance and gym execution. | Implemented in PR #110; isolated integration qualification with #111/#112 in progress. No main merge, deployment or production migration. |
 | [Documentation integration baseline](M0-baseline.md) | M0-DOC only: authority, inventory, context, audit references and static checks. | Completed documentation work / owner-reviewed; repository integration pending. No whole-M0 release accepted. |
 | [Urgent account recovery](urgent-account-recovery.md) | M0-SEC S1 credential/config closure, S2 lifecycle. | **Proposed**; not approved for implementation/deployment. Security work need not wait for broad history redesign. |
 | [Generated stabilization](generated-stabilization.md) | M4 bounded ownership/normalization/originality consolidation. | **Proposed**; no runtime execution authorized. |
@@ -32,3 +33,18 @@ One forward roadmap: [M0–M6 milestones](../roadmap/milestones.md). A plan desc
 | Completed / owner accepted | Explicit owner acceptance of this bounded scope/evidence and remaining deviations. |
 
 Additional M0-HIST packages, M0-SAFE, M0-CI, remaining M1 slices and M2A/M2B implementation detail awaits bounded plans; the roadmap contains their dependencies and gates. Historical task scripts cannot select approved work from old checklists. [Retained tasks](../audits/2026-09-28-legacy-task-register.md) remain pending reconciliation and do not authorize implementation.
+
+## 2026-10-21 first-party vision is not a bounded implementation plan
+
+The owner approved [PERS-001–PERS-020 supplemental outcomes](../requirements/personal-workoutapp-2026-10-21.md) and their [placement within M0–M6](../roadmap/personal-capability-crosswalk-2026-10-21.md). This does **not** register a new executable plan or authorize the import/HealthKit, coaching, redesign or personal-response implementations. The [next coder handoff](../operations/next-coder-handoff-2026-10-21.md) is for **read-only discovery and a proposed bounded gym-UX implementation package**. Register specific future plans here only after their scope, dependencies, tests and authorization have been reviewed; deployment approval remains separate.
+
+## Subsequent bounded authorizations — 2026-10-24 integration rehearsal
+
+The 2026-10-21 vision/handoff text above records its original permission boundary.
+The owner subsequently approved PR #108 at `33598c3` and explicitly authorized
+#110 implementation, #111's provisional initial-load amendment and #112's
+Today work. The current [integration plan/evidence](../evidence/integration-2026-10-24/PLAN.md)
+is limited to combining #109 → #110 → #111 → #112, contract-established inherited
+CI repairs and synthetic qualification. The vision itself remains outcomes only;
+Home/onboarding and later layouts are the approved next stream after readiness,
+not part of this rehearsal. No additional roadmap or release acceptance is created.

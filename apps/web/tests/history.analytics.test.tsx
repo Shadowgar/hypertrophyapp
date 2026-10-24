@@ -113,7 +113,7 @@ test("history page renders analytics dashboard payload", async () => {
   await waitFor(() => expect(screen.getByText(/90% recent average/i)).toBeInTheDocument());
   expect(screen.getByText(/High-Readiness Streak/i)).toBeInTheDocument();
   expect(screen.getAllByText(/bench/i).length).toBeGreaterThan(0);
-  expect(screen.getAllByText(/\+22 lbs/i).length).toBeGreaterThan(0);
+  expect(screen.getAllByText(/\+22 lb/i).length).toBeGreaterThan(0);
   expect(screen.getByText(/Volume Heat Map/i)).toBeInTheDocument();
   expect(screen.getByText(/Coaching Decision Timeline/i)).toBeInTheDocument();
   expect(screen.queryByText(/Progression is compounding\./i)).not.toBeInTheDocument();

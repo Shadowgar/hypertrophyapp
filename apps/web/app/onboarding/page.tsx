@@ -833,19 +833,10 @@ export default function OnboardingPage() {
       return null;
     }
 
-    const loginRes = await fetch(`${API_BASE_URL}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: normalizedEmail, password }),
-    });
-    if (!loginRes.ok) {
-      const loginError = await parseApiError(loginRes, "Login failed");
-      setStatus(`Registration/login failed: ${registerError}; ${loginError}. Use Wipe Test User By Email or password reset.`);
-      setPhase("account");
-      return null;
-    }
-    const token = (await loginRes.json()) as { access_token: string };
-    return token.access_token;
+    setStatus("An account already exists. Sign in to keep your existing training settings.");
+    setAuthMode("login");
+    setPhase("account");
+    return null;
   }
 
   async function saveOnboardingProfile(accessToken: string, resolvedName: string): Promise<boolean> {
@@ -938,6 +929,11 @@ export default function OnboardingPage() {
       }
 
       setAuthToken(accessToken);
+      // Authentication is not consent to replace an existing training profile.
+      if (authMode === "login") {
+        router.push("/today");
+        return;
+      }
 
       const profileSaved = await saveOnboardingProfile(accessToken, resolvedName);
       if (!profileSaved) {

@@ -1,0 +1,482 @@
+[
+  {
+    "block": 1,
+    "source": "base",
+    "scenario": "customized-large-unstarted",
+    "trial": 0,
+    "warmup_excluded": true,
+    "ms": 321.29221699142363,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 1,
+    "source": "base",
+    "scenario": "customized-large-unstarted",
+    "trial": 1,
+    "warmup_excluded": false,
+    "ms": 298.985087996698,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 1,
+    "source": "base",
+    "scenario": "customized-large-unstarted",
+    "trial": 2,
+    "warmup_excluded": false,
+    "ms": 242.9691410070518,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 1,
+    "source": "base",
+    "scenario": "customized-large-unstarted",
+    "trial": 3,
+    "warmup_excluded": false,
+    "ms": 204.52156900137197,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 1,
+    "source": "base",
+    "scenario": "customized-large-unstarted",
+    "trial": 4,
+    "warmup_excluded": false,
+    "ms": 301.5074390132213,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 1,
+    "source": "base",
+    "scenario": "customized-large-unstarted",
+    "trial": 5,
+    "warmup_excluded": false,
+    "ms": 244.97593399428297,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 1,
+    "source": "base",
+    "scenario": "customized-large-inprogress",
+    "trial": 0,
+    "warmup_excluded": true,
+    "ms": 253.59328799822833,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 1,
+    "source": "base",
+    "scenario": "customized-large-inprogress",
+    "trial": 1,
+    "warmup_excluded": false,
+    "ms": 340.9156859997893,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 1,
+    "source": "base",
+    "scenario": "customized-large-inprogress",
+    "trial": 2,
+    "warmup_excluded": false,
+    "ms": 234.20773301040754,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 1,
+    "source": "base",
+    "scenario": "customized-large-inprogress",
+    "trial": 3,
+    "warmup_excluded": false,
+    "ms": 229.23555300803855,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 1,
+    "source": "base",
+    "scenario": "customized-large-inprogress",
+    "trial": 4,
+    "warmup_excluded": false,
+    "ms": 361.5166419913294,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 1,
+    "source": "base",
+    "scenario": "customized-large-inprogress",
+    "trial": 5,
+    "warmup_excluded": false,
+    "ms": 275.33595499699004,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 2,
+    "source": "candidate",
+    "scenario": "customized-large-unstarted",
+    "trial": 0,
+    "warmup_excluded": true,
+    "ms": 333.46025900391396,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 2,
+    "source": "candidate",
+    "scenario": "customized-large-unstarted",
+    "trial": 1,
+    "warmup_excluded": false,
+    "ms": 356.4667840109905,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 2,
+    "source": "candidate",
+    "scenario": "customized-large-unstarted",
+    "trial": 2,
+    "warmup_excluded": false,
+    "ms": 213.32606399664655,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 2,
+    "source": "candidate",
+    "scenario": "customized-large-unstarted",
+    "trial": 3,
+    "warmup_excluded": false,
+    "ms": 206.2095900037093,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 2,
+    "source": "candidate",
+    "scenario": "customized-large-unstarted",
+    "trial": 4,
+    "warmup_excluded": false,
+    "ms": 307.29688199062366,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 2,
+    "source": "candidate",
+    "scenario": "customized-large-unstarted",
+    "trial": 5,
+    "warmup_excluded": false,
+    "ms": 291.65433200250845,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 2,
+    "source": "candidate",
+    "scenario": "customized-large-inprogress",
+    "trial": 0,
+    "warmup_excluded": true,
+    "ms": 229.69834299874492,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 2,
+    "source": "candidate",
+    "scenario": "customized-large-inprogress",
+    "trial": 1,
+    "warmup_excluded": false,
+    "ms": 328.49919400177896,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 2,
+    "source": "candidate",
+    "scenario": "customized-large-inprogress",
+    "trial": 2,
+    "warmup_excluded": false,
+    "ms": 225.48805600672495,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 2,
+    "source": "candidate",
+    "scenario": "customized-large-inprogress",
+    "trial": 3,
+    "warmup_excluded": false,
+    "ms": 239.73374400520697,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 2,
+    "source": "candidate",
+    "scenario": "customized-large-inprogress",
+    "trial": 4,
+    "warmup_excluded": false,
+    "ms": 371.6026540059829,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 2,
+    "source": "candidate",
+    "scenario": "customized-large-inprogress",
+    "trial": 5,
+    "warmup_excluded": false,
+    "ms": 257.96657300088555,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 3,
+    "source": "candidate",
+    "scenario": "customized-large-unstarted",
+    "trial": 0,
+    "warmup_excluded": true,
+    "ms": 328.11168300395366,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 3,
+    "source": "candidate",
+    "scenario": "customized-large-unstarted",
+    "trial": 1,
+    "warmup_excluded": false,
+    "ms": 352.6767379953526,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 3,
+    "source": "candidate",
+    "scenario": "customized-large-unstarted",
+    "trial": 2,
+    "warmup_excluded": false,
+    "ms": 204.96698000351898,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 3,
+    "source": "candidate",
+    "scenario": "customized-large-unstarted",
+    "trial": 3,
+    "warmup_excluded": false,
+    "ms": 206.56325000163633,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 3,
+    "source": "candidate",
+    "scenario": "customized-large-unstarted",
+    "trial": 4,
+    "warmup_excluded": false,
+    "ms": 302.01365701213945,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 3,
+    "source": "candidate",
+    "scenario": "customized-large-unstarted",
+    "trial": 5,
+    "warmup_excluded": false,
+    "ms": 205.57352299510967,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 3,
+    "source": "candidate",
+    "scenario": "customized-large-inprogress",
+    "trial": 0,
+    "warmup_excluded": true,
+    "ms": 231.7495519964723,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 3,
+    "source": "candidate",
+    "scenario": "customized-large-inprogress",
+    "trial": 1,
+    "warmup_excluded": false,
+    "ms": 413.0416889966,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 3,
+    "source": "candidate",
+    "scenario": "customized-large-inprogress",
+    "trial": 2,
+    "warmup_excluded": false,
+    "ms": 226.77994600962847,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 3,
+    "source": "candidate",
+    "scenario": "customized-large-inprogress",
+    "trial": 3,
+    "warmup_excluded": false,
+    "ms": 249.03619001270272,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 3,
+    "source": "candidate",
+    "scenario": "customized-large-inprogress",
+    "trial": 4,
+    "warmup_excluded": false,
+    "ms": 357.28303500218317,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 3,
+    "source": "candidate",
+    "scenario": "customized-large-inprogress",
+    "trial": 5,
+    "warmup_excluded": false,
+    "ms": 243.50557998695876,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 4,
+    "source": "base",
+    "scenario": "customized-large-unstarted",
+    "trial": 0,
+    "warmup_excluded": true,
+    "ms": 331.8908549990738,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 4,
+    "source": "base",
+    "scenario": "customized-large-unstarted",
+    "trial": 1,
+    "warmup_excluded": false,
+    "ms": 345.39983900322113,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 4,
+    "source": "base",
+    "scenario": "customized-large-unstarted",
+    "trial": 2,
+    "warmup_excluded": false,
+    "ms": 213.13439898949582,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 4,
+    "source": "base",
+    "scenario": "customized-large-unstarted",
+    "trial": 3,
+    "warmup_excluded": false,
+    "ms": 209.263484008261,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 4,
+    "source": "base",
+    "scenario": "customized-large-unstarted",
+    "trial": 4,
+    "warmup_excluded": false,
+    "ms": 302.49213900242466,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 4,
+    "source": "base",
+    "scenario": "customized-large-unstarted",
+    "trial": 5,
+    "warmup_excluded": false,
+    "ms": 258.952122007031,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 4,
+    "source": "base",
+    "scenario": "customized-large-inprogress",
+    "trial": 0,
+    "warmup_excluded": true,
+    "ms": 290.9965069993632,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 4,
+    "source": "base",
+    "scenario": "customized-large-inprogress",
+    "trial": 1,
+    "warmup_excluded": false,
+    "ms": 336.8374690035125,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 4,
+    "source": "base",
+    "scenario": "customized-large-inprogress",
+    "trial": 2,
+    "warmup_excluded": false,
+    "ms": 226.4943820046028,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 4,
+    "source": "base",
+    "scenario": "customized-large-inprogress",
+    "trial": 3,
+    "warmup_excluded": false,
+    "ms": 235.46038899803534,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 4,
+    "source": "base",
+    "scenario": "customized-large-inprogress",
+    "trial": 4,
+    "warmup_excluded": false,
+    "ms": 350.0307650101604,
+    "status": 200,
+    "exercises": 7
+  },
+  {
+    "block": 4,
+    "source": "base",
+    "scenario": "customized-large-inprogress",
+    "trial": 5,
+    "warmup_excluded": false,
+    "ms": 238.9605600037612,
+    "status": 200,
+    "exercises": 7
+  }
+]

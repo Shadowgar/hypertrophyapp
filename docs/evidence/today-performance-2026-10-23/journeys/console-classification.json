@@ -1,0 +1,12 @@
+{
+  "application_revision": "912e7e928960069316e81f01a1df08001b0f2a53",
+  "page_errors": [],
+  "api_failures": [],
+  "all_injected_network_failures_match_exercised_api_paths": true,
+  "remaining_inherited_resource_paths": [
+    "/favicon.ico",
+    "/programs"
+  ],
+  "source_baseline_proof": "c656 app-shell.tsx:15 includes /programs; index app/programs/page.tsx absent",
+  "console_clean": false
+}

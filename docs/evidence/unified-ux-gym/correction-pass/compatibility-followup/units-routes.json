@@ -1,0 +1,71 @@
+{
+  "observations": [
+    {
+      "unit": "kg",
+      "route": "/",
+      "renderedMassLabels": [
+        "82.5 kg",
+        "90 kg"
+      ],
+      "checkinCanonicalInputKg": false
+    },
+    {
+      "unit": "kg",
+      "route": "/week",
+      "renderedMassLabels": [],
+      "checkinCanonicalInputKg": false
+    },
+    {
+      "unit": "kg",
+      "route": "/checkin",
+      "renderedMassLabels": [],
+      "checkinCanonicalInputKg": true
+    },
+    {
+      "unit": "lb",
+      "route": "/",
+      "renderedMassLabels": [
+        "181.9 lb",
+        "198.4 lb"
+      ],
+      "checkinCanonicalInputKg": false
+    },
+    {
+      "unit": "lb",
+      "route": "/week",
+      "renderedMassLabels": [],
+      "checkinCanonicalInputKg": false
+    },
+    {
+      "unit": "lb",
+      "route": "/checkin",
+      "renderedMassLabels": [],
+      "checkinCanonicalInputKg": true
+    },
+    {
+      "unit": "kg",
+      "route": "/",
+      "renderedMassLabels": [
+        "82.5 kg",
+        "90 kg"
+      ],
+      "checkinCanonicalInputKg": false
+    },
+    {
+      "unit": "kg",
+      "route": "/week",
+      "renderedMassLabels": [],
+      "checkinCanonicalInputKg": false
+    },
+    {
+      "unit": "kg",
+      "route": "/checkin",
+      "renderedMassLabels": [],
+      "checkinCanonicalInputKg": true
+    }
+  ],
+  "canonicalProfileHashBefore": "b2bd1721e88b461c225efe378395837ae1752d5de2237818cdf63cfd2cde1890",
+  "canonicalProfileHashAfter": "b2bd1721e88b461c225efe378395837ae1752d5de2237818cdf63cfd2cde1890",
+  "errors": [],
+  "qualifiedWeekLoadsNotFabricated": true
+}

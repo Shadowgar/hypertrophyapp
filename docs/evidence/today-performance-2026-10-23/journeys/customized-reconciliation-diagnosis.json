@@ -1,0 +1,79 @@
+{
+  "finding": "Original harness incorrectly required a retry after an authoritative receipt reconciled the exact committed command. Baseline and candidate use the same receipt-bound auto-ack behavior. Failed expectation retained separately.",
+  "observations": [
+    {
+      "source": "base",
+      "committed_status": 200,
+      "effective_receipt_count": 1,
+      "completed_sets": 1,
+      "command_id_matches_original": true,
+      "canonical_actuals_match": true,
+      "controller": {
+        "weight": "30",
+        "reps": "",
+        "buttons": [
+          {
+            "text": "Effort: not recorded \u00b7 Add RIR",
+            "disabled": false,
+            "ariaDisabled": null
+          },
+          {
+            "text": "Save set 2",
+            "disabled": false,
+            "ariaDisabled": "true"
+          }
+        ],
+        "retryVisible": false
+      },
+      "original_command_id": "0a97f72a-1f61-4e75-8123-da221a47d003",
+      "effective_receipt_command_id": "0a97f72a-1f61-4e75-8123-da221a47d003",
+      "original_actuals": {
+        "set_index": 1,
+        "reps": 8,
+        "weight": 13.6077711
+      },
+      "effective_receipt_actuals": {
+        "set_index": 1,
+        "reps": 8,
+        "weight": 13.6077711
+      }
+    },
+    {
+      "source": "after",
+      "committed_status": 200,
+      "effective_receipt_count": 1,
+      "completed_sets": 1,
+      "command_id_matches_original": true,
+      "canonical_actuals_match": true,
+      "controller": {
+        "weight": "30",
+        "reps": "",
+        "buttons": [
+          {
+            "text": "Effort: not recorded \u00b7 Add RIR",
+            "disabled": false,
+            "ariaDisabled": null
+          },
+          {
+            "text": "Save set 2",
+            "disabled": false,
+            "ariaDisabled": "true"
+          }
+        ],
+        "retryVisible": false
+      },
+      "original_command_id": "731273b5-2301-453f-b947-8297bad2381a",
+      "effective_receipt_command_id": "731273b5-2301-453f-b947-8297bad2381a",
+      "original_actuals": {
+        "set_index": 1,
+        "reps": 8,
+        "weight": 13.6077711
+      },
+      "effective_receipt_actuals": {
+        "set_index": 1,
+        "reps": 8,
+        "weight": 13.6077711
+      }
+    }
+  ]
+}

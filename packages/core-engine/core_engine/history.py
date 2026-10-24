@@ -490,6 +490,11 @@ def _accumulate_logged_day_rows(
         set_volume = weight * reps
         exercise_entry["sets"].append(
             {
+                "id": _read_attr(row, "id"),
+                "set_kind": _read_attr(row, "set_kind"),
+                "parent_set_index": _read_attr(row, "parent_set_index"),
+                "supersedes_id": _read_attr(row, "supersedes_id"),
+                "actual_rir": (_read_attr(row, "replay_context") or {}).get("actual_rir"),
                 "workout_occurrence_id": _read_attr(row, "workout_occurrence_id"),
                 "exercise_occurrence_id": _read_attr(row, "exercise_occurrence_id"),
                 "original_authored_name": (_read_attr(row, "replay_context") or {}).get("planned_exercise", {}).get("name"),

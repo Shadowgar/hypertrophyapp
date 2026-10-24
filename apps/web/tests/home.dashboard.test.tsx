@@ -183,13 +183,13 @@ test.each([
   await waitFor(() => expect(screen.getAllByText(/Full Body A/i).length).toBeGreaterThan(0));
   expect(screen.getAllByText(/Full Body A/i).length).toBeGreaterThan(0);
   expect(screen.getByText(/Week 4/i)).toBeInTheDocument();
-  expect(screen.getByText(/201 lb/i)).toBeInTheDocument();
+  expect(screen.getByText(/443.1 lb/i)).toBeInTheDocument();
   expect(screen.getAllByText(/2 PR highlights/i).length).toBeGreaterThan(0);
   expect(screen.getAllByText(new RegExp(`${days} training days`, "i")).length).toBeGreaterThan(0);
   expect(screen.getAllByText(program).length).toBeGreaterThan(0);
   expect(screen.getByText(/Coach Brief/i)).toBeInTheDocument();
   expect(screen.getByText(/Actionable/i)).toBeInTheDocument();
-  expect(screen.getByText(/Start with Bench Press: 3 x 8-12 @ 496 lbs/i)).toBeInTheDocument();
+  expect(screen.getByText(/Start with Bench Press: 3 x 8-12 @ 496 lb/i)).toBeInTheDocument();
   expect(screen.getByText(/Session Blueprint/i)).toBeInTheDocument();
   expect(screen.getByText(/Weak Areas/i)).toBeInTheDocument();
   expect(screen.getAllByText(/Chest/i).length).toBeGreaterThan(0);

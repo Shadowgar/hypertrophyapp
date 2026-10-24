@@ -477,3 +477,18 @@ def test_effective_warmup_command_id_identifies_current_receipt_after_correction
         assert effective["command_id"] == db.get(WorkoutSetLog, effective["id"]).command_id
     assert log(client, headers, session, payload).json() == result.json()
     assert guidance(client, headers, session).json()["effective_sets"][0]["command_id"] == effective["command_id"]
+
+def test_working_save_accepts_guidance_returned_by_first_warmup(scenario):
+    user, headers, client = scenario
+    session = plan(user, warm_up_sets="1")
+    context = {"unit": "kg", "display_unit": "lb", "basis": "machine_stack", "increment": None,
+               "increment_unit": "kg", "equipment_key": "synthetic-cable"}
+    preview = guidance(client, headers, session, context).json()
+    warm = log(client, headers, session, submit(session, set_kind="warmup", weight=9.0718474,
+        reps=8, load_context=context, load_recommendation_id=preview["warmup_guidance"]["id"]))
+    assert warm.status_code == 200, warm.text
+    offered = warm.json()["load_intelligence"]["next_exposure"]["id"]
+    assert guidance(client, headers, session, context).json()["next_exposure"]["id"] == offered
+    saved = log(client, headers, session, submit(session, weight=18.1436948, reps=12, rpe=8,
+        load_context=context, load_recommendation_id=offered))
+    assert saved.status_code == 200, saved.text

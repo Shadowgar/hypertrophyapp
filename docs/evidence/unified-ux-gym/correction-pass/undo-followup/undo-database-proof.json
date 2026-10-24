@@ -1,0 +1,24 @@
+[
+  {
+    "fixture": "mobile_correction",
+    "rows": 6,
+    "supersededOriginalsPreserved": 2,
+    "effectiveWorkingSets": [],
+    "uniqueSetReceiptCommands": 6,
+    "serverUndoCommands": 3,
+    "duplicateCorrectionRows": 0,
+    "undoneRows": 3,
+    "canonicalKgUnchanged": true
+  },
+  {
+    "fixture": "desktop_correction",
+    "rows": 6,
+    "supersededOriginalsPreserved": 2,
+    "effectiveWorkingSets": [],
+    "uniqueSetReceiptCommands": 6,
+    "serverUndoCommands": 3,
+    "duplicateCorrectionRows": 0,
+    "undoneRows": 3,
+    "canonicalKgUnchanged": true
+  }
+]

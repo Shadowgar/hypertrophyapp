@@ -1,5 +1,46 @@
 # Requirements traceability
 
+## PERS-002 / Issue #103 Today and resume performance — 2026-10-23
+
+The [bounded 2026-10-24 cold-start closeout](../evidence/today-performance-2026-10-23/closeout-2026-10-24/CLOSEOUT.md)
+adds a Today-frontend counterfactual and matched opening/resume checks without
+changing application code. A material source cause remains unestablished; original
+unfavorable samples, unmet targets and Issue #103 partial status are retained.
+The [integration recommendation](../evidence/today-performance-2026-10-23/closeout-2026-10-24/INTEGRATION.md)
+is review-only and grants no merge or production-operation permission.
+
+The next owner-authorized Wave A slice is based on PR #111 `c656988` and keeps
+PR #110/#111 unchanged. It batches account-bound calibration reads and indexes
+source/setup history presence within `AuthoredHistorySnapshot`, with the same
+performed-date cutoff and effective records. Warm-up protocol reuse is response
+local; the existing core owner still decides every exercise's guidance. No
+cross-request or cross-account cache, new numerical policy or schema is added.
+
+Today overlaps independent date/review gates and starts display-only profile
+reads alongside progress. Required gates still precede Today; an unresolved
+refresh cannot expose an older writable runner. Account/epoch/read-generation
+guards reject late results; draft and immutable command storage survive retries.
+See [matched performance and runtime evidence](../evidence/today-performance-2026-10-23/README.md)
+and the [release-readiness boundaries](../evidence/today-performance-2026-10-23/RELEASE-READINESS.md).
+Local synthetic qualification does not reproduce or establish a fix for the
+owner's original two-minute production symptom. Physical iPhone Safari,
+production latency, inherited CI failures and final security qualification
+remain separate acceptance items. Issue #103 remains partial.
+
+## PERS-008 / Issue #103 starting-load slice — 2026-10-23
+
+The owner approved the [specific provisional numerical amendment](../contracts/proposals/authored-starting-load-v1.md)
+at PR #111 `4041a558`. The focused implementation adds optional known-1RM and
+effort-qualified recent-set reports, account/setup-scoped revisions, an initial-only
+deterministic estimate and the approved runner presentation. Qualified completed
+history and current working sets retain precedence; unsupported cases stay manual.
+See [implementation evidence](../evidence/starting-load-2026-10-23/IMPLEMENTATION.md)
+for actual tests, demonstrations and inherited failures. PERS-008 / Issue #103
+remain **partial**: eligibility is bounded, Today performance is qualified only within the separate
+local synthetic slice above, physical iPhone keyboard/background acceptance is untested, and
+final-revision security qualification remains separate. No production release,
+merge, live-data migration or broader Home/onboarding work is included.
+
 Status: **Initial populated mapping; qualification/owner acceptance pending**. All 80 catalog IDs are mapped. [Catalog](catalog.md) owns requirement text/approval; [product](product-contract.md) owns mode/load/date permissions. The chain is requirement → product → ADR → high-risk contract → implementing owner/module → automated test → manual qualification → evidence → milestone → owner acceptance.
 
 The product link in each requirement resolves to the common [product contract](product-contract.md); specific ADR/contract links are below. Module links identify existing implementation seams, not completed target code. Existing test files are candidate partial protections at the audited source, not invented future names or claims of full passing acceptance. Historical suites contain failures. `TBD` means no specific existing protection was established; future checks are described in the catalog, not pretended to exist.
@@ -133,3 +174,22 @@ Post-audit implementation advances GEN-001/002/003/004/005/006/007 and preserves
 ## M4 active lifecycle evidence, 2026-10-20
 
 GEN-002/003/004/005/007/009, SCHED-004/005 and HIST preservation advance through [date amendments](../../apps/api/app/customized_rescheduling.py), [explicit replacement](../../apps/api/app/customized_replacement.py), the existing application lifecycle/routes and `/customize`, Week and Today consumers. [Reschedule tests](../../apps/api/tests/test_customized_rescheduling.py), [replacement tests](../../apps/api/tests/test_customized_replacement.py), source-calendar Authored compatibility and [revision evidence](../evidence/2026-10-20-m4-active-lifecycle.md) retain account/revision/retry/correction/negative boundaries. The [migration/restore rehearsal](../evidence/2026-10-20-m4-release-rehearsal.md) advances applicable OPS/DATA qualification. This supplements the audited baseline; it does not mark whole-M4 release acceptance or scientific approval.
+
+## 2026-10-21 supplemental owner-approved scope (not a replacement for the original 80-row matrix)
+
+The existing matrix above traces the original 80 IDs at its recorded qualification baseline. The owner separately approved [PERS-001–PERS-020](personal-workoutapp-2026-10-21.md#supplemental-requirement-register) on 2026-10-21. They are **supplemental desired outcomes**, not silently folded into the historical 80-ID matrix. Their target milestone and relevant existing feature/issues are mapped in the [personal capability crosswalk](../roadmap/personal-capability-crosswalk-2026-10-21.md). No new PERS ID has an independently demonstrated full implementation, test-evidence chain or release acceptance as a result of this documentation update.
+
+For each future approved package, extend scoped traceability from its PERS ID to contract/mode authority, source/decision owner, API/UI/data flow, automated and manual tests, actual revision/environment evidence and explicit owner acceptance. Do not invent tests or copy evidence from mockups. No other fitness app/API connection is allowed; direct Apple XML/native Apple HealthKit is the accepted optional boundary.
+
+## Combined candidate qualification — 2026-10-24
+
+PERS-002/008, AUTH-FID/HIST/LOAD/DATA/GEN/UX/SEC/OPS retain their existing owners
+and acceptance boundaries. [Integration evidence and nine-case CI dispositions](../evidence/integration-2026-10-24/README.md)
+record fresh combined-revision checks; prior revision evidence stays dated.
+The original 80 rows and PERS-001–020 above remain intact. The approved
+known-1RM/recent-set/manual pathway now exists within #111's declared eligibility;
+Issue #103 remains partial for performance and physical-iPhone acceptance.
+The 2026-10-21 handoff's planning-only permission and pending visual choice are
+historical; #108 `33598c3` and subsequent owner implementation authorizations
+govern this stack. Full application layout implementation and release acceptance
+remain distinct; no new requirement is marked fully complete here.

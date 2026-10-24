@@ -1,5 +1,6 @@
+import {runnerScreen as screen} from "./helpers/runner-driver";
 import React from "react";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen as nativeScreen, waitFor } from "@testing-library/react";
 import TodayPage from "@/app/today/page";
 
 const digest = "b".repeat(64);
@@ -20,9 +21,11 @@ let failFirst: boolean;
 let staleFirst: boolean;
 let validationFirst: boolean;
 let correctionValidationFirst: boolean;
+let correctionTargetRejection: { status: number; message: string } | null;
 let variantFlow: boolean;
 let reported: boolean;
 let confirmed: boolean;
+let confirmedGuidance: ReturnType<typeof guidance> | null;
 let deferPreview: boolean;
 let deferMutation: boolean;
 let releaseMutation: () => void;
@@ -36,7 +39,7 @@ function guidance(weight: number | null = 25.25) {
 }
 function fixtureExercise() {
   return { id: "press", exercise_occurrence_id: "press-slot", name: "Intelligence Press", sets: 3, completed_sets: count,
-    rep_range: [8, 12], recommended_working_weight: 50, load_intelligence: confirmed ? null : envelope,
+    rep_range: [8, 12], recommended_working_weight: 50, load_intelligence: confirmed ? confirmedGuidance : envelope,
     source_lineage: { source_slot_id: "source-press" },
     ...(variantFlow ? { authored_constraint: { status: reported && !confirmed ? "unresolved" : confirmed ? "confirmed" : "ready",
       revision: confirmed ? 2 : reported ? 1 : 0, reasons: reported ? [{ kind: "pain", details: [] }] : [],
@@ -46,13 +49,15 @@ function fixtureExercise() {
   };
 }
 beforeEach(() => {
+  correctionTargetRejection = null;
+  confirmedGuidance = null;
   count = 0; envelope = guidance(); writes = []; failFirst = false; staleFirst = false; deferPreview = false; deferMutation = false; validationFirst = false; correctionValidationFirst = false; variantFlow = false; reported = false; confirmed = false; deferProgress = false;
   vi.stubGlobal("fetch", vi.fn(async (input, init) => {
     const url = String(input);
     if (url.includes("/plan/scheduling-context?")) return Response.json({ timezone: "UTC", local_today: new Date().toISOString().slice(0, 10), week_start: "2026-10-05", selected_dates: [], placement_revision: 0, plan: null });
     if (url.endsWith("/workout/today")) return Response.json({ session_id: "template", workout_occurrence_id: "load-occurrence", title: "Synthetic load", date: new Date().toISOString().slice(0, 10), exercises: [fixtureExercise()] });
     if (url.includes("/progress")) {
-      const response = Response.json({ completed_total: count, planned_total: 3, percent_complete: count / 3 * 100, exercises: [{ exercise_id: "press", exercise_occurrence_id: "press-slot", completed_sets: count, load_intelligence: envelope }] });
+      const response = Response.json({ completed_total: count, planned_total: 3, percent_complete: count / 3 * 100, exercises: [{ exercise_id: "press", exercise_occurrence_id: "press-slot", completed_sets: count, load_intelligence: confirmed ? confirmedGuidance : envelope }] });
       if (deferProgress) await new Promise<void>(resolve => { releaseProgress = resolve; });
       return response;
     }
@@ -80,6 +85,12 @@ beforeEach(() => {
         return response;
       }
       if (url.includes("/correct")) {
+        if (correctionTargetRejection) {
+          const original = envelope.effective_sets[0];
+          envelope = guidance();
+          envelope.effective_sets = original ? [{ ...original, id: "effective-replacement", reps: 11 }] : [];
+          return Response.json({ detail: correctionTargetRejection.message }, { status: correctionTargetRejection.status });
+        }
         if (correctionValidationFirst && writes.filter(w => w.path.endsWith("/correct")).length === 1) return Response.json({ detail: "Correction rejected before writes" }, { status: 422 });
         const response = Response.json({ status: "ok", original_set_id: "receipt-1", effective_set_id: "receipt-2", load_intelligence: envelope });
         if (deferMutation) await new Promise<void>(resolve => { releaseMutation = resolve; });
@@ -100,7 +111,7 @@ async function open() {
 test("qualified server load owns untouched prefill without display rounding changing canonical kg", async () => {
   await open();
   expect(screen.getByRole("spinbutton", { name: "Weight (lb)" })).toHaveValue(55.7);
-  expect(screen.getByText("Owned explanation from completed comparable exposures.")).toBeInTheDocument();
+  expect(screen.getAllByText("Owned explanation from completed comparable exposures.")[0]).toBeInTheDocument();
   fireEvent.change(screen.getByRole("spinbutton", { name: /Actual RPE/ }), { target: { value: "8.5" } });
   fireEvent.click(screen.getByRole("button", { name: "Complete Set" }));
   await waitFor(() => expect(writes.some(w => w.path.endsWith("/log-set"))).toBe(true));
@@ -164,10 +175,10 @@ test.each(["log", "correct", "undo"])("a preview from before %s cannot overwrite
     fireEvent.click(screen.getByRole("button", { name: "Save correction" }));
   } else fireEvent.click(screen.getByRole("button", { name: "Undo Last Set" }));
   if (operation === "undo") await waitFor(() => expect(screen.getByRole("spinbutton", { name: "Weight (lb)" })).toHaveValue(null));
-  else await screen.findByText("Rebuilt guidance from the changed effective receipts.");
+  else await screen.findAllByText("Rebuilt guidance from the changed effective receipts.").then(items=>items[0]);
   await act(async () => { releasePreview(); });
   if (operation === "undo") expect(screen.getByRole("spinbutton", { name: "Weight (lb)" })).toHaveValue(null);
-  else expect(screen.getByText("Rebuilt guidance from the changed effective receipts.")).toBeInTheDocument();
+  else expect(screen.getAllByText("Rebuilt guidance from the changed effective receipts.")[0]).toBeInTheDocument();
 });
 
 test("manual next-set draft survives a refreshed recommendation and override is recorded", async () => {
@@ -180,7 +191,7 @@ test("manual next-set draft survives a refreshed recommendation and override is 
   fireEvent.change(screen.getByRole("textbox", { name: "Load override reason (optional)" }), { target: { value: "equipment" } });
   fireEvent.click(screen.getByRole("button", { name: "Complete Set" }));
   await waitFor(() => expect(writes.some(w => w.path.endsWith("/log-set"))).toBe(true));
-  expect(writes.find(w => w.path.endsWith("/log-set"))!.body).toMatchObject({ weight: 27.2, load_override_reason: "equipment" });
+  expect(writes.find(w => w.path.endsWith("/log-set"))!.body).toMatchObject({ weight: 60 * 0.45359237, load_override_reason: "equipment" });
 });
 
 test("unknown monitor displays baseline separately without inferring a zero or planned load", async () => {
@@ -203,7 +214,7 @@ test("failed working command retains RPE/context/recommendation and exact reques
   failFirst = true; await open();
   fireEvent.change(screen.getByRole("spinbutton", { name: /Actual RPE/ }), { target: { value: "9" } });
   fireEvent.click(screen.getByRole("button", { name: "Complete Set" }));
-  await screen.findByText(/Set was not confirmed/);
+  await screen.findByText(/Save not confirmed/);
   fireEvent.change(screen.getByRole("spinbutton", { name: /Actual RPE/ }), { target: { value: "6" } });
   fireEvent.change(screen.getByRole("spinbutton", { name: "Weight (lb)" }), { target: { value: "70" } });
   fireEvent.click(screen.getByRole("button", { name: "Complete Set" }));
@@ -259,14 +270,14 @@ test("undo replaces authoritative receipts and clears previously qualified next 
   await open(); fireEvent.click(screen.getByRole("button", { name: "Undo Last Set" }));
   await waitFor(() => expect(screen.queryByRole("button", { name: "Edit set 1" })).toBeNull());
   expect(screen.getByRole("spinbutton", { name: "Weight (lb)" })).toHaveValue(null);
-  expect(screen.getByRole("button", { name: "Complete Set" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Complete Set" })).toHaveAttribute("aria-disabled", "true");
 });
 
 test("completed exercise presents next-exposure advice without prefilling another set", async () => {
   count = 3; await open();
   expect(screen.getByText(/Next exposure.*load guidance/)).toBeInTheDocument();
   expect(screen.getByRole("spinbutton", { name: "Weight (lb)" })).toHaveValue(null);
-  expect(screen.getByRole("button", { name: "All Sets Complete" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "All Sets Complete" })).toHaveAttribute("aria-disabled", "true");
 });
 
 test("resolved context metadata is omitted from guidance and logging request contracts", async () => {
@@ -283,18 +294,19 @@ test("summary monitor uses owned explanation without presenting legacy next-load
   render(<TodayPage />); fireEvent.click(screen.getByRole("button", { name: /Load today's workout/ }));
   await screen.findByText("Day Summary");
   expect(screen.getByText(/Next exposure: monitor/)).toBeInTheDocument();
-  expect(screen.getByText("Owned explanation from completed comparable exposures.")).toBeInTheDocument();
+  expect(screen.getAllByText("Owned explanation from completed comparable exposures.")[0]).toBeInTheDocument();
   expect(screen.queryByText(/Next: 218.3/)).toBeNull();
   expect(screen.queryByText("Legacy compatibility cause")).toBeNull();
 });
 
 
-test("first log preserves the offered server display context without requiring a preview", async () => {
+test("unit selection does not acknowledge advice bound to another display context", async () => {
   envelope.load_context.display_unit = "kg";
   await open();
   fireEvent.click(screen.getByRole("button", { name: "Complete Set" }));
   await waitFor(() => expect(writes.some(w => w.path.endsWith("/log-set"))).toBe(true));
-  expect(writes.find(w => w.path.endsWith("/log-set"))!.body).toMatchObject({ load_recommendation_id: digest, load_context: { display_unit: "kg" } });
+  expect(writes.find(w => w.path.endsWith("/log-set"))!.body).toMatchObject({ load_context: { display_unit: "lb" } });
+  expect(writes.find(w => w.path.endsWith("/log-set"))!.body).not.toHaveProperty("load_recommendation_id");
 });
 
 
@@ -325,11 +337,11 @@ test.each(["log", "correct"])("late %s and progress responses cannot repopulate 
   await waitFor(() => expect(writes.some(w => operation === "log" ? w.path.endsWith("/log-set") : w.path.endsWith("/correct"))).toBe(true));
   fireEvent.change(screen.getByRole("combobox", { name: "Load basis" }), { target: { value: "per_hand" } });
   releaseMutation();
-  if (operation === "log") await waitFor(() => expect(screen.getByRole("button", { name: "Complete Set" })).toBeEnabled());
+  if (operation === "log") await screen.findByText("✓ Set 1 saved");
   else await waitFor(() => expect(screen.queryByRole("button", { name: "Save correction" })).toBeNull());
   await waitFor(() => expect(screen.queryByText("Owned explanation from completed comparable exposures.")).toBeNull());
   expect(screen.getByRole("combobox", { name: "Load basis" })).toHaveValue("per_hand");
-  expect(screen.getByRole("spinbutton", { name: "Weight (lb)" })).toHaveValue(null);
+  expect(screen.getByRole("spinbutton", { name: "Weight (lb)" })).toHaveValue(operation === "log" ? 55.7 : null);
   if (operation === "log") expect(writes.find(w => w.path.endsWith("/log-set"))!.body.load_context).toMatchObject({ basis: "total_external" });
 });
 
@@ -355,36 +367,36 @@ test.each(["cached", "preview", "progress"])("confirmed variant discards cached 
 test.each(["0", "-0.5"])("invalid declared increment %s blocks logging before a retained command exists", async increment => {
   await open(); fireEvent.change(screen.getByRole("spinbutton", { name: "Known increment (optional)" }), { target: { value: increment } });
   fireEvent.change(screen.getByRole("spinbutton", { name: "Weight (lb)" }), { target: { value: "60" } });
-  expect(screen.getByRole("button", { name: "Enter a positive increment or leave it blank" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Enter a positive increment or leave it blank" })).toHaveAttribute("aria-disabled", "true");
   fireEvent.change(screen.getByRole("spinbutton", { name: "Known increment (optional)" }), { target: { value: "" } });
-  expect(screen.getByRole("button", { name: "Complete Set" })).toBeEnabled();
+  expect(screen.getByRole("button", { name: "Complete Set" })).toHaveAttribute("aria-disabled", "false");
   expect(writes.some(w => w.path.endsWith("/log-set"))).toBe(false);
 });
 
 test("required external actual load rejects zero while monitor keeps an empty load unknown", async () => {
   await open(); fireEvent.change(screen.getByRole("spinbutton", { name: "Weight (lb)" }), { target: { value: "0" } });
-  expect(screen.getByRole("button", { name: "Complete Set" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Complete Set" })).toHaveAttribute("aria-disabled", "true");
   expect(writes.some(w => w.path.endsWith("/log-set"))).toBe(false);
 });
 
 test("definitive log validation rejection releases only that command and preserves an editable RPE draft", async () => {
   validationFirst = true; await open(); fireEvent.change(screen.getByRole("spinbutton", { name: /Actual RPE/ }), { target: { value: "9" } });
   fireEvent.click(screen.getByRole("button", { name: "Complete Set" }));
-  await waitFor(() => expect(screen.getByRole("button", { name: "Complete Set" })).toBeEnabled());
+  await waitFor(() => expect(screen.getByRole("button", { name: "Complete Set" })).toHaveAttribute("aria-disabled", "false"));
   fireEvent.change(screen.getByRole("spinbutton", { name: "Weight (lb)" }), { target: { value: "60" } });
   fireEvent.change(screen.getByRole("spinbutton", { name: /Actual RPE/ }), { target: { value: "8" } });
   fireEvent.click(screen.getByRole("button", { name: "Complete Set" }));
   await waitFor(() => expect(writes.filter(w => w.path.endsWith("/log-set"))).toHaveLength(2));
   const [before, after] = writes.filter(w => w.path.endsWith("/log-set"));
   expect(after.body.command_id).not.toBe(before.body.command_id);
-  expect(after.body).toMatchObject({ weight: 27.2, rpe: 8 });
+  expect(after.body).toMatchObject({ weight: 60 * 0.45359237, rpe: 8 });
 });
 
 test("definitive correction validation rejection releases its command so revised values can submit", async () => {
   count = 1; correctionValidationFirst = true;
   envelope.effective_sets = [{ id: "receipt-1", set_index: 1, reps: 8, weight: 30, rpe: 8.5, created_at: "2026-10-06T12:00:00", set_kind: "work", parent_set_index: null, technique: null }];
   await open(); fireEvent.click(screen.getByRole("button", { name: "Edit set 1" })); fireEvent.click(screen.getByRole("button", { name: "Save correction" }));
-  await screen.findByText("Correction was not confirmed. Retry the same correction.");
+  await screen.findByText("Correction rejected before writes");
   fireEvent.change(screen.getByRole("spinbutton", { name: "Corrected reps" }), { target: { value: "10" } });
   fireEvent.click(screen.getByRole("button", { name: "Save correction" }));
   await waitFor(() => expect(writes.filter(w => w.path.endsWith("/correct"))).toHaveLength(2));
@@ -394,18 +406,131 @@ test("definitive correction validation rejection releases its command so revised
 });
 
 
-test("acknowledged manual first-set edits release the next-set remaining-load prefill", async () => {
+test("acknowledged set keeps its actual weight and clears repetitions for the next set", async () => {
   await open();
   fireEvent.change(screen.getByRole("spinbutton", { name: "Weight (lb)" }), { target: { value: "60" } });
   fireEvent.change(screen.getByRole("spinbutton", { name: "Reps" }), { target: { value: "7" } });
   fireEvent.change(screen.getByRole("spinbutton", { name: /Actual RPE/ }), { target: { value: "10" } });
   envelope.remaining_sets = decision(20, "remaining_sets", "decrease");
   fireEvent.click(screen.getByRole("button", { name: "Complete Set" }));
-  await waitFor(() => expect(screen.getByRole("spinbutton", { name: "Weight (lb)" })).toHaveValue(44.1));
-  expect(screen.getByRole("spinbutton", { name: "Reps" })).toHaveValue(8);
-  expect(writes.find(w => w.path.endsWith("/log-set"))!.body).toMatchObject({ weight: 27.2, reps: 7, rpe: 10 });
+  await screen.findByText("✓ Set 1 saved");
+  expect(screen.getByRole("spinbutton", { name: "Weight (lb)" })).toHaveValue(60);
+  expect(screen.getByRole("spinbutton", { name: "Reps" })).toHaveValue(null);
+  fireEvent.change(screen.getByRole("spinbutton", {name:"Reps"}), {target:{value:"8"}});
+  expect(writes.find(w => w.path.endsWith("/log-set"))!.body).toMatchObject({ weight: 60 * 0.45359237, reps: 7, rpe: 10 });
   fireEvent.change(screen.getByRole("spinbutton", { name: /Actual RPE/ }), { target: { value: "9" } });
   fireEvent.click(screen.getByRole("button", { name: "Complete Set" }));
   await waitFor(() => expect(writes.filter(w => w.path.endsWith("/log-set"))).toHaveLength(2));
-  expect(writes.filter(w => w.path.endsWith("/log-set"))[1].body).toMatchObject({ weight: 20, reps: 8, rpe: 9 });
+  expect(writes.filter(w => w.path.endsWith("/log-set"))[1].body).toMatchObject({ weight: 60 * 0.45359237, reps: 8, rpe: 9 });
+});
+
+
+test("a late initial progress failure cannot erase a newly confirmed working set",async()=>{
+ const base=vi.mocked(fetch).getMockImplementation()!;
+ let rejectInitial!: (error:Error)=>void;let requests=0;
+ vi.stubGlobal('fetch',vi.fn(async(input,init)=>{
+  if(String(input).includes('/progress') && ++requests===1)return new Promise<Response>((_resolve,reject)=>{rejectInitial=reject;});
+  return base(input,init);
+ }));
+ await open();await waitFor(()=>expect(rejectInitial).toBeDefined());
+ fireEvent.click(screen.getByRole('button',{name:'Complete Set'}));
+ await screen.findByText('✓ Set 1 saved');
+ await act(async()=>rejectInitial(new Error('progress failed late')));
+ expect(screen.getByRole('button',{name:/Intelligence Press/})).toHaveTextContent(/1\s*\/\s*3/);
+});
+
+
+test.each([
+  [409, "Set already voided or superseded; correct its effective replacement"],
+  [404, "Set not found"],
+] as const)("definitively obsolete correction %s refreshes effective receipts and retires the rejected attempt", async (status, message) => {
+  count = 1;
+  envelope.effective_sets = [{ id: "receipt-1", set_index: 1, reps: 8, weight: 25.25, rpe: 8.5, created_at: "2026-10-06T12:00:00", set_kind: "work", parent_set_index: null, technique: null }];
+  correctionTargetRejection = { status, message };
+  await open();
+  fireEvent.click(screen.getByRole("button", { name: "Edit set 1" }));
+  fireEvent.click(screen.getByRole("button", { name: "Save correction" }));
+  await screen.findByText(message);
+  expect(screen.queryByRole("button", { name: "Retry exact correction" })).not.toBeInTheDocument();
+  expect(screen.queryByRole("spinbutton", { name: "Corrected reps" })).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Edit set 1" })).toBeEnabled();
+  fireEvent.click(screen.getByRole("button", { name: "Edit set 1" }));
+  expect(screen.getByRole("spinbutton", { name: "Corrected reps" })).toHaveValue(11);
+  correctionTargetRejection = null;
+  fireEvent.click(screen.getByRole("button", { name: "Save correction" }));
+  await waitFor(() => expect(writes.filter(write => write.path.endsWith("/correct"))).toHaveLength(2));
+  const commands = writes.filter(write => write.path.endsWith("/correct"));
+  expect(commands[1].path).toMatch(/\/set\/effective-replacement\/correct$/);
+  expect(commands[1].body.command_id).not.toBe(commands[0].body.command_id);
+});
+
+
+test("same-occurrence reload keeps the edited actual draft and override reason", async () => {
+  await open();
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Weight (lb)" }), { target: { value: "60" } });
+  fireEvent.change(screen.getByRole("textbox", { name: "Load override reason (optional)" }), { target: { value: "equipment" } });
+  fireEvent.click(screen.getByRole("button", { name: "Back to list" }));
+  const reload = screen.getByRole("button", { name: "Reload" });
+  await waitFor(() => expect(reload).toBeEnabled());
+  fireEvent.click(reload);
+  await waitFor(() => expect(reload).toBeEnabled());
+  fireEvent.click(screen.getByRole("button", { name: /Intelligence Press/ }));
+  expect(screen.getByRole("spinbutton", { name: "Weight (lb)" })).toHaveValue(60);
+  expect(screen.getByRole("textbox", { name: "Load override reason (optional)" })).toHaveValue("equipment");
+});
+
+test.each(["success", "failure"])("a late Today refresh %s begun before a confirmed set cannot roll back actual progress", async outcome => {
+  await open();
+  const base = vi.mocked(fetch).getMockImplementation()!;
+  const staleReply = await base("/workout/today");
+  deferMutation = true;
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Weight (lb)" }), { target: { value: "60" } });
+  fireEvent.click(screen.getByRole("button", { name: "Complete Set" }));
+  await waitFor(() => expect(releaseMutation).toBeDefined());
+  fireEvent.click(screen.getByRole("button", { name: "Back to list" }));
+  const reload = screen.getByRole("button", { name: "Reload" });
+  await waitFor(() => expect(reload).toBeEnabled());
+  let release!: (reply: Response) => void;
+  vi.stubGlobal("fetch", vi.fn(async (input, init) => String(input).endsWith("/workout/today")
+    ? new Promise<Response>(resolve => { release = resolve; }) : base(input, init)));
+  fireEvent.click(reload);
+  await waitFor(() => expect(release).toBeDefined());
+  await act(async () => releaseMutation());
+  await act(async () => release(outcome === "success" ? staleReply : Response.json({ detail: "unavailable" }, { status: 503 })));
+  await nativeScreen.findByText("Workout changed while loading. Reload to verify the current workout. Your saved history is unchanged.");
+  expect(nativeScreen.queryByRole("region", { name: "Workout execution" })).not.toBeInTheDocument();
+  expect(writes.filter(write => write.path.endsWith("/log-set"))).toHaveLength(1);
+  vi.stubGlobal("fetch", vi.fn(base));
+  fireEvent.click(nativeScreen.getByRole("button", { name: "Reload" }));
+  await waitFor(() => expect(screen.getByRole("button", { name: /Intelligence Press/ })).toHaveTextContent(/1\s*\/\s*3/));
+});
+
+
+test("external confirmed variant reload retires source advice while retaining the frozen source command and draft", async () => {
+  variantFlow = true;
+  await open();
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Weight (lb)" }), { target: { value: "60" } });
+  fireEvent.change(screen.getByRole("combobox", { name: "Load basis" }), { target: { value: "per_hand" } });
+  envelope = guidance(); envelope.load_context.basis = "per_hand";
+  fireEvent.click(screen.getByRole("button", { name: "Preview load guidance" }));
+  await waitFor(() => expect(screen.getAllByText("Owned explanation from completed comparable exposures.").length).toBeGreaterThan(0));
+  failFirst = true;
+  fireEvent.click(screen.getByRole("button", { name: "Complete Set" }));
+  await nativeScreen.findByText("Save not confirmed. Retry the same set.");
+  const pendingSourceCommands = Object.entries(localStorage).filter(([key]) => key.endsWith("work:1:payload"));
+  expect(pendingSourceCommands).toHaveLength(1);
+  const savedSourceDraft = Object.entries(localStorage).find(([key]) => key.includes(":draft:press-slot:source"));
+  expect(savedSourceDraft).toBeDefined();
+  fireEvent.click(screen.getByRole("button", { name: "Back to list" }));
+  const reload = screen.getByRole("button", { name: "Reload" });
+  await waitFor(() => expect(reload).toBeEnabled());
+  confirmed = true;
+  confirmedGuidance = guidance(null);
+  fireEvent.click(reload);
+  await waitFor(() => expect(reload).toBeEnabled());
+  fireEvent.click(screen.getByRole("button", { name: /Approved Variant/ }));
+  expect(screen.getByRole("spinbutton", { name: "Weight (lb)" })).toHaveValue(null);
+  expect(screen.getByRole("combobox", { name: "Load basis" })).toHaveValue("total_external");
+  expect(localStorage.getItem(savedSourceDraft![0])).toBe(savedSourceDraft![1]);
+  for (const [key, payload] of pendingSourceCommands) expect(localStorage.getItem(key)).toBe(payload);
 });

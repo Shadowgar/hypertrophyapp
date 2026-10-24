@@ -13,7 +13,8 @@ import {
   type HistoryCalendarResponse,
   type HistoryDayDetailResponse,
 } from "@/lib/api";
-import { kgToLbs } from "@/lib/weight";
+import {useAppearance} from "@/components/appearance-provider";
+import {displayLoad} from "@/lib/appearance";
 
 function formatTimestamp(iso: string): string {
   const parsed = new Date(iso);
@@ -163,7 +164,7 @@ function roundOneDecimal(value: number): number {
   return Math.round(value * 10) / 10;
 }
 
-function resolveBodyweightSignal(points: HistoryAnalyticsResponse["bodyweight_trend"]): {
+function resolveBodyweightSignal(points: HistoryAnalyticsResponse["bodyweight_trend"], unit: "kg" | "lb"): {
   label: string;
   detail: string;
 } {
@@ -172,12 +173,13 @@ function resolveBodyweightSignal(points: HistoryAnalyticsResponse["bodyweight_tr
   }
   const first = points[0].body_weight;
   const last = points.at(-1)?.body_weight ?? first;
-  const firstLbs = kgToLbs(first);
-  const lastLbs = kgToLbs(last);
-  const deltaLbs = roundOneDecimal(lastLbs - firstLbs);
+  const firstDisplay = displayLoad(first, unit);
+  const lastDisplay = displayLoad(last, unit);
+  // Convert the canonical difference once; do not subtract rounded display values.
+  const delta = roundOneDecimal(displayLoad(last - first, unit));
   return {
-    label: `${deltaLbs >= 0 ? "+" : ""}${deltaLbs} lbs`,
-    detail: `${firstLbs} lbs to ${lastLbs} lbs across the visible window`,
+    label: `${formatSignedDelta(delta)} ${unit}`,
+    detail: `${firstDisplay} ${unit} to ${lastDisplay} ${unit} across the visible window`,
   };
 }
 
@@ -196,6 +198,7 @@ function resolveCoachQueue(entries: CoachingRecommendationTimelineEntry[]): {
 }
 
 function HistoryCalendarPanel() {
+  const {preferences} = useAppearance();
   const [calendar, setCalendar] = useState<HistoryCalendarResponse | null>(null);
   const [calendarStatus, setCalendarStatus] = useState("Loading calendar history...");
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
@@ -438,7 +441,7 @@ function HistoryCalendarPanel() {
                     type="button"
                     onClick={() => void loadDayDetail(day.date)}
                     className={`rounded border px-2 py-2 text-xs transition-colors ${dayClassName(isSelected, isCompleted)}`}
-                    title={`${day.date}: ${day.set_count} sets, ${day.exercise_count} exercises, ${day.total_volume} volume, ${day.pr_count} PRs`}
+                    title={`${day.date}: ${day.set_count} sets, ${day.exercise_count} exercises, ${displayLoad(day.total_volume, preferences.weight_unit)} ${preferences.weight_unit} × reps volume, ${day.pr_count} PRs`}
                   >
                     <div>{dateLabel}</div>
                     <div>{day.set_count}</div>
@@ -448,8 +451,8 @@ function HistoryCalendarPanel() {
               })}
             </div>
             <div className="flex items-center gap-4 text-[10px] text-zinc-500">
-              <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded border border-red-500/40 bg-red-500/10" /> Completed</span>
-              <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded border border-white/10 bg-zinc-900/70" /> Missed</span>
+              <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded border border-red-500/40 bg-red-500/10" /> Logged activity</span>
+              <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded border border-white/10 bg-zinc-900/70" /> No logged activity</span>
               <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded border border-[var(--ui-edge-active)] bg-[var(--ui-accent-active)]" /> Selected</span>
             </div>
             {filteredDays.length === 0 ? <p className="text-xs text-zinc-500">No days match current filters.</p> : null}
@@ -506,7 +509,7 @@ function HistoryCalendarPanel() {
                   Sets {formatSignedDelta(weekdayComparison.setDelta)}
                 </p>
                 <p className="rounded border border-white/10 bg-zinc-900/80 px-2 py-1 text-xs text-zinc-200">
-                  Volume {formatSignedDelta(weekdayComparison.volumeDelta)}
+                  Volume {formatSignedDelta(displayLoad(weekdayComparison.volumeDelta, preferences.weight_unit))} {preferences.weight_unit} × reps
                 </p>
                 <p className="rounded border border-white/10 bg-zinc-900/80 px-2 py-1 text-xs text-zinc-200">
                   PR Days {formatSignedDelta(weekdayComparison.prDelta)}
@@ -521,7 +524,7 @@ function HistoryCalendarPanel() {
             <p className="telemetry-meta">
               {dayDetail.date} · {dayDetail.totals.set_count} sets
               {formatPlannedSuffix(dayDetail.totals.planned_set_count, dayDetail.totals.set_delta)}
-              {` · ${dayDetail.totals.exercise_count} exercises · ${dayDetail.totals.total_volume} volume`}
+              {` · ${dayDetail.totals.exercise_count} exercises · ${displayLoad(dayDetail.totals.total_volume, preferences.weight_unit)} ${preferences.weight_unit} × reps volume`}
             </p>
             {dayDetail.workouts.map((workout) => (
               <div key={`day-workout-${workout.workout_id}`} className="rounded-md border border-white/10 bg-zinc-900/70 p-2">
@@ -530,7 +533,7 @@ function HistoryCalendarPanel() {
                 <p className="telemetry-meta">
                   {workout.total_sets} sets
                   {formatPlannedSuffix(workout.planned_sets_total, workout.set_delta)}
-                  {` · ${workout.total_volume} volume`}
+                  {` · ${displayLoad(workout.total_volume, preferences.weight_unit)} ${preferences.weight_unit} × reps volume`}
                 </p>
                 <div className="mt-1 space-y-1">
                   {workout.exercises.map((exercise) => (
@@ -547,10 +550,10 @@ function HistoryCalendarPanel() {
                       <p className="telemetry-meta">
                         {exercise.total_sets} sets
                         {formatPlannedSuffix(exercise.planned_sets, exercise.set_delta)}
-                        {` · ${exercise.total_volume} volume`}
+                        {` · ${displayLoad(exercise.total_volume, preferences.weight_unit)} ${preferences.weight_unit} × reps volume`}
                       </p>
                       <p className="telemetry-meta">
-                        {exercise.sets.map((entry) => `#${entry.set_index} ${entry.reps}x${entry.weight}${entry.performed_variant ? ` · ${entry.performed_variant.name} (confirmed variant; original ${entry.original_authored_name ?? exercise.planned_name ?? exercise.exercise_id})` : ""}`).join(" · ")}
+                        {exercise.sets.map((entry) => `${entry.set_kind === "warmup" ? "Warm-up" : entry.parent_set_index != null ? "Technique" : "Set"} ${entry.set_index}: ${entry.reps} × ${displayLoad(entry.weight,preferences.weight_unit)} ${preferences.weight_unit} · ${entry.actual_rir != null ? `Actual RIR ${entry.actual_rir}` : `Actual RPE ${entry.rpe ?? "unknown"}`}${entry.supersedes_id ? " · corrected" : ""}${entry.performed_variant ? ` · ${entry.performed_variant.name} (original ${entry.original_authored_name ?? exercise.planned_name ?? exercise.exercise_id})` : ""}`).join(" · ")}
                       </p>
                     </div>
                   ))}
@@ -575,6 +578,8 @@ function HistoryCalendarPanel() {
 }
 
 export default function HistoryPage() {
+  const { preferences } = useAppearance();
+  const unit = preferences.weight_unit;
   const [dashboard, setDashboard] = useState<HistoryAnalyticsResponse | null>(null);
   const [trendStatus, setTrendStatus] = useState("Loading trend data...");
   const [timelineEntries, setTimelineEntries] = useState<CoachingRecommendationTimelineEntry[]>([]);
@@ -677,7 +682,7 @@ export default function HistoryPage() {
   const prHighlights = dashboard?.pr_highlights ?? [];
   const measurementTrends = dashboard?.body_measurement_trends ?? [];
   const coachQueue = useMemo(() => resolveCoachQueue(timelineEntries), [timelineEntries]);
-  const bodyweightSignal = useMemo(() => resolveBodyweightSignal(dashboard?.bodyweight_trend ?? []), [dashboard]);
+  const bodyweightSignal = useMemo(() => resolveBodyweightSignal(dashboard?.bodyweight_trend ?? [], unit), [dashboard, unit]);
   const strengthLead = useMemo(() => {
     if (!primaryStrengthTrend) {
       return { hasData: false, label: "No lift trend", detail: "Log more repeated exposures." };
@@ -685,9 +690,9 @@ export default function HistoryPage() {
     return {
       hasData: true,
       label: primaryStrengthTrend.exercise_id,
-      detail: `PR ${kgToLbs(primaryStrengthTrend.pr_weight)} lbs (${primaryStrengthTrend.pr_delta >= 0 ? "+" : "-"}${kgToLbs(Math.abs(primaryStrengthTrend.pr_delta))} lbs)`,
+      detail: `PR ${displayLoad(primaryStrengthTrend.pr_weight, unit)} ${unit} (${formatSignedDelta(displayLoad(primaryStrengthTrend.pr_delta, unit))} ${unit})`,
     };
-  }, [primaryStrengthTrend]);
+  }, [primaryStrengthTrend, unit]);
 
   const heatmap = dashboard?.volume_heatmap;
   const heatmapMax = Math.max(heatmap?.max_volume ?? 0, 1);
@@ -827,8 +832,8 @@ export default function HistoryPage() {
                     key={`weight-${value}-${index}`}
                     className="flex-1 rounded-sm bg-zinc-700/70"
                     style={{ height: `${Math.round(normalized)}%` }}
-                    aria-label={`Week ${index + 1} bodyweight ${value}`}
-                    title={`Week ${index + 1}: ${kgToLbs(value)} lbs`}
+                    aria-label={`Week ${index + 1} bodyweight ${displayLoad(value, unit)} ${unit}`}
+                    title={`Week ${index + 1}: ${displayLoad(value, unit)} ${unit}`}
                   />
                 );
               })
@@ -837,7 +842,7 @@ export default function HistoryPage() {
             )}
           </div>
           <div className="flex items-center justify-between text-xs text-zinc-500">
-            <span>lbs</span>
+            <span>{unit}</span>
             <span>Last {Math.max(weeklyCheckins.length, 0)} check-ins</span>
           </div>
           <p className="text-xs text-zinc-400">{bodyweightSignal.detail}</p>
@@ -855,13 +860,14 @@ export default function HistoryPage() {
                     key={`${primaryStrengthTrend.exercise_id}-${point.week_start}`}
                     className="flex-1 rounded-sm bg-zinc-700/70"
                     style={{ height: `${Math.round(normalized)}%` }}
-                    title={`${point.week_start}: ${kgToLbs(point.max_weight)} lbs`}
+                    aria-label={`${point.week_start} strength ${displayLoad(point.max_weight, unit)} ${unit}`}
+                    title={`${point.week_start}: ${displayLoad(point.max_weight, unit)} ${unit}`}
                   />
                 );
               })}
             </div>
             <div className="flex items-center justify-between text-xs text-zinc-500">
-              <span>lbs</span>
+              <span>{unit}</span>
               <span>{strengthLead.detail}</span>
             </div>
           </div>
@@ -878,7 +884,7 @@ export default function HistoryPage() {
                 <span>{item.exercise_id}</span>
                 <span className="inline-flex items-center gap-2">
                   <span className="status-dot status-dot--green" />
-                  {item.pr_delta >= 0 ? "+" : "-"}{kgToLbs(Math.abs(item.pr_delta))} lbs
+                  {formatSignedDelta(displayLoad(item.pr_delta, unit))} {unit}
                 </span>
               </p>
             ))}
@@ -949,9 +955,9 @@ export default function HistoryPage() {
                       key={`${week.week_start}-${day.day_index}`}
                       className="rounded border border-white/10 px-1 py-1 text-center text-zinc-200"
                       style={{ backgroundColor: `rgba(220, 38, 38, ${alpha.toFixed(2)})` }}
-                      title={`Day ${day.day_index + 1}: ${day.volume} volume (${day.sets} sets)`}
+                      title={`Day ${day.day_index + 1}: ${displayLoad(day.volume, unit)} ${unit} × reps volume (${day.sets} sets)`}
                     >
-                      {day.volume > 0 ? Math.round(day.volume) : "-"}
+                      {day.volume > 0 ? displayLoad(day.volume, unit) : "-"}
                     </div>
                   );
                 })}

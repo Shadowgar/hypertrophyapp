@@ -1,0 +1,49 @@
+{
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "attempts": [
+    {
+      "url": "/api/workout/set/024fcc0d-944d-46b7-b723-2619a4ef118e/correct",
+      "payload": {
+        "reps": 13,
+        "weight": 18.143694800000002,
+        "reason": "Synthetic lost-after-commit correction",
+        "command_id": "aefc0ab4-e8cf-4a99-af3e-e5880dc63cb7"
+      }
+    },
+    {
+      "url": "/api/workout/set/024fcc0d-944d-46b7-b723-2619a4ef118e/correct",
+      "payload": {
+        "reps": 13,
+        "weight": 18.143694800000002,
+        "reason": "Synthetic lost-after-commit correction",
+        "command_id": "aefc0ab4-e8cf-4a99-af3e-e5880dc63cb7"
+      }
+    },
+    {
+      "url": "/api/workout/set/a61b23bb-377f-4873-955e-9468011355f0/correct",
+      "payload": {
+        "reps": 14,
+        "weight": 18.143694800000002,
+        "reason": "Synthetic failed-before-commit correction",
+        "command_id": "944ee140-7e10-4bf5-ad3e-afa23b8c9d2e"
+      }
+    },
+    {
+      "url": "/api/workout/set/a61b23bb-377f-4873-955e-9468011355f0/correct",
+      "payload": {
+        "reps": 14,
+        "weight": 18.143694800000002,
+        "reason": "Synthetic failed-before-commit correction",
+        "command_id": "944ee140-7e10-4bf5-ad3e-afa23b8c9d2e"
+      }
+    }
+  ],
+  "errors": [],
+  "afterCommitExactRetry": true,
+  "beforeCommitExactRetry": true,
+  "otherReceiptDisabled": true,
+  "closedReopenedReloaded": true
+}

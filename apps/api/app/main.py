@@ -54,7 +54,7 @@ def health() -> dict:
 
 @app.exception_handler(RequestValidationError)
 async def handle_request_validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
-    if request.url.path.startswith("/auth/"):
+    if request.url.path.startswith("/auth/") or request.url.path.endswith("/initial-calibration"):
         errors = sanitize_auth_validation_errors(exc.errors())
         log_event(
             validation_failure_event_name(request.url.path), level="warning",

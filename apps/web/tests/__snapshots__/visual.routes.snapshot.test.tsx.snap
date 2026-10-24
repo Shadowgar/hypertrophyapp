@@ -2,10 +2,10 @@
 
 exports[`visual snapshot: today route initial state 1`] = `
 <div
-  class="space-y-4 pb-[max(7rem,env(safe-area-inset-bottom))]"
+  class="space-y-4 pb-8"
 >
   <div
-    class="flex items-baseline justify-between gap-2"
+    class="flex flex-wrap items-baseline justify-between gap-2"
   >
     <h1
       class="ui-title-page"
@@ -28,7 +28,9 @@ exports[`visual snapshot: today route initial state 1`] = `
     class="main-card main-card--module main-card--accent spacing-grid spacing-grid--tight"
   >
     <button
-      class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 border border-[var(--ui-edge-active)] bg-[var(--ui-accent-active)] text-white shadow-[var(--ui-depth-shadow-2)] hover:bg-[rgba(220,38,38,0.25)] hover:shadow-[var(--ui-glow-active),var(--ui-depth-shadow-3)] h-10 px-4 py-2 min-h-[44px] w-full"
+      aria-busy="true"
+      class="ux-button ux-button-primary px-4 py-2 min-h-[44px] w-full"
+      disabled=""
     >
       <span
         class="inline-flex items-center gap-2"
@@ -56,7 +58,7 @@ exports[`visual snapshot: today route initial state 1`] = `
     role="status"
   >
     <p>
-      No workout loaded
+      Loading your scheduled workout…
     </p>
   </div>
 </div>
@@ -92,13 +94,13 @@ exports[`visual snapshot: week route 1`] = `
     >
       <button
         aria-pressed="true"
-        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 border border-[var(--ui-edge-active)] bg-[var(--ui-accent-active)] text-white shadow-[var(--ui-depth-shadow-2)] hover:bg-[rgba(220,38,38,0.25)] hover:shadow-[var(--ui-glow-active),var(--ui-depth-shadow-3)] h-10 px-4 py-2"
+        class="ux-button ux-button-primary px-4 py-2"
       >
         Current week
       </button>
       <button
         aria-pressed="false"
-        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 border border-[var(--ui-edge-active)] bg-[var(--ui-accent-active)] text-white shadow-[var(--ui-depth-shadow-2)] hover:bg-[rgba(220,38,38,0.25)] hover:shadow-[var(--ui-glow-active),var(--ui-depth-shadow-3)] h-10 px-4 py-2"
+        class="ux-button ux-button-primary px-4 py-2"
       >
         Next week
       </button>
@@ -219,7 +221,7 @@ exports[`visual snapshot: week route 1`] = `
     </p>
     <button
       aria-label="Preview selected dates"
-      class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-[transform,opacity] duration-150 ease-out hover:-translate-y-[1px] active:translate-y-px focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ui-edge-active)] disabled:pointer-events-none disabled:opacity-50 border border-[var(--ui-edge-active)] bg-[var(--ui-accent-active)] text-white shadow-[var(--ui-depth-shadow-2)] hover:bg-[rgba(220,38,38,0.25)] hover:shadow-[var(--ui-glow-active),var(--ui-depth-shadow-3)] h-10 px-4 py-2 w-full min-h-[48px]"
+      class="ux-button ux-button-primary px-4 py-2 w-full min-h-[48px]"
       disabled=""
     >
       Preview selected dates

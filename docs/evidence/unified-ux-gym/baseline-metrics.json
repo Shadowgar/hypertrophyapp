@@ -1,0 +1,40 @@
+{
+  "before": {
+    "scrollY": 16,
+    "weightY": 247.75,
+    "saveY": 428.25,
+    "weightDocumentY": 263.75,
+    "saveDocumentY": 444.25,
+    "nestedScroll": [
+      {
+        "tag": "HTML",
+        "top": 16
+      },
+      {
+        "tag": "DIV",
+        "top": 1223
+      }
+    ]
+  },
+  "after": {
+    "scrollY": 16,
+    "weightY": 317.75,
+    "repsY": 317.75,
+    "saveY": 498.25,
+    "weightDocumentY": 333.75,
+    "saveDocumentY": 514.25,
+    "nestedScroll": [
+      {
+        "tag": "HTML",
+        "top": 16
+      },
+      {
+        "tag": "DIV",
+        "top": 1223
+      }
+    ],
+    "focus": "BODY"
+  },
+  "elapsed": 6699,
+  "status": 200
+}

@@ -910,15 +910,16 @@ def test_latest_week_today_and_progress_auto_regenerate_stale_authored_phase1_ro
 
 
 @pytest.mark.parametrize(
-    ("selected_program_id", "expected_total_sets"),
+    ("selected_program_id", "expected_total_sets", "expected_week_sets"),
     [
-        ("pure_bodybuilding_phase_1_full_body", 30),
-        ("pure_bodybuilding_phase_2_full_body", 23),
+        ("pure_bodybuilding_phase_1_full_body", 29, 88),
+        ("pure_bodybuilding_phase_2_full_body", 22, 67),
     ],
 )
 def test_today_total_sets_matches_progress_planned_total(
     selected_program_id: str,
     expected_total_sets: int,
+    expected_week_sets: int,
 ) -> None:
     _reset_db()
     client = TestClient(app)
@@ -929,7 +930,24 @@ def test_today_total_sets_matches_progress_planned_total(
         selected_program_id=selected_program_id,
         days_available=3,
     )
-    _generate_week(client, headers=headers)
+    generated = _generate_week(client, headers=headers)
+    source_sessions = load_program_template(selected_program_id)["authored_weeks"][0]["sessions"]
+    source_slots = [exercise for session in source_sessions for exercise in session["exercises"]]
+    generated_slots = [exercise for session in generated["sessions"] for exercise in session["exercises"]]
+    # Redistribution may change grouping, never a source slot or its typed dose.
+    expected_by_slot = {
+        exercise["source_lineage"]["source_slot_id"]: (exercise["id"], exercise["sets"], exercise["authored_prescription"], exercise["source_relationships"])
+        for exercise in source_slots
+    }
+    assert len(expected_by_slot) == len(source_slots) == len(generated_slots)
+    assert {
+        exercise["source_lineage"]["source_slot_id"]: (exercise["id"], exercise["sets"], exercise["authored_prescription"], exercise["source_relationships"])
+        for exercise in generated_slots
+    } == expected_by_slot
+    assert sum(exercise["sets"] for exercise in generated_slots) == expected_week_sets
+
+    with SessionLocal() as db:
+        saved_plan_before_reads = deepcopy(db.query(WorkoutPlan).one().payload)
 
     today = client.get("/workout/today", headers=headers)
     assert today.status_code == 200
@@ -942,6 +960,29 @@ def test_today_total_sets_matches_progress_planned_total(
     assert int(today_payload.get("total_sets") or 0) == expected_total_sets
     assert int(progress_payload.get("planned_total") or 0) == expected_total_sets
     assert int(today_payload.get("total_sets") or 0) == int(progress_payload.get("planned_total") or 0)
+
+    selected_session = next(session for session in generated["sessions"] if session["session_id"] == today_payload["session_id"])
+    assert _session_set_total(selected_session) == expected_total_sets
+    assert _session_set_total(today_payload) == expected_total_sets
+    planned_by_occurrence = {
+        exercise["exercise_occurrence_id"]: exercise["sets"] for exercise in today_payload["exercises"]
+    }
+    assert len(planned_by_occurrence) == len(selected_session["exercises"])
+    assert {
+        exercise["exercise_occurrence_id"]: exercise["planned_sets"] for exercise in progress_payload["exercises"]
+    } == planned_by_occurrence
+    assert sum(planned_by_occurrence.values()) == expected_total_sets
+    assert progress_payload["completed_total"] == 0
+    assert all(exercise["completed_sets"] == 0 for exercise in today_payload["exercises"])
+    assert {
+        exercise["source_lineage"]["source_slot_id"]: (exercise["id"], exercise["sets"], exercise["authored_prescription"], exercise["source_relationships"])
+        for exercise in today_payload["exercises"]
+    } == {
+        exercise["source_lineage"]["source_slot_id"]: (exercise["id"], exercise["sets"], exercise["authored_prescription"], exercise["source_relationships"])
+        for exercise in selected_session["exercises"]
+    }
+    with SessionLocal() as db:
+        assert db.query(WorkoutPlan).one().payload == saved_plan_before_reads
 
 
 @pytest.mark.parametrize(

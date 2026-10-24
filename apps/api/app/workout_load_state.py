@@ -16,12 +16,14 @@ from fastapi import HTTPException
 from sqlalchemy import and_
 
 from core_engine.authored_warmups import build_authored_warmup_guidance
+from core_engine.authored_constraints import refresh_constraints
 from core_engine.load_intelligence import (
     summarize_completed_exercise_exposure, comparison_key_for_exposure,
-    decide_next_working_load, decide_remaining_working_load,
+    decide_next_working_load, decide_remaining_working_load, decide_initial_working_load,
 )
-from .models import AuthoredLoadState, WorkoutOccurrence, WorkoutSetLog
+from .models import AuthoredLoadState, AuthoredInitialCalibration, WorkoutOccurrence, WorkoutSetLog
 from .schemas import WorkoutLoadContext
+from .workout_initial_calibration import find_calibration, calibration_view, source_scope, setup_scope
 from .program_loader import load_program_rule_set, resolve_rule_program_id, load_program_onboarding_package
 
 AUTHORED_PROGRAMS = {"pure_bodybuilding_phase_1_full_body", "pure_bodybuilding_phase_2_full_body"}
@@ -56,12 +58,16 @@ def _source_warmup_protocol(program_id):
         "source_provenance": deepcopy(package.get("source_provenance") or {})}
 
 
-def _warmup_guidance(*, occurrence, exercise, next_decision, context, user_id):
-    protocol, provenance = _source_warmup_protocol(occurrence.program_id)
+def _warmup_guidance(*, occurrence, exercise, next_decision, context, user_id, provisional_decision=None,
+        source_protocol_snapshot=None):
+    protocol, provenance = (source_protocol_snapshot if source_protocol_snapshot is not None
+        else _source_warmup_protocol(occurrence.program_id))
     guidance = build_authored_warmup_guidance(exercise=exercise,
         working_decision=next_decision, load_context=context,
-        program_id=occurrence.program_id, source_protocol=protocol)
-    guidance["decision_trace"].update(source_protocol_provenance=provenance,
+        program_id=occurrence.program_id, source_protocol=protocol, provisional_decision=provisional_decision)
+    if provisional_decision and provisional_decision["status"] == "provisional":
+        next_decision = provisional_decision
+    guidance["decision_trace"].update(source_protocol_provenance=deepcopy(provenance),
         working_recommendation_id=next_decision["id"],
         working_evidence_revision=next_decision["evidence_revision"])
     evidence_revision = _digest({"working_evidence_revision": next_decision["evidence_revision"],
@@ -208,16 +214,30 @@ class AuthoredHistorySnapshot:
     user_id: str
     groups: tuple
     cohorts: Mapping[str, tuple]
+    initial_history_dates: Mapping
+    calibrations: Mapping[str, tuple]
     session: object = field(repr=False, compare=False)
+    warmup_protocols: dict = field(default_factory=dict, repr=False, compare=False)
 
 
 def load_authored_history_snapshot(db, *, user):
     groups = tuple(_all_groups(db, user))
     cohorts = defaultdict(list)
+    initial_history_dates = {}
     for group in groups:
         cohorts[_projection_key(group[5])].append(group)
+        if group[5]["effective_sets"]:
+            key = (source_scope(group[3]), setup_scope(group[5]["load_context"]))
+            day = group[0][0]
+            initial_history_dates[key] = min(day, initial_history_dates.get(key, day))
+    calibrations = defaultdict(list)
+    for row in db.query(AuthoredInitialCalibration).filter_by(user_id=user.id).order_by(
+            AuthoredInitialCalibration.revision.desc()).all():
+        calibrations[row.source_scope].append(row)
     return AuthoredHistorySnapshot(user_id=user.id, groups=groups,
-        cohorts=MappingProxyType({key: tuple(rows) for key, rows in cohorts.items()}), session=db)
+        cohorts=MappingProxyType({key: tuple(rows) for key, rows in cohorts.items()}),
+        initial_history_dates=MappingProxyType(initial_history_dates),
+        calibrations=MappingProxyType({key: tuple(rows) for key, rows in calibrations.items()}), session=db)
 
 
 def _wrap(decision, *, user_id, occurrence_id, exercise_id, context, exposures, scope, history_scope):
@@ -266,7 +286,12 @@ def project_authored_load_feedback(db, *, user, occurrence, exercise, supplied_c
         "inclusive": True}
     groups = [group for group in groups if group[0][0] <= cutoff_date]
     context_resolver = resolve_current_load_context if restore_warmup_context else resolve_load_context
-    context = context_resolver(user=user, supplied=supplied_context, records=records)
+    saved_calibration = find_calibration(db, user_id=user.id, occurrence=occurrence, exercise=exercise,
+        supplied_context=supplied_context, calibration_rows=history_snapshot.calibrations)
+    declaration = supplied_context
+    if declaration is None and restore_warmup_context and not has_working_root and saved_calibration is not None:
+        declaration = saved_calibration.load_context
+    context = context_resolver(user=user, supplied=declaration, records=records)
     # A new declaration never reinterprets already recorded or legacy set context.
     has_work = any(row.voided_at is None and row.parent_set_index is None
         and (row.set_kind or "work").strip().lower() in {"work", "top", "backoff"} for row in records)
@@ -290,9 +315,36 @@ def project_authored_load_feedback(db, *, user, occurrence, exercise, supplied_c
         remaining = _wrap(decide_remaining_working_load(exposure=exposure, rule_set=rule_set, load_context=context),
             scope="remaining_sets", **wrapper)
     next_offered = _wrap(next_decision, scope="next_exposure", **wrapper)
-    warmup = _warmup_guidance(occurrence=occurrence, exercise=exercise,
-        next_decision=next_offered, context=context, user_id=user.id)
-    return {"next_exposure": next_offered, "warmup_guidance": warmup,
+    saved_view = calibration_view(saved_calibration, occurrence, exercise)
+    initial_input = deepcopy(saved_view["input"]) if saved_view else None
+    if initial_input and saved_view["requires_confirmation"]:
+        initial_input["confirmed"] = False
+    # Presence is distinct from progression qualification. Later unresolved source
+    # targets must not hide real work merely because the progression key abstains.
+    first_history_date = history_snapshot.initial_history_dates.get((source_scope(exercise), setup_scope(context)))
+    has_initial_history = first_history_date is not None and first_history_date <= cutoff_date
+    current_exercise = {**deepcopy(exercise), "authored_constraint": refresh_constraints(exercise,
+        equipment=user.equipment_profile, restrictions=user.movement_restrictions)}
+    initial = decide_initial_working_load(exercise=current_exercise, program_id=occurrence.program_id,
+        calibration=initial_input, load_context=context, has_current_work=has_work,
+        has_effective_history=has_initial_history or any(item["effective_sets"] for item in decision_exposures),
+        today=datetime.now(timezone.utc).date())
+    initial.update(action="estimate", recommended_weight=initial["recommended_working_weight"],
+        known_baseline_weight=None, prefill_available=initial["status"] == "provisional",
+        evidence=deepcopy(next_decision["evidence"]), equipment_feasibility={
+            "status": "declared_inventory" if initial["status"] == "provisional" else "unknown",
+            "limitations": ["User-declared exact setup; not verified machine calibration"]})
+    initial["decision_trace"]["calibration_revision"] = saved_view["revision"] if saved_view else None
+    initial["decision_trace"]["calibration_id"] = saved_view["id"] if saved_view else None
+    initial_offered = _wrap(initial, scope="initial_calibration", **wrapper)
+    # Resolve only programs actually projected in this response. The core owner
+    # defensively copies the protocol; provenance is copied into each result.
+    if occurrence.program_id not in history_snapshot.warmup_protocols:
+        history_snapshot.warmup_protocols[occurrence.program_id] = _source_warmup_protocol(occurrence.program_id)
+    warmup = _warmup_guidance(occurrence=occurrence, exercise=current_exercise,
+        next_decision=next_offered, context=context, user_id=user.id, provisional_decision=initial_offered,
+        source_protocol_snapshot=history_snapshot.warmup_protocols[occurrence.program_id])
+    return {"next_exposure": next_offered, "initial_estimate": initial_offered, "calibration": saved_view, "warmup_guidance": warmup,
         "remaining_sets": remaining, "load_context": context, "effective_sets": effective_receipts(records)}
 
 
@@ -348,7 +400,7 @@ def _state_values(decision, *, context, program_id, evidence_revision):
 
 def capture_authored_context(*, exercise, context, feedback, payload):
     warmup = (payload.set_kind or "work").strip().lower() == "warmup"
-    offered = feedback["warmup_guidance"] if warmup else feedback["remaining_sets"] or feedback["next_exposure"]
+    offered = feedback["warmup_guidance"] if warmup else offered_working_decision(feedback)
     if payload.load_recommendation_id is not None and payload.load_recommendation_id != offered["id"]:
         raise HTTPException(409, {"code": "stale_load_recommendation",
             "message": "Load advice changed; refresh and review the current recommendation"})
@@ -370,3 +422,8 @@ def capture_authored_context(*, exercise, context, feedback, payload):
         captured["offered_recommendation"] = deepcopy(offered)
     return {"version": 2, "owner": OWNER, "planned_exercise": deepcopy(exercise),
         "rule_set": deepcopy(context["rule_set"]), "load_intelligence": captured}
+
+
+def offered_working_decision(feedback):
+    initial = feedback.get("initial_estimate")
+    return feedback["remaining_sets"] or (initial if initial and initial["prefill_available"] else feedback["next_exposure"])
