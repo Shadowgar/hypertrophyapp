@@ -1,0 +1,150 @@
+{
+  "existingAccountLoginOnlyAuthWrite": true,
+  "initialPreference": {
+    "theme_family": "classic",
+    "appearance": "dark",
+    "weight_unit": "lb",
+    "revision": 0
+  },
+  "equipmentPatchOnlyIntendedFields": true,
+  "unrelatedProfilePreserved": true,
+  "sixAppearanceSaves": [
+    {
+      "family": "graphite",
+      "appearance": "light",
+      "weight_unit": "kg",
+      "colors": {
+        "body": {
+          "text": "rgb(27, 27, 27)",
+          "background": "rgb(243, 243, 243)",
+          "border": "rgb(229, 231, 235)"
+        },
+        "heading": {
+          "text": "rgb(27, 27, 27)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "rgb(229, 231, 235)"
+        },
+        "select": {
+          "text": "rgb(27, 27, 27)",
+          "background": "rgb(255, 255, 255)",
+          "border": "rgb(115, 115, 115)"
+        }
+      }
+    },
+    {
+      "family": "graphite",
+      "appearance": "dark",
+      "weight_unit": "lb",
+      "colors": {
+        "body": {
+          "text": "rgb(240, 240, 240)",
+          "background": "rgb(17, 17, 17)",
+          "border": "rgb(229, 231, 235)"
+        },
+        "heading": {
+          "text": "rgb(240, 240, 240)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "rgb(229, 231, 235)"
+        },
+        "select": {
+          "text": "rgb(240, 240, 240)",
+          "background": "rgb(25, 25, 25)",
+          "border": "rgb(133, 133, 133)"
+        }
+      }
+    },
+    {
+      "family": "charcoal",
+      "appearance": "light",
+      "weight_unit": "kg",
+      "colors": {
+        "body": {
+          "text": "rgb(36, 36, 36)",
+          "background": "rgb(250, 250, 250)",
+          "border": "rgb(229, 231, 235)"
+        },
+        "heading": {
+          "text": "rgb(36, 36, 36)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "rgb(229, 231, 235)"
+        },
+        "select": {
+          "text": "rgb(36, 36, 36)",
+          "background": "rgb(255, 255, 255)",
+          "border": "rgb(115, 115, 115)"
+        }
+      }
+    },
+    {
+      "family": "charcoal",
+      "appearance": "dark",
+      "weight_unit": "lb",
+      "colors": {
+        "body": {
+          "text": "rgb(236, 236, 236)",
+          "background": "rgb(33, 33, 33)",
+          "border": "rgb(229, 231, 235)"
+        },
+        "heading": {
+          "text": "rgb(236, 236, 236)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "rgb(229, 231, 235)"
+        },
+        "select": {
+          "text": "rgb(236, 236, 236)",
+          "background": "rgb(41, 41, 41)",
+          "border": "rgb(150, 150, 150)"
+        }
+      }
+    },
+    {
+      "family": "classic",
+      "appearance": "light",
+      "weight_unit": "kg",
+      "colors": {
+        "body": {
+          "text": "rgb(23, 23, 23)",
+          "background": "rgb(241, 241, 241)",
+          "border": "rgb(229, 231, 235)"
+        },
+        "heading": {
+          "text": "rgb(23, 23, 23)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "rgb(229, 231, 235)"
+        },
+        "select": {
+          "text": "rgb(23, 23, 23)",
+          "background": "rgb(255, 255, 255)",
+          "border": "rgb(115, 115, 115)"
+        }
+      }
+    },
+    {
+      "family": "classic",
+      "appearance": "dark",
+      "weight_unit": "lb",
+      "colors": {
+        "body": {
+          "text": "rgb(245, 245, 245)",
+          "background": "rgb(16, 16, 16)",
+          "border": "rgb(229, 231, 235)"
+        },
+        "heading": {
+          "text": "rgb(245, 245, 245)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "rgb(229, 231, 235)"
+        },
+        "select": {
+          "text": "rgb(245, 245, 245)",
+          "background": "rgb(25, 25, 25)",
+          "border": "rgb(133, 133, 133)"
+        }
+      }
+    }
+  ],
+  "followDevice": true,
+  "crossDevicePersistence": true,
+  "unitSwitching": true,
+  "qualification_source": "188a45d68eb06b66b655ffeac251cb2453cd02a5",
+  "runtime_unchanged_from_pr112": true
+}

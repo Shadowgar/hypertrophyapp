@@ -1,0 +1,369 @@
+{
+  "migration": {
+    "target": "integration_1024 / m2a_test on loopback 55418, tmpfs",
+    "0024_to_0025_preserved": true,
+    "0025_to_0026_preserved": true,
+    "before_0025": {
+      "authored_load_states": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "body_measurement_entries": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "coaching_recommendations": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "customized_candidate_commands": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "customized_candidate_events": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "customized_candidate_heads": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "customized_candidate_schema": {
+        "rows": 1,
+        "content_digest": "c3aa9744214caf6eb993d6f88f3f1dda3e4e60d59f712b6463c4ce2c4b00dfa1"
+      },
+      "customized_candidate_sessions": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "customized_equipment_profiles": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exercise_states": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "password_reset_tokens": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "soreness_entries": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "users": {
+        "rows": 1,
+        "content_digest": "22dd0087aafcf3d57e3a0b5addfc0d2b8ee4104aa99a7efe815616379b659352"
+      },
+      "weekly_checkins": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "weekly_review_cycles": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "workout_log_commands": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "workout_occurrences": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "workout_plans": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "workout_session_states": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "workout_set_logs": {
+        "rows": 1,
+        "content_digest": "8b068ba084e809ea66275f16ffde0fd95c91736cda36d3b3c0aee6bd39093fac"
+      }
+    },
+    "before_0026": {
+      "authored_load_states": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "body_measurement_entries": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "coaching_recommendations": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "customized_candidate_commands": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "customized_candidate_events": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "customized_candidate_heads": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "customized_candidate_schema": {
+        "rows": 1,
+        "content_digest": "c3aa9744214caf6eb993d6f88f3f1dda3e4e60d59f712b6463c4ce2c4b00dfa1"
+      },
+      "customized_candidate_sessions": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "customized_equipment_profiles": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exercise_states": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "password_reset_tokens": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "soreness_entries": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "user_interface_preferences": {
+        "rows": 1,
+        "content_digest": "9c09525b88fa926a71e2df4f088f9a77efbc6008aec77f9379e7854484b3641e"
+      },
+      "users": {
+        "rows": 1,
+        "content_digest": "22dd0087aafcf3d57e3a0b5addfc0d2b8ee4104aa99a7efe815616379b659352"
+      },
+      "weekly_checkins": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "weekly_review_cycles": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "workout_log_commands": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "workout_occurrences": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "workout_plans": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "workout_session_states": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "workout_set_logs": {
+        "rows": 1,
+        "content_digest": "8b068ba084e809ea66275f16ffde0fd95c91736cda36d3b3c0aee6bd39093fac"
+      }
+    },
+    "after_0026": {
+      "authored_initial_calibrations": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "authored_load_states": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "body_measurement_entries": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "coaching_recommendations": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "customized_candidate_commands": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "customized_candidate_events": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "customized_candidate_heads": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "customized_candidate_schema": {
+        "rows": 1,
+        "content_digest": "c3aa9744214caf6eb993d6f88f3f1dda3e4e60d59f712b6463c4ce2c4b00dfa1"
+      },
+      "customized_candidate_sessions": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "customized_equipment_profiles": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exercise_states": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "password_reset_tokens": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "soreness_entries": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "user_interface_preferences": {
+        "rows": 1,
+        "content_digest": "9c09525b88fa926a71e2df4f088f9a77efbc6008aec77f9379e7854484b3641e"
+      },
+      "users": {
+        "rows": 1,
+        "content_digest": "22dd0087aafcf3d57e3a0b5addfc0d2b8ee4104aa99a7efe815616379b659352"
+      },
+      "weekly_checkins": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "weekly_review_cycles": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "workout_log_commands": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "workout_occurrences": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "workout_plans": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "workout_session_states": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "workout_set_logs": {
+        "rows": 1,
+        "content_digest": "8b068ba084e809ea66275f16ffde0fd95c91736cda36d3b3c0aee6bd39093fac"
+      }
+    },
+    "new_preferences_backfilled": false,
+    "new_calibrations_backfilled": false
+  },
+  "restoration": {
+    "source": "integration_1024",
+    "restore": "integration_1024_restore",
+    "identity_verified": true,
+    "empty_before_restore": true,
+    "all_tables_equal": true,
+    "tables": {
+      "alembic_version": {
+        "rows": 1,
+        "content_digest": "81528a0b99e74313be122dcd04e2363620440a48116d7804a314d1b8839c7af8"
+      },
+      "authored_initial_calibrations": {
+        "rows": 3,
+        "content_digest": "ba4e95573273b15add2a1b947c0d5861b0ace3e8be66fe4d9ffefde5dc956339"
+      },
+      "authored_load_states": {
+        "rows": 3,
+        "content_digest": "488e3c33578e9f91a5b02dd73602aafc0627d3c7b0563c06d7b731e102ff8d7c"
+      },
+      "body_measurement_entries": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "coaching_recommendations": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "customized_candidate_commands": {
+        "rows": 4,
+        "content_digest": "c38023195691c8d6dab89469d4c7595662c6f567a3f1bf00a1f0a24ee7bc9442"
+      },
+      "customized_candidate_events": {
+        "rows": 5,
+        "content_digest": "46b465e982726b78a4f92fb8fc0e320ec1e3f15fccd9fad94cac1c3ebc3835a2"
+      },
+      "customized_candidate_heads": {
+        "rows": 1,
+        "content_digest": "34dcdef98fdefd8df7a89a4ff84a5ff80b168b20803441906c7f011d3c0177b1"
+      },
+      "customized_candidate_schema": {
+        "rows": 1,
+        "content_digest": "c3aa9744214caf6eb993d6f88f3f1dda3e4e60d59f712b6463c4ce2c4b00dfa1"
+      },
+      "customized_candidate_sessions": {
+        "rows": 1,
+        "content_digest": "3cc96bade629fcc02564a3914e5725b0ed22f503a1afa0702cf80618dd8b750a"
+      },
+      "customized_equipment_profiles": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exercise_states": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "password_reset_tokens": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "soreness_entries": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "user_interface_preferences": {
+        "rows": 6,
+        "content_digest": "d622e89bd90687554289167739bad5b985311cb2dc5a230e72cb33a92b22f664"
+      },
+      "users": {
+        "rows": 6,
+        "content_digest": "1e8c28a8ec61bea6bce942f8add7c130b2979a1c8b93986a123505deb44daf87"
+      },
+      "weekly_checkins": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "weekly_review_cycles": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "workout_log_commands": {
+        "rows": 12,
+        "content_digest": "cbadc6ac7f9f9c34933ef01abf6ee62178172d72e32ac48e4af0140b7345812f"
+      },
+      "workout_occurrences": {
+        "rows": 3,
+        "content_digest": "fd7c1581606bceaefd1753d9dc373cd552ae25889dcb364a6a53b04d25cd461c"
+      },
+      "workout_plans": {
+        "rows": 5,
+        "content_digest": "da282cc44ae1d3904a800279e11359fa5b6d5fd5d9965d0dbc6d8d334b2d9c8a"
+      },
+      "workout_session_states": {
+        "rows": 0,
+        "content_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "workout_set_logs": {
+        "rows": 12,
+        "content_digest": "4f28e98787d6cf3aad5fd57bd31dda749fc29f1b5ee43e0eb51c4e81fb3434af"
+      }
+    }
+  },
+  "original_migration_seed_rows_still_match_after_browser": true
+}

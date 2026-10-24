@@ -1,0 +1,263 @@
+{
+  "environment": "isolated localhost3020 -> localhost8020 -> disposable PostgreSQL",
+  "viewports": [
+    {
+      "width": 390,
+      "height": 844
+    },
+    {
+      "width": 1440,
+      "height": 900
+    }
+  ],
+  "observations": [
+    {
+      "scenario": "A",
+      "benchmark": "100 lb known1RM",
+      "estimate": "65 lb",
+      "lostResponse": "server committed; exact command/body retried after close+reload",
+      "workingReceipts": 0
+    },
+    {
+      "scenario": "D-mobile",
+      "before": {
+        "weight": {
+          "x": 33,
+          "y": 564,
+          "width": 156,
+          "height": 58
+        },
+        "reps": {
+          "x": 201,
+          "y": 564,
+          "width": 156,
+          "height": 58
+        },
+        "save": {
+          "x": 33,
+          "y": 694,
+          "width": 324,
+          "height": 52
+        },
+        "scrollY": 0
+      },
+      "after": {
+        "weight": {
+          "x": 33,
+          "y": 564,
+          "width": 156,
+          "height": 58
+        },
+        "reps": {
+          "x": 201,
+          "y": 564,
+          "width": 156,
+          "height": 58
+        },
+        "save": {
+          "x": 33,
+          "y": 694,
+          "width": 324,
+          "height": 52
+        },
+        "scrollY": 0
+      },
+      "load": "65 lb retained",
+      "rest": true,
+      "initialEstimateRetired": true
+    },
+    {
+      "scenario": "D-desktop",
+      "before": {
+        "weight": {
+          "x": 515,
+          "y": 614,
+          "width": 233.5625,
+          "height": 58
+        },
+        "reps": {
+          "x": 760.5625,
+          "y": 614,
+          "width": 233.578125,
+          "height": 58
+        },
+        "save": {
+          "x": 515,
+          "y": 744,
+          "width": 479.140625,
+          "height": 52
+        },
+        "scrollY": 0
+      },
+      "uncertain": {
+        "weight": {
+          "x": 515,
+          "y": 614,
+          "width": 233.5625,
+          "height": 58
+        },
+        "reps": {
+          "x": 760.5625,
+          "y": 614,
+          "width": 233.578125,
+          "height": 58
+        },
+        "save": {
+          "x": 515,
+          "y": 744,
+          "width": 479.140625,
+          "height": 52
+        },
+        "scrollY": 0
+      },
+      "after": {
+        "weight": {
+          "x": 515,
+          "y": 614,
+          "width": 233.5625,
+          "height": 58
+        },
+        "reps": {
+          "x": 760.5625,
+          "y": 614,
+          "width": 233.578125,
+          "height": 58
+        },
+        "save": {
+          "x": 515,
+          "y": 744,
+          "width": 479.140625,
+          "height": 52
+        },
+        "scrollY": 0
+      },
+      "exactSetCommandRetry": true,
+      "source": "a2cc87d3-ad24-501e-bfa5-22cb9b00cef5",
+      "weightKg": 29.48350405
+    },
+    {
+      "scenario": "correction-and-undo",
+      "lostResponse": true,
+      "otherReceiptLocked": true,
+      "closeReloadExactRetry": true,
+      "afterUndoCompleted": 1,
+      "load": "65 lb retained"
+    },
+    {
+      "scenario": "B",
+      "explanation": "Starting load\nClose\n\nThe first source work set needs a numeric rep target with an upper bound from 6 to 12.\n\nSaved benchmark available for this occurrence.\n\n",
+      "manualLoad": "55 lb",
+      "manualReps": 10,
+      "saveEnabled": true
+    },
+    {
+      "scenario": "C",
+      "reportedBenchmark": "100 lb",
+      "qualifiedHistory": "40 kg displayed88.2 lb",
+      "historyWins": true
+    }
+  ],
+  "errors": [],
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "consoleLocations": [
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://127.0.0.1:3020/favicon.ico"
+    },
+    {
+      "message": "Failed to load resource: net::ERR_FAILED",
+      "url": "http://127.0.0.1:3020/api/workout/8131374b-17dc-58e6-9ec0-9f145d8b476b/initial-calibration"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://127.0.0.1:3020/programs?_rsc=bsU8Amt3f0T1Tw-f"
+    },
+    {
+      "message": "Failed to load resource: net::ERR_FAILED",
+      "url": "http://127.0.0.1:3020/api/workout/8131374b-17dc-58e6-9ec0-9f145d8b476b/log-set"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://127.0.0.1:3020/programs?_rsc=bsU8Amt3f0T1Tw-f"
+    },
+    {
+      "message": "Failed to load resource: net::ERR_FAILED",
+      "url": "http://127.0.0.1:3020/api/workout/set/a721d947-827c-48d4-b186-3eed22bc0f9c/correct"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://127.0.0.1:3020/programs?_rsc=bsU8Amt3f0T1Tw-f"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://127.0.0.1:3020/programs?_rsc=bsU8Amt3f0T1Tw-f"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://127.0.0.1:3020/programs?_rsc=JmFnTkhJC5n8mJfW"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://127.0.0.1:3020/programs?_rsc=bsU8Amt3f0T1Tw-f"
+    },
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://127.0.0.1:3020/programs?_rsc=bsU8Amt3f0T1Tw-f"
+    }
+  ],
+  "apiFailures": [],
+  "resourceFailures": [
+    {
+      "path": "/programs",
+      "status": 404,
+      "type": "fetch"
+    },
+    {
+      "path": "/programs",
+      "status": 404,
+      "type": "fetch"
+    },
+    {
+      "path": "/programs",
+      "status": 404,
+      "type": "fetch"
+    },
+    {
+      "path": "/programs",
+      "status": 404,
+      "type": "fetch"
+    },
+    {
+      "path": "/programs",
+      "status": 404,
+      "type": "fetch"
+    },
+    {
+      "path": "/programs",
+      "status": 404,
+      "type": "fetch"
+    },
+    {
+      "path": "/programs",
+      "status": 404,
+      "type": "fetch"
+    }
+  ],
+  "consoleQualification": "Inherited favicon and Programs-prefetch 404s retained explicitly; injected response-loss ERR_FAILED expected; no API/chunk/unhandled page errors",
+  "passed": true,
+  "applicationRevision": "combined candidate; runtime tree matches 912e7e9",
+  "qualification_source": "188a45d68eb06b66b655ffeac251cb2453cd02a5",
+  "runtime_unchanged_from_pr112": true
+}

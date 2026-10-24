@@ -180,3 +180,16 @@ GEN-002/003/004/005/007/009, SCHED-004/005 and HIST preservation advance through
 The existing matrix above traces the original 80 IDs at its recorded qualification baseline. The owner separately approved [PERS-001–PERS-020](personal-workoutapp-2026-10-21.md#supplemental-requirement-register) on 2026-10-21. They are **supplemental desired outcomes**, not silently folded into the historical 80-ID matrix. Their target milestone and relevant existing feature/issues are mapped in the [personal capability crosswalk](../roadmap/personal-capability-crosswalk-2026-10-21.md). No new PERS ID has an independently demonstrated full implementation, test-evidence chain or release acceptance as a result of this documentation update.
 
 For each future approved package, extend scoped traceability from its PERS ID to contract/mode authority, source/decision owner, API/UI/data flow, automated and manual tests, actual revision/environment evidence and explicit owner acceptance. Do not invent tests or copy evidence from mockups. No other fitness app/API connection is allowed; direct Apple XML/native Apple HealthKit is the accepted optional boundary.
+
+## Combined candidate qualification — 2026-10-24
+
+PERS-002/008, AUTH-FID/HIST/LOAD/DATA/GEN/UX/SEC/OPS retain their existing owners
+and acceptance boundaries. [Integration evidence and nine-case CI dispositions](../evidence/integration-2026-10-24/README.md)
+record fresh combined-revision checks; prior revision evidence stays dated.
+The original 80 rows and PERS-001–020 above remain intact. The approved
+known-1RM/recent-set/manual pathway now exists within #111's declared eligibility;
+Issue #103 remains partial for performance and physical-iPhone acceptance.
+The 2026-10-21 handoff's planning-only permission and pending visual choice are
+historical; #108 `33598c3` and subsequent owner implementation authorizations
+govern this stack. Full application layout implementation and release acceptance
+remain distinct; no new requirement is marked fully complete here.

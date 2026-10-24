@@ -1,5 +1,13 @@
 # Next coder AI handoff — read-only gym-use implementation planning
 
+> **Subsequent authorization (2026-10-24):** This is the original planning request,
+> retained as history. The owner later approved the unified design at PR #108
+> `33598c3`, implementation in #110, the bounded numerical amendment/#111 and
+> Today slice/#112, then this isolated integration rehearsal. Those explicit
+> approvals supersede this handoff's read-only and pending-visual instructions
+> for their named scopes. They do not authorize main merge or production work.
+> Current qualification: [integration record](../evidence/integration-2026-10-24/README.md).
+
 **Prepared:** 2026-10-21. **Permission:** read-only discovery and planning only. Not approval to write product code, merge, run migrations or deployment. This is a first implementation-slice proposal request under the existing M0/M2A/M6 roadmap, not a new milestone.
 
 ## Copy-ready instruction for the coding assistant
