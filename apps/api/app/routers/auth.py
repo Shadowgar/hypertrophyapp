@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..config import settings
 from ..emailer import is_smtp_configured, send_password_reset_email
-from ..models import PasswordResetToken, User, UserInterfacePreference
+from ..models import PasswordResetToken, User, UserInterfacePreference, AuthoredInitialCalibration
 from ..models import AuthoredLoadState, BodyMeasurementEntry, CoachingRecommendation, ExerciseState, SorenessEntry, WeeklyCheckin, WeeklyReviewCycle
 from ..models import WorkoutLogCommand, WorkoutOccurrence, WorkoutPlan, WorkoutSessionState, WorkoutSetLog
 from ..observability import log_event
@@ -90,6 +90,7 @@ def dev_wipe_user(payload: DevWipeUserRequest, db: DbSession) -> StatusResponse:
     db.query(BodyMeasurementEntry).filter(BodyMeasurementEntry.user_id == user_id).delete(synchronize_session=False)
     db.query(CoachingRecommendation).filter(CoachingRecommendation.user_id == user_id).delete(synchronize_session=False)
     db.query(PasswordResetToken).filter(PasswordResetToken.user_id == user_id).delete(synchronize_session=False)
+    db.query(AuthoredInitialCalibration).filter(AuthoredInitialCalibration.user_id == user_id).delete(synchronize_session=False)
     db.query(UserInterfacePreference).filter(UserInterfacePreference.user_id == user_id).delete(synchronize_session=False)
     db.query(User).filter(User.id == user_id).delete(synchronize_session=False)
     db.commit()

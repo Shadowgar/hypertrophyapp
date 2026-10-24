@@ -1,0 +1,163 @@
+{
+  "environment": "isolated localhost3020 -> localhost8020 -> disposable PostgreSQL",
+  "viewports": [
+    {
+      "width": 390,
+      "height": 844
+    },
+    {
+      "width": 1440,
+      "height": 900
+    }
+  ],
+  "observations": [
+    {
+      "scenario": "A",
+      "benchmark": "100 lb known1RM",
+      "estimate": "65 lb",
+      "lostResponse": "server committed; exact command/body retried after close+reload",
+      "workingReceipts": 0
+    },
+    {
+      "scenario": "D-mobile",
+      "before": {
+        "weight": {
+          "x": 33,
+          "y": 564,
+          "width": 156,
+          "height": 58
+        },
+        "reps": {
+          "x": 201,
+          "y": 564,
+          "width": 156,
+          "height": 58
+        },
+        "save": {
+          "x": 33,
+          "y": 694,
+          "width": 324,
+          "height": 52
+        },
+        "scrollY": 0
+      },
+      "after": {
+        "weight": {
+          "x": 33,
+          "y": 564,
+          "width": 156,
+          "height": 58
+        },
+        "reps": {
+          "x": 201,
+          "y": 564,
+          "width": 156,
+          "height": 58
+        },
+        "save": {
+          "x": 33,
+          "y": 694,
+          "width": 324,
+          "height": 52
+        },
+        "scrollY": 0
+      },
+      "load": "65 lb retained",
+      "rest": true,
+      "initialEstimateRetired": true
+    },
+    {
+      "scenario": "D-desktop",
+      "before": {
+        "weight": {
+          "x": 515,
+          "y": 614,
+          "width": 233.5625,
+          "height": 58
+        },
+        "reps": {
+          "x": 760.5625,
+          "y": 614,
+          "width": 233.578125,
+          "height": 58
+        },
+        "save": {
+          "x": 515,
+          "y": 744,
+          "width": 479.140625,
+          "height": 52
+        },
+        "scrollY": 0
+      },
+      "uncertain": {
+        "weight": {
+          "x": 515,
+          "y": 614,
+          "width": 233.5625,
+          "height": 58
+        },
+        "reps": {
+          "x": 760.5625,
+          "y": 614,
+          "width": 233.578125,
+          "height": 58
+        },
+        "save": {
+          "x": 515,
+          "y": 744,
+          "width": 479.140625,
+          "height": 52
+        },
+        "scrollY": 0
+      },
+      "after": {
+        "weight": {
+          "x": 515,
+          "y": 614,
+          "width": 233.5625,
+          "height": 58
+        },
+        "reps": {
+          "x": 760.5625,
+          "y": 614,
+          "width": 233.578125,
+          "height": 58
+        },
+        "save": {
+          "x": 515,
+          "y": 744,
+          "width": 479.140625,
+          "height": 52
+        },
+        "scrollY": 0
+      },
+      "exactSetCommandRetry": true,
+      "source": "0df830d0-6ae5-5837-a051-9c90dfbfdc90",
+      "weightKg": 29.48350405
+    },
+    {
+      "scenario": "correction-and-undo",
+      "lostResponse": true,
+      "otherReceiptLocked": true,
+      "closeReloadExactRetry": true,
+      "afterUndoCompleted": 1,
+      "load": "65 lb retained"
+    },
+    {
+      "scenario": "B",
+      "explanation": "Starting load\nClose\n\nThe first source work set needs a numeric rep target with an upper bound from 6 to 12.\n\nSaved benchmark available for this occurrence.\n\n",
+      "manualLoad": "55 lb",
+      "manualReps": 10,
+      "saveEnabled": true
+    },
+    {
+      "scenario": "C",
+      "reportedBenchmark": "100 lb",
+      "qualifiedHistory": "40 kg displayed88.2 lb",
+      "historyWins": true
+    }
+  ],
+  "errors": [],
+  "passed": true,
+  "applicationRevision": "96ef19d43c88440b987d290844e4da7775a70912"
+}

@@ -1,5 +1,19 @@
 # Requirements traceability
 
+## PERS-008 / Issue #103 starting-load slice — 2026-10-23
+
+The owner approved the [specific provisional numerical amendment](../contracts/proposals/authored-starting-load-v1.md)
+at PR #111 `4041a558`. The focused implementation adds optional known-1RM and
+effort-qualified recent-set reports, account/setup-scoped revisions, an initial-only
+deterministic estimate and the approved runner presentation. Qualified completed
+history and current working sets retain precedence; unsupported cases stay manual.
+See [implementation evidence](../evidence/starting-load-2026-10-23/IMPLEMENTATION.md)
+for actual tests, demonstrations and inherited failures. PERS-008 / Issue #103
+remain **partial**: eligibility is bounded, cold Today performance still needs
+qualification, physical iPhone keyboard/background acceptance is untested, and
+final-revision security qualification remains separate. No production release,
+merge, live-data migration or broader Home/onboarding work is included.
+
 Status: **Initial populated mapping; qualification/owner acceptance pending**. All 80 catalog IDs are mapped. [Catalog](catalog.md) owns requirement text/approval; [product](product-contract.md) owns mode/load/date permissions. The chain is requirement → product → ADR → high-risk contract → implementing owner/module → automated test → manual qualification → evidence → milestone → owner acceptance.
 
 The product link in each requirement resolves to the common [product contract](product-contract.md); specific ADR/contract links are below. Module links identify existing implementation seams, not completed target code. Existing test files are candidate partial protections at the audited source, not invented future names or claims of full passing acceptance. Historical suites contain failures. `TBD` means no specific existing protection was established; future checks are described in the catalog, not pretended to exist.

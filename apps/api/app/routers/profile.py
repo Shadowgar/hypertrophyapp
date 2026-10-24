@@ -34,7 +34,7 @@ from ..selected_date_plans import CurrentSchedulingProfile, current_scheduling_p
 from ..history_dates import performed_log_rows
 from ..workout_history import effective_set_logs, valid_weekly_reviews, lock_history_user
 from ..deps import get_current_user
-from ..models import UserInterfacePreference
+from ..models import UserInterfacePreference, AuthoredInitialCalibration
 from ..models import BodyMeasurementEntry, SorenessEntry, User, WeeklyCheckin, WeeklyReviewCycle, WorkoutSetLog
 from ..models import AuthoredLoadState, CoachingRecommendation, ExerciseState, PasswordResetToken, WorkoutLogCommand, WorkoutOccurrence, WorkoutPlan, WorkoutSessionState
 from ..observability import log_event
@@ -1084,6 +1084,7 @@ def wipe_current_user_data(
 
     _clear_user_training_state(db, user_id=user_id)
     db.query(PasswordResetToken).filter(PasswordResetToken.user_id == user_id).delete(synchronize_session=False)
+    db.query(AuthoredInitialCalibration).filter(AuthoredInitialCalibration.user_id == user_id).delete(synchronize_session=False)
     db.query(UserInterfacePreference).filter(UserInterfacePreference.user_id == user_id).delete(synchronize_session=False)
     db.query(User).filter(User.id == user_id).delete(synchronize_session=False)
     db.commit()

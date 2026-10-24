@@ -1,0 +1,116 @@
+[
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "slot": {
+      "x": 16,
+      "y": 312,
+      "right": 374,
+      "bottom": 408,
+      "height": 96,
+      "width": 358
+    },
+    "content": [
+      {
+        "x": 16,
+        "y": 342.125,
+        "right": 276.5,
+        "bottom": 377.859375,
+        "height": 35.734375,
+        "width": 260.5
+      },
+      {
+        "x": 296.59375,
+        "y": 336,
+        "right": 374,
+        "bottom": 384,
+        "height": 48,
+        "width": 77.40625
+      }
+    ],
+    "prescription": {
+      "x": 16,
+      "y": 236,
+      "right": 374,
+      "bottom": 304,
+      "height": 68,
+      "width": 358
+    },
+    "feedback": {
+      "x": 16,
+      "y": 416,
+      "right": 374,
+      "bottom": 480,
+      "height": 64,
+      "width": 358
+    },
+    "composer": {
+      "x": 16,
+      "y": 488,
+      "right": 374,
+      "bottom": 763,
+      "height": 275,
+      "width": 358
+    },
+    "text": "Suggested starting weight — estimate\n\n65 lb\n\nWhy?"
+  },
+  {
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "slot": {
+      "x": 498,
+      "y": 314,
+      "right": 1011.140625,
+      "bottom": 410,
+      "height": 96,
+      "width": 513.140625
+    },
+    "content": [
+      {
+        "x": 498,
+        "y": 344.125,
+        "right": 758.5,
+        "bottom": 379.859375,
+        "height": 35.734375,
+        "width": 260.5
+      },
+      {
+        "x": 933.734375,
+        "y": 338,
+        "right": 1011.140625,
+        "bottom": 386,
+        "height": 48,
+        "width": 77.40625
+      }
+    ],
+    "prescription": {
+      "x": 498,
+      "y": 210,
+      "right": 1011.140625,
+      "bottom": 298,
+      "height": 88,
+      "width": 513.140625
+    },
+    "feedback": {
+      "x": 498,
+      "y": 446,
+      "right": 1011.140625,
+      "bottom": 522,
+      "height": 76,
+      "width": 513.140625
+    },
+    "composer": {
+      "x": 498,
+      "y": 538,
+      "right": 1011.140625,
+      "bottom": 813,
+      "height": 275,
+      "width": 513.140625
+    },
+    "text": "Suggested starting weight — estimate\n\n65 lb\n\nWhy?"
+  }
+]

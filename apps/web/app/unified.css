@@ -332,14 +332,28 @@ input[type="radio"] {
   color: var(--text-secondary);
 }
 .atlas-suggestion {
-  height: 56px;
+  height: 96px;
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
+.atlas-suggestion > div {
+  min-width: 0;
+}
+.atlas-suggestion strong {
+  display: block;
+  font-size: 14px;
+  line-height: 1.3;
+}
 .atlas-suggestion p {
   font-size: 13px;
+  line-height: 1.35;
+}
+.atlas-suggestion button {
+  flex: none;
+  white-space: nowrap;
 }
 .atlas-feedback {
   height: 76px;
@@ -518,7 +532,7 @@ input[type="radio"] {
     height: 88px;
   }
   .atlas-suggestion {
-    height: 72px;
+    height: 96px;
   }
   .atlas-feedback {
     margin-top: 20px;
@@ -549,7 +563,7 @@ input[type="radio"] {
     gap: 12px;
   }
   .atlas-suggestion {
-    height: 56px;
+    height: 96px;
   }
 }
 @media (min-width: 1000px) {

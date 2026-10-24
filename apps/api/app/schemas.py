@@ -3,7 +3,7 @@ from typing import Any
 from typing import Literal
 import re
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
 from .adaptive_schema import UserTrainingState
 
@@ -613,6 +613,75 @@ class WorkoutLoadContext(BaseModel):
 class WorkoutLoadGuidanceRequest(BaseModel):
     exercise_occurrence_id: str = Field(min_length=1, max_length=128)
     load_context: WorkoutLoadContext | None = None
+
+
+class InitialAttainableLoads(BaseModel):
+    model_config = {"extra": "forbid"}
+    unit: Literal["lb", "kg"]
+    values: list[float] | None = Field(default=None, min_length=1, max_length=1000)
+    min: float | None = Field(default=None, gt=0, strict=True, allow_inf_nan=False)
+    step: float | None = Field(default=None, gt=0, strict=True, allow_inf_nan=False)
+    max: float | None = Field(default=None, gt=0, strict=True, allow_inf_nan=False)
+
+    @field_validator("values", mode="before")
+    @classmethod
+    def declared_values(cls, values):
+        import math
+        try:
+            valid = values is None or isinstance(values, list) and all(
+                type(v) in (int, float) and math.isfinite(v) and v > 0 for v in values)
+        except OverflowError:
+            valid = False
+        if not valid:
+            raise ValueError("Attainable loads must be finite positive numbers")
+        return values
+
+    @model_validator(mode="after")
+    def one_inventory(self):
+        if self.values is not None:
+            if any(v is not None for v in (self.min, self.step, self.max)):
+                raise ValueError("Declare a list or a grid, not both")
+        elif any(v is None for v in (self.min, self.step, self.max)) or self.min > self.max:
+            raise ValueError("Declare attainable minimum, positive step and maximum")
+        return self
+
+
+class AuthoredCalibrationInput(BaseModel):
+    model_config = {"extra": "forbid"}
+    method: Literal["known_1rm", "recent_set"]
+    load: float = Field(gt=0, strict=True, allow_inf_nan=False)
+    unit: Literal["lb", "kg"]
+    observed_date: date
+    reps: int | None = Field(default=None, ge=1, le=10, strict=True)
+    rir: float | None = Field(default=None, ge=0, le=3, strict=True, allow_inf_nan=False)
+    confirmed: bool = Field(strict=True)
+    variant_id: str = Field(min_length=1, max_length=128)
+    setup_details: str = Field(min_length=1, max_length=500)
+    attainable: InitialAttainableLoads
+
+    @field_validator("observed_date")
+    @classmethod
+    def past_observation(cls, value):
+        from datetime import timezone
+        if value > datetime.now(timezone.utc).date():
+            raise ValueError("Observation cannot be in the future")
+        return value
+
+    @model_validator(mode="after")
+    def reported_effort(self):
+        if self.method == "known_1rm" and (self.reps is not None or self.rir is not None):
+            raise ValueError("A known maximum is separate from a recent-set estimate")
+        if self.method == "recent_set" and self.reps is not None and self.rir is not None and self.reps + self.rir > 10:
+            raise ValueError("Recent reps plus reserve must not exceed ten")
+        return self
+
+
+class AuthoredCalibrationRequest(BaseModel):
+    model_config = {"extra": "forbid"}
+    command_id: str = Field(min_length=1, max_length=128)
+    exercise_occurrence_id: str = Field(min_length=1, max_length=128)
+    load_context: WorkoutLoadContext
+    calibration: AuthoredCalibrationInput
 
 
 class WorkoutSetLogRequest(BaseModel):

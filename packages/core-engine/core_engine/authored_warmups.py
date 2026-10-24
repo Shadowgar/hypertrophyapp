@@ -7,9 +7,10 @@ owner neither falls back to a planned load nor invents equipment inventory.
 """
 from copy import deepcopy
 from decimal import Decimal, DecimalException
+from datetime import date
 import re
 
-from .load_intelligence import _attainable_weight, _context_reasons, _digest, _finite, _numeric_target, _safe_json
+from .load_intelligence import decide_initial_working_load, _initial_attainable_weight, _attainable_weight, _context_reasons, _digest, _finite, _numeric_target, _safe_json
 
 VERSION = "authored-warmup-v1"
 _AUTHORED_PROGRAMS = {"pure_bodybuilding_phase_1_full_body", "pure_bodybuilding_phase_2_full_body"}
@@ -79,7 +80,8 @@ def _exercise_reasons(exercise):
     return reasons
 
 
-def build_authored_warmup_guidance(*, exercise, working_decision, load_context, program_id, source_protocol):
+def build_authored_warmup_guidance(*, exercise, working_decision, load_context, program_id, source_protocol,
+        provisional_decision=None):
     """Return lossless source count/text plus qualified canonical kg suggestions.
 
     Numeric but unsupported counts and textual counts have no synthetic rows.
@@ -88,6 +90,8 @@ def build_authored_warmup_guidance(*, exercise, working_decision, load_context, 
     """
     exercise, working, context, protocol = (deepcopy(value or {}) for value in
         (exercise, working_decision, load_context, source_protocol))
+    provisional = deepcopy(provisional_decision or {})
+    provisional_used = False
     source_count, count = _source_count(exercise)
     exercise_protocol_digest = _digest({key: protocol.get(key) for key in
         ("exercise_specific_warm_up_intro", "exercise_specific_warm_up")})
@@ -122,18 +126,44 @@ def build_authored_warmup_guidance(*, exercise, working_decision, load_context, 
                 if semantics in {"total_external", "per_hand", "machine_stack"} and semantics != context.get("basis"):
                     reasons.append("load_semantics_unsupported_or_contradictory")
         weight = working.get("recommended_weight")
-        if (working.get("scope") != "next_exposure" or working.get("prefill_available") is not True
-                or not _finite(weight) or weight <= 0):
+        qualified = (working.get("scope") == "next_exposure" and working.get("prefill_available") is True
+            and _finite(weight) and weight > 0)
+        if not qualified and provisional.get("status") == "provisional":
+            # Re-evaluate the supplied owner result against this exact source
+            # and setup. A copied/stale/tampered weight is not authority.
+            initial_trace = provisional.get("decision_trace") or {}
+            try:
+                evaluated_date = date.fromisoformat(initial_trace.get("evaluated_date"))
+                expected = decide_initial_working_load(exercise=exercise, program_id=program_id,
+                    calibration=initial_trace.get("calibration"), load_context=context,
+                    has_current_work=initial_trace.get("has_current_work", True),
+                    has_effective_history=initial_trace.get("has_effective_history", True), today=evaluated_date)
+                provisional_used = (all(provisional.get(key) == value for key, value in expected.items()
+                    if key != "decision_trace") and all(initial_trace.get(key) == value
+                    for key, value in expected["decision_trace"].items()) and expected["status"] == "provisional")
+            except (TypeError, ValueError):
+                provisional_used = False
+            if provisional_used:
+                weight = provisional["recommended_working_weight"]
+        if not qualified and not provisional_used:
             reasons.append("qualified_working_load_unavailable")
         increment = context.get("increment")
-        if not _finite(increment) or increment <= 0 or context.get("increment_unit") not in {"kg", "lb"}:
+        if not provisional_used and (not _finite(increment) or increment <= 0 or context.get("increment_unit") not in {"kg", "lb"}):
             reasons.append("declared_increment_unavailable")
         if not reasons:
             proposals = []
             try:
                 for row in rows:
                     raw_weight = Decimal(str(weight)) * Decimal(row["percent"]) / Decimal("100")
-                    proposed, feasibility = _attainable_weight(raw_weight, weight, "decrease", context)
+                    if provisional_used:
+                        attainable = provisional["decision_trace"]["calibration"]["attainable"]
+                        selected, reason = _initial_attainable_weight(raw_weight, attainable)
+                        proposed = float(selected) if selected is not None and selected < Decimal(str(weight)) else None
+                        feasibility = {"status": "declared_attainable_provisional", "attainable": deepcopy(attainable),
+                            "limitations": ["Warmup uses a provisional working-load estimate and user-declared equipment."],
+                            "reason_code": reason}
+                    else:
+                        proposed, feasibility = _attainable_weight(raw_weight, weight, "decrease", context)
                     proposals.append(proposed)
             except DecimalException as error:
                 # Accepted finite declarations can exceed the shared grid
@@ -152,7 +182,8 @@ def build_authored_warmup_guidance(*, exercise, working_decision, load_context, 
                     row["suggested_weight"] = proposed
         status = "manual" if reasons else "suggested"
         explanation = ("Source warmup targets are preserved; enter actual loads manually because load qualification is unresolved."
-            if reasons else "Source warmup percentages use the qualified next working load and the declared increment.")
+            if reasons else "Source warmup percentages use the provisional initial-load estimate and declared attainable loads."
+            if provisional_used else "Source warmup percentages use the qualified next working load and the declared increment.")
     reasons = list(dict.fromkeys(reasons))
     return _safe_json({"version": VERSION, "source_count": source_count, "count": count, "status": status,
         "source_instructions": _source_instructions(protocol, count, protocol_qualified),
@@ -170,5 +201,7 @@ def build_authored_warmup_guidance(*, exercise, working_decision, load_context, 
             "working_recommendation_id": working.get("id"), "working_evidence_revision": working.get("evidence_revision"),
             "working_decision_digest": _digest(working), "working_decision_trace": deepcopy(working.get("decision_trace")),
             "working_scope": working.get("scope"), "qualified_working_weight": working.get("recommended_weight"),
+            "provisional_working_weight": provisional.get("recommended_working_weight") if provisional_used else None,
+            "provisional_decision_trace": deepcopy(provisional.get("decision_trace")) if provisional_used else None,
             "load_context": deepcopy(context), "status": status, "reason_codes": reasons,
             "sets": deepcopy(rows)}})

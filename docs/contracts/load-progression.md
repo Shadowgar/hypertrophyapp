@@ -1,6 +1,6 @@
 # Load-progression contract
 
-Status: **Owner-approved automatic-load direction; technical evidence rules Proposed**. Owner: deterministic load/exposure decision family; API records effective data and web presents/prefills/overrides. [ADR-006](../adr/0006-load-and-exposure-model.md). No numerical training threshold is newly accepted here.
+Status: **Owner-approved automatic-load direction; technical evidence rules Proposed**. Owner: deterministic load/exposure decision family; API records effective data and web presents/prefills/overrides. [ADR-006](../adr/0006-load-and-exposure-model.md). The only newly accepted numerical policy is the explicitly linked provisional initial-calibration amendment below.
 
 ## Inputs, exposure and comparability
 
@@ -25,3 +25,14 @@ Bad-day protection distinguishes one anomalous context from repeated comparable 
 Persist recommendation/evidence/rule version and user chosen load/reason. Performed load controls later analysis; planned/prefilled load remains separate. Corrected/undone sets invalidate dependent exposure summaries, streaks and recommendations and rebuild the same effective state; historical evidence references remain auditable. Lost/inconsistent projections trigger rebuild/monitor rather than guess.
 
 Acceptance: planned 50 versus performed 45 uses the performed evidence; missing effort does not produce a same-RPE claim; assisted/bodyweight variants remain separate; a single bad day does not automatically prove regression; partial/duplicate/child sets do not count as extra completed exposures; correction removes its future effect; available increments produce feasible prefill; override preserves authored dose and trace. PostgreSQL concurrency and replay must qualify the supporting history contract.
+
+## Approved provisional initial calibration — 2026-10-23
+
+The owner approved [Authored provisional initial-load v1](proposals/authored-starting-load-v1.md)
+at PR #111 `4041a558ec3160806f36eddb7f0fc90c346681a9` for bounded implementation.
+Its inverse-Epley estimate and declared attainable-load floor are an initial-only
+branch of `core_engine.load_intelligence`, not completed-exposure progression.
+Reported/estimated maxima, provisional advice and actual work remain separate.
+No retained 70%/72% helper or Customized policy is activated. See
+[implementation qualification](../evidence/starting-load-2026-10-23/IMPLEMENTATION.md)
+and the separately retained [pre-implementation characterization](../evidence/starting-load-2026-10-23/README.md).
