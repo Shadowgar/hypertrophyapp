@@ -1,4 +1,7 @@
+from copy import deepcopy
 from types import SimpleNamespace
+
+import pytest
 
 from core_engine.decision_workout_session import (
     build_workout_performance_summary,
@@ -272,26 +275,31 @@ def test_prepare_workout_today_response_runtime_builds_final_today_payload() -> 
     assert runtime["decision_trace"]["interpreter"] == "prepare_workout_today_response_runtime"
 
 
-def test_build_workout_today_payload_normalizes_sets_to_working_sets_minimum() -> None:
-    """When stored plan has sets < working_sets, payload returns sets aligned to working_sets."""
+@pytest.mark.parametrize("raw_working_sets", ["3.0", "1", "2 per leg", None])
+def test_build_workout_today_payload_preserves_explicit_sets_and_raw_source_count(raw_working_sets: str | None) -> None:
+    """Today cannot reinterpret the execution dose from a companion source string."""
     from core_engine.decision_workout_session import build_workout_today_payload
 
+    selected_session = {
+        "session_id": "day-1",
+        "name": "Day 1",
+        "exercises": [{
+            "id": "hip_add",
+            "primary_exercise_id": "hip_add",
+            "name": "Hip Adduction",
+            "sets": 2,
+            "working_sets": raw_working_sets,
+            "rep_range": [10, 12],
+            "recommended_working_weight": 19,
+            "authored_prescription": {
+                "sets": [{"set_index": 1}, {"set_index": 2}],
+                "raw": {"working_sets": raw_working_sets},
+            },
+        }],
+    }
+    original = deepcopy(selected_session)
     payload = build_workout_today_payload(
-        selected_session={
-            "session_id": "day-1",
-            "name": "Day 1",
-            "exercises": [
-                {
-                    "id": "hip_add",
-                    "primary_exercise_id": "hip_add",
-                    "name": "Hip Adduction",
-                    "sets": 2,
-                    "working_sets": "3.0",
-                    "rep_range": [10, 12],
-                    "recommended_working_weight": 19,
-                }
-            ],
-        },
+        selected_session=selected_session,
         mesocycle={"week_index": 1},
         deload={"active": False},
         completed_sets_by_exercise={},
@@ -299,8 +307,12 @@ def test_build_workout_today_payload_normalizes_sets_to_working_sets_minimum() -
         resume_selected=False,
         daily_quote={"text": "", "author": "", "source": ""},
     )
-    assert payload["exercises"][0]["sets"] == 3
-    assert payload["exercises"][0]["working_sets"] == "3.0"
+    exercise = payload["exercises"][0]
+    assert exercise["sets"] == 2
+    assert exercise["working_sets"] == raw_working_sets
+    assert exercise["authored_prescription"] == original["exercises"][0]["authored_prescription"]
+    assert exercise["rep_range"] == [10, 12]
+    assert selected_session == original
 
 
 def test_prepare_workout_today_progression_route_runtime_builds_primary_ids_and_rule_set() -> None:

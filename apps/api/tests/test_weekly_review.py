@@ -1,8 +1,10 @@
+from copy import deepcopy
 from datetime import date, datetime, time, timedelta
 import math
 from uuid import uuid4
 
 from fastapi.testclient import TestClient
+import pytest
 
 from test_db import configure_test_database
 
@@ -11,6 +13,7 @@ configure_test_database("test_weekly_review")
 from app.database import Base, SessionLocal, engine
 from app.main import app
 from app.models import User, WeeklyReviewCycle, WorkoutPlan, WorkoutSetLog
+from app.program_loader import load_program_template
 
 
 def _reset_db() -> None:
@@ -28,7 +31,9 @@ def _review_week_start() -> date:
     return current_monday + timedelta(days=7) if date.today().weekday() == 6 else current_monday
 
 
-def _register_and_onboard(client: TestClient) -> dict[str, str]:
+def _register_and_onboard(
+    client: TestClient, *, program_id: str = "pure_bodybuilding_phase_1_full_body"
+) -> dict[str, str]:
     generated_secret = f"Pw-{uuid4().hex[:12]}"
     credential_field = "pass" + "word"
     register = client.post(
@@ -48,7 +53,7 @@ def _register_and_onboard(client: TestClient) -> dict[str, str]:
             "weight": 82,
             "gender": "male",
             "split_preference": "full_body",
-            "selected_program_id": "pure_bodybuilding_phase_1_full_body",
+            "selected_program_id": program_id,
             "training_location": "home",
             "equipment_profile": ["dumbbell", "bodyweight"],
             "days_available": 3,
@@ -298,10 +303,30 @@ def test_submit_weekly_review_prefers_canonical_coaching_state_sfr_from_training
     assert "high_adherence" not in stimulus_signals
 
 
-def test_generate_week_uses_saved_weekly_review_adjustments() -> None:
+@pytest.mark.parametrize("phase", [1, 2])
+@pytest.mark.parametrize("set_delta", [-1, 1])
+def test_generate_authored_week_preserves_source_despite_saved_review(phase: int, set_delta: int) -> None:
     _reset_db()
     client = TestClient(app)
-    headers = _register_and_onboard(client)
+    program_id = f"pure_bodybuilding_phase_{phase}_full_body"
+    headers = _register_and_onboard(client, program_id=program_id)
+    source_template = deepcopy(load_program_template(program_id))
+    source_exercises = [
+        exercise for session in source_template["authored_weeks"][0]["sessions"]
+        for exercise in session["exercises"]
+    ]
+    # Independent source input, rather than a second generation of the same output.
+    prescription_fields = (
+        "primary_exercise_id", "sets", "rep_range", "authored_prescription",
+        "source_lineage", "source_relationships", "slot_role",
+    )
+    expected_by_slot = {
+        exercise["source_lineage"]["source_slot_id"]: {
+            field: deepcopy(exercise[field]) for field in prescription_fields
+        }
+        for exercise in source_exercises
+    }
+    assert len(expected_by_slot) == len(source_exercises) > 0
 
     monday = _current_monday()
     with SessionLocal() as session:
@@ -322,28 +347,59 @@ def test_generate_week_uses_saved_weekly_review_adjustments() -> None:
                 notes="test",
                 faults={"exercise_faults": []},
                 adjustments={
-                    "global": {"set_delta": 1, "weight_scale": 0.95},
+                    "global": {"set_delta": set_delta, "weight_scale": 0.95},
                     "weak_point_exercises": [],
                     "exercise_overrides": {},
                     "decision_trace": {
                         "interpreter": "interpret_weekly_review_decision",
-                        "outcome": {"global_set_delta": 1, "global_weight_scale": 0.95},
+                        "outcome": {"global_set_delta": set_delta, "global_weight_scale": 0.95},
                     },
                 },
                 summary={"planned_sets_total": 0, "completed_sets_total": 0},
             )
         )
         session.commit()
+        cycle = session.query(WeeklyReviewCycle).filter_by(user_id=user.id).one()
+        saved_adjustments = deepcopy(cycle.adjustments)
+        saved_cycle_id = cycle.id
+        user_id = user.id
 
     generated = client.post("/plan/generate-week", headers=headers, json={})
     assert generated.status_code == 200
     payload = generated.json()
 
-    assert "adaptive_review" in payload
-    assert payload["adaptive_review"]["global_set_delta"] == 1
-    assert math.isclose(float(payload["adaptive_review"]["global_weight_scale"]), 0.95, rel_tol=1e-9, abs_tol=1e-9)
-    assert payload["adaptive_review"]["decision_trace"]["interpreter"] == "interpret_weekly_review_decision"
-    assert all((exercise.get("sets", 0) >= 2) for session in payload.get("sessions", []) for exercise in session.get("exercises", []))
+    assert payload["program_template_id"] == program_id
+    assert payload["mesocycle"]["authored_week_index"] == 1
+    exercises = [exercise for session in payload["sessions"] for exercise in session["exercises"]]
+    # The count assertion prevents dict key collapse from hiding duplicate source slots.
+    assert len(exercises) == len(expected_by_slot)
+    actual_by_slot = {
+        exercise["source_lineage"]["source_slot_id"]: {
+            field: exercise[field] for field in prescription_fields
+        }
+        for exercise in exercises
+    }
+    assert actual_by_slot == expected_by_slot
+    assert "adaptive_review" not in payload
+
+    with SessionLocal() as session:
+        stored_plan = session.query(WorkoutPlan).filter_by(user_id=user_id).one()
+        # The API adds occurrence IDs; compare persisted prescriptions independently.
+        stored_exercises = [
+            exercise for stored_session in stored_plan.payload["sessions"]
+            for exercise in stored_session["exercises"]
+        ]
+        assert len(stored_exercises) == len(expected_by_slot)
+        stored_by_slot = {
+            exercise["source_lineage"]["source_slot_id"]: {
+                field: exercise[field] for field in prescription_fields
+            }
+            for exercise in stored_exercises
+        }
+        assert stored_by_slot == expected_by_slot
+        assert "adaptive_review" not in stored_plan.payload
+        assert session.get(WeeklyReviewCycle, saved_cycle_id).adjustments == saved_adjustments
+    assert load_program_template(program_id) == source_template
 
 
 def test_weekly_review_weak_point_boost_is_bounded() -> None:

@@ -1362,12 +1362,15 @@ def test_prepare_workout_log_set_decision_runtime_prepares_exercise_state_persis
     assert runtime["decision_trace"]["outcome"]["has_starting_load_runtime"] is True
 
 
-def test_build_workout_today_state_payloads_merges_state_counts_and_hydrates_live_guidance() -> None:
+@pytest.mark.parametrize("state_completed_sets", [0, 2])
+def test_build_workout_today_state_payloads_preserves_effective_counts_and_hydrates_live_guidance(state_completed_sets: int) -> None:
+    # A stale state projection must neither resurrect undone work nor erase receipts.
+    effective_counts = {"bench": 1, "row": 2}
     payload = build_workout_today_state_payloads(
         session_states=[
             {
                 "exercise_id": "bench",
-                "completed_sets": 2,
+                "completed_sets": state_completed_sets,
                 "remaining_sets": 1,
                 "recommended_reps_min": 8,
                 "recommended_reps_max": 12,
@@ -1381,16 +1384,20 @@ def test_build_workout_today_state_payloads_merges_state_counts_and_hydrates_liv
                     "reason": "repeat_failure_threshold_reached",
                     "decision_trace": {"interpreter": "resolve_repeat_failure_substitution"},
                 },
-            }
+            },
+            {"exercise_id": "projection_only", "completed_sets": 4},
         ],
-        completed_sets_by_exercise={"bench": 1, "row": 2},
+        completed_sets_by_exercise=effective_counts,
         rule_set=_sample_rule_set(),
     )
 
-    assert payload["completed_sets_by_exercise"] == {"bench": 2, "row": 2}
+    assert payload["completed_sets_by_exercise"] == {"bench": 1, "row": 2}
+    assert effective_counts == {"bench": 1, "row": 2}
     assert payload["live_recommendations_by_exercise"]["bench"]["guidance"] == "remaining_sets_reduce_load_focus_target_reps"
     assert payload["live_recommendations_by_exercise"]["bench"]["remaining_sets"] == 1
     assert payload["live_recommendations_by_exercise"]["bench"]["substitution_recommendation"]["recommended_name"] == "Chest Supported Row"
+    assert "projection_only" not in payload["completed_sets_by_exercise"]
+    assert payload["live_recommendations_by_exercise"]["bench"]["recommended_weight"] == 97.5
 
 
 def test_build_repeat_failure_substitution_payload_returns_structured_result() -> None:

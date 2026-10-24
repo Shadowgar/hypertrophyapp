@@ -520,9 +520,12 @@ def test_resolve_scheduler_session_exercise_cap_uses_canonical_time_budget_rules
 
 
 def test_resolve_scheduler_muscle_coverage_runtime_uses_canonical_contract() -> None:
-    runtime = resolve_scheduler_muscle_coverage_runtime(rule_set=_scheduler_rule_set())
+    rule_set = _scheduler_rule_set()
+    coverage_contract = rule_set["generated_week_scheduler_rules"]["muscle_coverage"]
+    runtime = resolve_scheduler_muscle_coverage_runtime(rule_set=rule_set)
 
-    assert runtime["tracked_muscles"] == [
+    # Older compiled contracts omit core; preserve their order and append it.
+    expected_muscles = [
         "chest",
         "back",
         "quads",
@@ -532,9 +535,29 @@ def test_resolve_scheduler_muscle_coverage_runtime_uses_canonical_contract() -> 
         "biceps",
         "triceps",
         "calves",
+        "core",
     ]
+    expected_normalization = {
+        **coverage_contract["authored_label_normalization"],
+        "core": "core",
+        "abs": "core",
+        "abdominals": "core",
+    }
+    assert runtime["tracked_muscles"] == expected_muscles
     assert runtime["minimum_sets_per_muscle"] == 2
-    assert runtime["decision_trace"]["interpreter"] == "resolve_scheduler_muscle_coverage_runtime"
+    assert runtime["authored_label_normalization"] == expected_normalization
+    assert runtime["decision_trace"] == {
+        "interpreter": "resolve_scheduler_muscle_coverage_runtime",
+        "version": "v1",
+        "inputs": {"has_scheduler_rule_contract": True, "fallback_applied": False},
+        "outcome": {
+            "tracked_muscles": expected_muscles,
+            "minimum_sets_per_muscle": 2,
+            "normalization_label_count": len(expected_normalization),
+        },
+    }
+    assert "core" not in coverage_contract["tracked_muscles"]
+    assert "abs" not in coverage_contract["authored_label_normalization"]
 
 
 def test_resolve_scheduler_muscle_coverage_runtime_falls_back_to_canonical_contract_when_missing() -> None:
@@ -546,7 +569,8 @@ def test_resolve_scheduler_muscle_coverage_runtime_falls_back_to_canonical_contr
         }
     )
 
-    assert runtime["tracked_muscles"] == [
+    # The current fallback has core before calves, unlike an older explicit contract.
+    expected_muscles = [
         "chest",
         "back",
         "quads",
@@ -555,12 +579,44 @@ def test_resolve_scheduler_muscle_coverage_runtime_falls_back_to_canonical_contr
         "shoulders",
         "biceps",
         "triceps",
+        "core",
         "calves",
     ]
+    expected_normalization = {
+        **_scheduler_rule_set()["generated_week_scheduler_rules"]["muscle_coverage"][
+            "authored_label_normalization"
+        ],
+        "core": "core",
+        "abs": "core",
+        "abdominals": "core",
+    }
+    assert runtime["tracked_muscles"] == expected_muscles
     assert runtime["minimum_sets_per_muscle"] == 2
-    assert runtime["authored_label_normalization"]["lats"] == "back"
-    assert runtime["decision_trace"]["inputs"]["has_scheduler_rule_contract"] is False
-    assert runtime["decision_trace"]["inputs"]["fallback_applied"] is True
+    assert runtime["authored_label_normalization"] == expected_normalization
+    assert runtime["decision_trace"] == {
+        "interpreter": "resolve_scheduler_muscle_coverage_runtime",
+        "version": "v1",
+        "inputs": {"has_scheduler_rule_contract": False, "fallback_applied": True},
+        "outcome": {
+            "tracked_muscles": expected_muscles,
+            "minimum_sets_per_muscle": 2,
+            "normalization_label_count": len(expected_normalization),
+        },
+    }
+
+
+@pytest.mark.parametrize("label", ["core", "abs", "abdominals"])
+@pytest.mark.parametrize("has_contract", [True, False], ids=["explicit_contract", "fallback"])
+def test_resolve_scheduler_exercise_muscles_runtime_accounts_for_explicit_core_labels(
+    label: str, has_contract: bool,
+) -> None:
+    runtime = resolve_scheduler_exercise_muscles_runtime(
+        exercise={"name": "Unclassified exercise", "primary_muscles": [label]},
+        rule_set=_scheduler_rule_set() if has_contract else {},
+    )
+
+    assert runtime["normalized_muscles"] == ["core"]
+    assert runtime["decision_trace"]["outcome"]["input_source"] == "explicit_authored_muscle_metadata"
 
 
 def test_resolve_scheduler_exercise_muscles_runtime_normalizes_only_explicit_authored_metadata() -> None:
