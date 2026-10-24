@@ -32,3 +32,7 @@ One forward roadmap: [M0–M6 milestones](../roadmap/milestones.md). A plan desc
 | Completed / owner accepted | Explicit owner acceptance of this bounded scope/evidence and remaining deviations. |
 
 Additional M0-HIST packages, M0-SAFE, M0-CI, remaining M1 slices and M2A/M2B implementation detail awaits bounded plans; the roadmap contains their dependencies and gates. Historical task scripts cannot select approved work from old checklists. [Retained tasks](../audits/2026-09-28-legacy-task-register.md) remain pending reconciliation and do not authorize implementation.
+
+## 2026-10-21 first-party vision is not a bounded implementation plan
+
+The owner approved [PERS-001–PERS-020 supplemental outcomes](../requirements/personal-workoutapp-2026-10-21.md) and their [placement within M0–M6](../roadmap/personal-capability-crosswalk-2026-10-21.md). This does **not** register a new executable plan or authorize the import/HealthKit, coaching, redesign or personal-response implementations. The [next coder handoff](../operations/next-coder-handoff-2026-10-21.md) is for **read-only discovery and a proposed bounded gym-UX implementation package**. Register specific future plans here only after their scope, dependencies, tests and authorization have been reviewed; deployment approval remains separate.
