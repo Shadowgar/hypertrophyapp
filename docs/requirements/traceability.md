@@ -2,6 +2,13 @@
 
 ## PERS-002 / Issue #103 Today and resume performance — 2026-10-23
 
+The [bounded 2026-10-24 cold-start closeout](../evidence/today-performance-2026-10-23/closeout-2026-10-24/CLOSEOUT.md)
+adds a Today-frontend counterfactual and matched opening/resume checks without
+changing application code. A material source cause remains unestablished; original
+unfavorable samples, unmet targets and Issue #103 partial status are retained.
+The [integration recommendation](../evidence/today-performance-2026-10-23/closeout-2026-10-24/INTEGRATION.md)
+is review-only and grants no merge or production-operation permission.
+
 The next owner-authorized Wave A slice is based on PR #111 `c656988` and keeps
 PR #110/#111 unchanged. It batches account-bound calibration reads and indexes
 source/setup history presence within `AuthoredHistorySnapshot`, with the same
