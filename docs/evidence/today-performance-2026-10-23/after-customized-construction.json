@@ -1,0 +1,74 @@
+[
+  {
+    "trial": "first-0",
+    "phase": "proposals",
+    "status": 200,
+    "ms": 610.7424449874088
+  },
+  {
+    "trial": "first-0",
+    "phase": "challenge",
+    "status": 200,
+    "ms": 390.3008899942506
+  },
+  {
+    "trial": "first-0",
+    "phase": "accept",
+    "status": 200,
+    "ms": 431.90957899787463
+  },
+  {
+    "trial": "first-0",
+    "phase": "activate",
+    "status": 200,
+    "ms": 553.371349000372
+  },
+  {
+    "trial": "first-1",
+    "phase": "proposals",
+    "status": 200,
+    "ms": 322.7283599990187
+  },
+  {
+    "trial": "first-1",
+    "phase": "challenge",
+    "status": 200,
+    "ms": 281.5460650017485
+  },
+  {
+    "trial": "first-1",
+    "phase": "accept",
+    "status": 200,
+    "ms": 434.37244099914096
+  },
+  {
+    "trial": "first-1",
+    "phase": "activate",
+    "status": 200,
+    "ms": 386.9173139974009
+  },
+  {
+    "trial": "first-2",
+    "phase": "proposals",
+    "status": 200,
+    "ms": 316.7195309943054
+  },
+  {
+    "trial": "first-2",
+    "phase": "challenge",
+    "status": 200,
+    "ms": 524.2200079956092
+  },
+  {
+    "trial": "first-2",
+    "phase": "accept",
+    "status": 200,
+    "ms": 331.1683840001933
+  },
+  {
+    "trial": "first-2",
+    "phase": "activate",
+    "status": 200,
+    "ms": 384.25580100738443
+  }
+]

@@ -52,3 +52,15 @@ The owner approved the [first-party-only personal WorkoutApp supplemental requir
 Immediate gym-use execution/weight-unit/known-1RM/Today load corrections belong to existing [#103](https://github.com/Shadowgar/hypertrophyapp/issues/103) across M0/M2A/M6; the full-app design acceptance boundary remains [#105](https://github.com/Shadowgar/hypertrophyapp/issues/105) and draft [#108](https://github.com/Shadowgar/hypertrophyapp/pull/108). Actual-date/shift and duration intelligence follows M2B/M4 permission boundaries; effective comparable progression follows M2A; analytics/conditioning/body-context and recovery are M3; prospective personal-response evaluation and explanation are M5; app-only Apple XML import and separately scoped first-party native HealthKit/Watch work are future bounded M0-SAFE/M6-associated packages. Apple import has security/privacy gates and does not precondition immediate gym UX work. No third-party fitness/health/coaching app API or external AI-coach dependency is approved.
 
 Current GitHub release evidence must not be confused with production state: merged [PR #107](https://github.com/Shadowgar/hypertrophyapp/pull/107) and draft design [PR #108](https://github.com/Shadowgar/hypertrophyapp/pull/108) are different boundaries. Source/version, tested environments, unresolved CI dispositions, owner visual acceptance and separately authorized deployment still apply. The [next coder handoff](../operations/next-coder-handoff-2026-10-21.md) is intentionally read-only preparation before a bounded implementation authorization.
+## Wave A gym reliability — bounded Today/resume slice, 2026-10-23
+
+The owner separately authorized measured Today/resume implementation on a
+focused PR stacked on PR #111, under the personal direction/crosswalk read
+directly from unmerged PR #109 `4ac9c49`. This supplements existing M0-HIST/M6
+qualification and PERS-002 / Issue #103; it creates no new milestone or training
+policy. [Performance evidence](../evidence/today-performance-2026-10-23/README.md)
+records the environment, datasets, samples, targets and measured limits.
+[Release readiness](../evidence/today-performance-2026-10-23/RELEASE-READINESS.md)
+retains physical-device, inherited-test, scanner and production boundaries.
+Issue #103 and release acceptance remain partial; implementation does not
+include merge, deployment, production migration or live-data changes.

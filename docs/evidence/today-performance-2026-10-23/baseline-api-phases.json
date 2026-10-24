@@ -1,0 +1,1562 @@
+[
+  {
+    "path": "/workout/today",
+    "scenario": "authored-small-unstarted",
+    "sql_count": 22,
+    "sql_ms": 44.024768998497166,
+    "calibration_sql_count": 12,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 9.370583007694222
+      },
+      "app.workout_load_state._all_groups": {
+        "calls": 1,
+        "ms": 7.085478995577432
+      },
+      "app.routers.workout.load_authored_history_snapshot": {
+        "calls": 1,
+        "ms": 7.124369003577158
+      },
+      "app.workout_initial_calibration.source_scope": {
+        "calls": 6,
+        "ms": 0.964140985161066
+      },
+      "app.workout_load_state.find_calibration": {
+        "calls": 6,
+        "ms": 30.96526699664537
+      },
+      "app.workout_load_state._source_warmup_protocol": {
+        "calls": 6,
+        "ms": 720.0447479845025
+      },
+      "app.workout_load_state._warmup_guidance": {
+        "calls": 6,
+        "ms": 729.0973100316478
+      },
+      "app.workout_authored.project_authored_load_feedback": {
+        "calls": 6,
+        "ms": 780.5102790007368
+      },
+      "app.routers.workout.authored_feedback_projection": {
+        "calls": 6,
+        "ms": 782.7295510214753
+      }
+    },
+    "status": 200,
+    "total_ms": 956.200861997786
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "authored-small-unstarted",
+    "sql_count": 22,
+    "sql_ms": 25.445883977226913,
+    "calibration_sql_count": 12,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 4.492649997700937
+      },
+      "app.workout_load_state._all_groups": {
+        "calls": 1,
+        "ms": 4.926137000438757
+      },
+      "app.routers.workout.load_authored_history_snapshot": {
+        "calls": 1,
+        "ms": 4.950507005560212
+      },
+      "app.workout_initial_calibration.source_scope": {
+        "calls": 6,
+        "ms": 0.9858649864327163
+      },
+      "app.workout_load_state.find_calibration": {
+        "calls": 6,
+        "ms": 25.922256987541914
+      },
+      "app.workout_load_state._source_warmup_protocol": {
+        "calls": 6,
+        "ms": 664.258458011318
+      },
+      "app.workout_load_state._warmup_guidance": {
+        "calls": 6,
+        "ms": 673.9582889858866
+      },
+      "app.workout_authored.project_authored_load_feedback": {
+        "calls": 6,
+        "ms": 722.3268859961536
+      },
+      "app.routers.workout.authored_feedback_projection": {
+        "calls": 6,
+        "ms": 724.7069189907052
+      }
+    },
+    "status": 200,
+    "total_ms": 779.530286003137
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "authored-small-unstarted",
+    "sql_count": 22,
+    "sql_ms": 27.904985021450557,
+    "calibration_sql_count": 12,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 4.049829993164167
+      },
+      "app.workout_load_state._all_groups": {
+        "calls": 1,
+        "ms": 5.998649998218752
+      },
+      "app.routers.workout.load_authored_history_snapshot": {
+        "calls": 1,
+        "ms": 6.025298993336037
+      },
+      "app.workout_initial_calibration.source_scope": {
+        "calls": 6,
+        "ms": 1.0770889784907922
+      },
+      "app.workout_load_state.find_calibration": {
+        "calls": 6,
+        "ms": 24.711203994229436
+      },
+      "app.workout_load_state._source_warmup_protocol": {
+        "calls": 6,
+        "ms": 627.0076299988432
+      },
+      "app.workout_load_state._warmup_guidance": {
+        "calls": 6,
+        "ms": 635.800966003444
+      },
+      "app.workout_authored.project_authored_load_feedback": {
+        "calls": 6,
+        "ms": 681.2131380283972
+      },
+      "app.routers.workout.authored_feedback_projection": {
+        "calls": 6,
+        "ms": 683.431482015294
+      }
+    },
+    "status": 200,
+    "total_ms": 741.4243900129804
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "authored-small-unstarted",
+    "sql_count": 22,
+    "sql_ms": 21.638385005644523,
+    "calibration_sql_count": 12,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 4.4771690008929
+      },
+      "app.workout_load_state._all_groups": {
+        "calls": 1,
+        "ms": 4.063108004629612
+      },
+      "app.routers.workout.load_authored_history_snapshot": {
+        "calls": 1,
+        "ms": 4.082236991962418
+      },
+      "app.workout_initial_calibration.source_scope": {
+        "calls": 6,
+        "ms": 1.038198999594897
+      },
+      "app.workout_load_state.find_calibration": {
+        "calls": 6,
+        "ms": 22.8099229716463
+      },
+      "app.workout_load_state._source_warmup_protocol": {
+        "calls": 6,
+        "ms": 699.8603749816539
+      },
+      "app.workout_load_state._warmup_guidance": {
+        "calls": 6,
+        "ms": 708.714359003352
+      },
+      "app.workout_authored.project_authored_load_feedback": {
+        "calls": 6,
+        "ms": 752.6730870158644
+      },
+      "app.routers.workout.authored_feedback_projection": {
+        "calls": 6,
+        "ms": 754.9082299956353
+      }
+    },
+    "status": 200,
+    "total_ms": 802.3153899994213
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "authored-small-unstarted",
+    "sql_count": 22,
+    "sql_ms": 21.410941044450738,
+    "calibration_sql_count": 12,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 4.160850003245287
+      },
+      "app.workout_load_state._all_groups": {
+        "calls": 1,
+        "ms": 5.026028011343442
+      },
+      "app.routers.workout.load_authored_history_snapshot": {
+        "calls": 1,
+        "ms": 5.049157000030391
+      },
+      "app.workout_initial_calibration.source_scope": {
+        "calls": 6,
+        "ms": 0.9698470239527524
+      },
+      "app.workout_load_state.find_calibration": {
+        "calls": 6,
+        "ms": 21.75276100751944
+      },
+      "app.workout_load_state._source_warmup_protocol": {
+        "calls": 6,
+        "ms": 615.9502649970818
+      },
+      "app.workout_load_state._warmup_guidance": {
+        "calls": 6,
+        "ms": 624.7660989902215
+      },
+      "app.workout_authored.project_authored_load_feedback": {
+        "calls": 6,
+        "ms": 666.7043189954711
+      },
+      "app.routers.workout.authored_feedback_projection": {
+        "calls": 6,
+        "ms": 668.9376629947219
+      }
+    },
+    "status": 200,
+    "total_ms": 718.289647003985
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "authored-small-inprogress",
+    "sql_count": 21,
+    "sql_ms": 28.70273897133302,
+    "calibration_sql_count": 12,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 4.3791490024887025
+      },
+      "app.workout_load_state._all_groups": {
+        "calls": 1,
+        "ms": 7.482724991859868
+      },
+      "app.routers.workout.load_authored_history_snapshot": {
+        "calls": 1,
+        "ms": 7.529836992034689
+      },
+      "app.workout_initial_calibration.source_scope": {
+        "calls": 6,
+        "ms": 0.9625119855627418
+      },
+      "app.workout_load_state.find_calibration": {
+        "calls": 6,
+        "ms": 24.445330986054614
+      },
+      "app.workout_load_state.source_scope": {
+        "calls": 12,
+        "ms": 1.7547069874126464
+      },
+      "app.workout_load_state.setup_scope": {
+        "calls": 2,
+        "ms": 0.027499001589603722
+      },
+      "app.workout_load_state._source_warmup_protocol": {
+        "calls": 6,
+        "ms": 704.6277860063128
+      },
+      "app.workout_load_state._warmup_guidance": {
+        "calls": 6,
+        "ms": 713.800606012228
+      },
+      "app.workout_authored.project_authored_load_feedback": {
+        "calls": 6,
+        "ms": 761.3291980087524
+      },
+      "app.routers.workout.authored_feedback_projection": {
+        "calls": 6,
+        "ms": 763.6465039831819
+      }
+    },
+    "status": 200,
+    "total_ms": 820.8386610058369
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "authored-small-inprogress",
+    "sql_count": 21,
+    "sql_ms": 22.503289044834673,
+    "calibration_sql_count": 12,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 4.03690300299786
+      },
+      "app.workout_load_state._all_groups": {
+        "calls": 1,
+        "ms": 6.870921002700925
+      },
+      "app.routers.workout.load_authored_history_snapshot": {
+        "calls": 1,
+        "ms": 6.923403008840978
+      },
+      "app.workout_initial_calibration.source_scope": {
+        "calls": 6,
+        "ms": 0.8955089579103515
+      },
+      "app.workout_load_state.find_calibration": {
+        "calls": 6,
+        "ms": 21.051232019090094
+      },
+      "app.workout_load_state.source_scope": {
+        "calls": 12,
+        "ms": 1.9443949713604525
+      },
+      "app.workout_load_state.setup_scope": {
+        "calls": 2,
+        "ms": 0.021945001208223403
+      },
+      "app.workout_load_state._source_warmup_protocol": {
+        "calls": 6,
+        "ms": 610.1912430167431
+      },
+      "app.workout_load_state._warmup_guidance": {
+        "calls": 6,
+        "ms": 619.2396729893517
+      },
+      "app.workout_authored.project_authored_load_feedback": {
+        "calls": 6,
+        "ms": 664.5938099973137
+      },
+      "app.routers.workout.authored_feedback_projection": {
+        "calls": 6,
+        "ms": 666.8184320005821
+      }
+    },
+    "status": 200,
+    "total_ms": 716.4554910123115
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "authored-small-inprogress",
+    "sql_count": 21,
+    "sql_ms": 26.07374102808535,
+    "calibration_sql_count": 12,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 4.3347220052964985
+      },
+      "app.workout_load_state._all_groups": {
+        "calls": 1,
+        "ms": 7.307575011509471
+      },
+      "app.routers.workout.load_authored_history_snapshot": {
+        "calls": 1,
+        "ms": 7.352019994868897
+      },
+      "app.workout_initial_calibration.source_scope": {
+        "calls": 6,
+        "ms": 1.0010120022343472
+      },
+      "app.workout_load_state.find_calibration": {
+        "calls": 6,
+        "ms": 24.281033998704515
+      },
+      "app.workout_load_state.source_scope": {
+        "calls": 12,
+        "ms": 1.9062479841522872
+      },
+      "app.workout_load_state.setup_scope": {
+        "calls": 2,
+        "ms": 0.018426988390274346
+      },
+      "app.workout_load_state._source_warmup_protocol": {
+        "calls": 6,
+        "ms": 746.8410629808204
+      },
+      "app.workout_load_state._warmup_guidance": {
+        "calls": 6,
+        "ms": 755.8018639974762
+      },
+      "app.workout_authored.project_authored_load_feedback": {
+        "calls": 6,
+        "ms": 803.7459949991899
+      },
+      "app.routers.workout.authored_feedback_projection": {
+        "calls": 6,
+        "ms": 806.4700839750003
+      }
+    },
+    "status": 200,
+    "total_ms": 858.9100320095895
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "authored-small-inprogress",
+    "sql_count": 21,
+    "sql_ms": 26.85891698638443,
+    "calibration_sql_count": 12,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 4.244016992743127
+      },
+      "app.workout_load_state._all_groups": {
+        "calls": 1,
+        "ms": 7.64106099086348
+      },
+      "app.routers.workout.load_authored_history_snapshot": {
+        "calls": 1,
+        "ms": 7.685912991291843
+      },
+      "app.workout_initial_calibration.source_scope": {
+        "calls": 6,
+        "ms": 1.0691260104067624
+      },
+      "app.workout_load_state.find_calibration": {
+        "calls": 6,
+        "ms": 27.487871018820442
+      },
+      "app.workout_load_state.source_scope": {
+        "calls": 12,
+        "ms": 1.8880250281654298
+      },
+      "app.workout_load_state.setup_scope": {
+        "calls": 2,
+        "ms": 0.022610998712480068
+      },
+      "app.workout_load_state._source_warmup_protocol": {
+        "calls": 6,
+        "ms": 720.3066479996778
+      },
+      "app.workout_load_state._warmup_guidance": {
+        "calls": 6,
+        "ms": 729.166465025628
+      },
+      "app.workout_authored.project_authored_load_feedback": {
+        "calls": 6,
+        "ms": 780.6751989846816
+      },
+      "app.routers.workout.authored_feedback_projection": {
+        "calls": 6,
+        "ms": 783.0066170135979
+      }
+    },
+    "status": 200,
+    "total_ms": 833.6268929997459
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "authored-small-inprogress",
+    "sql_count": 21,
+    "sql_ms": 48.453729978064075,
+    "calibration_sql_count": 12,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 8.050881006056443
+      },
+      "app.workout_load_state._all_groups": {
+        "calls": 1,
+        "ms": 10.629673008224927
+      },
+      "app.routers.workout.load_authored_history_snapshot": {
+        "calls": 1,
+        "ms": 10.73745200119447
+      },
+      "app.workout_initial_calibration.source_scope": {
+        "calls": 6,
+        "ms": 0.9535839926684275
+      },
+      "app.workout_load_state.find_calibration": {
+        "calls": 6,
+        "ms": 26.536968027357943
+      },
+      "app.workout_load_state.source_scope": {
+        "calls": 12,
+        "ms": 1.7374860326526687
+      },
+      "app.workout_load_state.setup_scope": {
+        "calls": 2,
+        "ms": 0.01875798625405878
+      },
+      "app.workout_load_state._source_warmup_protocol": {
+        "calls": 6,
+        "ms": 604.2388299974846
+      },
+      "app.workout_load_state._warmup_guidance": {
+        "calls": 6,
+        "ms": 613.1861300091259
+      },
+      "app.workout_authored.project_authored_load_feedback": {
+        "calls": 6,
+        "ms": 662.6938350091223
+      },
+      "app.routers.workout.authored_feedback_projection": {
+        "calls": 6,
+        "ms": 665.0457179930527
+      }
+    },
+    "status": 200,
+    "total_ms": 750.1806950022001
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "authored-large-unstarted",
+    "sql_count": 22,
+    "sql_ms": 294.9356019962579,
+    "calibration_sql_count": 12,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 174.30830100784078
+      },
+      "app.workout_load_state._all_groups": {
+        "calls": 1,
+        "ms": 919.7642479994101
+      },
+      "app.routers.workout.load_authored_history_snapshot": {
+        "calls": 1,
+        "ms": 965.2590149926255
+      },
+      "app.workout_initial_calibration.source_scope": {
+        "calls": 6,
+        "ms": 0.9264000109396875
+      },
+      "app.workout_load_state.find_calibration": {
+        "calls": 6,
+        "ms": 22.90766300575342
+      },
+      "app.workout_load_state.source_scope": {
+        "calls": 7200,
+        "ms": 836.5329231746728
+      },
+      "app.workout_load_state.setup_scope": {
+        "calls": 1200,
+        "ms": 10.528733109822497
+      },
+      "app.workout_load_state._source_warmup_protocol": {
+        "calls": 6,
+        "ms": 899.6442099887645
+      },
+      "app.workout_load_state._warmup_guidance": {
+        "calls": 6,
+        "ms": 908.5464350064285
+      },
+      "app.workout_authored.project_authored_load_feedback": {
+        "calls": 6,
+        "ms": 1811.679117003223
+      },
+      "app.routers.workout.authored_feedback_projection": {
+        "calls": 6,
+        "ms": 1813.883367998642
+      }
+    },
+    "status": 200,
+    "total_ms": 3132.844733001548
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "authored-large-unstarted",
+    "sql_count": 22,
+    "sql_ms": 223.40094398532528,
+    "calibration_sql_count": 12,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 74.75838100071996
+      },
+      "app.workout_load_state._all_groups": {
+        "calls": 1,
+        "ms": 988.5138240060769
+      },
+      "app.routers.workout.load_authored_history_snapshot": {
+        "calls": 1,
+        "ms": 1037.525318999542
+      },
+      "app.workout_initial_calibration.source_scope": {
+        "calls": 6,
+        "ms": 0.9110480023082346
+      },
+      "app.workout_load_state.find_calibration": {
+        "calls": 6,
+        "ms": 23.05408897518646
+      },
+      "app.workout_load_state.source_scope": {
+        "calls": 7200,
+        "ms": 829.9377882358385
+      },
+      "app.workout_load_state.setup_scope": {
+        "calls": 1200,
+        "ms": 10.418615129310638
+      },
+      "app.workout_load_state._source_warmup_protocol": {
+        "calls": 6,
+        "ms": 720.2463039720897
+      },
+      "app.workout_load_state._warmup_guidance": {
+        "calls": 6,
+        "ms": 729.1112499806331
+      },
+      "app.workout_authored.project_authored_load_feedback": {
+        "calls": 6,
+        "ms": 1625.8787320402917
+      },
+      "app.routers.workout.authored_feedback_projection": {
+        "calls": 6,
+        "ms": 1628.0976689886302
+      }
+    },
+    "status": 200,
+    "total_ms": 2920.1251810009126
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "authored-large-unstarted",
+    "sql_count": 22,
+    "sql_ms": 269.3146379751852,
+    "calibration_sql_count": 12,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 75.26020200748462
+      },
+      "app.workout_load_state._all_groups": {
+        "calls": 1,
+        "ms": 894.7269720083568
+      },
+      "app.routers.workout.load_authored_history_snapshot": {
+        "calls": 1,
+        "ms": 949.8376559931785
+      },
+      "app.workout_initial_calibration.source_scope": {
+        "calls": 6,
+        "ms": 0.996049988316372
+      },
+      "app.workout_load_state.find_calibration": {
+        "calls": 6,
+        "ms": 26.44313298515044
+      },
+      "app.workout_load_state.source_scope": {
+        "calls": 7200,
+        "ms": 828.1154219002929
+      },
+      "app.workout_load_state.setup_scope": {
+        "calls": 1200,
+        "ms": 10.385921617853455
+      },
+      "app.workout_load_state._source_warmup_protocol": {
+        "calls": 6,
+        "ms": 712.3507149808574
+      },
+      "app.workout_load_state._warmup_guidance": {
+        "calls": 6,
+        "ms": 721.2825910100946
+      },
+      "app.workout_authored.project_authored_load_feedback": {
+        "calls": 6,
+        "ms": 1620.2527429995826
+      },
+      "app.routers.workout.authored_feedback_projection": {
+        "calls": 6,
+        "ms": 1622.6578079949832
+      }
+    },
+    "status": 200,
+    "total_ms": 2930.7619630126283
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "authored-large-unstarted",
+    "sql_count": 22,
+    "sql_ms": 429.7516660008114,
+    "calibration_sql_count": 12,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 185.20302900287788
+      },
+      "app.workout_load_state._all_groups": {
+        "calls": 1,
+        "ms": 1083.2756840100046
+      },
+      "app.routers.workout.load_authored_history_snapshot": {
+        "calls": 1,
+        "ms": 1128.3551110100234
+      },
+      "app.workout_initial_calibration.source_scope": {
+        "calls": 6,
+        "ms": 0.9937160066328943
+      },
+      "app.workout_load_state.find_calibration": {
+        "calls": 6,
+        "ms": 23.68070901138708
+      },
+      "app.workout_load_state.source_scope": {
+        "calls": 7200,
+        "ms": 826.0737793025328
+      },
+      "app.workout_load_state.setup_scope": {
+        "calls": 1200,
+        "ms": 10.326029965654016
+      },
+      "app.workout_load_state._source_warmup_protocol": {
+        "calls": 6,
+        "ms": 891.1301380139776
+      },
+      "app.workout_load_state._warmup_guidance": {
+        "calls": 6,
+        "ms": 900.2898650069255
+      },
+      "app.workout_authored.project_authored_load_feedback": {
+        "calls": 6,
+        "ms": 1793.272453985992
+      },
+      "app.routers.workout.authored_feedback_projection": {
+        "calls": 6,
+        "ms": 1795.5846310069319
+      }
+    },
+    "status": 200,
+    "total_ms": 3430.7237610046286
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "authored-large-unstarted",
+    "sql_count": 22,
+    "sql_ms": 276.3938569842139,
+    "calibration_sql_count": 12,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 87.24835299653932
+      },
+      "app.workout_load_state._all_groups": {
+        "calls": 1,
+        "ms": 865.0125980057055
+      },
+      "app.routers.workout.load_authored_history_snapshot": {
+        "calls": 1,
+        "ms": 909.5022399997106
+      },
+      "app.workout_initial_calibration.source_scope": {
+        "calls": 6,
+        "ms": 1.01777097734157
+      },
+      "app.workout_load_state.find_calibration": {
+        "calls": 6,
+        "ms": 25.343321991385892
+      },
+      "app.workout_load_state.source_scope": {
+        "calls": 7200,
+        "ms": 858.90980293334
+      },
+      "app.workout_load_state.setup_scope": {
+        "calls": 1200,
+        "ms": 10.90441201813519
+      },
+      "app.workout_load_state._source_warmup_protocol": {
+        "calls": 6,
+        "ms": 922.0652299991343
+      },
+      "app.workout_load_state._warmup_guidance": {
+        "calls": 6,
+        "ms": 931.288809995749
+      },
+      "app.workout_authored.project_authored_load_feedback": {
+        "calls": 6,
+        "ms": 1862.3809719865676
+      },
+      "app.routers.workout.authored_feedback_projection": {
+        "calls": 6,
+        "ms": 1864.7934639739105
+      }
+    },
+    "status": 200,
+    "total_ms": 3055.187707999721
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "authored-large-inprogress",
+    "sql_count": 21,
+    "sql_ms": 280.886449967511,
+    "calibration_sql_count": 12,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 91.04903000115883
+      },
+      "app.workout_load_state._all_groups": {
+        "calls": 1,
+        "ms": 1067.5661349960137
+      },
+      "app.routers.workout.load_authored_history_snapshot": {
+        "calls": 1,
+        "ms": 1113.0687889963156
+      },
+      "app.workout_initial_calibration.source_scope": {
+        "calls": 6,
+        "ms": 1.0028819961007684
+      },
+      "app.workout_load_state.find_calibration": {
+        "calls": 6,
+        "ms": 23.522022005636245
+      },
+      "app.workout_load_state.source_scope": {
+        "calls": 7212,
+        "ms": 831.7384902184131
+      },
+      "app.workout_load_state.setup_scope": {
+        "calls": 1202,
+        "ms": 10.434488809551112
+      },
+      "app.workout_load_state._source_warmup_protocol": {
+        "calls": 6,
+        "ms": 744.1473850049078
+      },
+      "app.workout_load_state._warmup_guidance": {
+        "calls": 6,
+        "ms": 753.162702996633
+      },
+      "app.workout_authored.project_authored_load_feedback": {
+        "calls": 6,
+        "ms": 1653.1404969864525
+      },
+      "app.routers.workout.authored_feedback_projection": {
+        "calls": 6,
+        "ms": 1655.505655988236
+      }
+    },
+    "status": 200,
+    "total_ms": 2960.8455980051076
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "authored-large-inprogress",
+    "sql_count": 21,
+    "sql_ms": 241.46214795473497,
+    "calibration_sql_count": 12,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 71.12671999493614
+      },
+      "app.workout_load_state._all_groups": {
+        "calls": 1,
+        "ms": 1028.3051650039852
+      },
+      "app.routers.workout.load_authored_history_snapshot": {
+        "calls": 1,
+        "ms": 1074.9286850041244
+      },
+      "app.workout_initial_calibration.source_scope": {
+        "calls": 6,
+        "ms": 1.0042339999927208
+      },
+      "app.workout_load_state.find_calibration": {
+        "calls": 6,
+        "ms": 24.29160600877367
+      },
+      "app.workout_load_state.source_scope": {
+        "calls": 7212,
+        "ms": 869.2877771682106
+      },
+      "app.workout_load_state.setup_scope": {
+        "calls": 1202,
+        "ms": 11.126966084702872
+      },
+      "app.workout_load_state._source_warmup_protocol": {
+        "calls": 6,
+        "ms": 719.6944559982512
+      },
+      "app.workout_load_state._warmup_guidance": {
+        "calls": 6,
+        "ms": 728.6959610210033
+      },
+      "app.workout_authored.project_authored_load_feedback": {
+        "calls": 6,
+        "ms": 1669.8791260132566
+      },
+      "app.routers.workout.authored_feedback_projection": {
+        "calls": 6,
+        "ms": 1672.2178219933994
+      }
+    },
+    "status": 200,
+    "total_ms": 2914.6791200037114
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "authored-large-inprogress",
+    "sql_count": 21,
+    "sql_ms": 235.61536900524516,
+    "calibration_sql_count": 12,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 70.64030699257273
+      },
+      "app.workout_load_state._all_groups": {
+        "calls": 1,
+        "ms": 1007.6587479998125
+      },
+      "app.routers.workout.load_authored_history_snapshot": {
+        "calls": 1,
+        "ms": 1052.7220989897614
+      },
+      "app.workout_initial_calibration.source_scope": {
+        "calls": 6,
+        "ms": 0.9074199915630743
+      },
+      "app.workout_load_state.find_calibration": {
+        "calls": 6,
+        "ms": 23.639781997189857
+      },
+      "app.workout_load_state.source_scope": {
+        "calls": 7212,
+        "ms": 829.3471729120938
+      },
+      "app.workout_load_state.setup_scope": {
+        "calls": 1202,
+        "ms": 10.176245050388388
+      },
+      "app.workout_load_state._source_warmup_protocol": {
+        "calls": 6,
+        "ms": 711.368678996223
+      },
+      "app.workout_load_state._warmup_guidance": {
+        "calls": 6,
+        "ms": 720.0879380106926
+      },
+      "app.workout_authored.project_authored_load_feedback": {
+        "calls": 6,
+        "ms": 1618.3845329942415
+      },
+      "app.routers.workout.authored_feedback_projection": {
+        "calls": 6,
+        "ms": 1620.5923579836963
+      }
+    },
+    "status": 200,
+    "total_ms": 2843.0880039959447
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "authored-large-inprogress",
+    "sql_count": 21,
+    "sql_ms": 189.721206043032,
+    "calibration_sql_count": 12,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 69.7284240013687
+      },
+      "app.workout_load_state._all_groups": {
+        "calls": 1,
+        "ms": 990.7809710130095
+      },
+      "app.routers.workout.load_authored_history_snapshot": {
+        "calls": 1,
+        "ms": 1035.5147810041672
+      },
+      "app.workout_initial_calibration.source_scope": {
+        "calls": 6,
+        "ms": 1.1074419744545594
+      },
+      "app.workout_load_state.find_calibration": {
+        "calls": 6,
+        "ms": 26.121426024474204
+      },
+      "app.workout_load_state.source_scope": {
+        "calls": 7212,
+        "ms": 856.2534168158891
+      },
+      "app.workout_load_state.setup_scope": {
+        "calls": 1202,
+        "ms": 11.015250798664056
+      },
+      "app.workout_load_state._source_warmup_protocol": {
+        "calls": 6,
+        "ms": 729.8984289955115
+      },
+      "app.workout_load_state._warmup_guidance": {
+        "calls": 6,
+        "ms": 739.6252560138237
+      },
+      "app.workout_authored.project_authored_load_feedback": {
+        "calls": 6,
+        "ms": 1669.0581470174948
+      },
+      "app.routers.workout.authored_feedback_projection": {
+        "calls": 6,
+        "ms": 1671.6233469633153
+      }
+    },
+    "status": 200,
+    "total_ms": 2871.8504249991383
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "authored-large-inprogress",
+    "sql_count": 21,
+    "sql_ms": 268.1673700135434,
+    "calibration_sql_count": 12,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 192.82147000194527
+      },
+      "app.workout_load_state._all_groups": {
+        "calls": 1,
+        "ms": 976.5807280055014
+      },
+      "app.routers.workout.load_authored_history_snapshot": {
+        "calls": 1,
+        "ms": 1022.2235859982902
+      },
+      "app.workout_initial_calibration.source_scope": {
+        "calls": 6,
+        "ms": 0.998586998321116
+      },
+      "app.workout_load_state.find_calibration": {
+        "calls": 6,
+        "ms": 24.13441799581051
+      },
+      "app.workout_load_state.source_scope": {
+        "calls": 7212,
+        "ms": 853.3218882948859
+      },
+      "app.workout_load_state.setup_scope": {
+        "calls": 1202,
+        "ms": 10.72280784137547
+      },
+      "app.workout_load_state._source_warmup_protocol": {
+        "calls": 6,
+        "ms": 674.1114920150721
+      },
+      "app.workout_load_state._warmup_guidance": {
+        "calls": 6,
+        "ms": 683.0526809935691
+      },
+      "app.workout_authored.project_authored_load_feedback": {
+        "calls": 6,
+        "ms": 1607.3198140074965
+      },
+      "app.routers.workout.authored_feedback_projection": {
+        "calls": 6,
+        "ms": 1609.6283800143283
+      }
+    },
+    "status": 200,
+    "total_ms": 2947.1192339988193
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "customized-small-unstarted",
+    "sql_count": 19,
+    "sql_ms": 26.94519198848866,
+    "calibration_sql_count": 0,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 3.2972269982565194
+      },
+      "app.workout_customized.decision_for": {
+        "calls": 7,
+        "ms": 100.49944200727623
+      },
+      "app.workout_customized.today": {
+        "calls": 1,
+        "ms": 103.19895901193377
+      }
+    },
+    "status": 200,
+    "total_ms": 119.90961599803995
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "customized-small-unstarted",
+    "sql_count": 19,
+    "sql_ms": 26.637967966962606,
+    "calibration_sql_count": 0,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 2.9191850044298917
+      },
+      "app.workout_customized.decision_for": {
+        "calls": 7,
+        "ms": 92.11729999515228
+      },
+      "app.workout_customized.today": {
+        "calls": 1,
+        "ms": 94.94587300287094
+      }
+    },
+    "status": 200,
+    "total_ms": 213.21448699745815
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "customized-small-unstarted",
+    "sql_count": 19,
+    "sql_ms": 22.59734300605487,
+    "calibration_sql_count": 0,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 2.696071009268053
+      },
+      "app.workout_customized.decision_for": {
+        "calls": 7,
+        "ms": 88.3900119952159
+      },
+      "app.workout_customized.today": {
+        "calls": 1,
+        "ms": 91.17343599791639
+      }
+    },
+    "status": 200,
+    "total_ms": 108.47311899124179
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "customized-small-unstarted",
+    "sql_count": 19,
+    "sql_ms": 26.53407603793312,
+    "calibration_sql_count": 0,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 3.309913008706644
+      },
+      "app.workout_customized.decision_for": {
+        "calls": 7,
+        "ms": 96.20399901177734
+      },
+      "app.workout_customized.today": {
+        "calls": 1,
+        "ms": 98.32156400079839
+      }
+    },
+    "status": 200,
+    "total_ms": 116.7088720103493
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "customized-small-unstarted",
+    "sql_count": 19,
+    "sql_ms": 33.95602099772077,
+    "calibration_sql_count": 0,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 3.6680839984910563
+      },
+      "app.workout_customized.decision_for": {
+        "calls": 7,
+        "ms": 111.10426498635206
+      },
+      "app.workout_customized.today": {
+        "calls": 1,
+        "ms": 114.4935100019211
+      }
+    },
+    "status": 200,
+    "total_ms": 142.4886989989318
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "customized-small-inprogress",
+    "sql_count": 22,
+    "sql_ms": 29.2479119671043,
+    "calibration_sql_count": 0,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 2.8895370051031932
+      },
+      "app.workout_customized.decision_for": {
+        "calls": 8,
+        "ms": 107.02591598965228
+      },
+      "app.workout_customized.feedback": {
+        "calls": 1,
+        "ms": 18.171841991716065
+      },
+      "app.workout_customized.today": {
+        "calls": 1,
+        "ms": 113.38151499512605
+      }
+    },
+    "status": 200,
+    "total_ms": 131.2897790048737
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "customized-small-inprogress",
+    "sql_count": 22,
+    "sql_ms": 28.26061798259616,
+    "calibration_sql_count": 0,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 2.998982003191486
+      },
+      "app.workout_customized.decision_for": {
+        "calls": 8,
+        "ms": 110.50853198685218
+      },
+      "app.workout_customized.feedback": {
+        "calls": 1,
+        "ms": 16.926955999224447
+      },
+      "app.workout_customized.today": {
+        "calls": 1,
+        "ms": 115.87686100392602
+      }
+    },
+    "status": 200,
+    "total_ms": 134.3697999982396
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "customized-small-inprogress",
+    "sql_count": 22,
+    "sql_ms": 27.99045096617192,
+    "calibration_sql_count": 0,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 3.2172259961953387
+      },
+      "app.workout_customized.decision_for": {
+        "calls": 8,
+        "ms": 105.82958700251766
+      },
+      "app.workout_customized.feedback": {
+        "calls": 1,
+        "ms": 16.906214994378388
+      },
+      "app.workout_customized.today": {
+        "calls": 1,
+        "ms": 110.82174100738484
+      }
+    },
+    "status": 200,
+    "total_ms": 129.78777800162788
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "customized-small-inprogress",
+    "sql_count": 22,
+    "sql_ms": 28.16043201892171,
+    "calibration_sql_count": 0,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 3.058021000470035
+      },
+      "app.workout_customized.decision_for": {
+        "calls": 8,
+        "ms": 106.62057703302708
+      },
+      "app.workout_customized.feedback": {
+        "calls": 1,
+        "ms": 16.12526099779643
+      },
+      "app.workout_customized.today": {
+        "calls": 1,
+        "ms": 111.78160501003731
+      }
+    },
+    "status": 200,
+    "total_ms": 130.3382110054372
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "customized-small-inprogress",
+    "sql_count": 22,
+    "sql_ms": 28.745307005010545,
+    "calibration_sql_count": 0,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 3.1991889991331846
+      },
+      "app.workout_customized.decision_for": {
+        "calls": 8,
+        "ms": 106.05356801534072
+      },
+      "app.workout_customized.feedback": {
+        "calls": 1,
+        "ms": 16.017963003832847
+      },
+      "app.workout_customized.today": {
+        "calls": 1,
+        "ms": 110.75601799529977
+      }
+    },
+    "status": 200,
+    "total_ms": 129.4544589909492
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "customized-large-unstarted",
+    "sql_count": 19,
+    "sql_ms": 57.81301097886171,
+    "calibration_sql_count": 0,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 55.87528400064912
+      },
+      "app.workout_customized.decision_for": {
+        "calls": 7,
+        "ms": 132.82437302405015
+      },
+      "app.workout_customized.today": {
+        "calls": 1,
+        "ms": 135.52044300013222
+      }
+    },
+    "status": 200,
+    "total_ms": 210.71354699961375
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "customized-large-unstarted",
+    "sql_count": 19,
+    "sql_ms": 67.0488880132325,
+    "calibration_sql_count": 0,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 53.62775600224268
+      },
+      "app.workout_customized.decision_for": {
+        "calls": 7,
+        "ms": 156.82665997883305
+      },
+      "app.workout_customized.today": {
+        "calls": 1,
+        "ms": 159.26313400268555
+      }
+    },
+    "status": 200,
+    "total_ms": 235.81045899481978
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "customized-large-unstarted",
+    "sql_count": 19,
+    "sql_ms": 81.83931696112268,
+    "calibration_sql_count": 0,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 226.93932701076847
+      },
+      "app.workout_customized.decision_for": {
+        "calls": 7,
+        "ms": 151.7437790025724
+      },
+      "app.workout_customized.today": {
+        "calls": 1,
+        "ms": 154.38134998839814
+      }
+    },
+    "status": 200,
+    "total_ms": 405.23372100142296
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "customized-large-unstarted",
+    "sql_count": 19,
+    "sql_ms": 60.85064298531506,
+    "calibration_sql_count": 0,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 64.39579901052639
+      },
+      "app.workout_customized.decision_for": {
+        "calls": 7,
+        "ms": 134.70480300020427
+      },
+      "app.workout_customized.today": {
+        "calls": 1,
+        "ms": 139.01474699378014
+      }
+    },
+    "status": 200,
+    "total_ms": 227.08918100397568
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "customized-large-unstarted",
+    "sql_count": 19,
+    "sql_ms": 55.78500700357836,
+    "calibration_sql_count": 0,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 56.45712399564218
+      },
+      "app.workout_customized.decision_for": {
+        "calls": 7,
+        "ms": 133.98096099263057
+      },
+      "app.workout_customized.today": {
+        "calls": 1,
+        "ms": 136.33134300471283
+      }
+    },
+    "status": 200,
+    "total_ms": 211.80030099640135
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "customized-large-inprogress",
+    "sql_count": 22,
+    "sql_ms": 67.83812097273767,
+    "calibration_sql_count": 0,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 175.3462640044745
+      },
+      "app.workout_customized.decision_for": {
+        "calls": 8,
+        "ms": 152.07296900916845
+      },
+      "app.workout_customized.feedback": {
+        "calls": 1,
+        "ms": 21.41338300134521
+      },
+      "app.workout_customized.today": {
+        "calls": 1,
+        "ms": 156.90080699278042
+      }
+    },
+    "status": 200,
+    "total_ms": 353.8943089952227
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "customized-large-inprogress",
+    "sql_count": 22,
+    "sql_ms": 58.36562997137662,
+    "calibration_sql_count": 0,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 53.45784600649495
+      },
+      "app.workout_customized.decision_for": {
+        "calls": 8,
+        "ms": 148.12278901808895
+      },
+      "app.workout_customized.feedback": {
+        "calls": 1,
+        "ms": 20.7758190081222
+      },
+      "app.workout_customized.today": {
+        "calls": 1,
+        "ms": 152.80510699085426
+      }
+    },
+    "status": 200,
+    "total_ms": 226.3392449967796
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "customized-large-inprogress",
+    "sql_count": 22,
+    "sql_ms": 64.94125198514666,
+    "calibration_sql_count": 0,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 57.64178800745867
+      },
+      "app.workout_customized.decision_for": {
+        "calls": 8,
+        "ms": 157.57185300753918
+      },
+      "app.workout_customized.feedback": {
+        "calls": 1,
+        "ms": 25.813808999373578
+      },
+      "app.workout_customized.today": {
+        "calls": 1,
+        "ms": 164.13175100751687
+      }
+    },
+    "status": 200,
+    "total_ms": 242.93069601117168
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "customized-large-inprogress",
+    "sql_count": 22,
+    "sql_ms": 63.97162796929479,
+    "calibration_sql_count": 0,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 163.70320900750812
+      },
+      "app.workout_customized.decision_for": {
+        "calls": 8,
+        "ms": 145.8093139954144
+      },
+      "app.workout_customized.feedback": {
+        "calls": 1,
+        "ms": 22.3050240019802
+      },
+      "app.workout_customized.today": {
+        "calls": 1,
+        "ms": 150.74361799634062
+      }
+    },
+    "status": 200,
+    "total_ms": 334.8529740032973
+  },
+  {
+    "path": "/workout/today",
+    "scenario": "customized-large-inprogress",
+    "sql_count": 22,
+    "sql_ms": 61.88525099423714,
+    "calibration_sql_count": 0,
+    "phases": {
+      "app.routers.workout._list_current_workout_plans": {
+        "calls": 1,
+        "ms": 56.21623199840542
+      },
+      "app.workout_customized.decision_for": {
+        "calls": 8,
+        "ms": 148.17736299301032
+      },
+      "app.workout_customized.feedback": {
+        "calls": 1,
+        "ms": 23.48094699846115
+      },
+      "app.workout_customized.today": {
+        "calls": 1,
+        "ms": 153.64358099759556
+      }
+    },
+    "status": 200,
+    "total_ms": 230.08134799601976
+  }
+]

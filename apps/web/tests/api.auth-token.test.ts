@@ -19,3 +19,16 @@ test("API request clears stale token on 401", async () => {
   await expect(api.getProfile()).rejects.toThrow(/Invalid token/i);
   expect(localStorage.getItem("hypertrophy_token")).toBeNull();
 });
+
+
+test("a late 401 for a retired token does not sign out the current account", async () => {
+  localStorage.setItem("hypertrophy_token", "synthetic-account-a");
+  let reply!: (response: Response) => void;
+  vi.mocked(fetch).mockImplementation(() => new Promise<Response>(resolve => { reply = resolve; }));
+  const oldRequest = api.getProfile();
+  const rejected = expect(oldRequest).rejects.toThrow(/Invalid token/i);
+  localStorage.setItem("hypertrophy_token", "synthetic-account-b");
+  reply(new Response("Invalid token", { status: 401 }));
+  await rejected;
+  expect(localStorage.getItem("hypertrophy_token")).toBe("synthetic-account-b");
+});

@@ -25,6 +25,7 @@ let correctionTargetRejection: { status: number; message: string } | null;
 let variantFlow: boolean;
 let reported: boolean;
 let confirmed: boolean;
+let confirmedGuidance: ReturnType<typeof guidance> | null;
 let deferPreview: boolean;
 let deferMutation: boolean;
 let releaseMutation: () => void;
@@ -38,7 +39,7 @@ function guidance(weight: number | null = 25.25) {
 }
 function fixtureExercise() {
   return { id: "press", exercise_occurrence_id: "press-slot", name: "Intelligence Press", sets: 3, completed_sets: count,
-    rep_range: [8, 12], recommended_working_weight: 50, load_intelligence: confirmed ? null : envelope,
+    rep_range: [8, 12], recommended_working_weight: 50, load_intelligence: confirmed ? confirmedGuidance : envelope,
     source_lineage: { source_slot_id: "source-press" },
     ...(variantFlow ? { authored_constraint: { status: reported && !confirmed ? "unresolved" : confirmed ? "confirmed" : "ready",
       revision: confirmed ? 2 : reported ? 1 : 0, reasons: reported ? [{ kind: "pain", details: [] }] : [],
@@ -49,13 +50,14 @@ function fixtureExercise() {
 }
 beforeEach(() => {
   correctionTargetRejection = null;
+  confirmedGuidance = null;
   count = 0; envelope = guidance(); writes = []; failFirst = false; staleFirst = false; deferPreview = false; deferMutation = false; validationFirst = false; correctionValidationFirst = false; variantFlow = false; reported = false; confirmed = false; deferProgress = false;
   vi.stubGlobal("fetch", vi.fn(async (input, init) => {
     const url = String(input);
     if (url.includes("/plan/scheduling-context?")) return Response.json({ timezone: "UTC", local_today: new Date().toISOString().slice(0, 10), week_start: "2026-10-05", selected_dates: [], placement_revision: 0, plan: null });
     if (url.endsWith("/workout/today")) return Response.json({ session_id: "template", workout_occurrence_id: "load-occurrence", title: "Synthetic load", date: new Date().toISOString().slice(0, 10), exercises: [fixtureExercise()] });
     if (url.includes("/progress")) {
-      const response = Response.json({ completed_total: count, planned_total: 3, percent_complete: count / 3 * 100, exercises: [{ exercise_id: "press", exercise_occurrence_id: "press-slot", completed_sets: count, load_intelligence: envelope }] });
+      const response = Response.json({ completed_total: count, planned_total: 3, percent_complete: count / 3 * 100, exercises: [{ exercise_id: "press", exercise_occurrence_id: "press-slot", completed_sets: count, load_intelligence: confirmed ? confirmedGuidance : envelope }] });
       if (deferProgress) await new Promise<void>(resolve => { releaseProgress = resolve; });
       return response;
     }
@@ -460,4 +462,75 @@ test.each([
   const commands = writes.filter(write => write.path.endsWith("/correct"));
   expect(commands[1].path).toMatch(/\/set\/effective-replacement\/correct$/);
   expect(commands[1].body.command_id).not.toBe(commands[0].body.command_id);
+});
+
+
+test("same-occurrence reload keeps the edited actual draft and override reason", async () => {
+  await open();
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Weight (lb)" }), { target: { value: "60" } });
+  fireEvent.change(screen.getByRole("textbox", { name: "Load override reason (optional)" }), { target: { value: "equipment" } });
+  fireEvent.click(screen.getByRole("button", { name: "Back to list" }));
+  const reload = screen.getByRole("button", { name: "Reload" });
+  await waitFor(() => expect(reload).toBeEnabled());
+  fireEvent.click(reload);
+  await waitFor(() => expect(reload).toBeEnabled());
+  fireEvent.click(screen.getByRole("button", { name: /Intelligence Press/ }));
+  expect(screen.getByRole("spinbutton", { name: "Weight (lb)" })).toHaveValue(60);
+  expect(screen.getByRole("textbox", { name: "Load override reason (optional)" })).toHaveValue("equipment");
+});
+
+test.each(["success", "failure"])("a late Today refresh %s begun before a confirmed set cannot roll back actual progress", async outcome => {
+  await open();
+  const base = vi.mocked(fetch).getMockImplementation()!;
+  const staleReply = await base("/workout/today");
+  deferMutation = true;
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Weight (lb)" }), { target: { value: "60" } });
+  fireEvent.click(screen.getByRole("button", { name: "Complete Set" }));
+  await waitFor(() => expect(releaseMutation).toBeDefined());
+  fireEvent.click(screen.getByRole("button", { name: "Back to list" }));
+  const reload = screen.getByRole("button", { name: "Reload" });
+  await waitFor(() => expect(reload).toBeEnabled());
+  let release!: (reply: Response) => void;
+  vi.stubGlobal("fetch", vi.fn(async (input, init) => String(input).endsWith("/workout/today")
+    ? new Promise<Response>(resolve => { release = resolve; }) : base(input, init)));
+  fireEvent.click(reload);
+  await waitFor(() => expect(release).toBeDefined());
+  await act(async () => releaseMutation());
+  await act(async () => release(outcome === "success" ? staleReply : Response.json({ detail: "unavailable" }, { status: 503 })));
+  await nativeScreen.findByText("Workout changed while loading. Reload to verify the current workout. Your saved history is unchanged.");
+  expect(nativeScreen.queryByRole("region", { name: "Workout execution" })).not.toBeInTheDocument();
+  expect(writes.filter(write => write.path.endsWith("/log-set"))).toHaveLength(1);
+  vi.stubGlobal("fetch", vi.fn(base));
+  fireEvent.click(nativeScreen.getByRole("button", { name: "Reload" }));
+  await waitFor(() => expect(screen.getByRole("button", { name: /Intelligence Press/ })).toHaveTextContent(/1\s*\/\s*3/));
+});
+
+
+test("external confirmed variant reload retires source advice while retaining the frozen source command and draft", async () => {
+  variantFlow = true;
+  await open();
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Weight (lb)" }), { target: { value: "60" } });
+  fireEvent.change(screen.getByRole("combobox", { name: "Load basis" }), { target: { value: "per_hand" } });
+  envelope = guidance(); envelope.load_context.basis = "per_hand";
+  fireEvent.click(screen.getByRole("button", { name: "Preview load guidance" }));
+  await waitFor(() => expect(screen.getAllByText("Owned explanation from completed comparable exposures.").length).toBeGreaterThan(0));
+  failFirst = true;
+  fireEvent.click(screen.getByRole("button", { name: "Complete Set" }));
+  await nativeScreen.findByText("Save not confirmed. Retry the same set.");
+  const pendingSourceCommands = Object.entries(localStorage).filter(([key]) => key.endsWith("work:1:payload"));
+  expect(pendingSourceCommands).toHaveLength(1);
+  const savedSourceDraft = Object.entries(localStorage).find(([key]) => key.includes(":draft:press-slot:source"));
+  expect(savedSourceDraft).toBeDefined();
+  fireEvent.click(screen.getByRole("button", { name: "Back to list" }));
+  const reload = screen.getByRole("button", { name: "Reload" });
+  await waitFor(() => expect(reload).toBeEnabled());
+  confirmed = true;
+  confirmedGuidance = guidance(null);
+  fireEvent.click(reload);
+  await waitFor(() => expect(reload).toBeEnabled());
+  fireEvent.click(screen.getByRole("button", { name: /Approved Variant/ }));
+  expect(screen.getByRole("spinbutton", { name: "Weight (lb)" })).toHaveValue(null);
+  expect(screen.getByRole("combobox", { name: "Load basis" })).toHaveValue("total_external");
+  expect(localStorage.getItem(savedSourceDraft![0])).toBe(savedSourceDraft![1]);
+  for (const [key, payload] of pendingSourceCommands) expect(localStorage.getItem(key)).toBe(payload);
 });

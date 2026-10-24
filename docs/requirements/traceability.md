@@ -1,5 +1,32 @@
 # Requirements traceability
 
+## PERS-002 / Issue #103 Today and resume performance — 2026-10-23
+
+The [bounded 2026-10-24 cold-start closeout](../evidence/today-performance-2026-10-23/closeout-2026-10-24/CLOSEOUT.md)
+adds a Today-frontend counterfactual and matched opening/resume checks without
+changing application code. A material source cause remains unestablished; original
+unfavorable samples, unmet targets and Issue #103 partial status are retained.
+The [integration recommendation](../evidence/today-performance-2026-10-23/closeout-2026-10-24/INTEGRATION.md)
+is review-only and grants no merge or production-operation permission.
+
+The next owner-authorized Wave A slice is based on PR #111 `c656988` and keeps
+PR #110/#111 unchanged. It batches account-bound calibration reads and indexes
+source/setup history presence within `AuthoredHistorySnapshot`, with the same
+performed-date cutoff and effective records. Warm-up protocol reuse is response
+local; the existing core owner still decides every exercise's guidance. No
+cross-request or cross-account cache, new numerical policy or schema is added.
+
+Today overlaps independent date/review gates and starts display-only profile
+reads alongside progress. Required gates still precede Today; an unresolved
+refresh cannot expose an older writable runner. Account/epoch/read-generation
+guards reject late results; draft and immutable command storage survive retries.
+See [matched performance and runtime evidence](../evidence/today-performance-2026-10-23/README.md)
+and the [release-readiness boundaries](../evidence/today-performance-2026-10-23/RELEASE-READINESS.md).
+Local synthetic qualification does not reproduce or establish a fix for the
+owner's original two-minute production symptom. Physical iPhone Safari,
+production latency, inherited CI failures and final security qualification
+remain separate acceptance items. Issue #103 remains partial.
+
 ## PERS-008 / Issue #103 starting-load slice — 2026-10-23
 
 The owner approved the [specific provisional numerical amendment](../contracts/proposals/authored-starting-load-v1.md)
@@ -9,8 +36,8 @@ deterministic estimate and the approved runner presentation. Qualified completed
 history and current working sets retain precedence; unsupported cases stay manual.
 See [implementation evidence](../evidence/starting-load-2026-10-23/IMPLEMENTATION.md)
 for actual tests, demonstrations and inherited failures. PERS-008 / Issue #103
-remain **partial**: eligibility is bounded, cold Today performance still needs
-qualification, physical iPhone keyboard/background acceptance is untested, and
+remain **partial**: eligibility is bounded, Today performance is qualified only within the separate
+local synthetic slice above, physical iPhone keyboard/background acceptance is untested, and
 final-revision security qualification remains separate. No production release,
 merge, live-data migration or broader Home/onboarding work is included.
 

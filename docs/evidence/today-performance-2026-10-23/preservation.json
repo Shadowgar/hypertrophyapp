@@ -1,0 +1,227 @@
+{
+  "endpoint_count": 24,
+  "all_endpoint_payloads_exactly_equal": true,
+  "payloads": [
+    {
+      "scenario": "authored-large-inprogress",
+      "endpoint": "progress",
+      "exact_equal": true,
+      "before_sha256": "c6996cd40ac2f9236410d0c2188dd05ca9ad2f5e5bde1859815289cfb4acbc74",
+      "after_sha256": "c6996cd40ac2f9236410d0c2188dd05ca9ad2f5e5bde1859815289cfb4acbc74",
+      "differences": []
+    },
+    {
+      "scenario": "authored-large-inprogress",
+      "endpoint": "summary",
+      "exact_equal": true,
+      "before_sha256": "66a0a782730b063d47613a13b5d4359404dd2bf0753b87d7c7586719d84bc558",
+      "after_sha256": "66a0a782730b063d47613a13b5d4359404dd2bf0753b87d7c7586719d84bc558",
+      "differences": []
+    },
+    {
+      "scenario": "authored-large-inprogress",
+      "endpoint": "today",
+      "exact_equal": true,
+      "before_sha256": "73e6637d1506584ab86e09d79b862846a98c28080615687d270fb75de23eb84d",
+      "after_sha256": "73e6637d1506584ab86e09d79b862846a98c28080615687d270fb75de23eb84d",
+      "differences": []
+    },
+    {
+      "scenario": "authored-large-unstarted",
+      "endpoint": "progress",
+      "exact_equal": true,
+      "before_sha256": "7aa5d910016836ea9b7e2ff97b6f404264ce4a248b178159b8017c506a11c362",
+      "after_sha256": "7aa5d910016836ea9b7e2ff97b6f404264ce4a248b178159b8017c506a11c362",
+      "differences": []
+    },
+    {
+      "scenario": "authored-large-unstarted",
+      "endpoint": "summary",
+      "exact_equal": true,
+      "before_sha256": "f565f7e47d62ae96aa71c22ae36c1e0d2e4856a29d014121a01881787922b0bb",
+      "after_sha256": "f565f7e47d62ae96aa71c22ae36c1e0d2e4856a29d014121a01881787922b0bb",
+      "differences": []
+    },
+    {
+      "scenario": "authored-large-unstarted",
+      "endpoint": "today",
+      "exact_equal": true,
+      "before_sha256": "e13de5e1c7173f97826f08f4f775e4d87bc35a2b81f43805f83600a0a6a77b7c",
+      "after_sha256": "e13de5e1c7173f97826f08f4f775e4d87bc35a2b81f43805f83600a0a6a77b7c",
+      "differences": []
+    },
+    {
+      "scenario": "authored-small-inprogress",
+      "endpoint": "progress",
+      "exact_equal": true,
+      "before_sha256": "dce081a0913af959778af9f96677a8b4c8db1ed98510e6b4a392764385b5eab1",
+      "after_sha256": "dce081a0913af959778af9f96677a8b4c8db1ed98510e6b4a392764385b5eab1",
+      "differences": []
+    },
+    {
+      "scenario": "authored-small-inprogress",
+      "endpoint": "summary",
+      "exact_equal": true,
+      "before_sha256": "4b4f882998882f52922db7adacc14970beb177ff16c48b410fc5d41a59deabef",
+      "after_sha256": "4b4f882998882f52922db7adacc14970beb177ff16c48b410fc5d41a59deabef",
+      "differences": []
+    },
+    {
+      "scenario": "authored-small-inprogress",
+      "endpoint": "today",
+      "exact_equal": true,
+      "before_sha256": "90c2dcc575f6b9855336bf3fb25cb6964dd8df1e7a3a4b0d8c4e860335855173",
+      "after_sha256": "90c2dcc575f6b9855336bf3fb25cb6964dd8df1e7a3a4b0d8c4e860335855173",
+      "differences": []
+    },
+    {
+      "scenario": "authored-small-unstarted",
+      "endpoint": "progress",
+      "exact_equal": true,
+      "before_sha256": "042b6c128b65a1f21367620bf9246a174ae96658015829ca43f12ea9d5a73e6b",
+      "after_sha256": "042b6c128b65a1f21367620bf9246a174ae96658015829ca43f12ea9d5a73e6b",
+      "differences": []
+    },
+    {
+      "scenario": "authored-small-unstarted",
+      "endpoint": "summary",
+      "exact_equal": true,
+      "before_sha256": "ff80be9f3321f42f6fd97a05feef1f9a9bce7422c960e53d6ee2826b339379d3",
+      "after_sha256": "ff80be9f3321f42f6fd97a05feef1f9a9bce7422c960e53d6ee2826b339379d3",
+      "differences": []
+    },
+    {
+      "scenario": "authored-small-unstarted",
+      "endpoint": "today",
+      "exact_equal": true,
+      "before_sha256": "370cc94e69e24b075539f80436b89557b61c95b2ec692b0abc2cefd28975425d",
+      "after_sha256": "370cc94e69e24b075539f80436b89557b61c95b2ec692b0abc2cefd28975425d",
+      "differences": []
+    },
+    {
+      "scenario": "customized-large-inprogress",
+      "endpoint": "progress",
+      "exact_equal": true,
+      "before_sha256": "c3306d103325011925271d98bdacc21592f33437ead51d413eb2220413133bea",
+      "after_sha256": "c3306d103325011925271d98bdacc21592f33437ead51d413eb2220413133bea",
+      "differences": []
+    },
+    {
+      "scenario": "customized-large-inprogress",
+      "endpoint": "summary",
+      "exact_equal": true,
+      "before_sha256": "4bbcd242c8049a0838f2be095fa30826c3a523ebcde09065beaa43e9c32dc8b4",
+      "after_sha256": "4bbcd242c8049a0838f2be095fa30826c3a523ebcde09065beaa43e9c32dc8b4",
+      "differences": []
+    },
+    {
+      "scenario": "customized-large-inprogress",
+      "endpoint": "today",
+      "exact_equal": true,
+      "before_sha256": "4c0ac6cc66713aa97e74cba35d48af0e1005a43cdfbef8e99037db08f4fb6da5",
+      "after_sha256": "4c0ac6cc66713aa97e74cba35d48af0e1005a43cdfbef8e99037db08f4fb6da5",
+      "differences": []
+    },
+    {
+      "scenario": "customized-large-unstarted",
+      "endpoint": "progress",
+      "exact_equal": true,
+      "before_sha256": "be3e9e69c7ca72e839de23660f43ef3d7218e937f98db5a946ef51fc9d71bce9",
+      "after_sha256": "be3e9e69c7ca72e839de23660f43ef3d7218e937f98db5a946ef51fc9d71bce9",
+      "differences": []
+    },
+    {
+      "scenario": "customized-large-unstarted",
+      "endpoint": "summary",
+      "exact_equal": true,
+      "before_sha256": "8183ef72e3d3c5892281dfddfc89350ef96cf3be026a782c6bf1fc96efe3e0fc",
+      "after_sha256": "8183ef72e3d3c5892281dfddfc89350ef96cf3be026a782c6bf1fc96efe3e0fc",
+      "differences": []
+    },
+    {
+      "scenario": "customized-large-unstarted",
+      "endpoint": "today",
+      "exact_equal": true,
+      "before_sha256": "6aa78c44deee8fcc9338122160a129243c96d52e75a3bdcc3cf45de7ce203e4d",
+      "after_sha256": "6aa78c44deee8fcc9338122160a129243c96d52e75a3bdcc3cf45de7ce203e4d",
+      "differences": []
+    },
+    {
+      "scenario": "customized-small-inprogress",
+      "endpoint": "progress",
+      "exact_equal": true,
+      "before_sha256": "29e724242d74edf43f577d555f6faef7582b414dd2d40a906e8737214385e1f7",
+      "after_sha256": "29e724242d74edf43f577d555f6faef7582b414dd2d40a906e8737214385e1f7",
+      "differences": []
+    },
+    {
+      "scenario": "customized-small-inprogress",
+      "endpoint": "summary",
+      "exact_equal": true,
+      "before_sha256": "d2e006a7d8546d1d9de29075e4aa7282355a71dd72a2e89f6d2c5434275ef7f2",
+      "after_sha256": "d2e006a7d8546d1d9de29075e4aa7282355a71dd72a2e89f6d2c5434275ef7f2",
+      "differences": []
+    },
+    {
+      "scenario": "customized-small-inprogress",
+      "endpoint": "today",
+      "exact_equal": true,
+      "before_sha256": "8303a126f256cf2f8a89bb4b1ed66eedba69ef1a71f973819e3efaef51bf150c",
+      "after_sha256": "8303a126f256cf2f8a89bb4b1ed66eedba69ef1a71f973819e3efaef51bf150c",
+      "differences": []
+    },
+    {
+      "scenario": "customized-small-unstarted",
+      "endpoint": "progress",
+      "exact_equal": true,
+      "before_sha256": "ebeac5e1c1fbd093212a38320e22efd03732318f1ab2f5cddacb27b3dd0bfc98",
+      "after_sha256": "ebeac5e1c1fbd093212a38320e22efd03732318f1ab2f5cddacb27b3dd0bfc98",
+      "differences": []
+    },
+    {
+      "scenario": "customized-small-unstarted",
+      "endpoint": "summary",
+      "exact_equal": true,
+      "before_sha256": "267a8081ad58bcd3f3ad7639bc3d787e3bc6a6832e3881b70b1700919b77d2de",
+      "after_sha256": "267a8081ad58bcd3f3ad7639bc3d787e3bc6a6832e3881b70b1700919b77d2de",
+      "differences": []
+    },
+    {
+      "scenario": "customized-small-unstarted",
+      "endpoint": "today",
+      "exact_equal": true,
+      "before_sha256": "6166bdad9c23ac6fbecfd376049b167ce52c624c33dfc9c40c906dcaebd0451a",
+      "after_sha256": "6166bdad9c23ac6fbecfd376049b167ce52c624c33dfc9c40c906dcaebd0451a",
+      "differences": []
+    }
+  ],
+  "scope": {
+    "account_count": 8,
+    "accounts": [
+      "authored-small-unstarted",
+      "authored-small-inprogress",
+      "authored-large-unstarted",
+      "authored-large-inprogress",
+      "customized-small-unstarted",
+      "customized-small-inprogress",
+      "customized-large-unstarted",
+      "customized-large-inprogress"
+    ],
+    "selection": "Only rows owned by the eight ordinary benchmark accounts; fresh first-use accounts excluded",
+    "tables": "Training plans, occurrences, receipts, commands, state, calibration, inventory and presentation preferences; no auth/reset-token tables"
+  },
+  "all_scoped_training_tables_equal": true,
+  "training_tables": {
+    "workout_plans": true,
+    "workout_occurrences": true,
+    "workout_set_logs": true,
+    "workout_log_commands": true,
+    "workout_session_states": true,
+    "authored_initial_calibrations": true,
+    "user_interface_preferences": true,
+    "authored_load_states": true,
+    "exercise_states": true,
+    "customized_equipment_profiles": true
+  },
+  "ordinary_accounts_unchanged_private_comparison": true
+}

@@ -1,0 +1,147 @@
+{
+  "source": {
+    "baseline": {
+      "revision": "c656988c2133e5a655c83a9ba87c5f6c47c9308e",
+      "build_id": "5gupZD75mVy5ZATfTF18I",
+      "routes_manifest_sha256": "5815a1100330b0cbac1c8c70eca68fe37b74e89d361149644751c96c2a99a3d1",
+      "runtime_sha256": {
+        "apps/api/app/workout_load_state.py": "894380a2efc0b86ded04bef466d845cdd3affd4cbc02f7a63763cd085a7c0631",
+        "apps/api/app/workout_initial_calibration.py": "4239d9f7e73598a18cc702043ff4a33e3cf3d21be8ecaea41fdfc61ee90cc73d",
+        "apps/web/app/today/page.tsx": "936584c7a343b1e3afbec4ccb434781e7146d456bf31e31ad57e76f3afbf41e3",
+        "apps/web/lib/api.ts": "68e5408186ae23a768a7f2dcedbf11cf5799c0c921dd52c96c4056a9d9ff6468"
+      }
+    },
+    "after": {
+      "revision": "912e7e928960069316e81f01a1df08001b0f2a53",
+      "build_id": "U4LUcHUOpuJcqc3YzGs16",
+      "routes_manifest_sha256": "5815a1100330b0cbac1c8c70eca68fe37b74e89d361149644751c96c2a99a3d1",
+      "runtime_sha256": {
+        "apps/api/app/workout_load_state.py": "e30e8a403de6558a68964523e85b82263eae45fe8732b8b5f7dea6187f5f7a27",
+        "apps/api/app/workout_initial_calibration.py": "c766261800fe755cdc46350a0227d4433a0007cfffce8c519802e9bf6735cfac",
+        "apps/web/app/today/page.tsx": "1b627e333b6eafb541ac4628c082b6fa605803806c73703b512cc225c249f83b",
+        "apps/web/lib/api.ts": "98f8e55cf4e904ea60cce7d9c0e42520bbf390baecdeea1e8ef54e57e7aee99e"
+      }
+    }
+  },
+  "platform": "Linux-6.8.0-1065-raspi-aarch64-with-glibc2.39",
+  "python": "3.12.3",
+  "node": "22.22.0",
+  "postgres": "PostgreSQL 16.13 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
+  "browser": "Headless Chromium 1208 via Playwright; 390x844",
+  "frontend": "Real Next.js production build on loopback3020; same-origin /api proxy to loopback8020",
+  "database": "Disposable today_performance_1023 / m2a_test on 127.0.0.1:55418; verified Docker tmpfs, no mounts",
+  "datasets": [
+    {
+      "scenario": "authored-small-unstarted",
+      "mode": "Authored",
+      "current_exercises": 6,
+      "prior_exposure_sessions": 0,
+      "current_receipts": 0,
+      "counts": {
+        "workout_plans": 1,
+        "workout_occurrences": 0,
+        "workout_set_logs": 0,
+        "authored_initial_calibrations": 0,
+        "user_interface_preferences": 1
+      }
+    },
+    {
+      "scenario": "authored-small-inprogress",
+      "mode": "Authored",
+      "current_exercises": 6,
+      "prior_exposure_sessions": 0,
+      "current_receipts": 1,
+      "counts": {
+        "workout_plans": 1,
+        "workout_occurrences": 1,
+        "workout_set_logs": 1,
+        "authored_initial_calibrations": 0,
+        "user_interface_preferences": 1
+      }
+    },
+    {
+      "scenario": "authored-large-unstarted",
+      "mode": "Authored",
+      "current_exercises": 6,
+      "prior_exposure_sessions": 100,
+      "current_receipts": 0,
+      "counts": {
+        "workout_plans": 101,
+        "workout_occurrences": 100,
+        "workout_set_logs": 1800,
+        "authored_initial_calibrations": 0,
+        "user_interface_preferences": 1
+      }
+    },
+    {
+      "scenario": "authored-large-inprogress",
+      "mode": "Authored",
+      "current_exercises": 6,
+      "prior_exposure_sessions": 100,
+      "current_receipts": 1,
+      "counts": {
+        "workout_plans": 101,
+        "workout_occurrences": 101,
+        "workout_set_logs": 1801,
+        "authored_initial_calibrations": 0,
+        "user_interface_preferences": 1
+      }
+    },
+    {
+      "scenario": "customized-small-unstarted",
+      "mode": "Customized",
+      "current_exercises": 7,
+      "prior_exposure_sessions": 0,
+      "current_receipts": 0,
+      "counts": {
+        "workout_plans": 1,
+        "workout_occurrences": 0,
+        "workout_set_logs": 0,
+        "authored_initial_calibrations": 0,
+        "user_interface_preferences": 1
+      }
+    },
+    {
+      "scenario": "customized-small-inprogress",
+      "mode": "Customized",
+      "current_exercises": 7,
+      "prior_exposure_sessions": 0,
+      "current_receipts": 1,
+      "counts": {
+        "workout_plans": 1,
+        "workout_occurrences": 1,
+        "workout_set_logs": 1,
+        "authored_initial_calibrations": 0,
+        "user_interface_preferences": 1
+      }
+    },
+    {
+      "scenario": "customized-large-unstarted",
+      "mode": "Customized",
+      "current_exercises": 7,
+      "prior_exposure_sessions": 100,
+      "current_receipts": 0,
+      "counts": {
+        "workout_plans": 101,
+        "workout_occurrences": 100,
+        "workout_set_logs": 1100,
+        "authored_initial_calibrations": 0,
+        "user_interface_preferences": 1
+      }
+    },
+    {
+      "scenario": "customized-large-inprogress",
+      "mode": "Customized",
+      "current_exercises": 7,
+      "prior_exposure_sessions": 100,
+      "current_receipts": 1,
+      "counts": {
+        "workout_plans": 101,
+        "workout_occurrences": 101,
+        "workout_set_logs": 1101,
+        "authored_initial_calibrations": 0,
+        "user_interface_preferences": 1
+      }
+    }
+  ]
+}

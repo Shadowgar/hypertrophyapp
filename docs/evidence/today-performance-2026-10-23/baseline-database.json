@@ -1,0 +1,59 @@
+{
+  "scope": {
+    "account_count": 8,
+    "accounts": [
+      "authored-small-unstarted",
+      "authored-small-inprogress",
+      "authored-large-unstarted",
+      "authored-large-inprogress",
+      "customized-small-unstarted",
+      "customized-small-inprogress",
+      "customized-large-unstarted",
+      "customized-large-inprogress"
+    ],
+    "selection": "Only rows owned by the eight ordinary benchmark accounts; fresh first-use accounts excluded",
+    "tables": "Training plans, occurrences, receipts, commands, state, calibration, inventory and presentation preferences; no auth/reset-token tables"
+  },
+  "tables": {
+    "workout_plans": {
+      "rows": 408,
+      "sha256": "8720f61c6a5a4a1d923f199725d594a49edf129973cd18b7a809b2f0d864dde3"
+    },
+    "workout_occurrences": {
+      "rows": 404,
+      "sha256": "e59ad9921313cbc56dd19253f0451011b9840f6a8b6cdddb21204992fbf28e5a"
+    },
+    "workout_set_logs": {
+      "rows": 5804,
+      "sha256": "84643ca64904278338f11773add9a657cf4e3f1ad71bc6213b7d67f34c118bcc"
+    },
+    "workout_log_commands": {
+      "rows": 4,
+      "sha256": "3bece163f3b0b982db9e7e0656dc8113c40dc0e74583162839ac61812823cdb9"
+    },
+    "workout_session_states": {
+      "rows": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "authored_initial_calibrations": {
+      "rows": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "user_interface_preferences": {
+      "rows": 8,
+      "sha256": "80c50fe1cdd75405d572f6c9e1931d8479474efc9bdb3d86c8dc09db0fd9bc44"
+    },
+    "authored_load_states": {
+      "rows": 305,
+      "sha256": "2130f890aebe2ab3b5d7cb1240c44be392dc66116f93def06c5e2e4dfb73cf97"
+    },
+    "exercise_states": {
+      "rows": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "customized_equipment_profiles": {
+      "rows": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    }
+  }
+}

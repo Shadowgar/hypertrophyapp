@@ -1,0 +1,44 @@
+{
+  "mode": "Customized",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "pageErrors": [],
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: net::ERR_FAILED",
+    "Failed to load resource: net::ERR_FAILED"
+  ],
+  "consoleLocations": [
+    {
+      "message": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://127.0.0.1:3020/favicon.ico"
+    },
+    {
+      "message": "Failed to load resource: net::ERR_FAILED",
+      "url": "http://127.0.0.1:3020/api/workout/4af237f1-dea4-5b1b-b99a-47a74397112b/log-set"
+    },
+    {
+      "message": "Failed to load resource: net::ERR_FAILED",
+      "url": "http://127.0.0.1:3020/api/workout/4af237f1-dea4-5b1b-b99a-47a74397112b/log-set"
+    },
+    {
+      "message": "Failed to load resource: net::ERR_FAILED",
+      "url": "http://127.0.0.1:3020/api/workout/set/ba72d8be-81e2-4196-b46a-876d9ff4f173/correct"
+    }
+  ],
+  "apiFailures": [],
+  "resourceFailures": [],
+  "consoleQualification": "Inherited favicon and Programs-prefetch 404s retained explicitly; injected response-loss ERR_FAILED expected; no API/chunk/unhandled page errors",
+  "saveFailureBeforeCommit": true,
+  "saveExactRetryAfterReload": true,
+  "committedSecondSetReceiptBoundReconciliation": true,
+  "committedSecondSetCanonicalPayloadPreserved": true,
+  "noAdditionalPostAfterReconcile": true,
+  "correctionResponseLostCommitted": true,
+  "correctionExactRetryAfterCloseReload": true,
+  "undoThenResumeEffectiveReceipts": 1,
+  "acceptedPrescriptionUnchanged": true
+}

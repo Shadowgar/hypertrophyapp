@@ -28,7 +28,9 @@ exports[`visual snapshot: today route initial state 1`] = `
     class="main-card main-card--module main-card--accent spacing-grid spacing-grid--tight"
   >
     <button
+      aria-busy="true"
       class="ux-button ux-button-primary px-4 py-2 min-h-[44px] w-full"
+      disabled=""
     >
       <span
         class="inline-flex items-center gap-2"
