@@ -2,7 +2,8 @@
 
 **Recommendation: BLOCKED for main integration under the existing release gate.**
 Two unchanged source-fidelity tests require the missing licensed Phase 1 companion
-workbook. The canonical security qualification is incomplete and physical iPhone
+workbook. Provider security findings remain open. The canonical security qualification is
+incomplete and physical iPhone
 Safari acceptance is pending. Failed CI is not accepted or waived. No production
 service/database/private record was contacted; no main merge or deployment occurred.
 
@@ -82,7 +83,7 @@ This is synthetic restore evidence, not a production backup or production RPO/RT
 | TypeScript | Pass (`tsc --noEmit --incremental false`). |
 | Lint | 0 errors, 7 retained hook-dependency warnings; no clean-warning claim. |
 | Focused PostgreSQL | **172 passed**, 112.18 s; Authored history snapshot, initial calibration, load intelligence and source warm-ups, including concurrency and retry/isolation boundaries. |
-| Fresh API CI | Reported separately in the final candidate's head-linked PR comment/checks. The two workbook checks remain failing prerequisites; no all-API-pass claim. |
+| Fresh API CI | First combined head `4e0fef6`: **958 passed, 2 failed, 120 skipped**, 510.53 s, run `40067157844`. Only the unchanged workbook checks failed; all corrected weekly cases passed. Final helper-correction head is reported separately in the head-linked PR comment; no all-API-pass claim. |
 | Independent review | No actionable finding in bounded test repairs/ancestry; reviewer reran 216 affected pure core cases successfully. Final release limits remain explicit. |
 
 The focused PG suite's unchanged safety guard requires the preexisting disposable
@@ -102,9 +103,9 @@ helpers only on newly created explicit disposable SQLite files. This is a local
 procedure deviation, not a full-suite pass or permission to repeat them. No PG or
 production reset was executed. Full API qualification uses the unchanged repository
 CI workflow's ephemeral target; assertions/skips/test selection are not weakened.
-The corrected weekly persistence comparison awaits fresh CI qualification; its
-interrupted local retry does not qualify it. The final head-linked PR comment
-records the completed CI result when available. [Nine-case disposition](INHERITED-CI.md).
+The corrected weekly persistence comparison passed in full combined CI at
+`4e0fef6`; its interrupted local retry did not qualify it. The final head-linked
+PR comment records the subsequent helper-correction head's completed CI result. [Nine-case disposition](INHERITED-CI.md).
 
 ### Actual browser behavior, not screenshot-only evidence
 

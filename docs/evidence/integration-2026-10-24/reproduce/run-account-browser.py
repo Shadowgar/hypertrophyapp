@@ -19,9 +19,9 @@ try:
  info={'build':(root/'apps/web/.next/BUILD_ID').read_text().strip(),'api':'127.0.0.1:8020','web':'127.0.0.1:3020','database':'integration_1024','dev_cleanup_enabled':False}
  Path('.qualification/journeys/build.json').write_text(json.dumps(info,indent=2))
  for script in ['account-journey.cjs']:
-  print('Running '+script,flush=True);subprocess.run(['node','.qualification/'+script],cwd=root,env=env,check=True)
+  print('Running '+script,flush=True);subprocess.run(['node','.qualification/'+script],cwd=root,env={**env,'WORKOUTAPP_SYNTHETIC_TEST_PASSWORD':os.environ['WORKOUTAPP_SYNTHETIC_TEST_PASSWORD']},check=True)
  for script in []:
-  subprocess.run([str(root/'.qualification/run-browser-python'),'pg','.qualification/'+script],cwd=root,env=env,check=True)
+  subprocess.run([str(root/'.qualification/run-browser-python'),'pg','.qualification/'+script],cwd=root,env={**env,'WORKOUTAPP_SYNTHETIC_TEST_PASSWORD':os.environ['WORKOUTAPP_SYNTHETIC_TEST_PASSWORD']},check=True)
 finally:
  for p in [web,api]:
   if p and p.poll() is None:

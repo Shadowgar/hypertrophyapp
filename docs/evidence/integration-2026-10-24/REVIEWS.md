@@ -32,3 +32,15 @@ Final evidence review found two wording overclaims: the workbook tests compare
 normalized raw source fields, not typed prescriptions; corrected weekly cases
 await CI rather than inheriting an interrupted local pass. Both were corrected
 in this package before publication. No new runtime finding was established.
+
+## Newly reported candidate review threads
+
+At `4e0fef6`, two new unresolved CodeQL threads appeared on #114:
+[r4366152805](https://github.com/Shadowgar/hypertrophyapp/pull/114#discussion_r4366152805)
+(password export in the new synthetic seed helper; bounded export removal and real
+journey rerun described in SECURITY.md), and
+[r4366152810](https://github.com/Shadowgar/hypertrophyapp/pull/114#discussion_r4366152810)
+(logging in inherited characterization helper; unchanged, explicit scoped triage
+remains open). Neither was silently resolved. Provider scan status and final
+thread/alert disposition are recorded in the final-head PR comment. Existing #110
+threads remain resolved; these new findings are not confused with the nine CI cases.

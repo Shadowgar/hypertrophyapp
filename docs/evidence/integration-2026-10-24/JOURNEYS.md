@@ -70,3 +70,12 @@ journey against its old records and pretend duplicate fixture actions are regres
 Full raw transport logs, private account files, additional captures and the exact
 synthetic dump remain local ignored evidence. Three representative PNGs plus small
 assertion files suffice; no duplicate gallery or performance raw-data series added.
+
+A later bounded account-helper rerun removed plaintext password export. Supply
+`WORKOUTAPP_SYNTHETIC_TEST_PASSWORD` explicitly only to the seed command and Node
+browser process through a private caller environment; do not print it, commit it,
+put it in the public fixture manifest or forward it to API/web server environments.
+The ignored account manifest keeps the existing synthetic bearer/email/user fields.
+[No-password-export verification](account-helper-hardening.json) records the actual
+successful sign-in and absence of the password key. Earlier capture provenance and
+the exact 63-row dump/restore snapshot remain intact; the new account is additive.

@@ -51,3 +51,37 @@ occurrences, records the empty-table digest evidence and closes **only incident
 check. Until confirmed by the provider, PR #111's check remains failed. Fresh
 candidate GitGuardian/CodeQL outcomes are reported independently in its head-linked
 PR qualification comment; a later green check does not retroactively close #111.
+
+## First combined-head provider results and bounded helper correction
+
+At `4e0fef6`, GitGuardian check `120792714563` failed with three occurrences of
+incident 38908114: original `306621747` and merge-associated `306714528` /
+`306714529`, all in the same unchanged original preservation file. No new secret
+value was established. Provider disposition remains unavailable and failed.
+
+CodeQL analysis jobs passed but aggregate check `120792835368` failed with two
+high-severity alerts. These are newly reported candidate findings, separate from
+the nine inherited test failures and from the blocked canonical scan:
+
+- [Alert 13](https://github.com/Shadowgar/hypertrophyapp/security/code-scanning/13),
+  new `reproduce/seed-existing.py`: the helper unnecessarily exported its generated
+  synthetic login password into the ignored account artifact. Removed that field;
+  the seed/browser now take the same explicit disposable password through the caller
+  environment, and the server launch environment does not carry that password.
+  The real account journey was rerun with a fresh synthetic user and an assertion
+  that the artifact has no password key; sign-in/equipment/six appearances passed.
+  Only this task-owned `.qualification` directory was made private (0700); no
+  shared host ancestors or canonical scan paths changed. Final provider verification
+  is in the head-linked PR comment; no synthetic success status or suppression.
+- [Alert 14](https://github.com/Shadowgar/hypertrophyapp/security/code-scanning/14),
+  inherited #111 `characterize.py`: clear-text logging of its result dictionary.
+  Static counterevidence is the exact disposable DB/user allowlist, freshly generated
+  synthetic users/records and output of source/guidance characterization only. It
+  was not executed in this rehearsal. This does not by itself dismiss the provider
+  finding or establish security acceptance. Retained unchanged for explicit scoped
+  triage; its thread remains open, rather than changing logging just to silence it.
+
+Any remaining failed CodeQL check/alert is an explicit qualification blocker,
+not a waiver. The smallest follow-up is the exact alert's source/output/privacy
+boundary review and supported provider disposition or a bounded proven fix; no
+new application architecture or general research phase is required.
