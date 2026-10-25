@@ -1,4 +1,5 @@
 // Compiled into the immutable web artifact, independent of the API response.
+// Qualified main releases verify this build identifier after cutover.
 export const dynamic = "force-static";
 
 export function GET() {
