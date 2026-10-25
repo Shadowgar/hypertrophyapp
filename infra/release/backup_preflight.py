@@ -57,10 +57,21 @@ with engine.connect().execution_options(isolation_level='REPEATABLE READ') as c:
 '''
 
 
-def run(args,*,input=None):
-    result=subprocess.run(args,input=input,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+def run(args,*,input=None,env=None):
+    result=subprocess.run(args,input=input,env=env,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     if result.returncode:raise RuntimeError('Private preflight command failed; output withheld')
     return result.stdout
+
+
+def start_restore_container(container,image):
+    # No extra retained host password file or literal secret in process arguments.
+    # Docker still holds its normal container environment, visible to its operator.
+    # Preserve the same Docker endpoint/context as all preceding identity checks.
+    environment={**os.environ,'POSTGRES_DB':'workoutapp_release_restore',
+                 'POSTGRES_USER':PRODUCTION_USER,'POSTGRES_PASSWORD':secrets.token_urlsafe(40)}
+    run(['docker','run','-d','--name',container,'--network','none',
+         '--tmpfs','/var/lib/postgresql/data:rw,noexec,nosuid,size=1g',
+         '--env','POSTGRES_DB','--env','POSTGRES_USER','--env','POSTGRES_PASSWORD',image],env=environment)
 
 
 def target(container):
@@ -111,9 +122,7 @@ def main():
     finally:
         if source.poll() is None:source.kill();source.wait()
     (root/'source-signature.private.json').write_text(json.dumps(before));(root/'source-signature.private.json').chmod(0o600)
-    password=secrets.token_urlsafe(40)
-    env=root/'restore.private.env';env.write_text('POSTGRES_DB=workoutapp_release_restore\nPOSTGRES_USER=hypertrophy\nPOSTGRES_PASSWORD='+password+'\n');env.chmod(0o600)
-    run(['docker','run','-d','--name',args.restore_container,'--network','none','--tmpfs','/var/lib/postgresql/data:rw,noexec,nosuid,size=1g','--env-file',str(env),image])
+    start_restore_container(args.restore_container,image)
     for _ in range(120):
         try:target(args.restore_container);break
         except RuntimeError:time.sleep(.5)
