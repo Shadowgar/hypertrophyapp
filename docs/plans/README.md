@@ -48,3 +48,7 @@ is limited to combining #109 → #110 → #111 → #112, contract-established in
 CI repairs and synthetic qualification. The vision itself remains outcomes only;
 Home/onboarding and later layouts are the approved next stream after readiness,
 not part of this rehearsal. No additional roadmap or release acceptance is created.
+
+## 2026-10-24 bounded deployment automation
+
+The owner authorized [continuous-release implementation and preflight](../operations/continuous-release-plan.md), including read-only production diagnosis, private backup/isolated restoration and focused release qualification. [Operational evidence/procedure](../operations/continuous-release.md) keeps exact cutover, schema changes and service activation separately owner-controlled. This is not Home/onboarding or another product roadmap.

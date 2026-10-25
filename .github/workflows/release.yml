@@ -1,0 +1,33 @@
+name: Production release
+on:
+  workflow_run:
+    workflows: [CI]
+    branches: [main]
+    types: [completed]
+permissions:
+  contents: read
+  actions: read
+  deployments: write
+concurrency:
+  group: workoutapp-production-release
+  cancel-in-progress: false
+jobs:
+  release:
+    if: >-
+      vars.WORKOUTAPP_RELEASE_ENABLED == 'true' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - name: Require full protected-main qualification, request release and verify live pair
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          QUALIFICATION_RUN: ${{ github.event.workflow_run.id }}
+        run: python3 infra/release/release.py request --run-id "$QUALIFICATION_RUN"

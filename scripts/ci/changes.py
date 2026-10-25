@@ -55,7 +55,13 @@ def sha(value):
 
 def changed_paths(event_name, event):
     if event_name == "workflow_dispatch":
-        return None, None, None
+        # Full runtime coverage still runs; docs compare with the real first parent
+        # rather than treating every historical broken link as newly introduced.
+        try:
+            parent = sha(git("rev-parse", "--verify", "HEAD^").decode().strip())
+        except subprocess.CalledProcessError:
+            parent = None
+        return parent, parent, None
     if event_name == "pull_request":
         base = sha(event["pull_request"]["base"]["sha"])
         head = sha(event["pull_request"]["head"]["sha"])
@@ -87,6 +93,9 @@ def main():
         event = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text())
         base, diff_base, paths = changed_paths(os.environ["GITHUB_EVENT_NAME"], event)
     selected = {key: True for key in CATEGORIES} if paths is None else classify(paths)
+    # A production release needs full qualification, including documentation-only main pushes.
+    if os.environ.get("GITHUB_EVENT_NAME") == "push" and os.environ.get("GITHUB_REF") == "refs/heads/main":
+        selected = {key: True for key in CATEGORIES}
     # Exercise these selectors/checkers whenever their implementation changes.
     selected["tooling"] |= selected["docs"]
     selected["docs"] |= selected["tooling"]

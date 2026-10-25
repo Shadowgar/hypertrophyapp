@@ -84,8 +84,10 @@ class SelectionTests(unittest.TestCase):
             self.assertEqual(changed_paths("push", event), (event["before"], event["before"], ["README.md"]))
         git.assert_called_once_with("diff", "--name-only", "--no-renames", "-z", event["before"], event["after"])
 
-    def test_dispatch_and_initial_push_keep_full_coverage_without_a_baseline(self):
-        self.assertEqual(changed_paths("workflow_dispatch", {}), (None, None, None))
+    def test_dispatch_keeps_full_coverage_with_parent_and_initial_push_has_no_baseline(self):
+        with patch("changes.git", return_value=("a" * 40).encode()) as git:
+            self.assertEqual(changed_paths("workflow_dispatch", {}), ("a" * 40, "a" * 40, None))
+        git.assert_called_once_with("rev-parse", "--verify", "HEAD^")
         self.assertEqual(changed_paths("push", {"before": "0" * 40, "after": "b" * 40}),
                          (None, None, None))
 
@@ -175,11 +177,20 @@ class ConsolidatedWorkflowTests(unittest.TestCase):
         steps = workflow["jobs"]["api-tests"]["steps"]
         self.assertTrue(any("pytest-xdist==3.8.0" in step.get("run", "") for step in steps))
         self.assertTrue(any("CI_TEST_ROOT=$test_root" in step.get("run", "") for step in steps))
-        command = next(step["run"] for step in steps if step.get("name") == "API behavior with explicitly enabled synthetic dev routes")
+        full = next(step for step in steps if step.get("name") == "Complete API and source-fidelity qualification")
+        command = full["run"]
         self.assertIn("-n 4 --dist=loadfile", command)
         self.assertNotIn("--ignore=tests/test_phase1_full_body_source_fidelity.py", command)
         self.assertIn("licensed_phase1.py --", command)
-        self.assertEqual(workflow["jobs"]["api-tests"]["environment"], "licensed-phase1-fixture")
+        guard="github.ref == 'refs/heads/main' && github.ref_protected && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')"
+        self.assertEqual(full['if'],guard)
+        self.assertEqual(workflow["jobs"]["api-tests"]["environment"], "${{ ("+guard+") && 'licensed-phase1-fixture' || 'public-ci' }}")
+        public=next(step for step in steps if step.get('name')=='PR API behavior without private source')
+        self.assertEqual(public['if'], '${{ !('+guard+') }}')
+        self.assertIn('--ignore=tests/test_phase1_full_body_source_fidelity.py',public['run'])
+        self.assertNotIn('secrets.',str(public))
+        self.assertNotIn('licensed_phase1.py',public['run'])
+        self.assertEqual([step.get('name') for step in steps if 'PHASE1_SOURCE_B64' in str(step)],['Complete API and source-fidelity qualification'])
         self.assertFalse(any("upload-artifact" in step.get("uses", "") for step in steps))
 
 
