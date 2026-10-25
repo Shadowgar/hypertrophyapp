@@ -45,6 +45,9 @@ def admit(*, sha: str, current: str, protected: bool, run: dict, jobs: list, che
     for entries,names in ((jobs,REQUIRED_JOBS),(checks,CODEQL_CHECKS)):
         successful={item.get('name') for item in entries if item.get('conclusion')=='success'}
         if not names <= successful or any(item.get('name') in names and item.get('conclusion')!='success' for item in entries):raise Refused('required_checks_incomplete')
+    full_api=[step for job in jobs if job.get('name')=='api-tests' for step in job.get('steps',[])
+              if step.get('name')=='Complete API and source-fidelity qualification']
+    if len(full_api)!=1 or full_api[0].get('conclusion')!='success':raise Refused('full_api_qualification_required')
 
 
 def require_code_only(paths):

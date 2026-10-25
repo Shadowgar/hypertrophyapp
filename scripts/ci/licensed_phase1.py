@@ -1,6 +1,6 @@
-"""Restore the exact private source for one approved CI job; never publish test bodies.
+"""Restore the exact private source for protected-main CI; never publish test bodies.
 
-Only environment-scoped Actions secrets from an owner-reviewed job may supply
+Only environment-scoped Actions secrets from the owner-approved main workflow supply
 PHASE1_SOURCE_B64_1..3. No download credentials, network or workbook parsing here.
 """
 from __future__ import annotations

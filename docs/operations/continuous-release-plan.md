@@ -38,7 +38,9 @@ setting and unchanged schema; never downgrade or restore an old dump over later 
 
 Acceptance: negative qualification tests, command/target/no-DDL/immutable-pair tests,
 actual isolated images/health checks, fresh CI and bounded security review. Existing
-fixture owner-review protection stays; private main fixture access is limited to
-protected main and still requires owner job approval. Operator service installation,
+fixture access is limited to protected main. Following the owner's 2026-10-25
+instruction to remove recurring fixture approvals, main's full suite runs
+automatically; PRs receive no private fixture and cannot qualify a release.
+Operator service installation,
 production schema changes and app cutover await one exact authorization. No claim
 of live automatic-release acceptance before the harmless post-authorization trial.

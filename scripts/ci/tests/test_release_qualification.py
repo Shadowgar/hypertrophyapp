@@ -16,11 +16,18 @@ class AdmissionTests(unittest.TestCase):
         return dict(sha=SHA, current=SHA, protected=True,
                     run={'head_sha':SHA, 'head_branch':'main', 'event':'push',
                          'conclusion':'success', 'path':'.github/workflows/ci.yml'},
-                    jobs=[{'name':n,'conclusion':'success'} for n in release.REQUIRED_JOBS],
+                    jobs=[{'name':n,'conclusion':'success','steps':[{'name':'Complete API and source-fidelity qualification','conclusion':'success'}] if n=='api-tests' else []} for n in release.REQUIRED_JOBS],
                     checks=[{'name':n,'conclusion':'success'} for n in release.CODEQL_CHECKS])
 
     def test_qualified_current_protected_main_is_admitted(self):
         release.admit(**self.facts())
+
+    def test_public_api_profile_cannot_replace_full_release_qualification(self):
+        for steps in ([],[{'name':'PR API behavior without private source','conclusion':'success'}],
+                      [{'name':'Complete API and source-fidelity qualification','conclusion':'skipped'}],
+                      [{'name':'Complete API and source-fidelity qualification','conclusion':'failure'}]):
+            facts=self.facts();next(job for job in facts['jobs'] if job['name']=='api-tests')['steps']=steps
+            with self.subTest(steps=steps),self.assertRaisesRegex(release.Refused,'full_api_qualification_required'):release.admit(**facts)
 
     def test_missing_skipped_failed_cancelled_checks_never_qualify(self):
         for group in ('jobs','checks'):

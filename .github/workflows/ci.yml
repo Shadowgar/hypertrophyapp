@@ -81,8 +81,9 @@ jobs:
 
   api-tests:
     needs: changes
-    # Owner-reviewed private fixture access; no deployment is performed.
-    environment: licensed-phase1-fixture
+    # Private bytes are available only after review/integration into protected main.
+    # The provider environment itself also allows only exact main, with no PR refs.
+    environment: ${{ (github.ref == 'refs/heads/main' && github.ref_protected && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')) && 'licensed-phase1-fixture' || 'public-ci' }}
     if: needs.changes.outputs.api == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -122,7 +123,17 @@ jobs:
           settings = Settings(_env_file=None)
           assert settings.allow_dev_wipe_endpoints is False, "Dev wipe endpoints must default to false"
           '
-      - name: API behavior with explicitly enabled synthetic dev routes
+      - name: PR API behavior without private source
+        if: ${{ !(github.ref == 'refs/heads/main' && github.ref_protected && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')) }}
+        working-directory: apps/api
+        env:
+          ALLOW_DEV_WIPE_ENDPOINTS: 'true'
+        # These two unchanged private-source tests run in the full main profile
+        # below. A successful PR profile is not production release qualification.
+        run: PYTHONPATH=. python -m pytest -q -n 4 --dist=loadfile --ignore=tests/test_config_defaults.py --ignore=tests/test_phase1_full_body_source_fidelity.py
+
+      - name: Complete API and source-fidelity qualification
+        if: github.ref == 'refs/heads/main' && github.ref_protected && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         working-directory: apps/api
         env:
           ALLOW_DEV_WIPE_ENDPOINTS: 'true'

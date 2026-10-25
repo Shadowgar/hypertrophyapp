@@ -52,6 +52,28 @@ there is no blanket link waiver or broad link cleanup. The same main docs with
 that explicit parent yield 28 existing / 0 new failures. The failed run remains
 failed; fresh corrected-head CI is required before release.
 
+### Automatic fixture qualification — owner direction, 2026-10-25
+
+The owner removed the recurring workbook-approval requirement. The workbook is an
+offline test fixture, never a WorkoutApp runtime dependency. The environment is
+restricted to exact `main`; earlier integration/PR ref exceptions are removed,
+and the manual reviewer requirement is removed only after that restriction is
+verified. Protected-main review and required checks remain in force.
+
+PR API checks use an unprivileged `public-ci` environment with no workbook secrets.
+The two original workbook tests are selected only by the full main profile;
+their assertions and source digest remain unchanged. Existing tests that require
+other unavailable source fixtures retain their explicit skip status. A green PR
+does not certify source fidelity or authorize a release.
+
+Every protected-main push/manual run automatically restores the exact private
+fixture and runs the complete API suite. Raw output stays private and the runner
+fixture is removed afterward. In addition to all required jobs, the host and
+publisher independently require a successful **Complete API and source-fidelity
+qualification** step from that exact main CI run. A missing/skipped/failed full
+step or a successful public PR profile cannot qualify production. No per-PR
+fixture rules or recurring workbook approval requests are part of this process.
+
 ## Release mechanism and trust boundary
 
 [`release.yml`](../../.github/workflows/release.yml) acts only on a completed CI
