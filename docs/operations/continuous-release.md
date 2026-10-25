@@ -94,6 +94,13 @@ migration/model change, incompatible schema, configuration drift or stale main
 stops for operator review. The initial pre-guard source needs its separately
 rehearsed bootstrap procedure; it is never promoted to automatic schema authority.
 
+Before schema checks and again before cutover, the executor resolves the exact
+Compose environment privately in memory and compares it with the running pair.
+Only version and validate-only startup deltas are allowed. Missing prior shell
+overrides, credential changes or Customized activation drift stop the release;
+values are neither persisted nor printed. Model relocations are evaluated with
+rename detection disabled so the original model deletion cannot evade review.
+
 A failed cutover records only a fixed category in private state/journal, and the
 GitHub release job fails if the exact pair never appears. Last-success retains
 current/previous immutable pairs and SHA. Automatic rollback is **off by default**:
@@ -101,6 +108,16 @@ newly written data cannot silently be interpreted by an unqualified old binary.
 Only an explicitly operator-approved compatibility setting permits same-schema
 previous-image recovery; both schema and readiness are rechecked. Never downgrade,
 stamp, reset or restore an older snapshot over subsequent live writes.
+
+A private `recovery-required.json` marker is written **before** replacing either
+service. A crash, partial update or failed readiness blocks the same request and
+all later requests. Matching image labels alone do not clear this marker. Stop
+the user timer, inspect the fixed-category failure and privately retained old/new
+image IDs, then perform explicitly authorized forward repair or compatible image
+recovery. Verify both public versions, schema, immutable IDs and preserved
+configuration before the operator removes the marker and resumes the timer.
+Successful deployment alone removes its in-flight marker after writing the
+success receipt. A same-revision poll still checks public readiness.
 
 ## Fresh private source backup and migration rehearsal
 

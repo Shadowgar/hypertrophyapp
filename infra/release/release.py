@@ -213,6 +213,17 @@ class Host:
         for item in self.compose_files:command+=['-f',item['path']]
         return command+['-f',str(file)]
 
+    def verify_environment(self,compose):
+        # Resolve interpolation with the exact deployment environment, in memory.
+        # Frozen files alone cannot prove parity with a prior shell's overrides.
+        services=json.loads(self.command(compose+['config','--format','json']))['services']
+        for service in ('api','web'):
+            configured=services[service].get('environment',{})
+            existing=dict(value.split('=',1) for value in self.inspect('container',self.prefix+'-'+service)['Config']['Env'])
+            controlled={'APP_VERSION','SCHEMA_MANAGEMENT_MODE'} if service=='api' else {'NEXT_PUBLIC_APP_VERSION'}
+            if any(existing.get(key)!=value for key,value in configured.items() if key not in controlled):raise Refused('runtime_configuration_changed')
+        if services['api']['environment'].get('CUSTOMIZED_ENABLED')!='true':raise Refused('runtime_configuration_changed')
+
     def build(self,revision,previous):
         if not self.mirror.exists():self.command(['git','-c','credential.helper=','clone','--bare','https://github.com/'+REPO+'.git',str(self.mirror)])
         git=['git','--git-dir',str(self.mirror)]
@@ -220,7 +231,7 @@ class Host:
         self.command(git+['cat-file','-e',revision+'^{commit}'])
         if not self.bootstrap:
             self.command(git+['merge-base','--is-ancestor',previous,revision])
-            changes=self.command(git+['diff','--name-only',previous,revision,'--','apps/api']).decode().splitlines()
+            changes=self.command(git+['diff','--no-renames','--name-only',previous,revision,'--','apps/api']).decode().splitlines()
             require_code_only(changes)
         with tempfile.TemporaryDirectory(dir=self.state,prefix='build-') as temp:
             context=Path(temp)
@@ -267,14 +278,23 @@ class Host:
         raise Refused('public_version_probe_failed')
 
     def deploy(self,revision,run_id):
+        latch=self.state/'recovery-required.json'
+        # Written before cutover: process termination and partial Compose success
+        # must require operator reconciliation, even if image labels now match.
+        if latch.exists():raise Refused('operator_recovery_required')
         previous,old=self.running()
-        if previous==revision:return
+        if previous==revision:
+            self.ready(revision,allow_legacy=self.bootstrap)
+            return
         qualify(revision,run_id)
         images=self.build(revision,previous)
         candidate=self.compose(images,revision)
+        self.verify_environment(candidate)
         self.schema(candidate)
         qualify(revision,run_id)  # stale/main/protection race check immediately before cutover
         self.verify_configuration()
+        self.verify_environment(candidate)
+        atomic(latch,{'revision':revision,'images':images,'previous_revision':previous,'previous_images':old,'ci_run_id':run_id,'started_unix':int(time.time())})
         try:
             self.command(candidate+['up','-d','--no-deps','--no-build','api','web'],timeout=240)
             self.ready(revision,allow_legacy=self.bootstrap)
@@ -290,6 +310,7 @@ class Host:
                 raise Refused('cutover_failed_approved_recovery_attempted') from None
             raise Refused('cutover_failed_operator_recovery_required') from None
         atomic(self.state/'last-success.json',{'revision':revision,'images':images,'previous_revision':previous,'previous_images':old,'ci_run_id':run_id,'completed_unix':int(time.time())})
+        latch.unlink()
 
 
 def publish(run_id):
