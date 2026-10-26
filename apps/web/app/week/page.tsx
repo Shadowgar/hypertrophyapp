@@ -340,6 +340,8 @@ export default function WeekPage() {
   const [plan, setPlan] = useState<GeneratedWeekPlan | null>(null);
   const [programs, setPrograms] = useState<ProgramTemplateOption[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [profileState, setProfileState] = useState<"loading" | "ready" | "error">("loading");
+  const [profileReload, setProfileReload] = useState(0);
   const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
   const [context, setContext] = useState<SchedulingContext | null>(null);
   const [contextState, setContextState] = useState<"loading" | "ready" | "error">("loading");
@@ -513,17 +515,34 @@ export default function WeekPage() {
   }
 
   useEffect(() => {
+    let active = true;
+    const token = getToken();
+    profileToken.current = undefined;
+    setProfile(null);
+    setProfileState("loading");
+    void api.getProfile().then(loadedProfile => {
+      if (!active || token !== getToken()) return;
+      profileToken.current = token;
+      setProfile(loadedProfile);
+      setSelectedProgramId(loadedProfile.selected_program_id ?? null);
+      setProfileState("ready");
+    }).catch(() => {
+      if (active && token === getToken()) setProfileState("error");
+    });
+    return () => { active = false; };
+  }, [profileReload]);
+
+  useEffect(() => {
     let mounted = true;
     mountedRef.current = true;
     const token = getToken();
     const requests = contextRequest;
     const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
     timezoneRef.current = browserTimezone;
-    Promise.all([api.listPrograms().catch(() => [] as ProgramTemplateOption[]), api.getProfile().catch(() => null as Profile | null)])
-      .then(([list, loadedProfile]) => {
+    api.listPrograms().catch(() => [] as ProgramTemplateOption[])
+      .then(list => {
         if (!mounted || token !== getToken()) return;
-        if (loadedProfile) profileToken.current = token;
-        setPrograms(list); setProfile(loadedProfile); setSelectedProgramId(loadedProfile?.selected_program_id ?? null);
+        setPrograms(list);
       });
     const refresh = () => refreshContext(timezoneRef.current || browserTimezone).catch((error) => {
       if (mounted && token === getToken() && !(error instanceof StaleSchedulingContext)) { setPreview(null); setPlanStatus(`Could not load current local week: ${error instanceof Error ? error.message : "Unknown error"}`); }
@@ -575,6 +594,8 @@ export default function WeekPage() {
       </fieldset> : null}
       <p className="text-sm" aria-live="polite">{selectedDates.length} of 2–5 dates selected</p>
       {context && selectedDates.some((date) => date < context.local_today) ? <p className="text-sm text-amber-300">Elapsed dates are placements only; selecting them does not create performed workout history.</p> : null}
+      {profileState === "loading" ? <p role="status">Loading your profile…</p> : null}
+      {profileState === "error" ? <div role="alert"><p>Your profile could not be loaded. Retry before previewing dates or saving program preferences.</p><Button variant="secondary" onClick={() => setProfileReload(value => value + 1)}>Retry profile loading</Button></div> : null}
       <Button aria-label="Preview selected dates" className="w-full min-h-[48px]" disabled={isGenerating || isSavingProgramSelection || !context || !profile || selectedDates.length < 2 || selectedDates.length > 5 || !timezone.trim()} onClick={() => schedule()}>{isGenerating ? "Checking dates..." : "Preview selected dates"}</Button>
       {preview ? <Button aria-label="Activate selected dates" className="w-full min-h-[48px]" disabled={isGenerating} onClick={() => schedule(true)}>Activate selected dates</Button> : null}
       {contextState === "loading" && !context ? <p role="status">Loading your local week…</p> : null}
@@ -594,12 +615,12 @@ export default function WeekPage() {
     </div>
     <Disclosure title="Program Override" badge={selectedProgramId ? "custom" : "auto"} defaultOpen={false}>
       <div className="space-y-2">
-        <select id="week-program" aria-label="Week program override selector" className="ui-select" value={selectedProgramId ?? ""} disabled={isGenerating}
+        <select id="week-program" aria-label="Week program override selector" className="ui-select" value={selectedProgramId ?? ""} disabled={isGenerating || profileState !== "ready"}
           onChange={(event) => { setSelectedProgramId(event.target.value || null); setPreview(null); }}>
           <option value="">Auto — trainer&apos;s recommended program</option>
           {programs.map((program) => <option key={program.id} value={program.id}>{getProgramDisplayName(program)}</option>)}
         </select>
-        <Button aria-label="Save program preference" className="min-h-[44px] px-3 text-xs font-semibold" onClick={saveProgramPreference} disabled={isGenerating || isSavingProgramSelection || !preferenceDirty}>{isSavingProgramSelection ? "Saving..." : "Save Preferences"}</Button>
+        <Button aria-label="Save program preference" className="min-h-[44px] px-3 text-xs font-semibold" onClick={saveProgramPreference} disabled={isGenerating || isSavingProgramSelection || profileState !== "ready" || !preferenceDirty}>{isSavingProgramSelection ? "Saving..." : "Save Preferences"}</Button>
         <p className="text-xs text-zinc-500">Save program preference separately. Activate dates after reviewing the preview.</p>
         {generatedOnboardingPrompt ? <div className="rounded-md border border-zinc-700 p-2 text-xs"><p>{generatedOnboardingPrompt}</p><a className="underline" href="/customize">Update generated plan preferences</a></div> : null}
       </div>
