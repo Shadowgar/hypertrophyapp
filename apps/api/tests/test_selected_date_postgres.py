@@ -1,7 +1,7 @@
 """Opt-in PostgreSQL selected-date races; never use inherited application DBs.
 
-Run after Alembic 0021 on the explicitly verified disposable M2B PostgreSQL
-container. Each test inserts a unique synthetic user and retains its records;
+Run on the exact opted-in historical or current schema target. Each test
+inserts a unique synthetic user and retains its records;
 there is no schema creation, truncation, deletion or production fallback here.
 """
 from concurrent.futures import ThreadPoolExecutor
@@ -15,20 +15,18 @@ from zoneinfo import ZoneInfo
 import pytest
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import make_url
+from postgres_qualification_target import selected_date_target
 
 
 explicit_url = os.environ.get("TEST_DATABASE_URL")
-if os.environ.get("M2B_POSTGRES_ISOLATED") != "1" or not explicit_url:
+current_requested = os.environ.get("M2B_CURRENT_POSTGRES_ISOLATED") == "1"
+if not current_requested and (os.environ.get("M2B_POSTGRES_ISOLATED") != "1" or not explicit_url):
     pytest.skip("Requires explicitly verified disposable M2B PostgreSQL", allow_module_level=True)
+assert explicit_url, "An explicit disposable test URL is required"
 target = make_url(explicit_url)
-if target.get_backend_name() != "postgresql":
+if not current_requested and target.get_backend_name() != "postgresql":
     pytest.skip("SQLite cannot qualify PostgreSQL locking", allow_module_level=True)
-assert os.environ.get("DATABASE_URL") == explicit_url
-assert target.drivername == "postgresql+psycopg"
-assert (target.host, target.port, target.database, target.username) == (
-    ("127.0.0.1", 25463, "m2b2_qualification", "m2b2_test")
-    if os.environ.get("M2B2_POSTGRES_ISOLATED") == "1" else
-    ("127.0.0.1", 25461, "m2b_qualification", "m2b_test"))
+expected = selected_date_target(explicit_url, os.environ, allow_0022=True)
 # Verify the target before importing the application or binding its engine.
 probe_engine = create_engine(target)
 with probe_engine.connect() as connection:
@@ -37,9 +35,7 @@ with probe_engine.connect() as connection:
     )).one()
     assert tuple(identity[:2]) == (target.database, target.username)
     assert identity[2] is not None and identity[3] == 5432
-    assert connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == (
-        "0022_authored_load_states" if os.environ.get("M2B2_POSTGRES_ISOLATED") == "1"
-        else "0021_selected_workout_dates")
+    assert connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == expected.revision
 probe_engine.dispose()
 
 from fastapi.testclient import TestClient

@@ -8,19 +8,20 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import make_url
+from postgres_qualification_target import selected_date_target
 
 explicit = os.environ.get('TEST_DATABASE_URL')
 assert explicit and os.environ.get('DATABASE_URL') == explicit
 target = make_url(explicit)
+if os.environ.get('M2B_CURRENT_POSTGRES_ISOLATED') == '1':
+    assert target.get_backend_name() == 'postgresql', 'Current-schema PostgreSQL qualification cannot fall back to SQLite'
 if target.get_backend_name() == 'postgresql':
-    assert os.environ.get('M2B_POSTGRES_ISOLATED') == '1'
-    assert (target.drivername, target.host, target.port, target.database, target.username) == (
-        'postgresql+psycopg', '127.0.0.1', 25461, 'm2b_qualification', 'm2b_test')
+    expected = selected_date_target(explicit, os.environ)
     probe = create_engine(target)
     with probe.connect() as db:
         assert tuple(db.execute(text('SELECT current_database(),current_user,inet_server_port()')).one()) == (
-            'm2b_qualification', 'm2b_test', 5432)
-        assert db.execute(text('SELECT version_num FROM alembic_version')).scalar_one() == '0021_selected_workout_dates'
+            expected.database, expected.user, 5432)
+        assert db.execute(text('SELECT version_num FROM alembic_version')).scalar_one() == expected.revision
     probe.dispose()
 else:
     root = Path(os.environ['HIST_TEST_ROOT']).resolve(strict=True)
