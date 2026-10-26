@@ -27,6 +27,12 @@ test.each([
   // @ts-ignore
   globalThis.fetch.mockImplementation((input, init) => {
     const url = requestUrl(input);
+    if (url.includes("/plan/scheduling-context?")) {
+      return Promise.resolve(Response.json({ timezone: "UTC", local_today: "2026-03-06", week_start: "2026-03-02", selected_dates: [], placement_revision: 0, plan: null }));
+    }
+    if (url.includes("/history/weekly-checkins?")) {
+      return Promise.resolve(Response.json({ entries: [] }));
+    }
     if (url.endsWith("/weekly-review/status")) {
       return Promise.resolve(
         new Response(
@@ -107,6 +113,7 @@ test.each([
   });
 
   render(<CheckinPage />);
+  fireEvent.click(screen.getByText("Detailed weekly review and nutrition targets"));
 
   await waitFor(() => {
     expect(screen.getByText(/Coaching Preview/i)).toBeInTheDocument();

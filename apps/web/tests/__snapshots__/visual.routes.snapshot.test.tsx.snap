@@ -66,8 +66,34 @@ exports[`visual snapshot: today route initial state 1`] = `
 
 exports[`visual snapshot: week route 1`] = `
 <div
-  class="space-y-4"
+  class="ux-page-stack ux-week-root"
 >
+  <header>
+    <p
+      class="ux-eyebrow"
+    >
+      Week
+    </p>
+    <h1
+      class="ui-title-page"
+    >
+      Your training week
+    </h1>
+    <p
+      class="ui-body-sm"
+    >
+      Choose the dates you can train. Preview the workouts before activating your schedule.
+    </p>
+    <p
+      class="ui-meta"
+    >
+      Mon, Mar 9
+       – 
+      Sun, Mar 15
+       · 
+      America/New_York
+    </p>
+  </header>
   <p
     class="text-sm"
   >
@@ -79,154 +105,236 @@ exports[`visual snapshot: week route 1`] = `
     </a>
      · Review explicit date changes and program replacement.
   </p>
-  <h1
-    class="ui-title-page"
+  <div
+    class="ux-week-layout"
   >
-    Week Plan
-  </h1>
-  <section
-    aria-label="Week scheduling"
-    class="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-3"
-  >
-    <div
-      aria-label="Select planning week"
-      class="flex flex-wrap gap-2"
+    <section
+      aria-label="Week scheduling"
+      class="ux-card ux-week-schedule space-y-3"
     >
-      <button
-        aria-pressed="true"
-        class="ux-button ux-button-primary px-4 py-2"
-      >
-        Current week
-      </button>
-      <button
-        aria-pressed="false"
-        class="ux-button ux-button-primary px-4 py-2"
-      >
-        Next week
-      </button>
-    </div>
-    <label
-      class="block space-y-2 text-sm"
-      for="scheduling-timezone"
-    >
-      <span>
-        Scheduling timezone
-      </span>
-      <input
-        class="ui-input w-full min-h-[44px]"
-        id="scheduling-timezone"
-        placeholder="America/New_York"
-        value="America/New_York"
-      />
-    </label>
-    <p
-      class="text-xs text-zinc-400"
-    >
-      Confirm this IANA timezone when activating your dates. Dates use your local Monday–Sunday week.
-    </p>
-    <fieldset>
-      <legend
-        class="mb-2 text-sm"
-      >
-        Current week: Mon, Mar 9 – Sun, Mar 15 (2026-03-09 – 2026-03-15) · Today: Tue, Mar 10
-      </legend>
       <div
-        class="grid grid-cols-1 gap-2 sm:grid-cols-2"
+        aria-label="Select planning week"
+        class="flex flex-wrap gap-2"
       >
-        <label
-          class="flex min-h-[48px] items-center gap-3 rounded-md border border-zinc-700 px-3 py-2 text-sm"
+        <button
+          aria-pressed="true"
+          class="ux-button ux-button-primary px-4 py-2"
         >
-          <input
-            class="h-5 w-5"
-            type="checkbox"
-          />
-          <span>
-            Mon, Mar 9
-          </span>
-        </label>
-        <label
-          class="flex min-h-[48px] items-center gap-3 rounded-md border border-zinc-700 px-3 py-2 text-sm"
+          Current week
+        </button>
+        <button
+          aria-pressed="false"
+          class="ux-button ux-button-primary px-4 py-2"
         >
-          <input
-            class="h-5 w-5"
-            type="checkbox"
-          />
-          <span>
-            Tue, Mar 10
-          </span>
-        </label>
-        <label
-          class="flex min-h-[48px] items-center gap-3 rounded-md border border-zinc-700 px-3 py-2 text-sm"
-        >
-          <input
-            class="h-5 w-5"
-            type="checkbox"
-          />
-          <span>
-            Wed, Mar 11
-          </span>
-        </label>
-        <label
-          class="flex min-h-[48px] items-center gap-3 rounded-md border border-zinc-700 px-3 py-2 text-sm"
-        >
-          <input
-            class="h-5 w-5"
-            type="checkbox"
-          />
-          <span>
-            Thu, Mar 12
-          </span>
-        </label>
-        <label
-          class="flex min-h-[48px] items-center gap-3 rounded-md border border-zinc-700 px-3 py-2 text-sm"
-        >
-          <input
-            class="h-5 w-5"
-            type="checkbox"
-          />
-          <span>
-            Fri, Mar 13
-          </span>
-        </label>
-        <label
-          class="flex min-h-[48px] items-center gap-3 rounded-md border border-zinc-700 px-3 py-2 text-sm"
-        >
-          <input
-            class="h-5 w-5"
-            type="checkbox"
-          />
-          <span>
-            Sat, Mar 14
-          </span>
-        </label>
-        <label
-          class="flex min-h-[48px] items-center gap-3 rounded-md border border-zinc-700 px-3 py-2 text-sm"
-        >
-          <input
-            class="h-5 w-5"
-            type="checkbox"
-          />
-          <span>
-            Sun, Mar 15
-          </span>
-        </label>
+          Next week
+        </button>
       </div>
-    </fieldset>
-    <p
-      aria-live="polite"
-      class="text-sm"
+      <div
+        class="rounded-lg border border-zinc-800 bg-zinc-900/40 overflow-hidden"
+      >
+        <button
+          aria-expanded="false"
+          class="flex min-h-[44px] w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-sm font-medium text-zinc-200 transition-colors hover:bg-zinc-800/50"
+          type="button"
+        >
+          <span
+            class="flex items-center gap-2"
+          >
+            Change scheduling timezone
+          </span>
+          <svg
+            class="h-4 w-4 flex-shrink-0 text-zinc-500 transition-transform duration-150 "
+            fill="none"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="m6 9 6 6 6-6"
+            />
+          </svg>
+        </button>
+      </div>
+      <fieldset
+        aria-label="Select actual training dates"
+        class="ux-date-picker"
+      >
+        <legend
+          class="mb-2 text-sm"
+        >
+          Current week: Mon, Mar 9 – Sun, Mar 15 (2026-03-09 – 2026-03-15) · Today: Tue, Mar 10
+        </legend>
+        <div
+          class="ux-week-dates"
+        >
+          <label
+            class="ux-week-date"
+            data-selected="false"
+          >
+            <input
+              aria-label="Mon, Mar 9"
+              type="checkbox"
+            />
+            <span
+              aria-hidden="true"
+            >
+              Mon
+            </span>
+            <strong
+              aria-hidden="true"
+            >
+              9
+            </strong>
+          </label>
+          <label
+            class="ux-week-date"
+            data-selected="false"
+          >
+            <input
+              aria-label="Tue, Mar 10"
+              type="checkbox"
+            />
+            <span
+              aria-hidden="true"
+            >
+              Tue
+            </span>
+            <strong
+              aria-hidden="true"
+            >
+              10
+            </strong>
+          </label>
+          <label
+            class="ux-week-date"
+            data-selected="false"
+          >
+            <input
+              aria-label="Wed, Mar 11"
+              type="checkbox"
+            />
+            <span
+              aria-hidden="true"
+            >
+              Wed
+            </span>
+            <strong
+              aria-hidden="true"
+            >
+              11
+            </strong>
+          </label>
+          <label
+            class="ux-week-date"
+            data-selected="false"
+          >
+            <input
+              aria-label="Thu, Mar 12"
+              type="checkbox"
+            />
+            <span
+              aria-hidden="true"
+            >
+              Thu
+            </span>
+            <strong
+              aria-hidden="true"
+            >
+              12
+            </strong>
+          </label>
+          <label
+            class="ux-week-date"
+            data-selected="false"
+          >
+            <input
+              aria-label="Fri, Mar 13"
+              type="checkbox"
+            />
+            <span
+              aria-hidden="true"
+            >
+              Fri
+            </span>
+            <strong
+              aria-hidden="true"
+            >
+              13
+            </strong>
+          </label>
+          <label
+            class="ux-week-date"
+            data-selected="false"
+          >
+            <input
+              aria-label="Sat, Mar 14"
+              type="checkbox"
+            />
+            <span
+              aria-hidden="true"
+            >
+              Sat
+            </span>
+            <strong
+              aria-hidden="true"
+            >
+              14
+            </strong>
+          </label>
+          <label
+            class="ux-week-date"
+            data-selected="false"
+          >
+            <input
+              aria-label="Sun, Mar 15"
+              type="checkbox"
+            />
+            <span
+              aria-hidden="true"
+            >
+              Sun
+            </span>
+            <strong
+              aria-hidden="true"
+            >
+              15
+            </strong>
+          </label>
+        </div>
+      </fieldset>
+      <p
+        aria-live="polite"
+        class="text-sm"
+      >
+        0
+         of 2–5 dates selected
+      </p>
+      <button
+        aria-label="Preview selected dates"
+        class="ux-button ux-button-primary px-4 py-2 w-full min-h-[48px]"
+        disabled=""
+      >
+        Preview selected dates
+      </button>
+    </section>
+    <section
+      aria-label="Scheduled sessions"
+      class="ux-card ux-week-sessions"
     >
-      0
-       of 2–5 dates selected
-    </p>
-    <button
-      aria-label="Preview selected dates"
-      class="ux-button ux-button-primary px-4 py-2 w-full min-h-[48px]"
-      disabled=""
-    >
-      Preview selected dates
-    </button>
-  </section>
+      <h2
+        class="ui-title-section"
+      >
+        Your sessions
+      </h2>
+      <p
+        class="ui-body-sm"
+      >
+        No active workouts for this week. Select dates and preview your plan.
+      </p>
+    </section>
+  </div>
   <div
     class="rounded-lg border border-zinc-800 bg-zinc-900/40 overflow-hidden"
   >
