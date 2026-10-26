@@ -1,0 +1,24 @@
+# Programs catalog qualification
+
+Implementation based on main `ad789ff983a51c2445fde34c849d3738fcb0311a`, reviewed 26 October 2026 (America/New_York; qualification continued after midnight UTC). Approved design remains PR #108 at `33598c3fb35328cc2d2b6310865f716380b6c81e`, especially Programs/catalog and More screens 12/65/67 and the entry boundary of 72. This is a bounded part of #105, not full application acceptance.
+
+## Behavior and authority
+
+`apps/web/app/programs/page.tsx` fills the missing `/programs` destination. Existing desktop navigation and mobile More now reach an actual catalog. It reads existing catalog/profile/scheduling-context APIs; it makes no write, selection, activation, generation or replacement request.
+
+Only the two explicitly admitted Authored Phase 1/2 records returned by the API are shown as available authored choices. Missing records remain missing; unknown IDs and the legacy `full_body_v1` generated template do not become new Customized choices. Public read-only catalog inspection returned Phase 1, Phase 2 and that legacy entry. The separate Customized card links to the existing `/customize` preview/consent workflow. It does not equate Choose For Me with consent.
+
+Profile `selected_program_id`/`program_selection_mode` identify the saved preference. Scheduling-context `plan.program_template_id` identifies the current dated plan, including an active Customized plan when projected by that owner. Profile fallback `effective_program_id` is never presented as proof of a schedule. Week retains dates/activation ownership; guide and history routes retain their current behavior. Browsing does not touch saved units, preferences, history, source templates or licensed assets.
+
+The catalog settles independently of profile latency. Account-specific state and callbacks are token scoped; retired responses cannot restore old account data. Current-token 401 uses the existing API helper's sign-out behavior; a late old-token 401 does not sign out a new token. Loading, acknowledged empty and failed reads remain distinct. The persistent refresh/retry control retains keyboard focus.
+
+## Verification
+
+- Initial missing-route test run failed to resolve `@/app/programs/page`, confirming the navigation target was absent. After implementation, all 13 new component cases passed. They cover GET-only behavior, separate phases/Customized, real availability, preference versus schedule, slow profile, empty/error/retry, schedule/profile failure, Auto/no plan, current 401, stale old-token 401 and late old catalog replies.
+- Full frontend suite: **50 files, 326 tests passed** with one worker and no file parallelism. Production Next build passed, including type checking, and emits `/programs` as a static route. Full ESLint: **0 errors, 7 pre-existing hook warnings** in unchanged components. No dependencies changed or installed.
+- Independent source review found no concrete issue in the new page/tests at SHA-256 `3c98e95c04b1d6fa7c886e055c485f7dc83060baef115db0b3aba033fef53c8d` / `3eb2bea961558021e8472d2f03e52f6bb724ea632cb8cbffbcfa10e4caec7a3d`. Review covered read-only authority, mode separation, actual schedule versus preference, stale account/error handling and accessible links; execution results belong to this implementation workstream.
+- Playwright production-browser run passed: guest redirects without account reads; login returns to Programs; all six family/appearance combinations at 1440×900 and 390×844; no horizontal overflow; Authored cards 118px high and Customized cards 90–110px; stored Phase 1 versus scheduled Phase 2; acknowledged empty catalog; keyboard retry focus; all nine desktop navigation links, all five mobile tabs and all six More destinations; Authored guide and Week date links. Across 141 intercepted requests, there were no runtime errors, unmapped routes or unexpected writes. The first navigation attempt failed because the synthetic History heatmap fixture omitted its required `weeks` field; correcting the fixture made the rerun pass without application changes. [Structured results](browser-results.json), [desktop dark](desktop-dark.png), [mobile light](mobile-light.png) and [mobile graphite](mobile-graphite.png) retain representative evidence. The local production server binds only `127.0.0.1:3128`, with its upstream API set to closed loopback port 9. Every browser `/api/**` request is intercepted using synthetic data; the only simulated write is login. No credentials, real accounts or production records are used.
+
+Documentation check passed with zero new active link failures (28 pre-existing exceptions); `git diff --check` passed.
+
+No migrations, API tests, live persistence mutations, workbook changes, merges or deployment were performed. Physical iPhone Safari/keyboard/VoiceOver and the remaining full Settings/Week/History/Analytics redesign remain outside this bounded result.
