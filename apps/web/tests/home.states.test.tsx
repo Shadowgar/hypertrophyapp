@@ -1,5 +1,5 @@
 import React from "react";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 import HomePage from "@/app/page";
 import { AppearanceProvider } from "@/components/appearance-provider";
@@ -135,4 +135,40 @@ test("a future program does not relabel this week's saved program", async () => 
   render(<HomePage />);
   await screen.findByRole("heading", { name: "Next week Phase 2" });
   expect(screen.getByText("3 training days · Full Body Phase 1")).toBeInTheDocument();
+});
+
+test("unavailable program reads do not tell a returning account to choose again", async () => {
+  vi.mocked(fetch).mockImplementation(async input => String(input).endsWith("/workout/today") ? Response.json(workout()) : unavailable());
+  render(<HomePage />);
+  await screen.findByRole("link", { name: "Open today's workout" });
+  expect(screen.getByText("Program details unavailable")).toBeInTheDocument();
+  expect(screen.queryByText("Choose a program")).not.toBeInTheDocument();
+});
+
+test("pending program reads remain checking even when the workout is ready", async () => {
+  vi.mocked(fetch).mockImplementation(async input => String(input).endsWith("/workout/today") ? Response.json(workout()) : new Promise<Response>(() => {}));
+  render(<HomePage />);
+  await screen.findByRole("link", { name: "Open today's workout" });
+  expect(screen.getByText("Checking your program…")).toBeInTheDocument();
+  expect(screen.queryByText("Choose a program")).not.toBeInTheDocument();
+});
+
+test.each([
+  { fields: { program_template_id: "pure_bodybuilding_phase_2_full_body" }, label: "Full Body Phase 2" },
+  { fields: { selected_program_id: "pure_bodybuilding_phase_2_full_body" }, label: "Full Body Phase 2" },
+  { fields: { customized: { proposal_id: "synthetic-consented" } }, label: "Customized workout" },
+  { fields: {}, label: "Program details unavailable" },
+])("the active workout owns its program identity: $label", async ({ fields, label }) => {
+  vi.mocked(fetch).mockImplementation(async input => {
+    const url = String(input);
+    if (url.endsWith("/workout/today")) return Response.json({ ...workout(), workout_occurrence_id: "active-occurrence", ...fields });
+    if (url.endsWith("/profile")) return Response.json({ selected_program_id: "pure_bodybuilding_phase_1_full_body", days_available: 3 });
+    if (url.includes("/plan/scheduling-context")) return Response.json(context({ program_template_id: "pure_bodybuilding_phase_1_full_body", sessions: [{ ...workout(), workout_occurrence_id: "different-occurrence" }] }));
+    return unavailable();
+  });
+  render(<HomePage />);
+  await screen.findByRole("link", { name: "Open today's workout" });
+  const nextStep = within(screen.getByRole("region", { name: "Next step" }));
+  expect(nextStep.getByText(label)).toBeInTheDocument();
+  expect(nextStep.queryByText("Full Body Phase 1")).not.toBeInTheDocument();
 });

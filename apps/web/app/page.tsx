@@ -8,9 +8,11 @@ import { displayLoad } from "@/lib/appearance";
 import { authoredRepLabel, isBodyweightAuthored } from "@/lib/authored-prescription";
 import { datesInWeek, formatCalendarDate } from "@/lib/calendar-date";
 
+type HomeWorkout = WorkoutSession & { program_template_id?: string | null; selected_program_id?: string | null };
+
 type Data = {
   profile: Profile | null;
-  workout: WorkoutSession | null;
+  workout: HomeWorkout | null;
   analytics: HistoryAnalyticsResponse | null;
   review: WeeklyReviewStatus | null;
   week: SchedulingContext | null;
@@ -33,9 +35,21 @@ function isNoWorkout(error: unknown): boolean {
     ["No plan generated", "No workout scheduled today", "No workouts available"].includes(error.message);
 }
 
-function programName(profile: Profile | null, context: SchedulingContext | null): string {
+function programName(profile: Profile | null, context: SchedulingContext | null, pending = false): string {
   const id = context?.plan?.program_template_id ?? profile?.effective_program_id ?? profile?.selected_program_id;
-  return id ? getProgramDisplayName({ id }) : "Choose a program";
+  return id ? getProgramDisplayName({ id }) : pending ? "Checking your program…" : profile ? "No program selected" : "Program details unavailable";
+}
+
+
+function workoutProgramName(workout: HomeWorkout, context: SchedulingContext | null, pending: boolean): string {
+  const id = workout.program_template_id ?? workout.selected_program_id;
+  if (id) return getProgramDisplayName({ id });
+  if (workout.customized) return "Customized workout";
+  // Calendar and Today are independent snapshots. Only an exact occurrence can bind them.
+  if (workout.workout_occurrence_id && context?.plan?.sessions.some(session => session.workout_occurrence_id === workout.workout_occurrence_id)) {
+    return programName(null, context);
+  }
+  return pending ? "Checking your program…" : "Program details unavailable";
 }
 
 export default function HomePage() {
@@ -127,7 +141,9 @@ export default function HomePage() {
     : noSchedule ? "No workouts scheduled for this week. Preview your dates in Week before you commit."
     : "No session returned today. Review Week for your actual schedule.";
   const chosenContext = workout ? data.week : upcoming?.context ?? data.week;
-  const knownProgram = programName(data.profile, chosenContext);
+  const knownProgram = workout
+    ? workoutProgramName(workout, data.week, status.week === "pending")
+    : programName(data.profile, chosenContext, status.profile === "pending" || status.week === "pending");
   const currentDates = data.week?.plan?.schedule?.mode === "selected_dates_v1" ? data.week.selected_dates : [];
   const analytics = data.analytics;
   const bodyweight = analytics?.bodyweight_trend?.at(-1)?.body_weight ?? data.profile?.weight;
@@ -147,7 +163,7 @@ export default function HomePage() {
             <p className="text-sm text-[var(--text-secondary)]">{knownProgram}</p>
             <h2 className="text-2xl">{primaryTitle}</h2>
             <p className="ux-muted" role="status" aria-live="polite">{message}</p>
-            {workout ? <p className="ux-muted">{workout.exercises.length} exercises{workout.mesocycle ? ` · Week ${workout.mesocycle.week_index}` : ""}</p> : null}
+            {workout ? <p className="ux-muted">{workout.exercises.length} {workout.exercises.length === 1 ? "exercise" : "exercises"}{workout.mesocycle ? ` · Week ${workout.mesocycle.week_index}` : ""}</p> : null}
             {checked && !workout && !upcoming && !noSchedule && status.week === "pending" ? <p className="ux-muted">Your week is still loading.</p> : null}
             {checked && workout ? <Link className="ux-button ux-button-primary w-full" href="/today">{workout.resume ? "Resume your workout" : "Open today's workout"}</Link>
               : checked ? <Link className="ux-button ux-button-primary w-full" href="/week">{noSchedule && !upcoming ? "Choose dates" : "Review Week"}</Link> : null}
