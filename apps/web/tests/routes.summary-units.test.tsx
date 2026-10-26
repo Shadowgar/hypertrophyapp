@@ -94,6 +94,7 @@ test.each(["kg", "lb"] as const)("Review audit renders saved %s while kg bodywei
     expect(screen.getByLabelText("Current Bodyweight (kg)")).toHaveValue(82.5);
   });
   fireEvent.change(screen.getByLabelText("Current Bodyweight (kg)"), { target: { value: "83.2" } });
+  fireEvent.change(screen.getByLabelText("Adherence Score (1-5)"), { target: { value: "4" } });
   fireEvent.click(screen.getByRole("button", { name: /Save Weekly Review/ }));
   await waitFor(() => expect(vi.mocked(fetch).mock.calls.some(([url, init]) => String(url).endsWith("/weekly-review") && init?.method === "POST")).toBe(true));
   const payload = vi.mocked(fetch).mock.calls.find(([url, init]) => String(url).endsWith("/weekly-review") && init?.method === "POST")![1];
