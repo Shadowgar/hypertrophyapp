@@ -1326,6 +1326,9 @@ export default function TodayPage() {
   const swapTargetCurrentIndex = swapTarget ? (swapIndexByExercise[exerciseKey(swapTarget)] ?? 0) : 0;
   const activeProgramId = workout ? extractProgramId(workout.session_id) : null;
   const executionVisible = occurrenceVerified && Boolean(selectedExerciseId);
+  const customizedProposalId = typeof workout?.customized === "object" ? workout.customized?.proposal_id : undefined;
+  const manageDatesHref = customizedProposalId ? `/customize?proposal=${encodeURIComponent(customizedProposalId)}` : workout?.customized ? "/customize" : "/week";
+  const manageDatesLabel = customizedProposalId ? "Manage Customized dates or replace program" : workout?.customized ? "Manage Customized programs" : "Manage training dates";
 
   const todayDate = localToday
     ? `${formatCalendarDate(localToday.date)} · ${localToday.timezone}`
@@ -1335,7 +1338,7 @@ export default function TodayPage() {
     <div className={executionVisible ? "atlas-page" : "space-y-4 pb-8"}>
       <div className={executionVisible ? "hidden" : "flex flex-wrap items-baseline justify-between gap-2"}>
         <h1 className="ui-title-page">Today</h1>
-        {!undoRecovery ? <Link className="inline-flex min-h-11 items-center underline" href={workout?.customized?.proposal_id?`/customize?proposal=${encodeURIComponent(workout.customized.proposal_id)}`:"/week"}>{workout?.customized?.proposal_id ? "Manage Customized dates or replace program" : "Manage training dates"}</Link> : null}
+        {!undoRecovery ? <Link className="inline-flex min-h-11 items-center underline" href={manageDatesHref}>{manageDatesLabel}</Link> : null}
         <p className="ui-meta text-zinc-400">{todayDate}</p>
       </div>
       <div className={executionVisible ? "hidden" : "main-card main-card--module main-card--accent spacing-grid spacing-grid--tight"}>

@@ -38,18 +38,22 @@ function fixture(override: (url: string, init?: RequestInit) => Promise<Response
 afterEach(() => { vi.restoreAllMocks(); cleanup(); vi.unstubAllGlobals(); });
 
 test.each([
-  { mode: "Authored Phase 1", program: "pure_bodybuilding_phase_1_full_body", proposal: undefined, label: "Manage training dates", href: "/week" },
-  { mode: "Authored Phase 2", program: "pure_bodybuilding_phase_2_full_body", proposal: undefined, label: "Manage training dates", href: "/week" },
-  { mode: "Customized", program: "customized_full_body_v1", proposal: "saved/proposal?revision=4", label: "Manage Customized dates or replace program", href: "/customize?proposal=saved%2Fproposal%3Frevision%3D4" },
-])("$mode date navigation preserves the actual workout mode without writes", async ({ program, proposal, label, href }) => {
+  { mode: "Authored Phase 1", program: "pure_bodybuilding_phase_1_full_body", customized: undefined, label: "Manage training dates", href: "/week" },
+  { mode: "Authored Phase 2", program: "pure_bodybuilding_phase_2_full_body", customized: false, label: "Manage training dates", href: "/week" },
+  { mode: "Customized boolean response", program: "customized_full_body_v1", customized: true, label: "Manage Customized programs", href: "/customize" },
+  { mode: "Customized without proposal metadata", program: "customized_full_body_v1", customized: {}, label: "Manage Customized programs", href: "/customize" },
+  { mode: "Customized with proposal metadata", program: "customized_full_body_v1", customized: { proposal_id: "saved/proposal?revision=4" }, label: "Manage Customized dates or replace program", href: "/customize?proposal=saved%2Fproposal%3Frevision%3D4" },
+])("$mode date navigation preserves the actual workout mode without writes", async ({ program, customized, label, href }) => {
   fixture(url => url.endsWith("/workout/today") ? Response.json({
     ...workout(), session_id: `${program}_day_1`, program_template_id: program,
-    ...(proposal ? { customized: { proposal_id: proposal } } : {}),
+    ...(customized === undefined ? {} : { customized }),
   }) : undefined);
   render(<TodayPage />);
   await screen.findByRole("button", { name: /Resume Press/ });
   expect(screen.getByRole("link", { name: label })).toHaveAttribute("href", href);
-  expect(screen.queryByRole("link", { name: proposal ? "Manage training dates" : "Manage Customized dates or replace program" })).not.toBeInTheDocument();
+  for (const other of ["Manage training dates", "Manage Customized programs", "Manage Customized dates or replace program"].filter(value => value !== label)) {
+    expect(screen.queryByRole("link", { name: other })).not.toBeInTheDocument();
+  }
   expect(vi.mocked(fetch).mock.calls.every(([, init]) => !init?.method || init.method === "GET")).toBe(true);
 });
 

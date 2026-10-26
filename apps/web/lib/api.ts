@@ -162,7 +162,7 @@ export type WorkoutLiveRecommendation = {
 };
 
 export type WorkoutSession = {
-  customized?: {proposal_id?:string};
+  customized?: boolean | {proposal_id?:string};
   workout_occurrence_id?: string;
   session_id: string;
   title: string;
