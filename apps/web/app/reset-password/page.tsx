@@ -1,123 +1,80 @@
 "use client";
 
-import { FormEvent, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-
-import { Button } from "@/components/ui/button";
-import { UiIcon } from "@/components/ui/icons";
-import { API_BASE_URL } from "@/lib/env";
+import { FormEvent, useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { SetupCard, SetupFlow, setupStyles as styles } from '@/components/setup-flow';
+import { API_BASE_URL } from '@/lib/env';
 
 export default function ResetPasswordPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [email, setEmail] = useState(() => searchParams.get("email") ?? "athlete@example.com");
-  const [token, setToken] = useState(() => searchParams.get("token") ?? "");
-  const [newPassword, setNewPassword] = useState("");
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [requestStatus, setRequestStatus] = useState("Idle");
-  const [confirmStatus, setConfirmStatus] = useState("Idle");
+  const query = useSearchParams();
+  const [stage, setStage] = useState<'request' | 'confirm' | 'complete'>(() => query.get('token') ? 'confirm' : 'request');
+  const [email, setEmail] = useState(() => query.get('email') ?? '');
+  const [token, setToken] = useState(() => query.get('token') ?? '');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [status, setStatus] = useState('');
+  const [error, setError] = useState(false);
+  const [expired, setExpired] = useState(false);
+  const inFlight = useRef(false);
+  const mounted = useRef(false);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
 
-  async function handleRequest(event: FormEvent) {
+  async function submit(event: FormEvent) {
     event.preventDefault();
-    setRequestStatus("Requesting...");
-
+    if (inFlight.current || stage === 'complete') return;
+    inFlight.current = true; setPending(true); setStatus(''); setError(false); setExpired(false);
+    const requesting = stage === 'request';
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/password-reset/request`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+      const response = await fetch(`${API_BASE_URL}/auth/password-reset/${requesting ? 'request' : 'confirm'}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requesting ? { email: email.trim().toLowerCase() } : { token, new_password: password }),
       });
+      if (!mounted.current) return;
       if (!response.ok) {
-        const detail = await response.text();
-        const message = detail ? `Request failed: ${detail}` : "Request failed";
-        setRequestStatus(message);
+        const invalid = !requesting && [400, 422].includes(response.status);
+        setExpired(invalid); setError(true);
+        setStatus(invalid ? 'This link is invalid or expired. Request a new link.' : 'Unable to complete this request. Please try again.');
         return;
       }
-
-      setRequestStatus("If recovery is available for this account, check your email.");
+      if (requesting) {
+        // Never consume credentials from an HTTP acknowledgement, even from an old server.
+        setStatus('If recovery is available for this account, check your email.');
+      } else {
+        setPassword(''); setToken(''); setStage('complete');
+        setStatus('Password updated. You can sign in with your new password.');
+      }
     } catch {
-      setRequestStatus("Network error");
+      if (mounted.current) { setError(true); setStatus('Unable to connect. Check your connection and try again.'); }
+    } finally {
+      inFlight.current = false;
+      if (mounted.current) setPending(false);
     }
   }
 
-  async function handleConfirm(event: FormEvent) {
-    event.preventDefault();
-    setConfirmStatus("Updating password...");
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/auth/password-reset/confirm`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, new_password: newPassword }),
-      });
-      if (!response.ok) {
-        const detail = await response.text();
-        const message = detail ? `Password update failed: ${detail}` : "Password update failed";
-        setConfirmStatus(message);
-        return;
-      }
-      setConfirmStatus("Password updated. Redirecting to login...");
-      setTimeout(() => router.push("/login"), 600);
-    } catch {
-      setConfirmStatus("Network error");
-    }
+  function requestAgain() {
+    setToken(''); setPassword(''); setShowPassword(false); setStage('request'); setStatus(''); setError(false); setExpired(false);
   }
 
-  return (
-    <div className="space-y-5">
-      <h1 className="ui-title-page">Reset Password</h1>
-
-      <form className="main-card main-card--module spacing-grid" onSubmit={handleRequest}>
-        <p className="telemetry-kicker">Step 1 - Request Reset Token</p>
-        <input
-          className="ui-input"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          placeholder="Email"
-        />
-        <Button className="w-full" type="submit">
-          <span className="inline-flex items-center gap-2">
-            <UiIcon name="reset" className="ui-icon--action" />
-            Request Reset
-          </span>
-        </Button>
-        <p className="ui-meta">Status: {requestStatus}</p>
-        <p className="ui-meta">Use the reset link or token delivered to your mailbox.</p>
-      </form>
-
-      <form className="main-card main-card--module spacing-grid" onSubmit={handleConfirm}>
-        <p className="telemetry-kicker">Step 2 - Confirm New Password</p>
-        <input
-          className="ui-input"
-          value={token}
-          onChange={(event) => setToken(event.target.value)}
-          placeholder="Reset token"
-        />
-        <input
-          className="ui-input"
-          value={newPassword}
-          onChange={(event) => setNewPassword(event.target.value)}
-          placeholder="New password"
-          type={showNewPassword ? "text" : "password"}
-        />
-        <button
-          className="h-8 w-full rounded-md border border-[var(--ui-edge-idle)] bg-[var(--ui-surface-1)] px-3 text-xs text-zinc-100 transition-colors hover:border-[var(--ui-edge-active)]"
-          onClick={() => setShowNewPassword((prev) => !prev)}
-          type="button"
-        >
-          <span className="inline-flex items-center gap-2">
-            <UiIcon name="settings" className="ui-icon--action" />
-            {showNewPassword ? "Hide Password" : "Show Password"}
-          </span>
-        </button>
-        <Button className="w-full" type="submit">
-          <span className="inline-flex items-center gap-2">
-            <UiIcon name="save" className="ui-icon--action" />
-            Confirm Reset
-          </span>
-        </Button>
-        <p className="ui-meta">Status: {confirmStatus}</p>
-      </form>
-    </div>
-  );
+  return <SetupFlow title={stage === 'confirm' ? 'Choose a new password' : 'Reset your password'} subtitle={stage === 'request' ? 'Request a reset link for your account.' : 'Return to your saved training.'} aside={<>
+    <SetupCard title="Your training stays saved"><p>Resetting your password does not clear your profile or workout history.</p></SetupCard>
+    <SetupCard title="Use your mailbox"><p>Open the link delivered to your email. A used or expired link needs a new request.</p></SetupCard>
+  </>}>
+    <form className={styles.form} onSubmit={submit}>
+      {stage === 'request' ? <label className={styles.field}>Email<input type="email" autoComplete="email" required value={email} disabled={pending} onChange={event => setEmail(event.target.value)} /></label> : null}
+      {stage === 'confirm' ? <>
+        <label className={styles.field}>Reset token<input type="password" autoComplete="off" required minLength={16} value={token} disabled={pending} onChange={event => setToken(event.target.value)} /></label>
+        <label className={styles.field}>New password<input type={showPassword ? 'text' : 'password'} autoComplete="new-password" required minLength={8} value={password} disabled={pending} onChange={event => setPassword(event.target.value)} /></label>
+        <Button type="button" variant="secondary" aria-pressed={showPassword} onClick={() => setShowPassword(value => !value)}>{showPassword ? 'Hide password' : 'Show password'}</Button>
+      </> : null}
+      {status ? <p role={error ? 'alert' : 'status'} className={`${styles.notice} ${error ? styles.error : ''}`}>{status}</p> : null}
+      <div className={styles.actions}>
+        {expired ? <Button type="button" onClick={requestAgain}>Request a new link</Button> : stage !== 'complete' ? <Button type="submit" disabled={pending}>{pending ? 'Please wait…' : stage === 'request' ? 'Send reset link' : 'Save new password'}</Button> : null}
+        <Link href="/login" className={stage === 'complete' ? styles.secondaryLink : styles.textLink}>Back to sign in</Link>
+      </div>
+      {stage === 'request' ? <Button type="button" variant="ghost" disabled={pending} onClick={() => { setStage('confirm'); setStatus(''); setError(false); }}>Enter a reset code</Button> : null}
+    </form>
+  </SetupFlow>;
 }

@@ -1,343 +1,48 @@
-import React from "react";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
-import { beforeEach, expect, test, vi } from "vitest";
-import OnboardingPage from "@/app/onboarding/page";
-
-const ONBOARDING_DRAFT_KEY = "hypertrophy_onboarding_draft_v1";
-
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({
-    push: vi.fn(),
-    replace: vi.fn(),
-  }),
-}));
-
-beforeEach(() => {
-  vi.unstubAllEnvs();
-  // reset fetch mock
-  // @ts-ignore
-  globalThis.fetch = vi.fn();
-  localStorage.clear();
+import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { beforeEach, expect, test, vi } from 'vitest';
+import { Call, chooseProgram, createAccount, fillBasics, installSetupApi, phase2, renderSetup, reviewSetup } from './helpers/onboarding-driver';
+const push = vi.hoisted(() => vi.fn());
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push, replace: vi.fn() }) }));
+const calls: Call[] = [];
+beforeEach(() => { localStorage.clear(); calls.length = 0; push.mockReset(); installSetupApi(calls); });
+test('Authored phases retain distinct catalog choices and accessible source guides before setup', async () => {
+  renderSetup(); await createAccount(); fireEvent.click(screen.getByRole('button', { name: /Follow an Authored program/ }));
+  expect(screen.getByRole('button', { name: /^Full Body Phase 1/ })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: /^Full Body Phase 2/ }));
+  expect(screen.getByRole('link', { name: 'Read the program guide' })).toHaveAttribute('href', `/guides/${phase2}`);
+  expect(calls.filter(call => call.method === 'POST')).toHaveLength(1);
+  fireEvent.click(screen.getByRole('button', { name: 'Use Full Body Phase 2' })); fillBasics(); await reviewSetup();
+  fireEvent.click(screen.getByRole('button', { name: 'Save setup & choose dates' }));
+  await waitFor(() => expect(push).toHaveBeenCalledWith('/week'));
+  expect(calls.find(call => call.url.endsWith('/profile/initial-setup'))?.payload.selected_program_id).toBe(phase2);
 });
-
-async function completeQuestionnaireToAccountStep() {
-  fireEvent.click(screen.getByRole("button", { name: /next slide/i }));
-  fireEvent.click(screen.getByRole("button", { name: /next slide/i }));
-  fireEvent.click(screen.getByRole("button", { name: /get started/i }));
-
-  fireEvent.click(screen.getByRole("button", { name: /^male$/i }));
-  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
-
-  fireEvent.click(screen.getByRole("button", { name: /build muscle/i }));
-  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
-
-  fireEvent.click(screen.getByRole("button", { name: /^next$/i })); // height
-  fireEvent.click(screen.getByRole("button", { name: /^next$/i })); // weight
-
-  fireEvent.change(screen.getByLabelText(/birthday/i), { target: { value: "1990-01-01" } });
-  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
-
-  fireEvent.click(screen.getByRole("button", { name: /getting started/i }));
-  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
-
-  // Skip all remaining skippable questionnaire questions until we reach the account step.
-  // (The questionnaire sequence changes as we add/remove steps, so we avoid hardcoding a count.)
-  let safety = 0;
-  while (!screen.queryByLabelText(/first name/i) && safety < 25) {
-    const skipButton = screen.queryByRole("button", { name: /skip/i });
-    if (!skipButton) break;
-    fireEvent.click(skipButton);
-    safety += 1;
-  }
-
-  await waitFor(() => {
-    expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
-  });
-  fireEvent.change(screen.getByLabelText(/first name/i), { target: { value: "Rocco" } });
-  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
-}
-
-test("Onboarding wizard reaches account step with program catalog and password toggle", async () => {
-  const programs = [
-    {
-      id: "pure_bodybuilding_phase_1_full_body",
-      name: "Full Body Phase 1",
-      description: "A 5-day full body",
-    },
-    {
-      id: "pure_bodybuilding_phase_2_full_body",
-      name: "Full Body Phase 2",
-      description: "A 5-day full body follow-up",
-    },
-    { id: "full_body_v1", name: "Make me a plan", description: "Deterministic generated full body" },
-  ];
-
-  // mock /plan/programs
-  // @ts-ignore
-  globalThis.fetch.mockImplementation((input, init) => {
-    if (typeof input === "string" && input.endsWith("/plan/programs")) {
-      return Promise.resolve(new Response(JSON.stringify(programs), { status: 200 }));
-    }
-    return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
-  });
-
-  render(<OnboardingPage />);
-
-  await waitFor(() => {
-    expect(screen.getByRole("button", { name: /next slide/i })).toBeInTheDocument();
-  });
-
-  await completeQuestionnaireToAccountStep();
-
-  await waitFor(() => {
-    expect(screen.getByLabelText(/program/i)).toBeInTheDocument();
-  });
-
-  expect(screen.getByText("Full Body Phase 1")).toBeInTheDocument();
-  expect(screen.getByText("Full Body Phase 2")).toBeInTheDocument();
-  expect(screen.getByText("Customize My Workout")).toBeInTheDocument();
-
-  const password = screen.getByLabelText(/Password/i);
-  expect(password).toHaveAttribute("type", "password");
-  fireEvent.click(screen.getByRole("button", { name: /show password/i }));
-  expect(password).toHaveAttribute("type", "text");
+test('all former optional normalized context remains available through progressive disclosure', async () => {
+  renderSetup(); await createAccount(); await chooseProgram(); fillBasics();
+  fireEvent.click(screen.getByText('Training context (optional)'));
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Build muscle' }));
+  for (const [label, value] of [['Consistent strength training','1_2_years'], ['Current training frequency','3_4_per_week'], ['Lifting experience','intermediate'], ['What helps you train?','self_motivated'], ['Current obstacle','not_enough_time']]) fireEvent.change(screen.getByLabelText(label), { target: { value } });
+  fireEvent.change(screen.getByLabelText('Preferred workout duration (minutes)'), { target: { value: '45' } });
+  fireEvent.change(screen.getByLabelText('Weak areas (comma-separated)'), { target: { value: 'Chest, hamstrings' } });
+  fireEvent.click(screen.getByText('Personal details (optional)'));
+  fireEvent.change(screen.getByLabelText('Gender'), { target: { value: 'prefer_not_to_say' } });
+  fireEvent.change(screen.getByLabelText('Birthday'), { target: { value: '1990-01-01' } });
+  fireEvent.change(screen.getByLabelText('Height (feet)'), { target: { value: '5' } });
+  fireEvent.change(screen.getByLabelText('Height (inches)'), { target: { value: '10' } });
+  await reviewSetup();
+  fireEvent.click(screen.getByText('Review optional answers'));
+  for (const answer of ['Build muscle', '1 to 2 years', '3 to 4 times per week', 'Intermediate', 'Self motivated', 'Not enough time', 'Prefer not to say', '1990-01-01', '5 ft 10 in', 'Chest, hamstrings']) expect(screen.getByText(answer)).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Save setup & choose dates' }));
+  await waitFor(() => expect(push).toHaveBeenCalledWith('/week'));
+  expect(calls.find(call => call.url.endsWith('/profile/initial-setup'))?.payload).toMatchObject({ session_time_budget_minutes: 45, weak_areas: ['chest','hamstrings'], onboarding_answers: { primary_goals: ['build_muscle'], training_age_bucket: '1_2_years', strength_frequency_bucket: '3_4_per_week', strength_experience_level: 'intermediate', motivation_driver: 'self_motivated', primary_obstacle: 'not_enough_time', gender: 'prefer_not_to_say', birthday: '1990-01-01', height: { unit: 'in', feet: 5, inches: 10, cm: null } } });
 });
-
-test("Onboarding saves constraint fields to /profile (equipment/time/movement)", async () => {
-  const programs = [
-    {
-      id: "pure_bodybuilding_phase_1_full_body",
-      name: "Full Body Phase 1",
-      description: "A 5-day full body",
-    },
-  ];
-
-  // @ts-ignore
-  const profileBodies: any[] = [];
-  // @ts-ignore
-  globalThis.fetch.mockImplementation((input, _init) => {
-    const url = typeof input === "string" ? input : input.toString();
-    if (url.endsWith("/plan/programs")) {
-      return Promise.resolve(new Response(JSON.stringify(programs), { status: 200 }));
-    }
-    if (url.endsWith("/auth/register")) {
-      return Promise.resolve(new Response(JSON.stringify({ access_token: "tok" }), { status: 200 }));
-    }
-    if (url.endsWith("/profile/initial-setup")) {
-      const init = _init ?? {};
-      const body = typeof init.body === "string" ? JSON.parse(init.body) : {};
-      profileBodies.push(body);
-      return Promise.resolve(new Response(JSON.stringify({ status: "ok" }), { status: 200 }));
-    }
-    if (url.endsWith("/profile/program-recommendation")) {
-      return Promise.resolve(
-        new Response(
-          JSON.stringify({
-            current_program_id: "pure_bodybuilding_phase_1_full_body",
-            recommended_program_id: "upper_lower_v1",
-            reason: "days_available_match",
-            compatible_program_ids: ["pure_bodybuilding_phase_1_full_body", "upper_lower_v1"],
-            generated_at: new Date().toISOString(),
-          }),
-          { status: 200 },
-        ),
-      );
-    }
-    if (url.endsWith("/profile/program-switch")) {
-      return Promise.resolve(
-        new Response(
-          JSON.stringify({
-            status: "switched",
-            current_program_id: "pure_bodybuilding_phase_1_full_body",
-            target_program_id: "upper_lower_v1",
-            recommended_program_id: "upper_lower_v1",
-            reason: "days_available_match",
-            requires_confirmation: false,
-            applied: true,
-          }),
-          { status: 200 },
-        ),
-      );
-    }
-    if (url.endsWith("/plan/generate-week")) {
-      return Promise.resolve(new Response(JSON.stringify({ status: "ok" }), { status: 200 }));
-    }
-    if (url.endsWith("/weekly-review/status")) {
-      return Promise.resolve(
-        new Response(JSON.stringify({ week_start: new Date().toISOString().slice(0, 10) }), { status: 200 }),
-      );
-    }
-    if (url.endsWith("/weekly-review")) {
-      return Promise.resolve(new Response(JSON.stringify({ status: "ok" }), { status: 200 }));
-    }
-    return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
-  });
-
-  render(<OnboardingPage />);
-  await waitFor(() => {
-    expect(screen.getByRole("button", { name: /next slide/i })).toBeInTheDocument();
-  });
-
-  // Navigate to questionnaire and stop just before account.
-  fireEvent.click(screen.getByRole("button", { name: /next slide/i }));
-  fireEvent.click(screen.getByRole("button", { name: /next slide/i }));
-  fireEvent.click(screen.getByRole("button", { name: /get started/i }));
-
-  fireEvent.click(screen.getByRole("button", { name: /^male$/i }));
-  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
-
-  fireEvent.click(screen.getByRole("button", { name: /build muscle/i }));
-  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
-
-  fireEvent.click(screen.getByRole("button", { name: /^next$/i })); // height
-  fireEvent.click(screen.getByRole("button", { name: /^next$/i })); // weight
-
-  fireEvent.change(screen.getByLabelText(/birthday/i), { target: { value: "1990-01-01" } });
-  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
-
-  fireEvent.click(screen.getByRole("button", { name: /getting started/i }));
-  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
-
-  // Skip all remaining skippable questionnaire questions until we reach the account step.
-  // While doing so, select an example movement restriction at the movement step.
-  let safety = 0;
-  while (!screen.queryByLabelText(/first name/i) && safety < 30) {
-    const movementStepHeading = screen.queryByText(/Do you have any movement limitations right now\?/i);
-    if (movementStepHeading) {
-      const overheadBtn = screen.queryByRole("button", { name: /Overhead pressing limitations/i });
-      if (overheadBtn) {
-        fireEvent.click(overheadBtn);
-      }
-    }
-
-    const skipButton = screen.queryByRole("button", { name: /skip/i });
-    if (!skipButton) break;
-    fireEvent.click(skipButton);
-    safety += 1;
-  }
-
-  await waitFor(() => {
-    expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
-  });
-  fireEvent.change(screen.getByLabelText(/first name/i), { target: { value: "Rocco" } });
-  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
-
-  fireEvent.change(screen.getByLabelText("Email address"), { target: { value: "synthetic@example.com" } });
-  fireEvent.change(screen.getByLabelText("Password"), { target: { value: "Synthetic-only-Q98z!" } });
-  // Submit account form -> triggers submitOnboarding -> POST /profile
-  fireEvent.click(screen.getByRole("button", { name: /continue/i }));
-
-  await waitFor(() => {
-    expect(profileBodies.length).toBeGreaterThan(0);
-  });
-
-  const payload = profileBodies[0];
-  expect(payload.session_time_budget_minutes).toBe(45);
-  expect(payload.movement_restrictions).toEqual(["overhead_pressing"]);
-
-  // Because location defaults to home when skipped, equipment defaults should include bodyweight.
-  expect(payload.equipment_profile).toEqual(expect.arrayContaining(["dumbbell", "bodyweight"]));
-});
-
-test("Onboarding restores saved draft progress from local storage", async () => {
-  const programs = [
-    {
-      id: "pure_bodybuilding_phase_1_full_body",
-      name: "Hypertrophy Phase 1",
-      description: "A 5-day full body",
-    },
-  ];
-
-  localStorage.setItem(
-    ONBOARDING_DRAFT_KEY,
-    JSON.stringify({
-      phase: "account",
-      authMode: "login",
-      introIndex: 2,
-      questionIndex: 14,
-      gender: "male",
-      primaryGoal: "build_muscle",
-      heightUnit: "in",
-      heightFeet: "5",
-      heightInches: "10",
-      heightCm: "178",
-      weightUnit: "lbs",
-      weightValue: "185",
-      birthday: "1990-01-01",
-      trainingAgeBucket: "1_2_years",
-      strengthFrequency: "3_4_per_week",
-      motivationDriver: "self_motivated",
-      obstacle: "not_enough_time",
-      trainingLocation: "gym",
-      gymSetup: "rack_dumbbells_machines_cables",
-      experienceLevel: "intermediate",
-      workoutDurationMinutes: 45,
-      daysAvailable: 4,
-      firstName: "Rocco",
-      lastName: "Tester",
-      email: "restored@example.com",
-      weakAreasRaw: "chest",
-      selectedProgramId: "pure_bodybuilding_phase_1_full_body",
-    }),
-  );
-
-  // @ts-ignore
-  globalThis.fetch.mockImplementation((input, _init) => {
-    if (typeof input === "string" && input.endsWith("/plan/programs")) {
-      return Promise.resolve(new Response(JSON.stringify(programs), { status: 200 }));
-    }
-    return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
-  });
-
-  render(<OnboardingPage />);
-
-  await waitFor(() => {
-    expect(screen.getByDisplayValue("restored@example.com")).toBeInTheDocument();
-  });
-
-  expect(screen.getByText(/Recovered saved onboarding draft/i)).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: /Clear Saved Draft/i })).toBeInTheDocument();
-});
-
-test("Developer reset control calls canonical phase1 reset endpoint", async () => {
-  vi.stubEnv("NEXT_PUBLIC_ENABLE_DEV_ACCOUNT_TOOLS", "true");
-  const programs = [
-    {
-      id: "pure_bodybuilding_phase_1_full_body",
-      name: "Hypertrophy Phase 1",
-      description: "A 5-day full body",
-    },
-  ];
-
-  const originalConfirm = globalThis.confirm;
-  // @ts-ignore
-  globalThis.confirm = vi.fn(() => true);
-
-  // @ts-ignore
-  globalThis.fetch.mockImplementation((input, _init) => {
-    if (typeof input === "string" && input.endsWith("/plan/programs")) {
-      return Promise.resolve(new Response(JSON.stringify(programs), { status: 200 }));
-    }
-    if (typeof input === "string" && input.endsWith("/profile/dev/reset-phase1")) {
-      return Promise.resolve(new Response(JSON.stringify({ status: "reset_to_phase1" }), { status: 200 }));
-    }
-    return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
-  });
-
-  render(<OnboardingPage />);
-
-  await waitFor(() => {
-    expect(screen.getByRole("button", { name: /Reset Current User to Clean Phase 1/i })).toBeInTheDocument();
-  });
-
-  fireEvent.click(screen.getByRole("button", { name: /Reset Current User to Clean Phase 1/i }));
-
-  await waitFor(() => {
-    expect(globalThis.fetch).toHaveBeenCalledWith(
-      expect.stringMatching(/\/profile\/dev\/reset-phase1$/),
-      expect.any(Object),
-    );
-  });
-
-  globalThis.confirm = originalConfirm;
+test('draft recovery retains non-private choices while measurements and credentials require re-entry', async () => {
+  localStorage.setItem('hypertrophy_onboarding_draft_v1', JSON.stringify({ phase: 'account', selectedProgramId: phase2, equipmentTags: ['cable'], workoutDurationMinutes: 45, firstName: 'Private old name', email: 'private-old@example.com', weightValue: '185', birthday: '1990-01-01' }));
+  renderSetup(); expect(await screen.findByText(/Recovered saved onboarding draft/)).toBeInTheDocument();
+  await createAccount(); await chooseProgram(phase2);
+  expect(screen.getByLabelText('Body weight (lb)')).toHaveValue(null); fillBasics();
+  fireEvent.click(screen.getByRole('button', { name: 'Continue to equipment' }));
+  expect(screen.getByRole('checkbox', { name: 'Cable station' })).toBeChecked();
+  const stored = JSON.parse(localStorage.getItem('hypertrophy_onboarding_draft_v1')!);
+  for (const key of ['firstName','email','password','weightValue','age','birthday','heightFeet']) expect(stored).not.toHaveProperty(key);
+  expect(stored).toMatchObject({ equipmentTags: ['cable'], selectedProgramId: phase2, workoutDurationMinutes: '45' });
 });
