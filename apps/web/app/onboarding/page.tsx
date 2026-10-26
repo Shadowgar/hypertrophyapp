@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { SetupCard, SetupFlow, setupStyles as styles } from '@/components/setup-flow';
 import { useAppearance } from '@/components/appearance-provider';
-import { api, getProgramDisplayName, getToken, setAuthToken, type ProgramTemplateOption } from '@/lib/api';
+import { api, ApiError, getProgramDisplayName, getToken, setAuthToken, type ProgramTemplateOption } from '@/lib/api';
 import { canonicalLoad } from '@/lib/appearance';
 import { API_BASE_URL } from '@/lib/env';
 import { discardCachedDraft, emptyAnswers, EQUIPMENT, GOALS, OPTIONAL_OPTIONS, readCachedDraft, readDraft, RESTRICTIONS, setupPayload, validBasics, writeCachedDraft, type SetupAnswers } from './setup-draft';
@@ -60,6 +60,7 @@ function SetupForm({ onAccountChanged, recoverDraft }: { onAccountChanged: () =>
   const [hasDraft, setHasDraft] = useState(false);
   const [cacheAvailable, setCacheAvailable] = useState(true);
   const [unitTouched, setUnitTouched] = useState(false);
+  const [preferenceRecovery, setPreferenceRecovery] = useState<'none' | 'reload' | 'review'>('none');
   const createdAccount = useRef<{ email: string; token: string } | null>(null);
   const submissionRevision = useRef(0);
   const submitting = useRef(false);
@@ -188,8 +189,28 @@ function SetupForm({ onAccountChanged, recoverDraft }: { onAccountChanged: () =>
     finally { endRequest(revision); }
   }
 
-  async function saveSetup(event: FormEvent) {
-    event.preventDefault(); if (submitting.current || completed.current) return;
+  async function reloadSetupPreferences() {
+    const account = createdAccount.current;
+    if (!account || getToken() !== account.token || submitting.current) return;
+    const revision = beginRequest();
+    // A reread reconciles server state without reinterpreting the entered weight
+    // or changing the unit the user is reviewing for this setup.
+    setUnitTouched(true);
+    try {
+      await appearance.reload();
+      if (mounted.current && submissionRevision.current === revision && getToken() === account.token) {
+        setPreferenceRecovery('review');
+      }
+    } catch {
+      if (mounted.current && submissionRevision.current === revision && getToken() === account.token) {
+        fail('Saved display preferences could not be reloaded. Retry the reload; your setup answers are still here.');
+      }
+    } finally { endRequest(revision); }
+  }
+
+  async function saveSetup(preferencesReviewed = false) {
+    if (submitting.current || completed.current) return;
+    if (preferenceRecovery !== 'none' && !preferencesReviewed) return;
     const account = createdAccount.current;
     if (!account || getToken() !== account.token || email !== account.email) { fail('Continue account setup before saving. No existing profile was changed.'); return; }
     if (!validBasics(answers) || !name.trim()) { fail('Complete the required setup answers before saving.'); return; }
@@ -199,9 +220,20 @@ function SetupForm({ onAccountChanged, recoverDraft }: { onAccountChanged: () =>
     const isCurrent = () => mounted.current && submissionRevision.current === revision && getToken() === account.token;
     try {
       if (answers.weightUnit !== appearance.preferences.weight_unit) {
-        await appearance.save({ theme_family: appearance.preferences.theme_family, appearance: appearance.preferences.appearance, weight_unit: answers.weightUnit }, appearance.preferences.revision);
+        try {
+          await appearance.save({ theme_family: appearance.preferences.theme_family, appearance: appearance.preferences.appearance, weight_unit: answers.weightUnit }, appearance.preferences.revision);
+        } catch (cause) {
+          if (isCurrent()) {
+            setPreferenceRecovery('reload');
+            fail(cause instanceof ApiError && cause.status === 409
+              ? 'Display preferences changed elsewhere. Reload and review the saved preferences before continuing. Your setup answers are still here.'
+              : 'The display preference save was not confirmed. Reload and review the saved preferences before continuing. Your setup answers are still here.');
+          }
+          return;
+        }
         if (!isCurrent()) return;
       }
+      setPreferenceRecovery('none');
       const response = await fetch(`${API_BASE_URL}/profile/initial-setup`, {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${account.token}` },
         body: JSON.stringify(setupPayload(answers, name, targets)),
@@ -320,7 +352,7 @@ function SetupForm({ onAccountChanged, recoverDraft }: { onAccountChanged: () =>
       <div className={styles.actions}><Button type="button" onClick={() => move('review')}>Review setup</Button><Button type="button" variant="ghost" onClick={() => move('basics')}>Back</Button></div>
     </div> : null}
 
-    {stage === 'review' ? <form className={styles.form} onSubmit={saveSetup}>
+    {stage === 'review' ? <form className={styles.form} onSubmit={event => { event.preventDefault(); void saveSetup(); }}>
       <SetupCard title="Your choices"><dl className={styles.review}>
         <div><dt>Program</dt><dd>{answers.selectedProgramId ? `${isCustomized ? 'Customized' : 'Authored'} · ${programName}` : programName}</dd></div>
         <div><dt>Weight display</dt><dd>{answers.weightUnit === 'lb' ? 'Pounds · lb' : 'Kilograms · kg'}</dd></div>
@@ -339,12 +371,21 @@ function SetupForm({ onAccountChanged, recoverDraft }: { onAccountChanged: () =>
         {!answers.selectedProgramId ? <div><dt>Auto family preference</dt><dd>{answers.chooseForMeFamily === 'upper_lower' ? 'Upper/Lower' : answers.chooseForMeFamily === 'push_pull' ? 'Push/Pull' : 'Full body'}</dd></div> : null}
       </dl></details>
       <details className={styles.disclosure}><summary>Nutrition targets (optional)</summary><p className={styles.helper}>Enter targets you have chosen. These are goals, not a report of intake or adherence. Blank values stay unknown.</p><div className={styles.pair}>
-        {([['calories', 'Daily calorie target'], ['protein', 'Protein target (g)'], ['fat', 'Fat target (g)'], ['carbs', 'Carbohydrate target (g)']] as const).map(([key, label]) => <label key={key} className={styles.field}>{label}<input type="number" min={key === 'calories' ? 1 : 0} step={1} value={targets[key]} onChange={event => setTargets(previous => ({ ...previous, [key]: event.target.value }))} /></label>)}
+        {([['calories', 'Daily calorie target'], ['protein', 'Protein target (g)'], ['fat', 'Fat target (g)'], ['carbs', 'Carbohydrate target (g)']] as const).map(([key, label]) => <label key={key} className={styles.field}>{label}<input type="number" min={key === 'calories' ? 1 : 0} step={1} value={targets[key]} disabled={pending || completed.current} onChange={event => setTargets(previous => ({ ...previous, [key]: event.target.value }))} /></label>)}
       </div></details>
       <SetupCard title={isCustomized ? 'Ready to review Customized' : 'Ready to choose dates'}><p>Your setup is saved separately from your schedule. {isCustomized ? 'You will review the original program and give explicit consent in Customize.' : 'Week previews the actual dates before you activate a schedule.'}</p></SetupCard>
-      {!appearance.ready ? <><p className={styles.notice}>Saved display preferences are unavailable.</p><Button type="button" variant="secondary" onClick={() => void appearance.reload()}>Reload preferences</Button></> : null}
-      {error ? <Button type="button" variant="secondary" disabled={pending} onClick={resumeInitialSetup}>Check saved setup</Button> : null}
-      <div className={styles.actions}><Button type="submit" disabled={pending || completed.current}>{pending ? 'Saving setup…' : isCustomized ? 'Save setup & review Customized' : 'Save setup & choose dates'}</Button><Button type="button" variant="ghost" disabled={pending || completed.current} onClick={() => move('basics')}>Edit setup</Button></div>
+      {preferenceRecovery !== 'none' ? <SetupCard title="Review saved display preferences">
+        {preferenceRecovery === 'review' && appearance.ready && !pending ? <>
+          <p>Saved: {({ classic: 'Classic WorkoutApp', graphite: 'Graphite', charcoal: 'Charcoal' })[appearance.preferences.theme_family]} · {({ light: 'Light', dark: 'Dark', system: 'Follow Device Settings' })[appearance.preferences.appearance]} · {appearance.preferences.weight_unit === 'lb' ? 'Pounds (lb)' : 'Kilograms (kg)'}.</p>
+          <p>Your setup uses {answers.weightUnit === 'lb' ? 'pounds (lb)' : 'kilograms (kg)'}. {answers.weightUnit === appearance.preferences.weight_unit ? 'The saved unit already matches; continuing will save only your setup.' : 'Continuing will replace the saved unit with your selected unit and keep the saved appearance.'}</p>
+          <Button type="button" disabled={pending || completed.current} onClick={event => { if (event.currentTarget.form?.reportValidity()) void saveSetup(true); }}>{answers.weightUnit === appearance.preferences.weight_unit ? 'Continue with saved preferences' : 'Use selected unit and save setup'}</Button>
+        </> : <>
+          <p role={appearance.error ? 'alert' : 'status'}>{appearance.error || 'Reload the saved preferences to check whether the unit changed. Reloading does not submit your setup.'}</p>
+          <Button type="button" variant="secondary" disabled={pending} onClick={() => void reloadSetupPreferences()}>Reload saved preferences</Button>
+        </>}
+      </SetupCard> : !appearance.ready ? <><p className={styles.notice}>Saved display preferences are unavailable.</p><Button type="button" variant="secondary" disabled={pending} onClick={() => void appearance.reload()}>Reload preferences</Button></> : null}
+      {error && preferenceRecovery === 'none' ? <Button type="button" variant="secondary" disabled={pending} onClick={resumeInitialSetup}>Check saved setup</Button> : null}
+      <div className={styles.actions}><Button type="submit" disabled={pending || completed.current || preferenceRecovery !== 'none'}>{pending ? 'Saving setup…' : isCustomized ? 'Save setup & review Customized' : 'Save setup & choose dates'}</Button><Button type="button" variant="ghost" disabled={pending || completed.current} onClick={() => move('basics')}>Edit setup</Button></div>
     </form> : null}
   </SetupFlow>;
 }
