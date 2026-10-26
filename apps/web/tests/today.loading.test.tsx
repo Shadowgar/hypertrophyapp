@@ -35,7 +35,60 @@ function fixture(override: (url: string, init?: RequestInit) => Promise<Response
   }));
   return requests;
 }
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+afterEach(() => { vi.restoreAllMocks(); cleanup(); vi.unstubAllGlobals(); });
+
+test.each(["read", "write"])("a failed optional browser cache %s cannot discard a verified workout", async operation => {
+  fixture();
+  if (operation === "read") {
+    const read = Storage.prototype.getItem;
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation(function (this: Storage, key: string) {
+      if (key.includes(":swaps:")) throw new DOMException("Storage unavailable", "SecurityError");
+      return read.call(this, key);
+    });
+  } else {
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("Storage full", "QuotaExceededError");
+    });
+  }
+  render(<TodayPage />);
+  const row = await screen.findByRole("button", { name: /Resume Press/ });
+  await waitFor(() => expect(row).toHaveTextContent("1/3"));
+  fireEvent.click(row);
+  expect(await screen.findByRole("spinbutton", { name: "Working repetitions" })).toBeEnabled();
+  expect(screen.queryByText(/Workout could not be loaded/)).not.toBeInTheDocument();
+});
+
+test("full browser storage still permits a frozen in-page set retry in canonical units", async () => {
+  let count = 0;
+  const attempts: Record<string, unknown>[] = [];
+  fixture((url, init) => {
+    if (url.endsWith("/progress")) return Response.json(progress("quota-occurrence", count));
+    if (url.endsWith("/workout/today")) return Response.json(workout("Quota Press", "quota-occurrence", count));
+    if (url.endsWith("/log-set")) {
+      attempts.push(JSON.parse(String(init?.body)));
+      if (attempts.length === 1) throw new TypeError("Reply lost");
+      count = 1;
+      return Response.json({ live_recommendation: { completed_sets: 1, remaining_sets: 2,
+        recommended_reps_min: 8, recommended_reps_max: 12, recommended_weight: 45.359237 } });
+    }
+    return undefined;
+  });
+  vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+    throw new DOMException("Storage full", "QuotaExceededError");
+  });
+  render(<TodayPage />);
+  fireEvent.click(await screen.findByRole("button", { name: /Quota Press/ }));
+  fireEvent.change(screen.getByLabelText("Working weight (lb)"), { target: { value: "100" } });
+  fireEvent.change(screen.getByLabelText("Working repetitions"), { target: { value: "8" } });
+  fireEvent.click(screen.getByRole("button", { name: "Save set 1" }));
+  const retry = await screen.findByRole("button", { name: "Retry same set" });
+  expect(screen.getByLabelText("Working weight (lb)")).toHaveAttribute("readonly");
+  fireEvent.click(retry);
+  await screen.findByText(/Set 1 saved/);
+  expect(attempts).toHaveLength(2);
+  expect(attempts[1]).toEqual(attempts[0]);
+  expect(attempts[1]).toMatchObject({ exercise_occurrence_id: "quota-occurrence-press", set_index: 1, reps: 8, weight: 45.359237 });
+});
 
 test("a pending or unavailable review cannot block an accepted scheduling date and workout", async () => {
   const clock = deferred<Response>(); const review = deferred<Response>();
@@ -57,6 +110,54 @@ test("a slow display profile does not delay resumed progress or the required sor
   expect(await screen.findByRole("button", { name: /Resume Press/ })).toHaveTextContent("1/3");
   await waitFor(() => expect(requests.some(url => url.includes("/soreness?"))).toBe(true));
   await act(async () => profile.resolve(Response.json({ weak_areas: ["arms"] })));
+});
+
+test.each(["retry", "continue"])("a failed soreness lookup preserves the accepted workout and supports %s without inventing a report", async action => {
+  let sorenessReads = 0;
+  const writes: string[] = [];
+  fixture((url, init) => {
+    if (init?.method && init.method !== "GET") writes.push(url);
+    if (url.includes("/soreness?")) return ++sorenessReads === 1
+      ? Response.json({ detail: "unavailable" }, { status: 503 }) : Response.json([]);
+    return undefined;
+  });
+  render(<TodayPage />);
+  await screen.findByRole("button", { name: "Retry soreness check" });
+  expect(screen.getByRole("button", { name: /Resume Press/ })).toHaveTextContent("1/3");
+  expect(screen.queryByText(/sore today\?/i)).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: action === "retry" ? "Retry soreness check" : "Continue workout" }));
+  if (action === "retry") {
+    await screen.findByText(/sore today\?/i);
+    expect(sorenessReads).toBe(2);
+    expect(screen.queryByRole("button", { name: "Retry soreness check" })).not.toBeInTheDocument();
+  } else {
+    expect(sorenessReads).toBe(1);
+    fireEvent.click(screen.getByRole("button", { name: /Resume Press/ }));
+    expect(await screen.findByRole("spinbutton", { name: "Working repetitions" })).toBeEnabled();
+  }
+  expect(writes).toEqual([]);
+});
+
+test.each([true, false])("a retired account's late soreness lookup (failed=%s) cannot affect the current workout", async failed => {
+  setAuthToken("synthetic-account-a");
+  const oldSoreness = deferred<Response>();
+  let oldSorenessStarted = false;
+  fixture((url, init) => {
+    const old = new Headers(init?.headers).get("Authorization") === "Bearer synthetic-account-a";
+    if (url.endsWith("/workout/today")) return Response.json(workout(old ? "Old Account Press" : "Current Account Press", old ? "old" : "current"));
+    if (url.endsWith("/progress")) return Response.json(progress(old ? "old" : "current"));
+    if (url.includes("/soreness?") && old) { oldSorenessStarted = true; return oldSoreness.promise; }
+    return undefined;
+  });
+  render(<TodayPage />);
+  await waitFor(() => expect(oldSorenessStarted).toBe(true));
+  act(() => setAuthToken("synthetic-account-b"));
+  await waitFor(() => expect(screen.getByRole("button", { name: /Current Account Press/ })).toHaveTextContent("1/3"));
+  await act(async () => oldSoreness.resolve(failed ? Response.json({}, { status: 503 }) : Response.json([])));
+  expect(screen.queryByText(/sore today\?/i)).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Retry soreness check" })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: /Current Account Press/ }));
+  expect(await screen.findByRole("spinbutton", { name: "Working repetitions" })).toBeEnabled();
 });
 
 test("loading and refresh remain visible until required reads settle", async () => {
