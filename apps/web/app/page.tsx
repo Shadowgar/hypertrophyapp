@@ -5,8 +5,6 @@ import { authoredRepLabel, isBodyweightAuthored } from "@/lib/authored-prescript
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { UiIcon } from "@/components/ui/icons";
 import {
   api,
   getProgramDisplayName,
