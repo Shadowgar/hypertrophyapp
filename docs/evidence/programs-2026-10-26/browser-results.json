@@ -1,0 +1,277 @@
+{
+  "results": [
+    {
+      "scenario": "guest protected redirect",
+      "url": "http://127.0.0.1:3128/login?next=%2Fprograms",
+      "apiRequests": 0
+    },
+    {
+      "scenario": "sign-in returns to Programs"
+    },
+    {
+      "theme": "classic",
+      "appearance": "dark",
+      "viewport": 1440,
+      "overflow": false,
+      "cardHeights": [
+        118,
+        118,
+        90
+      ]
+    },
+    {
+      "theme": "classic",
+      "appearance": "dark",
+      "viewport": 390,
+      "overflow": false,
+      "cardHeights": [
+        118,
+        118,
+        110
+      ]
+    },
+    {
+      "theme": "classic",
+      "appearance": "light",
+      "viewport": 1440,
+      "overflow": false,
+      "cardHeights": [
+        118,
+        118,
+        90
+      ]
+    },
+    {
+      "theme": "classic",
+      "appearance": "light",
+      "viewport": 390,
+      "overflow": false,
+      "cardHeights": [
+        118,
+        118,
+        110
+      ]
+    },
+    {
+      "theme": "graphite",
+      "appearance": "dark",
+      "viewport": 1440,
+      "overflow": false,
+      "cardHeights": [
+        118,
+        118,
+        90
+      ]
+    },
+    {
+      "theme": "graphite",
+      "appearance": "dark",
+      "viewport": 390,
+      "overflow": false,
+      "cardHeights": [
+        118,
+        118,
+        110
+      ]
+    },
+    {
+      "theme": "graphite",
+      "appearance": "light",
+      "viewport": 1440,
+      "overflow": false,
+      "cardHeights": [
+        118,
+        118,
+        90
+      ]
+    },
+    {
+      "theme": "graphite",
+      "appearance": "light",
+      "viewport": 390,
+      "overflow": false,
+      "cardHeights": [
+        118,
+        118,
+        110
+      ]
+    },
+    {
+      "theme": "charcoal",
+      "appearance": "dark",
+      "viewport": 1440,
+      "overflow": false,
+      "cardHeights": [
+        118,
+        118,
+        90
+      ]
+    },
+    {
+      "theme": "charcoal",
+      "appearance": "dark",
+      "viewport": 390,
+      "overflow": false,
+      "cardHeights": [
+        118,
+        118,
+        110
+      ]
+    },
+    {
+      "theme": "charcoal",
+      "appearance": "light",
+      "viewport": 1440,
+      "overflow": false,
+      "cardHeights": [
+        118,
+        118,
+        90
+      ]
+    },
+    {
+      "theme": "charcoal",
+      "appearance": "light",
+      "viewport": 390,
+      "overflow": false,
+      "cardHeights": [
+        118,
+        118,
+        110
+      ]
+    },
+    {
+      "scenario": "stored Phase 1 separated from scheduled Phase 2"
+    },
+    {
+      "scenario": "failure retry preserves keyboard focus"
+    },
+    {
+      "scenario": "empty catalog distinct from failure"
+    },
+    {
+      "scenario": "desktop navigation",
+      "label": "Home",
+      "path": "/",
+      "heading": "Rocco's HyperTrophy Plan"
+    },
+    {
+      "scenario": "desktop navigation",
+      "label": "Today",
+      "path": "/today",
+      "heading": "Today"
+    },
+    {
+      "scenario": "desktop navigation",
+      "label": "Week",
+      "path": "/week",
+      "heading": "Week Plan"
+    },
+    {
+      "scenario": "desktop navigation",
+      "label": "History",
+      "path": "/history",
+      "heading": "History"
+    },
+    {
+      "scenario": "desktop navigation",
+      "label": "Analytics",
+      "path": "/history#analytics",
+      "heading": "History"
+    },
+    {
+      "scenario": "desktop navigation",
+      "label": "Programs",
+      "path": "/programs",
+      "heading": "Your programs"
+    },
+    {
+      "scenario": "desktop navigation",
+      "label": "Check-In",
+      "path": "/checkin",
+      "heading": "Sunday Review"
+    },
+    {
+      "scenario": "desktop navigation",
+      "label": "Library",
+      "path": "/guides",
+      "heading": "Program Guides"
+    },
+    {
+      "scenario": "desktop navigation",
+      "label": "Settings",
+      "path": "/settings",
+      "heading": "Settings"
+    },
+    {
+      "scenario": "mobile navigation",
+      "label": "Home",
+      "path": "/"
+    },
+    {
+      "scenario": "mobile navigation",
+      "label": "Today",
+      "path": "/today"
+    },
+    {
+      "scenario": "mobile navigation",
+      "label": "Week",
+      "path": "/week"
+    },
+    {
+      "scenario": "mobile navigation",
+      "label": "History",
+      "path": "/history"
+    },
+    {
+      "scenario": "mobile navigation",
+      "label": "More",
+      "path": "/more"
+    },
+    {
+      "scenario": "mobile More navigation",
+      "label": "Programs",
+      "path": "/programs"
+    },
+    {
+      "scenario": "mobile More navigation",
+      "label": "Customize",
+      "path": "/customize"
+    },
+    {
+      "scenario": "mobile More navigation",
+      "label": "Check-In",
+      "path": "/checkin"
+    },
+    {
+      "scenario": "mobile More navigation",
+      "label": "Analytics",
+      "path": "/history#analytics"
+    },
+    {
+      "scenario": "mobile More navigation",
+      "label": "Exercise library",
+      "path": "/guides"
+    },
+    {
+      "scenario": "mobile More navigation",
+      "label": "Settings & account",
+      "path": "/settings"
+    },
+    {
+      "scenario": "Authored card opens guide"
+    },
+    {
+      "scenario": "choose dates link opens Week"
+    }
+  ],
+  "runtimeErrors": [],
+  "unknownRoutes": [],
+  "writes": [
+    {
+      "path": "/api/auth/login",
+      "method": "POST"
+    }
+  ],
+  "requests": 141
+}
