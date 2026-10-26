@@ -954,17 +954,11 @@ export default function TodayPage() {
     setWorkoutLoading(true);
     setMessage(currentOccurrence.current ? "Refreshing your scheduled workout…" : "Loading your scheduled workout…");
     try {
-      // Independent gate reads; neither permits loading Today until both succeed.
-      const [today, reviewStatus] = await Promise.all([resolveLocalToday(), api.getWeeklyReviewStatus()]);
+      // The account's scheduling clock owns occurrence/date routing. A missing
+      // weekly report is not authority to block an already scheduled workout.
+      const today = await resolveLocalToday();
       if (!isCurrentPageRead(scope)) return;
       const sorenessSkipKey = `hypertrophy_soreness_skip:${today}`;
-      if (reviewStatus.today_is_sunday && reviewStatus.review_required) {
-        setWorkout(null);
-        currentOccurrence.current = null;
-        setSelectedExerciseId(null);
-        setMessage("Sunday review required before starting workout. Go to Check-In to submit weekly review.");
-        return;
-      }
 
       const loadedWorkout = await loadToday();
       if (!loadedWorkout || !isCurrentPageRead(scope)) {

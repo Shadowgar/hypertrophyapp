@@ -238,7 +238,7 @@ function BlockRadarCard({
         </div>
         <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
           <p className="telemetry-kicker">Nutrition Phase</p>
-          <p className="text-sm text-zinc-100">{profile ? humanizeTokenLabel(profile.nutrition_phase) : "Maintenance"}</p>
+          <p className="text-sm text-zinc-100">{profile ? (profile.nutrition_phase ? humanizeTokenLabel(profile.nutrition_phase) : "Not provided") : "Maintenance"}</p>
         </div>
         <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
           <p className="telemetry-kicker">Weak Areas</p>

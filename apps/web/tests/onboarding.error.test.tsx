@@ -12,6 +12,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 beforeEach(() => {
+  vi.unstubAllEnvs();
   // @ts-ignore
   globalThis.fetch = vi.fn();
   localStorage.clear();
@@ -83,6 +84,8 @@ test("Onboarding surfaces register validation errors", async () => {
 
   await completeQuestionnaireToAccountStep();
 
+  if (!screen.getByLabelText<HTMLInputElement>("Email address").value) fireEvent.change(screen.getByLabelText("Email address"), { target: { value: "synthetic@example.com" } });
+  fireEvent.change(screen.getByLabelText("Password"), { target: { value: "Synthetic-only-Q98z!" } });
   fireEvent.click(screen.getByRole("button", { name: /continue/i }));
 
   await waitFor(() => {
@@ -105,6 +108,7 @@ test("Onboarding surfaces register validation errors", async () => {
 
 
 test("Onboarding developer wipe button calls dev wipe endpoint", async () => {
+  vi.stubEnv("NEXT_PUBLIC_ENABLE_DEV_ACCOUNT_TOOLS", "true");
   const confirmSpy = vi.spyOn(globalThis, "confirm").mockReturnValue(true);
 
   // @ts-ignore
@@ -132,6 +136,9 @@ test("Onboarding developer wipe button calls dev wipe endpoint", async () => {
     expect(screen.getByRole("button", { name: /wipe test user by email/i })).toBeInTheDocument();
   });
 
+  // Supply an explicit synthetic email; no account credentials are prefilled.
+  fireEvent.click(screen.getByRole("button", { name: /already have an account/i }));
+  fireEvent.change(screen.getByLabelText("Email address"), { target: { value: "synthetic-wipe@example.com" } });
   fireEvent.click(screen.getByRole("button", { name: /wipe test user by email/i }));
 
   await waitFor(() => {
@@ -173,7 +180,7 @@ test("Onboarding register request normalizes email casing and whitespace", async
     if (url.endsWith("/auth/register")) {
       return Promise.resolve(new Response(JSON.stringify({ access_token: "tok" }), { status: 200 }));
     }
-    if (url.endsWith("/profile")) {
+    if (url.endsWith("/profile/initial-setup")) {
       return Promise.resolve(new Response(JSON.stringify({ status: "ok" }), { status: 200 }));
     }
     if (url.endsWith("/plan/generate-week")) {
@@ -194,6 +201,8 @@ test("Onboarding register request normalizes email casing and whitespace", async
   fireEvent.change(screen.getByLabelText(/email address/i), {
     target: { value: "  ATHLETE@Example.COM  " },
   });
+  if (!screen.getByLabelText<HTMLInputElement>("Email address").value) fireEvent.change(screen.getByLabelText("Email address"), { target: { value: "synthetic@example.com" } });
+  fireEvent.change(screen.getByLabelText("Password"), { target: { value: "Synthetic-only-Q98z!" } });
   fireEvent.click(screen.getByRole("button", { name: /continue/i }));
 
   await waitFor(() => {
@@ -219,6 +228,7 @@ test("Onboarding register request normalizes email casing and whitespace", async
 
 
 test("Onboarding password reset request button calls reset endpoint", async () => {
+  vi.stubEnv("NEXT_PUBLIC_ENABLE_DEV_ACCOUNT_TOOLS", "true");
   // @ts-ignore
   globalThis.fetch.mockImplementation((input, _init) => {
     const url = typeof input === "string" ? input : input.url;
@@ -244,6 +254,8 @@ test("Onboarding password reset request button calls reset endpoint", async () =
     expect(screen.getByRole("button", { name: /request password reset token/i })).toBeInTheDocument();
   });
 
+  fireEvent.click(screen.getByRole("button", { name: /already have an account/i }));
+  fireEvent.change(screen.getByLabelText("Email address"), { target: { value: "synthetic-recovery@example.com" } });
   fireEvent.click(screen.getByRole("button", { name: /request password reset token/i }));
 
   await waitFor(() => {

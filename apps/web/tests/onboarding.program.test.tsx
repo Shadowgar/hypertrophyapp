@@ -13,6 +13,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 beforeEach(() => {
+  vi.unstubAllEnvs();
   // reset fetch mock
   // @ts-ignore
   globalThis.fetch = vi.fn();
@@ -122,7 +123,7 @@ test("Onboarding saves constraint fields to /profile (equipment/time/movement)",
     if (url.endsWith("/auth/register")) {
       return Promise.resolve(new Response(JSON.stringify({ access_token: "tok" }), { status: 200 }));
     }
-    if (url.endsWith("/profile")) {
+    if (url.endsWith("/profile/initial-setup")) {
       const init = _init ?? {};
       const body = typeof init.body === "string" ? JSON.parse(init.body) : {};
       profileBodies.push(body);
@@ -221,6 +222,8 @@ test("Onboarding saves constraint fields to /profile (equipment/time/movement)",
   fireEvent.change(screen.getByLabelText(/first name/i), { target: { value: "Rocco" } });
   fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
 
+  fireEvent.change(screen.getByLabelText("Email address"), { target: { value: "synthetic@example.com" } });
+  fireEvent.change(screen.getByLabelText("Password"), { target: { value: "Synthetic-only-Q98z!" } });
   // Submit account form -> triggers submitOnboarding -> POST /profile
   fireEvent.click(screen.getByRole("button", { name: /continue/i }));
 
@@ -297,6 +300,7 @@ test("Onboarding restores saved draft progress from local storage", async () => 
 });
 
 test("Developer reset control calls canonical phase1 reset endpoint", async () => {
+  vi.stubEnv("NEXT_PUBLIC_ENABLE_DEV_ACCOUNT_TOOLS", "true");
   const programs = [
     {
       id: "pure_bodybuilding_phase_1_full_body",

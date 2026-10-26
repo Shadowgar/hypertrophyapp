@@ -37,18 +37,16 @@ function fixture(override: (url: string, init?: RequestInit) => Promise<Response
 }
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
-test("date and review checks start together while both still gate Today", async () => {
+test("a pending or unavailable review cannot block an accepted scheduling date and workout", async () => {
   const clock = deferred<Response>(); const review = deferred<Response>();
   const requests = fixture(url => url.includes("/plan/scheduling-context?") ? clock.promise
     : url.endsWith("/weekly-review/status") ? review.promise : undefined);
   render(<TodayPage />);
-  await waitFor(() => expect(requests.some(url => url.endsWith("/weekly-review/status"))).toBe(true));
-  expect(requests.some(url => url.includes("/plan/scheduling-context?"))).toBe(true);
+  await waitFor(() => expect(requests.some(url => url.includes("/plan/scheduling-context?"))).toBe(true));
   expect(requests.some(url => url.endsWith("/workout/today"))).toBe(false);
   await act(async () => clock.resolve(Response.json(schedulingContext)));
-  expect(requests.some(url => url.endsWith("/workout/today"))).toBe(false);
-  await act(async () => review.resolve(Response.json(reviewStatus)));
   expect(await screen.findByRole("button", { name: /Resume Press/ })).toHaveTextContent("1/3");
+  expect(requests.some(url => url.endsWith("/weekly-review/status"))).toBe(false);
 });
 
 test("a slow display profile does not delay resumed progress or the required soreness check", async () => {
@@ -137,8 +135,8 @@ test("StrictMode effect replay still loads the scheduled occurrence", async () =
 });
 
 
-test.each(["clock", "review"])("failed %s verification never loads Today and releases the retry control", async failedGate => {
-  const requests = fixture(url => (failedGate === "clock" ? url.includes("/plan/scheduling-context?") : url.endsWith("/weekly-review/status"))
+test("failed clock verification never loads Today and releases the retry control", async () => {
+  const requests = fixture(url => url.includes("/plan/scheduling-context?")
     ? Response.json({ detail: "unavailable" }, { status: 503 }) : undefined);
   render(<TodayPage />);
   await screen.findByText("Unable to verify soreness status. Try again.");
@@ -146,13 +144,12 @@ test.each(["clock", "review"])("failed %s verification never loads Today and rel
   expect(screen.getByRole("button", { name: /Load today's workout/ })).toBeEnabled();
 });
 
-test("a required Sunday review still prevents Today and soreness reads", async () => {
+test.each(["missing", "failed"])("a %s Sunday review cannot block Today or fabricate a submission", async state => {
   const requests = fixture(url => url.endsWith("/weekly-review/status")
-    ? Response.json({ today_is_sunday: true, review_required: true }) : undefined);
+    ? state === "missing" ? Response.json({ today_is_sunday: true, review_required: true }) : Response.json({}, { status: 503 }) : undefined);
   render(<TodayPage />);
-  await screen.findByText("Sunday review required before starting workout. Go to Check-In to submit weekly review.");
-  expect(requests.some(url => url.endsWith("/workout/today") || url.includes("/soreness?"))).toBe(false);
-  expect(screen.getByRole("button", { name: /Load today's workout/ })).toBeEnabled();
+  expect(await screen.findByRole("button", { name: /Resume Press/ })).toHaveTextContent("1/3");
+  expect(requests.some(url => url.includes("weekly-review"))).toBe(false);
 });
 
 test("initial Today failure clears loading and can be retried without a write", async () => {
@@ -176,11 +173,11 @@ test("failed health reports a retryable state without waiting indefinitely", asy
 });
 
 
-test.each(["clock", "review", "today", "Sunday review"])("a required %s refresh hides prior controls and keeps them unavailable on failure", async failedRead => {
+test.each(["clock", "today"])("a required %s refresh hides prior controls and keeps them unavailable on failure", async failedRead => {
   let refreshing = false;
   const pending = deferred<Response>();
   fixture(url => refreshing && (failedRead === "clock" ? url.includes("/plan/scheduling-context?")
-    : failedRead === "today" ? url.endsWith("/workout/today") : url.endsWith("/weekly-review/status")) ? pending.promise : undefined);
+    : url.endsWith("/workout/today")) ? pending.promise : undefined);
   render(<TodayPage />);
   await waitFor(() => expect(screen.getByRole("button", { name: /Resume Press/ })).toHaveTextContent("1/3"));
   await waitFor(() => expect(screen.getByRole("button", { name: "Reload" })).toBeEnabled());
@@ -188,11 +185,8 @@ test.each(["clock", "review", "today", "Sunday review"])("a required %s refresh 
   fireEvent.click(screen.getByRole("button", { name: "Reload" }));
   expect(screen.queryByRole("button", { name: /Resume Press/ })).not.toBeInTheDocument();
   expect(screen.queryByRole("region", { name: "Workout execution" })).not.toBeInTheDocument();
-  await act(async () => pending.resolve(failedRead === "Sunday review" ? Response.json({ today_is_sunday: true, review_required: true })
-    : Response.json({ detail: "unavailable" }, { status: 503 })));
-  await screen.findByText(failedRead === "Sunday review"
-    ? "Sunday review required before starting workout. Go to Check-In to submit weekly review."
-    : failedRead === "today" ? "Workout could not be loaded. Retry loading your workout. Your saved history is unchanged."
+  await act(async () => pending.resolve(Response.json({ detail: "unavailable" }, { status: 503 })));
+  await screen.findByText(failedRead === "today" ? "Workout could not be loaded. Retry loading your workout. Your saved history is unchanged."
     : "Unable to verify soreness status. Try again.");
   expect(screen.queryByRole("button", { name: /Resume Press/ })).not.toBeInTheDocument();
   expect(screen.getByRole("button", { name: /Load today's workout/ })).toBeEnabled();

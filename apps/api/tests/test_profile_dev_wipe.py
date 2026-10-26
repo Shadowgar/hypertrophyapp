@@ -86,7 +86,8 @@ def test_profile_get_returns_default_payload_before_onboarding() -> None:
     payload = profile.json()
     assert payload["selected_program_id"] == "pure_bodybuilding_phase_1_full_body"
     assert payload["days_available"] == 2
-    assert payload["nutrition_phase"] == "maintenance"
+    for key in ("nutrition_phase", "calories", "protein", "fat", "carbs"):
+        assert payload[key] is None
     assert payload["equipment_profile"] == []
     assert payload["weak_areas"] == []
     assert payload["onboarding_answers"] == {}

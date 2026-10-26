@@ -85,7 +85,7 @@ test("a missing scheduling clock blocks daily writes and workout loading", async
   expect(fixture.saves).toEqual([]);
 });
 
-test.each(["Save & Start Workout", "Skip"])("%s rechecks the review gate instead of using a prior-day soreness modal", async (action) => {
+test.each(["Save & Start Workout", "Skip"])("%s rechecks the date without using a prior-day soreness modal or requiring a weekly report", async (action) => {
   const fixture = dailyFixture("2026-10-11T06:59:00Z", "America/Los_Angeles", "2026-10-10");
   render(<TodayPage />);
   await screen.findByText(/sore today\?/i);
@@ -94,8 +94,9 @@ test.each(["Save & Start Workout", "Skip"])("%s rechecks the review gate instead
   globalThis.fetch = vi.fn(async (input, init) => String(input).endsWith("/weekly-review/status")
     ? Response.json({ today_is_sunday: true, review_required: true }) : original(input, init));
   fireEvent.click(screen.getByRole("button", { name: action }));
-  await screen.findByText("Sunday review required before starting workout. Go to Check-In to submit weekly review.");
+  await waitFor(() => expect(fixture.workouts).toEqual(["2026-10-10", "2026-10-11"]));
+  await screen.findByText(/sore today\?/i);
   expect(fixture.saves).toEqual([]);
-  expect(fixture.workouts).toEqual(["2026-10-10"]);
+  expect(fixture.sorenessDates.at(-1)).toContain("start_date=2026-10-11&end_date=2026-10-11");
   expect(localStorage.getItem("hypertrophy_soreness_skip:2026-10-11")).toBeNull();
 });
