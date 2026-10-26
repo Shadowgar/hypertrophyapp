@@ -1,0 +1,159 @@
+name: ARM64 container qualification
+
+on:
+  pull_request:
+    paths:
+      - apps/web/package.json
+      - apps/web/package-lock.json
+      - apps/web/Dockerfile
+      - apps/api/Dockerfile
+      - .dockerignore
+      - .github/workflows/container-qualification.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: arm64-qualification-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    env:
+      CANDIDATE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ env.CANDIDATE_SHA }}
+          persist-credentials: false
+      - name: Build matching native ARM64 images from tracked inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          context="$(mktemp -d "$RUNNER_TEMP/container-context-XXXXXXXX")"
+          git archive "$CANDIDATE_SHA" | tar -x -C "$context"
+          for service in api web; do
+            version_arg=APP_VERSION
+            if [ "$service" = web ]; then version_arg=NEXT_PUBLIC_APP_VERSION; fi
+            docker build --pull --platform linux/arm64 \
+              --label "org.opencontainers.image.revision=$CANDIDATE_SHA" \
+              --build-arg "$version_arg=$CANDIDATE_SHA" \
+              -t "qualification-$service:$CANDIDATE_SHA" \
+              -f "$context/apps/$service/Dockerfile" "$context"
+          done
+      - name: Verify image identity, native dependencies and isolated runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+          import time
+
+          revision = os.environ['CANDIDATE_SHA']
+          receipt = {'revision': revision, 'platform': 'linux/arm64', 'images': {}, 'checks': []}
+          containers = []
+
+          def docker(*args):
+              return subprocess.check_output(['docker', *args], text=True, timeout=90).strip()
+
+          def probe(name, executable, source):
+              for attempt in range(60):
+                  result = subprocess.run(
+                      ['docker', 'exec', name, executable, '-c' if executable == 'python' else '-e', source],
+                      text=True, capture_output=True, timeout=15,
+                  )
+                  if result.returncode == 0:
+                      return json.loads(result.stdout)
+                  if docker('inspect', '--format', '{{.State.Running}}', name) != 'true':
+                      raise RuntimeError(f'{name} exited before its runtime probe passed')
+                  time.sleep(1)
+              raise RuntimeError(f'{name} did not pass its runtime probe within 60 attempts')
+
+          try:
+              for service in ('api', 'web'):
+                  tag = f'qualification-{service}:{revision}'
+                  info = json.loads(docker('image', 'inspect', tag))[0]
+                  assert info['Architecture'] == 'arm64' and info['Os'] == 'linux'
+                  assert info['Config']['Labels']['org.opencontainers.image.revision'] == revision
+                  receipt['images'][service] = {'id': info['Id'], 'revision': revision}
+
+              api = f'qualification-api-{os.environ["GITHUB_RUN_ID"]}'
+              web = f'qualification-web-{os.environ["GITHUB_RUN_ID"]}'
+              containers.extend((api, web))
+              # No host volumes, ports, external network, inherited environment, or live data.
+              # This explicit SQLite target exists only in this container's disposable tmpfs.
+              docker('run', '-d', '--name', api, '--network', 'none',
+                     '--tmpfs', '/qualification:rw,nosuid,nodev,size=128m',
+                     '--env', 'DATABASE_URL=sqlite:////qualification/api.sqlite3',
+                     '--env', 'SCHEMA_MANAGEMENT_MODE=bootstrap',
+                     '--env', 'JWT_SECRET=synthetic-container-qualification-key-not-a-live-credential',
+                     '--env', 'ALLOW_DEV_WIPE_ENDPOINTS=false',
+                     '--env', 'LOG_FILE_PATH=/qualification/api.log',
+                     f'qualification-api:{revision}', 'sh', '-ec',
+                     'python -c "import os; assert os.environ[\'DATABASE_URL\'] == '
+                     '\'sqlite:////qualification/api.sqlite3\'; assert not '
+                     '__import__(\'pathlib\').Path(\'/qualification/api.sqlite3\').exists()"; '
+                     'exec uvicorn app.main:app --host 127.0.0.1 --port 8000')
+              api_health = probe(api, 'python',
+                  'import json, os, urllib.request; '
+                  'data=json.load(urllib.request.urlopen("http://127.0.0.1:8000/health", timeout=5)); '
+                  'assert data["status"] == "ok" and data["version"] == os.environ["APP_VERSION"]; '
+                  'print(json.dumps(data))')
+              assert api_health['version'] == revision
+              receipt['checks'].append('api_health_revision_with_disposable_sqlite')
+
+              docker('run', '-d', '--name', web, '--network', 'none', f'qualification-web:{revision}')
+              web_version = probe(web, 'node',
+                  '(async()=>{const r=await fetch("http://127.0.0.1:3000/version"); '
+                  'if(!r.ok)throw Error("version status"); console.log(JSON.stringify(await r.json()));'
+                  '})().catch(()=>process.exit(1))')
+              assert web_version['version'] == revision
+              receipt['checks'].append('matching_web_api_revision')
+              for route in ('/', '/login', '/reset-password'):
+                  status = probe(web, 'node',
+                      '(async()=>{const r=await fetch(' + json.dumps('http://127.0.0.1:3000' + route) + '); '
+                      'if(r.status!==200)throw Error("route status"); '
+                      'console.log(JSON.stringify({status:r.status}));})().catch(()=>process.exit(1))')
+                  assert status['status'] == 200
+              receipt['checks'].append('guest_routes_200')
+              dependencies = json.loads(docker('exec', web, 'node', '-e', r'''
+          const assert = require('node:assert/strict');
+          const fs = require('node:fs');
+          const sharp = require('sharp');
+          (async () => {
+            assert.equal(process.arch, 'arm64');
+            assert.equal(process.report.getReport().header.glibcVersionRuntime, undefined);
+            assert.equal(require('next/package.json').version, require('./package.json').dependencies.next);
+            const actions = JSON.parse(fs.readFileSync('.next/server/server-reference-manifest.json', 'utf8'));
+            assert.deepEqual(Object.keys(actions.node), []);
+            assert.deepEqual(Object.keys(actions.edge), []);
+            const result = await sharp({create: {width: 2, height: 2, channels: 3, background: '#000'}}).png().toBuffer();
+            assert.ok(result.length > 0);
+            console.log(JSON.stringify({node: process.version, next: require('next/package.json').version,
+              sharp: require('sharp/package.json').version, libc: 'musl', server_actions: 0}));
+          })().catch(() => process.exit(1));
+          '''))
+              receipt['runtime'] = dependencies
+              receipt['checks'].extend(('native_sharp_png', 'musl_runtime', 'zero_server_actions'))
+              receipt['status'] = 'passed'
+              Path(os.environ['RUNNER_TEMP'], 'container-qualification.json').write_text(json.dumps(receipt, indent=2) + '\n')
+              print(json.dumps(receipt, indent=2))
+          finally:
+              for name in containers:
+                  subprocess.run(['docker', 'rm', '-f', name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+          PY
+      - name: Retain sanitized qualification receipt only
+        uses: actions/upload-artifact@v4
+        with:
+          name: arm64-container-qualification-${{ env.CANDIDATE_SHA }}
+          path: ${{ runner.temp }}/container-qualification.json
+          if-no-files-found: error
+          retention-days: 30
