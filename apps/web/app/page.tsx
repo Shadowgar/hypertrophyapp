@@ -197,11 +197,11 @@ export default function HomePage() {
         <div className="space-y-4 pt-3">
           {status.analytics === "pending" ? <p className="ux-muted">Training summary is still loading.</p> : status.analytics === "error" ? <p className="ux-muted">Training summary could not be loaded. Retry Home to check again.</p> : null}
           {bodyweight != null ? <p>Bodyweight: {displayLoad(bodyweight, preferences.weight_unit)} {preferences.weight_unit}</p> : null}
-          {analytics ? <><p>{prCount ? `${prCount} PR highlights` : "No recent PR highlights"}</p>{leadTrend ? <div><p>{leadTrend.exercise_id.replaceAll("_", " ")} tracked across {leadTrend.points.length} sessions</p><p>Latest {displayLoad(leadTrend.latest_weight, preferences.weight_unit)} {preferences.weight_unit} top set across {leadTrend.points.length} tracked sessions</p></div> : <p className="ux-muted">Log workouts to build comparable history.</p>}</> : null}
+          {analytics ? <><p>{prCount ? `${prCount} PR highlights` : "No recent PR highlights"}</p>{leadTrend ? <div><p>{leadTrend.exercise_id.replaceAll("_", " ")} · {leadTrend.points.length} tracked weeks</p><p>Latest recorded weekly maximum: {displayLoad(leadTrend.latest_weight, preferences.weight_unit)} {preferences.weight_unit}</p><p className="ux-muted">This summary may include different setups. Open Analytics for separate setup histories.</p></div> : <p className="ux-muted">Log workouts to build comparable history.</p>}</> : null}
           {workout?.exercises.slice(0, 3).map((exercise, index) => <p key={`${exercise.id}-${index}`}>
             {exercise.name} · {exercise.sets} x {authoredRepLabel(exercise)} @ {isBodyweightAuthored(exercise) ? "Bodyweight" : exercise.recommended_working_weight == null ? "Record actual load" : `${displayLoad(exercise.recommended_working_weight, preferences.weight_unit)} ${preferences.weight_unit}`}
           </p>)}
-          <Link className="ux-button ux-button-ghost" href="/history#analytics">Open Analytics</Link>
+          <Link className="ux-button ux-button-ghost" href="/analytics">Open Analytics</Link>
         </div>
       </details>
     </div>

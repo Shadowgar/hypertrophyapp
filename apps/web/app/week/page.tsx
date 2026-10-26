@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Disclosure } from "@/components/ui/disclosure";
-import { api, getToken, getProgramDisplayName, type GeneratedWeekExercise, type GeneratedWeekPlan, type ProgramTemplateOption, type Profile, type SchedulingContext, type SelectedDatePlanRequest } from "@/lib/api";
+import { api, getToken, getProgramDisplayName, type GeneratedWeekExercise, type GeneratedWeekPlan, type HistoryOccurrenceStatus, type ProgramTemplateOption, type Profile, type SchedulingContext, type SelectedDatePlanRequest } from "@/lib/api";
 import { datesInWeek, formatCalendarDate } from "@/lib/calendar-date";
 import { useAppearance } from "@/components/appearance-provider";
 import { displayLoad } from "@/lib/appearance";
@@ -343,6 +343,9 @@ export default function WeekPage() {
   const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
   const [context, setContext] = useState<SchedulingContext | null>(null);
   const [contextState, setContextState] = useState<"loading" | "ready" | "error">("loading");
+  const [progress, setProgress] = useState<Record<string, HistoryOccurrenceStatus>>({});
+  const [progressState, setProgressState] = useState<"loading" | "ready" | "error">("loading");
+  const [progressReload, setProgressReload] = useState(0);
   const contextRef = useRef<SchedulingContext | null>(null);
   const contextToken = useRef<string | null | undefined>(undefined);
   const profileToken = useRef<string | null | undefined>(undefined);
@@ -360,6 +363,20 @@ export default function WeekPage() {
   const [isSavingProgramSelection, setIsSavingProgramSelection] = useState(false);
   const [generatedOnboardingPrompt, setGeneratedOnboardingPrompt] = useState<string | null>(null);
   const preferenceDirty = selectedProgramId !== (profile?.selected_program_id ?? null);
+  const progressWeek = context?.week_start;
+  const progressRevision = context?.placement_revision;
+  useEffect(() => {
+    if (!progressWeek) return;
+    let active = true;
+    const token = getToken();
+    setProgress({}); setProgressState("loading");
+    api.getHistoryCalendar(progressWeek, datesInWeek(progressWeek)[6]).then(history => {
+      if (!active || token !== getToken()) return;
+      setProgress(Object.fromEntries((history.days ?? []).flatMap(day => day.occurrences ?? []).filter(occurrence => occurrence.workout_occurrence_id).map(occurrence => [occurrence.workout_occurrence_id, occurrence])));
+      setProgressState("ready");
+    }).catch(() => { if (active && token === getToken()) setProgressState("error"); });
+    return () => { active = false; };
+  }, [progressWeek, progressRevision, progressReload]);
 
   async function saveProgramPreference() {
     if (!preferenceDirty || preferenceSaveRef.current) return;
@@ -520,7 +537,7 @@ export default function WeekPage() {
 
   const visiblePlan = preview?.plan ?? plan;
   const plannedSets = visiblePlan?.sessions.reduce((sum, session) => sum + session.exercises.reduce((total, exercise) => total + exercise.sets, 0), 0);
-  return <div className="ux-page-stack">
+  return <div className="ux-page-stack ux-week-root">
     <header>
       <p className="ux-eyebrow">Week</p>
       <h1 className="ui-title-page">Your training week</h1>
@@ -529,7 +546,7 @@ export default function WeekPage() {
     </header>
     <p className="text-sm"><a className="underline" href={plan?.customized?.proposal_id?`/customize?proposal=${encodeURIComponent(plan.customized.proposal_id)}`:"/customize"}>{plan?.customized?"Manage Customized dates or replace program":"Customize My Workout"}</a> · Review explicit date changes and program replacement.</p>
     <div className="ux-week-layout">
-    <section className="ui-card ux-week-schedule space-y-3" aria-label="Week scheduling">
+    <section className="ux-card ux-week-schedule space-y-3" aria-label="Week scheduling">
       <div className="flex flex-wrap gap-2" aria-label="Select planning week">
         <Button aria-pressed={weekOffset === 0} disabled={isGenerating} onClick={() => void switchWeek(0)}>Current week</Button>
         <Button aria-pressed={weekOffset === 1} disabled={isGenerating} onClick={() => void switchWeek(1)}>Next week</Button>
@@ -563,14 +580,16 @@ export default function WeekPage() {
       {contextState === "loading" && !context ? <p role="status">Loading your local week…</p> : null}
       {contextState === "error" ? <div role="alert"><p>Could not refresh your week. Any previously loaded plan is still shown.</p><Button variant="secondary" onClick={() => void refreshContext(timezoneRef.current).then(() => setPlanStatus("Week loaded. Review your dates before previewing.")).catch(error => { if (!(error instanceof StaleSchedulingContext)) setPlanStatus("Could not load your week. Try again."); })}>Retry week loading</Button></div> : null}
     </section>
-    <section className="ui-card ux-week-sessions" aria-label="Scheduled sessions">
+    <section className="ux-card ux-week-sessions" aria-label="Scheduled sessions">
       <h2 className="ui-title-section">{preview ? "Preview your sessions" : "Your sessions"}</h2>
       {visiblePlan?.sessions.length ? visiblePlan.sessions.map((session) => <article className="ux-week-session" key={session.workout_occurrence_id ?? session.session_id}>
         <p className="ui-meta">{formatCalendarDate(session.date)}</p><h3>{session.title}</h3>
         <p className="ui-body-sm">{session.exercises.length} exercises · {session.exercises.reduce((total, exercise) => total + exercise.sets, 0)} planned working sets</p>
-        {preview ? <p className="ui-meta">Preview · not activated</p> : session.date === context?.local_today ? <a className="ui-link-primary" href="/today">Open scheduled workout</a> : <p className="ui-meta">{session.date < (context?.local_today ?? "") ? "Past scheduled date · see History for performed sets" : "Scheduled · prescriptions below"}</p>}
+        {!preview ? <p className="ui-meta">{progressLabel(progress[session.workout_occurrence_id ?? ""], progressState)}</p> : null}
+        {preview ? <p className="ui-meta">Preview · not activated</p> : session.date === context?.local_today ? <a className="ux-button ux-button-secondary px-4" href="/today">Open scheduled workout</a> : <p className="ui-meta">{session.date < (context?.local_today ?? "") ? "Past scheduled date · see History for performed sets" : "Scheduled · prescriptions below"}</p>}
       </article>) : <p className="ui-body-sm">{context ? "No active workouts for this week. Select dates and preview your plan." : contextState === "error" ? "Scheduled workouts are unavailable until the week loads." : "Loading scheduled workouts…"}</p>}
-      {plan ? <a className="ui-link-primary" href="/history">Review completed sets in History</a> : null}
+      {plan ? <a className="ux-button ux-button-secondary px-4" href="/history">Review completed sets in History</a> : null}
+      {progressState === "error" && plan ? <Button variant="secondary" onClick={() => setProgressReload(value => value + 1)}>Retry saved progress</Button> : null}
     </section>
     </div>
     <Disclosure title="Program Override" badge={selectedProgramId ? "custom" : "auto"} defaultOpen={false}>
@@ -596,4 +615,11 @@ export default function WeekPage() {
       <WeekExecutionCards plan={visiblePlan} />
     </> : null}
   </div>;
+}
+
+function progressLabel(receipt: HistoryOccurrenceStatus | undefined, state: "loading" | "ready" | "error") {
+  if (state === "loading") return "Checking saved progress…";
+  if (!receipt || receipt.status === "unknown" || receipt.working_sets_planned === null) return "Completion unavailable · review recorded sets in History";
+  const status = receipt.status === "complete" ? "Complete" : receipt.status === "partial" ? "In progress" : "Scheduled";
+  return `${status} · ${receipt.working_sets_completed} of ${receipt.working_sets_planned} working sets saved`;
 }

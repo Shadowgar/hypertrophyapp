@@ -7,7 +7,7 @@
 .ux-program-steps li[aria-current=step] { border-color: var(--accent-text); color: var(--text-primary); font-weight: 700; }
 .ux-program-steps span { display: grid; place-items: center; width: 28px; height: 28px; border: 1px solid var(--border-control); border-radius: 50%; }
 @media (min-width: 900px) { .ux-customize-inputs { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px; } .ux-customize-inputs > fieldset, .ux-customize-inputs > p, .ux-customize-inputs > div, .ux-customize-inputs > button { grid-column: 1 / -1; } }
-.ux-week-dates { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 4px; }
+.ux-week-dates { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 2px; }
 .ux-week-date { position: relative; display: grid; justify-items: center; align-content: center; min-height: 76px; gap: 5px; border: 1px solid var(--border-control); border-radius: 8px; color: var(--text-secondary); cursor: pointer; font-size: 12px; }
 .ux-week-date strong { font-size: 18px; color: var(--text-primary); }
 .ux-week-date input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
@@ -647,3 +647,5 @@ input[type="radio"] {
   background-color: var(--surface-raised);
   color: var(--text-primary);
 }
+
+@media (max-width: 480px) { .ux-week-root { margin-inline: -8px; } .ux-card.ux-week-schedule { padding: 8px; } }

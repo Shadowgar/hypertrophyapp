@@ -55,7 +55,8 @@ test.each(["kg", "lb"] as const)("Home mass summaries honor saved %s and switchi
     switchUnits(rerender, page, initial, unit => {
       const kg = unit === "kg";
       expect(screen.getByText(`Qualified press · 3 x 8-12 @ ${kg ? 80 : 176.4} ${unit}`)).toBeInTheDocument();
-      expect(screen.getByText(`Latest ${kg ? 80 : 176.4} ${unit} top set across 0 tracked sessions`)).toBeInTheDocument();
+      expect(screen.getByText(`Latest recorded weekly maximum: ${kg ? 80 : 176.4} ${unit}`)).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Open Analytics' })).toHaveAttribute('href', '/analytics');
       expect(screen.getByText(`Bodyweight: ${analyticsWeight ? (kg ? 85 : 187.4) : (kg ? 82.5 : 181.9)} ${unit}`)).toBeInTheDocument();
     });
     cleanup();

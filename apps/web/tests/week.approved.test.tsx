@@ -34,3 +34,23 @@ test('a delayed retired-account calendar reply cannot install dates', async () =
   await act(async () => { model.resolve!(fixture); await new Promise(resolve => setTimeout(resolve, 20)); });
   expect(screen.queryByRole('checkbox', { name: 'Mon, Oct 26' })).not.toBeInTheDocument();
 });
+
+test('Week uses the exact occurrence progress and never treats legacy activity as completion', async () => {
+  const session = { session_id: 'scheduled-session', workout_occurrence_id: 'owned-occurrence', title: 'Synthetic scheduled workout', date: '2026-10-26', exercises: [{ id: 'row', name: 'Synthetic row', sets: 2, rep_range: [8, 12] }] };
+  let occurrence = { workout_occurrence_id: 'another-occurrence', status: 'complete', working_sets_completed: 2, working_sets_planned: 2 };
+  vi.stubGlobal('fetch', vi.fn(async input => {
+    const url = String(input);
+    if (url.includes('/plan/scheduling-context')) return Response.json({ ...fixture, plan: { week_start: fixture.week_start, program_template_id: 'pure_bodybuilding_phase_1_full_body', sessions: [session] } });
+    if (url.includes('/history/calendar')) return Response.json({ days: [{ date: fixture.week_start, completed: true, set_count: 4, occurrences: [occurrence] }] });
+    if (url.endsWith('/profile')) return Response.json({ selected_program_id: null });
+    return Response.json([]);
+  }));
+  const view = render(<WeekPage />);
+  await screen.findByText('Completion unavailable · review recorded sets in History');
+  expect(screen.queryByText(/^Complete ·/)).not.toBeInTheDocument();
+  view.unmount();
+  occurrence = { ...occurrence, workout_occurrence_id: 'owned-occurrence', status: 'partial', working_sets_completed: 1 };
+  render(<WeekPage />);
+  await screen.findByText('In progress · 1 of 2 working sets saved');
+  expect(screen.queryByText(/^Complete ·/)).not.toBeInTheDocument();
+});
