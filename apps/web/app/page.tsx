@@ -559,7 +559,7 @@ export default function HomePage() {
         <>
           <div className="grid grid-cols-2 gap-3">
             <div className="main-card main-card--shell">
-              <p className="telemetry-kicker">Today's Workout</p>
+              <p className="telemetry-kicker">Today&apos;s Workout</p>
               <p className="telemetry-value">{workoutChecked ? dashboard.workout?.title ?? "No session returned today" : "Not checked"}</p>
               <p className="telemetry-meta">{presentation.workoutMeta}</p>
             </div>
