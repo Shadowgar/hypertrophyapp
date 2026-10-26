@@ -1,0 +1,164 @@
+{
+  "scope": "Local Chromium, warmed API/web processes; fresh client context versus same-context reload. No production or physical iPhone acceptance.",
+  "targetsMs": {
+    "freshOpen": 5000,
+    "warmResume": 2000
+  },
+  "records": [
+    {
+      "sourceRevision": "eb759a85a430aab773cfc2f0f23e575fbbc976ba",
+      "phase": "Authored Phase1",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "definition": "Navigation to visible enabled working weight/repetition controls, including explicit Skip of optional soreness prompt on fresh opens. New Chromium context each open; same-context reload for warm resume. API process and Next production server already warm. Existing Cross-Body occurrence has one effective working receipt after recovery qualification; controls offer Save set 2.",
+      "physicalDevice": false,
+      "excludedSamples": 0,
+      "browserVersion": "145.0.7632.0",
+      "databaseUnchanged": true,
+      "summary": {
+        "freshContextOpen": {
+          "samplesMs": [
+            3223.2,
+            3083.2,
+            1683.2,
+            2140
+          ],
+          "medianMs": 2611.6,
+          "rangeMs": [
+            1683.2,
+            3223.2
+          ],
+          "n": 4,
+          "complete": true
+        },
+        "warmResume": {
+          "samplesMs": [
+            1132.6,
+            1072.1,
+            1101.7
+          ],
+          "medianMs": 1101.7,
+          "rangeMs": [
+            1072.1,
+            1132.6
+          ],
+          "n": 3,
+          "complete": true
+        }
+      },
+      "controlledConditionsLimitation": "Root reported one separate Chromium CSS probe may have overlapped the intended quiet window before it closed. No valid samples were discarded; these are local browser-only warmed-server measurements, not isolated-device or production results."
+    },
+    {
+      "sourceRevision": "eb759a85a430aab773cfc2f0f23e575fbbc976ba",
+      "phase": "Customized",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "definition": "Navigation to visible enabled working weight/repetition controls, including explicit Skip of optional soreness prompt on fresh opens. New Chromium context each open; same-context reload for warm resume. API process and Next production server already warm. Existing accepted Customized first-exercise occurrence has one effective working receipt after root recovery qualification; controls offer Save set 2.",
+      "physicalDevice": false,
+      "excludedSamples": 0,
+      "browserVersion": "145.0.7632.0",
+      "databaseUnchanged": true,
+      "summary": {
+        "freshContextOpen": {
+          "samplesMs": [
+            2996.7,
+            5664.4,
+            12525.7
+          ],
+          "medianMs": 5664.4,
+          "rangeMs": [
+            2996.7,
+            12525.7
+          ],
+          "n": 3,
+          "complete": true
+        },
+        "warmResume": {
+          "samplesMs": [
+            3121.4,
+            6933,
+            2165.7
+          ],
+          "medianMs": 3121.4,
+          "rangeMs": [
+            2165.7,
+            6933
+          ],
+          "n": 3,
+          "complete": true
+        }
+      },
+      "controlledConditionsLimitation": "Root held builds/browser journeys. A sibling was retiring an inactive dependency cache, which may create disk contention; all valid samples retained."
+    },
+    {
+      "sourceRevision": "905305cffef61c7e45d9a66a7525f63fcd3b5005",
+      "phase": "Customized",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "definition": "Navigation to visible enabled working weight/repetition controls, including explicit Skip of optional soreness prompt on fresh opens. New Chromium context each open; same-context reload for warm resume. API process and Next production server already warm. Existing accepted Customized first-exercise occurrence has one effective working receipt after root recovery qualification; controls offer Save set 2.",
+      "physicalDevice": false,
+      "excludedSamples": 0,
+      "browserVersion": "145.0.7632.0",
+      "databaseUnchanged": true,
+      "summary": {
+        "freshContextOpen": {
+          "samplesMs": [
+            6399.6,
+            1472.1,
+            1479.2
+          ],
+          "medianMs": 1479.2,
+          "rangeMs": [
+            1472.1,
+            6399.6
+          ],
+          "n": 3,
+          "complete": true
+        },
+        "warmResume": {
+          "samplesMs": [
+            598.5,
+            1922.5,
+            1005.9
+          ],
+          "medianMs": 1005.9,
+          "rangeMs": [
+            598.5,
+            1922.5
+          ],
+          "n": 3,
+          "complete": true
+        }
+      },
+      "controlledConditionsLimitation": "Final bounded quiet window after root and theme browsers closed; no concurrent file deletion or build reported. Servers already warm. All earlier unfavorable eb759 samples are retained separately; no optimization is attributed."
+    }
+  ],
+  "originalPriorObservationsSeconds": {
+    "customizedSmallColdMedian": {
+      "baseline": 1.586,
+      "candidate": 2.541
+    },
+    "candidateOutlier": 7.353,
+    "abba": {
+      "baseline": [
+        1.325,
+        1.517
+      ],
+      "candidate": [
+        2.474,
+        1.614
+      ]
+    }
+  },
+  "retainedLimitations": [
+    "All valid samples retained, including the additional 3223.2ms Authored fresh sample from a pair whose resume harness matched a hidden span. The resulting 90s locator timeout is not application latency.",
+    "Earlier large-history target misses remain in the prior closeout. No source optimization is inferred from later fluctuation.",
+    "Original roughly two-minute production symptom not reproduced."
+  ]
+}

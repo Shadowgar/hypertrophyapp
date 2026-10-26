@@ -1,0 +1,103 @@
+{
+  "finalApplicationSource": "252d3dcf92cdc31b7c0f8c15f00dd5cbf04ee70a",
+  "localFullApi": {
+    "invocationRevision": "c97d646",
+    "passed": 985,
+    "skipped": 114,
+    "warnings": 1339,
+    "durationSeconds": 1286.74,
+    "includesOriginalPrivateSourceWorkbook": true
+  },
+  "localCore": {
+    "passed": 882,
+    "durationSeconds": 12.87
+  },
+  "sourceTestsAndNewGuards": {
+    "revision": "fe9f0aba04d94ba30511067085655c26e055630c",
+    "passed": 14,
+    "sourceAssertionsUnchanged": true
+  },
+  "runtimeTreeEquality": {
+    "apps/api/app": {
+      "tree": "7035c3946aa73c7b6190568eea050a22d3cb507a",
+      "unchangedFromApiInvocation": true
+    },
+    "packages/core-engine": {
+      "tree": "da53007d3fe23c75fafd228656d24ebd1a80151f",
+      "unchangedFromApiInvocation": true
+    },
+    "programs": {
+      "tree": "af29da17a4aec7b9e6d506f0880efa9fb7c26a84",
+      "unchangedFromApiInvocation": true
+    },
+    "knowledge": {
+      "tree": "3b67bc0be6e3ef285ad8b2dce8d73534e2b14499",
+      "unchangedFromApiInvocation": true
+    }
+  },
+  "postgres": {
+    "profileAndCleanup": 22,
+    "loadAndCalibration": 172,
+    "historyAndCorrection": 35,
+    "customizedLifecycle": 77,
+    "historyApi": 9,
+    "currentSchemaSelectedDates": 21,
+    "totalBehaviorPasses": 336,
+    "negativeTargetGuards": 12,
+    "currentSchema": "0026",
+    "verifiedTmpfsNoHostMounts": true,
+    "legacy0021Rehearsal": {
+      "passed": 17,
+      "failed": 2,
+      "reason": "Current code needs0026calibration table; retained historical failure. Guarded current-schema path passes unchanged assertions."
+    }
+  },
+  "migrationPreservation": {
+    "0024_to_0025_preserved": true,
+    "0025_to_0026_preserved": true,
+    "new_preferences_backfilled": false,
+    "new_calibrations_backfilled": false
+  },
+  "migrationScope": "Synthetic seed has one existing user, original workout set and explicit preference. Empty tables are not nonempty consent coverage; current-schema behavior/browser checks separately exercise consent and plans. Raw digests omitted.",
+  "canonicalSecurityExport": "Blocked by output-parent permissions limitation. No shared-host permissions changed; no sealed scan claimed.",
+  "physicalIphone": "Pending",
+  "applicationContainerQualification": {
+    "revision": "252d3dcf92cdc31b7c0f8c15f00dd5cbf04ee70a",
+    "platform": "linux/arm64",
+    "images": {
+      "api": {
+        "id": "sha256:7f73cdf0b3bc0eb169e5948afc949e73b1c96bcf4358cabbda9e74a4eff74fcf",
+        "revision": "252d3dcf92cdc31b7c0f8c15f00dd5cbf04ee70a"
+      },
+      "web": {
+        "id": "sha256:48340f1016d198ff9ad18ba36ca785c132e07e3d3c4a3ca76a54bc168661cb87",
+        "revision": "252d3dcf92cdc31b7c0f8c15f00dd5cbf04ee70a"
+      }
+    },
+    "checks": [
+      "api_health_revision_with_disposable_sqlite",
+      "matching_web_api_revision",
+      "guest_routes_200",
+      "native_sharp_png",
+      "musl_runtime",
+      "zero_server_actions"
+    ],
+    "runtime": {
+      "node": "v24.21.0",
+      "next": "16.4.1",
+      "sharp": "0.35.5",
+      "libc": "musl",
+      "server_actions": 0
+    },
+    "status": "passed"
+  },
+  "applicationWeb": {
+    "revision": "252d3dcf92cdc31b7c0f8c15f00dd5cbf04ee70a",
+    "passed": 458,
+    "files": 68,
+    "affectedLocalTests": 45,
+    "types": "passed",
+    "lintErrors": 0,
+    "retainedLintWarnings": 7
+  }
+}

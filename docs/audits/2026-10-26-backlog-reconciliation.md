@@ -1,5 +1,10 @@
 # WorkoutApp backlog reconciliation for 26 October 2026
 
+**Later implementation outcome:** the [26 October closeout](../evidence/backlog-2026-10-26/closeout/README.md)
+records the combined candidate, authorized security deployment, test evidence and
+remaining acceptance. The counts and dispositions below remain the original dated
+inventory; they are not the final integration status.
+
 All 104 initial pull requests and 15 standalone issues were enumerated from live GitHub data on 2026-10-26. At the initial checkpoint, 32 PRs were merged, 70 closed without merge, and two open (#116 and draft #119); 13 issues were closed and #103/#105 remained open. PR #120 (independent Next-only patch), #121 (Programs catalog) and #122 (truthful setup/history preservation) were subsequently opened: this checkpoint has **107 PRs, 32 merged, 70 closed-unmerged and five open**. No item was closed, reopened or merged during this reconciliation.
 
 Final all-item refresh: **2026-10-26T05:42:23.580370+00:00**, before publication of this report's own documentation PR. Counts and candidate status are a dated checkpoint, not a claim that GitHub cannot change afterward.

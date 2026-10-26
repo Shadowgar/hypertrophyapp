@@ -1,0 +1,622 @@
+{
+  "finalApplicationSource": "252d3dcf92cdc31b7c0f8c15f00dd5cbf04ee70a",
+  "syntheticOnly": true,
+  "privateIdentityAndCommandIdsOmitted": true,
+  "revisionPolicy": "Each record names the revision actually exercised. Earlier captures are not relabeled as final screenshots. The final Today navigation receipt is separate.",
+  "authoredPhase1": {
+    "sourceRevision": "eb759a85a430aab773cfc2f0f23e575fbbc976ba",
+    "functionalAssertionsPassed": true,
+    "blanketConsoleCheckPassed": false,
+    "qualificationIssue": {
+      "kind": "console-asset-failure",
+      "path": "/favicon.ico",
+      "status": 404,
+      "scope": "existing missing asset; no API or unhandled page errors",
+      "retained": true
+    },
+    "scenarios": [
+      {
+        "scenario": "known-1RM calibration",
+        "benchmark": "100 lb",
+        "estimate": "65 lb",
+        "workingReceipts": 0,
+        "exactRetryAfterCloseReload": true,
+        "calibrationRecords": 1
+      },
+      {
+        "scenario": "mobile first work",
+        "before": {
+          "weight": {
+            "x": 33,
+            "y": 564,
+            "width": 156,
+            "height": 58
+          },
+          "reps": {
+            "x": 201,
+            "y": 564,
+            "width": 156,
+            "height": 58
+          },
+          "save": {
+            "x": 33,
+            "y": 694,
+            "width": 324,
+            "height": 52
+          },
+          "scrollY": 0
+        },
+        "after": {
+          "weight": {
+            "x": 33,
+            "y": 564,
+            "width": 156,
+            "height": 58
+          },
+          "reps": {
+            "x": 201,
+            "y": 564,
+            "width": 156,
+            "height": 58
+          },
+          "save": {
+            "x": 33,
+            "y": 694,
+            "width": 324,
+            "height": 52
+          },
+          "scrollY": 0
+        },
+        "loadRetainedLb": 65,
+        "restVisible": true,
+        "initialEstimateRetired": true
+      },
+      {
+        "scenario": "desktop work retry",
+        "before": {
+          "weight": {
+            "x": 515,
+            "y": 614,
+            "width": 233.5625,
+            "height": 58
+          },
+          "reps": {
+            "x": 760.5625,
+            "y": 614,
+            "width": 233.578125,
+            "height": 58
+          },
+          "save": {
+            "x": 515,
+            "y": 744,
+            "width": 479.140625,
+            "height": 52
+          },
+          "scrollY": 0
+        },
+        "uncertain": {
+          "weight": {
+            "x": 515,
+            "y": 614,
+            "width": 233.5625,
+            "height": 58
+          },
+          "reps": {
+            "x": 760.5625,
+            "y": 614,
+            "width": 233.578125,
+            "height": 58
+          },
+          "save": {
+            "x": 515,
+            "y": 744,
+            "width": 479.140625,
+            "height": 52
+          },
+          "scrollY": 0
+        },
+        "after": {
+          "weight": {
+            "x": 515,
+            "y": 614,
+            "width": 233.5625,
+            "height": 58
+          },
+          "reps": {
+            "x": 760.5625,
+            "y": 614,
+            "width": 233.578125,
+            "height": 58
+          },
+          "save": {
+            "x": 515,
+            "y": 744,
+            "width": 479.140625,
+            "height": 52
+          },
+          "scrollY": 0
+        },
+        "exactBodyRetry": true,
+        "readonlyWhileUncertain": true,
+        "totalReceipts": 3
+      },
+      {
+        "scenario": "correction and undo",
+        "beforeCommitFailureNoWrites": true,
+        "committedLostReplyExactlyOneCorrection": true,
+        "otherReceiptLocked": true,
+        "exactRetryAfterCloseReload": true,
+        "originalReceiptsRetained": true,
+        "immutablePerformancePreserved": true,
+        "effectiveWorkingReceipts": 1,
+        "totalHistoricalReceipts": 4
+      },
+      {
+        "scenario": "History",
+        "calendarStatus": "partial",
+        "correctedWork": "12 \u00d7 65 lb",
+        "warmup": "8 \u00d7 37.5 lb",
+        "undoneWorkExcluded": true,
+        "untouchedSourceSlotsRetained": true
+      }
+    ],
+    "pageErrors": [],
+    "responseFailures": [],
+    "physicalDevice": false,
+    "allReceiptsMatchSeededSourceOccurrence": true,
+    "completion": {
+      "sourceRevision": "eb759a85a430aab773cfc2f0f23e575fbbc976ba",
+      "passed": true,
+      "crossBodyThreeReceipts": {
+        "effectiveIndices": [
+          1,
+          2,
+          3
+        ],
+        "distinctIds": 3,
+        "reloadConfirmed": true,
+        "lineagePreserved": true
+      },
+      "final": {
+        "workingSetsCompleted": 29,
+        "workingSetsPlanned": 29,
+        "effectiveWarmups": 1,
+        "allHistoricalReceipts": 32,
+        "allOriginalRowsRetained": true,
+        "otherPlannedDaysUnchanged": true,
+        "historyStatus": "complete",
+        "reviewReloadConfirmed": true
+      }
+    }
+  },
+  "authoredPhase2": {
+    "sourceRevision": "eb759a85a430aab773cfc2f0f23e575fbbc976ba",
+    "mode": "Authored Phase2",
+    "syntheticOnly": true,
+    "manualActualLoadLb": 20,
+    "optionalEffortReported": false,
+    "passed": true,
+    "canonicalWeightKg": 9.071847400000001,
+    "reloadRetainedLoadLb": 20,
+    "allSourcePrescriptionsUnchanged": true,
+    "otherPlannedDaysUnchanged": true,
+    "historyStatus": "partial"
+  },
+  "customized": {
+    "mode": "Customized",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "consoleQualification": "Inherited favicon and Programs-prefetch 404s retained explicitly; injected response-loss ERR_FAILED expected; no API/chunk/unhandled page errors",
+    "saveFailureBeforeCommit": true,
+    "saveExactRetryAfterReload": true,
+    "committedSecondSetReceiptBoundReconciliation": true,
+    "committedSecondSetCanonicalPayloadPreserved": true,
+    "noAdditionalPostAfterReconcile": true,
+    "correctionResponseLostCommitted": true,
+    "correctionExactRetryAfterCloseReload": true,
+    "undoThenResumeEffectiveReceipts": 1,
+    "acceptedPrescriptionUnchanged": true,
+    "sourceRevision": "eb759a85a430aab773cfc2f0f23e575fbbc976ba"
+  },
+  "onboardingAndAuthentication": {
+    "source": "eb759a85a430aab773cfc2f0f23e575fbbc976ba",
+    "environment": "isolated loopback3130 ->8130 -> browser_closeout",
+    "observations": [
+      {
+        "flow": "onboarding",
+        "requiredAnswers": true,
+        "nutritionUnknown": true,
+        "canonicalWeight": 81.6466266,
+        "setupPosts": 1,
+        "lostResponseRecovered": true
+      },
+      {
+        "flow": "returning-login",
+        "profileUnchanged": true,
+        "safeReturn": "/week"
+      }
+    ],
+    "pageErrors": [],
+    "failures": [],
+    "lastStep": "onboarding-complete",
+    "passed": true
+  },
+  "weekAndCheckin": {
+    "source": "eb759a85a430aab773cfc2f0f23e575fbbc976ba",
+    "pageErrors": [],
+    "week": {
+      "activationPosts": 1,
+      "acknowledgementRetainedOnReadFailure": true,
+      "readRetryOnly": true
+    },
+    "checkin": {
+      "lostResponse": true,
+      "readOnlyReconciliation": true,
+      "posts": 1
+    },
+    "unitSwitch": "lb -> kg via saved Settings",
+    "passed": true
+  },
+  "historyAndGuides": {
+    "source": "eb759a85a430aab773cfc2f0f23e575fbbc976ba",
+    "observations": [
+      {
+        "route": "History",
+        "unit": "lb",
+        "canonicalHistoryUnchanged": true,
+        "correctedEffectiveRecord": true
+      },
+      {
+        "route": "History",
+        "unit": "kg",
+        "canonicalHistoryUnchanged": true,
+        "correctedEffectiveRecord": true
+      },
+      {
+        "route": "History",
+        "unit": "lb",
+        "canonicalHistoryUnchanged": true,
+        "correctedEffectiveRecord": true
+      },
+      {
+        "route": "Guides",
+        "actualPublicApi": true,
+        "libraryPhaseDayExercise": true,
+        "sourceDetailsCollapsed": true,
+        "dayBreadcrumb": true
+      }
+    ],
+    "pageErrors": [],
+    "passed": true
+  },
+  "allAccountReadOnlyResume": {
+    "sourceRevision": "905305cffef61c7e45d9a66a7525f63fcd3b5005",
+    "readOnly": true,
+    "accounts": [
+      {
+        "role": "phase1",
+        "workingCompleted": 29,
+        "workingPlanned": 29,
+        "firstExerciseCompleted": 3,
+        "resumeLoad": "",
+        "historyStatus": "complete",
+        "databaseUnchanged": true
+      },
+      {
+        "role": "phase2",
+        "workingCompleted": 1,
+        "workingPlanned": 22,
+        "firstExerciseCompleted": 1,
+        "resumeLoad": "",
+        "historyStatus": "partial",
+        "databaseUnchanged": true,
+        "freshContextLoadDraft": "blank; no qualified owner prefill",
+        "ownerReasons": [
+          "load_basis_unknown_or_unsupported",
+          "recorded_load_context_incomparable",
+          "remaining_sets_not_qualified"
+        ],
+        "previousActualLoadRetainedInHistoryLb": 20,
+        "sameContextDraftReloadVerifiedSeparately": true
+      },
+      {
+        "role": "customized",
+        "workingCompleted": 1,
+        "workingPlanned": 11,
+        "firstExerciseCompleted": 1,
+        "resumeLoad": "",
+        "historyStatus": "partial",
+        "databaseUnchanged": true,
+        "freshContextLoadDraft": "blank; no attainable inventory for qualified load",
+        "ownerReasons": [
+          "attainable_inventory_unknown"
+        ],
+        "previousActualLoadRetainedInHistoryLb": 30,
+        "sameContextDraftReloadVerifiedSeparately": true
+      }
+    ],
+    "pageErrors": [],
+    "httpFailures": [],
+    "consoleErrors": [],
+    "writeRequests": [],
+    "passed": true,
+    "browserVersion": "145.0.7632.0",
+    "stage": "complete"
+  },
+  "navigationAndLateReplies": {
+    "source": "905305cffef61c7e45d9a66a7525f63fcd3b5005",
+    "pageErrors": [],
+    "resourceFailures": [
+      {
+        "path": "/api/profile",
+        "status": 503
+      },
+      {
+        "path": "/api/profile",
+        "status": 401
+      },
+      {
+        "path": "/api/plan/generated-training-profile/debug",
+        "status": 403
+      },
+      {
+        "path": "/api/plan/generated-training-profile/debug",
+        "status": 403
+      }
+    ],
+    "observations": [
+      {
+        "flow": "Week failed-profile retry",
+        "profileGets": 2,
+        "datesPreserved": true,
+        "previewRecovered": true,
+        "noSchedulingWrites": true
+      },
+      {
+        "flow": "Account switch during profile read",
+        "late401Retired": true,
+        "currentTokenAndPhase2Preserved": true
+      },
+      {
+        "width": 390,
+        "route": "/",
+        "overflow": false,
+        "declaredIcon": "/icon-192.svg"
+      },
+      {
+        "width": 390,
+        "route": "/week",
+        "overflow": false,
+        "declaredIcon": "/icon-192.svg"
+      },
+      {
+        "width": 390,
+        "route": "/today",
+        "overflow": false,
+        "declaredIcon": "/icon-192.svg"
+      },
+      {
+        "width": 390,
+        "route": "/history",
+        "overflow": false,
+        "declaredIcon": "/icon-192.svg"
+      },
+      {
+        "width": 390,
+        "route": "/analytics",
+        "overflow": false,
+        "declaredIcon": "/icon-192.svg"
+      },
+      {
+        "width": 390,
+        "route": "/programs",
+        "overflow": false,
+        "declaredIcon": "/icon-192.svg"
+      },
+      {
+        "width": 390,
+        "route": "/checkin",
+        "overflow": false,
+        "declaredIcon": "/icon-192.svg"
+      },
+      {
+        "width": 390,
+        "route": "/settings",
+        "overflow": false,
+        "declaredIcon": "/icon-192.svg"
+      },
+      {
+        "width": 390,
+        "route": "/guides",
+        "overflow": false,
+        "declaredIcon": "/icon-192.svg"
+      },
+      {
+        "width": 1440,
+        "route": "/",
+        "overflow": false,
+        "declaredIcon": "/icon-192.svg"
+      },
+      {
+        "width": 1440,
+        "route": "/week",
+        "overflow": false,
+        "declaredIcon": "/icon-192.svg"
+      },
+      {
+        "width": 1440,
+        "route": "/today",
+        "overflow": false,
+        "declaredIcon": "/icon-192.svg"
+      },
+      {
+        "width": 1440,
+        "route": "/history",
+        "overflow": false,
+        "declaredIcon": "/icon-192.svg"
+      },
+      {
+        "width": 1440,
+        "route": "/analytics",
+        "overflow": false,
+        "declaredIcon": "/icon-192.svg"
+      },
+      {
+        "width": 1440,
+        "route": "/programs",
+        "overflow": false,
+        "declaredIcon": "/icon-192.svg"
+      },
+      {
+        "width": 1440,
+        "route": "/checkin",
+        "overflow": false,
+        "declaredIcon": "/icon-192.svg"
+      },
+      {
+        "width": 1440,
+        "route": "/settings",
+        "overflow": false,
+        "declaredIcon": "/icon-192.svg"
+      },
+      {
+        "width": 1440,
+        "route": "/guides",
+        "overflow": false,
+        "declaredIcon": "/icon-192.svg"
+      }
+    ],
+    "expectedDisabledDeveloperProbe403": true,
+    "passed": true
+  },
+  "retainedFailures": [
+    "Original favicon404 fixed by declaring existing SVG; final905 icon200.",
+    "One scheduling-context upstream ECONNRESET/500 retained. Eight direct/proxy reads and repeated full account-switch test passed; cause beyond socket reset unproven.",
+    "Initial8e9 navigation test passed object-shaped fixtures but failed actual Customized boolean projection.252d3dc adds actual boolean compatibility and regression coverage."
+  ],
+  "finalTodayNavigation": {
+    "source_commit": "252d3dcf92cdc31b7c0f8c15f00dd5cbf04ee70a",
+    "scope": "read-only real-browser header link and click smoke",
+    "results": [
+      {
+        "account": "phase1",
+        "viewport": "mobile",
+        "dimensions": [
+          390,
+          844
+        ],
+        "label": "Manage training dates",
+        "destination": "/week",
+        "actualCustomizedShape": "undefined",
+        "exactProposalVerified": false,
+        "clickVerified": true,
+        "blockedWriteAttempts": 0,
+        "pageErrorCount": 0,
+        "consoleErrorCount": 0,
+        "failedReadCount": 0
+      },
+      {
+        "account": "phase2",
+        "viewport": "mobile",
+        "dimensions": [
+          390,
+          844
+        ],
+        "label": "Manage training dates",
+        "destination": "/week",
+        "actualCustomizedShape": "undefined",
+        "exactProposalVerified": false,
+        "clickVerified": true,
+        "blockedWriteAttempts": 0,
+        "pageErrorCount": 0,
+        "consoleErrorCount": 0,
+        "failedReadCount": 0
+      },
+      {
+        "account": "customized",
+        "viewport": "mobile",
+        "dimensions": [
+          390,
+          844
+        ],
+        "label": "Manage Customized programs",
+        "destination": "/customize",
+        "actualCustomizedShape": "boolean",
+        "exactProposalVerified": false,
+        "clickVerified": true,
+        "blockedWriteAttempts": 0,
+        "pageErrorCount": 0,
+        "consoleErrorCount": 0,
+        "failedReadCount": 0
+      },
+      {
+        "account": "phase1",
+        "viewport": "desktop",
+        "dimensions": [
+          1440,
+          900
+        ],
+        "label": "Manage training dates",
+        "destination": "/week",
+        "actualCustomizedShape": "undefined",
+        "exactProposalVerified": false,
+        "clickVerified": true,
+        "blockedWriteAttempts": 0,
+        "pageErrorCount": 0,
+        "consoleErrorCount": 0,
+        "failedReadCount": 0
+      },
+      {
+        "account": "phase2",
+        "viewport": "desktop",
+        "dimensions": [
+          1440,
+          900
+        ],
+        "label": "Manage training dates",
+        "destination": "/week",
+        "actualCustomizedShape": "undefined",
+        "exactProposalVerified": false,
+        "clickVerified": true,
+        "blockedWriteAttempts": 0,
+        "pageErrorCount": 0,
+        "consoleErrorCount": 0,
+        "failedReadCount": 0
+      },
+      {
+        "account": "customized",
+        "viewport": "desktop",
+        "dimensions": [
+          1440,
+          900
+        ],
+        "label": "Manage Customized programs",
+        "destination": "/customize",
+        "actualCustomizedShape": "boolean",
+        "exactProposalVerified": false,
+        "clickVerified": true,
+        "blockedWriteAttempts": 0,
+        "pageErrorCount": 0,
+        "consoleErrorCount": 0,
+        "failedReadCount": 0
+      }
+    ]
+  },
+  "finalApiRestart": {
+    "api_version": "252d3dcf92cdc31b7c0f8c15f00dd5cbf04ee70a",
+    "all_four_account_snapshots_unchanged": true,
+    "roles": [
+      "phase1",
+      "phase2",
+      "customized",
+      "root_ui"
+    ],
+    "database": "browser_closeout",
+    "schema": "0026_initial_calibration",
+    "preserved_prior_performance_evidence": true,
+    "new_timing_runs": 0,
+    "startup_refresh_attempt": "First private-helper health probe timed out at2s during concurrentbuild; bounded readiness retry succeeded before any login writes."
+  }
+}
