@@ -889,7 +889,7 @@ def test_build_profile_upsert_persistence_payload_defaults_selected_program(mode
 
 
 @pytest.mark.parametrize('mode', [None, 'manual', 'auto'])
-def test_build_profile_response_payload_applies_profile_defaults(mode) -> None:
+def test_build_profile_response_payload_preserves_unknown_nutrition(mode) -> None:
     payload = build_profile_response_payload(
         email="coach@example.com",
         name="Coach",
@@ -921,7 +921,8 @@ def test_build_profile_response_payload_applies_profile_defaults(mode) -> None:
     assert payload["choose_for_me_family"] is None
     assert payload["choose_for_me_diagnostics"] == {}
     assert payload["days_available"] == 2
-    assert payload["nutrition_phase"] == "maintenance"
+    for key in ("nutrition_phase", "calories", "protein", "fat", "carbs"):
+        assert payload[key] is None
     assert payload["equipment_profile"] == []
     assert payload["onboarding_answers"] == {}
     assert payload["movement_restrictions"] == []

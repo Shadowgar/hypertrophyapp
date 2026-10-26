@@ -4,6 +4,7 @@ One forward roadmap: [M0–M6 milestones](../roadmap/milestones.md). A plan desc
 
 | Plan | Scope / milestone | Current status / authorization |
 |---|---|---|
+| [Truthful onboarding and history preservation](truthful-onboarding-2026-10-26.md) | Registration observations/targets, guarded setup recovery and ordinary profile preservation. | Implemented in PR #122; isolated tests/browser qualified, final-head CI recorded on the PR; no merge/deployment. |
 | [Unified UX first implementation](unified-ux-gym.md) | Account protection, shared appearance and gym execution. | Implemented in PR #110; isolated integration qualification with #111/#112 in progress. No main merge, deployment or production migration. |
 | [Documentation integration baseline](M0-baseline.md) | M0-DOC only: authority, inventory, context, audit references and static checks. | Completed documentation work / owner-reviewed; repository integration pending. No whole-M0 release accepted. |
 | [Urgent account recovery](urgent-account-recovery.md) | M0-SEC S1 credential/config closure, S2 lifecycle. | **Proposed**; not approved for implementation/deployment. Security work need not wait for broad history redesign. |

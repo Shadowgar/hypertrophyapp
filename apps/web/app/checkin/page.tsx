@@ -48,11 +48,11 @@ export default function CheckinPage() {
   const unit = preferences.weight_unit;
   const [reviewStatus, setReviewStatus] = useState<WeeklyReviewStatus | null>(null);
   const [bodyWeight, setBodyWeight] = useState("0");
-  const [calories, setCalories] = useState("0");
-  const [protein, setProtein] = useState("0");
-  const [fat, setFat] = useState("0");
-  const [carbs, setCarbs] = useState("0");
-  const [adherenceScore, setAdherenceScore] = useState("4");
+  const [calories, setCalories] = useState("");
+  const [protein, setProtein] = useState("");
+  const [fat, setFat] = useState("");
+  const [carbs, setCarbs] = useState("");
+  const [adherenceScore, setAdherenceScore] = useState("");
   const [notes, setNotes] = useState("");
   const [sessionsNextWeek, setSessionsNextWeek] = useState("3");
   const [usesSelectedDates, setUsesSelectedDates] = useState(false);
@@ -71,13 +71,13 @@ export default function CheckinPage() {
         }
         setReviewStatus(weeklyStatus);
         setBodyWeight(String(profile.weight || 0));
-        setCalories(String(profile.calories || 0));
-        setProtein(String(profile.protein || 0));
-        setFat(String(profile.fat || 0));
-        setCarbs(String(profile.carbs || 0));
+        setCalories(profile.calories == null ? "" : String(profile.calories));
+        setProtein(profile.protein == null ? "" : String(profile.protein));
+        setFat(profile.fat == null ? "" : String(profile.fat));
+        setCarbs(profile.carbs == null ? "" : String(profile.carbs));
         setSessionsNextWeek(String(Math.max(2, Math.min(5, (profile.effective_days_available ?? profile.days_available) || 3))));
         setUsesSelectedDates(Boolean(profile.scheduling_timezone));
-        setStatus(weeklyStatus.review_required ? "Sunday review required" : "Weekly review ready");
+        setStatus(weeklyStatus.review_required ? "Weekly review available" : "Weekly review ready");
       })
       .catch(() => {
         if (!mounted) {
@@ -93,7 +93,11 @@ export default function CheckinPage() {
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    setStatus("Running Sunday review...");
+    if ([calories, protein, fat, carbs, adherenceScore].some(value => value.trim() === "")) {
+      setStatus("Enter your chosen nutrition targets and report your actual adherence before saving a review. A review is optional for training.");
+      return;
+    }
+    setStatus("Saving weekly review...");
 
     try {
       if (!reviewStatus) throw new Error("Weekly review status unavailable");
@@ -171,7 +175,8 @@ export default function CheckinPage() {
         </div>
 
         <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 space-y-3">
-          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Nutrition</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Nutrition targets</p>
+          <p className="ui-meta">These are your chosen goals for the upcoming week, not measured intake. Leave the review unsaved if you do not know them.</p>
           <label className="flex flex-col gap-1 text-sm text-zinc-300">
             <span>Daily Calories</span>
             <input className="ui-input" min="1" onChange={(event) => setCalories(event.target.value)} step="1" type="number" value={calories} />
@@ -204,7 +209,8 @@ export default function CheckinPage() {
           </label>
           <label className="flex flex-col gap-1 text-sm text-zinc-300">
             <span>Adherence Score (1-5)</span>
-            <select className="ui-select" onChange={(event) => setAdherenceScore(event.target.value)} value={adherenceScore}>
+            <select className="ui-select" required onChange={(event) => setAdherenceScore(event.target.value)} value={adherenceScore}>
+              <option value="">Choose what actually happened</option>
               {["1", "2", "3", "4", "5"].map((val) => (
                 <option key={val} value={val}>{val} — {ADHERENCE_LABELS[val]}</option>
               ))}

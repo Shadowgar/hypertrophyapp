@@ -185,6 +185,20 @@ def _build_generated_onboarding_response(raw_payload: dict[str, Any] | None) -> 
     )
 
 
+def _initial_setup_available(user: User) -> bool:
+    # Registration supplies name/email and a legacy mode default. Every training
+    # field is NULL until explicitly saved. A partial existing profile is not a
+    # blank account, and an Auto profile need not have a concrete program ID.
+    return user.program_selection_mode in (None, "manual") and all(getattr(user, field) is None for field in (
+        "age", "weight", "gender", "split_preference", "selected_program_id",
+        "days_available", "training_location", "equipment_profile", "weak_areas",
+        "onboarding_answers", "choose_for_me_family", "choose_for_me_diagnostics",
+        "session_time_budget_minutes", "movement_restrictions", "near_failure_tolerance",
+        "scheduling_timezone", "active_frequency_adaptation", "nutrition_phase",
+        "calories", "protein", "fat", "carbs",
+    ))
+
+
 def _is_profile_complete(
     *,
     selected_program_id: str | None,
@@ -276,6 +290,7 @@ def get_profile(current_user: CurrentUser, db: DbSession) -> ProfileResponse:
     selected_program_id = resolve_selected_program_binding_id(current_user.selected_program_id)
     effective = current_scheduling_profile(db, current_user, datetime.now(UTC))
     return ProfileResponse(
+        initial_setup_available=_initial_setup_available(current_user),
         scheduling_timezone=current_user.scheduling_timezone,
         effective_days_available=effective.days_available,
         effective_program_id=effective.program_id,
@@ -519,22 +534,10 @@ def upsert_profile(
         fat=payload.fat,
         carbs=payload.carbs,
     )
-    onboarding_answers_changed = bool(payload.onboarding_answers) and payload.onboarding_answers != (current_user.onboarding_answers or {})
-    same_binding_onboarding_reset = (
-        was_complete
-        and will_be_complete
-        and previous_binding_id == next_binding_id
-        and onboarding_answers_changed
-        and not _has_user_workout_activity(db, user_id=current_user.id)
-    )
-    should_reset_training_state = (
-        (not was_complete and will_be_complete)
-        or previous_binding_id != next_binding_id
-        or same_binding_onboarding_reset
-    )
     profile_action = "onboarding_submit" if (not was_complete and will_be_complete) else "profile_update"
-    if should_reset_training_state:
-        _clear_user_training_state(db, user_id=current_user.id)
+    # A preference update is not authority to erase plans, corrections, consent or
+    # reported observations. Existing dated plans retain their own program identity.
+    if previous_binding_id != next_binding_id:
         current_user.active_frequency_adaptation = None
     for key, value in persistence_payload.items():
         setattr(current_user, key, value)
@@ -553,6 +556,17 @@ def upsert_profile(
     )
 
     return get_profile(current_user, db)
+
+
+@router.post("/profile/initial-setup")
+def initialize_profile(payload: ProfileUpsert, db: DbSession, current_user: CurrentUser) -> ProfileResponse:
+    # Serialize the availability check with the first save. A lost response or
+    # another tab cannot turn setup recovery into an established-profile overwrite.
+    lock_history_user(db, current_user.id)
+    db.refresh(current_user)
+    if not _initial_setup_available(current_user):
+        raise HTTPException(status_code=409, detail="A profile is already saved. Continue account setup to read the saved result; use Settings for changes.")
+    return upsert_profile(payload, db, current_user)
 
 
 @router.get("/profile/program-recommendation")
@@ -589,6 +603,8 @@ def switch_program(
     db: DbSession,
     current_user: CurrentUser,
 ) -> ProgramSwitchResponse:
+    lock_history_user(db, current_user.id)
+    db.refresh(current_user)
     effective = current_scheduling_profile(db, current_user, datetime.now(UTC))
     selected_program_id = effective.program_id
     target_program_id = resolve_selected_program_binding_id(payload.target_program_id) or payload.target_program_id
@@ -624,7 +640,6 @@ def switch_program(
 
     if runtime["should_apply"]:
         if resolve_selected_program_binding_id(current_user.selected_program_id) != target_program_id:
-            _clear_user_training_state(db, user_id=current_user.id)
             current_user.active_frequency_adaptation = None
         current_user.selected_program_id = target_program_id
         db.add(current_user)

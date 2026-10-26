@@ -1059,11 +1059,11 @@ def build_profile_upsert_persistence_payload(
     session_time_budget_minutes: int | None,
     movement_restrictions: list[str] | None,
     near_failure_tolerance: str | None,
-    nutrition_phase: str,
-    calories: int,
-    protein: int,
-    fat: int,
-    carbs: int,
+    nutrition_phase: str | None,
+    calories: int | None,
+    protein: int | None,
+    fat: int | None,
+    carbs: int | None,
 ) -> dict[str, Any]:
     return {
         "name": name,
@@ -1136,11 +1136,11 @@ def build_profile_response_payload(
         "session_time_budget_minutes": session_time_budget_minutes,
         "movement_restrictions": list(movement_restrictions or []),
         "near_failure_tolerance": near_failure_tolerance,
-        "nutrition_phase": nutrition_phase or "maintenance",
-        "calories": calories or 0,
-        "protein": protein or 0,
-        "fat": fat or 0,
-        "carbs": carbs or 0,
+        "nutrition_phase": nutrition_phase,
+        "calories": calories,
+        "protein": protein,
+        "fat": fat,
+        "carbs": carbs,
     }
 
 

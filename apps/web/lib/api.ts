@@ -212,6 +212,7 @@ export type WorkoutProgress = {
 
 export type Profile = {
   email: string;
+  initial_setup_available?: boolean;
   name: string;
   age: number;
   weight: number;
@@ -225,11 +226,11 @@ export type Profile = {
   effective_days_available?: number | null;
   effective_program_id?: string | null;
   scheduling_timezone?: string | null;
-  nutrition_phase: string;
-  calories: number;
-  protein: number;
-  fat: number;
-  carbs: number;
+  nutrition_phase: string | null;
+  calories: number | null;
+  protein: number | null;
+  fat: number | null;
+  carbs: number | null;
   selected_program_id?: string | null;
   program_selection_mode: "manual" | "auto";
   choose_for_me_family?: "full_body" | "upper_lower" | "push_pull" | null;

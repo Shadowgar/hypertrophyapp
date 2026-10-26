@@ -1,50 +1,12 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { UiIcon } from "@/components/ui/icons";
-import { api, clearAuthToken, getProgramDisplayName, setAuthToken, type ProgramTemplateOption } from "@/lib/api";
+import { api, clearAuthToken, getProgramDisplayName, getToken, setAuthToken, type ProgramTemplateOption } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/env";
-
-const FALLBACK_PROGRAMS: ProgramTemplateOption[] = [
-  {
-    id: "pure_bodybuilding_phase_1_full_body",
-    name: "Full Body Phase 1",
-    split: "full_body",
-    days_supported: [2, 3, 4, 5],
-    description: "Workbook-faithful full body path with authored execution detail.",
-  },
-  {
-    id: "pure_bodybuilding_phase_2_full_body",
-    name: "Full Body Phase 2",
-    split: "full_body",
-    days_supported: [2, 3, 4, 5],
-    description: "Workbook-faithful phase-two full body path with authored block transitions.",
-  },
-  {
-    id: "full_body_v1",
-    name: "Customize My Workout",
-    split: "full_body",
-    days_supported: [2, 3, 4, 5],
-    description: "Deterministic generated full body path built from your constraints.",
-  },
-  {
-    id: "upper_lower_v1",
-    name: "Upper/Lower",
-    split: "upper_lower",
-    days_supported: [4],
-    description: "Authored upper/lower progression path.",
-  },
-  {
-    id: "ppl_v1",
-    name: "Push/Pull",
-    split: "ppl",
-    days_supported: [3, 4, 5],
-    description: "Authored push-pull-legs progression path.",
-  },
-];
 
 const INTRO_SLIDES = [
   {
@@ -233,7 +195,7 @@ function isMeaningfulDraft(draft: OnboardingDraft): boolean {
     || draft.experienceLevel
     || draft.firstName.trim()
     || draft.lastName.trim()
-    || draft.email.trim() !== "athlete@example.com"
+    || draft.email.trim()
     || draft.weakAreasRaw.trim()
     || draft.selectedProgramId,
   );
@@ -363,6 +325,18 @@ function defaultEquipmentTagsForLocation(location: "gym" | "home"): EquipmentTag
 }
 
 export default function OnboardingPage() {
+  const [accountRevision, setAccountRevision] = useState(0);
+  const resetAccount = useCallback(() => {
+    localStorage.removeItem(ONBOARDING_DRAFT_KEY);
+    setAccountRevision(revision => revision + 1);
+  }, []);
+  return <>
+    {accountRevision > 0 ? <p role="status" className="ux-card">Account changed. Sign in to continue with the current account; no other profile was changed.</p> : null}
+    <OnboardingForm key={accountRevision} onAccountChanged={resetAccount} />
+  </>;
+}
+
+function OnboardingForm({ onAccountChanged }: { onAccountChanged: () => void }) {
   const router = useRouter();
 
   const [phase, setPhase] = useState<Phase>("intro");
@@ -393,9 +367,47 @@ export default function OnboardingPage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
 
-  const [email, setEmail] = useState("athlete@example.com");
-  const [password, setPassword] = useState("athlete123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [hasSession, setHasSession] = useState(false);
+  const [resumingSetup, setResumingSetup] = useState(false);
+  const [nutritionTargets, setNutritionTargets] = useState({ calories: "", protein: "", fat: "", carbs: "" });
+  // Only this newly registered account may retry setup. No credentials or targets
+  // are added to the cross-account onboarding draft.
+  const createdAccount = useRef<{ email: string; token: string } | null>(null);
+  const submissionRevision = useRef(0);
+  const submitting = useRef(false);
+  const installingOwnToken = useRef(false);
+  const mounted = useRef(false);
+
+  useEffect(() => {
+    mounted.current = true;
+    let observedToken = getToken();
+    setHasSession(Boolean(observedToken));
+    const changed = () => {
+      const nextToken = getToken();
+      if (nextToken === observedToken) return;
+      observedToken = nextToken;
+      setHasSession(Boolean(nextToken));
+      if (installingOwnToken.current) return;
+      submissionRevision.current += 1;
+      submitting.current = false;
+      createdAccount.current = null;
+      onAccountChanged();
+    };
+    window.addEventListener("hypertrophy:auth-token-changed", changed);
+    window.addEventListener("storage", changed);
+    window.addEventListener("focus", changed);
+    return () => {
+      mounted.current = false;
+      submissionRevision.current += 1;
+      window.removeEventListener("hypertrophy:auth-token-changed", changed);
+      window.removeEventListener("storage", changed);
+      window.removeEventListener("focus", changed);
+    };
+  }, [onAccountChanged]);
+
   const [weakAreasRaw, setWeakAreasRaw] = useState("");
 
   const [programs, setPrograms] = useState<ProgramTemplateOption[]>([]);
@@ -416,15 +428,15 @@ export default function OnboardingPage() {
         if (!mounted) {
           return;
         }
-        const normalized = Array.isArray(list) && list.length > 0 ? list : FALLBACK_PROGRAMS;
+        const normalized = Array.isArray(list) ? list : [];
         setPrograms(normalized);
-        setProgramCatalogStatus(`Loaded ${normalized.length} active training template${normalized.length === 1 ? "" : "s"}.`);
+        setProgramCatalogStatus(normalized.length ? `Loaded ${normalized.length} available programs.` : "Program catalog unavailable. You can save Choose for me and review available programs in Week.");
       } catch {
         if (!mounted) {
           return;
         }
-        setPrograms(FALLBACK_PROGRAMS);
-        setProgramCatalogStatus("Using default program template. (API unreachable from this browser — check Docker containers.)");
+        setPrograms([]);
+        setProgramCatalogStatus("Program catalog unavailable. You can save Choose for me and review available programs in Week.");
       }
     })();
     return () => {
@@ -456,11 +468,6 @@ export default function OnboardingPage() {
     return scored.map((entry) => entry.program);
   }, [effectiveDaysAvailable, programs, splitPreference]);
 
-  useEffect(() => {
-    if (selectedProgramId && !visiblePrograms.some((program) => program.id === selectedProgramId)) {
-      setSelectedProgramId(null);
-    }
-  }, [selectedProgramId, visiblePrograms]);
 
   // Prefill equipment defaults based on location, but do not override explicit user selections.
   useEffect(() => {
@@ -787,7 +794,7 @@ export default function OnboardingPage() {
     };
   }
 
-  async function resolveAccessToken(resolvedName: string): Promise<string | null> {
+  async function resolveAccessToken(resolvedName: string, isCurrent: () => boolean): Promise<string | null> {
     const normalizedEmail = normalizeEmailInput(email);
     if (!normalizedEmail) {
       setStatus("Email is required");
@@ -801,8 +808,10 @@ export default function OnboardingPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: normalizedEmail, password }),
       });
+      if (!isCurrent()) return null;
       if (!loginRes.ok) {
         const loginError = await parseApiError(loginRes, "Login failed");
+        if (!isCurrent()) return null;
         setStatus(`Login failed: ${loginError}`);
         setPhase("account");
         return null;
@@ -816,17 +825,19 @@ export default function OnboardingPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: normalizedEmail, password, name: resolvedName }),
     });
+    if (!isCurrent()) return null;
     if (registerRes.ok) {
       const token = (await registerRes.json()) as { access_token: string };
       return token.access_token;
     }
 
     const registerError = await parseApiError(registerRes, "Registration failed");
+    if (!isCurrent()) return null;
     const looksLikeExistingAccount = registerRes.status === 400 && registerError.toLowerCase().includes("already used");
     if (!looksLikeExistingAccount) {
       const message =
         registerError === "Registration failed" || registerError.startsWith("Registration failed:")
-          ? "Registration failed. If the program catalog above shows “unavailable”, the API may not be reachable — ensure Docker containers are running (e.g. docker compose up -d)."
+          ? "Registration failed. Check your connection and try again."
           : `Registration failed: ${registerError}`;
       setStatus(message);
       setPhase("account");
@@ -839,7 +850,7 @@ export default function OnboardingPage() {
     return null;
   }
 
-  async function saveOnboardingProfile(accessToken: string, resolvedName: string): Promise<boolean> {
+  async function saveOnboardingProfile(accessToken: string, resolvedName: string, isCurrent: () => boolean): Promise<boolean> {
     const resolvedWeightKg = convertWeightToKg(Number(weightValue), weightUnit);
     const resolvedDays = daysAvailable ?? 3;
     const resolvedSplit = deriveSplitPreference(resolvedDays);
@@ -848,10 +859,11 @@ export default function OnboardingPage() {
       equipmentTags.length > 0 ? equipmentTags : defaultEquipmentTagsForLocation(resolvedLocation);
     const weakAreas = parseWeakAreas(weakAreasRaw);
     const resolvedWeakAreas = weakAreas.length > 0 ? weakAreas : [];
-    const nutritionPhase = primaryGoals.includes("lose_fat") || primaryGoal === "lose_fat" ? "cut" : "maintenance";
-    const calories = nutritionPhase === "cut" ? 2200 : 2600;
+    const suppliedTargets = Object.fromEntries(Object.entries(nutritionTargets)
+      .filter(([, value]) => value.trim() !== "")
+      .map(([key, value]) => [key, Number(value)]));
 
-    const profileRes = await fetch(`${API_BASE_URL}/profile`, {
+    const profileRes = await fetch(`${API_BASE_URL}/profile/initial-setup`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -870,11 +882,7 @@ export default function OnboardingPage() {
         weak_areas: resolvedWeakAreas,
         onboarding_answers: buildOnboardingAnswers(),
         days_available: resolvedDays,
-        nutrition_phase: nutritionPhase,
-        calories,
-        protein: 180,
-        fat: 70,
-        carbs: 280,
+        ...suppliedTargets,
         selected_program_id: selectedProgramId,
         program_selection_mode: selectedProgramId ? "manual" : "auto",
         choose_for_me_family: selectedProgramId ? null : chooseForMeFamily,
@@ -905,8 +913,10 @@ export default function OnboardingPage() {
       }),
     });
 
+    if (!isCurrent()) return false;
     if (!profileRes.ok) {
       const detail = await parseApiError(profileRes, "Profile save failed");
+      if (!isCurrent()) return false;
       setStatus(`Profile save failed: ${detail}`);
       setPhase("account");
       return false;
@@ -914,94 +924,101 @@ export default function OnboardingPage() {
     return true;
   }
 
+  async function resumeInitialSetup() {
+    const token = getToken();
+    if (!token || submitting.current) return;
+    const revision = ++submissionRevision.current;
+    const isCurrent = () => mounted.current && submissionRevision.current === revision && getToken() === token;
+    submitting.current = true;
+    setStatus("Checking saved setup...");
+    try {
+      const response = await fetch(`${API_BASE_URL}/profile`, { headers: { Authorization: `Bearer ${token}` } });
+      if (!isCurrent()) return;
+      if (!response.ok) throw new Error("setup read unavailable");
+      const profile = await response.json() as { email: string; name: string; initial_setup_available: boolean; selected_program_id: string | null };
+      if (!isCurrent()) return;
+      if (profile.initial_setup_available === false) {
+        // This includes a successful save whose response was lost. Read and
+        // continue without replaying stale answers over the persisted profile.
+        router.push(profile.selected_program_id === "full_body_v1" ? "/customize" : "/week");
+        return;
+      }
+      if (profile.initial_setup_available !== true || !profile.email) throw new Error("setup status unavailable");
+      createdAccount.current = { email: profile.email, token };
+      setEmail(profile.email);
+      setFirstName(profile.name || "");
+      setLastName("");
+      setPassword("");
+      setBirthday("");
+      setWeightValue("");
+      setHeightFeet("");
+      setHeightInches("");
+      setHeightCm("");
+      setNutritionTargets({ calories: "", protein: "", fat: "", carbs: "" });
+      setResumingSetup(true);
+      setAuthMode("register");
+      setQuestionIndex(0);
+      setPhase("questions");
+      setStatus("Review your answers to finish this account. Private measurements are not saved in the browser draft; enter them again before saving.");
+    } catch {
+      if (isCurrent()) setStatus("Unable to check saved setup. Retry Continue account setup; no profile was changed.");
+    } finally {
+      if (submissionRevision.current === revision) submitting.current = false;
+    }
+  }
+
   async function submitOnboarding(event: FormEvent) {
     event.preventDefault();
-    setStatus(authMode === "login" ? "Logging in..." : "Creating account...");
+    if (submitting.current) return;
+    if (authMode === "register" && selectedProgramId && !programs.some(program => program.id === selectedProgramId)) {
+      setStatus("Selected program is unavailable. Choose another option or retry loading the page; your choice was not replaced automatically.");
+      return;
+    }
+    const normalizedEmail = normalizeEmailInput(email);
+    const retryAccount = createdAccount.current;
+    if (authMode === "register" && getToken() && (!retryAccount || retryAccount.token !== getToken() || retryAccount.email !== normalizedEmail)) {
+      setStatus("An account is already signed in. Use Settings to change that profile, or sign out before creating another account.");
+      return;
+    }
+    const revision = ++submissionRevision.current;
+    let expectedToken = getToken();
+    const isCurrent = () => mounted.current && submissionRevision.current === revision && getToken() === expectedToken;
+    submitting.current = true;
+    setStatus(authMode === "login" ? "Logging in..." : retryAccount ? "Retrying profile save..." : "Creating account...");
     setPhase("saving");
 
     try {
       const fullName = [firstName.trim(), lastName.trim()].filter(Boolean).join(" ");
       const resolvedName = fullName || firstName.trim() || "Athlete";
-
-      const accessToken = await resolveAccessToken(resolvedName);
-      if (!accessToken) {
-        return;
-      }
-
-      setAuthToken(accessToken);
-      // Authentication is not consent to replace an existing training profile.
+      const accessToken = authMode === "register" && retryAccount
+        ? retryAccount.token : await resolveAccessToken(resolvedName, isCurrent);
+      if (!accessToken || !isCurrent()) return;
+      expectedToken = accessToken;
+      installingOwnToken.current = true;
+      try { setAuthToken(accessToken); } finally { installingOwnToken.current = false; }
+      // Authentication never authorizes replacing an established profile.
       if (authMode === "login") {
         router.push("/today");
         return;
       }
+      createdAccount.current = { email: normalizedEmail, token: accessToken };
+      setStatus("Saving your profile...");
+      const profileSaved = await saveOnboardingProfile(accessToken, resolvedName, isCurrent);
+      if (!profileSaved || !isCurrent()) return;
 
-      const profileSaved = await saveOnboardingProfile(accessToken, resolvedName);
-      if (!profileSaved) {
-        return;
-      }
-
-      if (selectedProgramId === "full_body_v1") {
-        localStorage.removeItem(ONBOARDING_DRAFT_KEY);
-        setHasSavedDraft(false);
-        router.push("/customize");
-        return;
-      }
-
-      let initialProgramId = selectedProgramId;
-      // If the user did not explicitly choose a program, ask the engine and apply its recommendation.
-      // This keeps onboarding deterministic while preserving explicit user choice.
-      if (!selectedProgramId) {
-        try {
-          const recommendation = await api.getProgramRecommendation();
-          if (
-            typeof recommendation.recommended_program_id === "string"
-            && recommendation.recommended_program_id
-            && recommendation.recommended_program_id !== recommendation.current_program_id
-          ) {
-            const switchResponse = await api.switchProgram({
-              target_program_id: recommendation.recommended_program_id,
-              confirm: true,
-            });
-            initialProgramId = switchResponse.target_program_id;
-            setStatus(`Applied recommendation: ${switchResponse.target_program_id}`);
-          }
-        } catch {
-          // non-blocking: fall back to profile/default selection
-        }
-      }
-
-      setStatus("Creating your workouts...");
-      try {
-        await api.generateWeek(initialProgramId);
-      } catch {
-        // keep onboarding successful even if initial pre-generation fails
-      }
-
-      // Submit an initial weekly review so the user is not required to do Sunday review before using the app
-      try {
-        const reviewStatus = await api.getWeeklyReviewStatus();
-        const reviewWeightKg = convertWeightToKg(Number(weightValue), weightUnit);
-        const reviewCalories = primaryGoals.includes("lose_fat") || primaryGoal === "lose_fat" ? 2200 : 2600;
-        await api.submitWeeklyReview({
-          body_weight: reviewWeightKg,
-          calories: reviewCalories,
-          protein: 180,
-          fat: 70,
-          carbs: 280,
-          adherence_score: 5,
-          week_start: reviewStatus.week_start,
-        });
-      } catch {
-        // non-blocking: user can still use the app; they may see Sunday review prompt later
-      }
-
-      setStatus("Onboarding saved and first plan initialized");
+      // Selection is a preference, not activation or consent. Week owns preview
+      // and confirmed scheduling; Customize owns its explicit consent lifecycle.
+      setStatus("Profile saved. Choose your training dates next.");
       localStorage.removeItem(ONBOARDING_DRAFT_KEY);
       setHasSavedDraft(false);
-      router.push("/today");
+      router.push(selectedProgramId === "full_body_v1" ? "/customize" : "/week");
     } catch {
-      setStatus("Network error during onboarding");
-      setPhase("account");
+      if (isCurrent()) {
+        setStatus(createdAccount.current ? "Profile save failed. Your account is created; retry to finish setup." : "Network error during onboarding. Try again.");
+        setPhase("account");
+      }
+    } finally {
+      if (submissionRevision.current === revision) submitting.current = false;
     }
   }
 
@@ -1432,6 +1449,7 @@ export default function OnboardingPage() {
     <div className="space-y-5">
       <h1 className="ui-title-page">Onboarding</h1>
 
+      {hasSession && !resumingSetup ? <Button type="button" variant="secondary" disabled={phase === "saving"} onClick={resumeInitialSetup}>Continue account setup</Button> : null}
       <div className="main-card main-card--module main-card--accent spacing-grid spacing-grid--tight">
         <div className="telemetry-header">
           <p className="telemetry-kicker">Adaptive Onboarding</p>
@@ -1519,13 +1537,14 @@ export default function OnboardingPage() {
       {phase === "account" ? (
         <form className="main-card main-card--module spacing-grid" onSubmit={submitOnboarding}>
           {renderProgress(questionSteps.length - 1, questionSteps.length - 1)}
-          <p className="telemetry-kicker">Create Account</p>
+          <p className="telemetry-kicker">{authMode === "login" ? "Sign in" : "Create account"}</p>
           {(status.toLowerCase().includes("failed") || status.toLowerCase().includes("error")) && status !== "Idle" ? (
             <div className="rounded-md border border-red-500/50 bg-red-950/30 p-3 text-sm text-red-200" role="alert">
               {status}
             </div>
           ) : null}
-          <input aria-label="Email address" className="ui-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
+          {resumingSetup ? <p className="ui-meta">Finishing setup for {email}. Your account is already created; review these answers before saving.</p> : <>
+          <input aria-label="Email address" required autoComplete="email" className="ui-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
           <div className="space-y-2">
             <input
               className="ui-input"
@@ -1534,6 +1553,9 @@ export default function OnboardingPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
               aria-label="Password"
+              required
+              minLength={8}
+              autoComplete={authMode === "login" ? "current-password" : "new-password"}
             />
             <button
               className="h-8 w-full rounded-md border border-[var(--ui-edge-idle)] bg-[var(--ui-surface-1)] px-3 text-xs text-zinc-100 transition-colors hover:border-[var(--ui-edge-active)]"
@@ -1543,7 +1565,9 @@ export default function OnboardingPage() {
               {showPassword ? "Hide Password" : "Show Password"}
             </button>
           </div>
+          </>}
 
+          {authMode === "register" ? <>
           <div className="space-y-1">
             <label htmlFor="program-select" className="ui-meta">Program</label>
             <select
@@ -1553,7 +1577,8 @@ export default function OnboardingPage() {
               onChange={(e) => setSelectedProgramId(e.target.value || null)}
               aria-label="Program"
             >
-              <option value="">Default - trainer recommendation</option>
+              <option value="">Choose for me</option>
+              {selectedProgramId && !programs.some(program => program.id === selectedProgramId) ? <option value={selectedProgramId}>Selected program — awaiting catalog</option> : null}
               {visiblePrograms.map((p) => (
                 <option key={p.id} value={p.id}>
                   {getProgramDisplayName(p)}
@@ -1589,11 +1614,24 @@ export default function OnboardingPage() {
             />
           </div>
 
+          <p className="ui-meta">This saves your preference. Review dates in Week before creating a schedule. Customized requires its own explicit setup and consent.</p>
+          <details className="rounded-lg border border-[var(--border-subtle)] p-3">
+            <summary className="cursor-pointer font-medium">Nutrition targets (optional)</summary>
+            <p className="ui-meta mt-2">Enter targets you have chosen. Leave unknown values blank. These are goals, not a report of what you ate or how closely you followed a plan.</p>
+            <div className="grid gap-3 sm:grid-cols-2 mt-3">
+              {([['calories', 'Daily calorie target'], ['protein', 'Protein target (g)'], ['fat', 'Fat target (g)'], ['carbs', 'Carbohydrate target (g)']] as const).map(([key, label]) => (
+                <label key={key} className="grid gap-1"><span>{label}</span><input className="ui-input" type="number" min={key === 'calories' ? 1 : 0} step="1" value={nutritionTargets[key]} onChange={event => setNutritionTargets(previous => ({ ...previous, [key]: event.target.value }))} /></label>
+              ))}
+            </div>
+          </details>
+          </> : <p className="ui-meta">Signing in keeps your existing profile, program, preferences and workout history.</p>}
+
           <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
             <Button
               type="button"
               variant="secondary"
               onClick={() => {
+                setResumingSetup(false);
                 setAuthMode(authMode === "register" ? "login" : "register");
                 setStatus(authMode === "register" ? "Switched to login mode" : "Switched to register mode");
               }}
@@ -1616,12 +1654,13 @@ export default function OnboardingPage() {
           <h2 className="text-2xl font-semibold text-zinc-100">{status}</h2>
           <p className="telemetry-meta">
             {status.toLowerCase().includes("failed") || status.toLowerCase().includes("error")
-              ? "Fix any error above and try again. Your account may already exist — try logging in or use Developer Tools to wipe the test user."
-              : "Saving profile, applying constraints, and generating your initial training week."}
+              ? "Retry to finish saving your profile. Your existing training history is preserved."
+              : "Saving your account and profile. You will review your program and training dates next."}
           </p>
         </div>
       ) : null}
 
+      {process.env.NODE_ENV !== "production" && process.env.NEXT_PUBLIC_ENABLE_DEV_ACCOUNT_TOOLS === "true" ? (
       <div className="rounded-md border border-red-700/40 bg-red-950/20 p-3">
         <p className="telemetry-kicker">Developer Tools</p>
         <p className="telemetry-meta">Reset onboarding/program test state without leaving this screen.</p>
@@ -1652,6 +1691,7 @@ export default function OnboardingPage() {
           </Button>
         </div>
       </div>
+      ) : null}
     </div>
   );
 }
