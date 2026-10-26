@@ -138,8 +138,8 @@ jobs:
             const result = await sharp({create: {width: 2, height: 2, channels: 3, background: '#000'}}).png().toBuffer();
             assert.ok(result.length > 0);
             console.log(JSON.stringify({node: process.version, next: require('next/package.json').version,
-              sharp: require('sharp/package.json').version, libc: 'musl', server_actions: 0}));
-          })().catch(() => process.exit(1));
+              sharp: sharp.versions.sharp, libc: 'musl', server_actions: 0}));
+          })().catch(error => { console.error(error.code || error.name); process.exit(1); });
           '''))
               receipt['runtime'] = dependencies
               receipt['checks'].extend(('native_sharp_png', 'musl_runtime', 'zero_server_actions'))
