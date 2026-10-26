@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -325,6 +325,18 @@ function defaultEquipmentTagsForLocation(location: "gym" | "home"): EquipmentTag
 }
 
 export default function OnboardingPage() {
+  const [accountRevision, setAccountRevision] = useState(0);
+  const resetAccount = useCallback(() => {
+    localStorage.removeItem(ONBOARDING_DRAFT_KEY);
+    setAccountRevision(revision => revision + 1);
+  }, []);
+  return <>
+    {accountRevision > 0 ? <p role="status" className="ux-card">Account changed. Sign in to continue with the current account; no other profile was changed.</p> : null}
+    <OnboardingForm key={accountRevision} onAccountChanged={resetAccount} />
+  </>;
+}
+
+function OnboardingForm({ onAccountChanged }: { onAccountChanged: () => void }) {
   const router = useRouter();
 
   const [phase, setPhase] = useState<Phase>("intro");
@@ -382,9 +394,7 @@ export default function OnboardingPage() {
       submissionRevision.current += 1;
       submitting.current = false;
       createdAccount.current = null;
-      setResumingSetup(false);
-      setPhase("account");
-      setStatus("Account changed. Sign in to continue with the current account; no other profile was changed.");
+      onAccountChanged();
     };
     window.addEventListener("hypertrophy:auth-token-changed", changed);
     window.addEventListener("storage", changed);
@@ -396,7 +406,7 @@ export default function OnboardingPage() {
       window.removeEventListener("storage", changed);
       window.removeEventListener("focus", changed);
     };
-  }, []);
+  }, [onAccountChanged]);
 
   const [weakAreasRaw, setWeakAreasRaw] = useState("");
 
@@ -1605,7 +1615,7 @@ export default function OnboardingPage() {
           </div>
 
           <p className="ui-meta">This saves your preference. Review dates in Week before creating a schedule. Customized requires its own explicit setup and consent.</p>
-          <details className="rounded-lg border border-[var(--border)] p-3">
+          <details className="rounded-lg border border-[var(--border-subtle)] p-3">
             <summary className="cursor-pointer font-medium">Nutrition targets (optional)</summary>
             <p className="ui-meta mt-2">Enter targets you have chosen. Leave unknown values blank. These are goals, not a report of what you ate or how closely you followed a plan.</p>
             <div className="grid gap-3 sm:grid-cols-2 mt-3">
