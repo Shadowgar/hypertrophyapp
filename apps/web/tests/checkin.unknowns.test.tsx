@@ -1,6 +1,6 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import CheckinPage from '@/app/checkin/page';
+import CheckinPage from '@/components/weekly-review';
 
 test('unknown nutrition and adherence stay blank and cannot be submitted as zero or a default score', async () => {
   const writes: string[] = [];

@@ -11,7 +11,7 @@ const links = [
   ["/today", "Today"],
   ["/week", "Week"],
   ["/history", "History"],
-  ["/history#analytics", "Analytics"],
+  ["/analytics", "Analytics"],
   ["/programs", "Programs"],
   ["/checkin", "Check-In"],
   ["/guides", "Library"],

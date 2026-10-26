@@ -1,4 +1,31 @@
 /* One component system; the appearance palette supplies every semantic color. */
+.ux-page-stack { display: grid; gap: 24px; }
+.ux-week-layout { display: grid; gap: 20px; align-items: start; }
+.ux-customize-page { max-width: 1100px; margin-inline: auto; }
+.ux-program-steps { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 8px; font-size: 13px; color: var(--text-secondary); }
+.ux-program-steps li { display: grid; gap: 8px; border-bottom: 2px solid var(--border-subtle); padding: 8px 0; }
+.ux-program-steps li[aria-current=step] { border-color: var(--accent-text); color: var(--text-primary); font-weight: 700; }
+.ux-program-steps span { display: grid; place-items: center; width: 28px; height: 28px; border: 1px solid var(--border-control); border-radius: 50%; }
+@media (min-width: 900px) { .ux-customize-inputs { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px; } .ux-customize-inputs > fieldset, .ux-customize-inputs > p, .ux-customize-inputs > div, .ux-customize-inputs > button { grid-column: 1 / -1; } }
+.ux-week-dates { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 4px; }
+.ux-week-date { position: relative; display: grid; justify-items: center; align-content: center; min-height: 76px; gap: 5px; border: 1px solid var(--border-control); border-radius: 8px; color: var(--text-secondary); cursor: pointer; font-size: 12px; }
+.ux-week-date strong { font-size: 18px; color: var(--text-primary); }
+.ux-week-date input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.ux-week-date:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
+.ux-week-date[data-selected=true] { border-color: var(--accent-text); background: var(--surface-selected); color: var(--text-primary); box-shadow: inset 0 -3px var(--accent-text); }
+.ux-week-date[data-selected=true]::after { content: "✓"; font-size: 12px; }
+.ux-week-date[data-selected=false]::after { content: "·"; font-size: 12px; }
+.ux-week-sessions { display: grid; gap: 18px; }
+.ux-week-session { display: grid; gap: 6px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 16px; }
+.ux-week-session h3 { color: var(--text-primary); font-size: 17px; font-weight: 650; }
+@media (min-width: 1100px) { .ux-week-layout { grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); } }
+.ux-page-stack > header { display: grid; gap: 8px; max-width: 72ch; }
+.ux-eyebrow { color: var(--accent-text); font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.ux-content-grid { display: grid; gap: 20px; align-items: start; }
+.ux-content-grid > * { min-width: 0; }
+.ux-saved { color: var(--success-text); }
+.ux-warning { color: var(--warning-text); }
+@media (min-width: 1000px) { .ux-content-grid { grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr); } }
 html {
   --ui-bg-matte: var(--canvas);
   --ui-surface-1: var(--surface);

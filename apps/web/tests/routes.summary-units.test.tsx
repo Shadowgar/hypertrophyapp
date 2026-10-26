@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor, cleanup } from "@testing-library/re
 import { beforeEach, expect, test, vi } from "vitest";
 import HomePage from "@/app/page";
 import WeekPage from "@/app/week/page";
-import CheckinPage from "@/app/checkin/page";
+import CheckinPage from "@/components/weekly-review";
 
 const saved = vi.hoisted(() => ({ weight_unit: "kg" as "kg" | "lb" }));
 vi.mock("@/components/appearance-provider", () => ({ useAppearance: () => ({ preferences: saved }) }));
@@ -80,7 +80,7 @@ test.each(["kg", "lb"] as const)("Week authored and Customized numeric kg payloa
   }
 });
 
-test.each(["kg", "lb"] as const)("Review audit renders saved %s while kg bodyweight input and submission remain canonical", async initial => {
+test.each(["kg", "lb"] as const)("Review audit renders saved %s and bodyweight input follows the saved unit while submission remains canonical", async initial => {
   saved.weight_unit = initial;
   const canonical = JSON.stringify(fixture);
   const page = <CheckinPage />;
@@ -90,13 +90,13 @@ test.each(["kg", "lb"] as const)("Review audit renders saved %s while kg bodywei
   switchUnits(rerender, page, initial, unit => {
     expect(screen.getByText(`3/3 sets · avg 10 reps @ ${unit === "kg" ? 80 : 176.4} ${unit}`)).toBeInTheDocument();
     expect(screen.getByText(`Target 8-12 reps @ ${unit === "kg" ? 90 : 198.4} ${unit}`)).toBeInTheDocument();
-    expect(screen.getByLabelText("Current Bodyweight (kg)")).toHaveValue(82.5);
+    expect(screen.getByLabelText(`Current Bodyweight (${unit})`)).toHaveValue(unit === "kg" ? 82.5 : 181.9);
   });
-  fireEvent.change(screen.getByLabelText("Current Bodyweight (kg)"), { target: { value: "83.2" } });
+  fireEvent.change(screen.getByLabelText(`Current Bodyweight (${saved.weight_unit})`), { target: { value: saved.weight_unit === "kg" ? "83.2" : "180" } });
   fireEvent.change(screen.getByLabelText("Adherence Score (1-5)"), { target: { value: "4" } });
   fireEvent.click(screen.getByRole("button", { name: /Save Weekly Review/ }));
   await waitFor(() => expect(vi.mocked(fetch).mock.calls.some(([url, init]) => String(url).endsWith("/weekly-review") && init?.method === "POST")).toBe(true));
   const payload = vi.mocked(fetch).mock.calls.find(([url, init]) => String(url).endsWith("/weekly-review") && init?.method === "POST")![1];
-  expect(JSON.parse(String(payload?.body)).body_weight).toBe(83.2);
+  expect(JSON.parse(String(payload?.body)).body_weight).toBe(saved.weight_unit === "kg" ? 83.2 : 81.6466266);
   expect(JSON.stringify(fixture)).toBe(canonical);
 });

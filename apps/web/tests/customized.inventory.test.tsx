@@ -5,7 +5,7 @@ import {CustomizedInventoryEditor} from '@/components/customized-inventory';
 import {customizedApi} from '@/lib/api';
 import type {InventoryDocument} from '@/lib/customized-inventory';
 
-vi.mock('@/lib/api', () => ({customizedApi: {saveProfile: vi.fn()}}));
+vi.mock('@/lib/api', () => ({customizedApi: {saveProfile: vi.fn()}, getToken: () => null}));
 const variants = [
   {id: 'db_press', name: 'Dumbbell press', implement: 'dumbbell', basis: 'per_hand'},
   {id: 'machine_press', name: 'Machine press', implement: 'machine', basis: 'machine_stack'},

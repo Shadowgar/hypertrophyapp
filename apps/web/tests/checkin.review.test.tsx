@@ -2,7 +2,7 @@ import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
-import CheckinPage from "@/app/checkin/page";
+import CheckinPage from "@/components/weekly-review";
 
 function resolveUrl(input: RequestInfo | URL): string {
   if (typeof input === "string") {
