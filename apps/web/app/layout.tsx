@@ -17,6 +17,7 @@ export const metadata: Metadata = {
   title: "WorkoutApp",
   description: "Deterministic hypertrophy workout planner and runner",
   manifest: "/manifest.json",
+  icons: { icon: "/icon-192.svg" },
 };
 
 export default function RootLayout({
