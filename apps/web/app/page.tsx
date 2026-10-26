@@ -1,602 +1,193 @@
 "use client";
 
-import { authoredRepLabel, isBodyweightAuthored } from "@/lib/authored-prescription";
-
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-
-import {
-  api,
-  getProgramDisplayName,
-  getToken,
-  type HistoryAnalyticsResponse,
-  type Profile,
-  type WeeklyReviewStatus,
-  type WorkoutExercise,
-  type WorkoutSession,
-} from "@/lib/api";
+import { useEffect, useState } from "react";
 import { useAppearance } from "@/components/appearance-provider";
+import { api, ApiError, getProgramDisplayName, getToken, type HistoryAnalyticsResponse, type Profile, type SchedulingContext, type WeeklyReviewStatus, type WorkoutSession } from "@/lib/api";
 import { displayLoad } from "@/lib/appearance";
+import { authoredRepLabel, isBodyweightAuthored } from "@/lib/authored-prescription";
+import { datesInWeek, formatCalendarDate } from "@/lib/calendar-date";
 
-type DashboardState = {
+type Data = {
   profile: Profile | null;
   workout: WorkoutSession | null;
   analytics: HistoryAnalyticsResponse | null;
-  reviewStatus: WeeklyReviewStatus | null;
+  review: WeeklyReviewStatus | null;
+  week: SchedulingContext | null;
+  nextWeek: SchedulingContext | null;
 };
-
-type DashboardPresentation = {
-  intro: string;
-  readinessTone: "green" | "yellow";
-  readinessLabel: string;
-  weekLabel: string;
-  statsLabel: string;
-  workoutMeta: string;
-  weekMeta: string;
+type ReadStatus = "pending" | "ready" | "error";
+type HomeState = {
+  token: string | null | undefined;
+  data: Data;
+  status: Record<keyof Data, ReadStatus>;
+  retryAvailable: boolean;
 };
-
-type DashboardInsight = {
-  title: string;
-  value: string;
-  meta: string;
-};
-
-type DashboardLoadState = "guest" | "loading" | "ready" | "partial" | "error";
-
-function humanizeTokenLabel(value: string): string {
-  return value
-    .split(/[_-]/)
-    .filter(Boolean)
-    .map((part) => part[0].toUpperCase() + part.slice(1))
-    .join(" ");
+const emptyData: Data = { profile: null, workout: null, analytics: null, review: null, week: null, nextWeek: null };
+function initialState(token: HomeState["token"], retryAvailable = false): HomeState {
+  return { token, data: { ...emptyData }, status: { profile: "pending", workout: "pending", analytics: "pending", review: "pending", week: "pending", nextWeek: "pending" }, retryAvailable };
+}
+// Only these domain responses acknowledge absence. Unknown 404s and conflicts are failures.
+function isNoWorkout(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 404 &&
+    ["No plan generated", "No workout scheduled today", "No workouts available"].includes(error.message);
 }
 
-function formatExercisePrescription(exercise: WorkoutExercise, unit: "kg" | "lb"): string {
-  const load = isBodyweightAuthored(exercise) ? "Bodyweight" : exercise.recommended_working_weight == null ? "Record actual load" : `${displayLoad(exercise.recommended_working_weight, unit)} ${unit}`;
-  return `${exercise.sets} x ${authoredRepLabel(exercise)} @ ${load}`;
-}
-
-function formatLeadExercise(workout: WorkoutSession | null, unit: "kg" | "lb"): string {
-  const firstExercise = workout?.exercises[0];
-  if (!firstExercise) {
-    return "No lead lift queued yet";
-  }
-  return `${firstExercise.name} · ${formatExercisePrescription(firstExercise, unit)}`;
-}
-
-function resolveWeakAreasLabel(profile: Profile | null): string {
-  const weakAreas = profile?.weak_areas?.filter((item) => item.trim().length > 0) ?? [];
-  if (weakAreas.length === 0) {
-    return "No weak-area bias saved";
-  }
-  return weakAreas.map(humanizeTokenLabel).join(", ");
-}
-
-function resolveCoachPriorities(hasToken: boolean, dashboard: DashboardState, unit: "kg" | "lb"): string[] {
-  if (!hasToken) {
-    return [
-      "Finish onboarding to generate a personalized hypertrophy week.",
-      "Run today’s session to unlock progression, history, and coaching signals.",
-      "Use weekly review to feed recovery, adherence, and load decisions back into the plan.",
-    ];
-  }
-
-  const priorities: string[] = [];
-  const firstExercise = dashboard.workout?.exercises[0];
-  if (dashboard.reviewStatus?.review_required) {
-    priorities.push("Submit the weekly review before generating the next planning cycle.");
-  }
-  if (dashboard.workout?.resume) {
-    priorities.push("Resume the unfinished session before rotating to a different workout day.");
-  }
-  if (dashboard.workout?.deload?.active) {
-    priorities.push(
-      `Deload is active. Keep execution clean and accept the reduced ${dashboard.workout.deload.load_reduction_pct}% load target this week.`,
-    );
-  }
-  if (firstExercise) {
-    priorities.push(`Start with ${firstExercise.name}: ${formatExercisePrescription(firstExercise, unit)}.`);
-  }
-
-  const weakAreas = dashboard.profile?.weak_areas?.filter((item) => item.trim().length > 0) ?? [];
-  if (weakAreas.length > 0) {
-    priorities.push(`Saved focus areas: ${weakAreas.slice(0, 2).map(humanizeTokenLabel).join(" and ")}. Follow the actual prescribed targets.`);
-  }
-
-  if (dashboard.analytics?.pr_highlights.length) {
-    priorities.push(
-      `Training history shows ${dashboard.analytics.pr_highlights.length} PR highlight${dashboard.analytics.pr_highlights.length === 1 ? "" : "s"} in the current analytics window.`,
-    );
-  }
-
-  if (priorities.length === 0) {
-    priorities.push("Generate a week to queue the next session and unlock adaptive coaching signals.");
-  }
-
-  return priorities.slice(0, 3);
-}
-
-function resolveMomentumInsights(analytics: HistoryAnalyticsResponse | null, unit: "kg" | "lb"): DashboardInsight[] {
-  const adherence = analytics?.adherence;
-  const strengthTrend = analytics?.strength_trends[0];
-  const prCount = analytics?.pr_highlights.length ?? 0;
-  let prValue = "No recent PRs";
-  let prMeta = "PR highlights will surface automatically as new top sets land.";
-  if (prCount > 0) {
-    const suffix = prCount === 1 ? "" : "s";
-    prValue = `${prCount} PR highlight${suffix}`;
-    prMeta = "Use history to inspect where the momentum is coming from.";
-  }
-
-  return [
-    {
-      title: "Adherence",
-      value: adherence ? `${adherence.average_pct}% avg` : "No adherence data",
-      meta: adherence ? `Latest score ${adherence.latest_score}/5 with ${adherence.high_readiness_streak} high-readiness weeks` : "Log check-ins to build recovery-aware coaching.",
-    },
-    {
-      title: "Strength Trend",
-      value: strengthTrend ? humanizeTokenLabel(strengthTrend.exercise_id) : "No lift trend yet",
-      meta: strengthTrend
-        ? `Latest ${displayLoad(strengthTrend.latest_weight, unit)} ${unit} top set across ${strengthTrend.points.length} tracked sessions`
-        : "Complete and log workouts to surface top moving lifts.",
-    },
-    {
-      title: "PR Window",
-      value: prValue,
-      meta: prMeta,
-    },
-  ];
-}
-
-function CoachBriefCard({
-  hasToken,
-  dashboard,
-}: Readonly<{
-  hasToken: boolean;
-  dashboard: DashboardState;
-}>) {
-  const { preferences } = useAppearance();
-  const priorities = resolveCoachPriorities(hasToken, dashboard, preferences.weight_unit);
-
-  return (
-    <div className="main-card main-card--module spacing-grid">
-      <div className="telemetry-header">
-        <div>
-          <p className="telemetry-kicker">Coach Brief</p>
-          <p className="telemetry-value">{hasToken ? "Today&apos;s command deck" : "How the app coaches"}</p>
-        </div>
-        <span className="telemetry-status">
-          <span className={`status-dot status-dot--${dashboard.reviewStatus?.review_required ? "yellow" : "green"}`} />
-          {dashboard.reviewStatus?.review_required ? "Needs review" : dashboard.workout ? "Session available" : "Check Week"}
-        </span>
-      </div>
-      <div className="space-y-2">
-        {priorities.map((item) => (
-          <div key={item} className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2 text-sm text-zinc-200">
-            {item}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function SessionBlueprintCard({ workout }: Readonly<{ workout: WorkoutSession | null }>) {
-  const { preferences } = useAppearance();
-  const previewExercises = workout?.exercises.slice(0, 3) ?? [];
-
-  return (
-    <div className="main-card main-card--module spacing-grid">
-      <div className="telemetry-header">
-        <div>
-          <p className="telemetry-kicker">Session Blueprint</p>
-          <p className="telemetry-value">{workout?.title ?? "No session queued"}</p>
-        </div>
-        <p className="telemetry-meta">{workout ? `${workout.exercises.length} exercises queued` : "Generate a week to queue training"}</p>
-      </div>
-      {previewExercises.length > 0 ? (
-        <div className="space-y-2">
-          {previewExercises.map((exercise) => (
-            <div key={exercise.id} className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
-              <p className="text-sm font-semibold text-zinc-100">{exercise.name}</p>
-              <p className="text-xs text-zinc-300">{formatExercisePrescription(exercise, preferences.weight_unit)}</p>
-            </div>
-          ))}
-          {workout && workout.exercises.length > previewExercises.length ? (
-            <p className="text-xs text-zinc-400">+ {workout.exercises.length - previewExercises.length} more exercises in today&apos;s queue</p>
-          ) : null}
-        </div>
-      ) : (
-        <p className="telemetry-meta">Once a workout is generated, this card will show the lead lifts and prescriptions for today.</p>
-      )}
-    </div>
-  );
-}
-
-function BlockRadarCard({
-  profile,
-  workout,
-}: Readonly<{
-  profile: Profile | null;
-  workout: WorkoutSession | null;
-}>) {
-  const { preferences } = useAppearance();
-  return (
-    <div className="main-card main-card--module spacing-grid">
-      <div className="telemetry-header">
-        <div>
-          <p className="telemetry-kicker">Block Radar</p>
-          <p className="telemetry-value">{formatProgramName(profile)}</p>
-        </div>
-        <p className="telemetry-meta">{profile ? `${profile.effective_days_available ?? profile.days_available} training days` : "Profile not set"}</p>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
-          <p className="telemetry-kicker">Lead Lift</p>
-          <p className="text-sm text-zinc-100">{formatLeadExercise(workout, preferences.weight_unit)}</p>
-        </div>
-        <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
-          <p className="telemetry-kicker">Nutrition Phase</p>
-          <p className="text-sm text-zinc-100">{profile ? humanizeTokenLabel(profile.nutrition_phase) : "Maintenance"}</p>
-        </div>
-        <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
-          <p className="telemetry-kicker">Weak Areas</p>
-          <p className="text-sm text-zinc-100">{resolveWeakAreasLabel(profile)}</p>
-        </div>
-        <div className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
-          <p className="telemetry-kicker">Equipment</p>
-          <p className="text-sm text-zinc-100">
-            {profile ? `${profile.equipment_profile.length} tools at ${profile.training_location ?? "your setup"}` : "Set location and equipment"}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function MomentumRadarCard({ analytics }: Readonly<{ analytics: HistoryAnalyticsResponse | null }>) {
-  const { preferences } = useAppearance();
-  const insights = resolveMomentumInsights(analytics, preferences.weight_unit);
-
-  return (
-    <div className="main-card main-card--module spacing-grid">
-      <div className="telemetry-header">
-        <div>
-          <p className="telemetry-kicker">Momentum Radar</p>
-          <p className="telemetry-value">Training signal quality</p>
-        </div>
-        <p className="telemetry-meta">{analytics ? `${analytics.window.limit_weeks}-week window` : "Awaiting history"}</p>
-      </div>
-      <div className="space-y-2">
-        {insights.map((insight) => (
-          <div key={insight.title} className="rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
-            <div className="flex items-center justify-between gap-3">
-              <p className="telemetry-kicker">{insight.title}</p>
-              <p className="text-sm font-semibold text-zinc-100">{insight.value}</p>
-            </div>
-            <p className="text-xs text-zinc-400">{insight.meta}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function formatProgramName(profile: Profile | null): string {
-  const selectedProgramId = (profile?.effective_program_id ?? profile?.selected_program_id)?.trim();
-  if (!selectedProgramId) {
-    return "Choose a program";
-  }
-  return getProgramDisplayName({ id: selectedProgramId });
-}
-
-function formatBodyweight(analytics: HistoryAnalyticsResponse | null, profile: Profile | null, unit: "kg" | "lb"): string {
-  const latest = analytics?.bodyweight_trend.at(-1);
-  if (latest?.body_weight !== undefined && latest?.body_weight !== null) {
-    return `${displayLoad(latest.body_weight, unit)} ${unit}`;
-  }
-  if (profile?.weight !== undefined && profile?.weight !== null) {
-    return `${displayLoad(profile.weight, unit)} ${unit}`;
-  }
-  return "No bodyweight yet";
-}
-
-function formatTrendMeta(analytics: HistoryAnalyticsResponse | null): string {
-  const leadTrend = analytics?.strength_trends[0];
-  if (leadTrend?.exercise_id && leadTrend.points.length > 0) {
-    const exerciseLabel = leadTrend.exercise_id
-      .split("_")
-      .filter(Boolean)
-      .map((part) => part[0].toUpperCase() + part.slice(1))
-      .join(" ");
-    return `${exerciseLabel} tracked across ${leadTrend.points.length} sessions`;
-  }
-  const adherence = analytics?.adherence;
-  if (adherence) {
-    return `Adherence average ${adherence.average_pct}%`;
-  }
-  return "Load history to see progression trends";
-}
-
-function formatWorkoutMeta(workout: WorkoutSession | null): string {
-  if (!workout) {
-    return "Generate your week to load the next session";
-  }
-  return `${workout.exercises.length} exercises${workout.resume ? " · resumable" : ""}`;
-}
-
-function formatWeekMeta(profile: Profile | null): string {
-  if (!profile) {
-    return "Set your profile and preferred split";
-  }
-  return `${profile.effective_days_available ?? profile.days_available} training days · ${formatProgramName(profile)}`;
-}
-
-function resolveStatsLabel(analytics: HistoryAnalyticsResponse | null): string {
-  if (analytics?.pr_highlights.length) {
-    return `${analytics.pr_highlights.length} PR highlights`;
-  }
-  if (analytics?.adherence) {
-    return `${analytics.adherence.high_readiness_streak} high-readiness weeks`;
-  }
-  return "No trend stats yet";
-}
-
-function resolveDashboardPresentation(
-  hasToken: boolean,
-  dashboard: DashboardState,
-  loadState: DashboardLoadState,
-  workoutChecked: boolean,
-): DashboardPresentation {
-  if (!hasToken) {
-    return {
-      intro: "Sign in to pick up your training where you left off.",
-      readinessTone: "yellow",
-      readinessLabel: "Welcome",
-      weekLabel: "Not loaded",
-      statsLabel: "Not loaded",
-      workoutMeta: "Sign in to check your schedule",
-      weekMeta: "Sign in to view your plan",
-    };
-  }
-
-  if (loadState === "loading") {
-    return {
-      intro: "Checking your training plan and next session.",
-      readinessTone: "yellow",
-      readinessLabel: "Loading Home",
-      weekLabel: "Loading…",
-      statsLabel: "Loading…",
-      workoutMeta: "Checking today's session",
-      weekMeta: "Checking your program",
-    };
-  }
-
-  if (loadState === "error") {
-    return {
-      intro: "Your saved training record is unchanged. Try loading Home again.",
-      readinessTone: "yellow",
-      readinessLabel: "Home unavailable",
-      weekLabel: "Unavailable",
-      statsLabel: "Unavailable",
-      workoutMeta: "Session not checked",
-      weekMeta: "Profile not checked",
-    };
-  }
-
-  if (!workoutChecked) {
-    return {
-      intro: "The next session could not be checked. You can retry or review Week.",
-      readinessTone: "yellow",
-      readinessLabel: "Workout status unknown",
-      weekLabel: "Not checked",
-      statsLabel: dashboard.analytics ? resolveStatsLabel(dashboard.analytics) : "Unavailable",
-      workoutMeta: "Session not checked",
-      weekMeta: dashboard.profile ? formatWeekMeta(dashboard.profile) : "Profile unavailable",
-    };
-  }
-
-  const readinessLabel = dashboard.reviewStatus?.review_required
-    ? "Weekly review due"
-    : dashboard.workout?.deload?.active
-      ? "Scheduled deload"
-      : dashboard.workout
-        ? "Session available"
-        : "Review your schedule";
-
-  return {
-    intro: "See your next session, review your week, and continue your training.",
-    readinessTone: dashboard.workout && !dashboard.reviewStatus?.review_required && !dashboard.workout.deload?.active
-      ? "green" : "yellow",
-    readinessLabel,
-    weekLabel: dashboard.workout?.mesocycle ? `Week ${dashboard.workout.mesocycle.week_index}` : "Week not shown",
-    statsLabel: dashboard.analytics ? resolveStatsLabel(dashboard.analytics) : loadState === "partial" ? "Unavailable" : "No trend stats yet",
-    workoutMeta: formatWorkoutMeta(dashboard.workout),
-    weekMeta: dashboard.profile ? formatWeekMeta(dashboard.profile) : "Profile unavailable",
-  };
+function programName(profile: Profile | null, context: SchedulingContext | null): string {
+  const id = context?.plan?.program_template_id ?? profile?.effective_program_id ?? profile?.selected_program_id;
+  return id ? getProgramDisplayName({ id }) : "Choose a program";
 }
 
 export default function HomePage() {
   const { preferences } = useAppearance();
-  const [dashboard, setDashboard] = useState<DashboardState>({
-    profile: null,
-    workout: null,
-    analytics: null,
-    reviewStatus: null,
-  });
-  const [dashboardStatus, setDashboardStatus] = useState("Sign in to view your training.");
-  const [hasToken, setHasToken] = useState<boolean | null>(null);
-  const [loadState, setLoadState] = useState<DashboardLoadState>("loading");
-  const [workoutChecked, setWorkoutChecked] = useState(false);
-  const [reloadKey, setReloadKey] = useState(0);
+  const [home, setHome] = useState<HomeState>(() => initialState(undefined));
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
-    const token = getToken();
-    setHasToken(Boolean(token));
-
-    if (!token) {
-      setLoadState("guest");
-      setWorkoutChecked(false);
-      setDashboardStatus("Sign in to view your training.");
-      return;
-    }
-
     let mounted = true;
-    setLoadState("loading");
-    setWorkoutChecked(false);
-    setDashboardStatus("Loading your training dashboard…");
-
-    Promise.allSettled([
-      api.getProfile(),
-      api.getTodayWorkout(),
-      api.getHistoryAnalytics(8, 24),
-      api.getWeeklyReviewStatus(),
-    ]).then((results) => {
-      if (!mounted) {
-        return;
+    let generation = 0;
+    let activeToken: string | null | undefined;
+    function load(keepRetry = false) {
+      const token = getToken();
+      const version = ++generation;
+      activeToken = token;
+      setHome(previous => initialState(token, keepRetry && previous.retryAvailable));
+      if (!token) return;
+      const isCurrent = () => mounted && version === generation && getToken() === token;
+      function read<K extends keyof Data>(key: K, request: Promise<Data[K]>) {
+        void request.then(value => {
+          if (!isCurrent()) return;
+          setHome(previous => ({ ...previous, data: { ...previous.data, [key]: value }, status: { ...previous.status, [key]: "ready" } }));
+        }, error => {
+          if (!isCurrent()) return;
+          if (key === "workout" && isNoWorkout(error)) {
+            setHome(previous => ({ ...previous, status: { ...previous.status, workout: "ready" } }));
+          } else {
+            setHome(previous => ({ ...previous, status: { ...previous.status, [key]: "error" }, retryAvailable: true }));
+          }
+        });
       }
-
-      const nextState: DashboardState = {
-        profile: results[0].status === "fulfilled" ? results[0].value : null,
-        workout: results[1].status === "fulfilled" ? results[1].value : null,
-        analytics: results[2].status === "fulfilled" ? results[2].value : null,
-        reviewStatus: results[3].status === "fulfilled" ? results[3].value : null,
-      };
-      setDashboard(nextState);
-
-      const failedCount = results.filter((result) => result.status === "rejected").length;
-      const todayChecked = results[1].status === "fulfilled";
-      setWorkoutChecked(todayChecked);
-      setLoadState(failedCount === results.length ? "error" : failedCount > 0 ? "partial" : "ready");
-
-      if (!todayChecked) {
-        setDashboardStatus("Could not check today's workout. Retry before assuming it is a rest day.");
-      } else if (nextState.reviewStatus?.review_required) {
-        setDashboardStatus("Weekly review is due before the next planning cycle.");
-      } else if (nextState.workout) {
-        setDashboardStatus(failedCount > 0
-          ? "Today's session is available. Some other dashboard information could not load."
-          : "Today's session is available.");
-      } else {
-        setDashboardStatus("No session was returned for today. Review Week for your actual schedule.");
-      }
-    });
-
+      // Today is independently actionable. Optional profile/history/review/calendar reads never gate it.
+      read("workout", api.getTodayWorkout());
+      read("profile", api.getProfile());
+      read("analytics", api.getHistoryAnalytics(8, 24));
+      read("review", api.getWeeklyReviewStatus());
+      // The API prefers the account's saved timezone; this is only a first-use fallback.
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+      read("week", api.getSchedulingContext(timezone));
+      read("nextWeek", api.getSchedulingContext(timezone, 1));
+    }
+    load(true);
+    const sync = () => { if (activeToken !== getToken()) load(); };
+    const storage = (event: StorageEvent) => { if (event.key === "hypertrophy_token" || event.key === null) sync(); };
+    window.addEventListener("hypertrophy:auth-token-changed", sync);
+    window.addEventListener("storage", storage);
+    window.addEventListener("focus", sync);
     return () => {
       mounted = false;
+      ++generation;
+      window.removeEventListener("hypertrophy:auth-token-changed", sync);
+      window.removeEventListener("storage", storage);
+      window.removeEventListener("focus", sync);
     };
-  }, [reloadKey]);
+  }, [reload]);
 
-  const presentation = useMemo(
-    () => resolveDashboardPresentation(Boolean(hasToken), dashboard, loadState, workoutChecked),
-    [dashboard, hasToken, loadState, workoutChecked],
-  );
-  const bodyweightLabel = formatBodyweight(dashboard.analytics, dashboard.profile, preferences.weight_unit);
-
-  if (hasToken === null) {
-    return <div className="main-card main-card--module" role="status">Loading WorkoutApp Home…</div>;
-  }
-
-  if (!hasToken) {
-    return (
-      <div className="mx-auto max-w-2xl space-y-4">
-        <h1 className="ui-title-hero">WorkoutApp</h1>
-        <p className="ui-body-sm">Your next session starts here. Sign in to continue your plan, or set up your first program.</p>
-        <div className="main-card main-card--module spacing-grid">
-          <p className="telemetry-kicker">Get started</p>
-          <Link className="ux-button ux-button-primary w-full" href="/login">Sign in</Link>
-          <Link className="ux-button ux-button-secondary w-full" href="/onboarding">Start onboarding</Link>
-          <Link className="text-sm underline" href="/reset-password">Need to reset your password?</Link>
-        </div>
+  if (home.token === undefined) return <div className="ux-card" role="status">Loading WorkoutApp Home…</div>;
+  if (!home.token) return (
+    <div className="mx-auto max-w-2xl space-y-6">
+      <h1>WorkoutApp</h1>
+      <p className="ux-muted">Your next session starts here. Sign in to continue your plan, or set up your first program.</p>
+      <div className="ux-card space-y-4">
+        <h2>Ready for your next session?</h2>
+        <p className="ux-muted">Your saved training stays with your account.</p>
+        <Link className="ux-button ux-button-primary w-full" href="/login?next=%2F">Sign in</Link>
+        <Link className="ux-button ux-button-secondary w-full" href="/onboarding">Start onboarding</Link>
+        <Link className="ux-button ux-button-ghost w-full" href="/reset-password">Need to reset your password?</Link>
       </div>
-    );
-  }
+    </div>
+  );
 
-  const showDetails = loadState !== "loading" && loadState !== "error";
-  const nextSession = workoutChecked ? dashboard.workout : null;
+  const { data, status } = home;
+  const workout = data.workout;
+  const checked = status.workout === "ready";
+  const loading = status.workout === "pending";
+  const failed = status.workout === "error";
+  // Future dates are previews only: they never authorize opening/resuming through Today.
+  const upcoming = [data.week, data.nextWeek].flatMap(context =>
+    context?.plan?.schedule?.mode === "selected_dates_v1"
+      ? context.plan.sessions.filter(session => session.date > context.local_today).map(session => ({ session, context })) : []
+  ).sort((a, b) => a.session.date.localeCompare(b.session.date))[0];
+  const noSchedule = checked && !workout && status.week === "ready" && data.week?.plan === null;
+  const title = noSchedule && !upcoming ? "Your week is open" : "Your next session";
+  const primaryTitle = loading ? "Checking your training" : failed ? "Home unavailable" : workout?.title ?? upcoming?.session.title ?? (noSchedule ? "Choose your training dates" : "Review your schedule");
+  const message = loading ? "Checking your workout and saved schedule…"
+    : failed ? "Could not check today's workout. Retry before assuming it is a rest day. Your saved history is unchanged."
+    : workout ? (workout.resume ? "Your unfinished session is available to resume." : "Session available.")
+    : upcoming ? `Next scheduled: ${formatCalendarDate(upcoming.session.date)}. No workout is scheduled today.`
+    : noSchedule ? "No workouts scheduled for this week. Preview your dates in Week before you commit."
+    : "No session returned today. Review Week for your actual schedule.";
+  const chosenContext = workout ? data.week : upcoming?.context ?? data.week;
+  const knownProgram = programName(data.profile, chosenContext);
+  const currentDates = data.week?.plan?.schedule?.mode === "selected_dates_v1" ? data.week.selected_dates : [];
+  const analytics = data.analytics;
+  const bodyweight = analytics?.bodyweight_trend?.at(-1)?.body_weight ?? data.profile?.weight;
+  const leadTrend = analytics?.strength_trends?.[0];
+  const prCount = analytics?.pr_highlights?.length ?? 0;
 
   return (
-    <div className="space-y-4">
-      <h1 className="ui-title-hero text-center">Your next session</h1>
-      <p className="ui-body-sm text-center">{presentation.intro}</p>
-
-      <div className="main-card main-card--module main-card--accent spacing-grid spacing-grid--tight">
-        <p className="telemetry-kicker">Home status</p>
-        <div className="telemetry-header">
-          <p className="telemetry-value">{presentation.readinessLabel}</p>
-          <span className="telemetry-status">
-            <span className={"status-dot status-dot--" + presentation.readinessTone} />
-            {loadState === "loading" ? "Checking" : loadState === "error" ? "Unavailable" : loadState === "partial" ? "Partial data" : nextSession ? "Session found" : "Checked"}
-          </span>
-        </div>
-        <p className="telemetry-meta" role="status">{dashboardStatus}</p>
-      </div>
-
-      <div className="main-card main-card--module spacing-grid">
-        <p className="telemetry-kicker">Next step</p>
-        {loadState === "loading" ? (
-          <p className="telemetry-meta">Checking your workout and saved schedule…</p>
-        ) : nextSession ? (
-          <Link className="ux-button ux-button-primary w-full" href="/today">
-            {nextSession.resume ? "Resume your workout" : "Open today's workout"}
+    <div className="mx-auto max-w-4xl space-y-5">
+      <header className="space-y-2">
+        <p className="text-sm font-semibold uppercase tracking-wide text-[var(--accent-text)]">Home</p>
+        <h1>{title}</h1>
+        {data.week?.local_today ? <p className="ux-muted">{formatCalendarDate(data.week.local_today)}</p> : null}
+      </header>
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+        <section className="space-y-4" aria-label="Next step">
+          <div className="ux-card space-y-3" aria-busy={loading}>
+            <p className="text-sm text-[var(--text-secondary)]">{knownProgram}</p>
+            <h2 className="text-2xl">{primaryTitle}</h2>
+            <p className="ux-muted" role="status" aria-live="polite">{message}</p>
+            {workout ? <p className="ux-muted">{workout.exercises.length} exercises{workout.mesocycle ? ` · Week ${workout.mesocycle.week_index}` : ""}</p> : null}
+            {checked && !workout && !upcoming && !noSchedule && status.week === "pending" ? <p className="ux-muted">Your week is still loading.</p> : null}
+            {checked && workout ? <Link className="ux-button ux-button-primary w-full" href="/today">{workout.resume ? "Resume your workout" : "Open today's workout"}</Link>
+              : checked ? <Link className="ux-button ux-button-primary w-full" href="/week">{noSchedule && !upcoming ? "Choose dates" : "Review Week"}</Link> : null}
+            {home.retryAvailable ? <button className={`ux-button ${failed ? "ux-button-primary" : "ux-button-secondary"} w-full`} type="button" aria-disabled={loading} onClick={() => { if (!loading) setReload(value => value + 1); }}>Retry Home</button> : null}
+          </div>
+          <Link className="ux-card block space-y-2" href="/checkin">
+            <h2>A quick check-in?</h2>
+            <p className="ux-muted">Optional. You can do it after training.</p>
+            {data.review?.review_required ? <p className="ux-muted">Weekly review is due for planning. Your available workout stays accessible.</p> : null}
           </Link>
-        ) : !workoutChecked ? (
-          <button className="ux-button ux-button-primary w-full" type="button" onClick={() => setReloadKey((key) => key + 1)}>
-            Retry Home
-          </button>
-        ) : (
-          <Link className="ux-button ux-button-primary w-full" href="/week">Review Week</Link>
-        )}
-        <div className="flex flex-wrap gap-4 text-sm">
-          <Link href="/week" className="underline">Open Week</Link>
-          <Link href="/history" className="underline">View History</Link>
-          <Link href="/checkin" className="underline">Check-In</Link>
-        </div>
+        </section>
+        <aside className="space-y-4" aria-label="Your training week">
+          <div className="ux-card space-y-3">
+            <h2>This week</h2>
+            {data.week?.week_start && currentDates.length ? <ol className="grid grid-cols-7 gap-1" aria-label="Selected training dates">
+              {datesInWeek(data.week.week_start).map(date => <li key={date}>
+                <Link href="/week" aria-label={`${formatCalendarDate(date)}${currentDates.includes(date) ? ", training scheduled" : ", no training scheduled"}`} aria-current={date === data.week?.local_today ? "date" : undefined}
+                  className={`flex min-h-12 items-center justify-center rounded-lg border border-[var(--border-control)] ${currentDates.includes(date) ? "bg-[var(--action-fill)] text-[var(--action-text)]" : "bg-[var(--surface-raised)]"}`}>
+                  {Number(date.slice(-2))}
+                </Link>
+              </li>)}
+            </ol> : <p className="ux-muted">{status.week === "pending" ? "Checking your saved dates…" : status.week === "error" ? "Your week could not be loaded." : data.week?.plan ? "Open Week to review your saved plan." : "Choose actual dates and preview your week."}</p>}
+            {data.profile ? <p className="ux-muted">{data.profile.effective_days_available ?? data.profile.days_available} training days · {programName(data.profile, data.week)}</p> : null}
+            <Link className="ux-button ux-button-secondary w-full" href="/week">Open Week</Link>
+          </div>
+          <Link className="ux-card block space-y-2" href="/history"><h2>Recent training</h2><p className="ux-muted">Your previous workouts are still in History.</p><span className="underline">View History</span></Link>
+        </aside>
       </div>
-
-      {showDetails ? (
-        <>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="main-card main-card--shell">
-              <p className="telemetry-kicker">Today&apos;s Workout</p>
-              <p className="telemetry-value">{workoutChecked ? dashboard.workout?.title ?? "No session returned today" : "Not checked"}</p>
-              <p className="telemetry-meta">{presentation.workoutMeta}</p>
-            </div>
-            <div className="main-card main-card--shell">
-              <p className="telemetry-kicker">Current Week</p>
-              <p className="telemetry-value">{presentation.weekLabel}</p>
-              <p className="telemetry-meta">{presentation.weekMeta}</p>
-            </div>
-            {dashboard.profile || dashboard.analytics ? (
-              <div className="main-card main-card--shell">
-                <p className="telemetry-kicker">Bodyweight</p>
-                <p className="telemetry-value">{bodyweightLabel}</p>
-                <p className="telemetry-meta">
-                  {dashboard.analytics?.bodyweight_trend.length
-                    ? `Latest check-in inside ${dashboard.analytics.window.limit_weeks}-week window`
-                    : "Track weekly review check-ins to build the trend"}
-                </p>
-              </div>
-            ) : null}
-            {dashboard.analytics ? (
-              <div className="main-card main-card--shell">
-                <p className="telemetry-kicker">Training Stats</p>
-                <p className="telemetry-value">{presentation.statsLabel}</p>
-                <p className="telemetry-meta">{formatTrendMeta(dashboard.analytics)}</p>
-              </div>
-            ) : null}
-          </div>
-          <div className="grid gap-3 lg:grid-cols-2">
-            {workoutChecked ? <CoachBriefCard hasToken={hasToken} dashboard={dashboard} /> : null}
-            {workoutChecked ? <SessionBlueprintCard workout={dashboard.workout} /> : null}
-          </div>
-          <div className="grid gap-3 lg:grid-cols-2">
-            {dashboard.profile ? <BlockRadarCard profile={dashboard.profile} workout={dashboard.workout} /> : null}
-            {dashboard.analytics ? <MomentumRadarCard analytics={dashboard.analytics} /> : null}
-          </div>
-        </>
-      ) : null}
+      <details className="ux-card">
+        <summary className="min-h-12 cursor-pointer font-semibold">Training summary</summary>
+        <div className="space-y-4 pt-3">
+          {status.analytics === "pending" ? <p className="ux-muted">Training summary is still loading.</p> : status.analytics === "error" ? <p className="ux-muted">Training summary could not be loaded. Retry Home to check again.</p> : null}
+          {bodyweight != null ? <p>Bodyweight: {displayLoad(bodyweight, preferences.weight_unit)} {preferences.weight_unit}</p> : null}
+          {analytics ? <><p>{prCount ? `${prCount} PR highlights` : "No recent PR highlights"}</p>{leadTrend ? <div><p>{leadTrend.exercise_id.replaceAll("_", " ")} tracked across {leadTrend.points.length} sessions</p><p>Latest {displayLoad(leadTrend.latest_weight, preferences.weight_unit)} {preferences.weight_unit} top set across {leadTrend.points.length} tracked sessions</p></div> : <p className="ux-muted">Log workouts to build comparable history.</p>}</> : null}
+          {workout?.exercises.slice(0, 3).map((exercise, index) => <p key={`${exercise.id}-${index}`}>
+            {exercise.name} · {exercise.sets} x {authoredRepLabel(exercise)} @ {isBodyweightAuthored(exercise) ? "Bodyweight" : exercise.recommended_working_weight == null ? "Record actual load" : `${displayLoad(exercise.recommended_working_weight, preferences.weight_unit)} ${preferences.weight_unit}`}
+          </p>)}
+          <Link className="ux-button ux-button-ghost" href="/history#analytics">Open Analytics</Link>
+        </div>
+      </details>
     </div>
   );
 }

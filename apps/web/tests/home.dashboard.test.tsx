@@ -187,15 +187,15 @@ test.each([
   expect(screen.getAllByText(/2 PR highlights/i).length).toBeGreaterThan(0);
   expect(screen.getAllByText(new RegExp(`${days} training days`, "i")).length).toBeGreaterThan(0);
   expect(screen.getAllByText(program).length).toBeGreaterThan(0);
-  expect(screen.getByText(/Coach Brief/i)).toBeInTheDocument();
+  expect(screen.getByText("Training summary")).toBeInTheDocument();
+  expect(screen.queryByText(/Coach Brief/i)).not.toBeInTheDocument();
   expect(screen.getAllByText(/Session available/i).length).toBeGreaterThan(0);
   expect(screen.getByRole("link", { name: "Open today's workout" })).toHaveAttribute("href", "/today");
   expect(screen.queryByText("Synced")).not.toBeInTheDocument();
-  expect(screen.getByText(/Start with Bench Press: 3 x 8-12 @ 496 lb/i)).toBeInTheDocument();
-  expect(screen.getByText(/Session Blueprint/i)).toBeInTheDocument();
-  expect(screen.getByText(/Weak Areas/i)).toBeInTheDocument();
+  expect(screen.getByText(/Bench Press · 3 x 8-12 @ 496 lb/i)).toBeInTheDocument();
+  expect(screen.getByText(/A quick check-in/i)).toBeInTheDocument();
   expect(screen.getAllByText(/Chest/i).length).toBeGreaterThan(0);
-  expect(screen.getByText(/Momentum Radar/i)).toBeInTheDocument();
+  expect(screen.queryByText(/Momentum Radar/i)).not.toBeInTheDocument();
   expect(screen.getAllByText(/Bench Press/i).length).toBeGreaterThan(0);
 });
 
@@ -259,6 +259,6 @@ test("Home shows Week instead of inventing a workout after an acknowledged empty
   );
   render(<HomePage />);
   await waitFor(() => expect(screen.getByRole("link", { name: "Review Week" })).toHaveAttribute("href", "/week"));
-  expect(screen.getByText("No session returned today")).toBeInTheDocument();
+  expect(screen.getByText(/No session returned today/)).toBeInTheDocument();
   expect(screen.queryByRole("link", { name: "Open today's workout" })).not.toBeInTheDocument();
 });
