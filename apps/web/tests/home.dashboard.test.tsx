@@ -240,11 +240,11 @@ test("Home offers a read-only retry after workout failure without claiming a res
         resume: true,
       });
     }
-    return Response.json({});
+    return Response.json({ detail: "Other dashboard data unavailable" }, { status: 503 });
   });
 
   render(<HomePage />);
-  await waitFor(() => expect(screen.getByText(/Workout status unknown/i)).toBeInTheDocument());
+  await waitFor(() => expect(screen.getByText(/Home unavailable/i)).toBeInTheDocument());
   expect(screen.queryByText(/No session returned today/i)).not.toBeInTheDocument();
   expect(screen.getByText(/Retry before assuming it is a rest day/i)).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Retry Home" }));
@@ -255,7 +255,7 @@ test("Home offers a read-only retry after workout failure without claiming a res
 test("Home shows Week instead of inventing a workout after an acknowledged empty response", async () => {
   localStorage.setItem("hypertrophy_token", "synthetic-token");
   vi.mocked(globalThis.fetch).mockImplementation(async (input) =>
-    resolveUrl(input).endsWith("/workout/today") ? Response.json(null) : Response.json({}),
+    resolveUrl(input).endsWith("/workout/today") ? Response.json(null) : Response.json({ detail: "Optional section unavailable" }, { status: 503 }),
   );
   render(<HomePage />);
   await waitFor(() => expect(screen.getByRole("link", { name: "Review Week" })).toHaveAttribute("href", "/week"));
