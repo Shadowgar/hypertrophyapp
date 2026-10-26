@@ -51,13 +51,12 @@ test.each(["kg", "lb"] as const)("Home mass summaries honor saved %s and switchi
     useAnalyticsWeight = analyticsWeight;
     const page = <HomePage />;
     const { rerender } = render(page);
-    await screen.findByText(/Start with Qualified press/);
+    await screen.findByText(/Qualified press · 3 x/);
     switchUnits(rerender, page, initial, unit => {
       const kg = unit === "kg";
-      expect(screen.getByText(`Start with Qualified press: 3 x 8-12 @ ${kg ? 80 : 176.4} ${unit}.`)).toBeInTheDocument();
-      expect(screen.getAllByText(`3 x 8-12 @ ${kg ? 80 : 176.4} ${unit}`).length).toBeGreaterThan(0);
+      expect(screen.getByText(`Qualified press · 3 x 8-12 @ ${kg ? 80 : 176.4} ${unit}`)).toBeInTheDocument();
       expect(screen.getByText(`Latest ${kg ? 80 : 176.4} ${unit} top set across 0 tracked sessions`)).toBeInTheDocument();
-      expect(screen.getByText(`${analyticsWeight ? (kg ? 85 : 187.4) : (kg ? 82.5 : 181.9)} ${unit}`)).toBeInTheDocument();
+      expect(screen.getByText(`Bodyweight: ${analyticsWeight ? (kg ? 85 : 187.4) : (kg ? 82.5 : 181.9)} ${unit}`)).toBeInTheDocument();
     });
     cleanup();
   }
