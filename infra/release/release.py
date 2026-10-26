@@ -26,6 +26,9 @@ ENVIRONMENT = 'workoutapp-production'
 REQUIRED_JOBS = frozenset(('api-tests','core-tests','web-checks','workflow-checks','documentation','container-build','CI qualification'))
 CODEQL_CHECKS = frozenset(('Analyze (python)','Analyze (javascript-typescript)','Analyze (actions)'))
 INPUTS = ('apps/api','apps/web','packages/core-engine','docs/rules','importers','knowledge','programs','.dockerignore')
+# Publisher-only budgets; the installed operator executor is not updated by CI.
+QUALIFICATION_TIMEOUT_SECONDS = 10 * 60
+PUBLISH_TIMEOUT_SECONDS = 100 * 60  # existing 90m host limit + timer pickup/margin
 
 
 class Refused(Exception):
@@ -321,22 +324,28 @@ def publish(run_id):
     if not token:raise Refused('actions_identity_required')
     run=api('/actions/runs/'+str(run_id),token=token);revision=sha(run.get('head_sha'))
     # CI and CodeQL finish independently; wait without weakening either gate.
+    qualification_deadline=time.monotonic()+QUALIFICATION_TIMEOUT_SECONDS
     for _ in range(60):
+        if time.monotonic()>=qualification_deadline:raise Refused('qualification_timeout')
         try:qualify(revision,run_id,token=token);break
         except Refused as e:
             if str(e) not in ('required_checks_incomplete','codeql_incomplete'):raise
-            time.sleep(10)
+            remaining=qualification_deadline-time.monotonic()
+            if remaining>0:time.sleep(min(10,remaining))
     else:raise Refused('qualification_timeout')
     api('/deployments',token=token,body={'ref':revision,'auto_merge':False,'required_contexts':['CI qualification'],'environment':ENVIRONMENT,'task':'workoutapp-release','production_environment':True,'payload':{'ci_run_id':run_id},'description':'Qualified main; host enforces schema and immutable pair'})
-    for _ in range(180):
+    deadline=time.monotonic()+PUBLISH_TIMEOUT_SECONDS
+    while time.monotonic()<deadline:
         try:
             versions=[]
             for path in ('/api/health','/version'):
+                if time.monotonic()>=deadline:break
                 with public_response(path) as response:versions.append(json.load(response)['version'])
-            if versions==[revision,revision]:
+            if versions==[revision,revision] and time.monotonic()<deadline:
                 print('Release confirmed: '+revision);return
         except (OSError,ValueError,KeyError):pass
-        time.sleep(10)
+        remaining=deadline-time.monotonic()
+        if remaining>0:time.sleep(min(10,remaining))
     raise Refused('host_release_timeout_check_private_status')
 
 

@@ -5,6 +5,66 @@ roadmap. Implementation and isolated qualification are authorized. Production
 cutover, migration and service activation require the exact release authorization
 at the end of the preflight. No production deployment is claimed by this document.
 
+## Publisher monitor correction — pending owner review, 2026-10-26
+
+PR #119 subsequently released main `891228ffc91fc90998cc100644e4e3989c775cc7`;
+see its [verified live receipt](https://github.com/Shadowgar/hypertrophyapp/pull/119#issuecomment-6420216428).
+The historical preflight below is not permission to replay activation/migrations.
+This correction changes publisher waiting only and authorizes no new release.
+
+The earlier 2026-10-25 automatic proof recorded a 24m37s host run and 28m47s from
+request to success. The #119 retry ran from 14:59:34 to 15:33:15 UTC: **33m41s**.
+Its GitHub publisher failed at 15:32:26, **49 seconds before** host success. The
+180-check loop slept for a nominal 30 minutes but also spent time in HTTP probes;
+raising the Actions job limit alone would not fix that publisher deadline.
+
+| Budget | Proposed value / compatibility |
+| --- | --- |
+| Qualification polling | 10 minutes on a monotonic clock; existing admission/checks and retryable categories unchanged. One in-flight qualification call can finish; its current five metadata requests each retain their 30s timeout. |
+| Independent live API/web monitoring | **100 minutes**, monotonic deadline; 10s polling, with sleep clipped to remaining time. Existing 10s public socket timeout retained. A response arriving after the deadline cannot confirm success. |
+| Actions release job | **120 minutes**, covering the monitor, qualification plus its 150s in-flight allowance, 60s lookup/request allowance, 10s probe allowance and 6m20s combined setup/shutdown margin. The job cap remains a failure boundary for pathological network stalls. |
+| Installed host executor | **Unchanged**: 90-minute systemd service limit; timer pickup up to 5m15s. The 100-minute monitor covers those existing limits, rather than merely doubling the observed host time. |
+
+Tests use simulated clocks and provider/public responses: observed late success,
+success after the full host/timer allowance, transport/503/JSON/missing-version
+failures, mixed versions, slow probes, late responses and genuine timeouts. Timeout
+still raises `host_release_timeout_check_private_status`; it creates no second
+request, local deployment, recovery or success waiver. Qualification failure still
+prevents the deployment request. Original failed release attempts remain failed.
+
+**Separate trust boundaries:** GitHub Actions checks out the qualified main SHA
+and runs its publisher. The operator-owned installed executor does not self-update.
+This patch leaves `Host`, `qualify`, admission, configuration/schema/immutable-image
+checks and host CLI behavior unchanged. No host installation is required for this
+publisher correction; do not copy the edited shared file into the installed path.
+Any future host behavior change still needs its separate reviewed installation.
+
+**Merging would have operational effects.** With `WORKOUTAPP_RELEASE_ENABLED=true`,
+even this monitoring-only main merge runs full main CI and then requests a release
+of the *new merge SHA*. A paused timer delays execution but does not prevent a
+queued request. Once resumed, the existing host builds matching API/web images for
+that new SHA even if application inputs otherwise match; it does not relabel or
+reuse the running version as the new revision. PR CI cannot publish a release.
+
+Safest subsequent procedure:
+
+1. Keep this PR unmerged, the timer paused and live `891228f` unchanged for review.
+2. Obtain separate owner authorization for integration and the resulting release.
+   If authorization covers **integration only**, obtain authorization to disable
+   the publisher variable before merging, keep the timer paused, and avoid queuing
+   an unapproved release. This assignment changes neither control.
+3. After an authorized merge, require exact-main full CI/private-source/CodeQL
+   qualification. Before any resume, reverify current main, disk headroom, existing
+   last-success/configuration/schema and absence of a recovery marker.
+4. Only after explicit release authorization enable the existing publisher/timer
+   and use the corrected release workflow associated with that qualified main CI
+   run. If it was skipped while disabled, rerun that associated workflow; do not
+   replay the old `891228f` publisher against a newer main or invoke manual deploy.
+5. Require controller success plus matching main/API/web/images and read-only data
+   verification. Stop/report failures under the existing recovery procedure.
+
+The running version remains `891228f` until that separately authorized release.
+
 ## Verified diagnosis — 2026-10-24
 
 - Host `openclaw`, Tailscale `100.66.50.41`, local Docker context `default`.

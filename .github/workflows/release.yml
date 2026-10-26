@@ -20,7 +20,8 @@ jobs:
       github.event.workflow_run.head_repository.full_name == github.repository &&
       (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch')
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    # 100m live-pair monitor + qualification/network/setup/shutdown allowance.
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v5
         with:
