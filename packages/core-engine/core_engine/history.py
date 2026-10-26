@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 from collections import defaultdict
+import json
 from datetime import date, datetime, timedelta
 from typing import Any
+
+from .history_status import calendar_statuses, working
 
 
 def _read_attr(value: Any, key: str, default: Any = None) -> Any:
@@ -174,6 +177,43 @@ def _build_strength_trends(log_rows: list[Any], *, limit: int = 4) -> tuple[list
     return trends, highlights[:3]
 
 
+
+def _build_recorded_load_series(log_rows: list[Any]) -> tuple[list[dict], int]:
+    """Present existing weekly maximum loads separately for declared setups.
+
+    This is descriptive grouping, not exposure qualification or progression.
+    Missing setup stays outside a same-setup series and is disclosed separately.
+    """
+    groups: dict[str, dict] = {}
+    unknown = 0
+    for row in log_rows:
+        if _read_attr(row, "voided_at") is not None or not working(row):
+            continue
+        replay = _read_attr(row, "replay_context") or {}
+        exercise = replay.get("planned_exercise") or {}
+        context = (replay.get("load_intelligence") or {}).get("load_context") or replay.get("load_context") or (exercise.get("customized") or {}).get("identity") or {}
+        basis, equipment = context.get("basis"), context.get("equipment_key")
+        if context.get("unit") != "kg" or not basis or basis == "unknown" or not equipment:
+            unknown += 1
+            continue
+        exercise_id = str(_read_attr(row, "exercise_id") or "")
+        variant = exercise.get("performed_variant") or {}
+        # Preserve all declared Customized identity dimensions (including ROM),
+        # rather than claiming an exercise ID alone establishes comparability.
+        identity = (exercise_id, basis, equipment, variant, (exercise.get("customized") or {}).get("identity"))
+        key = json.dumps(identity, sort_keys=True, separators=(",", ":"))
+        group = groups.setdefault(key, {"series_id": key, "exercise_id": exercise_id,
+            "exercise_name": variant.get("name") or exercise.get("name") or exercise_id,
+            "basis": basis, "equipment_key": equipment, "unit": "kg", "weekly": {}})
+        week = str(_monday_of(_performed_date(row)))
+        group["weekly"][week] = max(group["weekly"].get(week, 0.0), float(_read_attr(row, "weight", 0.0)))
+    result = []
+    for group in sorted(groups.values(), key=lambda item: (item["exercise_name"], item["series_id"])):
+        result.append({key: val for key, val in group.items() if key != "weekly"} | {
+            "points": [{"week_start": week, "max_weight": _round2(weight)} for week, weight in sorted(group["weekly"].items())]})
+    return result, unknown
+
+
 def _build_body_measurement_trends(entries: list[Any], *, limit: int = 3) -> list[dict[str, Any]]:
     grouped: dict[tuple[str, str], list[Any]] = defaultdict(list)
     for row in entries:
@@ -218,11 +258,13 @@ def _build_planned_exercise_map(exercises: list[dict[str, Any]]) -> tuple[dict[s
     planned_by_exercise: dict[str, dict[str, Any]] = {}
     total_planned_sets = 0
     for exercise in exercises:
-        exercise_key = str(exercise.get("primary_exercise_id") or exercise.get("id") or "").strip()
+        exercise_key = str(exercise.get("exercise_occurrence_id") or exercise.get("primary_exercise_id") or exercise.get("id") or "").strip()
         if not exercise_key:
             continue
         planned_sets = max(0, int(exercise.get("sets", 0) or 0))
         planned_by_exercise[exercise_key] = {
+            "exercise_id": exercise.get("id"),
+            "exercise_occurrence_id": exercise.get("exercise_occurrence_id"),
             "planned_sets": planned_sets,
             "planned_name": str(exercise.get("name") or exercise_key),
             "primary_muscles": _normalize_muscles(exercise.get("primary_muscles")),
@@ -428,12 +470,15 @@ def _extract_planned_sessions_for_day(plans: list[Any], day: date) -> dict[str, 
     planned_sessions: dict[str, dict[str, Any]] = {}
 
     for session, program_id in _iter_plan_sessions_for_day(plans, target_day):
-        workout_id = str(session.get("session_id") or "").strip()
+        workout_id = str(session.get("workout_occurrence_id") or session.get("session_id") or "").strip()
         if not workout_id or workout_id in planned_sessions:
             continue
 
         planned_by_exercise, total_planned_sets = _build_planned_exercise_map(session.get("exercises") or [])
         planned_sessions[workout_id] = {
+            "workout_id": session.get("session_id"),
+            "workout_occurrence_id": session.get("workout_occurrence_id"),
+            "title": session.get("title"),
             "program_id": program_id,
             "planned_sets_total": total_planned_sets,
             "planned_by_exercise": planned_by_exercise,
@@ -448,17 +493,19 @@ def _accumulate_logged_day_rows(
 ) -> dict[str, dict[str, Any]]:
     grouped: dict[str, dict[str, Any]] = {}
     for row in log_rows:
-        workout_id = str(_read_attr(row, "workout_id") or "")
+        workout_id = str(_read_attr(row, "workout_occurrence_id") or _read_attr(row, "workout_id") or "")
         planned_for_workout = planned_sessions.get(workout_id, {})
         planned_by_exercise = planned_for_workout.get("planned_by_exercise", {})
-        exercise_lookup_key = str(_read_attr(row, "primary_exercise_id") or _read_attr(row, "exercise_id") or "")
+        exercise_lookup_key = str(_read_attr(row, "exercise_occurrence_id") or _read_attr(row, "primary_exercise_id") or _read_attr(row, "exercise_id") or "")
         planned_info = planned_by_exercise.get(exercise_lookup_key, {})
         planned_sets_for_exercise = planned_info.get("planned_sets")
 
         workout = grouped.setdefault(
             workout_id,
             {
-                "workout_id": workout_id,
+                "workout_id": _read_attr(row, "workout_id"),
+                "workout_occurrence_id": _read_attr(row, "workout_occurrence_id"),
+                "title": planned_for_workout.get("title"),
                 "program_id": planned_for_workout.get("program_id"),
                 "total_sets": 0,
                 "total_volume": 0.0,
@@ -468,12 +515,13 @@ def _accumulate_logged_day_rows(
         )
         primary_exercise_id = _read_attr(row, "primary_exercise_id")
         exercise_id = _read_attr(row, "exercise_id")
-        exercise_key = f"{primary_exercise_id or exercise_id}::{exercise_id}"
+        exercise_key = _read_attr(row, "exercise_occurrence_id") or f"{primary_exercise_id or exercise_id}::{exercise_id}"
         exercise_map: dict[str, Any] = workout["exercise_map"]
         exercise_entry = exercise_map.setdefault(
             exercise_key,
             {
                 "exercise_id": exercise_id,
+                "exercise_occurrence_id": _read_attr(row, "exercise_occurrence_id"),
                 "primary_exercise_id": primary_exercise_id,
                 "sets": [],
                 "total_sets": 0,
@@ -514,6 +562,18 @@ def _accumulate_logged_day_rows(
         workout["total_sets"] += 1
         workout["total_volume"] += set_volume
 
+    for identity, workout in grouped.items():
+        planned = planned_sessions.get(identity, {}).get("planned_by_exercise", {})
+        recorded_slots = {entry.get("exercise_occurrence_id") for entry in workout["exercise_map"].values()}
+        for slot, exercise in planned.items():
+            if not exercise.get("exercise_occurrence_id") or slot in recorded_slots:
+                continue
+            workout["exercise_map"][slot] = {
+                "exercise_id": exercise["exercise_id"], "primary_exercise_id": exercise["exercise_id"],
+                "exercise_occurrence_id": slot, "planned_name": exercise["planned_name"],
+                "primary_muscles": exercise["primary_muscles"], "planned_sets": exercise["planned_sets"],
+                "sets": [], "total_sets": 0, "total_volume": 0.0,
+            }
     return grouped
 
 
@@ -532,6 +592,7 @@ def _serialize_grouped_workouts(grouped: dict[str, dict[str, Any]]) -> tuple[lis
             exercise_entries.append(
                 {
                     "exercise_id": exercise["exercise_id"],
+                    "exercise_occurrence_id": exercise.get("exercise_occurrence_id"),
                     "primary_exercise_id": exercise["primary_exercise_id"],
                     "planned_name": exercise.get("planned_name"),
                     "primary_muscles": list(exercise.get("primary_muscles") or []),
@@ -549,7 +610,9 @@ def _serialize_grouped_workouts(grouped: dict[str, dict[str, Any]]) -> tuple[lis
         planned_set_count_total += planned_sets_total
         workouts.append(
             {
-                "workout_id": workout_id,
+                "workout_id": workout["workout_id"],
+                "workout_occurrence_id": workout.get("workout_occurrence_id"),
+                "title": workout.get("title"),
                 "program_id": workout.get("program_id"),
                 "total_sets": int(workout["total_sets"]),
                 "total_volume": _round2(float(workout["total_volume"])),
@@ -579,8 +642,9 @@ def _build_planned_only_workouts(
         planned_by_exercise = planned_entry.get("planned_by_exercise", {})
         planned_exercises = [
             {
-                "exercise_id": exercise_id,
-                "primary_exercise_id": exercise_id,
+                "exercise_id": exercise_info.get("exercise_id") or exercise_id,
+                "exercise_occurrence_id": exercise_info.get("exercise_occurrence_id"),
+                "primary_exercise_id": exercise_info.get("exercise_id") or exercise_id,
                 "planned_name": str(exercise_info.get("planned_name") or exercise_id),
                 "primary_muscles": list(exercise_info.get("primary_muscles") or []),
                 "sets": [],
@@ -593,10 +657,12 @@ def _build_planned_only_workouts(
         ]
         planned_sets_total = int(planned_entry.get("planned_sets_total", 0) or 0)
         planned_set_count_total += planned_sets_total
-        unique_exercise_ids.update(str(exercise_id) for exercise_id in planned_by_exercise.keys())
+        unique_exercise_ids.update(str(item.get("exercise_id") or key) for key, item in planned_by_exercise.items())
         workouts.append(
             {
-                "workout_id": workout_id,
+                "workout_id": planned_entry.get("workout_id") or workout_id,
+                "workout_occurrence_id": planned_entry.get("workout_occurrence_id"),
+                "title": planned_entry.get("title"),
                 "program_id": planned_entry.get("program_id"),
                 "total_sets": 0,
                 "total_volume": 0.0,
@@ -659,6 +725,7 @@ def build_history_analytics(
         key=lambda row: (_read_attr(row, "measured_on"), _read_attr(row, "created_at")),
     )
 
+    load_series, load_series_unknown_sets = _build_recorded_load_series(log_rows)
     strength_trends, pr_highlights = _build_strength_trends(ordered_logs)
     measurement_trends = _build_body_measurement_trends(ordered_measurements)
     volume_heatmap = _build_volume_heatmap(ordered_logs, limit_weeks=capped_weeks, today=resolved_today)
@@ -686,6 +753,8 @@ def build_history_analytics(
             for entry in checkins
         ],
         "strength_trends": strength_trends,
+        "load_series": load_series,
+        "load_series_unknown_sets": load_series_unknown_sets,
         "pr_highlights": pr_highlights,
         "body_measurement_trends": measurement_trends,
         "volume_heatmap": volume_heatmap,
@@ -711,6 +780,12 @@ def build_history_calendar(
         end_date=end_date,
     )
     days = _build_calendar_days(ordered_logs, start_date, end_date, planned_day_metadata, pr_day_metadata)
+    statuses = calendar_statuses(plans, ordered_logs)
+    for day in days:
+        day.update(statuses.get(day["date"], {"status": "unknown", "working_sets_completed": 0,
+            "working_sets_planned": None, "occurrences": []}))
+    # Retain legacy activity/streak fields for compatibility. Explicit status,
+    # never the legacy `completed` activity flag, owns completion presentation.
     completed_dates = [date.fromisoformat(day["date"]) for day in days if day["completed"]]
     current_streak_days, longest_streak_days = _build_streaks(completed_dates, today=resolved_today)
 
@@ -742,7 +817,7 @@ def build_history_day_detail(
 
     planned_only_workouts, planned_only_ids, planned_only_set_total = _build_planned_only_workouts(
         planned_sessions,
-        existing_workout_ids={item["workout_id"] for item in workouts},
+        existing_workout_ids={item.get("workout_occurrence_id") or item["workout_id"] for item in workouts},
     )
     workouts.extend(planned_only_workouts)
     unique_exercise_ids.update(planned_only_ids)

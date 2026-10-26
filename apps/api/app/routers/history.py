@@ -1,17 +1,20 @@
+from copy import deepcopy
+from types import SimpleNamespace
 from datetime import UTC, date, datetime, timedelta
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from core_engine import build_history_analytics, build_history_calendar, build_history_day_detail
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..history_dates import performed_log_rows
 from ..selected_date_plans import local_week
 from ..deps import get_current_user
-from ..models import BodyMeasurementEntry, User, WeeklyCheckin, WorkoutPlan
+from ..models import BodyMeasurementEntry, User, WeeklyCheckin, WorkoutOccurrence, WorkoutPlan
 from ..program_loader import resolve_administered_program_id
+from ..workout_identity import identified_sessions
 
 router = APIRouter()
 
@@ -25,6 +28,28 @@ def _visible_history_plans(db: Session, user_id: str, limit: int) -> list[Workou
     return (db.query(WorkoutPlan).filter(WorkoutPlan.user_id == user_id,
         func.coalesce(mode, "") != "selected_dates_superseded_v1")
         .order_by(WorkoutPlan.created_at.desc()).limit(limit).all())
+
+
+def _history_projection_plans(db: Session, user_id: str, start: date, end: date, rows: list[dict]) -> list:
+    """Owner-bound immutable execution snapshots override replaceable plan views."""
+    plans = _visible_history_plans(db, user_id, 24)
+    referenced = {row["workout_occurrence_id"] for row in rows if row.get("workout_occurrence_id")}
+    snapshots = {row.id: row for row in db.query(WorkoutOccurrence).filter(
+        WorkoutOccurrence.user_id == user_id,
+        or_(WorkoutOccurrence.scheduled_date.between(start, end), WorkoutOccurrence.id.in_(referenced)),
+    ).all()}
+    projected = [SimpleNamespace(payload={**deepcopy(plan.payload), "sessions": identified_sessions(plan, snapshots)}) for plan in plans]
+    included = {session["workout_occurrence_id"] for plan in projected for session in plan.payload["sessions"]}
+    for identity, occurrence in snapshots.items():
+        if identity in included:
+            continue
+        session = deepcopy(occurrence.payload)
+        session["workout_occurrence_id"] = identity
+        if occurrence.scheduled_date:
+            session["date"] = session["scheduled_date"] = occurrence.scheduled_date.isoformat()
+        projected.append(SimpleNamespace(payload={"program_template_id": occurrence.program_id, "sessions": [session]}))
+    return projected
+
 
 _PROGRAM_ID_SCALAR_KEYS = {
     "program_id",
@@ -189,7 +214,7 @@ def get_history_calendar(
     rows = performed_log_rows(db, user_id=current_user.id, start_date=resolved_start, end_date=resolved_end)
     rows_until_end = performed_log_rows(db, user_id=current_user.id, end_date=resolved_end)
 
-    plans = _visible_history_plans(db, current_user.id, 24)
+    plans = _history_projection_plans(db, current_user.id, resolved_start, resolved_end, rows)
     payload = build_history_calendar(
         log_rows=rows,
         all_log_rows_until_end=rows_until_end,
@@ -209,6 +234,6 @@ def get_history_day_detail(
 ) -> dict[str, Any]:
     rows = performed_log_rows(db, user_id=current_user.id, start_date=day, end_date=day)
 
-    plans = _visible_history_plans(db, current_user.id, 12)
+    plans = _history_projection_plans(db, current_user.id, day, day, rows)
     payload = build_history_day_detail(day=day, log_rows=rows, plans=plans)
     return _normalize_program_identity_payload(payload)

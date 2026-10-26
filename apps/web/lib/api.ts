@@ -792,7 +792,14 @@ export type HistoryVolumeHeatmap = {
   }>;
 };
 
+export type HistoryLoadSeries = {
+  series_id: string; exercise_id: string; exercise_name: string; basis: string; equipment_key: string; unit: "kg";
+  points: Array<{week_start: string; max_weight: number}>;
+};
+
 export type HistoryAnalyticsResponse = {
+  load_series?: HistoryLoadSeries[];
+  load_series_unknown_sets?: number;
   window: {
     start_date: string;
     end_date: string;
@@ -814,7 +821,16 @@ export type HistoryAnalyticsResponse = {
   volume_heatmap: HistoryVolumeHeatmap;
 };
 
+export type HistoryDayStatus = "complete" | "partial" | "scheduled" | "rest" | "unknown";
+export type HistoryOccurrenceStatus = {
+  workout_occurrence_id: string; workout_id?: string; title: string; program_id?: string | null;
+  status: HistoryDayStatus; working_sets_completed: number; working_sets_planned: number | null;
+};
 export type HistoryCalendarDay = {
+  status?: HistoryDayStatus;
+  working_sets_completed?: number;
+  working_sets_planned?: number | null;
+  occurrences?: HistoryOccurrenceStatus[];
   date: string;
   weekday: number;
   set_count: number;
@@ -852,6 +868,7 @@ export type HistoryDaySet = {
 };
 
 export type HistoryDayExercise = {
+  exercise_occurrence_id?: string | null;
   exercise_id: string;
   primary_exercise_id?: string | null;
   planned_name?: string | null;
@@ -864,6 +881,8 @@ export type HistoryDayExercise = {
 };
 
 export type HistoryDayWorkout = {
+  workout_occurrence_id?: string | null;
+  title?: string | null;
   workout_id: string;
   program_id?: string | null;
   total_sets: number;
