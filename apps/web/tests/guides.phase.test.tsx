@@ -138,7 +138,7 @@ test("phase and day guides preserve phase-aware routing to day and exercise page
   );
   expect(screen.getByRole("link", { name: /Open first exercise/i })).toHaveAttribute(
     "href",
-    "/guides/pure_bodybuilding_phase_1_full_body/exercise/bench_press",
+    "/guides/pure_bodybuilding_phase_1_full_body/exercise/bench_press?day=1&phase=main",
   );
 
   unmount();
@@ -174,10 +174,10 @@ test("phase and day guides preserve phase-aware routing to day and exercise page
 
   render(<ProgramPhaseDayGuidePage />);
 
-  await waitFor(() => expect(screen.getByText(/Bench Press/i)).toBeInTheDocument());
+  await waitFor(() => expect(screen.getByRole("heading", { name: /Bench Press/i })).toBeInTheDocument());
   expect(screen.getByText(/Main Phase/i)).toBeInTheDocument();
   expect(screen.getByRole("link", { name: /Open exercise guide/i })).toHaveAttribute(
     "href",
-    "/guides/pure_bodybuilding_phase_1_full_body/exercise/bench_press",
+    "/guides/pure_bodybuilding_phase_1_full_body/exercise/bench_press?day=1&phase=main",
   );
 });

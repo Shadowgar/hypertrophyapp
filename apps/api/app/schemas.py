@@ -92,15 +92,17 @@ class ProfileUpsert(BaseModel):
     session_time_budget_minutes: int | None = Field(default=None, ge=15, le=240)
     movement_restrictions: list[str] = Field(default_factory=list)
     near_failure_tolerance: Literal["low", "moderate", "high"] | None = None
-    nutrition_phase: str
-    calories: int
-    protein: int
-    fat: int
-    carbs: int
+    # Optional user targets; absent values are unknown, not reported intake.
+    nutrition_phase: str | None = None
+    calories: int | None = None
+    protein: int | None = None
+    fat: int | None = None
+    carbs: int | None = None
 
 
 class ProfileResponse(ProfileUpsert):
     email: EmailStr
+    initial_setup_available: bool = Field(default=False, json_schema_extra={"readOnly": True})
     scheduling_timezone: str | None = Field(default=None, json_schema_extra={"readOnly": True})
     effective_days_available: int | None = Field(default=None, json_schema_extra={"readOnly": True})
     effective_program_id: str | None = Field(default=None, json_schema_extra={"readOnly": True})

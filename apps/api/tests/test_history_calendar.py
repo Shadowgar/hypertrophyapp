@@ -8,7 +8,8 @@ configure_test_database("test_history_calendar")
 
 from app.database import Base, SessionLocal, engine
 from app.main import app
-from app.models import User, WorkoutPlan, WorkoutSetLog
+from app.models import User, WorkoutOccurrence, WorkoutPlan, WorkoutSetLog
+from app.workout_identity import identified_sessions
 
 
 def _reset_db() -> None:
@@ -132,16 +133,21 @@ def test_history_calendar_and_day_detail() -> None:
     assert detail_payload["totals"]["planned_set_count"] == 3
     assert detail_payload["totals"]["set_delta"] == -1
     assert detail_payload["totals"]["exercise_count"] == 1
-    assert len(detail_payload["workouts"]) == 1
-    assert detail_payload["workouts"][0]["workout_id"] == "workout_a"
-    assert detail_payload["workouts"][0]["program_id"] == "pure_bodybuilding_phase_1_full_body"
-    assert detail_payload["workouts"][0]["planned_sets_total"] == 3
-    assert detail_payload["workouts"][0]["set_delta"] == -1
-    assert detail_payload["workouts"][0]["exercises"][0]["exercise_id"] == "bench_press"
-    assert detail_payload["workouts"][0]["exercises"][0]["planned_name"] == "Bench Press"
-    assert detail_payload["workouts"][0]["exercises"][0]["primary_muscles"] == ["chest"]
-    assert detail_payload["workouts"][0]["exercises"][0]["planned_sets"] == 3
-    assert detail_payload["workouts"][0]["exercises"][0]["set_delta"] == -1
+    # Legacy receipts cannot be bound to a generated occurrence merely because
+    # a date and template happen to match. Preserve both factual records.
+    assert day_one_entry["status"] == "unknown"
+    assert len(detail_payload["workouts"]) == 2
+    recorded = next(item for item in detail_payload["workouts"] if item["total_sets"])
+    planned = next(item for item in detail_payload["workouts"] if not item["total_sets"])
+    assert recorded["workout_id"] == "workout_a"
+    assert recorded["workout_occurrence_id"] is None
+    assert recorded["planned_sets_total"] == 0
+    assert recorded["exercises"][0]["planned_sets"] is None
+    assert len(recorded["exercises"][0]["sets"]) == 2
+    assert planned["program_id"] == "pure_bodybuilding_phase_1_full_body"
+    assert planned["planned_sets_total"] == 3
+    assert planned["exercises"][0]["planned_name"] == "Bench Press"
+    assert planned["exercises"][0]["primary_muscles"] == ["chest"]
 
     missed_detail = client.get(f"/history/day/{day_three.isoformat()}", headers=headers)
     assert missed_detail.status_code == 200
@@ -165,3 +171,81 @@ def test_history_calendar_rejects_invalid_date_window() -> None:
         headers=headers,
     )
     assert response.status_code == 400
+
+
+def test_calendar_projects_owner_snapshots_effective_work_and_unknown_legacy_without_writes() -> None:
+    from copy import deepcopy
+    _reset_db()
+    client = TestClient(app)
+    headers = {"Authorization": f"Bearer {_register_token(client)}"}
+    credential_field = "pass" + "word"
+    other = client.post("/auth/register", json={"email": "other-calendar@example.com", credential_field: "OtherCalendar1", "name": "Other"})
+    other_headers = {"Authorization": f"Bearer {other.json()['access_token']}"}
+    monday, performed, scheduled = date(2026, 10, 19), date(2026, 10, 21), date(2026, 10, 23)
+    with SessionLocal() as db:
+        owner = db.query(User).filter_by(email="calendar@example.com").one()
+        outsider = db.query(User).filter_by(email="other-calendar@example.com").one()
+        plan = WorkoutPlan(user_id=owner.id, week_start=monday, split="full_body", phase="accumulation", payload={
+            "program_template_id": "pure_bodybuilding_phase_1_full_body",
+            "schedule": {"mode": "selected_dates_v1", "week_start": str(monday), "timezone": "UTC", "selected_dates": [str(performed), str(scheduled)]},
+            "sessions": [{"session_id": "repeated-template", "title": "Saved workout", "date": str(day), "scheduled_date": str(day),
+                          "exercises": [{"id": "press", "name": "Saved press", "sets": 2, "primary_muscles": ["chest"]}]} for day in (performed, scheduled)]})
+        db.add(plan); db.flush()
+        snapshot = identified_sessions(plan)[0]
+        occurrence_id, exercise_id = snapshot["workout_occurrence_id"], snapshot["exercises"][0]["exercise_occurrence_id"]
+        db.add(WorkoutOccurrence(id=occurrence_id, user_id=owner.id, plan_id=plan.id, week_start=monday, scheduled_date=performed,
+            session_slot=0, workout_id="repeated-template", program_id="pure_bodybuilding_phase_1_full_body", payload=deepcopy(snapshot)))
+        db.add(WorkoutOccurrence(id="foreign-occurrence", user_id=outsider.id, plan_id="foreign-plan", week_start=monday,
+            scheduled_date=performed, session_slot=0, workout_id="foreign", payload={"session_id": "foreign", "title": "Foreign private session", "date": str(performed),
+                "exercises": [{"id": "foreign", "exercise_occurrence_id": "foreign-slot", "sets": 1}]}))
+        db.flush()
+        owner_id, plan_id = owner.id, plan.id
+        def log(identity, index, **extra):
+            return WorkoutSetLog(id=identity,user_id=owner_id,workout_id="repeated-template",workout_occurrence_id=occurrence_id,
+                exercise_occurrence_id=exercise_id,primary_exercise_id="press",exercise_id="press",set_index=index,reps=8,weight=20,
+                created_at=datetime(2026,10,22,1),**extra)
+        db.add_all([log("work-one",1,set_kind="work"),log("warmup-two",2,set_kind="warmup"),
+                    log("technique-two",2,set_kind="drop",parent_set_index=1),
+                    log("voided-two",2,set_kind="work",voided_at=datetime(2026,10,22,2))])
+        changed = deepcopy(plan.payload)
+        changed["sessions"][0]["exercises"][0]["sets"] = 9
+        changed["sessions"][0]["title"] = "Replaceable plan title"
+        plan.payload = changed
+        db.commit()
+
+    url = "/history/calendar?start_date=2026-10-19&end_date=2026-10-25"
+    response = client.get(url,headers=headers)
+    assert response.status_code == 200
+    days = {item["date"]: item for item in response.json()["days"]}
+    assert days[str(performed)]["status"] == "partial"
+    assert days[str(performed)]["working_sets_completed"] == 1
+    assert days[str(performed)]["working_sets_planned"] == 2
+    assert days[str(scheduled)]["status"] == "scheduled"
+    assert days["2026-10-20"]["status"] == "rest"
+    assert "Foreign private session" not in response.text
+    detail = client.get(f"/history/day/{performed}",headers=headers).json()
+    assert detail["workouts"][0]["title"] == "Saved workout"
+    assert detail["workouts"][0]["planned_sets_total"] == 2
+    assert len(detail["workouts"][0]["exercises"][0]["sets"]) == 3
+    other_response = client.get(url,headers=other_headers)
+    assert "Saved workout" not in other_response.text
+    assert "Foreign private session" in other_response.text
+
+    with SessionLocal() as db:
+        assert db.query(WorkoutOccurrence).count() == 2  # GET did not materialize the unstarted slot.
+        assert db.query(WorkoutSetLog).count() == 4
+        db.add(log("correction-two",2,set_kind="work",supersedes_id="voided-two"))
+        db.commit()
+    complete = client.get(url,headers=headers).json()
+    assert next(item for item in complete["days"] if item["date"] == str(performed))["status"] == "complete"
+    with SessionLocal() as db:
+        # Replacing/deleting the plan view does not erase the retained occurrence.
+        db.delete(db.get(WorkoutPlan,plan_id));db.commit()
+    retained = client.get(url,headers=headers).json()
+    retained_days = {item["date"]:item for item in retained["days"]}
+    assert retained_days[str(performed)]["status"] == "complete"
+    assert retained_days["2026-10-20"]["status"] == "unknown"
+    with SessionLocal() as db:
+        assert db.query(WorkoutOccurrence).count() == 2
+        assert db.query(WorkoutSetLog).count() == 5
+        assert db.get(WorkoutSetLog,"voided-two").voided_at is not None

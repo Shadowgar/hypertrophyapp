@@ -11,7 +11,7 @@ const links = [
   ["/today", "Today"],
   ["/week", "Week"],
   ["/history", "History"],
-  ["/history#analytics", "Analytics"],
+  ["/analytics", "Analytics"],
   ["/programs", "Programs"],
   ["/checkin", "Check-In"],
   ["/guides", "Library"],
@@ -155,7 +155,9 @@ export function AppShell({
       <main
         id="main-content"
         className="ux-main"
-        key={accountScope(token) ?? "guest"}
+        // Onboarding owns its registration handoff and resets itself on external
+        // account changes. Remounting here would discard its pending save result.
+        key={pathname === "/onboarding" ? "onboarding" : accountScope(token) ?? "guest"}
       >
         {children}
       </main>

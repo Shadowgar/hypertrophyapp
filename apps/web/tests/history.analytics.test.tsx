@@ -1,8 +1,8 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
-import HistoryPage from "@/app/history/page";
+import AnalyticsPage from "@/app/analytics/page";
 
 function resolveUrl(input: RequestInfo | URL): string {
   if (typeof input === "string") {
@@ -19,7 +19,7 @@ beforeEach(() => {
   globalThis.fetch = vi.fn();
 });
 
-test("history page renders analytics dashboard payload", async () => {
+test("dedicated analytics preserves factual historical aggregates without readiness or causal claims", async () => {
   const payload = {
     window: { start_date: "2026-02-01", end_date: "2026-03-05", limit_weeks: 8, checkin_limit: 24 },
     checkins: [
@@ -108,20 +108,15 @@ test("history page renders analytics dashboard payload", async () => {
     return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
   });
 
-  render(<HistoryPage />);
+  render(<AnalyticsPage />);
 
-  await waitFor(() => expect(screen.getByText(/90% recent average/i)).toBeInTheDocument());
-  expect(screen.getByText(/High-Readiness Streak/i)).toBeInTheDocument();
-  expect(screen.getAllByText(/bench/i).length).toBeGreaterThan(0);
-  expect(screen.getAllByText(/\+22 lb/i).length).toBeGreaterThan(0);
-  expect(screen.getByText(/Volume Heat Map/i)).toBeInTheDocument();
-  expect(screen.getByText(/Coaching Decision Timeline/i)).toBeInTheDocument();
-  expect(screen.queryByText(/Progression is compounding\./i)).not.toBeInTheDocument();
-  expect(screen.getByText(/Latest rationale: maintain_until_stable/i)).toBeInTheDocument();
-
-  fireEvent.click(screen.getByRole("button", { name: /Coaching Decision Timeline/i }));
-  await waitFor(() => {
-    expect(screen.getByText(/Focus: biceps, shoulders/i)).toBeInTheDocument();
-  });
-  expect(screen.getAllByText(/maintain_until_stable/i).length).toBeGreaterThanOrEqual(2);
+  await waitFor(() => expect(screen.getByText(/90% recent average self-reported adherence/i)).toBeInTheDocument());
+  expect(screen.queryByText(/High-Readiness Streak/i)).not.toBeInTheDocument();
+  expect(screen.getByText("Recorded maximum 198.4 lb")).toBeInTheDocument();
+  expect(screen.getByText(/Recorded volume · lb × reps/)).toBeInTheDocument();
+  expect(screen.getByText("Coaching decision history")).toBeInTheDocument();
+  expect(screen.queryByText(/Progression is compounding/)).not.toBeInTheDocument();
+  expect(screen.getByText("maintain_until_stable")).toBeInTheDocument();
+  expect(screen.getByText(/These earlier exercise-level aggregates do not establish matching setup/)).toBeInTheDocument();
+  expect(screen.getByRole("heading", {name:"More training will tell the story"})).toBeInTheDocument();
 });

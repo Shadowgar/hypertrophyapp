@@ -1,115 +1,67 @@
 "use client";
 
-import { FormEvent, useState } from "react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-
-import { Button } from "@/components/ui/button";
-import { UiIcon } from "@/components/ui/icons";
-import { setAuthToken } from "@/lib/api";
-import {safeReturnPath} from "@/lib/appearance";
-import { API_BASE_URL } from "@/lib/env";
+import { FormEvent, useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { SetupCard, SetupFlow, setupStyles as styles } from '@/components/setup-flow';
+import { getToken, setAuthToken } from '@/lib/api';
+import { safeReturnPath } from '@/lib/appearance';
+import { API_BASE_URL } from '@/lib/env';
 
 export default function LoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const query = useSearchParams();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [status, setStatus] = useState("");
-  const [pending,setPending]=useState(false);
+  const [status, setStatus] = useState('');
+  const [pending, setPending] = useState(false);
+  const inFlight = useRef(false);
+  const mounted = useRef(false);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
 
-  async function handleSubmit(event: FormEvent) {
+  async function submit(event: FormEvent) {
     event.preventDefault();
-    if(pending)return;
-    setPending(true);
-    setStatus("Signing in…");
-
+    if (inFlight.current) return;
+    const originalToken = getToken();
+    inFlight.current = true;
+    setPending(true); setStatus('');
+    const isCurrent = () => mounted.current && getToken() === originalToken;
     try {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
       });
-      if (!response.ok) {
-        const detail = await response.text();
-        setStatus(detail ? `Login failed: ${detail}` : "Login failed");
-        return;
-      }
-
-      const payload = (await response.json()) as { access_token: string };
+      if (!isCurrent()) return;
+      if (!response.ok) { setStatus('Unable to sign in. Check your email and password and try again.'); return; }
+      const payload = await response.json() as { access_token?: string };
+      if (!isCurrent()) return;
+      if (!payload.access_token) throw new Error('Missing authentication result');
       setAuthToken(payload.access_token);
-      const nextPath = safeReturnPath(searchParams.get("next"));
-      setStatus("Logged in");
-      router.push(nextPath);
+      router.push(safeReturnPath(query.get('next')));
     } catch {
-      setStatus("Unable to sign in. Check your connection and try again.");
-    } finally {setPending(false);}
+      if (isCurrent()) setStatus('Unable to sign in. Check your connection and try again.');
+    } finally {
+      inFlight.current = false;
+      if (mounted.current) setPending(false);
+    }
   }
 
-  return (
-    <div className="space-y-4">
-      <h1 className="ui-title-page">Login</h1>
-      <form className="main-card main-card--module spacing-grid" onSubmit={handleSubmit}>
-        <input
-          className="ui-input"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          placeholder="Email" aria-label="Email" type="email" autoComplete="username" required
-        />
-        <input
-          className="ui-input"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          placeholder="Password" aria-label="Password" autoComplete="current-password" required
-          type={showPassword ? "text" : "password"}
-        />
-        <button
-          className="h-8 w-full rounded-md border border-[var(--ui-edge-idle)] bg-[var(--ui-surface-1)] px-3 text-xs text-zinc-100 transition-colors hover:border-[var(--ui-edge-active)]"
-          onClick={() => setShowPassword((prev) => !prev)}
-          type="button"
-        >
-          <span className="inline-flex items-center gap-2">
-            <UiIcon name="settings" className="ui-icon--action" />
-            {showPassword ? "Hide Password" : "Show Password"}
-          </span>
-        </button>
-        <Button className="w-full" type="submit">
-          <span className="inline-flex items-center gap-2">
-            <UiIcon name="login" className="ui-icon--action" />
-            Login
-          </span>
-        </Button>
-        <p className="ui-body-sm text-center">
-          <Link
-            href={email ? `/reset-password?email=${encodeURIComponent(email)}` : "/reset-password"}
-            className="underline decoration-[var(--ui-edge-idle)] underline-offset-2 hover:decoration-[var(--ui-edge-active)]"
-          >
-            Forgot password?
-          </Link>
-        </p>
-        <Link
-          href="/"
-          className="inline-flex w-full items-center justify-center rounded-md border border-[var(--ui-edge-idle)] bg-[var(--ui-surface-1)] px-3 py-2 text-sm text-zinc-100 hover:border-[var(--ui-edge-active)]"
-        >
-          Back to Main Screen
-        </Link>
-      </form>
-      <p className="ui-body-sm">Status: {status}</p>
-      {status.startsWith("Login failed") && (
-        <p className="ui-body-sm">
-          Wrong password?{" "}
-          <Link
-            href={email ? `/reset-password?email=${encodeURIComponent(email)}` : "/reset-password"}
-            className="underline decoration-[var(--ui-edge-idle)] underline-offset-2 hover:decoration-[var(--ui-edge-active)]"
-          >
-            Request a password reset
-          </Link>
-        </p>
-      )}
-      <p className="mt-6 text-center text-[9px] text-zinc-600">
-        {process.env.NEXT_PUBLIC_APP_VERSION ?? "dev"}
-      </p>
-    </div>
-  );
+  return <SetupFlow title="Welcome back" subtitle="Sign in to continue where you left off." aside={<>
+    <SetupCard title="Back to your workout"><p>After sign-in, return to the workout you opened.</p></SetupCard>
+    <SetupCard title="Your setup stays yours"><p>Signing in does not recreate a plan or change your program.</p></SetupCard>
+  </>}>
+    <form className={styles.form} onSubmit={submit}>
+      <label className={styles.field}>Email<input type="email" autoComplete="username" required value={email} disabled={pending} onChange={event => setEmail(event.target.value)} /></label>
+      <label className={styles.field}>Password<input type={showPassword ? 'text' : 'password'} autoComplete="current-password" required value={password} disabled={pending} onChange={event => setPassword(event.target.value)} /></label>
+      <Button type="button" variant="secondary" className={styles.control} aria-pressed={showPassword} onClick={() => setShowPassword(value => !value)}>{showPassword ? 'Hide password' : 'Show password'}</Button>
+      <Link className={styles.secondaryLink} href={email ? `/reset-password?email=${encodeURIComponent(email.trim())}` : '/reset-password'}>Forgot password?</Link>
+      {status ? <p role="alert" className={`${styles.notice} ${styles.error}`}>{status}</p> : null}
+      <div className={styles.actions}>
+        <Button type="submit" disabled={pending}>{pending ? 'Signing in…' : 'Sign in'}</Button>
+        <Link className={styles.textLink} href="/onboarding">Create an account</Link>
+      </div>
+    </form>
+  </SetupFlow>;
 }

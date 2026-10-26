@@ -1,19 +1,30 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, test, expect, vi } from 'vitest';
 import OnboardingPage from '@/app/onboarding/page';
+import LoginPage from '@/app/login/page';
 const push = vi.hoisted(() => vi.fn());
-vi.mock('next/navigation', () => ({useRouter: () => ({push, replace: vi.fn()})}));
-beforeEach(() => { localStorage.clear(); push.mockReset(); });
-test('existing-account login never writes profile, program, plan or check-in', async () => {
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push, replace: vi.fn() }), useSearchParams: () => new URLSearchParams() }));
+beforeEach(() => { localStorage.clear(); push.mockReset(); vi.unstubAllEnvs(); });
+test('existing-account sign-in uses its dedicated flow and never writes profile, program, plan or check-in', async () => {
   const calls: string[] = [];
-  vi.stubGlobal('fetch', vi.fn(async (url: string, init?: RequestInit) => {
-    calls.push(`${init?.method ?? 'GET'} ${url}`);
-    return new Response(JSON.stringify(url.endsWith('/auth/login') ? {access_token:'synthetic-token'} : url.endsWith('/plan/programs') ? [] : {}), {status:200});
-  }));
-  render(<OnboardingPage/>);
-  fireEvent.click(await screen.findByRole('button', {name:/already have an account/i}));
-  fireEvent.click(screen.getByRole('button',{name:/log in and continue/i}));
+  vi.stubGlobal('fetch', vi.fn(async (input, init) => { const url = String(input); calls.push(`${init?.method ?? 'GET'} ${url}`); return Response.json(url.endsWith('/auth/login') ? { access_token: 'synthetic-token' } : []); }));
+  const setup = render(<OnboardingPage />);
+  for (const link of screen.getAllByRole('link', { name: 'Sign in' })) expect(link).toHaveAttribute('href', '/login');
+  expect(calls.filter(call => call.startsWith('POST'))).toEqual([]); setup.unmount();
+  render(<LoginPage />);
+  fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'returning@example.com' } });
+  fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'Synthetic-only-Q98z!' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
   await waitFor(() => expect(push).toHaveBeenCalledWith('/today'));
-  expect(calls.filter(c => c.startsWith('POST'))).toEqual([expect.stringMatching(/POST .*\/auth\/login$/)]);
+  expect(calls.filter(call => call.startsWith('POST'))).toEqual([expect.stringMatching(/POST .*\/auth\/login$/)]);
+});
+test('approved account setup exposes no development reset operations or fabricated credentials', async () => {
+  vi.stubEnv('NEXT_PUBLIC_ENABLE_DEV_ACCOUNT_TOOLS', 'true');
+  vi.stubGlobal('fetch', vi.fn(async () => Response.json([])));
+  await act(async () => { render(<OnboardingPage />); });
+  expect(screen.queryByText('Developer Tools')).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /wipe|reset.*phase/i })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Create an account' }));
+  expect(screen.getByLabelText('Email')).toHaveValue(''); expect(screen.getByLabelText('Password')).toHaveValue(''); expect(screen.getByLabelText('Name')).toHaveValue('');
 });

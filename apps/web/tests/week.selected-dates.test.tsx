@@ -53,6 +53,55 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
+test("an acknowledged activation stays saved when its refresh fails", async () => {
+  const originalFetch = globalThis.fetch;
+  let refreshFailed = true;
+  globalThis.fetch = vi.fn(async (input, init) => {
+    if (String(input).includes('/plan/scheduling-context') && writes.some(write => write.path.endsWith('/plan/generate-week')) && refreshFailed) return Response.json({ detail: 'Synthetic refresh outage' }, { status: 503 });
+    return originalFetch(input, init);
+  });
+  render(<WeekPage />);
+  await chooseDates();
+  fireEvent.click(screen.getByRole('button', { name: 'Preview selected dates' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Activate selected dates' }));
+  await screen.findByText(/Selected dates activated.*refresh/i);
+  expect(screen.queryByRole('button', { name: 'Activate selected dates' })).not.toBeInTheDocument();
+  refreshFailed = false;
+  fireEvent.click(screen.getByRole('button', { name: 'Retry week loading' }));
+  await screen.findByText(/Week loaded/);
+  expect(writes.filter(write => write.path.endsWith('/plan/generate-week'))).toHaveLength(1);
+});
+
+test("a retired account's selected dates cannot be submitted under another token", async () => {
+  localStorage.setItem('hypertrophy_token', 'synthetic-week-account-a');
+  render(<WeekPage />); await chooseDates();
+  localStorage.setItem('hypertrophy_token', 'synthetic-week-account-b');
+  fireEvent.click(screen.getByRole('button', { name: 'Preview selected dates' }));
+  await act(async () => { await new Promise(resolve => setTimeout(resolve, 10)); });
+  expect(writes).toHaveLength(0);
+});
+
+test("a focus refresh cannot suppress an acknowledged activation", async () => {
+  const originalFetch = globalThis.fetch;
+  let releaseOld: ((response: Response) => void) | null = null;
+  let held = false;
+  globalThis.fetch = vi.fn(async (input, init) => {
+    if (String(input).includes('/plan/scheduling-context') && writes.some(write => write.path.endsWith('/plan/generate-week')) && !held) {
+      held = true; return new Promise<Response>(resolve => { releaseOld = resolve; });
+    }
+    return originalFetch(input, init);
+  });
+  render(<WeekPage />); await chooseDates();
+  fireEvent.click(screen.getByRole('button', { name: 'Preview selected dates' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Activate selected dates' }));
+  await waitFor(() => expect(releaseOld).not.toBeNull());
+  fireEvent(window, new Event('focus'));
+  await screen.findByRole('link', { name: 'Open scheduled workout' });
+  await act(async () => { releaseOld!(Response.json(context)); });
+  expect(screen.getByText(/Selected dates activated/)).toBeInTheDocument();
+  expect(writes.filter(write => write.path.endsWith('/plan/generate-week'))).toHaveLength(1);
+});
+
 async function chooseDates() {
   for (const name of ["Tue, Oct 6", "Fri, Oct 9", "Sun, Oct 11"]) fireEvent.click(await screen.findByRole("checkbox", { name }));
 }
@@ -61,6 +110,7 @@ test("current local week offers accessible exact dates and preview does not acti
   render(<WeekPage />);
   await chooseDates();
   expect(screen.getAllByRole("checkbox")).toHaveLength(7);
+  fireEvent.click(screen.getByRole("button", { name: "Change scheduling timezone" }));
   expect(screen.getByLabelText("Scheduling timezone")).toHaveValue("America/Los_Angeles");
   expect(screen.getByText("3 of 2–5 dates selected")).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Activate selected dates" })).not.toBeInTheDocument();
@@ -153,6 +203,7 @@ test("editing timezone invalidates preview and switching local week clears dates
   fireEvent.click(screen.getByRole("button", { name: "Preview selected dates" }));
   await screen.findByRole("button", { name: "Activate selected dates" });
   context = { ...context, timezone: "Pacific/Auckland", local_today: "2026-10-12", week_start: "2026-10-12" };
+  fireEvent.click(screen.getByRole("button", { name: "Change scheduling timezone" }));
   fireEvent.change(screen.getByLabelText("Scheduling timezone"), { target: { value: "Pacific/Auckland" } });
   expect(screen.queryByRole("button", { name: "Activate selected dates" })).not.toBeInTheDocument();
   fireEvent.blur(screen.getByLabelText("Scheduling timezone"));

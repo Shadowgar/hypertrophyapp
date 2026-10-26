@@ -1,8 +1,8 @@
 'use client';
 
-import {useEffect, useRef, useState} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 import {Button} from '@/components/ui/button';
-import {customizedApi} from '@/lib/api';
+import {customizedApi, getToken} from '@/lib/api';
 import type {InventoryDocument, InventoryKind, InventorySetup, InventoryUnit, InventoryVariant, LocationProfile, StrengthReport} from '@/lib/customized-inventory';
 
 export type CustomizedInventoryEditorProps = {
@@ -10,6 +10,7 @@ export type CustomizedInventoryEditorProps = {
   equipment: string[];
   variants: InventoryVariant[];
   onSaved: (document: InventoryDocument) => void;
+  accountToken?: string | null;
 };
 type WeightDraft = {weight: string; count: string};
 type SetupDraft = {
@@ -78,7 +79,9 @@ function Field({label, value, onChange, numeric = false}: {label: string; value:
   return <label className="block text-sm">{label}<input className="ui-input block w-full min-w-0" aria-label={label} type={numeric ? 'number' : 'text'} step={numeric ? 'any' : undefined} value={value} onChange={e => onChange(e.target.value)}/></label>;
 }
 
-export function CustomizedInventoryEditor({document, equipment, variants, onSaved}: CustomizedInventoryEditorProps) {
+export function CustomizedInventoryEditor({document, equipment, variants, onSaved, accountToken}: CustomizedInventoryEditorProps) {
+  const [initialToken] = useState(getToken);
+  const documentToken = accountToken === undefined ? initialToken : accountToken;
   const [draft, setDraft] = useState(() => loadDraft(document?.profile ?? null));
   const [revision, setRevision] = useState(document?.revision ?? 0);
   const [blocked, setBlocked] = useState(document === null);
@@ -86,19 +89,27 @@ export function CustomizedInventoryEditor({document, equipment, variants, onSave
   const [error, setError] = useState('');
   const [status, setStatus] = useState('');
   const epoch = useRef(0);
+  const mounted = useRef(false);
+  const loadedToken = useRef<string | null | undefined>(undefined);
+  const reset = useCallback(() => {
+    epoch.current++; loadedToken.current = undefined;
+    setDraft(loadDraft(null)); setBlocked(true); setBusy(false); setError(''); setStatus('Account changed. Reload your inventory before saving.');
+  }, []);
   useEffect(() => {
+    if (documentToken !== getToken()) { reset(); return; }
     epoch.current++;
+    loadedToken.current = documentToken;
     setDraft(loadDraft(document?.profile ?? null)); setRevision(document?.revision ?? 0);
     setBlocked(document === null); setBusy(false); setError(''); setStatus('');
-  }, [document]);
+  }, [documentToken, document, reset]);
   useEffect(() => {
+    mounted.current = true;
     const invalidate = () => {epoch.current++;};
-    const reset = () => {
-      invalidate(); setDraft(loadDraft(null)); setBlocked(true); setBusy(false); setError(''); setStatus('Account changed. Reload your inventory before saving.');
-    };
+    const changed = () => { if (loadedToken.current !== getToken()) reset(); };
     window.addEventListener('hypertrophy:auth-token-changed', reset);
-    return () => {invalidate(); window.removeEventListener('hypertrophy:auth-token-changed', reset);};
-  }, []);
+    window.addEventListener('storage', changed); window.addEventListener('focus', changed);
+    return () => {mounted.current = false; invalidate(); window.removeEventListener('hypertrophy:auth-token-changed', reset); window.removeEventListener('storage', changed); window.removeEventListener('focus', changed);};
+  }, [reset]);
   function updateSetup(key: string, change: Partial<SetupDraft>) {
     setDraft(d => {
       const previous = d.setups.find(s => s.key === key);
@@ -115,17 +126,24 @@ export function CustomizedInventoryEditor({document, equipment, variants, onSave
     setDraft(d => ({...d, setups: d.setups.filter(s => s.key !== key), assignments: Object.fromEntries(Object.entries(d.assignments).filter(([, value]) => value !== key)), reports: d.reports.filter(r => r.setup_key !== key)}));
   }
   async function save() {
-    if (blocked || busy) return;
+    if (!mounted.current || blocked || busy) return;
+    const token = loadedToken.current;
+    if (token === undefined || token !== getToken()) { reset(); return; }
     const attempt = epoch.current;
+    const current = () => {
+      if (!mounted.current) return false;
+      if (loadedToken.current !== undefined && loadedToken.current !== getToken()) { reset(); return false; }
+      return attempt === epoch.current && token === loadedToken.current && token === getToken();
+    };
     setError(''); setStatus('');
     try {
       const profile = serialize(draft, equipment, variants);
       setBusy(true);
       const saved = await customizedApi.saveProfile(revision, profile);
-      if (attempt !== epoch.current) return;
+      if (!current()) return;
       setRevision(saved.revision); setDraft(loadDraft(saved.profile)); setStatus('Inventory saved. Review a new program preview to use availability changes.'); onSaved(saved);
-    } catch (e) {if (attempt === epoch.current) setError(e instanceof Error ? e.message : 'Inventory could not be saved.');}
-    finally {if (attempt === epoch.current) setBusy(false);}
+    } catch (e) {if (current()) setError(e instanceof Error ? e.message : 'Inventory could not be saved.');}
+    finally {if (current()) setBusy(false);}
   }
   return <details className="space-y-3 rounded border border-zinc-700 p-3">
     <summary className="min-h-11 cursor-pointer py-2 font-semibold">Equipment inventory and calibration</summary>

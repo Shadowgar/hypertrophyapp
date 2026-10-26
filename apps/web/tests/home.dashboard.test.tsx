@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
 import HomePage from "@/app/page";
@@ -20,13 +20,13 @@ beforeEach(() => {
   globalThis.fetch = vi.fn();
 });
 
-test("home page shows guest dashboard copy without a token", () => {
+test("guest Home offers sign-in and first-use setup without invented workout metrics", async () => {
   render(<HomePage />);
 
-  expect(screen.getByText(/Guest Preview/i)).toBeInTheDocument();
-  expect(screen.getByText(/Sign in to load your training dashboard/i)).toBeInTheDocument();
-  expect(screen.getByText(/How the app coaches/i)).toBeInTheDocument();
-  expect(screen.getByText(/Finish onboarding to generate a personalized hypertrophy week/i)).toBeInTheDocument();
+  await waitFor(() => expect(screen.getByRole("link", { name: "Sign in" })).toBeInTheDocument());
+  expect(screen.getByRole("link", { name: /Start onboarding/i })).toHaveAttribute("href", "/onboarding");
+  expect(screen.queryByText(/Session available/i)).not.toBeInTheDocument();
+  expect(screen.queryByText(/Coach Brief/i)).not.toBeInTheDocument();
   expect(globalThis.fetch).not.toHaveBeenCalled();
 });
 
@@ -187,13 +187,15 @@ test.each([
   expect(screen.getAllByText(/2 PR highlights/i).length).toBeGreaterThan(0);
   expect(screen.getAllByText(new RegExp(`${days} training days`, "i")).length).toBeGreaterThan(0);
   expect(screen.getAllByText(program).length).toBeGreaterThan(0);
-  expect(screen.getByText(/Coach Brief/i)).toBeInTheDocument();
-  expect(screen.getByText(/Actionable/i)).toBeInTheDocument();
-  expect(screen.getByText(/Start with Bench Press: 3 x 8-12 @ 496 lb/i)).toBeInTheDocument();
-  expect(screen.getByText(/Session Blueprint/i)).toBeInTheDocument();
-  expect(screen.getByText(/Weak Areas/i)).toBeInTheDocument();
+  expect(screen.getByText("Training summary")).toBeInTheDocument();
+  expect(screen.queryByText(/Coach Brief/i)).not.toBeInTheDocument();
+  expect(screen.getAllByText(/Session available/i).length).toBeGreaterThan(0);
+  expect(screen.getByRole("link", { name: "Open today's workout" })).toHaveAttribute("href", "/today");
+  expect(screen.queryByText("Synced")).not.toBeInTheDocument();
+  expect(screen.getByText(/Bench Press · 3 x 8-12 @ 496 lb/i)).toBeInTheDocument();
+  expect(screen.getByText(/A quick check-in/i)).toBeInTheDocument();
   expect(screen.getAllByText(/Chest/i).length).toBeGreaterThan(0);
-  expect(screen.getByText(/Momentum Radar/i)).toBeInTheDocument();
+  expect(screen.queryByText(/Momentum Radar/i)).not.toBeInTheDocument();
   expect(screen.getAllByText(/Bench Press/i).length).toBeGreaterThan(0);
 });
 
@@ -207,4 +209,56 @@ test("home monitor load remains unknown instead of presenting zero pounds", asyn
   render(<HomePage />);
   await waitFor(() => expect(screen.getAllByText(/Monitor Press.*Record actual load/).length).toBeGreaterThan(0));
   expect(screen.queryByText(/Monitor Press.*@ 0 lbs/)).toBeNull();
+});
+
+
+test("Home keeps an in-flight schedule check distinct from an empty schedule", async () => {
+  localStorage.setItem("hypertrophy_token", "synthetic-token");
+  vi.mocked(globalThis.fetch).mockImplementation(() => new Promise<Response>(() => {}));
+  render(<HomePage />);
+
+  await waitFor(() => expect(screen.getByText(/Checking your workout and saved schedule/i)).toBeInTheDocument());
+  expect(screen.queryByText(/No session returned today/i)).not.toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: /Review Week/i })).not.toBeInTheDocument();
+  expect(screen.queryByText("Synced")).not.toBeInTheDocument();
+});
+
+test("Home offers a read-only retry after workout failure without claiming a rest day", async () => {
+  localStorage.setItem("hypertrophy_token", "synthetic-token");
+  let todayCalls = 0;
+  vi.mocked(globalThis.fetch).mockImplementation(async (input) => {
+    const url = resolveUrl(input);
+    if (url.endsWith("/workout/today")) {
+      todayCalls += 1;
+      if (todayCalls === 1) {
+        return Response.json({ detail: "Temporary failure" }, { status: 503 });
+      }
+      return Response.json({
+        session_id: "synthetic-session",
+        title: "Recovered next session",
+        exercises: [],
+        resume: true,
+      });
+    }
+    return Response.json({ detail: "Other dashboard data unavailable" }, { status: 503 });
+  });
+
+  render(<HomePage />);
+  await waitFor(() => expect(screen.getByText(/Home unavailable/i)).toBeInTheDocument());
+  expect(screen.queryByText(/No session returned today/i)).not.toBeInTheDocument();
+  expect(screen.getByText(/Retry before assuming it is a rest day/i)).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Retry Home" }));
+  await waitFor(() => expect(screen.getByRole("link", { name: "Resume your workout" })).toHaveAttribute("href", "/today"));
+  expect(todayCalls).toBe(2);
+});
+
+test("Home shows Week instead of inventing a workout after an acknowledged empty response", async () => {
+  localStorage.setItem("hypertrophy_token", "synthetic-token");
+  vi.mocked(globalThis.fetch).mockImplementation(async (input) =>
+    resolveUrl(input).endsWith("/workout/today") ? Response.json(null) : Response.json({ detail: "Optional section unavailable" }, { status: 503 }),
+  );
+  render(<HomePage />);
+  await waitFor(() => expect(screen.getByRole("link", { name: "Review Week" })).toHaveAttribute("href", "/week"));
+  expect(screen.getByText(/No session returned today/)).toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: "Open today's workout" })).not.toBeInTheDocument();
 });

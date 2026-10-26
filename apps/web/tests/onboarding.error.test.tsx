@@ -1,252 +1,41 @@
-import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, expect, test, vi } from "vitest";
-
-import OnboardingPage from "@/app/onboarding/page";
-
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({
-    push: vi.fn(),
-    replace: vi.fn(),
-  }),
-}));
-
-beforeEach(() => {
-  // @ts-ignore
-  globalThis.fetch = vi.fn();
-  localStorage.clear();
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
+import { beforeEach, expect, test, vi } from 'vitest';
+import { getToken, setAuthToken } from '@/lib/api';
+import { Call, fillAccount, installSetupApi, renderSetup } from './helpers/onboarding-driver';
+const push = vi.hoisted(() => vi.fn());
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push, replace: vi.fn() }) }));
+const calls: Call[] = [];
+beforeEach(() => { localStorage.clear(); calls.length = 0; push.mockReset(); });
+test('registration validation failure retains inputs and never falls back to login', async () => {
+  installSetupApi(calls, call => call.url.endsWith('/auth/register') ? Promise.resolve(Response.json({ detail: 'Password must be at least 8 characters' }, { status: 422 })) : undefined);
+  renderSetup(); await fillAccount(); fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Registration failed: Password must be at least 8 characters');
+  expect(screen.getByLabelText('Email')).toHaveValue('synthetic-onboarding@example.com');
+  expect(calls.some(call => call.url.endsWith('/auth/login') || call.url.endsWith('/profile/initial-setup'))).toBe(false);
 });
-
-async function completeQuestionnaireToAccountStep() {
-  fireEvent.click(screen.getByRole("button", { name: /next slide/i }));
-  fireEvent.click(screen.getByRole("button", { name: /next slide/i }));
-  fireEvent.click(screen.getByRole("button", { name: /get started/i }));
-
-  fireEvent.click(screen.getByRole("button", { name: /^male$/i }));
-  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
-
-  fireEvent.click(screen.getByRole("button", { name: /build muscle/i }));
-  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
-
-  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
-  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
-
-  fireEvent.change(screen.getByLabelText(/birthday/i), { target: { value: "1990-01-01" } });
-  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
-
-  fireEvent.click(screen.getByRole("button", { name: /getting started/i }));
-  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
-
-  // Skip all remaining skippable questionnaire questions until we reach the account step.
-  // (The questionnaire sequence changes as we add/remove steps, so we avoid hardcoding a count.)
-  let safety = 0;
-  while (!screen.queryByLabelText(/first name/i) && safety < 25) {
-    const skipButton = screen.queryByRole("button", { name: /skip/i });
-    if (!skipButton) break;
-    fireEvent.click(skipButton);
-    safety += 1;
-  }
-
-  await waitFor(() => {
-    expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
-  });
-  fireEvent.change(screen.getByLabelText(/first name/i), { target: { value: "Rocco" } });
-  fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
-}
-
-test("Onboarding surfaces register validation errors", async () => {
-  // @ts-ignore
-  globalThis.fetch.mockImplementation((input, _init) => {
-    const url = typeof input === "string" ? input : input.url;
-
-    if (url.endsWith("/plan/programs")) {
-      return Promise.resolve(
-        new Response(
-          JSON.stringify([{ id: "pure_bodybuilding_phase_1_full_body", name: "Hypertrophy Phase 1" }]),
-          { status: 200 },
-        ),
-      );
-    }
-
-    if (url.endsWith("/auth/register")) {
-      return Promise.resolve(new Response(JSON.stringify({ detail: "Password must be at least 8 characters" }), { status: 422 }));
-    }
-
-    return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
-  });
-
-  render(<OnboardingPage />);
-
-  await waitFor(() => {
-    expect(screen.getByRole("button", { name: /next slide/i })).toBeInTheDocument();
-  });
-
-  await completeQuestionnaireToAccountStep();
-
-  fireEvent.click(screen.getByRole("button", { name: /continue/i }));
-
-  await waitFor(() => {
-    expect(screen.getAllByText(/registration failed: password must be at least 8 characters/i).length).toBeGreaterThan(0);
-  });
-
-  // @ts-ignore
-  const calls = globalThis.fetch.mock.calls as Array<[RequestInfo | URL, RequestInit | undefined]>;
-  const calledUrls = calls.map(([input]) => {
-    if (typeof input === "string") {
-      return input;
-    }
-    if (input instanceof URL) {
-      return input.toString();
-    }
-    return input.url;
-  });
-  expect(calledUrls.some((url) => url.endsWith("/auth/login"))).toBe(false);
+test('registration normalizes email casing and whitespace', async () => {
+  installSetupApi(calls); renderSetup(); await fillAccount('  ATHLETE@Example.COM  ');
+  fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
+  await screen.findByRole('heading', { name: 'How would you like to train?' });
+  expect(calls.find(call => call.url.endsWith('/auth/register'))?.payload.email).toBe('athlete@example.com');
 });
-
-
-test("Onboarding developer wipe button calls dev wipe endpoint", async () => {
-  const confirmSpy = vi.spyOn(globalThis, "confirm").mockReturnValue(true);
-
-  // @ts-ignore
-  globalThis.fetch.mockImplementation((input, _init) => {
-    const url = typeof input === "string" ? input : input.url;
-
-    if (url.endsWith("/plan/programs")) {
-      return Promise.resolve(
-        new Response(
-          JSON.stringify([{ id: "pure_bodybuilding_phase_1_full_body", name: "Hypertrophy Phase 1" }]),
-          { status: 200 },
-        ),
-      );
-    }
-    if (url.endsWith("/auth/dev/wipe-user")) {
-      return Promise.resolve(new Response(JSON.stringify({ status: "wiped" }), { status: 200 }));
-    }
-
-    return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
-  });
-
-  render(<OnboardingPage />);
-
-  await waitFor(() => {
-    expect(screen.getByRole("button", { name: /wipe test user by email/i })).toBeInTheDocument();
-  });
-
-  fireEvent.click(screen.getByRole("button", { name: /wipe test user by email/i }));
-
-  await waitFor(() => {
-    expect(screen.getAllByText(/test user wiped/i).length).toBeGreaterThan(0);
-  });
-
-  // @ts-ignore
-  const calls = globalThis.fetch.mock.calls as Array<[RequestInfo | URL, RequestInit | undefined]>;
-  const wipeCall = calls.find(([input]) => {
-    let url: string;
-    if (typeof input === "string") {
-      url = input;
-    } else if (input instanceof URL) {
-      url = input.toString();
-    } else {
-      url = input.url;
-    }
-    return url.endsWith("/auth/dev/wipe-user");
-  });
-  expect(wipeCall).toBeDefined();
-
-  confirmSpy.mockRestore();
+test('an existing-account response offers sign-in without authenticating or modifying its profile', async () => {
+  installSetupApi(calls, call => call.url.endsWith('/auth/register') ? Promise.resolve(Response.json({ detail: 'Email already used' }, { status: 400 })) : undefined);
+  renderSetup(); await fillAccount(); fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('An account already exists');
+  expect(screen.getByRole('link', { name: 'I already have an account' })).toHaveAttribute('href', '/login');
+  expect(calls.filter(call => call.method === 'POST')).toHaveLength(1); expect(getToken()).toBeNull();
 });
-
-
-test("Onboarding register request normalizes email casing and whitespace", async () => {
-  // @ts-ignore
-  globalThis.fetch.mockImplementation((input, _init) => {
-    const url = typeof input === "string" ? input : input.url;
-
-    if (url.endsWith("/plan/programs")) {
-      return Promise.resolve(
-        new Response(
-          JSON.stringify([{ id: "pure_bodybuilding_phase_1_full_body", name: "Hypertrophy Phase 1" }]),
-          { status: 200 },
-        ),
-      );
-    }
-    if (url.endsWith("/auth/register")) {
-      return Promise.resolve(new Response(JSON.stringify({ access_token: "tok" }), { status: 200 }));
-    }
-    if (url.endsWith("/profile")) {
-      return Promise.resolve(new Response(JSON.stringify({ status: "ok" }), { status: 200 }));
-    }
-    if (url.endsWith("/plan/generate-week")) {
-      return Promise.resolve(new Response(JSON.stringify({ status: "ok" }), { status: 200 }));
-    }
-
-    return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
-  });
-
-  render(<OnboardingPage />);
-
-  await waitFor(() => {
-    expect(screen.getByRole("button", { name: /next slide/i })).toBeInTheDocument();
-  });
-
-  await completeQuestionnaireToAccountStep();
-
-  fireEvent.change(screen.getByLabelText(/email address/i), {
-    target: { value: "  ATHLETE@Example.COM  " },
-  });
-  fireEvent.click(screen.getByRole("button", { name: /continue/i }));
-
-  await waitFor(() => {
-    // @ts-ignore
-    const calls = globalThis.fetch.mock.calls as Array<[RequestInfo | URL, RequestInit | undefined]>;
-    const registerCall = calls.find(([input]) => {
-      let url: string;
-      if (typeof input === "string") {
-        url = input;
-      } else if (input instanceof URL) {
-        url = input.toString();
-      } else {
-        url = input.url;
-      }
-      return url.endsWith("/auth/register");
-    });
-    expect(registerCall).toBeDefined();
-    const payloadBody = registerCall?.[1]?.body;
-    const body = typeof payloadBody === "string" ? (JSON.parse(payloadBody) as { email?: string }) : {};
-    expect(body.email).toBe("athlete@example.com");
-  });
-});
-
-
-test("Onboarding password reset request button calls reset endpoint", async () => {
-  // @ts-ignore
-  globalThis.fetch.mockImplementation((input, _init) => {
-    const url = typeof input === "string" ? input : input.url;
-
-    if (url.endsWith("/plan/programs")) {
-      return Promise.resolve(
-        new Response(
-          JSON.stringify([{ id: "pure_bodybuilding_phase_1_full_body", name: "Hypertrophy Phase 1" }]),
-          { status: 200 },
-        ),
-      );
-    }
-    if (url.endsWith("/auth/password-reset/request")) {
-      return Promise.resolve(new Response(JSON.stringify({ status: "accepted", reset_token: "abc123def456ghi7" }), { status: 200 }));
-    }
-
-    return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
-  });
-
-  render(<OnboardingPage />);
-
-  await waitFor(() => {
-    expect(screen.getByRole("button", { name: /request password reset token/i })).toBeInTheDocument();
-  });
-
-  fireEvent.click(screen.getByRole("button", { name: /request password reset token/i }));
-
-  await waitFor(() => {
-    expect(screen.getAllByText(/password reset token issued:/i).length).toBeGreaterThan(0);
-  });
+test('duplicate registration and a late response after an account switch cannot install a stale token', async () => {
+  let resolve!: (value: Response) => void;
+  const pending = new Promise<Response>(done => { resolve = done; });
+  installSetupApi(calls, call => call.url.endsWith('/auth/register') ? pending : undefined);
+  renderSetup(); await fillAccount(); fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
+  fireEvent.submit(screen.getByLabelText('Email').closest('form')!);
+  expect(calls.filter(call => call.url.endsWith('/auth/register'))).toHaveLength(1);
+  act(() => setAuthToken('another-account'));
+  await act(async () => resolve(Response.json({ access_token: 'stale-registration-token' })));
+  await waitFor(() => expect(screen.getByText(/Account changed/)).toBeInTheDocument());
+  expect(getToken()).toBe('another-account'); expect(push).not.toHaveBeenCalled();
+  expect(calls.some(call => call.url.endsWith('/profile/initial-setup'))).toBe(false);
 });

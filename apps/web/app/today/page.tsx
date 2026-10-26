@@ -534,6 +534,7 @@ export default function TodayPage() {
   const [notesOpenByExercise, setNotesOpenByExercise] = useState<NotesState>({});
   const [swapTargetExerciseId, setSwapTargetExerciseId] = useState<string | null>(null);
   const [showSorenessModal, setShowSorenessModal] = useState(false);
+  const [sorenessLookupFailed, setSorenessLookupFailed] = useState(false);
   const [sorenessStatus, setSorenessStatus] = useState("Idle");
   const [sorenessNotes, setSorenessNotes] = useState("");
   const [weakAreas, setWeakAreas] = useState<string[]>([]);
@@ -659,6 +660,7 @@ export default function TodayPage() {
       setWorkoutProgress(null);
       setCompletedSetsByExercise({});
       setShowSorenessModal(false);
+      setSorenessLookupFailed(false);
       setSorenessByMuscle(createInitialSorenessState());
       setSorenessNotes("");
       setSorenessStatus("Idle");
@@ -763,15 +765,10 @@ export default function TodayPage() {
       setOccurrenceVerified(true);
       if (!sameOccurrence) {
         const storageKey = occurrenceStorageKey("swaps", data);
-        const saved = localStorage.getItem(storageKey);
-        if (saved) {
-          try {
-            const parsed = JSON.parse(saved) as SwapState;
-            setSwapIndexByExercise(parsed);
-          } catch {
-            setSwapIndexByExercise({});
-          }
-        } else {
+        try {
+          const saved = localStorage.getItem(storageKey);
+          setSwapIndexByExercise(saved ? JSON.parse(saved) as SwapState : {});
+        } catch {
           setSwapIndexByExercise({});
         }
         const savedUndo = pendingLogPayload<UndoAttempt>(undoRecoveryStorageKey());
@@ -878,7 +875,7 @@ export default function TodayPage() {
           percent: Number(progress.percent_complete) || 0,
         });
         const completedKey = occurrenceStorageKey("completed", data);
-        localStorage.setItem(completedKey, JSON.stringify(merged));
+        try { localStorage.setItem(completedKey, JSON.stringify(merged)); } catch { /* server progress remains authoritative */ }
         if ((Number(progress.percent_complete) || 0) >= 100) {
           await loadWorkoutSummary(workoutReference(data));
         }
@@ -952,19 +949,14 @@ export default function TodayPage() {
     isBeginWorkoutLoadInProgress.current = true;
     setOccurrenceVerified(false);
     setWorkoutLoading(true);
+    setSorenessLookupFailed(false);
     setMessage(currentOccurrence.current ? "Refreshing your scheduled workout…" : "Loading your scheduled workout…");
     try {
-      // Independent gate reads; neither permits loading Today until both succeed.
-      const [today, reviewStatus] = await Promise.all([resolveLocalToday(), api.getWeeklyReviewStatus()]);
+      // The account's scheduling clock owns occurrence/date routing. A missing
+      // weekly report is not authority to block an already scheduled workout.
+      const today = await resolveLocalToday();
       if (!isCurrentPageRead(scope)) return;
       const sorenessSkipKey = `hypertrophy_soreness_skip:${today}`;
-      if (reviewStatus.today_is_sunday && reviewStatus.review_required) {
-        setWorkout(null);
-        currentOccurrence.current = null;
-        setSelectedExerciseId(null);
-        setMessage("Sunday review required before starting workout. Go to Check-In to submit weekly review.");
-        return;
-      }
 
       const loadedWorkout = await loadToday();
       if (!loadedWorkout || !isCurrentPageRead(scope)) {
@@ -986,8 +978,18 @@ export default function TodayPage() {
         // Ignore localStorage errors; fall back to normal behavior.
       }
 
-      const entriesToday = await api.listSoreness(today, today);
-      if (!isCurrentPageRead(scope)) return;
+      let entriesToday;
+      try {
+        entriesToday = await api.listSoreness(today, today);
+      } catch {
+        // Optional reported context cannot revoke an accepted occurrence or
+        // fabricate a clear soreness report when its read is unavailable.
+        if (isCurrentPageRead(scope) && currentOccurrence.current === workoutReference(loadedWorkout)) {
+          setSorenessLookupFailed(true);
+        }
+        return;
+      }
+      if (!isCurrentPageRead(scope) || currentOccurrence.current !== workoutReference(loadedWorkout)) return;
       if (entriesToday.length > 0) {
         return;
       }
@@ -1063,7 +1065,7 @@ export default function TodayPage() {
       return;
     }
     const storageKey = occurrenceStorageKey("swaps", workout);
-    localStorage.setItem(storageKey, JSON.stringify(swapIndexByExercise));
+    try { localStorage.setItem(storageKey, JSON.stringify(swapIndexByExercise)); } catch { /* view cache is optional */ }
   }, [swapIndexByExercise, workout]);
 
   function toggleNotes(exerciseId: string) {
@@ -1324,6 +1326,9 @@ export default function TodayPage() {
   const swapTargetCurrentIndex = swapTarget ? (swapIndexByExercise[exerciseKey(swapTarget)] ?? 0) : 0;
   const activeProgramId = workout ? extractProgramId(workout.session_id) : null;
   const executionVisible = occurrenceVerified && Boolean(selectedExerciseId);
+  const customizedProposalId = typeof workout?.customized === "object" ? workout.customized?.proposal_id : undefined;
+  const manageDatesHref = customizedProposalId ? `/customize?proposal=${encodeURIComponent(customizedProposalId)}` : workout?.customized ? "/customize" : "/week";
+  const manageDatesLabel = customizedProposalId ? "Manage Customized dates or replace program" : workout?.customized ? "Manage Customized programs" : "Manage training dates";
 
   const todayDate = localToday
     ? `${formatCalendarDate(localToday.date)} · ${localToday.timezone}`
@@ -1333,7 +1338,7 @@ export default function TodayPage() {
     <div className={executionVisible ? "atlas-page" : "space-y-4 pb-8"}>
       <div className={executionVisible ? "hidden" : "flex flex-wrap items-baseline justify-between gap-2"}>
         <h1 className="ui-title-page">Today</h1>
-        {!undoRecovery ? <Link className="inline-flex min-h-11 items-center underline" href={workout?.customized?.proposal_id?`/customize?proposal=${encodeURIComponent(workout.customized.proposal_id)}`:"/customize"}>Manage Customized dates or replace program</Link> : null}
+        {!undoRecovery ? <Link className="inline-flex min-h-11 items-center underline" href={manageDatesHref}>{manageDatesLabel}</Link> : null}
         <p className="ui-meta text-zinc-400">{todayDate}</p>
       </div>
       <div className={executionVisible ? "hidden" : "main-card main-card--module main-card--accent spacing-grid spacing-grid--tight"}>
@@ -1368,6 +1373,15 @@ export default function TodayPage() {
       ) : null}
 
       {undoRecovery && (!workout || undoRecovery.scope !== occurrenceStorageKey("attempt", workout) || !workout.exercises.some(item => exerciseKey(item) === undoRecovery.exerciseIdentity)) ? <div role="alert"><p>An undo for a previous workout is unconfirmed. This workout is read-only until the original undo is reconciled.</p><Button disabled={priorUndoBusy} onClick={recoverPriorUndo}>Retry original undo</Button></div> : null}
+      {sorenessLookupFailed && workout && occurrenceVerified && !executionVisible ? (
+        <div className="main-card main-card--shell space-y-2 ui-body-sm" role="status">
+          <p>Soreness check unavailable. Retry the check or continue without a soreness report.</p>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={beginWorkoutLoad} disabled={workoutLoading}>Retry soreness check</Button>
+            <Button variant="secondary" onClick={() => setSorenessLookupFailed(false)}>Continue workout</Button>
+          </div>
+        </div>
+      ) : null}
       {workout && occurrenceVerified ? (
         <div className={selectedExerciseId ? "hidden" : "space-y-3"}>
           <p className="ui-body-sm text-zinc-200">

@@ -1,0 +1,49 @@
+{
+  "checked_at_utc": "2026-10-26T09:22:31.414153+00:00",
+  "revision": "905305cffef61c7e45d9a66a7525f63fcd3b5005",
+  "browser": "Chromium",
+  "viewports": [
+    "390x844",
+    "1440x900"
+  ],
+  "theme_families": [
+    "graphite",
+    "charcoal",
+    "classic"
+  ],
+  "appearances": [
+    "light",
+    "dark"
+  ],
+  "routes": [
+    "/history",
+    "/analytics",
+    "/today",
+    "/customize"
+  ],
+  "cases": 48,
+  "sampled_text_elements": 2004,
+  "contrast_failure_routes": 0,
+  "overflow_routes": 0,
+  "page_errors": [],
+  "follow_device_light_dark": true,
+  "allowed_preference_writes": 7,
+  "blocked_mutations": [],
+  "workout_write_actions": 0,
+  "today_control_scope": "Unstarted second authored Phase2 exercise opened; working weight/repetitions and normal controls inspected, no logging or calibration",
+  "customized_control_scope": "Existing proposal/input surface inspected; no preview, consent, accept or activation commands",
+  "screenshot_inspection": [
+    "assets/classic-light-history.png",
+    "assets/classic-light-analytics.png",
+    "assets/classic-light-today.png"
+  ],
+  "original_cases_preserved": 96,
+  "original_light_contrast_failures": 12,
+  "all_original_affected_cases_rechecked": true,
+  "browser_closed": true,
+  "limitations": [
+    "Chromium only; physical Safari and VoiceOver pending",
+    "Computed solid-color contrast sampling does not replace a complete accessibility audit"
+  ],
+  "scopeNote": "Original96-case sweep included Customize screenshot; only three representative corrected images published. Full computed samples retained privately."
+}

@@ -2,7 +2,7 @@ import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
-import CheckinPage from "@/app/checkin/page";
+import CheckinPage from "@/components/weekly-review";
 
 function resolveUrl(input: RequestInfo | URL): string {
   if (typeof input === "string") {
@@ -168,7 +168,7 @@ test.each([
   render(<CheckinPage />);
 
   await waitFor(() => {
-    expect(screen.getByText(/Sunday review required/i)).toBeInTheDocument();
+    expect(screen.getByText(/Weekly review available/i)).toBeInTheDocument();
   });
 
   expect(screen.getByText(/Previous Week Lift Audit/i)).toBeInTheDocument();
@@ -180,6 +180,7 @@ test.each([
   });
   expect(screen.getByText(/high fault/i)).toBeInTheDocument();
 
+  fireEvent.change(screen.getByLabelText("Adherence Score (1-5)"), { target: { value: "4" } });
   fireEvent.click(screen.getByRole("button", { name: /Save Weekly Review/i }));
 
   await waitFor(() => {

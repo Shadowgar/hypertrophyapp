@@ -45,22 +45,22 @@ afterEach(() => {
 });
 
 test.each([
-  { zone: "Pacific/Auckland", instant: "2026-10-04T11:30:00Z", today: "2026-10-05", monthStart: "2026-09-08", weekStart: "2026-09-29", previousStart: "2026-09-22", previousEnd: "2026-09-28" },
-  { zone: "America/Los_Angeles", instant: "2026-10-05T02:30:00Z", today: "2026-10-04", monthStart: "2026-09-07", weekStart: "2026-09-28", previousStart: "2026-09-21", previousEnd: "2026-09-27" },
-])("History anchors rolling windows to persisted $zone local day across the UTC week boundary", async ({ zone, instant, today, monthStart, weekStart, previousStart, previousEnd }) => {
+  { zone: "Pacific/Auckland", instant: "2026-10-04T11:30:00Z", today: "2026-10-05", weekStart: "2026-10-05", weekEnd: "2026-10-11", previousStart: "2026-09-28", previousEnd: "2026-10-04" },
+  { zone: "America/Los_Angeles", instant: "2026-10-05T02:30:00Z", today: "2026-10-04", weekStart: "2026-09-28", weekEnd: "2026-10-04", previousStart: "2026-09-21", previousEnd: "2026-09-27" },
+])("History anchors calendar weeks to persisted $zone local day across the UTC week boundary", async ({ zone, instant, today, weekStart, weekEnd, previousStart, previousEnd }) => {
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date(instant));
   historyResponses(today, zone);
   render(<HistoryPage />);
 
-  expect(await screen.findByText(new RegExp(`Window ${monthStart} to ${today}`))).toBeInTheDocument();
-  expect(screen.getByTitle(`${today}: 1 sets, 1 exercises, 220.5 lb × reps volume, 0 PRs`)).toBeInTheDocument();
-  fireEvent.click(screen.getByRole("button", { name: "Week" }));
-  expect(await screen.findByText(new RegExp(`Window ${weekStart} to ${today}`))).toBeInTheDocument();
-  fireEvent.click(screen.getByRole("button", { name: "Previous Window" }));
+  expect(await screen.findByRole("button",{name:`${today}: Unknown`})).toBeInTheDocument();
+  const current = () => (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls.map(([input])=>new URL(String(input),"http://history.test")).filter(url=>url.pathname.endsWith("/history/calendar")).at(-1)!;
+  expect(current().searchParams.get("start_date")).toBe(weekStart);
+  expect(current().searchParams.get("end_date")).toBe(weekEnd);
+  fireEvent.click(screen.getByRole("button", { name: "Previous window" }));
   expect(await screen.findByText("No calendar history yet.")).toBeInTheDocument();
-  fireEvent.click(screen.getByRole("button", { name: "Next Window" }));
-  expect(await screen.findByText(new RegExp(`Window ${weekStart} to ${today}`))).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Next window" }));
+  expect(await screen.findByRole("button",{name:`${today}: Unknown`})).toBeInTheDocument();
 
   // Query bounds also own the prior window when there is no performed history to render.
   const requests = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls.map(([input]) => new URL(String(input), "http://history.test"));
@@ -73,7 +73,7 @@ test("History retains the explicit UTC day for accounts without a persisted sche
   vi.setSystemTime(new Date("2026-10-04T11:30:00Z"));
   historyResponses("2026-10-04", "UTC");
   render(<HistoryPage />);
-  expect(await screen.findByText(/Window 2026-09-07 to 2026-10-04/)).toBeInTheDocument();
+  expect(await screen.findByRole("button",{name:"2026-10-04: Unknown"})).toBeInTheDocument();
 });
 
 test.each(["unavailable", "invalid"])("History sends no guessed calendar range when its server clock is %s and can retry", async (failure) => {
@@ -86,5 +86,5 @@ test.each(["unavailable", "invalid"])("History sends no guessed calendar range w
   // Replace the invalid response with a qualified date before retrying the same control.
   if (failure === "invalid") historyResponses("2026-10-05", "Pacific/Auckland");
   fireEvent.click(screen.getByRole("button", { name: "Retry Calendar Load" }));
-  expect(await screen.findByText(/Window 2026-09-08 to 2026-10-05/)).toBeInTheDocument();
+  expect(await screen.findByRole("button",{name:"2026-10-05: Unknown"})).toBeInTheDocument();
 });

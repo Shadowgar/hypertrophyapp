@@ -1,0 +1,22 @@
+.page { display: grid; gap: 24px; min-width: 0; color: var(--text-primary); }
+.header { display: grid; gap: 8px; }
+.breadcrumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 0; margin: 0; list-style: none; }
+.breadcrumbs li { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.breadcrumbs a { display: inline-flex; align-items: center; min-height: 44px; padding: 4px 8px; border-radius: 8px; }
+.layout { display: grid; gap: 24px; align-items: start; min-width: 0; }
+.stack { display: grid; gap: 12px; min-width: 0; }
+.card { display: grid; gap: 12px; min-width: 0; border: 1px solid var(--border-control); border-radius: 16px; padding: 20px; background: var(--surface); overflow-wrap: anywhere; }
+.cardLink { min-height: 88px; color: var(--text-primary); text-decoration: none; }
+.cardTitle { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.muted { color: var(--text-secondary); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.action { display: inline-flex; justify-content: center; align-items: center; min-height: 48px; padding: 10px 16px; border: 1px solid var(--border-control); border-radius: 12px; background: var(--surface); color: var(--text-primary); font-weight: 600; text-align: center; overflow-wrap: anywhere; }
+.primary { background: var(--action-fill); color: var(--action-text); border-color: var(--action-fill); }
+.action[aria-disabled="true"] { color: var(--text-secondary); cursor: default; }
+.status { min-height: 24px; color: var(--text-secondary); }
+.source { min-width: 0; border: 1px solid var(--border-subtle); border-radius: 16px; padding: 0 16px; background: var(--surface); }
+.source summary { min-height: 48px; padding: 12px 0; cursor: pointer; font-weight: 600; }
+.source pre { margin: 0 0 16px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 0.8125rem; }
+.instructions { white-space: pre-wrap; overflow-wrap: anywhere; }
+.page a:focus-visible, .page button:focus-visible, .page summary:focus-visible { outline: 3px solid var(--accent-text); outline-offset: 3px; }
+@media (min-width: 1000px) { .layout { grid-template-columns: minmax(0, 1.5fr) minmax(240px, 1fr); } }
