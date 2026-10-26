@@ -115,7 +115,7 @@ test("Settings coaching panel previews and applies intelligence decisions", asyn
   globalThis.fetch.mockImplementation((input, init) => {
     const url = typeof input === "string" ? input : input.url;
 
-    if (url.endsWith("/profile") && (!init || init.method === "GET")) {
+    if (url.endsWith("/profile") && (!init?.method || init.method === "GET")) {
       return Promise.resolve(new Response(JSON.stringify(profile), { status: 200 }));
     }
     if (url.endsWith("/plan/programs")) {
@@ -204,6 +204,8 @@ test("Settings coaching panel previews and applies intelligence decisions", asyn
   await waitFor(() => {
     expect(screen.getByText(/Full Body Phase 1/i)).toBeInTheDocument();
   });
+  expect(screen.queryByRole("button", { name: /Get Recommendation/i })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: /Program recommendation/i }));
   expect(screen.getByRole("button", { name: /Get Recommendation/i })).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: /Get Recommendation/i }));
   await waitFor(() => {
@@ -373,7 +375,7 @@ test("Settings adaptation apply failure exposes retry recovery actions", async (
   // @ts-ignore
   globalThis.fetch.mockImplementation((input, init) => {
     const url = typeof input === "string" ? input : input.url;
-    if (url.endsWith("/profile") && (!init || init.method === "GET")) {
+    if (url.endsWith("/profile") && (!init?.method || init.method === "GET")) {
       return Promise.resolve(new Response(JSON.stringify(profile), { status: 200 }));
     }
     if (url.endsWith("/plan/programs")) {
@@ -429,7 +431,7 @@ test("Settings page shows inline validation for invalid temporary duration", asy
   // @ts-ignore
   globalThis.fetch.mockImplementation((input, init) => {
     const url = typeof input === "string" ? input : input.url;
-    if (url.endsWith("/profile") && (!init || init.method === "GET")) {
+    if (url.endsWith("/profile") && (!init?.method || init.method === "GET")) {
       return Promise.resolve(new Response(JSON.stringify(profile), { status: 200 }));
     }
     if (url.endsWith("/plan/programs")) {
