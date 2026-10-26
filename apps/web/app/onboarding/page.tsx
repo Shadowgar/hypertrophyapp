@@ -9,7 +9,7 @@ import { useAppearance } from '@/components/appearance-provider';
 import { api, getProgramDisplayName, getToken, setAuthToken, type ProgramTemplateOption } from '@/lib/api';
 import { canonicalLoad } from '@/lib/appearance';
 import { API_BASE_URL } from '@/lib/env';
-import { browserDraft, DRAFT_KEY, emptyAnswers, EQUIPMENT, GOALS, OPTIONAL_OPTIONS, readDraft, RESTRICTIONS, setupPayload, validBasics, type SetupAnswers } from './setup-draft';
+import { discardCachedDraft, emptyAnswers, EQUIPMENT, GOALS, OPTIONAL_OPTIONS, readCachedDraft, readDraft, RESTRICTIONS, setupPayload, validBasics, writeCachedDraft, type SetupAnswers } from './setup-draft';
 
 type Stage = 'welcome' | 'account' | 'program' | 'authored' | 'program-detail' | 'help' | 'basics' | 'equipment' | 'review';
 const AUTHORED_IDS = ['pure_bodybuilding_phase_1_full_body', 'pure_bodybuilding_phase_2_full_body'];
@@ -32,14 +32,14 @@ async function responseError(response: Response, fallback: string): Promise<stri
 
 export default function OnboardingPage() {
   const [accountRevision, setAccountRevision] = useState(0);
-  const reset = useCallback(() => { localStorage.removeItem(DRAFT_KEY); setAccountRevision(value => value + 1); }, []);
+  const reset = useCallback(() => { discardCachedDraft(); setAccountRevision(value => value + 1); }, []);
   return <>
     {accountRevision > 0 ? <p role="status" className={styles.notice}>Account changed. Sign in to continue with the current account; no other profile was changed.</p> : null}
-    <SetupForm key={accountRevision} onAccountChanged={reset} />
+    <SetupForm key={accountRevision} recoverDraft={accountRevision === 0} onAccountChanged={reset} />
   </>;
 }
 
-function SetupForm({ onAccountChanged }: { onAccountChanged: () => void }) {
+function SetupForm({ onAccountChanged, recoverDraft }: { onAccountChanged: () => void; recoverDraft: boolean }) {
   const router = useRouter();
   const appearance = useAppearance();
   const [stage, setStage] = useState<Stage>('welcome');
@@ -58,6 +58,7 @@ function SetupForm({ onAccountChanged }: { onAccountChanged: () => void }) {
   const [hasSession, setHasSession] = useState(false);
   const [draftReady, setDraftReady] = useState(false);
   const [hasDraft, setHasDraft] = useState(false);
+  const [cacheAvailable, setCacheAvailable] = useState(true);
   const [unitTouched, setUnitTouched] = useState(false);
   const createdAccount = useRef<{ email: string; token: string } | null>(null);
   const submissionRevision = useRef(0);
@@ -95,19 +96,23 @@ function SetupForm({ onAccountChanged }: { onAccountChanged: () => void }) {
   }, [catalogAttempt]);
 
   useEffect(() => {
-    const raw = localStorage.getItem(DRAFT_KEY);
+    // An account change must not recover the prior draft if its removal was denied.
+    if (!recoverDraft) { setDraftReady(true); return; }
+    const raw = readCachedDraft();
+    if (raw === undefined) setCacheAvailable(false);
     if (raw) {
       const restored = readDraft(raw);
       if (restored) { setAnswers(restored); setHasDraft(true); setStatus('Recovered saved onboarding draft. Review your choices and re-enter private measurements.'); }
-      else localStorage.removeItem(DRAFT_KEY);
+      else if (!discardCachedDraft()) setCacheAvailable(false);
     }
     setDraftReady(true);
-  }, []);
+  }, [recoverDraft]);
 
   useEffect(() => {
-    if (!draftReady || completed.current || stage === 'welcome' || stage === 'account') return;
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(browserDraft(answers))); setHasDraft(true);
-  }, [answers, draftReady, stage]);
+    if (!draftReady || !cacheAvailable || completed.current || stage === 'welcome' || stage === 'account') return;
+    const saved = writeCachedDraft(answers); setHasDraft(saved);
+    if (!saved) setCacheAvailable(false);
+  }, [answers, cacheAvailable, draftReady, stage]);
 
   useEffect(() => {
     if (appearance.ready && !unitTouched) setAnswers(value => withWeightUnit(value, appearance.preferences.weight_unit));
@@ -208,7 +213,8 @@ function SetupForm({ onAccountChanged }: { onAccountChanged: () => void }) {
         return;
       }
       completed.current = true;
-      localStorage.removeItem(DRAFT_KEY); setHasDraft(false);
+      if (!discardCachedDraft()) setCacheAvailable(false);
+      setHasDraft(false);
       setStatus('Profile saved. Choose your training dates next.');
       router.push(answers.selectedProgramId === 'full_body_v1' ? '/customize' : '/week');
     } catch { if (isCurrent()) fail('Profile save failed. Your account is created; retry to finish setup.'); }
@@ -234,8 +240,9 @@ function SetupForm({ onAccountChanged }: { onAccountChanged: () => void }) {
     <SetupCard title="Already have an account?"><p><Link href="/login">Sign in</Link> to return to your saved training.</p></SetupCard>
   </>}>
     {status ? <p role={error ? 'alert' : 'status'} className={`${styles.notice} ${error ? styles.error : ''}`}>{status}</p> : null}
+    {!cacheAvailable ? <p role="status" className={styles.notice}>Browser draft storage is unavailable. Keep this page open until setup is saved.</p> : null}
     {hasSession && !createdAccount.current ? <Button type="button" variant="secondary" disabled={pending} onClick={resumeInitialSetup}>Continue account setup</Button> : null}
-    {hasDraft ? <details className={styles.disclosure}><summary>Saved setup choices</summary><p className={styles.helper}>Credentials and private measurements are not stored in this browser draft.</p><Button type="button" variant="ghost" onClick={() => { localStorage.removeItem(DRAFT_KEY); setHasDraft(false); }}>Clear Saved Draft</Button></details> : null}
+    {hasDraft ? <details className={styles.disclosure}><summary>Saved setup choices</summary><p className={styles.helper}>Credentials and private measurements are not stored in this browser draft.</p><Button type="button" variant="ghost" onClick={() => { if (discardCachedDraft()) setHasDraft(false); else setCacheAvailable(false); }}>Clear Saved Draft</Button></details> : null}
 
     {stage === 'welcome' ? <div className={styles.form}>
       <SetupCard title="Train with your program"><p>Follow an Authored program or choose to build a Customized program.</p></SetupCard>

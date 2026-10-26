@@ -36,6 +36,19 @@ export function browserDraft(answers: SetupAnswers) {
   return Object.fromEntries(Object.entries(answers).filter(([key]) => !privateFields.has(key)));
 }
 
+// Draft persistence is optional and must never decide whether server setup succeeded.
+export function readCachedDraft(): string | null | undefined {
+  try { return localStorage.getItem(DRAFT_KEY); } catch { return undefined; }
+}
+
+export function writeCachedDraft(answers: SetupAnswers): boolean {
+  try { localStorage.setItem(DRAFT_KEY, JSON.stringify(browserDraft(answers))); return true; } catch { return false; }
+}
+
+export function discardCachedDraft(): boolean {
+  try { localStorage.removeItem(DRAFT_KEY); return true; } catch { return false; }
+}
+
 export function readDraft(raw: string): SetupAnswers | null {
   try {
     const value = JSON.parse(raw) as Record<string, unknown>;
