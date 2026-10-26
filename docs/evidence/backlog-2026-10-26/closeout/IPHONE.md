@@ -3,7 +3,7 @@
 Chromium at a mobile viewport does not qualify Safari, the physical keyboard,
 VoiceOver or background suspension. No physical iPhone was available in this pass.
 
-Use application source `252d3dcf 92cdc 31b7c0f8c 15f 00dd5cbf 04ee 70a`, or a later
+Use application source `252d3dcf92cdc31b7c0f8c15f00dd5cbf04ee70a`, or a later
 evidence-only head with identical application trees. Record the exact source, web
 build ID, API `/health` and web `/version` before testing. The disposable preview
 pair for this pass is web `127.0.0.1:3130` → API `127.0.0.1:8130` → PostgreSQL
