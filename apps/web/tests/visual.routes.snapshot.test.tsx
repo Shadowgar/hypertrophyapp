@@ -34,10 +34,10 @@ beforeEach(() => {
   globalThis.fetch = vi.fn();
 });
 
-test("visual snapshot: home route", () => {
-  const { getByText } = render(<HomePage />);
-  expect(getByText(/HyperTrophy Plan/i)).toBeInTheDocument();
-  expect(getByText(/Start Onboarding/i)).toBeInTheDocument();
+test("visual snapshot: guest Home route", async () => {
+  const { findByRole, getByRole } = render(<HomePage />);
+  await findByRole("heading", { name: "WorkoutApp" });
+  expect(getByRole("link", { name: /Start onboarding/i })).toBeInTheDocument();
 });
 
 test("visual snapshot: week route", async () => {
