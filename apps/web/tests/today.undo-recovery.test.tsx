@@ -78,6 +78,8 @@ test.each([["before", 2], ["after", 2], ["after", 1]] as const)("%s-commit undo 
   expect(screen.getByLabelText("Select exercise")).toBeDisabled();
   for (const button of screen.getAllByRole("button", { name: "Review workout" })) expect(button).toBeDisabled();
   expect(screen.queryByRole("link", { name: "Back to Week" })).not.toBeInTheDocument();
+  expect(screen.queryByText("Manage training dates")).not.toBeInTheDocument();
+  expect(screen.queryByText("Manage Customized dates or replace program")).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: /^Warm-up ·/ }));
   expect(screen.getByRole("button", { name: "Log warm-up 1" })).toBeDisabled();
   fireEvent.click(screen.getByRole("button", { name: "Close Warm-up" }));

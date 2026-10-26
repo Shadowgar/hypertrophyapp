@@ -1335,7 +1335,7 @@ export default function TodayPage() {
     <div className={executionVisible ? "atlas-page" : "space-y-4 pb-8"}>
       <div className={executionVisible ? "hidden" : "flex flex-wrap items-baseline justify-between gap-2"}>
         <h1 className="ui-title-page">Today</h1>
-        {!undoRecovery ? <Link className="inline-flex min-h-11 items-center underline" href={workout?.customized?.proposal_id?`/customize?proposal=${encodeURIComponent(workout.customized.proposal_id)}`:"/customize"}>Manage Customized dates or replace program</Link> : null}
+        {!undoRecovery ? <Link className="inline-flex min-h-11 items-center underline" href={workout?.customized?.proposal_id?`/customize?proposal=${encodeURIComponent(workout.customized.proposal_id)}`:"/week"}>{workout?.customized?.proposal_id ? "Manage Customized dates or replace program" : "Manage training dates"}</Link> : null}
         <p className="ui-meta text-zinc-400">{todayDate}</p>
       </div>
       <div className={executionVisible ? "hidden" : "main-card main-card--module main-card--accent spacing-grid spacing-grid--tight"}>

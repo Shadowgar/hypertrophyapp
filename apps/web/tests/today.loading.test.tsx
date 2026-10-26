@@ -37,6 +37,22 @@ function fixture(override: (url: string, init?: RequestInit) => Promise<Response
 }
 afterEach(() => { vi.restoreAllMocks(); cleanup(); vi.unstubAllGlobals(); });
 
+test.each([
+  { mode: "Authored Phase 1", program: "pure_bodybuilding_phase_1_full_body", proposal: undefined, label: "Manage training dates", href: "/week" },
+  { mode: "Authored Phase 2", program: "pure_bodybuilding_phase_2_full_body", proposal: undefined, label: "Manage training dates", href: "/week" },
+  { mode: "Customized", program: "customized_full_body_v1", proposal: "saved/proposal?revision=4", label: "Manage Customized dates or replace program", href: "/customize?proposal=saved%2Fproposal%3Frevision%3D4" },
+])("$mode date navigation preserves the actual workout mode without writes", async ({ program, proposal, label, href }) => {
+  fixture(url => url.endsWith("/workout/today") ? Response.json({
+    ...workout(), session_id: `${program}_day_1`, program_template_id: program,
+    ...(proposal ? { customized: { proposal_id: proposal } } : {}),
+  }) : undefined);
+  render(<TodayPage />);
+  await screen.findByRole("button", { name: /Resume Press/ });
+  expect(screen.getByRole("link", { name: label })).toHaveAttribute("href", href);
+  expect(screen.queryByRole("link", { name: proposal ? "Manage training dates" : "Manage Customized dates or replace program" })).not.toBeInTheDocument();
+  expect(vi.mocked(fetch).mock.calls.every(([, init]) => !init?.method || init.method === "GET")).toBe(true);
+});
+
 test.each(["read", "write"])("a failed optional browser cache %s cannot discard a verified workout", async operation => {
   fixture();
   if (operation === "read") {

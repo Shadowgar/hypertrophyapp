@@ -14,9 +14,9 @@ exports[`visual snapshot: today route initial state 1`] = `
     </h1>
     <a
       class="inline-flex min-h-11 items-center underline"
-      href="/customize"
+      href="/week"
     >
-      Manage Customized dates or replace program
+      Manage training dates
     </a>
     <p
       class="ui-meta text-zinc-400"
