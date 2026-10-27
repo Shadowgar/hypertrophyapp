@@ -96,18 +96,23 @@ mounts. Identity was verified before persistence operations. API/web used dedica
 missing libraries were extracted in isolated evidence storage, without installing
 host packages. Browser automation does not substitute for physical iPhone Safari.
 
-## Security limitation and pending approval
+## Security qualification
 
 Codex Security capability preflight returned ready; Daybreak Blue access is granted.
-Scan `44f4ae2c-c783-44dc-9dc8-293c5d69224f` was started for immutable
-`d905397..30331df`. Canonical draft storage was rejected because five owner-owned
-ancestor directories under `~/.codex` have mode 775. The proposed correction is
-775→755 for exactly `.codex`, `state`, `state/plugins`,
-`state/plugins/codex-security`, and its `scans` directory. Explicit permission was
-requested; **no permission change, sealed scan or clean scan result is claimed**.
-The running scan is preserved for continuation. A final-head scan or supplemental
-review remains required once storage is available. Provider CodeQL and GitGuardian
-results are separately revision-scoped and recorded on the PR.
+The initial canonical draft was blocked because five owner-owned Codex ancestor
+folders were group-writable (775). The owner explicitly approved removing group
+write. Exactly `.codex`, `state`, `state/plugins`,
+`state/plugins/codex-security`, and its `scans` directory were changed to 755;
+file contents and production service permissions were not changed.
+
+The preserved scan `44f4ae2c-c783-44dc-9dc8-293c5d69224f` is now sealed for
+immutable `d905397..30331df`, with complete changed-source coverage and no
+reportable security findings. Known functional lifecycle/test-isolation defects at
+that early revision were subsequently corrected; this receipt is security-scoped.
+See PR #127 for the subsequent delta-review receipt through the final head and its
+exact-head CI results. Together the two immutable ranges cover the focused PR;
+neither is a production/ingress audit or a scientific-prescription certification.
+Provider CodeQL and GitGuardian remain separately revision-scoped checks.
 
 No merge, production migration, deployment, publishing enablement, timer restart,
 account reset or live-data mutation occurred. The timer was observed active on
