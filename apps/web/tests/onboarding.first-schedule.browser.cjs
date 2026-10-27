@@ -26,7 +26,9 @@ if (out) fs.mkdirSync(out, { recursive: true });
    await page.getByLabel('Name', { exact: true }).fill('Synthetic browser');
    await page.getByLabel('Email', { exact: true }).fill(email);
    await page.getByLabel('Password', { exact: true }).fill(password);
+   await page.getByLabel('Password', { exact: true }).focus();
    await tap(page.getByRole('button', { name: 'Show password', exact: true }));
+   assert.equal(await page.getByLabel('Password', { exact: true }).evaluate(input => document.activeElement === input), true);
    assert.equal(await page.getByLabel('Password', { exact: true }).getAttribute('type'), 'text');
    assert.equal(await page.getByLabel('Password', { exact: true }).inputValue(), password);
    await tap(page.getByRole('button', { name: 'Hide password', exact: true }));
@@ -52,6 +54,13 @@ if (out) fs.mkdirSync(out, { recursive: true });
    assert.equal(writes.filter(call => call.path === '/api/profile/initial-setup').length, 1);
    assert.equal(writes.filter(call => call.path === '/api/plan/generate-week').length, 0);
    assert.deepEqual(errors, []);
+  } catch (error) {
+   const failed = context.pages().at(-1);
+   if (failed && !failed.isClosed()) {
+    console.error('Failed browser URL:', failed.url()); console.error((await failed.locator('body').innerText()).slice(0, 1800));
+    if (out) await failed.screenshot({ path: `${out}/${engine}-failure.png`, fullPage: true });
+   }
+   throw error;
   } finally { await browser.close(); }
  }
  if (out) fs.writeFileSync(`${out}/summary.json`, JSON.stringify(summaries, null, 2));
@@ -94,7 +103,7 @@ async function runAfterLogin(page, email, password, engine, out, writes, errors)
  if (out) await page.screenshot({ path: `${out}/${engine}-preview.png`, fullPage: true });
  // Saved profile has no activated plan: re-login must return to date planning.
  await page.evaluate(() => { localStorage.removeItem('hypertrophy_token'); window.dispatchEvent(new Event('hypertrophy:auth-token-changed')); });
- await page.goto(`${base}login`);
+ await page.waitForURL(url => url.pathname === '/login');
  await page.getByLabel('Email', { exact: true }).fill(email); await page.getByLabel('Password', { exact: true }).fill(password);
  await tap(page.getByRole('button', { name: 'Sign in', exact: true })); await page.waitForURL('**/week');
  await page.goto(`${base}onboarding`); await page.getByRole('heading', { name: 'Your saved setup' }).waitFor();

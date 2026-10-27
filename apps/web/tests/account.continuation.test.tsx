@@ -97,3 +97,12 @@ test('a late profile reply cannot navigate an account switched after authenticat
  await act(async () => resolve(Response.json({ initial_setup_available: true, setup_status: 'initial' })));
  expect(nav.push).not.toHaveBeenCalled(); expect(localStorage.getItem('hypertrophy_token')).toBe('account-b');
 });
+
+test('StrictMode remount resumes authenticated setup without stranding the first request', async () => {
+ setAuthToken('strict-account'); const calls: Call[] = [];
+ installSetupApi(calls, call => call.url.endsWith('/profile') ? Promise.resolve(Response.json({ email: 'synthetic@example.com', name: 'Synthetic', initial_setup_available: true, setup_status: 'initial' })) : undefined);
+ renderSetup(<React.StrictMode><OnboardingPage /></React.StrictMode>);
+ await screen.findByRole('heading', { name: 'How would you like to train?' });
+ expect(screen.queryByRole('button', { name: 'Continue account setup' })).not.toBeInTheDocument();
+ expect(calls.some(call => call.method === 'POST')).toBe(false);
+});

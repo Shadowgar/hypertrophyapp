@@ -311,13 +311,35 @@ exports[`visual snapshot: week route 1`] = `
         0
          of 2–5 dates selected
       </p>
+      <div
+        class="space-y-1 text-sm"
+        id="week-preview-requirements"
+      >
+        <p>
+          Select at least 2 dates to preview (0 selected).
+        </p>
+      </div>
       <button
+        aria-describedby="week-preview-requirements week-preview-status"
         aria-label="Preview selected dates"
         class="ux-button ux-button-primary px-4 py-2 w-full min-h-[48px]"
         disabled=""
       >
         Preview selected dates
       </button>
+      <div
+        aria-atomic="true"
+        aria-live="polite"
+        class="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3"
+        id="week-preview-status"
+        role="status"
+      >
+        <p
+          class="text-sm text-zinc-200"
+        >
+          Choose 2–5 dates, then preview your week.
+        </p>
+      </div>
     </section>
     <section
       aria-label="Scheduled sessions"
@@ -367,16 +389,6 @@ exports[`visual snapshot: week route 1`] = `
         />
       </svg>
     </button>
-  </div>
-  <div
-    class="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3"
-    role="status"
-  >
-    <p
-      class="text-sm text-zinc-200"
-    >
-      Choose 2–5 dates, then preview your week.
-    </p>
   </div>
 </div>
 `;

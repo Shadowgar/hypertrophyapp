@@ -344,6 +344,7 @@ export default function WeekPage() {
   const [profileState, setProfileState] = useState<"loading" | "ready" | "error">("loading");
   const [profileReload, setProfileReload] = useState(0);
   const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
+  const [selectedProgramMode, setSelectedProgramMode] = useState<"manual" | "auto">("auto");
   const [context, setContext] = useState<SchedulingContext | null>(null);
   const [contextState, setContextState] = useState<"loading" | "ready" | "error">("loading");
   const [progress, setProgress] = useState<Record<string, HistoryOccurrenceStatus>>({});
@@ -365,7 +366,7 @@ export default function WeekPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSavingProgramSelection, setIsSavingProgramSelection] = useState(false);
   const [generatedOnboardingPrompt, setGeneratedOnboardingPrompt] = useState<string | null>(null);
-  const preferenceDirty = selectedProgramId !== (profile?.selected_program_id ?? null);
+  const preferenceDirty = selectedProgramId !== (profile?.selected_program_id ?? null) || selectedProgramMode !== (profile?.program_selection_mode ?? (profile?.selected_program_id ? "manual" : "auto"));
   const progressWeek = context?.week_start;
   const progressRevision = context?.placement_revision;
   useEffect(() => {
@@ -393,6 +394,7 @@ export default function WeekPage() {
       if (!mountedRef.current || token !== getToken()) return;
       setProfile(updated);
       setSelectedProgramId(updated.selected_program_id ?? null);
+      setSelectedProgramMode(updated.program_selection_mode ?? (updated.selected_program_id ? "manual" : "auto"));
       if (updated.selected_program_id === "full_body_v1") {
         try {
           const onboarding = await api.getGeneratedOnboarding();
@@ -457,7 +459,7 @@ export default function WeekPage() {
   }
 
   const needsSetup = profile?.initial_setup_available === true;
-  const missingProgram = profile?.program_selection_mode === "manual" && !selectedProgramId && !plan && !preferenceDirty;
+  const missingProgram = selectedProgramMode === "manual" && !selectedProgramId && !plan && !preferenceDirty;
   const customizedProgram = selectedProgramId === "full_body_v1" || selectedProgramId === "customized_full_body_v1" || Boolean(plan?.customized);
   let timezoneValid = Boolean(timezone.trim());
   if (timezoneValid) {
@@ -477,7 +479,7 @@ export default function WeekPage() {
 
   function accountChanged() {
     if (!mountedRef.current) return;
-    setPreview(null); setPlan(null); setContext(null); setProfile(null); setSelectedProgramId(null); setSelectedDates([]);
+    setPreview(null); setPlan(null); setContext(null); setProfile(null); setSelectedProgramId(null); setSelectedProgramMode("auto"); setSelectedDates([]);
     contextRef.current = null; contextToken.current = undefined; profileToken.current = undefined;
     setIsGenerating(false); setRetryPreview(false);
     setPlanStatus("Account changed or session expired. Reload Week before scheduling.");
@@ -563,6 +565,7 @@ export default function WeekPage() {
       profileToken.current = token;
       setProfile(loadedProfile);
       setSelectedProgramId(loadedProfile.selected_program_id ?? null);
+      setSelectedProgramMode(loadedProfile.program_selection_mode ?? (loadedProfile.selected_program_id ? "manual" : "auto"));
       setProfileState("ready");
     }).catch(() => {
       if (active && token === getToken()) setProfileState("error");
@@ -662,8 +665,9 @@ export default function WeekPage() {
     </div>
     <Disclosure title="Program Override" badge={selectedProgramId ? "custom" : "auto"} defaultOpen={false}>
       <div className="space-y-2">
-        <select id="week-program" aria-label="Week program override selector" className="ui-select" value={selectedProgramId ?? ""} disabled={isGenerating || profileState !== "ready"}
-          onChange={(event) => { setSelectedProgramId(event.target.value || null); setPreview(null); setRetryPreview(false); setPlanStatus("Your program changed. Preview your selected dates again."); }}>
+        <select id="week-program" aria-label="Week program override selector" className="ui-select" value={selectedProgramId ?? (selectedProgramMode === "manual" ? "__choose__" : "")} disabled={isGenerating || profileState !== "ready"}
+          onChange={(event) => { setSelectedProgramId(event.target.value || null); setSelectedProgramMode(event.target.value ? "manual" : "auto"); setPreview(null); setRetryPreview(false); setPlanStatus("Your program changed. Preview your selected dates again."); }}>
+          <option value="__choose__" disabled>Choose a program or Auto</option>
           <option value="">Auto — trainer&apos;s recommended program</option>
           {programs.map((program) => <option key={program.id} value={program.id}>{getProgramDisplayName(program)}</option>)}
         </select>

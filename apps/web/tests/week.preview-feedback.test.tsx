@@ -200,3 +200,19 @@ test('changed saved program discards a delayed preview despite unchanged placeme
   expect(controls().getByText(/local week or placement changed/)).toBeVisible();
   expect(controls().queryByRole('button', { name: 'Activate selected dates' })).not.toBeInTheDocument();
 });
+
+test('a saved manual/null profile can explicitly choose and save Auto without initialization', async () => {
+ profile = { ...profile, selected_program_id: null, program_selection_mode: 'manual' };
+ render(<WeekPage />); await selectDates(2);
+ fireEvent.click(screen.getByRole('button', { name: /Program Override/ }));
+ const selector = screen.getByRole('combobox', { name: 'Week program override selector' });
+ expect(selector).toHaveDisplayValue('Choose a program or Auto');
+ fireEvent.change(selector, { target: { value: '' } });
+ expect(screen.getByRole('button', { name: 'Save program preference' })).toBeEnabled();
+ preview(); await controls().findByText(/Preview ready/);
+ expect(writes[0].body.template_id).toBeNull();
+ expect(writes.every(write => write.path.endsWith('/selected-dates/preview'))).toBe(true);
+ fireEvent.click(screen.getByRole('button', { name: 'Save program preference' }));
+ await waitFor(() => expect(writes.some(write => write.path.endsWith('/profile/program-selection'))).toBe(true));
+ expect(writes.find(write => write.path.endsWith('/profile/program-selection'))!.body).toEqual({ selected_program_id: null, program_selection_mode: 'auto' });
+});

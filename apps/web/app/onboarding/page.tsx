@@ -84,7 +84,7 @@ function SetupForm({ onAccountChanged, recoverDraft }: { onAccountChanged: () =>
     window.addEventListener('hypertrophy:auth-token-changed', changed);
     window.addEventListener('storage', changed); window.addEventListener('focus', changed);
     return () => {
-      mounted.current = false; retireSubmission();
+      mounted.current = false; retireSubmission(); submitting.current = false;
       window.removeEventListener('hypertrophy:auth-token-changed', changed);
       window.removeEventListener('storage', changed); window.removeEventListener('focus', changed);
     };
