@@ -365,7 +365,7 @@ test("Week page offers retry after preview failure", async () => {
   fireEvent.click(screen.getByRole("button", { name: /Preview selected dates/i }));
 
   await waitFor(() => {
-    expect(screen.getByText(/Preview only\./i)).toBeInTheDocument();
+    expect(screen.getByText(/Preview ready.*not activated/i)).toBeInTheDocument();
   });
 });
 

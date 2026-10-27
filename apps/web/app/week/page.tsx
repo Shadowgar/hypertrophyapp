@@ -337,6 +337,7 @@ class StaleSchedulingContext extends Error {}
 
 export default function WeekPage() {
   const [planStatus, setPlanStatus] = useState("Choose 2–5 dates, then preview your week.");
+  const [retryPreview, setRetryPreview] = useState(false);
   const [plan, setPlan] = useState<GeneratedWeekPlan | null>(null);
   const [programs, setPrograms] = useState<ProgramTemplateOption[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -419,7 +420,7 @@ export default function WeekPage() {
     if (!mountedRef.current || token !== getToken() || requestNumber !== contextRequest.current) throw new StaleSchedulingContext("Scheduling context changed. Try again.");
     setContextState("ready");
     const previous = contextRef.current;
-    const changed = !previous || loaded.week_start !== previous.week_start || loaded.timezone !== previous.timezone || loaded.placement_revision !== previous.placement_revision;
+    const changed = !previous || loaded.week_start !== previous.week_start || loaded.timezone !== previous.timezone || loaded.placement_revision !== previous.placement_revision || loaded.plan?.program_template_id !== previous.plan?.program_template_id;
     contextRef.current = loaded;
     contextToken.current = token;
     setContext(loaded);
@@ -455,31 +456,61 @@ export default function WeekPage() {
     }
   }
 
+  const needsSetup = profile?.initial_setup_available === true;
+  const missingProgram = profile?.program_selection_mode === "manual" && !selectedProgramId && !plan && !preferenceDirty;
+  const customizedProgram = selectedProgramId === "customized_full_body_v1" || Boolean(plan?.customized);
+  let timezoneValid = Boolean(timezone.trim());
+  if (timezoneValid) {
+    try { new Intl.DateTimeFormat("en", { timeZone: timezone.trim() }); }
+    catch { timezoneValid = false; }
+  }
+  const previewUnavailable = [
+    profileState !== "ready" || !profile ? "Load your saved profile before previewing dates." : null,
+    needsSetup ? "Finish saving your setup profile before previewing dates." : null,
+    missingProgram ? "Choose a program or Auto before previewing dates." : null,
+    customizedProgram ? "Customized dates require their separate preview and consent." : null,
+    !context || contextState === "error" ? "Scheduling context is unavailable. Retry week loading before previewing dates." : null,
+    !timezoneValid ? "Enter a valid IANA scheduling timezone before previewing dates." : null,
+    selectedDates.length < 2 ? `Select at least 2 dates to preview (${selectedDates.length} selected).` : null,
+    selectedDates.length > 5 ? `Select no more than 5 dates to preview (${selectedDates.length} selected).` : null,
+  ].filter((reason): reason is string => Boolean(reason));
+
+  function accountChanged() {
+    if (!mountedRef.current) return;
+    setPreview(null); setPlan(null); setContext(null); setProfile(null); setSelectedProgramId(null); setSelectedDates([]);
+    contextRef.current = null; contextToken.current = undefined; profileToken.current = undefined;
+    setIsGenerating(false); setRetryPreview(false);
+    setPlanStatus("Account changed or session expired. Reload Week before scheduling.");
+  }
+
   function makeRequest(): SelectedDatePlanRequest | null {
-    if (!context || contextToken.current !== getToken() || profileToken.current !== getToken() || selectedDates.length < 2 || selectedDates.length > 5 || !timezone.trim()) return null;
+    if (previewUnavailable.length || !context || contextToken.current !== getToken() || profileToken.current !== getToken()) return null;
     return { template_id: selectedProgramId ?? plan?.program_template_id ?? null, week_start: context.week_start,
       selected_dates: [...selectedDates].sort(), timezone: timezone.trim(), expected_placement_revision: context.placement_revision };
   }
 
   async function schedule(activate = false) {
-    if (schedulingRef.current) return;
+    if (schedulingRef.current) { setPlanStatus("Your date request is still running. Please wait."); return; }
     const token = getToken();
-    if (token !== contextToken.current || token !== profileToken.current) { setPreview(null); setPlanStatus("Account changed. Reload Week before scheduling."); return; }
+    if (token !== contextToken.current || token !== profileToken.current) { accountChanged(); return; }
     const request = activate ? preview?.request : makeRequest();
-    if (!request) return;
+    if (!request) { setPlanStatus(activate ? "Preview your selected dates before activating a schedule." : previewUnavailable.join(" ") || "Reload Week before previewing dates."); return; }
     if (activate && JSON.stringify(request) !== JSON.stringify(makeRequest())) {
       setPreview(null);
       setPlanStatus("Your inputs changed. Preview your selected dates again.");
       return;
     }
     const targetOffset = weekOffsetRef.current;
+    const sourceProgram = contextRef.current?.plan?.program_template_id;
     schedulingRef.current = true;
-    setIsGenerating(true);
+    setIsGenerating(true); setRetryPreview(false);
+    setPlanStatus(activate ? "Activating your reviewed selected dates…" : "Checking your selected dates… No schedule has been activated.");
     let acknowledged = false;
     try {
       const fresh = await refreshContext(request.timezone);
-      if (token !== getToken() || token !== profileToken.current) return;
-      if (fresh.week_start !== request.week_start || fresh.placement_revision !== request.expected_placement_revision || fresh.timezone !== context?.timezone) {
+      if (!mountedRef.current) return;
+      if (token !== getToken() || token !== profileToken.current) { accountChanged(); return; }
+      if (fresh.week_start !== request.week_start || fresh.placement_revision !== request.expected_placement_revision || fresh.timezone !== context?.timezone || fresh.plan?.program_template_id !== sourceProgram) {
         setPreview(null);
         setPlanStatus("The local week or placement changed. Review your dates and preview again.");
         return;
@@ -487,29 +518,36 @@ export default function WeekPage() {
       if (activate) {
         if (!preview?.digest) throw new Error("Unable to verify this preview. Try previewing your dates again.");
         await api.activateSelectedDates({ ...request, expected_preview_digest: preview.digest });
-        if (!mountedRef.current || token !== getToken()) return;
+        if (!mountedRef.current) return;
+        if (token !== getToken()) { accountChanged(); return; }
         acknowledged = true;
         setPreview(null);
         setPlanStatus("Selected dates activated. Refreshing your saved schedule…");
         await refreshContext(request.timezone, true);
         setPlanStatus("Selected dates activated. Today follows your local calendar dates.");
       } else {
-        const previewRequest = contextRequest.current;
         const data = await api.previewSelectedDates(request);
-        if (!mountedRef.current || token !== getToken() || previewRequest !== contextRequest.current || targetOffset !== weekOffsetRef.current) return;
-        if (contextRef.current?.week_start !== request.week_start || contextRef.current?.placement_revision !== request.expected_placement_revision) return;
+        if (!mountedRef.current) return;
+        if (token !== getToken()) { accountChanged(); return; }
+        const latest = contextRef.current;
+        if (targetOffset !== weekOffsetRef.current || latest?.week_start !== request.week_start || latest?.placement_revision !== request.expected_placement_revision || latest?.timezone !== fresh.timezone || latest?.plan?.program_template_id !== sourceProgram) {
+          setPreview(null); setPlanStatus("The local week or placement changed. Review your dates and preview again."); return;
+        }
         const digest = data.schedule?.preview_digest;
         if (!digest || !/^[a-f0-9]{64}$/.test(digest)) throw new Error("Unable to verify this preview. Try previewing your dates again.");
         setPreview({ plan: data, request, digest });
-        setPlanStatus("Preview only. Review workload and spacing, then activate these dates.");
+        setPlanStatus("Preview ready · not activated. Review your sessions, workload and spacing, then activate these dates.");
       }
     } catch (error) {
-      if (!mountedRef.current || token !== getToken()) return;
+      if (!mountedRef.current) return;
+      if (token !== getToken()) { accountChanged(); return; }
       setPreview(null);
       if (acknowledged) { setPlanStatus(error instanceof StaleSchedulingContext ? "Selected dates activated. The latest schedule is being refreshed." : "Selected dates activated. The refresh failed; retry loading to see your saved schedule."); return; }
-      if (error instanceof StaleSchedulingContext) return;
+      if (error instanceof StaleSchedulingContext) { setPlanStatus("Scheduling context changed. Review your dates and preview them again."); setRetryPreview(true); return; }
       if (activate) await refreshContext(request.timezone).catch(() => undefined);
-      if (!mountedRef.current || token !== getToken()) return;
+      if (!mountedRef.current) return;
+      if (token !== getToken()) { accountChanged(); return; }
+      setRetryPreview(true);
       setPlanStatus(`Failed to ${activate ? "activate" : "preview"} selected dates: ${error instanceof Error ? error.message : "Unknown error"}`);
     } finally { schedulingRef.current = false; if (mountedRef.current && token === getToken()) setIsGenerating(false); }
   }
@@ -574,7 +612,7 @@ export default function WeekPage() {
       <label htmlFor="scheduling-timezone" className="block space-y-2 text-sm">
         <span>Scheduling timezone</span>
         <input id="scheduling-timezone" className="ui-input w-full min-h-[44px]" value={timezone} disabled={isGenerating} placeholder="America/New_York"
-          onChange={(event) => { timezoneRef.current = event.target.value; setTimezone(event.target.value); setPreview(null); }}
+          onChange={(event) => { timezoneRef.current = event.target.value; setTimezone(event.target.value); setPreview(null); setRetryPreview(false); setPlanStatus("Your timezone changed. Preview your selected dates again."); }}
           onBlur={() => { if (timezone.trim() && timezone.trim() !== context?.timezone) void refreshContext(timezone.trim()).catch((error) => {
             if (error instanceof StaleSchedulingContext) return;
             setPreview(null); setPlanStatus(`Could not load timezone: ${error instanceof Error ? error.message : "Unknown error"}`);
@@ -587,7 +625,7 @@ export default function WeekPage() {
         <div className="ux-week-dates">
           {datesInWeek(context.week_start).map((date) => <label key={date} data-selected={selectedDates.includes(date)} className="ux-week-date">
             <input type="checkbox" aria-label={formatCalendarDate(date)} checked={selectedDates.includes(date)} onChange={() => {
-              setSelectedDates((current) => current.includes(date) ? current.filter((item) => item !== date) : [...current, date].sort()); setPreview(null);
+              setSelectedDates((current) => current.includes(date) ? current.filter((item) => item !== date) : [...current, date].sort()); setPreview(null); setRetryPreview(false); setPlanStatus("Your dates changed. Preview your selected dates again.");
             }} /><span aria-hidden="true">{formatCalendarDate(date).split(",")[0]}</span><strong aria-hidden="true">{Number(date.slice(-2))}</strong>
           </label>)}
         </div>
@@ -596,8 +634,17 @@ export default function WeekPage() {
       {context && selectedDates.some((date) => date < context.local_today) ? <p className="text-sm text-amber-300">Elapsed dates are placements only; selecting them does not create performed workout history.</p> : null}
       {profileState === "loading" ? <p role="status">Loading your profile…</p> : null}
       {profileState === "error" ? <div role="alert"><p>Your profile could not be loaded. Retry before previewing dates or saving program preferences.</p><Button variant="secondary" onClick={() => setProfileReload(value => value + 1)}>Retry profile loading</Button></div> : null}
-      <Button aria-label="Preview selected dates" className="w-full min-h-[48px]" disabled={isGenerating || isSavingProgramSelection || !context || !profile || selectedDates.length < 2 || selectedDates.length > 5 || !timezone.trim()} onClick={() => schedule()}>{isGenerating ? "Checking dates..." : "Preview selected dates"}</Button>
+      <div id="week-preview-requirements" className="space-y-1 text-sm">
+        {previewUnavailable.map(reason => <p key={reason}>{reason}</p>)}
+        {needsSetup || missingProgram ? <a className="underline" href="/onboarding">Resume Setup</a> : null}
+        {customizedProgram ? <a className="underline" href="/customize">Open Customized planning</a> : null}
+      </div>
+      <Button aria-label="Preview selected dates" className="w-full min-h-[48px]" aria-describedby="week-preview-requirements week-preview-status" disabled={isGenerating || isSavingProgramSelection || previewUnavailable.length > 0} onClick={() => schedule()}>{isGenerating ? "Checking dates..." : "Preview selected dates"}</Button>
       {preview ? <Button aria-label="Activate selected dates" className="w-full min-h-[48px]" disabled={isGenerating} onClick={() => schedule(true)}>Activate selected dates</Button> : null}
+      <div id="week-preview-status" className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3" role="status" aria-live="polite" aria-atomic="true">
+        <p className="text-sm text-zinc-200">{planStatus}</p>
+      </div>
+      {retryPreview ? <Button variant="secondary" disabled={isGenerating || previewUnavailable.length > 0} onClick={() => void schedule()}>Retry preview</Button> : null}
       {contextState === "loading" && !context ? <p role="status">Loading your local week…</p> : null}
       {contextState === "error" ? <div role="alert"><p>Could not refresh your week. Any previously loaded plan is still shown.</p><Button variant="secondary" onClick={() => void refreshContext(timezoneRef.current).then(() => setPlanStatus("Week loaded. Review your dates before previewing.")).catch(error => { if (!(error instanceof StaleSchedulingContext)) setPlanStatus("Could not load your week. Try again."); })}>Retry week loading</Button></div> : null}
     </section>
@@ -616,7 +663,7 @@ export default function WeekPage() {
     <Disclosure title="Program Override" badge={selectedProgramId ? "custom" : "auto"} defaultOpen={false}>
       <div className="space-y-2">
         <select id="week-program" aria-label="Week program override selector" className="ui-select" value={selectedProgramId ?? ""} disabled={isGenerating || profileState !== "ready"}
-          onChange={(event) => { setSelectedProgramId(event.target.value || null); setPreview(null); }}>
+          onChange={(event) => { setSelectedProgramId(event.target.value || null); setPreview(null); setRetryPreview(false); setPlanStatus("Your program changed. Preview your selected dates again."); }}>
           <option value="">Auto — trainer&apos;s recommended program</option>
           {programs.map((program) => <option key={program.id} value={program.id}>{getProgramDisplayName(program)}</option>)}
         </select>
@@ -625,9 +672,6 @@ export default function WeekPage() {
         {generatedOnboardingPrompt ? <div className="rounded-md border border-zinc-700 p-2 text-xs"><p>{generatedOnboardingPrompt}</p><a className="underline" href="/customize">Update generated plan preferences</a></div> : null}
       </div>
     </Disclosure>
-    <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3" role="status">
-      <p className="text-sm text-zinc-200">{planStatus}</p>
-    </div>
     {visiblePlan ? <>
       {preview ? <p className="text-sm font-semibold">Placement preview — awaiting activation</p> : null}
       <p className="text-sm">Planned sets: {plannedSets}</p>
