@@ -87,8 +87,8 @@ test('Auto remains an explicit null program request', async () => {
   expect(writes[0].body.template_id).toBeNull();
 });
 
-test('Customized retains its separate preview and consent path', async () => {
-  profile = { ...profile, selected_program_id: 'customized_full_body_v1' };
+test.each(['customized_full_body_v1', 'full_body_v1'])('Customized %s retains its separate preview and consent path', async id => {
+  profile = { ...profile, selected_program_id: id };
   render(<WeekPage />); await selectDates(2);
   expect(controls().getByRole('button', { name: 'Preview selected dates' })).toBeDisabled();
   expect(controls().getByText(/Customized dates require their separate preview and consent/)).toBeVisible();

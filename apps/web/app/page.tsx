@@ -157,6 +157,11 @@ export default function HomePage() {
         <h1>{title}</h1>
         {data.week?.local_today ? <p className="ux-muted">{formatCalendarDate(data.week.local_today)}</p> : null}
       </header>
+      {status.profile === 'ready' && data.profile ? <section className="ux-card space-y-3" aria-label="Account setup">
+        <h2>{data.profile.initial_setup_available ? 'Finish setting up your account' : 'Your setup'}</h2>
+        <Link className="ux-button ux-button-secondary" href="/onboarding">{data.profile.initial_setup_available || data.profile.setup_status === 'planning' ? 'Resume Setup' : 'Review/Edit Setup'}</Link>
+        {data.profile.setup_status === 'planning' ? <Link className="ux-button ux-button-primary" href={data.profile.selected_program_id === 'full_body_v1' ? '/customize' : '/week'}>Continue to program &amp; dates</Link> : null}
+      </section> : null}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <section className="space-y-4" aria-label="Next step">
           <div className="ux-card space-y-3" aria-busy={loading}>

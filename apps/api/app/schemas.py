@@ -102,6 +102,7 @@ class ProfileUpsert(BaseModel):
 
 class ProfileResponse(ProfileUpsert):
     email: EmailStr
+    setup_status: Literal["initial", "planning", "established"] = Field(default="established", json_schema_extra={"readOnly": True})
     initial_setup_available: bool = Field(default=False, json_schema_extra={"readOnly": True})
     scheduling_timezone: str | None = Field(default=None, json_schema_extra={"readOnly": True})
     effective_days_available: int | None = Field(default=None, json_schema_extra={"readOnly": True})

@@ -458,7 +458,7 @@ export default function WeekPage() {
 
   const needsSetup = profile?.initial_setup_available === true;
   const missingProgram = profile?.program_selection_mode === "manual" && !selectedProgramId && !plan && !preferenceDirty;
-  const customizedProgram = selectedProgramId === "customized_full_body_v1" || Boolean(plan?.customized);
+  const customizedProgram = selectedProgramId === "full_body_v1" || selectedProgramId === "customized_full_body_v1" || Boolean(plan?.customized);
   let timezoneValid = Boolean(timezone.trim());
   if (timezoneValid) {
     try { new Intl.DateTimeFormat("en", { timeZone: timezone.trim() }); }

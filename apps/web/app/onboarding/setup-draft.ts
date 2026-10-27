@@ -1,4 +1,5 @@
-import { canonicalLoad } from '@/lib/appearance';
+import { getToken } from '@/lib/api';
+import { accountScope, canonicalLoad } from '@/lib/appearance';
 
 export const DRAFT_KEY = 'hypertrophy_onboarding_draft_v1';
 export const EQUIPMENT = [['barbell', 'Barbell'], ['bench', 'Bench'], ['dumbbell', 'Dumbbells'], ['cable', 'Cable station'], ['machine', 'Machines'], ['bands', 'Bands'], ['bodyweight', 'Bodyweight']] as const;
@@ -38,15 +39,21 @@ export function browserDraft(answers: SetupAnswers) {
 
 // Draft persistence is optional and must never decide whether server setup succeeded.
 export function readCachedDraft(): string | null | undefined {
-  try { return localStorage.getItem(DRAFT_KEY); } catch { return undefined; }
+  try {
+    const token = getToken(); const owner = token ? accountScope(token) : 'guest';
+    const savedOwner = localStorage.getItem(`${DRAFT_KEY}.owner`);
+    if (token && (!owner || savedOwner !== owner)) return null;
+    if (!token && savedOwner && savedOwner !== 'guest') return null;
+    return localStorage.getItem(DRAFT_KEY);
+  } catch { return undefined; }
 }
 
 export function writeCachedDraft(answers: SetupAnswers): boolean {
-  try { localStorage.setItem(DRAFT_KEY, JSON.stringify(browserDraft(answers))); return true; } catch { return false; }
+  try { localStorage.setItem(`${DRAFT_KEY}.owner`, getToken() ? accountScope(getToken()) ?? 'unrecoverable' : 'guest'); localStorage.setItem(DRAFT_KEY, JSON.stringify(browserDraft(answers))); return true; } catch { return false; }
 }
 
 export function discardCachedDraft(): boolean {
-  try { localStorage.removeItem(DRAFT_KEY); return true; } catch { return false; }
+  try { localStorage.removeItem(DRAFT_KEY); localStorage.removeItem(`${DRAFT_KEY}.owner`); return true; } catch { return false; }
 }
 
 export function readDraft(raw: string): SetupAnswers | null {

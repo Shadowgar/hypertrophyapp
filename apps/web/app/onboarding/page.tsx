@@ -7,11 +7,14 @@ import { Button } from '@/components/ui/button';
 import { SetupCard, SetupFlow, setupStyles as styles } from '@/components/setup-flow';
 import { useAppearance } from '@/components/appearance-provider';
 import { api, ApiError, getProgramDisplayName, getToken, setAuthToken, type ProgramTemplateOption } from '@/lib/api';
-import { canonicalLoad } from '@/lib/appearance';
+import { accountScope, canonicalLoad } from '@/lib/appearance';
+import { PasswordField } from '@/components/password-field';
+import { SavedSetup } from '@/components/saved-setup';
+import { clearAuthToken, type Profile } from '@/lib/api';
 import { API_BASE_URL } from '@/lib/env';
 import { discardCachedDraft, emptyAnswers, EQUIPMENT, GOALS, OPTIONAL_OPTIONS, readCachedDraft, readDraft, RESTRICTIONS, setupPayload, validBasics, writeCachedDraft, type SetupAnswers } from './setup-draft';
 
-type Stage = 'welcome' | 'account' | 'program' | 'authored' | 'program-detail' | 'help' | 'basics' | 'equipment' | 'review';
+type Stage = 'welcome' | 'account' | 'program' | 'authored' | 'program-detail' | 'help' | 'basics' | 'equipment' | 'review' | 'saved';
 const AUTHORED_IDS = ['pure_bodybuilding_phase_1_full_body', 'pure_bodybuilding_phase_2_full_body'];
 
 function withWeightUnit(previous: SetupAnswers, unit: 'lb' | 'kg'): SetupAnswers {
@@ -34,7 +37,7 @@ export default function OnboardingPage() {
   const [accountRevision, setAccountRevision] = useState(0);
   const reset = useCallback(() => { discardCachedDraft(); setAccountRevision(value => value + 1); }, []);
   return <>
-    {accountRevision > 0 ? <p role="status" className={styles.notice}>Account changed. Sign in to continue with the current account; no other profile was changed.</p> : null}
+    {accountRevision > 0 ? <p role="status" className={styles.notice}>Account changed. Sign in to continue with the current account; no other profile was changed. <Link href="/login">Sign in</Link></p> : null}
     <SetupForm key={accountRevision} recoverDraft={accountRevision === 0} onAccountChanged={reset} />
   </>;
 }
@@ -42,12 +45,12 @@ export default function OnboardingPage() {
 function SetupForm({ onAccountChanged, recoverDraft }: { onAccountChanged: () => void; recoverDraft: boolean }) {
   const router = useRouter();
   const appearance = useAppearance();
+  const [savedProfile, setSavedProfile] = useState<Profile | null>(null);
   const [stage, setStage] = useState<Stage>('welcome');
   const [answers, setAnswers] = useState<SetupAnswers>(emptyAnswers);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [targets, setTargets] = useState({ calories: '', protein: '', fat: '', carbs: '' });
   const [programs, setPrograms] = useState<ProgramTemplateOption[]>([]);
   const [catalogState, setCatalogState] = useState<'loading' | 'ready' | 'failed'>('loading');
@@ -120,7 +123,34 @@ function SetupForm({ onAccountChanged, recoverDraft }: { onAccountChanged: () =>
   }, [appearance.ready, appearance.preferences.weight_unit, unitTouched]);
 
   function update<K extends keyof SetupAnswers>(key: K, value: SetupAnswers[K]) { setAnswers(previous => ({ ...previous, [key]: value })); }
-  function move(next: Stage) { setStage(next); setStatus(''); setError(false); }
+  function move(next: Stage) {
+    const safe = getToken() && (next === 'welcome' || next === 'account') ? 'program' : next;
+    setStage(safe); setStatus(''); setError(false);
+    const scope = accountScope(getToken());
+    if (scope) { try { localStorage.setItem(`hypertrophy_setup_position_${scope}`, safe); } catch { /* Optional recovery. */ } }
+    const state = { ...window.history.state, onboardingStage: safe };
+    if (getToken() && (stage === 'account' || stage === 'welcome')) window.history.replaceState(state, '', '/onboarding');
+    else window.history.pushState(state, '', '/onboarding');
+  }
+
+  useEffect(() => {
+    const back = () => {
+      const next = window.history.state?.onboardingStage as Stage | undefined;
+      const allowed: Stage[] = ['program', 'authored', 'program-detail', 'help', 'basics', 'equipment', 'review'];
+      if (savedProfile) { setStage('saved'); return; }
+      if (getToken()) setStage(next && allowed.includes(next) ? next : 'program');
+      else setStage(next === 'account' ? 'account' : 'welcome');
+      setStatus(''); setError(false);
+    };
+    window.addEventListener('popstate', back);
+    return () => window.removeEventListener('popstate', back);
+  }, [savedProfile]);
+
+  useEffect(() => {
+    if (getToken()) void resumeInitialSetup();
+    // External identity changes remount this form; registration owns its handoff.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   function toggle(key: 'equipmentTags' | 'movementRestrictions' | 'primaryGoals', value: string) {
     setAnswers(previous => ({ ...previous, [key]: previous[key].includes(value) ? previous[key].filter(item => item !== value) : [...previous[key], value] }));
   }
@@ -175,16 +205,24 @@ function SetupForm({ onAccountChanged, recoverDraft }: { onAccountChanged: () =>
     try {
       const response = await fetch(`${API_BASE_URL}/profile`, { headers: { Authorization: `Bearer ${token}` } });
       if (!isCurrent()) return;
+      if (response.status === 401) { clearAuthToken(); return; }
       if (!response.ok) throw new Error('Setup unavailable');
-      const profile = await response.json() as { email: string; name: string; initial_setup_available: boolean; selected_program_id: string | null };
+      const profile = await response.json() as Profile;
       if (!isCurrent()) return;
-      if (profile.initial_setup_available === false) { router.push(profile.selected_program_id === 'full_body_v1' ? '/customize' : '/week'); return; }
+      if (profile.initial_setup_available === false) { setSavedProfile(profile); setStage('saved'); setStatus('Your saved setup is available to review. Continue planning separately.'); return; }
       if (profile.initial_setup_available !== true || !profile.email) throw new Error('Setup status unavailable');
       createdAccount.current = { email: profile.email, token };
       setEmail(profile.email); setName(profile.name || ''); setPassword('');
       setAnswers(previous => ({ ...previous, age: '', weightValue: '', birthday: '', heightFeet: '', heightInches: '', heightCm: '' }));
       setTargets({ calories: '', protein: '', fat: '', carbs: '' });
-      setStage('program'); setStatus('Review your answers to finish this account. Private measurements are not saved in the browser draft; enter them again before saving.');
+      let position: Stage = 'program';
+      const scope = accountScope(token);
+      try {
+        const saved = scope && localStorage.getItem(`hypertrophy_setup_position_${scope}`);
+        if (saved && ['program', 'authored', 'program-detail', 'help', 'basics', 'equipment', 'review'].includes(saved)) position = saved as Stage;
+      } catch { /* Optional stage recovery. */ }
+      if (position === 'equipment' || position === 'review') position = 'basics';
+      setStage(position); setStatus('Review your answers to finish this account. Private measurements are not saved in the browser draft; enter them again before saving.');
     } catch { if (isCurrent()) fail('Unable to check saved setup. Retry Continue account setup; no profile was changed.'); }
     finally { endRequest(revision); }
   }
@@ -257,6 +295,7 @@ function SetupForm({ onAccountChanged, recoverDraft }: { onAccountChanged: () =>
   const programName = selectedProgram ? getProgramDisplayName(selectedProgram) : answers.selectedProgramId ? 'Selected program unavailable' : 'Auto · choose a program in Week';
   const isCustomized = answers.selectedProgramId === 'full_body_v1';
   const titles: Record<Stage, [string, string]> = {
+    saved: ['Your saved setup', 'Review your answers and continue planning.'],
     welcome: ['Ready for your next session?', 'A clear plan. Your actual progress.'], account: ['Make it yours', 'Create your account, then choose a program.'],
     program: ['How would you like to train?', 'Start with a clear choice. You can review it next.'], authored: ['Follow an Authored program', 'Each phase keeps its own exercises and training instructions.'],
     'program-detail': [programName, 'Authored program'], help: ['Compare your options', 'Choose a path, or keep an Auto preference until you review the available programs.'],
@@ -273,20 +312,21 @@ function SetupForm({ onAccountChanged, recoverDraft }: { onAccountChanged: () =>
   </>}>
     {status ? <p role={error ? 'alert' : 'status'} className={`${styles.notice} ${error ? styles.error : ''}`}>{status}</p> : null}
     {!cacheAvailable ? <p role="status" className={styles.notice}>Browser draft storage is unavailable. Keep this page open until setup is saved.</p> : null}
-    {hasSession && !createdAccount.current ? <Button type="button" variant="secondary" disabled={pending} onClick={resumeInitialSetup}>Continue account setup</Button> : null}
+    {hasSession && !createdAccount.current && !savedProfile ? <Button type="button" variant="secondary" disabled={pending} onClick={resumeInitialSetup}>Continue account setup</Button> : null}
     {hasDraft ? <details className={styles.disclosure}><summary>Saved setup choices</summary><p className={styles.helper}>Credentials and private measurements are not stored in this browser draft.</p><Button type="button" variant="ghost" onClick={() => { if (discardCachedDraft()) setHasDraft(false); else setCacheAvailable(false); }}>Clear Saved Draft</Button></details> : null}
 
-    {stage === 'welcome' ? <div className={styles.form}>
+    {stage === 'saved' && savedProfile ? <SavedSetup profile={savedProfile} unit={appearance.preferences.weight_unit} /> : null}
+
+    {stage === 'welcome' && !hasSession ? <div className={styles.form}>
       <SetupCard title="Train with your program"><p>Follow an Authored program or choose to build a Customized program.</p></SetupCard>
       <Link href="/login" className={styles.choice}><strong>Already training here?</strong><span>Sign in to return to your workouts and history.</span></Link>
       <div className={styles.actions}><Button type="button" onClick={() => move('account')}>Create an account</Button><Link href="/login" className={styles.textLink}>Sign in</Link></div>
     </div> : null}
 
-    {stage === 'account' ? <form className={styles.form} onSubmit={register}>
+    {stage === 'account' && !hasSession ? <form className={styles.form} onSubmit={register}>
       <label className={styles.field}>Name<input autoComplete="name" required value={name} disabled={pending} onChange={event => setName(event.target.value)} /></label>
       <label className={styles.field}>Email<input type="email" autoComplete="email" required value={email} disabled={pending} onChange={event => setEmail(event.target.value)} /></label>
-      <label className={styles.field}>Password<input type={showPassword ? 'text' : 'password'} autoComplete="new-password" minLength={8} required value={password} disabled={pending} onChange={event => setPassword(event.target.value)} /></label>
-      <Button type="button" variant="secondary" aria-pressed={showPassword} onClick={() => setShowPassword(value => !value)}>{showPassword ? 'Hide password' : 'Show password'}</Button>
+      <PasswordField value={password} onChange={setPassword} autoComplete="new-password" disabled={pending} minLength={8} />
       <SetupCard title="Your choice comes next"><p>You can review your setup before starting training.</p></SetupCard>
       <div className={styles.actions}><Button type="submit" disabled={pending}>{pending ? 'Creating account…' : 'Create account'}</Button><Link href="/login" className={styles.textLink}>I already have an account</Link></div>
     </form> : null}

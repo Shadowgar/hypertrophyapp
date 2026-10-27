@@ -213,6 +213,7 @@ export type WorkoutProgress = {
 export type Profile = {
   email: string;
   initial_setup_available?: boolean;
+  setup_status?: "initial" | "planning" | "established";
   name: string;
   age: number;
   weight: number;
@@ -1126,6 +1127,7 @@ export const api = {
     method: "POST", body: JSON.stringify(payload),
   }),
   getProfile: () => request<Profile>("/profile"),
+  updateSetupBasics: (payload: Pick<Profile, "name" | "age" | "weight">) => request<Profile>("/profile/setup-basics", { method: "PATCH", body: JSON.stringify(payload) }),
   updateEquipment: (payload: {training_location: "home" | "gym"; equipment_profile: string[]}) => request<Profile>("/profile/equipment", {method: "PATCH", body: JSON.stringify(payload)}),
   getInterfacePreferences: () => request<InterfacePreferences>("/profile/preferences"),
   saveInterfacePreferences: (payload: Omit<InterfacePreferences, "revision"> & {expected_revision: number}) => request<InterfacePreferences>("/profile/preferences", {method:"PUT", body:JSON.stringify(payload)}),
@@ -1184,7 +1186,7 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  updateProfile: (payload: Partial<Omit<Profile, "effective_days_available" | "effective_program_id" | "scheduling_timezone">>) => request<Profile>("/profile", { method: "POST", body: JSON.stringify(payload) }),
+  updateProfile: (payload: Partial<Omit<Profile, "effective_days_available" | "effective_program_id" | "scheduling_timezone" | "initial_setup_available" | "setup_status">>) => request<Profile>("/profile", { method: "POST", body: JSON.stringify(payload) }),
   updateProgramSelection: (payload: { selected_program_id: string | null; program_selection_mode: "manual" | "auto" }) =>
     request<Profile>("/profile/program-selection", {
       method: "POST",

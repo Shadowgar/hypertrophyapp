@@ -199,6 +199,12 @@ def _initial_setup_available(user: User) -> bool:
     ))
 
 
+def _has_training_history(db: Session, user: User) -> bool:
+    # Old plans and retained/voided receipts still establish an existing account.
+    return (db.query(WorkoutPlan.id).filter(WorkoutPlan.user_id == user.id).first() is not None
+            or db.query(WorkoutSetLog.id).filter(WorkoutSetLog.user_id == user.id).first() is not None)
+
+
 def _is_profile_complete(
     *,
     selected_program_id: str | None,
@@ -289,8 +295,11 @@ def _collect_previous_week_performance_summary(
 def get_profile(current_user: CurrentUser, db: DbSession) -> ProfileResponse:
     selected_program_id = resolve_selected_program_binding_id(current_user.selected_program_id)
     effective = current_scheduling_profile(db, current_user, datetime.now(UTC))
+    established = _has_training_history(db, current_user)
+    initial = not established and _initial_setup_available(current_user)
     return ProfileResponse(
-        initial_setup_available=_initial_setup_available(current_user),
+        initial_setup_available=initial,
+        setup_status="established" if established else "initial" if initial else "planning",
         scheduling_timezone=current_user.scheduling_timezone,
         effective_days_available=effective.days_available,
         effective_program_id=effective.program_id,
@@ -408,6 +417,26 @@ def get_training_state(
 
     return UserTrainingStateResponse.model_validate(payload)
 
+
+
+class SetupBasicsUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True, allow_inf_nan=False)
+    name: str = Field(min_length=1, max_length=100)
+    age: int = Field(ge=14, le=90)
+    weight: float = Field(gt=0)
+
+
+@router.patch("/profile/setup-basics")
+def update_setup_basics(payload: SetupBasicsUpdate, db: DbSession, current_user: CurrentUser) -> ProfileResponse:
+    lock_history_user(db, current_user.id)
+    db.refresh(current_user)
+    if _initial_setup_available(current_user) and not _has_training_history(db, current_user):
+        raise HTTPException(status_code=409, detail="Finish initial setup before editing saved basics.")
+    current_user.name = payload.name
+    current_user.age = payload.age
+    current_user.weight = payload.weight
+    db.commit()
+    return get_profile(current_user, db)
 
 
 class EquipmentUpdate(BaseModel):
@@ -564,7 +593,7 @@ def initialize_profile(payload: ProfileUpsert, db: DbSession, current_user: Curr
     # another tab cannot turn setup recovery into an established-profile overwrite.
     lock_history_user(db, current_user.id)
     db.refresh(current_user)
-    if not _initial_setup_available(current_user):
+    if not _initial_setup_available(current_user) or _has_training_history(db, current_user):
         raise HTTPException(status_code=409, detail="A profile is already saved. Continue account setup to read the saved result; use Settings for changes.")
     return upsert_profile(payload, db, current_user)
 

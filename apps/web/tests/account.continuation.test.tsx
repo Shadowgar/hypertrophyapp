@@ -69,3 +69,31 @@ for (const form of ['login', 'registration'] as const) {
   expect(vi.mocked(fetch).mock.calls.some(([, init]) => init?.method === 'POST')).toBe(false);
  });
 }
+
+test('a delayed autofill value survives the visibility toggle before its input event arrives', () => {
+ vi.stubGlobal('fetch', vi.fn(async () => Response.json([]))); render(<LoginPage />);
+ const input = screen.getByLabelText('Password', { exact: true }) as HTMLInputElement;
+ Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(input, 'Synthetic-delayed-autofill');
+ fireEvent.click(screen.getByRole('button', { name: 'Show password' }));
+ expect(input).toHaveValue('Synthetic-delayed-autofill'); expect(input).toHaveAttribute('type', 'text');
+});
+test('returning to login while authenticated replaces the account form with setup continuation', async () => {
+ setAuthToken('existing-token'); vi.stubGlobal('fetch', vi.fn(async () => Response.json({ initial_setup_available: true, setup_status: 'initial' })));
+ render(<LoginPage />); await waitFor(() => expect(nav.replace).toHaveBeenCalledWith('/onboarding'));
+ expect(vi.mocked(fetch).mock.calls.some(([, init]) => init?.method === 'POST')).toBe(false);
+});
+test('expired session during setup check explains reauthentication and never initializes a profile', async () => {
+ vi.stubGlobal('fetch', vi.fn(async url => String(url).endsWith('/auth/login') ? Response.json({ access_token: 'expires' }) : Response.json({}, { status: 401 })));
+ render(<LoginPage />); signIn(); await screen.findByText(/Your session expired/);
+ expect(localStorage.getItem('hypertrophy_token')).toBeNull(); expect(nav.push).not.toHaveBeenCalled();
+ expect(screen.getByRole('button', { name: 'Sign in' })).not.toBeDisabled();
+});
+test('a late profile reply cannot navigate an account switched after authentication', async () => {
+ let resolve!: (response: Response) => void;
+ const pending = new Promise<Response>(done => { resolve = done; });
+ vi.stubGlobal('fetch', vi.fn(url => String(url).endsWith('/auth/login') ? Promise.resolve(Response.json({ access_token: 'account-a' })) : pending));
+ render(<LoginPage />); signIn(); await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+ act(() => setAuthToken('account-b'));
+ await act(async () => resolve(Response.json({ initial_setup_available: true, setup_status: 'initial' })));
+ expect(nav.push).not.toHaveBeenCalled(); expect(localStorage.getItem('hypertrophy_token')).toBe('account-b');
+});
