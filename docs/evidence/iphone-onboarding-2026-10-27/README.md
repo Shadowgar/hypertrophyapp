@@ -63,7 +63,7 @@ Subsequent changes to this evidence package do not change runtime source.
   and TypeScript passed. Final-head provider results are recorded on PR #127.
 - Focused Week corrections: initial recovery **48/48**, with subsequent alias,
   Manual/null selection/save and lifecycle regressions passing their focused runs.
-- Saved basics: **6 frontend cases**, **13 disposable PostgreSQL API cases**.
+- Saved basics: **6 frontend cases**, **14 disposable PostgreSQL API cases**.
   Includes authentication, blank-account rejection, validation/unrelated fields,
   history/consent preservation, units, duplicate submits, errors/retry and delayed
   account changes. No reset/drop/truncate or development wipe helper was used.
@@ -133,3 +133,15 @@ resume; publisher false and public API/web 891228f were left unchanged. Issues
 
 Current live 891228f does not include these candidate fixes. No deployment is
 implied by this retest procedure or by an implementation/CI result.
+
+
+## API CI fixture correction
+
+The first full API CI run at `306cec3` reported **3 failures, 998 passes and
+121 skips** in `test_route_observability.py`. The new route fixture entered
+application startup, which installed production logging handlers and disabled
+propagation across later tests in the same worker. A new capture regression
+reproduced **1 failure / 13 passes**; after avoiding startup and creating only
+missing tables on the caller-verified disposable target, **14 API cases passed**.
+No reset/drop helper, runtime logger change or weakened observability assertion
+was used. Final-head provider CI must rerun the original three assertions.

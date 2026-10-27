@@ -4,13 +4,19 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
-from app.database import SessionLocal
+from app.database import Base, SessionLocal, engine
 from app.models import User, WorkoutPlan, WorkoutSetLog
 
 @pytest.fixture(scope='module')
 def client():
-    with TestClient(app) as client:
-        yield client
+    # The caller verifies the disposable target before imports. Create missing
+    # tables only; never reset data or run startup's process-wide logging setup.
+    Base.metadata.create_all(bind=engine)
+    route_client = TestClient(app)
+    try:
+        yield route_client
+    finally:
+        route_client.close()
 
 def register(client):
     email = f'iphone-{uuid4().hex}@example.com'
@@ -116,3 +122,11 @@ def test_basics_edit_requires_authentication_and_never_initializes_blank_account
     with SessionLocal() as db:
         user = db.query(User).filter_by(email=email).one()
         assert user.age is None and user.weight is None and user.name == 'Synthetic'
+
+
+def test_route_client_keeps_shared_log_capture_intact(client, caplog):
+    # Route fixtures must not install production logging handlers for later files.
+    import logging
+    with caplog.at_level(logging.INFO, logger='hypertrophy.app'):
+        logging.getLogger('hypertrophy.app').info('synthetic setup capture sentinel')
+    assert any(record.message == 'synthetic setup capture sentinel' for record in caplog.records)
