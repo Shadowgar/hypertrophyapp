@@ -20,26 +20,32 @@ export default function LoginPage() {
   const [pending, setPending] = useState(false);
   const inFlight = useRef(false);
   const mounted = useRef(false);
+  const continuationRevision = useRef(0);
+  const mountRevision = useRef(0);
   useEffect(() => {
     mounted.current = true;
+    const lifecycle = ++mountRevision.current;
     const token = getToken();
     if (token) {
       setContinuationToken(token); setPending(true); inFlight.current = true;
-      void continueSetup(token, true).finally(() => { inFlight.current = false; if (mounted.current) setPending(false); });
+      void continueSetup(token, true).finally(() => {
+        if (mounted.current && lifecycle === mountRevision.current) { inFlight.current = false; setPending(false); }
+      });
     }
-    return () => { mounted.current = false; };
+    return () => { mounted.current = false; ++continuationRevision.current; ++mountRevision.current; };
     // Existing-session recovery runs once; explicit retry captures the current token.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function continueSetup(token: string, replace = false) {
+    const revision = ++continuationRevision.current;
     try {
       const profile = await api.getProfile();
-      if (!mounted.current || getToken() !== token) return;
+      if (!mounted.current || revision !== continuationRevision.current || getToken() !== token) return;
       const destination = setupContinuation(profile, query.get('next'));
       if (replace) router.replace(destination); else router.push(destination);
     } catch {
-      if (!mounted.current) return;
+      if (!mounted.current || revision !== continuationRevision.current) return;
       if (getToken() === token) setStatus('Signed in. Unable to check your setup. Retry to continue with your saved account.');
       else if (!getToken()) { setContinuationToken(null); setStatus('Your session expired. Sign in again to continue setup.'); }
     }

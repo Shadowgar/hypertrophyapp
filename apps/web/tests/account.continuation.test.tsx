@@ -106,3 +106,11 @@ test('StrictMode remount resumes authenticated setup without stranding the first
  expect(screen.queryByRole('button', { name: 'Continue account setup' })).not.toBeInTheDocument();
  expect(calls.some(call => call.method === 'POST')).toBe(false);
 });
+
+test('StrictMode authenticated login continuation navigates only once', async () => {
+ setAuthToken('strict-login');
+ vi.stubGlobal('fetch', vi.fn(async () => Response.json({ initial_setup_available: true, setup_status: 'initial' })));
+ render(<React.StrictMode><LoginPage /></React.StrictMode>);
+ await waitFor(() => expect(nav.replace).toHaveBeenCalledWith('/onboarding'));
+ expect(nav.replace).toHaveBeenCalledTimes(1);
+});

@@ -40,11 +40,15 @@ if (out) fs.mkdirSync(out, { recursive: true });
    assert.equal(await page.getByRole('button', { name: 'Create account', exact: true }).count(), 0);
    await page.goForward(); await page.getByRole('heading', { name: 'Follow an Authored program' }).waitFor();
    await page.reload(); await page.getByRole('heading', { name: 'Follow an Authored program' }).waitFor();
+   await page.waitForLoadState('networkidle');
    // Leave/close the page, sign out locally, then sign back into the same account.
    await page.close();
    const resumed = await context.newPage();
    await resumed.goto(`${base}onboarding`);
+   await resumed.getByRole('heading', { name: 'Follow an Authored program' }).waitFor();
+   await resumed.waitForLoadState('networkidle');
    await resumed.evaluate(() => { localStorage.removeItem('hypertrophy_token'); window.dispatchEvent(new Event('hypertrophy:auth-token-changed')); });
+   await resumed.waitForLoadState('networkidle');
    await resumed.close();
    const next = await context.newPage();
    // Continue with a fresh page while keeping only the account-owned non-private draft.
@@ -106,6 +110,8 @@ async function runAfterLogin(page, email, password, engine, out, writes, errors)
  await page.waitForURL(url => url.pathname === '/login');
  await page.getByLabel('Email', { exact: true }).fill(email); await page.getByLabel('Password', { exact: true }).fill(password);
  await tap(page.getByRole('button', { name: 'Sign in', exact: true })); await page.waitForURL('**/week');
+ await page.getByRole('region', { name: 'Week scheduling' }).getByRole('checkbox').first().waitFor();
+ await page.waitForLoadState('networkidle');
  await page.goto(`${base}onboarding`); await page.getByRole('heading', { name: 'Your saved setup' }).waitFor();
  assert.equal(await page.getByRole('button', { name: 'Create account', exact: true }).count(), 0);
  if (out) await page.screenshot({ path: `${out}/${engine}-saved-setup.png`, fullPage: true });
