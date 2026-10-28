@@ -76,3 +76,29 @@ test('invalid current basics remain local until corrected', async () => {
   expect(await screen.findByRole('alert')).toHaveTextContent(/name.*age.*bodyweight/i);
   expect(writes).toHaveLength(0);
 });
+
+
+test('partial profiles show unknown answers instead of compatibility defaults', () => {
+  const partial = { ...profile, age: 0, weight: 0, days_available: 2,
+    selected_program_id: 'pure_bodybuilding_phase_1_full_body', program_selection_mode: 'manual',
+    setup_field_presence: { age: false, weight: false, days_available: false, selected_program_id: false },
+  } as Profile;
+  render(<SavedSetup profile={partial} unit="kg" />);
+  for (const label of ['Age', 'Body weight', 'Training days per week', 'Program preference']) {
+    expect(screen.getByText(label).nextElementSibling).toHaveTextContent('Not reported');
+  }
+  expect(screen.getByLabelText('Current age')).toHaveValue(null);
+  expect(screen.getByLabelText('Current bodyweight (kg)')).toHaveValue(null);
+  expect(writes).toHaveLength(0);
+});
+
+test('an explicitly saved Auto preference stays distinct from a missing manual selection', () => {
+  const automatic = { ...profile, selected_program_id: null, program_selection_mode: 'auto',
+    setup_field_presence: { age: true, weight: true, days_available: true, selected_program_id: false },
+  } as Profile;
+  render(<SavedSetup profile={automatic} unit="kg" />);
+  expect(screen.getByText('Program preference').nextElementSibling).toHaveTextContent('Auto');
+  expect(screen.getByText('Age').nextElementSibling).toHaveTextContent('32');
+  expect(screen.getByText('Training days per week').nextElementSibling).toHaveTextContent('3');
+  expect(writes).toHaveLength(0);
+});

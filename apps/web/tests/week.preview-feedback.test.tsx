@@ -216,3 +216,19 @@ test('a saved manual/null profile can explicitly choose and save Auto without in
  await waitFor(() => expect(writes.some(write => write.path.endsWith('/profile/program-selection'))).toBe(true));
  expect(writes.find(write => write.path.endsWith('/profile/program-selection'))!.body).toEqual({ selected_program_id: null, program_selection_mode: 'auto' });
 });
+
+
+test('manual partial profile does not promote compatibility Phase 1 into a saved selection', async () => {
+  profile = { ...profile, selected_program_id: 'pure_bodybuilding_phase_1_full_body',
+    setup_field_presence: { age: false, weight: false, days_available: false, selected_program_id: false } };
+  render(<WeekPage />); await selectDates(2);
+  expect(controls().getByRole('button', { name: 'Preview selected dates' })).toBeDisabled();
+  fireEvent.click(screen.getByRole('button', { name: /Program Override/ }));
+  expect(screen.getByRole('combobox', { name: 'Week program override selector' })).toHaveDisplayValue('Choose a program or Auto');
+  expect(screen.getByRole('button', { name: 'Save program preference' })).toBeDisabled();
+  fireEvent.change(screen.getByRole('combobox', { name: 'Week program override selector' }), { target: { value: '' } });
+  expect(screen.getByRole('button', { name: 'Save program preference' })).toBeEnabled();
+  preview(); await controls().findByText(/Preview ready/);
+  expect(writes[0].body.template_id).toBeNull();
+  expect(writes.every(write => write.path.endsWith('/selected-dates/preview'))).toBe(true);
+});

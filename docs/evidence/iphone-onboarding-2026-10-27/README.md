@@ -150,3 +150,47 @@ reproduced **1 failure / 13 passes**; after avoiding startup and creating only
 missing tables on the caller-verified disposable target, **14 API cases passed**.
 No reset/drop helper, runtime logger change or weakened observability assertion
 was used. Final-head provider CI must rerun the original three assertions.
+
+## Independent review and corrective qualification — 2026-10-28
+
+The owner authorized independent advisory-review substitution, same-PR fixes,
+protected integration and release preflight; production deployment still needs
+explicit approval of the resulting qualified main SHA. Branch protection requires
+CI qualification, CodeQL, GitGuardian and resolved conversations, not the Codex
+bot. One manual retry completed the bot review of `03f1634` without reported
+findings (PR receipt 6460379702). That receipt does not qualify later changes.
+
+Independent account and scheduling reviews inspected the full relevant diff and
+supporting paths. They found two defects missed by the original qualification:
+
+- Separate draft-owner/payload writes and reads could associate another account's
+  answers after quota failures or interleaving. A delayed cross-tab event also let
+  old form answers acquire the new identity. A fresh boundary review found the
+  same ambiguity in legacy recovery and setup retry. Owner and answers now share
+  one atomic versioned envelope; form recovery/persistence retains its originating
+  identity, with explicit rebinding only after its own registration. Ambiguous
+  legacy browser drafts are discarded and require re-entry; server-saved profiles
+  and history are untouched. Malformed subjects fail closed and guest ownership
+  is distinct from an account whose subject is `guest`.
+- Saved Setup presented compatibility defaults as user-saved answers: null age,
+  days and Manual program could appear as age 0, two days and Phase 1. Additive
+  read-only `setup_field_presence` reports raw field presence. Saved review shows
+  unknown answers honestly, and Week offers an explicit missing-program choice.
+  The compatibility response values and deterministic engine remain unchanged.
+
+Failing-before evidence: five draft-helper regressions, one deferred form-write
+regression, two legacy/recovery edge cases, two frontend presence cases, and three
+PostgreSQL presence cases failed on the affected implementations before repair.
+After correction: **76 focused web tests passed**, types and scoped lint passed;
+**17 disposable PostgreSQL API cases passed**. Existing React act/deprecation
+warnings remain identified rather than represented as clean output.
+
+The frozen corrected runtime completed the full browser journey again in desktop
+Chromium and mobile WebKit, using the same explicit isolated PostgreSQL/loopback
+stack. [Mutation summary](browser/review-2026-10-28-summary.json): one registration
+and initialization per account, one preview, two logins, zero activation requests,
+zero page errors. Read-only SQL confirms zero browser-cohort plans and set logs.
+Physical iPhone Safari remains separate. The final immutable replacement SHA,
+full provider CI and new sealed delta-security receipt are recorded on PR #127;
+older 1002/509 counts do not qualify changed source. No migration/infrastructure
+change was added. Full historical questionnaire editing is not included.

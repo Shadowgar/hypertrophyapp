@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import type { Profile } from '@/lib/api';
-import { api, getToken, getProgramDisplayName } from '@/lib/api';
+import { api, getToken, getProgramDisplayName, savedSetupValue } from '@/lib/api';
 import { canonicalLoad, displayLoad } from '@/lib/appearance';
 import { SetupCard, setupStyles as styles } from './setup-flow';
 const labels: Record<string, string> = {
@@ -20,9 +20,10 @@ function answer(value: unknown): string {
 }
 export function SavedSetup({ profile: initialProfile, unit }: { profile: Profile; unit: 'lb' | 'kg' }) {
   const [profile, setProfile] = useState(initialProfile);
+  const savedWeight = savedSetupValue(profile, 'weight');
   const [name, setName] = useState(initialProfile.name ?? '');
-  const [age, setAge] = useState(String(initialProfile.age ?? ''));
-  const [weight, setWeight] = useState(initialProfile.weight ? String(displayLoad(initialProfile.weight, unit)) : '');
+  const [age, setAge] = useState(String(savedSetupValue(initialProfile, 'age') ?? ''));
+  const [weight, setWeight] = useState(savedSetupValue(initialProfile, 'weight') ? String(displayLoad(initialProfile.weight, unit)) : '');
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -30,7 +31,7 @@ export function SavedSetup({ profile: initialProfile, unit }: { profile: Profile
   const mounted = useRef(true);
   const saving = useRef(false);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
-  useEffect(() => { setWeight(profile.weight ? String(displayLoad(profile.weight, unit)) : ''); }, [unit, profile.weight]);
+  useEffect(() => { setWeight(savedWeight ? String(displayLoad(savedWeight, unit)) : ''); }, [unit, savedWeight]);
 
   async function saveBasics(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -53,15 +54,16 @@ export function SavedSetup({ profile: initialProfile, unit }: { profile: Profile
       if (mounted.current) setError(token !== getToken() ? 'Account changed. Reload setup before editing.' : `Could not save basics: ${failure instanceof Error ? failure.message : 'Unknown error'}. Try Save basics again.`);
     } finally { saving.current = false; if (mounted.current) setPending(false); }
   }
-  const customized = profile.selected_program_id === 'full_body_v1';
+  const programId = savedSetupValue(profile, 'selected_program_id');
+  const customized = programId === 'full_body_v1';
   const height = profile.onboarding_answers?.height as { unit?: string; cm?: number; feet?: number; inches?: number } | undefined;
   return <div className={styles.form}>
     <SetupCard title="Your saved answers"><dl className={styles.review}>
       <div><dt>Name</dt><dd>{profile.name || 'Not reported'}</dd></div>
-      <div><dt>Program preference</dt><dd>{profile.selected_program_id ? getProgramDisplayName({ id: profile.selected_program_id }) : 'Auto · choose in Week'}</dd></div>
-      <div><dt>Age</dt><dd>{profile.age ?? 'Not reported'}</dd></div>
-      <div><dt>Body weight</dt><dd>{profile.weight ? `${displayLoad(profile.weight, unit)} ${unit}` : 'Not reported'}</dd></div>
-      <div><dt>Training days per week</dt><dd>{profile.days_available}</dd></div>
+      <div><dt>Program preference</dt><dd>{programId ? getProgramDisplayName({ id: programId }) : profile.program_selection_mode === 'auto' ? 'Auto · choose in Week' : 'Not reported'}</dd></div>
+      <div><dt>Age</dt><dd>{savedSetupValue(profile, 'age') ?? 'Not reported'}</dd></div>
+      <div><dt>Body weight</dt><dd>{savedWeight ? `${displayLoad(savedWeight, unit)} ${unit}` : 'Not reported'}</dd></div>
+      <div><dt>Training days per week</dt><dd>{savedSetupValue(profile, 'days_available') ?? 'Not reported'}</dd></div>
       <div><dt>Height</dt><dd>{height?.unit === 'cm' && height.cm ? `${height.cm} cm` : height?.feet || height?.inches ? `${height.feet ?? 'Unreported'} ft ${height.inches ?? 'unreported'} in` : 'Not reported'}</dd></div>
       {Object.entries(labels).map(([key, label]) => <div key={key}><dt>{label}</dt><dd>{answer(profile.onboarding_answers?.[key])}</dd></div>)}
     </dl></SetupCard>

@@ -64,6 +64,7 @@ function SetupForm({ onAccountChanged, recoverDraft }: { onAccountChanged: () =>
   const [cacheAvailable, setCacheAvailable] = useState(true);
   const [unitTouched, setUnitTouched] = useState(false);
   const [preferenceRecovery, setPreferenceRecovery] = useState<'none' | 'reload' | 'review'>('none');
+  const draftToken = useRef(getToken());
   const createdAccount = useRef<{ email: string; token: string } | null>(null);
   const submissionRevision = useRef(0);
   const submitting = useRef(false);
@@ -102,7 +103,7 @@ function SetupForm({ onAccountChanged, recoverDraft }: { onAccountChanged: () =>
   useEffect(() => {
     // An account change must not recover the prior draft if its removal was denied.
     if (!recoverDraft) { setDraftReady(true); return; }
-    const raw = readCachedDraft();
+    const raw = readCachedDraft(draftToken.current);
     if (raw === undefined) setCacheAvailable(false);
     if (raw) {
       const restored = readDraft(raw);
@@ -114,7 +115,7 @@ function SetupForm({ onAccountChanged, recoverDraft }: { onAccountChanged: () =>
 
   useEffect(() => {
     if (!draftReady || !cacheAvailable || completed.current || stage === 'welcome' || stage === 'account') return;
-    const saved = writeCachedDraft(answers); setHasDraft(saved);
+    const saved = writeCachedDraft(answers, draftToken.current); setHasDraft(saved);
     if (!saved) setCacheAvailable(false);
   }, [answers, cacheAvailable, draftReady, stage]);
 
@@ -190,6 +191,7 @@ function SetupForm({ onAccountChanged, recoverDraft }: { onAccountChanged: () =>
       if (!isCurrent()) return;
       if (!result.access_token) throw new Error('Missing authentication result');
       expectedToken = result.access_token;
+      draftToken.current = result.access_token;
       createdAccount.current = { email: normalizedEmail, token: result.access_token };
       installingOwnToken.current = true;
       try { setAuthToken(result.access_token); } finally { installingOwnToken.current = false; }
@@ -199,7 +201,9 @@ function SetupForm({ onAccountChanged, recoverDraft }: { onAccountChanged: () =>
   }
 
   async function resumeInitialSetup() {
-    const token = getToken(); if (!token || submitting.current) return;
+    const token = getToken();
+    if (token !== draftToken.current) { onAccountChanged(); return; }
+    if (!token || submitting.current) return;
     const revision = beginRequest();
     const isCurrent = () => mounted.current && submissionRevision.current === revision && getToken() === token;
     try {

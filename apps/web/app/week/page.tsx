@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Disclosure } from "@/components/ui/disclosure";
-import { api, getToken, getProgramDisplayName, type GeneratedWeekExercise, type GeneratedWeekPlan, type HistoryOccurrenceStatus, type ProgramTemplateOption, type Profile, type SchedulingContext, type SelectedDatePlanRequest } from "@/lib/api";
+import { api, getToken, getProgramDisplayName, savedSetupValue, type GeneratedWeekExercise, type GeneratedWeekPlan, type HistoryOccurrenceStatus, type ProgramTemplateOption, type Profile, type SchedulingContext, type SelectedDatePlanRequest } from "@/lib/api";
 import { datesInWeek, formatCalendarDate } from "@/lib/calendar-date";
 import { useAppearance } from "@/components/appearance-provider";
 import { displayLoad } from "@/lib/appearance";
@@ -366,7 +366,8 @@ export default function WeekPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSavingProgramSelection, setIsSavingProgramSelection] = useState(false);
   const [generatedOnboardingPrompt, setGeneratedOnboardingPrompt] = useState<string | null>(null);
-  const preferenceDirty = selectedProgramId !== (profile?.selected_program_id ?? null) || selectedProgramMode !== (profile?.program_selection_mode ?? (profile?.selected_program_id ? "manual" : "auto"));
+  const savedProgramId = savedSetupValue(profile, "selected_program_id");
+  const preferenceDirty = selectedProgramId !== savedProgramId || selectedProgramMode !== (profile?.program_selection_mode ?? (savedProgramId ? "manual" : "auto"));
   const progressWeek = context?.week_start;
   const progressRevision = context?.placement_revision;
   useEffect(() => {
@@ -393,8 +394,8 @@ export default function WeekPage() {
       const updated = await api.updateProgramSelection({ selected_program_id: selectedProgramId, program_selection_mode: selectedProgramId ? "manual" : "auto" });
       if (!mountedRef.current || token !== getToken()) return;
       setProfile(updated);
-      setSelectedProgramId(updated.selected_program_id ?? null);
-      setSelectedProgramMode(updated.program_selection_mode ?? (updated.selected_program_id ? "manual" : "auto"));
+      setSelectedProgramId(savedSetupValue(updated, "selected_program_id"));
+      setSelectedProgramMode(updated.program_selection_mode ?? (savedSetupValue(updated, "selected_program_id") ? "manual" : "auto"));
       if (updated.selected_program_id === "full_body_v1") {
         try {
           const onboarding = await api.getGeneratedOnboarding();
@@ -564,8 +565,8 @@ export default function WeekPage() {
       if (!active || token !== getToken()) return;
       profileToken.current = token;
       setProfile(loadedProfile);
-      setSelectedProgramId(loadedProfile.selected_program_id ?? null);
-      setSelectedProgramMode(loadedProfile.program_selection_mode ?? (loadedProfile.selected_program_id ? "manual" : "auto"));
+      setSelectedProgramId(savedSetupValue(loadedProfile, "selected_program_id"));
+      setSelectedProgramMode(loadedProfile.program_selection_mode ?? (savedSetupValue(loadedProfile, "selected_program_id") ? "manual" : "auto"));
       setProfileState("ready");
     }).catch(() => {
       if (active && token === getToken()) setProfileState("error");
@@ -663,7 +664,7 @@ export default function WeekPage() {
       {progressState === "error" && plan ? <Button variant="secondary" onClick={() => setProgressReload(value => value + 1)}>Retry saved progress</Button> : null}
     </section>
     </div>
-    <Disclosure title="Program Override" badge={selectedProgramId ? "custom" : "auto"} defaultOpen={false}>
+    <Disclosure title="Program Override" badge={selectedProgramId ? "custom" : selectedProgramMode === "auto" ? "auto" : "not selected"} defaultOpen={false}>
       <div className="space-y-2">
         <select id="week-program" aria-label="Week program override selector" className="ui-select" value={selectedProgramId ?? (selectedProgramMode === "manual" ? "__choose__" : "")} disabled={isGenerating || profileState !== "ready"}
           onChange={(event) => { setSelectedProgramId(event.target.value || null); setSelectedProgramMode(event.target.value ? "manual" : "auto"); setPreview(null); setRetryPreview(false); setPlanStatus("Your program changed. Preview your selected dates again."); }}>

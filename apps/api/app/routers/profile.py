@@ -300,6 +300,10 @@ def get_profile(current_user: CurrentUser, db: DbSession) -> ProfileResponse:
     return ProfileResponse(
         initial_setup_available=initial,
         setup_status="established" if established else "initial" if initial else "planning",
+        # Preserve legacy response defaults while identifying actual saved answers.
+        setup_field_presence={field: getattr(current_user, field) is not None for field in (
+            "age", "weight", "days_available", "selected_program_id",
+        )},
         scheduling_timezone=current_user.scheduling_timezone,
         effective_days_available=effective.days_available,
         effective_program_id=effective.program_id,

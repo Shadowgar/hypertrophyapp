@@ -130,3 +130,42 @@ def test_route_client_keeps_shared_log_capture_intact(client, caplog):
     with caplog.at_level(logging.INFO, logger='hypertrophy.app'):
         logging.getLogger('hypertrophy.app').info('synthetic setup capture sentinel')
     assert any(record.message == 'synthetic setup capture sentinel' for record in caplog.records)
+
+
+def test_partial_profile_reports_raw_setup_presence_without_mutating_compatibility_defaults(client):
+    email, headers = register(client)
+    with SessionLocal() as db:
+        user = db.query(User).filter_by(email=email).one()
+        user.equipment_profile = ['dumbbell']
+        db.commit()
+        before = snapshot(user)
+    for _ in range(2):
+        response = client.get('/profile', headers=headers)
+        assert response.status_code == 200
+        data = response.json()
+        assert data['initial_setup_available'] is False
+        assert data['setup_status'] == 'planning'
+        assert data['setup_field_presence'] == dict(age=False, weight=False, days_available=False, selected_program_id=False)
+        # Existing response compatibility stays intact; setup consumers use presence.
+        assert (data['age'], data['weight'], data['days_available'], data['selected_program_id']) == (0, 0, 2, 'pure_bodybuilding_phase_1_full_body')
+    with SessionLocal() as db:
+        assert snapshot(db.query(User).filter_by(email=email).one()) == before
+    response = client.patch('/profile/setup-basics', headers=headers, json={'name': 'Saved', 'age': 32, 'weight': 80})
+    assert response.status_code == 200
+    assert response.json()['setup_field_presence'] == dict(age=True, weight=True, days_available=False, selected_program_id=False)
+    with SessionLocal() as db:
+        user = db.query(User).filter_by(email=email).one()
+        assert user.days_available is None and user.selected_program_id is None
+        assert user.equipment_profile == ['dumbbell']
+
+
+@pytest.mark.parametrize('mode,program', [('manual', 'pure_bodybuilding_phase_2_full_body'), ('auto', None)])
+def test_setup_presence_distinguishes_explicit_program_and_auto(client, mode, program):
+    _, headers = register(client)
+    payload = dict(name='Synthetic', age=32, weight=80, gender='', split_preference='full_body', days_available=3,
+                   program_selection_mode=mode, selected_program_id=program)
+    response = client.post('/profile/initial-setup', headers=headers, json=payload)
+    assert response.status_code == 200
+    assert response.json()['setup_field_presence'] == dict(age=True, weight=True, days_available=True, selected_program_id=program is not None)
+    assert response.json()['program_selection_mode'] == mode
+    assert response.json()['selected_program_id'] == program
