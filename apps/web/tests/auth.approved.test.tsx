@@ -12,7 +12,7 @@ beforeEach(() => { localStorage.clear(); navigation.push.mockReset(); navigation
 
 test('sign-in disables duplicate submits and preserves the entire safe destination without profile writes', async () => {
   const response = deferred<Response>();
-  vi.mocked(fetch).mockReturnValue(response.promise);
+  vi.mocked(fetch).mockImplementation(input => String(input).endsWith('/auth/login') ? response.promise : Promise.resolve(Response.json({ setup_status: 'established', initial_setup_available: false })));
   navigation.query.set('next', '/today?workout=owned-occurrence#sets');
   render(<LoginPage />);
   fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'returning@example.com' } });
@@ -22,7 +22,7 @@ test('sign-in disables duplicate submits and preserves the entire safe destinati
   fireEvent.submit(screen.getByLabelText('Email').closest('form')!);
   expect(fetch).toHaveBeenCalledTimes(1);
   await act(async () => response.resolve(Response.json({ access_token: 'synthetic-login-token' })));
-  expect(navigation.push).toHaveBeenCalledWith('/today?workout=owned-occurrence#sets');
+  await waitFor(() => expect(navigation.push).toHaveBeenCalledWith('/today?workout=owned-occurrence#sets'));
   expect(fetch).toHaveBeenCalledWith(expect.stringMatching(/\/auth\/login$/), expect.any(Object));
 });
 

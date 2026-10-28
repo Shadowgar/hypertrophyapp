@@ -479,6 +479,7 @@ function SettingsContent() {
 
         <section id="account-preferences" className={styles.card} aria-labelledby="account-heading">
           <h2 id="account-heading">Account &amp; accessibility</h2>
+          {profileLoad === 'ready' && profile ? <Link className={styles.link} href="/onboarding">{profile.initial_setup_available || profile.setup_status === 'planning' ? 'Resume Setup' : 'Review/Edit Setup'}</Link> : null}
           {profile ? <dl className={styles.account}><div><dt>Name</dt><dd>{profile.name || "Not set"}</dd></div><div><dt>Email</dt><dd>{profile.email}</dd></div></dl> : <p className={styles.muted}>{profileLoad === "loading" ? "Loading profile…" : "Profile unavailable."}</p>}
           <p className={styles.muted}>Appearance follows your selected preference. Follow Device Settings uses this device&apos;s light or dark setting.</p>
           <Button variant="secondary" disabled={trainingPending} onClick={() => {

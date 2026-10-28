@@ -1,0 +1,56 @@
+[
+  {
+    "engine": "chromium",
+    "viewport": "1440x900 desktop",
+    "writes": [
+      {
+        "method": "POST",
+        "path": "/api/auth/register"
+      },
+      {
+        "method": "POST",
+        "path": "/api/auth/login"
+      },
+      {
+        "method": "POST",
+        "path": "/api/profile/initial-setup"
+      },
+      {
+        "method": "POST",
+        "path": "/api/plan/selected-dates/preview"
+      },
+      {
+        "method": "POST",
+        "path": "/api/auth/login"
+      }
+    ],
+    "pageErrors": []
+  },
+  {
+    "engine": "webkit",
+    "viewport": "390x844 iPhone 13 emulation",
+    "writes": [
+      {
+        "method": "POST",
+        "path": "/api/auth/register"
+      },
+      {
+        "method": "POST",
+        "path": "/api/auth/login"
+      },
+      {
+        "method": "POST",
+        "path": "/api/profile/initial-setup"
+      },
+      {
+        "method": "POST",
+        "path": "/api/plan/selected-dates/preview"
+      },
+      {
+        "method": "POST",
+        "path": "/api/auth/login"
+      }
+    ],
+    "pageErrors": []
+  }
+]

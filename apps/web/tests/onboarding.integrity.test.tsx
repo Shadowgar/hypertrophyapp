@@ -62,7 +62,9 @@ test('reload after a committed profile with lost response continues the saved ch
   setAuthToken('new-synthetic-account');
   installSetupApi(calls, call => call.url.endsWith('/profile') ? Promise.resolve(Response.json({ email: 'synthetic@example.com', initial_setup_available: false, selected_program_id: 'full_body_v1' })) : undefined);
   renderSetup(); fireEvent.click(await screen.findByRole('button', { name: 'Continue account setup' }));
-  await waitFor(() => expect(push).toHaveBeenCalledWith('/customize')); expect(calls.some(call => call.method === 'POST')).toBe(false);
+  await screen.findByRole('heading', { name: 'Your saved setup' });
+  expect(screen.getByRole('link', { name: 'Continue to Customized' })).toHaveAttribute('href', '/customize');
+  expect(push).not.toHaveBeenCalled(); expect(calls.some(call => call.method === 'POST')).toBe(false);
 });
 test('a late error body from the prior account cannot replace the account-change recovery message', async () => {
   const body = deferred<{ detail: string }>(); const response = new Response(null, { status: 503 }); response.json = () => body.promise;

@@ -1,7 +1,7 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { setAuthToken } from '@/lib/api';
-import { DRAFT_KEY } from '@/app/onboarding/setup-draft';
+import { DRAFT_KEY, readCachedDraft, writeCachedDraft, emptyAnswers } from '@/app/onboarding/setup-draft';
 import { Call, chooseProgram, createAccount, fillBasics, installSetupApi, renderSetup, reviewSetup } from './helpers/onboarding-driver';
 
 const push = vi.hoisted(() => vi.fn());
@@ -63,4 +63,30 @@ test('failed cache cleanup cannot retain an old account form or apply its pendin
   expect(screen.queryByRole('heading', { name: 'Review your setup' })).not.toBeInTheDocument();
   expect(push).not.toHaveBeenCalled();
   expect(calls.filter(call => call.url.endsWith('/profile/initial-setup'))).toHaveLength(1);
+});
+
+test('a mounted form never persists old answers for a different account before its storage event', async () => {
+  const token = (sub: string) => `header.${btoa(JSON.stringify({ sub }))}.signature`;
+  installSetupApi(calls, call => call.url.endsWith('/auth/register') ? Promise.resolve(Response.json({ access_token: token('account-a') })) : undefined);
+  renderSetup(); await createAccount(); await chooseProgram();
+  expect(readCachedDraft()).toContain('pure_bodybuilding_phase_1_full_body');
+  localStorage.setItem('hypertrophy_token', token('account-b'));
+  fireEvent.change(screen.getByLabelText('Training days per week'), { target: { value: '4' } });
+  expect(readCachedDraft()).toBeNull();
+  expect(calls.filter(call => call.url.endsWith('/profile/initial-setup'))).toHaveLength(0);
+});
+
+test('setup recovery resets an old form before adopting a different account', async () => {
+  const token = (sub: string) => `header.${btoa(JSON.stringify({ sub }))}.signature`;
+  setAuthToken(token('account-a')); writeCachedDraft({ ...emptyAnswers, equipmentTags: ['cable'] });
+  installSetupApi(calls, call => call.url.endsWith('/profile') ? Promise.resolve(call.token === `Bearer ${token('account-a')}` ? Response.json({}, { status: 503 }) : Response.json({ email: 'account-b@example.com', name: 'B', initial_setup_available: true })) : undefined);
+  renderSetup(); await screen.findByText(/Unable to check saved setup/);
+  localStorage.setItem('hypertrophy_token', token('account-b'));
+  fireEvent.click(screen.getByRole('button', { name: 'Continue account setup' }));
+  await screen.findByRole('heading', { name: 'How would you like to train?' });
+  await chooseProgram(); fillBasics();
+  fireEvent.click(screen.getByRole('button', { name: 'Continue to equipment' }));
+  await screen.findByRole('heading', { name: 'Your equipment' });
+  expect(screen.getByLabelText('Cable station')).not.toBeChecked();
+  expect(calls.filter(call => call.url.endsWith('/profile/initial-setup'))).toHaveLength(0);
 });

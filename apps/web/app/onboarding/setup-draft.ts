@@ -1,4 +1,5 @@
-import { canonicalLoad } from '@/lib/appearance';
+import { getToken } from '@/lib/api';
+import { accountScope, canonicalLoad } from '@/lib/appearance';
 
 export const DRAFT_KEY = 'hypertrophy_onboarding_draft_v1';
 export const EQUIPMENT = [['barbell', 'Barbell'], ['bench', 'Bench'], ['dumbbell', 'Dumbbells'], ['cable', 'Cable station'], ['machine', 'Machines'], ['bands', 'Bands'], ['bodyweight', 'Bodyweight']] as const;
@@ -36,17 +37,44 @@ export function browserDraft(answers: SetupAnswers) {
   return Object.fromEntries(Object.entries(answers).filter(([key]) => !privateFields.has(key)));
 }
 
-// Draft persistence is optional and must never decide whether server setup succeeded.
-export function readCachedDraft(): string | null | undefined {
-  try { return localStorage.getItem(DRAFT_KEY); } catch { return undefined; }
+// Owner and answers share one atomic storage value. An old split-key owner may
+// have been updated without its payload, so legacy caches are not trusted.
+function draftOwner(token: string | null): string | null {
+  if (!token) return 'guest';
+  const scope = accountScope(token);
+  return scope ? `account:${scope}` : null;
 }
 
-export function writeCachedDraft(answers: SetupAnswers): boolean {
-  try { localStorage.setItem(DRAFT_KEY, JSON.stringify(browserDraft(answers))); return true; } catch { return false; }
+// The caller supplies the identity that owns its in-memory answers. A delayed
+// cross-tab storage event must not relabel those answers with a newer token.
+export function readCachedDraft(expectedToken = getToken()): string | null | undefined {
+  try {
+    if (getToken() !== expectedToken) return null;
+    const owner = draftOwner(expectedToken);
+    if (!owner) return null;
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    const value = JSON.parse(raw);
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+    if ('version' in value || 'owner' in value || 'answers' in value) {
+      if (value.version !== 2 || value.owner !== owner || !value.answers || typeof value.answers !== 'object' || Array.isArray(value.answers)) return null;
+      return getToken() === expectedToken ? JSON.stringify(value.answers) : null;
+    }
+    return null;
+  } catch { return undefined; }
+}
+
+export function writeCachedDraft(answers: SetupAnswers, expectedToken = getToken()): boolean {
+  try {
+    const owner = draftOwner(expectedToken);
+    if (!owner || getToken() !== expectedToken) return false;
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({ version: 2, owner, answers: browserDraft(answers) }));
+    return true;
+  } catch { return false; }
 }
 
 export function discardCachedDraft(): boolean {
-  try { localStorage.removeItem(DRAFT_KEY); return true; } catch { return false; }
+  try { localStorage.removeItem(DRAFT_KEY); localStorage.removeItem(`${DRAFT_KEY}.owner`); return true; } catch { return false; }
 }
 
 export function readDraft(raw: string): SetupAnswers | null {

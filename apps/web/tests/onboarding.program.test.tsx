@@ -36,13 +36,16 @@ test('all former optional normalized context remains available through progressi
   expect(calls.find(call => call.url.endsWith('/profile/initial-setup'))?.payload).toMatchObject({ session_time_budget_minutes: 45, weak_areas: ['chest','hamstrings'], onboarding_answers: { primary_goals: ['build_muscle'], training_age_bucket: '1_2_years', strength_frequency_bucket: '3_4_per_week', strength_experience_level: 'intermediate', motivation_driver: 'self_motivated', primary_obstacle: 'not_enough_time', gender: 'prefer_not_to_say', birthday: '1990-01-01', height: { unit: 'in', feet: 5, inches: 10, cm: null } } });
 });
 test('draft recovery retains non-private choices while measurements and credentials require re-entry', async () => {
-  localStorage.setItem('hypertrophy_onboarding_draft_v1', JSON.stringify({ phase: 'account', selectedProgramId: phase2, equipmentTags: ['cable'], workoutDurationMinutes: 45, firstName: 'Private old name', email: 'private-old@example.com', weightValue: '185', birthday: '1990-01-01' }));
+  const token = `test.${btoa(JSON.stringify({ sub: 'synthetic-draft-owner' }))}.test`;
+  installSetupApi(calls, call => call.url.endsWith('/auth/register') ? Promise.resolve(Response.json({ access_token: token })) : undefined);
+  localStorage.setItem('hypertrophy_onboarding_draft_v1', JSON.stringify({ version: 2, owner: 'guest', answers: { phase: 'account', selectedProgramId: phase2, equipmentTags: ['cable'], workoutDurationMinutes: 45, firstName: 'Private old name', email: 'private-old@example.com', weightValue: '185', birthday: '1990-01-01' } }));
   renderSetup(); expect(await screen.findByText(/Recovered saved onboarding draft/)).toBeInTheDocument();
   await createAccount(); await chooseProgram(phase2);
   expect(screen.getByLabelText('Body weight (lb)')).toHaveValue(null); fillBasics();
   fireEvent.click(screen.getByRole('button', { name: 'Continue to equipment' }));
   expect(screen.getByRole('checkbox', { name: 'Cable station' })).toBeChecked();
   const stored = JSON.parse(localStorage.getItem('hypertrophy_onboarding_draft_v1')!);
-  for (const key of ['firstName','email','password','weightValue','age','birthday','heightFeet']) expect(stored).not.toHaveProperty(key);
-  expect(stored).toMatchObject({ equipmentTags: ['cable'], selectedProgramId: phase2, workoutDurationMinutes: '45' });
+  for (const key of ['firstName','email','password','weightValue','age','birthday','heightFeet']) expect(stored.answers).not.toHaveProperty(key);
+  expect(stored).toMatchObject({ version: 2, owner: 'account:synthetic-draft-owner' });
+  expect(stored.answers).toMatchObject({ equipmentTags: ['cable'], selectedProgramId: phase2, workoutDurationMinutes: '45' });
 });
