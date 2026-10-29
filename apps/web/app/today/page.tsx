@@ -11,6 +11,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { SorenessDialog } from "@/components/soreness-dialog";
 import { Disclosure } from "@/components/ui/disclosure";
 import { UiIcon } from "@/components/ui/icons";
 import {
@@ -1337,7 +1338,7 @@ export default function TodayPage() {
   return (
     <div className={executionVisible ? "atlas-page" : "space-y-4 pb-8"}>
       <div className={executionVisible ? "hidden" : "flex flex-wrap items-baseline justify-between gap-2"}>
-        <h1 className="ui-title-page">Today</h1>
+        <h1 className="ui-title-page" data-today-heading tabIndex={-1}>Today</h1>
         {!undoRecovery ? <Link className="inline-flex min-h-11 items-center underline" href={manageDatesHref}>{manageDatesLabel}</Link> : null}
         <p className="ui-meta text-zinc-400">{todayDate}</p>
       </div>
@@ -1719,54 +1720,15 @@ export default function TodayPage() {
       ) : null}
 
       {showSorenessModal ? (
-        <div className="fixed inset-0 z-[70] flex items-start justify-center bg-black/60 px-4 pb-6 pt-[max(1rem,env(safe-area-inset-top))] overflow-y-auto">
-          <div className="main-card main-card--elevated w-full max-w-md spacing-grid max-h-[90dvh] overflow-y-auto">
-            <div>
-              <p className="text-sm font-semibold text-zinc-100">What&rsquo;s sore today?</p>
-              <p className="ui-meta">Log soreness before starting this workout.</p>
-            </div>
-
-            <div className="space-y-2">
-              {MUSCLE_GROUPS.map((muscle) => (
-                <div key={muscle} className="flex items-center justify-between gap-2">
-                  <span className="ui-label text-zinc-300">{muscle}</span>
-                  <select
-                    className="ui-select p-1 text-xs"
-                    onChange={(event) => {
-                      const value = event.target.value as SorenessSeverity;
-                      setSorenessByMuscle((prev) => ({ ...prev, [muscle]: value }));
-                    }}
-                    value={sorenessByMuscle[muscle]}
-                  >
-                    <option value="none">None</option>
-                    <option value="mild">Mild</option>
-                    <option value="moderate">Moderate</option>
-                    <option value="severe">Severe</option>
-                  </select>
-                </div>
-              ))}
-            </div>
-
-            <textarea
-              className="ui-textarea text-xs"
-              onChange={(event) => setSorenessNotes(event.target.value)}
-              placeholder="Optional soreness notes"
-              rows={3}
-              value={sorenessNotes}
-            />
-
-            <p className="ui-meta">{sorenessStatus}</p>
-
-            <div className="flex gap-2">
-              <Button className="w-full" onClick={submitSorenessAndLoad} type="button">
-                <span className="inline-flex items-center gap-2">
-                  <UiIcon name="save" className="ui-icon--action" />
-                  Save & Start Workout
-                </span>
-              </Button>
-              <Button
-                className="w-full"
-                onClick={async () => {
+        <SorenessDialog
+          muscles={MUSCLE_GROUPS}
+          values={sorenessByMuscle}
+          notes={sorenessNotes}
+          status={sorenessStatus}
+          onSeverity={(muscle, value) => setSorenessByMuscle(previous => ({ ...previous, [muscle]: value }))}
+          onNotes={setSorenessNotes}
+          onSave={submitSorenessAndLoad}
+          onSkip={async () => {
                   const scope = capturePageRead();
                   try {
                     const today = await resolveLocalToday();
@@ -1785,18 +1747,8 @@ export default function TodayPage() {
                   } catch {
                     if (isCurrentPageRead(scope)) setSorenessStatus("Unable to verify the local date. Try again.");
                   }
-                }}
-                type="button"
-                variant="secondary"
-              >
-                <span className="inline-flex items-center gap-2">
-                  <UiIcon name="skip" className="ui-icon--action" />
-                  Skip
-                </span>
-              </Button>
-            </div>
-          </div>
-        </div>
+          }}
+        />
       ) : null}
     </div>
   );

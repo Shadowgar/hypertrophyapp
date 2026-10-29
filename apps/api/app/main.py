@@ -48,7 +48,7 @@ async def lifespan(_app: FastAPI):
     yield
 
 
-app = FastAPI(title="Rocco's HyperTrophy Plan API", version=APP_VERSION, lifespan=lifespan)
+app = FastAPI(title="FERRAVIS API", version=APP_VERSION, lifespan=lifespan)
 
 
 def request_route_template(request: Request) -> str:

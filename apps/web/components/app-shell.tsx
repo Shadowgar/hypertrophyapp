@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import Link from "next/link";
+import { Brand } from "@/components/brand";
 import { accountScope } from "@/lib/appearance";
 import { clearAuthToken } from "@/lib/api";
 const links = [
@@ -96,7 +97,7 @@ export function AppShell({
   if (!hydrated) {
     return (
       <main className="ux-main" role="status">
-        Loading WorkoutApp…
+        Loading FERRAVIS…
       </main>
     );
   }
@@ -120,7 +121,7 @@ export function AppShell({
       {token ? (
         <nav className="ux-sidebar" aria-label="Main navigation">
           <Link className="ux-brand" href="/">
-            WorkoutApp
+            <Brand />
           </Link>
           {links.map(([href, label]) => (
             <Link
@@ -144,7 +145,7 @@ export function AppShell({
       ) : null}
       <header className="ux-header">
         <Link href="/" className="ux-brand">
-          WorkoutApp
+          <Brand />
         </Link>
         {token ? (
           <Link href="/settings">Account</Link>

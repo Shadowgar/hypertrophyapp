@@ -1,12 +1,12 @@
 > Documentation entry point: [docs/README.md](docs/README.md). The documentation authority baseline was owner-approved on 2026-09-28; old overview/quickstart claims below are historical implementation guidance, not full qualification or permission to reset live data. Use [scoped agent context](AGENTS.md), [safe development](docs/operations/development.md) and the [database safety lock](DB_SAFETY_LOCK.md).
 
-# Rocco's HyperTrophy Plan Monorepo
+# FERRAVIS — Strength, Engineered.
 
-Deterministic hypertrophy planner + workout runner for local-first deployment.
+Personal strength and hypertrophy training, with deterministic planning and an auditable workout runner. The repository and deployment identifiers remain `hypertrophyapp` for compatibility.
 
 ## About
 
-Rocco's HyperTrophy is an explainable, deterministic adaptive hypertrophy coaching platform. It is designed to produce reproducible weekly workout plans and live coaching guidance from canonical program templates and explicitly distilled coaching rules. The project emphasizes local-first development, deterministic decision-making, and structured decision traces so that every automated coaching choice can be inspected and tested.
+FERRAVIS is an explainable, deterministic adaptive hypertrophy coaching platform. It is designed to produce reproducible weekly workout plans and live coaching guidance from canonical program templates and explicitly distilled coaching rules. The project emphasizes local-first development, deterministic decision-making, and structured decision traces so that every automated coaching choice can be inspected and tested.
 
 Core goals:
 - Produce deterministic, testable workout plans from authored templates.

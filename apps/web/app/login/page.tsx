@@ -83,7 +83,7 @@ export default function LoginPage() {
     <SetupCard title="Back to your workout"><p>After sign-in, return to the workout you opened.</p></SetupCard>
     <SetupCard title="Your setup stays yours"><p>Signing in does not recreate a plan or change your program.</p></SetupCard>
   </>}>
-    <form className={styles.form} onSubmit={submit}>
+    <form className={`${styles.form} ${styles.loginForm}`} onSubmit={submit}>
       <label className={styles.field}>Email<input type="email" autoComplete="username" required value={email} disabled={pending} onChange={event => setEmail(event.target.value)} /></label>
       <PasswordField value={password} onChange={setPassword} autoComplete="current-password" disabled={pending} />
       <Link className={styles.secondaryLink} href={email ? `/reset-password?email=${encodeURIComponent(email.trim())}` : '/reset-password'}>Forgot password?</Link>

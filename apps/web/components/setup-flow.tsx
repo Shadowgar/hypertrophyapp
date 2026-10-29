@@ -20,7 +20,7 @@ export function SetupFlow({ title, subtitle, eyebrow = 'Account', aside, childre
       {children}
     </section>
     <aside className={styles.aside} aria-label="Setup information">
-      <SetupCard title="WorkoutApp"><p>Your setup</p></SetupCard>
+      <SetupCard title="FERRAVIS"><p>Strength, Engineered.</p></SetupCard>
       {aside}
     </aside>
   </div>;

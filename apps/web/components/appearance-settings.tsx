@@ -27,7 +27,7 @@ export function AppearanceSettings() {
     <section className="ux-card space-y-4" aria-labelledby="appearance-title">
       <h2 id="appearance-title">Appearance</h2>
       <p>
-        Your familiar Classic WorkoutApp Dark stays selected until you change
+        Your familiar Classic FERRAVIS Dark stays selected until you change
         it.
       </p>
       <fieldset
@@ -47,7 +47,7 @@ export function AppearanceSettings() {
           >
             <option value="graphite">Graphite</option>
             <option value="charcoal">Charcoal</option>
-            <option value="classic">Classic WorkoutApp</option>
+            <option value="classic">Classic FERRAVIS</option>
           </select>
         </label>
         <label className="ux-field">
@@ -134,7 +134,7 @@ export function AppearanceSettings() {
           status ||
           (!ready
             ? "Loading saved appearance…"
-            : "Six appearances. One familiar WorkoutApp.")}
+            : "Six appearances. One familiar FERRAVIS.")}
       </p>
     </section>
   );
