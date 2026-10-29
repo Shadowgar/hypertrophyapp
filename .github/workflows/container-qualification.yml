@@ -29,6 +29,7 @@ jobs:
     timeout-minutes: 30
     env:
       CANDIDATE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      EXPORT_WEB_RUNTIME: ${{ github.event_name == 'workflow_dispatch' && inputs.export_web_runtime && 'true' || 'false' }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -45,9 +46,16 @@ jobs:
           for service in api web; do
             version_arg=APP_VERSION
             if [ "$service" = web ]; then version_arg=NEXT_PUBLIC_APP_VERSION; fi
+            qualification_args=()
+            if [ "$service" = web ] && [ "$EXPORT_WEB_RUNTIME" = true ]; then
+              # Next rewrites bind this at build time. The opt-in browser artifact
+              # must reach only the separately verified disposable local API.
+              qualification_args+=(--build-arg SERVER_API_BASE_URL=http://127.0.0.1:55438)
+            fi
             docker build --pull --platform linux/arm64 \
               --label "org.opencontainers.image.revision=$CANDIDATE_SHA" \
               --build-arg "$version_arg=$CANDIDATE_SHA" \
+              "${qualification_args[@]}" \
               -t "qualification-$service:$CANDIDATE_SHA" \
               -f "$context/apps/$service/Dockerfile" "$context"
           done
@@ -64,6 +72,8 @@ jobs:
 
           revision = os.environ['CANDIDATE_SHA']
           receipt = {'revision': revision, 'platform': 'linux/arm64', 'images': {}, 'checks': []}
+          receipt['server_api_base_url'] = ('http://127.0.0.1:55438' if os.environ['EXPORT_WEB_RUNTIME'] == 'true'
+                                            else 'http://api:8000')
           containers = []
 
           def docker(*args):
@@ -135,6 +145,10 @@ jobs:
           const sharp = require('sharp');
           (async () => {
             assert.equal(process.arch, 'arm64');
+            for (const installer of ['/usr/local/lib/node_modules/npm', '/usr/local/bin/npm',
+                                     '/usr/local/bin/npx', '/usr/local/bin/yarn', '/usr/local/bin/yarnpkg']) {
+              assert.equal(fs.existsSync(installer), false, 'runtime package installer must be absent');
+            }
             assert.equal(process.report.getReport().header.glibcVersionRuntime, undefined);
             assert.equal(require('next/package.json').version, require('./package.json').dependencies.next);
             const actions = JSON.parse(fs.readFileSync('.next/server/server-reference-manifest.json', 'utf8'));
@@ -188,7 +202,7 @@ jobs:
           done
           docker run --rm --network none --entrypoint python "qualification-api:$CANDIDATE_SHA" -c '
           import importlib.metadata as m
-          assert m.version("pip") == "26.2.2"
+          assert all(d.metadata["Name"].lower() != "pip" for d in m.distributions())
           print("\n".join(sorted(d.metadata["Name"]+"=="+d.version for d in m.distributions())))
           ' > "$reports/api-installed.txt"
           # The internal editable package is reviewed as source, not sent to PyPI.
