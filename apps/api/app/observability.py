@@ -200,11 +200,40 @@ def validation_failure_event_name(path: str) -> str:
     return "request_validation_failed"
 
 
+_PUBLIC_VALUE_ERROR_MESSAGES = {
+    f"Value error, {message}": f"Value error, {message}"
+    for message in (
+        # Fixed schema guidance only. Never interpolate input, validator context
+        # or a partial match; return the canonical value from this mapping.
+        "Password exceeds supported byte length",
+        "week_start must be a Monday",
+        "week_start cannot be in the future",
+        "Use local calendar dates in YYYY-MM-DD format",
+        "Enter a whole number between 1 and 8.",
+        "Temporary duration must be between 1 and 8 weeks.",
+        "Attainable loads must be finite positive numbers",
+        "Declare a list or a grid, not both",
+        "Declare attainable minimum, positive step and maximum",
+        "Observation cannot be in the future",
+        "A known maximum is separate from a recent-set estimate",
+        "Recent reps plus reserve must not exceed ten",
+    )
+}
+
+
+def _public_validation_message(error: dict[str, Any]) -> str:
+    message = error.get("msg")
+    if error.get("type") == "value_error" and isinstance(message, str):
+        return _PUBLIC_VALUE_ERROR_MESSAGES.get(message, "Invalid value")
+    return "Invalid value"
+
+
 def sanitize_auth_validation_errors(errors: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Allowlist metadata for every request; never reflect private input/context.
 
     The historical function name remains for callers. Arbitrary model/dictionary
-    keys and validator messages may contain user-supplied private content.
+    keys and validator messages may contain user-supplied private content. Known
+    constant schema guidance remains actionable without reflecting that content.
     """
     allowed_locations = {"body", "query", "path", "header", "email", "password", "name", "token", "new_password", "confirmation"}
     allowed_types = {"missing", "string_type", "string_too_short", "string_too_long", "value_error", "json_invalid", "model_attributes_type"}
@@ -212,7 +241,7 @@ def sanitize_auth_validation_errors(errors: list[dict[str, Any]]) -> list[dict[s
         {
             "loc": [part if isinstance(part, int) or (isinstance(part, str) and part in allowed_locations) else "[field]" for part in error.get("loc", [])],
             "type": error.get("type") if error.get("type") in allowed_types else "validation_error",
-            "msg": "Invalid value",
+            "msg": _public_validation_message(error),
         }
         for error in errors
     ]

@@ -124,6 +124,44 @@ def test_nested_validation_metadata_cannot_bypass_redaction(monkeypatch, caplog,
     assert json.loads(response.body)["detail"][0]["loc"] == ["body", "[field]", 0]
 
 
+@pytest.mark.parametrize("model_name", ["FrequencyAdaptationPreviewRequest", "FrequencyAdaptationApplyRequest"])
+@pytest.mark.parametrize("value,message", [
+    (10, "Value error, Temporary duration must be between 1 and 8 weeks."),
+    ("private-sentinel", "Value error, Enter a whole number between 1 and 8."),
+])
+def test_fixed_domain_validation_guidance_survives_without_private_input(monkeypatch, caplog, model_name, value, message):
+    from pydantic import ValidationError
+    from app import schemas
+
+    monkeypatch.setattr(logger, "propagate", True)
+    caplog.set_level(logging.WARNING, logger=logger.name)
+    with pytest.raises(ValidationError) as invalid:
+        getattr(schemas, model_name)(target_days=3, duration_weeks=value)
+    error = RequestValidationError(invalid.value.errors())
+    request = Request({"type": "http", "path": "/plan/adaptation/preview", "method": "POST", "headers": []})
+    response = asyncio.run(main.handle_request_validation_error(request, error))
+    detail = json.loads(response.body)["detail"][0]
+    assert detail["msg"] == message
+    assert "private-sentinel" not in response.body.decode() + caplog.text
+    assert set(detail) == {"loc", "type", "msg"}
+
+
+@pytest.mark.parametrize("message", [
+    "private-sentinel",
+    "Value error, Temporary duration must be between 1 and 8 weeks. private-sentinel",
+    "private-sentinel Value error, Temporary duration must be between 1 and 8 weeks.",
+])
+def test_validation_guidance_allowlist_never_accepts_arbitrary_or_extended_text(message):
+    from app.observability import sanitize_auth_validation_errors
+
+    result = sanitize_auth_validation_errors([{
+        "loc": ("body", "duration_weeks"), "type": "value_error", "msg": message,
+        "input": "private-sentinel", "ctx": {"error": "private-sentinel"},
+    }])
+    assert result[0]["msg"] == "Invalid value"
+    assert "private-sentinel" not in json.dumps(result)
+
+
 def test_auth_operation_error_never_reflects_exception_or_traceback(monkeypatch, caplog):
     monkeypatch.setattr(logger, "propagate", True)
     caplog.set_level(logging.WARNING, logger=logger.name)
