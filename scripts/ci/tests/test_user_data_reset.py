@@ -97,6 +97,21 @@ class TestOperatorGuards(unittest.TestCase):
         assert r.returncode!=0
         assert "required" in r.stderr.lower()
 
+    def test_container_libpq_environment_cannot_redirect_connections(self):
+        m = tool()
+        target = {"container": "a" * 64, "role": "ferravis", "database": "ferravis_test"}
+        with patch.dict(os.environ, {"PGHOST": "unexpected.example", "PGPORT": "6543",
+                                     "PGSERVICE": "unreviewed", "PGOPTIONS": "-c search_path=other"}):
+            for client in ("psql", "pg_dump", "pg_restore"):
+                with self.subTest(client=client):
+                    argv = m.postgres_command(target, client)
+                    self.assertEqual(argv[:7], ["docker", "exec", "-i", "a" * 64, "env", "-i", "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"])
+                    self.assertIn(client, argv)
+                    self.assertEqual(argv[argv.index("-h") + 1], "/var/run/postgresql")
+                    self.assertEqual(argv[argv.index("-p") + 1], "5432")
+                    self.assertNotIn("unexpected.example", " ".join(argv))
+                    self.assertNotIn("PGSERVICE", " ".join(argv))
+
 
     def test_restore_check_accepts_only_measured_check_cast_normalization(self):
         m=tool(); import copy

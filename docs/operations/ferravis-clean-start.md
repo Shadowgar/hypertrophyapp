@@ -69,6 +69,9 @@ arguments cannot reset anything. Production target checks bind the full immutabl
 container ID, image ID, database, role, cluster ID, Compose identity, exact volume
 and matching running API/web revision. Disposable targets must have the explicit
 disposable label and only tmpfs mounts.
+All PostgreSQL clients use a cleared environment and the container-local
+`/var/run/postgresql` socket on port 5432; inherited libpq settings cannot redirect
+the verified container's clients to a different server.
 
 `prepare` captures schema, per-table counts and SHA-256 content fingerprints,
 creates one custom-format compressed dump, then requires the same inventory.

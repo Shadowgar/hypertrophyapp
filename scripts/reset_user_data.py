@@ -140,11 +140,20 @@ def command(args, data=None, stdout=None):
         raise ResetRefused("External command failed; transaction completion is not confirmed") from exc
 
 
+def postgres_command(target, executable):
+    require(executable in {"psql", "pg_dump", "pg_restore"}, "Unreviewed PostgreSQL client")
+    # Bind to this container's local server. Never inherit PGHOST/PGSERVICE,
+    # PGOPTIONS, password/service files or any other libpq redirection setting.
+    return ["docker", "exec", "-i", target["container"], "env", "-i",
+            "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+            "LC_ALL=C", executable, "-h", "/var/run/postgresql", "-p", "5432",
+            "-U", target["role"], "-d", target["database"]]
+
+
 def sql(target, query, readonly=True):
     if readonly:
         query = "BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY; SET LOCAL statement_timeout='15s'; " + query + "; COMMIT;"
-    return command(["docker", "exec", "-i", target["container"], "psql", "-X", "-q", "-At",
-                    "-v", "ON_ERROR_STOP=1", "-U", target["role"], "-d", target["database"]],
+    return command(postgres_command(target, "psql") + ["-X", "-q", "-At", "-v", "ON_ERROR_STOP=1"],
                    query.encode()).decode().strip()
 
 
@@ -209,8 +218,8 @@ def prepare(target, snapshot, manifest_path):
     except OSError as exc:
         raise ResetRefused("Refusing existing snapshot path") from exc
     with os.fdopen(fd, "wb") as stream:
-        command(["docker", "exec", target["container"], "pg_dump", "-U", target["role"],
-                 "-d", target["database"], "-Fc", "-Z", "9", "--no-owner", "--no-privileges"], stdout=stream)
+        command(postgres_command(target, "pg_dump") +
+                ["-Fc", "-Z", "9", "--no-owner", "--no-privileges"], stdout=stream)
         stream.flush()
         os.fsync(stream.fileno())
     require(capture(target) == before, "Data changed during snapshot; no reset manifest issued")
@@ -259,8 +268,8 @@ def verify_restore(manifest_path, target, receipt_path, verify_existing=False):
         # Archive input is streamed, never emitted or copied into source artifacts.
         with Path(manifest["snapshot"]["path"]).open("rb") as stream:
             try:
-                subprocess.run(["docker", "exec", "-i", target["container"], "pg_restore", "--exit-on-error",
-                                "--no-owner", "--no-privileges", "-U", target["role"], "-d", target["database"]],
+                subprocess.run(postgres_command(target, "pg_restore") +
+                               ["--exit-on-error", "--no-owner", "--no-privileges"],
                                stdin=stream, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, check=True, timeout=180)
             except subprocess.SubprocessError as exc:
                 raise ResetRefused("Isolated restoration failed; no verification receipt issued") from exc
