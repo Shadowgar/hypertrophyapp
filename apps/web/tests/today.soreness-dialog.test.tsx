@@ -4,22 +4,27 @@ import TodayPage from '@/app/today/page';
 
 afterEach(() => { cleanup(); localStorage.clear(); vi.restoreAllMocks(); });
 
-function fixture() {
+function fixture(deferRefreshedProgress = false) {
   const writes: unknown[] = [];
   let finish: (response: Response) => void = () => {};
+  let progressReads = 0;
+  let finishProgress: (response: Response) => void = () => {};
   globalThis.fetch = vi.fn(async (input, init) => {
     const url = String(input);
     if (url.endsWith('/health')) return Response.json({ status: 'ok' });
     if (url.includes('/plan/scheduling-context?')) return Response.json({ timezone: 'America/New_York', local_today: '2026-10-29', week_start: '2026-10-26', selected_dates: ['2026-10-29'], placement_revision: 1, plan: null });
     if (url.endsWith('/workout/today')) return Response.json({ session_id: 'daily', workout_occurrence_id: 'daily-occurrence', title: 'Daily Workout', date: '2026-10-29', exercises: [{ id: 'press', name: 'Daily Press', sets: 3, rep_range: [8, 12], recommended_working_weight: 20 }] });
     if (url.includes('/soreness?')) return Response.json([]);
+    if (url.endsWith('/progress') && deferRefreshedProgress && ++progressReads > 1) {
+      return new Promise<Response>(resolve => { finishProgress = resolve; });
+    }
     if (url.endsWith('/soreness') && init?.method === 'POST') {
       writes.push(JSON.parse(String(init.body)));
       return new Promise<Response>(resolve => { finish = resolve; });
     }
     return Response.json({});
   });
-  return { writes, finish: (response: Response) => finish(response) };
+  return { writes, finish: (response: Response) => finish(response), finishProgress: () => finishProgress(Response.json({ exercises: [] })) };
 }
 
 test('soreness controls have an accessible dialog name and individual labels', async () => {
@@ -62,5 +67,25 @@ test('closing soreness restores focus to the visible exercise when a saved worko
   fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   await waitFor(() => expect(screen.getByRole('heading', { name: 'Daily Press', level: 1 })).toHaveFocus());
+  expect(request.writes).toHaveLength(0);
+});
+
+test('a late progress refresh preserves focus after the athlete resumes interacting', async () => {
+  vi.spyOn(HTMLElement.prototype, 'getClientRects').mockImplementation(function (this: HTMLElement) {
+    return (this.closest('.hidden') ? [] : [new DOMRect(0, 0, 100, 40)]) as unknown as DOMRectList;
+  });
+  localStorage.setItem('hypertrophy_occurrence_v3:guest:selected:daily-occurrence', 'press');
+  const request = fixture(true); render(<TodayPage />);
+  await screen.findByRole('dialog', { name: /What.s sore today/ });
+  fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  await screen.findByRole('heading', { name: 'Daily Press', level: 1 });
+  const control = screen.getByRole('combobox', { name: 'Select exercise' });
+  control.focus();
+  await act(async () => {
+    request.finishProgress();
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  });
+  expect(control).toHaveFocus();
   expect(request.writes).toHaveLength(0);
 });

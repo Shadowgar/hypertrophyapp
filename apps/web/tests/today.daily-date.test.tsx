@@ -39,7 +39,7 @@ test.each([
   render(<TodayPage />);
   expect(await screen.findByText(/sore today\?/i)).toBeInTheDocument();
   expect(fixture.sorenessDates).toEqual([expect.stringContaining(`start_date=${day}&end_date=${day}`)]);
-  fireEvent.click(screen.getByRole("button", { name: /Save & Start Workout/ }));
+  fireEvent.click(await screen.findByRole("button", { name: /Save & Start Workout/ }));
   await waitFor(() => expect(fixture.saves).toEqual([day]));
   await waitFor(() => expect(screen.queryByText(/sore today\?/i)).not.toBeInTheDocument());
 });

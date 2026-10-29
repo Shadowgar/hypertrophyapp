@@ -50,6 +50,10 @@ export function SorenessDialog({ muscles, values, notes, status, onSeverity, onN
         node && node !== body && node.isConnected && !node.matches(':disabled')
         && node.getClientRects().length > 0 && window.getComputedStyle(node).visibility !== 'hidden',
       );
+      const active = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      // A slow refresh may finish after the athlete has resumed interacting.
+      // Restore only lost/hidden focus; never take it from a visible page control.
+      if (canReceiveFocus(active) && !element.contains(active)) return;
       const destination = canReceiveFocus(previousFocus) ? previousFocus
         : Array.from(page.querySelectorAll<HTMLElement>('[data-today-heading]')).find(canReceiveFocus);
       destination?.focus({ preventScroll: true });
@@ -77,7 +81,8 @@ export function SorenessDialog({ muscles, values, notes, status, onSeverity, onN
     }
   }
   const failed = status !== 'Idle' && !pending;
-  return <dialog ref={dialog} className={styles.dialog} aria-labelledby={`${id}-title`} aria-describedby={`${id}-description`}
+  // Inline block margin isolates the top-layer dialog from Today’s space-y utility.
+  return <dialog ref={dialog} className={styles.dialog} style={{ marginBlock: 0 }} aria-labelledby={`${id}-title`} aria-describedby={`${id}-description`}
     onCancel={event => { event.preventDefault(); void run('skip'); }}
     onKeyDown={event => {
       if (event.key !== 'Tab') return;
@@ -89,11 +94,11 @@ export function SorenessDialog({ muscles, values, notes, status, onSeverity, onN
         event.preventDefault(); first?.focus();
       }
     }}>
+    <div className={styles.body} role="region" aria-label="Soreness inputs" tabIndex={0}>
     <header className={styles.header}>
       <h2 ref={title} tabIndex={-1} id={`${id}-title`}>What&rsquo;s sore today?</h2>
       <p id={`${id}-description`}>Log soreness before starting this workout.</p>
     </header>
-    <div className={styles.body} role="region" aria-label="Soreness inputs" tabIndex={0}>
       <fieldset disabled={Boolean(pending)} className={styles.fields}>
         <legend className="sr-only">Soreness by muscle group</legend>
         {muscles.map(muscle => <label key={muscle} className={styles.row}>
@@ -109,7 +114,7 @@ export function SorenessDialog({ muscles, values, notes, status, onSeverity, onN
       </fieldset>
     </div>
     <footer className={styles.footer}>
-      <p className={failed ? styles.error : styles.status} role={failed ? 'alert' : 'status'} aria-live={failed ? 'assertive' : 'polite'}>
+      <p className={failed ? styles.error : styles.status} role={failed ? 'alert' : 'status'} aria-live={failed ? 'assertive' : 'polite'} tabIndex={failed ? 0 : undefined}>
         {pending === 'save' ? 'Saving soreness…' : pending === 'skip' ? 'Opening workout…' : failed ? status : ''}
       </p>
       <div className={styles.actions}>

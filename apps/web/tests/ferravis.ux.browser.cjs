@@ -10,7 +10,9 @@ const out = process.env.FERRAVIS_TEST_ARTIFACTS;
 assert.ok(out, 'Artifact directory is required'); fs.mkdirSync(out, { recursive: true });
 const baseline = process.env.FERRAVIS_CAPTURE_BASELINE === '1';
 const token = `synthetic.${Buffer.from(JSON.stringify({ sub: 'ferravis-browser-fixture' })).toString('base64url')}.synthetic`;
-const viewports = [ ['desktop', 1440, 900], ['mobile', 390, 844], ['short-desktop', 1440, 600], ['landscape', 844, 390] ];
+const viewports = [ ['desktop', 1440, 900], ['mobile', 390, 844], ['short-desktop', 1440, 600], ['landscape', 844, 390] ]
+ .filter(([name]) => !process.env.FERRAVIS_TEST_VIEWPORTS || process.env.FERRAVIS_TEST_VIEWPORTS.split(',').includes(name));
+assert.ok(viewports.length, 'At least one known viewport is required');
 (async () => {
  const results = [];
  for (const engine of (process.env.FERRAVIS_TEST_ENGINES || 'chromium,webkit').split(',')) {
@@ -19,6 +21,7 @@ const viewports = [ ['desktop', 1440, 900], ['mobile', 390, 844], ['short-deskto
    const handheld = name === 'mobile' || name === 'landscape';
    const context = await browser.newContext({ ...(handheld ? devices['iPhone 13'] : {}), viewport: { width, height }, reducedMotion: 'reduce' });
    const requests = [], errors = [], draftIsolation = []; let failSave = true, saveCount = 0, setupProfile = null;
+   let holdProgress = false, releaseProgress;
    await context.route('**/*', async route => {
     const url = new URL(route.request().url());
     if (url.origin !== base.origin) return route.abort();
@@ -35,7 +38,10 @@ const viewports = [ ['desktop', 1440, 900], ['mobile', 390, 844], ['short-deskto
     else if (path === '/plan/scheduling-context') data = { timezone: 'America/New_York', local_today: '2026-10-29', week_start: '2026-10-26', selected_dates: ['2026-10-29'], placement_revision: 1, plan: null };
     else if (path === '/weekly-review/status') data = { today_is_sunday: false, review_required: false };
     else if (path === '/workout/today') data = { session_id: 'fixture-session', workout_occurrence_id: 'fixture-occurrence', title: 'Full Body Workout', date: '2026-10-29', exercises: [{ id: 'press', name: 'Bench Press', sets: 3, rep_range: [8, 12], recommended_working_weight: 40 }] };
-    else if (path.endsWith('/progress')) data = { completed_total: 0, planned_total: 3, percent_complete: 0, exercises: [] };
+    else if (path.endsWith('/progress')) {
+     if (holdProgress) await new Promise(resolve => { releaseProgress = resolve; });
+     data = { completed_total: 0, planned_total: 3, percent_complete: 0, exercises: [] };
+    }
     else if (path === '/soreness') {
      if (route.request().method() === 'POST') { saveCount++; await new Promise(resolve => setTimeout(resolve, 350)); data = failSave ? { detail: 'Synthetic save failure' } : {}; status = failSave ? 503 : 200; }
      else data = [];
@@ -136,7 +142,7 @@ const viewports = [ ['desktop', 1440, 900], ['mobile', 390, 844], ['short-deskto
    if (!baseline) {
     const dialog = page.getByRole('dialog', { name: /What.s sore today/ });
     const bounds = await dialog.boundingBox();
-    assert.ok(bounds.y >= 0 && bounds.y + bounds.height <= height, `Dialog exceeds viewport: ${JSON.stringify(bounds)}`);
+    assert.ok(bounds.y >= 0 && bounds.y + bounds.height <= height, `Dialog exceeds viewport: ${JSON.stringify({ bounds, layout: await dialog.evaluate(el => ({ top: getComputedStyle(el).top, marginTop: getComputedStyle(el).marginTop, viewportHeight: visualViewport.height, viewportTop: visualViewport.offsetTop })) })}`);
     assert.ok(initialSave.y >= 0 && initialSave.y + initialSave.height <= height);
     assert.ok(initialSkip.y >= 0 && initialSkip.y + initialSkip.height <= height);
     assert.equal(await dialog.evaluate(el => el.contains(document.activeElement)), true);
@@ -171,30 +177,36 @@ const viewports = [ ['desktop', 1440, 900], ['mobile', 390, 844], ['short-deskto
     await page.mouse.move(5, 5); await page.mouse.wheel(0, 1000); await page.waitForTimeout(200);
     assert.equal(await page.evaluate(() => window.scrollY), oldScroll, 'Backdrop wheel scrolled background');
     await dialog.getByLabel('Optional soreness notes').fill('Synthetic check only');
-    if (name === 'mobile') {
+    const keyboardHeight = name === 'landscape' ? 180 : 340;
+    if (handheld) {
      // Exercise the VisualViewport handler with a keyboard-sized visible region.
      // Headless browsers do not display a real iPhone keyboard; physical acceptance stays open.
-     await page.evaluate(() => {
-      Object.defineProperty(window.visualViewport, 'height', { configurable: true, value: 340 });
+     await page.evaluate(keyboardHeight => {
+      Object.defineProperty(window.visualViewport, 'height', { configurable: true, value: keyboardHeight });
       Object.defineProperty(window.visualViewport, 'offsetTop', { configurable: true, value: 40 });
       window.visualViewport.dispatchEvent(new Event('resize'));
-     });
+     }, keyboardHeight);
      const keyboardBounds = await dialog.boundingBox(), keyboardSave = await save.boundingBox();
-     assert.ok(keyboardBounds.y >= 40 && keyboardBounds.y + keyboardBounds.height <= 380);
-     assert.ok(keyboardSave.y >= 40 && keyboardSave.y + keyboardSave.height <= 380);
+     assert.ok(keyboardBounds.y >= 40 && keyboardBounds.y + keyboardBounds.height <= 40 + keyboardHeight);
+     assert.ok(keyboardSave.y >= 40 && keyboardSave.y + keyboardSave.height <= 40 + keyboardHeight, 'Keyboard viewport clips Save');
+     assert.ok((await body.boundingBox()).height > 0, 'Keyboard viewport hides all inputs');
      await page.screenshot({ path: `${out}/${engine}-${name}-keyboard-viewport.png`, fullPage: true });
-     await page.evaluate(() => {
-      delete window.visualViewport.height; delete window.visualViewport.offsetTop;
-      window.visualViewport.dispatchEvent(new Event('resize'));
-     });
     }
     await activate(save); await save.evaluate(el => el.click());
     assert.equal(await save.isDisabled(), true); assert.equal(await skip.isDisabled(), true);
     assert.equal(await dialog.getByRole('status').textContent(), 'Saving soreness…');
+    const pendingSave = await save.boundingBox();
+    assert.ok(pendingSave.y + pendingSave.height <= (handheld ? 40 + keyboardHeight : height), 'Pending status clips Save');
     await page.getByRole('alert').filter({ hasText: 'Failed to save soreness' }).waitFor();
     assert.equal(saveCount, 1);
-    const alert = await page.getByRole('alert').filter({ hasText: 'Failed to save soreness' }).boundingBox(); assert.ok(alert.y + alert.height <= height);
+    const alert = await page.getByRole('alert').filter({ hasText: 'Failed to save soreness' }).boundingBox(); assert.ok(alert.y + alert.height <= (handheld ? 40 + keyboardHeight : height));
+    const errorSave = await save.boundingBox();
+    assert.ok(errorSave.y + errorSave.height <= (handheld ? 40 + keyboardHeight : height), 'Error status clips Save');
     await page.screenshot({ path: `${out}/${engine}-${name}-soreness-error.png`, fullPage: true });
+    if (handheld) await page.evaluate(() => {
+     delete window.visualViewport.height; delete window.visualViewport.offsetTop;
+     window.visualViewport.dispatchEvent(new Event('resize'));
+    });
     failSave = false; await activate(save); await dialog.waitFor({ state: 'hidden' }); assert.equal(saveCount, 2);
     assert.equal(await page.evaluate(() => document.body.style.position), '', 'Body scroll lock leaked');
     assert.equal(await page.getByRole('heading', { name: 'Today', exact: true }).evaluate(el => el === document.activeElement), true, 'Focus did not return to Today');
@@ -214,6 +226,17 @@ const viewports = [ ['desktop', 1440, 900], ['mobile', 390, 844], ['short-deskto
     assert.equal(await page.getByRole('heading', { name: 'Bench Press', level: 1 }).evaluate(el => el === document.activeElement), true, 'Resumed exercise lost focus to the hidden Today heading');
     assert.equal(saveCount, 2, 'Resumed-view Skip wrote a soreness report');
     await page.screenshot({ path: `${out}/${engine}-${name}-resumed-workout.png`, fullPage: true });
+    await page.evaluate(() => localStorage.removeItem('hypertrophy_soreness_skip:2026-10-29'));
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.getByRole('dialog').waitFor(); holdProgress = true;
+    await page.keyboard.press('Escape'); await page.getByRole('dialog').waitFor({ state: 'hidden' });
+    const resumedControl = page.getByRole('combobox', { name: 'Select exercise' });
+    await resumedControl.waitFor(); await resumedControl.focus();
+    assert.equal(typeof releaseProgress, 'function', 'Progress refresh was not held');
+    holdProgress = false; releaseProgress();
+    await page.waitForLoadState('networkidle');
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    assert.equal(await resumedControl.evaluate(el => el === document.activeElement), true, 'Delayed progress stole focus from a resumed control');
     assert.deepEqual(errors, []);
    }
    results.push({ engine, name, login, modal, draftIsolation, pageErrors: errors, interceptedApiRequests: requests.length });
