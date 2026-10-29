@@ -50,7 +50,7 @@ def test_invalid_bearer_tokens_fail_closed(case):
 
 
 def test_valid_token_still_decodes_with_configured_algorithm():
-    token = create_access_token("synthetic-user")
+    token = create_access_token("synthetic-user", "synthetic-credential")
     assert jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])["sub"] == "synthetic-user"
 
 

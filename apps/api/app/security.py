@@ -17,12 +17,13 @@ def verify_password(password: str, password_hash: str) -> bool:
         return False
 
 
-def create_access_token(subject: str, credential_hash: str | None = None) -> str:
+def create_access_token(subject: str, credential_hash: str) -> str:
     settings.validate_signing_configuration()
     expire = datetime.now(timezone.utc) + timedelta(minutes=settings.jwt_expire_minutes)
     payload = {"sub": subject, "exp": expire, "jti": secrets.token_hex(16)}
-    if credential_hash is not None:
-        payload["cv"] = hashlib.sha256(credential_hash.encode()).hexdigest()
+    if not credential_hash:
+        raise ValueError("Access tokens require current credentials")
+    payload["cv"] = hashlib.sha256(credential_hash.encode()).hexdigest()
     return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
 
 

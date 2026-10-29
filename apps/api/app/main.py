@@ -2,12 +2,11 @@ import os
 from datetime import UTC, date, datetime
 from contextlib import asynccontextmanager
 from uuid import uuid4
-from typing import Any
 
 from fastapi import FastAPI, Request
-from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from starlette.routing import Match
 
 from .config import settings
 from .database import Base, engine
@@ -52,6 +51,17 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(title="Rocco's HyperTrophy Plan API", version=APP_VERSION, lifespan=lifespan)
 
 
+def request_route_template(request: Request) -> str:
+    """Use registered route metadata, never user-controlled path segments."""
+    matched = request.scope.get("route")
+    if matched is not None and hasattr(matched, "path"):
+        return matched.path
+    for route in app.routes:
+        if route.matches(request.scope)[0] == Match.FULL:
+            return getattr(route, "path", "[unmatched]")
+    return "[unmatched]"
+
+
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok", "date": date.today().isoformat(), "version": APP_VERSION}
@@ -59,39 +69,20 @@ def health() -> dict:
 
 @app.exception_handler(RequestValidationError)
 async def handle_request_validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
-    if request.url.path.startswith("/auth/") or request.url.path.endswith("/initial-calibration"):
-        errors = sanitize_auth_validation_errors(exc.errors())
-        log_event(
-            validation_failure_event_name(request.url.path), level="warning",
-            validation_errors=errors, error_class="RequestValidationError",
-            error_message="Invalid authentication request",
-        )
-        return JSONResponse(status_code=422, content={"detail": errors})
-    messages = [error.get("msg", "Validation error") for error in exc.errors()]
-    validation_errors: list[dict[str, Any]] = []
-    for error in exc.errors():
-        loc = ".".join(str(part) for part in error.get("loc", []))
-        validation_errors.append(
-            {
-                "field": loc,
-                "rejected_value": error.get("input"),
-                "range": error.get("ctx"),
-                "error_type": error.get("type"),
-                "message": error.get("msg"),
-            }
-        )
+    errors = sanitize_auth_validation_errors(exc.errors())
+    route = request_route_template(request)
     log_event(
         validation_failure_event_name(request.url.path),
         level="warning",
-        route=request.url.path,
+        route=route,
         action=request.method.lower(),
         user_id=getattr(request.state, "user_id", None),
-        request_path=request.url.path,
-        validation_errors=validation_errors,
+        request_path=route,
+        validation_errors=errors,
         error_class=exc.__class__.__name__,
-        error_message="; ".join(messages),
+        error_message="Invalid request",
     )
-    return JSONResponse(status_code=422, content={"detail": jsonable_encoder(exc.errors())})
+    return JSONResponse(status_code=422, content={"detail": errors})
 
 
 @app.middleware("http")
@@ -100,7 +91,8 @@ async def log_unhandled_exceptions(request: Request, call_next):
     request_id = incoming_request_id[:128] if incoming_request_id else str(uuid4())
     request.state.request_id = request_id
     request_id_token = set_request_id(request_id)
-    route_token = set_request_route(request.url.path)
+    route = request_route_template(request)
+    route_token = set_request_route(route)
     action_token = set_request_action(request.method.lower())
     try:
         response = await call_next(request)
@@ -110,16 +102,14 @@ async def log_unhandled_exceptions(request: Request, call_next):
         is_auth = request.url.path.startswith("/auth/")
         log_event(
             "request_failed_exception",
-            level="error" if is_auth else "exception",
-            route=request.url.path,
+            level="error",
+            route=route,
             action=request.method.lower(),
             user_id=getattr(request.state, "user_id", None),
             error_class=exc.__class__.__name__,
-            error_message="Authentication operation failed" if is_auth else str(exc),
+            error_message="Authentication operation failed" if is_auth else "Request operation failed",
         )
-        if is_auth:
-            return JSONResponse(status_code=500, content={"detail": "Authentication operation failed"})
-        raise
+        return JSONResponse(status_code=500, content={"detail": "Authentication operation failed" if is_auth else "Request operation failed"})
     finally:
         reset_request_action(action_token)
         reset_request_route(route_token)

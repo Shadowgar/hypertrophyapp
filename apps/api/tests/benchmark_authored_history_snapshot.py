@@ -19,7 +19,8 @@ from test_authored_load_intelligence import SessionLocal, engine, User, WorkoutP
 from fastapi.testclient import TestClient
 from sqlalchemy import event, text
 from app.main import app
-from app.security import create_access_token, hash_password
+from auth_test_helpers import create_access_token
+from app.security import hash_password
 from app import workout_load_state as state
 
 

@@ -37,7 +37,7 @@ from app.database import Base, SessionLocal, engine
 from app.main import app
 from app import models
 from app.models import User, WorkoutPlan, WorkoutOccurrence, WorkoutSetLog, WorkoutLogCommand, ExerciseState
-from app.security import create_access_token
+from auth_test_helpers import create_access_token
 from app.workout_identity import identified_sessions
 from core_engine.authored_prescription import preserve_prescription
 

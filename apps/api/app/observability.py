@@ -201,7 +201,11 @@ def validation_failure_event_name(path: str) -> str:
 
 
 def sanitize_auth_validation_errors(errors: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Allowlist diagnostic metadata; never reflect rejected input or context."""
+    """Allowlist metadata for every request; never reflect private input/context.
+
+    The historical function name remains for callers. Arbitrary model/dictionary
+    keys and validator messages may contain user-supplied private content.
+    """
     allowed_locations = {"body", "query", "path", "header", "email", "password", "name", "token", "new_password", "confirmation"}
     allowed_types = {"missing", "string_type", "string_too_short", "string_too_long", "value_error", "json_invalid", "model_attributes_type"}
     return [

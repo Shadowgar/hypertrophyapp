@@ -27,7 +27,7 @@ from app.main import app
 from app.models import User, WorkoutOccurrence, WorkoutPlan
 from app.routers import plan as plan_router
 from app import selected_date_plans
-from app.security import create_access_token
+from auth_test_helpers import create_access_token
 
 
 @pytest.fixture

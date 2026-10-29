@@ -12,7 +12,7 @@ from fastapi.testclient import TestClient
 from app.database import Base, SessionLocal, engine
 from app.main import app
 from app.models import User, WorkoutOccurrence, WorkoutPlan
-from app.security import create_access_token
+from auth_test_helpers import create_access_token
 from app.workout_identity import identified_sessions
 
 

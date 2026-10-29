@@ -147,7 +147,8 @@ def test_logging_captures_adaptation_preview_validation_failure(caplog) -> None:
     assert any(
         entry.get("event") == "frequency_adaptation_preview_failed_validation"
         and entry.get("route") == "/plan/adaptation/preview"
-        and "Temporary duration must be between 1 and 8 weeks." in str(entry.get("error_message"))
+        and entry.get("error_message") == "Invalid request"
+        and all("rejected_value" not in error and "input" not in error for error in entry.get("validation_errors", []))
         for entry in logs
     )
 

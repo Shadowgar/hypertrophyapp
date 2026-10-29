@@ -22,7 +22,7 @@ def test_unsafe_signing_configuration_rejected_without_reflection(monkeypatch, k
     if key:
         assert key not in str(error.value)
     monkeypatch.setattr(settings, "jwt_secret", key)
-    for operation in (lambda: security.create_access_token("synthetic"), lambda: security.hash_password_reset_token("synthetic-reset-input")):
+    for operation in (lambda: security.create_access_token("synthetic", "synthetic-credential"), lambda: security.hash_password_reset_token("synthetic-reset-input")):
         with pytest.raises(RuntimeError, match="explicit non-placeholder"):
             operation()
 
@@ -111,12 +111,13 @@ def test_auth_validation_response_and_logs_never_reflect_input(monkeypatch, capl
     assert any("request_validation_failed" in record.message for record in caplog.records)
 
 
-def test_nested_validation_metadata_cannot_bypass_redaction(monkeypatch, caplog):
+@pytest.mark.parametrize("path", ["/auth/password-reset/confirm", "/profile", "/workout/check-in", "/plan/guides/programs/x/days/private-sentinel"])
+def test_nested_validation_metadata_cannot_bypass_redaction(monkeypatch, caplog, path):
     monkeypatch.setattr(logger, "propagate", True)
     caplog.set_level(logging.WARNING, logger=logger.name)
     marker = "private-sentinel"
     error = RequestValidationError([{"loc": ("body", marker, 0), "type": marker, "msg": marker, "ctx": {"reason": marker}, "input": {"nested": [marker]}}])
-    request = Request({"type": "http", "path": "/auth/password-reset/confirm", "method": "POST", "headers": []})
+    request = Request({"type": "http", "path": path, "method": "POST", "headers": []})
     response = asyncio.run(main.handle_request_validation_error(request, error))
     assert marker not in response.body.decode()
     assert marker not in caplog.text
