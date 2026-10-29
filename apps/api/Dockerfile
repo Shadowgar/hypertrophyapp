@@ -12,7 +12,8 @@ RUN python -m pip install --no-cache-dir --upgrade pip==26.2.2 && \
     python -m pip install --no-cache-dir -r /app/apps/api/requirements.txt
 
 COPY packages/core-engine /app/packages/core-engine
-RUN pip install --no-cache-dir -e /app/packages/core-engine
+RUN python -m pip install --no-cache-dir -e /app/packages/core-engine && \
+    python -m pip uninstall --yes pip
 
 COPY apps/api /app/apps/api
 COPY apps/web/lib /app/apps/web/lib
