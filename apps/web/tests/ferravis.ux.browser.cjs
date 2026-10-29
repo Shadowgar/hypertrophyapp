@@ -204,6 +204,16 @@ const viewports = [ ['desktop', 1440, 900], ['mobile', 390, 844], ['short-deskto
     assert.equal(saveCount, 2, 'Skip wrote a soreness report');
     assert.equal(await page.getByRole('heading', { name: 'Today', exact: true }).evaluate(el => el === document.activeElement), true, 'Skip did not restore focus');
     await page.screenshot({ path: `${out}/${engine}-${name}-today.png`, fullPage: true });
+    await activate(page.getByRole('button', { name: /Bench Press/ }));
+    await page.getByRole('heading', { name: 'Bench Press', level: 1 }).waitFor();
+    await page.evaluate(() => localStorage.removeItem('hypertrophy_soreness_skip:2026-10-29'));
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.getByRole('dialog', { name: /What.s sore today/ }).waitFor();
+    await page.keyboard.press('Escape'); await page.getByRole('dialog').waitFor({ state: 'hidden' });
+    await page.waitForFunction(() => document.activeElement?.matches('.atlas-name[data-today-heading]'));
+    assert.equal(await page.getByRole('heading', { name: 'Bench Press', level: 1 }).evaluate(el => el === document.activeElement), true, 'Resumed exercise lost focus to the hidden Today heading');
+    assert.equal(saveCount, 2, 'Resumed-view Skip wrote a soreness report');
+    await page.screenshot({ path: `${out}/${engine}-${name}-resumed-workout.png`, fullPage: true });
     assert.deepEqual(errors, []);
    }
    results.push({ engine, name, login, modal, draftIsolation, pageErrors: errors, interceptedApiRequests: requests.length });

@@ -14,7 +14,9 @@ date-rollover handling, daily Skip key and workout refresh. The new
 makes the background inert; the dialog bounds itself to the visual viewport and
 safe areas. Inputs/notes scroll within the body, with actions and status/error
 text in the persistent footer. Body scroll position/styles and focus are restored
-on exit. Pending actions disable both controls and use a synchronous guard
+on exit. Focus is checked again after the existing asynchronous workout refresh,
+so a resumed exercise receives focus instead of the temporarily visible list
+heading. Pending actions disable both controls and use a synchronous guard
 against repeated activation. Escape follows the existing explicit Skip action.
 
 The login form has a local CSS override for the shared minimum height and
@@ -46,6 +48,7 @@ build slot. Partial development captures are not final qualification.
 | Raster assets | Five PNGs: correct dimensions, CRC-valid chunks and complete decompression; vector/raster visually inspected. |
 | Initial full web run | 508 passed / 16 failed: 15 fixture URL-shape failures from the explicit loopback override; one intentional focus-target snapshot change. |
 | Corrected affected-file run | 33 passed with `/api` fixture URL shape; only the two intentional Today heading attributes changed in the snapshot. |
+| Resumed-exercise focus regression | Reproduced focus on the hidden Today heading; after the fix, 16 soreness/runner/date tests passed. Full combined-head CI remains pending. |
 | Full corrected web suite | 524 passed across 74 files, two workers; no failed/skipped tests. |
 | Lint | Exit 0; no errors, nine existing hook-dependency warnings. |
 | TypeScript | Exit 0 after removing an unsupported test-only `getByRole` option; initial diagnostic retained. |

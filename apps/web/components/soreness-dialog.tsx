@@ -24,9 +24,11 @@ export function SorenessDialog({ muscles, values, notes, status, onSeverity, onN
   const title = useRef<HTMLHeadingElement>(null);
   const inFlight = useRef(false);
   const mounted = useRef(false);
+  const restoreFocus = useRef(() => {});
   const [pending, setPending] = useState<'save' | 'skip' | null>(null);
   useEffect(() => {
     const element = dialog.current!;
+    const page = element.parentElement;
     const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const body = document.body;
     const savedStyle = { position: body.style.position, top: body.style.top, left: body.style.left, width: body.style.width, overflow: body.style.overflow };
@@ -42,15 +44,23 @@ export function SorenessDialog({ muscles, values, notes, status, onSeverity, onN
     window.addEventListener('resize', resize);
     mounted.current = true;
     element.showModal(); title.current?.focus({ preventScroll: true });
+    restoreFocus.current = () => {
+      if (!page?.isConnected) return;
+      const canReceiveFocus = (node: HTMLElement | null): node is HTMLElement => Boolean(
+        node && node !== body && node.isConnected && !node.matches(':disabled')
+        && node.getClientRects().length > 0 && window.getComputedStyle(node).visibility !== 'hidden',
+      );
+      const destination = canReceiveFocus(previousFocus) ? previousFocus
+        : Array.from(page.querySelectorAll<HTMLElement>('[data-today-heading]')).find(canReceiveFocus);
+      destination?.focus({ preventScroll: true });
+    };
     return () => {
       mounted.current = false;
       viewport?.removeEventListener('resize', resize); viewport?.removeEventListener('scroll', resize);
       window.removeEventListener('resize', resize);
       element.close(); Object.assign(body.style, savedStyle);
       window.scrollTo(scrollX, scrollY);
-      const destination = previousFocus && previousFocus !== body && previousFocus.isConnected
-        ? previousFocus : document.querySelector<HTMLElement>('[data-today-heading]');
-      destination?.focus({ preventScroll: true });
+      restoreFocus.current();
     };
   }, []);
 
@@ -58,7 +68,13 @@ export function SorenessDialog({ muscles, values, notes, status, onSeverity, onN
     if (inFlight.current) return;
     inFlight.current = true; setPending(action);
     try { await (action === 'save' ? onSave() : onSkip()); }
-    finally { inFlight.current = false; if (mounted.current) setPending(null); }
+    finally {
+      inFlight.current = false;
+      if (mounted.current) setPending(null);
+      // Today refreshes the workout after closing. Focus its final visible view,
+      // after React commits the resumed exercise instead of the temporary loader.
+      else window.requestAnimationFrame(() => restoreFocus.current());
+    }
   }
   const failed = status !== 'Idle' && !pending;
   return <dialog ref={dialog} className={styles.dialog} aria-labelledby={`${id}-title`} aria-describedby={`${id}-description`}

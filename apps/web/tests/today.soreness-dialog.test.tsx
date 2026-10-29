@@ -50,3 +50,17 @@ test('pending save prevents duplicate writes or Skip and a failed save retains e
   await act(async () => request.finish(Response.json({})));
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 });
+
+test('closing soreness restores focus to the visible exercise when a saved workout view resumes', async () => {
+  // jsdom has no layout; model the existing Today hidden/list and visible/runner regions.
+  vi.spyOn(HTMLElement.prototype, 'getClientRects').mockImplementation(function (this: HTMLElement) {
+    return (this.closest('.hidden') ? [] : [new DOMRect(0, 0, 100, 40)]) as unknown as DOMRectList;
+  });
+  localStorage.setItem('hypertrophy_occurrence_v3:guest:selected:daily-occurrence', 'press');
+  const request = fixture(); render(<TodayPage />);
+  await screen.findByRole('dialog', { name: /What.s sore today/ });
+  fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  await waitFor(() => expect(screen.getByRole('heading', { name: 'Daily Press', level: 1 })).toHaveFocus());
+  expect(request.writes).toHaveLength(0);
+});

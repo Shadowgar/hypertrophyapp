@@ -290,7 +290,7 @@ export function AtlasRunner(p: Props) {
         <p className="atlas-mode">
           {p.exercise.customized ? "Customized" : "Authored"} · Today
         </p>
-        <h1 className="atlas-name">{p.name}</h1>
+        <h1 className="atlas-name" data-today-heading tabIndex={-1}>{p.name}</h1>
         <div className="atlas-prescription ux-card">
           <strong>
             {p.exercise.sets} working sets ×{" "}
