@@ -12,27 +12,27 @@ beforeEach(() => { localStorage.clear(); localStorage.setItem("hypertrophy_token
 
 test("available workout appears while analytics remains unresolved", async () => {
   const analytics = deferred();
-  vi.mocked(fetch).mockImplementation(async input => String(input).includes("/history/analytics") ? analytics.promise : String(input).endsWith("/workout/today") ? Response.json(workout()) : unavailable());
+  vi.mocked(fetch).mockImplementation(async input => String(input).endsWith("/training/next") ? Response.json({ mode: "calendar", action: "none" }) : String(input).includes("/history/analytics") ? analytics.promise : String(input).endsWith("/workout/today") ? Response.json(workout()) : unavailable());
   render(<HomePage />);
   expect(await screen.findByRole("link", { name: "Open today's workout" })).toHaveAttribute("href", "/today");
   expect(screen.getByText("Training summary is still loading.")).toBeInTheDocument();
 });
 test.each(["No plan generated", "No workout scheduled today", "No workouts available"])("recognizes API empty state: %s", async detail => {
-  vi.mocked(fetch).mockImplementation(async input => String(input).endsWith("/workout/today") ? Response.json({ detail }, { status: 404 }) : String(input).includes("/plan/scheduling-context") ? Response.json(context()) : unavailable());
+  vi.mocked(fetch).mockImplementation(async input => String(input).endsWith("/training/next") ? Response.json({ mode: "calendar", action: "none" }) : String(input).endsWith("/workout/today") ? Response.json({ detail }, { status: 404 }) : String(input).includes("/plan/scheduling-context") ? Response.json(context()) : unavailable());
   render(<HomePage />);
   expect(await screen.findByRole("link", { name: "Choose dates" })).toHaveAttribute("href", "/week");
   expect(screen.getByRole("heading", { name: "Your week is open" })).toBeInTheDocument();
   expect(screen.queryByText(/Rest day/)).not.toBeInTheDocument();
 });
 test.each([404, 409])("unknown %s remains a retryable failure", async status => {
-  vi.mocked(fetch).mockImplementation(async input => String(input).endsWith("/workout/today") ? Response.json({ detail: "Synthetic unresolved route" }, { status }) : unavailable());
+  vi.mocked(fetch).mockImplementation(async input => String(input).endsWith("/training/next") ? Response.json({ mode: "calendar", action: "none" }) : String(input).endsWith("/workout/today") ? Response.json({ detail: "Synthetic unresolved route" }, { status }) : unavailable());
   render(<HomePage />);
   expect(await screen.findByRole("button", { name: "Retry Home" })).toBeInTheDocument();
   expect(screen.queryByRole("heading", { name: "Your week is open" })).not.toBeInTheDocument();
 });
 test("calendar dates do not invent a next workout when its authoritative preview fails", async () => {
   const plan = { program_template_id: "pure_bodybuilding_phase_2_full_body", schedule: { mode: "selected_dates_v1" }, sessions: [{ ...workout("Future Phase 2"), date: "2026-10-28" }] };
-  vi.mocked(fetch).mockImplementation(async input => String(input).endsWith("/workout/today") ? Response.json({ detail: "No workout scheduled today" }, { status: 404 }) : String(input).includes("/plan/scheduling-context") ? Response.json(context(plan)) : unavailable());
+  vi.mocked(fetch).mockImplementation(async input => String(input).endsWith("/training/next") ? Response.json({ mode: "calendar", action: "none" }) : String(input).endsWith("/workout/today") ? Response.json({ detail: "No workout scheduled today" }, { status: 404 }) : String(input).includes("/plan/scheduling-context") ? Response.json(context(plan)) : unavailable());
   render(<HomePage />);
   expect(await screen.findByRole("heading", { name: "Review your schedule" })).toBeInTheDocument();
   await screen.findByText(/next workout preview could not be loaded/);
@@ -43,6 +43,7 @@ test("calendar dates do not invent a next workout when its authoritative preview
 test("account switch clears a rendered workout and ignores delayed prior account data", async () => {
   const oldAnalytics = deferred();
   vi.mocked(fetch).mockImplementation(async (input, init) => {
+    if (String(input).endsWith("/training/next")) return Response.json({ mode: "calendar", action: "none" });
     const account = new Headers(init?.headers).get("Authorization");
     if (String(input).includes("/history/analytics") && account === "Bearer synthetic-a") return oldAnalytics.promise;
     if (String(input).endsWith("/workout/today")) return Response.json(workout(account === "Bearer synthetic-a" ? "Account A workout" : "Account B workout"));
@@ -59,7 +60,7 @@ test("account switch clears a rendered workout and ignores delayed prior account
 });
 test.each(["logout", "storage", "expired"])("%s removes private content without waiting for analytics", async mode => {
   const pending = deferred();
-  vi.mocked(fetch).mockImplementation(async input => String(input).endsWith("/workout/today") ? Response.json(workout()) : String(input).includes("/history/analytics") ? pending.promise : unavailable());
+  vi.mocked(fetch).mockImplementation(async input => String(input).endsWith("/training/next") ? Response.json({ mode: "calendar", action: "none" }) : String(input).endsWith("/workout/today") ? Response.json(workout()) : String(input).includes("/history/analytics") ? pending.promise : unavailable());
   render(<HomePage />); await screen.findByRole("link", { name: "Open today's workout" });
   if (mode === "expired") await act(async () => pending.resolve(Response.json({ detail: "Invalid token" }, { status: 401 })));
   else act(() => { if (mode === "logout") clearAuthToken(); else { localStorage.removeItem("hypertrophy_token"); window.dispatchEvent(new StorageEvent("storage", { key: "hypertrophy_token" })); } });
@@ -68,7 +69,7 @@ test.each(["logout", "storage", "expired"])("%s removes private content without 
 });
 test("retry remains mounted and retains focus during the next request", async () => {
   const pending = deferred(); let attempt = 0;
-  vi.mocked(fetch).mockImplementation(async input => String(input).endsWith("/workout/today") && attempt++ > 0 ? pending.promise : unavailable());
+  vi.mocked(fetch).mockImplementation(async input => String(input).endsWith("/training/next") ? Response.json({ mode: "calendar", action: "none" }) : String(input).endsWith("/workout/today") && attempt++ > 0 ? pending.promise : unavailable());
   render(<HomePage />); const retry = await screen.findByRole("button", { name: "Retry Home" });
   retry.focus(); fireEvent.click(retry);
   expect(screen.getByRole("button", { name: "Retry Home" })).toBe(retry); expect(retry).toHaveFocus();
@@ -79,7 +80,7 @@ test("retry remains mounted and retains focus during the next request", async ()
 
 test("a late unauthorized workout from the old account cannot sign out the new one", async () => {
   const old = deferred();
-  vi.mocked(fetch).mockImplementation(async (input, init) => String(input).endsWith("/workout/today")
+  vi.mocked(fetch).mockImplementation(async (input, init) => String(input).endsWith("/training/next") ? Response.json({ mode: "calendar", action: "none" }) : String(input).endsWith("/workout/today")
     ? new Headers(init?.headers).get("Authorization") === "Bearer synthetic-a" ? old.promise : Response.json(workout("New account workout")) : unavailable());
   render(<HomePage />);
   act(() => setAuthToken("synthetic-b"));
@@ -92,6 +93,7 @@ test("a late unauthorized workout from the old account cannot sign out the new o
 test("a stale previous-attempt response cannot overwrite the retry", async () => {
   const old = deferred(); let analyticsCalls = 0;
   vi.mocked(fetch).mockImplementation(async input => {
+    if (String(input).endsWith("/training/next")) return Response.json({ mode: "calendar", action: "none" });
     if (String(input).includes("/history/analytics") && analyticsCalls++ === 0) return old.promise;
     return String(input).endsWith("/workout/today") ? Response.json(workout()) : unavailable();
   });
@@ -105,7 +107,7 @@ test("a stale previous-attempt response cannot overwrite the retry", async () =>
 
 test.each(["classic", "graphite", "charcoal"].flatMap(theme => ["light", "dark"].map(appearance => ({ theme, appearance }))))("preserves $theme/$appearance and kilograms without account writes", async ({ theme, appearance }) => {
   vi.stubGlobal("matchMedia", vi.fn(() => ({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() })));
-  vi.mocked(fetch).mockImplementation(async input => String(input).endsWith("/profile/preferences")
+  vi.mocked(fetch).mockImplementation(async input => String(input).endsWith("/training/next") ? Response.json({ mode: "calendar", action: "none" }) : String(input).endsWith("/profile/preferences")
     ? Response.json({ theme_family: theme, appearance, weight_unit: "kg", revision: 8 })
     : String(input).endsWith("/workout/today") ? Response.json(workout()) : unavailable());
   render(<AppearanceProvider><HomePage /></AppearanceProvider>);
@@ -116,7 +118,7 @@ test.each(["classic", "graphite", "charcoal"].flatMap(theme => ["light", "dark"]
 });
 
 test("future preview cannot bypass an unresolved Today request", async () => {
-  vi.mocked(fetch).mockImplementation(async input => String(input).includes("/plan/scheduling-context")
+  vi.mocked(fetch).mockImplementation(async input => String(input).endsWith("/training/next") ? Response.json({ mode: "calendar", action: "none" }) : String(input).includes("/plan/scheduling-context")
     ? Response.json(context({ schedule: { mode: "selected_dates_v1" }, sessions: [{ ...workout("Future not actionable"), date: "2026-10-28" }] })) : unavailable());
   render(<HomePage />);
   await screen.findByRole("button", { name: "Retry Home" });
@@ -128,6 +130,7 @@ test("a future program does not relabel this week's saved program", async () => 
   const current = { program_template_id: "pure_bodybuilding_phase_1_full_body", schedule: { mode: "selected_dates_v1" }, sessions: [] };
   const future = { program_template_id: "pure_bodybuilding_phase_2_full_body", schedule: { mode: "selected_dates_v1" }, sessions: [{ ...workout("Next week Phase 2"), date: "2026-11-03" }] };
   vi.mocked(fetch).mockImplementation(async input => {
+    if (String(input).endsWith("/training/next")) return Response.json({ mode: "calendar", action: "none" });
     const url = String(input);
     if (url.endsWith("/profile")) return Response.json({ effective_days_available: 3, effective_program_id: "pure_bodybuilding_phase_1_full_body" });
     if (url.includes("/plan/scheduling-context")) return Response.json(context(url.includes("week_offset=1") ? future : current));
@@ -141,7 +144,7 @@ test("a future program does not relabel this week's saved program", async () => 
 });
 
 test("unavailable program reads do not tell a returning account to choose again", async () => {
-  vi.mocked(fetch).mockImplementation(async input => String(input).endsWith("/workout/today") ? Response.json(workout()) : unavailable());
+  vi.mocked(fetch).mockImplementation(async input => String(input).endsWith("/training/next") ? Response.json({ mode: "calendar", action: "none" }) : String(input).endsWith("/workout/today") ? Response.json(workout()) : unavailable());
   render(<HomePage />);
   await screen.findByRole("link", { name: "Open today's workout" });
   expect(screen.getByText("Program details unavailable")).toBeInTheDocument();
@@ -149,7 +152,7 @@ test("unavailable program reads do not tell a returning account to choose again"
 });
 
 test("pending program reads remain checking even when the workout is ready", async () => {
-  vi.mocked(fetch).mockImplementation(async input => String(input).endsWith("/workout/today") ? Response.json(workout()) : new Promise<Response>(() => {}));
+  vi.mocked(fetch).mockImplementation(async input => String(input).endsWith("/training/next") ? Response.json({ mode: "calendar", action: "none" }) : String(input).endsWith("/workout/today") ? Response.json(workout()) : new Promise<Response>(() => {}));
   render(<HomePage />);
   await screen.findByRole("link", { name: "Open today's workout" });
   expect(screen.getByText("Checking your program…")).toBeInTheDocument();
@@ -163,6 +166,7 @@ test.each([
   { fields: {}, label: "Program details unavailable" },
 ])("the active workout owns its program identity: $label", async ({ fields, label }) => {
   vi.mocked(fetch).mockImplementation(async input => {
+    if (String(input).endsWith("/training/next")) return Response.json({ mode: "calendar", action: "none" });
     const url = String(input);
     if (url.endsWith("/workout/today")) return Response.json({ ...workout(), workout_occurrence_id: "active-occurrence", ...fields });
     if (url.endsWith("/profile")) return Response.json({ selected_program_id: "pure_bodybuilding_phase_1_full_body", days_available: 3 });

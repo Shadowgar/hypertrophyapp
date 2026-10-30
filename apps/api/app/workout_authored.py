@@ -1,5 +1,6 @@
 """Persistence of typed authored set receipts without inventing numeric policy."""
 from copy import deepcopy
+from .flexible_training import performance_fields
 from fastapi import HTTPException
 from core_engine.authored_constraints import typed_tracking_feedback, is_bodyweight_authored
 from .models import WorkoutSetLog, WorkoutLogCommand
@@ -119,13 +120,16 @@ def log_authored_set(db, *, current_user, occurrence, exercise, payload, command
         primary_exercise_id=exercise.get("primary_exercise_id") or exercise["id"], exercise_id=payload.exercise_id,
         set_index=payload.set_index, reps=payload.reps, weight=payload.weight, rpe=payload.rpe,
         set_kind=kind, parent_set_index=payload.parent_set_index, technique=deepcopy(payload.technique),
-        command_id=command_id, request_digest=digest, replay_context=captured)
+        command_id=command_id, request_digest=digest, replay_context=captured, **performance_fields(occurrence))
     db.add(record)
     rebuild_authored_load_state(db, user=current_user)
     projection = authored_feedback_projection(db, user=current_user, occurrence=occurrence,
         exercise=exercise, supplied_context=payload.load_context)
     live = projection["live_recommendation"]
     planned_weight = float(exercise.get("recommended_working_weight") or 0)
+    if occurrence.sequence_id:
+        from .workout_load_state import offered_working_decision
+        planned_weight = offered_working_decision(before)["recommended_weight"]
     planned_reps_min, planned_reps_max = live["recommended_reps_min"], live["recommended_reps_max"]
     receipt_trace = deepcopy(projection["decision_trace"])
     receipt_guidance, receipt_reason = live["guidance"], live["guidance_rationale"]
@@ -144,7 +148,8 @@ def log_authored_set(db, *, current_user, occurrence, exercise, payload, command
         next_working_weight=projection["load_intelligence"]["next_exposure"]["recommended_weight"],
         guidance=receipt_guidance, guidance_rationale=receipt_reason, decision_trace=receipt_trace,
         live_recommendation=live, load_intelligence=projection["load_intelligence"], exercise_state=projection["exercise_state"],
-        created_at=record.created_at, workout_occurrence_id=occurrence.id,
+        created_at=record.created_at, performed_local_date=record.performed_local_date,
+        performed_timezone=record.performed_timezone, execution_context_id=record.execution_context_id, workout_occurrence_id=occurrence.id,
         exercise_occurrence_id=record.exercise_occurrence_id, command_id=command_id)
     db.add(WorkoutLogCommand(user_id=current_user.id, command_id=command_id, request_digest=digest,
         workout_occurrence_id=occurrence.id, exercise_occurrence_id=record.exercise_occurrence_id,

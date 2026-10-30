@@ -1,7 +1,7 @@
 from datetime import UTC, date, datetime
 import uuid
 
-from sqlalchemy import Date, DateTime, Float, ForeignKey, Integer, JSON, String, UniqueConstraint, Index, CheckConstraint, text
+from sqlalchemy import Date, DateTime, Float, ForeignKey, Integer, JSON, String, UniqueConstraint, Index, CheckConstraint, ForeignKeyConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .database import Base
@@ -35,6 +35,8 @@ class User(Base):
     onboarding_answers: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     active_frequency_adaptation: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     days_available: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    schedule_mode: Mapped[str] = mapped_column(String(16), nullable=False, default="calendar", server_default="calendar")
+    expected_sessions_per_week: Mapped[int | None] = mapped_column(Integer, nullable=True)
     scheduling_timezone: Mapped[str | None] = mapped_column(String(64), nullable=True)
     session_time_budget_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
     movement_restrictions: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
@@ -198,14 +200,57 @@ class CoachingRecommendation(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive)
 
 
+class TrainingSequence(Base):
+    """One current native-source cursor per account; dates never advance it."""
+    __tablename__ = "training_sequences"
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id: Mapped[str] = mapped_column(String, ForeignKey(USER_FK), index=True)
+    program_id: Mapped[str] = mapped_column(String, nullable=False)
+    source_digest: Mapped[str] = mapped_column(String(64), nullable=False)
+    source_catalog: Mapped[dict] = mapped_column(JSON, nullable=False)
+    timezone: Mapped[str] = mapped_column(String(64), nullable=False)
+    expected_sessions_per_week: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    revision: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    cursor: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    state: Mapped[str] = mapped_column(String(24), nullable=False, default="active")
+    consent: Mapped[dict] = mapped_column(JSON, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive)
+    __table_args__ = (
+        UniqueConstraint("id", "user_id", name="uq_training_sequence_owner"),
+        CheckConstraint("revision > 0 AND cursor >= 0", name="ck_training_sequence_revision"),
+        CheckConstraint("expected_sessions_per_week IS NULL OR expected_sessions_per_week BETWEEN 1 AND 7", name="ck_training_sequence_frequency"),
+        CheckConstraint("state IN ('active','attention_required','finished','retired')", name="ck_training_sequence_state"),
+        Index("uq_training_sequence_current", "user_id", unique=True,
+            postgresql_where=text("state IN ('active','attention_required')"),
+            sqlite_where=text("state IN ('active','attention_required')")),
+    )
+
+
+class TrainingSequenceCommand(Base):
+    """Immutable lifecycle/advancement receipts, separate from effective coverage."""
+    __tablename__ = "training_sequence_commands"
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id: Mapped[str] = mapped_column(String, ForeignKey(USER_FK), nullable=False, index=True)
+    command_id: Mapped[str] = mapped_column(String(128), nullable=False)
+    request_digest: Mapped[str] = mapped_column(String(64), nullable=False)
+    sequence_id: Mapped[str] = mapped_column(String, ForeignKey("training_sequences.id"), nullable=False)
+    operation: Mapped[str] = mapped_column(String(24), nullable=False)
+    response: Mapped[dict] = mapped_column(JSON, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive)
+    __table_args__ = (
+        UniqueConstraint("user_id", "command_id", name="uq_training_sequence_command_user"),
+        ForeignKeyConstraint(["sequence_id", "user_id"], ["training_sequences.id", "training_sequences.user_id"], name="fk_sequence_command_owner"),
+    )
+
+
 class WorkoutOccurrence(Base):
     """Execution snapshot; plan_id is lineage, not a FK to a replaceable plan."""
     __tablename__ = "workout_occurrences"
 
     id: Mapped[str] = mapped_column(String, primary_key=True)
     user_id: Mapped[str] = mapped_column(String, ForeignKey(USER_FK), index=True)
-    plan_id: Mapped[str] = mapped_column(String)
-    week_start: Mapped[date] = mapped_column(Date)
+    plan_id: Mapped[str | None] = mapped_column(String, nullable=True)
+    week_start: Mapped[date | None] = mapped_column(Date, nullable=True)
     scheduled_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     schedule_timezone: Mapped[str | None] = mapped_column(String(64), nullable=True)
     placement_revision: Mapped[int | None] = mapped_column(Integer, nullable=True)
@@ -214,7 +259,20 @@ class WorkoutOccurrence(Base):
     program_id: Mapped[str | None] = mapped_column(String, nullable=True)
     payload: Mapped[dict] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive)
-    __table_args__ = (UniqueConstraint("user_id", "plan_id", "session_slot", name="uq_workout_occurrence_slot"),)
+    sequence_id: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
+    source_position: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    source_week: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    source_session: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    prescription_digest: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    execution_state: Mapped[str | None] = mapped_column(String(24), nullable=True)
+    execution_context: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    advancement: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    __table_args__ = (
+        UniqueConstraint("user_id", "plan_id", "session_slot", name="uq_workout_occurrence_slot"),
+        UniqueConstraint("sequence_id", "source_position", name="uq_sequence_source_position"),
+        ForeignKeyConstraint(["sequence_id", "user_id"], ["training_sequences.id", "training_sequences.user_id"], name="fk_occurrence_sequence_owner"),
+        CheckConstraint("(sequence_id IS NULL AND plan_id IS NOT NULL AND week_start IS NOT NULL) OR (sequence_id IS NOT NULL AND plan_id IS NULL AND week_start IS NULL AND source_position IS NOT NULL AND execution_state IS NOT NULL)", name="ck_occurrence_anchor"),
+    )
 
 
 class WorkoutLogCommand(Base):
@@ -250,6 +308,9 @@ class WorkoutSetLog(Base):
         UniqueConstraint("supersedes_id", name="uq_set_log_supersedes"),
         CheckConstraint("(workout_occurrence_id IS NULL) = (exercise_occurrence_id IS NULL)", name="ck_set_log_occurrence_pair"),
     )
+    performed_local_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    performed_timezone: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    execution_context_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
     # Performance columns remain immutable; amendments retain receipt lineage.
     voided_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     void_reason: Mapped[str | None] = mapped_column(String(500), nullable=True)

@@ -236,6 +236,10 @@ class ApplicationLifecycle(CustomizedRescheduling, CustomizedReplacement, Lifecy
             self._candidate(document)
             with Session(bind=tx.connection,join_transaction_mode='rollback_only') as db:
                 snapshot=document['snapshot'];request=self._request(snapshot['request'])
+                from .workout_history import lock_history_user
+                from .flexible_training import guard_calendar
+                lock_history_user(db, actor.subject)
+                guard_calendar(db, actor.subject)
                 user=db.get(User,actor.subject)
                 if user.scheduling_timezone and user.scheduling_timezone!=request.timezone:
                     raise LifecycleError('schedule_timezone_change_requires_resolution')

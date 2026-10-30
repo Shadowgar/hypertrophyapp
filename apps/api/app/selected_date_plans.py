@@ -92,6 +92,10 @@ def current_scheduling_profile(db: Session, user: User, planning_instant: dateti
     A future activation takes effect here only on its local Monday. Legacy
     profiles and weeks without a dated plan keep the stored availability.
     """
+    from .flexible_training import current_sequence
+    sequence = current_sequence(db, user.id)
+    if sequence:
+        return CurrentSchedulingProfile(None, sequence.program_id)
     fallback = CurrentSchedulingProfile(user.days_available, resolve_selected_program_binding_id(user.selected_program_id))
     if not user.scheduling_timezone:
         return fallback
@@ -144,6 +148,8 @@ def scheduling_context(db: Session, user: User, timezone: str | None, planning_i
     legacy = next((p for p in plans if p.week_start == monday and not p.payload.get('schedule')
         and resolve_selected_program_binding_id(p.payload.get('program_template_id')) == user.selected_program_id), None)
     plan = identified_plans(db, [row or legacy])[0].payload if row or legacy else None
+    if plan is not None:
+        plan = {**plan, 'plan_id': (row or legacy).id}
     return {'timezone': zone, 'timezone_persisted': bool(user.scheduling_timezone),
         'local_today': today.isoformat(), 'week_start': monday.isoformat(),
         'current_week_start': current_monday.isoformat(),
@@ -260,6 +266,8 @@ def selected_week_command(*, db: Session, user: User, explicit_template_id: str 
     if not preview:
         lock_history_user(db, user.id)
         db.refresh(user)
+    from .flexible_training import guard_calendar
+    guard_calendar(db, user.id)
     if user.scheduling_timezone and user.scheduling_timezone != selected_week.timezone:
         raise HTTPException(409, 'Use your configured scheduling timezone; timezone changes need a separate history policy')
     if not preview:

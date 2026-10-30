@@ -289,8 +289,8 @@ function SetupForm({ onAccountChanged, recoverDraft }: { onAccountChanged: () =>
       completed.current = true;
       if (!discardCachedDraft()) setCacheAvailable(false);
       setHasDraft(false);
-      setStatus('Profile saved. Choose your training dates next.');
-      router.push(answers.selectedProgramId === 'full_body_v1' ? '/customize' : '/week');
+      setStatus(answers.scheduleMode === 'flexible' ? 'Profile saved. Review the original source workouts before confirming Flexible.' : 'Profile saved. Choose your training dates next.');
+      router.push(answers.scheduleMode === 'flexible' ? '/training/setup' : answers.selectedProgramId === 'full_body_v1' ? '/customize' : '/week');
     } catch { if (isCurrent()) fail('Profile save failed. Your account is created; retry to finish setup.'); }
     finally { endRequest(revision); }
   }
@@ -337,7 +337,7 @@ function SetupForm({ onAccountChanged, recoverDraft }: { onAccountChanged: () =>
 
     {stage === 'program' ? <div className={styles.form}>
       {choice('Follow an Authored program', 'Keep the original exercises, sets and training instructions.', () => move('authored'))}
-      {choice('Create a Customized program', 'Review a separate program around your needs. Consent and activation come later.', () => { update('selectedProgramId', 'full_body_v1'); move('basics'); })}
+      {choice('Create a Customized program', 'Review a separate program around your needs. Consent and activation come later.', () => { update('scheduleMode', 'calendar'); update('selectedProgramId', 'full_body_v1'); move('basics'); })}
       {choice('Help me choose', 'Compare the options before deciding.', () => move('help'))}
     </div> : null}
 
@@ -351,6 +351,11 @@ function SetupForm({ onAccountChanged, recoverDraft }: { onAccountChanged: () =>
     {stage === 'program-detail' ? <div className={styles.form}>
       <SetupCard title="Follow the original plan"><p>Exercises, set targets and techniques stay as authored. Working loads can adapt.</p></SetupCard>
       <SetupCard title="Choose actual training dates"><p>Review each session’s workload before activating a schedule. Phase 1 and Phase 2 stay separate.</p></SetupCard>
+      <fieldset className={styles.checks}><legend>Training schedule</legend>
+        <label className={styles.check}><input type="radio" name="schedule-mode" checked={answers.scheduleMode === 'calendar'} onChange={() => update('scheduleMode', 'calendar')} />Calendar · choose actual dates</label>
+        <label className={styles.check}><input type="radio" name="schedule-mode" checked={answers.scheduleMode === 'flexible'} onChange={() => update('scheduleMode', 'flexible')} />Flexible · complete original workouts at your pace</label>
+      </fieldset>
+      {answers.scheduleMode === 'flexible' ? <p>Dates are optional. Original source workouts stay separate and may span more than seven days. Expected frequency never compresses their exercises or sets.</p> : null}
       <Link className={styles.secondaryLink} href={`/guides/${encodeURIComponent(answers.selectedProgramId || '')}`}>Read the program guide</Link>
       <div className={styles.actions}><Button type="button" disabled={!selectedProgram} onClick={() => move('basics')}>Use {programName}</Button><Button type="button" variant="ghost" onClick={() => move('authored')}>Compare programs</Button></div>
     </div> : null}
@@ -360,7 +365,7 @@ function SetupForm({ onAccountChanged, recoverDraft }: { onAccountChanged: () =>
       <SetupCard title="Customized"><p>Create an original Full Body program after reviewing its inputs and giving explicit consent in Customize.</p></SetupCard>
       <SetupCard title="Auto preference"><p>Keep the choice open and review available programs in Week. Auto does not activate a plan or grant Customized consent.</p></SetupCard>
       <label className={styles.field}>Choose-for-me family<select value={answers.chooseForMeFamily} onChange={event => update('chooseForMeFamily', event.target.value as SetupAnswers['chooseForMeFamily'])}><option value="full_body">Full body</option><option value="upper_lower">Upper/Lower</option><option value="push_pull">Push/Pull</option></select></label>
-      <div className={styles.actions}><Button type="button" onClick={() => { update('selectedProgramId', null); move('basics'); }}>Keep Auto preference</Button><Button type="button" variant="ghost" onClick={() => move('program')}>Choose a path</Button></div>
+      <div className={styles.actions}><Button type="button" onClick={() => { update('scheduleMode', 'calendar'); update('selectedProgramId', null); move('basics'); }}>Keep Auto preference</Button><Button type="button" variant="ghost" onClick={() => move('program')}>Choose a path</Button></div>
     </div> : null}
 
     {stage === 'basics' ? <form className={styles.form} onSubmit={event => { event.preventDefault(); if (validBasics(answers)) move('equipment'); }}>
@@ -370,9 +375,13 @@ function SetupForm({ onAccountChanged, recoverDraft }: { onAccountChanged: () =>
         <label className={styles.field}>Body weight ({answers.weightUnit})<input type="number" min="0.1" step="any" required value={answers.weightValue} onChange={event => update('weightValue', event.target.value)} /></label>
       </div>
       <p className={styles.helper}>Age and body weight are required for setup. Optional details can stay blank.</p>
-      <label className={styles.field}>Training days per week<select required value={answers.daysAvailable} onChange={event => update('daysAvailable', event.target.value)}><option value="">Choose a count</option>{[2, 3, 4, 5].map(days => <option key={days} value={days}>{days} days</option>)}</select></label>
+      {answers.scheduleMode === 'flexible' ? <>
+        <label className={styles.field}>Expected sessions per week (optional)<select value={answers.expectedSessionsPerWeek} onChange={event => update('expectedSessionsPerWeek', event.target.value)}><option value="">No expectation set</option>{[1,2,3,4,5,6,7].map(days => <option key={days} value={days}>{days} sessions</option>)}</select></label>
+        <p className={styles.helper}>An expectation, not a quota. It never changes your program, source workouts or dose.</p>
+        <label className={styles.field}>Program timezone<input required value={answers.schedulingTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'} onChange={event => update('schedulingTimezone', event.target.value)} /></label>
+      </> : <label className={styles.field}>Training days per week<select required value={answers.daysAvailable} onChange={event => update('daysAvailable', event.target.value)}><option value="">Choose a count</option>{[2, 3, 4, 5].map(days => <option key={days} value={days}>{days} days</option>)}</select></label>}
       <label className={styles.field}>Training location<select value={answers.trainingLocation} onChange={event => update('trainingLocation', event.target.value)}><option value="">Not reported</option><option value="gym">Gym</option><option value="home">Home</option></select></label>
-      <SetupCard title="Only what this plan needs"><p>{isCustomized ? 'Exact equipment, dates and program inputs are reviewed in Customize before you consent.' : 'Setup does not change an Authored exercise, set target or technique. You will choose actual dates in Week.'}</p></SetupCard>
+      <SetupCard title="Only what this plan needs"><p>{isCustomized ? 'Exact equipment, dates and program inputs are reviewed in Customize before you consent.' : answers.scheduleMode === 'flexible' ? 'Setup does not change source prescriptions. Review original source workouts before confirming Flexible; dates are optional.' : 'Setup does not change an Authored exercise, set target or technique. You will choose actual dates in Week.'}</p></SetupCard>
       <details className={styles.disclosure}><summary>Training context (optional)</summary><div className={styles.fields}>
         <fieldset className={styles.checks}><legend>Training goals</legend>{GOALS.map(([value, label]) => <label key={value} className={styles.check}><input type="checkbox" checked={answers.primaryGoals.includes(value)} onChange={() => toggle('primaryGoals', value)} />{label}</label>)}</fieldset>
         {select('trainingAgeBucket', 'Consistent strength training')}{select('strengthFrequency', 'Current training frequency')}{select('experienceLevel', 'Lifting experience')}
@@ -401,7 +410,7 @@ function SetupForm({ onAccountChanged, recoverDraft }: { onAccountChanged: () =>
         <div><dt>Program</dt><dd>{answers.selectedProgramId ? `${isCustomized ? 'Customized' : 'Authored'} · ${programName}` : programName}</dd></div>
         <div><dt>Weight display</dt><dd>{answers.weightUnit === 'lb' ? 'Pounds · lb' : 'Kilograms · kg'}</dd></div>
         <div><dt>About you</dt><dd>{name} · {answers.age} years · {answers.weightValue} {answers.weightUnit}</dd></div>
-        <div><dt>Training days</dt><dd>{answers.daysAvailable} per week · actual dates still to choose</dd></div>
+        <div><dt>{answers.scheduleMode === 'flexible' ? 'Flexible expectation' : 'Training days'}</dt><dd>{answers.scheduleMode === 'flexible' ? `${answers.expectedSessionsPerWeek || 'No'} expected sessions per week · dates optional` : `${answers.daysAvailable} per week · actual dates still to choose`}</dd></div>
         <div><dt>Equipment</dt><dd>{answers.trainingLocation || 'Location not reported'} · {answers.equipmentTags.length ? answers.equipmentTags.map(value => EQUIPMENT.find(([id]) => id === value)?.[1] || value).join(', ') : 'No equipment reported'}</dd></div>
         <div><dt>Limitations</dt><dd>{answers.movementRestrictions.length ? answers.movementRestrictions.map(value => RESTRICTIONS.find(([id]) => id === value)?.[1] || value).join(', ') : 'No limitations reported'}</dd></div>
         <div><dt>Optional context</dt><dd>{answers.workoutDurationMinutes ? `${answers.workoutDurationMinutes} minutes requested. ` : 'Workout duration not reported. '}Unanswered optional fields remain unknown.</dd></div>
@@ -417,7 +426,7 @@ function SetupForm({ onAccountChanged, recoverDraft }: { onAccountChanged: () =>
       <details className={styles.disclosure}><summary>Nutrition targets (optional)</summary><p className={styles.helper}>Enter targets you have chosen. These are goals, not a report of intake or adherence. Blank values stay unknown.</p><div className={styles.pair}>
         {([['calories', 'Daily calorie target'], ['protein', 'Protein target (g)'], ['fat', 'Fat target (g)'], ['carbs', 'Carbohydrate target (g)']] as const).map(([key, label]) => <label key={key} className={styles.field}>{label}<input type="number" min={key === 'calories' ? 1 : 0} step={1} value={targets[key]} disabled={pending || completed.current} onChange={event => setTargets(previous => ({ ...previous, [key]: event.target.value }))} /></label>)}
       </div></details>
-      <SetupCard title={isCustomized ? 'Ready to review Customized' : 'Ready to choose dates'}><p>Your setup is saved separately from your schedule. {isCustomized ? 'You will review the original program and give explicit consent in Customize.' : 'Week previews the actual dates before you activate a schedule.'}</p></SetupCard>
+      <SetupCard title={isCustomized ? 'Ready to review Customized' : answers.scheduleMode === 'flexible' ? 'Ready to review Flexible' : 'Ready to choose dates'}><p>Your setup is saved separately from your schedule. {isCustomized ? 'You will review the original program and give explicit consent in Customize.' : answers.scheduleMode === 'flexible' ? 'Review and explicitly confirm original source workouts next. Saving your profile does not enroll or start a workout.' : 'Week previews the actual dates before you activate a schedule.'}</p></SetupCard>
       {preferenceRecovery !== 'none' ? <SetupCard title="Review saved display preferences">
         {preferenceRecovery === 'review' && appearance.ready && !pending ? <>
           <p>Saved: {({ classic: 'Classic FERRAVIS', graphite: 'Graphite', charcoal: 'Charcoal' })[appearance.preferences.theme_family]} · {({ light: 'Light', dark: 'Dark', system: 'Follow Device Settings' })[appearance.preferences.appearance]} · {appearance.preferences.weight_unit === 'lb' ? 'Pounds (lb)' : 'Kilograms (kg)'}.</p>
@@ -429,7 +438,7 @@ function SetupForm({ onAccountChanged, recoverDraft }: { onAccountChanged: () =>
         </>}
       </SetupCard> : !appearance.ready ? <><p className={styles.notice}>Saved display preferences are unavailable.</p><Button type="button" variant="secondary" disabled={pending} onClick={() => void appearance.reload()}>Reload preferences</Button></> : null}
       {error && preferenceRecovery === 'none' ? <Button type="button" variant="secondary" disabled={pending} onClick={resumeInitialSetup}>Check saved setup</Button> : null}
-      <div className={styles.actions}><Button type="submit" disabled={pending || completed.current || preferenceRecovery !== 'none'}>{pending ? 'Saving setup…' : isCustomized ? 'Save setup & review Customized' : 'Save setup & choose dates'}</Button><Button type="button" variant="ghost" disabled={pending || completed.current} onClick={() => move('basics')}>Edit setup</Button></div>
+      <div className={styles.actions}><Button type="submit" disabled={pending || completed.current || preferenceRecovery !== 'none'}>{pending ? 'Saving setup…' : isCustomized ? 'Save setup & review Customized' : answers.scheduleMode === 'flexible' ? 'Save setup & review Flexible' : 'Save setup & choose dates'}</Button><Button type="button" variant="ghost" disabled={pending || completed.current} onClick={() => move('basics')}>Edit setup</Button></div>
     </form> : null}
   </SetupFlow>;
 }

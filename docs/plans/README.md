@@ -4,6 +4,7 @@ One forward roadmap: [M0–M6 milestones](../roadmap/milestones.md). A plan desc
 
 | Plan | Scope / milestone | Current status / authorization |
 |---|---|---|
+| [Flexible training progression](flexible-training-progression.md) | M2B/M6 completion-driven source sequence, optional calendar and actual execution dates. | Owner approved implementation with End Early, non-rewinding corrections, finite account reconciliation and guarded unstarted conversion, 2026-10-30. Draft PR #133; no merge/deployment. |
 | [Flexible Today and workload correction](flexible-today-workload.md) | M2B/M6 same-week unstarted preview/move and source-preserving workload. | Owner-authorized implementation 2026-10-30; isolated qualification and one unmerged PR required. |
 | [FERRAVIS pre-relaunch](ferravis-prelaunch.md) | Security/runtime, two UI repairs, public rebrand and guarded reset preparation. | Owner-authorized engineering and isolated qualification on 2026-10-29; two unmerged PRs. No live reset, deployment, merge or control change. |
 | [Truthful onboarding and history preservation](truthful-onboarding-2026-10-26.md) | Registration observations/targets, guarded setup recovery and ordinary profile preservation. | Implemented in PR #122; isolated tests/browser qualified, final-head CI recorded on the PR; no merge/deployment. |

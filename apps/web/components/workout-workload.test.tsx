@@ -43,3 +43,11 @@ test("unknown program guidance does not invent Authored or Customized mode", () 
   expect(screen.queryByRole("link", {name:/Review Customized/})).not.toBeInTheDocument();
   expect(screen.queryByText(/all source exercises/)).not.toBeInTheDocument();
 });
+
+test('Flexible workload keeps the native source grouping and offers Pause/Resume without calendar redistribution',()=>{
+  render(<WorkoutWorkload exercises={[{sets:3}]} mode="flexible" timeBudgetMinutes={45}/>);
+  expect(screen.getByText(/Pause and Resume the same source workout across days/)).toBeInTheDocument();
+  expect(screen.queryByRole('link',{name:/selected visits|saved plan in Week/})).not.toBeInTheDocument();
+  expect(screen.queryByText(/cannot.*carry unfinished work/)).not.toBeInTheDocument();
+  expect(screen.getByText(/Duration is unknown/)).toBeInTheDocument();
+});

@@ -26,6 +26,7 @@ import { Button } from "./ui/button";
 import { LoadIntelligencePanel, type PerformedSet } from "./exercise-control";
 
 type Props = {
+  flexible?: boolean;
   exercise: WorkoutExercise;
   name: string;
   completed: number;
@@ -253,7 +254,7 @@ export function AtlasRunner(p: Props) {
         <Button variant="secondary" disabled={undoLocked} onClick={p.onClose}>
           Review workout
         </Button>
-        {undoLocked ? <span aria-disabled="true">Back to Week</span> : <Link href="/week">Back to Week</Link>}
+        {undoLocked ? <span aria-disabled="true">{p.flexible ? "Back to training" : "Back to Week"}</span> : <Link href={p.flexible ? "/" : "/week"}>{p.flexible ? "Back to training" : "Back to Week"}</Link>}
       </nav>
       <div className="atlas-center">
         <nav className="atlas-switcher" aria-label="Exercise navigation">
