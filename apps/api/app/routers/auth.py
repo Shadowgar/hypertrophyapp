@@ -12,6 +12,7 @@ from ..models import PasswordResetToken, User, UserInterfacePreference, Authored
 from ..models import AuthoredLoadState, BodyMeasurementEntry, CoachingRecommendation, ExerciseState, SorenessEntry, WeeklyCheckin, WeeklyReviewCycle
 from ..models import WorkoutLogCommand, WorkoutOccurrence, WorkoutPlan, WorkoutSessionState, WorkoutSetLog
 from ..observability import log_event
+from .. import auth_limits
 from ..schemas import (
     DevWipeUserRequest,
     LoginRequest,
@@ -30,7 +31,7 @@ from ..security import (
     verify_password,
 )
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(auth_limits.limit_auth_concurrency)])
 
 DbSession = Annotated[Session, Depends(get_db)]
 
@@ -38,6 +39,7 @@ DbSession = Annotated[Session, Depends(get_db)]
 @router.post("/register")
 def register(payload: RegisterRequest, db: DbSession) -> TokenResponse:
     normalized_email = payload.email.strip().lower()
+    auth_limits.auth_attempts.check("register", normalized_email)
     existing = db.query(User).filter(func.lower(User.email) == normalized_email).first()
     if existing:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already used")
@@ -57,6 +59,7 @@ def register(payload: RegisterRequest, db: DbSession) -> TokenResponse:
 @router.post("/login")
 def login(payload: LoginRequest, db: DbSession) -> TokenResponse:
     normalized_email = payload.email.strip().lower()
+    auth_limits.auth_attempts.check("login", normalized_email)
     user = db.query(User).filter(func.lower(User.email) == normalized_email).first()
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
@@ -99,13 +102,16 @@ def dev_wipe_user(payload: DevWipeUserRequest, db: DbSession) -> StatusResponse:
 
 @router.post("/password-reset/request")
 def password_reset_request(payload: PasswordResetRequest, db: DbSession) -> PasswordResetRequestResponse:
+    auth_limits.auth_attempts.check("request", payload.email.strip().lower())
     accepted = PasswordResetRequestResponse(status="accepted", reset_token=None)
     if not is_smtp_configured(settings):
         log_event("password_reset_delivery_unavailable", level="warning")
         return accepted
 
     normalized_email = payload.email.strip().lower()
-    user = db.query(User).filter(func.lower(User.email) == normalized_email).first()
+    # Match the account-first ordering used by confirmation and other account
+    # writers. Release this lock before SMTP; activation cannot revive used rows.
+    user = db.query(User).filter(func.lower(User.email) == normalized_email).populate_existing().with_for_update().first()
     if not user:
         return accepted
 
@@ -149,7 +155,16 @@ def password_reset_request(payload: PasswordResetRequest, db: DbSession) -> Pass
 
 @router.post("/password-reset/confirm")
 def password_reset_confirm(payload: PasswordResetConfirmRequest, db: DbSession) -> StatusResponse:
+    auth_limits.auth_attempts.check("confirm", payload.token)
     token_hash = hash_password_reset_token(payload.token)
+    owner = db.query(PasswordResetToken.user_id).filter(PasswordResetToken.token_hash == token_hash).first()
+    if owner is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired reset token")
+    # Lock the account before re-reading the credential. Requests for the same
+    # or different tokens serialize on the same row, including token issuance.
+    user = db.query(User).filter(User.id == owner.user_id).populate_existing().with_for_update().first()
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired reset token")
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     entry = (
         db.query(PasswordResetToken)
@@ -158,18 +173,23 @@ def password_reset_confirm(payload: PasswordResetConfirmRequest, db: DbSession) 
             PasswordResetToken.used_at.is_(None),
             PasswordResetToken.expires_at > now,
         )
-        .first()
+        .populate_existing().first()
     )
     if not entry:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired reset token")
 
-    user = db.query(User).filter(User.id == entry.user_id).first()
-    if not user:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid reset token user")
-
+    # The conditional claim is also required for disposable SQLite, where
+    # SELECT FOR UPDATE is a no-op. A losing claimant must not change password.
+    claimed = db.query(PasswordResetToken).filter(
+        PasswordResetToken.id == entry.id,
+        PasswordResetToken.used_at.is_(None),
+        PasswordResetToken.expires_at > now,
+    ).update({PasswordResetToken.used_at: now}, synchronize_session=False)
+    if claimed != 1:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired reset token")
     user.password_hash = hash_password(payload.new_password)
-    entry.used_at = now
+    db.query(PasswordResetToken).filter(PasswordResetToken.user_id == user.id, PasswordResetToken.used_at.is_(None)).update({PasswordResetToken.used_at: now}, synchronize_session=False)
     db.add(user)
-    db.add(entry)
     db.commit()
     return StatusResponse(status="password_updated")

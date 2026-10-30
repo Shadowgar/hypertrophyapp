@@ -57,7 +57,7 @@ def run():
         def remember(self,subject,key,digest,response):self.retries[subject,key]=(digest,deepcopy(response))
     class Lookup:
         def filter(self,predicate):self.subject=predicate.right.value;return self
-        def first(self):return User(id=self.subject) if self.subject in {'alice','bob'} else None
+        def first(self):return User(id=self.subject, password_hash='synthetic-probe-credential') if self.subject in {'alice','bob'} else None
     def disposable_lookup():yield SimpleNamespace(query=lambda model:Lookup())
     service=LifecycleService(server=replace(demo_server(),allowed_subjects=('alice','bob')),store=MemoryStore(),
         schedule=SyntheticSchedule(),clock=lambda:demo_context().planning_instant,
@@ -65,14 +65,14 @@ def run():
     app=create_lifecycle_app(service=service,account_dependency=existing_account_dependency(),trusted_origin='http://testserver')
     app.dependency_overrides[get_db]=disposable_lookup
     client=TestClient(app)
-    alice=create_access_token('alice');bob=create_access_token('bob')
+    alice=create_access_token('alice','synthetic-probe-credential');bob=create_access_token('bob','synthetic-probe-credential')
     p=client.post('/customized/proposals',json=proposed_request(),headers={
         'Authorization':'Bearer '+alice,'Origin':'http://testserver','Idempotency-Key':'probe-create'}).json()
     assert p['subject']=='alice'
     for id in (p['proposal_id'],'unknown'):
         r=client.get('/customized/proposals/'+id,headers={'Authorization':'Bearer '+bob})
         assert r.status_code==404 and r.json()=={'status':'not_found'}
-    for token in ('forged.invalid.token',create_access_token('absent')):
+    for token in ('forged.invalid.token',create_access_token('absent','synthetic-probe-credential')):
         assert client.get('/customized/proposals/unknown',headers={'Authorization':'Bearer '+token}).status_code==401
     assert 'app.main' not in sys.modules
     # A positive control establishes that the connection guard is actually live.

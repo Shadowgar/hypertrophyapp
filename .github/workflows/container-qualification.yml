@@ -10,6 +10,11 @@ on:
       - .dockerignore
       - .github/workflows/container-qualification.yml
   workflow_dispatch:
+    inputs:
+      export_web_runtime:
+        description: Retain the built web runtime for isolated browser qualification
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -24,6 +29,7 @@ jobs:
     timeout-minutes: 30
     env:
       CANDIDATE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      EXPORT_WEB_RUNTIME: ${{ github.event_name == 'workflow_dispatch' && inputs.export_web_runtime && 'true' || 'false' }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -40,9 +46,16 @@ jobs:
           for service in api web; do
             version_arg=APP_VERSION
             if [ "$service" = web ]; then version_arg=NEXT_PUBLIC_APP_VERSION; fi
+            qualification_args=()
+            if [ "$service" = web ] && [ "$EXPORT_WEB_RUNTIME" = true ]; then
+              # Next rewrites bind this at build time. The opt-in browser artifact
+              # must reach only the separately verified disposable local API.
+              qualification_args+=(--build-arg SERVER_API_BASE_URL=http://127.0.0.1:55438)
+            fi
             docker build --pull --platform linux/arm64 \
               --label "org.opencontainers.image.revision=$CANDIDATE_SHA" \
               --build-arg "$version_arg=$CANDIDATE_SHA" \
+              "${qualification_args[@]}" \
               -t "qualification-$service:$CANDIDATE_SHA" \
               -f "$context/apps/$service/Dockerfile" "$context"
           done
@@ -59,6 +72,8 @@ jobs:
 
           revision = os.environ['CANDIDATE_SHA']
           receipt = {'revision': revision, 'platform': 'linux/arm64', 'images': {}, 'checks': []}
+          receipt['server_api_base_url'] = ('http://127.0.0.1:55438' if os.environ['EXPORT_WEB_RUNTIME'] == 'true'
+                                            else 'http://api:8000')
           containers = []
 
           def docker(*args):
@@ -130,6 +145,10 @@ jobs:
           const sharp = require('sharp');
           (async () => {
             assert.equal(process.arch, 'arm64');
+            for (const installer of ['/usr/local/lib/node_modules/npm', '/usr/local/bin/npm',
+                                     '/usr/local/bin/npx', '/usr/local/bin/yarn', '/usr/local/bin/yarnpkg']) {
+              assert.equal(fs.existsSync(installer), false, 'runtime package installer must be absent');
+            }
             assert.equal(process.report.getReport().header.glibcVersionRuntime, undefined);
             assert.equal(require('next/package.json').version, require('./package.json').dependencies.next);
             const actions = JSON.parse(fs.readFileSync('.next/server/server-reference-manifest.json', 'utf8'));
@@ -157,3 +176,88 @@ jobs:
           path: ${{ runner.temp }}/container-qualification.json
           if-no-files-found: error
           retention-days: 30
+      - name: Scan exact native images and retain SBOMs
+        shell: bash
+        env:
+          TRIVY_IMAGE: aquasec/trivy:0.69.3@sha256:bcc376de8d77cfe086a917230e818dc9f8528e3c852f7b1aff648949b6258d1c
+        run: |
+          set -euo pipefail
+          reports="$RUNNER_TEMP/container-security"
+          cache="$RUNNER_TEMP/trivy-cache"
+          mkdir -p "$reports" "$cache"
+          for service in api web; do
+            image_id="$(docker image inspect --format '{{.Id}}' "qualification-$service:$CANDIDATE_SHA")"
+            docker run --rm --cpus 2 --memory 3g \
+              -v /var/run/docker.sock:/var/run/docker.sock:ro \
+              -v "$cache:/root/.cache/trivy" -v "$reports:/reports" \
+              "$TRIVY_IMAGE" image --image-src docker --parallel 1 --timeout 15m \
+              --skip-java-db-update --offline-scan --scanners vuln --format json \
+              --output "/reports/$service-vulnerabilities.json" "$image_id"
+            docker run --rm --cpus 2 --memory 3g \
+              -v /var/run/docker.sock:/var/run/docker.sock:ro \
+              -v "$cache:/root/.cache/trivy" -v "$reports:/reports" \
+              "$TRIVY_IMAGE" image --image-src docker --parallel 1 --timeout 15m \
+              --skip-db-update --skip-java-db-update --offline-scan --format cyclonedx \
+              --output "/reports/$service-sbom.cdx.json" "$image_id"
+          done
+          docker run --rm --network none --entrypoint python "qualification-api:$CANDIDATE_SHA" -c '
+          import importlib.metadata as m
+          assert all(d.metadata["Name"].lower() != "pip" for d in m.distributions())
+          print("\n".join(sorted(d.metadata["Name"]+"=="+d.version for d in m.distributions())))
+          ' > "$reports/api-installed.txt"
+          # The internal editable package is reviewed as source, not sent to PyPI.
+          sed '/^core-engine==/d' "$reports/api-installed.txt" > "$reports/api-public-packages.txt"
+          python3 -m venv "$RUNNER_TEMP/audit-venv"
+          "$RUNNER_TEMP/audit-venv/bin/pip" install 'pip-audit==2.10.1'
+          audit_status=0
+          "$RUNNER_TEMP/audit-venv/bin/pip-audit" --disable-pip --no-deps --format json \
+            -r "$reports/api-public-packages.txt" -o "$reports/api-pip-audit.json" || audit_status=$?
+          # Exit 1 means findings, which are retained for disposition; scanner
+          # execution errors must fail qualification instead of looking clean.
+          test "$audit_status" -le 1
+          python3 - <<'PY'
+          from collections import Counter
+          import json, os
+          from pathlib import Path
+          root = Path(os.environ['RUNNER_TEMP']) / 'container-security'
+          receipt = json.loads((root.parent / 'container-qualification.json').read_text())
+          summary = {'revision': receipt['revision'], 'images': receipt['images'],
+                     'scan_completed': True, 'findings_require_disposition': True,
+                     'internal_package_excluded_from_pypi': 'core-engine', 'images_scanned': {}}
+          for service in ('api', 'web'):
+              report = json.loads((root / f'{service}-vulnerabilities.json').read_text())
+              counts = Counter(v['Severity'] for result in report.get('Results', [])
+                               for v in result.get('Vulnerabilities', []))
+              summary['images_scanned'][service] = dict(counts)
+          audit = json.loads((root / 'api-pip-audit.json').read_text())
+          summary['python_advisories'] = sum(len(d['vulns']) for d in audit['dependencies'])
+          (root / 'summary.json').write_text(json.dumps(summary, indent=2) + '\n')
+          print(json.dumps(summary, indent=2))
+          PY
+      - name: Retain scan results at every severity
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arm64-security-${{ env.CANDIDATE_SHA }}
+          path: ${{ runner.temp }}/container-security/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Export the exact built web runtime for isolated browser testing
+        if: github.event_name == 'workflow_dispatch' && inputs.export_web_runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm --network none --entrypoint tar "qualification-web:$CANDIDATE_SHA" \
+            -C /app/apps/web -czf - . > "$RUNNER_TEMP/web-runtime.tar.gz"
+          (cd "$RUNNER_TEMP" && sha256sum web-runtime.tar.gz > web-runtime.sha256)
+      - name: Retain optional web runtime artifact
+        if: github.event_name == 'workflow_dispatch' && inputs.export_web_runtime
+        uses: actions/upload-artifact@v4
+        with:
+          name: arm64-web-runtime-${{ env.CANDIDATE_SHA }}
+          path: |
+            ${{ runner.temp }}/web-runtime.tar.gz
+            ${{ runner.temp }}/web-runtime.sha256
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 3

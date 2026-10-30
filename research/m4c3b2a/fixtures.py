@@ -79,7 +79,7 @@ class SyntheticCalendar:
 
 def build_staging_demo(root,*,origin):
     context=demo_context();accounts=DisposableAccounts(root);access=SyntheticSessionAccess();calendar=SyntheticCalendar()
-    tokens={subject:create_access_token(subject) for subject in ('alice','bob')}
+    tokens={subject:create_access_token(subject, accounts.user(subject).password_hash) for subject in ('alice','bob')}
     for subject,token in tokens.items():
         binding=hashlib.sha256(('Bearer '+token).encode()).hexdigest()
         user=accounts.user(subject)

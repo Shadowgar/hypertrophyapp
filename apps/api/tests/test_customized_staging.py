@@ -30,7 +30,7 @@ def staged(tmp_path):
     from research.m4c3b1.store import DisposableProposalStore
     now=demo_context().planning_instant
     users={name:User(id=name,password_hash='synthetic-credential-'+name) for name in ('alice','bob')}
-    tokens={name:create_access_token(name) for name in users}
+    tokens={name:create_access_token(name, users[name].password_hash) for name in users}
     class Access:
         grants={}
         def resolve(self,subject,session_id):return self.grants.get((subject,session_id))

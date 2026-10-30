@@ -43,7 +43,7 @@ from app.database import SessionLocal, engine
 from app.main import app
 from app.models import User, WorkoutOccurrence, WorkoutPlan, WorkoutSetLog
 from app.routers import workout
-from app.security import create_access_token
+from auth_test_helpers import create_access_token
 from app import selected_date_plans
 
 

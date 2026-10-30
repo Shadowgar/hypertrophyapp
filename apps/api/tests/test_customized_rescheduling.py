@@ -244,7 +244,7 @@ def test_reschedule_retains_local_dates_through_dst_change(application,monkeypat
     from test_customized_application import request
     from app.models import WorkoutPlan,User
     from app.config import settings
-    from app.security import create_access_token
+    from auth_test_helpers import create_access_token
     import app.main as main
     monkeypatch.setattr(settings,'jwt_expire_minutes',14*24*60)
     with application[2]() as db:

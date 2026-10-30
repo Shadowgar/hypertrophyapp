@@ -24,41 +24,47 @@ def test_parallel_worker_database_rejects_unsafe_targets(tmp_path, url, worker) 
         isolated_worker_database_url(url, worker, str(tmp_path))
 
 
-def test_configure_test_database_uses_explicit_override(monkeypatch) -> None:
-    explicit = "sqlite:///./explicit_override.sqlite3"
+def test_configure_test_database_uses_explicit_override(monkeypatch, tmp_path) -> None:
+    explicit = f"sqlite:///{tmp_path / 'explicit.sqlite3'}"
     monkeypatch.setenv("TEST_DATABASE_URL", explicit)
-
-    url = configure_test_database("explicit_case")
-
-    assert url == explicit
+    monkeypatch.setenv("CI_TEST_ROOT", str(tmp_path))
+    assert configure_test_database("explicit_case") == explicit
     assert os.environ["DATABASE_URL"] == explicit
 
 
-def test_configure_test_database_falls_back_to_sqlite_when_postgres_unreachable(monkeypatch) -> None:
+def test_inherited_production_settings_are_never_selected(monkeypatch):
     monkeypatch.delenv("TEST_DATABASE_URL", raising=False)
-    monkeypatch.delenv("PYTEST_ACTIVE_TEST", raising=False)
-    monkeypatch.setenv("TEST_DATABASE_HOST", "127.0.0.1")
-    monkeypatch.setenv("TEST_DATABASE_PORT", "65530")
-
-    url = configure_test_database("fallback_case")
-
-    assert url.startswith("sqlite:///")
-    assert os.environ["DATABASE_URL"] == url
-    assert os.environ["PYTEST_ACTIVE_TEST"] == "fallback_case"
-
-
-def test_configure_test_database_prefers_database_name_when_reachable(monkeypatch) -> None:
-    monkeypatch.delenv("TEST_DATABASE_URL", raising=False)
-    monkeypatch.delenv("TEST_DATABASE_NAME", raising=False)
     monkeypatch.setenv("DATABASE_NAME", "hypertrophy")
-    monkeypatch.setenv("POSTGRES_DB", "hypertrophy_test")
-    monkeypatch.setenv("TEST_DATABASE_HOST", "postgres")
-    monkeypatch.setenv("TEST_DATABASE_PORT", "5432")
-    monkeypatch.setenv("TEST_DATABASE_USER", "hypertrophy")
-    monkeypatch.setenv("TEST_DATABASE_PASSWORD", "hypertrophy")
-    monkeypatch.setattr(test_db, "_postgres_is_reachable", lambda _host, _port: True)
+    monkeypatch.setenv("DATABASE_HOST", "postgres")
+    monkeypatch.setenv("POSTGRES_DB", "hypertrophy")
+    with pytest.raises(ValueError, match="explicit verified disposable"):
+        configure_test_database("unsafe")
 
-    url = configure_test_database("reachable_case")
 
-    assert url.endswith("/hypertrophy")
-    assert os.environ["DATABASE_URL"] == url
+@pytest.mark.parametrize("url", [
+    "postgresql://hypertrophy:private-sentinel@postgres:5432/hypertrophy",
+    "postgresql://test:private-sentinel@127.0.0.1:5432/test_db",
+    "sqlite:////etc/private-sentinel.sqlite3", "sqlite:///relative.sqlite3",
+    "not-a-url-private-sentinel",
+])
+def test_unverified_or_unsafe_target_rejected_without_secret_output(monkeypatch, tmp_path, url):
+    monkeypatch.setenv("TEST_DATABASE_URL", url)
+    monkeypatch.setenv("CI_TEST_ROOT", str(tmp_path))
+    with pytest.raises(ValueError) as rejected:
+        configure_test_database("unsafe")
+    assert "private-sentinel" not in str(rejected.value)
+
+
+def test_postgres_requires_all_disposable_markers(monkeypatch):
+    url = "postgresql+psycopg://synthetic:dummy@127.0.0.1:55439/synthetic_test"
+    monkeypatch.setenv("TEST_DATABASE_URL", url)
+    monkeypatch.delenv("TEST_DATABASE_DISPOSABLE", raising=False)
+    with pytest.raises(ValueError):
+        configure_test_database("missing_marker")
+    monkeypatch.setenv("TEST_DATABASE_DISPOSABLE", "1")
+    monkeypatch.setenv("TEST_DATABASE_NAME", "synthetic_test")
+    monkeypatch.setenv("TEST_DATABASE_USER", "synthetic")
+    assert configure_test_database("declared_target") == url
+    monkeypatch.setenv("TEST_DATABASE_URL", url + "?host=other-host&port=5432&dbname=hypertrophy&user=other-user")
+    with pytest.raises(ValueError):
+        configure_test_database("query_override")

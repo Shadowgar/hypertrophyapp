@@ -11,7 +11,7 @@ from sqlalchemy import text
 from app.database import SessionLocal, engine
 from app.main import app
 from app.models import ExerciseState, WorkoutSetLog, WorkoutSessionState, User
-from app.security import create_access_token
+from auth_test_helpers import create_access_token
 from app.workout_history import state_snapshot
 from test_workout_occurrence_identity import scenario, plan, submission, log
 

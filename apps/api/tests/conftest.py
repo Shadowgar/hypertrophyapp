@@ -21,3 +21,14 @@ if worker_id:
 configure_test_database("pytest_session_default")
 # An explicit synthetic signing key; runtime has no development fallback.
 os.environ["JWT_SECRET"] = "isolated-api-test-signing-key-not-for-deployment-000"
+# Fixtures exercising explicitly development-only behavior opt in only after
+# configure_test_database has validated the disposable target above.
+os.environ["ALLOW_DEV_WIPE_ENDPOINTS"] = "true"
+
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def isolate_auth_attempt_budgets(monkeypatch):
+    from app import auth_limits
+    monkeypatch.setattr(auth_limits, "auth_attempts", auth_limits.AuthAttemptLimiter())

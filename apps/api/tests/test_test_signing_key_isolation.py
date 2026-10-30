@@ -19,6 +19,7 @@ def test_test_setup_replaces_inherited_key_before_settings_and_security_imports(
         "PYTHONPATH": os.environ.get("PYTHONPATH", ""),
         "DATABASE_URL": database_url,
         "TEST_DATABASE_URL": database_url,
+        "CI_TEST_ROOT": str(tmp_path),
         "JWT_SECRET": inherited_key,
     }
     probe = '''
@@ -40,7 +41,7 @@ import jwt
 test_key = "isolated-api-test-signing-key-not-for-deployment-000"
 assert os.environ["JWT_SECRET"] == test_key
 assert settings.jwt_secret == test_key
-token = create_access_token("synthetic-subject")
+token = create_access_token("synthetic-subject", "synthetic-credential")
 assert jwt.decode(token, test_key, algorithms=[settings.jwt_algorithm])["sub"] == "synthetic-subject"
 try:
     jwt.decode(token, inherited_key, algorithms=[settings.jwt_algorithm])

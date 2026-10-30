@@ -15,8 +15,15 @@ class TokenResponse(BaseModel):
 
 class RegisterRequest(BaseModel):
     email: EmailStr
-    password: str = Field(min_length=8)
-    name: str
+    password: str = Field(min_length=8, max_length=72)
+    name: str = Field(max_length=200)
+
+    @field_validator("password")
+    @classmethod
+    def bound_password_bytes(cls, value: str) -> str:
+        if len(value.encode("utf-8")) > 72:
+            raise ValueError("Password exceeds supported byte length")
+        return value
 
     @field_validator("email")
     @classmethod
@@ -26,7 +33,7 @@ class RegisterRequest(BaseModel):
 
 class LoginRequest(BaseModel):
     email: EmailStr
-    password: str
+    password: str = Field(max_length=1024)
 
     @field_validator("email")
     @classmethod
@@ -59,8 +66,13 @@ class PasswordResetRequestResponse(BaseModel):
 
 
 class PasswordResetConfirmRequest(BaseModel):
-    token: str = Field(min_length=16)
-    new_password: str = Field(min_length=8)
+    token: str = Field(min_length=16, max_length=128)
+    new_password: str = Field(min_length=8, max_length=72)
+
+    @field_validator("new_password")
+    @classmethod
+    def bound_password_bytes(cls, value: str) -> str:
+        return RegisterRequest.bound_password_bytes(value)
 
 
 class StatusResponse(BaseModel):

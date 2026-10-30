@@ -1,22 +1,7 @@
 import os
 import re
-import socket
 from pathlib import Path
 from sqlalchemy.engine import make_url
-
-
-def _postgres_is_reachable(host: str, port: int) -> bool:
-    try:
-        with socket.create_connection((host, port), timeout=0.6):
-            return True
-    except OSError:
-        return False
-
-
-def _sqlite_fallback_url(test_name: str) -> str:
-    safe_name = re.sub(r"[^a-zA-Z0-9_.-]+", "_", test_name).strip("_") or "pytest"
-    db_path = Path(__file__).resolve().parent / f".tmp_{safe_name}.sqlite3"
-    return f"sqlite:///{db_path}"
 
 
 def isolated_worker_database_url(explicit_url: str, worker_id: str, test_root: str) -> str:
@@ -37,31 +22,45 @@ def isolated_worker_database_url(explicit_url: str, worker_id: str, test_root: s
 
 
 def configure_test_database(test_name: str) -> str:
-    """Set DATABASE_URL for tests with Postgres-first behavior.
+    """Require explicit disposable coordinates before app imports or any DDL.
 
-    Override with TEST_DATABASE_URL for local one-off cases (including SQLite).
+    SQLite files require an existing CI_TEST_ROOT/TEST_DATABASE_ROOT. PostgreSQL
+    requires separately verified, declared disposable database/user coordinates
+    and a non-default loopback port. Never infer targets from runtime settings.
     """
-    explicit_url = os.getenv("TEST_DATABASE_URL")
-    if explicit_url:
-        os.environ["DATABASE_URL"] = explicit_url
-        return explicit_url
-
-    host = os.getenv("TEST_DATABASE_HOST", os.getenv("DATABASE_HOST", os.getenv("POSTGRES_HOST", "localhost")))
-    port = int(os.getenv("TEST_DATABASE_PORT", os.getenv("DATABASE_PORT", "5432")))
-    name = os.getenv(
-        "TEST_DATABASE_NAME",
-        os.getenv("DATABASE_NAME", os.getenv("POSTGRES_DB", "hypertrophy_test")),
-    )
-    user = os.getenv("TEST_DATABASE_USER", os.getenv("POSTGRES_USER", "hypertrophy"))
-    password = os.getenv("TEST_DATABASE_PASSWORD", os.getenv("POSTGRES_PASSWORD", "hypertrophy"))
-
-    if _postgres_is_reachable(host, port):
-        url = f"postgresql+psycopg://{user}:{password}@{host}:{port}/{name}"
-    else:
-        url = _sqlite_fallback_url(test_name)
-
-    os.environ["DATABASE_URL"] = url
+    explicit = os.environ.get("TEST_DATABASE_URL", "")
+    if not explicit:
+        raise ValueError("Tests require an explicit verified disposable TEST_DATABASE_URL")
+    try:
+        url = make_url(explicit)
+        if url.query:
+            # libpq/SQLAlchemy query options can override authority coordinates
+            # (host, dbname, user, service); validate the actual fixed target.
+            raise ValueError("Test database URL query overrides are forbidden")
+        if url.get_backend_name() == "sqlite":
+            if url.database != ":memory:":
+                root_value = os.environ.get("CI_TEST_ROOT") or os.environ.get("TEST_DATABASE_ROOT")
+                if not root_value:
+                    raise ValueError("Missing disposable test root")
+                root = Path(root_value).resolve(strict=True)
+                if not url.database or not Path(url.database).is_absolute():
+                    raise ValueError("SQLite test path must be absolute")
+                database = Path(url.database).resolve()
+                if root == Path("/") or database == root or not database.is_relative_to(root):
+                    raise ValueError("SQLite target is outside the disposable test root")
+        elif url.get_backend_name() == "postgresql":
+            if (os.environ.get("TEST_DATABASE_DISPOSABLE") != "1"
+                    or url.host not in {"127.0.0.1", "::1"}
+                    or not url.port or url.port == 5432
+                    or not url.database or url.database in {"hypertrophy", "postgres", "template0", "template1"}
+                    or url.database != os.environ.get("TEST_DATABASE_NAME")
+                    or not url.username or url.username != os.environ.get("TEST_DATABASE_USER")):
+                raise ValueError("PostgreSQL target is not declared disposable")
+        else:
+            raise ValueError("Unsupported disposable database backend")
+    except Exception as exc:
+        # URLs may contain passwords; never reflect parser or coordinate values.
+        raise ValueError("Tests require a verified disposable database and explicit target markers") from None
+    os.environ["DATABASE_URL"] = explicit
     os.environ.setdefault("PYTEST_ACTIVE_TEST", test_name)
-    # Keep dev-only debug/wipe routes available in test context.
-    os.environ.setdefault("ALLOW_DEV_WIPE_ENDPOINTS", "true")
-    return url
+    return explicit

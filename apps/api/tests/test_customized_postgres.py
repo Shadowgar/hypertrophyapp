@@ -131,11 +131,14 @@ def test_real_jwt_current_user_bridge_and_server_session_identity(system):
     from fastapi.testclient import TestClient
     from sqlalchemy.orm import Session
     from app.security import create_access_token
+    from app.models import User
     from app.deps import get_db
     from app.customized_staging_http import create_staging_app
     from app.customized_lifecycle_models import LifecycleError
     s=system;subject=s.actors['a'].subject
-    token=create_access_token(subject);header='Bearer '+token
+    with Session(s.engine) as account_db:
+        token=create_access_token(subject, account_db.get(User, subject).password_hash)
+    header='Bearer '+token
     session_id=s.gate.issue(subject,header,entitlement_reference='explicit-test-only',scopes=('customized:preview','customized:proposal'),
         valid_from=s.service.clock()-timedelta(minutes=1),expires_at=s.service.clock()+timedelta(hours=1))
     assert len(session_id)==36 and session_id!=__import__('hashlib').sha256(header.encode()).hexdigest()
@@ -150,7 +153,8 @@ def test_real_jwt_current_user_bridge_and_server_session_identity(system):
     s.gate.revoke(subject,session_id)
     assert client.post('/customized/proposals',json=request(),headers=headers).status_code==401
     # Valid existing JWT without an explicit server session never gains scopes.
-    other=create_access_token(s.actors['b'].subject)
+    with Session(s.engine) as account_db:
+        other=create_access_token(s.actors['b'].subject, account_db.get(User, s.actors['b'].subject).password_hash)
     assert client.post('/customized/proposals',json=request(),headers={**headers,'Authorization':'Bearer '+other}).status_code==403
 
 

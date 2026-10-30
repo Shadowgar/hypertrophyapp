@@ -37,7 +37,7 @@ from app.database import Base, SessionLocal, engine
 from app.main import app
 from app.models import User, WorkoutOccurrence, WorkoutPlan, WorkoutSetLog
 from app.routers import history, profile
-from app.security import create_access_token
+from auth_test_helpers import create_access_token
 
 
 BOUNDARIES = [

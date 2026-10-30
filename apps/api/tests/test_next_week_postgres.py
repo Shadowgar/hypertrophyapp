@@ -9,7 +9,7 @@ from app import selected_date_plans
 from app.database import SessionLocal
 from app.models import AuthoredLoadState, WorkoutLogCommand, WorkoutPlan, WorkoutOccurrence, WorkoutSetLog
 from app.models import User
-from app.security import create_access_token
+from auth_test_helpers import create_access_token
 from app.routers import plan as plan_router
 
 

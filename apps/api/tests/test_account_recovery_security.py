@@ -22,7 +22,7 @@ def test_unsafe_signing_configuration_rejected_without_reflection(monkeypatch, k
     if key:
         assert key not in str(error.value)
     monkeypatch.setattr(settings, "jwt_secret", key)
-    for operation in (lambda: security.create_access_token("synthetic"), lambda: security.hash_password_reset_token("synthetic-reset-input")):
+    for operation in (lambda: security.create_access_token("synthetic", "synthetic-credential"), lambda: security.hash_password_reset_token("synthetic-reset-input")):
         with pytest.raises(RuntimeError, match="explicit non-placeholder"):
             operation()
 
@@ -111,16 +111,55 @@ def test_auth_validation_response_and_logs_never_reflect_input(monkeypatch, capl
     assert any("request_validation_failed" in record.message for record in caplog.records)
 
 
-def test_nested_validation_metadata_cannot_bypass_redaction(monkeypatch, caplog):
+@pytest.mark.parametrize("path", ["/auth/password-reset/confirm", "/profile", "/workout/check-in", "/plan/guides/programs/x/days/private-sentinel"])
+def test_nested_validation_metadata_cannot_bypass_redaction(monkeypatch, caplog, path):
     monkeypatch.setattr(logger, "propagate", True)
     caplog.set_level(logging.WARNING, logger=logger.name)
     marker = "private-sentinel"
     error = RequestValidationError([{"loc": ("body", marker, 0), "type": marker, "msg": marker, "ctx": {"reason": marker}, "input": {"nested": [marker]}}])
-    request = Request({"type": "http", "path": "/auth/password-reset/confirm", "method": "POST", "headers": []})
+    request = Request({"type": "http", "path": path, "method": "POST", "headers": []})
     response = asyncio.run(main.handle_request_validation_error(request, error))
     assert marker not in response.body.decode()
     assert marker not in caplog.text
     assert json.loads(response.body)["detail"][0]["loc"] == ["body", "[field]", 0]
+
+
+@pytest.mark.parametrize("model_name", ["FrequencyAdaptationPreviewRequest", "FrequencyAdaptationApplyRequest"])
+@pytest.mark.parametrize("value,message", [
+    (10, "Value error, Temporary duration must be between 1 and 8 weeks."),
+    ("private-sentinel", "Value error, Enter a whole number between 1 and 8."),
+])
+def test_fixed_domain_validation_guidance_survives_without_private_input(monkeypatch, caplog, model_name, value, message):
+    from pydantic import ValidationError
+    from app import schemas
+
+    monkeypatch.setattr(logger, "propagate", True)
+    caplog.set_level(logging.WARNING, logger=logger.name)
+    with pytest.raises(ValidationError) as invalid:
+        getattr(schemas, model_name)(target_days=3, duration_weeks=value)
+    error = RequestValidationError(invalid.value.errors())
+    request = Request({"type": "http", "path": "/plan/adaptation/preview", "method": "POST", "headers": []})
+    response = asyncio.run(main.handle_request_validation_error(request, error))
+    detail = json.loads(response.body)["detail"][0]
+    assert detail["msg"] == message
+    assert "private-sentinel" not in response.body.decode() + caplog.text
+    assert set(detail) == {"loc", "type", "msg"}
+
+
+@pytest.mark.parametrize("message", [
+    "private-sentinel",
+    "Value error, Temporary duration must be between 1 and 8 weeks. private-sentinel",
+    "private-sentinel Value error, Temporary duration must be between 1 and 8 weeks.",
+])
+def test_validation_guidance_allowlist_never_accepts_arbitrary_or_extended_text(message):
+    from app.observability import sanitize_auth_validation_errors
+
+    result = sanitize_auth_validation_errors([{
+        "loc": ("body", "duration_weeks"), "type": "value_error", "msg": message,
+        "input": "private-sentinel", "ctx": {"error": "private-sentinel"},
+    }])
+    assert result[0]["msg"] == "Invalid value"
+    assert "private-sentinel" not in json.dumps(result)
 
 
 def test_auth_operation_error_never_reflects_exception_or_traceback(monkeypatch, caplog):

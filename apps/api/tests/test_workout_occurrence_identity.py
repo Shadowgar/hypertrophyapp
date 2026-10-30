@@ -14,7 +14,7 @@ from sqlalchemy.exc import IntegrityError
 from app.database import Base, SessionLocal, engine
 from app.main import app
 from app.models import User, WorkoutPlan, WorkoutSetLog, WorkoutSessionState, WorkoutLogCommand, WorkoutOccurrence, ExerciseState
-from app.security import create_access_token
+from auth_test_helpers import create_access_token
 from app.workout_identity import identified_sessions
 
 

@@ -198,7 +198,7 @@ def test_current_profile_conflict_pauses_confirmed_variant_without_rewriting_fro
 
 
 def test_confirmed_variant_cannot_change_after_a_receipt_and_foreign_owner_is_rejected(scenario):
-    from app.security import create_access_token
+    from auth_test_helpers import create_access_token
     user,headers,client=scenario;session=constrained_plan(user)
     r=send(client,headers,session,decision(session,'confirm',option_id='substitution_option_1'));assert r.status_code==200
     session['exercises'][0]=r.json()['exercise'];payload=submission(session);payload['weight']=0
