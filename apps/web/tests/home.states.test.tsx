@@ -30,11 +30,13 @@ test.each([404, 409])("unknown %s remains a retryable failure", async status => 
   expect(await screen.findByRole("button", { name: "Retry Home" })).toBeInTheDocument();
   expect(screen.queryByRole("heading", { name: "Your week is open" })).not.toBeInTheDocument();
 });
-test("next dated session stays a Week link, never today's workout", async () => {
+test("calendar dates do not invent a next workout when its authoritative preview fails", async () => {
   const plan = { program_template_id: "pure_bodybuilding_phase_2_full_body", schedule: { mode: "selected_dates_v1" }, sessions: [{ ...workout("Future Phase 2"), date: "2026-10-28" }] };
   vi.mocked(fetch).mockImplementation(async input => String(input).endsWith("/workout/today") ? Response.json({ detail: "No workout scheduled today" }, { status: 404 }) : String(input).includes("/plan/scheduling-context") ? Response.json(context(plan)) : unavailable());
   render(<HomePage />);
-  expect(await screen.findByRole("heading", { name: "Future Phase 2" })).toBeInTheDocument();
+  expect(await screen.findByRole("heading", { name: "Review your schedule" })).toBeInTheDocument();
+  await screen.findByText(/next workout preview could not be loaded/);
+  expect(screen.queryByRole("heading", { name: "Future Phase 2" })).not.toBeInTheDocument();
   expect(screen.getByRole("link", { name: "Review Week" })).toHaveAttribute("href", "/week");
   expect(screen.queryByRole("link", { name: /Open today's workout/ })).not.toBeInTheDocument();
 });
@@ -133,7 +135,8 @@ test("a future program does not relabel this week's saved program", async () => 
     return unavailable();
   });
   render(<HomePage />);
-  await screen.findByRole("heading", { name: "Next week Phase 2" });
+  await screen.findByRole("heading", { name: "Review your schedule" });
+  expect(screen.queryByRole("heading", { name: "Next week Phase 2" })).not.toBeInTheDocument();
   expect(screen.getByText("3 training days · Full Body Phase 1")).toBeInTheDocument();
 });
 

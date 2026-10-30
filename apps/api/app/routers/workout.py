@@ -42,6 +42,7 @@ from ..program_loader import (
 )
 from .plan import ensure_current_workout_plans_for_user
 from ..schemas import (
+    MoveNextPlannedWorkoutRequest,
     WorkoutLiveRecommendationResponse,
     WorkoutSetLogRequest,
     WorkoutSetLogResponse,
@@ -58,6 +59,22 @@ router = APIRouter()
 
 DbSession = Annotated[Session, Depends(get_db)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+@router.get("/workout/next-planned")
+def workout_next_planned(db: DbSession, current_user: CurrentUser):
+    from ..next_planned_workout import next_planned_workout
+    return next_planned_workout(db, current_user, datetime.now(UTC))
+
+
+@router.post("/workout/next-planned/move")
+def workout_move_next_planned(payload: MoveNextPlannedWorkoutRequest, db: DbSession, current_user: CurrentUser):
+    from ..next_planned_workout import move_next_planned_workout
+    result = move_next_planned_workout(db, current_user, payload, lambda: datetime.now(UTC))
+    log_event("workout_placement_moved_to_today", user_id=current_user.id,
+        workout_occurrence_id=payload.workout_occurrence_id, expected_placement_revision=payload.expected_placement_revision,
+        placement_revision=result['schedule']['placement_revision'], owner="selected_week_command")
+    return result
 
 
 def _coerce_int(value: Any) -> int:

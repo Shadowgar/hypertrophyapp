@@ -102,7 +102,7 @@ def _date_sensitive_source():
     ]}]
 
 
-def test_actual_date_gaps_change_grouping_before_workload_balance():
+def test_advisory_overlap_cannot_unbalance_consecutive_date_workload():
     from datetime import date
     source = _date_sensitive_source()
     target = [{}, {}, {}]
@@ -111,19 +111,21 @@ def test_actual_date_gaps_change_grouping_before_workload_balance():
     consecutive, trace = redistribute_authored_sessions(source, target, selected_dates=[
         date(2026, 9, 29), date(2026, 9, 30), date(2026, 10, 1)])
     assert [len(s["exercises"]) for s in spread] == [2, 2, 2]
-    assert [len(s["exercises"]) for s in consecutive] == [1, 2, 3]
-    assert trace["selected_date_allocation"]["objective"]["consecutive_overlapping_working_sets"] == 2
+    assert [len(s["exercises"]) for s in consecutive] == [2, 2, 2]
+    assert trace["selected_date_allocation"]["objective"] == {
+        "working_set_range": 0, "target_squared_deviation": 0,
+        "consecutive_overlapping_working_sets": 4, "source_cuts": [2, 4]}
     replay, replay_trace = redistribute_authored_sessions(source, target, selected_dates=[
         date(2026, 9, 29), date(2026, 9, 30), date(2026, 10, 1)])
     assert (replay, replay_trace) == (consecutive, trace)
     assert [e for s in consecutive for e in s["exercises"]] == source[0]["exercises"]
 
 
-def test_only_consecutive_edge_changes_the_cut_for_mixed_gaps():
+def test_mixed_gaps_keep_balanced_workload_before_advisory_overlap():
     from datetime import date
     output, _ = redistribute_authored_sessions(_date_sensitive_source(), [{}, {}, {}],
         selected_dates=[date(2026, 9, 29), date(2026, 9, 30), date(2026, 10, 4)])
-    assert [len(s["exercises"]) for s in output] == [3, 1, 2]
+    assert [len(s["exercises"]) for s in output] == [2, 2, 2]
 
 
 def test_neighbor_work_is_evaluated_and_date_only_context_stays_unknown():
@@ -132,7 +134,7 @@ def test_neighbor_work_is_evaluated_and_date_only_context_stays_unknown():
         selected_dates=[date(2026, 9, 28), date(2026, 10, 2)],
         previous_context={"date": date(2026, 9, 27), "exercises": [
             {"sets": 6, "primary_muscles": ["chest"]}]})
-    assert [len(s["exercises"]) for s in output] == [1, 5]
+    assert [len(s["exercises"]) for s in output] == [3, 3]
     assert trace["selected_date_allocation"]["context_completeness"] == {"previous": "known", "next": "unknown"}
 
 
@@ -212,3 +214,38 @@ def test_compiled_phase_first_week_retains_all_set_and_slot_relationships_on_act
         selected_dates=[date(2026, 9, 28), date(2026, 9, 29), date(2026, 9, 30), date(2026, 10, 1), date(2026, 10, 2)][:days])
     assert [e for s in output for e in s["exercises"]] == [e for s in source for e in s["exercises"]]
     assert trace["authored_redistribution_preserved_weekly_sets"] == sum(e["sets"] for s in source for e in s["exercises"])
+
+
+def test_advisory_overlap_breaks_equal_workload_scores_before_source_cuts():
+    from datetime import date
+    source = [{"exercises": [
+        {**_exercise(f"slot-{index}"), "primary_muscles": ["chest" if index <= 4 else "back"]}
+        for index in range(1, 8)
+    ]}]
+    legacy, _ = redistribute_authored_sessions(source, [{}, {}, {}])
+    selected, trace = redistribute_authored_sessions(source, [{}, {}, {}],
+        selected_dates=[date(2026, 10, 26), date(2026, 10, 27), date(2026, 10, 30)])
+    assert [len(s["exercises"]) for s in legacy] == [2, 3, 2]
+    assert [len(s["exercises"]) for s in selected] == [3, 2, 2]
+    assert trace["selected_date_allocation"]["objective"] == {
+        "working_set_range": 2, "target_squared_deviation": 2,
+        "consecutive_overlapping_working_sets": 2, "source_cuts": [3, 5]}
+
+
+@pytest.mark.parametrize("days,expected_sets", [(3, [29, 30, 29]), (4, [21, 21, 22, 24])])
+def test_phase_one_adjacent_dates_do_not_create_tiny_sessions_to_avoid_overlap(days, expected_sets):
+    from datetime import date
+    import json
+    from pathlib import Path
+    artifact = json.loads((Path(__file__).resolve().parents[3] / "programs/gold/pure_bodybuilding_phase_1_full_body.json").read_text())
+    library = json.loads((Path(__file__).resolve().parents[3] / "knowledge/compiled/exercise_library.foundation.v1.json").read_text())
+    muscles = {item["exercise_id"]: item.get("primary_muscles") or [] for item in library["records"]}
+    source = [{"exercises": [{**slot, "sets": len(slot["authored_prescription"]["sets"]),
+        "primary_muscles": muscles.get(slot["exercise_id"], [])} for slot in day["slots"]]}
+        for day in artifact["phases"][0]["weeks"][0]["days"]]
+    original = deepcopy(source)
+    output, trace = redistribute_authored_sessions(source, [{}] * days,
+        selected_dates=[date(2026, 10, 26), date(2026, 10, 27), date(2026, 10, 30), date(2026, 11, 1)][:days])
+    assert [sum(e["sets"] for e in s["exercises"]) for s in output] == expected_sets
+    assert [e for s in output for e in s["exercises"]] == [e for s in original for e in s["exercises"]]
+    assert source == original

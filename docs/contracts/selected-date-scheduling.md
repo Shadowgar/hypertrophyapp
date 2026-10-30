@@ -35,3 +35,28 @@ Acceptance: Tue/Fri/Sun placements exactly match inputs; duplicates/out-of-week 
 ### Customized active placement extension, 2026-10-20
 
 The existing `/customized` lifecycle uses this same local-week validator and lossless placer for explicitly confirmed date-only amendments. It retains stable plan/slot identities and advances placement revision atomically. A mixed started/unstarted Customized week can retain frozen slots while moving only other slots; retained placement history and unchanged date/prescription qualify older frozen snapshot revisions. Authored still uses its existing week-freeze behavior and permitted occurrence receipt overlays. Same-week replacement is a separate explicit Customized consent operation, never permission granted by this scheduling endpoint. [Scope and evidence](../evidence/2026-10-20-m4-active-lifecycle.md).
+
+### Confirmed next-session option and workload correction, 2026-10-30
+
+The owner-authorized [flexible Today package](../plans/flexible-today-workload.md)
+adds a read-only next-unstarted dated-session preview. A separate confirmed command
+binds the reviewed account-owned plan, occurrence, original date, current local
+date, placement revision and prescription/dependency digest. It delegates to the
+existing Authored selected-date command under the same User lock. Only same-week,
+source-order-preserving moves admitted by its entirely-unstarted-week rules are
+allowed. Execution/consent snapshots still freeze that week. An existing workout
+today, changed preview/date, cross-week work, source minimum-rest conflict or
+Customized consent boundary blocks the move without changing history. Missing
+outstanding work returns no candidate; it never implies completion.
+
+For newly reviewed selected-date allocations, the declared advisory objective is
+`selected-date-workload-first-v2`: minimize working-set range, then squared
+working-set target deviation, then consecutive-day declared-muscle overlap, then
+source cuts. Hard source relationships and minimum rest remain mandatory. This
+corrects overlap-first allocations that could push most of a week into one visit;
+there is no automatic rewrite of an existing placement. Counts and a saved time
+goal are disclosed without a claimed duration estimate. An entirely unstarted
+week can be explicitly previewed across more of its existing 2–5 selected visits.
+Splitting a started occurrence, using more than five visits, or carrying work to
+another source/calendar week requires a separate qualified contract; this package
+does not silently enable any of them. See the [allocation audit](../evidence/flexible-training-workload-2026-10-30.md).

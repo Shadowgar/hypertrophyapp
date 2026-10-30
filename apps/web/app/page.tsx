@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { WorkoutWorkload, workloadMode } from "@/components/workout-workload";
+import { NextWorkout } from "@/components/next-workout";
 import { useAppearance } from "@/components/appearance-provider";
 import { api, ApiError, getProgramDisplayName, getToken, type HistoryAnalyticsResponse, type Profile, type SchedulingContext, type WeeklyReviewStatus, type WorkoutSession } from "@/lib/api";
 import { displayLoad } from "@/lib/appearance";
@@ -16,7 +18,6 @@ type Data = {
   analytics: HistoryAnalyticsResponse | null;
   review: WeeklyReviewStatus | null;
   week: SchedulingContext | null;
-  nextWeek: SchedulingContext | null;
 };
 type ReadStatus = "pending" | "ready" | "error";
 type HomeState = {
@@ -25,9 +26,9 @@ type HomeState = {
   status: Record<keyof Data, ReadStatus>;
   retryAvailable: boolean;
 };
-const emptyData: Data = { profile: null, workout: null, analytics: null, review: null, week: null, nextWeek: null };
+const emptyData: Data = { profile: null, workout: null, analytics: null, review: null, week: null };
 function initialState(token: HomeState["token"], retryAvailable = false): HomeState {
-  return { token, data: { ...emptyData }, status: { profile: "pending", workout: "pending", analytics: "pending", review: "pending", week: "pending", nextWeek: "pending" }, retryAvailable };
+  return { token, data: { ...emptyData }, status: { profile: "pending", workout: "pending", analytics: "pending", review: "pending", week: "pending" }, retryAvailable };
 }
 // Only these domain responses acknowledge absence. Unknown 404s and conflicts are failures.
 function isNoWorkout(error: unknown): boolean {
@@ -89,7 +90,6 @@ export default function HomePage() {
       // The API prefers the account's saved timezone; this is only a first-use fallback.
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
       read("week", api.getSchedulingContext(timezone));
-      read("nextWeek", api.getSchedulingContext(timezone, 1));
     }
     load(true);
     const sync = () => { if (activeToken !== getToken()) load(); };
@@ -127,24 +127,17 @@ export default function HomePage() {
   const checked = status.workout === "ready";
   const loading = status.workout === "pending";
   const failed = status.workout === "error";
-  // Future dates are previews only: they never authorize opening/resuming through Today.
-  const upcoming = [data.week, data.nextWeek].flatMap(context =>
-    context?.plan?.schedule?.mode === "selected_dates_v1"
-      ? context.plan.sessions.filter(session => session.date > context.local_today).map(session => ({ session, context })) : []
-  ).sort((a, b) => a.session.date.localeCompare(b.session.date))[0];
   const noSchedule = checked && !workout && status.week === "ready" && data.week?.plan === null;
-  const title = noSchedule && !upcoming ? "Your week is open" : "Your next session";
-  const primaryTitle = loading ? "Checking your training" : failed ? "Home unavailable" : workout?.title ?? upcoming?.session.title ?? (noSchedule ? "Choose your training dates" : "Review your schedule");
+  const title = noSchedule ? "Your week is open" : workout ? "Your next session" : "Your training";
+  const primaryTitle = loading ? "Checking your training" : failed ? "Home unavailable" : workout?.title ?? (noSchedule ? "Choose your training dates" : "Review your schedule");
   const message = loading ? "Checking your workout and saved schedule…"
     : failed ? "Could not check today's workout. Retry before assuming it is a rest day. Your saved history is unchanged."
     : workout ? (workout.resume ? "Your unfinished session is available to resume." : "Session available.")
-    : upcoming ? `Next scheduled: ${formatCalendarDate(upcoming.session.date)}. No workout is scheduled today.`
     : noSchedule ? "No workouts scheduled for this week. Preview your dates in Week before you commit."
     : "No session returned today. Review Week for your actual schedule.";
-  const chosenContext = workout ? data.week : upcoming?.context ?? data.week;
   const knownProgram = workout
     ? workoutProgramName(workout, data.week, status.week === "pending")
-    : programName(data.profile, chosenContext, status.profile === "pending" || status.week === "pending");
+    : programName(data.profile, data.week, status.profile === "pending" || status.week === "pending");
   const currentDates = data.week?.plan?.schedule?.mode === "selected_dates_v1" ? data.week.selected_dates : [];
   const analytics = data.analytics;
   const bodyweight = analytics?.bodyweight_trend?.at(-1)?.body_weight ?? data.profile?.weight;
@@ -170,11 +163,13 @@ export default function HomePage() {
             <h2 className="text-2xl">{primaryTitle}</h2>
             <p className="ux-muted" role="status" aria-live="polite">{message}</p>
             {workout ? <p className="ux-muted">{workout.exercises.length} {workout.exercises.length === 1 ? "exercise" : "exercises"}{workout.mesocycle ? ` · Week ${workout.mesocycle.week_index}` : ""}</p> : null}
-            {checked && !workout && !upcoming && !noSchedule && status.week === "pending" ? <p className="ux-muted">Your week is still loading.</p> : null}
+            {workout ? <WorkoutWorkload exercises={workout.exercises} timeBudgetMinutes={data.profile?.session_time_budget_minutes} mode={workloadMode(workout.program_template_id ?? workout.selected_program_id, Boolean(workout.customized))} /> : null}
+            {checked && !workout && !noSchedule && status.week === "pending" ? <p className="ux-muted">Your week is still loading.</p> : null}
             {checked && workout ? <Link className="ux-button ux-button-primary w-full" href="/today">{workout.resume ? "Resume your workout" : "Open today's workout"}</Link>
-              : checked ? <Link className="ux-button ux-button-primary w-full" href="/week">{noSchedule && !upcoming ? "Choose dates" : "Review Week"}</Link> : null}
+              : checked ? <Link className="ux-button ux-button-primary w-full" href="/week">{noSchedule ? "Choose dates" : "Review Week"}</Link> : null}
             {home.retryAvailable ? <button className={`ux-button ${failed ? "ux-button-primary" : "ux-button-secondary"} w-full`} type="button" aria-disabled={loading} onClick={() => { if (!loading) setReload(value => value + 1); }}>Retry Home</button> : null}
           </div>
+          {checked && !workout ? <NextWorkout accountToken={home.token} timeBudgetMinutes={data.profile?.session_time_budget_minutes} enabled onMoved={() => setReload(value => value + 1)} /> : null}
           <Link className="ux-card block space-y-2" href="/checkin">
             <h2>A quick check-in?</h2>
             <p className="ux-muted">Optional. You can do it after training.</p>

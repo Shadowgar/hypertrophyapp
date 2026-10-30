@@ -1,5 +1,7 @@
 "use client";
 import {InlineTechniquePanel,type TechniqueModalState} from "@/components/technique-entry";
+import { WorkoutWorkload, workloadMode } from "@/components/workout-workload";
+import { NextWorkout } from "@/components/next-workout";
 import { AtlasRunner } from "@/components/atlas-runner";
 import { useAppearance } from "@/components/appearance-provider";
 import { AuthoredWarmups, type PerformedWarmup } from "@/components/authored-warmups";
@@ -519,6 +521,7 @@ export default function TodayPage() {
   const [health, setHealth] = useState("loading");
   const [workoutLoading, setWorkoutLoading] = useState(false);
   const [occurrenceVerified, setOccurrenceVerified] = useState(false);
+  const [nextPreviewAllowed, setNextPreviewAllowed] = useState(false);
   const [accountGeneration, setAccountGeneration] = useState(0);
   const pageReadEpoch = useRef(0);
   const todayReadVersion = useRef(0);
@@ -538,6 +541,7 @@ export default function TodayPage() {
   const [sorenessLookupFailed, setSorenessLookupFailed] = useState(false);
   const [sorenessStatus, setSorenessStatus] = useState("Idle");
   const [sorenessNotes, setSorenessNotes] = useState("");
+  const [sessionTimeGoal, setSessionTimeGoal] = useState<number | null | undefined>(undefined);
   const [weakAreas, setWeakAreas] = useState<string[]>([]);
   const [sorenessByMuscle, setSorenessByMuscle] = useState<Record<string, SorenessSeverity>>(createInitialSorenessState());
   const [completedSetsByExercise, setCompletedSetsByExercise] = useState<Record<string, number>>({});
@@ -650,6 +654,7 @@ export default function TodayPage() {
       sorenessDismissedDate.current = null;
       sorenessPromptDate.current = null;
       setWorkout(null);
+      setNextPreviewAllowed(false);
       setOccurrenceVerified(false);
       setSelectedExerciseId(null);
       setTechniqueModal(null);
@@ -657,6 +662,7 @@ export default function TodayPage() {
       setSwapTargetExerciseId(null);
       setLocalToday(null);
       setWeakAreas([]);
+      setSessionTimeGoal(undefined);
       setWorkoutSummary(null);
       setWorkoutProgress(null);
       setCompletedSetsByExercise({});
@@ -753,6 +759,7 @@ export default function TodayPage() {
     const requestGeneration = captureLoadGeneration();
     const isCurrent = () => isCurrentPageRead(scope) && version === todayReadVersion.current;
     setOccurrenceVerified(false);
+    setNextPreviewAllowed(false);
     try {
       const data = await api.getTodayWorkout();
       if (!isCurrent()) return null;
@@ -851,6 +858,7 @@ export default function TodayPage() {
           ? profile.weak_areas.filter((value): value is string => typeof value === "string" && value.trim().length > 0)
           : [];
         setWeakAreas(profileWeakAreas);
+        setSessionTimeGoal(profile.session_time_budget_minutes ?? null);
       }).catch(() => {
         if (isCurrent()) setWeakAreas([]);
       });
@@ -899,6 +907,7 @@ export default function TodayPage() {
       setSelectedExerciseId(null);
       setTechniqueModal(null);
       setGlobalRestTimer(null);
+      setNextPreviewAllowed(error instanceof ApiError && error.status === 404 && ["No workout scheduled today", "No plan generated", "No workouts available"].includes(error.message));
       setMessage(error instanceof Error && error.message === "No workout scheduled today"
         ? "Rest day — no workout is scheduled for your local date. Check Week for your selected dates."
         : error instanceof ApiError && error.status === 404
@@ -950,6 +959,7 @@ export default function TodayPage() {
     isBeginWorkoutLoadInProgress.current = true;
     setOccurrenceVerified(false);
     setWorkoutLoading(true);
+    setNextPreviewAllowed(false);
     setSorenessLookupFailed(false);
     setMessage(currentOccurrence.current ? "Refreshing your scheduled workout…" : "Loading your scheduled workout…");
     try {
@@ -1021,6 +1031,18 @@ export default function TodayPage() {
     hasAutoLoadStarted.current = true;
     beginWorkoutLoad();
   }, [health, workout, beginWorkoutLoad, accountGeneration]);
+
+  useEffect(() => {
+    if (!nextPreviewAllowed || !getToken()) return;
+    const scope = capturePageRead();
+    let active = true;
+    void api.getProfile().then(profile => {
+      if (active && isCurrentPageRead(scope)) setSessionTimeGoal(profile.session_time_budget_minutes ?? null);
+    }).catch(() => {
+      if (active && isCurrentPageRead(scope)) setSessionTimeGoal(undefined);
+    });
+    return () => { active = false; };
+  }, [nextPreviewAllowed, accountGeneration, capturePageRead, isCurrentPageRead]);
 
   function restartForChangedSorenessDate(today: string): boolean {
     if (sorenessPromptDate.current === today) return false;
@@ -1373,6 +1395,8 @@ export default function TodayPage() {
         </div>
       ) : null}
 
+      {nextPreviewAllowed && !workout && !workoutLoading && !undoRecovery ? <NextWorkout accountToken={getToken()} timeBudgetMinutes={sessionTimeGoal} enabled onMoved={() => { void beginWorkoutLoad(); }} canMoveNow={() => !undoRecoveryRef.current && !undoInFlight.current && !isBeginWorkoutLoadInProgress.current} /> : null}
+
       {undoRecovery && (!workout || undoRecovery.scope !== occurrenceStorageKey("attempt", workout) || !workout.exercises.some(item => exerciseKey(item) === undoRecovery.exerciseIdentity)) ? <div role="alert"><p>An undo for a previous workout is unconfirmed. This workout is read-only until the original undo is reconciled.</p><Button disabled={priorUndoBusy} onClick={recoverPriorUndo}>Retry original undo</Button></div> : null}
       {sorenessLookupFailed && workout && occurrenceVerified && !executionVisible ? (
         <div className="main-card main-card--shell space-y-2 ui-body-sm" role="status">
@@ -1389,6 +1413,7 @@ export default function TodayPage() {
             {workout.title} · {workoutProgress?.completed ?? 0}/{workoutProgress?.planned ?? 0} sets
           </p>
 
+          {!undoRecovery ? <WorkoutWorkload exercises={workout.exercises} timeBudgetMinutes={sessionTimeGoal} mode={workloadMode(workout.program_template_id ?? workout.selected_program_id, Boolean(workout.customized))} /> : null}
           <ul className="space-y-1.5" aria-label="Exercise list">
             {(workout.exercises ?? []).map((exercise) => {
               const selectedName = resolveExerciseName(exercise, swapIndexByExercise);

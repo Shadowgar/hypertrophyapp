@@ -162,6 +162,8 @@ export type WorkoutLiveRecommendation = {
 };
 
 export type WorkoutSession = {
+  program_template_id?: string | null;
+  selected_program_id?: string | null;
   customized?: boolean | {proposal_id?:string};
   workout_occurrence_id?: string;
   session_id: string;
@@ -211,6 +213,7 @@ export type WorkoutProgress = {
 };
 
 export type Profile = {
+  session_time_budget_minutes?: number | null;
   email: string;
   initial_setup_available?: boolean;
   setup_status?: "initial" | "planning" | "established";
@@ -1100,9 +1103,30 @@ function parseApiErrorMessage(raw: string, status: number): string {
   return fallback;
 }
 
+export type NextPlannedWorkout = {
+  plan_id: string;
+  workout_occurrence_id: string;
+  original_date: string;
+  local_today: string;
+  timezone: string;
+  program_template_id: string;
+  placement_revision: number;
+  session: WorkoutSession;
+  can_move: boolean;
+  blocked_reason: string | null;
+  preview_digest: string | null;
+};
+
+
 export const api = {
   health: () => request<{ status: string; date: string; version?: string }>("/health"),
   getTodayWorkout: () => request<WorkoutSession>("/workout/today"),
+  getNextPlannedWorkout: () => request<NextPlannedWorkout | null>("/workout/next-planned"),
+  moveNextPlannedWorkout: (payload: {
+    plan_id: string; workout_occurrence_id: string; expected_original_date: string;
+    expected_local_today: string; expected_placement_revision: number;
+    expected_preview_digest: string; confirmed: true;
+  }) => request<GeneratedWeekPlan>("/workout/next-planned/move", {method: "POST", body: JSON.stringify(payload)}),
   decideAuthoredSubstitution: (workoutId: string, payload: { command_id: string; exercise_id: string;
     exercise_occurrence_id: string; expected_revision: number; expected_source_lineage: Record<string, unknown>;
     action: "report" | "confirm" | "decline"; reason?: "equipment" | "pain" | "safety"; option_id?: string }) =>

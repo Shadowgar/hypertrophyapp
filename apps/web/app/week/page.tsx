@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Disclosure } from "@/components/ui/disclosure";
+import { WorkoutWorkload, workloadMode } from "@/components/workout-workload";
 import { api, getToken, getProgramDisplayName, savedSetupValue, type GeneratedWeekExercise, type GeneratedWeekPlan, type HistoryOccurrenceStatus, type ProgramTemplateOption, type Profile, type SchedulingContext, type SelectedDatePlanRequest } from "@/lib/api";
 import { datesInWeek, formatCalendarDate } from "@/lib/calendar-date";
 import { useAppearance } from "@/components/appearance-provider";
@@ -656,7 +657,8 @@ export default function WeekPage() {
       <h2 className="ui-title-section">{preview ? "Preview your sessions" : "Your sessions"}</h2>
       {visiblePlan?.sessions.length ? visiblePlan.sessions.map((session) => <article className="ux-week-session" key={session.workout_occurrence_id ?? session.session_id}>
         <p className="ui-meta">{formatCalendarDate(session.date)}</p><h3>{session.title}</h3>
-        <p className="ui-body-sm">{session.exercises.length} exercises · {session.exercises.reduce((total, exercise) => total + exercise.sets, 0)} planned working sets</p>
+        <WorkoutWorkload exercises={session.exercises} timeBudgetMinutes={profile?.session_time_budget_minutes}
+          mode={workloadMode(visiblePlan.program_template_id, Boolean(visiblePlan.customized))} />
         {!preview ? <p className="ui-meta">{progressLabel(progress[session.workout_occurrence_id ?? ""], progressState)}</p> : null}
         {preview ? <p className="ui-meta">Preview · not activated</p> : session.date === context?.local_today ? <a className="ux-button ux-button-secondary px-4" href="/today">Open scheduled workout</a> : <p className="ui-meta">{session.date < (context?.local_today ?? "") ? "Past scheduled date · see History for performed sets" : "Scheduled · prescriptions below"}</p>}
       </article>) : <p className="ui-body-sm">{context ? "No active workouts for this week. Select dates and preview your plan." : contextState === "error" ? "Scheduled workouts are unavailable until the week loads." : "Loading scheduled workouts…"}</p>}

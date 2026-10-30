@@ -2,7 +2,7 @@
 
 This module changes session placement only. It owns no exercise selection,
 substitution or set prescription. Optional dates activate the declared advisory
-calendar-gap objective; omitted dates retain the M1-C allocation policy.
+workload-first calendar-gap objective; omitted dates retain the M1-C allocation policy.
 """
 from copy import deepcopy
 from itertools import combinations
@@ -16,8 +16,8 @@ class AuthoredAllocationInfeasible(ValueError):
 
 
 DATE_OBJECTIVE = {
-    "version": "selected-date-lexical-v1",
-    "order": ["consecutive_overlapping_working_sets", "working_set_range", "target_squared_deviation", "source_cuts"],
+    "version": "selected-date-workload-first-v2",
+    "order": ["working_set_range", "target_squared_deviation", "consecutive_overlapping_working_sets", "source_cuts"],
     "overlap_unit": "sum of minimum primary-muscle attributed working sets on consecutive calendar-date edges",
     "authority": "advisory scheduling policy; no recovery or clinical qualification",
 }
@@ -229,7 +229,8 @@ def redistribute_authored_sessions(source_sessions, adapted_days, *, selected_da
             for context, index in ((previous_context, 0), (next_context, day_count - 1)):
                 if context is not None and context.get("exercises") is not None and abs((context["date"] - selected_dates[index]).days) == 1:
                     overlap += _overlap(profiles[index], _muscle_work(context["exercises"]))
-            score = (overlap, *score)
+            # Advisory spacing breaks equally balanced workloads only.
+            score = (*score[:2], overlap, cuts)
         if best is None or score < best[0]:
             best = (score, boundaries, actuals)
     if best is None:
@@ -276,8 +277,8 @@ def redistribute_authored_sessions(source_sessions, adapted_days, *, selected_da
             "neighbor_unknown_primary_muscle_slot_counts": {side: sum(not exercise.get("primary_muscles") for exercise in context["exercises"])
                 if context is not None and context.get("exercises") is not None else None
                 for side, context in (("previous", previous_context), ("next", next_context))},
-            "objective": {"consecutive_overlapping_working_sets": best[0][0], "working_set_range": best[0][1],
-                "target_squared_deviation": best[0][2], "source_cuts": list(best[0][3])},
+            "objective": {"working_set_range": best[0][0], "target_squared_deviation": best[0][1],
+                "consecutive_overlapping_working_sets": best[0][2], "source_cuts": list(best[0][3])},
             "grouping": "preserved" if preserve_grouping else "allocated",
             "source_digest": sha256(json.dumps([entry[2] for entry in entries], sort_keys=True, separators=(",", ":"), default=str).encode()).hexdigest(),
             "rule_digest": sha256(json.dumps(DATE_OBJECTIVE, sort_keys=True, separators=(",", ":")).encode()).hexdigest(),
