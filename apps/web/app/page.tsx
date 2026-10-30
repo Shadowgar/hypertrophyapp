@@ -89,10 +89,11 @@ export default function HomePage() {
         });
       }
       // Today is independently actionable. Optional profile/history/review/calendar reads never gate it.
-      read("workout", api.getTodayWorkout());
+      const training = api.getNextTraining();
+      read("workout", training.then(next => next.mode === "flexible" && !["active", "finish"].includes(next.action) ? null : api.getTodayWorkout()));
       read("profile", api.getProfile());
       read("analytics", api.getHistoryAnalytics(8, 24));
-      read("review", api.getWeeklyReviewStatus());
+      read("review", training.then(next => next.mode === "flexible" ? null : api.getWeeklyReviewStatus()));
       // The API prefers the account's saved timezone; this is only a first-use fallback.
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
       read("week", api.getSchedulingContext(timezone));

@@ -250,3 +250,53 @@ def test_calendar_review_cannot_invent_flexible_dose_or_adaptation(scenario, mon
         from app.models import User, WeeklyReviewCycle
         assert db.get(User, uid).days_available is None
         assert db.query(WeeklyReviewCycle).filter_by(user_id=uid).count() == 0
+
+
+def test_next_day_unreceived_command_has_definitive_rejection_but_committed_command_replays(scenario, monkeypatch):
+    small_source(monkeypatch)
+    clock(monkeypatch, datetime(2026, 10, 30, 16, tzinfo=UTC))
+    _, headers, client = scenario
+    state, _ = enrollment(client, headers)
+    started, _ = operation(client, headers, state, 'start')
+    exercise = state['session']['exercises'][0]
+    body = {'command_id': str(uuid4()), 'exercise_id': exercise['id'],
+        'exercise_occurrence_id': exercise['exercise_occurrence_id'], 'set_index': 1,
+        'reps': 8, 'weight': 20, 'set_kind': 'work', 'execution_context_id': started.json()['execution_context']['id']}
+    path = f'/workout/{state["occurrence_id"]}/log-set'
+    accepted = client.post(path, headers=headers, json=body)
+    assert accepted.status_code == 200, accepted.text
+    clock(monkeypatch, datetime(2026, 11, 2, 16, tzinfo=UTC))
+    assert next_state(client, headers)['action'] == 'resume'
+    assert client.post(path, headers=headers, json=body).json() == accepted.json()
+    rejected = client.post(path, headers=headers, json={**body, 'command_id': str(uuid4()), 'set_index': 2})
+    assert rejected.status_code == 409
+    assert rejected.json()['detail']['code'] == 'performance_context_not_current'
+
+
+def test_legacy_read_repair_rechecks_mode_after_waiting_for_account_lock(scenario, monkeypatch):
+    uid, _, _ = scenario
+    from app.routers import plan
+    from app.models import User, WorkoutPlan
+    from sqlalchemy import update
+    from datetime import date
+    with SessionLocal() as db:
+        user = db.get(User, uid)
+        original = {'program_template_id': user.selected_program_id, 'sessions': []}
+        row = WorkoutPlan(user_id=uid, week_start=date(2026, 10, 26), split='full_body', phase='accumulation', payload=deepcopy(original))
+        db.add(row)
+        db.commit()
+        db.refresh(user)
+        locks=[]
+        def grant_after_mode_change(session, user_id):
+            locks.append(user_id)
+            # Models a stale authenticated User while the preceding lock holder
+            # saves Flexible mode. The identity map must be refreshed after lock.
+            session.execute(update(User).where(User.id == user_id).values(schedule_mode='flexible'),
+                execution_options={'synchronize_session': False})
+        monkeypatch.setattr(plan, 'lock_history_user', grant_after_mode_change)
+        def forbidden_builder(**kwargs):
+            pytest.fail('Legacy GET reached regeneration using stale calendar ownership')
+        monkeypatch.setattr(plan, '_build_week_plan_runtime_for_user', forbidden_builder)
+        assert plan._ensure_latest_authored_plan_current_if_needed(db=db, current_user=user) is None
+        assert locks == [uid]
+        assert db.get(WorkoutPlan, row.id).payload == original

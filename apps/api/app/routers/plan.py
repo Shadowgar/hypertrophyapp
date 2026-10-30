@@ -2229,6 +2229,11 @@ def _ensure_latest_authored_plan_current_if_needed(
     db: Session,
     current_user: User,
 ) -> WorkoutPlan | None:
+    # This legacy GET can repair a saved plan. Serialize its entire decision
+    # with enrollment/conversion and discard an authenticated User snapshot
+    # loaded before another writer acquired the account lock.
+    lock_history_user(db, current_user.id)
+    db.refresh(current_user)
     if current_user.schedule_mode == "flexible":
         return None
     selected_template_id = resolve_selected_program_binding_id(current_user.selected_program_id)

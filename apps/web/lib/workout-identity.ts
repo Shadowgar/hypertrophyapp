@@ -30,6 +30,30 @@ export function pendingCommandKey(workout: string, exercise: string, slot: strin
 const memoryCommands = new Map<string, string>();
 const memoryPayloads = new Map<string, unknown>();
 
+/** Enumerate exact account-owned Flexible attempts without needing an active runner. */
+export function pendingFlexibleSets<T extends object>(scope: string): Array<{key:string;workoutId:string;payload:T}> {
+  const prefix = `hypertrophy_occurrence_v2:command:hypertrophy_occurrence_v3:${scope}:attempt:`;
+  const keys = new Set(memoryPayloads.keys());
+  try {
+    for (let index=0; index<localStorage.length; index++) {
+      const key=localStorage.key(index);
+      if(key?.endsWith(':payload')) keys.add(key.slice(0,-8));
+    }
+  } catch { /* Memory-retained commands are still available. */ }
+  const pending:Array<{key:string;workoutId:string;payload:T}>=[];
+  for (const key of keys) {
+    if(!key.startsWith(prefix))continue;
+    const workoutId=key.slice(prefix.length).split(':')[0];
+    const payload=pendingLogPayload<Record<string,unknown>>(key);
+    if(/^[\w-]+$/.test(workoutId) && payload && typeof payload.command_id==='string'
+        && typeof payload.execution_context_id==='string' && typeof payload.exercise_id==='string'
+        && typeof payload.set_index==='number' && typeof payload.reps==='number' && typeof payload.weight==='number') {
+      pending.push({key,workoutId,payload:payload as T});
+    }
+  }
+  return pending;
+}
+
 /** Pending writes remain blocking even when browser persistence could not be written. */
 export function hasPendingWorkoutCommands(scope: string): boolean {
   const matches = (key: string) => key.startsWith("hypertrophy_occurrence_v2:command:")

@@ -7,6 +7,7 @@ import { accountScope } from '@/lib/appearance';
 import { acknowledgeLogCommand, hasPendingWorkoutCommands, pendingLogPayload, retainLogPayload } from '@/lib/workout-identity';
 import { WorkoutWorkload } from '@/components/workout-workload';
 import { formatCalendarDate } from '@/lib/calendar-date';
+import {PendingTrainingSets} from '@/components/pending-training-sets';
 
 export function trainingRecoveryBlocked(token: string | null): boolean {
   try {
@@ -117,6 +118,7 @@ export function FlexibleTraining({ accountToken, onResolved, onContinue, canChan
     {next.coverage?<p>{next.coverage.completed} / {next.coverage.required} required working sets recorded{next.coverage.known?'':'; coverage needs review'}.</p>:null}
     {next.blockers?.map(blocker=><p key={blocker.code} role="status">{blocker.message??blocker.code.replaceAll('_',' ')}{blocker.earliest_day?` Earliest eligible day: ${formatCalendarDate(blocker.earliest_day)}.`:''}</p>)}
     {notice?<p role="status">{notice}</p>:null}
+    <PendingTrainingSets key={accountToken} accountToken={accountToken} onRecovered={message=>{setNotice(message);setReload(value=>value+1);}}/>
     {trainingRecoveryBlocked(accountToken)?<p role="alert">Resolve the pending set or undo before changing training.</p>:null}
     {pending?<button className="ux-button ux-button-primary" disabled={busy} onClick={()=>void execute(pending)}>Retry original training command</button>:<div className="flex flex-wrap gap-2">
       {next.action==='start'?<button className="ux-button ux-button-primary" onClick={()=>confirm('start')}>Start next workout</button>:null}

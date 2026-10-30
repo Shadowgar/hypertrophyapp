@@ -384,6 +384,7 @@ function WorkoutSummaryCard({ summary }: Readonly<{ summary: WorkoutSummary | nu
 }
 
 function ExerciseDetailOverlay({
+  flexible,
   exercise,
   navigation,
   onSelectExercise,
@@ -416,6 +417,7 @@ function ExerciseDetailOverlay({
   warmupCommandScope,
   effectiveSets,
 }: Readonly<{
+  flexible?: boolean;
   exercise: WorkoutExercise;
   navigation: Array<{id:string;name:string;completed:number;total:number}>;
   onSelectExercise: (id:string)=>void;
@@ -450,7 +452,7 @@ function ExerciseDetailOverlay({
 }>) {
 
   const bodyweight = isBodyweightAuthored(exercise) || Boolean(exercise.customized && exercise.load_semantics === "bodyweight");
-  return <AtlasRunner exercise={exercise} name={selectedName} completed={completed} scope={warmupCommandScope}
+  return <AtlasRunner flexible={flexible} exercise={exercise} name={selectedName} completed={completed} scope={warmupCommandScope}
     guidance={loadIntelligence} context={loadContext} receipts={effectiveSets} navigation={navigation} onSelect={onSelectExercise}
     onSaveCalibration={exercise.customized ? undefined : onSaveCalibration}
     onClose={onClose} submit={onSetComplete} onUndo={onUndoLastSet} undoRecovery={undoRecovery} onCorrect={onCorrectSet} rest={globalRestTimer} endRest={onClearGlobalRestTimer}
@@ -533,6 +535,7 @@ export default function TodayPage() {
   const isCurrentPageRead = useCallback((scope: PageReadScope) =>
     mounted.current && scope.epoch === pageReadEpoch.current && scope.token === getToken(), []);
   const [trainingDecision, setTrainingDecision] = useState<TrainingNext | null>(null);
+  const [trainingChecked, setTrainingChecked] = useState(false);
   const [workout, setWorkout] = useState<WorkoutSession | null>(null);
   const currentWorkout = useRef(workout);
   useEffect(() => { currentWorkout.current = workout; }, [workout]);
@@ -612,6 +615,7 @@ export default function TodayPage() {
   const sorenessDismissedDate = useRef<string | null>(null);
   const sorenessPromptDate = useRef<string | null>(null);
   const trainingResolved = useCallback((next: TrainingNext | null) => {
+    setTrainingChecked(true);
     setTrainingDecision(next);
     if (next?.mode === "flexible" && !["active", "finish"].includes(next.action)) {
       invalidatePageReads();
@@ -669,6 +673,7 @@ export default function TodayPage() {
       sorenessPromptDate.current = null;
       setWorkout(null);
       setTrainingDecision(null);
+      setTrainingChecked(false);
       setNextPreviewAllowed(false);
       setOccurrenceVerified(false);
       setSelectedExerciseId(null);
@@ -1041,12 +1046,12 @@ export default function TodayPage() {
   }, [loadToday, resolveLocalToday, resetSorenessForm, showSorenessModal, capturePageRead, isCurrentPageRead]);
 
   useEffect(() => {
-    if ((trainingDecision?.mode === "flexible" && !["active", "finish"].includes(trainingDecision.action)) || health !== "ok" || workout !== null || hasAutoLoadStarted.current) {
+    if (!trainingChecked || (trainingDecision?.mode === "flexible" && !["active", "finish"].includes(trainingDecision.action)) || health !== "ok" || workout !== null || hasAutoLoadStarted.current) {
       return;
     }
     hasAutoLoadStarted.current = true;
     beginWorkoutLoad();
-  }, [health, workout, beginWorkoutLoad, accountGeneration, trainingDecision]);
+  }, [health, workout, beginWorkoutLoad, accountGeneration, trainingDecision, trainingChecked]);
 
   useEffect(() => {
     if (!nextPreviewAllowed || !getToken()) return;
@@ -1510,6 +1515,7 @@ export default function TodayPage() {
 
         return (
           <ExerciseDetailOverlay
+            flexible={trainingDecision?.mode === "flexible"}
             key={`${exerciseKey(exercise)}/${exercise.performed_variant?.option_id ?? "source"}`}
             exercise={exercise.customized?{...exercise,customized_load_decision:(recommendation?.decision_trace?.load_decision as typeof exercise.customized_load_decision)??exercise.customized_load_decision}:exercise}
             navigation={workout.exercises.map(item=>({id:exerciseKey(item),name:resolveDisplayExerciseName(item,resolveExerciseName(item,swapIndexByExercise),weakAreas),completed:completedSetsByExercise[exerciseKey(item)]??0,total:item.sets}))}

@@ -153,3 +153,37 @@ test.each(['finished','retired'])('terminal %s state offers an explicit new-prog
  serve({...decision,action:'none',session:null,state});render(<HomePage/>);
  expect(await screen.findByRole('link',{name:'Review new Flexible program'})).toHaveAttribute('href','/training/setup');
 });
+
+test.each(['retained','expired','unknown'])('next-day pending-set recovery is reachable before Resume: %s',async outcome=>{
+ const {retainLogPayload,pendingLogPayload,acknowledgeLogCommand}=await import('@/lib/workout-identity');
+ const key='hypertrophy_occurrence_v2:command:hypertrophy_occurrence_v3:flexible-web:attempt:occ-a:press-a:work:1';
+ const payload={command_id:`lost-${outcome}`,execution_context_id:'old-day-context',exercise_id:'press',exercise_occurrence_id:'press-a',set_index:1,reps:8,weight:20};
+ retainLogPayload(key,payload);
+ serve({...decision,action:'resume',local_day:'2026-11-02'});
+ const fetcher=vi.mocked(fetch).getMockImplementation()!;
+ const retries:unknown[]=[];
+ vi.mocked(fetch).mockImplementation((input,init)=>{
+  if(String(input).endsWith('/workout/occ-a/log-set')){
+   retries.push(JSON.parse(String(init?.body)));
+   return Promise.resolve(outcome==='retained'?Response.json({id:'saved-set',command_id:payload.command_id,workout_occurrence_id:'occ-a'}):Response.json({detail:{code:outcome==='expired'?'performance_context_not_current':'unknown',message:'Original context unavailable'}},{status:outcome==='expired'?409:503}));
+  }
+  return fetcher(input,init);
+ });
+ render(<HomePage/>);
+ fireEvent.click(await screen.findByRole('button',{name:'Resume workout'}));
+ expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+ fireEvent.click(await screen.findByRole('button',{name:'Retry original set'}));
+ await waitFor(()=>expect(retries).toEqual([payload]));
+ if(outcome==='unknown'){
+  await screen.findByText(/Set result remains unknown/);
+  expect(pendingLogPayload(key)).toEqual(payload);
+  fireEvent.click(screen.getByRole('button',{name:'Resume workout'}));
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+ }else{
+  await screen.findByText(outcome==='retained'?/Original set receipt confirmed/:/Original set was not recorded/);
+  expect(pendingLogPayload(key)).toBeNull();
+  fireEvent.click(await screen.findByRole('button',{name:'Resume workout'}));
+  expect(screen.getByRole('dialog')).toBeInTheDocument();
+ }
+ acknowledgeLogCommand(key);
+});

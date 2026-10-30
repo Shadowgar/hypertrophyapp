@@ -374,7 +374,10 @@ def validate_performance(db, user, occurrence, context_id):
     if (not sequence or sequence.id != occurrence.sequence_id or sequence.cursor != occurrence.source_position
             or occurrence.execution_state != 'active' or not context_id or context_id != context.get('id')
             or context.get('local_day') != str(_day(sequence)) or context.get('timezone') != sequence.timezone):
-        raise HTTPException(409, 'Confirm Start or Resume for this occurrence and actual local day before recording work')
+        # Called only after exact retained-command replay under the User lock.
+        # This rejected context cannot be reused by a later Resume (new UUID).
+        raise HTTPException(409, {'code': 'performance_context_not_current',
+            'message': 'Original set was not recorded: its execution context is no longer current. Confirm Start or Resume before recording new work.'})
     state = next_training(db, user, sequence)
     if state['action'] == 'blocked':
         raise HTTPException(409, {'message': 'A mandatory training dependency needs reconciliation', 'blockers': state['blockers']})

@@ -1,18 +1,18 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, expect, test, vi } from 'vitest';
 import TodayPage from '@/app/today/page';
 const token=`header.${btoa(JSON.stringify({sub:'flexible-today'}))}.signature`;
 const date='2026-10-30';
-function fixture(options:{resume?:boolean;lost?:boolean}={}){
+function fixture(options:{resume?:boolean;lost?:boolean;trainingPending?:Promise<void>}={}){
  let started=!options.resume;let count=0;let ctx='execution-original';
- const writes:Array<Record<string,unknown>>=[];const commands:Array<Record<string,unknown>>=[];
+ const writes:Array<Record<string,unknown>>=[];const commands:Array<Record<string,unknown>>=[];const reads:string[]=[];
  const workout=()=>({session_id:'native-a',workout_occurrence_id:'native-occ-a',title:'Source workout A',date,execution_context:{id:ctx,local_day:date,timezone:'America/New_York'},exercises:[{id:'press',exercise_occurrence_id:'slot-a',name:'Flexible Source Press',sets:3,rep_range:[8,12],recommended_working_weight:20}]});
  const next=()=>({mode:'flexible',sequence_id:'seq-a',revision:2,occurrence_id:'native-occ-a',action:started?'active':'resume',state:started?'active':'paused',session:workout(),local_day:date,digest:'evidence-digest',execution_context:started?workout().execution_context:null,coverage:{known:true,required:3,completed:count,complete:false,missing:[{exercise_occurrence_id:'slot-a',set_index:2,name:'Flexible Source Press'}]}});
  vi.stubGlobal('fetch',vi.fn(async(input,init)=>{
-  const url=String(input);
+  const url=String(input); reads.push(url);
   if(url.endsWith('/health'))return Response.json({status:'ok'});
-  if(url.endsWith('/training/next'))return Response.json(next());
+  if(url.endsWith('/training/next')){await options.trainingPending;return Response.json(next());}
   if(url.endsWith('/training/seq-a/resume')){commands.push(JSON.parse(String(init.body)));started=true;return Response.json(next());}
   if(url.endsWith('/training/seq-a/pause')){commands.push(JSON.parse(String(init.body)));started=false;return Response.json(next());}
   if(url.includes('/plan/scheduling-context'))return Response.json({timezone:'America/New_York',local_today:date,week_start:'2026-10-26',plan:null});
@@ -22,9 +22,20 @@ function fixture(options:{resume?:boolean;lost?:boolean}={}){
   if(url.includes('/soreness?'))return Response.json([{entry_date:date}]);
   if(url.endsWith('/log-set')){writes.push(JSON.parse(String(init.body)));if(options.lost&&writes.length===1){ctx='execution-new-day';throw new TypeError('lost acknowledgement');}count=1;return Response.json({live_recommendation:{completed_sets:1,remaining_sets:2,recommended_reps_min:8,recommended_reps_max:12,recommended_weight:20}});}
   return Response.json({});
- }));return {writes,commands};
+ }));return {writes,commands,reads};
 }
 beforeEach(()=>localStorage.setItem('hypertrophy_token',token));
+test('Today waits for the server mode before attempting calendar-style autoload',async()=>{
+ let resolve!:()=>void;
+ const trainingPending=new Promise<void>(done=>{resolve=done;});
+ const state=fixture({resume:true,trainingPending});
+ await act(async()=>{render(<TodayPage/>);});
+ await waitFor(()=>expect(state.reads.some(url=>url.endsWith('/health'))).toBe(true));
+ expect(state.reads.some(url=>url.endsWith('/workout/today'))).toBe(false);
+ await act(async()=>{resolve();});
+ await screen.findByRole('button',{name:'Resume workout'});
+ expect(state.reads.some(url=>url.endsWith('/workout/today'))).toBe(false);
+});
 test('Resume explicitly binds the day then opens the same source occurrence in the existing runner',async()=>{
  const state=fixture({resume:true});render(<TodayPage/>);
  fireEvent.click(await screen.findByRole('button',{name:'Resume workout'}));

@@ -562,6 +562,11 @@ def log_set(workout_id: str, payload: WorkoutSetLogRequest, db: DbSession, curre
         if replay:
             return replay
     occurrence, session = resolve_occurrence(db, current_user.id, workout_id, _list_workout_plans(db, current_user.id))
+    from ..flexible_training import validate_performance
+    if payload.command_id:
+        # An exact retained receipt already returned above. Resolve expired-day
+        # pending commands before unrelated current equipment/consent checks.
+        validate_performance(db, current_user, occurrence, payload.execution_context_id)
     exercise = resolve_exercise(session, payload.exercise_id, payload.exercise_occurrence_id)
     if not exercise.get('customized') and any(getattr(payload,k) is not None for k in ('actual_rir','technique_quality','pain')):
         raise HTTPException(422,'These evidence fields apply only to Customized workouts')
@@ -585,8 +590,8 @@ def log_set(workout_id: str, payload: WorkoutSetLogRequest, db: DbSession, curre
     replay = _replay_command(db, current_user.id, command_id, digest)
     if replay:
         return replay
-    from ..flexible_training import validate_performance
-    validate_performance(db, current_user, occurrence, payload.execution_context_id)
+    if not payload.command_id:
+        validate_performance(db, current_user, occurrence, payload.execution_context_id)
     try:
         return _apply_log_set(workout_id, payload, db, current_user, occurrence, session, exercise, command_id, digest)
     except IntegrityError:

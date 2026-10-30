@@ -841,10 +841,11 @@ export type HistoryAnalyticsResponse = {
   volume_heatmap: HistoryVolumeHeatmap;
 };
 
-export type HistoryDayStatus = "ended_early" | "amended_incomplete" | "complete" | "partial" | "scheduled" | "rest" | "unknown";
+export type HistoryDayStatus = "complete" | "partial" | "scheduled" | "rest" | "unknown";
+export type HistorySessionStatus = HistoryDayStatus | "ended_early" | "amended_incomplete" | "active" | "paused" | "planned";
 export type HistoryOccurrenceStatus = {
   workout_occurrence_id: string; workout_id?: string; title: string; program_id?: string | null;
-  status: HistoryDayStatus; working_sets_completed: number; working_sets_planned: number | null;
+  status: HistorySessionStatus; working_sets_completed: number; working_sets_planned: number | null;
 };
 export type HistoryCalendarDay = {
   status?: HistoryDayStatus;
