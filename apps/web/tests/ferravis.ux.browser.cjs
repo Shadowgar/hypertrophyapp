@@ -21,7 +21,7 @@ assert.ok(viewports.length, 'At least one known viewport is required');
    const handheld = name === 'mobile' || name === 'landscape';
    const context = await browser.newContext({ ...(handheld ? devices['iPhone 13'] : {}), viewport: { width, height }, reducedMotion: 'reduce' });
    const requests = [], errors = [], draftIsolation = []; let failSave = true, saveCount = 0, setupProfile = null;
-   let holdProgress = false, releaseProgress;
+   let holdProgress = false; const pendingProgress = [];
    await context.route('**/*', async route => {
     const url = new URL(route.request().url());
     if (url.origin !== base.origin) return route.abort();
@@ -39,7 +39,7 @@ assert.ok(viewports.length, 'At least one known viewport is required');
     else if (path === '/weekly-review/status') data = { today_is_sunday: false, review_required: false };
     else if (path === '/workout/today') data = { session_id: 'fixture-session', workout_occurrence_id: 'fixture-occurrence', title: 'Full Body Workout', date: '2026-10-29', exercises: [{ id: 'press', name: 'Bench Press', sets: 3, rep_range: [8, 12], recommended_working_weight: 40 }] };
     else if (path.endsWith('/progress')) {
-     if (holdProgress) await new Promise(resolve => { releaseProgress = resolve; });
+     if (holdProgress) await new Promise(resolve => { pendingProgress.push(resolve); });
      data = { completed_total: 0, planned_total: 3, percent_complete: 0, exercises: [] };
     }
     else if (path === '/soreness') {
@@ -103,7 +103,7 @@ assert.ok(viewports.length, 'At least one known viewport is required');
        // Positive control: this is a valid old-account draft, not malformed test data.
        await page.getByRole('heading', { name: 'A few essentials' }).waitFor();
        assert.equal(await page.getByLabel('Training days per week').inputValue(), '5');
-       assert.equal(await page.getByLabel('Training location', { exact: true }).inputValue(), 'home');
+       assert.equal(await page.getByLabel('Training location').inputValue(), 'home');
        setupProfile = { id: newId, email, name: 'Synthetic reset fixture', initial_setup_available: true };
        await page.evaluate(token => localStorage.setItem('hypertrophy_token', token), session(newId));
        await page.reload({ waitUntil: 'networkidle' });
@@ -114,7 +114,7 @@ assert.ok(viewports.length, 'At least one known viewport is required');
       await activate(page.getByRole('button', { name: 'Keep Auto preference' }));
       await page.getByRole('heading', { name: 'A few essentials' }).waitFor();
       for (const label of ['Age', 'Body weight (lb)', 'Training days per week', 'Training location']) {
-       assert.equal(await page.getByLabel(label, { exact: true }).inputValue(), '', `${kind} leaked ${label}`);
+       assert.equal(await page.getByLabel(label).inputValue(), '', `${kind} leaked ${label}`);
       }
       await page.screenshot({ path: `${out}/${engine}-${name}-${kind}-defaults.png`, fullPage: true });
       await page.getByLabel('Age', { exact: true }).fill('34');
@@ -154,27 +154,39 @@ assert.ok(viewports.length, 'At least one known viewport is required');
     if (height <= 600) assert.equal(scrollable, true, 'Short viewport should scroll inputs');
     await body.focus(); await page.keyboard.press('Shift+Tab');
     assert.equal(await skip.evaluate(el => el === document.activeElement), true, 'Backward Tab did not wrap');
-    await body.focus(); await page.keyboard.press('PageDown'); await page.waitForTimeout(200);
-    if (scrollable) assert.ok(await body.evaluate(el => el.scrollTop > 0), 'Keyboard cannot scroll inputs');
+    // This WebKit runner does not map PageDown to overflow scrolling; its
+    // native ArrowDown behavior does. Assert actual scroll, without scripting it.
+    await body.focus(); await page.keyboard.press(engine === 'webkit' ? 'ArrowDown' : 'PageDown');
+    if (scrollable) await page.waitForFunction(el => el.scrollTop > 0, await body.elementHandle());
     await body.evaluate(el => { el.scrollTop = 0; });
     const oldScroll = await page.evaluate(() => window.scrollY);
-    const bodyBox = await body.boundingBox(); await page.mouse.move(bodyBox.x + bodyBox.width / 2, bodyBox.y + bodyBox.height / 2); await page.mouse.wheel(0, 1000);
-    await page.waitForTimeout(200);
-    if (scrollable) assert.ok(await body.evaluate(el => el.scrollTop > 0), 'Inputs do not scroll');
+    const bodyBox = await body.boundingBox();
+    // Playwright explicitly rejects mouse.wheel in mobile WebKit. Desktop
+    // engines cover wheel; both engines cover keys and mobile touch controls.
+    if (!(engine === 'webkit' && handheld)) {
+     await page.mouse.move(bodyBox.x + bodyBox.width / 2, bodyBox.y + bodyBox.height / 2); await page.mouse.wheel(0, 1000);
+     if (scrollable) await page.waitForFunction(el => el.scrollTop > 0, await body.elementHandle());
+    }
     assert.equal(await page.evaluate(() => window.scrollY), oldScroll, 'Background scrolled');
     const afterScroll = await save.boundingBox(); assert.ok(Math.abs(afterScroll.y - initialSave.y) < 1, 'Footer moved while scrolling');
     if (engine === 'chromium' && handheld && scrollable) {
      await body.evaluate(el => { el.scrollTop = 0; });
      const cdp = await context.newCDPSession(page);
-     // Browser-native touch scroll; WebKit is checked with touch controls and wheel/keyboard separately.
-     await cdp.send('Input.synthesizeScrollGesture', {
-      x: bodyBox.x + bodyBox.width / 2, y: bodyBox.y + bodyBox.height * .8,
-      yDistance: -Math.min(180, bodyBox.height * .6), gestureSourceType: 'touch', speed: 300,
-     });
+     // Browser-native touch scroll; mobile WebKit covers touch controls/keyboard.
+     const x = bodyBox.x + 24, y = bodyBox.y + bodyBox.height * .8;
+     const distance = Math.min(180, bodyBox.height * .6);
+     await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+     for (let step = 1; step <= 8; step++) {
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x, y: y - distance * step / 8 }] });
+      await page.waitForTimeout(20);
+     }
+     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+     await page.waitForTimeout(200);
      await cdp.detach();
      assert.ok(await body.evaluate(el => el.scrollTop > 0), 'Touch gesture cannot scroll inputs');
     }
-    await page.mouse.move(5, 5); await page.mouse.wheel(0, 1000); await page.waitForTimeout(200);
+    if (engine === 'webkit' && handheld) await page.touchscreen.tap(5, 5);
+    else { await page.mouse.move(5, 5); await page.mouse.wheel(0, 1000); await page.waitForTimeout(200); }
     assert.equal(await page.evaluate(() => window.scrollY), oldScroll, 'Backdrop wheel scrolled background');
     await dialog.getByLabel('Optional soreness notes').fill('Synthetic check only');
     const keyboardHeight = name === 'landscape' ? 180 : 340;
@@ -208,10 +220,13 @@ assert.ok(viewports.length, 'At least one known viewport is required');
      window.visualViewport.dispatchEvent(new Event('resize'));
     });
     failSave = false; await activate(save); await dialog.waitFor({ state: 'hidden' }); assert.equal(saveCount, 2);
+    // React removes the dialog before its passive cleanup restores body/focus.
+    await page.waitForFunction(() => document.body.style.position === '' && document.activeElement?.matches('[data-today-heading]'));
     assert.equal(await page.evaluate(() => document.body.style.position), '', 'Body scroll lock leaked');
     assert.equal(await page.getByRole('heading', { name: 'Today', exact: true }).evaluate(el => el === document.activeElement), true, 'Focus did not return to Today');
     await page.reload(); await page.getByRole('dialog').waitFor();
     await page.keyboard.press('Escape'); await page.getByRole('dialog').waitFor({ state: 'hidden' });
+    await page.waitForFunction(() => document.body.style.position === '' && document.activeElement?.matches('[data-today-heading]'));
     assert.equal(await page.evaluate(() => localStorage.getItem('hypertrophy_soreness_skip:2026-10-29')), '1');
     assert.equal(saveCount, 2, 'Skip wrote a soreness report');
     assert.equal(await page.getByRole('heading', { name: 'Today', exact: true }).evaluate(el => el === document.activeElement), true, 'Skip did not restore focus');
@@ -230,10 +245,10 @@ assert.ok(viewports.length, 'At least one known viewport is required');
     await page.reload({ waitUntil: 'networkidle' });
     await page.getByRole('dialog').waitFor(); holdProgress = true;
     await page.keyboard.press('Escape'); await page.getByRole('dialog').waitFor({ state: 'hidden' });
-    const resumedControl = page.getByRole('combobox', { name: 'Select exercise' });
+    const resumedControl = page.getByRole('spinbutton', { name: 'Working repetitions' });
     await resumedControl.waitFor(); await resumedControl.focus();
-    assert.equal(typeof releaseProgress, 'function', 'Progress refresh was not held');
-    holdProgress = false; releaseProgress();
+    assert.ok(pendingProgress.length > 0, 'Progress refresh was not held');
+    holdProgress = false; pendingProgress.splice(0).forEach(resolve => resolve());
     await page.waitForLoadState('networkidle');
     await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
     assert.equal(await resumedControl.evaluate(el => el === document.activeElement), true, 'Delayed progress stole focus from a resumed control');

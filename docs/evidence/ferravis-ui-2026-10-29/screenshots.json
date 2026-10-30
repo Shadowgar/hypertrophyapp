@@ -1,0 +1,55 @@
+{
+  "source": "Synthetic loopback-only fixtures; baseline8693ede and production-built38db151. BrowserCSSviewports recorded in README; handhelddevicePixelRatio3. Screenshots unedited.",
+  "files": [
+    {
+      "file": "screenshots/before-desktop-login.png",
+      "sha256": "b836487b68b62800b8774d89e870d1aa6fe701dde1e913c600962b7e2299420d",
+      "bytes": 52440
+    },
+    {
+      "file": "screenshots/after-desktop-login.png",
+      "sha256": "4dae5013e431fb56ec6f98c9937894358c2f81a347a636e13d5c3ae16f384127",
+      "bytes": 50233
+    },
+    {
+      "file": "screenshots/before-mobile-login.png",
+      "sha256": "e229859d8deed7022248ad999096687f24409384abf8b10fe31350e48178af69",
+      "bytes": 28477
+    },
+    {
+      "file": "screenshots/after-mobile-login.png",
+      "sha256": "e6929604a7f636095c953f275249958f6ba74c716792d128405efd6a4e2a6abd",
+      "bytes": 93205
+    },
+    {
+      "file": "screenshots/before-short-desktop-soreness.png",
+      "sha256": "878401817b5b8c61f4f66a305174960fdcb6538057eb31070ea65a941c4d9569",
+      "bytes": 30724
+    },
+    {
+      "file": "screenshots/after-short-desktop-soreness.png",
+      "sha256": "86222c7784575772a77f6cd3e6b5cf32f5a2e6aedcb7d927c95f1a9bc9113070",
+      "bytes": 59150
+    },
+    {
+      "file": "screenshots/before-landscape-soreness.png",
+      "sha256": "924c4a7a1cfcea3674fd70a9299bb4b14296a619278e0b753b5c5ee18ff33e9d",
+      "bytes": 21312
+    },
+    {
+      "file": "screenshots/after-landscape-soreness.png",
+      "sha256": "52582fa055c71caf4b683380c1c421699dcb882469986e439e588ca817a3d6c2",
+      "bytes": 128380
+    },
+    {
+      "file": "screenshots/before-mobile-soreness.png",
+      "sha256": "0baa3509f1059dc6e023b0662d898b1b88045a0a82360324560690393f9e87aa",
+      "bytes": 40079
+    },
+    {
+      "file": "screenshots/after-mobile-soreness.png",
+      "sha256": "31ecca6ed649e86445bf182372b814cb94a4def510c60908a9f69396e942f6f0",
+      "bytes": 139546
+    }
+  ]
+}
