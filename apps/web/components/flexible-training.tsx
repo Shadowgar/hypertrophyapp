@@ -48,7 +48,9 @@ export function FlexibleTraining({ accountToken, onResolved, onContinue, canChan
     const current=()=>active&&generation.current===epoch&&getToken()===accountToken;
     setReadFailed(false);setRetired(false);setNext(null);setOperation(null);setLoading(true);setBusy(false);inFlight.current=false;
     setPending(pendingLogPayload<RetainedTrainingCommand>(commandKey));
-    if(!accountToken){setLoading(false);return;}
+    // With no account, the existing authenticated routes own sign-in rejection;
+    // there is no private sequence decision to wait for.
+    if(!accountToken){setLoading(false);callbacks.current.onResolved?.(null);return;}
     void api.getNextTraining().then(value=>{
       if(!current())return;
       // Old calendar clients may have no sequence; never infer Flexible from a date plan.
