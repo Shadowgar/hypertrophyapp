@@ -38,6 +38,7 @@ test.each([
 
   // @ts-ignore
   globalThis.fetch.mockImplementation((input: RequestInfo | URL) => {
+    if (resolveUrl(input).endsWith("/training/next")) return Promise.resolve(Response.json({ mode: "calendar", action: "none" }));
     const url = resolveUrl(input);
 
     if (url.endsWith("/profile")) {
@@ -203,6 +204,7 @@ test.each([
 test("home monitor load remains unknown instead of presenting zero pounds", async () => {
   localStorage.setItem("hypertrophy_token", "synthetic-token");
   vi.mocked(globalThis.fetch).mockImplementation(async input => {
+    if (resolveUrl(input).endsWith("/training/next")) return Response.json({ mode: "calendar", action: "none" });
     if (resolveUrl(input).endsWith("/workout/today")) return Response.json({ title: "Synthetic authored", exercises: [{ id: "press", name: "Monitor Press", sets: 2, rep_range: [8, 12], recommended_working_weight: null }] });
     return Response.json({ detail: "Synthetic optional dashboard data unavailable" }, { status: 503 });
   });
@@ -227,6 +229,7 @@ test("Home offers a read-only retry after workout failure without claiming a res
   localStorage.setItem("hypertrophy_token", "synthetic-token");
   let todayCalls = 0;
   vi.mocked(globalThis.fetch).mockImplementation(async (input) => {
+    if (resolveUrl(input).endsWith("/training/next")) return Response.json({ mode: "calendar", action: "none" });
     const url = resolveUrl(input);
     if (url.endsWith("/workout/today")) {
       todayCalls += 1;
@@ -255,6 +258,7 @@ test("Home offers a read-only retry after workout failure without claiming a res
 test("Home shows Week instead of inventing a workout after an acknowledged empty response", async () => {
   localStorage.setItem("hypertrophy_token", "synthetic-token");
   vi.mocked(globalThis.fetch).mockImplementation(async (input) =>
+    resolveUrl(input).endsWith("/training/next") ? Response.json({ mode: "calendar", action: "none" }) :
     resolveUrl(input).endsWith("/workout/today") ? Response.json(null) : Response.json({ detail: "Optional section unavailable" }, { status: 503 }),
   );
   render(<HomePage />);

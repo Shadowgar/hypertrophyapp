@@ -1,4 +1,5 @@
 from datetime import UTC, date, datetime, timedelta
+from uuid import uuid4
 from typing import Annotated, Any, Sequence, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -22,7 +23,7 @@ from core_engine import (
     prepare_program_switch_runtime,
     resolve_weekly_review_window,
 )
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from typing import Literal
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -189,7 +190,7 @@ def _initial_setup_available(user: User) -> bool:
     # Registration supplies name/email and a legacy mode default. Every training
     # field is NULL until explicitly saved. A partial existing profile is not a
     # blank account, and an Auto profile need not have a concrete program ID.
-    return user.program_selection_mode in (None, "manual") and all(getattr(user, field) is None for field in (
+    return user.schedule_mode != "flexible" and user.expected_sessions_per_week is None and user.program_selection_mode in (None, "manual") and all(getattr(user, field) is None for field in (
         "age", "weight", "gender", "split_preference", "selected_program_id",
         "days_available", "training_location", "equipment_profile", "weak_areas",
         "onboarding_answers", "choose_for_me_family", "choose_for_me_diagnostics",
@@ -201,7 +202,9 @@ def _initial_setup_available(user: User) -> bool:
 
 def _has_training_history(db: Session, user: User) -> bool:
     # Old plans and retained/voided receipts still establish an existing account.
-    return (db.query(WorkoutPlan.id).filter(WorkoutPlan.user_id == user.id).first() is not None
+    from ..models import TrainingSequence
+    return (db.query(TrainingSequence.id).filter_by(user_id=user.id).first() is not None
+            or db.query(WorkoutPlan.id).filter(WorkoutPlan.user_id == user.id).first() is not None
             or db.query(WorkoutSetLog.id).filter(WorkoutSetLog.user_id == user.id).first() is not None)
 
 
@@ -210,11 +213,12 @@ def _is_profile_complete(
     selected_program_id: str | None,
     split_preference: str | None,
     days_available: int | None,
+    schedule_mode: str = "calendar",
 ) -> bool:
     return bool(
         resolve_selected_program_binding_id(selected_program_id)
         and str(split_preference or "").strip()
-        and days_available is not None
+        and (days_available is not None or schedule_mode == "flexible")
     )
 
 
@@ -297,7 +301,9 @@ def get_profile(current_user: CurrentUser, db: DbSession) -> ProfileResponse:
     effective = current_scheduling_profile(db, current_user, datetime.now(UTC))
     established = _has_training_history(db, current_user)
     initial = not established and _initial_setup_available(current_user)
-    return ProfileResponse(
+    response = ProfileResponse(
+        schedule_mode=current_user.schedule_mode,
+        expected_sessions_per_week=current_user.expected_sessions_per_week,
         initial_setup_available=initial,
         setup_status="established" if established else "initial" if initial else "planning",
         # Preserve legacy response defaults while identifying actual saved answers.
@@ -307,7 +313,7 @@ def get_profile(current_user: CurrentUser, db: DbSession) -> ProfileResponse:
         scheduling_timezone=current_user.scheduling_timezone,
         effective_days_available=effective.days_available,
         effective_program_id=effective.program_id,
-        **build_profile_response_payload(
+        **{**build_profile_response_payload(
             email=current_user.email,
             name=current_user.name,
             age=current_user.age,
@@ -331,8 +337,9 @@ def get_profile(current_user: CurrentUser, db: DbSession) -> ProfileResponse:
             protein=current_user.protein,
             fat=current_user.fat,
             carbs=current_user.carbs,
-        )
+        ), **({"days_available": None} if current_user.schedule_mode == "flexible" else {})}
     )
+    return response
 
 
 @router.get("/profile/training-state")
@@ -340,6 +347,8 @@ def get_training_state(
     db: DbSession,
     current_user: CurrentUser,
 ) -> UserTrainingStateResponse:
+    if current_user.schedule_mode == "flexible":
+        raise HTTPException(409, "Use /training/next for Flexible sequence decisions; calendar frequency is not set")
     effective = current_scheduling_profile(db, current_user, datetime.now(UTC))
     latest_plan = _latest_plan(db, current_user, effective)
     prior_query = db.query(WorkoutPlan).filter(WorkoutPlan.user_id == current_user.id)
@@ -520,7 +529,15 @@ def upsert_profile(
         if not field.is_required() and key not in payload.model_fields_set
         and getattr(current_user, key, None) is not None
     }
-    payload = payload.model_copy(update=preserved)
+    try:
+        payload = ProfileUpsert.model_validate({**payload.model_dump(), **preserved})
+    except ValidationError as exc:
+        raise HTTPException(409, "Profile fields conflict with the saved scheduling mode; refresh before saving") from exc
+    from ..flexible_training import current_sequence
+    sequence = current_sequence(db, current_user.id)
+    if sequence and (payload.schedule_mode != "flexible" or payload.selected_program_id != current_user.selected_program_id
+            or payload.program_selection_mode != current_user.program_selection_mode):
+        raise HTTPException(409, "The current Flexible program owns its binding; profile edits cannot replace it")
     existing_onboarding_answers = dict(cast(dict[str, Any], current_user.onboarding_answers or {}))
     incoming_onboarding_answers = dict(payload.onboarding_answers or {})
     if (
@@ -536,12 +553,12 @@ def upsert_profile(
     was_complete = _is_profile_complete(
         selected_program_id=current_user.selected_program_id,
         split_preference=current_user.split_preference,
-        days_available=current_user.days_available,
+        days_available=current_user.days_available, schedule_mode=current_user.schedule_mode,
     )
     will_be_complete = _is_profile_complete(
         selected_program_id=payload.selected_program_id,
         split_preference=payload.split_preference,
-        days_available=payload.days_available,
+        days_available=payload.days_available, schedule_mode=payload.schedule_mode,
     )
     persistence_payload = build_profile_upsert_persistence_payload(
         name=payload.name,
@@ -567,6 +584,16 @@ def upsert_profile(
         fat=payload.fat,
         carbs=payload.carbs,
     )
+    persistence_payload.update(schedule_mode=payload.schedule_mode, expected_sessions_per_week=payload.expected_sessions_per_week)
+    if sequence and sequence.expected_sessions_per_week != payload.expected_sessions_per_week:
+        from ..models import TrainingSequenceCommand
+        from ..flexible_training import digest
+        previous = sequence.expected_sessions_per_week
+        sequence.expected_sessions_per_week = payload.expected_sessions_per_week
+        sequence.revision += 1
+        db.add(TrainingSequenceCommand(user_id=current_user.id, sequence_id=sequence.id,
+            command_id="server/frequency/" + str(uuid4()), operation="frequency", request_digest=digest(payload.expected_sessions_per_week),
+            response={"previous": previous, "expected_sessions_per_week": payload.expected_sessions_per_week, "revision": sequence.revision}))
     profile_action = "onboarding_submit" if (not was_complete and will_be_complete) else "profile_update"
     # A preference update is not authority to erase plans, corrections, consent or
     # reported observations. Existing dated plans retain their own program identity.
@@ -607,6 +634,8 @@ def program_recommendation(
     db: DbSession,
     current_user: CurrentUser,
 ) -> ProgramRecommendationResponse:
+    if current_user.schedule_mode == "flexible":
+        raise HTTPException(409, "Use /training/next for Flexible sequence decisions; calendar frequency is not set")
     effective = current_scheduling_profile(db, current_user, datetime.now(UTC))
     selected_program_id = effective.program_id
     latest_plan = _latest_plan(db, current_user, effective)
@@ -638,6 +667,8 @@ def switch_program(
 ) -> ProgramSwitchResponse:
     lock_history_user(db, current_user.id)
     db.refresh(current_user)
+    from ..flexible_training import guard_calendar
+    guard_calendar(db, current_user.id)
     effective = current_scheduling_profile(db, current_user, datetime.now(UTC))
     selected_program_id = effective.program_id
     target_program_id = resolve_selected_program_binding_id(payload.target_program_id) or payload.target_program_id
@@ -687,6 +718,10 @@ def update_program_selection(
     db: DbSession,
     current_user: CurrentUser,
 ) -> ProfileResponse:
+    lock_history_user(db, current_user.id)
+    db.refresh(current_user)
+    from ..flexible_training import guard_calendar
+    guard_calendar(db, current_user.id)
     next_binding_id = resolve_selected_program_binding_id(payload.selected_program_id)
     if payload.program_selection_mode == "manual" and not next_binding_id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="selected_program_id is required in manual mode")
@@ -834,6 +869,8 @@ def weekly_review_status(
     db: DbSession,
     current_user: CurrentUser,
 ) -> WeeklyReviewStatusResponse:
+    if current_user.schedule_mode == "flexible":
+        raise HTTPException(409, "Calendar-based weekly review cannot assess a Flexible source sequence; use actual-date History and /training/next")
     today = _weekly_review_today(current_user)
     window = resolve_weekly_review_window(today=today)
     week_start = window["week_start"]
@@ -866,6 +903,8 @@ def submit_weekly_review(
 ) -> WeeklyReviewSubmitResponse:
     lock_history_user(db, current_user.id)
     db.refresh(current_user)
+    if current_user.schedule_mode == "flexible":
+        raise HTTPException(409, "Calendar-based weekly review cannot adapt a Flexible source sequence; optional check-ins remain available")
     today = _weekly_review_today(current_user)
     submit_window = prepare_weekly_review_submit_window(
         today=today,

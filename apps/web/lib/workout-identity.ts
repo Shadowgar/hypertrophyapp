@@ -30,6 +30,18 @@ export function pendingCommandKey(workout: string, exercise: string, slot: strin
 const memoryCommands = new Map<string, string>();
 const memoryPayloads = new Map<string, unknown>();
 
+/** Pending writes remain blocking even when browser persistence could not be written. */
+export function hasPendingWorkoutCommands(scope: string): boolean {
+  const matches = (key: string) => key.startsWith("hypertrophy_occurrence_v2:command:")
+    && key.includes(`hypertrophy_occurrence_v3:${scope}:`);
+  if ([...memoryPayloads.keys()].some(matches)) return true;
+  for (let index = 0; index < localStorage.length; index++) {
+    const key = localStorage.key(index) ?? "";
+    if (key.endsWith(":payload") && matches(key)) return true;
+  }
+  return false;
+}
+
 /** Read an attempted receipt without creating a new command. */
 export function pendingLogPayload<T extends object>(key: string): T | null {
   let payload = memoryPayloads.get(key);

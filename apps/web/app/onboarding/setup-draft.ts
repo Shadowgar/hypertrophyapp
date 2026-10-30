@@ -21,12 +21,14 @@ export type SetupAnswers = {
   motivationDriver: string; obstacle: string; experienceLevel: string;
   trainingLocation: string; equipmentTags: string[]; movementRestrictions: string[];
   workoutDurationMinutes: string; daysAvailable: string; weakAreasRaw: string;
+  scheduleMode: 'calendar' | 'flexible'; expectedSessionsPerWeek: string; schedulingTimezone: string;
   selectedProgramId: string | null; chooseForMeFamily: 'full_body' | 'upper_lower' | 'push_pull';
 };
 export const emptyAnswers: SetupAnswers = {
   age: '', weightValue: '', weightUnit: 'lb', birthday: '', heightUnit: 'in', heightFeet: '', heightInches: '', heightCm: '',
   gender: '', primaryGoals: [], trainingAgeBucket: '', strengthFrequency: '', motivationDriver: '', obstacle: '', experienceLevel: '',
   trainingLocation: '', equipmentTags: [], movementRestrictions: [], workoutDurationMinutes: '', daysAvailable: '', weakAreasRaw: '',
+  scheduleMode: 'calendar', expectedSessionsPerWeek: '', schedulingTimezone: '',
   selectedProgramId: null, chooseForMeFamily: 'full_body',
 };
 const privateFields = new Set(['age', 'weightValue', 'birthday', 'heightFeet', 'heightInches', 'heightCm']);
@@ -82,7 +84,7 @@ export function readDraft(raw: string): SetupAnswers | null {
     const value = JSON.parse(raw) as Record<string, unknown>;
     if (!value || typeof value !== 'object') return null;
     const result = { ...emptyAnswers };
-    for (const key of ['trainingLocation', 'weakAreasRaw', 'daysAvailable', 'workoutDurationMinutes'] as const) {
+    for (const key of ['trainingLocation', 'weakAreasRaw', 'daysAvailable', 'workoutDurationMinutes', 'expectedSessionsPerWeek', 'schedulingTimezone'] as const) {
       if (typeof value[key] === 'string' || typeof value[key] === 'number') result[key] = String(value[key]);
     }
     for (const key of Object.keys(OPTIONAL_OPTIONS) as Array<keyof typeof OPTIONAL_OPTIONS>) {
@@ -92,6 +94,7 @@ export function readDraft(raw: string): SetupAnswers | null {
       if (Array.isArray(value[key])) result[key] = (value[key] as unknown[]).filter((choice): choice is string => typeof choice === 'string' && choices.some(([allowed]) => allowed === choice));
     }
     if (result.primaryGoals.length === 0 && GOALS.some(([goal]) => goal === value.primaryGoal)) result.primaryGoals = [String(value.primaryGoal)];
+    if (value.scheduleMode === 'flexible') result.scheduleMode = 'flexible';
     if (typeof value.selectedProgramId === 'string') result.selectedProgramId = value.selectedProgramId || null;
     if (value.weightUnit === 'kg') result.weightUnit = 'kg';
     if (value.heightUnit === 'cm') result.heightUnit = 'cm';
@@ -104,7 +107,10 @@ export function validBasics(answers: SetupAnswers): boolean {
   const age = Number(answers.age), weight = Number(answers.weightValue), days = Number(answers.daysAvailable);
   return answers.age.trim() !== '' && Number.isInteger(age) && age >= 14 && age <= 90
     && answers.weightValue.trim() !== '' && Number.isFinite(weight) && weight > 0
-    && Number.isInteger(days) && days >= 2 && days <= 5
+    && (answers.scheduleMode === 'flexible'
+      ? ['pure_bodybuilding_phase_1_full_body', 'pure_bodybuilding_phase_2_full_body'].includes(answers.selectedProgramId ?? '')
+        && (answers.expectedSessionsPerWeek === '' || (Number.isInteger(Number(answers.expectedSessionsPerWeek)) && Number(answers.expectedSessionsPerWeek) >= 1 && Number(answers.expectedSessionsPerWeek) <= 7))
+      : Number.isInteger(days) && days >= 2 && days <= 5)
     && (answers.workoutDurationMinutes === '' || (Number(answers.workoutDurationMinutes) >= 15 && Number(answers.workoutDurationMinutes) <= 240));
 }
 
@@ -112,13 +118,14 @@ export function setupPayload(answers: SetupAnswers, name: string, targets: Recor
   if (!validBasics(answers) || !name.trim()) throw new Error('Complete the required setup answers before saving.');
   const present = (value: string) => value.trim() || null;
   const numeric = (value: string) => value.trim() === '' ? null : Number(value);
-  const days = Number(answers.daysAvailable);
+  const days = answers.scheduleMode === 'flexible' ? null : Number(answers.daysAvailable);
   // Existing compatibility mapping is retained; it is not generation or consent.
-  const split = days <= 3 ? 'full_body' : days === 4 ? 'upper_lower' : 'ppl';
+  const split = days === null || days <= 3 ? 'full_body' : days === 4 ? 'upper_lower' : 'ppl';
   const time = numeric(answers.workoutDurationMinutes);
   const weakAreas = answers.weakAreasRaw.split(',').map(value => value.trim().toLowerCase()).filter(Boolean);
   return {
     name: name.trim(), age: Number(answers.age), weight: canonicalLoad(Number(answers.weightValue), answers.weightUnit),
+    ...(answers.scheduleMode === 'flexible' ? { schedule_mode: 'flexible' as const, expected_sessions_per_week: numeric(answers.expectedSessionsPerWeek), scheduling_timezone: answers.schedulingTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC' } : {}),
     gender: answers.gender, split_preference: split, days_available: days,
     training_location: present(answers.trainingLocation), equipment_profile: answers.equipmentTags,
     session_time_budget_minutes: time, movement_restrictions: answers.movementRestrictions, weak_areas: weakAreas,

@@ -117,9 +117,11 @@ function SettingsContent() {
       if (cancelled || !isCurrentSession()) return;
       setProfile(data);
       setProfileLoad("ready");
-      const currentDays = (data.effective_days_available ?? data.days_available) || 5;
-      setPreviewFromDays(Math.max(MIN_TRAINING_DAYS, Math.min(MAX_TRAINING_DAYS, currentDays)));
-      setPreviewToDays(Math.max(MIN_TRAINING_DAYS, Math.min(MAX_TRAINING_DAYS, Math.min(currentDays, 3))));
+      if (data.schedule_mode !== "flexible") {
+        const currentDays = (data.effective_days_available ?? data.days_available) || 5;
+        setPreviewFromDays(Math.max(MIN_TRAINING_DAYS, Math.min(MAX_TRAINING_DAYS, currentDays)));
+        setPreviewToDays(Math.max(MIN_TRAINING_DAYS, Math.min(MAX_TRAINING_DAYS, Math.min(currentDays, 3))));
+      }
       setEditTrainingLocation(data.training_location === "home" || data.training_location === "gym" ? data.training_location : "");
       setEditEquipment(Array.isArray(data.equipment_profile) ? data.equipment_profile : []);
     }).catch(() => {
@@ -139,6 +141,7 @@ function SettingsContent() {
     return () => { cancelled = true; };
   }, [isCurrentSession]);
 
+  const flexible = profile?.schedule_mode === "flexible";
   const selectedProgramId = profile?.effective_program_id ?? profile?.selected_program_id ?? null;
   const selectedProgramName = selectedProgramId ? getProgramDisplayName({ id: selectedProgramId }) : "No active program";
   const trainingPending = trainingSave === "pending";
@@ -172,6 +175,7 @@ function SettingsContent() {
   }
 
   async function generateCoachPreview() {
+    if (flexible) return;
     if (!selectedProgramId || !isCurrentSession()) return;
     setCoachStatus("Generating preview...");
     setAdaptationStatus(null);
@@ -203,6 +207,7 @@ function SettingsContent() {
   }
 
   async function generateAdaptationPreview() {
+    if (flexible) return;
     if (!selectedProgramId || !isCurrentSession()) return;
     if (temporaryDurationValidationMessage) {
       setAdaptationStatus(temporaryDurationValidationMessage);
@@ -233,6 +238,7 @@ function SettingsContent() {
   }
 
   async function applyAdaptation() {
+    if (flexible) return;
     if (!selectedProgramId || !isCurrentSession()) return;
     if (temporaryDurationValidationMessage) {
       setAdaptationApplyStatus(temporaryDurationValidationMessage);
@@ -264,6 +270,7 @@ function SettingsContent() {
   }
 
   async function generateWeekAfterAdaptation() {
+    if (flexible) return;
     if (!selectedProgramId || !isCurrentSession()) return;
     setIsGeneratingPostApplyWeek(true);
     setPostApplyGenerateStatus("Generating week from adapted state...");
@@ -281,6 +288,7 @@ function SettingsContent() {
   }
 
   async function runApplyPhase(confirm: boolean) {
+    if (flexible) return;
     if (!isCurrentSession()) return;
     const recommendationId = applyRecommendationId.trim();
     if (!recommendationId) {
@@ -301,6 +309,7 @@ function SettingsContent() {
   }
 
   async function runApplySpecialization(confirm: boolean) {
+    if (flexible) return;
     if (!isCurrentSession()) return;
     const recommendationId = applyRecommendationId.trim();
     if (!recommendationId) {
@@ -344,6 +353,7 @@ function SettingsContent() {
   }
 
   async function loadProgramRecommendation() {
+    if (flexible) return;
     if (!isCurrentSession()) return;
     setProgramRecommendationStatus("Getting recommendation...");
     try {
@@ -362,6 +372,7 @@ function SettingsContent() {
   }
 
   async function applyRecommendedProgram() {
+    if (flexible) return;
     if (!isCurrentSession()) return;
     if (!programRecommendation?.recommended_program_id) {
       setProgramRecommendationStatus("Get a recommendation first.");
@@ -472,8 +483,12 @@ function SettingsContent() {
             <h3>Active program</h3>
             <p>{profileLoad === "ready" ? selectedProgramName : profileLoad === "loading" ? "Loading program…" : "Program unavailable"}</p>
             {profileLoad === "ready" ? <p className={styles.muted}>Program selection: {profile?.program_selection_mode === "auto" ? "Auto" : "Manual"}</p> : null}
-            <p className={styles.muted}>Choose an original Customized Full Body program, review dates and accept its exact version.</p>
-            <Link href="/customize" className={styles.link}>Update generated plan preferences</Link>
+            {flexible ? <>
+              <p className={styles.muted}>{profile?.expected_sessions_per_week ?? 'No'} expected sessions per week · dates optional</p>
+              <p className={styles.muted}>Expected frequency does not regroup source workouts or change their prescriptions. Calendar frequency and program-apply controls are unavailable for this enrollment.</p>
+              <Link href={profile?.setup_status === 'planning' ? '/training/setup' : '/today'} className={styles.link}>Manage Flexible training</Link>
+            </> : <><p className={styles.muted}>Choose an original Customized Full Body program, review dates and accept its exact version.</p>
+            <Link href="/customize" className={styles.link}>Update generated plan preferences</Link></>}
           </div>
         </section>
 
@@ -490,7 +505,7 @@ function SettingsContent() {
         </section>
       </div>
 
-      <section className={styles.advanced} aria-labelledby="advanced-heading">
+      {!flexible ? <section className={styles.advanced} aria-labelledby="advanced-heading">
         <div><h2 id="advanced-heading">Advanced training controls</h2><p className={styles.muted}>Review recommendations and hypothetical coaching inputs before applying any change.</p></div>
         <Disclosure title="Program recommendation" defaultOpen={false}>
           <div className="space-y-3">
@@ -617,7 +632,7 @@ function SettingsContent() {
         </div>
       </Disclosure>
 
-      </section>
+      </section> : null}
 
       {devWipeEnabled ? (
       <Disclosure title="Developer tools" defaultOpen={false}>

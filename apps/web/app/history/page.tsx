@@ -95,7 +95,7 @@ export default function HistoryPage() {
               return <button key={day.date} className={`history-date history-date--${status}`} style={{gridColumn:String(weekday+1)}}
                 aria-label={`${day.date}: ${historyStatusLabels[status]}`} aria-pressed={selectedDay===day.date} disabled={!shown}
                 title={`${day.date}: ${day.set_count} recorded sets · ${historyStatusLabels[status]}`} onClick={()=>choose(day.date)}>
-                <span>{Number(day.date.slice(-2))}</span><small aria-hidden="true">{status==="complete"?"✓":status==="partial"?"◐":status==="scheduled"?"○":status==="rest"?"—":"?"}</small>
+                <span>{Number(day.date.slice(-2))}</span><small aria-hidden="true">{status==="complete"?"✓":["partial","ended_early","amended_incomplete"].includes(status)?"◐":status==="scheduled"?"○":status==="rest"?"—":"?"}</small>
               </button>;
             })}
           </div>

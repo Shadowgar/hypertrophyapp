@@ -22,7 +22,7 @@ from .observability import (
     validation_failure_event_name,
     sanitize_auth_validation_errors,
 )
-from .routers import auth, history, plan, profile, workout, customized
+from .routers import auth, history, plan, profile, workout, customized, training
 
 def customized_clock():
     return datetime.now(UTC)
@@ -122,3 +122,5 @@ app.include_router(plan.router, tags=["plan"])
 app.include_router(workout.router, tags=["workout"])
 app.include_router(history.router, tags=["history"])
 app.include_router(customized.router, tags=["customized"])
+
+app.include_router(training.router, tags=["training"])

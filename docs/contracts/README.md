@@ -16,9 +16,9 @@ Current contract map under [product](../requirements/product-contract.md), [cons
 
 Legacy [canonical schema](Canonical_Program_Schema.md), [high-risk payload/API contracts](High_Risk_Contracts.md) and [offline contract](Offline_Sync_Deterministic_Contract.md) retain compatibility details. Existing wire fields and error shapes are not changed by docs migration. No new ADR authorizes silently dropping fields. Resolving divergent proposed schema keys, preview/apply transitions or offline-write scope requires a bounded implementation plan and consumer verification; offline writes remain deferred.
 
-## Pending flexible training contract
+## Flexible training contract
 
-The [completion-driven sequence proposal](flexible-training-sequence-proposal.md)
-records the 2026-10-30 owner direction and original-source grouping choice. Its
-API/state/schema and correction/adoption policies are **Proposed**, not accepted
-runtime authority. See the [bounded gate](../plans/flexible-training-progression.md).
+The [completion-driven sequence contract](flexible-training-sequence-proposal.md)
+records the 2026-10-30 owner direction and original-source grouping choice. The owner approved bounded implementation with explicit End Early, correction
+reconciliation and unstarted conversion amendments on 2026-10-30. Runtime
+qualification and release acceptance remain separate. See the [bounded plan](../plans/flexible-training-progression.md).

@@ -68,6 +68,7 @@ export default function WeeklyReview() {
   const [notes, setNotes] = useState("");
   const [sessionsNextWeek, setSessionsNextWeek] = useState("3");
   const [usesSelectedDates, setUsesSelectedDates] = useState(false);
+  const [flexible, setFlexible] = useState(false);
   const [status, setStatus] = useState("Loading weekly review...");
   const [reviewResult, setReviewResult] = useState<WeeklyReviewResponse | null>(null);
   const [isGeneratingNextWeek, setIsGeneratingNextWeek] = useState(false);
@@ -77,8 +78,11 @@ export default function WeeklyReview() {
   useEffect(() => {
     let mounted = true; mountedRef.current = true;
     const token = getToken();
-    Promise.all([api.getWeeklyReviewStatus(), api.getProfile()])
-      .then(([weeklyStatus, profile]) => {
+    api.getProfile()
+      .then(async profile => {
+        if (!mounted || token !== getToken()) return;
+        if (profile.schedule_mode === "flexible") { setFlexible(true); return; }
+        const weeklyStatus = await api.getWeeklyReviewStatus();
         if (!mounted || token !== getToken()) {
           return;
         }
@@ -199,6 +203,12 @@ export default function WeeklyReview() {
   const proteinValue = Number(protein || 0);
   const fatValue = Number(fat || 0);
   const carbsValue = Number(carbs || 0);
+
+  if (flexible) return <div className="space-y-3">
+    <p>Calendar-based weekly review is unavailable for Flexible training. A source block can span weeks, so calendar completion percentages and dose adjustments would be misleading.</p>
+    <p>Optional check-ins remain available. History shows actual performance and incomplete closures; your original prescriptions stay unchanged.</p>
+    <Link href="/today" className="ux-button ux-button-secondary">Continue Flexible training</Link>
+  </div>;
 
   return (
     <div className="space-y-4">
