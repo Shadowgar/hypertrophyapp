@@ -106,10 +106,11 @@ export default function HomePage() {
     };
   }, [reload]);
 
-  if (home.token === undefined) return <div className="ux-card" role="status">Loading WorkoutApp Home…</div>;
+  if (home.token === undefined) return <div className="ux-card" role="status">Loading FERRAVIS Home…</div>;
   if (!home.token) return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <h1>WorkoutApp</h1>
+      <h1>FERRAVIS</h1>
+      <p className="ux-eyebrow">Strength, Engineered.</p>
       <p className="ux-muted">Your next session starts here. Sign in to continue your plan, or set up your first program.</p>
       <div className="ux-card space-y-4">
         <h2>Ready for your next session?</h2>

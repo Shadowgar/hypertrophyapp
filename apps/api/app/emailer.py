@@ -55,13 +55,13 @@ def send_password_reset_email(
         return EmailDeliveryResult(sent=False, error="SMTP from email is not configured")
 
     message = EmailMessage()
-    message["Subject"] = "Reset your Hypertrophy App password"
+    message["Subject"] = "Reset your FERRAVIS password"
     message["From"] = formataddr((config.smtp_from_name, from_email))
     message["To"] = to_email
     message.set_content(
         "\n".join(
             [
-                "We received a request to reset your Hypertrophy App password.",
+                "We received a request to reset your FERRAVIS password.",
                 "",
                 "Use this secure reset link:",
                 reset_url,

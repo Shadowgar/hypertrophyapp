@@ -418,7 +418,7 @@ function SettingsContent() {
       </header>
 
       <nav className={styles.sections} aria-label="Settings sections">
-        <a href="#appearance-preferences"><strong>Theme &amp; appearance</strong><span>Choose how WorkoutApp looks</span></a>
+        <a href="#appearance-preferences"><strong>Theme &amp; appearance</strong><span>Choose how FERRAVIS looks</span></a>
         <a href="#appearance-preferences"><strong>Weight display</strong><span>Pounds or kilograms</span></a>
         <a href="#training-preferences"><strong>Equipment &amp; training preferences</strong><span>Your location, equipment and program</span></a>
         <a href="#account-preferences"><strong>Account &amp; accessibility</strong><span>Your profile and account access</span></a>

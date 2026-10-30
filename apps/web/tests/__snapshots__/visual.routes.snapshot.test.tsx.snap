@@ -9,6 +9,8 @@ exports[`visual snapshot: today route initial state 1`] = `
   >
     <h1
       class="ui-title-page"
+      data-today-heading="true"
+      tabindex="-1"
     >
       Today
     </h1>

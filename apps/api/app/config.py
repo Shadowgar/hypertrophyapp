@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     smtp_username: str | None = None
     smtp_password: str | None = None
     smtp_from_email: str | None = None
-    smtp_from_name: str = "Hypertrophy App"
+    smtp_from_name: str = "FERRAVIS"
     smtp_use_tls: bool = True
     smtp_timeout_seconds: float = 10.0
     password_reset_base_url: str = "https://hypertrophy.theroccos.us/reset-password"

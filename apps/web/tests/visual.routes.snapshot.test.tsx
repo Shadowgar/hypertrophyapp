@@ -36,7 +36,7 @@ beforeEach(() => {
 
 test("visual snapshot: guest Home route", async () => {
   const { findByRole, getByRole } = render(<HomePage />);
-  await findByRole("heading", { name: "WorkoutApp" });
+  await findByRole("heading", { name: "FERRAVIS" });
   expect(getByRole("link", { name: /Start onboarding/i })).toBeInTheDocument();
 });
 

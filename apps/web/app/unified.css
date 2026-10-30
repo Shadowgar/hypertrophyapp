@@ -182,13 +182,8 @@ input[type="radio"] {
   align-items: center;
   gap: 10px;
 }
-.ux-brand::before {
-  content: "▌▌";
-  color: var(--accent-text);
-  font-size: 24px;
-  letter-spacing: -6px;
-  margin-right: 5px;
-}
+.ux-brand-mark { flex: none; }
+.ux-brand-wordmark { font-size: .85em; font-weight: 750; letter-spacing: .09em; }
 .ux-main {
   max-width: 1440px;
   margin: auto;
