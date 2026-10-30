@@ -78,7 +78,9 @@ def test_predecessor_revision_invalidates_future_preview_but_not_activated_plan(
     frozen = deepcopy(future.json())
     assert activate(client, headers, request_dates(MONDAY, revision=2)).status_code == 200
     context = client.get(f'/plan/scheduling-context?timezone=America/New_York&week_start={request["week_start"]}', headers=headers)
-    assert context.json()['plan'] == frozen
+    with SessionLocal() as db:
+        plan_id = db.query(WorkoutPlan).filter_by(user_id=user_id, week_start=MONDAY+timedelta(days=7)).one().id
+    assert context.json()['plan'] == {**frozen, 'plan_id': plan_id}
 
 @pytest.mark.parametrize('count', [2,4,5])
 def test_next_week_uses_source_successor_for_every_date_count(week, count):
@@ -202,7 +204,9 @@ def test_activated_future_becomes_current_on_local_monday_without_regeneration(w
     fixed_clock(monkeypatch, datetime(2026,10,12,4,1,tzinfo=UTC))
     context = client.get('/plan/scheduling-context?timezone=America/New_York', headers=headers)
     assert context.status_code == 200, context.text
-    assert context.json()['plan'] == saved
+    with SessionLocal() as db:
+        plan_id = db.query(WorkoutPlan).filter_by(user_id=user_id, week_start=next_monday).one().id
+    assert context.json()['plan'] == {**saved, 'plan_id': plan_id}
     assert context.json()['week_start'] == next_monday.isoformat()
     today = client.get('/workout/today', headers=headers)
     assert today.status_code == 200, today.text
