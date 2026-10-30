@@ -329,6 +329,16 @@ class BodyMeasurementEntryResponse(BaseModel):
     created_at: datetime
 
 
+class MoveNextPlannedWorkoutRequest(BaseModel):
+    plan_id: str = Field(min_length=1, max_length=64)
+    workout_occurrence_id: str = Field(min_length=1, max_length=64)
+    expected_original_date: date
+    expected_local_today: date
+    expected_placement_revision: int = Field(ge=1)
+    expected_preview_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+    confirmed: Literal[True]
+
+
 class GenerateWeekPlanRequest(BaseModel):
     template_id: str | None = None
     target_days: int | None = Field(default=None, ge=2, le=5)
