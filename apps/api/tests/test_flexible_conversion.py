@@ -1,11 +1,11 @@
 """Real Authored dated-plan conversion, using only disposable scenario accounts."""
 from copy import deepcopy
-from datetime import timedelta
+from datetime import UTC, datetime, time, timedelta
 from uuid import uuid4
 
 import pytest
 
-from test_selected_date_scheduling import scenario, request_dates, current_monday
+from test_selected_date_scheduling import scenario, request_dates, current_monday, fixed_clock
 from app.database import SessionLocal
 from app.flexible_source import native_source
 from app.models import User, WorkoutPlan, WorkoutOccurrence, WorkoutSetLog, TrainingSequence
@@ -38,6 +38,37 @@ def assert_no_conversion(uid, plan_id, original):
     with SessionLocal() as db:
         assert db.query(TrainingSequence).filter_by(user_id=uid).count() == 0
         assert db.get(WorkoutPlan, plan_id).payload == original
+
+
+@pytest.mark.parametrize("program_id", [PHASE1, PHASE2])
+def test_sole_next_week_first_block_is_discoverable_and_guardedly_converted(scenario, monkeypatch, program_id):
+    uid, headers, client = scenario
+    future_monday = current_monday() + timedelta(days=7)
+    # A pre-existing first-block reservation may be entirely in the upcoming
+    # week. Build it through the normal API, then inspect from the prior week.
+    fixed_clock(monkeypatch, datetime.combine(future_monday, time(16), UTC))
+    generated = client.post('/plan/generate-week', headers=headers,
+        json=request_dates(future_monday, phase=program_id))
+    assert generated.status_code == 200, generated.text
+    with SessionLocal() as db:
+        row = db.query(WorkoutPlan).filter_by(user_id=uid).one()
+        plan_id, original = row.id, deepcopy(row.payload)
+    fixed_clock(monkeypatch, datetime.combine(future_monday-timedelta(days=4), time(16), UTC))
+    assert client.get('/plan/scheduling-context?timezone=America/New_York', headers=headers).json()['plan'] is None
+    upcoming = client.get('/plan/scheduling-context?timezone=America/New_York&week_offset=1', headers=headers)
+    assert upcoming.status_code == 200, upcoming.text
+    assert upcoming.json()['plan']['plan_id'] == plan_id
+    request, preview = switch_preview(client, headers, plan_id, program_id)
+    assert preview['legacy_plan_id'] == plan_id and preview['available'] is True
+    confirmed = client.post('/training/enroll', headers=headers, json={**request,
+        'preview_digest': preview['digest'], 'command_id': str(uuid4()), 'confirmed': True})
+    assert confirmed.status_code == 200, confirmed.text
+    with SessionLocal() as db:
+        retained = db.get(WorkoutPlan, plan_id).payload
+        assert retained['sessions'] == original['sessions']
+        assert retained['flexible_supersession']['original_schedule'] == original['schedule']
+        assert db.query(TrainingSequence).filter_by(user_id=uid, state='active').count() == 1
+        assert db.query(WorkoutSetLog).filter_by(user_id=uid).count() == 0
 
 
 @pytest.mark.parametrize("program_id,auto", [(PHASE1, False), (PHASE2, False), (PHASE1, True)])

@@ -2,6 +2,7 @@
 from copy import deepcopy
 from datetime import UTC, date, datetime
 from uuid import uuid4
+import pytest
 
 from test_flexible_lifecycle import scenario, small_source, enrollment, operation, next_state, clock
 from app.database import SessionLocal
@@ -116,6 +117,85 @@ def test_partial_actual_work_end_early_retains_exact_missing_work(scenario, monk
     assert history["status"] == "ended_early" and history["coverage_status"] == "incomplete"
     assert history["working_sets_completed"] == 1 and history["advancement"] == advancement
     assert ended["source_position"] == 1
+
+
+@pytest.mark.parametrize("later_day", [False, True])
+def test_paused_complete_work_finishes_without_new_performance_context(scenario, monkeypatch, later_day):
+    user_id, headers, client, enrolled = _prepare(scenario, monkeypatch)
+    active, _ = _operate(client, headers, enrolled, "start")
+    _log_all(client, headers, active)
+    before_pause = next_state(client, headers)
+    paused, _ = _operate(client, headers, before_pause, "pause")
+    with SessionLocal() as db:
+        original_logs = [{column.key: getattr(row, column.key) for column in WorkoutSetLog.__table__.columns}
+            for row in db.query(WorkoutSetLog).filter_by(user_id=user_id).order_by(WorkoutSetLog.id)]
+    if later_day:
+        clock(monkeypatch, datetime(2026, 11, 2, 16, tzinfo=UTC))
+    ready = next_state(client, headers)
+    assert ready["action"] == "finish" and ready["coverage"]["complete"]
+    assert ready["occurrence_id"] == active["occurrence_id"]
+    assert ready["execution_context"] is None
+    stale, _ = operation(client, headers, before_pause, "finish")
+    assert stale.status_code == 409
+    resume, _ = operation(client, headers, ready, "resume")
+    assert resume.status_code == 409
+    finished, request = _operate(client, headers, ready, "finish")
+    assert finished["source_position"] == 1
+    assert client.post(f'/training/{ready["sequence_id"]}/finish', headers=headers, json=request).json() == finished
+    frozen = _snapshot(active["occurrence_id"])
+    assert frozen["state"] == "finished" and frozen["context"] is None
+    assert frozen["advancement"]["operation"] == "finish"
+    with SessionLocal() as db:
+        assert [{column.key: getattr(row, column.key) for column in WorkoutSetLog.__table__.columns}
+            for row in db.query(WorkoutSetLog).filter_by(user_id=user_id).order_by(WorkoutSetLog.id)] == original_logs
+        assert db.query(TrainingSequenceCommand).filter_by(user_id=user_id, operation="resume").count() == 0
+    history = _history_occurrence(client, headers, active["occurrence_id"])
+    assert history["actual_dates"] == ["2026-10-31"]
+
+
+def test_paused_finish_preview_is_revoked_when_effective_coverage_changes(scenario, monkeypatch):
+    _, headers, client, enrolled = _prepare(scenario, monkeypatch)
+    active, _ = _operate(client, headers, enrolled, "start")
+    _log_all(client, headers, active)
+    paused, _ = _operate(client, headers, next_state(client, headers), "pause")
+    assert paused["action"] == "finish"
+    _undo(client, headers, active)
+    current = next_state(client, headers)
+    assert current["action"] == "resume" and not current["coverage"]["complete"]
+    for reviewed in (paused, current):
+        denied, _ = operation(client, headers, reviewed, "finish")
+        assert denied.status_code == 409
+    assert _snapshot(active["occurrence_id"])["advancement"] is None
+
+
+def test_complete_active_previous_day_can_close_with_its_original_context(scenario, monkeypatch):
+    _, headers, client, enrolled = _prepare(scenario, monkeypatch)
+    active, _ = _operate(client, headers, enrolled, "start")
+    _log_all(client, headers, active)
+    clock(monkeypatch, datetime(2026, 11, 2, 16, tzinfo=UTC))
+    ready = next_state(client, headers)
+    assert ready['action'] == 'finish' and ready['execution_context'] == active['execution_context']
+    _operate(client, headers, ready, 'finish')
+    assert _history_occurrence(client, headers, active['occurrence_id'])['actual_dates'] == ['2026-10-31']
+
+
+@pytest.mark.parametrize("blocker", ["hard_rest_wait", "mandatory_evidence_unknown"])
+def test_paused_complete_work_cannot_finish_through_a_mandatory_rest_block(scenario, monkeypatch, blocker):
+    from app import flexible_training as training
+    _, headers, client, enrolled = _prepare(scenario, monkeypatch)
+    active, _ = _operate(client, headers, enrolled, "start")
+    _log_all(client, headers, active)
+    paused, _ = _operate(client, headers, next_state(client, headers), "pause")
+    # Exercise command admission against the rest owner's blocking result;
+    # declared-edge calculations are independently tested in reconciliation.
+    monkeypatch.setattr(training, '_rest', lambda *_: {'blockers': [{'code': blocker}]})
+    blocked = next_state(client, headers)
+    assert blocked['action'] == 'blocked' and blocked['coverage']['complete']
+    for reviewed in (paused, blocked):
+        denied, _ = operation(client, headers, reviewed, 'finish')
+        assert denied.status_code == 409
+    saved = _snapshot(active['occurrence_id'])
+    assert saved['state'] == 'paused' and saved['context'] is None and saved['advancement'] is None
 
 
 def test_pause_resume_across_local_days_keeps_each_actual_set_date(scenario, monkeypatch):

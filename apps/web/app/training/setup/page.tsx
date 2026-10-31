@@ -46,13 +46,17 @@ export default function TrainingSetupPage() {
     setPending(pendingLogPayload<EnrollmentCommand>(commandKey));
     if(!token){setLoading(false);return;}
     const fallback=Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC';
-    void Promise.all([api.getProfile(),api.getSchedulingContext(fallback),api.getNextTraining()]).then(([profile,calendar,next])=>{
+    void Promise.all([api.getProfile(),api.getSchedulingContext(fallback),api.getSchedulingContext(fallback,1),api.getNextTraining()]).then(([profile,calendar,upcoming,next])=>{
       if(!current())return;
       setProgram(authoredPrograms.includes(profile.selected_program_id??'')?profile.selected_program_id!:'');
       setTimezone(profile.scheduling_timezone||calendar.timezone||fallback);
       setExpectation(profile.expected_sessions_per_week?.toString()??'');
-      setHasLegacyPlan(Boolean(calendar.plan));
-      setLegacyPlan(calendar.plan?.plan_id??null);
+      // Discovery is limited to the two supported calendar windows. The
+      // server's guarded preview still owns eligibility across ALL outstanding
+      // work, including ambiguous reservations outside these visible windows.
+      const reservation=calendar.plan??upcoming.plan;
+      setHasLegacyPlan(Boolean(reservation));
+      setLegacyPlan(reservation?.plan_id??null);
       setEnrolled(Boolean(next.mode==='flexible'&&next.sequence_id&&next.state!=='retired'&&next.state!=='finished'));
       setLoaded(true);
     }).catch(()=>{if(current())setNotice('Could not verify your saved program and reservations. Retry before changing your training.');})
@@ -101,6 +105,7 @@ export default function TrainingSetupPage() {
         <label className="block">Expected sessions per week (optional)<select className="ux-input" value={expectation} disabled={busy||Boolean(pending)} onChange={event=>{setExpectation(event.target.value);invalidate();}}><option value="">No expectation set</option>{[1,2,3,4,5,6,7].map(count=><option key={count} value={count}>{count}</option>)}</select></label>
         <p className="ux-muted">This is an expectation, not a weekly quota or a promise about workout duration.</p>
         {hasLegacyPlan?<p>Switching is available only for an entirely unstarted, conflict-free Authored reservation. Any activity or consent snapshot blocks conversion; nothing is silently abandoned.</p>:null}
+        {legacyPlan?<p>Calendar reservation to review: <code>{legacyPlan}</code>. The preview checks eligibility before you can confirm the switch.</p>:null}
         <button className="ux-button ux-button-primary" disabled={busy||Boolean(pending)||trainingRecoveryBlocked(token)} type="submit">{busy?'Checking preview…':hasLegacyPlan?'Preview Switch to Flexible':'Preview Flexible'}</button>
       </form>
       {preview?<section className="ux-card space-y-4" aria-label="Flexible enrollment preview">

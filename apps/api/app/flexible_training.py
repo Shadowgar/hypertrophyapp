@@ -145,7 +145,16 @@ def next_training(db, user, sequence=None):
         blockers.append({'code': 'coverage_unknown', 'message': 'Required working-set coverage is ambiguous'})
     context = occurrence.execution_context or {}
     state = occurrence.execution_state
-    action = 'start' if state == 'planned' else 'resume' if state == 'paused' or context.get('local_day') != str(day) else 'finish' if coverage['complete'] else 'active'
+    if state == 'planned':
+        action = 'start'
+    elif state in ('active', 'paused') and coverage['complete']:
+        # Closure records no performance: a pause or a new local day does not
+        # require minting another execution context for already verified work.
+        action = 'finish'
+    elif state == 'paused' or context.get('local_day') != str(day):
+        action = 'resume'
+    else:
+        action = 'active'
     if blockers or sequence.state == 'attention_required':
         action = 'blocked'
     result.update(action=action, session=session, occurrence_id=occurrence.id,

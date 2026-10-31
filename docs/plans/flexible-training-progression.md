@@ -113,3 +113,18 @@ V1 limitations remain explicit:
   the explicit route to a different prescription.
 - Physical iPhone/gym and production migration/release acceptance remain pending
   under open Issues #103/#105.
+
+## Focused owner review corrections — 2026-10-31
+
+Setup reads both supported calendar windows so a sole next-week reservation can
+be explicitly identified and bound to the existing guarded Switch preview. The
+server still checks all outstanding work, ambiguity, consent and activity.
+Verified complete work offers Finish before Pause/Resume or local-day renewal;
+closure creates no performance context or receipt date. Source/rest blockers and
+the existing locked revision/digest/day/coverage checks retain authority.
+
+Focused red/green API/UI regressions and the repeatable
+`apps/web/tests/flexible-review.browser.cjs` cover these corrections. Browser API
+responses are synthetic and intercepted; native-source API checks use disposable
+accounts. Final-head PR CI is recorded on #133. No source prescriptions, migration
+0027, End Early contract, production operation or release control is changed.

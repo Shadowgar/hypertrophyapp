@@ -127,7 +127,7 @@ export function FlexibleTraining({ accountToken, onResolved, onContinue, canChan
       {next.action==='resume'?<button className="ux-button ux-button-primary" onClick={()=>confirm('resume')}>Resume workout</button>:null}
       {next.action==='active'?(onContinue?<button className="ux-button ux-button-primary" onClick={()=>{if(permitted())onContinue();}}>Continue workout</button>:<Link className="ux-button ux-button-primary" href="/today">Continue workout</Link>):null}
       {next.action==='finish'?<button className="ux-button ux-button-primary" onClick={()=>confirm('finish')}>Finish workout</button>:null}
-      {next.action==='active'||next.action==='finish'?<button className="ux-button ux-button-secondary" onClick={()=>confirm('pause')}>Pause workout</button>:null}
+      {next.action==='active'||(next.action==='finish'&&next.execution_context)?<button className="ux-button ux-button-secondary" onClick={()=>confirm('pause')}>Pause workout</button>:null}
       {actionable&&next.action!=='start'&&next.coverage?.known&&!next.coverage.complete?<button className="ux-button ux-button-secondary" onClick={()=>confirm('end-early')}>End early</button>:null}
       {next.resolution_options?.some(option=>['reconcile','recheck'].includes(option))?<button className="ux-button ux-button-secondary" onClick={()=>confirm('reconcile')}>Recheck training</button>:null}
       {next.resolution_options?.includes('retire')?<button className="ux-button ux-button-secondary" onClick={()=>confirm('retire')}>Retire this program</button>:null}

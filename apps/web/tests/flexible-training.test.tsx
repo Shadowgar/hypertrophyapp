@@ -127,6 +127,19 @@ test('full effective coverage offers explicit Finish without automatically advan
  await waitFor(()=>expect(writes).toHaveLength(1));
 });
 
+test('paused complete coverage finishes without Resume, Pause or a new context request',async()=>{
+ const writes=serve({...decision,action:'finish',execution_context:null,coverage:{known:true,required:3,completed:3,complete:true,missing:[]}});render(<HomePage/>);
+ fireEvent.click(await screen.findByRole('button',{name:'Finish workout'}));
+ expect(screen.queryByRole('button',{name:'Resume workout'})).not.toBeInTheDocument();
+ expect(screen.queryByRole('button',{name:'Pause workout'})).not.toBeInTheDocument();
+ expect(writes).toHaveLength(0);
+ fireEvent.click(screen.getByRole('button',{name:'Confirm finish'}));
+ await waitFor(()=>expect(writes).toHaveLength(1));
+ const lifecycleCalls=vi.mocked(fetch).mock.calls.filter(([path,init])=>String(path).includes('/training/seq-a/')&&init?.method==='POST');
+ expect(lifecycleCalls).toHaveLength(1);expect(String(lifecycleCalls[0][0])).toMatch(/\/finish$/);
+ expect(writes[0]).toMatchObject({expected_digest:'reviewed-digest',occurrence_id:'occ-a',confirmed:true});
+});
+
 test('calendar start guidance waits for the authoritative training mode when profile is also pending',async()=>{
  serve();const fetcher=vi.mocked(fetch).getMockImplementation()!;
  vi.mocked(fetch).mockImplementation((input,init)=>String(input).endsWith('/training/next')||String(input).endsWith('/profile')?new Promise<Response>(()=>{}):fetcher(input,init));
