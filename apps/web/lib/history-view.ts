@@ -32,4 +32,4 @@ export function historyRange(today:string, mode:"week"|"month", offset:number) {
   else {end.setUTCMonth(end.getUTCMonth()+1);end.setUTCDate(0);}
   return {startDate:start.toISOString().slice(0,10),endDate:end.toISOString().slice(0,10)};
 }
-export const historyStatusLabels = {complete:"Complete",partial:"Partial",scheduled:"Scheduled · not completed",rest:"Rest",unknown:"Unknown"} as const;
+export const historyStatusLabels = {active:"In progress",paused:"Paused",planned:"Planned · not started",ended_early:"Ended early · incomplete",amended_incomplete:"Amended · incomplete",complete:"Complete",partial:"Partial",scheduled:"Scheduled · not completed",rest:"Rest",unknown:"Unknown"} as const;

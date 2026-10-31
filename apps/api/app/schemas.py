@@ -100,7 +100,17 @@ class ProfileUpsert(BaseModel):
     equipment_profile: list[str] = Field(default_factory=list)
     weak_areas: list[str] = Field(default_factory=list)
     onboarding_answers: dict[str, Any] = Field(default_factory=dict)
-    days_available: int = Field(ge=2, le=5)
+    schedule_mode: Literal["calendar", "flexible"] = "calendar"
+    expected_sessions_per_week: int | None = Field(default=None, ge=1, le=7, strict=True)
+    days_available: int | None = Field(default=None, ge=2, le=5)
+
+    @model_validator(mode="after")
+    def validate_schedule_mode(self):
+        if self.schedule_mode == "calendar" and self.days_available is None:
+            raise ValueError("Calendar scheduling requires a selected visit count")
+        if self.schedule_mode == "flexible" and self.days_available is not None:
+            raise ValueError("Flexible frequency is advisory; omit the calendar visit count")
+        return self
     session_time_budget_minutes: int | None = Field(default=None, ge=15, le=240)
     movement_restrictions: list[str] = Field(default_factory=list)
     near_failure_tolerance: Literal["low", "moderate", "high"] | None = None
@@ -718,6 +728,7 @@ class AuthoredCalibrationRequest(BaseModel):
 
 
 class WorkoutSetLogRequest(BaseModel):
+    execution_context_id: str | None = Field(default=None, min_length=1, max_length=128)
     command_id: str | None = Field(default=None, min_length=1, max_length=128)
     exercise_occurrence_id: str | None = None
     primary_exercise_id: str | None = None
@@ -760,6 +771,9 @@ class WorkoutLiveRecommendationResponse(BaseModel):
 
 
 class WorkoutSetLogResponse(BaseModel):
+    performed_local_date: date | None = None
+    performed_timezone: str | None = None
+    execution_context_id: str | None = None
     customized_receipts: list[dict[str, Any]] | None = None
     workout_occurrence_id: str
     exercise_occurrence_id: str

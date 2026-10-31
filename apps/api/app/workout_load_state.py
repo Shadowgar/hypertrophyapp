@@ -7,7 +7,7 @@ from collections import defaultdict
 from collections.abc import Mapping
 from copy import deepcopy
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from types import SimpleNamespace, MappingProxyType
 import hashlib
 import json
@@ -129,7 +129,10 @@ def effective_receipts(records):
         "technique": deepcopy(row.technique), "created_at": row.created_at.isoformat(),
         "amended_at": row.amended_at.isoformat() if row.amended_at else None,
         "supersedes_id": row.supersedes_id,
-        "load_context": deepcopy(((row.replay_context or {}).get("load_intelligence") or {}).get("load_context"))
+        "load_context": deepcopy(((row.replay_context or {}).get("load_intelligence") or {}).get("load_context")),
+        **({"performed_local_date": row.performed_local_date.isoformat(),
+            "performed_timezone": row.performed_timezone, "execution_context_id": row.execution_context_id}
+           if row.performed_local_date is not None else {})
     } for row in records if row.voided_at is None]
 
 
@@ -194,6 +197,15 @@ def _all_groups(db, user):
         # Match occurrence-performed-date-v1. Retain the original receipt audit
         # time as a legacy fallback and deterministic same-date tie-breaker.
         chronology = (occurrence.scheduled_date or anchor.created_at.date(), anchor.created_at)
+        if occurrence.sequence_id:
+            effective_work = [row for row in records if row.voided_at is None and row.parent_set_index is None
+                and (row.set_kind or "work").strip().lower() in {"work", "top", "backoff"}
+                and row.performed_local_date is not None]
+            if effective_work:
+                latest = max(effective_work, key=lambda row: (row.performed_local_date, row.created_at, row.id))
+                chronology = (latest.performed_local_date, latest.created_at)
+            elif anchor.performed_local_date is not None:
+                chronology = (anchor.performed_local_date, anchor.created_at)
         ordered.append((chronology, anchor.id, occurrence, exercise, records,
             _summarize(occurrence, exercise, records, context)))
     return sorted(ordered, key=lambda group: (group[0], group[1]))
@@ -275,13 +287,18 @@ def project_authored_load_feedback(db, *, user, occurrence, exercise, supplied_c
     # any work exists; legacy plan dates and warm-ups cannot invent that date.
     has_working_root = any(row.parent_set_index is None
         and (row.set_kind or "work").strip().lower() in {"work", "top", "backoff"} for row in records)
-    if occurrence.scheduled_date is not None:
+    context_day = (occurrence.execution_context or {}).get("local_day") if occurrence.sequence_id else None
+    if context_day:
+        cutoff_date, cutoff_source = date.fromisoformat(context_day), "confirmed_execution_context_local_day"
+    elif occurrence.sequence_id and current and has_working_root:
+        cutoff_date, cutoff_source = current[0][0], "latest_effective_work_local_day"
+    elif occurrence.scheduled_date is not None:
         cutoff_date, cutoff_source = occurrence.scheduled_date, "owner_occurrence_scheduled_date"
     elif current and has_working_root:
         cutoff_date, cutoff_source = current[0][0], "original_working_receipt_audit_date"
     else:
         cutoff_date, cutoff_source = datetime.now(timezone.utc).date(), "pending_working_receipt_utc_date"
-    history_scope = {"owner": OWNER, "policy": "occurrence-performed-date-v1",
+    history_scope = {"owner": OWNER, "policy": "explicit-receipt-performed-date-v1" if occurrence.sequence_id else "occurrence-performed-date-v1",
         "cutoff_date": cutoff_date.isoformat(), "cutoff_source": cutoff_source,
         "inclusive": True}
     groups = [group for group in groups if group[0][0] <= cutoff_date]

@@ -1,7 +1,7 @@
 from datetime import date, datetime, UTC
 import hashlib
 import json
-from uuid import uuid5, UUID
+from uuid import uuid4, uuid5, UUID
 from copy import deepcopy
 from typing import Annotated, Any, cast
 
@@ -301,31 +301,44 @@ def workout_today(
         action="today_fetch",
         user_id=current_user.id,
     )
-    raw_plans = _list_current_workout_plans(db, current_user)
-    today_iso = date.today().isoformat()
-    if current_user.scheduling_timezone:
-        from ..selected_date_plans import active_selected_plans, local_week
-        today, monday = local_week(current_user.scheduling_timezone, datetime.now(UTC))
-        today_iso = today.isoformat()
-        raw_plans = active_selected_plans(raw_plans, monday)
-        if not raw_plans:
-            raise HTTPException(404, "No workout scheduled today")
-        if len(raw_plans) != 1:
-            raise HTTPException(409, "Multiple active dated plans require reconciliation")
-    plans = identified_plans(db, raw_plans)
-    plan_runtime = prepare_workout_today_plan_route_runtime(plan_rows=plans)
-    if not bool(plan_runtime["has_plan"]):
-        raise HTTPException(status_code=404, detail="No plan generated")
+    from ..flexible_training import next_training
+    flexible = next_training(db, current_user)
+    if flexible['mode'] == 'flexible':
+        if flexible['action'] not in ('active', 'finish'):
+            raise HTTPException(409, {'message': 'Use the confirmed Flexible training action', 'training': flexible})
+        occurrence = db.query(WorkoutOccurrence).filter_by(id=flexible['occurrence_id'], user_id=current_user.id).one()
+        raw_plans = []
+        plans = occurrence_plan(occurrence, flexible['session'])
+        plan_runtime = prepare_workout_today_plan_route_runtime(plan_rows=plans)
+        sessions = [flexible['session']]
+        today_iso = flexible['local_day']
+        plan_runtime['mesocycle'] = {'authored_week_index': occurrence.source_week}
+    else:
+        raw_plans = _list_current_workout_plans(db, current_user)
+        today_iso = date.today().isoformat()
+        if current_user.scheduling_timezone:
+            from ..selected_date_plans import active_selected_plans, local_week
+            today, monday = local_week(current_user.scheduling_timezone, datetime.now(UTC))
+            today_iso = today.isoformat()
+            raw_plans = active_selected_plans(raw_plans, monday)
+            if not raw_plans:
+                raise HTTPException(404, "No workout scheduled today")
+            if len(raw_plans) != 1:
+                raise HTTPException(409, "Multiple active dated plans require reconciliation")
+        plans = identified_plans(db, raw_plans)
+        plan_runtime = prepare_workout_today_plan_route_runtime(plan_rows=plans)
+        if not bool(plan_runtime["has_plan"]):
+            raise HTTPException(status_code=404, detail="No plan generated")
 
-    sessions = cast(list[dict], plan_runtime["sessions"])
-    latest_payload = plans[0].payload if plans else {}
-    schedule = latest_payload.get("schedule") if isinstance(latest_payload, dict) else None
-    if isinstance(schedule, dict) and schedule.get("mode") == "selected_dates_v1":
-        sessions = [session for session in sessions if session.get("scheduled_date") == today_iso]
-        if not sessions:
-            raise HTTPException(status_code=404, detail="No workout scheduled today")
-        if len(sessions) != 1:
-            raise HTTPException(status_code=409, detail="Conflicting workouts share today's selected date")
+        sessions = cast(list[dict], plan_runtime["sessions"])
+        latest_payload = plans[0].payload if plans else {}
+        schedule = latest_payload.get("schedule") if isinstance(latest_payload, dict) else None
+        if isinstance(schedule, dict) and schedule.get("mode") == "selected_dates_v1":
+            sessions = [session for session in sessions if session.get("scheduled_date") == today_iso]
+            if not sessions:
+                raise HTTPException(status_code=404, detail="No workout scheduled today")
+            if len(sessions) != 1:
+                raise HTTPException(status_code=409, detail="Conflicting workouts share today's selected date")
     session_ids = [session["workout_occurrence_id"] for session in sessions]
     recent_logs = []
     if session_ids:
@@ -338,13 +351,17 @@ def workout_today(
             .order_by(WorkoutSetLog.created_at.desc())
             .all()
         )
-    selection_runtime = prepare_workout_today_selection_route_runtime(
-        sessions=sessions,
-        recent_logs=recent_logs,
-        today_iso=today_iso,
-    )
-    selected = cast(dict, selection_runtime["selected_session"])
-    resume_selected = bool(selection_runtime["resume_selected"])
+    if flexible['mode'] == 'flexible':
+        selected = deepcopy(flexible['session'])
+        resume_selected = flexible['coverage']['completed'] > 0
+    else:
+        selection_runtime = prepare_workout_today_selection_route_runtime(
+            sessions=sessions,
+            recent_logs=recent_logs,
+            today_iso=today_iso,
+        )
+        selected = cast(dict, selection_runtime["selected_session"])
+        resume_selected = bool(selection_runtime["resume_selected"])
 
     if not selected:
         raise HTTPException(status_code=404, detail="No workouts available")
@@ -433,6 +450,11 @@ def workout_today(
     if authored_selected:
         occurrence, frozen = resolve_occurrence(db, current_user.id, selected["workout_occurrence_id"], raw_plans)
         _attach_authored_load_feedback(db, current_user, occurrence, frozen, response_payload)
+    if flexible['mode'] == 'flexible':
+        response_payload['execution_context'] = flexible['execution_context']
+        response_payload['schedule_mode'] = 'flexible'
+        for exercise in response_payload.get('exercises', []):
+            exercise['starting_load_quality_source'] = 'authored_load_intelligence'
     constructed_payload = cast(dict[str, Any], deepcopy(response_payload))
     mesocycle = cast(dict, response_payload.get("mesocycle") or {})
     session_metrics = _extract_session_observability_metrics(cast(dict[str, Any], response_payload))
@@ -523,7 +545,7 @@ def _replay_command(db: Session, user_id: str, command_id: str, digest: str):
 def log_set(workout_id: str, payload: WorkoutSetLogRequest, db: DbSession, current_user: CurrentUser) -> WorkoutSetLogResponse:
     normalized = payload.model_dump(mode="json", exclude={"command_id"})
     # New absent fields must not change the digest of a pre-M2A command.
-    for field in ("load_context", "load_recommendation_id", "load_override_reason", "actual_rir", "technique_quality", "pain"):
+    for field in ("load_context", "load_recommendation_id", "load_override_reason", "actual_rir", "technique_quality", "pain", "execution_context_id"):
         if normalized[field] is None:
             normalized.pop(field)
     normalized["set_kind"] = (payload.set_kind or "work").strip().lower() or "work"
@@ -540,6 +562,11 @@ def log_set(workout_id: str, payload: WorkoutSetLogRequest, db: DbSession, curre
         if replay:
             return replay
     occurrence, session = resolve_occurrence(db, current_user.id, workout_id, _list_workout_plans(db, current_user.id))
+    from ..flexible_training import validate_performance
+    if payload.command_id:
+        # An exact retained receipt already returned above. Resolve expired-day
+        # pending commands before unrelated current equipment/consent checks.
+        validate_performance(db, current_user, occurrence, payload.execution_context_id)
     exercise = resolve_exercise(session, payload.exercise_id, payload.exercise_occurrence_id)
     if not exercise.get('customized') and any(getattr(payload,k) is not None for k in ('actual_rir','technique_quality','pain')):
         raise HTTPException(422,'These evidence fields apply only to Customized workouts')
@@ -563,6 +590,8 @@ def log_set(workout_id: str, payload: WorkoutSetLogRequest, db: DbSession, curre
     replay = _replay_command(db, current_user.id, command_id, digest)
     if replay:
         return replay
+    if not payload.command_id:
+        validate_performance(db, current_user, occurrence, payload.execution_context_id)
     try:
         return _apply_log_set(workout_id, payload, db, current_user, occurrence, session, exercise, command_id, digest)
     except IntegrityError:
@@ -781,6 +810,8 @@ def undo_last_set(workout_id: str, payload: WorkoutUndoLastSetRequest, db: DbSes
         result = {"status": "ok", "voided_set_id": record.id, **_reconstruct_history(db, record)}
     _save_history_action(db, user_id=current_user.id, command_id=payload.command_id, digest=digest, operation="undo",
         occurrence=occurrence, exercise_occurrence_id=exercise["exercise_occurrence_id"], result=result)
+    from ..flexible_training import reconcile_amendment
+    reconcile_amendment(db, current_user, payload.command_id or str(uuid4()))
     db.commit()
     return result
 
@@ -820,6 +851,8 @@ def correct_set(set_id: str, payload: WorkoutSetCorrectionRequest, db: DbSession
         rpe=payload.rpe if "rpe" in payload.model_fields_set else original.rpe,
         set_kind=original.set_kind, parent_set_index=original.parent_set_index, technique=deepcopy(original.technique),
         created_at=original.created_at, amended_at=now, supersedes_id=original.id,
+        performed_local_date=original.performed_local_date, performed_timezone=original.performed_timezone,
+        execution_context_id=original.execution_context_id,
         replay_context=deepcopy(context), command_id=payload.command_id, request_digest=digest)
     if context['version']==3:
         for name in ('actual_rir','technique_quality','pain'):
@@ -838,6 +871,8 @@ def correct_set(set_id: str, payload: WorkoutSetCorrectionRequest, db: DbSession
     occurrence = db.query(WorkoutOccurrence).filter_by(id=original.workout_occurrence_id, user_id=current_user.id).one()
     _save_history_action(db, user_id=current_user.id, command_id=payload.command_id, digest=digest, operation="correct",
         occurrence=occurrence, exercise_occurrence_id=original.exercise_occurrence_id, result=result)
+    from ..flexible_training import reconcile_amendment
+    reconcile_amendment(db, current_user, payload.command_id or str(uuid4()))
     db.commit()
     return result
 

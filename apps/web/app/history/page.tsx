@@ -29,7 +29,7 @@ export default function HistoryPage() {
   const detail = detailResource?.account === account && detailResource.data.date === selectedDay && getToken() === account ? detailResource.data : null;
   const days = calendar?.days ?? [];
   const programs = Array.from(new Set(days.flatMap(day=>day.program_ids)));
-  const matches = (day:HistoryCalendarResponse["days"][number]) => (statusFilter === "all" || (day.status ?? "unknown") === statusFilter) && (programFilter === "all" || day.program_ids.includes(programFilter));
+  const matches = (day:HistoryCalendarResponse["days"][number]) => (statusFilter === "all" || (day.status ?? "unknown") === statusFilter || day.occurrences?.some(session => session.status === statusFilter)) && (programFilter === "all" || day.program_ids.includes(programFilter));
 
   useEffect(()=>{setSelectedDay(null);setSelectedOccurrence("");setDetailResource(null);},[statusFilter,programFilter]);
 
@@ -95,7 +95,7 @@ export default function HistoryPage() {
               return <button key={day.date} className={`history-date history-date--${status}`} style={{gridColumn:String(weekday+1)}}
                 aria-label={`${day.date}: ${historyStatusLabels[status]}`} aria-pressed={selectedDay===day.date} disabled={!shown}
                 title={`${day.date}: ${day.set_count} recorded sets · ${historyStatusLabels[status]}`} onClick={()=>choose(day.date)}>
-                <span>{Number(day.date.slice(-2))}</span><small aria-hidden="true">{status==="complete"?"✓":status==="partial"?"◐":status==="scheduled"?"○":status==="rest"?"—":"?"}</small>
+                <span>{Number(day.date.slice(-2))}</span><small aria-hidden="true">{status==="complete"?"✓":["partial","ended_early","amended_incomplete"].includes(status)?"◐":status==="scheduled"?"○":status==="rest"?"—":"?"}</small>
               </button>;
             })}
           </div>
@@ -108,7 +108,7 @@ export default function HistoryPage() {
         </details>
       </section>
       <section className="history-card" aria-label="Recent sessions"><h2>Recent sessions</h2>
-        {recent.length ? <ul className="history-session-list">{recent.flatMap(day=>(day.occurrences?.length ? day.occurrences : [{workout_occurrence_id:"",title:"Recorded activity",status:"unknown" as HistoryDayStatus,working_sets_completed:0,working_sets_planned:null}]).map((session,index)=><li key={`${day.date}-${session.workout_occurrence_id}-${index}`}>
+        {recent.length ? <ul className="history-session-list">{recent.flatMap(day=>(day.occurrences?.length ? day.occurrences : [{workout_occurrence_id:"",title:"Recorded activity",status:"unknown" as HistoryDayStatus,working_sets_completed:0,working_sets_planned:null}]).filter(session => statusFilter === "all" || day.status === statusFilter || session.status === statusFilter).map((session,index)=><li key={`${day.date}-${session.workout_occurrence_id}-${index}`}>
           <button onClick={()=>choose(day.date,session.workout_occurrence_id)}><strong>{displayDate(day.date,{weekday:"short",day:"numeric"})} · {session.title}</strong>
             <span>{historyStatusLabels[session.status]}{session.working_sets_planned!=null ? ` · ${session.working_sets_completed} / ${session.working_sets_planned} working sets` : " · completion not established"}</span></button>
         </li>))}</ul> : <p>{calendar ? "No sessions match this window and filter. Dates without evidence remain unknown." : "Your sessions will appear when the calendar loads."}</p>}

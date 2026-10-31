@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { WorkoutWorkload, workloadMode } from "@/components/workout-workload";
+import { FlexibleTraining } from "@/components/flexible-training";
 import { NextWorkout } from "@/components/next-workout";
 import { useAppearance } from "@/components/appearance-provider";
 import { api, ApiError, getProgramDisplayName, getToken, type HistoryAnalyticsResponse, type Profile, type SchedulingContext, type WeeklyReviewStatus, type WorkoutSession } from "@/lib/api";
@@ -56,6 +57,9 @@ function workoutProgramName(workout: HomeWorkout, context: SchedulingContext | n
 export default function HomePage() {
   const { preferences } = useAppearance();
   const [home, setHome] = useState<HomeState>(() => initialState(undefined));
+  const [flexibleMode, setFlexibleMode] = useState(false);
+  const [trainingChecked, setTrainingChecked] = useState(false);
+  const trainingResolved = useCallback((next: {mode: string} | null) => { setFlexibleMode(next?.mode === "flexible"); setTrainingChecked(true); }, []);
   const [reload, setReload] = useState(0);
 
   useEffect(() => {
@@ -66,6 +70,8 @@ export default function HomePage() {
       const token = getToken();
       const version = ++generation;
       activeToken = token;
+      setFlexibleMode(false);
+      setTrainingChecked(false);
       setHome(previous => initialState(token, keepRetry && previous.retryAvailable));
       if (!token) return;
       const isCurrent = () => mounted && version === generation && getToken() === token;
@@ -83,10 +89,11 @@ export default function HomePage() {
         });
       }
       // Today is independently actionable. Optional profile/history/review/calendar reads never gate it.
-      read("workout", api.getTodayWorkout());
+      const training = api.getNextTraining();
+      read("workout", training.then(next => next.mode === "flexible" && !["active", "finish"].includes(next.action) ? null : api.getTodayWorkout()));
       read("profile", api.getProfile());
       read("analytics", api.getHistoryAnalytics(8, 24));
-      read("review", api.getWeeklyReviewStatus());
+      read("review", training.then(next => next.mode === "flexible" ? null : api.getWeeklyReviewStatus()));
       // The API prefers the account's saved timezone; this is only a first-use fallback.
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
       read("week", api.getSchedulingContext(timezone));
@@ -124,11 +131,12 @@ export default function HomePage() {
 
   const { data, status } = home;
   const workout = data.workout;
-  const checked = status.workout === "ready";
-  const loading = status.workout === "pending";
+  const checked = status.workout === "ready" && trainingChecked;
+  const loading = status.workout === "pending" || !trainingChecked;
   const failed = status.workout === "error";
+  const flexible = flexibleMode || data.profile?.schedule_mode === "flexible";
   const noSchedule = checked && !workout && status.week === "ready" && data.week?.plan === null;
-  const title = noSchedule ? "Your week is open" : workout ? "Your next session" : "Your training";
+  const title = flexible ? "Your training" : noSchedule ? "Your week is open" : workout ? "Your next session" : "Your training";
   const primaryTitle = loading ? "Checking your training" : failed ? "Home unavailable" : workout?.title ?? (noSchedule ? "Choose your training dates" : "Review your schedule");
   const message = loading ? "Checking your workout and saved schedule…"
     : failed ? "Could not check today's workout. Retry before assuming it is a rest day. Your saved history is unchanged."
@@ -154,11 +162,12 @@ export default function HomePage() {
       {status.profile === 'ready' && data.profile ? <section className="ux-card space-y-3" aria-label="Account setup">
         <h2>{data.profile.initial_setup_available ? 'Finish setting up your account' : 'Your setup'}</h2>
         <Link className="ux-button ux-button-secondary" href="/onboarding">{data.profile.initial_setup_available || data.profile.setup_status === 'planning' ? 'Resume Setup' : 'Review/Edit Setup'}</Link>
-        {data.profile.setup_status === 'planning' ? <Link className="ux-button ux-button-primary" href={data.profile.selected_program_id === 'full_body_v1' ? '/customize' : '/week'}>Continue to program &amp; dates</Link> : null}
+        {data.profile.setup_status === 'planning' ? <Link className="ux-button ux-button-primary" href={flexible ? '/training/setup' : data.profile.selected_program_id === 'full_body_v1' ? '/customize' : '/week'}>{flexible ? 'Review Flexible program' : 'Continue to program & dates'}</Link> : null}
       </section> : null}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <section className="space-y-4" aria-label="Next step">
-          <div className="ux-card space-y-3" aria-busy={loading}>
+          <FlexibleTraining accountToken={home.token} onResolved={trainingResolved} timeBudgetMinutes={data.profile?.session_time_budget_minutes} reloadKey={reload} />
+          {!flexible ? <div className="ux-card space-y-3" aria-busy={loading}>
             <p className="text-sm text-[var(--text-secondary)]">{knownProgram}</p>
             <h2 className="text-2xl">{primaryTitle}</h2>
             <p className="ux-muted" role="status" aria-live="polite">{message}</p>
@@ -168,8 +177,8 @@ export default function HomePage() {
             {checked && workout ? <Link className="ux-button ux-button-primary w-full" href="/today">{workout.resume ? "Resume your workout" : "Open today's workout"}</Link>
               : checked ? <Link className="ux-button ux-button-primary w-full" href="/week">{noSchedule ? "Choose dates" : "Review Week"}</Link> : null}
             {home.retryAvailable ? <button className={`ux-button ${failed ? "ux-button-primary" : "ux-button-secondary"} w-full`} type="button" aria-disabled={loading} onClick={() => { if (!loading) setReload(value => value + 1); }}>Retry Home</button> : null}
-          </div>
-          {checked && !workout ? <NextWorkout accountToken={home.token} timeBudgetMinutes={data.profile?.session_time_budget_minutes} enabled onMoved={() => setReload(value => value + 1)} /> : null}
+          </div> : null}
+          {!flexible && checked && !workout ? <NextWorkout accountToken={home.token} timeBudgetMinutes={data.profile?.session_time_budget_minutes} enabled onMoved={() => setReload(value => value + 1)} /> : null}
           <Link className="ux-card block space-y-2" href="/checkin">
             <h2>A quick check-in?</h2>
             <p className="ux-muted">Optional. You can do it after training.</p>
@@ -178,7 +187,8 @@ export default function HomePage() {
         </section>
         <aside className="space-y-4" aria-label="Your training week">
           <div className="ux-card space-y-3">
-            <h2>This week</h2>
+            <h2>{flexible ? "Your pace" : "This week"}</h2>
+            {flexible ? <p className="ux-muted">{data.profile?.expected_sessions_per_week ? `Expected ${data.profile.expected_sessions_per_week} visits per week. ` : "No expected frequency set. "}Your original source block can span calendar weeks. Missing a date does not skip work.</p> : <>
             {data.week?.week_start && currentDates.length ? <ol className="grid grid-cols-7 gap-1" aria-label="Selected training dates">
               {datesInWeek(data.week.week_start).map(date => <li key={date}>
                 <Link href="/week" aria-label={`${formatCalendarDate(date)}${currentDates.includes(date) ? ", training scheduled" : ", no training scheduled"}`} aria-current={date === data.week?.local_today ? "date" : undefined}
@@ -188,7 +198,8 @@ export default function HomePage() {
               </li>)}
             </ol> : <p className="ux-muted">{status.week === "pending" ? "Checking your saved dates…" : status.week === "error" ? "Your week could not be loaded." : data.week?.plan ? "Open Week to review your saved plan." : "Choose actual dates and preview your week."}</p>}
             {data.profile ? <p className="ux-muted">{data.profile.effective_days_available ?? data.profile.days_available} training days · {programName(data.profile, data.week)}</p> : null}
-            <Link className="ux-button ux-button-secondary w-full" href="/week">Open Week</Link>
+            <Link className="ux-button ux-button-secondary w-full" href="/week">Open Week</Link></>}
+            {!flexible && data.profile?.selected_program_id?.startsWith("pure_bodybuilding_") ? <Link className="ux-button ux-button-secondary w-full" href="/training/setup">Switch to Flexible</Link> : null}
           </div>
           <Link className="ux-card block space-y-2" href="/history"><h2>Recent training</h2><p className="ux-muted">Your previous workouts are still in History.</p><span className="underline">View History</span></Link>
         </aside>

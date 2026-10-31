@@ -55,6 +55,7 @@ export function SavedSetup({ profile: initialProfile, unit }: { profile: Profile
     } finally { saving.current = false; if (mounted.current) setPending(false); }
   }
   const programId = savedSetupValue(profile, 'selected_program_id');
+  const flexible = profile.schedule_mode === 'flexible';
   const customized = programId === 'full_body_v1';
   const height = profile.onboarding_answers?.height as { unit?: string; cm?: number; feet?: number; inches?: number } | undefined;
   return <div className={styles.form}>
@@ -63,7 +64,7 @@ export function SavedSetup({ profile: initialProfile, unit }: { profile: Profile
       <div><dt>Program preference</dt><dd>{programId ? getProgramDisplayName({ id: programId }) : profile.program_selection_mode === 'auto' ? 'Auto · choose in Week' : 'Not reported'}</dd></div>
       <div><dt>Age</dt><dd>{savedSetupValue(profile, 'age') ?? 'Not reported'}</dd></div>
       <div><dt>Body weight</dt><dd>{savedWeight ? `${displayLoad(savedWeight, unit)} ${unit}` : 'Not reported'}</dd></div>
-      <div><dt>Training days per week</dt><dd>{savedSetupValue(profile, 'days_available') ?? 'Not reported'}</dd></div>
+      <div><dt>{flexible ? 'Flexible expectation' : 'Training days per week'}</dt><dd>{flexible ? `${profile.expected_sessions_per_week ?? 'No'} expected sessions · dates optional` : savedSetupValue(profile, 'days_available') ?? 'Not reported'}</dd></div>
       <div><dt>Height</dt><dd>{height?.unit === 'cm' && height.cm ? `${height.cm} cm` : height?.feet || height?.inches ? `${height.feet ?? 'Unreported'} ft ${height.inches ?? 'unreported'} in` : 'Not reported'}</dd></div>
       {Object.entries(labels).map(([key, label]) => <div key={key}><dt>{label}</dt><dd>{answer(profile.onboarding_answers?.[key])}</dd></div>)}
     </dl></SetupCard>
@@ -82,7 +83,7 @@ export function SavedSetup({ profile: initialProfile, unit }: { profile: Profile
     </SetupCard>
     <p className={styles.helper}>Review your saved answers here. Edit equipment and display preferences in Settings, or review your program and dates separately. Your workouts and history stay with this account.</p>
     <Link className={styles.secondaryLink} href="/settings#training-preferences">Edit equipment &amp; preferences</Link>
-    <Link className={styles.secondaryLink} href={customized ? '/customize' : '/week'}>{customized ? 'Continue to Customized' : 'Continue to program & dates'}</Link>
+    <Link className={styles.secondaryLink} href={flexible ? profile.setup_status === 'planning' ? '/training/setup' : '/today' : customized ? '/customize' : '/week'}>{flexible ? 'Continue Flexible training' : customized ? 'Continue to Customized' : 'Continue to program & dates'}</Link>
     <Link className={styles.textLink} href="/">Return Home</Link>
   </div>;
 }

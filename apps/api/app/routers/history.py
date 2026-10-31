@@ -5,7 +5,8 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from core_engine import build_history_analytics, build_history_calendar, build_history_day_detail
-from sqlalchemy import func, or_
+from core_engine.history_status import calendar_statuses
+from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -36,15 +37,42 @@ def _history_projection_plans(db: Session, user_id: str, start: date, end: date,
     referenced = {row["workout_occurrence_id"] for row in rows if row.get("workout_occurrence_id")}
     snapshots = {row.id: row for row in db.query(WorkoutOccurrence).filter(
         WorkoutOccurrence.user_id == user_id,
-        or_(WorkoutOccurrence.scheduled_date.between(start, end), WorkoutOccurrence.id.in_(referenced)),
+        or_(WorkoutOccurrence.scheduled_date.between(start, end), WorkoutOccurrence.id.in_(referenced),
+            and_(WorkoutOccurrence.sequence_id.is_not(None), or_(
+                WorkoutOccurrence.advancement["local_day"].as_string().between(str(start), str(end)),
+                WorkoutOccurrence.execution_context["local_day"].as_string().between(str(start), str(end))))),
     ).all()}
     projected = [SimpleNamespace(payload={**deepcopy(plan.payload), "sessions": identified_sessions(plan, snapshots)}) for plan in plans]
     included = {session["workout_occurrence_id"] for plan in projected for session in plan.payload["sessions"]}
+    flexible_ids = {identity for identity, occurrence in snapshots.items() if occurrence.sequence_id}
+    # Coverage is lifetime evidence for these exact owned occurrences; activity
+    # counts retain the caller's date window and never use these extra rows.
+    coverage_rows = performed_log_rows(db, user_id=user_id, occurrence_ids=flexible_ids) if flexible_ids else []
+    by_occurrence: dict[str, list[dict]] = {}
+    for row in coverage_rows:
+        by_occurrence.setdefault(row["workout_occurrence_id"], []).append(row)
     for identity, occurrence in snapshots.items():
         if identity in included:
             continue
         session = deepcopy(occurrence.payload)
         session["workout_occurrence_id"] = identity
+        if occurrence.sequence_id:
+            effective_rows = by_occurrence.get(identity, [])
+            actual_dates = {row["performed_date"].isoformat() for row in effective_rows}
+            projection_dates = set(actual_dates)
+            for context in (occurrence.advancement, occurrence.execution_context):
+                day = (context or {}).get("local_day")
+                if day:
+                    projection_dates.add(day)
+            session.pop("scheduled_date", None)
+            session.update(sequence_id=occurrence.sequence_id, execution_state=occurrence.execution_state,
+                advancement=deepcopy(occurrence.advancement), actual_dates=sorted(actual_dates),
+                projection_dates=sorted(projection_dates), coverage_rows=effective_rows)
+            for day in sorted(projection_dates):
+                if str(start) <= day <= str(end):
+                    projected.append(SimpleNamespace(payload={"program_template_id": occurrence.program_id,
+                        "sessions": [{**session, "date": day}]}))
+            continue
         if occurrence.scheduled_date:
             session["date"] = session["scheduled_date"] = occurrence.scheduled_date.isoformat()
         projected.append(SimpleNamespace(payload={"program_template_id": occurrence.program_id, "sessions": [session]}))
@@ -119,6 +147,9 @@ def get_exercise_history(
             "set_index": row['set_index'],
             "created_at": row['created_at'].isoformat(),
             "performed_date": row['performed_date'].isoformat(),
+            "performed_date_source": row["performed_date_source"],
+            **({"performed_timezone": row["performed_timezone"], "execution_context_id": row["execution_context_id"]}
+               if row["performed_local_date"] is not None else {}),
         }
         for row in rows
     ]
@@ -236,4 +267,19 @@ def get_history_day_detail(
 
     plans = _history_projection_plans(db, current_user.id, day, day, rows)
     payload = build_history_day_detail(day=day, log_rows=rows, plans=plans)
+    statuses = {item["workout_occurrence_id"]: item
+        for item in calendar_statuses(plans, rows).get(day.isoformat(), {}).get("occurrences", [])
+        if item.get("sequence_id")}
+    receipt_dates = {row["id"]: row for row in rows}
+    for workout in payload["workouts"]:
+        status = statuses.get(workout.get("workout_occurrence_id"))
+        if status:
+            workout.update(status)
+        for exercise in workout["exercises"]:
+            for receipt in exercise["sets"]:
+                row = receipt_dates[receipt["id"]]
+                receipt.update(performed_date=row["performed_date"].isoformat(),
+                    performed_date_source=row["performed_date_source"])
+                if row["performed_local_date"] is not None:
+                    receipt.update(performed_timezone=row["performed_timezone"], execution_context_id=row["execution_context_id"])
     return _normalize_program_identity_payload(payload)

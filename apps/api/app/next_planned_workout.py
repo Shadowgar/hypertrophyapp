@@ -81,6 +81,8 @@ def next_planned_workout(db, user, planning_instant: datetime):
 def move_next_planned_workout(db, user, payload, planning_clock):
     lock_history_user(db, user.id)
     db.refresh(user)
+    from .flexible_training import guard_calendar
+    guard_calendar(db, user.id)
     planning_instant = planning_clock()
     value = _review(db, user, planning_instant)
     expected = {'plan_id': payload.plan_id, 'workout_occurrence_id': payload.workout_occurrence_id,

@@ -1,6 +1,7 @@
 "use client";
 import {InlineTechniquePanel,type TechniqueModalState} from "@/components/technique-entry";
 import { WorkoutWorkload, workloadMode } from "@/components/workout-workload";
+import { FlexibleTraining } from "@/components/flexible-training";
 import { NextWorkout } from "@/components/next-workout";
 import { AtlasRunner } from "@/components/atlas-runner";
 import { useAppearance } from "@/components/appearance-provider";
@@ -30,6 +31,7 @@ import {
   api,
   getToken,
   ApiError,
+  type TrainingNext,
   type SorenessSeverity,
   type WorkoutExercise,
   type WorkoutLiveRecommendation,
@@ -382,6 +384,7 @@ function WorkoutSummaryCard({ summary }: Readonly<{ summary: WorkoutSummary | nu
 }
 
 function ExerciseDetailOverlay({
+  flexible,
   exercise,
   navigation,
   onSelectExercise,
@@ -414,6 +417,7 @@ function ExerciseDetailOverlay({
   warmupCommandScope,
   effectiveSets,
 }: Readonly<{
+  flexible?: boolean;
   exercise: WorkoutExercise;
   navigation: Array<{id:string;name:string;completed:number;total:number}>;
   onSelectExercise: (id:string)=>void;
@@ -448,7 +452,7 @@ function ExerciseDetailOverlay({
 }>) {
 
   const bodyweight = isBodyweightAuthored(exercise) || Boolean(exercise.customized && exercise.load_semantics === "bodyweight");
-  return <AtlasRunner exercise={exercise} name={selectedName} completed={completed} scope={warmupCommandScope}
+  return <AtlasRunner flexible={flexible} exercise={exercise} name={selectedName} completed={completed} scope={warmupCommandScope}
     guidance={loadIntelligence} context={loadContext} receipts={effectiveSets} navigation={navigation} onSelect={onSelectExercise}
     onSaveCalibration={exercise.customized ? undefined : onSaveCalibration}
     onClose={onClose} submit={onSetComplete} onUndo={onUndoLastSet} undoRecovery={undoRecovery} onCorrect={onCorrectSet} rest={globalRestTimer} endRest={onClearGlobalRestTimer}
@@ -530,6 +534,8 @@ export default function TodayPage() {
   const capturePageRead = useCallback((): PageReadScope => ({ token: getToken(), epoch: pageReadEpoch.current }), []);
   const isCurrentPageRead = useCallback((scope: PageReadScope) =>
     mounted.current && scope.epoch === pageReadEpoch.current && scope.token === getToken(), []);
+  const [trainingDecision, setTrainingDecision] = useState<TrainingNext | null>(null);
+  const [trainingChecked, setTrainingChecked] = useState(false);
   const [workout, setWorkout] = useState<WorkoutSession | null>(null);
   const currentWorkout = useRef(workout);
   useEffect(() => { currentWorkout.current = workout; }, [workout]);
@@ -608,6 +614,18 @@ export default function TodayPage() {
   const isBeginWorkoutLoadInProgress = useRef(false);
   const sorenessDismissedDate = useRef<string | null>(null);
   const sorenessPromptDate = useRef<string | null>(null);
+  const trainingResolved = useCallback((next: TrainingNext | null) => {
+    setTrainingChecked(true);
+    setTrainingDecision(next);
+    if (next?.mode === "flexible" && !["active", "finish"].includes(next.action)) {
+      invalidatePageReads();
+      currentOccurrence.current = null;
+      isBeginWorkoutLoadInProgress.current = false;
+      setWorkoutLoading(false);
+      setWorkout(null); setOccurrenceVerified(false);
+    }
+  }, [invalidatePageReads]);
+
 
   const resetExerciseAuthority = useCallback((key: string, refreshed: WorkoutExercise, hadGuidance: boolean) => {
     forgetSelectedLoadContext(key);
@@ -654,6 +672,8 @@ export default function TodayPage() {
       sorenessDismissedDate.current = null;
       sorenessPromptDate.current = null;
       setWorkout(null);
+      setTrainingDecision(null);
+      setTrainingChecked(false);
       setNextPreviewAllowed(false);
       setOccurrenceVerified(false);
       setSelectedExerciseId(null);
@@ -933,6 +953,7 @@ export default function TodayPage() {
       acknowledgeLogCommand(pendingCommandKey(attempt.scope, attempt.exerciseIdentity, "undo"));
       acknowledgeLogCommand(recoveryKey); undoRecoveryRef.current = null; setUndoRecovery(null);
       await loadToday();
+      window.dispatchEvent(new Event("hypertrophy:training-changed"));
     } catch (error) {
       if (!isCurrentPageRead(pageScope)) return;
       if (isDefinitiveUndoRejection(error) && undoRecoveryStorageKey() === recoveryKey) {
@@ -1025,12 +1046,12 @@ export default function TodayPage() {
   }, [loadToday, resolveLocalToday, resetSorenessForm, showSorenessModal, capturePageRead, isCurrentPageRead]);
 
   useEffect(() => {
-    if (health !== "ok" || workout !== null || hasAutoLoadStarted.current) {
+    if (!trainingChecked || (trainingDecision?.mode === "flexible" && !["active", "finish"].includes(trainingDecision.action)) || health !== "ok" || workout !== null || hasAutoLoadStarted.current) {
       return;
     }
     hasAutoLoadStarted.current = true;
     beginWorkoutLoad();
-  }, [health, workout, beginWorkoutLoad, accountGeneration]);
+  }, [health, workout, beginWorkoutLoad, accountGeneration, trainingDecision, trainingChecked]);
 
   useEffect(() => {
     if (!nextPreviewAllowed || !getToken()) return;
@@ -1118,6 +1139,7 @@ export default function TodayPage() {
     const offeredDecision = currentLoadDecision(intelligence, completedCount - 1, exercise.sets);
     const context = loadContextByExercise[exerciseId] ?? intelligence?.load_context;
     const payload = {
+      ...(workout.execution_context?.id || workout.execution_context_id ? { execution_context_id: workout.execution_context?.id ?? workout.execution_context_id! } : {}),
       primary_exercise_id: exercise.primary_exercise_id ?? null,
       exercise_id: exercise.id,
       exercise_occurrence_id: exercise.exercise_occurrence_id,
@@ -1135,6 +1157,7 @@ export default function TodayPage() {
     try {
       const retained = retainLogPayload(commandKey, { ...payload, command_id: getLogCommand(commandKey) });
       const feedback = await api.logSet(workoutReference(workout), retained);
+      window.dispatchEvent(new Event("hypertrophy:training-changed"));
       acknowledgeLogCommand(commandKey);
       if (currentOccurrence.current !== workoutReference(workout)) return;
       setLastSetByExercise((prev) => ({ ...prev, [exerciseId]: performed }));
@@ -1243,6 +1266,7 @@ export default function TodayPage() {
     if (!exercise) throw new Error("Exercise occurrence is unavailable");
     const commandKey = pendingCommandKey(workout ? occurrenceStorageKey("attempt", workout) : state.workoutId, state.exerciseId, `${state.kind}:${state.parentSetIndex}:${ordinal}`);
     const payload = retainLogPayload(commandKey, {
+      ...(workout?.execution_context?.id || workout?.execution_context_id ? { execution_context_id: workout.execution_context?.id ?? workout.execution_context_id! } : {}),
       command_id: getLogCommand(commandKey),
       primary_exercise_id: exercise.primary_exercise_id,
       exercise_id: exercise.id,
@@ -1256,6 +1280,7 @@ export default function TodayPage() {
       technique: { type: state.kind, ordinal },
     });
     try {const feedback=await api.logSet(state.workoutId,payload);
+      window.dispatchEvent(new Event("hypertrophy:training-changed"));
       if(currentOccurrence.current===state.workoutId && feedback.load_intelligence!==undefined)updateLoadIntelligence(state.exerciseId,feedback.load_intelligence??null);
     } catch(error){if(error instanceof ApiError&&error.status===422)acknowledgeLogCommand(commandKey);throw error;}
     acknowledgeLogCommand(commandKey);
@@ -1332,6 +1357,7 @@ export default function TodayPage() {
       // new request against the latest set.
       acknowledgeLogCommand(commandKey); acknowledgeLogCommand(recoveryKey);
       undoRecoveryRef.current = null; setUndoRecovery(null); setMessage("");
+      if (workout.execution_context) window.dispatchEvent(new Event("hypertrophy:training-changed"));
       return confirmedCount;
     } catch (error) {
       if (!isCurrentPageRead(pageScope)) return false;
@@ -1359,12 +1385,13 @@ export default function TodayPage() {
 
   return (
     <div className={executionVisible ? "atlas-page" : "space-y-4 pb-8"}>
+      <FlexibleTraining accountToken={getToken()} onResolved={trainingResolved} onContinue={() => { void beginWorkoutLoad(); }} canChange={() => !undoRecoveryRef.current && !undoInFlight.current && !isBeginWorkoutLoadInProgress.current} timeBudgetMinutes={sessionTimeGoal} />
       <div className={executionVisible ? "hidden" : "flex flex-wrap items-baseline justify-between gap-2"}>
         <h1 className="ui-title-page" data-today-heading tabIndex={-1}>Today</h1>
-        {!undoRecovery ? <Link className="inline-flex min-h-11 items-center underline" href={manageDatesHref}>{manageDatesLabel}</Link> : null}
+        {!undoRecovery && trainingDecision?.mode !== "flexible" ? <Link className="inline-flex min-h-11 items-center underline" href={manageDatesHref}>{manageDatesLabel}</Link> : null}
         <p className="ui-meta text-zinc-400">{todayDate}</p>
       </div>
-      <div className={executionVisible ? "hidden" : "main-card main-card--module main-card--accent spacing-grid spacing-grid--tight"}>
+      <div className={executionVisible || trainingDecision?.mode === "flexible" ? "hidden" : "main-card main-card--module main-card--accent spacing-grid spacing-grid--tight"}>
         <Button className="min-h-[44px] w-full" onClick={beginWorkoutLoad} disabled={workoutLoading} aria-busy={workoutLoading}>
           <span className="inline-flex items-center gap-2">
             <UiIcon name="workout" className="ui-icon--action" />
@@ -1373,7 +1400,7 @@ export default function TodayPage() {
         </Button>
       </div>
 
-      {message && !executionVisible ? (
+      {message && !executionVisible && trainingDecision?.mode !== "flexible" ? (
         <div className="main-card main-card--shell space-y-2 ui-body-sm" role="status">
           {message.startsWith("Rest day") ? <h2 className="text-base font-semibold">No workout scheduled today</h2> : null}
           <p>{message}</p>
@@ -1395,7 +1422,7 @@ export default function TodayPage() {
         </div>
       ) : null}
 
-      {nextPreviewAllowed && !workout && !workoutLoading && !undoRecovery ? <NextWorkout accountToken={getToken()} timeBudgetMinutes={sessionTimeGoal} enabled onMoved={() => { void beginWorkoutLoad(); }} canMoveNow={() => !undoRecoveryRef.current && !undoInFlight.current && !isBeginWorkoutLoadInProgress.current} /> : null}
+      {trainingDecision?.mode !== "flexible" && nextPreviewAllowed && !workout && !workoutLoading && !undoRecovery ? <NextWorkout accountToken={getToken()} timeBudgetMinutes={sessionTimeGoal} enabled onMoved={() => { void beginWorkoutLoad(); }} canMoveNow={() => !undoRecoveryRef.current && !undoInFlight.current && !isBeginWorkoutLoadInProgress.current} /> : null}
 
       {undoRecovery && (!workout || undoRecovery.scope !== occurrenceStorageKey("attempt", workout) || !workout.exercises.some(item => exerciseKey(item) === undoRecovery.exerciseIdentity)) ? <div role="alert"><p>An undo for a previous workout is unconfirmed. This workout is read-only until the original undo is reconciled.</p><Button disabled={priorUndoBusy} onClick={recoverPriorUndo}>Retry original undo</Button></div> : null}
       {sorenessLookupFailed && workout && occurrenceVerified && !executionVisible ? (
@@ -1413,7 +1440,7 @@ export default function TodayPage() {
             {workout.title} · {workoutProgress?.completed ?? 0}/{workoutProgress?.planned ?? 0} sets
           </p>
 
-          {!undoRecovery ? <WorkoutWorkload exercises={workout.exercises} timeBudgetMinutes={sessionTimeGoal} mode={workloadMode(workout.program_template_id ?? workout.selected_program_id, Boolean(workout.customized))} /> : null}
+          {!undoRecovery ? <WorkoutWorkload exercises={workout.exercises} timeBudgetMinutes={sessionTimeGoal} mode={trainingDecision?.mode === "flexible" ? "flexible" : workloadMode(workout.program_template_id ?? workout.selected_program_id, Boolean(workout.customized))} /> : null}
           <ul className="space-y-1.5" aria-label="Exercise list">
             {(workout.exercises ?? []).map((exercise) => {
               const selectedName = resolveExerciseName(exercise, swapIndexByExercise);
@@ -1488,6 +1515,7 @@ export default function TodayPage() {
 
         return (
           <ExerciseDetailOverlay
+            flexible={trainingDecision?.mode === "flexible"}
             key={`${exerciseKey(exercise)}/${exercise.performed_variant?.option_id ?? "source"}`}
             exercise={exercise.customized?{...exercise,customized_load_decision:(recommendation?.decision_trace?.load_decision as typeof exercise.customized_load_decision)??exercise.customized_load_decision}:exercise}
             navigation={workout.exercises.map(item=>({id:exerciseKey(item),name:resolveDisplayExerciseName(item,resolveExerciseName(item,swapIndexByExercise),weakAreas),completed:completedSetsByExercise[exerciseKey(item)]??0,total:item.sets}))}
@@ -1540,13 +1568,15 @@ export default function TodayPage() {
               if (undoRecoveryRef.current) throw new Error("Confirm the original undo before recording warm-ups.");
               const key = exerciseKey(exercise);
               const commandKey = pendingCommandKey(occurrenceStorageKey("attempt", workout), key, `warmup:${ordinal}`);
-              const payload = retainLogPayload(commandKey, { exercise_id: exercise.id,
+              const payload = retainLogPayload(commandKey, {
+                ...(workout.execution_context?.id || workout.execution_context_id ? { execution_context_id: workout.execution_context?.id ?? workout.execution_context_id! } : {}), exercise_id: exercise.id,
                 primary_exercise_id: exercise.primary_exercise_id ?? null, exercise_occurrence_id: exercise.exercise_occurrence_id,
                 command_id: getLogCommand(commandKey), set_index: ordinal, reps: performed.reps, weight: performed.weight, rpe: performed.rpe,
                 set_kind: "warmup", parent_set_index: null, technique: null, load_context: loadContext,
                 ...(loadIntelligence?.warmup_guidance?.id && loadIntelligence.load_context.display_unit === loadContext.display_unit ? { load_recommendation_id: loadIntelligence.warmup_guidance.id } : {}) });
               try {
                 const feedback = await api.logSet(workoutReference(workout), payload);
+                window.dispatchEvent(new Event("hypertrophy:training-changed"));
                 acknowledgeLogCommand(commandKey);
                 if (currentOccurrence.current !== workoutReference(workout)) return;
                 advanceLoadGeneration(key);
@@ -1610,6 +1640,7 @@ export default function TodayPage() {
                 throw error;
               }
               acknowledgeLogCommand(commandKey);
+              if (workout.execution_context) window.dispatchEvent(new Event("hypertrophy:training-changed"));
               if (currentOccurrence.current !== workoutReference(workout)) return;
               advanceLoadGeneration(exerciseKey(exercise));
               if (result.customized_receipts) setEffectiveSetsByExercise(previous=>({...previous,[exerciseKey(exercise)]:result.customized_receipts!}));
@@ -1636,6 +1667,7 @@ export default function TodayPage() {
               const commandKey = pendingCommandKey(occurrenceStorageKey("attempt", workout), exerciseKey(exercise), JSON.stringify(input));
               const result = await api.decideAuthoredSubstitution(workoutReference(workout), { ...input, command_id: getLogCommand(commandKey) });
               acknowledgeLogCommand(commandKey);
+              if (workout.execution_context) window.dispatchEvent(new Event("hypertrophy:training-changed"));
               if (currentOccurrence.current !== workoutReference(workout)) return;
               const key = exerciseKey(exercise);
               loadPreviewVersions.current[key] = (loadPreviewVersions.current[key] ?? 0) + 1;

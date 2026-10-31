@@ -1292,6 +1292,8 @@ def _apply_coaching_decision_route(
     decision_kind: Literal["phase", "specialization"],
 ) -> dict[str, Any]:
     lock_history_user(db, current_user.id)
+    from ..flexible_training import guard_calendar
+    guard_calendar(db, current_user.id)
     source_recommendation = _resolve_preview_recommendation(
         db,
         user_id=current_user.id,
@@ -2227,6 +2229,13 @@ def _ensure_latest_authored_plan_current_if_needed(
     db: Session,
     current_user: User,
 ) -> WorkoutPlan | None:
+    # This legacy GET can repair a saved plan. Serialize its entire decision
+    # with enrollment/conversion and discard an authenticated User snapshot
+    # loaded before another writer acquired the account lock.
+    lock_history_user(db, current_user.id)
+    db.refresh(current_user)
+    if current_user.schedule_mode == "flexible":
+        return None
     selected_template_id = resolve_selected_program_binding_id(current_user.selected_program_id)
     if not (is_authored_phase1_binding_id(selected_template_id) or is_authored_phase2_binding_id(selected_template_id)):
         plans = _list_user_workout_plans(db, user_id=current_user.id)
@@ -2317,6 +2326,8 @@ def _generate_week_for_user(
     if selected_week is None:
         lock_history_user(db, current_user.id)
         db.refresh(current_user)
+    from ..flexible_training import guard_calendar
+    guard_calendar(db, current_user.id)
     if selected_week is not None:
         if generation_mode != "current_week_regenerate":
             raise HTTPException(422, "Use the selected-date preview and activation workflow")
@@ -2419,6 +2430,8 @@ def plan_generate_week(
     db: DbSession,
     current_user: CurrentUser,
 ) -> dict:
+    from ..flexible_training import guard_calendar
+    guard_calendar(db, current_user.id)
     if not current_user.split_preference or (not current_user.days_available and payload.selected_dates is None):
         raise HTTPException(status_code=400, detail=PROFILE_INCOMPLETE_DETAIL)
     explicit_template_id = resolve_selected_program_binding_id(payload.template_id) if payload.template_id else None
@@ -2454,6 +2467,8 @@ def plan_generate_next_week(
     db: DbSession,
     current_user: CurrentUser,
 ) -> dict:
+    from ..flexible_training import guard_calendar
+    guard_calendar(db, current_user.id)
     if not current_user.days_available or not current_user.split_preference:
         raise HTTPException(status_code=400, detail=PROFILE_INCOMPLETE_DETAIL)
     explicit_template_id = resolve_selected_program_binding_id(payload.template_id) if payload.template_id else None

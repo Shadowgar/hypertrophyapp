@@ -176,7 +176,8 @@ def test_null_and_legacy_occurrences_keep_created_day_and_audit_timestamp(scenar
         rows = performed_log_rows(db, user_id=user_id, start_date=timestamp.date(), end_date=timestamp.date())
     assert len(rows) == 1 and rows[0]['id'] == log_id
     assert rows[0]['performed_date'] == timestamp.date() and rows[0]['created_at'] == timestamp
-    assert set(rows[0]) == set(before[0]) | {'performed_date'}
+    assert set(rows[0]) == set(before[0]) | {'performed_date', 'performed_date_source'}
+    assert rows[0]['performed_date_source'] == 'legacy_audit_timestamp_date'
     assert client.get('/history/day/2026-10-12', headers=headers).json()['totals']['set_count'] == 1
     assert stored_logs(user_id) == before
 

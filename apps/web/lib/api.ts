@@ -161,7 +161,12 @@ export type WorkoutLiveRecommendation = {
   decision_trace?: Record<string, unknown>;
 };
 
+export type TrainingExecutionContext = { id: string; local_day: string; timezone: string };
+
 export type WorkoutSession = {
+  execution_context?: TrainingExecutionContext | null;
+  execution_context_id?: string | null;
+  sequence_id?: string | null;
   program_template_id?: string | null;
   selected_program_id?: string | null;
   customized?: boolean | {proposal_id?:string};
@@ -227,7 +232,9 @@ export type Profile = {
   equipment_profile: string[];
   weak_areas?: string[];
   onboarding_answers?: Record<string, unknown>;
-  days_available: number;
+  days_available: number | null;
+  schedule_mode?: "calendar" | "flexible";
+  expected_sessions_per_week?: number | null;
   effective_days_available?: number | null;
   effective_program_id?: string | null;
   scheduling_timezone?: string | null;
@@ -339,6 +346,7 @@ export type GeneratedWeekSession = {
 };
 
 export type GeneratedWeekPlan = {
+  plan_id?: string;
   customized?: {proposal_id?:string};
   schedule?: {
     mode: string;
@@ -834,9 +842,10 @@ export type HistoryAnalyticsResponse = {
 };
 
 export type HistoryDayStatus = "complete" | "partial" | "scheduled" | "rest" | "unknown";
+export type HistorySessionStatus = HistoryDayStatus | "ended_early" | "amended_incomplete" | "active" | "paused" | "planned";
 export type HistoryOccurrenceStatus = {
   workout_occurrence_id: string; workout_id?: string; title: string; program_id?: string | null;
-  status: HistoryDayStatus; working_sets_completed: number; working_sets_planned: number | null;
+  status: HistorySessionStatus; working_sets_completed: number; working_sets_planned: number | null;
 };
 export type HistoryCalendarDay = {
   status?: HistoryDayStatus;
@@ -1118,7 +1127,29 @@ export type NextPlannedWorkout = {
 };
 
 
+export type TrainingOperation = "start" | "pause" | "resume" | "finish" | "end-early" | "reconcile" | "retire";
+export type TrainingNext = {
+  mode: "calendar" | "flexible";
+  sequence_id?: string; revision?: number; source_position?: number; state?: string;
+  action: "start" | "resume" | "active" | "finish" | "none" | "blocked";
+  session?: WorkoutSession | null; occurrence_id?: string | null; execution_context?: TrainingExecutionContext | null;
+  local_day?: string; timezone?: string; digest?: string;
+  coverage?: {known: boolean; required: number; completed: number; missing: Array<{exercise_occurrence_id: string; set_index: number; name: string}>; complete: boolean};
+  blockers?: Array<{code: string; message?: string; earliest_day?: string}>;
+  resolution_options?: string[]; source_notice?: string; expected_sessions_per_week?: number | null;
+};
+export type TrainingCommand = {command_id: string; expected_revision: number; occurrence_id: string | null;
+  expected_digest: string; expected_local_day: string; confirmed: true; reason?: string};
+export type TrainingEnrollmentInput = {program_id: string; timezone: string; expected_sessions_per_week: number | null; switch_plan_id?: string | null};
+export type TrainingEnrollmentPreview = {digest: string; program_id: string; session_count: number; total_working_sets: number;
+  first_session: Omit<WorkoutSession, "title"> & {title?: string; name?: string}; legacy_plan_id?: string | null; available: boolean;
+  blockers?: Array<{code: string; message?: string}>; source_notice?: string};
+
 export const api = {
+  getNextTraining: () => request<TrainingNext>("/training/next"),
+  previewTrainingEnrollment: (payload: TrainingEnrollmentInput) => request<TrainingEnrollmentPreview>("/training/enroll/preview", {method: "POST", body: JSON.stringify(payload)}),
+  enrollTraining: (payload: TrainingEnrollmentInput & {preview_digest: string; command_id: string; confirmed: true}) => request<TrainingNext>("/training/enroll", {method: "POST", body: JSON.stringify(payload)}),
+  commandTraining: (sequenceId: string, operation: TrainingOperation, payload: TrainingCommand) => request<TrainingNext>(`/training/${encodeURIComponent(sequenceId)}/${operation}`, {method: "POST", body: JSON.stringify(payload)}),
   health: () => request<{ status: string; date: string; version?: string }>("/health"),
   getTodayWorkout: () => request<WorkoutSession>("/workout/today"),
   getNextPlannedWorkout: () => request<NextPlannedWorkout | null>("/workout/next-planned"),
@@ -1289,6 +1320,7 @@ export const api = {
       exercise_id: string;
       exercise_occurrence_id?: string;
       command_id?: string;
+      execution_context_id?: string;
       set_index: number;
       reps: number;
       weight: number;

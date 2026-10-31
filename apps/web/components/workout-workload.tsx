@@ -1,4 +1,4 @@
-export type WorkloadMode = "authored" | "customized" | "unknown";
+export type WorkloadMode = "flexible" | "authored" | "customized" | "unknown";
 
 /** Only these response identities establish Authored source authority. */
 export function workloadMode(programId: string | null | undefined, customized = false): WorkloadMode {
@@ -26,7 +26,7 @@ export function WorkoutWorkload({ exercises, timeBudgetMinutes, mode = "unknown"
     <p className="font-semibold">{exercises.length} {exercises.length === 1 ? "exercise" : "exercises"} · {workingSets} planned working sets</p>
     <p>{goalLabel} Duration is unknown; these counts are not a calibrated time estimate.</p>
     <p className="text-amber-300">Review this workload before starting: it may exceed your available time.</p>
-    {mode === "authored" ? <>
+    {mode === "flexible" ? <><p>Pause and Resume the same source workout across days. Its original exercises and sets stay intact; expected frequency does not regroup them.</p><p>Finish requires all required working sets. End Early records the exact missing work as incomplete before advancing.</p></> : mode === "authored" ? <>
       <p>Before starting any workout this week, review more selected visits to spread all source exercises and working sets while preserving their order and relationships.</p>
       <p><a className="underline" href="/week">Review 2–5 selected visits in Week</a>. Preview and confirm a feasible placement before it replaces your schedule.</p>
       <p className="text-xs text-zinc-400">This option cannot split a started workout or carry unfinished work into another week.</p>
