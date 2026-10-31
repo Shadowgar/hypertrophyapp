@@ -97,7 +97,18 @@ def typed_tracking_feedback(exercise, **kwargs):
     if projected.get('performed_variant'):
         projected['load_semantics'] = projected['performed_variant'].get('load_semantics')
         projected['recommended_working_weight'] = 0.0
+    unavailable_weight = not is_bodyweight_authored(projected) and (
+        bool(projected.get('performed_variant')) or projected.get('recommended_working_weight') is None)
+    if unavailable_weight:
+        # Private compatibility input for the compiler-qualified helper. It is
+        # neither stored in the source exercise nor returned as load advice.
+        projected['recommended_working_weight'] = 0.0
     result = _feedback(projected, **kwargs)
+    if unavailable_weight:
+        result['recommended_weight'] = None
+        result['decision_trace']['runtime_weight_adapter'] = {
+            'owner': 'core_engine.authored_constraints',
+            'source_weight_available': exercise.get('recommended_working_weight') is not None}
     if exercise.get('performed_variant'):
         result['guidance'] = 'Follow the source target and record the actual performed variant load.'
         result['guidance_rationale'] = 'confirmed_variant_receipt_only'

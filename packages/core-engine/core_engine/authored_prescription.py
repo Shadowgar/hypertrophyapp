@@ -98,6 +98,6 @@ def typed_tracking_feedback(exercise, *, completed_sets, set_index=1):
         "completed_sets": completed_sets}
     return {"completed_sets": completed_sets, "remaining_sets": max(0, int(exercise["sets"]) - completed_sets),
         "recommended_reps_min": bounds[0] if bounds else None, "recommended_reps_max": bounds[1] if bounds else None,
-        "recommended_weight": 0.0 if is_bodyweight_authored(exercise) else (float(exercise["recommended_working_weight"]) if exercise.get("recommended_working_weight") is not None else None),
+        "recommended_weight": 0.0 if is_bodyweight_authored(exercise) else float(exercise["recommended_working_weight"]),
         "guidance": "Follow the authored target and record actual reps.",
         "guidance_rationale": "authored_typed_target", "decision_trace": trace}
