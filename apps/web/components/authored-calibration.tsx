@@ -125,8 +125,8 @@ export function AuthoredCalibration(p: Props) {
     persist(draft);
   }, [draft, persist]);
   const [editing, setEditing] = useState<{ field: string; value: string; unit: "lb" | "kg" } | null>(null);
-  const offered = useRef(p.eligible !== false);
-  if (p.eligible !== false) offered.current = true;
+  const [offered, setOffered] = useState(p.eligible !== false);
+  if (!offered && p.eligible !== false) setOffered(true);
   const locked = p.disabled || busy || Boolean(draft.attempt) || p.eligible === false;
   const unit = draft.attempt ? draft.unit : p.context.display_unit;
   function shown(value: string, precise = false) {
@@ -270,7 +270,7 @@ export function AuthoredCalibration(p: Props) {
       setBusy(false);
     }
   }
-  if (!offered.current && !draft.attempt) return null;
+  if (!offered && !draft.attempt) return null;
   return (
     <div className="space-y-4 ux-card">
       {p.guidance?.initial_estimate?.status === "unavailable" ? <p className="ux-muted">
