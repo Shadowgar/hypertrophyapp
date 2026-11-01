@@ -129,11 +129,9 @@ test("estimate label and actual draft survive refreshed advice and reload", () =
   ).toHaveValue(60);
 });
 function fillBenchmark() {
-  fireEvent.click(screen.getByRole("button", { name: "Why?" }));
-  fireEvent.change(screen.getByLabelText("Starting-load path"), {
-    target: { value: "known_1rm" },
-  });
-  fireEvent.change(screen.getByLabelText("Benchmark load"), {
+  fireEvent.click(screen.getByRole("radio", { name: "I know my 1-rep max." }));
+  fireEvent.click(screen.getByText("Equipment and available loads"));
+  fireEvent.change(screen.getByLabelText("Benchmark load (lb)"), {
     target: { value: "100" },
   });
   fireEvent.change(screen.getByLabelText("Observed date"), {
@@ -176,7 +174,6 @@ test("optional benchmark submits context without recording work; uncertain retry
   });
   view.unmount();
   render(runner(guidance(), { onSaveCalibration: save, submit }));
-  fireEvent.click(screen.getByRole("button", { name: "Why?" }));
   fireEvent.click(
     screen.getByRole("button", { name: "Retry exact benchmark" }),
   );
@@ -282,7 +279,7 @@ test("Today sends the calibration command and restores the server setup on reloa
   expect(screen.getByLabelText("Equipment identity")).toHaveValue(
     "specific-cable",
   );
-  expect(screen.getByLabelText("Benchmark load")).toHaveValue(100);
+  expect(screen.getByLabelText("Benchmark load (lb)")).toHaveValue(100);
   expect(
     screen.getByRole("spinbutton", { name: "Working weight (lb)" }),
   ).toHaveValue(65);
@@ -321,10 +318,8 @@ test("recent benchmark requires explicit RIR and confirmation and sends declared
   const save = vi.fn<(command: unknown, isRetry?: boolean) => Promise<void>>(async () => {});
   render(runner(guidance(), { onSaveCalibration: save }));
   fillBenchmark();
-  fireEvent.change(screen.getByLabelText("Starting-load path"), {
-    target: { value: "recent_set" },
-  });
-  fireEvent.change(screen.getByLabelText("Benchmark load"), {
+  fireEvent.click(screen.getByRole("radio", { name: "I know a recent weight and repetitions." }));
+  fireEvent.change(screen.getByLabelText("Benchmark load (lb)"), {
     target: { value: "40" },
   });
   fireEvent.change(screen.getByLabelText("Benchmark reps (1–10)"), {
@@ -405,7 +400,7 @@ test("later occurrence restores benchmark details but requires fresh confirmatio
     }),
   );
   fireEvent.click(screen.getByRole("button", { name: "Why?" }));
-  expect(screen.getByLabelText("Benchmark load")).toHaveValue(100);
+  expect(screen.getByLabelText("Benchmark load (lb)")).toHaveValue(100);
   expect(screen.getByLabelText(/I confirm this benchmark/)).not.toBeChecked();
   expect(
     screen.getByRole("button", { name: "Save benchmark and estimate" }),
@@ -527,20 +522,17 @@ test("benchmark retry preserves a newer declared setup and rejects advice for th
     screen.getByRole("button", { name: "Save benchmark and estimate" }),
   );
   await screen.findByText(/Benchmark save not confirmed/);
-  fireEvent.click(screen.getByRole("button", { name: "Close Starting load" }));
   fireEvent.click(screen.getByRole("button", { name: "Guide & setup" }));
   fireEvent.change(screen.getByLabelText("Equipment reference (optional)"), {
     target: { value: "new-cable" },
   });
   fireEvent.click(screen.getByRole("button", { name: "Close Guide & setup" }));
-  fireEvent.click(screen.getByRole("button", { name: "Set up" }));
   fireEvent.click(
     screen.getByRole("button", { name: "Retry exact benchmark" }),
   );
   await screen.findByText(/Benchmark saved/);
   expect(requests[1]).toEqual(requests[0]);
   expect(screen.getByLabelText("Working weight (lb)")).toHaveValue(60);
-  fireEvent.click(screen.getByRole("button", { name: "Close Starting load" }));
   fireEvent.click(screen.getByRole("button", { name: "Guide & setup" }));
   expect(screen.getByLabelText("Equipment reference (optional)")).toHaveValue(
     "new-cable",
@@ -576,4 +568,144 @@ test.each([["effective_history_takes_precedence", 0], ["current_working_sets_tak
   fireEvent.click(screen.getByRole("button", { name: "Set up" }));
   expect(screen.getByRole("dialog", { name: "Starting load" })).toHaveTextContent(explanation);
   expect(screen.getByRole("dialog", { name: "Starting load" })).not.toHaveTextContent("Existing work takes precedence over an estimate.");
+});
+
+test("first-use choices are inline; manual logging needs no benchmark setup", async () => {
+  const g = guidance();
+  g.initial_estimate = null;
+  const submit = vi.fn(async (..._args: any[]) => {});
+  render(runner(g, { onSaveCalibration: vi.fn(), submit }));
+  expect(screen.getByRole("radio", { name: "I know my 1-rep max." })).toBeVisible();
+  expect(screen.getByRole("radio", { name: "I know a recent weight and repetitions." })).toBeVisible();
+  expect(screen.getByRole("radio", { name: "I'll choose a comfortable starting weight myself." })).toBeChecked();
+  expect(screen.queryByLabelText("Equipment identity")).not.toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText("Working weight (lb)"), { target: { value: "20" } });
+  fireEvent.click(screen.getByRole("button", { name: "Save set 1" }));
+  await waitFor(() => expect(submit).toHaveBeenCalledOnce());
+  expect(submit.mock.calls[0][2]).toMatchObject({ weight: 20, display_unit: "lb" });
+  expect(submit.mock.calls[0][2].canonicalWeight).toBeCloseTo(9.0718474, 10);
+});
+
+test("estimate setup is optional for actual logging and does not duplicate the composer", () => {
+  render(runner(guidance(), { onSaveCalibration: vi.fn() }));
+  fireEvent.click(screen.getByRole("radio", { name: "I know my 1-rep max." }));
+  expect(screen.getByLabelText("Benchmark load (lb)")).toBeVisible();
+  expect(screen.getByLabelText("Equipment identity")).not.toBeVisible();
+  expect(screen.getByRole("button", { name: "Save benchmark and estimate" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Save set 1" })).toBeEnabled();
+  fireEvent.click(screen.getByRole("button", { name: "Why?" }));
+  expect(screen.getAllByLabelText("Benchmark load (lb)")).toHaveLength(1);
+});
+
+test("history-backed guidance does not offer first-use estimates", () => {
+  const g = guidance();
+  g.next_exposure = decision(40);
+  g.initial_estimate!.status = "unavailable";
+  g.initial_estimate!.reason_codes = ["effective_history_takes_precedence"];
+  render(runner(g, { onSaveCalibration: vi.fn() }));
+  expect(screen.queryByRole("radio", { name: "I know my 1-rep max." })).not.toBeInTheDocument();
+  expect(screen.getByLabelText("Working weight (lb)")).toHaveValue(88.2);
+});
+
+test("saved benchmark retains original magnitude across preferred-unit presentation and reload", async () => {
+  const { AuthoredCalibration } = await import("@/components/authored-calibration");
+  const save = vi.fn(async (..._args: any[]) => {});
+  const g = guidance();
+  const props = { scope: "unit-user", exercise: { id: "cross-body", exercise_occurrence_id: "slot-a", name: "Cross Body", sets: 3, rep_range: [10, 12] } as any,
+    context: g.load_context, disabled: false, onSave: save };
+  const view = render(<AuthoredCalibration {...props} />);
+  fireEvent.click(screen.getByRole("radio", { name: "I know my 1-rep max." }));
+  fireEvent.change(screen.getByLabelText("Benchmark load (lb)"), { target: { value: "100" } });
+  fireEvent.change(screen.getByLabelText("Observed date"), { target: { value: "2026-10-20" } });
+  fireEvent.change(screen.getByLabelText("Setup details"), { target: { value: "same setup" } });
+  fireEvent.change(screen.getByLabelText("Available loads (comma separated)"), { target: { value: "5,65,100" } });
+  view.rerender(<AuthoredCalibration {...props} context={{ ...g.load_context, display_unit: "kg" }} />);
+  expect(screen.getByLabelText("Benchmark load (kg)")).toHaveValue(45.359237);
+  fireEvent.click(screen.getByLabelText(/I confirm this benchmark/));
+  fireEvent.click(screen.getByRole("button", { name: "Save benchmark and estimate" }));
+  await waitFor(() => expect(save).toHaveBeenCalledOnce());
+  expect(save.mock.calls[0][0].calibration).toMatchObject({ load: 100, unit: "lb", attainable: { unit: "lb", values: [5,65,100] } });
+  view.unmount();
+  render(<AuthoredCalibration {...props} context={{ ...g.load_context, display_unit: "kg" }} />);
+  expect(screen.getByLabelText("Benchmark load (kg)")).toHaveValue(45.359237);
+});
+
+test("pending benchmark survives a first actual set and history takes precedence on retry", async () => {
+  const save = vi.fn(async (..._args: any[]) => { if (save.mock.calls.length === 1) throw Error("lost reply"); });
+  const view = render(runner(guidance(), { onSaveCalibration: save }));
+  fillBenchmark();
+  fireEvent.click(screen.getByRole("button", { name: "Save benchmark and estimate" }));
+  await screen.findByText(/Benchmark save not confirmed/);
+  const g = guidance();
+  g.initial_estimate!.status = "unavailable";
+  g.initial_estimate!.reason_codes = ["current_working_sets_take_precedence"];
+  view.rerender(runner(g, { onSaveCalibration: save, completed: 1 }));
+  fireEvent.click(screen.getByRole("button", { name: "Retry exact benchmark" }));
+  await waitFor(() => expect(save).toHaveBeenCalledTimes(2));
+  expect(save.mock.calls[1][0]).toEqual(save.mock.calls[0][0]);
+  await waitFor(() => expect(screen.getByRole("radio", { name: "I know my 1-rep max." })).toBeDisabled());
+});
+
+test("Customized choices disclose the unsupported calculation and preserve manual logging", async () => {
+  const g = guidance(); g.initial_estimate = null;
+  const exercise = { id: "custom", exercise_occurrence_id: "custom-slot", name: "Custom", sets: 3, rep_range: [8,12], load_semantics: "external_load",
+    customized: { target_min: 1, target_max: 3, target_kind: "rir", rest_seconds: { low:90, high:120 } } };
+  render(runner(g, { exercise }));
+  fireEvent.click(screen.getByRole("radio", { name: "I know my 1-rep max." }));
+  expect(screen.getByText(/Customized does not convert/)).toBeVisible();
+  expect(screen.queryByLabelText(/Benchmark load/)).not.toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText("Working weight (lb)"), { target: { value:"25" } });
+  expect(screen.getByRole("button", { name:"Save set 1" })).toBeEnabled();
+});
+
+test("equipment declarations keep their labeled units through display changes, edits, reload and retry", async () => {
+  const { AuthoredCalibration } = await import("@/components/authored-calibration");
+  const g = guidance();
+  g.calibration = { id:"old",revision:1,requires_confirmation:true,load_context:g.load_context,
+    input:{method:"known_1rm",load:100,unit:"kg",observed_date:"2026-10-20",confirmed:false,variant_id:"cross-body",setup_details:"unchanged cable",attainable:{unit:"kg",values:[5,10,15]}} };
+  const save = vi.fn(async (..._args:any[]) => { if(save.mock.calls.length===1)throw Error("lost reply"); });
+  const props = {scope:"exact-list-user",exercise:{id:"cross-body",exercise_occurrence_id:"slot-a",name:"Cross Body",sets:3,rep_range:[10,12]} as any,context:g.load_context,guidance:g,disabled:false,onSave:save};
+  const view=render(<AuthoredCalibration {...props}/>);
+  const loads=screen.getByLabelText("Available loads (comma separated)") as HTMLInputElement;
+  fireEvent.change(loads,{target:{value:loads.value+", 44"}});
+  fireEvent.change(loads,{target:{value:loads.value.split(",").reverse().join(",")}});
+  fireEvent.change(loads,{target:{value:loads.value.split(",").reverse().join(",")}});
+  fireEvent.click(screen.getByLabelText(/I confirm this benchmark/));
+  fireEvent.click(screen.getByRole("button",{name:"Save benchmark and estimate"}));
+  await screen.findByText(/Benchmark save not confirmed/);
+  expect(save.mock.calls[0][0].calibration.attainable.values.slice(0,3)).toEqual([5,10,15]);
+  expect(screen.getByLabelText("Available load unit")).toHaveValue("kg");
+  expect(save.mock.calls[0][0].calibration.attainable.values[3]).toBe(44);
+  view.unmount();render(<AuthoredCalibration {...props} context={{...g.load_context,display_unit:"kg"}}/>);
+  fireEvent.click(screen.getByRole("button",{name:"Retry exact benchmark"}));
+  await waitFor(()=>expect(save).toHaveBeenCalledTimes(2));
+  expect(save.mock.calls[1][0]).toEqual(save.mock.calls[0][0]);
+});
+
+test("first-use help stays mounted after a saved set so expanded content cannot clamp scroll", () => {
+  const view=render(runner(guidance(),{onSaveCalibration:vi.fn()}));fillBenchmark();
+  const g=guidance();g.initial_estimate!.status="unavailable";g.initial_estimate!.reason_codes=["current_working_sets_take_precedence"];
+  view.rerender(runner(g,{onSaveCalibration:vi.fn(),completed:1}));
+  expect(screen.getByLabelText("Benchmark load (lb)")).toBeDisabled();
+  expect(screen.getByText("Equipment and available loads").closest("details")).toHaveAttribute("open");
+  expect(screen.getByRole("button",{name:"Save benchmark and estimate"})).toBeDisabled();
+});
+
+test.each(["new-lb-grid", "restore-kg-grid"])("benchmark and equipment keep independent exact declarations: %s", async mode => {
+  const { AuthoredCalibration }=await import("@/components/authored-calibration");const g=guidance();const save=vi.fn(async(..._args:any[])=>{});
+  g.calibration={id:"mixed",revision:1,requires_confirmation:true,load_context:g.load_context,input:{method:"known_1rm",load:100,unit:mode==="new-lb-grid"?"kg":"lb",observed_date:"2026-10-20",confirmed:false,variant_id:"cross-body",setup_details:"same cable",attainable:{unit:"kg",min:5,step:5,max:15}}};
+  render(<AuthoredCalibration scope="mixed-grid" exercise={{id:"cross-body",exercise_occurrence_id:"slot-a",name:"Cross Body",sets:3,rep_range:[10,12]} as any} context={g.load_context} guidance={g} disabled={false} onSave={save}/>);
+  if(mode==="new-lb-grid"){
+    fireEvent.change(screen.getByLabelText("Benchmark load (lb)"),{target:{value:"90"}});
+    fireEvent.change(screen.getByLabelText("Available load unit"),{target:{value:"lb"}});
+    for(const [label,value] of [["Minimum available load","5"],["Available increment","5"],["Maximum available load","100"]])fireEvent.change(screen.getByLabelText(label),{target:{value}});
+  }
+  fireEvent.click(screen.getByLabelText(/I confirm this benchmark/));fireEvent.click(screen.getByRole("button",{name:"Save benchmark and estimate"}));await waitFor(()=>expect(save).toHaveBeenCalledOnce());
+  expect(save.mock.calls[0][0].calibration).toMatchObject({unit:"lb",load:mode==="new-lb-grid"?90:100,attainable:{unit:mode==="new-lb-grid"?"lb":"kg",min:5,step:5,max:mode==="new-lb-grid"?100:15}});
+});
+
+test("restored pending benchmark remains visible after confirmation alongside actual work", async()=>{
+ const save=vi.fn(async(..._args:any[])=>{if(save.mock.calls.length===1)throw Error("lost reply")});const view=render(runner(guidance(),{onSaveCalibration:save}));fillBenchmark();fireEvent.click(screen.getByRole("button",{name:"Save benchmark and estimate"}));await screen.findByText(/Benchmark save not confirmed/);view.unmount();
+ const g=guidance();g.initial_estimate!.status="unavailable";g.initial_estimate!.reason_codes=["current_working_sets_take_precedence"];
+ render(runner(g,{onSaveCalibration:save,completed:1}));fireEvent.click(screen.getByRole("button",{name:"Retry exact benchmark"}));await waitFor(()=>expect(save).toHaveBeenCalledTimes(2));expect(save.mock.calls[1][0]).toEqual(save.mock.calls[0][0]);await screen.findByText(/Benchmark saved/);expect(screen.getByLabelText("Benchmark load (lb)")).toBeDisabled();
 });

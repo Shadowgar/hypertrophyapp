@@ -1,0 +1,68 @@
+{
+  "api": "mocked, layout-only",
+  "viewport": 390,
+  "document": 390,
+  "composer": 358,
+  "fields": [
+    {
+      "right": 55,
+      "left": 33,
+      "cardRight": 358
+    },
+    {
+      "right": 55,
+      "left": 33,
+      "cardRight": 358
+    },
+    {
+      "right": 51.4375,
+      "left": 33,
+      "cardRight": 358
+    },
+    {
+      "right": 357,
+      "left": 33,
+      "cardRight": 358
+    },
+    {
+      "right": 357,
+      "left": 33,
+      "cardRight": 358
+    },
+    {
+      "right": 340,
+      "left": 50,
+      "cardRight": 341
+    },
+    {
+      "right": 340,
+      "left": 50,
+      "cardRight": 341
+    },
+    {
+      "right": 340,
+      "left": 50,
+      "cardRight": 341
+    },
+    {
+      "right": 340,
+      "left": 50,
+      "cardRight": 341
+    },
+    {
+      "right": 340,
+      "left": 50,
+      "cardRight": 341
+    },
+    {
+      "right": 340,
+      "left": 50,
+      "cardRight": 341
+    },
+    {
+      "right": 46,
+      "left": 33,
+      "cardRight": 358
+    }
+  ]
+}

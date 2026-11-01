@@ -142,6 +142,8 @@ export function AtlasRunner(p: Props) {
     bodyweight,
     submit: (set, value) => p.submit(key, set, value),
   });
+  const [customizedHelpOffered, setCustomizedHelpOffered] = useState(false);
+  if (!customizedHelpOffered && p.exercise.customized && p.completed === 0 && suggested == null) setCustomizedHelpOffered(true);
   const [panel, setPanel] = useState<
     "warmup" | "guide" | "records" | "effort" | "load" | null
   >(null);
@@ -434,6 +436,32 @@ export function AtlasRunner(p: Props) {
                   : `Save set ${setIndex}`}
           </Button>
         </section>
+        {!p.exercise.customized && p.onSaveCalibration ? (
+          <AuthoredCalibration
+            key={`${p.scope}:${key}:${p.exercise.performed_variant?.id ?? p.exercise.id}`}
+            scope={p.scope} exercise={p.exercise}
+            context={{ ...p.context, display_unit: unit }} guidance={p.guidance}
+            eligible={p.completed === 0 && !existingWorkTakesPrecedence && (suggested == null || decision?.scope === "initial_calibration")}
+            disabled={ctrl.locked || undoLocked || blocked}
+            onSave={p.onSaveCalibration} />
+        ) : null}
+        {p.exercise.customized && customizedHelpOffered ? (
+          <fieldset className="ux-card space-y-3" disabled={ctrl.locked || undoLocked || blocked || p.completed > 0}>
+            <legend className="font-semibold">Starting weight · optional help</legend>
+            {([
+              ["known", "I know my 1-rep max."],
+              ["recent", "I know a recent weight and repetitions."],
+              ["manual", "I'll choose a comfortable starting weight myself."],
+            ] as const).map(([value, label]) => <label className="flex items-start gap-3" key={value}>
+              <input type="radio" name={`${p.scope}:${key}:starting-path`} checked={calibration === value}
+                onChange={() => setCalibration(value)} />{label}
+            </label>)}
+            <p className="ux-muted">{calibration === "manual"
+              ? "Enter your actual load and reps above, then Save Set. No benchmark form is required."
+              : "Customized does not convert a reported max or recent set into a starting weight. Record your actual comfortable load; comparable performed work remains the guidance authority."}</p>
+            {calibration !== "manual" ? <Link href="/customize">Manage confirmed strength information with your equipment</Link> : null}
+          </fieldset>
+        ) : null}
         <div className="atlas-actions">
           <Button variant="secondary" onClick={() => setPanel("records")}>
             Recorded sets · {work.length}
@@ -638,11 +666,7 @@ export function AtlasRunner(p: Props) {
             {loadExplanation ??
               "Choose a comfortable starting load on this exact equipment. No maximum test is required."}
           </p>
-          {!p.exercise.customized && p.onSaveCalibration ? <AuthoredCalibration
-            key={`${p.scope}:${key}:${p.exercise.performed_variant?.id ?? p.exercise.id}`}
-            scope={p.scope} exercise={p.exercise} context={p.context} guidance={p.guidance}
-            disabled={ctrl.locked || undoLocked || p.completed > 0 || blocked}
-            onSave={p.onSaveCalibration} /> : <>
+          {p.exercise.customized ? <>
           <label className="ux-field">
             Starting-load path
             <select
@@ -687,7 +711,7 @@ export function AtlasRunner(p: Props) {
                 : "No qualified comparable baseline is available. Use manual calibration."}
             </p>
           ) : null}
-          </>}
+          </> : null}
           <label className="ux-field">
             Chosen starting load ({unit})
             <input

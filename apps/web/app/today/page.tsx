@@ -1385,7 +1385,9 @@ export default function TodayPage() {
 
   return (
     <div className={executionVisible ? "atlas-page" : "space-y-4 pb-8"}>
-      <FlexibleTraining accountToken={getToken()} onResolved={trainingResolved} onContinue={() => { void beginWorkoutLoad(); }} canChange={() => !undoRecoveryRef.current && !undoInFlight.current && !isBeginWorkoutLoadInProgress.current} timeBudgetMinutes={sessionTimeGoal} />
+      <div hidden={executionVisible}>
+        <FlexibleTraining accountToken={getToken()} onResolved={trainingResolved} onContinue={() => { void beginWorkoutLoad(); }} canChange={() => !undoRecoveryRef.current && !undoInFlight.current && !isBeginWorkoutLoadInProgress.current} timeBudgetMinutes={sessionTimeGoal} />
+      </div>
       <div className={executionVisible ? "hidden" : "flex flex-wrap items-baseline justify-between gap-2"}>
         <h1 className="ui-title-page" data-today-heading tabIndex={-1}>Today</h1>
         {!undoRecovery && trainingDecision?.mode !== "flexible" ? <Link className="inline-flex min-h-11 items-center underline" href={manageDatesHref}>{manageDatesLabel}</Link> : null}

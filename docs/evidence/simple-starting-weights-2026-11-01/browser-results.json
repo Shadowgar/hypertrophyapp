@@ -1,0 +1,177 @@
+{
+  "runtimeRevision": "9129099681347412c4e69a6a03c87152ecb93811",
+  "environment": "synthetic accounts; loopback3041 -> 8041 -> tmpfs PostgreSQL16 loopback55441",
+  "observations": [
+    {
+      "scenario": "known-1rm",
+      "provisional": true,
+      "suggestedLb": 65,
+      "benchmarkExactRetryAfterReload": true,
+      "actualSetsBeforeLogging": 0
+    },
+    {
+      "scenario": "phase1",
+      "saveBefore": {
+        "top": 694,
+        "left": 33,
+        "width": 324,
+        "height": 52,
+        "scrollY": 576,
+        "focused": "Working repetitions"
+      },
+      "saveAfter": {
+        "top": 694,
+        "left": 33,
+        "width": 324,
+        "height": 52,
+        "scrollY": 576,
+        "focused": "Working repetitions"
+      },
+      "oneWorkingSet": true,
+      "canonicalKg": 29.48350405,
+      "lostResponseExactRetry": true
+    },
+    {
+      "scenario": "correction-undo-reload",
+      "logicalSetsAfterUndo": 0,
+      "sourceIdentityRetained": true
+    },
+    {
+      "scenario": "recent",
+      "saveBefore": {
+        "top": 694,
+        "left": 33,
+        "width": 324,
+        "height": 52,
+        "scrollY": 576,
+        "focused": "Working repetitions"
+      },
+      "saveAfter": {
+        "top": 694,
+        "left": 33,
+        "width": 324,
+        "height": 52,
+        "scrollY": 576,
+        "focused": "Working repetitions"
+      },
+      "oneWorkingSet": true,
+      "canonicalKg": 15.875732950000002,
+      "lostResponseExactRetry": false
+    },
+    {
+      "scenario": "recent-set",
+      "reportedReps": 8,
+      "explicitRir": 2,
+      "provisional": true
+    },
+    {
+      "scenario": "manual",
+      "saveBefore": {
+        "top": 694,
+        "left": 33,
+        "width": 324,
+        "height": 52,
+        "scrollY": 0,
+        "focused": "Working repetitions"
+      },
+      "saveAfter": {
+        "top": 694,
+        "left": 33,
+        "width": 324,
+        "height": 52,
+        "scrollY": 0,
+        "focused": "Working repetitions"
+      },
+      "oneWorkingSet": true,
+      "canonicalKg": 9.071847400000001,
+      "lostResponseExactRetry": false
+    },
+    {
+      "scenario": "lb-kg-reload",
+      "canonicalKgRetained": true
+    },
+    {
+      "scenario": "phase2",
+      "saveBefore": {
+        "top": 694,
+        "left": 33,
+        "width": 324,
+        "height": 52,
+        "scrollY": 576,
+        "focused": "Working repetitions"
+      },
+      "saveAfter": {
+        "top": 694,
+        "left": 33,
+        "width": 324,
+        "height": 52,
+        "scrollY": 576,
+        "focused": "Working repetitions"
+      },
+      "oneWorkingSet": true,
+      "canonicalKg": 9.071847400000001,
+      "lostResponseExactRetry": false
+    },
+    {
+      "scenario": "phase2-source-first-today",
+      "provisional": false,
+      "manualFallback": true
+    },
+    {
+      "scenario": "flexible",
+      "saveBefore": {
+        "top": 694,
+        "left": 33,
+        "width": 324,
+        "height": 52,
+        "scrollY": 576,
+        "focused": "Working repetitions"
+      },
+      "saveAfter": {
+        "top": 694,
+        "left": 33,
+        "width": 324,
+        "height": 52,
+        "scrollY": 576,
+        "focused": "Working repetitions"
+      },
+      "oneWorkingSet": true,
+      "canonicalKg": 29.48350405,
+      "lostResponseExactRetry": false
+    },
+    {
+      "scenario": "native-flexible",
+      "executionContextAttached": true,
+      "actualDateRetained": true
+    },
+    {
+      "scenario": "customized",
+      "saveBefore": {
+        "top": 694,
+        "left": 33,
+        "width": 324,
+        "height": 52,
+        "scrollY": 412,
+        "focused": "Working repetitions"
+      },
+      "saveAfter": {
+        "top": 694,
+        "left": 33,
+        "width": 324,
+        "height": 52,
+        "scrollY": 412,
+        "focused": "Working repetitions"
+      },
+      "oneWorkingSet": true,
+      "canonicalKg": 9.071847400000001,
+      "lostResponseExactRetry": false
+    },
+    {
+      "scenario": "account-switch",
+      "noDraftOrBenchmarkLeak": true
+    }
+  ],
+  "pageErrors": [],
+  "unexpectedApiErrors": [],
+  "passed": true
+}

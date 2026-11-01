@@ -292,3 +292,14 @@ def test_initial_arithmetic_is_independent_of_the_callers_decimal_context():
         caller.prec = 6
         caller.rounding = ROUND_UP
         assert decide() == expected
+
+
+@pytest.mark.parametrize('benchmark,attainable,expected_kg', [
+    (90, {'unit': 'lb', 'min': 5, 'step': 5, 'max': 100}, 27.2155422),
+    (100, {'unit': 'kg', 'min': 5, 'step': 5, 'max': 15}, 15),
+])
+def test_independent_original_declarations_preserve_exact_equipment_floor(benchmark, attainable, expected_kg):
+    """The UI must not convert declarations through a binary-float grid first."""
+    result = decide(cal=calibration(load=benchmark, unit='lb', attainable=attainable))
+    assert result['status'] == 'provisional'
+    assert result['recommended_working_weight'] == expected_kg

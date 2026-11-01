@@ -8,6 +8,7 @@ import {
   type LoadIntelligence,
   type WorkoutExercise,
 } from "@/lib/api";
+import { canonicalLoad, displayLoad } from "@/lib/appearance";
 import { Button } from "./ui/button";
 
 type Props = {
@@ -16,6 +17,7 @@ type Props = {
   context: LoadContext;
   guidance?: LoadIntelligence | null;
   disabled: boolean;
+  eligible?: boolean;
   onSave: (
     command: InitialCalibrationCommand,
     isRetry?: boolean,
@@ -31,6 +33,7 @@ type Draft = {
   setup: string;
   equipment: string;
   basis: LoadContext["basis"];
+  attainableUnit: "lb" | "kg";
   grid: boolean;
   values: string;
   min: string;
@@ -46,16 +49,17 @@ export function AuthoredCalibration(p: Props) {
   const [draft, setDraft] = useState<Draft>(() => {
     try {
       const cached = JSON.parse(localStorage.getItem(key) ?? "null");
-      if (cached && typeof cached.load === "string") return cached;
+      if (cached && typeof cached.load === "string") return { ...cached, attainableUnit: cached.attainableUnit ?? cached.attempt?.calibration.attainable.unit ?? cached.unit };
     } catch {
       /* in-memory fallback */
     }
     const input = saved?.input;
     const attainable = input?.attainable;
+    const reportUnit = input?.unit ?? p.context.display_unit;
     return {
       method: input?.method ?? "manual",
       load: input ? String(input.load) : "",
-      unit: input?.unit ?? p.context.display_unit,
+      unit: reportUnit,
       date: input?.observed_date ?? "",
       reps: input?.reps == null ? "" : String(input.reps),
       rir: input?.rir == null ? "" : String(input.rir),
@@ -66,6 +70,7 @@ export function AuthoredCalibration(p: Props) {
         p.context.basis === "unknown"
           ? (saved?.load_context.basis ?? "unknown")
           : p.context.basis,
+      attainableUnit: attainable?.unit ?? p.context.display_unit,
       grid: Boolean(attainable && "min" in attainable),
       values:
         attainable && "values" in attainable
@@ -116,12 +121,33 @@ export function AuthoredCalibration(p: Props) {
   useEffect(() => {
     persist(draft);
   }, [draft, persist]);
-  const locked = p.disabled || busy || Boolean(draft.attempt);
+  const [offered, setOffered] = useState(p.eligible !== false || Boolean(draft.attempt));
+  if (!offered && (p.eligible !== false || draft.attempt)) setOffered(true);
+  const locked = p.disabled || busy || Boolean(draft.attempt) || p.eligible === false;
+  const unit = draft.attempt ? draft.unit : p.context.display_unit;
+  const shownLoad = !draft.load.trim() || unit === draft.unit || !Number.isFinite(Number(draft.load))
+    ? draft.load : String(displayLoad(canonicalLoad(Number(draft.load), draft.unit), unit));
+  function editBenchmark(value: string) {
+    if (locked) return;
+    // A new entry is an exact declaration in the displayed unit, not a
+    // conversion into a prior report's unit. Equipment keeps its own unit.
+    setDraft(d => ({ ...d, load: value, unit, confirmed: false }));
+  }
+  function changeAttainableUnit(value: "lb" | "kg") {
+    if (locked || value === draft.attainableUnit) return;
+    setDraft(d => ({ ...d, attainableUnit: value, values: "", min: "", step: "", max: "", confirmed: false }));
+  }
+  const choices = [
+    ["known_1rm", "I know my 1-rep max."],
+    ["recent_set", "I know a recent weight and repetitions."],
+    ["manual", "I'll choose a comfortable starting weight myself."],
+  ] as const;
   function edit<K extends keyof Draft>(field: K, value: Draft[K]) {
     if (locked) return;
     setDraft((d) => ({
       ...d,
       [field]: value,
+      ...(field === "method" && ![d.values, d.min, d.step, d.max].some(v => v.trim()) ? { attainableUnit: unit } : {}),
       confirmed: field === "confirmed" ? Boolean(value) : false,
     }));
   }
@@ -159,7 +185,7 @@ export function AuthoredCalibration(p: Props) {
     if (
       inFlight.current ||
       p.disabled ||
-      (!draft.attempt && !valid) ||
+      (!draft.attempt && (!valid || p.eligible === false)) ||
       !p.exercise.exercise_occurrence_id
     )
       return;
@@ -184,12 +210,12 @@ export function AuthoredCalibration(p: Props) {
         setup_details: draft.setup.trim(),
         attainable: draft.grid
           ? {
-              unit: draft.unit,
+              unit: draft.attainableUnit,
               min: Number(draft.min),
               step: Number(draft.step),
               max: Number(draft.max),
             }
-          : { unit: draft.unit, values: values.map(Number) },
+          : { unit: draft.attainableUnit, values: values.map(Number) },
       },
     };
     const retained = { ...draft, attempt: command };
@@ -220,8 +246,12 @@ export function AuthoredCalibration(p: Props) {
       setBusy(false);
     }
   }
+  if (!offered && !draft.attempt) return null;
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 ux-card">
+      {p.guidance?.initial_estimate?.status === "unavailable" ? <p className="ux-muted">
+        {p.guidance.initial_estimate.explanation.match(/^.*?[.!?](?=\s|$)/)?.[0] ?? "No supported estimate yet. Choose an actual load or review load details."}
+      </p> : null}
       {saved ? (
         <p>
           {saved.requires_confirmation
@@ -229,18 +259,21 @@ export function AuthoredCalibration(p: Props) {
             : "Saved benchmark available for this occurrence."}
         </p>
       ) : null}
-      <fieldset disabled={locked} className="space-y-4">
-        <label className="ux-field">
-          Starting-load path
-          <select
-            value={draft.method}
-            onChange={(e) => edit("method", e.target.value as Draft["method"])}
-          >
-            <option value="manual">Choose manually</option>
-            <option value="known_1rm">Known 1RM (optional)</option>
-            <option value="recent_set">Recent performance</option>
-          </select>
-        </label>
+      <fieldset disabled={locked} className="min-w-0 space-y-4">
+        <legend className="font-semibold">Starting weight · optional help</legend>
+        {choices.map(([method, label]) => (
+          <label className="flex items-start gap-3" key={method}>
+            <input type="radio" name={`${key}:path`} value={method}
+              checked={draft.method === method}
+              disabled={method !== "manual" && p.eligible === false}
+              onChange={() => edit("method", method)} />
+            {label}
+          </label>
+        ))}
+        {draft.method === "manual" ? <p className="ux-muted">
+          Enter your actual load and reps above, then Save Set. No benchmark or equipment form is required.
+          Stop for pain or deteriorating technique.
+        </p> : null}
         {draft.method !== "manual" ? (
           <>
             <p>
@@ -250,25 +283,17 @@ export function AuthoredCalibration(p: Props) {
               workout sets.
             </p>
             <label className="ux-field">
-              Benchmark load
+              Benchmark load ({unit})
               <input
                 type="number"
                 min="0"
                 step="any"
-                value={draft.load}
-                onChange={(e) => edit("load", e.target.value)}
+                value={shownLoad}
+                inputMode="decimal"
+                onChange={(e) => editBenchmark(e.target.value)}
               />
             </label>
-            <label className="ux-field">
-              Benchmark unit
-              <select
-                value={draft.unit}
-                onChange={(e) => edit("unit", e.target.value as Draft["unit"])}
-              >
-                <option value="lb">lb</option>
-                <option value="kg">kg</option>
-              </select>
-            </label>
+            {unit !== draft.unit ? <p className="ux-muted">Converted from your saved {draft.unit} values. Unedited loads keep their original precision.</p> : null}
             <label className="ux-field">
               Observed date
               <input
@@ -307,6 +332,9 @@ export function AuthoredCalibration(p: Props) {
                 </p>
               </>
             ) : null}
+            <details className="ux-card space-y-3">
+              <summary className="cursor-pointer font-semibold">Equipment and available loads</summary>
+              <p className="ux-muted">Required for an estimate, not for logging. Use only this exact setup; no machine conversion is assumed.</p>
             <label className="ux-field">
               Benchmark load basis
               <select
@@ -324,6 +352,7 @@ export function AuthoredCalibration(p: Props) {
             <label className="ux-field">
               Equipment identity
               <input
+                placeholder="Your name for this exact machine or equipment setup"
                 value={draft.equipment}
                 onChange={(e) => edit("equipment", e.target.value)}
               />
@@ -331,6 +360,7 @@ export function AuthoredCalibration(p: Props) {
             <label className="ux-field">
               Setup details
               <input
+                placeholder="Attachment, grip, settings, side and range of motion"
                 value={draft.setup}
                 onChange={(e) => edit("setup", e.target.value)}
               />
@@ -349,7 +379,16 @@ export function AuthoredCalibration(p: Props) {
                 <option value="grid">Minimum, increment and maximum</option>
               </select>
             </label>
-            <p>Available loads in {draft.unit}, using the same load basis.</p>
+            <label className="ux-field">
+              Available load unit
+              <select value={draft.attainableUnit} onChange={e => changeAttainableUnit(e.target.value as "lb" | "kg")}>
+                <option value="lb">lb</option><option value="kg">kg</option>
+              </select>
+            </label>
+            <p>Available loads in {draft.attainableUnit}, using the same load basis.
+              Use the labels on this equipment. Changing units clears this draft list or grid; enter the labeled loads again.
+              {draft.attainableUnit !== unit ? ` Your working load displays in ${unit}; these equipment declarations stay in ${draft.attainableUnit}.` : ""}
+            </p>
             {draft.grid ? (
               <>
                 {(["min", "step", "max"] as const).map((field, index) => (
@@ -380,6 +419,7 @@ export function AuthoredCalibration(p: Props) {
                 />
               </label>
             )}
+            </details>
             <label className="flex gap-3">
               <input
                 type="checkbox"
@@ -392,9 +432,13 @@ export function AuthoredCalibration(p: Props) {
           </>
         ) : null}
       </fieldset>
+      {draft.method !== "manual" && !valid && !draft.attempt ? <p className="ux-muted">
+        To estimate, enter the benchmark and date, add equipment and available loads, and confirm the exact setup.
+        You can instead record an actual load above without saving a benchmark.
+      </p> : null}
       {draft.method !== "manual" || draft.attempt ? (
         <Button
-          disabled={busy || p.disabled || (!draft.attempt && !valid)}
+          disabled={busy || p.disabled || (!draft.attempt && (!valid || p.eligible === false))}
           onClick={save}
         >
           {busy

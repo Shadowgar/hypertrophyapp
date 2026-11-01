@@ -581,3 +581,22 @@ def test_resolved_frozen_constraint_uses_current_feasibility_for_warmups(scenari
     feedback = result.json()
     assert feedback['initial_estimate']['status'] == 'provisional'
     assert feedback['warmup_guidance']['status'] == 'suggested', feedback['warmup_guidance']['reason_codes']
+
+
+@pytest.mark.parametrize('benchmark,attainable,expected_kg', [
+    (90, {'unit': 'lb', 'min': 5, 'step': 5, 'max': 100}, 27.2155422),
+    (100, {'unit': 'kg', 'min': 5, 'step': 5, 'max': 15}, 15),
+])
+def test_report_and_equipment_units_persist_independently_without_grid_roundtrip(scenario, benchmark, attainable, expected_kg):
+    user, headers, client = scenario
+    session = plan(user)
+    payload = calibration_payload(session, load=benchmark, unit='lb', attainable=attainable)
+    response = save(client, headers, session, payload)
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body['initial_estimate']['status'] == 'provisional'
+    assert body['initial_estimate']['recommended_weight'] == expected_kg
+    assert body['calibration']['input'] == payload['calibration']
+    assert save(client, headers, session, payload).json() == body
+    with SessionLocal() as db:
+        assert db.query(WorkoutSetLog).filter_by(user_id=user).count() == 0
