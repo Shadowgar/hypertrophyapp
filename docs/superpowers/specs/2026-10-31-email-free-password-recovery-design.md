@@ -1,6 +1,6 @@
 # Email-free password recovery — bounded design
 
-Status: proposed implementation design for the owner's explicit two-priority
+Status: owner-approved implementation design for the owner's explicit two-priority
 assignment. Production issuance, migration, integration and deployment remain
 unauthorized. Base: protected main `88bb339fc820e59973fc20666ea00423f43f73fa`.
 
@@ -30,11 +30,9 @@ Existing training tables and User credential/session representation are unchange
 The alternative is to ship only the no-migration operator utility and defer the
 permanent feature; existing schema has no suitable durable code/audit store.
 
-The owner's final "no migration" restriction needs explicit clarification: this
-design requests permission to **include migration 0028 in the unmerged PR and run
-it only against verified disposable PostgreSQL**. No production migration runs.
-If that scope is declined, the permanent runtime portion remains blocked rather
-than overloading unrelated state.
+The owner explicitly approved including migration 0028 in the unmerged PR and
+running it only against verified disposable PostgreSQL. No production migration
+runs.
 
 ## Priority 1: private local operator issuance
 
@@ -66,8 +64,7 @@ than overloading unrelated state.
 
 ## Priority 2: permanent recovery lifecycle
 
-Proposed defaults below are implementation calls for owner review, not claims of
-existing approval.
+The following lifecycle decisions were explicitly approved by the owner.
 
 1. **Enrollment/regeneration:** require current authenticated credentials, explicit
    confirmation and the current password. Lock/reload User and revalidate the
