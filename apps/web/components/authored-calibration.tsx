@@ -134,10 +134,20 @@ export function AuthoredCalibration(p: Props) {
   function fieldValue(field: string, value: string) {
     return editing?.field === field && editing.unit === unit ? editing.value : shown(value);
   }
+  function shownValues() {
+    if (editing?.field === "values" && editing.unit === unit) return editing.value;
+    return unit === draft.unit ? draft.values : draft.values.split(",").map((v) => shown(v.trim())).join(", ");
+  }
   function editLoad(field: "load" | "min" | "step" | "max" | "values", value: string) {
     if (locked) return;
+    const previousDisplay = shownValues().split(",");
+    const previousOriginal = draft.values.split(",");
+    const retained = field === "values" ? value.split(",").map((v, index) =>
+      previousDisplay[index]?.trim() === v.trim()
+        ? previousOriginal[index]
+        : original(v.trim())).join(",") : original(value);
     setEditing({ field, value, unit });
-    edit(field, field === "values" ? value.split(",").map((v) => original(v.trim())).join(",") : original(value));
+    edit(field, retained);
   }
   function original(value: string) {
     if (!value.trim() || !Number.isFinite(Number(value)) || unit === draft.unit) return value;
@@ -299,6 +309,7 @@ export function AuthoredCalibration(p: Props) {
                 onChange={(e) => editLoad("load", e.target.value)}
               />
             </label>
+            {unit !== draft.unit ? <p className="ux-muted">Converted from your saved {draft.unit} values. Unedited loads keep their original precision.</p> : null}
             <label className="ux-field">
               Observed date
               <input
@@ -410,7 +421,7 @@ export function AuthoredCalibration(p: Props) {
               <label className="ux-field">
                 Available loads (comma separated)
                 <input
-                  value={editing?.field === "values" && editing.unit === unit ? editing.value : unit === draft.unit ? draft.values : draft.values.split(",").map((v) => shown(v.trim())).join(", ")}
+                  value={shownValues()}
                   onChange={(e) => editLoad("values", e.target.value)}
                 />
               </label>

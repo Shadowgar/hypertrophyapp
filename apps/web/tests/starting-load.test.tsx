@@ -657,3 +657,24 @@ test("Customized choices disclose the unsupported calculation and preserve manua
   fireEvent.change(screen.getByLabelText("Working weight (lb)"), { target: { value:"25" } });
   expect(screen.getByRole("button", { name:"Save set 1" })).toBeEnabled();
 });
+
+test("appending a converted attainable list preserves exact old loads through save, reload and retry", async () => {
+  const { AuthoredCalibration } = await import("@/components/authored-calibration");
+  const g = guidance();
+  g.calibration = { id:"old",revision:1,requires_confirmation:true,load_context:g.load_context,
+    input:{method:"known_1rm",load:100,unit:"kg",observed_date:"2026-10-20",confirmed:false,variant_id:"cross-body",setup_details:"unchanged cable",attainable:{unit:"kg",values:[5,10,15]}} };
+  const save = vi.fn(async (..._args:any[]) => { if(save.mock.calls.length===1)throw Error("lost reply"); });
+  const props = {scope:"exact-list-user",exercise:{id:"cross-body",exercise_occurrence_id:"slot-a",name:"Cross Body",sets:3,rep_range:[10,12]} as any,context:g.load_context,guidance:g,disabled:false,onSave:save};
+  const view=render(<AuthoredCalibration {...props}/>);
+  const loads=screen.getByLabelText("Available loads (comma separated)") as HTMLInputElement;
+  fireEvent.change(loads,{target:{value:loads.value+", 44"}});
+  fireEvent.click(screen.getByLabelText(/I confirm this benchmark/));
+  fireEvent.click(screen.getByRole("button",{name:"Save benchmark and estimate"}));
+  await screen.findByText(/Benchmark save not confirmed/);
+  expect(save.mock.calls[0][0].calibration.attainable.values.slice(0,3)).toEqual([5,10,15]);
+  expect(save.mock.calls[0][0].calibration.attainable.values[3]).toBeCloseTo(44*0.45359237,10);
+  view.unmount();render(<AuthoredCalibration {...props} context={{...g.load_context,display_unit:"kg"}}/>);
+  fireEvent.click(screen.getByRole("button",{name:"Retry exact benchmark"}));
+  await waitFor(()=>expect(save).toHaveBeenCalledTimes(2));
+  expect(save.mock.calls[1][0]).toEqual(save.mock.calls[0][0]);
+});
