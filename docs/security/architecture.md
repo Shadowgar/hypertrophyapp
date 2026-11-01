@@ -29,3 +29,13 @@ SEC-S1 closes recovery/configuration/transport/logging without history schema ch
 Only sanitized enabled/disabled/present/missing/unknown states enter production-control evidence; see the urgent brief. Do not dump environments, credentials, URLs containing tokens, logs or user records. Fake mail/synthetic accounts and explicitly isolated PostgreSQL qualify behavior, not the live edge. Threat hypotheses, verified source findings, conditional exposure and qualified live controls are separate statuses.
 
 Managed export remains **failed** for directory privacy; no permissions repair or sealed scan is claimed. No complete dependency/CVE, ingress, personal-data, backup or deployed-image audit exists. Report vulnerabilities privately per [SECURITY.md](../../SECURITY.md); advisories and messages to third parties require separately authorized scope.
+
+## Owner-approved email-free recovery extension (unmerged implementation)
+
+The 2026-10-31 owner-approved [email-free recovery contract](email-free-recovery.md)
+adds password-confirmed backup-code enrollment and owned security notices, with
+additive 0028 isolated-only rehearsal. It reuses the current credential-bound JWT
+and account-locking authorities; it does not adopt the historical Proposed
+`auth_version` mechanism. The [operator procedure](../operations/operator-account-recovery.md)
+works with deployed 0027 and requires separate exact-target issuance approval.
+This extension does not certify production controls or authorize migration/release.

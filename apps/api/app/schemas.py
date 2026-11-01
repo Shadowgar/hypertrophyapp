@@ -863,3 +863,14 @@ class AuthoredSubstitutionRequest(BaseModel):
     action: Literal["report", "confirm", "decline"]
     reason: Literal["equipment", "pain", "safety"] | None = None
     option_id: str | None = None
+
+
+class RecoveryCodesRequest(BaseModel):
+    command_id: str = Field(pattern=r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+    current_password: str = Field(min_length=8, max_length=72, repr=False)
+    confirmed: Literal[True]
+
+    @field_validator("current_password")
+    @classmethod
+    def bound_current_password_bytes(cls, value: str) -> str:
+        return RegisterRequest.bound_password_bytes(value)

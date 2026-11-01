@@ -56,3 +56,5 @@ not part of this rehearsal. No additional roadmap or release acceptance is creat
 ## 2026-10-24 bounded deployment automation
 
 The owner authorized [continuous-release implementation and preflight](../operations/continuous-release-plan.md), including read-only production diagnosis, private backup/isolated restoration and focused release qualification. [Operational evidence/procedure](../operations/continuous-release.md) keeps exact cutover, schema changes and service activation separately owner-controlled. This is not Home/onboarding or another product roadmap.
+
+- [Email-free recovery implementation](../superpowers/plans/2026-10-31-email-free-password-recovery.md): owner-approved design; operator utility and permanent recovery PR, isolated 0028 rehearsal only. No production issuance/migration/deployment authorization.

@@ -19,7 +19,7 @@ def _rejected(retry_after: float = 60) -> HTTPException:
 
 
 class AuthAttemptLimiter:
-    policies = {"login": (10, 60), "register": (5, 60), "request": (3, 900), "confirm": (5, 60)}
+    policies = {"login": (10, 60), "register": (5, 60), "request": (3, 900), "confirm": (5, 60), "recovery_generate": (3, 900)}
 
     def __init__(self, *, clock=monotonic, max_targets=2048):
         self.clock, self.max_targets = clock, max_targets

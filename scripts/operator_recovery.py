@@ -35,10 +35,11 @@ def fingerprint(data):
 
 
 def private_read(path):
-    p = Path(path)
-    s = p.lstat()
-    require(stat.S_ISREG(s.st_mode) and s.st_uid == os.getuid() and not s.st_mode & 0o077, 'Protected operator-owned regular file required')
-    return json.loads(p.read_text())
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+    with os.fdopen(fd) as f:
+        s = os.fstat(f.fileno())
+        require(stat.S_ISREG(s.st_mode) and s.st_uid == os.getuid() and not s.st_mode & 0o077, 'Protected operator-owned regular file required')
+        return json.load(f)
 
 
 def private_write(path, value):
@@ -50,7 +51,7 @@ def private_write(path, value):
 def private_terminal():
     require(all(os.isatty(fd) for fd in (0, 1, 2)), 'Private local terminal required; no pipes or tool terminals')
     tty = os.open('/dev/tty', os.O_RDWR | os.O_NOCTTY)
-    require(os.tcgetpgrp(tty) == os.getpgrp() and os.fstat(tty).st_uid == os.getuid(), 'Authenticated foreground operator terminal required')
+    require(os.tcgetpgrp(tty) == os.getpgrp() and os.stat(os.ttyname(0)).st_uid == os.getuid(), 'Authenticated foreground operator terminal required')
     return os.fdopen(tty, 'w', buffering=1)
 
 

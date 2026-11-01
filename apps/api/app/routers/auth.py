@@ -1,11 +1,15 @@
 from typing import Annotated
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from ..database import get_db
+from ..deps import get_current_user
+from ..account_recovery import confirm_recovery, generate_codes, recovery_status
+from ..models import AccountRecoveryCode, AccountSecurityEvent
+from ..schemas import RecoveryCodesRequest
 from ..config import settings
 from ..emailer import is_smtp_configured, send_password_reset_email
 from ..models import PasswordResetToken, User, UserInterfacePreference, AuthoredInitialCalibration
@@ -92,6 +96,8 @@ def dev_wipe_user(payload: DevWipeUserRequest, db: DbSession) -> StatusResponse:
     db.query(SorenessEntry).filter(SorenessEntry.user_id == user_id).delete(synchronize_session=False)
     db.query(BodyMeasurementEntry).filter(BodyMeasurementEntry.user_id == user_id).delete(synchronize_session=False)
     db.query(CoachingRecommendation).filter(CoachingRecommendation.user_id == user_id).delete(synchronize_session=False)
+    db.query(AccountRecoveryCode).filter(AccountRecoveryCode.user_id == user_id).delete(synchronize_session=False)
+    db.query(AccountSecurityEvent).filter(AccountSecurityEvent.user_id == user_id).delete(synchronize_session=False)
     db.query(PasswordResetToken).filter(PasswordResetToken.user_id == user_id).delete(synchronize_session=False)
     db.query(AuthoredInitialCalibration).filter(AuthoredInitialCalibration.user_id == user_id).delete(synchronize_session=False)
     db.query(UserInterfacePreference).filter(UserInterfacePreference.user_id == user_id).delete(synchronize_session=False)
@@ -156,40 +162,29 @@ def password_reset_request(payload: PasswordResetRequest, db: DbSession) -> Pass
 @router.post("/password-reset/confirm")
 def password_reset_confirm(payload: PasswordResetConfirmRequest, db: DbSession) -> StatusResponse:
     auth_limits.auth_attempts.check("confirm", payload.token)
-    token_hash = hash_password_reset_token(payload.token)
-    owner = db.query(PasswordResetToken.user_id).filter(PasswordResetToken.token_hash == token_hash).first()
-    if owner is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired reset token")
-    # Lock the account before re-reading the credential. Requests for the same
-    # or different tokens serialize on the same row, including token issuance.
-    user = db.query(User).filter(User.id == owner.user_id).populate_existing().with_for_update().first()
-    if user is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired reset token")
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
-    entry = (
-        db.query(PasswordResetToken)
-        .filter(
-            PasswordResetToken.token_hash == token_hash,
-            PasswordResetToken.used_at.is_(None),
-            PasswordResetToken.expires_at > now,
-        )
-        .populate_existing().first()
-    )
-    if not entry:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired reset token")
-
-    # The conditional claim is also required for disposable SQLite, where
-    # SELECT FOR UPDATE is a no-op. A losing claimant must not change password.
-    claimed = db.query(PasswordResetToken).filter(
-        PasswordResetToken.id == entry.id,
-        PasswordResetToken.used_at.is_(None),
-        PasswordResetToken.expires_at > now,
-    ).update({PasswordResetToken.used_at: now}, synchronize_session=False)
-    if claimed != 1:
-        db.rollback()
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired reset token")
-    user.password_hash = hash_password(payload.new_password)
-    db.query(PasswordResetToken).filter(PasswordResetToken.user_id == user.id, PasswordResetToken.used_at.is_(None)).update({PasswordResetToken.used_at: now}, synchronize_session=False)
-    db.add(user)
-    db.commit()
+    confirm_recovery(db, payload.token, payload.new_password)
     return StatusResponse(status="password_updated")
+
+
+@router.get("/recovery-codes")
+def get_recovery_codes(db: DbSession, response: Response, user: Annotated[User, Depends(get_current_user)]):
+    response.headers["Cache-Control"] = "no-store"
+    return recovery_status(db, user.id)
+
+
+@router.post("/recovery-codes")
+def post_recovery_codes(payload: RecoveryCodesRequest, request: Request, response: Response,
+                        db: DbSession, user: Annotated[User, Depends(get_current_user)]):
+    auth_limits.auth_attempts.check("recovery_generate", user.id)
+    response.headers["Cache-Control"] = "no-store"
+    return generate_codes(db, user.id, request.state.credential_version, payload.current_password, payload.command_id)
+
+
+@router.post("/recovery-events/{event_id}/acknowledge")
+def acknowledge_recovery_event(event_id: str, db: DbSession, user: Annotated[User, Depends(get_current_user)]) -> StatusResponse:
+    claimed = db.query(AccountSecurityEvent).filter_by(id=event_id, user_id=user.id).update(
+        {AccountSecurityEvent.acknowledged_at: datetime.now(timezone.utc).replace(tzinfo=None)}, synchronize_session=False)
+    if claimed != 1:
+        raise HTTPException(404, "Security event not found")
+    db.commit()
+    return StatusResponse(status="acknowledged")

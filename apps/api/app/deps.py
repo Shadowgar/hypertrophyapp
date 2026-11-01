@@ -38,7 +38,13 @@ def get_current_user(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
     # Every route requires current credentials. Versionless legacy sessions must
     # sign in again; no Authored/generated mode exempts session revocation.
-    if not secrets.compare_digest(payload["cv"], sha256(user.password_hash.encode()).hexdigest()):
-        raise HTTPException(status_code=401,detail="Session credentials changed; sign in again")
+    assert_current_credential(user, payload["cv"])
+    request.state.credential_version = payload["cv"]
     request.state.user_id = user.id
     return user
+
+
+def assert_current_credential(user: User, credential_version: str) -> None:
+    """Reuse after locking/reloading User for sensitive authenticated mutations."""
+    if not secrets.compare_digest(credential_version, sha256(user.password_hash.encode()).hexdigest()):
+        raise HTTPException(status_code=401, detail="Session credentials changed; sign in again")

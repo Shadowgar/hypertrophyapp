@@ -110,6 +110,31 @@ class PasswordResetToken(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive)
 
 
+class AccountRecoveryCode(Base):
+    """High-entropy bearer credentials. Plaintext is never persisted."""
+    __tablename__ = "account_recovery_codes"
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id: Mapped[str] = mapped_column(String, ForeignKey(USER_FK), nullable=False, index=True)
+    batch_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    code_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive)
+    used_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
+class AccountSecurityEvent(Base):
+    """Owner-visible durable audit; no request bodies, addresses or credentials."""
+    __tablename__ = "account_security_events"
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id: Mapped[str] = mapped_column(String, ForeignKey(USER_FK), nullable=False, index=True)
+    kind: Mapped[str] = mapped_column(String(32), nullable=False)
+    command_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    batch_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow_naive)
+    acknowledged_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    __table_args__ = (UniqueConstraint("user_id", "command_id", name="uq_recovery_generation_command"),)
+
+
 class WeeklyCheckin(Base):
     __tablename__ = "weekly_checkins"
 
