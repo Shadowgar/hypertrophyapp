@@ -31,19 +31,19 @@
 **Files:** apps/web/components/authored-calibration.tsx, apps/web/components/atlas-runner.tsx, apps/web/tests/starting-load.test.tsx.
 **Interfaces:** Existing InitialCalibrationCommand and AtlasRunner props stay unchanged; no API/schema change. Benchmark reports remain separate from actual sets.
 
-- [ ] Add failing UI tests: three visible choices, manual logs without setup, progressive setup, unsupported/history boundaries, original-unit benchmark surviving preference changes/reload and exact retries.
-- [ ] Run focused tests to observe failures.
-- [ ] Implement inline choices below composer, progressive estimate-only setup, and saved-preference presentation without reinterpreting underlying units. Keep one calibration component, pending commands accessible, and separate Customized disclosure.
-- [ ] Run starting-load, atlas-set, appearance and Customized/Today nonregressions; typecheck and lint changed files.
-- [ ] Commit the implementation and focused tests.
+- [x] Add failing UI tests: three visible choices, manual logs without setup, progressive setup, unsupported/history boundaries, original-unit benchmark surviving preference changes/reload and exact retries.
+- [x] Run focused tests to observe failures.
+- [x] Implement inline choices below composer, progressive estimate-only setup, and saved-preference presentation without reinterpreting underlying units. Keep one calibration component, pending commands accessible, and separate Customized disclosure.
+- [x] Run starting-load, atlas-set, appearance and Customized/Today nonregressions; typecheck and lint changed files.
+- [x] Commit the implementation and focused tests.
 
 ### Task 2: Isolated journey qualification and review
 
 **Files:** Focused browser harness/evidence under docs/evidence/simple-starting-weights-2026-11-01; narrowly justified test changes only.
 **Interfaces:** Task 1 consumes unchanged server calibration/logging endpoints and persisted canonical-kg receipts.
 
-- [ ] Verify explicit disposable targets and use synthetic accounts only. Capture before/after desktop and 390×844 mobile.
-- [ ] Exercise Phase 1, Phase 2, Flexible and Customized first-set paths; known/recent/manual, absent evidence/equipment mismatch, units, interrupted retry, correction/undo/account switch and keyboard/composer stability. Record measured scope and limits.
-- [ ] Run focused existing API/core calibration and history tests with explicit disposable environment; compare protected compiler/artifact bytes to base.
-- [ ] Run fresh changed-file review, fix substantive findings with red/green tests, then create one PR linked to #103/#105 without closing either.
+- [x] Verify explicit disposable targets and use synthetic accounts only. Capture before/after desktop and 390×844 mobile.
+- [x] Exercise Phase 1, Phase 2, Flexible and Customized first-set paths; known/recent/manual, absent evidence/equipment mismatch, units, interrupted retry, correction/undo/account switch and keyboard/composer stability. Record measured scope and limits.
+- [x] Run focused existing API/core calibration and history tests with explicit disposable environment; compare protected compiler/artifact bytes to base.
+- [x] Run fresh changed-file review, fix substantive findings with red/green tests, then create one PR linked to #103/#105 without closing either.
 - [ ] Run normal qualification at final review head once; record exact head/check outcomes and physical iPhone acceptance steps. Do not merge.

@@ -1,0 +1,43 @@
+{
+  "all_eight_inputs_byte_identical": true,
+  "baseline_compiler_sha256": "e258c5e512fb00b8a550510f4fac507486001146fa425e8856f41046aef8a7d4",
+  "candidate_compiler_sha256": "e258c5e512fb00b8a550510f4fac507486001146fa425e8856f41046aef8a7d4",
+  "authored_artifacts": [
+    {
+      "path": "programs/archive_imports/pure_bodybuilding_phase_2___full_body_sheet_(1)_imported.json",
+      "sha256": "3902235b9f3439c451c4bd1d9486a253e34cba31fc58d34dbdb5b01b2e42081f"
+    },
+    {
+      "path": "programs/archive_imports/pure_bodybuilding_phase_2___full_body_sheet_imported.json",
+      "sha256": "c5b56168a4247c2bd0c3634c0ac03ab78a13419b4dd0ec0e0a334d986f3c33d4"
+    },
+    {
+      "path": "programs/archive_imports/pure_bodybuilding_phase_2___ppl_sheet_imported.json",
+      "sha256": "07df96677360bb505eb0a98745ac3ad26251231f929c4bd8e2e38cb6198523e8"
+    },
+    {
+      "path": "programs/archive_imports/pure_bodybuilding_phase_2___upper_lower_sheet_imported.json",
+      "sha256": "a57885af2357744db55d6995615f9f00d9349347e22b4e2da1302467269b4992"
+    },
+    {
+      "path": "programs/gold/pure_bodybuilding_phase_1_full_body.json",
+      "sha256": "a7870e29b7620f8d7195df6b2a2cd23fcb9c6bf5eeb318eb2fa548618889ca06"
+    },
+    {
+      "path": "programs/gold/pure_bodybuilding_phase_1_full_body.onboarding.json",
+      "sha256": "479675d07af06a999765b67c699e9c992a9b61cbb98af7059785ee4fd1d0b1f6"
+    },
+    {
+      "path": "programs/gold/pure_bodybuilding_phase_2_full_body.import_report.json",
+      "sha256": "c6bcb859ed254026100a0dc0c6ea8d3e97dac6fa0331bafd342533107893a47b"
+    },
+    {
+      "path": "programs/gold/pure_bodybuilding_phase_2_full_body.json",
+      "sha256": "327a614926c91227bc118b0dbe1eb28027f97949a86ae65375b04f7dff6bc00c"
+    },
+    {
+      "path": "programs/gold/pure_bodybuilding_phase_2_full_body.onboarding.json",
+      "sha256": "ad2865e9b11d53d6a04dff1c5b70bcf9a99bc643f9a019a53ff17fb5ffcc7d62"
+    }
+  ]
+}

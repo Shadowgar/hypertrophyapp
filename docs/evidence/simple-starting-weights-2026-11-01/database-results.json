@@ -1,0 +1,79 @@
+[
+  {
+    "scenario": "phase1",
+    "source_preserved": true,
+    "canonical_kg_preserved": true,
+    "source_projection_sha256": "ae68120de2ad450c865c80ff7506eab2e5a45931253b3cbdae21d0983ba282ff",
+    "effective_working_sets": 0,
+    "raw_set_rows": 2,
+    "calibration_reports": 1,
+    "distinct_calibration_commands": 1,
+    "actual_dates_present": false
+  },
+  {
+    "scenario": "recent",
+    "source_preserved": true,
+    "canonical_kg_preserved": true,
+    "source_projection_sha256": "ae68120de2ad450c865c80ff7506eab2e5a45931253b3cbdae21d0983ba282ff",
+    "effective_working_sets": 1,
+    "raw_set_rows": 1,
+    "calibration_reports": 1,
+    "distinct_calibration_commands": 1,
+    "actual_dates_present": false
+  },
+  {
+    "scenario": "manual",
+    "source_preserved": true,
+    "canonical_kg_preserved": true,
+    "source_projection_sha256": "ae68120de2ad450c865c80ff7506eab2e5a45931253b3cbdae21d0983ba282ff",
+    "effective_working_sets": 1,
+    "raw_set_rows": 1,
+    "calibration_reports": 0,
+    "distinct_calibration_commands": 0,
+    "actual_dates_present": false
+  },
+  {
+    "scenario": "unsupported",
+    "source_preserved": true,
+    "canonical_kg_preserved": true,
+    "source_projection_sha256": "ae68120de2ad450c865c80ff7506eab2e5a45931253b3cbdae21d0983ba282ff",
+    "effective_working_sets": 0,
+    "raw_set_rows": 0,
+    "calibration_reports": 0,
+    "distinct_calibration_commands": 0,
+    "actual_dates_present": true
+  },
+  {
+    "scenario": "phase2",
+    "source_preserved": true,
+    "canonical_kg_preserved": true,
+    "source_projection_sha256": "d08e1c58bd5872652731a433467d179597933624c60cf49b8790d59dd94aa095",
+    "effective_working_sets": 1,
+    "raw_set_rows": 1,
+    "calibration_reports": 1,
+    "distinct_calibration_commands": 1,
+    "actual_dates_present": false
+  },
+  {
+    "scenario": "flexible",
+    "source_preserved": true,
+    "canonical_kg_preserved": true,
+    "source_projection_sha256": "3bc86057a11154687c77347516622e90e4ac7b5556ab40673bf651381229ce95",
+    "effective_working_sets": 1,
+    "raw_set_rows": 1,
+    "calibration_reports": 1,
+    "distinct_calibration_commands": 1,
+    "actual_dates_present": true
+  },
+  {
+    "scenario": "customized",
+    "source_preserved": true,
+    "canonical_kg_preserved": true,
+    "source_projection_sha256": "c9a96e6da1e3076718458aa3136c658ceaba115b6679b36bde42738d9d116138",
+    "effective_working_sets": 1,
+    "raw_set_rows": 1,
+    "calibration_reports": 0,
+    "distinct_calibration_commands": 0,
+    "actual_dates_present": false
+  }
+]
