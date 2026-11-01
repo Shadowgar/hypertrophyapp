@@ -33,6 +33,7 @@ type Draft = {
   setup: string;
   equipment: string;
   basis: LoadContext["basis"];
+  attainableUnit: "lb" | "kg";
   grid: boolean;
   values: string;
   min: string;
@@ -48,18 +49,13 @@ export function AuthoredCalibration(p: Props) {
   const [draft, setDraft] = useState<Draft>(() => {
     try {
       const cached = JSON.parse(localStorage.getItem(key) ?? "null");
-      if (cached && typeof cached.load === "string") return cached;
+      if (cached && typeof cached.load === "string") return { ...cached, attainableUnit: cached.attainableUnit ?? cached.attempt?.calibration.attainable.unit ?? cached.unit };
     } catch {
       /* in-memory fallback */
     }
     const input = saved?.input;
     const attainable = input?.attainable;
     const reportUnit = input?.unit ?? p.context.display_unit;
-    const attainableValue = (value: number) => {
-      if (!attainable || attainable.unit === reportUnit) return value;
-      const kg = canonicalLoad(value, attainable.unit);
-      return reportUnit === "kg" ? kg : kg / 0.45359237;
-    };
     return {
       method: input?.method ?? "manual",
       load: input ? String(input.load) : "",
@@ -74,14 +70,15 @@ export function AuthoredCalibration(p: Props) {
         p.context.basis === "unknown"
           ? (saved?.load_context.basis ?? "unknown")
           : p.context.basis,
+      attainableUnit: attainable?.unit ?? p.context.display_unit,
       grid: Boolean(attainable && "min" in attainable),
       values:
         attainable && "values" in attainable
-          ? attainable.values.map(attainableValue).join(", ")
+          ? attainable.values.join(", ")
           : "",
-      min: attainable && "min" in attainable ? String(attainableValue(attainable.min)) : "",
-      step: attainable && "step" in attainable ? String(attainableValue(attainable.step)) : "",
-      max: attainable && "max" in attainable ? String(attainableValue(attainable.max)) : "",
+      min: attainable && "min" in attainable ? String(attainable.min) : "",
+      step: attainable && "step" in attainable ? String(attainable.step) : "",
+      max: attainable && "max" in attainable ? String(attainable.max) : "",
       confirmed: Boolean(input?.confirmed && !saved?.requires_confirmation),
     };
   });
@@ -124,43 +121,21 @@ export function AuthoredCalibration(p: Props) {
   useEffect(() => {
     persist(draft);
   }, [draft, persist]);
-  const [editing, setEditing] = useState<{ field: string; value: string; unit: "lb" | "kg" } | null>(null);
-  const [offered, setOffered] = useState(p.eligible !== false);
-  if (!offered && p.eligible !== false) setOffered(true);
+  const [offered, setOffered] = useState(p.eligible !== false || Boolean(draft.attempt));
+  if (!offered && (p.eligible !== false || draft.attempt)) setOffered(true);
   const locked = p.disabled || busy || Boolean(draft.attempt) || p.eligible === false;
   const unit = draft.attempt ? draft.unit : p.context.display_unit;
-  function shown(value: string, precise = false) {
-    if (!value.trim() || !Number.isFinite(Number(value)) || unit === draft.unit) return value;
-    const kg = canonicalLoad(Number(value), draft.unit);
-    // Equipment grids/lists must not inherit the rounded actual-load display.
-    return precise ? String(Number((unit === "kg" ? kg : kg / 0.45359237).toPrecision(15)))
-      : String(displayLoad(kg, unit));
-  }
-  function fieldValue(field: string, value: string) {
-    return editing?.field === field && editing.unit === unit ? editing.value : shown(value, field !== "load");
-  }
-  function shownValues() {
-    if (editing?.field === "values" && editing.unit === unit) return editing.value;
-    return unit === draft.unit ? draft.values : draft.values.split(",").map((v) => shown(v.trim(), true)).join(", ");
-  }
-  function editLoad(field: "load" | "min" | "step" | "max" | "values", value: string) {
+  const shownLoad = !draft.load.trim() || unit === draft.unit || !Number.isFinite(Number(draft.load))
+    ? draft.load : String(displayLoad(canonicalLoad(Number(draft.load), draft.unit), unit));
+  function editBenchmark(value: string) {
     if (locked) return;
-    const previousDisplay = shownValues().split(",");
-    const previousOriginal = draft.values.split(",");
-    const retained = field === "values" ? value.split(",").map((v, index) => {
-      const token = v.trim();
-      if (previousDisplay[index]?.trim() === token) return previousOriginal[index];
-      // Adding, removing or reordering entries must preserve untouched magnitudes.
-      const matches = previousDisplay.flatMap((entry, i) => entry.trim() === token ? [i] : []);
-      return matches.length === 1 ? previousOriginal[matches[0]] : original(token);
-    }).join(",") : original(value);
-    setEditing({ field, value, unit });
-    edit(field, retained);
+    // A new entry is an exact declaration in the displayed unit, not a
+    // conversion into a prior report's unit. Equipment keeps its own unit.
+    setDraft(d => ({ ...d, load: value, unit, confirmed: false }));
   }
-  function original(value: string) {
-    if (!value.trim() || !Number.isFinite(Number(value)) || unit === draft.unit) return value;
-    const kg = canonicalLoad(Number(value), unit);
-    return String(draft.unit === "kg" ? kg : kg / 0.45359237);
+  function changeAttainableUnit(value: "lb" | "kg") {
+    if (locked || value === draft.attainableUnit) return;
+    setDraft(d => ({ ...d, attainableUnit: value, values: "", min: "", step: "", max: "", confirmed: false }));
   }
   const choices = [
     ["known_1rm", "I know my 1-rep max."],
@@ -172,6 +147,7 @@ export function AuthoredCalibration(p: Props) {
     setDraft((d) => ({
       ...d,
       [field]: value,
+      ...(field === "method" && ![d.values, d.min, d.step, d.max].some(v => v.trim()) ? { attainableUnit: unit } : {}),
       confirmed: field === "confirmed" ? Boolean(value) : false,
     }));
   }
@@ -234,12 +210,12 @@ export function AuthoredCalibration(p: Props) {
         setup_details: draft.setup.trim(),
         attainable: draft.grid
           ? {
-              unit: draft.unit,
+              unit: draft.attainableUnit,
               min: Number(draft.min),
               step: Number(draft.step),
               max: Number(draft.max),
             }
-          : { unit: draft.unit, values: values.map(Number) },
+          : { unit: draft.attainableUnit, values: values.map(Number) },
       },
     };
     const retained = { ...draft, attempt: command };
@@ -283,7 +259,7 @@ export function AuthoredCalibration(p: Props) {
             : "Saved benchmark available for this occurrence."}
         </p>
       ) : null}
-      <fieldset disabled={locked} className="space-y-4">
+      <fieldset disabled={locked} className="min-w-0 space-y-4">
         <legend className="font-semibold">Starting weight · optional help</legend>
         {choices.map(([method, label]) => (
           <label className="flex items-start gap-3" key={method}>
@@ -312,9 +288,9 @@ export function AuthoredCalibration(p: Props) {
                 type="number"
                 min="0"
                 step="any"
-                value={fieldValue("load", draft.load)}
+                value={shownLoad}
                 inputMode="decimal"
-                onChange={(e) => editLoad("load", e.target.value)}
+                onChange={(e) => editBenchmark(e.target.value)}
               />
             </label>
             {unit !== draft.unit ? <p className="ux-muted">Converted from your saved {draft.unit} values. Unedited loads keep their original precision.</p> : null}
@@ -403,7 +379,16 @@ export function AuthoredCalibration(p: Props) {
                 <option value="grid">Minimum, increment and maximum</option>
               </select>
             </label>
-            <p>Available loads in {unit}, using the same load basis.</p>
+            <label className="ux-field">
+              Available load unit
+              <select value={draft.attainableUnit} onChange={e => changeAttainableUnit(e.target.value as "lb" | "kg")}>
+                <option value="lb">lb</option><option value="kg">kg</option>
+              </select>
+            </label>
+            <p>Available loads in {draft.attainableUnit}, using the same load basis.
+              Use the labels on this equipment. Changing units clears this draft list or grid; enter the labeled loads again.
+              {draft.attainableUnit !== unit ? ` Your working load displays in ${unit}; these equipment declarations stay in ${draft.attainableUnit}.` : ""}
+            </p>
             {draft.grid ? (
               <>
                 {(["min", "step", "max"] as const).map((field, index) => (
@@ -419,8 +404,8 @@ export function AuthoredCalibration(p: Props) {
                       type="number"
                       min="0"
                       step="any"
-                      value={fieldValue(field, draft[field])}
-                      onChange={(e) => editLoad(field, e.target.value)}
+                      value={draft[field]}
+                      onChange={(e) => edit(field, e.target.value)}
                     />
                   </label>
                 ))}
@@ -429,8 +414,8 @@ export function AuthoredCalibration(p: Props) {
               <label className="ux-field">
                 Available loads (comma separated)
                 <input
-                  value={shownValues()}
-                  onChange={(e) => editLoad("values", e.target.value)}
+                  value={draft.values}
+                  onChange={(e) => edit("values", e.target.value)}
                 />
               </label>
             )}

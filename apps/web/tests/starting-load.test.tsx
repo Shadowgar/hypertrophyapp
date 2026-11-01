@@ -658,7 +658,7 @@ test("Customized choices disclose the unsupported calculation and preserve manua
   expect(screen.getByRole("button", { name:"Save set 1" })).toBeEnabled();
 });
 
-test("appending a converted attainable list preserves exact old loads through save, reload and retry", async () => {
+test("equipment declarations keep their labeled units through display changes, edits, reload and retry", async () => {
   const { AuthoredCalibration } = await import("@/components/authored-calibration");
   const g = guidance();
   g.calibration = { id:"old",revision:1,requires_confirmation:true,load_context:g.load_context,
@@ -674,7 +674,8 @@ test("appending a converted attainable list preserves exact old loads through sa
   fireEvent.click(screen.getByRole("button",{name:"Save benchmark and estimate"}));
   await screen.findByText(/Benchmark save not confirmed/);
   expect(save.mock.calls[0][0].calibration.attainable.values.slice(0,3)).toEqual([5,10,15]);
-  expect(save.mock.calls[0][0].calibration.attainable.values[3]).toBeCloseTo(44*0.45359237,10);
+  expect(screen.getByLabelText("Available load unit")).toHaveValue("kg");
+  expect(save.mock.calls[0][0].calibration.attainable.values[3]).toBe(44);
   view.unmount();render(<AuthoredCalibration {...props} context={{...g.load_context,display_unit:"kg"}}/>);
   fireEvent.click(screen.getByRole("button",{name:"Retry exact benchmark"}));
   await waitFor(()=>expect(save).toHaveBeenCalledTimes(2));
@@ -688,4 +689,23 @@ test("first-use help stays mounted after a saved set so expanded content cannot 
   expect(screen.getByLabelText("Benchmark load (lb)")).toBeDisabled();
   expect(screen.getByText("Equipment and available loads").closest("details")).toHaveAttribute("open");
   expect(screen.getByRole("button",{name:"Save benchmark and estimate"})).toBeDisabled();
+});
+
+test.each(["new-lb-grid", "restore-kg-grid"])("benchmark and equipment keep independent exact declarations: %s", async mode => {
+  const { AuthoredCalibration }=await import("@/components/authored-calibration");const g=guidance();const save=vi.fn(async(..._args:any[])=>{});
+  g.calibration={id:"mixed",revision:1,requires_confirmation:true,load_context:g.load_context,input:{method:"known_1rm",load:100,unit:mode==="new-lb-grid"?"kg":"lb",observed_date:"2026-10-20",confirmed:false,variant_id:"cross-body",setup_details:"same cable",attainable:{unit:"kg",min:5,step:5,max:15}}};
+  render(<AuthoredCalibration scope="mixed-grid" exercise={{id:"cross-body",exercise_occurrence_id:"slot-a",name:"Cross Body",sets:3,rep_range:[10,12]} as any} context={g.load_context} guidance={g} disabled={false} onSave={save}/>);
+  if(mode==="new-lb-grid"){
+    fireEvent.change(screen.getByLabelText("Benchmark load (lb)"),{target:{value:"90"}});
+    fireEvent.change(screen.getByLabelText("Available load unit"),{target:{value:"lb"}});
+    for(const [label,value] of [["Minimum available load","5"],["Available increment","5"],["Maximum available load","100"]])fireEvent.change(screen.getByLabelText(label),{target:{value}});
+  }
+  fireEvent.click(screen.getByLabelText(/I confirm this benchmark/));fireEvent.click(screen.getByRole("button",{name:"Save benchmark and estimate"}));await waitFor(()=>expect(save).toHaveBeenCalledOnce());
+  expect(save.mock.calls[0][0].calibration).toMatchObject({unit:"lb",load:mode==="new-lb-grid"?90:100,attainable:{unit:mode==="new-lb-grid"?"lb":"kg",min:5,step:5,max:mode==="new-lb-grid"?100:15}});
+});
+
+test("restored pending benchmark remains visible after confirmation alongside actual work", async()=>{
+ const save=vi.fn(async(..._args:any[])=>{if(save.mock.calls.length===1)throw Error("lost reply")});const view=render(runner(guidance(),{onSaveCalibration:save}));fillBenchmark();fireEvent.click(screen.getByRole("button",{name:"Save benchmark and estimate"}));await screen.findByText(/Benchmark save not confirmed/);view.unmount();
+ const g=guidance();g.initial_estimate!.status="unavailable";g.initial_estimate!.reason_codes=["current_working_sets_take_precedence"];
+ render(runner(g,{onSaveCalibration:save,completed:1}));fireEvent.click(screen.getByRole("button",{name:"Retry exact benchmark"}));await waitFor(()=>expect(save).toHaveBeenCalledTimes(2));expect(save.mock.calls[1][0]).toEqual(save.mock.calls[0][0]);await screen.findByText(/Benchmark saved/);expect(screen.getByLabelText("Benchmark load (lb)")).toBeDisabled();
 });
