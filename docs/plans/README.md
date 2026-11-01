@@ -56,3 +56,5 @@ not part of this rehearsal. No additional roadmap or release acceptance is creat
 ## 2026-10-24 bounded deployment automation
 
 The owner authorized [continuous-release implementation and preflight](../operations/continuous-release-plan.md), including read-only production diagnosis, private backup/isolated restoration and focused release qualification. [Operational evidence/procedure](../operations/continuous-release.md) keeps exact cutover, schema changes and service activation separately owner-controlled. This is not Home/onboarding or another product roadmap.
+
+- [Gmail password-reset delivery](../operations/gmail-password-reset.md): owner-selected configuration-only replacement for the superseded self-hosted/operator-code approaches. No new app/schema authority or automatic activation.
