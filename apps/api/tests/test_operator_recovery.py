@@ -1,5 +1,6 @@
 """Synthetic persistence only; issuer never invokes Docker from these tests."""
 from datetime import datetime, timedelta, timezone
+from hashlib import sha256
 import importlib.util
 from pathlib import Path
 from uuid import uuid4
@@ -129,3 +130,65 @@ def test_postgres_two_issuers_one_winner(account):
             try: worker.issue(db,account,binding); return 'issued'
             except worker.RecoveryRefused: db.rollback(); return 'refused'
     with ThreadPoolExecutor(2) as pool: assert sorted(pool.map(invoke,[0,1]))==['issued','refused']
+
+def test_binding_does_not_store_an_email_fingerprint(account):
+    with SessionLocal() as db:
+        state=worker.inspect_account(db,account)
+        assert set(state)=={'account_id','account_sha256','reset_state_sha256'}
+
+def test_worker_refuses_non_pipe_output_before_imports_or_writes(monkeypatch):
+    from types import SimpleNamespace
+    import stat
+    monkeypatch.setattr(worker.os,'fstat',lambda _:SimpleNamespace(st_mode=stat.S_IFREG|0o600))
+    with pytest.raises(worker.RecoveryRefused): worker.require_private_pipe()
+
+@pytest.mark.parametrize('matches', [True, False, 'true'])
+def test_prepare_keeps_email_only_in_private_stdin_not_manifest(tmp_path, monkeypatch, capsys, matches):
+    import io
+    host=_host()
+    class Terminal(io.StringIO):
+        def close(self): pass
+    monkeypatch.setattr(host,'private_terminal',Terminal)
+    monkeypatch.setattr(host,'verify_host',lambda _:None)
+    email='Synthetic-private@example.com'
+    monkeypatch.setattr(host.getpass,'getpass',lambda _: email)
+    def inspect(operation, manifest, expected_email=None):
+        assert operation=='inspect' and expected_email==email.lower()
+        return {'state':{'account_id':'synthetic','account_sha256':'binding','reset_state_sha256':'binding'},'account_matches':matches}
+    monkeypatch.setattr(host,'worker',inspect)
+    target=tmp_path/'target.json';host.private_write(target,{})
+    manifest=tmp_path/'manifest.json'
+    result=host.main(['prepare','--target',str(target),'--manifest',str(manifest)])
+    assert result==(0 if matches is True else 1)
+    assert manifest.exists()==(matches is True)
+    retained=''.join(p.read_text() for p in tmp_path.iterdir())+str(capsys.readouterr())
+    assert email.lower() not in retained.lower()
+    assert sha256(email.lower().encode()).hexdigest() not in retained
+
+@pytest.mark.parametrize('mode', [0o100600,0o020600,0o140600])
+def test_worker_guard_precedes_application_imports(monkeypatch, mode):
+    import builtins
+    from types import SimpleNamespace
+    monkeypatch.setattr(worker.os,'fstat',lambda _:SimpleNamespace(st_mode=mode))
+    original=builtins.__import__; seen=[]
+    def importing(name,*args,**kwargs):
+        if name.startswith('app.'): seen.append(name); raise AssertionError('app imported')
+        return original(name,*args,**kwargs)
+    monkeypatch.setattr(builtins,'__import__',importing)
+    monkeypatch.setattr(worker.os,'write',lambda fd,data:len(data))
+    with pytest.raises(SystemExit): worker.main()
+    assert seen==[]
+
+def test_real_anonymous_pipe_and_partial_write(monkeypatch):
+    import os
+    read,write=os.pipe()
+    try:
+        real_fstat=os.fstat(write)
+        monkeypatch.setattr(worker.os,'fstat',lambda _:real_fstat)
+        output=[]
+        monkeypatch.setattr(worker.os,'write',lambda fd,data:output.append(data) or len(data))
+        worker.write_private_response({'status':'synthetic'})
+        assert output==[b'{"status": "synthetic"}']
+        monkeypatch.setattr(worker.os,'write',lambda fd,data:1)
+        with pytest.raises(worker.RecoveryRefused): worker.write_private_response({'status':'synthetic'})
+    finally: os.close(read); os.close(write)

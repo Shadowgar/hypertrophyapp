@@ -22,7 +22,9 @@ deployment, merge or release-control action. Issues #103/#105 remain open.
   PostgreSQL network. Schema remains0027; existing confirmation endpoint accepts
   the operator code once, rejects replay, rejects old JWT and preserves synthetic
   account preferences and plan. Worker digest
-  `6dc6a2caf4f70cdd43c0bae9fadaef44a9c5a1e42d37d72532eb60ca99eaea1f`.
+  `2211b9b10cb5388ccdff815f6a5d79505b3affe16fb5a245fcb4a83414d0a89d`
+  after IPC hardening. Real Docker-exec stdout FIFO verified; normalized-email
+  match/wrong-email refusal and existing confirmation/replay tests pass.
 - Focused React/security tests: **9 passed**. TypeScript: no errors. Focused ESLint:
   zero errors; two existing ref-cleanup warnings in login. Documentation check:
   no new broken active links;28 historical baseline exceptions remain.
@@ -46,7 +48,8 @@ Codex Security scan `68e4f85e-ae04-48d4-8de3-a7c020a63ac6` completed/sealed over
 reviewed,16/16 authoritative source items closed, no deferred coverage. Historical
 supplied threat model retained with its original scope. A later CSS-token/border
 assertion correction was inspected separately; it is outside that sealed range.
-No security-sensitive authority changed after the sealed revision. Normal final-head
+Subsequent operator IPC/email-comparison hardening is outside the sealed range
+and received separate focused security validation. Normal final-head
 GitHub CI/CodeQL/GitGuardian results are reported on the PR, separately from local
 static review. No OS, live ingress or deployment certification is claimed.
 
@@ -66,3 +69,25 @@ JWT exposure to XSS, authenticated-settings-only notifications, and no recovery
 without a saved code or trusted operator remain explicit limits. No passkeys or
 unrelated security/OS upgrades are part of this PR. Existing residual host security
 risks and release safeguards are unchanged.
+
+
+## Final qualification correction
+
+The initial PR CodeQL run raised two high alerts on the operator path: hidden
+email comparison classified as weak password hashing, and worker print classified
+as sensitive logging. No lower-privilege disclosure was established, but the
+worker output boundary was implicit. The correction removes the standalone email
+digest entirely, sends email only in private stdin, returns Boolean match/no-match
+and persists only aggregate account/reset state. Worker stdout must be an actual
+FIFO before application import or database work, and a dedicated IPC response
+handles partial writes without replay. The supported host caller still requires
+its private authenticated terminal and captures that pipe. FIFO alone cannot
+prove reader authentication or absence of terminal recording.
+
+Focused issuer tests after tightening: **16 passed** on disposable PostgreSQL;
+real current-image Docker-exec/0027 rehearsal confirms the boundary and single-use
+confirmation. The rehearsal also observed PostgreSQL inet-to-text returning a
+netmask; canonical `host(inet_server_addr())` now supplies the exact address for
+comparison without relaxing target identity. No checks were disabled, alerts
+dismissed or security rules suppressed. Fresh normal CI/CodeQL qualification is
+required at the corrected final head.

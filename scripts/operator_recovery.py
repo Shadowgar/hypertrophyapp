@@ -95,9 +95,9 @@ def verify_host(target):
     require(addresses == target['server_addresses'], 'Database network identity changed')
 
 
-def worker(operation, manifest):
+def worker(operation, manifest, expected_email=None):
     source = Path(__file__).with_name('operator_recovery_worker.py').read_text()
-    result = json.loads(docker(['exec', '-i', manifest['target']['api_container'], 'python', '-c', source], canonical({'operation': operation, 'target': manifest['target'], 'state': manifest.get('state')})))
+    result = json.loads(docker(['exec', '-i', manifest['target']['api_container'], 'python', '-c', source], canonical({'operation': operation, 'target': manifest['target'], 'state': manifest.get('state'), 'expected_email': expected_email})))
     require('error' not in result, 'Worker outcome unconfirmed; do not retry issuance')
     return result
 
@@ -115,20 +115,21 @@ def main(argv=None):
                 target = private_read(args.target)
                 verify_host(target)
                 manifest = {'format': 1, 'target': target, 'prepared_at': datetime.now(timezone.utc).isoformat()}
-                manifest.update(worker('inspect', manifest))
                 email = getpass.getpass('Exact login email (hidden, not saved): ').strip().lower()
-                require(hashlib.sha256(email.encode()).hexdigest() == manifest['state']['normalized_email_sha256'], 'Account identity does not match')
+                result = worker('inspect', manifest, expected_email=email)
                 del email
+                require(result.get('account_matches') is True, 'Account identity does not match')
+                manifest['state'] = result['state']
                 private_write(args.manifest, manifest)
                 terminal.write('Prepared only. Manifest SHA256 '+fingerprint(manifest)+'\n')
-                return
+                return 0
             manifest = private_read(args.manifest)
             verify_host(manifest['target'])
             require(worker('inspect', manifest)['state'] == manifest['state'], 'Account/recovery inventory changed; renewed approval required')
             digest = fingerprint(manifest)
             if args.operation == 'verify':
                 terminal.write('Read-only verification passed. Manifest SHA256 '+digest+'\n')
-                return
+                return 0
             approval = getpass.getpass('One-time owner authorization (hidden): ')
             require(approval == 'ISSUE ONE FERRAVIS RECOVERY CODE '+digest, 'Exact separate owner authorization required')
             # Exclusive durable marker prevents a transport/display failure from

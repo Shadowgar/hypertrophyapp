@@ -18,8 +18,8 @@ command arguments, history, files, logs, tickets or chat. They are bearer secret
    `role`, `cluster`, `volume`, `schema`, `server_addresses` (sorted container IPs),
    `account_id`. IDs must be full, immutable values; no environment defaults.
 2. `umask 077` and run `python3 scripts/operator_recovery.py prepare --target /private/target.json --manifest /private/recovery.json`.
-   Type the exact login email at the hidden prompt. Only a protected comparison
-   fingerprint is retained. Preparation is read-only and binds credential/reset
+   Type the exact login email at the hidden prompt. The worker checks it privately and returns only match/no-match;
+   the address and its standalone digest are not retained. Preparation is read-only and binds credential/reset
    state. It prints a nonsecret manifest SHA256.
 3. Run `python3 scripts/operator_recovery.py verify --manifest /private/recovery.json`.
    Present the verified target identities and digest to the owner. **Stop here**
@@ -42,9 +42,11 @@ command arguments, history, files, logs, tickets or chat. They are bearer secret
    explicit owner authorization and invalidates the previous code. Do not edit or
    delete attempt markers to retry. A failure may commit before transport fails.
 
-The host script sends only reviewed worker source and target binding to the
-existing API interpreter; no installation, source mount or restart. The worker
-uses the configured DB only after verifying the exact backend/name/role, cluster,
+The host script sends reviewed worker source, target binding and (during
+preparation only) the hidden email through private stdin IPC to the
+existing API interpreter; no installation, source mount or restart. The worker refuses any non-pipe stdout before application imports or database
+work, and uses a dedicated private IPC response rather than logging credentials.
+The worker uses the configured DB only after verifying the exact backend/name/role, cluster,
 server IP/port, schema and APP_VERSION, independently cross-checked via PostgreSQL
 socket and immutable Docker metadata. Privileged host/Docker operators are inside
 the trust boundary. Issuance is not exposed through an HTTP API.
