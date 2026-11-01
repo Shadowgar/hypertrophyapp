@@ -1,10 +1,10 @@
-.panel { display: grid; gap: 1rem; padding: 1.25rem; border: 1px solid var(--ui-border); border-radius: 1rem; overflow-wrap: anywhere; }
+.panel { display: grid; gap: 1rem; padding: 1.25rem; border: 1px solid var(--border-control); border-radius: 1rem; overflow-wrap: anywhere; }
 .panel h2, .panel h3, .panel p { margin: 0; }
 .form { display: grid; gap: 1rem; }
 .form label { display: grid; gap: .5rem; }
-.form input[type="password"] { width: 100%; min-width: 0; padding: .65rem; color: inherit; background: var(--ui-surface); border: 1px solid var(--ui-border); border-radius: .5rem; }
+.form input[type="password"] { width: 100%; min-width: 0; padding: .65rem; color: inherit; background: var(--surface); border: 1px solid var(--border-control); border-radius: .5rem; }
 .form .confirm { display: flex; align-items: flex-start; gap: .65rem; }
 .confirm input { flex-shrink: 0; margin-top: .3rem; }
-.notice { display: grid; gap: .75rem; padding: 1rem; background: var(--ui-surface); border: 1px solid var(--ui-border); border-radius: .75rem; }
+.notice { display: grid; gap: .75rem; padding: 1rem; background: var(--surface); border: 1px solid var(--border-control); border-radius: .75rem; }
 .codes { padding-left: 1.5rem; display: grid; gap: .5rem; }
 .codes code { font-size: .85rem; overflow-wrap: anywhere; user-select: all; }

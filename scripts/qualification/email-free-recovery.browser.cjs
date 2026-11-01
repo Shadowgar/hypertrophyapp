@@ -34,6 +34,7 @@ let stage='preflight';
    await page.goto(base+'/settings');
    await page.getByRole('heading',{name:'Password recovery',exact:true}).waitFor();
    await page.getByText('0 unused recovery codes remain.',{exact:true}).waitFor();
+   assert.equal(await page.getByLabel('Current password',{exact:true}).evaluate(element=>getComputedStyle(element).borderStyle),'solid');
    await page.getByLabel('Current password',{exact:true}).fill(original);
    await page.getByRole('checkbox',{name:/I will save the new codes privately/}).check();
    stage=engine+' generation';
