@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { AccountRecovery } from "@/components/account-recovery";
 import {AppearanceSettings} from "@/components/appearance-settings";
 import { useCallback, useEffect, useRef, useState } from "react";
 import styles from "./settings.module.css";
@@ -443,6 +444,7 @@ function SettingsContent() {
       ) : null}
 
       <div className={styles.content}>
+        <AccountRecovery />
         <div id="appearance-preferences" className={styles.appearance}>
           <AppearanceSettings />
         </div>

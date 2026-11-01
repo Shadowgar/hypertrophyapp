@@ -86,7 +86,7 @@ export default function LoginPage() {
     <form className={`${styles.form} ${styles.loginForm}`} onSubmit={submit}>
       <label className={styles.field}>Email<input type="email" autoComplete="username" required value={email} disabled={pending} onChange={event => setEmail(event.target.value)} /></label>
       <PasswordField value={password} onChange={setPassword} autoComplete="current-password" disabled={pending} />
-      <Link className={styles.secondaryLink} href={email ? `/reset-password?email=${encodeURIComponent(email.trim())}` : '/reset-password'}>Forgot password?</Link>
+      <Link className={styles.secondaryLink} href="/reset-password">Forgot password?</Link>
       {status ? <p role="alert" className={`${styles.notice} ${styles.error}`}>{status}</p> : null}
       {continuationToken ? <Button type="button" variant="secondary" disabled={pending} onClick={async () => {
         if (inFlight.current) return;

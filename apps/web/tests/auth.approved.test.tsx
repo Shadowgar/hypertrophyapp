@@ -38,30 +38,28 @@ test('late sign-in cannot replace an account that changed while authentication w
   expect(navigation.push).not.toHaveBeenCalled();
 });
 
-test('recovery starts with empty email and a separate request stage, ignores response credentials, and guards duplicates', async () => {
+test('recovery defaults to a saved code, never requests email, and guards duplicate submits', async () => {
   const response = deferred<Response>(); vi.mocked(fetch).mockReturnValue(response.promise);
   render(<ResetPasswordPage />);
-  expect(screen.getByLabelText('Email')).toHaveValue('');
-  expect(screen.queryByLabelText('New password')).not.toBeInTheDocument();
-  fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'synthetic@example.com' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Send reset link' }));
-  fireEvent.submit(screen.getByLabelText('Email').closest('form')!);
+  expect(screen.queryByLabelText('Email')).not.toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText('Recovery code'), { target: { value: 'synthetic-recovery-code' } });
+  fireEvent.change(screen.getByLabelText('New password'), { target: { value: 'Synthetic-only-password' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Save new password' }));
+  fireEvent.submit(screen.getByLabelText('Recovery code').closest('form')!);
   expect(fetch).toHaveBeenCalledTimes(1);
-  await act(async () => response.resolve(Response.json({ status: 'accepted', reset_token: 'must-never-be-displayed' })));
-  expect(screen.getByRole('status')).toHaveTextContent('If recovery is available for this account');
-  expect(screen.queryByDisplayValue('must-never-be-displayed')).not.toBeInTheDocument();
-  expect(screen.queryByLabelText('New password')).not.toBeInTheDocument();
+  expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/auth/password-reset/confirm'), expect.anything());
+  await act(async () => response.resolve(Response.json({ status: 'password_updated' })));
+  expect(screen.getByRole('status')).toHaveTextContent('Password updated');
+  expect(screen.queryByDisplayValue('Synthetic-only-password')).not.toBeInTheDocument();
 });
-
-test('an expired mailbox link offers a fresh request without retaining the token or password', async () => {
+test('legacy link remains usable and invalid code offers another code without email promises', async () => {
   navigation.query = new URLSearchParams({ token: 'expired-synthetic-link' });
   vi.mocked(fetch).mockResolvedValue(Response.json({ detail: 'invalid' }, { status: 400 }));
   render(<ResetPasswordPage />);
+  expect(screen.getByLabelText('Recovery code')).toHaveValue('expired-synthetic-link');
   fireEvent.change(screen.getByLabelText('New password'), { target: { value: 'Synthetic-only-password' } });
   fireEvent.click(screen.getByRole('button', { name: 'Save new password' }));
-  await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/invalid or expired/i));
-  fireEvent.click(screen.getByRole('button', { name: 'Request a new link' }));
-  expect(screen.getByLabelText('Email')).toHaveValue('');
-  expect(screen.queryByDisplayValue('expired-synthetic-link')).not.toBeInTheDocument();
-  expect(screen.queryByDisplayValue('Synthetic-only-password')).not.toBeInTheDocument();
+  await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/invalid or no longer available/i));
+  fireEvent.click(screen.getByRole('button', { name: 'Try another code' }));
+  expect(screen.getByLabelText('Recovery code')).toHaveValue(''); expect(screen.getByLabelText('New password')).toHaveValue('');
 });
