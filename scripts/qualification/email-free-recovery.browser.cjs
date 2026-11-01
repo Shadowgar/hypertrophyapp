@@ -14,10 +14,12 @@ let stage='preflight';
 (async () => {
  for (const path of ['/version', '/api/health']) assert.equal((await (await fetch(base+path)).json()).version, version);
  const results=[];
- for (const engine of ['chromium','webkit']) {
-  const browser=await ({chromium,webkit})[engine].launch({headless:true});
+ const engines=['chromium','chromium-mobile',...(process.env.FERRAVIS_WEBKIT==='1'?['webkit']:[])];
+ for (const engine of engines) {
+  stage=engine+' launch';
+  const browser=await (engine==='webkit'?webkit:chromium).launch({headless:true});
   try {
-   const context=await browser.newContext(engine==='webkit'?devices['iPhone 13']:{viewport:{width:1440,height:900}});
+   const context=await browser.newContext(engine==='webkit'?devices['iPhone 13']:engine==='chromium-mobile'?{viewport:{width:390,height:844},isMobile:true,hasTouch:true}:{viewport:{width:1440,height:900}});
    await context.route('**/*',r=>new URL(r.request().url()).origin===base?r.continue():r.abort());
    const email=`synthetic-recovery-${engine}-${Date.now()}@example.com`;
    const original='Synthetic-only-Q98!'; const updated='New-synthetic-only-Q98!';
@@ -25,7 +27,7 @@ let stage='preflight';
    assert.equal(registration.status(),200);
    const token=(await registration.json()).access_token;
    const page=await context.newPage(); page.setDefaultTimeout(60000);
-   const errors=[]; page.on('pageerror',()=>errors.push('pageerror'));
+   const errors=[]; page.on('pageerror',error=>errors.push({name:error.name,frames:(error.stack||'').split('\n').slice(1,4)}));
    stage=engine+' settings';
    await page.goto(base+'/login');
    await page.evaluate(value=>localStorage.setItem('hypertrophy_token',value),token);
@@ -67,8 +69,10 @@ let stage='preflight';
    await page.getByText('Your password was recovered. Previous sign-ins were invalidated.',{exact:true}).waitFor();
    const replay=await context.request.post(base+'/api/auth/password-reset/confirm',{data:{token:codes[0],new_password:updated}});
    assert.equal(replay.status(),400);
+   stage=engine+' runtime';
+   if(errors.length) fs.writeFileSync(out+'/runtime-frames.json',JSON.stringify(errors));
    assert.deepEqual(errors,[]);
-   results.push({engine,viewport:engine==='webkit'?'iPhone13':'1440x900',generated:10,remaining:9,oldSession:401,replay:400,pageErrors:0,emailSent:false});
+   results.push({engine,viewport:engine==='webkit'?'iPhone13-emulated':engine==='chromium-mobile'?'390x844':'1440x900',generated:10,remaining:9,oldSession:401,replay:400,pageErrors:0,emailSent:false});
   } finally { await browser.close(); }
  }
  fs.writeFileSync(out+'/summary.json',JSON.stringify(results,null,2));
