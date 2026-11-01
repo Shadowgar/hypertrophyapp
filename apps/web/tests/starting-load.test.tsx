@@ -643,7 +643,7 @@ test("pending benchmark survives a first actual set and history takes precedence
   fireEvent.click(screen.getByRole("button", { name: "Retry exact benchmark" }));
   await waitFor(() => expect(save).toHaveBeenCalledTimes(2));
   expect(save.mock.calls[1][0]).toEqual(save.mock.calls[0][0]);
-  await waitFor(() => expect(screen.queryByRole("radio", { name: "I know my 1-rep max." })).not.toBeInTheDocument());
+  await waitFor(() => expect(screen.getByRole("radio", { name: "I know my 1-rep max." })).toBeDisabled());
 });
 
 test("Customized choices disclose the unsupported calculation and preserve manual logging", async () => {
@@ -668,6 +668,8 @@ test("appending a converted attainable list preserves exact old loads through sa
   const view=render(<AuthoredCalibration {...props}/>);
   const loads=screen.getByLabelText("Available loads (comma separated)") as HTMLInputElement;
   fireEvent.change(loads,{target:{value:loads.value+", 44"}});
+  fireEvent.change(loads,{target:{value:loads.value.split(",").reverse().join(",")}});
+  fireEvent.change(loads,{target:{value:loads.value.split(",").reverse().join(",")}});
   fireEvent.click(screen.getByLabelText(/I confirm this benchmark/));
   fireEvent.click(screen.getByRole("button",{name:"Save benchmark and estimate"}));
   await screen.findByText(/Benchmark save not confirmed/);
@@ -677,4 +679,13 @@ test("appending a converted attainable list preserves exact old loads through sa
   fireEvent.click(screen.getByRole("button",{name:"Retry exact benchmark"}));
   await waitFor(()=>expect(save).toHaveBeenCalledTimes(2));
   expect(save.mock.calls[1][0]).toEqual(save.mock.calls[0][0]);
+});
+
+test("first-use help stays mounted after a saved set so expanded content cannot clamp scroll", () => {
+  const view=render(runner(guidance(),{onSaveCalibration:vi.fn()}));fillBenchmark();
+  const g=guidance();g.initial_estimate!.status="unavailable";g.initial_estimate!.reason_codes=["current_working_sets_take_precedence"];
+  view.rerender(runner(g,{onSaveCalibration:vi.fn(),completed:1}));
+  expect(screen.getByLabelText("Benchmark load (lb)")).toBeDisabled();
+  expect(screen.getByText("Equipment and available loads").closest("details")).toHaveAttribute("open");
+  expect(screen.getByRole("button",{name:"Save benchmark and estimate"})).toBeDisabled();
 });

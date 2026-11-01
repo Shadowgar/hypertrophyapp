@@ -4,7 +4,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 import TodayPage from '@/app/today/page';
 const token=`header.${btoa(JSON.stringify({sub:'flexible-today'}))}.signature`;
 const date='2026-10-30';
-function fixture(options:{resume?:boolean;lost?:boolean;trainingPending?:Promise<void>}={}){
+function fixture(options:{resume?:boolean;lost?:boolean;trainingPending?:Promise<void>;blockedAfterRefresh?:boolean}={}){
  let started=!options.resume;let count=0;let ctx='execution-original';
  const writes:Array<Record<string,unknown>>=[];const commands:Array<Record<string,unknown>>=[];const reads:string[]=[];
  const workout=()=>({session_id:'native-a',workout_occurrence_id:'native-occ-a',title:'Source workout A',date,execution_context:{id:ctx,local_day:date,timezone:'America/New_York'},exercises:[{id:'press',exercise_occurrence_id:'slot-a',name:'Flexible Source Press',sets:3,rep_range:[8,12],recommended_working_weight:20}]});
@@ -12,7 +12,7 @@ function fixture(options:{resume?:boolean;lost?:boolean;trainingPending?:Promise
  vi.stubGlobal('fetch',vi.fn(async(input,init)=>{
   const url=String(input); reads.push(url);
   if(url.endsWith('/health'))return Response.json({status:'ok'});
-  if(url.endsWith('/training/next')){await options.trainingPending;return Response.json(next());}
+  if(url.endsWith('/training/next')){await options.trainingPending;return Response.json(options.blockedAfterRefresh&&reads.filter(r=>r.endsWith('/training/next')).length>1?{...next(),action:'blocked',blockers:[{code:'mandatory_rest',message:'Required rest evidence needs review'}]}:next());}
   if(url.endsWith('/training/seq-a/resume')){commands.push(JSON.parse(String(init.body)));started=true;return Response.json(next());}
   if(url.endsWith('/training/seq-a/pause')){commands.push(JSON.parse(String(init.body)));started=false;return Response.json(next());}
   if(url.includes('/plan/scheduling-context'))return Response.json({timezone:'America/New_York',local_today:date,week_start:'2026-10-26',plan:null});
@@ -69,4 +69,14 @@ test('Pause retires the runner view without deleting progress and exposes Resume
  await screen.findByRole('button',{name:'Resume workout'});
  expect(screen.queryByRole('button',{name:/Flexible Source Press/})).not.toBeInTheDocument();
  expect(state.writes).toHaveLength(0);
+});
+
+test('training refresh stays outside active set-entry layout and mandatory blockers still retire the runner',async()=>{
+ fixture({blockedAfterRefresh:true});render(<TodayPage/>);
+ fireEvent.click(await screen.findByRole('button',{name:/Flexible Source Press/}));
+ expect(screen.getByRole('region',{name:'Flexible training',hidden:true})).not.toBeVisible();
+ await act(async()=>window.dispatchEvent(new Event('hypertrophy:training-changed')));
+ await screen.findByText('Required rest evidence needs review');
+ expect(screen.queryByRole('region',{name:'Working set entry'})).not.toBeInTheDocument();
+ expect(screen.getByRole('region',{name:'Flexible training'})).toBeVisible();
 });

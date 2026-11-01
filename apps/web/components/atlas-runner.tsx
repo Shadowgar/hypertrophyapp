@@ -142,6 +142,8 @@ export function AtlasRunner(p: Props) {
     bodyweight,
     submit: (set, value) => p.submit(key, set, value),
   });
+  const customizedHelpOffered = useRef(false);
+  if (p.exercise.customized && p.completed === 0 && suggested == null) customizedHelpOffered.current = true;
   const [panel, setPanel] = useState<
     "warmup" | "guide" | "records" | "effort" | "load" | null
   >(null);
@@ -443,8 +445,8 @@ export function AtlasRunner(p: Props) {
             disabled={ctrl.locked || undoLocked || blocked}
             onSave={p.onSaveCalibration} />
         ) : null}
-        {p.exercise.customized && p.completed === 0 && suggested == null ? (
-          <fieldset className="ux-card space-y-3" disabled={ctrl.locked || undoLocked || blocked}>
+        {p.exercise.customized && customizedHelpOffered.current ? (
+          <fieldset className="ux-card space-y-3" disabled={ctrl.locked || undoLocked || blocked || p.completed > 0}>
             <legend className="font-semibold">Starting weight · optional help</legend>
             {([
               ["known", "I know my 1-rep max."],

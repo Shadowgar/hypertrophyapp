@@ -125,27 +125,35 @@ export function AuthoredCalibration(p: Props) {
     persist(draft);
   }, [draft, persist]);
   const [editing, setEditing] = useState<{ field: string; value: string; unit: "lb" | "kg" } | null>(null);
-  const locked = p.disabled || busy || Boolean(draft.attempt);
+  const offered = useRef(p.eligible !== false);
+  if (p.eligible !== false) offered.current = true;
+  const locked = p.disabled || busy || Boolean(draft.attempt) || p.eligible === false;
   const unit = draft.attempt ? draft.unit : p.context.display_unit;
-  function shown(value: string) {
+  function shown(value: string, precise = false) {
     if (!value.trim() || !Number.isFinite(Number(value)) || unit === draft.unit) return value;
-    return String(displayLoad(canonicalLoad(Number(value), draft.unit), unit));
+    const kg = canonicalLoad(Number(value), draft.unit);
+    // Equipment grids/lists must not inherit the rounded actual-load display.
+    return precise ? String(Number((unit === "kg" ? kg : kg / 0.45359237).toPrecision(15)))
+      : String(displayLoad(kg, unit));
   }
   function fieldValue(field: string, value: string) {
-    return editing?.field === field && editing.unit === unit ? editing.value : shown(value);
+    return editing?.field === field && editing.unit === unit ? editing.value : shown(value, field !== "load");
   }
   function shownValues() {
     if (editing?.field === "values" && editing.unit === unit) return editing.value;
-    return unit === draft.unit ? draft.values : draft.values.split(",").map((v) => shown(v.trim())).join(", ");
+    return unit === draft.unit ? draft.values : draft.values.split(",").map((v) => shown(v.trim(), true)).join(", ");
   }
   function editLoad(field: "load" | "min" | "step" | "max" | "values", value: string) {
     if (locked) return;
     const previousDisplay = shownValues().split(",");
     const previousOriginal = draft.values.split(",");
-    const retained = field === "values" ? value.split(",").map((v, index) =>
-      previousDisplay[index]?.trim() === v.trim()
-        ? previousOriginal[index]
-        : original(v.trim())).join(",") : original(value);
+    const retained = field === "values" ? value.split(",").map((v, index) => {
+      const token = v.trim();
+      if (previousDisplay[index]?.trim() === token) return previousOriginal[index];
+      // Adding, removing or reordering entries must preserve untouched magnitudes.
+      const matches = previousDisplay.flatMap((entry, i) => entry.trim() === token ? [i] : []);
+      return matches.length === 1 ? previousOriginal[matches[0]] : original(token);
+    }).join(",") : original(value);
     setEditing({ field, value, unit });
     edit(field, retained);
   }
@@ -262,7 +270,7 @@ export function AuthoredCalibration(p: Props) {
       setBusy(false);
     }
   }
-  if (p.eligible === false && !draft.attempt) return null;
+  if (!offered.current && !draft.attempt) return null;
   return (
     <div className="space-y-4 ux-card">
       {p.guidance?.initial_estimate?.status === "unavailable" ? <p className="ux-muted">
@@ -445,7 +453,7 @@ export function AuthoredCalibration(p: Props) {
       </p> : null}
       {draft.method !== "manual" || draft.attempt ? (
         <Button
-          disabled={busy || p.disabled || (!draft.attempt && !valid)}
+          disabled={busy || p.disabled || (!draft.attempt && (!valid || p.eligible === false))}
           onClick={save}
         >
           {busy
