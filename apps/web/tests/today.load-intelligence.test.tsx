@@ -438,7 +438,7 @@ test("a late initial progress failure cannot erase a newly confirmed working set
  await act(async()=>rejectInitial(new Error('progress failed late')));
  expect(screen.getByRole('button',{name:/Intelligence Press/})).toHaveTextContent(/1\s*\/\s*3/);
  expect(nativeScreen.queryByText('Checking the latest saved sets…')).not.toBeInTheDocument();
- expect(nativeScreen.getByText(/Latest set refresh unavailable/)).toBeVisible();
+ expect(nativeScreen.getByText(/Saved-set refresh unavailable/)).toBeVisible();
 });
 
 

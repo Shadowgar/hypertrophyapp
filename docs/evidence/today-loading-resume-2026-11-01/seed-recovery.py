@@ -4,6 +4,7 @@ from copy import deepcopy
 from uuid import uuid4
 from datetime import date,datetime,timedelta
 from zoneinfo import ZoneInfo
+from recovery_dates import recovery_dates
 from sqlalchemy import create_engine,text
 from sqlalchemy.engine import make_url
 u=make_url(os.environ['DATABASE_URL'])
@@ -19,7 +20,7 @@ from app.workout_identity import identified_sessions
 import httpx
 c=httpx.Client(base_url='http://127.0.0.1:8043',timeout=120)
 accounts={}
-for mode,phase in [('recent',1),('manual',1),('unsupported',1)]:
+for mode,phase in [('recent',1),('manual',1),('unsupported',1),('flexible',1)]:
  uid=str(uuid4()); today=datetime.now(ZoneInfo("UTC")).date(); monday=today-timedelta(days=today.weekday())
  program=f'pure_bodybuilding_phase_{phase}_full_body'
  with SessionLocal() as db:
@@ -34,7 +35,7 @@ for mode,phase in [('recent',1),('manual',1),('unsupported',1)]:
   assert r.status_code==200,(path,r.status_code)
   return r.json()
  if mode not in ('flexible','customized'):
-  post('/plan/generate-week',{'template_id':program,'week_start':monday.isoformat(),'selected_dates':[(monday+timedelta(days=i)).isoformat() for i in (0,2,4)],'timezone':'UTC','target_days':3,'expected_placement_revision':0})
+  post('/plan/generate-week',{'template_id':program,'week_start':monday.isoformat(),'selected_dates':[d.isoformat() for d in recovery_dates(today)],'timezone':'UTC','target_days':3,'expected_placement_revision':0})
  if mode=='flexible':
   body={'program_id':program,'timezone':'UTC','expected_sessions_per_week':3}
   preview=post('/training/enroll/preview',body);assert preview['available']
@@ -54,4 +55,4 @@ for mode,phase in [('recent',1),('manual',1),('unsupported',1)]:
  profile=c.get('/profile',headers=headers);assert profile.status_code==200,(mode,profile.status_code)
 
 p=Path('.qualification/browser-recovery-accounts.json');p.write_text(json.dumps(accounts));p.chmod(0o600)
-print('Three fresh isolated recovery fixtures ready. No original measurement fixture changed.')
+print('Four fresh isolated recovery fixtures ready. No original measurement fixture changed.')

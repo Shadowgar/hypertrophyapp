@@ -1,0 +1,42 @@
+[
+  {
+    "group": "recovery",
+    "scenario": "recent",
+    "source_projection_sha256": "8bee8dbbd2cf12e17f77c95f0a1d5d695ee8dc69f55677e53ec3575d93030838",
+    "source_preserved": true,
+    "effective_sets": 1,
+    "audit_rows": 1,
+    "canonical_kg_preserved": true,
+    "calendar_dates_not_backfilled": true
+  },
+  {
+    "group": "recovery",
+    "scenario": "manual",
+    "source_projection_sha256": "8bee8dbbd2cf12e17f77c95f0a1d5d695ee8dc69f55677e53ec3575d93030838",
+    "source_preserved": true,
+    "effective_sets": 0,
+    "audit_rows": 2,
+    "canonical_kg_preserved": true,
+    "calendar_dates_not_backfilled": true
+  },
+  {
+    "group": "recovery",
+    "scenario": "unsupported",
+    "source_projection_sha256": "8bee8dbbd2cf12e17f77c95f0a1d5d695ee8dc69f55677e53ec3575d93030838",
+    "source_preserved": true,
+    "effective_sets": 0,
+    "audit_rows": 0,
+    "canonical_kg_preserved": true,
+    "calendar_dates_not_backfilled": true
+  },
+  {
+    "group": "recovery",
+    "scenario": "flexible",
+    "source_projection_sha256": "3bc86057a11154687c77347516622e90e4ac7b5556ab40673bf651381229ce95",
+    "source_preserved": true,
+    "effective_sets": 0,
+    "audit_rows": 0,
+    "canonical_kg_preserved": true,
+    "calendar_dates_not_backfilled": true
+  }
+]

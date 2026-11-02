@@ -531,6 +531,7 @@ export default function TodayPage() {
     setOccurrenceVerifiedState(value);
   }, []);
   const retainedView = useRef<HTMLFieldSetElement>(null);
+  const progressReadVersion = useRef(0);
   const [progressReadState, setProgressReadState] = useState<"idle" | "checking" | "failed">("idle");
   useEffect(() => {
     if (!occurrenceVerified) retainedView.current?.querySelectorAll<HTMLDialogElement>("dialog[open]")
@@ -777,6 +778,40 @@ export default function TodayPage() {
     return context.local_today;
   }, [capturePageRead, isCurrentPageRead]);
 
+  const refreshWorkoutProgress = useCallback(async (data: WorkoutSession, useTodayFallback = false) => {
+    if (!verifiedView.current || currentOccurrence.current !== workoutReference(data)) return;
+    const scope = capturePageRead();
+    const todayVersion = todayReadVersion.current;
+    const version = ++progressReadVersion.current;
+    const isCurrent = () => isCurrentPageRead(scope) && todayVersion === todayReadVersion.current
+      && version === progressReadVersion.current && verifiedView.current
+      && currentOccurrence.current === workoutReference(data);
+    const initialGeneration = captureLoadGeneration();
+    const localCompleted = Object.fromEntries(data.exercises.map(exercise => [exerciseKey(exercise), exercise.completed_sets ?? 0]));
+    setProgressReadState("checking");
+    try {
+      const { progress, generation } = await getScopedWorkoutProgress(workoutReference(data));
+      if (!isCurrent()) return;
+      setProgressReadState("idle");
+      applyProgressLoad(progress.exercises ?? [], generation);
+      if ((progress.exercises ?? []).some(item => !isCurrentLoadGeneration(item.exercise_occurrence_id ?? item.exercise_id, generation))) return;
+      const serverCompleted = Object.fromEntries((progress.exercises ?? []).map(item => [item.exercise_occurrence_id ?? item.exercise_id, Number(item.completed_sets) || 0]));
+      const merged = Object.keys(serverCompleted).length > 0 ? serverCompleted : localCompleted;
+      setCompletedSetsByExercise(merged);
+      setWorkoutProgress({ completed: Number(progress.completed_total) || 0, planned: Number(progress.planned_total) || 0, percent: Number(progress.percent_complete) || 0 });
+      try { localStorage.setItem(occurrenceStorageKey("completed", data), JSON.stringify(merged)); } catch { /* server progress remains authoritative */ }
+      if ((Number(progress.percent_complete) || 0) >= 100) await loadWorkoutSummary(workoutReference(data));
+    } catch {
+      if (!isCurrent()) return;
+      // Settle status independently; an older failure never replaces newer receipts.
+      setProgressReadState("failed");
+      if (useTodayFallback && data.exercises.every(exercise => isCurrentLoadGeneration(exerciseKey(exercise), initialGeneration))) {
+        setCompletedSetsByExercise(localCompleted);
+        setWorkoutProgress(null);
+      }
+    }
+  }, [capturePageRead, isCurrentPageRead, captureLoadGeneration, getScopedWorkoutProgress, applyProgressLoad, isCurrentLoadGeneration, loadWorkoutSummary]);
+
   const loadToday = useCallback(async (): Promise<WorkoutSession | null> => {
     const scope = capturePageRead();
     const version = ++todayReadVersion.current;
@@ -887,45 +922,8 @@ export default function TodayPage() {
         if (isCurrent()) setWeakAreas([]);
       });
 
-      // Confirmed server state is authoritative; local caches are never receipts.
-      const localCompleted: Record<string,number> = Object.fromEntries(data.exercises.map(exercise=>[exerciseKey(exercise),exercise.completed_sets??0]));
-      const initialProgressGeneration = captureLoadGeneration();
-
-      // Today is already verified; this optional projection must not delay recovery context.
-      setProgressReadState("checking");
-      // prefer server-side progress when available
-      void (async () => {
-        try {
-          const { progress, generation } = await getScopedWorkoutProgress(workoutReference(data));
-          if (!isCurrent() || currentOccurrence.current !== workoutReference(data)) return null;
-          setProgressReadState("idle");
-          applyProgressLoad(progress.exercises ?? [], generation);
-          if ((progress.exercises ?? []).some(item => !isCurrentLoadGeneration(item.exercise_occurrence_id ?? item.exercise_id, generation))) return data;
-          const serverCompleted = Object.fromEntries(
-            (progress.exercises ?? []).map((item) => [item.exercise_occurrence_id ?? item.exercise_id, Number(item.completed_sets) || 0]),
-          ) as Record<string, number>;
-          const merged = Object.keys(serverCompleted).length > 0 ? serverCompleted : localCompleted;
-          setCompletedSetsByExercise(merged);
-          setWorkoutProgress({
-            completed: Number(progress.completed_total) || 0,
-            planned: Number(progress.planned_total) || 0,
-            percent: Number(progress.percent_complete) || 0,
-          });
-          const completedKey = occurrenceStorageKey("completed", data);
-          try { localStorage.setItem(completedKey, JSON.stringify(merged)); } catch { /* server progress remains authoritative */ }
-          if ((Number(progress.percent_complete) || 0) >= 100) {
-            await loadWorkoutSummary(workoutReference(data));
-          }
-        } catch {
-          if (!isCurrent() || currentOccurrence.current !== workoutReference(data)) return;
-          // Settling this read must not depend on permission to replace newer receipts.
-          setProgressReadState("failed");
-          if (data.exercises.every(exercise => isCurrentLoadGeneration(exerciseKey(exercise), initialProgressGeneration))) {
-            setCompletedSetsByExercise(localCompleted);
-            setWorkoutProgress(null);
-          }
-        }
-      })();
+      // Today is already verified; auxiliary progress must not delay recovery context.
+      void refreshWorkoutProgress(data, true);
       return data;
     } catch (error) {
       if (!isCurrent()) return null;
@@ -953,7 +951,7 @@ export default function TodayPage() {
         : "Workout could not be loaded. Retry loading your workout. Your saved history is unchanged.");
       return null;
     }
-  }, [loadWorkoutSummary, applyProgressLoad, resetSelectedLoadContext, getScopedWorkoutProgress, capturePageRead, isCurrentPageRead, captureLoadGeneration, isCurrentLoadGeneration, resetExerciseAuthority, setOccurrenceVerified]);
+  }, [applyProgressLoad, resetSelectedLoadContext, capturePageRead, isCurrentPageRead, captureLoadGeneration, isCurrentLoadGeneration, resetExerciseAuthority, setOccurrenceVerified, refreshWorkoutProgress]);
 
   async function recoverPriorUndo() {
     const pageScope = capturePageRead();
@@ -1407,6 +1405,13 @@ export default function TodayPage() {
   const manageDatesHref = customizedProposalId ? `/customize?proposal=${encodeURIComponent(customizedProposalId)}` : workout?.customized ? "/customize" : "/week";
   const manageDatesLabel = customizedProposalId ? "Manage Customized dates or replace program" : workout?.customized ? "Manage Customized programs" : "Manage training dates";
 
+  const progressStatus = <div role="status" className="flex h-14 items-center gap-2 text-sm">
+    <p className="min-w-0 flex-1 ux-muted">{progressReadState === "checking" ? "Checking the latest saved sets…"
+      : progressReadState === "failed" ? "Saved-set refresh unavailable." : ""}</p>
+    {progressReadState === "failed" ? <Button variant="secondary" className="min-h-11 shrink-0"
+      onClick={() => { if (workout) void refreshWorkoutProgress(workout); }}>Retry saved sets</Button> : null}
+  </div>;
+
   const todayDate = localToday
     ? `${formatCalendarDate(localToday.date)} · ${localToday.timezone}`
     : `${new Date().toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} · browser local date`;
@@ -1470,9 +1475,7 @@ export default function TodayPage() {
             {workout.title} · {workoutProgress?.completed ?? workout.exercises.reduce((total, exercise) => total + (completedSetsByExercise[exerciseKey(exercise)] ?? exercise.completed_sets ?? 0), 0)}/{workoutProgress?.planned ?? workout.exercises.reduce((total, exercise) => total + exercise.sets, 0)} sets
           </p>
 
-          <p role="status" className="min-h-6 ux-muted">{progressReadState === "checking"
-            ? "Checking the latest saved sets…" : progressReadState === "failed"
-              ? "Latest set refresh unavailable. The verified workout is still open; use Reload to check again." : ""}</p>
+          {!selectedExerciseId ? progressStatus : null}
           {!undoRecovery ? <WorkoutWorkload exercises={workout.exercises} timeBudgetMinutes={sessionTimeGoal} mode={trainingDecision?.mode === "flexible" ? "flexible" : workloadMode(workout.program_template_id ?? workout.selected_program_id, Boolean(workout.customized))} /> : null}
           <ul className="space-y-1.5" aria-label="Exercise list">
             {(workout.exercises ?? []).map((exercise) => {
@@ -1731,6 +1734,8 @@ export default function TodayPage() {
           </fieldset>
         );
       })() : null}
+
+      {workout && occurrenceVerified && selectedExerciseId ? progressStatus : null}
 
       {/* Global rest bar when overlay is closed (timer persists) */}
       {occurrenceVerified && globalRestTimer != null && selectedExerciseId !== globalRestTimer.exerciseId ? (

@@ -360,7 +360,7 @@ test("an unavailable training decision blocks Today and exposes its own retry",a
 test("failed auxiliary progress keeps Today counts and explains the limited refresh",async()=>{
  fixture(url=>url.endsWith("/workout/today")?Response.json(workout("Verified Press","verified",1)):url.endsWith("/progress")?Response.json({detail:"unavailable"},{status:503}):undefined);
  render(<TodayPage/>);expect(await screen.findByRole("button",{name:/Verified Press/})).toHaveTextContent("1/3");
- await screen.findByText(/Latest set refresh unavailable/);
+ await screen.findByText(/Saved-set refresh unavailable/);
  expect(screen.getByText(/Verified Press workout.*1\/3 sets/)).toBeInTheDocument();
  expect(screen.queryByText(/No workout available/)).not.toBeInTheDocument();
 });
@@ -395,4 +395,14 @@ test("a new account's failed first read cannot retain the previous private view"
  render(<TodayPage/>);fireEvent.click(await screen.findByRole("button",{name:/Private Account A/}));const old=screen.getByLabelText("Working weight (lb)");
  act(()=>setAuthToken("account-b"));await act(async()=>pending.resolve(Response.json({detail:"offline"},{status:503})));
  await screen.findByText(/Workout could not be loaded/);expect(old.isConnected).toBe(false);expect(screen.queryByText("Private Account A",{exact:false})).not.toBeInTheDocument();
+});
+
+test("progress failures stay visible inside execution and retry only progress without discarding the draft",async()=>{
+ let progressReads=0;const requests=fixture(url=>url.endsWith('/progress')&&++progressReads===1?Response.json({detail:'unavailable'},{status:503}):undefined);
+ render(<TodayPage/>);fireEvent.click(await screen.findByRole('button',{name:/Resume Press/}));const input=screen.getByLabelText('Working weight (lb)');fireEvent.change(input,{target:{value:'42'}});
+ expect(await screen.findByText(/Saved-set refresh unavailable/)).toBeVisible();
+ fireEvent.click(screen.getByRole('button',{name:'Retry saved sets'}));
+ await waitFor(()=>expect(screen.queryByText(/Saved-set refresh unavailable/)).not.toBeInTheDocument());
+ expect(screen.getByLabelText('Working weight (lb)')).toBe(input);expect(input).toHaveValue(42);
+ expect(requests.filter(url=>url.endsWith('/workout/today'))).toHaveLength(1);expect(requests.filter(url=>url.endsWith('/progress'))).toHaveLength(2);
 });

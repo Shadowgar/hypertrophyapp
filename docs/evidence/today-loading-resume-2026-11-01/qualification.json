@@ -4,8 +4,8 @@
   "baseline_main_codeql": 41361759384,
   "baseline_release_conclusion": "skipped",
   "focused_tests": {
-    "files": 13,
-    "passed": 154,
+    "files": 14,
+    "passed": 164,
     "failed": 0
   },
   "candidate_build": "Next production webpack + typecheck success",
@@ -16,18 +16,17 @@
     "runtime_files": 3,
     "findings": 0,
     "coverage": "diff only",
-    "qualification_note": "Exact reviewed source56b9042; final followup changes only the progress-failure status branch, verified by regression and independent review finding. Normal CodeQL/GitGuardian qualify final PR head."
+    "qualification_note": "Exact initial reviewed source56b9042 only. Subsequent progress-status/retry changes are covered by focused regressions and final-head CodeQL/GitGuardian, not claimed as part of this earlier diff scan."
   },
   "webkit": "Cached WebKit2248 cannot launch: missing host dependencies. No host packages installed.",
   "measured_source_head": "56b90429feb34d5c7251531cf1bb2a5b7585e8c3",
-  "final_source_head": "121b3e4766391307529e9cc05a33778c8e124c85",
   "measured_runtime_source_sha256": {
     "apps/web/app/today/page.tsx": "cb1b6d372ae8d5f45eaa4e30528007fd4f8260d184a3f8194cec2a72455d1001",
     "apps/web/components/flexible-training.tsx": "700ebee319cf56ce64347f585ec9c94dc30348ae87fc1d85c75e56d62dbfd10d",
     "apps/web/lib/api.ts": "12667ea2fe3655d6545237dff8416f55d065a28119a94d1791eb8bc05d194ac1"
   },
   "final_runtime_source_sha256": {
-    "apps/web/app/today/page.tsx": "9f1e44461b1f01193033c75b863c8dc81dfbe1bad2ccca7838a2d99fd64a1ffe",
+    "apps/web/app/today/page.tsx": "4b691b94d4a0574f63321d3e5f0dafd772da5220354c3d5cab0a38a11882958b",
     "apps/web/components/flexible-training.tsx": "700ebee319cf56ce64347f585ec9c94dc30348ae87fc1d85c75e56d62dbfd10d",
     "apps/web/lib/api.ts": "12667ea2fe3655d6545237dff8416f55d065a28119a94d1791eb8bc05d194ac1"
   },
@@ -39,5 +38,13 @@
     "minor": 0,
     "declined_to_judge": [],
     "resolution": "Final source commit settles failed progress status independently of protected receipt generation. Existing late-failure regression failed before and passed after; full targeted154test set passed."
+  },
+  "final_source_binding": "Runtime SHA256 values below identify the final locally tested build; commit containing this evidence identifies review head.",
+  "review_corrections": {
+    "browser_scenarios": 9,
+    "date_fixture_cases": 14,
+    "initial_pr_ci": 41366879769,
+    "initial_pr_ci_failure": "Three stale daily-date expectations; updated to exact request budget and current failure copy.",
+    "additional_changes": "Accessible progress-only retry in Calendar/Flexible execution, guarded against stale/account/occurrence reads; all-weekday recovery fixtures."
   }
 }

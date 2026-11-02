@@ -11,10 +11,14 @@ function dailyFixture(instant: string, timezone: string, initialDay: string) {
   const sorenessDates: string[] = [];
   const saves: string[] = [];
   const workouts: string[] = [];
+  const dateLookups: string[] = [];
   globalThis.fetch = vi.fn(async (input, init) => {
     const url = String(input);
     if (url.endsWith("/health")) return Response.json({ status: "ok" });
-    if (url.includes("/plan/scheduling-context?")) return Response.json({ timezone, local_today: day, week_start: "2026-10-05", selected_dates: [day], placement_revision: 1, plan: null });
+    if (url.includes("/plan/scheduling-context?")) {
+      dateLookups.push(day);
+      return Response.json({ timezone, local_today: day, week_start: "2026-10-05", selected_dates: [day], placement_revision: 1, plan: null });
+    }
     if (url.endsWith("/weekly-review/status")) return Response.json({ today_is_sunday: false, review_required: false });
     if (url.endsWith("/workout/today")) {
       workouts.push(day);
@@ -28,7 +32,7 @@ function dailyFixture(instant: string, timezone: string, initialDay: string) {
     }
     return Response.json({});
   });
-  return { sorenessDates, saves, workouts, setDay: (value: string) => { day = value; } };
+  return { sorenessDates, saves, workouts, dateLookups, setDay: (value: string) => { day = value; } };
 }
 
 test.each([
@@ -53,10 +57,13 @@ test.each([
   await screen.findByText(/sore today\?/i);
   fireEvent.click(screen.getByRole("button", { name: /^Skip$/ }));
   await waitFor(() => expect(localStorage.getItem(`hypertrophy_soreness_skip:${day}`)).toBe("1"));
+  expect(fixture.workouts).toEqual([day]);
+  expect(fixture.dateLookups).toEqual([day, day]);
   unmount();
   render(<TodayPage />);
   await screen.findByRole("button", { name: /Daily Press/ });
-  await waitFor(() => expect(fixture.workouts.length).toBeGreaterThanOrEqual(3));
+  await waitFor(() => expect(fixture.workouts).toEqual([day, day]));
+  expect(fixture.dateLookups).toEqual([day, day, day]);
   expect(fixture.sorenessDates).toHaveLength(1);
   expect(screen.queryByText(/sore today\?/i)).not.toBeInTheDocument();
 });
@@ -79,7 +86,7 @@ test("a missing scheduling clock blocks daily writes and workout loading", async
   globalThis.fetch = vi.fn(async (input, init) => String(input).includes("/plan/scheduling-context?")
     ? Response.json({ detail: "unavailable" }, { status: 503 }) : original(input, init));
   render(<TodayPage />);
-  await screen.findByText("Unable to verify soreness status. Try again.");
+  await screen.findByText("The local training date could not be verified. Retry loading your workout. Your saved history is unchanged.");
   expect(fixture.workouts).toEqual([]);
   expect(fixture.sorenessDates).toEqual([]);
   expect(fixture.saves).toEqual([]);

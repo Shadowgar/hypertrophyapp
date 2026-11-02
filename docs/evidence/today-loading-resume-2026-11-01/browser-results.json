@@ -2,6 +2,78 @@
   "environment": "Loopback production-built Next, real API, verified disposable PostgreSQL16; synthetic accounts only",
   "observations": [
     {
+      "scenario": "manual-visible-progress-retry",
+      "progressOnly": true,
+      "sameDraft": true,
+      "stationaryComposer": true,
+      "geometry": {
+        "before": {
+          "top": 694,
+          "left": 33,
+          "height": 52,
+          "scrollY": 0,
+          "focused": "Working repetitions"
+        },
+        "failed": {
+          "top": 694,
+          "left": 33,
+          "height": 52,
+          "scrollY": 0,
+          "focused": "Working repetitions"
+        },
+        "retryBefore": {
+          "top": 694,
+          "left": 33,
+          "height": 52,
+          "scrollY": 633,
+          "focused": "Working repetitions"
+        },
+        "retryAfter": {
+          "top": 694,
+          "left": 33,
+          "height": 52,
+          "scrollY": 633,
+          "focused": null
+        }
+      }
+    },
+    {
+      "scenario": "flexible-visible-progress-retry",
+      "progressOnly": true,
+      "sameDraft": true,
+      "stationaryComposer": true,
+      "geometry": {
+        "before": {
+          "top": 694,
+          "left": 33,
+          "height": 52,
+          "scrollY": 576,
+          "focused": "Working repetitions"
+        },
+        "failed": {
+          "top": 694,
+          "left": 33,
+          "height": 52,
+          "scrollY": 576,
+          "focused": "Working repetitions"
+        },
+        "retryBefore": {
+          "top": 694,
+          "left": 33,
+          "height": 52,
+          "scrollY": 576,
+          "focused": "Working repetitions"
+        },
+        "retryAfter": {
+          "top": 694,
+          "left": 33,
+          "height": 52,
+          "scrollY": 576,
+          "focused": null
+        }
+      }
+    },
+    {
       "scenario": "slow-real-today",
       "truthfulLoading": true,
       "noFalseAbsence": true
