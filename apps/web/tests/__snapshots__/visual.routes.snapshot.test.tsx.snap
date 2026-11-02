@@ -61,7 +61,7 @@ exports[`visual snapshot: today route initial state 1`] = `
     role="status"
   >
     <p>
-      Loading your scheduled workout…
+      Loading your workout…
     </p>
   </div>
 </div>

@@ -185,13 +185,13 @@ test("loading and refresh remain visible until required reads settle", async () 
   fixture(url => url.endsWith("/workout/today") ? (++reads === 1 ? initial.promise : refresh.promise) : undefined);
   render(<TodayPage />);
   await waitFor(() => expect(screen.getByRole("button", { name: /Load today's workout/ })).toBeDisabled());
-  expect(screen.getByText("Loading your scheduled workout…")).toBeInTheDocument();
+  expect(screen.getByText("Loading your workout…")).toBeInTheDocument();
   await act(async () => initial.resolve(Response.json(workout())));
   const reload = await screen.findByRole("button", { name: "Reload" });
   await waitFor(() => expect(reload).toBeEnabled());
   fireEvent.click(reload);
   expect(reload).toBeDisabled();
-  expect(screen.getByText("Refreshing your scheduled workout…")).toBeInTheDocument();
+  expect(screen.getByText("Refreshing your workout…")).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: /Resume Press/ })).not.toBeInTheDocument();
   await act(async () => refresh.resolve(Response.json(workout())));
   await waitFor(() => expect(reload).toBeEnabled());
@@ -260,7 +260,7 @@ test("failed clock verification never loads Today and releases the retry control
   const requests = fixture(url => url.includes("/plan/scheduling-context?")
     ? Response.json({ detail: "unavailable" }, { status: 503 }) : undefined);
   render(<TodayPage />);
-  await screen.findByText("Unable to verify soreness status. Try again.");
+  await screen.findByText("The local training date could not be verified. Retry loading your workout. Your saved history is unchanged.");
   expect(requests.some(url => url.endsWith("/workout/today") || url.includes("/soreness?"))).toBe(false);
   expect(screen.getByRole("button", { name: /Load today's workout/ })).toBeEnabled();
 });
@@ -286,11 +286,10 @@ test("initial Today failure clears loading and can be retried without a write", 
   expect(requests.some(url => url.includes("generate"))).toBe(false);
 });
 
-test("failed health reports a retryable state without waiting indefinitely", async () => {
-  fixture(url => url.endsWith("/health") ? Response.json({ detail: "offline" }, { status: 503 }) : undefined);
-  render(<TodayPage />);
-  await screen.findByText("Workout service unavailable. Retry loading your workout. Your saved history is unchanged.");
-  expect(screen.getByRole("button", { name: /Load today's workout/ })).toBeEnabled();
+test("workout authorization is independent of a failed diagnostic health endpoint", async () => {
+  const requests=fixture(url => url.endsWith("/health") ? Response.json({ detail:"offline" },{ status:503 }) : undefined);
+  render(<TodayPage/>);await screen.findByRole("button",{name:/Resume Press/});
+  expect(requests.some(url=>url.endsWith("/health"))).toBe(false);
 });
 
 
@@ -307,10 +306,10 @@ test.each(["clock", "today"])("a required %s refresh hides prior controls and ke
   expect(screen.queryByRole("button", { name: /Resume Press/ })).not.toBeInTheDocument();
   expect(screen.queryByRole("region", { name: "Workout execution" })).not.toBeInTheDocument();
   await act(async () => pending.resolve(Response.json({ detail: "unavailable" }, { status: 503 })));
-  await screen.findByText(failedRead === "today" ? "Workout could not be loaded. Retry loading your workout. Your saved history is unchanged."
-    : "Unable to verify soreness status. Try again.");
+  await screen.findByText(failedRead === "today" ? "Workout refresh failed. Retry to verify your workout. Your draft and saved history are kept."
+    : "The local training date could not be verified. Retry loading your workout. Your saved history is unchanged.");
   expect(screen.queryByRole("button", { name: /Resume Press/ })).not.toBeInTheDocument();
-  expect(screen.getByRole("button", { name: /Load today's workout/ })).toBeEnabled();
+  expect(screen.getByRole("button", { name: "Reload" })).toBeEnabled();
 });
 
 test("accepted Today controls are usable while profile and progress are still pending", async () => {
@@ -323,4 +322,77 @@ test("accepted Today controls are usable while profile and progress are still pe
   expect(await screen.findByRole("region", { name: "Workout execution" })).toBeInTheDocument();
   expect(screen.getByRole("spinbutton", { name: "Working repetitions" })).toBeEnabled();
   await act(async () => { profile.resolve(Response.json({})); projection.resolve(Response.json(progress())); });
+});
+
+test("a diagnostic health ping cannot postpone an authenticated workout",async()=>{
+ const never=deferred<Response>();const requests=fixture(url=>url.endsWith("/health")?never.promise:undefined);
+ render(<TodayPage/>);await screen.findByRole("button",{name:/Resume Press/});
+ expect(requests.some(url=>url.endsWith("/health"))).toBe(false);
+});
+
+test("the optional soreness prompt does not wait behind progress",async()=>{
+ const pending=deferred<Response>();const requests=fixture(url=>url.endsWith("/progress")?pending.promise:url.includes("/soreness?")?Response.json([]):undefined);
+ render(<TodayPage/>);
+ await screen.findByRole("button",{name:"Skip"});
+ expect(requests.some(url=>url.endsWith("/progress"))).toBe(true);
+ await act(async()=>pending.resolve(Response.json(progress())));
+});
+
+test("same-day Skip preserves verified workout and does not fetch Today twice",async()=>{
+ const requests=fixture(url=>url.includes("/soreness?")?Response.json([]):undefined);render(<TodayPage/>);
+ fireEvent.click(await screen.findByRole("button",{name:"Skip"}));
+ await waitFor(()=>expect(requests.filter(url=>url.includes("/plan/scheduling-context?")).length).toBe(2));
+ await waitFor(()=>expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+ expect(requests.filter(url=>url.endsWith("/workout/today"))).toHaveLength(1);
+ expect(requests.filter(url=>url.endsWith("/progress"))).toHaveLength(1);
+});
+
+test("an unavailable training decision blocks Today and exposes its own retry",async()=>{
+ setAuthToken(`header.${btoa(JSON.stringify({sub:"mode-retry"}))}.signature`);
+ let reads=0;const requests=fixture(url=>url.endsWith("/training/next")?++reads===1?Response.json({detail:"unavailable"},{status:503}):Response.json({mode:"calendar",action:"none"}):undefined);
+ render(<TodayPage/>);const retry=await screen.findByRole("button",{name:"Retry training state"});
+ expect(screen.getByRole("button",{name:/Load today's workout/})).toBeDisabled();
+ expect(screen.queryByText("Loading your workout…")).not.toBeInTheDocument();
+ expect(requests.some(url=>url.endsWith("/workout/today"))).toBe(false);
+ fireEvent.click(retry);await screen.findByRole("button",{name:/Resume Press/});
+});
+
+test("failed auxiliary progress keeps Today counts and explains the limited refresh",async()=>{
+ fixture(url=>url.endsWith("/workout/today")?Response.json(workout("Verified Press","verified",1)):url.endsWith("/progress")?Response.json({detail:"unavailable"},{status:503}):undefined);
+ render(<TodayPage/>);expect(await screen.findByRole("button",{name:/Verified Press/})).toHaveTextContent("1/3");
+ await screen.findByText(/Latest set refresh unavailable/);
+ expect(screen.getByText(/Verified Press workout.*1\/3 sets/)).toBeInTheDocument();
+ expect(screen.queryByText(/No workout available/)).not.toBeInTheDocument();
+});
+
+test("a temporary refresh failure keeps the selected composer mounted but unavailable until verified",async()=>{
+ let fail=false;fixture(url=>fail&&url.endsWith("/workout/today")?Response.json({detail:"unavailable"},{status:503}):undefined);
+ render(<TodayPage/>);fireEvent.click(await screen.findByRole("button",{name:/Resume Press/}));
+ const weight=screen.getByLabelText("Working weight (lb)");fireEvent.change(weight,{target:{value:"73"}});
+ const stored=Storage.prototype.setItem;vi.spyOn(Storage.prototype,"setItem").mockImplementation(function(this:Storage,key,value){if(key.includes(":draft:"))throw new DOMException("Unavailable","SecurityError");return stored.call(this,key,value)});
+ fireEvent.change(weight,{target:{value:"74"}});fail=true;
+ fireEvent.click(screen.getByRole("button",{name:"Reload",hidden:true}));
+ await screen.findByText(/Workout refresh failed/);
+ expect(weight.isConnected).toBe(true);expect(weight).not.toBeVisible();expect(weight).toBeDisabled();
+ expect(screen.queryByRole("region",{name:"Working set entry"})).not.toBeInTheDocument();
+ fail=false;fireEvent.click(screen.getByRole("button",{name:"Reload"}));
+ await waitFor(()=>expect(weight).toBeVisible());expect(weight).toHaveValue(74);expect(weight).toBeEnabled();
+ expect(screen.getByLabelText("Working weight (lb)")).toBe(weight);
+});
+
+test("an authoritative no-session response retires the old view instead of presenting cached work as current",async()=>{
+ let missing=false;fixture(url=>missing&&url.endsWith("/workout/today")?Response.json({detail:"No workout scheduled today"},{status:404}):undefined);
+ render(<TodayPage/>);fireEvent.click(await screen.findByRole("button",{name:/Resume Press/}));const input=screen.getByLabelText("Working weight (lb)");missing=true;
+ fireEvent.click(screen.getByRole("button",{name:"Reload",hidden:true}));await screen.findByText(/Rest day — no workout/);expect(input.isConnected).toBe(false);
+});
+
+test("a new account's failed first read cannot retain the previous private view",async()=>{
+ setAuthToken("account-a");const pending=deferred<Response>();fixture((url,init)=>{
+  const account=new Headers(init?.headers).get("Authorization");
+  if(url.endsWith("/workout/today"))return account==="Bearer account-b"?pending.promise:Response.json(workout("Private Account A","private-a"));
+  return undefined;
+ });
+ render(<TodayPage/>);fireEvent.click(await screen.findByRole("button",{name:/Private Account A/}));const old=screen.getByLabelText("Working weight (lb)");
+ act(()=>setAuthToken("account-b"));await act(async()=>pending.resolve(Response.json({detail:"offline"},{status:503})));
+ await screen.findByText(/Workout could not be loaded/);expect(old.isConnected).toBe(false);expect(screen.queryByText("Private Account A",{exact:false})).not.toBeInTheDocument();
 });

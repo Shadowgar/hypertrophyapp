@@ -1,0 +1,58 @@
+{
+  "environment": "Loopback production-built Next, real API, verified disposable PostgreSQL16; synthetic accounts only",
+  "observations": [
+    {
+      "scenario": "slow-real-today",
+      "truthfulLoading": true,
+      "noFalseAbsence": true
+    },
+    {
+      "scenario": "stalled-mode",
+      "boundedRetry": true,
+      "noImplicitCalendarFallback": true
+    },
+    {
+      "scenario": "reload-offline-retry",
+      "sameDraftRestored": true,
+      "noUnverifiedEntry": true
+    },
+    {
+      "scenario": "committed-save-reload-retry",
+      "exactCommand": true,
+      "oneReceipt": true,
+      "canonicalKgPreserved": true,
+      "stationarySave": true,
+      "geometry": {
+        "before": {
+          "top": 694,
+          "left": 33,
+          "height": 52,
+          "scrollY": 0,
+          "focused": "Working repetitions"
+        },
+        "after": {
+          "top": 694,
+          "left": 33,
+          "height": 52,
+          "scrollY": 0,
+          "focused": "Working repetitions"
+        }
+      }
+    },
+    {
+      "scenario": "correction-undo-reload",
+      "noEffectiveSetAfterUndo": true
+    },
+    {
+      "scenario": "precommit-interruption-full-reload",
+      "exactPendingCommandRestored": true,
+      "oneReceipt": true
+    },
+    {
+      "scenario": "account-switch",
+      "noDraftLeak": true
+    }
+  ],
+  "pageErrors": [],
+  "passed": true
+}
