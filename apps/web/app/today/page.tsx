@@ -917,10 +917,12 @@ export default function TodayPage() {
             await loadWorkoutSummary(workoutReference(data));
           }
         } catch {
-          if(isCurrent() && currentOccurrence.current===workoutReference(data) && data.exercises.every(exercise=>isCurrentLoadGeneration(exerciseKey(exercise),initialProgressGeneration))){
+          if (!isCurrent() || currentOccurrence.current !== workoutReference(data)) return;
+          // Settling this read must not depend on permission to replace newer receipts.
+          setProgressReadState("failed");
+          if (data.exercises.every(exercise => isCurrentLoadGeneration(exerciseKey(exercise), initialProgressGeneration))) {
             setCompletedSetsByExercise(localCompleted);
             setWorkoutProgress(null);
-            setProgressReadState("failed");
           }
         }
       })();
