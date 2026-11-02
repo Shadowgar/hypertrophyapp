@@ -1,0 +1,2768 @@
+{
+  "base": "06e910896203355c11815d3e586e1dec6d8e0c3e",
+  "samples_per_cell": 3,
+  "fixture_calendar": "2026-11-01T23:45:00Z for routing and initial-estimate date only; authentication clock actual. Baseline measured on same calendar day before midnight; response exercises and traces verified byte-equal after external fixture injection. Recovery journeys use actual clocks and new Monday fixtures.",
+  "method": "Sequential base/candidate production builds, Chromium390x844, real API/SQL, same synthetic occurrence payloads. No cache-reset/cold-process guarantee; no p95 or physical iPhone assertion. Controlled real GET responses held1500ms in browser after actual server response.",
+  "summary": [
+    {
+      "mode": "phase1",
+      "controlled_delay": "none",
+      "baseline": {
+        "visible_ms": {
+          "median_ms": 1030,
+          "min_ms": 983,
+          "max_ms": 1299
+        },
+        "soreness_ms": {
+          "median_ms": 1039,
+          "min_ms": 992,
+          "max_ms": 1312
+        },
+        "usable_ms": {
+          "median_ms": 2103,
+          "min_ms": 1585,
+          "max_ms": 2535
+        },
+        "request_counts": [
+          {
+            "/api/profile/preferences": 1,
+            "/api/health": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 2,
+            "/api/profile": 2,
+            "/api/workout/<occurrence>/progress": 2,
+            "/api/soreness": 1
+          },
+          {
+            "/api/profile/preferences": 1,
+            "/api/health": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 2,
+            "/api/profile": 2,
+            "/api/workout/<occurrence>/progress": 2,
+            "/api/soreness": 1
+          },
+          {
+            "/api/profile/preferences": 1,
+            "/api/health": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 2,
+            "/api/profile": 2,
+            "/api/workout/<occurrence>/progress": 2,
+            "/api/soreness": 1
+          }
+        ]
+      },
+      "candidate": {
+        "visible_ms": {
+          "median_ms": 1011,
+          "min_ms": 1003,
+          "max_ms": 1595
+        },
+        "soreness_ms": {
+          "median_ms": 1020,
+          "min_ms": 1017,
+          "max_ms": 1637
+        },
+        "usable_ms": {
+          "median_ms": 1467,
+          "min_ms": 1246,
+          "max_ms": 1982
+        },
+        "request_counts": [
+          {
+            "/api/profile/preferences": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 1,
+            "/api/profile": 1,
+            "/api/soreness": 1,
+            "/api/workout/<occurrence>/progress": 1
+          },
+          {
+            "/api/profile/preferences": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 1,
+            "/api/soreness": 1,
+            "/api/profile": 1,
+            "/api/workout/<occurrence>/progress": 1
+          },
+          {
+            "/api/profile/preferences": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 1,
+            "/api/soreness": 1,
+            "/api/profile": 1,
+            "/api/workout/<occurrence>/progress": 1
+          }
+        ]
+      }
+    },
+    {
+      "mode": "phase2",
+      "controlled_delay": "none",
+      "baseline": {
+        "visible_ms": {
+          "median_ms": 1301,
+          "min_ms": 490,
+          "max_ms": 1428
+        },
+        "soreness_ms": {
+          "median_ms": 1311,
+          "min_ms": 731,
+          "max_ms": 1457
+        },
+        "usable_ms": {
+          "median_ms": 1983,
+          "min_ms": 1493,
+          "max_ms": 2091
+        },
+        "request_counts": [
+          {
+            "/api/profile/preferences": 1,
+            "/api/health": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 2,
+            "/api/profile": 2,
+            "/api/workout/<occurrence>/progress": 2,
+            "/api/soreness": 1
+          },
+          {
+            "/api/profile/preferences": 1,
+            "/api/health": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 2,
+            "/api/profile": 2,
+            "/api/workout/<occurrence>/progress": 2,
+            "/api/soreness": 1
+          },
+          {
+            "/api/profile/preferences": 1,
+            "/api/health": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 2,
+            "/api/profile": 2,
+            "/api/workout/<occurrence>/progress": 2,
+            "/api/soreness": 1
+          }
+        ]
+      },
+      "candidate": {
+        "visible_ms": {
+          "median_ms": 1016,
+          "min_ms": 974,
+          "max_ms": 1252
+        },
+        "soreness_ms": {
+          "median_ms": 1026,
+          "min_ms": 992,
+          "max_ms": 1263
+        },
+        "usable_ms": {
+          "median_ms": 1554,
+          "min_ms": 1437,
+          "max_ms": 1567
+        },
+        "request_counts": [
+          {
+            "/api/profile/preferences": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 1,
+            "/api/soreness": 1,
+            "/api/profile": 1,
+            "/api/workout/<occurrence>/progress": 1
+          },
+          {
+            "/api/profile/preferences": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 1,
+            "/api/soreness": 1,
+            "/api/profile": 1,
+            "/api/workout/<occurrence>/progress": 1
+          },
+          {
+            "/api/profile/preferences": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 1,
+            "/api/soreness": 1,
+            "/api/profile": 1,
+            "/api/workout/<occurrence>/progress": 1
+          }
+        ]
+      }
+    },
+    {
+      "mode": "flexible",
+      "controlled_delay": "none",
+      "baseline": {
+        "visible_ms": {
+          "median_ms": 993,
+          "min_ms": 967,
+          "max_ms": 1262
+        },
+        "soreness_ms": {
+          "median_ms": 1289,
+          "min_ms": 1205,
+          "max_ms": 1495
+        },
+        "usable_ms": {
+          "median_ms": 2356,
+          "min_ms": 2307,
+          "max_ms": 2562
+        },
+        "request_counts": [
+          {
+            "/api/profile/preferences": 1,
+            "/api/health": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 2,
+            "/api/profile": 2,
+            "/api/workout/<occurrence>/progress": 2,
+            "/api/soreness": 1
+          },
+          {
+            "/api/profile/preferences": 1,
+            "/api/health": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 2,
+            "/api/profile": 2,
+            "/api/workout/<occurrence>/progress": 2,
+            "/api/soreness": 1
+          },
+          {
+            "/api/profile/preferences": 1,
+            "/api/health": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 2,
+            "/api/profile": 2,
+            "/api/workout/<occurrence>/progress": 2,
+            "/api/soreness": 1
+          }
+        ]
+      },
+      "candidate": {
+        "visible_ms": {
+          "median_ms": 1683,
+          "min_ms": 990,
+          "max_ms": 2214
+        },
+        "soreness_ms": {
+          "median_ms": 1690,
+          "min_ms": 1037,
+          "max_ms": 2222
+        },
+        "usable_ms": {
+          "median_ms": 1914,
+          "min_ms": 1398,
+          "max_ms": 2436
+        },
+        "request_counts": [
+          {
+            "/api/profile/preferences": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 1,
+            "/api/soreness": 1,
+            "/api/profile": 1,
+            "/api/workout/<occurrence>/progress": 1
+          },
+          {
+            "/api/profile/preferences": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 1,
+            "/api/profile": 1,
+            "/api/soreness": 1,
+            "/api/workout/<occurrence>/progress": 1
+          },
+          {
+            "/api/profile/preferences": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 1,
+            "/api/soreness": 1,
+            "/api/profile": 1,
+            "/api/workout/<occurrence>/progress": 1
+          }
+        ]
+      }
+    },
+    {
+      "mode": "customized",
+      "controlled_delay": "none",
+      "baseline": {
+        "visible_ms": {
+          "median_ms": 695,
+          "min_ms": 481,
+          "max_ms": 1220
+        },
+        "soreness_ms": {
+          "median_ms": 706,
+          "min_ms": 489,
+          "max_ms": 1236
+        },
+        "usable_ms": {
+          "median_ms": 1181,
+          "min_ms": 890,
+          "max_ms": 1739
+        },
+        "request_counts": [
+          {
+            "/api/profile/preferences": 1,
+            "/api/health": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 2,
+            "/api/workout/<occurrence>/progress": 2,
+            "/api/profile": 2,
+            "/api/soreness": 1
+          },
+          {
+            "/api/profile/preferences": 1,
+            "/api/health": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 2,
+            "/api/profile": 2,
+            "/api/workout/<occurrence>/progress": 2,
+            "/api/soreness": 1
+          },
+          {
+            "/api/profile/preferences": 1,
+            "/api/health": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 2,
+            "/api/profile": 2,
+            "/api/workout/<occurrence>/progress": 2,
+            "/api/soreness": 1
+          }
+        ]
+      },
+      "candidate": {
+        "visible_ms": {
+          "median_ms": 608,
+          "min_ms": 516,
+          "max_ms": 4450
+        },
+        "soreness_ms": {
+          "median_ms": 672,
+          "min_ms": 527,
+          "max_ms": 4459
+        },
+        "usable_ms": {
+          "median_ms": 893,
+          "min_ms": 738,
+          "max_ms": 4669
+        },
+        "request_counts": [
+          {
+            "/api/profile/preferences": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 1,
+            "/api/profile": 1,
+            "/api/soreness": 1,
+            "/api/workout/<occurrence>/progress": 1
+          },
+          {
+            "/api/profile/preferences": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 1,
+            "/api/soreness": 1,
+            "/api/profile": 1,
+            "/api/workout/<occurrence>/progress": 1
+          },
+          {
+            "/api/profile/preferences": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 1,
+            "/api/profile": 1,
+            "/api/soreness": 1,
+            "/api/workout/<occurrence>/progress": 1
+          }
+        ]
+      }
+    },
+    {
+      "mode": "phase1",
+      "controlled_delay": "progress",
+      "baseline": {
+        "visible_ms": {
+          "median_ms": 1196,
+          "min_ms": 1035,
+          "max_ms": 1578
+        },
+        "soreness_ms": {
+          "median_ms": 3058,
+          "min_ms": 2897,
+          "max_ms": 3477
+        },
+        "usable_ms": {
+          "median_ms": 3875,
+          "min_ms": 3492,
+          "max_ms": 4101
+        },
+        "request_counts": [
+          {
+            "/api/profile/preferences": 1,
+            "/api/health": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 2,
+            "/api/profile": 2,
+            "/api/workout/<occurrence>/progress": 2,
+            "/api/soreness": 1
+          },
+          {
+            "/api/profile/preferences": 1,
+            "/api/health": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 2,
+            "/api/profile": 2,
+            "/api/workout/<occurrence>/progress": 2,
+            "/api/soreness": 1
+          },
+          {
+            "/api/profile/preferences": 1,
+            "/api/training/next": 1,
+            "/api/health": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 2,
+            "/api/profile": 2,
+            "/api/workout/<occurrence>/progress": 2,
+            "/api/soreness": 1
+          }
+        ]
+      },
+      "candidate": {
+        "visible_ms": {
+          "median_ms": 1260,
+          "min_ms": 1064,
+          "max_ms": 2499
+        },
+        "soreness_ms": {
+          "median_ms": 1272,
+          "min_ms": 1073,
+          "max_ms": 2578
+        },
+        "usable_ms": {
+          "median_ms": 1499,
+          "min_ms": 1286,
+          "max_ms": 2909
+        },
+        "request_counts": [
+          {
+            "/api/profile/preferences": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 1,
+            "/api/soreness": 1,
+            "/api/profile": 1,
+            "/api/workout/<occurrence>/progress": 1
+          },
+          {
+            "/api/profile/preferences": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 1,
+            "/api/soreness": 1,
+            "/api/profile": 1,
+            "/api/workout/<occurrence>/progress": 1
+          },
+          {
+            "/api/profile/preferences": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 1,
+            "/api/soreness": 1,
+            "/api/profile": 1,
+            "/api/workout/<occurrence>/progress": 1
+          }
+        ]
+      }
+    },
+    {
+      "mode": "phase1",
+      "controlled_delay": "health",
+      "baseline": {
+        "visible_ms": {
+          "median_ms": 2555,
+          "min_ms": 2516,
+          "max_ms": 2806
+        },
+        "soreness_ms": {
+          "median_ms": 2569,
+          "min_ms": 2527,
+          "max_ms": 2816
+        },
+        "usable_ms": {
+          "median_ms": 3590,
+          "min_ms": 3166,
+          "max_ms": 3671
+        },
+        "request_counts": [
+          {
+            "/api/profile/preferences": 1,
+            "/api/training/next": 1,
+            "/api/health": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 2,
+            "/api/profile": 2,
+            "/api/workout/<occurrence>/progress": 2,
+            "/api/soreness": 1
+          },
+          {
+            "/api/profile/preferences": 1,
+            "/api/training/next": 1,
+            "/api/health": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 2,
+            "/api/profile": 2,
+            "/api/workout/<occurrence>/progress": 2,
+            "/api/soreness": 1
+          },
+          {
+            "/api/profile/preferences": 1,
+            "/api/training/next": 1,
+            "/api/health": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 2,
+            "/api/profile": 2,
+            "/api/workout/<occurrence>/progress": 2,
+            "/api/soreness": 1
+          }
+        ]
+      },
+      "candidate": {
+        "visible_ms": {
+          "median_ms": 1359,
+          "min_ms": 1020,
+          "max_ms": 1663
+        },
+        "soreness_ms": {
+          "median_ms": 1368,
+          "min_ms": 1052,
+          "max_ms": 1671
+        },
+        "usable_ms": {
+          "median_ms": 1622,
+          "min_ms": 1426,
+          "max_ms": 1898
+        },
+        "request_counts": [
+          {
+            "/api/profile/preferences": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 1,
+            "/api/soreness": 1,
+            "/api/profile": 1,
+            "/api/workout/<occurrence>/progress": 1
+          },
+          {
+            "/api/profile/preferences": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 1,
+            "/api/soreness": 1,
+            "/api/profile": 1,
+            "/api/workout/<occurrence>/progress": 1
+          },
+          {
+            "/api/profile/preferences": 1,
+            "/api/training/next": 1,
+            "/api/plan/scheduling-context": 2,
+            "/api/workout/today": 1,
+            "/api/soreness": 1,
+            "/api/profile": 1,
+            "/api/workout/<occurrence>/progress": 1
+          }
+        ]
+      }
+    }
+  ],
+  "samples": {
+    "baseline": [
+      {
+        "mode": "phase1",
+        "delay": "none",
+        "rep": 0,
+        "visible_ms": 1299.4598460000002,
+        "soreness_ms": 1311.9021659999999,
+        "usable_ms": 2535.0374269999998,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 101,
+            "status": 200
+          },
+          {
+            "path": "/api/health",
+            "elapsed_ms": 75,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 77,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 141,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 234,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 55,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 228,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 14,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 56,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 344,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 47,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 216,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "phase1",
+        "delay": "none",
+        "rep": 1,
+        "visible_ms": 1030.2795990000004,
+        "soreness_ms": 1039.0526020000007,
+        "usable_ms": 1585.3822580000005,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 45,
+            "status": 200
+          },
+          {
+            "path": "/api/health",
+            "elapsed_ms": 31,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 66,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 83,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 226,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 48,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 215,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 15,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 44,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 245,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 48,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 248,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "phase1",
+        "delay": "none",
+        "rep": 2,
+        "visible_ms": 982.8546049999995,
+        "soreness_ms": 992.3395220000002,
+        "usable_ms": 2103.4877750000005,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 43,
+            "status": 200
+          },
+          {
+            "path": "/api/health",
+            "elapsed_ms": 41,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 48,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 96,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 216,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 50,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 276,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 16,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 50,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 452,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 50,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 236,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "phase2",
+        "delay": "none",
+        "rep": 0,
+        "visible_ms": 1428.385096,
+        "soreness_ms": 1456.7183289999994,
+        "usable_ms": 2090.7177310000006,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 112,
+            "status": 200
+          },
+          {
+            "path": "/api/health",
+            "elapsed_ms": 51,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 56,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 195,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 312,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 76,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 248,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 15,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 45,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 227,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 46,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 246,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "phase2",
+        "delay": "none",
+        "rep": 1,
+        "visible_ms": 1301.4902970000003,
+        "soreness_ms": 1310.6707669999996,
+        "usable_ms": 1982.7585259999996,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 94,
+            "status": 200
+          },
+          {
+            "path": "/api/health",
+            "elapsed_ms": 102,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 148,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 101,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 262,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 54,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 268,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 26,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 59,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 235,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 48,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 388,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "phase2",
+        "delay": "none",
+        "rep": 2,
+        "visible_ms": 490.18990099999974,
+        "soreness_ms": 730.804431999999,
+        "usable_ms": 1493.2111509999995,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 36,
+            "status": 200
+          },
+          {
+            "path": "/api/health",
+            "elapsed_ms": 37,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 54,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 57,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 210,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 54,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 210,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 17,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 51,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 230,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 65,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 259,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "flexible",
+        "delay": "none",
+        "rep": 0,
+        "visible_ms": 1262.239891000001,
+        "soreness_ms": 1494.6644640000013,
+        "usable_ms": 2562.0131150000016,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 83,
+            "status": 200
+          },
+          {
+            "path": "/api/health",
+            "elapsed_ms": 162,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 346,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 26,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 445,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 31,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 210,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 15,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 30,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 574,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 54,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 340,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "flexible",
+        "delay": "none",
+        "rep": 1,
+        "visible_ms": 993.2755350000007,
+        "soreness_ms": 1204.9479199999987,
+        "usable_ms": 2355.7430679999998,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 41,
+            "status": 200
+          },
+          {
+            "path": "/api/health",
+            "elapsed_ms": 25,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 327,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 22,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 447,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 25,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 208,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 12,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 16,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 769,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 84,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 367,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "flexible",
+        "delay": "none",
+        "rep": 2,
+        "visible_ms": 966.9977510000026,
+        "soreness_ms": 1289.3254640000014,
+        "usable_ms": 2306.8271520000017,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 40,
+            "status": 200
+          },
+          {
+            "path": "/api/health",
+            "elapsed_ms": 50,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 332,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 22,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 457,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 32,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 219,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 34,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 38,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 455,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 30,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 328,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "customized",
+        "delay": "none",
+        "rep": 0,
+        "visible_ms": 695.4507369999992,
+        "soreness_ms": 706.0878889999985,
+        "usable_ms": 1180.9264949999997,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 80,
+            "status": 200
+          },
+          {
+            "path": "/api/health",
+            "elapsed_ms": 33,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 36,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 74,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 134,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 46,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 50,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 24,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 43,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 132,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 94,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 98,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "customized",
+        "delay": "none",
+        "rep": 1,
+        "visible_ms": 1220.2722170000015,
+        "soreness_ms": 1236.2104639999998,
+        "usable_ms": 1739.422007000001,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 77,
+            "status": 200
+          },
+          {
+            "path": "/api/health",
+            "elapsed_ms": 44,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 61,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 187,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 324,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 84,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 114,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 37,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 41,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 178,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 65,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 68,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "customized",
+        "delay": "none",
+        "rep": 2,
+        "visible_ms": 480.791115,
+        "soreness_ms": 489.06976000000213,
+        "usable_ms": 890.4086070000012,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 37,
+            "status": 200
+          },
+          {
+            "path": "/api/health",
+            "elapsed_ms": 24,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 41,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 60,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 117,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 47,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 52,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 15,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 33,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 126,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 34,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 38,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "phase1",
+        "delay": "progress",
+        "rep": 0,
+        "visible_ms": 1195.9599369999996,
+        "soreness_ms": 3058.369666999999,
+        "usable_ms": 3875.2913499999995,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 63,
+            "status": 200
+          },
+          {
+            "path": "/api/health",
+            "elapsed_ms": 55,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 75,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 112,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 228,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 47,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 1772,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 78,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 56,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 237,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 422,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 2122,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "phase1",
+        "delay": "progress",
+        "rep": 1,
+        "visible_ms": 1034.9056190000047,
+        "soreness_ms": 2897.2127949999995,
+        "usable_ms": 3492.0677020000003,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 52,
+            "status": 200
+          },
+          {
+            "path": "/api/health",
+            "elapsed_ms": 79,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 81,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 136,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 238,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 55,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 1747,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 18,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 58,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 235,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 43,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 1972,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "phase1",
+        "delay": "progress",
+        "rep": 2,
+        "visible_ms": 1578.1719689999954,
+        "soreness_ms": 3477.077913000001,
+        "usable_ms": 4100.820893999997,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 78,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 173,
+            "status": 200
+          },
+          {
+            "path": "/api/health",
+            "elapsed_ms": 194,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 184,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 377,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 74,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 1820,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 19,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 59,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 307,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 60,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 1759,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "phase1",
+        "delay": "health",
+        "rep": 0,
+        "visible_ms": 2805.599586000004,
+        "soreness_ms": 2816.4795190000004,
+        "usable_ms": 3590.089976000003,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 90,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 92,
+            "status": 200
+          },
+          {
+            "path": "/api/health",
+            "elapsed_ms": 1560,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 49,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 292,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 75,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 267,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 20,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 65,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 215,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 55,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 238,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "phase1",
+        "delay": "health",
+        "rep": 1,
+        "visible_ms": 2554.768962000002,
+        "soreness_ms": 2568.5196299999952,
+        "usable_ms": 3165.885528999999,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 49,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 59,
+            "status": 200
+          },
+          {
+            "path": "/api/health",
+            "elapsed_ms": 1559,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 221,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 267,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 54,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 227,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 18,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 61,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 240,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 51,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 255,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "phase1",
+        "delay": "health",
+        "rep": 2,
+        "visible_ms": 2515.8620050000027,
+        "soreness_ms": 2527.2851109999974,
+        "usable_ms": 3671.472287999997,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 60,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 71,
+            "status": 200
+          },
+          {
+            "path": "/api/health",
+            "elapsed_ms": 1566,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 76,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 246,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 51,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 270,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 37,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 587,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 234,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 65,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 292,
+            "status": 200
+          }
+        ]
+      }
+    ],
+    "candidate": [
+      {
+        "mode": "phase1",
+        "delay": "none",
+        "rep": 0,
+        "visible_ms": 1595.153596,
+        "soreness_ms": 1636.8162790000006,
+        "usable_ms": 1982.499292999999,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 119,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 71,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 64,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 398,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 108,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 124,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 494,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 56,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "phase1",
+        "delay": "none",
+        "rep": 1,
+        "visible_ms": 1010.5675599999995,
+        "soreness_ms": 1019.850504,
+        "usable_ms": 1245.6537360000002,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 44,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 51,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 74,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 269,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 33,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 313,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 380,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 50,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "phase1",
+        "delay": "none",
+        "rep": 2,
+        "visible_ms": 1002.9640409999975,
+        "soreness_ms": 1017.1795809999985,
+        "usable_ms": 1466.9212989999996,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 40,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 36,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 182,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 360,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 63,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 124,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 402,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 131,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "phase2",
+        "delay": "none",
+        "rep": 0,
+        "visible_ms": 1251.5871149999984,
+        "soreness_ms": 1262.806618999999,
+        "usable_ms": 1566.7075029999978,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 74,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 28,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 143,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 236,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 38,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 80,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 254,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 48,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "phase2",
+        "delay": "none",
+        "rep": 1,
+        "visible_ms": 973.6206119999988,
+        "soreness_ms": 991.7293090000021,
+        "usable_ms": 1436.519558,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 249,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 241,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 69,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 216,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 46,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 80,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 259,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 58,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "phase2",
+        "delay": "none",
+        "rep": 2,
+        "visible_ms": 1016.0606889999981,
+        "soreness_ms": 1026.0958460000002,
+        "usable_ms": 1554.4249039999995,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 59,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 49,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 83,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 208,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 42,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 72,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 241,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 203,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "flexible",
+        "delay": "none",
+        "rep": 0,
+        "visible_ms": 1682.8028000000013,
+        "soreness_ms": 1690.1287770000017,
+        "usable_ms": 1914.3101339999994,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 66,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 369,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 25,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 486,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 29,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 49,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 246,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 26,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "flexible",
+        "delay": "none",
+        "rep": 1,
+        "visible_ms": 990.0786520000001,
+        "soreness_ms": 1037.3370849999992,
+        "usable_ms": 1397.9080669999967,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 45,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 326,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 18,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 468,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 30,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 37,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 117,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 277,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "flexible",
+        "delay": "none",
+        "rep": 2,
+        "visible_ms": 2214.3791060000003,
+        "soreness_ms": 2221.7255640000003,
+        "usable_ms": 2435.6120200000005,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 284,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 1025,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 32,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 607,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 26,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 41,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 243,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 26,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "customized",
+        "delay": "none",
+        "rep": 0,
+        "visible_ms": 4449.7858819999965,
+        "soreness_ms": 4458.905767999997,
+        "usable_ms": 4668.818378999997,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 2084,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 800,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 396,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 174,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 54,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 52,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 68,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 38,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "customized",
+        "delay": "none",
+        "rep": 1,
+        "visible_ms": 516.3975740000024,
+        "soreness_ms": 527.456001999999,
+        "usable_ms": 737.6927270000015,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 66,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 42,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 81,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 137,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 45,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 62,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 64,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 33,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "customized",
+        "delay": "none",
+        "rep": 2,
+        "visible_ms": 607.6918449999939,
+        "soreness_ms": 672.020869999993,
+        "usable_ms": 892.9059989999951,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 80,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 98,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 73,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 121,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 53,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 52,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 93,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 37,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "phase1",
+        "delay": "progress",
+        "rep": 0,
+        "visible_ms": 2498.993589999998,
+        "soreness_ms": 2577.948233000003,
+        "usable_ms": 2908.5887969999967,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 166,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 101,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 275,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 676,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 166,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 258,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 60,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 2186,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "phase1",
+        "delay": "progress",
+        "rep": 1,
+        "visible_ms": 1063.701893999998,
+        "soreness_ms": 1073.4129719999983,
+        "usable_ms": 1286.3625240000038,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 54,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 62,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 147,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 234,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 54,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 92,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 63,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 1779,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "phase1",
+        "delay": "progress",
+        "rep": 2,
+        "visible_ms": 1260.1372059999994,
+        "soreness_ms": 1271.5423789999986,
+        "usable_ms": 1499.112473999994,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 92,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 102,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 303,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 231,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 41,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 83,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 54,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 1797,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "phase1",
+        "delay": "health",
+        "rep": 0,
+        "visible_ms": 1358.7145019999953,
+        "soreness_ms": 1367.8208689999956,
+        "usable_ms": 1622.3124679999964,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 93,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 44,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 105,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 251,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 70,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 75,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 273,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 60,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "phase1",
+        "delay": "health",
+        "rep": 1,
+        "visible_ms": 1662.8012230000022,
+        "soreness_ms": 1671.4852150000006,
+        "usable_ms": 1897.9228309999962,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 69,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 134,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 294,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 360,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 51,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 68,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 276,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 58,
+            "status": 200
+          }
+        ]
+      },
+      {
+        "mode": "phase1",
+        "delay": "health",
+        "rep": 2,
+        "visible_ms": 1019.8581170000034,
+        "soreness_ms": 1051.937794999998,
+        "usable_ms": 1426.0738320000019,
+        "reads": [
+          {
+            "path": "/api/profile/preferences",
+            "elapsed_ms": 56,
+            "status": 200
+          },
+          {
+            "path": "/api/training/next",
+            "elapsed_ms": 71,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 100,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/today",
+            "elapsed_ms": 228,
+            "status": 200
+          },
+          {
+            "path": "/api/soreness",
+            "elapsed_ms": 46,
+            "status": 200
+          },
+          {
+            "path": "/api/profile",
+            "elapsed_ms": 81,
+            "status": 200
+          },
+          {
+            "path": "/api/workout/<occurrence>/progress",
+            "elapsed_ms": 339,
+            "status": 200
+          },
+          {
+            "path": "/api/plan/scheduling-context",
+            "elapsed_ms": 125,
+            "status": 200
+          }
+        ]
+      }
+    ]
+  }
+}

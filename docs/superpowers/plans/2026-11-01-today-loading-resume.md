@@ -30,13 +30,13 @@
 **Files:** apps/web/lib/api.ts; components/flexible-training.tsx; app/today/page.tsx; focused API-client/Today/Flexible tests.
 **Interfaces:** Existing server endpoints/payloads unchanged. 15s deadline for selected GETs only. Optional training-read state callback; existing server decision callback stays authoritative.
 
-- [ ] Write failing tests for stalled reads, no health prerequisite, training lookup errors, phase-correct date errors and late/account-switch responses. Prove writes have no new timeout.
-- [ ] Observe red; implement bounded GET helper and readable checking/error/retry states without treating missing mode as calendar or bypassing server gates.
-- [ ] Write failing tests for prompt independent of progress and no second Today/progress after Skip; preserve date rollover and saved-report reload tests.
-- [ ] Observe red; launch progress asynchronously and reuse the verified occurrence on same-day Skip only.
-- [ ] Write failing refresh/recovery tests: hidden stale controls, same-occurrence draft preserved, mutation guards while unverified, mandatory conflict/account retirement, pending undo recovery.
-- [ ] Observe red; retain transiently unverified state without making it writable; keep the existing canonical draft/receipt owners.
-- [ ] Run focused loading, soreness, Flexible, state/unit/retry/correction and starting-weight regressions; typecheck/lint. Commit.
+- [x] Write failing tests for stalled reads, no health prerequisite, training lookup errors, phase-correct date errors and late/account-switch responses. Prove writes have no new timeout.
+- [x] Observe red; implement bounded GET helper and readable checking/error/retry states without treating missing mode as calendar or bypassing server gates.
+- [x] Write failing tests for prompt independent of progress and no second Today/progress after Skip; preserve date rollover and saved-report reload tests.
+- [x] Observe red; launch progress asynchronously and reuse the verified occurrence on same-day Skip only.
+- [x] Write failing refresh/recovery tests: hidden stale controls, same-occurrence draft preserved, mutation guards while unverified, mandatory conflict/account retirement, pending undo recovery.
+- [x] Observe red; retain transiently unverified state without making it writable; keep the existing canonical draft/receipt owners.
+- [x] Run focused loading, soreness, Flexible, state/unit/retry/correction and starting-weight regressions; typecheck/lint. Commit.
 
 ### Task 2: Matched measurements, review and PR qualification
 
@@ -44,7 +44,7 @@
 **Interfaces:** Same production build/rewrite and verified synthetic database/fixtures for baseline/candidate. External instrumenter reused from prior package; no runtime policy instrumentation.
 
 - [x] Verify protected main/current checks and disposable target before imports/bootstrap; capture baseline 18 visits (3 per mode/condition), request counts and API phases.
-- [ ] Build candidate sequentially; measure identical native and controlled-delay cases, retain all samples/ranges and report limits.
-- [ ] Real browser/API recovery, reload/pending set and unit/account isolation journeys; source/history comparison. No ordinary measurement-account writes.
-- [ ] Fresh changed-file review and scoped security review; fix actual findings with focused red/green tests.
+- [x] Build candidate sequentially; measure identical native and controlled-delay cases, retain all samples/ranges and report limits.
+- [x] Real browser/API recovery, reload/pending set and unit/account isolation journeys; source/history comparison. No writes to the four timing-mode accounts.
+- [x] Fresh changed-file review and scoped security review; fix actual findings with focused red/green tests.
 - [ ] Create one focused PR, keep103/105open and run normal final-head CI/CodeQL/GitGuardian. Record SHA/results/checkpoint; do not merge/deploy.

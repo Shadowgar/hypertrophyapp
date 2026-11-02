@@ -1,0 +1,43 @@
+{
+  "baseline_main": "06e910896203355c11815d3e586e1dec6d8e0c3e",
+  "baseline_main_ci": 41361759667,
+  "baseline_main_codeql": 41361759384,
+  "baseline_release_conclusion": "skipped",
+  "focused_tests": {
+    "files": 13,
+    "passed": 154,
+    "failed": 0
+  },
+  "candidate_build": "Next production webpack + typecheck success",
+  "changed_file_lint": "success",
+  "security_scan": {
+    "id": "34de960d-48d3-4608-9408-e61efb173faf",
+    "reviewed_head": "56b90429feb34d5c7251531cf1bb2a5b7585e8c3",
+    "runtime_files": 3,
+    "findings": 0,
+    "coverage": "diff only",
+    "qualification_note": "Exact reviewed source56b9042; final followup changes only the progress-failure status branch, verified by regression and independent review finding. Normal CodeQL/GitGuardian qualify final PR head."
+  },
+  "webkit": "Cached WebKit2248 cannot launch: missing host dependencies. No host packages installed.",
+  "measured_source_head": "56b90429feb34d5c7251531cf1bb2a5b7585e8c3",
+  "final_source_head": "121b3e4766391307529e9cc05a33778c8e124c85",
+  "measured_runtime_source_sha256": {
+    "apps/web/app/today/page.tsx": "cb1b6d372ae8d5f45eaa4e30528007fd4f8260d184a3f8194cec2a72455d1001",
+    "apps/web/components/flexible-training.tsx": "700ebee319cf56ce64347f585ec9c94dc30348ae87fc1d85c75e56d62dbfd10d",
+    "apps/web/lib/api.ts": "12667ea2fe3655d6545237dff8416f55d065a28119a94d1791eb8bc05d194ac1"
+  },
+  "final_runtime_source_sha256": {
+    "apps/web/app/today/page.tsx": "9f1e44461b1f01193033c75b863c8dc81dfbe1bad2ccca7838a2d99fd64a1ffe",
+    "apps/web/components/flexible-training.tsx": "700ebee319cf56ce64347f585ec9c94dc30348ae87fc1d85c75e56d62dbfd10d",
+    "apps/web/lib/api.ts": "12667ea2fe3655d6545237dff8416f55d065a28119a94d1791eb8bc05d194ac1"
+  },
+  "independent_review": {
+    "base": "06e910896203355c11815d3e586e1dec6d8e0c3e",
+    "head": "56b90429feb34d5c7251531cf1bb2a5b7585e8c3",
+    "critical": 0,
+    "important": 1,
+    "minor": 0,
+    "declined_to_judge": [],
+    "resolution": "Final source commit settles failed progress status independently of protected receipt generation. Existing late-failure regression failed before and passed after; full targeted154test set passed."
+  }
+}
