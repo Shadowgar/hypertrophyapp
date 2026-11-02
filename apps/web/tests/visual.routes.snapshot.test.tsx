@@ -154,7 +154,7 @@ test("visual snapshot: today route initial state", async () => {
   });
 
   const { container, getByText, getByRole } = render(<TodayPage />);
-  await waitFor(() => expect(getByText("Loading your scheduled workout…")).toBeInTheDocument());
+  await waitFor(() => expect(getByText("Loading your workout…")).toBeInTheDocument());
   await waitFor(() => expect(getByRole("button", { name: /Load today's workout/ })).toHaveAttribute("aria-busy", "true"));
   expect(container.firstChild).toMatchSnapshot();
   dateSpy.mockRestore();

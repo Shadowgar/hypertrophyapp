@@ -1,0 +1,21 @@
+{
+  "base": "06e910896203355c11815d3e586e1dec6d8e0c3e",
+  "compiler_inputs_byte_identical": 8,
+  "baseline_compiler_sha256": "e258c5e512fb00b8a550510f4fac507486001146fa425e8856f41046aef8a7d4",
+  "candidate_compiler_sha256": "e258c5e512fb00b8a550510f4fac507486001146fa425e8856f41046aef8a7d4",
+  "authored_artifact_files_byte_identical": 9,
+  "starting_weight_composer_files_byte_identical": [
+    {
+      "path": "apps/web/components/atlas-runner.tsx",
+      "sha256": "d4961b5511b4033510404f4016596c4245d4f531e63bada4755cab7b0364e5a8"
+    },
+    {
+      "path": "apps/web/components/authored-calibration.tsx",
+      "sha256": "f339c8f94d2aff7a3e6c1eca4f0f176a8872dc94fa265503ca245f0b255a7fae"
+    },
+    {
+      "path": "apps/web/components/use-atlas-set.ts",
+      "sha256": "176cdce22e4d7bca603faff68389b93f01f41394c0498dd50f0d3e61344c8de8"
+    }
+  ]
+}

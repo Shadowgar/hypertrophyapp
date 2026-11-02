@@ -21,7 +21,8 @@ type RetainedTrainingCommand = { sequenceId: string; operation: TrainingOperatio
 const labels: Record<TrainingOperation, string> = { start:'start', resume:'resume', pause:'pause', finish:'finish', 'end-early':'end early', reconcile:'recheck', retire:'retire program' };
 
 /** Server-owned sequence decisions; this view never advances from local set counts. */
-export function FlexibleTraining({ accountToken, onResolved, onContinue, canChange, timeBudgetMinutes, reloadKey = 0 }: {
+export function FlexibleTraining({ accountToken, onResolved, onContinue, canChange, timeBudgetMinutes, reloadKey = 0, onReadState }: {
+  onReadState?: (state: "loading" | "ready" | "error") => void;
   accountToken: string | null; onResolved?: (next: TrainingNext | null) => void;
   onContinue?: () => void; canChange?: () => boolean; timeBudgetMinutes?: number | null; reloadKey?: number;
 }) {
@@ -35,8 +36,8 @@ export function FlexibleTraining({ accountToken, onResolved, onContinue, canChan
   const [pending, setPending] = useState<RetainedTrainingCommand | null>(null);
   const [reload, setReload] = useState(0);
   const [retired, setRetired] = useState(false);
-  const callbacks = useRef({onResolved, onContinue, canChange});
-  useLayoutEffect(() => { callbacks.current={onResolved,onContinue,canChange}; }, [onResolved,onContinue,canChange]);
+  const callbacks = useRef({onResolved, onContinue, canChange, onReadState});
+  useLayoutEffect(() => { callbacks.current={onResolved,onContinue,canChange,onReadState}; }, [onResolved,onContinue,canChange,onReadState]);
   const generation = useRef(0);
   const invalidate = useCallback(() => { ++generation.current; }, []);
   const inFlight = useRef(false);
@@ -48,14 +49,15 @@ export function FlexibleTraining({ accountToken, onResolved, onContinue, canChan
     const current=()=>active&&generation.current===epoch&&getToken()===accountToken;
     setReadFailed(false);setRetired(false);setNext(null);setOperation(null);setLoading(true);setBusy(false);inFlight.current=false;
     setPending(pendingLogPayload<RetainedTrainingCommand>(commandKey));
+    if (getToken() === accountToken) callbacks.current.onReadState?.("loading");
     // With no account, the existing authenticated routes own sign-in rejection;
     // there is no private sequence decision to wait for.
-    if(!accountToken){setLoading(false);callbacks.current.onResolved?.(null);return;}
+    if(!accountToken){setLoading(false);callbacks.current.onResolved?.(null);callbacks.current.onReadState?.("ready");return;}
     void api.getNextTraining().then(value=>{
       if(!current())return;
       // Old calendar clients may have no sequence; never infer Flexible from a date plan.
-      setNext(value?.mode==='flexible'?value:null);callbacks.current.onResolved?.(value?.mode==='flexible'?value:null);
-    }).catch(()=>{if(current()){setReadFailed(true);setNotice('Training state could not be checked. Recheck before changing your program.');}})
+      setNext(value?.mode==='flexible'?value:null);callbacks.current.onResolved?.(value?.mode==='flexible'?value:null);callbacks.current.onReadState?.('ready');
+    }).catch(()=>{if(current()){setReadFailed(true);setNotice('Training state could not be checked. Retry before loading or changing your workout.');callbacks.current.onReadState?.('error');}})
       .finally(()=>{if(current())setLoading(false);});
     return()=>{active=false;invalidate();};
   },[accountToken,commandKey,reload,reloadKey,invalidate]);

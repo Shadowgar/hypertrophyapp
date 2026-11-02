@@ -522,9 +522,21 @@ function WorkoutHeaderCard({
 
 export default function TodayPage() {
   const {preferences} = useAppearance();
-  const [health, setHealth] = useState("loading");
+  const [trainingReadState, setTrainingReadState] = useState<"loading" | "ready" | "error">("loading");
   const [workoutLoading, setWorkoutLoading] = useState(false);
-  const [occurrenceVerified, setOccurrenceVerified] = useState(false);
+  const verifiedView = useRef(false);
+  const [occurrenceVerified, setOccurrenceVerifiedState] = useState(false);
+  const setOccurrenceVerified = useCallback((value: boolean) => {
+    verifiedView.current = value;
+    setOccurrenceVerifiedState(value);
+  }, []);
+  const retainedView = useRef<HTMLFieldSetElement>(null);
+  const progressReadVersion = useRef(0);
+  const [progressReadState, setProgressReadState] = useState<"idle" | "checking" | "failed">("idle");
+  useEffect(() => {
+    if (!occurrenceVerified) retainedView.current?.querySelectorAll<HTMLDialogElement>("dialog[open]")
+      .forEach(dialog => dialog.close());
+  }, [occurrenceVerified]);
   const [nextPreviewAllowed, setNextPreviewAllowed] = useState(false);
   const [accountGeneration, setAccountGeneration] = useState(0);
   const pageReadEpoch = useRef(0);
@@ -539,7 +551,7 @@ export default function TodayPage() {
   const [workout, setWorkout] = useState<WorkoutSession | null>(null);
   const currentWorkout = useRef(workout);
   useEffect(() => { currentWorkout.current = workout; }, [workout]);
-  const [message, setMessage] = useState("Loading your scheduled workout…");
+  const [message, setMessage] = useState("Loading your workout…");
   const [swapIndexByExercise, setSwapIndexByExercise] = useState<SwapState>({});
   const [notesOpenByExercise, setNotesOpenByExercise] = useState<NotesState>({});
   const [swapTargetExerciseId, setSwapTargetExerciseId] = useState<string | null>(null);
@@ -614,6 +626,10 @@ export default function TodayPage() {
   const isBeginWorkoutLoadInProgress = useRef(false);
   const sorenessDismissedDate = useRef<string | null>(null);
   const sorenessPromptDate = useRef<string | null>(null);
+  const trainingReadChanged = useCallback((state: "loading" | "ready" | "error") => {
+    setTrainingReadState(state);
+    if (state !== "ready") setTrainingChecked(false);
+  }, []);
   const trainingResolved = useCallback((next: TrainingNext | null) => {
     setTrainingChecked(true);
     setTrainingDecision(next);
@@ -622,9 +638,9 @@ export default function TodayPage() {
       currentOccurrence.current = null;
       isBeginWorkoutLoadInProgress.current = false;
       setWorkoutLoading(false);
-      setWorkout(null); setOccurrenceVerified(false);
+      currentWorkout.current = null; setWorkout(null); setOccurrenceVerified(false);
     }
-  }, [invalidatePageReads]);
+  }, [invalidatePageReads, setOccurrenceVerified]);
 
 
   const resetExerciseAuthority = useCallback((key: string, refreshed: WorkoutExercise, hadGuidance: boolean) => {
@@ -671,7 +687,7 @@ export default function TodayPage() {
       setPriorUndoBusy(false);
       sorenessDismissedDate.current = null;
       sorenessPromptDate.current = null;
-      setWorkout(null);
+      currentWorkout.current = null; setWorkout(null);
       setTrainingDecision(null);
       setTrainingChecked(false);
       setNextPreviewAllowed(false);
@@ -696,7 +712,7 @@ export default function TodayPage() {
       setUndoRecovery(recovery);
       resetSelectedLoadContext();
       setWorkoutLoading(false);
-      setMessage("Loading your scheduled workout…");
+      setMessage("Loading your workout…");
       setAccountGeneration(value => value + 1);
     };
     const storageSync = (event: StorageEvent) => {
@@ -712,7 +728,7 @@ export default function TodayPage() {
       window.removeEventListener("hypertrophy:auth-token-changed", syncAccount);
       window.removeEventListener("storage", storageSync);
     };
-  }, [resetSelectedLoadContext, invalidatePageReads]);
+  }, [resetSelectedLoadContext, invalidatePageReads, setOccurrenceVerified]);
 
   // Global rest timer countdown
   useEffect(() => {
@@ -749,17 +765,6 @@ export default function TodayPage() {
     try { localStorage.setItem(occurrenceStorageKey("selected", workout), selectedExerciseId); } catch { /* in-memory selection */ }
   }, [selectedExerciseId, workout]);
 
-  useEffect(() => {
-    let active = true;
-    api.health()
-      .then(data => { if (active) setHealth(data.status); })
-      .catch(() => {
-        if (!active) return;
-        setHealth("offline");
-        setMessage("Workout service unavailable. Retry loading your workout. Your saved history is unchanged.");
-      });
-    return () => { active = false; };
-  }, []);
 
   const resolveLocalToday = useCallback(async (): Promise<string> => {
     const scope = capturePageRead();
@@ -772,6 +777,40 @@ export default function TodayPage() {
     setLocalToday({ date: context.local_today, timezone: context.timezone });
     return context.local_today;
   }, [capturePageRead, isCurrentPageRead]);
+
+  const refreshWorkoutProgress = useCallback(async (data: WorkoutSession, useTodayFallback = false) => {
+    if (!verifiedView.current || currentOccurrence.current !== workoutReference(data)) return;
+    const scope = capturePageRead();
+    const todayVersion = todayReadVersion.current;
+    const version = ++progressReadVersion.current;
+    const isCurrent = () => isCurrentPageRead(scope) && todayVersion === todayReadVersion.current
+      && version === progressReadVersion.current && verifiedView.current
+      && currentOccurrence.current === workoutReference(data);
+    const initialGeneration = captureLoadGeneration();
+    const localCompleted = Object.fromEntries(data.exercises.map(exercise => [exerciseKey(exercise), exercise.completed_sets ?? 0]));
+    setProgressReadState("checking");
+    try {
+      const { progress, generation } = await getScopedWorkoutProgress(workoutReference(data));
+      if (!isCurrent()) return;
+      setProgressReadState("idle");
+      applyProgressLoad(progress.exercises ?? [], generation);
+      if ((progress.exercises ?? []).some(item => !isCurrentLoadGeneration(item.exercise_occurrence_id ?? item.exercise_id, generation))) return;
+      const serverCompleted = Object.fromEntries((progress.exercises ?? []).map(item => [item.exercise_occurrence_id ?? item.exercise_id, Number(item.completed_sets) || 0]));
+      const merged = Object.keys(serverCompleted).length > 0 ? serverCompleted : localCompleted;
+      setCompletedSetsByExercise(merged);
+      setWorkoutProgress({ completed: Number(progress.completed_total) || 0, planned: Number(progress.planned_total) || 0, percent: Number(progress.percent_complete) || 0 });
+      try { localStorage.setItem(occurrenceStorageKey("completed", data), JSON.stringify(merged)); } catch { /* server progress remains authoritative */ }
+      if ((Number(progress.percent_complete) || 0) >= 100) await loadWorkoutSummary(workoutReference(data));
+    } catch {
+      if (!isCurrent()) return;
+      // Settle status independently; an older failure never replaces newer receipts.
+      setProgressReadState("failed");
+      if (useTodayFallback && data.exercises.every(exercise => isCurrentLoadGeneration(exerciseKey(exercise), initialGeneration))) {
+        setCompletedSetsByExercise(localCompleted);
+        setWorkoutProgress(null);
+      }
+    }
+  }, [capturePageRead, isCurrentPageRead, captureLoadGeneration, getScopedWorkoutProgress, applyProgressLoad, isCurrentLoadGeneration, loadWorkoutSummary]);
 
   const loadToday = useCallback(async (): Promise<WorkoutSession | null> => {
     const scope = capturePageRead();
@@ -883,37 +922,8 @@ export default function TodayPage() {
         if (isCurrent()) setWeakAreas([]);
       });
 
-      // Confirmed server state is authoritative; local caches are never receipts.
-      const localCompleted: Record<string,number> = Object.fromEntries(data.exercises.map(exercise=>[exerciseKey(exercise),exercise.completed_sets??0]));
-      const initialProgressGeneration = captureLoadGeneration();
-
-      // prefer server-side progress when available
-      try {
-        const { progress, generation } = await getScopedWorkoutProgress(workoutReference(data));
-        if (!isCurrent() || currentOccurrence.current !== workoutReference(data)) return null;
-        applyProgressLoad(progress.exercises ?? [], generation);
-        if ((progress.exercises ?? []).some(item => !isCurrentLoadGeneration(item.exercise_occurrence_id ?? item.exercise_id, generation))) return data;
-        const serverCompleted = Object.fromEntries(
-          (progress.exercises ?? []).map((item) => [item.exercise_occurrence_id ?? item.exercise_id, Number(item.completed_sets) || 0]),
-        ) as Record<string, number>;
-        const merged = Object.keys(serverCompleted).length > 0 ? serverCompleted : localCompleted;
-        setCompletedSetsByExercise(merged);
-        setWorkoutProgress({
-          completed: Number(progress.completed_total) || 0,
-          planned: Number(progress.planned_total) || 0,
-          percent: Number(progress.percent_complete) || 0,
-        });
-        const completedKey = occurrenceStorageKey("completed", data);
-        try { localStorage.setItem(completedKey, JSON.stringify(merged)); } catch { /* server progress remains authoritative */ }
-        if ((Number(progress.percent_complete) || 0) >= 100) {
-          await loadWorkoutSummary(workoutReference(data));
-        }
-      } catch {
-        if(isCurrent() && currentOccurrence.current===workoutReference(data) && data.exercises.every(exercise=>isCurrentLoadGeneration(exerciseKey(exercise),initialProgressGeneration))){
-          setCompletedSetsByExercise(localCompleted);
-          setWorkoutProgress(null);
-        }
-      }
+      // Today is already verified; auxiliary progress must not delay recovery context.
+      void refreshWorkoutProgress(data, true);
       return data;
     } catch (error) {
       if (!isCurrent()) return null;
@@ -921,7 +931,13 @@ export default function TodayPage() {
         setMessage("Workout changed while loading. Reload to verify the current workout. Your saved history is unchanged.");
         return null;
       }
-      setWorkout(null);
+      if (currentWorkout.current && (!(error instanceof ApiError) || error.status >= 500)) {
+        setOccurrenceVerified(false);
+        setNextPreviewAllowed(false);
+        setMessage("Workout refresh failed. Retry to verify your workout. Your draft and saved history are kept.");
+        return null;
+      }
+      currentWorkout.current = null; setWorkout(null);
       currentOccurrence.current = null;
       setOccurrenceVerified(false);
       setSelectedExerciseId(null);
@@ -935,7 +951,7 @@ export default function TodayPage() {
         : "Workout could not be loaded. Retry loading your workout. Your saved history is unchanged.");
       return null;
     }
-  }, [loadWorkoutSummary, applyProgressLoad, resetSelectedLoadContext, getScopedWorkoutProgress, capturePageRead, isCurrentPageRead, captureLoadGeneration, isCurrentLoadGeneration, resetExerciseAuthority]);
+  }, [applyProgressLoad, resetSelectedLoadContext, capturePageRead, isCurrentPageRead, captureLoadGeneration, isCurrentLoadGeneration, resetExerciseAuthority, setOccurrenceVerified, refreshWorkoutProgress]);
 
   async function recoverPriorUndo() {
     const pageScope = capturePageRead();
@@ -982,7 +998,7 @@ export default function TodayPage() {
     setWorkoutLoading(true);
     setNextPreviewAllowed(false);
     setSorenessLookupFailed(false);
-    setMessage(currentOccurrence.current ? "Refreshing your scheduled workout…" : "Loading your scheduled workout…");
+    setMessage(currentOccurrence.current ? "Refreshing your workout…" : "Loading your workout…");
     try {
       // The account's scheduling clock owns occurrence/date routing. A missing
       // weekly report is not authority to block an already scheduled workout.
@@ -1030,28 +1046,26 @@ export default function TodayPage() {
       setShowSorenessModal(true);
     } catch {
       if (isCurrentPageRead(scope)) {
-        setWorkout(null);
-        currentOccurrence.current = null;
+        if (!currentWorkout.current) setSelectedExerciseId(null);
         setOccurrenceVerified(false);
-        setSelectedExerciseId(null);
-        setMessage("Unable to verify soreness status. Try again.");
+        setMessage("The local training date could not be verified. Retry loading your workout. Your saved history is unchanged.");
       }
     } finally {
       if (isCurrentPageRead(scope)) {
         isBeginWorkoutLoadInProgress.current = false;
         setWorkoutLoading(false);
-        setMessage(previous => previous === "Refreshing your scheduled workout…" ? "" : previous);
+        setMessage(previous => previous === "Refreshing your workout…" ? "" : previous);
       }
     }
-  }, [loadToday, resolveLocalToday, resetSorenessForm, showSorenessModal, capturePageRead, isCurrentPageRead]);
+  }, [loadToday, resolveLocalToday, resetSorenessForm, showSorenessModal, capturePageRead, isCurrentPageRead, setOccurrenceVerified]);
 
   useEffect(() => {
-    if (!trainingChecked || (trainingDecision?.mode === "flexible" && !["active", "finish"].includes(trainingDecision.action)) || health !== "ok" || workout !== null || hasAutoLoadStarted.current) {
+    if (!trainingChecked || (trainingDecision?.mode === "flexible" && !["active", "finish"].includes(trainingDecision.action)) || workout !== null || hasAutoLoadStarted.current) {
       return;
     }
     hasAutoLoadStarted.current = true;
     beginWorkoutLoad();
-  }, [health, workout, beginWorkoutLoad, accountGeneration, trainingDecision, trainingChecked]);
+  }, [workout, beginWorkoutLoad, accountGeneration, trainingDecision, trainingChecked]);
 
   useEffect(() => {
     if (!nextPreviewAllowed || !getToken()) return;
@@ -1072,7 +1086,10 @@ export default function TodayPage() {
     sorenessDismissedDate.current = null;
     setShowSorenessModal(false);
     hasAutoLoadStarted.current = false;
-    setWorkout(null);
+    currentOccurrence.current = null;
+    setOccurrenceVerified(false);
+    currentWorkout.current = null; setWorkout(null);
+    setMessage("The local date changed. Verifying your workout for today…");
     return true;
   }
 
@@ -1124,11 +1141,18 @@ export default function TodayPage() {
     setSwapTargetExerciseId(null);
   }
 
+  const requireVerifiedWorkout = useCallback(() => {
+    if (!verifiedView.current || !workout || currentOccurrence.current !== workoutReference(workout)) {
+      throw new Error("Verify your workout before recording changes.");
+    }
+  }, [workout]);
+
   async function handleSetComplete(
     exerciseId: string,
     completedCount: number,
     performed: PerformedSet,
   ) {
+    requireVerifiedWorkout();
     if (undoRecoveryRef.current) throw new Error("Confirm the original undo before recording more work.");
     if (!workout) return;
     // find exercise info for payload
@@ -1261,6 +1285,7 @@ export default function TodayPage() {
     performed: { reps: number; weight: number },
     ordinal: number,
   ) {
+    requireVerifiedWorkout();
     if (undoRecoveryRef.current) throw new Error("Confirm the original undo before recording technique work.");
     const exercise = (workout?.exercises ?? []).find((entry) => exerciseKey(entry) === state.exerciseId);
     if (!exercise) throw new Error("Exercise occurrence is unavailable");
@@ -1292,6 +1317,7 @@ export default function TodayPage() {
   };
 
   async function handleUndoLastSet(exercise: WorkoutExercise): Promise<number | false> {
+    requireVerifiedWorkout();
     if (!workout) return false;
     const pageScope = capturePageRead();
     const loadIntelligence = intelligenceFor(exercise);
@@ -1379,6 +1405,13 @@ export default function TodayPage() {
   const manageDatesHref = customizedProposalId ? `/customize?proposal=${encodeURIComponent(customizedProposalId)}` : workout?.customized ? "/customize" : "/week";
   const manageDatesLabel = customizedProposalId ? "Manage Customized dates or replace program" : workout?.customized ? "Manage Customized programs" : "Manage training dates";
 
+  const progressStatus = <div role="status" className="flex h-14 items-center gap-2 text-sm">
+    <p className="min-w-0 flex-1 ux-muted">{progressReadState === "checking" ? "Checking the latest saved sets…"
+      : progressReadState === "failed" ? "Saved-set refresh unavailable." : ""}</p>
+    {progressReadState === "failed" ? <Button variant="secondary" className="min-h-11 shrink-0"
+      onClick={() => { if (workout) void refreshWorkoutProgress(workout); }}>Retry saved sets</Button> : null}
+  </div>;
+
   const todayDate = localToday
     ? `${formatCalendarDate(localToday.date)} · ${localToday.timezone}`
     : `${new Date().toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} · browser local date`;
@@ -1386,7 +1419,7 @@ export default function TodayPage() {
   return (
     <div className={executionVisible ? "atlas-page" : "space-y-4 pb-8"}>
       <div hidden={executionVisible}>
-        <FlexibleTraining accountToken={getToken()} onResolved={trainingResolved} onContinue={() => { void beginWorkoutLoad(); }} canChange={() => !undoRecoveryRef.current && !undoInFlight.current && !isBeginWorkoutLoadInProgress.current} timeBudgetMinutes={sessionTimeGoal} />
+        <FlexibleTraining accountToken={getToken()} onResolved={trainingResolved} onReadState={trainingReadChanged} onContinue={() => { void beginWorkoutLoad(); }} canChange={() => !undoRecoveryRef.current && !undoInFlight.current && !isBeginWorkoutLoadInProgress.current} timeBudgetMinutes={sessionTimeGoal} />
       </div>
       <div className={executionVisible ? "hidden" : "flex flex-wrap items-baseline justify-between gap-2"}>
         <h1 className="ui-title-page" data-today-heading tabIndex={-1}>Today</h1>
@@ -1394,7 +1427,7 @@ export default function TodayPage() {
         <p className="ui-meta text-zinc-400">{todayDate}</p>
       </div>
       <div className={executionVisible || trainingDecision?.mode === "flexible" ? "hidden" : "main-card main-card--module main-card--accent spacing-grid spacing-grid--tight"}>
-        <Button className="min-h-[44px] w-full" onClick={beginWorkoutLoad} disabled={workoutLoading} aria-busy={workoutLoading}>
+        <Button className="min-h-[44px] w-full" onClick={beginWorkoutLoad} disabled={workoutLoading || !trainingChecked} aria-busy={workoutLoading || trainingReadState === "loading"}>
           <span className="inline-flex items-center gap-2">
             <UiIcon name="workout" className="ui-icon--action" />
             {workout ? "Reload" : "Load today's workout"}
@@ -1402,7 +1435,7 @@ export default function TodayPage() {
         </Button>
       </div>
 
-      {message && !executionVisible && trainingDecision?.mode !== "flexible" ? (
+      {message && !executionVisible && trainingReadState !== "error" && (trainingDecision?.mode !== "flexible" || ["active", "finish"].includes(trainingDecision.action)) ? (
         <div className="main-card main-card--shell space-y-2 ui-body-sm" role="status">
           {message.startsWith("Rest day") ? <h2 className="text-base font-semibold">No workout scheduled today</h2> : null}
           <p>{message}</p>
@@ -1426,7 +1459,7 @@ export default function TodayPage() {
 
       {trainingDecision?.mode !== "flexible" && nextPreviewAllowed && !workout && !workoutLoading && !undoRecovery ? <NextWorkout accountToken={getToken()} timeBudgetMinutes={sessionTimeGoal} enabled onMoved={() => { void beginWorkoutLoad(); }} canMoveNow={() => !undoRecoveryRef.current && !undoInFlight.current && !isBeginWorkoutLoadInProgress.current} /> : null}
 
-      {undoRecovery && (!workout || undoRecovery.scope !== occurrenceStorageKey("attempt", workout) || !workout.exercises.some(item => exerciseKey(item) === undoRecovery.exerciseIdentity)) ? <div role="alert"><p>An undo for a previous workout is unconfirmed. This workout is read-only until the original undo is reconciled.</p><Button disabled={priorUndoBusy} onClick={recoverPriorUndo}>Retry original undo</Button></div> : null}
+      {undoRecovery && (!occurrenceVerified || !workout || undoRecovery.scope !== occurrenceStorageKey("attempt", workout) || !workout.exercises.some(item => exerciseKey(item) === undoRecovery.exerciseIdentity)) ? <div role="alert"><p>An undo for a previous workout is unconfirmed. This workout is read-only until the original undo is reconciled.</p><Button disabled={priorUndoBusy} onClick={recoverPriorUndo}>Retry original undo</Button></div> : null}
       {sorenessLookupFailed && workout && occurrenceVerified && !executionVisible ? (
         <div className="main-card main-card--shell space-y-2 ui-body-sm" role="status">
           <p>Soreness check unavailable. Retry the check or continue without a soreness report.</p>
@@ -1439,9 +1472,10 @@ export default function TodayPage() {
       {workout && occurrenceVerified ? (
         <div className={selectedExerciseId ? "hidden" : "space-y-3"}>
           <p className="ui-body-sm text-zinc-200">
-            {workout.title} · {workoutProgress?.completed ?? 0}/{workoutProgress?.planned ?? 0} sets
+            {workout.title} · {workoutProgress?.completed ?? workout.exercises.reduce((total, exercise) => total + (completedSetsByExercise[exerciseKey(exercise)] ?? exercise.completed_sets ?? 0), 0)}/{workoutProgress?.planned ?? workout.exercises.reduce((total, exercise) => total + exercise.sets, 0)} sets
           </p>
 
+          {!selectedExerciseId ? progressStatus : null}
           {!undoRecovery ? <WorkoutWorkload exercises={workout.exercises} timeBudgetMinutes={sessionTimeGoal} mode={trainingDecision?.mode === "flexible" ? "flexible" : workloadMode(workout.program_template_id ?? workout.selected_program_id, Boolean(workout.customized))} /> : null}
           <ul className="space-y-1.5" aria-label="Exercise list">
             {(workout.exercises ?? []).map((exercise) => {
@@ -1495,7 +1529,7 @@ export default function TodayPage() {
         </div>
       ) : null}
 
-      {workout && occurrenceVerified && selectedExerciseId ? (() => {
+      {workout && selectedExerciseId ? (() => {
         const exercise = (workout.exercises ?? []).find((e) => exerciseKey(e) === selectedExerciseId);
         if (!exercise) {
           return null;
@@ -1516,6 +1550,7 @@ export default function TodayPage() {
         const canUndo = completed > 0 || effectiveSets.length > 0 || undoRecovery?.exerciseIdentity === exerciseKey(exercise);
 
         return (
+          <fieldset ref={retainedView} hidden={!occurrenceVerified} disabled={!occurrenceVerified} className="min-w-0 border-0 p-0 m-0">
           <ExerciseDetailOverlay
             flexible={trainingDecision?.mode === "flexible"}
             key={`${exerciseKey(exercise)}/${exercise.performed_variant?.option_id ?? "source"}`}
@@ -1538,6 +1573,9 @@ export default function TodayPage() {
               setLoadIntelligenceByExercise(previous => ({ ...previous, [exerciseKey(exercise)]: null }));
             }}
             onSaveCalibration={async (command, isRetry = false) => {
+              if (!verifiedView.current || currentOccurrence.current !== workoutReference(workout)) {
+                throw new Error("Verify your workout before recording changes.");
+              }
               if (undoRecoveryRef.current) throw new Error("Resolve the pending undo before saving a benchmark");
               const key = exerciseKey(exercise);
               const version = (loadPreviewVersions.current[key] ?? 0) + 1;
@@ -1567,6 +1605,9 @@ export default function TodayPage() {
             onOverrideReason={reason => setLoadOverrideByExercise(previous => ({ ...previous, [exerciseKey(exercise)]: reason }))}
             warmupCommandScope={occurrenceStorageKey("attempt", workout)}
             onWarmupComplete={async (ordinal, performed) => {
+              if (!verifiedView.current || currentOccurrence.current !== workoutReference(workout)) {
+                throw new Error("Verify your workout before recording changes.");
+              }
               if (undoRecoveryRef.current) throw new Error("Confirm the original undo before recording warm-ups.");
               const key = exerciseKey(exercise);
               const commandKey = pendingCommandKey(occurrenceStorageKey("attempt", workout), key, `warmup:${ordinal}`);
@@ -1600,6 +1641,9 @@ export default function TodayPage() {
               }
             }}
             onCorrectSet={async (receipt, values) => {
+              if (!verifiedView.current || currentOccurrence.current !== workoutReference(workout)) {
+                throw new Error("Verify your workout before recording changes.");
+              }
               if (undoRecoveryRef.current) throw new Error("Confirm the original undo before correcting sets.");
               const commandKey = pendingCommandKey(occurrenceStorageKey("attempt", workout), exerciseKey(exercise), `correct:${receipt.id}`);
               const payload = retainLogPayload(commandKey, { ...values, command_id: getLogCommand(commandKey) });
@@ -1662,6 +1706,9 @@ export default function TodayPage() {
             liveGuidance={!loadIntelligence && !exercise.customized ? resolveGuidanceText(recommendation?.guidance_rationale ?? feedback?.guidance_rationale, recommendation?.guidance ?? feedback?.guidance) : ""}
             onUndoLastSet={canUndo ? () => handleUndoLastSet(exercise) : undefined}
             onAuthoredDecision={async (decision) => {
+              if (!verifiedView.current || currentOccurrence.current !== workoutReference(workout)) {
+                throw new Error("Verify your workout before recording changes.");
+              }
               if (undoRecoveryRef.current) throw new Error("Confirm the original undo before changing this exercise.");
               if (!exercise.exercise_occurrence_id) throw new Error("Occurrence unavailable");
               const input = { ...decision, exercise_id: exercise.id, exercise_occurrence_id: exercise.exercise_occurrence_id,
@@ -1684,8 +1731,11 @@ export default function TodayPage() {
             globalRestTimer={globalRestTimer}
             onClearGlobalRestTimer={() => setGlobalRestTimer(null)}
           />
+          </fieldset>
         );
       })() : null}
+
+      {workout && occurrenceVerified && selectedExerciseId ? progressStatus : null}
 
       {/* Global rest bar when overlay is closed (timer persists) */}
       {occurrenceVerified && globalRestTimer != null && selectedExerciseId !== globalRestTimer.exerciseId ? (
@@ -1802,7 +1852,9 @@ export default function TodayPage() {
                     sorenessDismissedDate.current = today;
                     sorenessPromptDate.current = null;
                     setShowSorenessModal(false);
-                    await loadToday();
+                    // Skip records no new recovery evidence. The verified same-day
+                    // occurrence remains authoritative; saving a report still reloads.
+
                   } catch {
                     if (isCurrentPageRead(scope)) setSorenessStatus("Unable to verify the local date. Try again.");
                   }

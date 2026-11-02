@@ -1091,6 +1091,22 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return (await res.json()) as T;
 }
 
+/** Bound reads only. A timed-out mutation must never be assumed rejected. */
+export const WORKOUT_READ_TIMEOUT_MS = 15_000;
+async function readRequest<T>(path: string): Promise<T> {
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<never>((_resolve, reject) => {
+    timer = setTimeout(() => {
+      reject(new Error("The workout read timed out. Check your connection and retry."));
+      controller.abort();
+    }, WORKOUT_READ_TIMEOUT_MS);
+    timer.unref?.();
+  });
+  try { return await Promise.race([request<T>(path, { signal: controller.signal }), deadline]); }
+  finally { clearTimeout(timer); }
+}
+
 function parseApiErrorMessage(raw: string, status: number): string {
   const fallback = raw || `HTTP ${status}`;
   try {
@@ -1146,12 +1162,12 @@ export type TrainingEnrollmentPreview = {digest: string; program_id: string; ses
   blockers?: Array<{code: string; message?: string}>; source_notice?: string};
 
 export const api = {
-  getNextTraining: () => request<TrainingNext>("/training/next"),
+  getNextTraining: () => readRequest<TrainingNext>("/training/next"),
   previewTrainingEnrollment: (payload: TrainingEnrollmentInput) => request<TrainingEnrollmentPreview>("/training/enroll/preview", {method: "POST", body: JSON.stringify(payload)}),
   enrollTraining: (payload: TrainingEnrollmentInput & {preview_digest: string; command_id: string; confirmed: true}) => request<TrainingNext>("/training/enroll", {method: "POST", body: JSON.stringify(payload)}),
   commandTraining: (sequenceId: string, operation: TrainingOperation, payload: TrainingCommand) => request<TrainingNext>(`/training/${encodeURIComponent(sequenceId)}/${operation}`, {method: "POST", body: JSON.stringify(payload)}),
   health: () => request<{ status: string; date: string; version?: string }>("/health"),
-  getTodayWorkout: () => request<WorkoutSession>("/workout/today"),
+  getTodayWorkout: () => readRequest<WorkoutSession>("/workout/today"),
   getNextPlannedWorkout: () => request<NextPlannedWorkout | null>("/workout/next-planned"),
   moveNextPlannedWorkout: (payload: {
     plan_id: string; workout_occurrence_id: string; expected_original_date: string;
@@ -1163,7 +1179,7 @@ export const api = {
     action: "report" | "confirm" | "decline"; reason?: "equipment" | "pain" | "safety"; option_id?: string }) =>
     request<{ exercise: WorkoutExercise; workout_occurrence_id: string }>(`/workout/${workoutId}/authored-substitution`,
       { method: "POST", body: JSON.stringify(payload) }),
-  getWorkoutProgress: (workoutId: string) => request<WorkoutProgress>(`/workout/${encodeURIComponent(workoutId)}/progress`),
+  getWorkoutProgress: (workoutId: string) => readRequest<WorkoutProgress>(`/workout/${encodeURIComponent(workoutId)}/progress`),
   getWorkoutSummary: (workoutId: string) => request<WorkoutSummary>(`/workout/${encodeURIComponent(workoutId)}/summary`),
   generateWeek: (templateId?: string | null, targetDays?: number | null) =>
     request<GeneratedWeekPlan>("/plan/generate-week", {
@@ -1182,7 +1198,7 @@ export const api = {
       }),
     }),
   getLatestWeekPlan: () => request<GeneratedWeekPlan>("/plan/latest-week"),
-  getSchedulingContext: (timezone: string, weekOffset = 0) => request<SchedulingContext>(`/plan/scheduling-context?timezone=${encodeURIComponent(timezone)}${weekOffset ? `&week_offset=${weekOffset}` : ""}`),
+  getSchedulingContext: (timezone: string, weekOffset = 0) => readRequest<SchedulingContext>(`/plan/scheduling-context?timezone=${encodeURIComponent(timezone)}${weekOffset ? `&week_offset=${weekOffset}` : ""}`),
   previewSelectedDates: (payload: SelectedDatePlanRequest) => request<GeneratedWeekPlan>("/plan/selected-dates/preview", {
     method: "POST", body: JSON.stringify(payload),
   }),
@@ -1287,7 +1303,7 @@ export const api = {
   getHistoryDayDetail: (day: string) =>
     request<HistoryDayDetailResponse>(`/history/day/${encodeURIComponent(day)}`),
   listSoreness: (startDate: string, endDate: string) =>
-    request<SorenessEntry[]>(`/soreness?start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`),
+    readRequest<SorenessEntry[]>(`/soreness?start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`),
   createSoreness: (payload: SorenessCreatePayload) =>
     request<SorenessEntry>("/soreness", {
       method: "POST",
