@@ -1,0 +1,13 @@
+# Inactive reference template. See docs/operations/gmail-password-reset.md.
+# Never commit a populated credential file or apply this to production without
+# exact configuration parity, frozen-file reconciliation and owner approval.
+services:
+  api:
+    environment:
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: "587"
+      SMTP_USE_TLS: "true"
+      SMTP_USERNAME: ${FERRAVIS_GMAIL_USERNAME:?Provide the private Gmail sender}
+      SMTP_PASSWORD: ${FERRAVIS_GMAIL_APP_PASSWORD:?Provide the private Google app password}
+      SMTP_FROM_EMAIL: ${FERRAVIS_GMAIL_USERNAME:?Provide the private Gmail sender}
+      SMTP_FROM_NAME: FERRAVIS
